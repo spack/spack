@@ -15,7 +15,7 @@ class EsysParticle(CMakePackage):
     homepage = "https://launchpad.net/esys-particle"
     url = "https://launchpadlibrarian.net/539636757/esys-particle-3.0-alpha.tar.gz"
 
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("3.0-alpha", sha256="4fba856a95c93991cacb904e6a54a7ded93558f7adc8c3e6da99bc347843a434")
 

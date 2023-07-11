@@ -14,7 +14,7 @@ class PyJupytext(PythonPackage):
     git = "https://github.com/mwouts/jupytext/"
     pypi = "jupytext/jupytext-1.13.0.tar.gz"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     version("1.14.1", sha256="314fa0e732b1d14764271843b676938ef8a7b9d53c3575ade636b45d13f341c8")
     version("1.13.6", sha256="c6c25918ddb6403d0d8504e08d35f6efc447baf0dbeb6a28b73adf39e866a0c4")

@@ -14,7 +14,7 @@ class Nsimd(CMakePackage):
     homepage = "https://agenium-scale.github.io/nsimd/"
     url = "https://github.com/agenium-scale/nsimd/archive/v1.0.tar.gz"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("3.0.1", sha256="6a90d7ce5f9da5cfac872463951f3374bb0e0824d92f714db0fd4901b32497fd")
     version("3.0", sha256="5cab09020ce3a6819ddb3b3b8cafa6bc1377821b596c0f2954f52c852d092d5c")

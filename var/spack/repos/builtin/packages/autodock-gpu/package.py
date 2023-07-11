@@ -16,7 +16,7 @@ class AutodockGpu(MakefilePackage):
     homepage = "https://ccsb.scripps.edu/autodock"
     git = "https://github.com/ccsb-scripps/AutoDock-GPU.git"
 
-    maintainers = ["RemiLacroix-IDRIS"]
+    maintainers("RemiLacroix-IDRIS")
 
     version("develop", branch="develop")
 

@@ -28,20 +28,13 @@ import os
 import os.path
 import re
 import shutil
-import sys
 import urllib.parse
 from typing import List, Optional
 
 import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    get_single_file,
-    mkdirp,
-    temp_cwd,
-    temp_rename,
-    working_dir,
-)
+from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, temp_rename, working_dir
 from llnl.util.symlink import symlink
 
 import spack.config
@@ -59,7 +52,6 @@ from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
-is_windows = sys.platform == "win32"
 
 CONTENT_TYPE_MISMATCH_WARNING_TEMPLATE = (
     "The contents of {subject} look like {content_type}.  Either the URL"
@@ -93,22 +85,6 @@ def _ensure_one_stage_entry(stage_path):
     stage_entries = os.listdir(stage_path)
     assert len(stage_entries) == 1
     return os.path.join(stage_path, stage_entries[0])
-
-
-def _filesummary(path, print_bytes=16):
-    try:
-        n = print_bytes
-        with open(path, "rb") as f:
-            size = os.fstat(f.fileno()).st_size
-            if size <= 2 * n:
-                short_contents = f.read(2 * n)
-            else:
-                short_contents = f.read(n)
-                f.seek(-n, 2)
-                short_contents += b"..." + f.read(n)
-        return size, short_contents
-    except OSError:
-        return 0, b""
 
 
 def fetcher(cls):
@@ -519,7 +495,7 @@ class URLFetchStrategy(FetchStrategy):
             # On failure, provide some information about the file size and
             # contents, so that we can quickly see what the issue is (redirect
             # was not followed, empty file, text instead of binary, ...)
-            size, contents = _filesummary(self.archive_file)
+            size, contents = fs.filesummary(self.archive_file)
             raise ChecksumError(
                 f"{checker.hash_name} checksum failed for {self.archive_file}",
                 f"Expected {self.digest} but got {checker.sum}. "
@@ -898,12 +874,12 @@ class GitFetchStrategy(VCSFetchStrategy):
             # If we want a particular branch ask for it.
             if branch:
                 args.extend(["--branch", branch])
-            elif tag and self.git_version >= spack.version.ver("1.8.5.2"):
+            elif tag and self.git_version >= spack.version.Version("1.8.5.2"):
                 args.extend(["--branch", tag])
 
             # Try to be efficient if we're using a new enough git.
             # This checks out only one branch's history
-            if self.git_version >= spack.version.ver("1.7.10"):
+            if self.git_version >= spack.version.Version("1.7.10"):
                 if self.get_full_repo:
                     args.append("--no-single-branch")
                 else:
@@ -914,7 +890,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 # tree, if the in-use git and protocol permit it.
                 if (
                     (not self.get_full_repo)
-                    and self.git_version >= spack.version.ver("1.7.1")
+                    and self.git_version >= spack.version.Version("1.7.1")
                     and self.protocol_supports_shallow_clone()
                 ):
                     args.extend(["--depth", "1"])
@@ -931,7 +907,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 # For tags, be conservative and check them out AFTER
                 # cloning.  Later git versions can do this with clone
                 # --branch, but older ones fail.
-                if tag and self.git_version < spack.version.ver("1.8.5.2"):
+                if tag and self.git_version < spack.version.Version("1.8.5.2"):
                     # pull --tags returns a "special" error code of 1 in
                     # older versions that we have to ignore.
                     # see: https://github.com/git/git/commit/19d122b
@@ -1525,7 +1501,7 @@ def _from_merged_attrs(fetcher, pkg, version):
     return fetcher(**attrs)
 
 
-def for_package_version(pkg, version):
+def for_package_version(pkg, version=None):
     """Determine a fetch strategy based on the arguments supplied to
     version() in the package description."""
 
@@ -1536,17 +1512,27 @@ def for_package_version(pkg, version):
 
     check_pkg_attributes(pkg)
 
-    if not isinstance(version, spack.version.VersionBase):
-        version = spack.version.Version(version)
+    if version is not None:
+        assert not pkg.spec.concrete, "concrete specs should not pass the 'version=' argument"
+        # Specs are initialized with the universe range, if no version information is given,
+        # so here we make sure we always match the version passed as argument
+        if not isinstance(version, spack.version.StandardVersion):
+            version = spack.version.Version(version)
+
+        version_list = spack.version.VersionList()
+        version_list.add(version)
+        pkg.spec.versions = version_list
+    else:
+        version = pkg.version
 
     # if it's a commit, we must use a GitFetchStrategy
     if isinstance(version, spack.version.GitVersion):
         if not hasattr(pkg, "git"):
             raise web_util.FetchError(
-                "Cannot fetch git version for %s. Package has no 'git' attribute" % pkg.name
+                f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
         # Populate the version with comparisons to other commits
-        version.generate_git_lookup(pkg.name)
+        version.attach_git_lookup_from_package(pkg.name)
 
         # For GitVersion, we have no way to determine whether a ref is a branch or tag
         # Fortunately, we handle branches and tags identically, except tags are
@@ -1555,23 +1541,15 @@ def for_package_version(pkg, version):
         # performance hit for branches on older versions of git.
         # Branches cannot be cached, so we tell the fetcher not to cache tags/branches
         ref_type = "commit" if version.is_commit else "tag"
-        kwargs = {
-            "git": pkg.git,
-            ref_type: version.ref,
-            "no_cache": True,
-        }
+        kwargs = {"git": pkg.git, ref_type: version.ref, "no_cache": True}
 
         kwargs["submodules"] = getattr(pkg, "submodules", False)
 
-        # if we have a ref_version already, and it is a version from the package
-        # we can use that version's submodule specifications
-        if pkg.version.ref_version:
-            ref_version = spack.version.Version(pkg.version.ref_version[0])
-            ref_version_attributes = pkg.versions.get(ref_version)
-            if ref_version_attributes:
-                kwargs["submodules"] = ref_version_attributes.get(
-                    "submodules", kwargs["submodules"]
-                )
+        # if the ref_version is a known version from the package, use that version's
+        # submodule specifications
+        ref_version_attributes = pkg.versions.get(pkg.version.ref_version)
+        if ref_version_attributes:
+            kwargs["submodules"] = ref_version_attributes.get("submodules", kwargs["submodules"])
 
         fetcher = GitFetchStrategy(**kwargs)
         return fetcher

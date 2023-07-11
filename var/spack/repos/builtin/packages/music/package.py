@@ -19,7 +19,7 @@ class Music(CMakePackage):
     homepage = "https://www-n.oca.eu/ohahn/MUSIC/"
     git = "https://bitbucket.org/ohahn/music.git"
 
-    maintainers = ["charmoniumQ"]
+    maintainers("charmoniumQ")
 
     version("2021-12-01", commit="6747c54f3b73ec36719c265fd96362849a83cb45")
 

@@ -33,7 +33,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-12-12-1.tar.gz"
     git = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers = ["keitat", "sethrj", "kuberry", "jwillenbring", "psakievich"]
+    maintainers("keitat", "sethrj", "kuberry", "jwillenbring", "psakievich")
 
     tags = ["e4s"]
 
@@ -41,14 +41,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("14.0.0", sha256="054d2fabdf70fce0dfaeb20eed265bd7894045d3e00c3d1ddb72d1c77c339ca1")
     version("13.4.1", sha256="5465cbff3de7ef4ac7d40eeff9d99342c00d9d20eee0a5f64f0a523093f5f1b3")
     version("13.4.0", sha256="39550006e059043b7e2177f10467ae2f77fe639901aee91cbc1e359516ff8d3e")
     version("13.2.0", sha256="0ddb47784ba7b8a6b9a07a4822b33be508feb4ccd54301b2a5d10c9e54524b90")
-    version(
-        "13.0.1",
-        sha256="0bce7066c27e83085bc189bf524e535e5225636c9ee4b16291a38849d6c2216d",
-        preferred=True,
-    )
+    version("13.0.1", sha256="0bce7066c27e83085bc189bf524e535e5225636c9ee4b16291a38849d6c2216d")
     version("13.0.0", sha256="d44e8181b3ef5eae4e90aad40a33486f0b2ae6ba1c34b419ce8cbc70fd5dd6bd")
     version(
         "12.18.1", commit="55a75997332636a28afc9db1aee4ae46fe8d93e7"
@@ -722,9 +719,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             libs = depspec.libs
             try:
                 options.extend(
-                    [
-                        define(trilinos_name + "_INCLUDE_DIRS", depspec.headers.directories),
-                    ]
+                    [define(trilinos_name + "_INCLUDE_DIRS", depspec.headers.directories)]
                 )
             except NoHeadersError:
                 # Handle case were depspec does not have headers
@@ -772,7 +767,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         ]
         if spec.satisfies("@12.12.1:"):
             tpl_dep_map.append(("Pnetcdf", "parallel-netcdf"))
-        if spec.satisfies("@13:"):
+        if spec.satisfies("@13:") and not spec.satisfies("@develop"):
             tpl_dep_map.append(("HWLOC", "hwloc"))
 
         for tpl_name, dep_name in tpl_dep_map:
@@ -813,11 +808,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             )
 
         if spec.satisfies("^superlu-dist@4.0:"):
-            options.extend(
-                [
-                    define("HAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG", True),
-                ]
-            )
+            options.extend([define("HAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG", True)])
 
         if spec.satisfies("^parallel-netcdf"):
             options.extend(
@@ -841,10 +832,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         float_s = spec.variants["float"].value
 
         options.extend(
-            [
-                define("Teuchos_ENABLE_COMPLEX", complex_s),
-                define("Teuchos_ENABLE_FLOAT", float_s),
-            ]
+            [define("Teuchos_ENABLE_COMPLEX", complex_s), define("Teuchos_ENABLE_FLOAT", float_s)]
         )
 
         if "+tpetra +explicit_template_instantiation" in spec:

@@ -9,17 +9,9 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import (
-    HeaderList,
-    LibraryList,
-    find,
-    find_headers,
-    find_libraries,
-)
+from llnl.util.filesystem import HeaderList, LibraryList, find, find_headers, find_libraries
 
 import spack.paths
-
-is_windows = sys.platform == "win32"
 
 
 @pytest.fixture()
@@ -34,7 +26,7 @@ def library_list():
             "/dir3/libz.so",
             "libmpi.so.20.10.1",  # shared object libraries may be versioned
         ]
-        if not is_windows
+        if sys.platform != "win32"
         else [
             "/dir1/liblapack.lib",
             "/dir2/libpython3.6.dll",
@@ -65,10 +57,10 @@ def header_list():
 
 
 # TODO: Remove below when llnl.util.filesystem.find_libraries becomes spec aware
-plat_static_ext = "lib" if is_windows else "a"
+plat_static_ext = "lib" if sys.platform == "win32" else "a"
 
 
-plat_shared_ext = "dll" if is_windows else "so"
+plat_shared_ext = "dll" if sys.platform == "win32" else "so"
 
 
 plat_apple_shared_ext = "dylib"
@@ -80,12 +72,12 @@ class TestLibraryList(object):
         assert library_list == x
 
     def test_joined_and_str(self, library_list):
-
         s1 = library_list.joined()
         expected = " ".join(
             [
                 "/dir1/liblapack.%s" % plat_static_ext,
-                "/dir2/libpython3.6.%s" % (plat_apple_shared_ext if not is_windows else "dll"),
+                "/dir2/libpython3.6.%s"
+                % (plat_apple_shared_ext if sys.platform != "win32" else "dll"),
                 "/dir1/libblas.%s" % plat_static_ext,
                 "/dir3/libz.%s" % plat_shared_ext,
                 "libmpi.%s.20.10.1" % plat_shared_ext,
@@ -100,7 +92,8 @@ class TestLibraryList(object):
         expected = ";".join(
             [
                 "/dir1/liblapack.%s" % plat_static_ext,
-                "/dir2/libpython3.6.%s" % (plat_apple_shared_ext if not is_windows else "dll"),
+                "/dir2/libpython3.6.%s"
+                % (plat_apple_shared_ext if sys.platform != "win32" else "dll"),
                 "/dir1/libblas.%s" % plat_static_ext,
                 "/dir3/libz.%s" % plat_shared_ext,
                 "libmpi.%s.20.10.1" % plat_shared_ext,
@@ -109,7 +102,6 @@ class TestLibraryList(object):
         assert s3 == expected
 
     def test_flags(self, library_list):
-
         search_flags = library_list.search_flags
         assert "-L/dir1" in search_flags
         assert "-L/dir2" in search_flags
@@ -306,7 +298,6 @@ def test_library_type_search(lib_list, kwargs):
     ],
 )
 def test_searching_order(search_fn, search_list, root, kwargs):
-
     # Test search
     result = search_fn(search_list, root, **kwargs)
 

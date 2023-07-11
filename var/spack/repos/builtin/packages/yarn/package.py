@@ -12,7 +12,7 @@ class Yarn(Package):
     homepage = "https://yarnpkg.com"
     url = "https://github.com/yarnpkg/yarn/releases/download/v1.22.4/yarn-v1.22.4.tar.gz"
 
-    maintainers = ["cosmicexplorer"]
+    maintainers("cosmicexplorer")
 
     depends_on("node-js@4.0:", type="run")
 

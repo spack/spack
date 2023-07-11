@@ -17,7 +17,7 @@ class Jblob(Package):
     homepage = "https://cera-www.dkrz.de/WDCC/ui/cerasearch"
     url = "https://cera-www.dkrz.de/jblob/jblob-3.0.zip"
 
-    maintainers = ["ajkotobi"]
+    maintainers("ajkotobi")
 
     version("3.0", sha256="576b5956358386a8832c6d1d13c410705e54888354a10cfd4f094513458067e4")
 

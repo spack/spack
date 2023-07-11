@@ -13,7 +13,7 @@ class PyPyopencl(PythonPackage):
     homepage = "https://documen.tician.de/pyopencl/"
     pypi = "pyopencl/pyopencl-2020.2.2.tar.gz"
 
-    maintainers = ["matthiasdiener"]
+    maintainers("matthiasdiener")
 
     version("2020.2.2", sha256="31fcc79fb6862998e98d91a624c0bd4f0ab4c5d418d199912d4d312c64e437ec")
 

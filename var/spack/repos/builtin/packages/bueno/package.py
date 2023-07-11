@@ -13,7 +13,7 @@ class Bueno(PythonPackage):
     url = "https://github.com/lanl/bueno/archive/refs/tags/v0.0.1.tar.gz"
     git = "https://github.com/lanl/bueno.git"
 
-    maintainers = ["rbberger"]
+    maintainers("rbberger")
 
     version("master", branch="master")
 

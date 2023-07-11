@@ -9,7 +9,7 @@ from spack.package import *
 class PyYtoptAutotune(PythonPackage):
     """Common interface for autotuning search space and method definition."""
 
-    maintainers = ["Kerilk", "liuyangzhuan"]
+    maintainers("Kerilk", "liuyangzhuan")
 
     homepage = "https://github.com/ytopt-team/autotune"
     url = "https://github.com/ytopt-team/autotune/archive/refs/tags/v1.1.0.tar.gz"

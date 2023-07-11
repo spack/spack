@@ -18,7 +18,7 @@ class Pinentry(AutotoolsPackage):
     homepage = "https://gnupg.org/related_software/pinentry/index.html"
     url = "https://gnupg.org/ftp/gcrypt/pinentry/pinentry-1.1.0.tar.bz2"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     version("1.2.1", sha256="457a185e5a85238fb945a955dc6352ab962dc8b48720b62fc9fa48c7540a4067")
     version("1.2.0", sha256="10072045a3e043d0581f91cd5676fcac7ffee957a16636adedaa4f583a616470")

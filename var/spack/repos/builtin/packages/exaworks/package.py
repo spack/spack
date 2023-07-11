@@ -12,7 +12,7 @@ class Exaworks(BundlePackage):
     """
 
     homepage = "https://exaworks.org/"
-    maintainers = ["andre-merzky"]
+    maintainers("andre-merzky")
 
     version("0.1.0")
 

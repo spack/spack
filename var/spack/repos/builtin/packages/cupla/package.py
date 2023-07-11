@@ -14,7 +14,7 @@ class Cupla(Package):
     git = "https://github.com/alpaka-group/cupla.git"
     url = "https://github.com/alpaka-group/cupla/archive/refs/tags/0.3.0.tar.gz"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     version("develop", branch="dev")
     version("master", branch="master")

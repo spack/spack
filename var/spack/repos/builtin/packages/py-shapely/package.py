@@ -16,7 +16,7 @@ class PyShapely(PythonPackage):
     pypi = "shapely/shapely-1.7.1.tar.gz"
     git = "https://github.com/shapely/shapely.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("main", branch="main")
     version("2.0.1", sha256="66a6b1a3e72ece97fc85536a281476f9b7794de2e646ca8a4517e2e3c1446893")

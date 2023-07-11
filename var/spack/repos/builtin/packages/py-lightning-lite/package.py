@@ -13,7 +13,7 @@ class PyLightningLite(PythonPackage):
     homepage = "https://github.com/Lightning-AI/lightning"
     pypi = "lightning-lite/lightning-lite-1.8.0.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("1.8.0", sha256="a71940409d3d1a5bb20f63716c86a745157ce30100f1c16600dfe33d9b657955")
 

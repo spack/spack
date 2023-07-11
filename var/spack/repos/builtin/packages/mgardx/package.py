@@ -17,7 +17,7 @@ class Mgardx(CMakePackage):
     homepage = "https://github.com/lxAltria/MGARDx"
     git = "https://github.com/robertu94/MGARDx"
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     variant("shared", description="build shared libraries", default=True)
 

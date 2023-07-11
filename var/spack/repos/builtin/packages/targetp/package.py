@@ -21,7 +21,7 @@ class Targetp(Package):
     url = "file://{0}/targetp-1.1b.Linux.tar.gz".format(os.getcwd())
     manual_download = True
 
-    version("1.1b", "80233d0056e11abfd22a4ce73d1808c6")
+    version("1.1b", md5="80233d0056e11abfd22a4ce73d1808c6")
 
     depends_on("perl", type="run")
     depends_on("awk", type="run")

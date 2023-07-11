@@ -28,7 +28,7 @@ class Povray(AutotoolsPackage):
     url = "https://github.com/POV-Ray/povray/archive/v3.7.0.8.tar.gz"
     git = "https://github.com/POV-Ray/povray.git"
 
-    # maintainers = ['payerle' ]
+    # maintainers('payerle' )
 
     version("3.7.0.8", sha256="53d11ebd2972fc452af168a00eb83aefb61387662c10784e81b63e44aa575de4")
 

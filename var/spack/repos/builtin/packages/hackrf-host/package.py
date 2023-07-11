@@ -14,7 +14,7 @@ class HackrfHost(CMakePackage):
     homepage = "https://github.com/mossmann/hackrf"
     url = "https://github.com/mossmann/hackrf/archive/v2018.01.1.tar.gz"
 
-    maintainers = ["aweits"]
+    maintainers("aweits")
 
     root_cmakelists_dir = "host"
 

@@ -17,7 +17,7 @@ class Albany(CMakePackage):
     homepage = "http://gahansen.github.io/Albany"
     git = "https://github.com/gahansen/Albany.git"
 
-    maintainers = ["gahansen"]
+    maintainers("gahansen")
 
     version("develop", branch="master")
 

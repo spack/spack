@@ -13,7 +13,7 @@ class Sam2p(Package):
     url = "https://github.com/pts/sam2p/archive/v0.49.4.tar.gz"
     git = homepage
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     version("master", branch="master")
     version("2021-05-04", commit="f3e9cc0a2df1880a63f9f37c96e3595bca890cfa")

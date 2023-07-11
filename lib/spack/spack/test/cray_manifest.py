@@ -15,7 +15,12 @@ import os
 import pytest
 
 import spack
+import spack.cmd
+import spack.compilers
+import spack.config
 import spack.cray_manifest as cray_manifest
+import spack.spec
+import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
 
 example_x_json_str = """\
@@ -130,10 +135,7 @@ class JsonCompilerEntry(object):
         """The compiler spec only lists the name/version, not
         arch/executables.
         """
-        return {
-            "name": self.name,
-            "version": self.version,
-        }
+        return {"name": self.name, "version": self.version}
 
 
 _common_arch = JsonArchEntry(platform="linux", os="centos8", target="haswell").to_dict()
@@ -265,10 +267,7 @@ def test_translate_compiler_name():
     nvidia_compiler = JsonCompilerEntry(
         name="nvidia",
         version="19.1",
-        executables={
-            "cc": "/path/to/compiler/nvc",
-            "cxx": "/path/to/compiler/nvc++",
-        },
+        executables={"cc": "/path/to/compiler/nvc", "cxx": "/path/to/compiler/nvc++"},
     )
 
     compiler = compiler_from_entry(nvidia_compiler.compiler_json())
@@ -354,7 +353,7 @@ def test_read_cray_manifest_twice_no_compiler_duplicates(
 ):
     if spack.config.get("config:concretizer") == "clingo":
         pytest.skip(
-            "The ASP-based concretizer is currently picky about " " OS matching and will fail."
+            "The ASP-based concretizer is currently picky about OS matching and will fail."
         )
 
     with tmpdir.as_cwd():
@@ -368,7 +367,7 @@ def test_read_cray_manifest_twice_no_compiler_duplicates(
 
         compilers = spack.compilers.all_compilers()
         filtered = list(
-            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc@10.2.0.cray")
+            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc@=10.2.0.cray")
         )
         assert len(filtered) == 1
 

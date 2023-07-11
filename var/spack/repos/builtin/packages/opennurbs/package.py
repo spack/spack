@@ -15,7 +15,7 @@ class Opennurbs(Package):
     homepage = "https://github.com/OpenNURBS/OpenNURBS"
     git = "https://github.com/OpenNURBS/OpenNURBS.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers("jrood-nrel")
 
     version("develop", branch="develop")
 

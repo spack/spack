@@ -14,7 +14,7 @@ class SpiralPackageHcol(Package):
     url = "https://github.com/spiral-software/spiral-package-hcol/archive/refs/tags/1.0.0.tar.gz"
     git = "https://github.com/spiral-software/spiral-package-hcol.git"
 
-    maintainers = ["spiralgen"]
+    maintainers("spiralgen")
     extends("spiral-software")
 
     version("master", branch="master")

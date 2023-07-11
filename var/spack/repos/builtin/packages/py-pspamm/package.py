@@ -13,7 +13,7 @@ class PyPspamm(PythonPackage):
     homepage = "https://github.com/SeisSol/PSpaMM/blob/master/README.md"
     git = "https://github.com/SeisSol/PSpaMM.git"
 
-    maintainers = ["ravil-mobile"]
+    maintainers("ravil-mobile")
 
     version("develop", branch="master")
 

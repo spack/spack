@@ -18,7 +18,7 @@ class Recola(CMakePackage):
     homepage = "https://recola.hepforge.org"
     url = "https://recola.hepforge.org/downloads/?f=recola2-2.2.3.tar.gz"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     variant("python", default=True, description="Build py-recola python bindings.")
 

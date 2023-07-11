@@ -19,7 +19,7 @@ class SlurmDrmaa(AutotoolsPackage):
     url = "https://github.com/natefoo/slurm-drmaa/releases/download/1.1.2/slurm-drmaa-1.1.2.tar.gz"
     git = "https://github.com/natefoo/slurm-drmaa.git"
 
-    maintainers = ["pwablito"]
+    maintainers("pwablito")
 
     version("main", branch="main", submodules=True)
     version("1.1.2", sha256="5bfe25d501de83729df3c8c8f28535b9da3e99aea7738e259903abd6f1f5c836")

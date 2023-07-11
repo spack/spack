@@ -42,7 +42,6 @@ class Admixtools(MakefilePackage):
 
     def install(self, spec, prefix):
         with working_dir("src"):
-
             make("install")
             install_tree("bin", prefix.bin)
             install("twtable", prefix.bin)

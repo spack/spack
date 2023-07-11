@@ -14,7 +14,7 @@ class PyElephant(PythonPackage):
     git = "https://github.com/NeuralEnsemble/elephant.git"
 
     # list of GitHub accounts to notify when the package is updated.
-    maintainers = ["Moritz-Alexander-Kern"]
+    maintainers("Moritz-Alexander-Kern")
 
     version("0.11.2", sha256="f8759fff0bbb136ae4ffc8d1eacadeea8ba56610d705c3bf207de87ada3ba240")
     version("0.11.1", sha256="d604a202583440fdf9d95d42cef50a410bd74fcaaa1a925b139435f27ab012ef")

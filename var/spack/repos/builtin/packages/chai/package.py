@@ -17,7 +17,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/CHAI.git"
     tags = ["ecp", "e4s", "radiuss"]
 
-    maintainers = ["davidbeckingsale"]
+    maintainers("davidbeckingsale")
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)

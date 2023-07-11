@@ -20,13 +20,13 @@ class Vacuumms(CMakePackage):
     url = "https://github.com/frankwillmore/VACUUMMS/archive/refs/tags/v1.0.0.tar.gz"
     git = "https://github.com/frankwillmore/VACUUMMS.git"
 
-    maintainers = ["frankwillmore"]
+    maintainers("frankwillmore")
 
     version("master", branch="master")
     version("1.1.1", tag="v1.1.1")
     version(
         "1.0.0",
-        "c18fe52f5041880da7f50d3808d37afb3e9c936a56f80f67838d045bf7af372f",
+        sha256="c18fe52f5041880da7f50d3808d37afb3e9c936a56f80f67838d045bf7af372f",
         deprecated=True,
     )
 

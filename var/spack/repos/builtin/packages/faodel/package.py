@@ -13,7 +13,7 @@ class Faodel(CMakePackage):
     url = "https://github.com/faodel/faodel/archive/v1.2108.1.tar.gz"
     git = "https://github.com/faodel/faodel.git"
 
-    maintainers = ["tkordenbrock", "craigulmer"]
+    maintainers("tkordenbrock", "craigulmer")
 
     tags = ["e4s"]
 

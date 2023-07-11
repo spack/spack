@@ -116,9 +116,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
 
 
 class GenericBuilder(spack.build_systems.generic.GenericBuilder, SetupEnvironment):
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         nmake("-f" "win32\\Makefile.msc")
-        build_dir = self.pkg.stage.source_path
+        build_dir = pkg.stage.source_path
         install_tree = {
             "bin": glob.glob(os.path.join(build_dir, "*.dll")),
             "lib": glob.glob(os.path.join(build_dir, "*.lib")),
@@ -138,4 +138,4 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder, SetupEnvironmen
                 for file in tree[inst_dir]:
                     install(file, install_dst)
 
-        installtree(self.prefix, install_tree)
+        installtree(prefix, install_tree)

@@ -16,7 +16,7 @@ class Teckit(AutotoolsPackage):
     TECkit compiler creates these tables from plain-text, human-readable
     descriptions."""
 
-    maintainers = ["rountree"]
+    maintainers("rountree")
     homepage = "https://scripts.sil.org/cms/scripts/page.php?cat_id=TECkit"
     git = "https://github.com/silnrsi/teckit.git"
 

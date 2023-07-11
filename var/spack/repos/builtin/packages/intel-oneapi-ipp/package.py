@@ -21,12 +21,18 @@ class IntelOneapiIpp(IntelOneApiLibraryPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = (
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/ipp.html"
     )
 
+    version(
+        "2021.8.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/732392fa-41b3-4a92-935e-6a2b823162a7/l_ipp_oneapi_p_2021.8.0.46345_offline.sh",
+        sha256="d3348f37d03583dc767d3e3e8b5f0208405772de7991bd9d52112d83d332b749",
+        expand=False,
+    )
     version(
         "2021.7.0",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19126/l_ipp_oneapi_p_2021.7.0.25396_offline.sh",
@@ -88,7 +94,7 @@ class IntelOneapiIpp(IntelOneApiLibraryPackage):
         expand=False,
     )
 
-    depends_on("intel-oneapi-tbb")
+    depends_on("tbb")
 
     provides("ipp")
 

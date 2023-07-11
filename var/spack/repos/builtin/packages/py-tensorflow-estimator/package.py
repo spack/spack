@@ -15,7 +15,7 @@ class PyTensorflowEstimator(Package):
     homepage = "https://github.com/tensorflow/estimator"
     url = "https://github.com/tensorflow/estimator/archive/v2.2.0.tar.gz"
 
-    maintainers = ["aweits"]
+    maintainers("aweits")
 
     version("2.10", sha256="60df309377cf4e584ca20198f9639beb685d50616395f50770fc0999092d6d85")
     version("2.9.0", sha256="62d7b5a574d9c995542f6cb485ff1c18ad115afd9ec6d63437b2aab227c35ef6")

@@ -12,7 +12,7 @@ class Mimalloc(CMakePackage):
     homepage = "https://microsoft.github.io/mimalloc"
     url = "https://github.com/microsoft/mimalloc/archive/v0.0.0.tar.gz"
     git = "https://github.com/microsoft/mimalloc.git"
-    maintainers = ["msimberg"]
+    maintainers("msimberg")
 
     version("dev-slice", branch="dev-slice")
     version("dev", branch="dev")
@@ -55,11 +55,7 @@ class Mimalloc(CMakePackage):
             "for malloc() etc)",
             None,
         ),
-        "xmalloc": (
-            False,
-            "Enable abort() call on memory allocation failure by default",
-            None,
-        ),
+        "xmalloc": (False, "Enable abort() call on memory allocation failure by default", None),
         "show_errors": (
             False,
             "Show error and warning messages by default (only enabled by default "

@@ -12,7 +12,7 @@ class PyUsgs(PythonPackage):
     homepage = "https://github.com/kapadia/usgs"
     pypi = "usgs/usgs-0.2.7.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("0.2.7", sha256="484e569ea1baf9574e11ccf15219957364690dcf06ee3d09afef030df944e79b")
 

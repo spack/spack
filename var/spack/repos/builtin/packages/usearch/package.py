@@ -19,7 +19,7 @@ class Usearch(Package):
     https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.drive5.com/usearch/"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     manual_download = True
 

@@ -17,7 +17,7 @@ class ArmForge(Package):
     through to complex parallel HPC codes with MPI, OpenMP, threads or CUDA."""
 
     homepage = "https://www.arm.com/products/development-tools/server-and-hpc/forge"
-    maintainers = ["NickRF"]
+    maintainers("NickRF")
 
     # TODO: this mess should be fixed as soon as a way to parametrize/constrain
     #       versions (and checksums) based on the target platform shows up
@@ -161,11 +161,7 @@ class ArmForge(Package):
         description='Detect available PMU counters via "forge-probe" during install',
     )
 
-    variant(
-        "accept-eula",
-        default=False,
-        description="Accept the EULA",
-    )
+    variant("accept-eula", default=False, description="Accept the EULA")
 
     # forge-probe executes with "/usr/bin/env python"
     depends_on("python@2.7:", type="build", when="+probe")

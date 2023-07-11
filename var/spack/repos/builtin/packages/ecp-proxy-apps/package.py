@@ -14,7 +14,7 @@ class EcpProxyApps(BundlePackage):
     """
 
     tags = ["proxy-app", "ecp-proxy-app"]
-    maintainers = ["rspavel"]
+    maintainers("rspavel")
 
     homepage = "https://proxyapps.exascaleproject.org"
 

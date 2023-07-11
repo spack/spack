@@ -13,7 +13,7 @@ class Tioga(CMakePackage):
     homepage = "https://github.com/jsitaraman/tioga"
     git = "https://github.com/jsitaraman/tioga.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers("jrood-nrel")
 
     # The original TIOGA repo has possibly been abandoned,
     # so work on TIOGA has continued in the Exawind project

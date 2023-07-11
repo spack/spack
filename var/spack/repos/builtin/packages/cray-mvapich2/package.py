@@ -12,7 +12,7 @@ class CrayMvapich2(Package):
     homepage = "https://docs.nersc.gov/development/compilers/wrappers/"
     has_code = False  # Skip attempts to fetch source that is not available
 
-    maintainers = ["hppritcha"]
+    maintainers("hppritcha")
 
     version("8.1.0")
     version("8.0.16")

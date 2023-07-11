@@ -258,7 +258,7 @@ class Openfoam(Package):
     in 2004.
     """
 
-    maintainers = ["olesenm"]
+    maintainers("olesenm")
     homepage = "https://www.openfoam.com/"
     url = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
     git = "https://develop.openfoam.com/Development/openfoam.git"
@@ -325,8 +325,6 @@ class Openfoam(Package):
     version("1706", sha256="7779048bb53798d9a5bd2b2be0bf302c5fd3dff98e29249d6e0ef7eeb83db79a")
     version("1612", sha256="2909c43506a68e1f23efd0ca6186a6948ae0fc8fe1e39c78cc23ef0d69f3569d")
 
-    variant("float32", default=False, description="Use single-precision")
-    variant("spdp", default=False, description="Use single/double mixed precision")
     variant("int64", default=False, description="With 64-bit labels")
     variant("knl", default=False, description="Use KNL compiler settings")
     variant("kahip", default=False, description="With kahip decomposition")
@@ -340,6 +338,13 @@ class Openfoam(Package):
     variant("vtk", default=False, description="With VTK runTimePostProcessing")
     variant(
         "source", default=True, description="Install library/application sources and tutorials"
+    )
+    variant(
+        "precision",
+        default="dp",
+        description="Precision option",
+        values=("sp", "dp", conditional("spdp", when="@1906:")),
+        multi=False,
     )
 
     depends_on("mpi")
@@ -495,7 +500,7 @@ class Openfoam(Package):
                         "(FOAM|WM)_.*USER_.*",
                     ],
                     whitelist=[  # Whitelist these
-                        "MPI_ARCH_PATH",  # Can be required for compilation
+                        "MPI_ARCH_PATH"  # Can be required for compilation
                     ],
                 )
 
@@ -569,7 +574,7 @@ class Openfoam(Package):
         # Avoid WM_PROJECT_INST_DIR for ThirdParty
         # This modification is non-critical
         edits = {
-            "WM_THIRD_PARTY_DIR": r"$WM_PROJECT_DIR/ThirdParty  #SPACK: No separate third-party",
+            "WM_THIRD_PARTY_DIR": r"$WM_PROJECT_DIR/ThirdParty  #SPACK: No separate third-party"
         }
         rewrite_environ_files(  # etc/{bashrc,cshrc}
             edits, posix=join_path("etc", "bashrc"), cshell=join_path("etc", "cshrc")
@@ -720,14 +725,10 @@ class Openfoam(Package):
             }
 
         if "+kahip" in spec:
-            self.etc_config["kahip"] = {
-                "KAHIP_ARCH_PATH": spec["kahip"].prefix,
-            }
+            self.etc_config["kahip"] = {"KAHIP_ARCH_PATH": spec["kahip"].prefix}
 
         if "+metis" in spec:
-            self.etc_config["metis"] = {
-                "METIS_ARCH_PATH": spec["metis"].prefix,
-            }
+            self.etc_config["metis"] = {"METIS_ARCH_PATH": spec["metis"].prefix}
 
         # ParaView_INCLUDE_DIR is not used in 1812, but has no ill-effect
         if "+paraview" in spec:
@@ -789,9 +790,7 @@ class Openfoam(Package):
         mkdirp(self.projectdir)
 
         # Filtering: bashrc, cshrc
-        edits = {
-            "WM_PROJECT_DIR": self.projectdir,
-        }
+        edits = {"WM_PROJECT_DIR": self.projectdir}
         etc_dir = join_path(self.projectdir, "etc")
         rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
             edits, posix=join_path(etc_dir, "bashrc"), cshell=join_path(etc_dir, "cshrc")
@@ -901,7 +900,7 @@ class OpenfoamArch(object):
         self.compiler = None  # <- %compiler
         self.arch_option = ""  # Eg, -march=knl
         self.label_size = None  # <- +int64
-        self.precision_option = "DP"  # <- +float32 | +spdp
+        self.precision_option = "DP"  # <- precision= sp | dp | spdp
         self.compile_option = kwargs.get("compile-option", "-spack")
         self.arch = None
         self.options = None
@@ -914,10 +913,10 @@ class OpenfoamArch(object):
             self.label_size = "32"
 
         # WM_PRECISION_OPTION
-        if "+spdp" in spec:
-            self.precision_option = "SPDP"
-        elif "+float32" in spec:
+        if "precision=sp" in spec:
             self.precision_option = "SP"
+        elif "precision=spdp" in spec:
+            self.precision_option = "SPDP"
 
         # Processor/architecture-specific optimizations
         if "+knl" in spec:

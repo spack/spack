@@ -16,7 +16,7 @@ class G4particlexs(Package):
 
     tags = ["hep"]
 
-    maintainers = ["drbenmorgan"]
+    maintainers("drbenmorgan")
 
     # Only versions relevant to Geant4 releases built by spack are added
     version("4.0", sha256="9381039703c3f2b0fd36ab4999362a2c8b4ff9080c322f90b4e319281133ca95")

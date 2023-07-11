@@ -14,7 +14,7 @@ class Camellia(CMakePackage):
     homepage = "https://bitbucket.org/nateroberts/Camellia"
     git = "https://bitbucket.org/nateroberts/camellia.git"
 
-    maintainers = ["CamelliaDPG"]
+    maintainers("CamelliaDPG")
 
     version("master", branch="master")
 

@@ -13,7 +13,7 @@ class LuaFfi(LuaPackage):
     git = "https://github.com/facebook/luaffifb/"
     url = "https://github.com/facebook/luaffifb/"
 
-    maintainers = ["trws"]
+    maintainers("trws")
 
     version(
         "0.0.1.fakever",

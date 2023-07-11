@@ -12,11 +12,11 @@ class Drishti(PythonPackage):
     by detecting typical I/O performance pitfalls and providing a set of recommendations.
     """
 
-    homepage = "https://github.com/hpc-io/drishti"
-    git = "https://github.com/hpc-io/drishti"
+    homepage = "https://github.com/hpc-io/drishti-io"
+    git = "https://github.com/hpc-io/drishti-io"
     pypi = "drishti-io/drishti-io-0.4.tar.gz"
 
-    maintainers = ["jeanbez", "sbyna"]
+    maintainers("jeanbez", "sbyna")
 
     version("master", branch="master")
 

@@ -12,7 +12,7 @@ class PyContextily(PythonPackage):
     homepage = "https://github.com/darribas/contextily"
     pypi = "contextily/contextily-1.0.1.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("1.0.1", sha256="f7dc25dbc8e01163be6cdeedb49a56da9cd0d586c838861f442ef2ee45eba9d4")
 

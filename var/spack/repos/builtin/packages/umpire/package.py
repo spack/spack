@@ -20,7 +20,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/Umpire.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers = ["davidbeckingsale"]
+    maintainers("davidbeckingsale")
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
@@ -98,6 +98,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp@main", when="@main")
     depends_on("camp@main", when="@develop")
     depends_on("camp+openmp", when="+openmp")
+    depends_on("camp~cuda", when="~cuda")
 
     with when("@5.0.0:"):
         with when("+cuda"):

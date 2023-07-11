@@ -14,7 +14,7 @@ class Ruby(AutotoolsPackage, NMakePackage):
     simplicity and productivity.
     """
 
-    maintainers = ["Kerilk"]
+    maintainers("Kerilk")
 
     homepage = "https://www.ruby-lang.org/"
     url = "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"

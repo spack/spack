@@ -16,7 +16,7 @@ class XalanC(CMakePackage):
     homepage = "https://xalan.apache.org"
     url = "https://dlcdn.apache.org/xalan/xalan-c/sources/xalan_c-1.12.tar.gz"
 
-    maintainers = ["omsai"]
+    maintainers("omsai")
 
     version("1.12", sha256="ee7d4b0b08c5676f5e586c7154d94a5b32b299ac3cbb946e24c4375a25552da7")
 

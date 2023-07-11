@@ -15,7 +15,7 @@ class PyOpenpmdValidator(PythonPackage):
     git = "https://github.com/openPMD/openPMD-validator.git"
     pypi = "openPMD-validator/openPMD-validator-1.1.0.3.tar.gz"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("1.1.0.3", sha256="b2e57123c1dc09cdc121011d007e30fab82b3d21732d02e4f1ba919b24345810")
     version("1.1.0.2", sha256="6ac6e2860351d9940821ca6f3b44ab63629e0bd06f6984225c55830c3e58b83c")

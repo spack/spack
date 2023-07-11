@@ -10,7 +10,7 @@ class E4sCl(PythonPackage):
     """Container Launcher for E4S containers, facilitating MPI library
     translations"""
 
-    maintainers = ["spoutn1k", "FrederickDeny"]
+    maintainers("spoutn1k", "FrederickDeny")
     homepage = "https://e4s-cl.readthedocs.io"
     url = "https://oaciss.uoregon.edu/e4s/e4s-cl/releases"
     git = "https://github.com/E4S-Project/e4s-cl"

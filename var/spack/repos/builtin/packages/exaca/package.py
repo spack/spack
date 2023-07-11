@@ -14,7 +14,7 @@ class Exaca(CMakePackage):
     git = "https://github.com/LLNL/ExaCA.git"
     url = "https://github.com/LLNL/ExaCA/archive/1.0.0.tar.gz"
 
-    maintainers = ["streeve", "MattRolchigo"]
+    maintainers("streeve", "MattRolchigo")
 
     tags = ["ecp"]
 

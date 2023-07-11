@@ -17,7 +17,7 @@ class PyGeopandas(PythonPackage):
     pypi = "geopandas/geopandas-0.8.1.tar.gz"
     git = "https://github.com/geopandas/geopandas.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master")
     version("0.11.1", sha256="f0f0c8d0423d30cf81de2056d853145c4362739350a7f8f2d72cc7409ef1eca1")

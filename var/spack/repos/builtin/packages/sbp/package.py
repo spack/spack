@@ -12,7 +12,7 @@ class Sbp(CMakePackage):
     homepage = "https://github.com/swift-nav/libsbp"
     git = "https://github.com/swift-nav/libsbp"
 
-    maintainers = ["jayvdb"]
+    maintainers("jayvdb")
 
     version("3.4.10", tag="v3.4.10", submodules=True)
 

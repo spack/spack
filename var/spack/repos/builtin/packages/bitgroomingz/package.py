@@ -12,7 +12,7 @@ class Bitgroomingz(CMakePackage):
     homepage = "https://github.com/disheng222/BitGroomingZ"
     git = "https://github.com/disheng222/BitGroomingZ"
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     version("master", branch="master")
     version("2022-10-14", commit="a018b20cca9f7d6a5396ab36230e4be6ae1cb25b")

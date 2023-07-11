@@ -12,7 +12,7 @@ class Ratel(MakefilePackage, CudaPackage, ROCmPackage):
     homepage = "https://ratel.micromorph.org"
     git = "https://gitlab.com/micromorph/ratel.git"
 
-    maintainers = ["jedbrown", "jeremylt"]
+    maintainers("jedbrown", "jeremylt")
 
     version("develop", branch="main")
     version("0.2.1", tag="v0.2.1")

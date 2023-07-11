@@ -17,7 +17,7 @@ class RPinfsc50(RPackage):
 
     cran = "pinfsc50"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("1.2.0", sha256="ed1fe214b9261feef8abfbf724c2bd9070d68e99a6ea95208aff2c57bbef8794")
 

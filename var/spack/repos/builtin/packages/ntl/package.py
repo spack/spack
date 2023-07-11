@@ -20,7 +20,7 @@ class Ntl(MakefilePackage):
     homepage = "https://libntl.org"
     url = "https://github.com/libntl/ntl/archive/refs/tags/v11.5.1.tar.gz"
 
-    maintainers = ["wohlbier"]
+    maintainers("wohlbier")
 
     version("11.5.1", sha256="ef578fa8b6c0c64edd1183c4c303b534468b58dd3eb8df8c9a5633f984888de5")
     version("11.5.0", sha256="9e1e6488b177c3e5d772fdd6279c890937a9d1c3b694a904ac1cfbe9cab836db")

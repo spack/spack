@@ -15,7 +15,7 @@ class PyHpbandster(PythonPackage):
 
     homepage = "https://github.com/automl/HpBandSter"
     pypi = "hpbandster/hpbandster-0.7.4.tar.gz"
-    maintainers = ["liuyangzhuan"]
+    maintainers("liuyangzhuan")
 
     version("0.7.4", sha256="49ffc32688155b509e62f3617b52ae15a96c9bff2c996a23df83f279106c5921")
     version("0.7.3", sha256="dd6c255f5dfe773a7f0c5ecf580b46a406d9f691303e2f849a14f7ae08ff9f13")

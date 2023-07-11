@@ -11,7 +11,7 @@ class PyPytestDatadir(PythonPackage):
 
     homepage = "https://github.com/gabrielcnr/pytest-datadir"
     pypi = "pytest-datadir/pytest-datadir-1.4.1.tar.gz"
-    maintainers = ["HaoZeke"]
+    maintainers("HaoZeke")
 
     version("1.4.1", sha256="9f7a3c4def6ac4cac3cc8181139ab53bd2667231052bd40cb07081748d4420f0")
 

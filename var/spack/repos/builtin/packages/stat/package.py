@@ -13,7 +13,7 @@ class Stat(AutotoolsPackage):
     homepage = "https://paradyn.org/STAT/STAT.html"
     url = "https://github.com/LLNL/STAT/archive/v2.0.0.tar.gz"
     git = "https://github.com/llnl/stat.git"
-    maintainers = ["lee218llnl"]
+    maintainers("lee218llnl")
 
     version("develop", branch="develop")
     version(

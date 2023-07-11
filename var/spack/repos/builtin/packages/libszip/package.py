@@ -38,9 +38,4 @@ class Libszip(AutotoolsPackage):
         return libs
 
     def configure_args(self):
-        return [
-            "--enable-production",
-            "--enable-shared",
-            "--enable-static",
-            "--enable-encoding",
-        ]
+        return ["--enable-production", "--enable-shared", "--enable-static", "--enable-encoding"]

@@ -15,7 +15,7 @@ class G4realsurface(Package):
 
     tags = ["hep"]
 
-    maintainers = ["drbenmorgan"]
+    maintainers("drbenmorgan")
 
     # Only versions relevant to Geant4 releases built by spack are added
     version("2.2", sha256="9954dee0012f5331267f783690e912e72db5bf52ea9babecd12ea22282176820")

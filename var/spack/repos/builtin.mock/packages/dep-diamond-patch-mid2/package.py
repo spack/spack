@@ -21,7 +21,7 @@ X   Y
     homepage = "http://www.example.com"
     url = "http://www.example.com/patch-a-dependency-1.0.tar.gz"
 
-    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     # single patch file in repo
     depends_on(
@@ -30,6 +30,6 @@ X   Y
             patch(
                 "http://example.com/urlpatch.patch",
                 sha256="mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234",
-            ),
+            )
         ],
     )

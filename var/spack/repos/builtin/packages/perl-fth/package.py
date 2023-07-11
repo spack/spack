@@ -25,7 +25,7 @@ class PerlFth(Package):
     homepage = "https://sourceforge.net/projects/ftagshtml/"
     url = "https://downloads.sourceforge.net/project/ftagshtml/ftagshtml-0.524.tgz"
 
-    maintainers = ["cessenat"]
+    maintainers("cessenat")
 
     version("0.527", sha256="df98e9e2f4dbef863b09a22ed92681dff028a6f345ba530bc3afd8221efe633c")
     version("0.526", sha256="ada1c7306111d59d64572fe8a9b038026fd0daebaff630924997ef2dc22d87a8")
@@ -113,10 +113,7 @@ class PerlFth(Package):
                     fthfile.filter("#!/usr/bin/env perl", mstr, backup=False)
 
         # Adds a Makefile with an rsync rule
-        makefile_inc = [
-            "RSYNC_OPTS = -avuzL",
-            "RSYNC = rsync",
-        ]
+        makefile_inc = ["RSYNC_OPTS = -avuzL", "RSYNC = rsync"]
         makefile_inc.append("install:")
         makefile_inc.append("\t$(RSYNC) $(RSYNC_OPTS) . %s" % prefix)
         makefile_inc.append("")

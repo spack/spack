@@ -15,8 +15,9 @@ class AmqpCpp(CMakePackage):
     git = "https://github.com/CopernicaMarketingSoftware/AMQP-CPP.git"
     url = "https://github.com/CopernicaMarketingSoftware/AMQP-CPP/archive/refs/tags/v4.3.19.tar.gz"
 
-    maintainers = ["lpottier"]
+    maintainers("lpottier")
 
+    version("4.3.24", sha256="c3312f8af813cacabf6c257dfaf41bf9e66606bbf7d62d085a9b7da695355245")
     version("4.3.19", sha256="ca29bb349c498948576a4604bed5fd3c27d87240b271a4441ccf04ba3797b31d")
 
     variant(

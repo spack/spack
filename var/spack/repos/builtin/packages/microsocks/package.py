@@ -16,7 +16,7 @@ class Microsocks(MakefilePackage):
     url = "https://github.com/rofl0r/microsocks/archive/refs/tags/v1.0.2.tar.gz"
     git = "https://github.com/rofl0r/microsocks.git"
 
-    maintainers = ["jcpunk"]
+    maintainers("jcpunk")
 
     version("develop", branch="master")
     version("1.0.2", sha256="5ece77c283e71f73b9530da46302fdb4f72a0ae139aa734c07fe532407a6211a")

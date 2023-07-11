@@ -12,7 +12,7 @@ class PyHttpstan(PythonPackage):
     homepage = "https://mc-stan.org/"
     url = "https://github.com/stan-dev/httpstan/archive/refs/tags/4.6.1.tar.gz"
 
-    maintainers = ["haralmha"]
+    maintainers("haralmha")
 
     version("4.8.0", sha256="cadfce05d24ec2af50d71c5212c648cbee5684a7f98fedd3838e124e5a9b4962")
     version("4.7.2", sha256="94f6631d969cbd91d136194b074d02642d8c9e2a05674877a39059be87c5bf7b")

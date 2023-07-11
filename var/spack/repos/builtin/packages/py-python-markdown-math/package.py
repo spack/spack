@@ -11,7 +11,7 @@ class PyPythonMarkdownMath(PythonPackage):
 
     pypi = "python-markdown-math/python-markdown-math-0.8.tar.gz"
 
-    maintainers = ["wscullin"]
+    maintainers("wscullin")
 
     version("0.8", sha256="8564212af679fc18d53f38681f16080fcd3d186073f23825c7ce86fadd3e3635")
 

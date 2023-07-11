@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyCupy(PythonPackage):
+class PyCupy(PythonPackage, CudaPackage):
     """CuPy is an open-source array library accelerated with
     NVIDIA CUDA. CuPy provides GPU accelerated computing with
     Python. CuPy uses CUDA-related libraries including cuBLAS,
@@ -17,11 +17,6 @@ class PyCupy(PythonPackage):
     pypi = "cupy/cupy-8.0.0.tar.gz"
 
     version("11.2.0", sha256="c33361f117a347a63f6996ea97446d17f1c038f1a1f533e502464235076923e2")
-    version(
-        "8.0.0",
-        sha256="d1dcba5070dfa754445d010cdc952ff6b646d5f9bdcd7a63e8246e2472c3ddb8",
-        deprecated=True,
-    )
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
@@ -32,3 +27,12 @@ class PyCupy(PythonPackage):
     depends_on("nccl")
     depends_on("cudnn")
     depends_on("cutensor")
+
+    conflicts("~cuda")
+
+    def setup_build_environment(self, env):
+        env.set("CUPY_NUM_BUILD_JOBS", make_jobs)
+        if not self.spec.satisfies("cuda_arch=none"):
+            cuda_arch = self.spec.variants["cuda_arch"].value
+            arch_str = ";".join("arch=compute_{0},code=sm_{0}".format(i) for i in cuda_arch)
+            env.set("CUPY_NVCC_GENERATE_CODE", arch_str)

@@ -14,6 +14,6 @@ class Hoppet(AutotoolsPackage):
     url = "https://github.com/gavinsalam/hoppet/archive/refs/tags/hoppet-1.2.0.tar.gz"
 
     tags = ["hep"]
-    maintainers = ["haralmha"]
+    maintainers("haralmha")
 
     version("1.2.0", sha256="6e00eb56a4f922d03dfceba7b389a3aaf51f277afa46d7b634d661e0797e8898")

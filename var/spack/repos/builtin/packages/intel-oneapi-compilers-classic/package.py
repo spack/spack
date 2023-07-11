@@ -16,7 +16,7 @@ class IntelOneapiCompilersClassic(Package):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
@@ -34,6 +34,7 @@ class IntelOneapiCompilersClassic(Package):
         "2021.7.0": "2022.2.0",
         "2021.7.1": "2022.2.1",
         "2021.8.0": "2023.0.0",
+        "2021.9.0": "2023.1.0",
     }.items():
         version(ver)
         depends_on("intel-oneapi-compilers@" + oneapi_ver, when="@" + ver, type="run")

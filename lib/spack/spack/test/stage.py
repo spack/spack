@@ -198,6 +198,7 @@ def tmp_build_stage_dir(tmpdir, clear_stage_root):
 @pytest.fixture
 def mock_stage_archive(tmp_build_stage_dir):
     """Create the directories and files for the staged mock archive."""
+
     # Mock up a stage area that looks like this:
     #
     # tmpdir/                test_files_dir
@@ -385,7 +386,6 @@ def check_stage_dir_perms(prefix, path):
 
 @pytest.mark.usefixtures("mock_packages")
 class TestStage(object):
-
     stage_name = "spack-test-stage"
 
     def test_setup_and_destroy_name_with_tmp(self, mock_stage_archive):
@@ -444,7 +444,6 @@ class TestStage(object):
 
     @pytest.mark.disable_clean_stage_check
     def test_composite_stage_with_expand_resource(self, composite_stage_with_expanding_resource):
-
         (
             composite_stage,
             root_stage,
@@ -718,56 +717,17 @@ class TestStage(object):
             except OSError:
                 pass
 
-    @pytest.mark.nomockstage
-    def test_create_stage_root_bad_uid(self, tmpdir, monkeypatch):
-        """
-        Test the code path that uses an existing user path -- whether `$user`
-        in `$tempdir` or not -- and triggers the generation of the UID
-        mismatch warning.
-
-        This situation can happen with some `config:build_stage` settings
-        for teams using a common service account for installing software.
-        """
-        orig_stat = os.stat
-
-        class MinStat:
-            st_mode = -1
-            st_uid = -1
-
-        def _stat(path):
-            p_stat = orig_stat(path)
-
-            fake_stat = MinStat()
-            fake_stat.st_mode = p_stat.st_mode
-            return fake_stat
-
-        user_dir = tmpdir.join(getpass.getuser())
-        user_dir.ensure(dir=True)
-        user_path = str(user_dir)
-
-        # TODO: If we could guarantee access to the monkeypatch context
-        # function (i.e., 3.6.0 on), the call and assertion could be moved
-        # to a with block, such as:
-        #
-        #  with monkeypatch.context() as m:
-        #      m.setattr(os, 'stat', _stat)
-        #      spack.stage.create_stage_root(user_path)
-        #      assert os.stat(user_path).st_uid != os.getuid()
-        monkeypatch.setattr(os, "stat", _stat)
-        spack.stage.create_stage_root(user_path)
-
-        # The following check depends on the patched os.stat as a poor
-        # substitute for confirming the generated warnings.
-        assert os.stat(user_path).st_uid != getuid()
-
     def test_resolve_paths(self):
         """Test _resolve_paths."""
         assert spack.stage._resolve_paths([]) == []
 
         # resolved path without user appends user
         paths = [os.path.join(os.path.sep, "a", "b", "c")]
+        can_paths = [paths[0]]
         user = getpass.getuser()
-        can_paths = [os.path.join(paths[0], user)]
+
+        if sys.platform != "win32":
+            can_paths = [os.path.join(paths[0], user)]
         assert spack.stage._resolve_paths(paths) == can_paths
 
         # resolved path with node including user does not append user
@@ -790,7 +750,7 @@ class TestStage(object):
             res_paths[1] = can_tempdir
             res_paths[2] = os.path.join(can_tempdir, user)
             res_paths[3] = os.path.join(can_tempdir, "stage", user)
-        else:
+        elif sys.platform != "win32":
             res_paths[0] = os.path.join(res_paths[0], user)
 
         assert spack.stage._resolve_paths(paths) == res_paths

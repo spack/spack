@@ -12,7 +12,7 @@ class LibpressioAdios2(CMakePackage):
     homepage = "https://github.com/robertu94/libpressio_adios2"
     url = "https://github.com/robertu94/libpressio_adios2/archive/refs/tags/0.0.1.tar.gz"
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     version("0.0.2", sha256="8ab4b5a0dd8038d52f54aa9b5a67b83a8f7cd096db4c5a413fe0c6caf678e402")
     version("0.0.1", sha256="ab9c7e26114e8d81f8ad8aca703855079cd3441f9b72e01d9b4aeb0c57ce0746")

@@ -117,7 +117,6 @@ class FujitsuFftw(FftwBase):
         # Different precisions must be configured and compiled one at a time
         configure = Executable("../configure")
         for precision in self.selected_precisions:
-
             opts = (enable_precision[precision] or []) + options[:]
             with working_dir(precision, create=True):
                 configure(*opts)

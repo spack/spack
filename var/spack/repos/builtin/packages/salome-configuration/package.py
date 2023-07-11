@@ -13,7 +13,7 @@ class SalomeConfiguration(Package):
     """salome-configuration is a part of SALOME platform and define general
     build tools for the platform."""
 
-    maintainers = ["franciskloss"]
+    maintainers("franciskloss")
 
     homepage = "https://www.salome-platform.org"
     git = "https://git.salome-platform.org/gitpub/tools/configuration.git"

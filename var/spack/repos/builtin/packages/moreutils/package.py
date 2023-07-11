@@ -14,7 +14,7 @@ class Moreutils(MakefilePackage):
     homepage = "https://joeyh.name/code/moreutils"
     url = "https://deb.debian.org/debian/pool/main/m/moreutils/moreutils_0.63.orig.tar.xz"
 
-    maintainers = ["matthiasdiener"]
+    maintainers("matthiasdiener")
 
     version("0.65", sha256="ba0cfaa1ff6ead2b15c62a67292de66a366f9b815a09697b54677f7e15f5a2b2")
     version("0.63", sha256="01f0b331e07e62c70d58c2dabbb68f5c4ddae4ee6f2d8f070fd1e316108af72c")

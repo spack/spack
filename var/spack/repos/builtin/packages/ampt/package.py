@@ -14,7 +14,7 @@ class Ampt(MakefilePackage):
     homepage = "http://myweb.ecu.edu/linz/ampt/"
     url = "http://myweb.ecu.edu/linz/ampt/ampt-v1.26t9b-v2.26t9b.zip"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     tags = ["hep"]
 

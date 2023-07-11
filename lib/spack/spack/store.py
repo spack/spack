@@ -20,6 +20,7 @@ debugging easier.
 import contextlib
 import os
 import re
+from typing import Union
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -119,7 +120,6 @@ def parse_install_tree(config_dict):
             msg = "Cannot pad %s to %s characters." % (root, padded_length)
             msg += " It is already %s characters long" % len(root)
             tty.warn(msg)
-        root = root.rstrip(os.path.sep)
     else:
         root = unpadded_root
 
@@ -197,7 +197,7 @@ def _store():
 
 
 #: Singleton store instance
-store = llnl.util.lang.Singleton(_store)
+store: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_store)
 
 
 def _store_root():

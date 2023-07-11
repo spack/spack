@@ -14,7 +14,7 @@ class Op2Dsl(MakefilePackage, CudaPackage):
     homepage = "https://op-dsl.github.io/"
     git = "https://github.com/OP-DSL/OP2-Common.git"
 
-    maintainers = ["gihanmudalige", "reguly", "bozbez"]
+    maintainers("gihanmudalige", "reguly", "bozbez")
 
     version("master", branch="master")
     version("1.1.0", tag="v1.1.0")

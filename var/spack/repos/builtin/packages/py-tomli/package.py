@@ -15,7 +15,7 @@ class PyTomli(PythonPackage):
     pypi = "tomli/tomli-2.0.1.tar.gz"
     git = "https://github.com/hukkin/tomli.git"
 
-    maintainers = ["charmoniumq"]
+    maintainers("charmoniumq")
 
     version("2.0.1", sha256="de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f")
     version("1.2.2", sha256="c6ce0015eb38820eaf32b5db832dbc26deb3dd427bd5f6556cf0acac2c214fee")

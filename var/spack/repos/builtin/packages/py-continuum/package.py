@@ -12,7 +12,7 @@ class PyContinuum(PythonPackage):
     homepage = "https://continuum.readthedocs.io/en/latest/"
     pypi = "continuum/continuum-1.2.7.tar.gz"
 
-    maintainers = ["thomas-bouvier"]
+    maintainers("thomas-bouvier")
 
     version("1.2.7", sha256="baadcdbe2f5b3c05254307c73434a012f2a3d663e1be9469a03d4b82559e98e1")
 

@@ -16,7 +16,7 @@ class Testu01(AutotoolsPackage):
     homepage = "http://simul.iro.umontreal.ca/testu01/tu01.html"
     git = "https://github.com/umontreal-simul/TestU01-2009/"
 
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     version(
         "1.2.3",

@@ -14,7 +14,7 @@ class PyFenicsInstant(PythonPackage):
 
     homepage = "https://fenicsproject.org"
     url = "https://bitbucket.org/fenics-project/instant/downloads/instant-2017.2.0.tar.gz"
-    maintainers = ["emai-imcs"]
+    maintainers("emai-imcs")
 
     version("2017.2.0", sha256="be24f162fd1a89b82fae002db8df0b4f111fd50db83d78c0c121015c02e45b7b")
     version("2016.2.0", sha256="df5e8ca306546fd1ee1a28e36b61c5d46456dc8b07e3293d674ddff62cf8d953")

@@ -16,7 +16,7 @@ class Adms(AutotoolsPackage):
     url = "https://github.com/Qucs/ADMS/releases/download/release-2.3.7/adms-2.3.7.tar.gz"
     git = "https://github.com/Qucs/ADMS.git"
 
-    maintainers = ["cessenat"]
+    maintainers("cessenat")
 
     version("master", branch="master")
     version("2.3.7", sha256="3a78e1283ecdc3f356410474b3ff44c4dcc82cb89772087fd3bbde8a1038ce08")

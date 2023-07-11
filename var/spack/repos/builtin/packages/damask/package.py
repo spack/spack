@@ -26,7 +26,7 @@ class Damask(BundlePackage):
 
     homepage = "https://damask.mpie.de"
 
-    maintainers = ["MarDiehl"]
+    maintainers("MarDiehl")
 
     version("3.0.0-alpha7")
     version("3.0.0-alpha6")

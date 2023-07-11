@@ -13,7 +13,7 @@ class Sparse(MakefilePackage):
     homepage = "http://sparse.sourceforge.net/"
     url = "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz"
 
-    maintainers = ["wortiz"]
+    maintainers("wortiz")
 
     version("1.4b", sha256="63e6646244fd8f4d89f7f70fbf4cfd46b7688d21b22840a0ce57d294a7496d28")
 

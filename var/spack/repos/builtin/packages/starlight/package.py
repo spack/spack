@@ -16,7 +16,7 @@ class Starlight(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     version(
         "313",

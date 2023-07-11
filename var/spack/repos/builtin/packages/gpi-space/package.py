@@ -21,7 +21,7 @@ class GpiSpace(CMakePackage):
     url = "https://github.com/cc-hpc-itwm/gpispace/archive/refs/tags/v21.09.tar.gz"
     git = "https://github.com/cc-hpc-itwm/gpispace.git"
 
-    maintainers = ["mzeyen1985", "tiberot", "rumach", "mrahn", "acastanedam"]
+    maintainers("mzeyen1985", "tiberot", "rumach", "mrahn", "acastanedam")
 
     version("latest", branch="main")
     version("22.09", sha256="f938847205181081ed24896bba16302ac35bbf478b4ceecae5bb21d5a38c8556")
@@ -51,12 +51,6 @@ class GpiSpace(CMakePackage):
         values=("infiniband", "ethernet"),
         description="GPI-2 fabric to enable",
         when="+iml",
-    )
-    variant(
-        "build_type",
-        default="Release",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-        description="CMake build type",
     )
 
     depends_on("cmake@3.15.0:", type="build")

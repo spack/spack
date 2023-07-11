@@ -18,7 +18,7 @@ class Iwyu(CMakePackage):
     homepage = "https://include-what-you-use.org"
     url = "https://include-what-you-use.org/downloads/include-what-you-use-0.13.src.tar.gz"
 
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     tags = ["build-tools"]
 

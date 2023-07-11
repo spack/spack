@@ -14,7 +14,7 @@ class Pbbam(MesonPackage):
 
     homepage = "https://github.com/PacificBiosciences/pbbam"
     url = "https://github.com/PacificBiosciences/pbbam/archive/refs/tags/0.18.0.tar.gz"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version(
         "2.1.0",

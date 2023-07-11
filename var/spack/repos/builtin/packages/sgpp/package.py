@@ -16,7 +16,7 @@ class Sgpp(SConsPackage):
     url = "https://github.com/SGpp/SGpp/archive/v3.2.0.tar.gz"
     git = "https://github.com/SGpp/SGpp.git"
 
-    maintainers = ["G-071", "leiterrl", "pfluegdk"]
+    maintainers("G-071", "leiterrl", "pfluegdk")
 
     version("master", branch="master")
     version("3.4.0", sha256="450d4002850b0a48c561abe221b634261ca44eee111ca605c3e80797182f40b3")

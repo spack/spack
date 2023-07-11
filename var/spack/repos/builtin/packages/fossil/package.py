@@ -16,7 +16,7 @@ class Fossil(AutotoolsPackage):
     homepage = "https://fossil-scm.org/"
     url = "https://github.com/drdcd/fossil-scm"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version(
         "2.18",

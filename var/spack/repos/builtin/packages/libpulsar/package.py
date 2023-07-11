@@ -14,7 +14,7 @@ class Libpulsar(CMakePackage):
     homepage = "https://github.com/apache/pulsar"
     url = "https://github.com/apache/pulsar/archive/v2.7.0.tar.gz"
 
-    maintainers = ["aahmed-se"]
+    maintainers("aahmed-se")
 
     version("2.7.0", sha256="5bf8e5115075e12c848a9e4474cd47067c3200f7ff13c45f624f7383287e8e5e")
 

@@ -16,12 +16,18 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = (
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onetbb.html"
     )
 
+    version(
+        "2021.9.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/7dcd261b-12fa-418a-b61b-b3dd4d597466/l_tbb_oneapi_p_2021.9.0.43484_offline.sh",
+        sha256="77f7a256e0035d2d7b911a4b8b398f293991c7c8705ef6c94d48f4cfd760018d",
+        expand=False,
+    )
     version(
         "2021.8.0",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19143/l_tbb_oneapi_p_2021.8.0.25334_offline.sh",
@@ -88,3 +94,8 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
     @property
     def component_dir(self):
         return "tbb"
+
+    @run_after("install")
+    def fixup_prefix(self):
+        self.symlink_dir(self.component_prefix.include, self.prefix.include)
+        self.symlink_dir(self.component_prefix.lib, self.prefix.lib)

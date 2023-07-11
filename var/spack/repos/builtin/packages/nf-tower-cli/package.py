@@ -15,7 +15,7 @@ class NfTowerCli(Package):
     """
 
     homepage = "https://github.com/seqeralabs/tower-cli"
-    maintainers = ["marcodelapierre"]
+    maintainers("marcodelapierre")
 
     if platform.machine() == "x86_64":
         if platform.system() == "Darwin":

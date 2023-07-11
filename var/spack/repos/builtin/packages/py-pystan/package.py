@@ -13,7 +13,7 @@ class PyPystan(PythonPackage):
     homepage = "https://mc-stan.org/"
     pypi = "pystan/pystan-3.4.0.tar.gz"
 
-    maintainers = ["haralmha"]
+    maintainers("haralmha")
 
     version("3.5.0", sha256="078571d071a5b7c0af59206d4994a0979f4ac4b61f4a720b640c44fe35514929")
     version("3.4.0", sha256="325e2fb0ab804555c05a603e0c9152ab11fcc3af01f3e9a9ff9fe9954b93184f")

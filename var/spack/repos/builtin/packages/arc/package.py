@@ -18,7 +18,7 @@ class Arc(CMakePackage):
     url = "https://github.com/FTHPC/ARC"
     git = "https://github.com/robertu94/ARC"
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     version("master", branch="master")
     version("2021-12-01", commit="49d4a5df53a082f15a6959aef434224fd7b9beac")

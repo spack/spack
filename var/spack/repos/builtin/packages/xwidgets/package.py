@@ -13,7 +13,7 @@ class Xwidgets(CMakePackage):
     url = "https://github.com/jupyter-xeus/xwidgets/archive/0.25.0.tar.gz"
     git = "https://github.com/jupyter-xeus/xwidgets.git"
 
-    maintainers = ["tomstitt"]
+    maintainers("tomstitt")
 
     version("master", branch="master")
     version("0.25.0", sha256="7b6d36999e3b926c40389167c48b33f234a075365f089f89571b33a160421d8e")

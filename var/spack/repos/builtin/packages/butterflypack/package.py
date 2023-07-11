@@ -23,7 +23,7 @@ class Butterflypack(CMakePackage):
     homepage = "https://github.com/liuyangzhuan/ButterflyPACK"
     git = "https://github.com/liuyangzhuan/ButterflyPACK.git"
     url = "https://github.com/liuyangzhuan/ButterflyPACK/archive/v2.2.0.tar.gz"
-    maintainers = ["liuyangzhuan"]
+    maintainers("liuyangzhuan")
 
     version("master", branch="master")
     version("2.2.2", sha256="73f67073e4291877f1eee19483a8a7b3c761eaf79a75805d52105ceedead85ea")
@@ -72,5 +72,10 @@ class Butterflypack(CMakePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
         args.append("-Denable_openmp=%s" % ("ON" if "+openmp" in spec else "OFF"))
+        if "%cce" in spec:
+            # Assume the proper Cray CCE module (cce) is loaded:
+            craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+            env.setdefault("LDFLAGS", "")
+            env["LDFLAGS"] += " -Wl,-rpath," + craylibs_path
 
         return args

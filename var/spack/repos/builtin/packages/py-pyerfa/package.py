@@ -18,7 +18,7 @@ class PyPyerfa(PythonPackage):
     homepage = "https://github.com/liberfa/pyerfa"
     pypi = "pyerfa/pyerfa-2.0.0.1.tar.gz"
 
-    maintainers = ["meyersbs"]
+    maintainers("meyersbs")
 
     version("2.0.0.1", sha256="2fd4637ffe2c1e6ede7482c13f583ba7c73119d78bef90175448ce506a0ede30")
 

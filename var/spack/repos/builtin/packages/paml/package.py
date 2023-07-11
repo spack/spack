@@ -13,7 +13,7 @@ class Paml(MakefilePackage):
     homepage = "http://abacus.gene.ucl.ac.uk/software/paml.html"
     url = "https://github.com/abacus-gene/paml/archive/refs/tags/v4.10.0.tar.gz"
     git = "https://github.com/abacus-gene/paml.git"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version(
         "4.10.3",

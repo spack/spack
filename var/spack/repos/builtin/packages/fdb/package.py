@@ -14,7 +14,7 @@ class Fdb(CMakePackage):
     url = "https://github.com/ecmwf/fdb/archive/refs/tags/5.7.8.tar.gz"
     git = "https://github.com/ecmwf/fdb.git"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     # master version of fdb is subject to frequent changes and is to be used experimentally.
     version("master", branch="master")

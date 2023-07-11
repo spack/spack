@@ -67,18 +67,12 @@ def test_raising_exception_if_bootstrap_disabled(mutable_config):
 
 
 def test_raising_exception_module_importable():
-    with pytest.raises(
-        ImportError,
-        match='cannot bootstrap the "asdf" Python module',
-    ):
+    with pytest.raises(ImportError, match='cannot bootstrap the "asdf" Python module'):
         spack.bootstrap.core.ensure_module_importable_or_raise("asdf")
 
 
 def test_raising_exception_executables_in_path():
-    with pytest.raises(
-        RuntimeError,
-        match="cannot bootstrap any of the asdf, fdsa executables",
-    ):
+    with pytest.raises(RuntimeError, match="cannot bootstrap any of the asdf, fdsa executables"):
         spack.bootstrap.core.ensure_executables_in_path_or_raise(["asdf", "fdsa"], "python")
 
 

@@ -19,7 +19,7 @@ class VotcaXtp(CMakePackage):
     homepage = "https://www.votca.org"
     url = "https://github.com/votca/xtp/tarball/v1.4.1"
     git = "https://github.com/votca/xtp.git"
-    maintainers = ["junghans"]
+    maintainers("junghans")
 
     version("stable", branch="stable", deprecated=True)
     version(

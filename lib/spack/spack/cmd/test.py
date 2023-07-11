@@ -11,7 +11,7 @@ import os
 import re
 import shutil
 import sys
-import textwrap
+from collections import Counter
 
 from llnl.util import lang, tty
 from llnl.util.tty import colify
@@ -34,9 +34,7 @@ def setup_parser(subparser):
 
     # Run
     run_parser = sp.add_parser(
-        "run",
-        description=test_run.__doc__,
-        help=spack.cmd.first_line(test_run.__doc__),
+        "run", description=test_run.__doc__, help=spack.cmd.first_line(test_run.__doc__)
     )
 
     alias_help_msg = "Provide an alias for this test-suite"
@@ -81,9 +79,7 @@ def setup_parser(subparser):
 
     # List
     list_parser = sp.add_parser(
-        "list",
-        description=test_list.__doc__,
-        help=spack.cmd.first_line(test_list.__doc__),
+        "list", description=test_list.__doc__, help=spack.cmd.first_line(test_list.__doc__)
     )
     list_parser.add_argument(
         "-a",
@@ -97,9 +93,7 @@ def setup_parser(subparser):
 
     # Find
     find_parser = sp.add_parser(
-        "find",
-        description=test_find.__doc__,
-        help=spack.cmd.first_line(test_find.__doc__),
+        "find", description=test_find.__doc__, help=spack.cmd.first_line(test_find.__doc__)
     )
     find_parser.add_argument(
         "filter",
@@ -109,9 +103,7 @@ def setup_parser(subparser):
 
     # Status
     status_parser = sp.add_parser(
-        "status",
-        description=test_status.__doc__,
-        help=spack.cmd.first_line(test_status.__doc__),
+        "status", description=test_status.__doc__, help=spack.cmd.first_line(test_status.__doc__)
     )
     status_parser.add_argument(
         "names", nargs=argparse.REMAINDER, help="Test suites for which to print status"
@@ -148,9 +140,7 @@ def setup_parser(subparser):
 
     # Remove
     remove_parser = sp.add_parser(
-        "remove",
-        description=test_remove.__doc__,
-        help=spack.cmd.first_line(test_remove.__doc__),
+        "remove", description=test_remove.__doc__, help=spack.cmd.first_line(test_remove.__doc__)
     )
     arguments.add_common_arguments(remove_parser, ["yes_to_all"])
     remove_parser.add_argument(
@@ -171,19 +161,10 @@ def test_run(args):
 
     # cdash help option
     if args.help_cdash:
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog=textwrap.dedent(
-                """\
-environment variables:
-  SPACK_CDASH_AUTH_TOKEN
-                        authentication token to present to CDash
-                        """
-            ),
-        )
-        arguments.add_cdash_args(parser, True)
-        parser.print_help()
+        arguments.print_cdash_help()
         return
+
+    arguments.sanitize_reporter_options(args)
 
     # set config option for fail-fast
     if args.fail_fast:
@@ -199,11 +180,7 @@ environment variables:
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
     specs_to_test = []
     for spec in specs:
-        matching = spack.store.db.query_local(
-            spec,
-            hashes=hashes,
-            explicit=explicit,
-        )
+        matching = spack.store.db.query_local(spec, hashes=hashes, explicit=explicit)
         if spec and not matching:
             tty.warn("No {0}installed packages match spec {1}".format(explicit_str, spec))
             """
@@ -237,22 +214,15 @@ environment variables:
         )
 
 
+def report_filename(args, test_suite):
+    return os.path.abspath(args.log_file or "test-{}".format(test_suite.name))
+
+
 def create_reporter(args, specs_to_test, test_suite):
     if args.log_format is None:
         return None
 
-    filename = args.cdash_upload_url
-    if not filename:
-        if args.log_file:
-            if os.path.isabs(args.log_file):
-                log_file = args.log_file
-            else:
-                log_dir = os.getcwd()
-                log_file = os.path.join(log_dir, args.log_file)
-        else:
-            log_file = os.path.join(os.getcwd(), "test-%s" % test_suite.name)
-        filename = log_file
-
+    filename = report_filename(args, test_suite)
     context_manager = spack.report.test_context_manager(
         reporter=args.reporter(),
         filename=filename,
@@ -267,9 +237,8 @@ def test_list(args):
     tagged = set(spack.repo.path.packages_with_tags(*args.tag)) if args.tag else set()
 
     def has_test_and_tags(pkg_class):
-        return spack.package_base.has_test_method(pkg_class) and (
-            not args.tag or pkg_class.name in tagged
-        )
+        tests = spack.install_test.test_functions(pkg_class)
+        return len(tests) and (not args.tag or pkg_class.name in tagged)
 
     if args.list_all:
         report_packages = [
@@ -389,18 +358,17 @@ def _report_suite_results(test_suite, args, constraints):
 
         tty.msg("test specs:")
 
-        failed, skipped, untested = 0, 0, 0
+        counts = Counter()
         for pkg_id in test_specs:
             if pkg_id in results:
                 status = results[pkg_id]
-                if status == "FAILED":
-                    failed += 1
-                elif status == "NO-TESTS":
-                    untested += 1
-                elif status == "SKIPPED":
-                    skipped += 1
+                # Backward-compatibility:  NO-TESTS => NO_TESTS
+                status = "NO_TESTS" if status == "NO-TESTS" else status
 
-                if args.failed and status != "FAILED":
+                status = spack.install_test.TestStatus[status]
+                counts[status] += 1
+
+                if args.failed and status != spack.install_test.TestStatus.FAILED:
                     continue
 
                 msg = "  {0} {1}".format(pkg_id, status)
@@ -412,7 +380,7 @@ def _report_suite_results(test_suite, args, constraints):
                             msg += "\n{0}".format("".join(f.readlines()))
                 tty.msg(msg)
 
-        spack.install_test.write_test_summary(failed, skipped, untested, len(test_specs))
+        spack.install_test.write_test_summary(counts)
     else:
         msg = "Test %s has no results.\n" % test_suite.name
         msg += "        Check if it is running with "

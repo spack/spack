@@ -13,7 +13,7 @@ class Gaussian(Package):
     homepage = "http://www.gaussian.com/"
     manual_download = True
 
-    maintainers = ["antoniokaust"]
+    maintainers("antoniokaust")
 
     version("16-B.01", sha256="0b2cf60aa85d2c8c8e7547446e60e8e8cb67eec20e5f13c4a3e4e7616dcdf122")
     version("09-D.01", sha256="ef14885b5e334b6ec44a93bfd7225c634247dc946416af3087ab055bf05f54cd")

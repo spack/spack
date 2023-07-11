@@ -19,7 +19,7 @@ class Anaconda2(Package):
     homepage = "https://www.anaconda.com"
     url = "https://repo.anaconda.com/archive/Anaconda2-2019.10-Linux-x86_64.sh"
 
-    maintainers = ["ajkotobi"]
+    maintainers("ajkotobi")
 
     version(
         "2019.10",

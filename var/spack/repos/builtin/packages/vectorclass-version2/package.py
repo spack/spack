@@ -14,7 +14,7 @@ class VectorclassVersion2(Package):
     homepage = "https://www.agner.org/optimize/#vectorclass"
     url = "https://github.com/vectorclass/version2/archive/refs/tags/v2.01.04.tar.gz"
 
-    maintainers = ["haralmha"]
+    maintainers("haralmha")
 
     version("2.01.04", sha256="7885c343b1af9eb940f4debdd7cd19544130a06ed70e0000e1a8471fb9c15118")
 

@@ -11,7 +11,7 @@ class Cxxopts(CMakePackage):
 
     homepage = "https://github.com/jarro2783/cxxopts"
     url = "https://github.com/jarro2783/cxxopts/archive/v2.2.0.tar.gz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("3.0.0", sha256="36f41fa2a46b3c1466613b63f3fa73dc24d912bc90d667147f1e43215a8c6d00")
     version("2.2.1", sha256="984aa3c8917d649b14d7f6277104ce38dd142ce378a9198ec926f03302399681")

@@ -39,12 +39,7 @@ class Blast2go(Package):
 
         config_input_file = "spack-config.in"
 
-        config_input_data = [
-            "o\n",
-            prefix.bin + "\n",
-            "n\n",
-            "n\n",
-        ]
+        config_input_data = ["o\n", prefix.bin + "\n", "n\n", "n\n"]
 
         with open(config_input_file, "w") as f:
             f.writelines(config_input_data)

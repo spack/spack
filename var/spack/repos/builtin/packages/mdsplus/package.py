@@ -13,7 +13,7 @@ class Mdsplus(AutotoolsPackage):
     homepage = "https://mdsplus.org"
     git = "https://github.com/MDSplus/mdsplus.git"
 
-    maintainers = ["wmvanvliet"]
+    maintainers("wmvanvliet")
 
     parallel = False
 

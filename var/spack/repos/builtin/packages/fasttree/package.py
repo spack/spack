@@ -15,7 +15,7 @@ class Fasttree(Package):
 
     homepage = "http://www.microbesonline.org/fasttree"
     url = "http://www.microbesonline.org/fasttree/FastTree-2.1.10.c"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version(
         "2.1.11",

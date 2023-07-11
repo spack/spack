@@ -19,7 +19,7 @@ class Dpcpp(CMakePackage):
     version("2021.09", commit="bd68232bb96386bf7649345c0557ba520e73c02d")
     version("2021.12", commit="27f59d8906fcc8aece7ff6aa570ccdee52168c2d")
 
-    maintainers = ["ravil-mobile"]
+    maintainers("ravil-mobile")
     variant("cuda", default=False, description="switch from OpenCL to CUDA")
     variant("rocm", default=False, description="switch from OpenCL to ROCm")
     variant(

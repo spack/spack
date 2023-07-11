@@ -13,7 +13,7 @@ class Hevea(MakefilePackage):
     url = "https://github.com/maranget/hevea/archive/v2.35.tar.gz"
     git = "https://github.com/maranget/hevea.git"
 
-    maintainers = ["scemama", "cessenat"]
+    maintainers("scemama", "cessenat")
 
     version("develop", branch="master")
     version("2.35", sha256="78f834cc7a8112ec59d0b8acdfbed0c8ac7dbb85f964d0be1f4eed04f25cdf54")

@@ -11,7 +11,7 @@ class PyQuantities(PythonPackage):
 
     homepage = "https://python-quantities.readthedocs.org"
     pypi = "quantities/quantities-0.12.1.tar.gz"
-    maintainers = ["apdavison"]
+    maintainers("apdavison")
 
     version("0.13.0", sha256="0fde20115410de21cefa786f3aeae69c1b51bb19ee492190324c1da705e61a81")
     version("0.12.5", sha256="67546963cb2a519b1a4aa43d132ef754360268e5d551b43dd1716903d99812f0")

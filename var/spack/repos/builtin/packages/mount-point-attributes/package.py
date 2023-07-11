@@ -13,7 +13,7 @@ class MountPointAttributes(AutotoolsPackage):
     homepage = "https://github.com/LLNL/MountPointAttributes"
     url = "https://github.com/LLNL/MountPointAttributes/files/2270601/mountpointattr-1.1.tar.gz"
     git = "https://github.com/LLNL/MountPointAttributes.git"
-    maintainers = ["lee218llnl"]
+    maintainers("lee218llnl")
 
     version("master", branch="master")
     version(
@@ -27,4 +27,4 @@ class MountPointAttributes(AutotoolsPackage):
     depends_on("automake", type="build", when="@master")
     depends_on("libtool", type="build", when="@master")
 
-    patch("mpa_type_conversion.patch", when="@1.1:1.1.0")
+    patch("mpa_type_conversion.patch", when="@=1.1")

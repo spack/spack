@@ -15,9 +15,9 @@ class RcclTests(MakefilePackage):
     url = "https://github.com/ROCmSoftwarePlatform/rccl-tests.git"
     tags = ["rocm"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
-    version("develop", branch="develop", default=True)
+    version("develop", branch="develop", preferred=True)
     version("master", branch="master")
 
     variant("mpi", default=True, description="with MPI support")

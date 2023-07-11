@@ -18,7 +18,7 @@ class Gimp(AutotoolsPackage):
     homepage = "https://www.gimp.org"
     url = "https://download.gimp.org/gimp/v2.10/gimp-2.10.32.tar.bz2"
 
-    maintainers = ["benkirk"]
+    maintainers("benkirk")
 
     conflicts("platform=darwin", msg="spack/GIMP currently requires Linux")
     conflicts("platform=windows", msg="spack/GIMP currently requires Linux")

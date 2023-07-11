@@ -13,7 +13,7 @@ class Libunistring(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/libunistring/"
     gnu_mirror_path = "libunistring/libunistring-0.9.10.tar.xz"
     git = "https://git.savannah.gnu.org/git/libunistring.git"
-    maintainers = ["bernhardkaindl"]
+    maintainers("bernhardkaindl")
 
     version("master", branch="master")
     version("1.1", sha256="827c1eb9cb6e7c738b171745dac0888aa58c5924df2e59239318383de0729b98")

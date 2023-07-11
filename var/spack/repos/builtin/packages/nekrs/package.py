@@ -28,7 +28,7 @@ class Nekrs(Package, CudaPackage, ROCmPackage):
         "ecp-apps",
     ]
 
-    maintainers = ["thilinarmtb", "stgeke"]
+    maintainers("thilinarmtb", "stgeke")
 
     version("21.0", tag="v21.0")
 

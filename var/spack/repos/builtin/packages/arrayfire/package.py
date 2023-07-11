@@ -13,7 +13,7 @@ class Arrayfire(CMakePackage, CudaPackage):
 
     homepage = "https://arrayfire.org/docs/index.htm"
     git = "https://github.com/arrayfire/arrayfire.git"
-    maintainers = ["umar456"]
+    maintainers("umar456")
 
     version("master")
     version("3.8.1", commit="823e8e399fe8c120c6ec7ec75f09e6106b3074ca", tag="v3.8.1")

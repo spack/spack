@@ -13,7 +13,7 @@ class PyFastfold(PythonPackage):
     homepage = "https://github.com/hpcaitech/FastFold"
     url = "https://github.com/hpcaitech/FastFold/archive/refs/tags/0.2.0.tar.gz"
 
-    maintainers = ["meyersbs"]
+    maintainers("meyersbs")
 
     version("0.2.0", sha256="6760dbae9809b8b26219c9477489d34325807be504098901d0375fbdc3103f88")
 

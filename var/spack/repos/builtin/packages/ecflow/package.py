@@ -19,7 +19,7 @@ class Ecflow(CMakePackage):
     homepage = "https://confluence.ecmwf.int/display/ECFLOW/"
     url = "https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-4.11.1-Source.tar.gz"
 
-    maintainers = ["climbfuji"]
+    maintainers("climbfuji")
 
     # https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-5.8.3-Source.tar.gz?api=v2
     version("5.8.3", sha256="1d890008414017da578dbd5a95cb1b4d599f01d5a3bb3e0297fe94a87fbd81a6")

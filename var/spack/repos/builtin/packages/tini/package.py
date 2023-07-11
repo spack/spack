@@ -12,7 +12,7 @@ class Tini(CMakePackage):
 
     homepage = "https://github.com/krallin/tini"
     url = "https://github.com/krallin/tini/archive/refs/tags/v0.19.0.tar.gz"
-    maintainers = ["teonnik", "Madeeks"]
+    maintainers("teonnik", "Madeeks")
 
     version("0.19.0", sha256="0fd35a7030052acd9f58948d1d900fe1e432ee37103c5561554408bdac6bbf0d")
     patch("tini_static_rpath_issue.patch", when="@0.19.0:")

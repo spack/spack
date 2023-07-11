@@ -13,7 +13,7 @@ class Sionlib(AutotoolsPackage):
     homepage = "https://www.fz-juelich.de/ias/jsc/EN/Expertise/Support/Software/SIONlib/_node.html"
     url = "https://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.6"
 
-    maintainers = ["pramodk"]
+    maintainers("pramodk")
 
     version(
         "1.7.6",
