@@ -31,6 +31,7 @@ class Hepmc3(CMakePackage):
     # note that version 3.0.0 is not supported
     # conflicts with cmake configuration
 
+    variant("protobuf", default=False, description="Enable Protobuf I/O")
     variant("python", default=False, description="Enable Python bindings")
     variant("rootio", default=False, description="Enable ROOT I/O")
     variant(
@@ -41,6 +42,7 @@ class Hepmc3(CMakePackage):
 
     depends_on("cmake@2.8.9:", type="build")
     depends_on("root", when="+rootio")
+    depends_on("protobuf", when="+protobuf")
     depends_on("python", when="+python")
 
     conflicts("%gcc@9.3.0", when="@:3.1.1")
@@ -50,12 +52,14 @@ class Hepmc3(CMakePackage):
         spec = self.spec
         from_variant = self.define_from_variant
         args = [
+            from_variant("HEPMC3_ENABLE_PROTOBUF", "protobuf"),
             from_variant("HEPMC3_ENABLE_PYTHON", "python"),
             from_variant("HEPMC3_ENABLE_ROOTIO", "rootio"),
             from_variant("HEPMC3_INSTALL_INTERFACES", "interfaces"),
+            self.define("HEPMC3_ENABLE_TEST", self.run_tests),
         ]
 
-        if self.spec.satisfies("+python"):
+        if "+python" in spec:
             py_ver = spec["python"].version.up_to(2)
             args.extend(
                 [
@@ -64,7 +68,7 @@ class Hepmc3(CMakePackage):
                 ]
             )
 
-        if self.spec.satisfies("+rootio"):
-            args.append(self.define("ROOT_DIR", self.spec["root"].prefix))
-        args.append(self.define("HEPMC3_ENABLE_TEST", self.run_tests))
+        if "+rootio" in spec:
+            args.append(self.define("ROOT_DIR", spec["root"].prefix))
+
         return args
