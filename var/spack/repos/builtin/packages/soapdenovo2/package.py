@@ -23,9 +23,9 @@ class Soapdenovo2(MakefilePackage):
     version("240", sha256="cc9e9f216072c0bbcace5efdead947e1c3f41f09baec5508c7b90f933a090909")
 
     def flag_handler(self, name, flags):
+        if name.lower() == "cflags" and self.spec.satisfies("%gcc@10:"):
+            flags.append("-fcommon")
         if name.lower() == "cflags" or name.lower() == "cxxflags" or name.lower() == "cppflags":
-            if self.spec.satisfies("%gcc@10:"):
-                flags.append("-fcommon")
             opt_flag = re.compile("-O.*")
             # This package cannot compile with anything other than the -O3
             # specified in the makefile
