@@ -29,10 +29,7 @@ level = "long"
 
 def setup_parser(subparser):
     # User can only choose one
-    subparser.add_argument(
-        "--scope",
-        help="configuration scope to read/modify",
-    )
+    subparser.add_argument("--scope", help="configuration scope to read/modify")
 
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="config_command")
 
