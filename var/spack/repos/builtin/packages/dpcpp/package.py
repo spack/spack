@@ -121,6 +121,7 @@ class Dpcpp(CMakePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared-libs"),
             self.define("SYCL_ENABLE_XPTI_TRACING", "ON"),
             self.define_from_variant("LLVM_ENABLE_LLD", "lld"),
+            self.define_from_variant("XPTI_ENABLE_WERROR", "werror"),
             self.define("SYCL_ENABLE_PLUGINS", sycl_enabled_plugins),
             self.define_from_variant("SYCL_ENABLE_KERNEL_FUSION", "fusion"),
         ]
