@@ -13,10 +13,9 @@ from spack.package import *
 from spack.util.executable import Executable
 
 
-
-
 class LuaBaseMixin(MakefilePackage):
     """Base class defining common Lua implementation package details"""
+
     extendable = True
 
     variant(
@@ -201,8 +200,7 @@ class LuaBuilderMixin:
         env.prepend_path("LUA_CPATH", ";".join(lua_cpatterns), separator=";")
 
 
-
-class LuaImplPackage(LuaBaseMixin, LuaBuilderMixin, ):
+class LuaImplPackage(LuaBaseMixin, LuaBuilderMixin):
     """Specialized class for lua *implementations*
 
     This exists to ensure that lua, luajit and luajit-openresty all initialize extension
