@@ -94,9 +94,9 @@ properties = {
             "binary_index_ttl": {"type": "integer", "minimum": 0},
         },
         "deprecatedProperties": {
-            "properties": ["module_roots"],
-            "message": "config:module_roots has been replaced by "
-            "modules:[module set]:roots and is ignored",
+            "properties": ["terminal_title"],
+            "message": "config:terminal_title has been replaced by "
+            "install_status and is ignored",
             "error": False,
         },
     }
