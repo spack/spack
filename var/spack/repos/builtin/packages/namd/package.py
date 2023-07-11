@@ -21,6 +21,8 @@ class Namd(MakefilePackage, CudaPackage):
     git = "https://charm.cs.illinois.edu/gerrit/namd.git"
     manual_download = True
 
+    maintainers("jcphill")
+
     version("master", branch="master")
     version("2.15a2", sha256="8748cbaa93fc480f92fc263d9323e55bce6623fc693dbfd4a40f59b92669713e")
     version("2.15a1", branch="master", tag="release-2-15-alpha-1")
@@ -45,7 +47,7 @@ class Namd(MakefilePackage, CudaPackage):
 
     variant(
         "interface",
-        default="none",
+        default="tcl",
         values=("none", "tcl", "python"),
         description="Enables Tcl and/or python interface",
     )

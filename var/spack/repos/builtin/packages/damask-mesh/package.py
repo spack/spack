@@ -39,6 +39,8 @@ class DamaskMesh(CMakePackage):
     depends_on("hdf5@1.10:+mpi+fortran")
     depends_on("libfyaml", when="@3.0.0-alpha7:")
 
+    # relax Fortran sourc limit to 132 char to enable PETSc macro expansion. created by @MarDiehl
+    patch("long-lines.patch", when="@3.0.0-alpha7")
     patch("CMakeDebugRelease.patch", when="@3.0.0-alpha4")
 
     variant(

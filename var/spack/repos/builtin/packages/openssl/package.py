@@ -73,11 +73,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
-    version(
-        "1.1.1u",
-        sha256="e2f8d84b523eecd06c7be7626830370300fbcc15386bf5142d72758f6963ebc6",
-        preferred=True,
-    )
+    version("1.1.1u", sha256="e2f8d84b523eecd06c7be7626830370300fbcc15386bf5142d72758f6963ebc6")
     version(
         "1.1.1t",
         sha256="8dee9b24bdb1dcbf0c3d1e9b02fb8f6bf22165e807f45adeb7c9677536859d3b",
@@ -402,6 +398,10 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             # Last tested on nvidia@22.3 for x86_64:
             # nvhpc segfaults NVC++-F-0000-Internal compiler error.
             # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
+            options.append("no-asm")
+        elif spec.satisfies("@3: %oneapi"):
+            # Last tested on oneapi@2023.1.0 for x86_64:
+            # crypto/md5/md5-x86_64.s:684:31: error: expected string
             options.append("no-asm")
 
         # The default glibc provided by CentOS 7 does not provide proper

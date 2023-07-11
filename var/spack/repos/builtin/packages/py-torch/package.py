@@ -389,6 +389,20 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         working_dir="third_party/gloo",
     )
 
+    # Some missing includes
+    # See: https://github.com/pytorch/pytorch/pull/100036
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/100036.patch?full_index=1",
+        sha256="65060b54c31196b26dcff29bbb178fd17d5677e8481a2a06002c0ca4dd37b3d0",
+        when="@2.0.0:2.0.1",
+    )
+    # See: https://github.com/pytorch/pytorch/pull/100049
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/100049.patch?full_index=1",
+        sha256="673056141c0ea6ff4411f65a26f1a9d7a7c49ad8fe034a01ef0d56ba8a7a9386",
+        when="@2.0.0:2.0.1",
+    )
+
     @when("@1.5.0:")
     def patch(self):
         # https://github.com/pytorch/pytorch/issues/52208

@@ -175,7 +175,7 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
         return find_libraries("*", root=lib_path, shared=True, recursive=True)
 
 
-class IntelOneApiStaticLibraryList(object):
+class IntelOneApiStaticLibraryList:
     """Provides ld_flags when static linking is needed
 
     Oneapi puts static and dynamic libraries in the same directory, so

@@ -11,7 +11,7 @@ import traceback
 from .cpus import cpus_available
 
 
-class ErrorFromWorker(object):
+class ErrorFromWorker:
     """Wrapper class to report an error from a worker process"""
 
     def __init__(self, exc_cls, exc, tb):
@@ -37,7 +37,7 @@ class ErrorFromWorker(object):
         return self.error_message
 
 
-class Task(object):
+class Task:
     """Wrapped task that trap every Exception and return it as an
     ErrorFromWorker object.
 

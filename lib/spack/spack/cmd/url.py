@@ -288,7 +288,7 @@ def url_stats(args):
     # dictionary of issue type -> package -> descriptions
     issues = defaultdict(lambda: defaultdict(lambda: []))
 
-    class UrlStats(object):
+    class UrlStats:
         def __init__(self):
             self.total = 0
             self.schemes = defaultdict(lambda: 0)

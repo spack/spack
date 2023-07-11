@@ -135,7 +135,7 @@ class InstallStatus(str):
     pass
 
 
-class InstallStatuses(object):
+class InstallStatuses:
     INSTALLED = InstallStatus("installed")
     DEPRECATED = InstallStatus("deprecated")
     MISSING = InstallStatus("missing")
@@ -162,7 +162,7 @@ class InstallStatuses(object):
             return query_arg
 
 
-class InstallRecord(object):
+class InstallRecord:
     """A record represents one installation in the DB.
 
     The record keeps track of the spec for the installation, its
@@ -253,7 +253,7 @@ class ForbiddenLockError(SpackError):
     """Raised when an upstream DB attempts to acquire a lock"""
 
 
-class ForbiddenLock(object):
+class ForbiddenLock:
     def __getattribute__(self, name):
         raise ForbiddenLockError("Cannot access attribute '{0}' of lock".format(name))
 
@@ -307,7 +307,7 @@ _query_docstring = """
         """
 
 
-class Database(object):
+class Database:
 
     """Per-process lock objects for each install prefix."""
 
@@ -1216,7 +1216,7 @@ class Database(object):
             match = self.query_one(spec, **kwargs)
             if match:
                 return match.dag_hash()
-            raise KeyError("No such spec in database! %s" % spec)
+            raise NoSuchSpecError(spec)
         return key
 
     @_autospec
@@ -1667,8 +1667,22 @@ class InvalidDatabaseVersionError(SpackError):
             f"you need a newer Spack version to read the DB in '{database.root}'. "
             f"{self.database_version_message}"
         )
-        super(InvalidDatabaseVersionError, self).__init__(msg)
+        super().__init__(msg)
 
     @property
     def database_version_message(self):
         return f"The expected DB version is '{self.expected}', but '{self.found}' was found."
+
+
+class NoSuchSpecError(KeyError):
+    """Raised when a spec is not found in the database."""
+
+    def __init__(self, spec):
+        self.spec = spec
+        super().__init__(spec)
+
+    def __str__(self):
+        # This exception is raised frequently, and almost always
+        # caught, so ensure we don't pay the cost of Spec.__str__
+        # unless the exception is actually printed.
+        return f"No such spec in database: {self.spec}"

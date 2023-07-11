@@ -377,6 +377,7 @@ spack:
 
         with ev.read("test"):
             monkeypatch.setattr(spack.main, "get_version", lambda: "0.15.3")
+            monkeypatch.setattr(spack.main, "get_spack_commit", lambda: "big ol commit sha")
             ci_cmd("generate", "--output-file", outputfile)
 
             with open(outputfile) as f:
@@ -387,7 +388,7 @@ spack:
 
                 global_vars = yaml_contents["variables"]
                 assert global_vars["SPACK_VERSION"] == "0.15.3"
-                assert global_vars["SPACK_CHECKOUT_VERSION"] == "v0.15.3"
+                assert global_vars["SPACK_CHECKOUT_VERSION"] == "big ol commit sha"
 
                 for ci_key in yaml_contents.keys():
                     ci_obj = yaml_contents[ci_key]
@@ -1196,6 +1197,7 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
 
 
 @pytest.mark.parametrize("match_behavior", ["first", "merge"])
+@pytest.mark.parametrize("git_version", ["big ol commit sha", None])
 def test_ci_generate_override_runner_attrs(
     tmpdir,
     mutable_mock_env_path,
@@ -1204,6 +1206,7 @@ def test_ci_generate_override_runner_attrs(
     monkeypatch,
     ci_base_environment,
     match_behavior,
+    git_version,
 ):
     """Test that we get the behavior we want with respect to the provision
     of runner attributes like tags, variables, and scripts, both when we
@@ -1281,7 +1284,9 @@ spack:
         outputfile = str(tmpdir.join(".gitlab-ci.yml"))
 
         with ev.read("test"):
-            monkeypatch.setattr(spack.main, "get_version", lambda: "0.15.3-416-12ad69eb1")
+            monkeypatch.setattr(spack, "spack_version", "0.20.0.test0")
+            monkeypatch.setattr(spack.main, "get_version", lambda: "0.20.0.test0 (blah)")
+            monkeypatch.setattr(spack.main, "get_spack_commit", lambda: git_version)
             ci_cmd("generate", "--output-file", outputfile)
 
         with open(outputfile) as f:
@@ -1291,9 +1296,9 @@ spack:
             assert "variables" in yaml_contents
             global_vars = yaml_contents["variables"]
             assert "SPACK_VERSION" in global_vars
-            assert global_vars["SPACK_VERSION"] == "0.15.3-416-12ad69eb1"
+            assert global_vars["SPACK_VERSION"] == "0.20.0.test0 (blah)"
             assert "SPACK_CHECKOUT_VERSION" in global_vars
-            assert global_vars["SPACK_CHECKOUT_VERSION"] == "12ad69eb1"
+            assert global_vars["SPACK_CHECKOUT_VERSION"] == git_version or "v0.20.0.test0"
 
             for ci_key in yaml_contents.keys():
                 if ci_key.startswith("a"):
