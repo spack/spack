@@ -60,7 +60,7 @@ new file mode 100644
 index 0000000..6cba945
 --- /dev/null
 +++ b/src/CMakeLists.txt
-@@ -0,0 +1,78 @@
+@@ -0,0 +1,81 @@
 +set(LUA_LIB_SOURCES lapi.c
 +                    lcode.c
 +                    lctype.c
@@ -101,11 +101,14 @@ index 0000000..6cba945
 +# Lua static library - liblua
 +add_library(liblua_static STATIC $<TARGET_OBJECTS:luaobj>)
 +set_target_properties(liblua_static
-+    PROPERTIES OUTPUT_NAME liblua
++    PROPERTIES OUTPUT_NAME lua_static
 +)
 +list(APPEND LuaExportTargets liblua_static)
 +# If enabled, shared lua library lua
 +if(BUILD_SHARED_LIBS)
++    if(WIN32)
++       set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
++    endif(WIN32)
 +    add_library(liblua SHARED $<TARGET_OBJECTS:luaobj>)
 +    target_compile_definitions(liblua PUBLIC $<$<BOOL:WIN32>:LUA_BUILD_AS_DLL>)
 +    set_target_properties(liblua
