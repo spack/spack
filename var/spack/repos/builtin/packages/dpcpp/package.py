@@ -36,8 +36,8 @@ class Dpcpp(CMakePackage):
     variant("assertions", default=False, description="build with assertions")
     variant("docs", default=False, description="build Doxygen documentation")
     variant("werror", default=False, description="treat warnings as errors")
-    variant("shared", default=False, description="build shared libraries")
     variant("remangle_libclc", default=True, description="remangle libclc gen. variants")
+    variant("shared-libs", default=False, description="build shared libraries")
     variant("lld", default=False, description="use LLD linker for build")
     variant("fusion", default=True, description="Enable the kernel fusion JIT compiler")
 
@@ -117,7 +117,7 @@ class Dpcpp(CMakePackage):
             self.define_from_variant("LIBCLC_GENERATE_REMANGLED_VARIANTS", "remangle_libclc"),
             self.define_from_variant("LLVM_ENABLE_DOXYGEN", "docs"),
             self.define_from_variant("LLVM_ENABLE_SPHINX", "docs"),
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared-libs"),
             self.define("SYCL_ENABLE_XPTI_TRACING", "ON"),
             self.define_from_variant("LLVM_ENABLE_LLD", "lld"),
             self.define("SYCL_ENABLE_PLUGINS", sycl_enabled_plugins),
