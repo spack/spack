@@ -19,7 +19,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "http://flecsi.org/"
     git = "https://github.com/flecsi/flecsi.git"
-    maintainers("rspavel", "ktsai7", "rbberger")
+    maintainers("ktsai7", "rbberger")
 
     tags = ["e4s"]
 
