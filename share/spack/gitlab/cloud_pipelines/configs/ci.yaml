@@ -8,6 +8,8 @@ ci:
 
   pipeline-gen:
   - build-job:
+      before_script-:
+      - - spack list --count  # ensure that spack's cache is populated
       script::
       - - spack compiler find
         - cd ${SPACK_CONCRETE_ENV_DIR}
