@@ -137,7 +137,6 @@ class PyMatplotlib(PythonPackage):
     )
     variant("latex", default=False, description="Enable LaTeX text rendering support")
     variant("fonts", default=False, description="Enable support for system font detection")
-    variant("rebuildmeeeee", default=True, description="Rebuild me please")
 
     # https://matplotlib.org/stable/devel/dependencies.html
     # Runtime dependencies
