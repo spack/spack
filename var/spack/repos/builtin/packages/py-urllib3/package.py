@@ -26,7 +26,7 @@ class PyUrllib3(PythonPackage):
     version("1.14", sha256="dd4fb13a4ce50b18338c7e4d665b21fd38632c5d4b1d9f1a1379276bd3c08d37")
 
     variant("socks", default=False, description="SOCKS and HTTP proxy support")
-    variant("secure", default=False, description="Add SSL/TLS support")
+    variant("secure", default=False, description="Add SSL/TLS support", when="@:2.0")
     variant("brotli", default=False, description="Add Brotli support")
     variant("zstd", default=False, description="Add Zstandard support", when="@2:")
 
