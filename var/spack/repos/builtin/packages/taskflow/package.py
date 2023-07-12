@@ -23,6 +23,11 @@ class Taskflow(CMakePackage):
     version("3.2.0", sha256="26c37a494789fedc5de8d1f8452dc8a7774a220d02c14d5b19efe0dfe0359c0c")
     version("3.1.0", sha256="b83e9a78c254d831b8401d0f8a766e3c5b60d8d20be5af6e2d2fad4aa4a8b980")
     version("3.0.0", sha256="553c88a6e56e115d29ac1520b8a0fea4557a5fcda1af1427bd3ba454926d03a2")
+    version(
+        "2.7.0", 
+        sha256="bc2227dcabec86abeba1fee56bb357d9d3c0ef0184f7c2275d7008e8758dfc3e",
+        deprecated=True
+    )
 
     # Compiler must offer C++17 support
     conflicts("%gcc@:8.4", when="@3.0:")
