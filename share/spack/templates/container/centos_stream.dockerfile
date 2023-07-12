@@ -19,11 +19,11 @@ RUN dnf update -y \
         iproute \
         make \
         patch \
-        python38 \
-        python38-pip \
-        python38-setuptools \
+        python3.11 \
+        python3.11-setuptools \
         unzip \
- && pip3 install boto3 \
+ && python3.11 -m ensurepip \
+ && pip3.11 install boto3 \
  && rm -rf /var/cache/dnf \
  && dnf clean all
 {% endblock %}
