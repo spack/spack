@@ -136,7 +136,7 @@ config:
 
     # Also check if we can provide a relative path
     with fs.working_dir(tmpdir):
-        output2 = config(f"--scope=./config.yaml", "get")
+        output2 = config("--scope=./config.yaml", "get")
         assert "scope_by_path/test2" in output2
 
 
