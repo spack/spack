@@ -59,9 +59,7 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("hwloc", when="+hwloc")
 
     # cuda-centric
-    # reminder for arch numbers to names: 60=pascal, 70=volta, 75=turing, 80=ampere
-    # TODO: we could use a map here to clean up and use naming vs. numbers.
-    cuda_arch_list = ("60", "70", "75", "80")
+    cuda_arch_list = CudaPackage.cuda_arch_values
     for nvarch in cuda_arch_list:
         depends_on(
             "kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={0}".format(nvarch),
