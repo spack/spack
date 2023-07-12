@@ -139,6 +139,12 @@ config:
         output2 = config("--scope=./config.yaml", "get")
         assert "scope_by_path/test2" in output2
 
+    # Check that we can modify the scope
+    config(f"--scope={config_path}", "add", "config:template_dirs:scope_by_path/test3")
+    output3 = config(f"--scope={config_path}", "get")
+    assert "scope_by_path/test2" in output3
+    assert "scope_by_path/test3" in output3
+
 
 def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config("edit", "--print-file", fail_on_error=False)
