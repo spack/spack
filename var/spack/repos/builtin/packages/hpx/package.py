@@ -195,8 +195,13 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/spack/spack/pull/17654
     # https://github.com/STEllAR-GROUP/hpx/issues/4829
     depends_on("boost+context", when="+generic_coroutines")
-    _msg_generic_coroutines = "This platform requires +generic_coroutines"
-    conflicts("~generic_coroutines", when="platform=darwin", msg=_msg_generic_coroutines)
+
+    _msg_generic_coroutines_platform = "This platform requires +generic_coroutines"
+    conflicts("~generic_coroutines", when="platform=darwin", msg=_msg_generic_coroutines_platform)
+
+    _msg_generic_coroutines_target = "This target requires +generic_coroutines"
+    conflicts("~generic_coroutines", when="target=aarch64:", msg=_msg_generic_coroutines_target)
+    conflicts("~generic_coroutines", when="target=arm:", msg=_msg_generic_coroutines_target)
 
     # Patches APEX
     patch("git_external.patch", when="@1.3.0 instrumentation=apex")
