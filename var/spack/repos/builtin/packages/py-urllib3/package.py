@@ -49,6 +49,6 @@ class PyUrllib3(PythonPackage):
     depends_on("py-pysocks@1.5.6,1.5.8:1", when="+socks")
 
     depends_on("py-brotlipy@0.6:", when="+brotli")
-    depends_on("py-brotlipy@1.0.9:", when="+brotli @2:")
+    depends_on("py-brotlicffi@1.0.9:", when="+brotli @2:")
 
     depends_on("zstd@0.18.0:", when="+zstd @2:")
