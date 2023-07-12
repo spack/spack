@@ -157,10 +157,11 @@ class Legion(CMakePackage, ROCmPackage):
     )
     conflicts("gasnet_root", when="network=mpi")
 
+    gasnet_conduits = ["aries", "ibv", "udp", "mpi", "ucx", "ofi-slingshot11"]
     variant(
         "conduit",
         default="none",
-        values=("aries", "ibv", "udp", "mpi", "ucx", "none"),
+        values=gasnet_conduits + ["none"],
         description="The gasnet conduit(s) to enable.",
         multi=False,
     )
@@ -171,7 +172,6 @@ class Legion(CMakePackage, ROCmPackage):
         msg="a conduit must be selected when 'network=gasnet'",
     )
 
-    gasnet_conduits = ("aries", "ibv", "udp", "mpi", "ucx")
     for c in gasnet_conduits:
         conflict_str = "conduit=%s" % c
         conflicts(
@@ -277,6 +277,7 @@ class Legion(CMakePackage, ROCmPackage):
         default=512,
         description="Maximum number of fields allowed in a logical region.",
     )
+    depends_on("cray-pmi", when="conduit=ofi-slingshot11 ^cray-mpich")
 
     def setup_build_environment(self, build_env):
         spec = self.spec
@@ -300,7 +301,13 @@ class Legion(CMakePackage, ROCmPackage):
                 options.append("-DLegion_EMBED_GASNet_LOCALSRC=%s" % gasnet_dir)
 
             gasnet_conduit = spec.variants["conduit"].value
-            options.append("-DGASNet_CONDUIT=%s" % gasnet_conduit)
+
+            if "-" in gasnet_conduit:
+                gasnet_conduit, gasnet_system = gasnet_conduit.split("-")
+                options.append("-DGASNet_CONDUIT=%s" % gasnet_conduit)
+                options.append("-DGASNet_SYSTEM=%s" % gasnet_system)
+            else:
+                options.append("-DGASNet_CONDUIT=%s" % gasnet_conduit)
 
             if "+gasnet_debug" in spec:
                 options.append("-DLegion_EMBED_GASNet_CONFIGURE_ARGS=--enable-debug")
