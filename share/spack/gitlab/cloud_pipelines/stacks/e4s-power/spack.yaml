@@ -210,8 +210,6 @@ spack:
     pipeline-gen:
     - build-job:
         image: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
-        before_script-:
-        - spack list --count  # ensure that spack's cache is populated 
 
   cdash:
     build-group: E4S Power
