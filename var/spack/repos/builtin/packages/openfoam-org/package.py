@@ -83,11 +83,17 @@ class OpenfoamOrg(Package):
     )
 
     variant("int64", default=False, description="Compile with 64-bit label")
-    variant("float32", default=False, description="Compile with 32-bit scalar (single-precision)")
     variant(
         "source", default=True, description="Install library/application sources and tutorials"
     )
     variant("metis", default=False, description="With metis decomposition")
+    variant(
+        "precision",
+        default="dp",
+        description="Precision option",
+        values=("sp", "dp", conditional("lp", when="@6:")),
+        multi=False,
+    )
 
     depends_on("mpi")
     depends_on("zlib")
@@ -414,6 +420,14 @@ class OpenfoamOrg(Package):
 
 class OpenfoamOrgArch(OpenfoamArch):
     """An openfoam-org variant of OpenfoamArch"""
+
+    def __init__(self, spec, **kwargs):
+        super().__init__(spec, **kwargs)
+        if "precision=lp" in spec:
+            self.precision_option = "LP"
+        elif "precision=sp" in spec:
+            self.precision_option = "SP"
+        self.update_options()
 
     def update_arch(self, spec):
         """Handle differences in WM_ARCH naming"""
