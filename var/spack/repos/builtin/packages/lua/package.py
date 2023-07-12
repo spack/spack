@@ -196,7 +196,9 @@ class LuaBuilderMixin:
         # This can be invoked from either the builder or package context
         # this circuitous routing ensures it works from both
         # without this method needing to understand its calling context
-        lua_patterns, lua_cpatterns = self.spec.package._setup_dependent_env_helper(env, dependent_spec)
+        lua_patterns, lua_cpatterns = self.spec.package._setup_dependent_env_helper(
+            env, dependent_spec
+        )
 
         env.prepend_path("LUA_PATH", ";".join(lua_patterns), separator=";")
         env.prepend_path("LUA_CPATH", ";".join(lua_cpatterns), separator=";")
