@@ -8,7 +8,7 @@ ci:
 
   pipeline-gen:
   - build-job:
-      before_script:
+      before_script-:
       - - spack list --count  # ensure that spack's cache is populated
       script::
       - - spack compiler find
