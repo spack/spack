@@ -1689,7 +1689,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
     return True
 
 
-def reproduce_ci_job(url, work_dir, autostart, gpg_url):
+def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
     """Given a url to gitlab artifacts.zip from a failed 'spack ci rebuild' job,
     attempt to setup an environment in which the failure can be reproduced
     locally.  This entails the following:
@@ -1895,11 +1895,13 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url):
                 ["exec", "$@"],
             ]
         )
-        process_command("entrypoint", entrypoint_script, work_dir, run=False)
+        process_command(
+            "entrypoint", entrypoint_script, work_dir, run=False, exit_on_failure=False
+        )
 
         docker_command = [
             [
-                "docker",
+                runtime,
                 "run",
                 "-i",
                 "-t",
@@ -1925,16 +1927,14 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url):
             ]
         ]
         autostart = autostart and setup_result
-        process_command(
-            "docker_start", docker_command, work_dir, run=autostart, exit_on_failure=False
-        )
+        process_command("start", docker_command, work_dir, run=autostart)
 
         if not autostart:
             inst_list.append("\nTo run the docker reproducer:\n\n")
             inst_list.extend(
                 [
                     "    - Start the docker container install",
-                    "       $ {0}/docker_start.sh".format(work_dir),
+                    "       $ {0}/start.sh".format(work_dir),
                 ]
             )
     else:

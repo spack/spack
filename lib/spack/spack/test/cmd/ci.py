@@ -1993,9 +1993,9 @@ spack:
         output=str,
     )
     # Make sure the script was generated
-    assert os.path.exists(os.path.join(os.path.realpath(working_dir.strpath), "docker_start.sh"))
+    assert os.path.exists(os.path.join(os.path.realpath(working_dir.strpath), "start.sh"))
     # Make sure we tell the suer where it is when not in interactive mode
-    expect_out = "$ {0}/docker_start.sh".format(os.path.realpath(working_dir.strpath))
+    expect_out = "$ {0}/start.sh".format(os.path.realpath(working_dir.strpath))
     assert expect_out in rep_out
 
 
