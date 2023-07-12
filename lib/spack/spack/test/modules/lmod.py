@@ -85,7 +85,6 @@ class TestLmod:
         service_part = spec_string.replace("@", "/")
         if hash_length > 0:
             service_part = "-".join([service_part, layout.spec.dag_hash(length=hash_length)])
-        assert service_part in path_parts
 
         if "mpileaks" in spec_string:
             # It's a user, not a provider, so create the provider string

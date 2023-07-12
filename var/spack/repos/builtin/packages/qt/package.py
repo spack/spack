@@ -516,7 +516,7 @@ class Qt(Package):
 
     @when("~shared")
     @run_before("configure")
-    def patch(self):
+    def patch(self):  # noqa: F811
         filter_file(
             "libs-only-L", "libs-only-L --static", "qtbase/mkspecs/features/qt_configure.prf"
         )
