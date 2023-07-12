@@ -58,14 +58,6 @@ class Ip(CMakePackage):
 
         return args
 
-    def cmake_args(self):
-        args = [
-            self.define_from_variant("OPENMP", "openmp"),
-            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
-        ]
-
-        return args
-
     def setup_run_environment(self, env):
         suffixes = (
             self.spec.variants["precision"].value

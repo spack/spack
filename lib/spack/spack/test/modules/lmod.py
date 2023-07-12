@@ -93,7 +93,7 @@ class TestLmod:
             # original spack code:
             # service_part = layout.spec["mpi"].format("{name}/{version}-{hash:7}")
             if hash_length > 0:
-                short_hash = hash[:hash_length]
+                short_hash = hash[:hash_length]  # noqa: F841
                 service_part = layout.spec["mpi"].format("{name}/{version}-{short_hash}")
             else:
                 service_part = layout.spec["mpi"].format("{name}/{version}")

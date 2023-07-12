@@ -102,7 +102,3 @@ class PyCython(PythonPackage):
     def build_test(self):
         # Warning: full suite of unit tests takes a very long time
         python("runtests.py", "-j", str(make_jobs))
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.prepend_path("PATH", self.prefix.bin)
-        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)

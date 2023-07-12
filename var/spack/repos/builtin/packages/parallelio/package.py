@@ -46,10 +46,6 @@ class Parallelio(CMakePackage):
     depends_on("netcdf-fortran", type="link", when="+fortran")
     depends_on("parallel-netcdf", type="link", when="+pnetcdf")
 
-    def url_for_version(self, version):
-        url = "https://github.com/NCAR/ParallelIO/archive/refs/tags/pio{}.tar.gz"
-        return url.format(version.underscored)
-
     resource(name="genf90", git="https://github.com/PARALLELIO/genf90.git", tag="genf90_200608")
 
     # Allow argument mismatch in gfortran versions > 10 for mpi library compatibility

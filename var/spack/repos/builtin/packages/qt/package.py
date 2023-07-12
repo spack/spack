@@ -500,7 +500,7 @@ class Qt(Package):
         )
 
     @when("@4: %fj")
-    def patch(self):
+    def patch(self):  # noqa: F811
         (mkspec_dir, platform) = self.get_mkspec()
 
         conf = os.path.join(mkspec_dir, "common", "clang.conf")
