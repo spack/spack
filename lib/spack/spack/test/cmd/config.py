@@ -119,16 +119,18 @@ def test_config_add_with_scope_adds_to_scope(mutable_config, mutable_mock_env_pa
 
 def test_config_scope_by_path(mutable_config, mutable_mock_env_path, tmpdir):
     """Without officially registering the scope with Spack, check that we
-       can parse a section by providing a path.
+    can parse a section by providing a path.
     """
     config_path = os.path.abspath(str(tmpdir.join("config.yaml")))
     with open(config_path, "w") as f:
-        f.write("""\
+        f.write(
+            """\
 config:
   template_dirs:
   - scope_by_path/test1
   - scope_by_path/test2
-""")
+"""
+        )
     output1 = config(f"--scope={config_path}", "get")
     assert "scope_by_path/test2" in output1
 
