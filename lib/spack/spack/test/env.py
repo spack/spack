@@ -504,7 +504,7 @@ def test_error_message_when_using_too_new_lockfile(tmp_path):
 
 @pytest.mark.regression("38240")
 @pytest.mark.parametrize(
-    "config_scheme,env_scheme",
+    "unify_in_lower_scope,unify_in_spack_yaml",
     [
         (True, False),
         (True, "when_possible"),
@@ -514,40 +514,40 @@ def test_error_message_when_using_too_new_lockfile(tmp_path):
         ("when_possible", True),
     ],
 )
-def test_environment_concretizer_scheme_used(tmpdir, config_scheme, env_scheme):
-    """Test to ensure environment's concretizer:unify option is read and takes precedence."""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            f"""\
+def test_environment_concretizer_scheme_used(tmp_path, unify_in_lower_scope, unify_in_spack_yaml):
+    """Tests that "unify" settings in spack.yaml always take precedence over settings in lower
+    configuration scopes.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
 spack:
   specs:
   - mpileaks
   concretizer:
-    unify: {str(env_scheme).lower()}
+    unify: {str(unify_in_spack_yaml).lower()}
 """
-        )
+    )
 
-    with tmpdir.as_cwd():
-        with spack.config.override("concretizer:unify", config_scheme):
-            with ev.Environment(tmpdir.strpath) as e:
-                assert e.unify == env_scheme
+    with spack.config.override("concretizer:unify", unify_in_lower_scope):
+        with ev.Environment(manifest.parent) as e:
+            assert e.unify == unify_in_spack_yaml
 
 
-@pytest.mark.parametrize("config_scheme", [True, False, "when_possible"])
-def test_environment_config_scheme_used(tmpdir, config_scheme):
-    """Test to ensure environment uses the configuration concretization scheme."""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+@pytest.mark.parametrize("unify_in_config", [True, False, "when_possible"])
+def test_environment_config_scheme_used(tmp_path, unify_in_config):
+    """Tests that "unify" settings in lower configuration scopes is taken into account,
+    if absent in spack.yaml.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        """\
 spack:
   specs:
   - mpileaks
 """
-        )
+    )
 
-    with tmpdir.as_cwd():
-        with spack.config.override("concretizer:unify", config_scheme):
-            with ev.Environment(tmpdir.strpath) as e:
-                assert e.unify == config_scheme
+    with spack.config.override("concretizer:unify", unify_in_config):
+        with ev.Environment(manifest.parent) as e:
+            assert e.unify == unify_in_config
