@@ -200,7 +200,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
         with working_dir(test_dir, create=False):
             with spack.util.environment.set_env(PAPIROOT=self.prefix):
                 make()
-                exe_simple = which('simple')
+                exe_simple = which("simple")
                 exe_simple()
-                exe_threads = which('threads')
+                exe_threads = which("threads")
                 exe_threads()
