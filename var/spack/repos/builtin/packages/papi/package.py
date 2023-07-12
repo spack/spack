@@ -22,12 +22,12 @@ class Papi(AutotoolsPackage, ROCmPackage):
     components that expose performance measurement opportunities
     across the hardware and software stack."""
 
-    homepage = "https://icl.cs.utk.edu/papi/index.html"
+    homepage = "https://icl.utk.edu/papi/"
     maintainers("G-Ragghianti")
 
     tags = ["e4s"]
 
-    url = "https://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
+    url = "https://icl.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
     git = "https://github.com/icl-utk-edu/papi"
 
     version("master", branch="master")
@@ -181,3 +181,26 @@ class Papi(AutotoolsPackage, ROCmPackage):
                 join_path(self.prefix.lib, "libpapi.dylib"),
             )
             fs.fix_darwin_install_name(self.prefix.lib)
+
+    test_src_dir = "src/smoke_tests"
+    test_requires_compiler = True
+
+    @run_after("install")
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        if os.path.exists(self.test_src_dir):
+            self.cache_extra_test_sources([self.test_src_dir])
+
+    def test_smoke(self):
+        """Compile and run simple code against the installed papi library."""
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+        if not os.path.exists(test_dir):
+            raise SkipTest("Skipping smoke tests, directory doesn't exist")
+        with working_dir(test_dir, create=False):
+            with spack.util.environment.set_env(PAPIROOT=self.prefix):
+                make()
+                exe_simple = which("simple")
+                exe_simple()
+                exe_threads = which("threads")
+                exe_threads()
