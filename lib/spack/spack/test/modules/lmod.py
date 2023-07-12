@@ -96,7 +96,6 @@ class TestLmod:
                 service_part = layout.spec["mpi"].format("{name}/{version}-{short_hash}")
             else:
                 service_part = layout.spec["mpi"].format("{name}/{version}")
-            raise Exception("This service_part has not been tested: {}".format(service_part))
             # *DH 20230710
         else:
             # Only relevant for providers, not users, of virtuals
