@@ -418,7 +418,7 @@ def env_list(args):
     colify(color_names, indent=4)
 
 
-class ViewAction(object):
+class ViewAction:
     regenerate = "regenerate"
     enable = "enable"
     disable = "disable"

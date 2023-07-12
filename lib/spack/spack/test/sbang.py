@@ -62,7 +62,7 @@ def sbang_line():
     yield "#!/bin/sh %s/bin/sbang\n" % spack.store.layout.root
 
 
-class ScriptDirectory(object):
+class ScriptDirectory:
     """Directory full of test scripts to run sbang instrumentation on."""
 
     def __init__(self, sbang_line):

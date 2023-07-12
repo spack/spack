@@ -313,7 +313,7 @@ def test_write_list_in_memory(mock_low_high_config):
     assert config == repos_high["repos"] + repos_low["repos"]
 
 
-class MockEnv(object):
+class MockEnv:
     def __init__(self, path):
         self.path = path
 

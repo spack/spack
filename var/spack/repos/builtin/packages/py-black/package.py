@@ -17,6 +17,7 @@ class PyBlack(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("23.7.0", sha256="022a582720b0d9480ed82576c920a8c1dde97cc38ff11d8d8859b3bd6ca9eedb")
     version("23.3.0", sha256="1c7b8d606e728a41ea1ccbd7264677e494e87cf630e399262ced92d4a8dac940")
     version("23.1.0", sha256="b0bd97bea8903f5a2ba7219257a44e3f1f9d00073d6cc1add68f0beec69692ac")
     version("22.12.0", sha256="229351e5a18ca30f447bf724d007f890f97e13af070bb6ad4c0a441cd7596a2f")
@@ -34,8 +35,7 @@ class PyBlack(PythonPackage):
     depends_on("py-hatchling@1.8:", when="@22.10:", type="build")
     depends_on("py-hatch-vcs", when="@22.10:", type="build")
     depends_on("py-hatch-fancy-pypi-readme", when="@22.10:", type="build")
-    depends_on("py-setuptools@45:", when="@:22.8", type=("build", "run"))
-    depends_on("py-setuptools-scm@6.3.1:+toml", when="@:22.8", type="build")
+    depends_on("python@3.8:", when="@23.7:", type=("build", "run"))
     # Needed to ensure that Spack can bootstrap black with Python 3.6
     depends_on("python@3.7:", when="@22.10:", type=("build", "run"))
     depends_on("py-click@8:", type=("build", "run"))
@@ -45,13 +45,18 @@ class PyBlack(PythonPackage):
     depends_on("py-platformdirs@2:", type=("build", "run"))
     depends_on("py-tomli@1.1:", when="@22.8: ^python@:3.10", type=("build", "run"))
     depends_on("py-tomli@1.1:", when="@21.7:22.6", type=("build", "run"))
-    depends_on("py-typed-ast@1.4.2:", when="^python@:3.7", type=("build", "run"))
     depends_on("py-typing-extensions@3.10:", when="^python@:3.9", type=("build", "run"))
+
     depends_on("py-colorama@0.4.3:", when="+colorama", type=("build", "run"))
     depends_on("py-uvloop@0.15.2:", when="+uvloop", type=("build", "run"))
     depends_on("py-aiohttp@3.7.4:", when="+d", type=("build", "run"))
     depends_on("py-ipython@7.8:", when="+jupyter", type=("build", "run"))
     depends_on("py-tokenize-rt@3.2:", when="+jupyter", type=("build", "run"))
+
+    # Historical dependencies
+    depends_on("py-setuptools@45:", when="@:22.8", type=("build", "run"))
+    depends_on("py-setuptools-scm@6.3.1:+toml", when="@:22.8", type="build")
+    depends_on("py-typed-ast@1.4.2:", when="^python@:3.7", type=("build", "run"))
 
     # Needed because this package is used to bootstrap Spack (Spack supports Python 3.6+)
     depends_on("py-dataclasses@0.6:", when="^python@:3.6", type=("build", "run"))

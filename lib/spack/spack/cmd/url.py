@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import division, print_function
-
 import urllib.parse
 from collections import defaultdict
 
@@ -290,7 +288,7 @@ def url_stats(args):
     # dictionary of issue type -> package -> descriptions
     issues = defaultdict(lambda: defaultdict(lambda: []))
 
-    class UrlStats(object):
+    class UrlStats:
         def __init__(self):
             self.total = 0
             self.schemes = defaultdict(lambda: 0)

@@ -222,12 +222,12 @@ def test_list_url(tmpdir):
     assert list_url(True) == ["dir/another-file.txt", "file-0.txt", "file-1.txt", "file-2.txt"]
 
 
-class MockPages(object):
+class MockPages:
     def search(self, *args, **kwargs):
         return [{"Key": "keyone"}, {"Key": "keytwo"}, {"Key": "keythree"}]
 
 
-class MockPaginator(object):
+class MockPaginator:
     def paginate(self, *args, **kwargs):
         return MockPages()
 
@@ -240,7 +240,7 @@ class MockClientError(Exception):
         }
 
 
-class MockS3Client(object):
+class MockS3Client:
     def get_paginator(self, *args, **kwargs):
         return MockPaginator()
 

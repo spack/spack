@@ -108,7 +108,7 @@ def mock_remove_prefix(*args):
     raise MockInstallError("Intentional error", "Mock remove_prefix method intentionally fails")
 
 
-class RemovePrefixChecker(object):
+class RemovePrefixChecker:
     def __init__(self, wrapped_rm_prefix):
         self.removed = False
         self.wrapped_rm_prefix = wrapped_rm_prefix
@@ -118,7 +118,7 @@ class RemovePrefixChecker(object):
         self.wrapped_rm_prefix()
 
 
-class MockStage(object):
+class MockStage:
     def __init__(self, wrapped_stage):
         self.wrapped_stage = wrapped_stage
         self.test_destroyed = False

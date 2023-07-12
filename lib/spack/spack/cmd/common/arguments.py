@@ -479,7 +479,7 @@ class ConfigSetAction(argparse.Action):
         # substituting '_' for ':'.
         dest = dest.replace(":", "_")
 
-        super(ConfigSetAction, self).__init__(
+        super().__init__(
             option_strings=option_strings,
             dest=dest,
             nargs=0,
