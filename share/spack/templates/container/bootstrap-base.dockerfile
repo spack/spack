@@ -23,7 +23,7 @@ RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
 RUN mkdir -p /root/.spack \
  && cp $SPACK_ROOT/share/spack/docker/modules.yaml \
         /root/.spack/modules.yaml \
- && rm -rf /root/*.* /run/nologin $SPACK_ROOT/.git
+ && rm -rf /root/*.* /run/nologin
 
 # [WORKAROUND]
 # https://superuser.com/questions/1241548/
