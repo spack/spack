@@ -41,6 +41,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("14.2.0", sha256="c96606e5cd7fc9d25b9dc20719cd388658520d7cbbd2b4de77a118440d1e0ccb")
     version("14.0.0", sha256="054d2fabdf70fce0dfaeb20eed265bd7894045d3e00c3d1ddb72d1c77c339ca1")
     version("13.4.1", sha256="5465cbff3de7ef4ac7d40eeff9d99342c00d9d20eee0a5f64f0a523093f5f1b3")
     version("13.4.0", sha256="39550006e059043b7e2177f10467ae2f77fe639901aee91cbc1e359516ff8d3e")
@@ -372,6 +373,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     #
     depends_on("cgns", when="+exodus")
+    depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
     depends_on("hypre~internal-superlu~int64", when="+hypre")
     depends_on("kokkos-nvcc-wrapper", when="+wrapper")
