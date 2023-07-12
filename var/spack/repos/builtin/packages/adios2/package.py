@@ -82,12 +82,6 @@ class Adios2(CMakePackage, CudaPackage):
         when="@2.9:",
         description="Enable support for S3 compatible storage using AWS SDK's S3 module",
     )
-    variant(
-        "libcatalyst",
-        default=True,
-        when="@2.9:",
-        description="Enable support for in situ visualization plugin using ParaView Catalyst",
-    )
 
     # Optional language bindings, C++11 and C always provided
     variant("cuda", default=False, when="@2.8:", description="Enable CUDA support")
@@ -144,7 +138,6 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("py-numpy@1.6.1:", when="+python", type=("build", "run"))
     depends_on("py-mpi4py@2.0.0:", when="+mpi +python", type=("build", "run"))
     depends_on("aws-sdk-cpp", when="+aws")
-    depends_on("libcatalyst@2", when="+libcatalyst")
 
     # Fix findmpi when called by dependees
     # See https://github.com/ornladios/ADIOS2/pull/1632
