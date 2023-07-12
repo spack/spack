@@ -130,6 +130,10 @@ class Octopus(AutotoolsPackage, CudaPackage):
     # TODO: etsf-io, sparskit,
     # feast, libfm, pfft, isf, pnfft, poke
 
+    # Don't run the default command 'make check' for test
+    # as it takes too long to finish
+    build_time_test_callbacks = []
+
     def configure_args(self):
         spec = self.spec
         lapack = spec["lapack"].libs
