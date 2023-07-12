@@ -39,12 +39,12 @@ class Hipace(CMakePackage):
         description="Floating point precision (single/double)",
     )
 
-    depends_on("cmake@3.15.0:", type="build")
     depends_on("cmake@3.18.0:", type="build", when="@23.07:")
+    depends_on("cmake@3.15.0:", type="build")
     depends_on("mpi", when="+mpi")
     with when("+openpmd"):
-        depends_on("openpmd-api@0.14.2:")
         depends_on("openpmd-api@0.15.1:", when="@23.07:")
+        depends_on("openpmd-api@0.14.2:")
         depends_on("openpmd-api ~mpi", when="~mpi")
         depends_on("openpmd-api +mpi", when="+mpi")
     with when("compute=noacc"):
@@ -58,12 +58,12 @@ class Hipace(CMakePackage):
         depends_on("pkgconfig", type="build")
         depends_on("llvm-openmp", when="%apple-clang")
     with when("compute=cuda"):
-        depends_on("cuda@9.2.88:")
         depends_on("cuda@:12.1", when="%gcc@:12.2")
         depends_on("cuda@:12.0", when="%gcc@:12.1")
         depends_on("cuda@:12.1", when="%gcc@:12.2")
         depends_on("cuda@:11.8", when="%gcc@:9")
         depends_on("cuda@:10", when="%gcc@:8")
+        depends_on("cuda@9.2.88:")
     with when("compute=hip"):
         depends_on("rocfft")
         depends_on("rocprim")
