@@ -25,10 +25,10 @@ class Soapdenovo2(MakefilePackage):
     def flag_handler(self, name, flags):
         if name.lower() == "cflags" and self.spec.satisfies("%gcc@10:"):
             flags.append("-fcommon")
-        if name.lower() == "cflags" or name.lower() == "cxxflags" or name.lower() == "cppflags":
+        if name.lower() in ["cflags", "cxxflags", "cppflags"]:
             opt_flag = re.compile("-O.*")
-            # This package cannot compile with anything other than the -O3
-            # specified in the makefile
+            # This package cannot compile with any optimization flag other
+            # than the -O3 specified in the makefile
             flags = [f for f in flags if not opt_flag.match(f)]
         return (flags, None, None)
 
