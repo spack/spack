@@ -135,6 +135,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # Patch
     patch("diy-include-cstddef.patch", when="@1.5.3:1.8.0")
 
+    # VTK-M PR#2972
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/2972
+    patch("vtkm-cuda-swap-conflict-pr2972.patch", when="@1.9 +cuda ^cuda@12:")
+
     def cmake_args(self):
         spec = self.spec
         options = []
@@ -231,24 +235,29 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
             if "+cuda_native" in spec:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
                 options.append("-DCMAKE_CUDA_HOST_COMPILER={0}".format(env["SPACK_CXX"]))
-                if "cuda_arch" in spec.variants:
-                    cuda_value = spec.variants["cuda_arch"].value
-                    cuda_arch = cuda_value[0]
-                    if cuda_arch in gpu_name_table:
-                        vtkm_cuda_arch = gpu_name_table[cuda_arch]
-                        options.append("-DVTKm_CUDA_Architecture={0}".format(vtkm_cuda_arch))
+
+                if spec.satisfies("@1.9.0:"):
+                    options.append(self.builder.define_cuda_architectures(self))
+
                 else:
-                    # this fix is necessary if compiling platform has cuda, but
-                    # no devices (this is common for front end nodes on hpc
-                    # clusters). We choose volta as a lowest common denominator
-                    options.append("-DVTKm_CUDA_Architecture=volta")
+                    # VTKm_CUDA_Architecture only accepts a single CUDA arch
+                    num_cuda_arch = spec.variants["cuda_arch"].value[0]
+                    str_cuda_arch = str()
+
+                    try:
+                        str_cuda_arch = gpu_name_table[num_cuda_arch]
+                    except KeyError:
+                        raise InstallError(
+                            f"cuda_arch={num_cuda_arch} needs cmake>=3.18 & VTK-m>=1.9.0"
+                        )
+                    options.append(f"-DVTKm_CUDA_Architecture={str_cuda_arch}")
+
             else:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=OFF")
 
             # hip support
             if "+rocm" in spec:
-                archs = ",".join(self.spec.variants["amdgpu_target"].value)
-                options.append("-DCMAKE_HIP_ARCHITECTURES:STRING={0}".format(archs))
+                options.append(self.builder.define_hip_architectures(self))
 
             # openmp support
             if "+openmp" in spec:
