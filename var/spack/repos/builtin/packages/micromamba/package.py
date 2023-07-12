@@ -45,8 +45,8 @@ class Micromamba(CMakePackage):
         depends_on("yaml-cpp", type="link")
         depends_on("libreproc+cxx+shared", type="link")
         depends_on("tl-expected@2022-11-24", type="link")
-        depends_on("fmt", type="link")
-        depends_on("spdlog", type="link")
+        depends_on("fmt@9.1.0", type="link")
+        depends_on("spdlog@1.11.0", type="link")
 
         # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/include/mamba/core/validate.hpp#L13
         depends_on("nlohmann-json", type="link")
@@ -78,8 +78,8 @@ class Micromamba(CMakePackage):
         depends_on("yaml-cpp", type="link")
         depends_on("libreproc+cxx", type="link")
         depends_on("tl-expected@2022-11-24", type="link")
-        depends_on("fmt", type="link")
-        depends_on("spdlog", type="link")
+        depends_on("fmt@9.1.0", type="link")
+        depends_on("spdlog@1.11.0", type="link")
         depends_on("nlohmann-json", type="link")
         depends_on("cpp-termcolor", type="link")
         depends_on("cli11@2.2:", type="link")
