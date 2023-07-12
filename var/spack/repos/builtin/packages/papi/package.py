@@ -183,6 +183,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
             fs.fix_darwin_install_name(self.prefix.lib)
 
     test_src_dir = "src/smoke_tests"
+    test_requires_compiler = True
 
     @run_after("install")
     def cache_test_sources(self):
@@ -191,14 +192,15 @@ class Papi(AutotoolsPackage, ROCmPackage):
         if os.path.exists(self.test_src_dir):
             self.cache_extra_test_sources([self.test_src_dir])
 
-    def test(self):
+    def test_smoke(self):
+        """Compile and run simple code against the installed papi library."""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         if not os.path.exists(test_dir):
-            print("Skipping smoke tests, directory doesn't exist")
-            return
+            raise SkipTest("Skipping smoke tests, directory doesn't exist")
         with working_dir(test_dir, create=False):
             with spack.util.environment.set_env(PAPIROOT=self.prefix):
                 make()
-                self.run_test("./simple", purpose="PAPI smoke test - simple")
-                self.run_test("./threads", purpose="PAPI smoke test - threads")
-                make("clean")
+                exe_simple = which('simple')
+                exe_simple()
+                exe_threads = which('threads')
+                exe_threads()
