@@ -113,6 +113,10 @@ def _get_scope_and_section(args):
     path = getattr(args, "path", None)
 
     if scope and scope not in spack.config.config.scopes:
+        # If a relative path is provided, and this path matches the name of
+        # a scope (e.g. "user/darwin"), this function will return a scope based
+        # on the path (one can disambiguate this by using a name like
+        # "./user/darwin")
         adhoc_scope = spack.config.scope_from_path(scope)
         if adhoc_scope:
             scope = adhoc_scope

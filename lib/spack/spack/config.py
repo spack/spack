@@ -117,12 +117,6 @@ def scope_from_path(fpath):
     """Given a path to a file, create a scope object. This can be used to
     directly edit scopes that are not otherwise tracked in the current
     configuration.
-
-    Note this function is for taking a scope option provided from the
-    command line, and inferring whether it is referring to a file.
-    For that to be unambiguous, we require that it be absolute:
-    scopes can use '/' but not refer to files, but no scope names
-    begin with a '/' (or a Windows drive letter and '\')
     """
     if not fpath:
         return None
