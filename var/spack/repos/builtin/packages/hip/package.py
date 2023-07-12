@@ -326,6 +326,13 @@ class Hip(CMakePackage):
     patch("Add_missing_open_cl_header_file_for_4.3.0.patch", when="@4.3.0:4.3.2")
     patch("0014-hip-test-file-reorg-5.4.0.patch", when="@5.4.0:")
 
+    # See https://github.com/ROCm-Developer-Tools/HIP/pull/3206
+    patch(
+        "https://github.com/ROCm-Developer-Tools/HIP/commit/50ee82f6bc4aad10908ce09198c9f7ebfb2a3561.patch?full_index=1",
+        sha256="c2ee21cdc55262c7c6ba65546b5ca5f65ea89730",
+        when="@5.2:5.4",
+    )
+
     @property
     def root_cmakelists_dir(self):
         if self.spec.satisfies("@:4.3.2"):
