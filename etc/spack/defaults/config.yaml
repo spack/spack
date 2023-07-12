@@ -216,10 +216,11 @@ config:
   # manipulation by unprivileged user (e.g. AFS)
   allow_sgid: true
 
-  # Whether to set the terminal title to display status information during
-  # building and installing packages. This gives information about Spack's
-  # current progress as well as the current and total number of packages.
-  terminal_title: false
+  # Whether to show status information during building and installing packages.
+  # This gives information about Spack's current progress as well as the current
+  # and total number of packages. Information is shown both in the terminal
+  # title and inline.
+  install_status: true
 
   # Number of seconds a buildcache's index.json is cached locally before probing
   # for updates, within a single Spack invocation. Defaults to 10 minutes.

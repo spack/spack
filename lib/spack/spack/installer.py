@@ -536,7 +536,7 @@ def get_dependent_ids(spec):
     return [package_id(d.package) for d in spec.dependents()]
 
 
-def install_msg(name, pid):
+def install_msg(name, pid, install_status):
     """
     Colorize the name/id of the package being installed
 
@@ -548,7 +548,12 @@ def install_msg(name, pid):
         str: Colorized installing message
     """
     pre = "{0}: ".format(pid) if tty.show_pid() else ""
-    return pre + colorize("@*{Installing} @*g{%s}" % name)
+    post = (
+        " @*{%s}" % install_status.get_progress()
+        if install_status and spack.config.get("config:install_status", True)
+        else ""
+    )
+    return pre + colorize("@*{Installing} @*g{%s}%s" % (name, post))
 
 
 def archive_install_logs(pkg, phase_log_dir):
@@ -657,9 +662,9 @@ def package_id(pkg):
     return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
 
 
-class TermTitle:
+class InstallStatus:
     def __init__(self, pkg_count):
-        # Counters used for showing status information in the terminal title
+        # Counters used for showing status information
         self.pkg_num = 0
         self.pkg_count = pkg_count
         self.pkg_ids = set()
@@ -671,16 +676,19 @@ class TermTitle:
             self.pkg_num += 1
             self.pkg_ids.add(pkg_id)
 
-    def set(self, text):
-        if not spack.config.get("config:terminal_title", False):
+    def set_term_title(self, text):
+        if not spack.config.get("config:install_status", True):
             return
 
         if not sys.stdout.isatty():
             return
 
-        status = "{0} [{1}/{2}]".format(text, self.pkg_num, self.pkg_count)
+        status = "{0} {1}".format(text, self.get_progress())
         sys.stdout.write("\033]0;Spack: {0}\007".format(status))
         sys.stdout.flush()
+
+    def get_progress(self):
+        return "[{0}/{1}]".format(self.pkg_num, self.pkg_count)
 
 
 class TermStatusLine:
@@ -1240,7 +1248,7 @@ class PackageInstaller:
             spack.compilers.find_compilers([compiler_search_prefix])
         )
 
-    def _install_task(self, task):
+    def _install_task(self, task, install_status):
         """
         Perform the installation of the requested spec and/or dependency
         represented by the build task.
@@ -1257,7 +1265,7 @@ class PackageInstaller:
 
         pkg, pkg_id = task.pkg, task.pkg_id
 
-        tty.msg(install_msg(pkg_id, self.pid))
+        tty.msg(install_msg(pkg_id, self.pid, install_status))
         task.start = task.start or time.time()
         task.status = STATUS_INSTALLING
 
@@ -1406,7 +1414,7 @@ class PackageInstaller:
         else:
             return None
 
-    def _requeue_task(self, task):
+    def _requeue_task(self, task, install_status):
         """
         Requeues a task that appears to be in progress by another process.
 
@@ -1416,7 +1424,8 @@ class PackageInstaller:
         if task.status not in [STATUS_INSTALLED, STATUS_INSTALLING]:
             tty.debug(
                 "{0} {1}".format(
-                    install_msg(task.pkg_id, self.pid), "in progress by another process"
+                    install_msg(task.pkg_id, self.pid, install_status),
+                    "in progress by another process",
                 )
             )
 
@@ -1595,7 +1604,7 @@ class PackageInstaller:
         single_explicit_spec = len(self.build_requests) == 1
         failed_explicits = []
 
-        term_title = TermTitle(len(self.build_pq))
+        install_status = InstallStatus(len(self.build_pq))
 
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
@@ -1611,8 +1620,8 @@ class PackageInstaller:
             keep_prefix = install_args.get("keep_prefix")
 
             pkg, pkg_id, spec = task.pkg, task.pkg_id, task.pkg.spec
-            term_title.next_pkg(pkg)
-            term_title.set("Processing {0}".format(pkg.name))
+            install_status.next_pkg(pkg)
+            install_status.set_term_title("Processing {0}".format(pkg.name))
             tty.debug("Processing {0}: task={1}".format(pkg_id, task))
             # Ensure that the current spec has NO uninstalled dependencies,
             # which is assumed to be reflected directly in its priority.
@@ -1676,7 +1685,7 @@ class PackageInstaller:
             # another process is likely (un)installing the spec or has
             # determined the spec has already been installed (though the
             # other process may be hung).
-            term_title.set("Acquiring lock for {0}".format(pkg.name))
+            install_status.set_term_title("Acquiring lock for {0}".format(pkg.name))
             term_status.add(pkg_id)
             ltype, lock = self._ensure_locked("write", pkg)
             if lock is None:
@@ -1689,7 +1698,7 @@ class PackageInstaller:
             # can check the status presumably established by another process
             # -- failed, installed, or uninstalled -- on the next pass.
             if lock is None:
-                self._requeue_task(task)
+                self._requeue_task(task, install_status)
                 continue
 
             term_status.clear()
@@ -1700,7 +1709,7 @@ class PackageInstaller:
                 task.request.overwrite_time = time.time()
 
             # Determine state of installation artifacts and adjust accordingly.
-            term_title.set("Preparing {0}".format(pkg.name))
+            install_status.set_term_title("Preparing {0}".format(pkg.name))
             self._prepare_for_install(task)
 
             # Flag an already installed package
@@ -1728,7 +1737,7 @@ class PackageInstaller:
                     # established by the other process -- failed, installed,
                     # or uninstalled -- on the next pass.
                     self.installed.remove(pkg_id)
-                    self._requeue_task(task)
+                    self._requeue_task(task, install_status)
                 continue
 
             # Having a read lock on an uninstalled pkg may mean another
@@ -1741,19 +1750,19 @@ class PackageInstaller:
             # uninstalled -- on the next pass.
             if ltype == "read":
                 lock.release_read()
-                self._requeue_task(task)
+                self._requeue_task(task, install_status)
                 continue
 
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
-            term_title.set("Installing {0}".format(pkg.name))
+            install_status.set_term_title("Installing {0}".format(pkg.name))
             try:
                 action = self._install_action(task)
 
                 if action == InstallAction.INSTALL:
-                    self._install_task(task)
+                    self._install_task(task, install_status)
                 elif action == InstallAction.OVERWRITE:
-                    OverwriteInstall(self, spack.store.db, task).install()
+                    OverwriteInstall(self, spack.store.db, task, install_status).install()
 
                 self._update_installed(task)
 
@@ -1779,7 +1788,7 @@ class PackageInstaller:
                 err += " Requeueing to install from source."
                 tty.error(err.format(pkg.name, str(exc)))
                 task.use_cache = False
-                self._requeue_task(task)
+                self._requeue_task(task, install_status)
                 continue
 
             except (Exception, SystemExit) as exc:
@@ -2092,10 +2101,11 @@ def build_process(pkg, install_args):
 
 
 class OverwriteInstall:
-    def __init__(self, installer, database, task):
+    def __init__(self, installer, database, task, install_status):
         self.installer = installer
         self.database = database
         self.task = task
+        self.install_status = install_status
 
     def install(self):
         """
@@ -2106,7 +2116,7 @@ class OverwriteInstall:
         """
         try:
             with fs.replace_directory_transaction(self.task.pkg.prefix):
-                self.installer._install_task(self.task)
+                self.installer._install_task(self.task, self.install_status)
         except fs.CouldNotRestoreDirectoryBackup as e:
             self.database.remove(self.task.pkg.spec)
             tty.error(

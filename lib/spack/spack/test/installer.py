@@ -148,15 +148,19 @@ def test_install_msg(monkeypatch):
     install_msg = "Installing {0}".format(name)
 
     monkeypatch.setattr(tty, "_debug", 0)
-    assert inst.install_msg(name, pid) == install_msg
+    assert inst.install_msg(name, pid, None) == install_msg
+
+    install_status = inst.InstallStatus(1)
+    expected = "{0} [0/1]".format(install_msg)
+    assert inst.install_msg(name, pid, install_status) == expected
 
     monkeypatch.setattr(tty, "_debug", 1)
-    assert inst.install_msg(name, pid) == install_msg
+    assert inst.install_msg(name, pid, None) == install_msg
 
     # Expect the PID to be added at debug level 2
     monkeypatch.setattr(tty, "_debug", 2)
     expected = "{0}: {1}".format(pid, install_msg)
-    assert inst.install_msg(name, pid) == expected
+    assert inst.install_msg(name, pid, None) == expected
 
 
 def test_install_from_cache_errors(install_mockery, capsys):
@@ -795,7 +799,7 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     task = create_build_task(request.pkg)
 
     monkeypatch.setattr(inst, "_install_from_cache", _true)
-    installer._install_task(task)
+    installer._install_task(task, None)
     assert request.pkg_id in installer.installed
 
 
@@ -817,7 +821,7 @@ def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
     monkeypatch.setattr(spack.database.Database, "add", _noop)
     monkeypatch.setattr(spack.compilers, "add_compilers_to_config", _add)
 
-    installer._install_task(task)
+    installer._install_task(task, None)
 
     out = capfd.readouterr()[0]
     assert config_msg in out
@@ -868,7 +872,7 @@ def test_requeue_task(install_mockery, capfd):
     # temporarily set tty debug messages on so we can test output
     current_debug_level = tty.debug_level()
     tty.set_debug(1)
-    installer._requeue_task(task)
+    installer._requeue_task(task, None)
     tty.set_debug(current_debug_level)
 
     ids = list(installer.build_tasks)
@@ -1031,7 +1035,7 @@ def test_install_fail_on_interrupt(install_mockery, monkeypatch):
     spec_name = "a"
     err_msg = "mock keyboard interrupt for {0}".format(spec_name)
 
-    def _interrupt(installer, task, **kwargs):
+    def _interrupt(installer, task, install_status, **kwargs):
         if task.pkg.name == spec_name:
             raise KeyboardInterrupt(err_msg)
         else:
@@ -1058,7 +1062,7 @@ def test_install_fail_single(install_mockery, monkeypatch):
     class MyBuildException(Exception):
         pass
 
-    def _install(installer, task, **kwargs):
+    def _install(installer, task, install_status, **kwargs):
         if task.pkg.name == spec_name:
             raise MyBuildException(err_msg)
         else:
@@ -1085,7 +1089,7 @@ def test_install_fail_multi(install_mockery, monkeypatch):
     class MyBuildException(Exception):
         pass
 
-    def _install(installer, task, **kwargs):
+    def _install(installer, task, install_status, **kwargs):
         if task.pkg.name == spec_name:
             raise MyBuildException(err_msg)
         else:
@@ -1157,7 +1161,7 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
 def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     """Cover basic install lock failure handling in a single pass."""
 
-    def _requeued(installer, task):
+    def _requeued(installer, task, install_status):
         tty.msg("requeued {0}".format(task.pkg.spec.name))
 
     const_arg = installer_args(["b"], {})
@@ -1192,7 +1196,7 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
         # also do not allow the package to be locked again
         monkeypatch.setattr(inst.PackageInstaller, "_ensure_locked", _not_locked)
 
-    def _requeued(installer, task):
+    def _requeued(installer, task, install_status):
         tty.msg("requeued {0}".format(inst.package_id(task.pkg)))
 
     # Flag the package as installed
@@ -1224,7 +1228,7 @@ def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
         tty.msg("preparing {0}".format(task.pkg.spec.name))
         assert task.pkg.spec.name not in installer.installed
 
-    def _requeued(installer, task):
+    def _requeued(installer, task, install_status):
         tty.msg("requeued {0}".format(task.pkg.spec.name))
 
     # Force a read lock
@@ -1289,7 +1293,7 @@ def test_overwrite_install_backup_success(temporary_store, config, mock_packages
     fs.touchp(installed_file)
 
     class InstallerThatWipesThePrefixDir:
-        def _install_task(self, task):
+        def _install_task(self, task, install_status):
             shutil.rmtree(task.pkg.prefix, ignore_errors=True)
             fs.mkdirp(task.pkg.prefix)
             raise Exception("Some fatal install error")
@@ -1302,7 +1306,7 @@ def test_overwrite_install_backup_success(temporary_store, config, mock_packages
 
     fake_installer = InstallerThatWipesThePrefixDir()
     fake_db = FakeDatabase()
-    overwrite_install = inst.OverwriteInstall(fake_installer, fake_db, task)
+    overwrite_install = inst.OverwriteInstall(fake_installer, fake_db, task, None)
 
     # Installation should throw the installation exception, not the backup
     # failure.
@@ -1323,7 +1327,7 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
     """
 
     class InstallerThatAccidentallyDeletesTheBackupDir:
-        def _install_task(self, task):
+        def _install_task(self, task, install_status):
             # Remove the backup directory, which is at the same level as the prefix,
             # starting with .backup
             backup_glob = os.path.join(
@@ -1351,7 +1355,7 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
 
     fake_installer = InstallerThatAccidentallyDeletesTheBackupDir()
     fake_db = FakeDatabase()
-    overwrite_install = inst.OverwriteInstall(fake_installer, fake_db, task)
+    overwrite_install = inst.OverwriteInstall(fake_installer, fake_db, task, None)
 
     # Installation should throw the installation exception, not the backup
     # failure.
