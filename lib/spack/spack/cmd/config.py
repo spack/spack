@@ -110,29 +110,29 @@ def _get_scope_and_section(args):
     section = getattr(args, "section", None)
     path = getattr(args, "path", None)
 
-    if scope and scope not in spack.config.config.scopes:
-        # Infer that the scope is a path. Since we only do this when the scope
-        # is not a valid scope name, a relative path like "user/linux" would
-        # be ignored; one can disambiguate with e.g. "./user/linux"
-        adhoc_scope = spack.config.scope_from_path(scope)
-        if adhoc_scope:
-            scope = adhoc_scope
+    if scope:
+        if scope in spack.config.config.scopes:
+            scope = spack.config.config.scopes[scope]
+        else:
+            # Infer that the scope is a path. Since we only do this when the scope
+            # is not a valid scope name, a relative path like "user/linux" would
+            # be ignored; one can disambiguate with e.g. "./user/linux"
+            scope = spack.config.scope_from_path(scope)
 
     # w/no args and an active environment, point to env manifest
     if not section and not scope:
         env = ev.active_environment()
         if env:
-            scope = env.env_file_config_scope_name()
+            scope = env.env_file_config_scope()
 
     # set scope defaults
     elif not scope:
-        scope = spack.config.default_modify_scope(section)
+        scope_name = spack.config.default_modify_scope(section)
+        spack.config.config.scopes[scope_name]
 
     # special handling for commands that take value instead of section
     if path:
         section = path[: path.find(":")] if ":" in path else path
-        if not scope:
-            scope = spack.config.default_modify_scope(section)
 
     return scope, section
 
@@ -145,21 +145,30 @@ def config_get(args):
     """
     scope, section = _get_scope_and_section(args)
 
-    if section is not None:
+    if section is not None and not args.scope:
         spack.config.config.print_section(section)
     elif scope:
         if isinstance(scope, spack.config.ConfigScope):
-            config_file = scope.path
+            if isinstance(scope, spack.config.SingleFileScope):
+                config_file = scope.path
+            elif not section:
+                raise ValueError("Must specify a section for a directory scope")
+
+            if section:
+                config_file = scope.get_section_filename(section)
+
             missing_msg = "No such file: %s" % config_file
         elif scope.startswith("env:"):
             config_file = spack.config.config.get_config_filename(scope, section)
             missing_msg = "environment has no %s file" % ev.manifest_name
+        else:
+            raise ValueError("Unexpected: " + str(scope))
 
         if os.path.exists(config_file):
             with open(config_file) as f:
                 print(f.read())
         else:
-            tty.die(missing_msg)
+            print("<No config for this scope/section>")
 
     else:
         tty.die("`spack config get` requires a section argument " "or an active environment.")

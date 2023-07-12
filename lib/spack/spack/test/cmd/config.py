@@ -152,6 +152,47 @@ config:
     assert "scope_by_path/test3" not in output4
 
 
+class MockArgs(dict):
+    def __init__(self, settings):
+        super(MockArgs, self).__init__(settings)
+
+    def __getattr__(self, name):
+        try:
+            return super(MockArgs, self).__getattr__(name)
+        except AttributeError:
+            try:
+                return self[name]
+            except KeyError as e:
+                raise AttributeError() from e
+
+
+def test_config_scope_by_path_shadowed(mutable_config, mutable_mock_env_path, tmpdir):
+    """When a --scope refers to a relative path which matches an existin scope
+    name, check that we can retrieve it by e.g. prepending "./" on Linux.
+    """
+    config_dir = tmpdir.ensure("user", dir=True)
+    config_file = config_dir.join("config.yaml")
+    config_path = os.path.abspath(str(tmpdir.join("config.yaml")))
+    with open(config_file, "w") as f:
+        f.write(
+            """\
+config:
+  template_dirs:
+  - scope_by_path/test1
+"""
+        )
+
+    #x = spack.cmd.config._get_scope_and_section(MockArgs({"scope": "user"}))
+    #import pdb; pdb.set_trace()
+
+    with fs.working_dir(tmpdir):
+        output1 = config("--scope=user", "get", "config")
+        assert "scope_by_path/test1" not in output1
+
+        output2 = config("--scope=.{0}user".format(os.sep), "get", "config")
+        assert "scope_by_path/test1" in output2
+
+
 def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config("edit", "--print-file", fail_on_error=False)
     assert "requires a section argument or an active environment" in output
