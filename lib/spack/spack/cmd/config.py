@@ -112,9 +112,10 @@ def _get_scope_and_section(args):
     section = getattr(args, "section", None)
     path = getattr(args, "path", None)
 
-    adhoc_scope = spack.config.scope_from_path(scope)
-    if adhoc_scope:
-        scope = adhoc_scope
+    if scope and scope not in spack.config.config.scopes:
+        adhoc_scope = spack.config.scope_from_path(scope)
+        if adhoc_scope:
+            scope = adhoc_scope
 
     # w/no args and an active environment, point to env manifest
     if not section and not scope:

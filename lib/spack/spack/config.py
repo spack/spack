@@ -126,9 +126,6 @@ def scope_from_path(fpath):
     """
     if not fpath:
         return None
-    if not os.path.isabs(fpath):
-        tty.debug("{0} is not an absolute path: skip direct construction of scope".format(fpath))
-        return None
 
     if os.path.isdir(fpath):
         return ConfigScope("<adhoc>", fpath)

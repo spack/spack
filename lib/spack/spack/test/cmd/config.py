@@ -117,6 +117,27 @@ def test_config_add_with_scope_adds_to_scope(mutable_config, mutable_mock_env_pa
     assert spack.config.get("config:install_tree:root", scope="user") == "/usr"
 
 
+def test_config_scope_by_path(mutable_config, mutable_mock_env_path, tmpdir):
+    """Without officially registering the scope with Spack, check that we
+       can parse a section by providing a path.
+    """
+    config_path = os.path.abspath(str(tmpdir.join("config.yaml")))
+    with open(config_path, "w") as f:
+        f.write("""\
+config:
+  template_dirs:
+  - scope_by_path/test1
+  - scope_by_path/test2
+""")
+    output1 = config(f"--scope={config_path}", "get")
+    assert "scope_by_path/test2" in output1
+
+    # Also check if we can provide a relative path
+    with fs.working_dir(tmpdir):
+        output2 = config(f"--scope=./config.yaml", "get")
+        assert "scope_by_path/test2" in output2
+
+
 def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config("edit", "--print-file", fail_on_error=False)
     assert "requires a section argument or an active environment" in output
