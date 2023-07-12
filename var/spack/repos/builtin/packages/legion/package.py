@@ -152,21 +152,34 @@ class Legion(CMakePackage, ROCmPackage):
         else:
             return True
 
-    with when("network=gasnet"):
-        variant(
-            "gasnet_root",
-            default="none",
-            values=validate_gasnet_root,
-            description="Path to a pre-installed version of GASNet (prefix directory).",
-            multi=False,
-        )
-        variant(
-            "conduit",
-            default="none",
-            values=("none", "aries", "ibv", "udp", "mpi", "ucx", "ofi-slingshot11"),
-            description="The GASNet conduit(s) to enable.",
-            sticky=True,
-            multi=False,
+    variant(
+        "gasnet_root",
+        default="none",
+        values=validate_gasnet_root,
+        description="Path to a pre-installed version of GASNet (prefix directory).",
+        multi=False,
+    )
+    conflicts("gasnet_root", when="network=mpi")
+
+    gasnet_conduits = ["aries", "ibv", "udp", "mpi", "ucx", "ofi-slingshot11"]
+    variant(
+        "conduit",
+        default="none",
+        values=gasnet_conduits + ["none"],
+        description="The gasnet conduit(s) to enable.",
+        multi=False,
+    )
+
+    conflicts(
+        "conduit=none",
+        when="network=gasnet",
+        msg="a conduit must be selected when 'network=gasnet'",
+    )
+
+    for c in gasnet_conduits:
+        conflict_str = "conduit=%s" % c
+        conflicts(
+            conflict_str, when="network=mpi", msg="conduit attribute requires 'network=gasnet'."
         )
         conflicts(
             "conduit=none", msg="the 'conduit' variant must be set to a value other than 'none'"
@@ -262,12 +275,7 @@ class Legion(CMakePackage, ROCmPackage):
         default=512,
         description="Maximum number of fields allowed in a logical region.",
     )
-    variant(
-        "max_num_nodes",
-        values=int,
-        default=1024,
-        description="Maximum number of nodes supported by Legion.",
-    )
+    depends_on("cray-pmi", when="conduit=ofi-slingshot11 ^cray-mpich")
 
     def setup_build_environment(self, build_env):
         spec = self.spec
