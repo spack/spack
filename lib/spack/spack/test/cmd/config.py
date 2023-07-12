@@ -145,6 +145,12 @@ config:
     assert "scope_by_path/test2" in output3
     assert "scope_by_path/test3" in output3
 
+    # Sanity check: make sure we haven't modified anything in any of Spack's
+    # tracked scopes
+    output4 = config("get", "config")
+    assert "config:" in output4
+    assert "scope_by_path/test3" not in output4
+
 
 def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config("edit", "--print-file", fail_on_error=False)
