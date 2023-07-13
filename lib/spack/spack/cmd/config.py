@@ -142,7 +142,7 @@ def _get_config_file(args):
     scope, section = _get_scope_and_section(args)
 
     if not section and not isinstance(scope, spack.config.SingleFileScope):
-        tty.die("`spack config get` requires a section argument or an active environment.")
+        tty.die("Must specify --section, or have an active environment, or specify a file path as a --scope")
 
     if section:
         config_file = scope.get_section_filename(section)

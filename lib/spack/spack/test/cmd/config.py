@@ -195,12 +195,12 @@ config:
 
 def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config("edit", "--print-file", fail_on_error=False)
-    assert "requires a section argument or an active environment" in output
+    assert "Must specify --section, or have an active environment," in output
 
 
 def test_config_get_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config("get", fail_on_error=False)
-    assert "requires a section argument or an active environment" in output
+    assert "Must specify --section, or have an active environment," in output
 
 
 def test_config_list():
