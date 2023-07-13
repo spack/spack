@@ -164,7 +164,10 @@ def entries_to_specs(entries):
                     continue
                 parent_spec = spec_dict[entry["hash"]]
                 dep_spec = spec_dict[dep_hash]
-                parent_spec._add_dependency(dep_spec, deptypes=deptypes)
+                parent_spec._add_dependency(dep_spec, deptypes=deptypes, virtuals=())
+
+    for spec in spec_dict.values():
+        spack.spec.reconstruct_virtuals_on_edges(spec)
 
     return spec_dict
 
@@ -196,4 +199,4 @@ def read(path, apply_updates):
 
 class ManifestValidationError(spack.error.SpackError):
     def __init__(self, msg, long_msg=None):
-        super(ManifestValidationError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)

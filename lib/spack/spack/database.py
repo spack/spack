@@ -36,6 +36,8 @@ except ImportError:
     _use_uuid = False
     pass
 
+from typing import Optional, Tuple
+
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -60,7 +62,7 @@ _db_dirname = ".spack-db"
 # DB version.  This is stuck in the DB file to track changes in format.
 # Increment by one when the database format changes.
 # Versions before 5 were not integers.
-_db_version = vn.Version("6")
+_db_version = vn.Version("7")
 
 # For any version combinations here, skip reindex when upgrading.
 # Reindexing can take considerable time and is not always necessary.
@@ -72,6 +74,7 @@ _skip_reindex = [
     # version is saved to disk the first time the DB is written.
     (vn.Version("0.9.3"), vn.Version("5")),
     (vn.Version("5"), vn.Version("6")),
+    (vn.Version("6"), vn.Version("7")),
 ]
 
 # Default timeout for spack database locks in seconds or None (no timeout).
@@ -105,7 +108,11 @@ default_install_record_fields = [
 
 
 def reader(version):
-    reader_cls = {vn.Version("5"): spack.spec.SpecfileV1, vn.Version("6"): spack.spec.SpecfileV3}
+    reader_cls = {
+        vn.Version("5"): spack.spec.SpecfileV1,
+        vn.Version("6"): spack.spec.SpecfileV3,
+        vn.Version("7"): spack.spec.SpecfileV4,
+    }
     return reader_cls[version]
 
 
@@ -130,7 +137,7 @@ class InstallStatus(str):
     pass
 
 
-class InstallStatuses(object):
+class InstallStatuses:
     INSTALLED = InstallStatus("installed")
     DEPRECATED = InstallStatus("deprecated")
     MISSING = InstallStatus("missing")
@@ -157,7 +164,7 @@ class InstallStatuses(object):
             return query_arg
 
 
-class InstallRecord(object):
+class InstallRecord:
     """A record represents one installation in the DB.
 
     The record keeps track of the spec for the installation, its
@@ -173,9 +180,9 @@ class InstallRecord(object):
     dependents left.
 
     Args:
-        spec (spack.spec.Spec): spec tracked by the install record
-        path (str): path where the spec has been installed
-        installed (bool): whether or not the spec is currently installed
+        spec: spec tracked by the install record
+        path: path where the spec has been installed
+        installed: whether or not the spec is currently installed
         ref_count (int): number of specs that depend on this one
         explicit (bool or None): whether or not this spec was explicitly
             installed, or pulled-in as a dependency of something else
@@ -184,14 +191,14 @@ class InstallRecord(object):
 
     def __init__(
         self,
-        spec,
-        path,
-        installed,
-        ref_count=0,
-        explicit=False,
-        installation_time=None,
-        deprecated_for=None,
-        in_buildcache=False,
+        spec: "spack.spec.Spec",
+        path: str,
+        installed: bool,
+        ref_count: int = 0,
+        explicit: bool = False,
+        installation_time: Optional[float] = None,
+        deprecated_for: Optional["spack.spec.Spec"] = None,
+        in_buildcache: bool = False,
         origin=None,
     ):
         self.spec = spec
@@ -248,7 +255,7 @@ class ForbiddenLockError(SpackError):
     """Raised when an upstream DB attempts to acquire a lock"""
 
 
-class ForbiddenLock(object):
+class ForbiddenLock:
     def __getattribute__(self, name):
         raise ForbiddenLockError("Cannot access attribute '{0}' of lock".format(name))
 
@@ -302,7 +309,7 @@ _query_docstring = """
         """
 
 
-class Database(object):
+class Database:
 
     """Per-process lock objects for each install prefix."""
 
@@ -402,7 +409,7 @@ class Database(object):
             self.lock = lk.Lock(
                 self._lock_path, default_timeout=self.db_lock_timeout, desc="database"
             )
-        self._data = {}
+        self._data: Dict[str, InstallRecord] = {}
 
         # For every installed spec we keep track of its install prefix, so that
         # we can answer the simple query whether a given path is already taken
@@ -705,7 +712,9 @@ class Database(object):
             if hash_key in db._data:
                 return db
 
-    def query_by_spec_hash(self, hash_key, data=None):
+    def query_by_spec_hash(
+        self, hash_key: str, data: Optional[Dict[str, InstallRecord]] = None
+    ) -> Tuple[bool, Optional[InstallRecord]]:
         """Get a spec for hash, and whether it's installed upstream.
 
         Return:
@@ -743,7 +752,9 @@ class Database(object):
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _ in spec_reader.read_specfile_dep_specs(yaml_deps):
+            for dname, dhash, dtypes, _, virtuals in spec_reader.read_specfile_dep_specs(
+                yaml_deps
+            ):
                 # It is important that we always check upstream installations
                 # in the same order, and that we always check the local
                 # installation first: if a downstream Spack installs a package
@@ -766,7 +777,7 @@ class Database(object):
                     tty.warn(msg)
                     continue
 
-                spec._add_dependency(child, deptypes=dtypes)
+                spec._add_dependency(child, deptypes=dtypes, virtuals=virtuals)
 
     def _read_from_file(self, filename):
         """Fill database from file, do not maintain old data.
@@ -1172,7 +1183,7 @@ class Database(object):
             for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                new_spec._add_dependency(record.spec, deptypes=dep.deptypes)
+                new_spec._add_dependency(record.spec, deptypes=dep.deptypes, virtuals=dep.virtuals)
                 if not upstream:
                     record.ref_count += 1
 
@@ -1209,7 +1220,7 @@ class Database(object):
             match = self.query_one(spec, **kwargs)
             if match:
                 return match.dag_hash()
-            raise KeyError("No such spec in database! %s" % spec)
+            raise NoSuchSpecError(spec)
         return key
 
     @_autospec
@@ -1660,8 +1671,22 @@ class InvalidDatabaseVersionError(SpackError):
             f"you need a newer Spack version to read the DB in '{database.root}'. "
             f"{self.database_version_message}"
         )
-        super(InvalidDatabaseVersionError, self).__init__(msg)
+        super().__init__(msg)
 
     @property
     def database_version_message(self):
         return f"The expected DB version is '{self.expected}', but '{self.found}' was found."
+
+
+class NoSuchSpecError(KeyError):
+    """Raised when a spec is not found in the database."""
+
+    def __init__(self, spec):
+        self.spec = spec
+        super().__init__(spec)
+
+    def __str__(self):
+        # This exception is raised frequently, and almost always
+        # caught, so ensure we don't pay the cost of Spec.__str__
+        # unless the exception is actually printed.
+        return f"No such spec in database: {self.spec}"

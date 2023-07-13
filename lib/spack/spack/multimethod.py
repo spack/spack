@@ -52,7 +52,7 @@ class MultiMethodMeta(type):
         super(MultiMethodMeta, cls).__init__(name, bases, attr_dict)
 
 
-class SpecMultiMethod(object):
+class SpecMultiMethod:
     """This implements a multi-method for Spack specs.  Packages are
     instantiated with a particular spec, and you may want to
     execute different versions of methods based on what the spec
@@ -153,7 +153,7 @@ class SpecMultiMethod(object):
         )
 
 
-class when(object):
+class when:
     def __init__(self, condition):
         """Can be used both as a decorator, for multimethods, or as a context
         manager to group ``when=`` arguments together.
@@ -275,14 +275,14 @@ class MultiMethodError(spack.error.SpackError):
     """Superclass for multimethod dispatch errors"""
 
     def __init__(self, message):
-        super(MultiMethodError, self).__init__(message)
+        super().__init__(message)
 
 
 class NoSuchMethodError(spack.error.SpackError):
     """Raised when we can't find a version of a multi-method."""
 
     def __init__(self, cls, method_name, spec, possible_specs):
-        super(NoSuchMethodError, self).__init__(
+        super().__init__(
             "Package %s does not support %s called with %s.  Options are: %s"
             % (cls.__name__, method_name, spec, ", ".join(str(s) for s in possible_specs))
         )

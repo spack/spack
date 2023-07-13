@@ -47,6 +47,7 @@ _SHELL_SET_STRINGS = {
     "csh": "setenv {0} {1};\n",
     "fish": "set -gx {0} {1};\n",
     "bat": 'set "{0}={1}"\n',
+    "pwsh": "$Env:{0}={1}\n",
 }
 
 
@@ -55,6 +56,7 @@ _SHELL_UNSET_STRINGS = {
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
     "bat": 'set "{0}="\n',
+    "pwsh": "Remove-Item Env:{0}\n",
 }
 
 
@@ -172,7 +174,9 @@ BASH_FUNCTION_FINDER = re.compile(r"BASH_FUNC_(.*?)\(\)")
 
 
 def _win_env_var_to_set_line(var: str, val: str) -> str:
-    return f'set "{var}={val}"'
+    is_pwsh = os.environ.get("SPACK_SHELL", None) == "pwsh"
+    env_set_phrase = f"$Env:{var}={val}" if is_pwsh else f'set "{var}={val}"'
+    return env_set_phrase
 
 
 def _nix_env_var_to_source_line(var: str, val: str) -> str:
@@ -351,13 +355,20 @@ class NameValueModifier:
 
 
 class SetEnv(NameValueModifier):
-    __slots__ = ("force",)
+    __slots__ = ("force", "raw")
 
     def __init__(
-        self, name: str, value: str, *, trace: Optional[Trace] = None, force: bool = False
+        self,
+        name: str,
+        value: str,
+        *,
+        trace: Optional[Trace] = None,
+        force: bool = False,
+        raw: bool = False,
     ):
         super().__init__(name, value, trace=trace)
         self.force = force
+        self.raw = raw
 
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"SetEnv: {self.name}={str(self.value)}", level=3)
@@ -501,15 +512,16 @@ class EnvironmentModifications:
         return Trace(filename=filename, lineno=lineno, context=current_context)
 
     @system_env_normalize
-    def set(self, name: str, value: str, *, force: bool = False):
+    def set(self, name: str, value: str, *, force: bool = False, raw: bool = False):
         """Stores a request to set an environment variable.
 
         Args:
             name: name of the environment variable
             value: value of the environment variable
             force: if True, audit will not consider this modification a warning
+            raw: if True, format of value string is skipped
         """
-        item = SetEnv(name, value, trace=self._trace(), force=force)
+        item = SetEnv(name, value, trace=self._trace(), force=force, raw=raw)
         self.env_modifications.append(item)
 
     @system_env_normalize
@@ -685,7 +697,7 @@ class EnvironmentModifications:
 
     def shell_modifications(
         self,
-        shell: str = "sh",
+        shell: str = "sh" if sys.platform != "win32" else os.environ.get("SPACK_SHELL", "bat"),
         explicit: bool = False,
         env: Optional[MutableMapping[str, str]] = None,
     ) -> str:
@@ -768,16 +780,21 @@ class EnvironmentModifications:
                 "PS1",
                 "PS2",
                 "ENV",
-                # Environment modules v4
+                # Environment Modules or Lmod
                 "LOADEDMODULES",
                 "_LMFILES_",
-                "BASH_FUNC_module()",
                 "MODULEPATH",
-                "MODULES_(.*)",
-                r"(\w*)_mod(quar|share)",
-                # Lmod configuration
-                r"LMOD_(.*)",
                 "MODULERCFILE",
+                "BASH_FUNC_ml()",
+                "BASH_FUNC_module()",
+                # Environment Modules-specific configuration
+                "MODULESHOME",
+                "BASH_FUNC__module_raw()",
+                r"MODULES_(.*)",
+                r"__MODULES_(.*)",
+                r"(\w*)_mod(quar|share)",
+                # Lmod-specific configuration
+                r"LMOD_(.*)",
             ]
         )
 

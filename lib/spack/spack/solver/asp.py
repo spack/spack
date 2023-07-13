@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from __future__ import division, print_function
-
 import collections
 import collections.abc
 import copy
@@ -249,7 +247,7 @@ def specify(spec):
     return spack.spec.Spec(spec)
 
 
-class AspObject(object):
+class AspObject:
     """Object representing a piece of ASP code."""
 
 
@@ -315,7 +313,7 @@ class AspFunction(AspObject):
         return str(self)
 
 
-class AspFunctionBuilder(object):
+class AspFunctionBuilder:
     def __getattr__(self, name):
         return AspFunction(name)
 
@@ -357,7 +355,7 @@ def check_packages_exist(specs):
                 raise spack.repo.UnknownPackageError(str(s.fullname))
 
 
-class Result(object):
+class Result:
     """Result of an ASP solve."""
 
     def __init__(self, specs, asp=None):
@@ -657,7 +655,7 @@ RequirementRule = collections.namedtuple(
 )
 
 
-class PyclingoDriver(object):
+class PyclingoDriver:
     def __init__(self, cores=True):
         """Driver for the Python clingo interface.
 
@@ -855,7 +853,7 @@ class PyclingoDriver(object):
         return result, timer, self.control.statistics
 
 
-class SpackSolverSetup(object):
+class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
     def __init__(self, tests=False):
@@ -1538,7 +1536,7 @@ class SpackSolverSetup(object):
         clauses = []
 
         # TODO: do this with consistent suffixes.
-        class Head(object):
+        class Head:
             node = fn.attr("node")
             virtual_node = fn.attr("virtual_node")
             node_platform = fn.attr("node_platform_set")
@@ -1552,7 +1550,7 @@ class SpackSolverSetup(object):
             node_flag_propagate = fn.attr("node_flag_propagate")
             variant_propagate = fn.attr("variant_propagate")
 
-        class Body(object):
+        class Body:
             node = fn.attr("node")
             virtual_node = fn.attr("virtual_node")
             node_platform = fn.attr("node_platform")
@@ -2383,7 +2381,7 @@ class SpackSolverSetup(object):
         return version_specs
 
 
-class SpecBuilder(object):
+class SpecBuilder:
     """Class with actions to rebuild a spec from ASP results."""
 
     #: Regex for attributes that don't need actions b/c they aren't used to construct specs.
@@ -2393,6 +2391,7 @@ class SpecBuilder(object):
                 r"^.*_propagate$",
                 r"^.*_satisfies$",
                 r"^.*_set$",
+                r"^node_compiler$",
                 r"^package_hash$",
                 r"^root$",
                 r"^virtual_node$",
@@ -2500,10 +2499,15 @@ class SpecBuilder(object):
         assert len(dependencies) < 2, msg
 
         if not dependencies:
-            self._specs[pkg].add_dependency_edge(self._specs[dep], deptypes=(type,))
+            self._specs[pkg].add_dependency_edge(self._specs[dep], deptypes=(type,), virtuals=())
         else:
             # TODO: This assumes that each solve unifies dependencies
-            dependencies[0].add_type(type)
+            dependencies[0].update_deptypes(deptypes=(type,))
+
+    def virtual_on_edge(self, pkg, provider, virtual):
+        dependencies = self._specs[pkg].edges_to_dependencies(name=provider)
+        assert len(dependencies) == 1
+        dependencies[0].update_virtuals((virtual,))
 
     def reorder_flags(self):
         """Order compiler flags on specs in predefined order.
@@ -2581,6 +2585,8 @@ class SpecBuilder(object):
             return (-2, 0)
         elif name == "external_spec_selected":
             return (0, 0)  # note out of order so this goes last
+        elif name == "virtual_on_edge":
+            return (1, 0)
         else:
             return (-1, 0)
 
@@ -2691,7 +2697,7 @@ def _develop_specs_from_env(spec, env):
     spec.constrain(dev_info["spec"])
 
 
-class Solver(object):
+class Solver:
     """This is the main external interface class for solving.
 
     It manages solver configuration and preferences in one place. It sets up the solve

@@ -12,6 +12,7 @@ class PySetuptoolsScm(PythonPackage):
     homepage = "https://github.com/pypa/setuptools_scm"
     pypi = "setuptools_scm/setuptools_scm-4.1.2.tar.gz"
 
+    version("7.1.0", sha256="6c508345a771aad7d56ebff0e70628bf2b0ec7573762be9960214730de278f27")
     version("7.0.5", sha256="031e13af771d6f892b941adb6ea04545bbf91ebc5ce68c78aaf3fff6e1fb4844")
     version("7.0.3", sha256="cf8ab8e235bed840cd4559b658af0d8e8a70896a191bbc510ee914ec5325332d")
     version("6.3.2", sha256="a49aa8081eeb3514eb9728fa5040f2eaa962d6c6f4ec9c32f6c1fba88f88a0f2")
@@ -37,6 +38,7 @@ class PySetuptoolsScm(PythonPackage):
     depends_on("py-setuptools@34.4:", type=("build", "run"))
     depends_on("py-toml", when="+toml @:6.1.0", type=("build", "run"))
     depends_on("py-tomli@1:", when="+toml @6.1.0:", type=("build", "run"))
-    depends_on("py-tomli@1:", when="@7:", type=("build", "run"))
+    depends_on("py-tomli@1:", when="@7.0", type=("build", "run"))
+    depends_on("py-tomli@1:", when="@7.1: ^python@:3.10", type=("build", "run"))
     depends_on("py-typing-extensions", when="@7:", type=("build", "run"))
     depends_on("py-importlib-metadata", when="@7: ^python@:3.7", type=("build", "run"))
