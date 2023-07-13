@@ -197,7 +197,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
                 options.append("-DCMAKE_CUDA_HOST_COMPILER={0}".format(env["SPACK_CXX"]))
 
-                if spec.satisfies("@1.9.0:"):
+                if spec.satisfies("@1.9.0:") and spec.satisfies("^cmake@3.18:"):
                     options.append(self.builder.define_cuda_architectures(self))
 
                 else:
