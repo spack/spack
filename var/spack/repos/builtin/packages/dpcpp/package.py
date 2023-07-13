@@ -54,6 +54,7 @@ class Dpcpp(CMakePackage):
     # depends_on('hip@4.0.0:', when='+rocm', type='build')
 
     root_cmakelists_dir = "llvm"
+    build_targets = ["deploy-sycl-toolchain"]
 
     def cmake_args(self):
         llvm_external_projects = "sycl;llvm-spirv;opencl;xpti;xptifw"
