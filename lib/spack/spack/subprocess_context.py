@@ -67,10 +67,11 @@ class PackageInstallContext:
 
     def __init__(self, pkg):
         if _SERIALIZE:
+            self.serialized_pkg = serialize(pkg)
             self.serialized_env = serialize(spack.environment.active_environment())
         else:
+            self.pkg = pkg
             self.env = spack.environment.active_environment()
-        self.spec = pkg.spec
         self.spack_working_dir = spack.main.spack_working_dir
         self.test_state = TestState()
 
@@ -78,7 +79,7 @@ class PackageInstallContext:
         self.test_state.restore()
         spack.main.spack_working_dir = self.spack_working_dir
         env = pickle.load(self.serialized_env) if _SERIALIZE else self.env
-        pkg = self.spec.package
+        pkg = pickle.load(self.serialized_pkg) if _SERIALIZE else self.pkg
         if env:
             spack.environment.activate(env)
         return pkg
