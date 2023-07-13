@@ -692,8 +692,6 @@ class Configuration:
         parts = process_config_path(path)
         section = parts.pop(0)
 
-        #scope = self._validate_scope(scope or default_modify_scope(section))
-
         section_data = self.get_config(section, scope=scope)
 
         data = section_data
@@ -704,11 +702,7 @@ class Configuration:
                 new = type(data[key])()
                 del data[key]
             else:
-                try:
-                    new = data[key]
-                except:
-                    import pdb; pdb.set_trace()
-                    raise
+                new = data[key]
 
             if isinstance(new, dict):
                 # Make it an ordered dict

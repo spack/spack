@@ -172,7 +172,6 @@ def test_config_scope_by_path_shadowed(mutable_config, mutable_mock_env_path, tm
     """
     config_dir = tmpdir.ensure("user", dir=True)
     config_file = config_dir.join("config.yaml")
-    config_path = os.path.abspath(str(tmpdir.join("config.yaml")))
     with open(config_file, "w") as f:
         f.write(
             """\
@@ -181,9 +180,6 @@ config:
   - scope_by_path/test1
 """
         )
-
-    #x = spack.cmd.config._get_scope_and_section(MockArgs({"scope": "user"}))
-    #import pdb; pdb.set_trace()
 
     with fs.working_dir(tmpdir):
         output1 = config("--scope=user", "get", "config")
