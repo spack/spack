@@ -260,6 +260,8 @@ class Cudnn(Package):
     # need to use modified URLs like in url_for_version.
     maintainers("adamjstewart", "bvanessen")
 
+    skip_version_audit = ["platform=darwin"]
+
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)

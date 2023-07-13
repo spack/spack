@@ -17,7 +17,10 @@ concurrency:
 jobs:
   # Run audits on all the packages in the built-in repository
   package-audits:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.operating_system }}
+    strategy:
+      matrix:
+        operating_system: ["ubuntu-latest", "macos-latest"]
     steps:
     - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # @v2
     - uses: actions/setup-python@bd6b4b6205c4dbad673328db7b31b7fab9e241c0 # @v2
@@ -41,4 +44,4 @@ jobs:
     - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # @v2.1.0
       if: ${{ inputs.with_coverage == 'true' }}
       with:
-        flags: unittests,linux,audits
+        flags: unittests,audits
