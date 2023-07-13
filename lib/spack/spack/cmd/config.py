@@ -138,17 +138,8 @@ def _get_scope_and_section(args):
     return scope, section
 
 
-def config_get(args):
-    """Dump merged YAML configuration for a specific section.
-
-    With no arguments and an active environment, print the contents of
-    the environment's manifest file (spack.yaml).
-    """
+def _get_config_file(args):
     scope, section = _get_scope_and_section(args)
-
-    if section is not None and not args.scope:
-        spack.config.config.print_section(section)
-        return
 
     if not section and not isinstance(scope, spack.config.SingleFileScope):
         tty.die("`spack config get` requires a section argument or an active environment.")
@@ -157,6 +148,21 @@ def config_get(args):
         config_file = scope.get_section_filename(section)
     else:
         config_file = scope.path
+
+    return config_file
+
+
+def config_get(args):
+    """Dump merged YAML configuration for a specific section.
+
+    With no arguments and an active environment, print the contents of
+    the environment's manifest file (spack.yaml).
+    """
+    if args.section and not args.scope:
+        spack.config.config.print_section(args.section)
+        return
+
+    config_file = _get_config_file(args)
 
     if os.path.exists(config_file):
         with open(config_file) as f:
@@ -176,17 +182,7 @@ def config_edit(args):
     With no arguments and an active environment, edit the spack.yaml for
     the active environment.
     """
-    spack_env = os.environ.get(ev.spack_env_var)
-    if spack_env and not args.scope:
-        # Don't use the scope object for envs, as `config edit` can be called
-        # for a malformed environment. Use SPACK_ENV to find spack.yaml.
-        config_file = ev.manifest_file(spack_env)
-    else:
-        # If we aren't editing a spack.yaml file, get config path from scope.
-        scope, section = _get_scope_and_section(args)
-        if not scope and not section:
-            tty.die("`spack config edit` requires a section argument " "or an active environment.")
-        config_file = spack.config.config.get_config_filename(scope, section)
+    config_file = _get_config_file(args)
 
     if args.print_file:
         print(config_file)
