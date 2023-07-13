@@ -731,7 +731,7 @@ class Environment:
 
         self.txlock = lk.Lock(self._transaction_lock_path)
 
-        self.unify = None
+        self._unify = None
         self.new_specs: List[Spec] = []
         self.new_installs: List[Spec] = []
         self.views: Dict[str, ViewDescriptor] = {}
@@ -754,6 +754,16 @@ class Environment:
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
             self._read()
+
+    @property
+    def unify(self):
+        if self._unify is None:
+            self._unify = spack.config.get("concretizer:unify", False)
+        return self._unify
+
+    @unify.setter
+    def unify(self, value):
+        self._unify = value
 
     def __reduce__(self):
         return _create_environment, (self.path,)
@@ -815,9 +825,6 @@ class Environment:
             )
         else:
             self.views = {}
-
-        # Retrieve unification scheme for the concretizer
-        self.unify = spack.config.get("concretizer:unify", False)
 
         # Retrieve dev-build packages:
         self.dev_specs = copy.deepcopy(env_configuration.get("develop", {}))
