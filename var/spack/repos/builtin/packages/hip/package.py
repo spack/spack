@@ -120,7 +120,7 @@ class Hip(CMakePackage):
 
     depends_on("cuda", when="+cuda")
 
-    depends_on("cmake@3.16.8:", type="build", when="@4.5.0:")
+    depends_on("cmake@3.16.8:", type=("build", "run"), when="@4.5.0:")
     depends_on("cmake@3.4.3:", type="build")
     depends_on("perl@5.10:", type=("build", "run"))
 
@@ -325,6 +325,7 @@ class Hip(CMakePackage):
 
     patch("Add_missing_open_cl_header_file_for_4.3.0.patch", when="@4.3.0:4.3.2")
     patch("0014-hip-test-file-reorg-5.4.0.patch", when="@5.4.0:")
+    patch("0016-hip-sample-fix-hipMalloc-call.patch", when="@5.4.3:")
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/3206
     patch(
@@ -617,12 +618,12 @@ class Hip(CMakePackage):
             return
         self.cache_extra_test_sources([self.test_src_dir])
 
-    def test(self):
+    def test_samples(self):
+        # configure, build and run all hip samples
         if self.spec.satisfies("@:5.1.0"):
             print("Skipping: stand-alone tests")
             return
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
-        cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
         prefixes = ";".join(
             [
                 self.spec["hip"].prefix,
@@ -631,34 +632,43 @@ class Hip(CMakePackage):
                 self.spec["hsa-rocr-dev"].prefix,
             ]
         )
-        cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, "."]
-        failed_tests = []
+        cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."]
+
+        amdclang_path = join_path(self.spec["llvm-amdgpu"].prefix, "bin", "amdclang++")
+        os.environ["CXX"] = amdclang_path
+        os.environ["FC"] = "/usr/bin/gfortran"
+
         for root, dirs, files in os.walk(test_dir):
             dirs.sort()
             if "CMakeLists.txt" in files or "Makefile" in files:
                 with working_dir(root, create=True):
                     head, test_name = os.path.split(root)
-                    try:
-                        print("{:=^80}".format("Configuring test for " + test_name))
+                    with test_part(
+                        self,
+                        "test_sample_{0}".format(test_name),
+                        purpose="configure, build and run test: {0}".format(test_name),
+                    ):
                         if "CMakeLists.txt" in files:
-                            self.run_test(cmake_bin, cc_options)
-                        else:
-                            print("CMakeLists.txt doesn't exist for this test, running Makefile")
+                            print("Configuring  test " + test_name)
+                            os.mkdir("build")
+                            os.chdir("build")
+                            cmake(*cc_options)
+
                         print("Building test " + test_name)
-                        make()
+                        make(parallel=False)
                         # itterate through the files in dir to find the newly built binary
                         for file in os.listdir("."):
                             if (
                                 file not in files
                                 and os.path.isfile(file)
                                 and os.access(file, os.X_OK)
+                                and not file.endswith(".o")
                             ):
                                 print("Executing test binary: " + file)
-                                self.run_test(file)
+                                exe = which(file)
+                                if file == "hipDispatchEnqueueRateMT":
+                                    options = ["16", "0"]
+                                else:
+                                    options = []
+                                exe(*options)
                         make("clean")
-                    except ProcessError:
-                        print("Test Failed\n")
-                        failed_tests.append(test_name)
-
-        print("\nFailed Tests List:")
-        print(*failed_tests, sep="\n")
