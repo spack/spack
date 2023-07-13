@@ -54,7 +54,9 @@ def setup_parser(subparser):
     push_sign.add_argument(
         "--unsigned", "-u", action="store_true", help="push unsigned buildcache tarballs"
     )
-    push_sign.add_argument("--key", "-k", metavar="key", type=str, default=None, help="key for signing")
+    push_sign.add_argument(
+        "--key", "-k", metavar="key", type=str, default=None, help="key for signing"
+    )
     push.add_argument("mirror", type=str, help="mirror name, path, or URL")
     push.add_argument(
         "--update-index",
