@@ -217,9 +217,7 @@ def mirror_remove(args):
     spack.mirror.remove(args.name, args.scope)
 
 
-def mirror_set_url(args):
-    """change the URL of a mirror"""
-    url = args.url
+def _configure_mirror(args):
     mirrors = spack.config.get("mirrors", scope=args.scope)
 
     if args.name not in mirrors:
@@ -255,12 +253,12 @@ def mirror_set_url(args):
 
 
 def mirror_set(args):
-    """configure the connection details of a mirror"""
+    """Configure the connection details of a mirror"""
     _configure_mirror(args)
 
 
 def mirror_set_url(args):
-    """change the URL of a mirror"""
+    """Change the URL of a mirror."""
     _configure_mirror(args)
 
 
