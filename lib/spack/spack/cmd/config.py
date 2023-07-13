@@ -148,31 +148,21 @@ def config_get(args):
 
     if section is not None and not args.scope:
         spack.config.config.print_section(section)
-    elif scope:
-        if isinstance(scope, spack.config.ConfigScope):
-            if isinstance(scope, spack.config.SingleFileScope):
-                config_file = scope.path
-            elif not section:
-                raise ValueError("Must specify a section for a directory scope")
+        return
 
-            if section:
-                config_file = scope.get_section_filename(section)
+    if isinstance(scope, spack.config.SingleFileScope):
+        config_file = scope.path
+    elif not section:
+        tty.die("`spack config get` requires a section argument or an active environment.")
 
-            missing_msg = "No such file: %s" % config_file
-        elif scope.startswith("env:"):
-            config_file = spack.config.config.get_config_filename(scope, section)
-            missing_msg = "environment has no %s file" % ev.manifest_name
-        else:
-            raise ValueError("Unexpected: " + str(scope))
+    if section:
+        config_file = scope.get_section_filename(section)
 
-        if os.path.exists(config_file):
-            with open(config_file) as f:
-                print(f.read())
-        else:
-            print("<No config for this scope/section>")
-
-    else:
-        tty.die("`spack config get` requires a section argument " "or an active environment.")
+    if os.path.exists(config_file):
+        with open(config_file) as f:
+            print(f.read())
+    # The config file might not exist if there is no config associated with
+    # the specified section at the specified scope; in that case, print nothing.
 
 
 def config_blame(args):
