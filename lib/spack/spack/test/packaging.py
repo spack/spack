@@ -29,7 +29,6 @@ import spack.util.url as url_util
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import (
-    ensure_binary_is_relocatable,
     macho_find_paths,
     macho_make_paths_normal,
     macho_make_paths_relative,
@@ -141,7 +140,6 @@ def test_relocate_text(tmp_path):
     dummy_txt = tmp_path / "dummy.txt"
     dummy_txt.write_text(original_dir)
 
-    ensure_binary_is_relocatable(os.path.realpath(dummy_txt))
     relocate_text([str(dummy_txt)], {original_dir: relocation_dir})
     text = dummy_txt.read_text()
 

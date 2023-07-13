@@ -417,7 +417,7 @@ def preview_fn(args):
     for spec in specs:
         print("Relocatable nodes")
         print("--------------------------------")
-        print(spec.tree(status_fn=spack.relocate.is_relocatable))
+        print(spec.tree(status_fn=lambda s: True))
 
 
 def check_fn(args):
