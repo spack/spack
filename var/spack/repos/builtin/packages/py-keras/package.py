@@ -21,6 +21,7 @@ class PyKeras(PythonPackage):
     git = "https://github.com/keras-team/keras.git"
     url = "https://github.com/keras-team/keras/archive/refs/tags/v2.7.0.tar.gz"
 
+    version("2.13.1", sha256="b3591493cce75a69adef7b192cec6be222e76e2386d132cd4e34aa190b0ecbd5")
     version("2.12.0", sha256="6336cebb6b2b0a91f7efd3ff3a9db3a94f2abccf07a40323138afb80826aec62")
     version("2.11.0", sha256="e7a7c4199ac76ea750d145c1d84ae1b932e68b9bca34e83596bd66b2fc2ad79e")
     version("2.10.0", sha256="b1d8d9358700f4a585455854a142d88cc987419c1638ef935b440842d593ad04")
@@ -60,7 +61,7 @@ class PyKeras(PythonPackage):
     depends_on("py-pydot", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
-    for minor_ver in range(6, 13):
+    for minor_ver in range(6, 14):
         depends_on(
             "py-tensorflow@2.{}".format(minor_ver),
             type=("build", "run"),
