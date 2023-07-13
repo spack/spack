@@ -21,6 +21,8 @@ class PyPymol(PythonPackage):
 
     depends_on("python+tkinter@2.7:", type=("build", "link", "run"), when="@2.3.0:2.4.0")
     depends_on("python+tkinter@3.6:", type=("build", "link", "run"), when="@2.5.0:")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
     depends_on("gl")
     depends_on("glew")
     depends_on("libpng")

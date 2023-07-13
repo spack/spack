@@ -19,6 +19,8 @@ class PyShiboken(PythonPackage):
     depends_on("cmake", type="build")
 
     depends_on("py-setuptools", type="build")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
     depends_on("py-sphinx@:3.4", type=("build", "run"))
     depends_on("libxml2")
     depends_on("qt@:4.8")
