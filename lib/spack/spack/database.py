@@ -409,7 +409,7 @@ class Database:
             self.lock = lk.Lock(
                 self._lock_path, default_timeout=self.db_lock_timeout, desc="database"
             )
-        self._data = {}
+        self._data: Dict[str, InstallRecord] = {}
 
         # For every installed spec we keep track of its install prefix, so that
         # we can answer the simple query whether a given path is already taken
@@ -712,7 +712,9 @@ class Database:
             if hash_key in db._data:
                 return db
 
-    def query_by_spec_hash(self, hash_key, data=None) -> Tuple[bool, Optional[InstallRecord]]:
+    def query_by_spec_hash(
+        self, hash_key: str, data: Optional[Dict[str, InstallRecord]] = None
+    ) -> Tuple[bool, Optional[InstallRecord]]:
         """Get a spec for hash, and whether it's installed upstream.
 
         Return:
