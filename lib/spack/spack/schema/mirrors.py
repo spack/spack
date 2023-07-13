@@ -6,7 +6,47 @@
 """Schema for mirrors.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/mirrors.py
+   :lines: 12-69
 """
+
+#: Common properties for connection specification
+connection = {
+    "url": {"type": "string"},
+    # todo: replace this with named keys "username" / "password" or "id" / "secret"
+    "access_pair": {
+        "type": "array",
+        "items": {"type": ["string", "null"], "minItems": 2, "maxItems": 2},
+    },
+    "access_token": {"type": ["string", "null"]},
+    "profile": {"type": ["string", "null"]},
+    "endpoint_url": {"type": ["string", "null"]},
+}
+
+#: Mirror connection inside pull/push keys
+fetch_and_push = {
+    "anyOf": [
+        {"type": "string"},
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {**connection},  # type: ignore
+        },
+    ]
+}
+
+#: Mirror connection when no pull/push keys are set
+mirror_entry = {
+    "type": "object",
+    "additionalProperties": False,
+    "anyOf": [{"required": ["url"]}, {"required": ["fetch"]}, {"required": ["pull"]}],
+    "properties": {
+        "source": {"type": "boolean"},
+        "binary": {"type": "boolean"},
+        "fetch": fetch_and_push,
+        "push": fetch_and_push,
+        **connection,  # type: ignore
+    },
+}
 
 #: Properties for inclusion in other schemas
 properties = {
@@ -14,21 +54,7 @@ properties = {
         "type": "object",
         "default": {},
         "additionalProperties": False,
-        "patternProperties": {
-            r"\w[\w-]*": {
-                "anyOf": [
-                    {"type": "string"},
-                    {
-                        "type": "object",
-                        "required": ["fetch", "push"],
-                        "properties": {
-                            "fetch": {"type": ["string", "object"]},
-                            "push": {"type": ["string", "object"]},
-                        },
-                    },
-                ]
-            }
-        },
+        "patternProperties": {r"\w[\w-]*": {"anyOf": [{"type": "string"}, mirror_entry]}},
     }
 }
 
