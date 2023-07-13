@@ -45,15 +45,18 @@ def setup_parser(subparser):
     push = subparsers.add_parser("push", aliases=["create"], help=push_fn.__doc__)
     push.add_argument("-f", "--force", action="store_true", help="overwrite tarball if it exists")
     push.add_argument(
-        "-u", "--unsigned", action="store_true", help="push unsigned buildcache tarballs"
-    )
-    push.add_argument(
-        "-a",
         "--allow-root",
+        "-a",
         action="store_true",
         help="allow install root string in binary files after RPATH substitution",
     )
-    push.add_argument("-k", "--key", metavar="key", type=str, default=None, help="key for signing")
+    push_sign = push.add_mutually_exclusive_group(required=False)
+    push_sign.add_argument(
+        "--unsigned", "-u", action="store_true", help="push unsigned buildcache tarballs"
+    )
+    push_sign.add_argument(
+        "--key", "-k", metavar="key", type=str, default=None, help="key for signing"
+    )
     push.add_argument("mirror", type=str, help="mirror name, path, or URL")
     push.add_argument(
         "--update-index",
@@ -70,9 +73,9 @@ def setup_parser(subparser):
         default="package,dependencies",
         dest="things_to_install",
         choices=["package", "dependencies"],
-        help="select the buildcache mode\n\n"
-        "the default is to build a cache for the package along with all its dependencies. "
-        "alternatively, one can decide to build a cache for only the package or only the "
+        help="select the buildcache mode. "
+        "The default is to build a cache for the package along with all its dependencies. "
+        "Alternatively, one can decide to build a cache for only the package or only the "
         "dependencies",
     )
     arguments.add_common_arguments(push, ["specs"])
