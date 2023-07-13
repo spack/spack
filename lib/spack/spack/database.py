@@ -36,6 +36,8 @@ except ImportError:
     _use_uuid = False
     pass
 
+from typing import Optional, Tuple
+
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -710,7 +712,7 @@ class Database:
             if hash_key in db._data:
                 return db
 
-    def query_by_spec_hash(self, hash_key, data=None):
+    def query_by_spec_hash(self, hash_key, data=None) -> Tuple[bool, Optional[InstallRecord]]:
         """Get a spec for hash, and whether it's installed upstream.
 
         Return:
