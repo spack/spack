@@ -505,8 +505,8 @@ def _try_install_from_binary_cache(
             otherwise, ``False``
         timer: timer to keep track of binary install phases.
     """
-    # Early exit if no mirrors are configured.
-    if not spack.mirror.MirrorCollection():
+    # Early exit if no binary mirrors are configured.
+    if not spack.mirror.MirrorCollection(binary=True):
         return False
 
     tty.debug("Searching for binary cache of {0}".format(package_id(pkg)))

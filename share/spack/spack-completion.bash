@@ -1290,7 +1290,7 @@ _spack_mirror() {
     then
         SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated"
     else
-        SPACK_COMPREPLY="create destroy add remove rm set-url list"
+        SPACK_COMPREPLY="create destroy add remove rm set-url set list"
     fi
 }
 
@@ -1310,7 +1310,7 @@ _spack_mirror_destroy() {
 _spack_mirror_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url"
+        SPACK_COMPREPLY="-h --help --scope --type --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url"
     else
         _mirrors
     fi
@@ -1337,7 +1337,16 @@ _spack_mirror_rm() {
 _spack_mirror_set_url() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --push --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url"
+        SPACK_COMPREPLY="-h --help --push --fetch --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url"
+    else
+        _mirrors
+    fi
+}
+
+_spack_mirror_set() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --push --fetch --type --url --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url"
     else
         _mirrors
     fi
