@@ -50,13 +50,7 @@ def setup_parser(subparser):
         action="store_true",
         help="allow install root string in binary files after RPATH substitution",
     )
-    push_sign = push.add_mutually_exclusive_group(required=False)
-    push_sign.add_argument(
-        "--unsigned", "-u", action="store_true", help="push unsigned buildcache tarballs"
-    )
-    push_sign.add_argument(
-        "--key", "-k", metavar="key", type=str, default=None, help="key for signing"
-    )
+    push.add_argument("-k", "--key", metavar="key", type=str, default=None, help="key for signing")
     push.add_argument("mirror", type=str, help="mirror name, path, or URL")
     push.add_argument(
         "--update-index",
@@ -73,9 +67,9 @@ def setup_parser(subparser):
         default="package,dependencies",
         dest="things_to_install",
         choices=["package", "dependencies"],
-        help="select the buildcache mode. "
-        "The default is to build a cache for the package along with all its dependencies. "
-        "Alternatively, one can decide to build a cache for only the package or only the "
+        help="select the buildcache mode\n\n"
+        "the default is to build a cache for the package along with all its dependencies. "
+        "alternatively, one can decide to build a cache for only the package or only the "
         "dependencies",
     )
     arguments.add_common_arguments(push, ["specs"])
@@ -414,10 +408,14 @@ def keys_fn(args):
 
 def preview_fn(args):
     """analyze an installed spec and reports whether executables and libraries are relocatable"""
-    tty.warn(
-        "`spack buildcache preview` is deprecated since `spack buildcache push --allow-root` is "
-        "now the default. This command will be removed in Spack 0.22"
-    )
+    constraints = spack.cmd.parse_specs(args.specs)
+    specs = spack.store.find(constraints, multiple=True)
+
+    # Cycle over the specs that match
+    for spec in specs:
+        print("Relocatable nodes")
+        print("--------------------------------")
+        print(spec.tree(status_fn=spack.relocate.is_relocatable))
 
 
 def check_fn(args):
