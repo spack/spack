@@ -354,7 +354,7 @@ class Eccodes(CMakePackage):
             # Prevent overriding by environment variables AEC_DIR and AEC_PATH:
             args.append(self.define("AEC_DIR", self.spec["libaec"].prefix))
 
-        if "^python" in self.spec:
+        if "+memfs" in self.spec:
             args.append(self.define("PYTHON_EXECUTABLE", python.path))
 
         definitions = self.spec.variants["definitions"].value
