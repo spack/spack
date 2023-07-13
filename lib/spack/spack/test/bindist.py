@@ -176,7 +176,7 @@ def install_dir_non_default_layout(tmpdir):
         spack.store.layout = real_layout
 
 
-args = ["strings", "file"]
+args = ["file"]
 if sys.platform == "darwin":
     args.extend(["/usr/bin/clang++", "install_name_tool"])
 else:

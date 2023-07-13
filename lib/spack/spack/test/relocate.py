@@ -171,7 +171,7 @@ def test_normalize_relative_paths(start_path, relative_paths, expected):
     assert normalized == expected
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "file", "gcc")
 @skip_unless_linux
 def test_relocate_text_bin(binary_with_rpaths, prefix_like):
     prefix = "/usr/" + prefix_like
@@ -188,7 +188,7 @@ def test_relocate_text_bin(binary_with_rpaths, prefix_like):
     assert "%s/lib:%s/lib64" % (new_prefix, new_prefix) in rpaths_for(executable)
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "file", "gcc")
 @skip_unless_linux
 def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, prefix_tmpdir):
     # Create an executable, set some RPATHs, copy it to another location
@@ -210,7 +210,7 @@ def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, p
     assert "/foo/lib:/usr/lib64" in rpaths_for(new_binary)
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "file", "gcc")
 @skip_unless_linux
 def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
@@ -231,7 +231,7 @@ def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
     assert "/foo/lib:/foo/lib64:/opt/local/lib" in rpaths_for(new_binary)
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "file", "gcc")
 @skip_unless_linux
 def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
@@ -251,7 +251,7 @@ def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpd
     assert "$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib" in rpaths_for(new_binary)
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "file", "gcc")
 @skip_unless_linux
 def test_relocate_text_bin_with_message(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
