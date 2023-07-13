@@ -335,15 +335,14 @@ class Eccodes(CMakePackage):
         ]
 
         if "+netcdf" in self.spec:
-            args.extend(
-                [
-                    # Prevent possible overriding by environment variables
-                    # NETCDF_ROOT, NETCDF_DIR, and NETCDF_PATH:
-                    self.define("NETCDF_PATH", self.spec["netcdf-c"].prefix),
-                    # Prevent overriding by environment variable HDF5_ROOT:
-                    self.define("HDF5_ROOT", self.spec["hdf5"].prefix),
-                ]
-            )
+            # Prevent possible overriding by environment variables NETCDF_ROOT, NETCDF_DIR, and
+            # NETCDF_PATH:
+            args.append(self.define("NETCDF_PATH", self.spec["netcdf-c"].prefix))
+            # Prevent overriding by environment variable HDF5_ROOT (starting version 2.14.0,
+            # ecCodes is shipped with ecBuild 3.1.0+, which does not seem to rely on the HDF5_ROOT
+            # variable):
+            if self.spec.satisfies("@:2.13"):
+                args.append(self.define("HDF5_ROOT", self.spec["hdf5"].prefix))
 
         if jp2k == "openjpeg":
             args.append(self.define("OPENJPEG_PATH", self.spec["openjpeg"].prefix))
