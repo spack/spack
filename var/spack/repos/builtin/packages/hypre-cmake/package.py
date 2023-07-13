@@ -102,7 +102,7 @@ class HypreCmake(CMakePackage, CudaPackage):
         filter_file(r"^CXX\s*=.*", "CXX = " + self.spec["mpi"].mpicxx, makefile)
         filter_file(
             r"^LIBS\s*=.*",
-            f"LIBS = -L$(HYPRE_DIR)/lib64 -lHYPRE -lm $(CUDA_LIBS) $(DOMP_LIBS)",
+            r"LIBS = -L$(HYPRE_DIR)/lib64 -lHYPRE -lm $(CUDA_LIBS) $(DOMP_LIBS)",
             makefile,
         )
 
