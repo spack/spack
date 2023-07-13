@@ -26,8 +26,8 @@ def setup_parser(subparser):
         "--installed",
         action="store_true",
         default=False,
-        help="List installed dependencies of an installed spec, "
-        "instead of possible dependencies of a package.",
+        help="list installed dependencies of an installed spec "
+        "instead of possible dependencies of a package",
     )
     subparser.add_argument(
         "-t",

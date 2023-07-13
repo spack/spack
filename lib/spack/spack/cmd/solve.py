@@ -33,7 +33,7 @@ def setup_parser(subparser):
         "--show",
         action="store",
         default="opt,solutions",
-        help="select outputs: comma-separated list of: \n"
+        help="select outputs\n\ncomma-separated list of:\n"
         "  asp          asp program text\n"
         "  opt          optimization criteria for best model\n"
         "  output       raw clingo output\n"

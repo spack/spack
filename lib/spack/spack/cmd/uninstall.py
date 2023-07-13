@@ -54,7 +54,7 @@ def setup_parser(subparser):
         "--force",
         action="store_true",
         dest="force",
-        help="remove regardless of whether other packages or environments " "depend on this one",
+        help="remove regardless of whether other packages or environments depend on this one",
     )
     subparser.add_argument(
         "--remove",

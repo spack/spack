@@ -44,7 +44,7 @@ from spack.config import validate
 from spack.filesystem_view import YamlFilesystemView, view_func_parser
 from spack.util import spack_yaml as s_yaml
 
-description = "project packages to a compact naming scheme on the filesystem."
+description = "project packages to a compact naming scheme on the filesystem"
 section = "environments"
 level = "short"
 
@@ -81,7 +81,7 @@ def setup_parser(sp):
         "--verbose",
         action="store_true",
         default=False,
-        help="If not verbose only warnings/errors will be printed.",
+        help="if not verbose only warnings/errors will be printed",
     )
     sp.add_argument(
         "-e",
@@ -95,7 +95,7 @@ def setup_parser(sp):
         "--dependencies",
         choices=["true", "false", "yes", "no"],
         default="true",
-        help="Link/remove/list dependencies.",
+        help="link/remove/list dependencies",
     )
 
     ssp = sp.add_subparsers(metavar="ACTION", dest="action")
@@ -137,12 +137,11 @@ def setup_parser(sp):
         if cmd in ("symlink", "hardlink", "copy"):
             # invalid for remove/statlink, for those commands the view needs to
             # already know its own projections.
-            help_msg = "Initialize view using projections from file."
             act.add_argument(
                 "--projection-file",
                 dest="projection_file",
                 type=spack.cmd.extant_file,
-                help=help_msg,
+                help="initialize view using projections from file",
             )
 
         if cmd == "remove":
@@ -150,7 +149,7 @@ def setup_parser(sp):
             act.add_argument(
                 "--no-remove-dependents",
                 action="store_true",
-                help="Do not remove dependents of specified specs.",
+                help="do not remove dependents of specified specs",
             )
 
             # with all option, spec is an optional argument

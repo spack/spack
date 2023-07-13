@@ -55,13 +55,13 @@ def setup_parser(subparser):
     directories.add_argument(
         "--source-dir",
         action="store_true",
-        help="source directory for a spec " "(requires it to be staged first)",
+        help="source directory for a spec (requires it to be staged first)",
     )
     directories.add_argument(
         "-b",
         "--build-dir",
         action="store_true",
-        help="build directory for a spec " "(requires it to be staged first)",
+        help="build directory for a spec (requires it to be staged first)",
     )
     directories.add_argument(
         "-e",
@@ -162,7 +162,7 @@ def location(parser, args):
     # source dir remains, which requires the spec to be staged
     if not pkg.stage.expanded:
         tty.die(
-            "Source directory does not exist yet. " "Run this to create it:",
+            "Source directory does not exist yet. Run this to create it:",
             "spack stage " + " ".join(args.spec),
         )
 

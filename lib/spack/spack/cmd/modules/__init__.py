@@ -31,7 +31,7 @@ def setup_parser(subparser):
         action="store",
         dest="module_set_name",
         default="default",
-        help="Named module set to use from modules configuration.",
+        help="named module set to use from modules configuration",
     )
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="subparser_name")
 

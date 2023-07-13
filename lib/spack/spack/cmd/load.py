@@ -66,10 +66,9 @@ def setup_parser(subparser):
         default="package,dependencies",
         dest="things_to_load",
         choices=["package", "dependencies"],
-        help="""select whether to load the package and its dependencies
-the default is to load the package and all dependencies
-alternatively one can decide to load only the package or only
-the dependencies""",
+        help="select whether to load the package and its dependencies\n\n"
+        "the default is to load the package and all dependencies. alternatively, "
+        "one can decide to load only the package or only the dependencies",
     )
 
     subparser.add_argument(
