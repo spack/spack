@@ -61,6 +61,22 @@ _build_cache_relative_path = "build_cache"
 _build_cache_keys_relative_path = "_pgp"
 
 
+class BuildCacheDatabase(spack_db.Database):
+    """A database for binary buildcaches.
+
+    A database supports writing buildcache index files, in which case certain fields are not
+    needed in each install record, and no locking is required. To use this feature, it provides
+    ``lock_cfg=NO_LOCK``, and override the list of ``record_fields``.
+    """
+
+    record_fields = ("spec", "ref_count", "in_buildcache")
+
+    def __init__(self, root):
+        super().__init__(root, lock_cfg=spack_db.NO_LOCK)
+        self._write_transaction_impl = llnl.util.lang.nullcontext
+        self._read_transaction_impl = llnl.util.lang.nullcontext
+
+
 class FetchCacheError(Exception):
     """Error thrown when fetching the cache failed, usually a composite error list."""
 
@@ -190,7 +206,7 @@ class BinaryCacheIndex:
         tmpdir = tempfile.mkdtemp()
 
         try:
-            db = spack_db.Database(tmpdir, lock_cfg=spack_db.NO_LOCK)
+            db = BuildCacheDatabase(tmpdir)
 
             try:
                 self._index_file_cache.init_entry(cache_key)
@@ -1059,10 +1075,7 @@ def generate_package_index(cache_prefix, concurrency=32):
 
     tmpdir = tempfile.mkdtemp()
 
-    class BuildCacheDatabase(spack_db.Database):
-        record_fields = ("spec", "ref_count", "in_buildcache")
-
-    db = BuildCacheDatabase(tmpdir, lock_cfg=spack_db.NO_LOCK)
+    db = BuildCacheDatabase(tmpdir)
     db.root = None
     db_root_dir = db.database_directory
 

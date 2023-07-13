@@ -38,7 +38,6 @@ except ImportError:
 from typing import Optional, Tuple
 
 import llnl.util.filesystem as fs
-import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack.hash_types as ht
@@ -353,7 +352,7 @@ class Database:
     _prefix_failures: Dict[str, lk.Lock] = {}
 
     #: Fields written for each install record
-    record_fields = DEFAULT_INSTALL_RECORD_FIELDS
+    record_fields: Tuple[str, ...] = DEFAULT_INSTALL_RECORD_FIELDS
 
     def __init__(self, root, upstream_dbs=None, is_upstream=False, lock_cfg=DEFAULT_LOCK_CFG):
         """Database for Spack installations.
@@ -367,10 +366,6 @@ class Database:
         The database will attempt to read an ``index.json`` file in the database directory.
         If that does not exist, it will create a database when needed by scanning the entire
         store root for ``spec.json`` files according to Spack's directory layout.
-
-        A database supports writing buildcache index files, in which case certain fields are not
-        needed in each install record, and no locking is required. To use this feature, provide
-        ``lock_cfg=NO_LOCK``, and override the list of ``record_fields``.
 
         Args:
             root (str): root directory where to create the database directory.
@@ -454,12 +449,8 @@ class Database:
         # message)
         self._fail_when_missing_deps = False
 
-        if lock_cfg.enable:
-            self._write_transaction_impl = lk.WriteTransaction
-            self._read_transaction_impl = lk.ReadTransaction
-        else:
-            self._write_transaction_impl = lang.nullcontext
-            self._read_transaction_impl = lang.nullcontext
+        self._write_transaction_impl = lk.WriteTransaction
+        self._read_transaction_impl = lk.ReadTransaction
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
