@@ -692,6 +692,8 @@ class Configuration:
         parts = process_config_path(path)
         section = parts.pop(0)
 
+        scope = self._validate_scope(scope or default_modify_scope(section))
+
         section_data = self.get_config(section, scope=scope)
 
         data = section_data
@@ -886,6 +888,8 @@ def add_from_file(filename, scope=None):
             existing = get(section, scope=scope)
             new = merge_yaml(existing, value)
 
+            #import pdb; pdb.set_trace()
+
             # We cannot call config.set directly (set is a type)
             config.set(section, new, scope)
 
@@ -932,6 +936,9 @@ def add(fullpath, scope=None):
     # append values to lists
     if isinstance(existing, list) and not isinstance(value, list):
         value = [value]
+
+    #if "::" in fullpath:
+    #    import pdb; pdb.set_trace()
 
     # merge value into existing
     new = merge_yaml(existing, value)

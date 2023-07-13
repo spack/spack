@@ -128,11 +128,14 @@ def _get_scope_and_section(args):
     # set scope defaults
     elif not scope:
         scope_name = spack.config.default_modify_scope(section)
-        spack.config.config.scopes[scope_name]
+        scope = spack.config.config.scopes[scope_name]
 
     # special handling for commands that take value instead of section
     if path:
         section = path[: path.find(":")] if ":" in path else path
+        if not scope:
+            scope_name = spack.config.default_modify_scope(section)
+            scope = spack.config.config.scopes[scope_name]
 
     return scope, section
 
