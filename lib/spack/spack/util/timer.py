@@ -25,10 +25,7 @@ Interval = collections.namedtuple("Interval", ("begin", "end"))
 global_timer_name = "_global"
 
 
-class NullTimer:
-    """Timer interface that does nothing, useful in for "tell
-    don't ask" style code when timers are optional."""
-
+class BaseTimer:
     def start(self, name=global_timer_name):
         pass
 
@@ -53,11 +50,14 @@ class NullTimer:
         pass
 
 
-#: instance of a do-nothing timer
-NULL_TIMER = NullTimer()
+class NullTimer(BaseTimer):
+    """Timer interface that does nothing, useful in for "tell
+    don't ask" style code when timers are optional."""
+
+    pass
 
 
-class Timer:
+class Timer(BaseTimer):
     """Simple interval timer"""
 
     def __init__(self, now=time.time):
@@ -153,3 +153,7 @@ class Timer:
         # Write to out
         for name, duration in formatted:
             out.write(f"    {name:10s} {pretty_seconds(duration):>10s}\n")
+
+
+#: instance of a do-nothing timer
+NULL_TIMER = NullTimer()

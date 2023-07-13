@@ -639,7 +639,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def __init__(self, spec):
         # this determines how the package should be built.
-        self.spec = spec
+        self.spec: "spack.spec.Spec" = spec
 
         # Allow custom staging paths for packages
         self.path = None
