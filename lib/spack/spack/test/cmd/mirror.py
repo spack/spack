@@ -350,21 +350,32 @@ class TestMirrorCreate:
         assert all(s.concrete for s in specs)
 
 
-def test_mirror_set_1(mutable_config):
+def test_mirror_type(mutable_config):
     """Test the mirror set command"""
-    mirror("add", "example", "http://example.com")
-    mirror("set", "example", "--no-binary", "--source")
+    mirror("add", "example", "--type", "binary", "http://example.com")
+    assert spack.config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "source": False,
+        "binary": True,
+    }
 
+    mirror("set", "example", "--type", "source")
     assert spack.config.get("mirrors:example") == {
         "url": "http://example.com",
         "source": True,
         "binary": False,
     }
 
-    mirror("set", "example", "--binary", "--no-source")
+    mirror("set", "example", "--type", "binary")
     assert spack.config.get("mirrors:example") == {
         "url": "http://example.com",
         "source": False,
+        "binary": True,
+    }
+    mirror("set", "example", "--type", "binary", "--type", "source")
+    assert spack.config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "source": True,
         "binary": True,
     }
 
