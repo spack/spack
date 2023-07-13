@@ -125,10 +125,11 @@ class Protobuf(CMakePackage):
         ]
 
         if self.spec.satisfies("@3.22:"):
+            cxxstd = self.spec["abseil-cpp"].variants["cxxstd"].value
             args.extend(
                 [
                     self.define("protobuf_ABSL_PROVIDER", "package"),
-                    self.define("CMAKE_CXX_STANDARD", 14),
+                    self.define("CMAKE_CXX_STANDARD", cxxstd),
                 ]
             )
 

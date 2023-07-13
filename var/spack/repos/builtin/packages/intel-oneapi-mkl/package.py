@@ -136,7 +136,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
             return IntelOneApiStaticLibraryList(libs, system_libs)
 
     def setup_run_environment(self, env):
-        super(IntelOneapiMkl, self).setup_run_environment(env)
+        super().setup_run_environment(env)
 
         # Support RPATH injection to the library directories when the '-mkl' or '-qmkl'
         # flag of the Intel compilers are used outside the Spack build environment. We
@@ -176,7 +176,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         libs.append("libmkl_core")
 
         if self.spec.satisfies("+cluster"):
-            if any(self.spec.satisfies(m) for m in ["^intel-oneapi-mpi", "^intel-mpi", "^mpich"]):
+            if any(
+                self.spec.satisfies(m)
+                for m in ["^intel-oneapi-mpi", "^intel-mpi", "^mpich", "^cray-mpich"]
+            ):
                 libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
             elif self.spec.satisfies("^openmpi"):
                 libs.append(self._xlp64_lib("libmkl_blacs_openmpi"))

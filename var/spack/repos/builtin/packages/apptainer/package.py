@@ -53,3 +53,8 @@ class Apptainer(SingularityBase):
         if spec.satisfies("@1.1.0: +suid"):
             options.append("--with-suid")
         return options
+
+    def flag_handler(self, name, flags):
+        # Certain go modules this build pulls in cannot be built with anything
+        # other than -O0. Best to just discard any injected flags.
+        return (None, flags, None)

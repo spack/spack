@@ -177,7 +177,7 @@ def check_spec_manifest(spec):
     return results
 
 
-class VerificationResults(object):
+class VerificationResults:
     def __init__(self):
         self.errors = {}
 

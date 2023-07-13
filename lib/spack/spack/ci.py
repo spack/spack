@@ -57,7 +57,7 @@ spack_compiler = spack.main.SpackCommand("compiler")
 PushResult = namedtuple("PushResult", "success url")
 
 
-class TemporaryDirectory(object):
+class TemporaryDirectory:
     def __init__(self):
         self.temporary_directory = tempfile.mkdtemp()
 
@@ -224,7 +224,7 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
     if not stages:
         return
 
-    mirrors = spack.mirror.MirrorCollection(mirrors=mirrors_to_check)
+    mirrors = spack.mirror.MirrorCollection(mirrors=mirrors_to_check, binary=True)
     tty.msg("Checked the following mirrors for binaries:")
     for m in mirrors.values():
         tty.msg("  {0}".format(m.fetch_url))
@@ -471,7 +471,7 @@ def _unpack_script(script_section, op=_noop):
     return script
 
 
-class RebuildDecision(object):
+class RebuildDecision:
     def __init__(self):
         self.rebuild = True
         self.mirrors = []
@@ -1257,20 +1257,11 @@ def generate_gitlab_ci_yaml(
 
         output_object["stages"] = stage_names
 
-        # Capture the version of spack used to generate the pipeline, transform it
-        # into a value that can be passed to "git checkout", and save it in a
-        # global yaml variable
+        # Capture the version of Spack used to generate the pipeline, that can be
+        # passed to `git checkout` for version consistency. If we aren't in a Git
+        # repository, presume we are a Spack release and use the Git tag instead.
         spack_version = spack.main.get_version()
-        version_to_clone = None
-        v_match = re.match(r"^\d+\.\d+\.\d+$", spack_version)
-        if v_match:
-            version_to_clone = "v{0}".format(v_match.group(0))
-        else:
-            v_match = re.match(r"^[^-]+-[^-]+-([a-f\d]+)$", spack_version)
-            if v_match:
-                version_to_clone = v_match.group(1)
-            else:
-                version_to_clone = spack_version
+        version_to_clone = spack.main.get_spack_commit() or f"v{spack.spack_version}"
 
         output_object["variables"] = {
             "SPACK_ARTIFACTS_ROOT": rel_artifacts_root,
@@ -2128,7 +2119,7 @@ def run_standalone_tests(**kwargs):
     tty.debug("spack test exited {0}".format(exit_code))
 
 
-class CDashHandler(object):
+class CDashHandler:
     """
     Class for managing CDash data and processing.
     """

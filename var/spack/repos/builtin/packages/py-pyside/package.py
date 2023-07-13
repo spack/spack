@@ -36,6 +36,8 @@ class PyPyside(PythonPackage):
     depends_on("cmake", type="build")
 
     depends_on("py-setuptools", type="build")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
     depends_on("py-sphinx", type=("build", "run"))
     depends_on("py-sphinx@:3.5.0", type=("build", "run"), when="@:1.2.2")
     depends_on("qt@4.5:4.9")

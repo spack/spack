@@ -17,9 +17,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.epilog = (
-        "If called without argument returns " "the list of all valid virtual packages"
-    )
+    subparser.epilog = "If called without argument returns the list of all valid virtual packages"
     subparser.add_argument(
         "virtual_package", nargs="*", help="find packages that provide this virtual package"
     )

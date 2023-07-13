@@ -5,6 +5,7 @@
 """Manages the details on the images used in the various stages."""
 import json
 import os.path
+import shlex
 import sys
 
 import llnl.util.filesystem as fs
@@ -130,8 +131,11 @@ def checkout_command(url, ref, enforce_sha, verify):
     if enforce_sha or verify:
         ref = _verify_ref(url, ref, enforce_sha)
 
-    command = (
-        "git clone {0} . && git fetch origin {1}:container_branch &&"
-        " git checkout container_branch "
-    ).format(url, ref)
-    return command
+    return " && ".join(
+        [
+            "git init --quiet",
+            f"git remote add origin {shlex.quote(url)}",
+            f"git fetch --depth=1 origin {shlex.quote(ref)}",
+            "git checkout --detach FETCH_HEAD",
+        ]
+    )
