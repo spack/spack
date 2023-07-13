@@ -515,7 +515,7 @@ def compiler_for_spec(compiler_spec, arch_spec):
     if len(compilers) < 1:
         raise NoCompilerForSpecError(compiler_spec, arch_spec.os)
     if len(compilers) > 1:
-        msg = "Multiple definitions of compiler %s" % compiler_spec
+        msg = "Multiple definitions of compiler %s " % compiler_spec
         msg += "for architecture %s:\n %s" % (arch_spec, compilers)
         tty.debug(msg)
     return compilers[0]
