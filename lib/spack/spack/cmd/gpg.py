@@ -68,7 +68,7 @@ def setup_parser(subparser):
         metavar="DEST",
         type=str,
         dest="secret",
-        help="export the private key to a file.",
+        help="export the private key to a file",
     )
     create.set_defaults(func=gpg_create)
 
@@ -86,7 +86,7 @@ def setup_parser(subparser):
     export = subparsers.add_parser("export", help=gpg_export.__doc__)
     export.add_argument("location", type=str, help="where to export keys")
     export.add_argument(
-        "keys", nargs="*", help="the keys to export; " "all public keys if unspecified"
+        "keys", nargs="*", help="the keys to export (all public keys if unspecified)"
     )
     export.add_argument("--secret", action="store_true", help="export secret keys")
     export.set_defaults(func=gpg_export)
@@ -99,29 +99,29 @@ def setup_parser(subparser):
         "--directory",
         metavar="directory",
         type=str,
-        help="local directory where keys will be published.",
+        help="local directory where keys will be published",
     )
     output.add_argument(
         "-m",
         "--mirror-name",
         metavar="mirror-name",
         type=str,
-        help="name of the mirror where " + "keys will be published.",
+        help="name of the mirror where keys will be published",
     )
     output.add_argument(
         "--mirror-url",
         metavar="mirror-url",
         type=str,
-        help="URL of the mirror where " + "keys will be published.",
+        help="URL of the mirror where keys will be published",
     )
     publish.add_argument(
         "--rebuild-index",
         action="store_true",
         default=False,
-        help=("Regenerate buildcache key index " "after publishing key(s)"),
+        help="regenerate buildcache key index after publishing key(s)",
     )
     publish.add_argument(
-        "keys", nargs="*", help="the keys to publish; " "all public keys if unspecified"
+        "keys", nargs="*", help="keys to publish (all public keys if unspecified)"
     )
     publish.set_defaults(func=gpg_publish)
 
@@ -146,7 +146,7 @@ def gpg_create(args):
 
 
 def gpg_export(args):
-    """export a gpg key, optionally including secret key."""
+    """export a gpg key, optionally including secret key"""
     keys = args.keys
     if not keys:
         keys = spack.util.gpg.signing_keys()
@@ -168,7 +168,7 @@ def gpg_sign(args):
         elif not keys:
             raise RuntimeError("no signing keys are available")
         else:
-            raise RuntimeError("multiple signing keys are available; " "please choose one")
+            raise RuntimeError("multiple signing keys are available; please choose one")
     output = args.output
     if not output:
         output = args.spec[0] + ".asc"
