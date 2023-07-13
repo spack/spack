@@ -45,8 +45,8 @@ def setup_parser(subparser):
     push = subparsers.add_parser("push", aliases=["create"], help=push_fn.__doc__)
     push.add_argument("-f", "--force", action="store_true", help="overwrite tarball if it exists")
     push.add_argument(
-        "-a",
         "--allow-root",
+        "-a",
         action="store_true",
         help="allow install root string in binary files after RPATH substitution",
     )
