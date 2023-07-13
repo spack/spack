@@ -321,6 +321,9 @@ class Eccodes(CMakePackage):
             self.define_from_variant("ENABLE_ECCODES_THREADS", "pthreads"),
             self.define_from_variant("ENABLE_ECCODES_OMP_THREADS", "openmp"),
             self.define_from_variant("ENABLE_MEMFS", "memfs"),
+            self.define(
+                "ENABLE_PYTHON{0}".format("2" if self.spec.satisfies("@2.20.0:") else ""), False
+            ),
             self.define_from_variant("ENABLE_FORTRAN", "fortran"),
             self.define("BUILD_SHARED_LIBS", "BOTH" if "+shared" in self.spec else "OFF"),
             self.define("ENABLE_TESTS", self.run_tests),
