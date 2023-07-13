@@ -33,16 +33,24 @@ class PyPyside(PythonPackage):
         preferred=True,
     )
 
-    depends_on("cmake", type="build")
-
+    # no support for python@3.5: https://github.com/pyside/PySide/issues/132
+    depends_on("python@:3.4", when="@1.2.4", type=("build", "run"))
+    # to prevent error: 'PyTypeObject' {aka 'struct _typeobject'} has no member
+    # named 'tp_print'
+    depends_on("python@:3.8", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
+    depends_on("cmake", type="build")
+
     depends_on("py-sphinx", type=("build", "run"))
     depends_on("py-sphinx@:3.5.0", type=("build", "run"), when="@:1.2.2")
     depends_on("qt@4.5:4.9")
     depends_on("libxml2@2.6.32:")
     depends_on("libxslt@1.1.19:")
+
+    # to prevent ImportError: cannot import name 'soft_unicode' from 'markupsafe'
+    conflicts("^py-markupsafe@2.0.2:")
 
     def patch(self):
         """Undo PySide RPATH handling and add Spack RPATH."""
