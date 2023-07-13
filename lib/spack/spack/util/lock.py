@@ -31,8 +31,10 @@ class Lock(llnl.util.lock.Lock):
 
     def __init__(self, *args, **kwargs):
         enable_lock = kwargs.pop("enable", None)
-        if enable_lock is None:
-            enable_lock = sys.platform != "win32"
+        if sys.platform == "win32":
+            enable_lock = False
+        elif sys.platform != "win32" and enable_lock is None:
+            enable_lock = True
         self._enable = enable_lock
         super(Lock, self).__init__(*args, **kwargs)
 
