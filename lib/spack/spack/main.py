@@ -703,7 +703,6 @@ class SpackCommand:
         fail_on_error = kwargs.get("fail_on_error", True)
 
         if self.subprocess:
-            #import pdb; pdb.set_trace()
             p = sp.Popen(
                 [spack.paths.spack_script, self.command_name] + prepend + list(argv),
                 stdout=sp.PIPE,
