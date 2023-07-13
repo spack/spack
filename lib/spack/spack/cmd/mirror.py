@@ -103,6 +103,15 @@ def setup_parser(subparser):
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
+    add_parser.add_argument(
+        "--type",
+        action="append",
+        choices=("binary", "source"),
+        help=(
+            "specify the mirror type: for both binary "
+            "and source use `--type binary --type source` (default)"
+        ),
+    )
     arguments.add_s3_connection_args(add_parser, False)
     # Remove
     remove_parser = sp.add_parser("remove", aliases=["rm"], help=mirror_remove.__doc__)
@@ -145,19 +154,14 @@ def setup_parser(subparser):
     set_parser_push_or_fetch.add_argument(
         "--fetch", action="store_true", help="modify just the fetch connection details"
     )
-    set_parser_binary = set_parser.add_mutually_exclusive_group(required=False)
-    set_parser_binary.add_argument(
-        "--binary", action="store_true", help="define the mirror as a binary mirror"
-    )
-    set_parser_binary.add_argument(
-        "--no-binary", action="store_true", help="disable the mirror for binaries"
-    )
-    set_parser_source = set_parser.add_mutually_exclusive_group(required=False)
-    set_parser_source.add_argument(
-        "--source", action="store_true", help="define the mirror as a source mirror"
-    )
-    set_parser_source.add_argument(
-        "--no-source", action="store_true", help="disable the mirror for sources"
+    set_parser.add_argument(
+        "--type",
+        action="append",
+        choices=("binary", "source"),
+        help=(
+            "specify the mirror type: for both binary "
+            "and source use `--type binary --type source`"
+        ),
     )
     set_parser.add_argument("--url", help="url of mirror directory from 'spack mirror create'")
     set_parser.add_argument(
@@ -188,6 +192,7 @@ def mirror_add(args):
         or args.s3_access_token
         or args.s3_profile
         or args.s3_endpoint_url
+        or args.type
     ):
         connection = {"url": args.url}
         if args.s3_access_key_id and args.s3_access_key_secret:
@@ -198,6 +203,9 @@ def mirror_add(args):
             connection["profile"] = args.s3_profile
         if args.s3_endpoint_url:
             connection["endpoint_url"] = args.s3_endpoint_url
+        if args.type:
+            connection["binary"] = "binary" in args.type
+            connection["source"] = "source" in args.type
         mirror = spack.mirror.Mirror(connection, name=args.name)
     else:
         mirror = spack.mirror.Mirror(args.url, name=args.name)
@@ -231,14 +239,9 @@ def _configure_mirror(args):
 
     # argparse cannot distinguish between --binary and --no-binary when same dest :(
     # notice that set-url does not have these args, so getattr
-    if getattr(args, "binary", None):
-        changes["binary"] = True
-    if getattr(args, "no_binary", None):
-        changes["binary"] = False
-    if getattr(args, "source", None):
-        changes["source"] = True
-    if getattr(args, "no_source", None):
-        changes["source"] = False
+    if getattr(args, "type", None):
+        changes["binary"] = "binary" in args.type
+        changes["source"] = "source" in args.type
 
     changed = entry.update(changes, direction)
 
