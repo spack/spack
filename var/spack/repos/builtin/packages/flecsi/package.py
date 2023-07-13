@@ -24,7 +24,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("develop", branch="develop")
-    version("2.2.0", tag="v2.2.0", preferred=True)
+    version("2.2.1", tag="v2.2.1", preferred=True)
+    version("2.2.0", tag="v2.2.0")
     version("2.1.0", tag="v2.1.0")
     version("2.0.0", tag="v2.0.0")
     version("1.4.1", tag="v1.4.1", submodules=True)
