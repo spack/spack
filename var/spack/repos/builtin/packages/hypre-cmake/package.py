@@ -94,6 +94,17 @@ class HypreCmake(CMakePackage, CudaPackage):
         if "+mpi" not in self.spec:
             print("Package must be installed with +mpi to cache test sources")
             return
+        # Customize the examples makefile before caching it
+        makefile = join_path(self.extra_install_tests, "Makefile")
+        filter_file(r"^HYPRE_DIR\s* =.*", f"HYPRE_DIR = {self.prefix}", makefile)
+        filter_file(r"^CC\s*=.*", "CC = " + self.spec["mpi"].mpicc, makefile)
+        filter_file(r"^F77\s*=.*", "F77 = " + self.spec["mpi"].mpif77, makefile)
+        filter_file(r"^CXX\s*=.*", "CXX = " + self.spec["mpi"].mpicxx, makefile)
+        filter_file(
+            r"^LIBS\s*=.*",
+            f"LIBS = -L$(HYPRE_DIR)/lib64 -lHYPRE -lm $(CUDA_LIBS) $(DOMP_LIBS)",
+            makefile,
+        )
 
         self.cache_extra_test_sources(self.extra_install_tests)
 
@@ -110,7 +121,7 @@ class HypreCmake(CMakePackage, CudaPackage):
         # Build copied and cached test examples
         with working_dir(self._cached_tests_work_dir):
             make = which("make")
-            make(f"HYPRE_DIR={self.prefix}", "bigint")
+            make("bigint")
 
             # Run the examples built above
             for _bin in ["ex5big", "ex15big"]:
