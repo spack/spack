@@ -207,41 +207,41 @@ def test_replace_paths(tmpdir):
         hash_d = "hukkosc7ahff7o65h6cdhvcoxm57d4bw"
         hash_loco = "zy4oigsc4eovn5yhr2lk4aukwzoespob"
 
-        prefix2hash = dict()
+        prefix2hash = {}
 
-        old_spack_dir = os.path.join("%s" % tmpdir, "Users", "developer", "spack")
+        old_spack_dir = os.path.join(f"{tmpdir}", "Users", "developer", "spack")
         fs.mkdirp(old_spack_dir)
 
-        oldprefix_a = os.path.join("%s" % old_spack_dir, "pkgA-%s" % hash_a)
-        oldlibdir_a = os.path.join("%s" % oldprefix_a, "lib")
+        oldprefix_a = os.path.join(f"{old_spack_dir}", f"pkgA-{hash_a}")
+        oldlibdir_a = os.path.join(f"{oldprefix_a}", "lib")
         fs.mkdirp(oldlibdir_a)
         prefix2hash[str(oldprefix_a)] = hash_a
 
-        oldprefix_b = os.path.join("%s" % old_spack_dir, "pkgB-%s" % hash_b)
-        oldlibdir_b = os.path.join("%s" % oldprefix_b, "lib")
+        oldprefix_b = os.path.join(f"{old_spack_dir}", f"pkgB-{hash_b}")
+        oldlibdir_b = os.path.join(f"{oldprefix_b}", "lib")
         fs.mkdirp(oldlibdir_b)
         prefix2hash[str(oldprefix_b)] = hash_b
 
-        oldprefix_c = os.path.join("%s" % old_spack_dir, "pkgC-%s" % hash_c)
-        oldlibdir_c = os.path.join("%s" % oldprefix_c, "lib")
-        oldlibdir_cc = os.path.join("%s" % oldlibdir_c, "C")
+        oldprefix_c = os.path.join(f"{old_spack_dir}", f"pkgC-{hash_c}")
+        oldlibdir_c = os.path.join(f"{oldprefix_c}", "lib")
+        oldlibdir_cc = os.path.join(f"{oldlibdir_c}", "C")
         fs.mkdirp(oldlibdir_c)
         prefix2hash[str(oldprefix_c)] = hash_c
 
-        oldprefix_d = os.path.join("%s" % old_spack_dir, "pkgD-%s" % hash_d)
-        oldlibdir_d = os.path.join("%s" % oldprefix_d, "lib")
+        oldprefix_d = os.path.join(f"{old_spack_dir}", f"pkgD-{hash_d}")
+        oldlibdir_d = os.path.join(f"{oldprefix_d}", "lib")
         fs.mkdirp(oldlibdir_d)
         prefix2hash[str(oldprefix_d)] = hash_d
 
-        oldprefix_local = os.path.join("%s" % tmpdir, "usr", "local")
-        oldlibdir_local = os.path.join("%s" % oldprefix_local, "lib")
+        oldprefix_local = os.path.join(f"{tmpdir}", "usr", "local")
+        oldlibdir_local = os.path.join(f"{oldprefix_local}", "lib")
         fs.mkdirp(oldlibdir_local)
         prefix2hash[str(oldprefix_local)] = hash_loco
-        libfile_a = "libA.%s" % suffix
-        libfile_b = "libB.%s" % suffix
-        libfile_c = "libC.%s" % suffix
-        libfile_d = "libD.%s" % suffix
-        libfile_loco = "libloco.%s" % suffix
+        libfile_a = f"libA.{suffix}"
+        libfile_b = f"libB.{suffix}"
+        libfile_c = f"libC.{suffix}"
+        libfile_d = f"libD.{suffix}"
+        libfile_loco = f"libloco.{suffix}"
         old_libnames = [
             os.path.join(oldlibdir_a, libfile_a),
             os.path.join(oldlibdir_b, libfile_b),
@@ -256,31 +256,31 @@ def test_replace_paths(tmpdir):
 
         hash2prefix = dict()
 
-        new_spack_dir = os.path.join("%s" % tmpdir, "Users", "Shared", "spack")
+        new_spack_dir = os.path.join(f"{tmpdir}", "Users", "Shared", "spack")
         fs.mkdirp(new_spack_dir)
 
-        prefix_a = os.path.join(new_spack_dir, "pkgA-%s" % hash_a)
+        prefix_a = os.path.join(new_spack_dir, f"pkgA-{hash_a}")
         libdir_a = os.path.join(prefix_a, "lib")
         fs.mkdirp(libdir_a)
         hash2prefix[hash_a] = str(prefix_a)
 
-        prefix_b = os.path.join(new_spack_dir, "pkgB-%s" % hash_b)
+        prefix_b = os.path.join(new_spack_dir, f"pkgB-{hash_b}")
         libdir_b = os.path.join(prefix_b, "lib")
         fs.mkdirp(libdir_b)
         hash2prefix[hash_b] = str(prefix_b)
 
-        prefix_c = os.path.join(new_spack_dir, "pkgC-%s" % hash_c)
+        prefix_c = os.path.join(new_spack_dir, f"pkgC-{hash_c}")
         libdir_c = os.path.join(prefix_c, "lib")
         libdir_cc = os.path.join(libdir_c, "C")
         fs.mkdirp(libdir_cc)
         hash2prefix[hash_c] = str(prefix_c)
 
-        prefix_d = os.path.join(new_spack_dir, "pkgD-%s" % hash_d)
+        prefix_d = os.path.join(new_spack_dir, f"pkgD-{hash_d}")
         libdir_d = os.path.join(prefix_d, "lib")
         fs.mkdirp(libdir_d)
         hash2prefix[hash_d] = str(prefix_d)
 
-        prefix_local = os.path.join("%s" % tmpdir, "usr", "local")
+        prefix_local = os.path.join(f"{tmpdir}", "usr", "local")
         libdir_local = os.path.join(prefix_local, "lib")
         fs.mkdirp(libdir_local)
         hash2prefix[hash_loco] = str(prefix_local)
@@ -351,10 +351,10 @@ def test_replace_paths(tmpdir):
         out_dict = macho_find_paths(
             [oldlibdir_a, oldlibdir_b, oldlibdir_c, oldlibdir_cc, oldlibdir_local],
             [
-                "@rpath/%s" % libfile_a,
-                "@rpath/%s" % libfile_b,
-                "@rpath/%s" % libfile_c,
-                "@rpath/%s" % libfile_loco,
+                f"@rpath/{libfile_a}",
+                f"@rpath/{libfile_b}",
+                f"@rpath/{libfile_c}",
+                f"@rpath/{libfile_loco}",
             ],
             None,
             old_spack_dir,
@@ -362,10 +362,10 @@ def test_replace_paths(tmpdir):
         )
 
         assert out_dict == {
-            "@rpath/%s" % libfile_a: "@rpath/%s" % libfile_a,
-            "@rpath/%s" % libfile_b: "@rpath/%s" % libfile_b,
-            "@rpath/%s" % libfile_c: "@rpath/%s" % libfile_c,
-            "@rpath/%s" % libfile_loco: "@rpath/%s" % libfile_loco,
+            f"@rpath/{libfile_a}": f"@rpath/{libfile_a}",
+            f"@rpath/{libfile_b}": f"@rpath/{libfile_b}",
+            f"@rpath/{libfile_c}": f"@rpath/{libfile_c}",
+            f"@rpath/{libfile_loco}": f"@rpath/{libfile_loco}",
             oldlibdir_a: libdir_a,
             oldlibdir_b: libdir_b,
             oldlibdir_c: libdir_c,
@@ -375,15 +375,15 @@ def test_replace_paths(tmpdir):
 
         out_dict = macho_find_paths(
             [oldlibdir_a, oldlibdir_b, oldlibdir_d, oldlibdir_local],
-            ["@rpath/%s" % libfile_a, "@rpath/%s" % libfile_b, "@rpath/%s" % libfile_loco],
+            [f"@rpath/{libfile_a}", f"@rpath/{libfile_b}", f"@rpath/{libfile_loco}"],
             None,
             old_spack_dir,
             prefix2prefix,
         )
         assert out_dict == {
-            "@rpath/%s" % libfile_a: "@rpath/%s" % libfile_a,
-            "@rpath/%s" % libfile_b: "@rpath/%s" % libfile_b,
-            "@rpath/%s" % libfile_loco: "@rpath/%s" % libfile_loco,
+            f"@rpath/{libfile_a}": f"@rpath/{libfile_a}",
+            f"@rpath/{libfile_b}": f"@rpath/{libfile_b}",
+            f"@rpath/{libfile_loco}": f"@rpath/{libfile_loco}",
             oldlibdir_a: libdir_a,
             oldlibdir_b: libdir_b,
             oldlibdir_d: libdir_d,
@@ -515,7 +515,7 @@ def test_manual_download(
 
     @property
     def _instr(pkg):
-        return "Download instructions for {0}".format(pkg.spec.name)
+        return f"Download instructions for {pkg.spec.name}"
 
     spec = default_mock_concretization("a")
     spec.package.manual_download = manual
