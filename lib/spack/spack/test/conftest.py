@@ -950,7 +950,7 @@ def disable_compiler_execution(monkeypatch, request):
 
 
 @pytest.fixture(scope="function")
-def install_mockery(temporary_store, config, mock_packages):
+def install_mockery(temporary_store, mutable_config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override("config:checksum", False):
