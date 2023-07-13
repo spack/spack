@@ -255,6 +255,11 @@ protected-publish:
 # you should inlclude your custom definitions at the end of the of the
 # extends list.
 #
+# Also note that if extending .base-job, the mirror url given in your
+# spack.yaml should take the form:
+#
+#     s3://spack-binaries/develop/${SPACK_CI_STACK_NAME}
+#
 ########################################
 # My Super Cool Pipeline
 ########################################
