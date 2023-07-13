@@ -6,12 +6,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 set -e
 
-# TODO: Remove debugging output
-set -xv
 set_pcluster_defaults() {
     # Set versions of pre-installed software in packages.yaml
     [ -z "${SLURM_VERSION}" ] && SLURM_VERSION=$(strings /opt/slurm/lib/libslurm.so | grep  -e '^VERSION'  | awk '{print $2}'  | sed -e 's?"??g')
-    [ -z "${LIBFABRIC_MODULE_VERSION}" ] && LIBFABRIC_MODULE_VERSION=$(grep 'Version:' /opt/amazon/efa/lib64/pkgconfig/libfabric.pc | awk '{print $2}')
+    [ -z "${LIBFABRIC_MODULE_VERSION}" ] && LIBFABRIC_MODULE_VERSION=$(grep 'Version:' "$(find /opt/amazon/efa/ -name libfabric.pc | head -n1)" | awk '{print $2}' | sed -e 's?~??g')
     [ -z "${LIBFABRIC_MODULE}" ] && LIBFABRIC_MODULE="libfabric-aws/${LIBFABRIC_MODULE_VERSION}"
     [ -z "${LIBFABRIC_VERSION}" ] && LIBFABRIC_VERSION=${LIBFABRIC_MODULE_VERSION//amzn*}
     [ -z "${GCC_VERSION}" ] && GCC_VERSION=$(gcc -v 2>&1 |tail -n 1| awk '{print $3}' )
@@ -30,7 +28,6 @@ setup_spack() {
 
 patch_compilers_yaml() {
     # Graceful exit if package not found by spack
-    set +e
     set -o pipefail
     compilers_yaml="${SPACK_ROOT}/etc/spack/compilers.yaml"
     [ -f "${compilers_yaml}" ] || {
@@ -41,7 +38,7 @@ patch_compilers_yaml() {
     # System ld is too old for amzn linux2
     spack_gcc_version=$(spack find --format '{version}' gcc)
     binutils_path=$(spack find -p binutils | awk '/binutils/ {print $2}')
-    [ -d "${binutils_path}" ] && [ -n "${spack_gcc_version}" ] && python3 <<EOF
+    if [ -d "${binutils_path}" ] && [ -n "${spack_gcc_version}" ]; then python3 <<EOF
 import yaml
 
 with open("${compilers_yaml}",'r') as f:
@@ -55,12 +52,11 @@ for c in compilers["compilers"]:
 with open("${compilers_yaml}",'w') as f:
     yaml.dump(compilers, f)
 EOF
-
+    fi
     # Oneapi needs extra_rpath to gcc libstdc++.so.6
-    spack find intel-oneapi-compilers &>/dev/null && \
-        oneapi_gcc_version=$(spack find --format '{compiler}' intel-oneapi-compilers | sed -e 's/=//g') && \
-        [ -n "${oneapi_gcc_version}" ] && oneapi_gcc_path=$(spack find -p "${oneapi_gcc_version}" | grep "${oneapi_gcc_version}" | awk '{print $2}') && \
-        [ -d "${oneapi_gcc_path}" ] && python3 <<EOF
+    if oneapi_gcc_version=$(spack find --format '{compiler}' intel-oneapi-compilers | sed -e 's/=//g') && \
+            [ -n "${oneapi_gcc_version}" ] && oneapi_gcc_path=$(spack find -p "${oneapi_gcc_version}" | grep "${oneapi_gcc_version}" | awk '{print $2}') && \
+            [ -d "${oneapi_gcc_path}" ]; then python3 <<EOF
 import yaml
 
 with open("${compilers_yaml}",'r') as f:
@@ -73,6 +69,7 @@ for c in compilers["compilers"]:
 with open("${compilers_yaml}",'w') as f:
     yaml.dump(compilers, f)
 EOF
+    fi
 }
 
 install_packages() {
