@@ -33,8 +33,6 @@ class PyPyside(PythonPackage):
         preferred=True,
     )
 
-    # no support for python@3.5: https://github.com/pyside/PySide/issues/132
-    depends_on("python@:3.4", when="@1.2.4", type=("build", "run"))
     # to prevent error: 'PyTypeObject' {aka 'struct _typeobject'} has no member
     # named 'tp_print'
     depends_on("python@:3.8", type=("build", "run"))
@@ -98,6 +96,13 @@ class PyPyside(PythonPackage):
             "'Programming Language :: Python :: 3.4'",
             "'Programming Language :: Python :: 3.4',\r\n        "
             "'Programming Language :: Python :: 3.5'",
+            "setup.py",
+        )
+
+        # remove check for python version
+        filter_file(
+            r"^check_allowed_python_version()",
+            "",
             "setup.py",
         )
 
