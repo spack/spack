@@ -28,8 +28,6 @@ class PyShiboken(PythonPackage):
     depends_on("libxml2")
     depends_on("qt@4.6:4.8")
 
-    # Fails to query the Qt version with qmake with qt@3
-    conflicts("^qt@3")
     # to prevent ImportError: cannot import name 'soft_unicode' from 'markupsafe'
     conflicts("^py-markupsafe@2.0.2:")
 
