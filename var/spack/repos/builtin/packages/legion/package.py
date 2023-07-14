@@ -164,7 +164,9 @@ class Legion(CMakePackage, ROCmPackage):
             sticky=True,
             multi=False,
         )
-        conflicts("conduit=none", msg="the 'conduit' must be set to a value other than 'none'")
+        conflicts(
+            "conduit=none", msg="the 'conduit' variant must be set to a value other than 'none'"
+        )
         variant("gasnet_debug", default=False, description="Build gasnet with debugging enabled.")
 
     variant("shared", default=False, description="Build shared libraries.")
