@@ -16,6 +16,39 @@ class PyOpenai(PythonPackage):
     homepage = "https://github.com/openai/openai-python"
     pypi = "openai/openai-0.27.8.tar.gz"
 
+    variant("datalib",      default=False)
+    variant("wandb",        default=False)
+    variant("embeddings",   default=False)
+
     version("0.27.8", sha256="2483095c7db1eee274cebac79e315a986c4e55207bb4fa7b82d185b3a2ed9536")
 
-    depends_on("py-setuptools", type="build")
+    depends_on("python@3.7.1:",             type=("build", "run"))
+    depends_on("py-setuptools",             type="build")
+    depends_on("py-requests@2.20:",         type=("build", "run"))
+    depends_on("py-tqdm",                   type=("build", "run"))
+    depends_on("py-typing-extensions",      type=("build", "run"))
+    depends_on("py-aiohttp",                type=("build", "run"))
+
+    # datalib
+    depends_on("py-numpy",                  type=("build", "run"), when="+datalib")
+    depends_on("py-pandas@1.2.4:",          type=("build", "run"), when="+datalib")
+    depends_on("py-pandas-stubs@1.1.0.11:", type=("build", "run"), when="+datalib")
+    depends_on("py-openpyxl@3.0.7:",        type=("build", "run"), when="+datalib")
+
+    # wandb
+    depends_on("py-wandb",                  type=("build", "run"), when="+wandb")
+    depends_on("py-numpy",                  type=("build", "run"), when="+wandb")
+    depends_on("py-pandas@1.2.4:",          type=("build", "run"), when="+wandb")
+    depends_on("py-pandas-stubs@1.1.0.11:", type=("build", "run"), when="+wandb")
+    depends_on("py-openpyxl@3.0.7:",        type=("build", "run"), when="+wandb")
+    
+    # embeddings
+    depends_on("py-scikit-learn@1.0.2:",    type=("build", "run"), when="+embeddings")
+    depends_on("py-tenacity@8.0.1:",        type=("build", "run"), when="+embeddings")
+    depends_on("py-matplotlib",             type=("build", "run"), when="+embeddings")
+    depends_on("py-plotly",                 type=("build", "run"), when="+embeddings")
+    depends_on("py-numpy",                  type=("build", "run"), when="+embeddings")
+    depends_on("py-scipy",                  type=("build", "run"), when="+embeddings")
+    depends_on("py-pandas@1.2.4:",          type=("build", "run"), when="+embeddings")
+    depends_on("py-pandas-stubs@1.1.0.11:", type=("build", "run"), when="+embeddings")
+    depends_on("py-openpyxl@3.0.7:",        type=("build", "run"), when="+embeddings")
