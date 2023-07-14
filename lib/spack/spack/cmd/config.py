@@ -34,7 +34,7 @@ def setup_parser(subparser):
     get_parser = sp.add_parser("get", help="print configuration values")
     get_parser.add_argument(
         "section",
-        help="configuration section to print. " "options: %(choices)s",
+        help="configuration section to print\n\noptions: %(choices)s",
         nargs="?",
         metavar="section",
         choices=spack.config.section_schemas,
@@ -45,7 +45,7 @@ def setup_parser(subparser):
     )
     blame_parser.add_argument(
         "section",
-        help="configuration section to print. " "options: %(choices)s",
+        help="configuration section to print\n\noptions: %(choices)s",
         metavar="section",
         choices=spack.config.section_schemas,
     )
@@ -53,7 +53,7 @@ def setup_parser(subparser):
     edit_parser = sp.add_parser("edit", help="edit configuration file")
     edit_parser.add_argument(
         "section",
-        help="configuration section to edit. " "options: %(choices)s",
+        help="configuration section to edit\n\noptions: %(choices)s",
         metavar="section",
         nargs="?",
         choices=spack.config.section_schemas,
@@ -68,7 +68,7 @@ def setup_parser(subparser):
     add_parser.add_argument(
         "path",
         nargs="?",
-        help="colon-separated path to config that should be added," " e.g. 'config:default:true'",
+        help="colon-separated path to config that should be added, e.g. 'config:default:true'",
     )
     add_parser.add_argument("-f", "--file", help="file from which to set all config values")
 
@@ -80,7 +80,7 @@ def setup_parser(subparser):
         "--local",
         action="store_true",
         default=False,
-        help="Set packages preferences based on local installs, rather " "than upstream.",
+        help="set packages preferences based on local installs, rather than upstream",
     )
 
     remove_parser = sp.add_parser("remove", aliases=["rm"], help="remove configuration parameters")
@@ -378,7 +378,7 @@ def config_revert(args):
 
     proceed = True
     if not args.yes_to_all:
-        msg = "The following scopes will be restored from the corresponding" " backup files:\n"
+        msg = "The following scopes will be restored from the corresponding backup files:\n"
         for entry in to_be_restored:
             msg += "\t[scope={0.scope}, bkp={0.bkp}]\n".format(entry)
         msg += "This operation cannot be undone."

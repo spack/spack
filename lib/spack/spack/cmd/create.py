@@ -612,7 +612,7 @@ def setup_parser(subparser):
         "--template",
         metavar="TEMPLATE",
         choices=sorted(templates.keys()),
-        help="build system template to use. options: %(choices)s",
+        help="build system template to use\n\noptions: %(choices)s",
     )
     subparser.add_argument(
         "-r", "--repo", help="path to a repository where the package should be created"
@@ -620,7 +620,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         "-N",
         "--namespace",
-        help="specify a namespace for the package. must be the namespace of "
+        help="specify a namespace for the package\n\nmust be the namespace of "
         "a repository registered with Spack",
     )
     subparser.add_argument(
@@ -878,7 +878,7 @@ def get_build_system(template, url, guesser):
         # Use whatever build system the guesser detected
         selected_template = guesser.build_system
         if selected_template == "generic":
-            tty.warn("Unable to detect a build system. " "Using a generic package template.")
+            tty.warn("Unable to detect a build system. Using a generic package template.")
         else:
             msg = "This package looks like it uses the {0} build system"
             tty.msg(msg.format(selected_template))

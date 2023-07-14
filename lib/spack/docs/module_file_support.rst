@@ -275,10 +275,12 @@ of the installed software. For instance, in the snippet below:
              set:
                BAR: 'bar'
          # This anonymous spec selects any package that
-         # depends on openmpi. The double colon at the
+         # depends on mpi. The double colon at the
          # end clears the set of rules that matched so far.
-         ^openmpi::
+         ^mpi::
            environment:
+             prepend_path:
+               PATH: '{^mpi.prefix}/bin'
              set:
                BAR: 'baz'
          # Selects any zlib package
@@ -293,7 +295,9 @@ of the installed software. For instance, in the snippet below:
              - FOOBAR
 
 you are instructing Spack to set the environment variable ``BAR=bar`` for every module,
-unless the associated spec satisfies ``^openmpi`` in which case ``BAR=baz``.
+unless the associated spec satisfies the abstract dependency ``^mpi`` in which case
+``BAR=baz``, and the directory containing the respective MPI executables is prepended
+to the ``PATH`` variable.
 In addition in any spec that satisfies ``zlib`` the value ``foo`` will be
 prepended to ``LD_LIBRARY_PATH`` and in any spec that satisfies ``zlib%gcc@4.8``
 the variable ``FOOBAR`` will be unset.
