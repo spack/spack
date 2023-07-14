@@ -19,9 +19,10 @@ debugging easier.
 """
 import contextlib
 import os
+import pathlib
 import re
 import uuid
-from typing import Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -34,7 +35,10 @@ import spack.paths
 import spack.util.path
 
 #: default installation root, relative to the Spack install path
-default_install_tree_root = os.path.join(spack.paths.opt_path, "spack")
+DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
+
+
+ConfigurationType = Union["spack.config.Configuration", "llnl.util.lang.Singleton"]
 
 
 def parse_install_tree(config_dict):
@@ -80,7 +84,7 @@ def parse_install_tree(config_dict):
 
         projections = {"all": all_projection}
     else:
-        unpadded_root = install_tree.get("root", default_install_tree_root)
+        unpadded_root = install_tree.get("root", DEFAULT_INSTALL_TREE_ROOT)
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 
         padded_length = install_tree.get("padded_length", False)
@@ -133,32 +137,32 @@ class Store:
     Stores consist of packages installed according to a
     ``DirectoryLayout``, along with an index, or _database_ of their
     contents.  The directory layout controls what paths look like and how
-    Spack ensures that each uniqe spec gets its own unique directory (or
-    not, though we don't recommend that). The database is a signle file
+    Spack ensures that each unique spec gets its own unique directory (or
+    not, though we don't recommend that). The database is a single file
     that caches metadata for the entire Spack installation.  It prevents
     us from having to spider the install tree to figure out what's there.
 
     Args:
-        root (str): path to the root of the install tree
-        unpadded_root (str): path to the root of the install tree without
-            padding; the sbang script has to be installed here to work with
-            padded roots
-        path_scheme (str): expression according to guidelines in
-            ``spack.util.path`` that describes how to construct a path to
+        root: path to the root of the install tree
+        unpadded_root: path to the root of the install tree without padding.
+            The sbang script has to be installed here to work with padded roots
+        projections: expression according to guidelines that describes how to construct a path to
             a package prefix in this store
-        hash_length (int): length of the hashes used in the directory
-            layout; spec hash suffixes will be truncated to this length
+        hash_length: length of the hashes used in the directory layout. Spec hash suffixes will be
+            truncated to this length
+        upstreams: optional list of upstream databases
+        lock_cfg: lock configuration for the database
     """
 
     def __init__(
         self,
-        root,
-        unpadded_root=None,
-        projections=None,
-        hash_length=None,
-        upstreams=None,
-        lock_cfg=spack.database.NO_LOCK,
-    ):
+        root: str,
+        unpadded_root: Optional[str] = None,
+        projections: Optional[Dict[str, str]] = None,
+        hash_length: Optional[int] = None,
+        upstreams: Optional[List[spack.database.Database]] = None,
+        lock_cfg: spack.database.LockConfiguration = spack.database.NO_LOCK,
+    ) -> None:
         self.root = root
         self.unpadded_root = unpadded_root or root
         self.projections = projections
@@ -170,7 +174,7 @@ class Store:
             root, projections=projections, hash_length=hash_length
         )
 
-    def reindex(self):
+    def reindex(self) -> None:
         """Convenience function to reindex the store DB with its own layout."""
         return self.db.reindex(self.layout)
 
@@ -185,11 +189,11 @@ class Store:
         )
 
 
-def create(configuration):
+def create(configuration: ConfigurationType) -> Store:
     """Create a store from the configuration passed as input.
 
     Args:
-        configuration (spack.config.Configuration): configuration to use to create a store.
+        configuration: configuration to create a store.
     """
     configuration = configuration or spack.config.config
     config_dict = configuration.get("config")
@@ -212,7 +216,7 @@ def create(configuration):
     )
 
 
-def _create_global():
+def _create_global() -> Store:
     # Check that the user is not trying to install software into the store
     # reserved by Spack to bootstrap its own dependencies, since this would
     # lead to bizarre behaviors (e.g. cleaning the bootstrap area would wipe
@@ -233,27 +237,33 @@ def _create_global():
 store: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_create_global)
 
 
-def _store_root():
+def _store_root() -> str:
     return store.root
 
 
-def _store_unpadded_root():
+def _store_unpadded_root() -> str:
     return store.unpadded_root
 
 
-def _store_db():
+def _store_db() -> spack.database.Database:
     return store.db
 
 
-def _store_layout():
+def _store_layout() -> spack.directory_layout.DirectoryLayout:
     return store.layout
 
 
 # convenience accessors for parts of the singleton store
-root = llnl.util.lang.LazyReference(_store_root)
-unpadded_root = llnl.util.lang.LazyReference(_store_unpadded_root)
-db = llnl.util.lang.LazyReference(_store_db)
-layout = llnl.util.lang.LazyReference(_store_layout)
+root: Union[llnl.util.lang.LazyReference, str] = llnl.util.lang.LazyReference(_store_root)
+unpadded_root: Union[llnl.util.lang.LazyReference, str] = llnl.util.lang.LazyReference(
+    _store_unpadded_root
+)
+db: Union[llnl.util.lang.LazyReference, spack.database.Database] = llnl.util.lang.LazyReference(
+    _store_db
+)
+layout: Union[
+    llnl.util.lang.LazyReference, "spack.directory_layout.DirectoryLayout"
+] = llnl.util.lang.LazyReference(_store_layout)
 
 
 def reinitialize():
@@ -281,8 +291,10 @@ def restore(token):
     store, root, unpadded_root, db, layout = token
 
 
-def _construct_upstream_dbs_from_install_roots(install_roots, _test=False):
-    accumulated_upstream_dbs = []
+def _construct_upstream_dbs_from_install_roots(
+    install_roots: List[str], _test: bool = False
+) -> List[spack.database.Database]:
+    accumulated_upstream_dbs: List[spack.database.Database] = []
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
@@ -297,8 +309,13 @@ def _construct_upstream_dbs_from_install_roots(install_roots, _test=False):
     return accumulated_upstream_dbs
 
 
-def find(constraints, multiple=False, query_fn=None, **kwargs):
-    """Return a list of specs matching the constraints passed as inputs.
+def find(
+    constraints: Union[str, List[str], List["spack.spec.Spec"]],
+    multiple: bool = False,
+    query_fn: Optional[Callable[[Any], List["spack.spec.Spec"]]] = None,
+    **kwargs,
+) -> List["spack.spec.Spec"]:
+    """Returns a list of specs matching the constraints passed as inputs.
 
     At least one spec per constraint must match, otherwise the function
     will error with an appropriate message.
@@ -310,21 +327,17 @@ def find(constraints, multiple=False, query_fn=None, **kwargs):
     The query function must accept a spec as its first argument.
 
     Args:
-        constraints (List[spack.spec.Spec]): specs to be matched against
-            installed packages
-        multiple (bool): if True multiple matches per constraint are admitted
+        constraints: spec(s) to be matched against installed packages
+        multiple: if True multiple matches per constraint are admitted
         query_fn (Callable): query function to get matching specs. By default,
             ``spack.store.db.query``
         **kwargs: keyword arguments forwarded to the query function
-
-    Return:
-        List of matching specs
     """
-    # Normalize input to list of specs
     if isinstance(constraints, str):
         constraints = [spack.spec.Spec(constraints)]
 
-    matching_specs, errors = [], []
+    matching_specs: List[spack.spec.Spec] = []
+    errors = []
     query_fn = query_fn or spack.store.db.query
     for spec in constraints:
         current_matches = query_fn(spec, **kwargs)
@@ -350,37 +363,36 @@ def find(constraints, multiple=False, query_fn=None, **kwargs):
     return matching_specs
 
 
-def specfile_matches(filename, **kwargs):
+def specfile_matches(filename: str, **kwargs) -> List["spack.spec.Spec"]:
     """Same as find but reads the query from a spec file.
 
     Args:
-        filename (str): YAML or JSON file from which to read the query.
+        filename: YAML or JSON file from which to read the query.
         **kwargs: keyword arguments forwarded to "find"
-
-    Return:
-        List of matches
     """
     query = [spack.spec.Spec.from_specfile(filename)]
     return spack.store.find(query, **kwargs)
 
 
 @contextlib.contextmanager
-def use_store(store_or_path, extra_data=None):
+def use_store(
+    path: Union[str, pathlib.Path], extra_data: Optional[Dict[str, Any]] = None
+) -> Generator[Store, None, None]:
     """Use the store passed as argument within the context manager.
 
     Args:
-        store_or_path: either a Store object ot a path to where the store resides.
-        extra_data (dict): extra configuration under "config:install_tree" to be
+        path: path to the store.
+        extra_data: extra configuration under "config:install_tree" to be
             taken into account.
 
-    Returns:
+    Yields:
         Store object associated with the context manager's store
     """
     global store, db, layout, root, unpadded_root
 
-    assert not isinstance(store_or_path, Store), "cannot pass a store anymore"
+    assert not isinstance(path, Store), "cannot pass a store anymore"
     scope_name = "use-store-{}".format(uuid.uuid4())
-    data = {"root": store_or_path}
+    data = {"root": str(path)}
     if extra_data:
         data.update(extra_data)
 

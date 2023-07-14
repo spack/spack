@@ -467,7 +467,7 @@ full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDE
     ],
 )
 def test_parse_install_tree(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.default_install_tree_root
+    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -522,7 +522,7 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     ],
 )
 def test_parse_install_tree_padded(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.default_install_tree_root
+    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 

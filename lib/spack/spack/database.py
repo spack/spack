@@ -18,14 +18,13 @@ as the authoritative database of packages in Spack.  This module
 provides a cache and a sanity checking mechanism for what is in the
 filesystem.
 """
-import collections
 import contextlib
 import datetime
 import os
 import socket
 import sys
 import time
-from typing import Dict
+from typing import Dict, NamedTuple
 
 try:
     import uuid
@@ -313,20 +312,27 @@ _QUERY_DOCSTRING = """
 #:    enable (bool): whether to enable locks or not.
 #:    database_timeout (int or None): timeout for the database lock
 #:    package_timeout (int or None): timeout for the package lock
-LockConfiguration = collections.namedtuple(
-    "LockConfiguration", ["enable", "database_timeout", "package_timeout"]
-)
+
+
+class LockConfiguration(NamedTuple):
+    enable: bool
+    database_timeout: Optional[int]
+    package_timeout: Optional[int]
 
 
 #: Configure a database to avoid using locks
-NO_LOCK = LockConfiguration(enable=False, database_timeout=None, package_timeout=None)
+NO_LOCK: LockConfiguration = LockConfiguration(
+    enable=False, database_timeout=None, package_timeout=None
+)
 
 
 #: Configure the database to use locks without a timeout
-NO_TIMEOUT = LockConfiguration(enable=True, database_timeout=None, package_timeout=None)
+NO_TIMEOUT: LockConfiguration = LockConfiguration(
+    enable=True, database_timeout=None, package_timeout=None
+)
 
 #: Default configuration for database locks
-DEFAULT_LOCK_CFG = LockConfiguration(
+DEFAULT_LOCK_CFG: LockConfiguration = LockConfiguration(
     enable=True,
     database_timeout=_DEFAULT_DB_LOCK_TIMEOUT,
     package_timeout=_DEFAULT_PKG_LOCK_TIMEOUT,
