@@ -47,9 +47,6 @@ class PyPyside(PythonPackage):
     depends_on("libxml2@2.6.32:")
     depends_on("libxslt@1.1.19:")
 
-    # to prevent ImportError: cannot import name 'soft_unicode' from 'markupsafe'
-    conflicts("^py-markupsafe@2.0.2:")
-
     def patch(self):
         """Undo PySide RPATH handling and add Spack RPATH."""
         # Figure out the special RPATH
