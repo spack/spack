@@ -158,11 +158,13 @@ class Legion(CMakePackage, ROCmPackage):
         )
         variant(
             "conduit",
-            default="mpi",
-            values=("aries", "ibv", "udp", "mpi", "ucx", "ofi-slingshot11"),
+            default="none",
+            values=("none", "aries", "ibv", "udp", "mpi", "ucx", "ofi-slingshot11"),
             description="The gasnet conduit(s) to enable.",
+            sticky=True,
             multi=False,
         )
+        conflicts("conduit=none", msg="the 'conduit' must be set to a value other than 'none'")
         variant("gasnet_debug", default=False, description="Build gasnet with debugging enabled.")
 
     variant("shared", default=False, description="Build shared libraries.")
