@@ -47,6 +47,8 @@ class GitAnnex(Package):
     # - $ git annex whereis git-annex/linux/current/git-annex-standalone-arm64.tar.gz
     #     -> gives web url
 
+    skip_version_audit = ["platform=darwin"]
+
     if platform.system() == "Linux" and platform.machine() == "aarch64":
         # git-annex-standalone-arm64.tar.gz
         version(
