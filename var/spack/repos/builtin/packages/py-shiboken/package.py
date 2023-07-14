@@ -26,7 +26,7 @@ class PyShiboken(PythonPackage):
     depends_on("py-pip@:23.0", type="build")
     depends_on("py-sphinx@:3.4", type=("build", "run"))
     depends_on("libxml2")
-    depends_on("qt@:4.8")
+    depends_on("qt@4.6:4.8")
 
     # Fails to query the Qt version with qmake with qt@3
     conflicts("^qt@3")
