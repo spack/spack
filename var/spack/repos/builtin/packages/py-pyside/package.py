@@ -100,11 +100,7 @@ class PyPyside(PythonPackage):
         )
 
         # remove check for python version
-        filter_file(
-            r"^check_allowed_python_version()",
-            "",
-            "setup.py",
-        )
+        filter_file(r"^check_allowed_python_version()", "", "setup.py")
 
     def install_options(self, spec, prefix):
         return ["--jobs={0}".format(make_jobs)]
