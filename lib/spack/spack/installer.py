@@ -2342,7 +2342,6 @@ class BuildProcessInstaller:
         self.pkg.stage.keep = self.keep_stage
 
         with self.pkg.stage:
-
             self.timer.start("stage")
 
             if not self.fake:

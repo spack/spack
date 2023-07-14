@@ -205,12 +205,15 @@ class UrlPatch(Patch):
         if self._stage:
             return self._stage
 
-        # use archive digest for compressed archives
-        fetch_digest = self.sha256
-        if self.archive_sha256:
-            fetch_digest = self.archive_sha256
+        fetch_digest = self.archive_sha256 or self.sha256
 
-        fetcher = fs.URLFetchStrategy(self.url, fetch_digest, expand=bool(self.archive_sha256))
+        # Two checksums, one for compressed file, one for its contents
+        if self.archive_sha256:
+            fetcher = fs.FetchAndVerifyExpandedFile(
+                self.url, archive_sha256=self.archive_sha256, expanded_sha256=self.sha256
+            )
+        else:
+            fetcher = fs.URLFetchStrategy(self.url, sha256=self.sha256, expand=False)
 
         # The same package can have multiple patches with the same name but
         # with different contents, therefore apply a subset of the hash.
