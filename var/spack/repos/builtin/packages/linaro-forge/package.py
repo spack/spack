@@ -23,7 +23,7 @@ class LinaroForge(Package):
     homepage = "https://www.linaroforge.com"
     maintainers("kenche-linaro")
 
-    if platform.machine() == "aarch64":
+    if platform.machine() in ["aarch64", "arm64"]:
         version("23.0", sha256="7ae20bb27d539751d1776d1e09a65dcce821fc6a75f924675439f791261783fb")
         version(
             "22.1.4", sha256="4e2af481a37b4c99dba0de6fac75ac945316955fc4170d06e321530adea7ac9f"
