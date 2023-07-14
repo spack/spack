@@ -18,12 +18,20 @@ class PyShiboken(PythonPackage):
 
     depends_on("cmake", type="build")
 
+    # to prevent error: 'PyTypeObject' {aka 'struct _typeobject'} has no member
+    # named 'tp_print'
+    depends_on("python@:3.8", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
     depends_on("py-sphinx@:3.4", type=("build", "run"))
     depends_on("libxml2")
     depends_on("qt@:4.8")
+
+    # Fails to query the Qt version with qmake with qt@3
+    conflicts("^qt@3")
+    # to prevent ImportError: cannot import name 'soft_unicode' from 'markupsafe'
+    conflicts("^py-markupsafe@2.0.2:")
 
     # subprocess.mswindows was renamed to subprocess._mswindows in Python 3.5
     patch("python-3.5.patch", when="^python@3.5:")
