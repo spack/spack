@@ -297,11 +297,7 @@ class Legion(CMakePackage, ROCmPackage):
                 options.append("-DLegion_EMBED_GASNet_CONFIGURE_ARGS=--enable-debug")
         elif "network=mpi" in spec:
             options.append("-DLegion_NETWORKS=mpi")
-            if spec.variants["gasnet_root"].value != "none":
-                raise InstallError("'gasnet_root' is only valid when 'network=gasnet'.")
         else:
-            if spec.variants["gasnet_root"].value != "none":
-                raise InstallError("'gasnet_root' is only valid when 'network=gasnet'.")
             options.append("-DLegion_EMBED_GASNet=OFF")
 
         if "+shared" in spec:
