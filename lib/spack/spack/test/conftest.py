@@ -968,8 +968,9 @@ def install_mockery(temporary_store, mutable_config, mock_packages):
 
 
 @pytest.fixture(scope="function")
-def temporary_store(tmpdir):
+def temporary_store(tmpdir, request):
     """Hooks a temporary empty store for the test function."""
+    ensure_configuration_fixture_run_before(request)
     temporary_store_path = tmpdir.join("opt")
     with spack.store.use_store(str(temporary_store_path)) as s:
         yield s
@@ -1536,13 +1537,12 @@ def mock_svn_repository(tmpdir_factory):
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_env_path(tmpdir_factory, mutable_config):
+def mutable_mock_env_path(tmp_path, mutable_config, monkeypatch):
     """Fixture for mocking the internal spack environments directory."""
-    saved_path = ev.environment.default_env_path
-    mock_path = tmpdir_factory.mktemp("mock-env-path")
-    ev.environment.default_env_path = str(mock_path)
-    yield mock_path
-    ev.environment.default_env_path = saved_path
+    mock_path = tmp_path / "mock-env-path"
+    mutable_config.set("config:environments_root", str(mock_path))
+    monkeypatch.setattr(ev.environment, "default_env_path", str(mock_path))
+    return mock_path
 
 
 @pytest.fixture()

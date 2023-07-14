@@ -121,14 +121,13 @@ def test_relative_import_spack_packages_as_python_modules(mock_packages):
     assert issubclass(Mpileaks, spack.package_base.PackageBase)
 
 
-def test_all_virtual_packages_have_default_providers(default_config):
+def test_all_virtual_packages_have_default_providers():
     """All virtual packages must have a default provider explicitly set."""
-    defaults = spack.config.get("packages", scope="defaults")
+    configuration = spack.config.create()
+    defaults = configuration.get("packages", scope="defaults")
     default_providers = defaults["all"]["providers"]
     providers = spack.repo.path.provider_index.providers
-    default_providers_filename = spack.config.config.scopes["defaults"].get_section_filename(
-        "packages"
-    )
+    default_providers_filename = configuration.scopes["defaults"].get_section_filename("packages")
     for provider in providers:
         assert provider in default_providers, (
             "all providers must have a default in %s" % default_providers_filename

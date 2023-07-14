@@ -1230,21 +1230,21 @@ def test_default_install_tree(monkeypatch):
 
 def test_local_config_can_be_disabled(working_env):
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = "true"
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
 
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = ""
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
 
     del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" in cfg.scopes
     assert "site" in cfg.scopes
