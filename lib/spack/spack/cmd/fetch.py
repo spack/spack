@@ -68,5 +68,7 @@ def fetch(parser, args):
                 if args.missing and s.installed:
                     continue
 
-                s.package.do_fetch()
-        spec.package.do_fetch()
+                with s.package.stage:
+                    s.package.do_fetch()
+        with spec.package.stage:
+            spec.package.do_fetch()
