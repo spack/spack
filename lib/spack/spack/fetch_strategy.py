@@ -42,7 +42,6 @@ import spack.error
 import spack.url
 import spack.util.crypto as crypto
 import spack.util.git
-import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
@@ -226,24 +225,6 @@ class BundleFetchStrategy(FetchStrategy):
 
     def mirror_id(self):
         """BundlePackages don't have a mirror id."""
-
-
-class FetchStrategyComposite(pattern.Composite):
-    """Composite for a FetchStrategy object."""
-
-    matches = FetchStrategy.matches
-
-    def __init__(self):
-        super().__init__(["fetch", "check", "expand", "reset", "archive", "cachable", "mirror_id"])
-
-    def source_id(self):
-        component_ids = tuple(i.source_id() for i in self)
-        if all(component_ids):
-            return component_ids
-
-    def set_package(self, package):
-        for item in self:
-            item.package = package
 
 
 @fetcher

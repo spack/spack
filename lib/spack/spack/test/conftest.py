@@ -50,7 +50,7 @@ import spack.util.git
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
-from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
+from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
 from spack.util.web import FetchError
 
@@ -993,10 +993,9 @@ def install_mockery_mutable_config(temporary_store, mutable_config, mock_package
 @pytest.fixture()
 def mock_fetch(mock_archive, monkeypatch):
     """Fake the URL for a package so it downloads from a file."""
-    mock_fetcher = FetchStrategyComposite()
-    mock_fetcher.append(URLFetchStrategy(mock_archive.url))
-
-    monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", mock_fetcher)
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "fetcher", URLFetchStrategy(mock_archive.url)
+    )
 
 
 class MockLayout:

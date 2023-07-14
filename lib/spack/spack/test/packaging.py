@@ -26,7 +26,7 @@ import spack.repo
 import spack.store
 import spack.util.gpg
 import spack.util.url as url_util
-from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
+from spack.fetch_strategy import URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import (
     ensure_binary_is_relocatable,
@@ -41,6 +41,11 @@ from spack.relocate import (
 from spack.spec import Spec
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+
+
+def fake_fetchify(url, pkg):
+    """Fake the URL for a package so it downloads from a file."""
+    pkg.fetcher = URLFetchStrategy(url)
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_gnupghome")
@@ -489,8 +494,7 @@ def mock_download():
                 "<non-existent URL>", "This FetchStrategy always fails"
             )
 
-    fetcher = FetchStrategyComposite()
-    fetcher.append(FailedDownloadStrategy())
+    fetcher = FailedDownloadStrategy()
 
     @property
     def fake_fn(self):
@@ -536,9 +540,7 @@ def fetching_not_allowed(monkeypatch):
         def fetch(self):
             raise Exception("Sources are fetched but shouldn't have been")
 
-    fetcher = FetchStrategyComposite()
-    fetcher.append(FetchingNotAllowed())
-    monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", fetcher)
+    monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", FetchingNotAllowed())
 
 
 def test_fetch_without_code_is_noop(
