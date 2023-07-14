@@ -84,10 +84,10 @@ class Rmgdft(CMakePackage, CudaPackage):
         spec = self.spec
         if "+cuda" in spec:
             targets = ["rmg-gpu"]
-            cuda_arch_list = spec.variants['cuda_arch'].value
+            cuda_arch_list = spec.variants["cuda_arch"].value
             cuda_arch = cuda_arch_list[0]
-            if cuda_arch != 'none':
-                args.append('-DCUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch))
+            if cuda_arch != "none":
+                args.append("-DCUDA_FLAGS=-arch=sm_{0}".format(cuda_arch))
             if "+local_orbitals" in spec:
                 targets.append("rmg-on-gpu")
         else:
