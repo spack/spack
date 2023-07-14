@@ -18,6 +18,7 @@ class Eckit(CMakePackage):
 
     maintainers("skosukhin", "climbfuji")
 
+    version("1.23.1", sha256="cd3c4b7a3a2de0f4a59f00f7bab3178dd59c0e27900d48eaeb357975e8ce2f15")
     version("1.23.0", sha256="3cac55ddf7036ecd32cb0974a1ec3a2d347de574ab3a2c0bb6c6f8982e5a7a09")
     version("1.22.1", sha256="a3463d07e47e3bd3e5efa13fdc03d7d3a30ada919ccec3259c6c9c7da4cfdfd9")
     version("1.20.2", sha256="9c11ddaaf346e40d11312b81ca7f1b510017f26618f4c0f5c5c59c37623fbac8")
@@ -25,9 +26,12 @@ class Eckit(CMakePackage):
     version("1.16.3", sha256="d2aae7d8030e2ce39e5d04e36dd6aa739f3c8dfffe32c61c2a3127c36b573485")
     version("1.16.0", sha256="9e09161ea6955df693d3c9ac70131985eaf7cf24a9fa4d6263661c6814ebbaf1")
 
-    variant("build_type", default="RelWithDebInfo",
-            description="CMake build type",
-            values=("Debug", "Release", "RelWithDebInfo"))
+    variant(
+        "build_type",
+        default="RelWithDebInfo",
+        description="CMake build type",
+        values=("Debug", "Release", "RelWithDebInfo"),
+    )
 
     variant("shared", default=True, description="Build shared libraries")
     variant("tools", default=True, description="Build the command line tools")
