@@ -78,19 +78,23 @@ def hash_fun_for_digest(hexdigest):
     return hash_fun_for_algo(hash_algo_for_digest(hexdigest))
 
 
-def checksum(hashlib_algo, filename, **kwargs):
+def checksum_fp(hashlib_algo, fp, *, block_size=2**20):
+    hasher = hashlib_algo()
+    while True:
+        data = fp.read(block_size)
+        if not data:
+            break
+        hasher.update(data)
+    return hasher.hexdigest()
+
+
+def checksum(hashlib_algo, filename, *, block_size=2**20):
     """Returns a hex digest of the filename generated using an
     algorithm from hashlib.
     """
-    block_size = kwargs.get("block_size", 2**20)
-    hasher = hashlib_algo()
-    with open(filename, "rb") as file:
-        while True:
-            data = file.read(block_size)
-            if not data:
-                break
-            hasher.update(data)
-    return hasher.hexdigest()
+
+    with open(filename, "rb") as f:
+        return checksum_fp(hashlib_algo, f, block_size=block_size)
 
 
 class Checker:
