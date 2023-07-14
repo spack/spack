@@ -500,3 +500,54 @@ def test_error_message_when_using_too_new_lockfile(tmp_path):
     ev.initialize_environment_dir(env_dir, init_file)
     with pytest.raises(ev.SpackEnvironmentError, match="You need to use a newer Spack version."):
         ev.Environment(env_dir)
+
+
+@pytest.mark.regression("38240")
+@pytest.mark.parametrize(
+    "unify_in_lower_scope,unify_in_spack_yaml",
+    [
+        (True, False),
+        (True, "when_possible"),
+        (False, True),
+        (False, "when_possible"),
+        ("when_possible", False),
+        ("when_possible", True),
+    ],
+)
+def test_environment_concretizer_scheme_used(tmp_path, unify_in_lower_scope, unify_in_spack_yaml):
+    """Tests that "unify" settings in spack.yaml always take precedence over settings in lower
+    configuration scopes.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
+spack:
+  specs:
+  - mpileaks
+  concretizer:
+    unify: {str(unify_in_spack_yaml).lower()}
+"""
+    )
+
+    with spack.config.override("concretizer:unify", unify_in_lower_scope):
+        with ev.Environment(manifest.parent) as e:
+            assert e.unify == unify_in_spack_yaml
+
+
+@pytest.mark.parametrize("unify_in_config", [True, False, "when_possible"])
+def test_environment_config_scheme_used(tmp_path, unify_in_config):
+    """Tests that "unify" settings in lower configuration scopes is taken into account,
+    if absent in spack.yaml.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        """\
+spack:
+  specs:
+  - mpileaks
+"""
+    )
+
+    with spack.config.override("concretizer:unify", unify_in_config):
+        with ev.Environment(manifest.parent) as e:
+            assert e.unify == unify_in_config

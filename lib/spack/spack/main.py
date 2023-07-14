@@ -436,7 +436,7 @@ def make_argument_parser(**kwargs):
         default=None,
         action="append",
         dest="config_vars",
-        help="add one or more custom, one off config settings.",
+        help="add one or more custom, one off config settings",
     )
     parser.add_argument(
         "-C",
@@ -451,9 +451,9 @@ def make_argument_parser(**kwargs):
         "--debug",
         action="count",
         default=0,
-        help="write out debug messages " "(more d's for more verbosity: -d, -dd, -ddd, etc.)",
+        help="write out debug messages\n\n(more d's for more verbosity: -d, -dd, -ddd, etc.)",
     )
-    parser.add_argument("--timestamp", action="store_true", help="Add a timestamp to tty output")
+    parser.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
     parser.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
 
     env_group = parser.add_mutually_exclusive_group()
@@ -527,8 +527,7 @@ def make_argument_parser(**kwargs):
         "--sorted-profile",
         default=None,
         metavar="STAT",
-        help="profile and sort by one or more of:\n[%s]"
-        % ",\n ".join([", ".join(line) for line in stat_lines]),
+        help=f"profile and sort\n\none or more of: {stat_lines[0]}",
     )
     parser.add_argument(
         "--lines",
@@ -555,7 +554,7 @@ def make_argument_parser(**kwargs):
         "-V", "--version", action="store_true", help="show version number and exit"
     )
     parser.add_argument(
-        "--print-shell-vars", action="store", help="print info needed by setup-env.[c]sh"
+        "--print-shell-vars", action="store", help="print info needed by setup-env.*sh"
     )
 
     return parser

@@ -17,6 +17,8 @@ class Xrootd(CMakePackage):
 
     maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb", "wdconinc")
 
+    version("5.6.1", sha256="9afc48ab0fb3ba69611b1edc1b682a185d49b45caf197323eecd1146d705370c")
+    version("5.6.0", sha256="cda0d32d29f94220be9b6627a80386eb33fac2dcc25c8104569eaa4ea3563009")
     version("5.5.5", sha256="0710caae527082e73d3bf8f9d1dffe95808afd3fcaaaa15ab0b937b8b226bc1f")
     version("5.5.4", sha256="41a8557ea2d118b1950282b17abea9230b252aa5ee1a5959173e2534b7d611d3")
     version("5.5.3", sha256="703829c2460204bd3c7ba8eaa23911c3c9a310f6d436211ba0af487ef7f6a980")
@@ -104,15 +106,17 @@ class Xrootd(CMakePackage):
 
     depends_on("bzip2")
     depends_on("cmake@2.6:", type="build", when="@3.1.0:")
+    depends_on("cmake@3.16:", type="build", when="@5.6:")
     conflicts("cmake@:3.0", when="@5.0.0")
-    conflicts("cmake@:3.15.99", when="@5.5.4:")
+    conflicts("cmake@:3.15.99", when="@5.5.4:5.5")
     depends_on("davix", when="+davix")
     depends_on("libxml2", when="+http")
     depends_on("uuid", when="@4.11.0:")
     depends_on("openssl@:1", when="@:5.4")
     depends_on("openssl")
     depends_on("python", when="+python")
-    depends_on("py-setuptools", type="build", when="+python")
+    depends_on("py-setuptools", type="build", when="@:5.5 +python")
+    depends_on("py-pip", type="build", when="@5.6: +python")
     depends_on("readline", when="+readline")
     depends_on("xz")
     depends_on("zlib")
