@@ -123,6 +123,13 @@ class Xrootd(CMakePackage):
     conflicts("openssl@3:", when="@:5.3.99")
 
     extends("python", when="+python")
+
+    # Issue with _STAT_VER not being defined, fixed in 5.0.3
+    patch(
+        "https://github.com/xrootd/xrootd/commit/1f2d48fa23ba220ce92bf8ec6c15305ebbf19564.diff?full_index=1",
+        sha256="cfb5c2a13257012c6f117e8a1d0a3831b02586e910d845b5ff5e80d1ab2119bc",
+        when="@4:5.0.2",
+    )
     patch("python-support.patch", level=1, when="@:4.8+python")
     # https://github.com/xrootd/xrootd/pull/1805
     patch(
@@ -135,6 +142,12 @@ class Xrootd(CMakePackage):
         "https://patch-diff.githubusercontent.com/raw/xrootd/xrootd/pull/1930.patch?full_index=1",
         sha256="969f8b07edff42449ad76b02f3e57d93b8d6c829be1ba14bccf831c27bc971e1",
         when="@5.5.3",
+    )
+    # https://github.com/xrootd/xrootd/pull/2013
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/xrootd/xrootd/pull/2013.patch?full_index=1",
+        sha256="3596f45234c421abb00d0d0539033207596587f00b2d35897da8ba3302811bba",
+        when="@5.5.0:5.5.5",
     )
 
     # do not use systemd

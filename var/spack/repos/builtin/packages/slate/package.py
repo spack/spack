@@ -66,7 +66,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     for val in ROCmPackage.amdgpu_targets:
         depends_on("blaspp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
         depends_on("lapackpp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
-    depends_on("lapackpp@2022.07.00", when="@2022.07.00:")
+    depends_on("lapackpp@2022.07.00:", when="@2022.07.00:")
     depends_on("lapackpp@2022.05.00:", when="@2022.05.00:")
     depends_on("lapackpp@2021.04.00:", when="@2021.05.01:")
     depends_on("lapackpp@2020.10.02", when="@2020.10.00")
@@ -102,6 +102,13 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             backend_config,
             "-Duse_mpi=%s" % ("+mpi" in spec),
         ]
+        if "+cuda" in spec:
+            archs = ";".join(spec.variants["cuda_arch"].value)
+            config.append("-DCMAKE_CUDA_ARCHITECTURES=%s" % archs)
+        if "+rocm" in spec:
+            archs = ";".join(spec.variants["amdgpu_target"].value)
+            config.append("-DCMAKE_HIP_ARCHITECTURES=%s" % archs)
+
         if self.run_tests:
             config.append("-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"))
         return config

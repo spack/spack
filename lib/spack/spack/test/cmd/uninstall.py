@@ -18,7 +18,7 @@ uninstall = SpackCommand("uninstall")
 install = SpackCommand("install")
 
 
-class MockArgs(object):
+class MockArgs:
     def __init__(self, packages, all=False, force=False, dependents=False):
         self.packages = packages
         self.all = all
@@ -207,7 +207,7 @@ def test_in_memory_consistency_when_uninstalling(mutable_database, monkeypatch):
 # Note: I want to use https://docs.pytest.org/en/7.1.x/how-to/skipping.html#skip-all-test-functions-of-a-class-or-module
 # the style formatter insists on separating these two lines.
 @pytest.mark.skipif(sys.platform == "win32", reason="Envs unsupported on Windows")
-class TestUninstallFromEnv(object):
+class TestUninstallFromEnv:
     """Tests an installation with two environments e1 and e2, which each have
     shared package installations:
 

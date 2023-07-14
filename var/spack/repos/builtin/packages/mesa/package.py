@@ -13,7 +13,7 @@ class Mesa(MesonPackage):
     - a system for rendering interactive 3D graphics."""
 
     homepage = "https://www.mesa3d.org"
-    maintainers("chuckatkins", "v-dobrev")
+    maintainers("v-dobrev")
 
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
@@ -153,7 +153,7 @@ class Mesa(MesonPackage):
         if self.spec.satisfies("%intel"):
             if name == "cflags":
                 flags.append("-std=c99")
-        return super(Mesa, self).flag_handler(name, flags)
+        return super().flag_handler(name, flags)
 
     @property
     def libglx_headers(self):

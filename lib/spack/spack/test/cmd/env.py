@@ -390,6 +390,19 @@ def test_remove_after_concretize():
     assert not any(s.name == "mpileaks" for s in env_specs)
 
 
+def test_remove_before_concretize():
+    e = ev.create("test")
+    e.unify = True
+
+    e.add("mpileaks")
+    e.concretize()
+
+    e.remove("mpileaks")
+    e.concretize()
+
+    assert not list(e.concretized_specs())
+
+
 def test_remove_command():
     env("create", "test")
     assert "test" in env("list")
@@ -2675,7 +2688,7 @@ spack:
 
         spec = e.specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.get_projection_for_spec(spec)
-        modules_glob = "%s/modules/**/*" % e.path
+        modules_glob = "%s/modules/**/*/*" % e.path
         modules = glob.glob(modules_glob)
         assert len(modules) == 1
         module = modules[0]
@@ -2711,12 +2724,12 @@ spack:
 
         spec = e.specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.get_projection_for_spec(spec)
-        modules_glob = "%s/modules/**/*" % e.path
+        modules_glob = "%s/modules/**/*/*" % e.path
         modules = glob.glob(modules_glob)
         assert len(modules) == 1
         module = modules[0]
 
-        full_modules_glob = "%s/full_modules/**/*" % e.path
+        full_modules_glob = "%s/full_modules/**/*/*" % e.path
         full_modules = glob.glob(full_modules_glob)
         assert len(full_modules) == 1
         full_module = full_modules[0]

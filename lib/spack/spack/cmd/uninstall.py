@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import sys
 from typing import Dict, List, Optional
 
@@ -56,7 +54,7 @@ def setup_parser(subparser):
         "--force",
         action="store_true",
         dest="force",
-        help="remove regardless of whether other packages or environments " "depend on this one",
+        help="remove regardless of whether other packages or environments depend on this one",
     )
     subparser.add_argument(
         "--remove",

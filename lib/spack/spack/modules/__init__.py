@@ -7,8 +7,6 @@
 include Tcl non-hierarchical modules, Lua hierarchical modules, and others.
 """
 
-from __future__ import absolute_import
-
 from .common import disable_modules, ensure_modules_are_enabled_or_warn
 from .lmod import LmodModulefileWriter
 from .tcl import TclModulefileWriter
