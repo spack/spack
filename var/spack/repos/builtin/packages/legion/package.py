@@ -148,42 +148,26 @@ class Legion(CMakePackage, ROCmPackage):
         else:
             return True
 
-    variant(
-        "gasnet_root",
-        default="none",
-        values=validate_gasnet_root,
-        description="Path to a pre-installed version of GASNet (prefix directory).",
-        multi=False,
-    )
-    conflicts("gasnet_root", when="network=mpi")
-
-    gasnet_conduits = ["aries", "ibv", "udp", "mpi", "ucx", "ofi-slingshot11"]
-    variant(
-        "conduit",
-        default="none",
-        values=gasnet_conduits + ["none"],
-        description="The gasnet conduit(s) to enable.",
-        multi=False,
-    )
-
-    conflicts(
-        "conduit=none",
-        when="network=gasnet",
-        msg="a conduit must be selected when 'network=gasnet'",
-    )
-
-    for c in gasnet_conduits:
-        conflict_str = "conduit=%s" % c
-        conflicts(
-            conflict_str, when="network=mpi", msg="conduit attribute requires 'network=gasnet'."
+    with when("network=gasnet"):
+        variant(
+            "gasnet_root",
+            default="none",
+            values=validate_gasnet_root,
+            description="Path to a pre-installed version of GASNet (prefix directory).",
+            multi=False,
+        )
+        variant(
+            "conduit",
+            default="none",
+            values=("none", "aries", "ibv", "udp", "mpi", "ucx", "ofi-slingshot11"),
+            description="The gasnet conduit(s) to enable.",
+            sticky=True,
+            multi=False,
         )
         conflicts(
-            conflict_str, when="network=none", msg="conduit attribute requires 'network=gasnet'."
+            "conduit=none", msg="the 'conduit' variant must be set to a value other than 'none'"
         )
-
-    variant("gasnet_debug", default=False, description="Build gasnet with debugging enabled.")
-    conflicts("+gasnet_debug", when="network=mpi")
-    conflicts("+gasnet_debug", when="network=none")
+        variant("gasnet_debug", default=False, description="Build gasnet with debugging enabled.")
 
     variant("shared", default=False, description="Build shared libraries.")
 
@@ -313,11 +297,7 @@ class Legion(CMakePackage, ROCmPackage):
                 options.append("-DLegion_EMBED_GASNet_CONFIGURE_ARGS=--enable-debug")
         elif "network=mpi" in spec:
             options.append("-DLegion_NETWORKS=mpi")
-            if spec.variants["gasnet_root"].value != "none":
-                raise InstallError("'gasnet_root' is only valid when 'network=gasnet'.")
         else:
-            if spec.variants["gasnet_root"].value != "none":
-                raise InstallError("'gasnet_root' is only valid when 'network=gasnet'.")
             options.append("-DLegion_EMBED_GASNet=OFF")
 
         if "+shared" in spec:
