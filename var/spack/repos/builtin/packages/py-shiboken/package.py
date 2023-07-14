@@ -28,9 +28,6 @@ class PyShiboken(PythonPackage):
     depends_on("libxml2")
     depends_on("qt@4.6:4.8")
 
-    # to prevent ImportError: cannot import name 'soft_unicode' from 'markupsafe'
-    conflicts("^py-markupsafe@2.0.2:")
-
     # subprocess.mswindows was renamed to subprocess._mswindows in Python 3.5
     patch("python-3.5.patch", when="^python@3.5:")
 
