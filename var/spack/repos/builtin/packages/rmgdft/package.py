@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Rmgdft(CMakePackage):
+class Rmgdft(CMakePackage, CudaPackage):
     """RMGDFT is a high performance real-space density functional code
     designed for large scale electronic structure calculations."""
 
@@ -16,6 +16,7 @@ class Rmgdft(CMakePackage):
     maintainers("elbriggs")
     tags = ["ecp", "ecp-apps"]
     version("master", branch="master")
+    version("5.4.0", tag="v5.4.0")
     version("5.3.1", tag="v5.3.1")
     version("5.2.0", tag="v5.2.0")
     version("5.0.5", tag="v5.0.5")
@@ -34,6 +35,8 @@ class Rmgdft(CMakePackage):
     variant("local_orbitals", default=True, description="Build O(N) variant.")
 
     variant("cuda", default=False, description="Build cuda enabled variant.")
+
+    variant("rocm", default=False, description="Build rocm enabled variant.")
 
     # Normally we want this but some compilers (e.g. IBM) are
     # very slow when this is on so provide the option to disable
@@ -63,6 +66,10 @@ class Rmgdft(CMakePackage):
     depends_on("mpi")
     depends_on("hdf5")
     depends_on("cuda", when="+cuda")
+    with when("+rocm"):
+        depends_on("hipblas")
+        depends_on("rocfft")
+        depends_on("rocsolver")
 
     # RMG is a hybrid MPI/threads code and performance is
     # highly dependent on the threading model of the blas
@@ -77,6 +84,10 @@ class Rmgdft(CMakePackage):
         spec = self.spec
         if "+cuda" in spec:
             targets = ["rmg-gpu"]
+            cuda_arch_list = spec.variants['cuda_arch'].value
+            cuda_arch = cuda_arch_list[0]
+            if cuda_arch != 'none':
+                 args.append('-DCUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch))
             if "+local_orbitals" in spec:
                 targets.append("rmg-on-gpu")
         else:
