@@ -17,10 +17,11 @@ class PyProtobuf(PythonPackage):
     homepage = "https://developers.google.com/protocol-buffers/"
     pypi = "protobuf/protobuf-3.11.0.tar.gz"
 
-    variant("cpp", default=True, description="Enable the cpp implementation")
+    variant("cpp", default=True, when="@:4.21", description="Enable the cpp implementation")
 
     # Newer versions seem to require bazel to build?
     # https://github.com/protocolbuffers/protobuf/tree/main/python
+    version("4.23.3", sha256="7a92beb30600332a52cdadbedb40d33fd7c8a0d7f549c440347bc606fb3fe34b")
     version("4.21.9", sha256="61f21493d96d2a77f9ca84fefa105872550ab5ef71d21c458eb80edcf4885a99")
     version("4.21.7", sha256="71d9dba03ed3432c878a801e2ea51e034b0ea01cf3a4344fb60166cb5f6c8757")
     version("4.21.5", sha256="eb1106e87e095628e96884a877a51cdb90087106ee693925ec0a300468a9be3a")
@@ -68,7 +69,7 @@ class PyProtobuf(PythonPackage):
 
     # Setup dependencies for protobuf to use the same minor version as py-protobuf
     # Handle mapping the 4.x release to the protobuf 3.x releases
-    for ver in list(range(21, 22)):
+    for ver in list(range(21, 24)):
         depends_on("protobuf@3." + str(ver), when="+cpp @4." + str(ver))
     # Handle the 3.x series releases
     for ver in list(range(0, 21)):
