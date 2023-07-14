@@ -224,7 +224,7 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
     if not stages:
         return
 
-    mirrors = spack.mirror.MirrorCollection(mirrors=mirrors_to_check)
+    mirrors = spack.mirror.MirrorCollection(mirrors=mirrors_to_check, binary=True)
     tty.msg("Checked the following mirrors for binaries:")
     for m in mirrors.values():
         tty.msg("  {0}".format(m.fetch_url))

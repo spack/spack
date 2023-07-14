@@ -26,7 +26,7 @@ import spack.store
 from spack.database import InstallStatuses
 from spack.error import SpackError
 
-description = "Replace one package with another via symlinks"
+description = "replace one package with another via symlinks"
 section = "admin"
 level = "long"
 
@@ -46,7 +46,7 @@ def setup_parser(sp):
         action="store_true",
         default=True,
         dest="dependencies",
-        help="Deprecate dependencies (default)",
+        help="deprecate dependencies (default)",
     )
     deps.add_argument(
         "-D",
@@ -54,7 +54,7 @@ def setup_parser(sp):
         action="store_false",
         default=True,
         dest="dependencies",
-        help="Do not deprecate dependencies",
+        help="do not deprecate dependencies",
     )
 
     install = sp.add_mutually_exclusive_group()
@@ -64,7 +64,7 @@ def setup_parser(sp):
         action="store_true",
         default=False,
         dest="install",
-        help="Concretize and install deprecator spec",
+        help="concretize and install deprecator spec",
     )
     install.add_argument(
         "-I",
@@ -72,7 +72,7 @@ def setup_parser(sp):
         action="store_false",
         default=False,
         dest="install",
-        help="Deprecator spec must already be installed (default)",
+        help="deprecator spec must already be installed (default)",
     )
 
     sp.add_argument(
@@ -81,7 +81,7 @@ def setup_parser(sp):
         type=str,
         default="soft",
         choices=["soft", "hard"],
-        help="Type of filesystem link to use for deprecation (default soft)",
+        help="type of filesystem link to use for deprecation (default soft)",
     )
 
     sp.add_argument(

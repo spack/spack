@@ -179,6 +179,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     variant("shared", default=True, description="Build a shared libperl.so library")
     variant("threads", default=True, description="Build perl with threads support")
     variant("open", default=True, description="Support open.pm")
+    variant("opcode", default=True, description="Support Opcode.pm")
 
     resource(
         name="cpanm",
@@ -241,6 +242,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 fail_on_error=False,
             )
             variants += "+open" if perl.returncode == 0 else "~open"
+            # this is just to detect incomplete installs
+            # normally perl installs Opcode.pm
+            perl("-e", "use Opcode", output=os.devnull, error=os.devnull, fail_on_error=False)
+            variants += "+opcode" if perl.returncode == 0 else "~opcode"
             return variants
 
     # On a lustre filesystem, patch may fail when files
