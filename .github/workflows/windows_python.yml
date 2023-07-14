@@ -27,8 +27,6 @@ jobs:
     - name: Create local develop
       run: |
         ./.github/workflows/setup_git.ps1
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
     - name: Unit Test
       run: |
         spack unit-test -x --verbose --cov --cov-config=pyproject.toml --ignore=lib/spack/spack/test/cmd
