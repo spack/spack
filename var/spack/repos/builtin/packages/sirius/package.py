@@ -273,24 +273,28 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
 
+        cm_label = ""
+        if "@7.5:" in spec:
+            cm_label = "SIRIUS_"
+
         args = [
-            self.define_from_variant("USE_OPENMP", "openmp"),
-            self.define_from_variant("USE_ELPA", "elpa"),
-            self.define_from_variant("USE_MAGMA", "magma"),
-            self.define_from_variant("USE_NLCGLIB", "nlcglib"),
-            self.define_from_variant("USE_VDWXC", "vdwxc"),
-            self.define_from_variant("USE_MEMORY_POOL", "memory_pool"),
-            self.define_from_variant("USE_SCALAPACK", "scalapack"),
-            self.define_from_variant("CREATE_FORTRAN_BINDINGS", "fortran"),
-            self.define_from_variant("CREATE_PYTHON_MODULE", "python"),
-            self.define_from_variant("USE_CUDA", "cuda"),
-            self.define_from_variant("USE_ROCM", "rocm"),
-            self.define_from_variant("BUILD_TESTING", "tests"),
-            self.define_from_variant("BUILD_APPS", "apps"),
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("USE_FP32", "single_precision"),
-            self.define_from_variant("USE_PROFILER", "profiler"),
-            self.define_from_variant("USE_WANNIER90", "wannier90"),
+            self.define_from_variant(cm_label + "USE_OPENMP", "openmp"),
+            self.define_from_variant(cm_label + "USE_ELPA", "elpa"),
+            self.define_from_variant(cm_label + "USE_MAGMA", "magma"),
+            self.define_from_variant(cm_label + "USE_NLCGLIB", "nlcglib"),
+            self.define_from_variant(cm_label + "USE_VDWXC", "vdwxc"),
+            self.define_from_variant(cm_label + "USE_MEMORY_POOL", "memory_pool"),
+            self.define_from_variant(cm_label + "USE_SCALAPACK", "scalapack"),
+            self.define_from_variant(cm_label + "CREATE_FORTRAN_BINDINGS", "fortran"),
+            self.define_from_variant(cm_label + "CREATE_PYTHON_MODULE", "python"),
+            self.define_from_variant(cm_label + "USE_CUDA", "cuda"),
+            self.define_from_variant(cm_label + "USE_ROCM", "rocm"),
+            self.define_from_variant(cm_label + "BUILD_TESTING", "tests"),
+            self.define_from_variant(cm_label + "BUILD_APPS", "apps"),
+            self.define_from_variant(cm_label + "BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant(cm_label + "USE_FP32", "single_precision"),
+            self.define_from_variant(cm_label + "USE_PROFILER", "profiler"),
+            self.define_from_variant(cm_label + "USE_WANNIER90", "wannier90"),
         ]
 
         lapack = spec["lapack"]
@@ -308,21 +312,25 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         if "+scalapack" in spec and "^cray-libsci" not in spec:
             args.extend(
                 [
-                    self.define("SCALAPACK_FOUND", "true"),
-                    self.define("SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
-                    self.define("SCALAPACK_LIBRARIES", spec["scalapack"].libs.joined(";")),
+                    self.define(cm_label + "SCALAPACK_FOUND", "true"),
+                    self.define(
+                        cm_label + "SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include
+                    ),
+                    self.define(
+                        cm_label + "SCALAPACK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
                 ]
             )
 
         if "^cray-libsci" in spec:
-            args.append(self.define("USE_CRAY_LIBSCI", "ON"))
+            args.append(self.define(cm_label + "USE_CRAY_LIBSCI", "ON"))
 
         if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
-            args.append(self.define("USE_MKL", "ON"))
+            args.append(self.define(cm_label + "USE_MKL", "ON"))
 
         if "+elpa" in spec:
             elpa_incdir = os.path.join(spec["elpa"].headers.directories[0], "elpa")
-            args.append(self.define("ELPA_INCLUDE_DIR", elpa_incdir))
+            args.append(self.define(cm_label + "ELPA_INCLUDE_DIR", elpa_incdir))
 
         if "+cuda" in spec:
             cuda_arch = spec.variants["cuda_arch"].value
