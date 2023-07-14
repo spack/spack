@@ -11,7 +11,6 @@ packages.
 
 import base64
 import collections
-import contextlib
 import copy
 import functools
 import glob
@@ -1784,13 +1783,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         pieces = ["resource", resource.name, self.spec.dag_hash()]
         resource_stage_folder = "-".join(pieces)
         return resource_stage_folder
-
-    @contextlib.contextmanager
-    def _stage_and_write_lock(self):
-        """Prefix lock nested in a stage."""
-        with self.stage:
-            with spack.store.db.prefix_write_lock(self.spec):
-                yield
 
     def do_install(self, **kwargs):
         """Called by commands to install a package and or its dependencies.
