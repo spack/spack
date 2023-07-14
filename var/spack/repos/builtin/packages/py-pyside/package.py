@@ -90,16 +90,8 @@ class PyPyside(PythonPackage):
         # PySide can't find the Shiboken library, even though it comes
         # bundled with it and is installed in the same directory.
 
-        # PySide does not provide official support for
-        # Python 3.5, but it should work fine
-        filter_file(
-            "'Programming Language :: Python :: 3.4'",
-            "'Programming Language :: Python :: 3.4',\r\n        "
-            "'Programming Language :: Python :: 3.5'",
-            "setup.py",
-        )
-
-        # remove check for python version
+        # remove check for python version becaus Python 3.5 is not officially
+        # supported, but it should work fine
         filter_file(r"^check_allowed_python_version()", "", "setup.py")
 
     def install_options(self, spec, prefix):
