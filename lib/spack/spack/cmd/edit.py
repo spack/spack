@@ -62,7 +62,7 @@ def setup_parser(subparser):
         dest="path",
         action="store_const",
         const=spack.paths.build_systems_path,
-        help="Edit the build system with the supplied name.",
+        help="edit the build system with the supplied name",
     )
     excl_args.add_argument(
         "-c",

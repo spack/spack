@@ -14,6 +14,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
 
     homepage = "https://arrow.apache.org"
     pypi = "pyarrow/pyarrow-0.17.1.tar.gz"
+    git = "https://github.com/apache/arrow"
 
     version("10.0.1", sha256="1a14f57a5f472ce8234f2964cd5184cccaa8df7e04568c64edc33b23eb285dd5")
     version("8.0.0", sha256="4a18a211ed888f1ac0b0ebcb99e2d9a3e913a481120ee9b1fe33d3fedb945d4e")
@@ -28,7 +29,9 @@ class PyPyarrow(PythonPackage, CudaPackage):
 
     variant("parquet", default=False, description="Build with Parquet support")
     variant("orc", default=False, description="Build with orc support")
-    variant("dataset", default=True, description="Build with Dataset support")
+    variant("dataset", default=False, description="Build with Dataset support")
+
+    conflicts("~parquet", when="+dataset")
 
     depends_on("cmake@3.0.0:", type="build")
     depends_on("pkgconfig", type="build")

@@ -42,7 +42,7 @@ spack:
     mpich:
       require: '@4.1.1 ~wrapperrpath ~hwloc'
     py-cryptography:
-      require: '@38.0.1'
+      require: '@38.0'
     unzip:
       require: '%gcc'
     binutils:

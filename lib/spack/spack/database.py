@@ -36,6 +36,8 @@ except ImportError:
     _use_uuid = False
     pass
 
+from typing import Optional, Tuple
+
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -178,9 +180,9 @@ class InstallRecord:
     dependents left.
 
     Args:
-        spec (spack.spec.Spec): spec tracked by the install record
-        path (str): path where the spec has been installed
-        installed (bool): whether or not the spec is currently installed
+        spec: spec tracked by the install record
+        path: path where the spec has been installed
+        installed: whether or not the spec is currently installed
         ref_count (int): number of specs that depend on this one
         explicit (bool or None): whether or not this spec was explicitly
             installed, or pulled-in as a dependency of something else
@@ -189,14 +191,14 @@ class InstallRecord:
 
     def __init__(
         self,
-        spec,
-        path,
-        installed,
-        ref_count=0,
-        explicit=False,
-        installation_time=None,
-        deprecated_for=None,
-        in_buildcache=False,
+        spec: "spack.spec.Spec",
+        path: str,
+        installed: bool,
+        ref_count: int = 0,
+        explicit: bool = False,
+        installation_time: Optional[float] = None,
+        deprecated_for: Optional["spack.spec.Spec"] = None,
+        in_buildcache: bool = False,
         origin=None,
     ):
         self.spec = spec
@@ -407,7 +409,7 @@ class Database:
             self.lock = lk.Lock(
                 self._lock_path, default_timeout=self.db_lock_timeout, desc="database"
             )
-        self._data = {}
+        self._data: Dict[str, InstallRecord] = {}
 
         # For every installed spec we keep track of its install prefix, so that
         # we can answer the simple query whether a given path is already taken
@@ -710,7 +712,9 @@ class Database:
             if hash_key in db._data:
                 return db
 
-    def query_by_spec_hash(self, hash_key, data=None):
+    def query_by_spec_hash(
+        self, hash_key: str, data: Optional[Dict[str, InstallRecord]] = None
+    ) -> Tuple[bool, Optional[InstallRecord]]:
         """Get a spec for hash, and whether it's installed upstream.
 
         Return:
@@ -1216,7 +1220,7 @@ class Database:
             match = self.query_one(spec, **kwargs)
             if match:
                 return match.dag_hash()
-            raise KeyError("No such spec in database! %s" % spec)
+            raise NoSuchSpecError(spec)
         return key
 
     @_autospec
@@ -1672,3 +1676,17 @@ class InvalidDatabaseVersionError(SpackError):
     @property
     def database_version_message(self):
         return f"The expected DB version is '{self.expected}', but '{self.found}' was found."
+
+
+class NoSuchSpecError(KeyError):
+    """Raised when a spec is not found in the database."""
+
+    def __init__(self, spec):
+        self.spec = spec
+        super().__init__(spec)
+
+    def __str__(self):
+        # This exception is raised frequently, and almost always
+        # caught, so ensure we don't pay the cost of Spec.__str__
+        # unless the exception is actually printed.
+        return f"No such spec in database: {self.spec}"
