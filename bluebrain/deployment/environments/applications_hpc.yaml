@@ -6,6 +6,7 @@ spack:
         include:
           - asciitoh5
           - model-neocortex
+          - morpho-kit
           - nest
           - neurodamus-hippocampus
           - neurodamus-neocortex
@@ -30,6 +31,7 @@ spack:
           +plasticity: '{name}-plasticity/{version}'
           +ngv+metabolism: '{name}-multiscale/{version}'
   specs:
+    - morpho-kit
     - neuron+tests+coreneuron
     - neuron+tests+coreneuron+sympy
     - neuron%nvhpc+caliper+coreneuron+gpu+tests+openmp
