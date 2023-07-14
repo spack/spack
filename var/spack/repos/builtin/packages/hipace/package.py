@@ -43,7 +43,7 @@ class Hipace(CMakePackage):
     depends_on("cmake@3.15.0:", type="build")
     depends_on("mpi", when="+mpi")
     with when("+openpmd"):
-        depends_on("openpmd-api@0.15.1:", when="@23.07:")
+        depends_on("openpmd-api@0.15.1:", when="@23.05:")
         depends_on("openpmd-api@0.14.2:")
         depends_on("openpmd-api ~mpi", when="~mpi")
         depends_on("openpmd-api +mpi", when="+mpi")
