@@ -341,6 +341,10 @@ class Nvhpc(Package):
     )
     variant("lapack", default=True, description="Enable LAPACK")
     variant("mpi", default=False, description="Enable MPI")
+    variant("cuda_version",
+            default="default",
+            description="CUDA version, for example 11.8")
+
 
     provides("blas", when="+blas")
     provides("lapack", when="+lapack")
@@ -359,6 +363,8 @@ class Nvhpc(Package):
         env.set("NVHPC_SILENT", "true")
         env.set("NVHPC_ACCEPT_EULA", "accept")
         env.set("NVHPC_INSTALL_DIR", self.prefix)
+        if self.spec.variants["cuda_version"].value != "default":
+            env.set("NVHPC_DEFAULT_CUDA", self.spec.variants["cuda_version"].value)
 
         if self.spec.variants["install_type"].value == "network":
             local_dir = join_path(self._version_prefix(), "share_objects")
