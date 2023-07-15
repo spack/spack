@@ -1801,20 +1801,20 @@ class Environment:
 
         # Perform installation-time check
         transitive_install_times = collections.defaultdict(int)
-        for spec in traverse.traverse_nodes(self.concrete_roots(), direction="children", order="post"):
+        for spec in traverse.traverse_nodes(
+            self.concrete_roots(), direction="children", order="post"
+        ):
             if not spec.installed:
                 continue
 
             _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
             when_this_spec_was_installed = record.installation_time
             transitive_install_times[spec] = max(
-                transitive_install_times[spec],
-                when_this_spec_was_installed
+                transitive_install_times[spec], when_this_spec_was_installed
             )
             for parent in spec.dependents():
                 transitive_install_times[parent] = max(
-                    transitive_install_times[parent],
-                    when_this_spec_was_installed
+                    transitive_install_times[parent], when_this_spec_was_installed
                 )
         specs_where_a_dependency_was_installed_more_recently = list()
         for spec, transitive_install_time in transitive_install_times.items():
@@ -1825,9 +1825,7 @@ class Environment:
             when_this_spec_was_installed = record.installation_time
 
             if when_this_spec_was_installed < transitive_install_time:
-                specs_where_a_dependency_was_installed_more_recently.append(
-                    spec.dag_hash()
-                )
+                specs_where_a_dependency_was_installed_more_recently.append(spec.dag_hash())
 
         # Find all dev specs that were modified.
         changed_dev_specs = [
