@@ -447,7 +447,7 @@ def test_dev_build_rebuild_dependent_delayed(
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - dependent-of-dev-build@0.0.0
 

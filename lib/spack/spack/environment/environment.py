@@ -1787,6 +1787,36 @@ class Environment:
         self.specs_by_hash[h] = concrete
 
     def _get_overwrite_specs(self):
+        # Perform installation-time check
+        import collections
+        transitive_install_times = collections.defaultdict(int)
+        for spec in traverse.traverse_nodes(self.concrete_roots(), direction="children", order="post"):
+            if not spec.installed:
+                continue
+
+            _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+            when_this_spec_was_installed = record.installation_time
+            transitive_install_times[spec] = max(
+                transitive_install_times[spec],
+                when_this_spec_was_installed
+            )
+            for parent in spec.dependents():
+                transitive_install_times[parent] = max(
+                    transitive_install_times[parent],
+                    when_this_spec_was_installed
+                )
+
+        specs_where_a_dependency_was_installed_more_recently = list()
+        for spec, transitive_install_time in transitive_install_times.items():
+            if not spec.installed:
+                continue
+
+            _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+            when_this_spec_was_installed = record.installation_time
+
+            if when_this_spec_was_installed < transitive_install_time:
+                specs_where_a_dependency_was_installed_more_recently.append(spec)
+
         # Find all dev specs that were modified.
         changed_dev_specs = [
             s
@@ -1810,7 +1840,7 @@ class Environment:
                 key=traverse.by_dag_hash,
             )
             if depth == 0 or spec.installed
-        ]
+        ] + specs_where_a_dependency_was_installed_more_recently
 
     def _install_log_links(self, spec):
         if not spec.external:
