@@ -401,7 +401,7 @@ def test_url_missing_curl(tmpdir, monkeypatch):
 
 
 def test_url_fetch_text_urllib_bad_returncode(tmpdir, monkeypatch):
-    class response(object):
+    class response:
         def getcode(self):
             return 404
 

@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import sys
 
 import llnl.util.tty as tty
@@ -28,7 +26,7 @@ def setup_parser(subparser):
     output.add_argument(
         "--safe-only",
         action="store_true",
-        help="[deprecated] only list safe versions " "of the package",
+        help="[deprecated] only list safe versions of the package",
     )
     output.add_argument(
         "-r", "--remote", action="store_true", help="only list remote versions of the package"
@@ -37,7 +35,7 @@ def setup_parser(subparser):
         "-n",
         "--new",
         action="store_true",
-        help="only list remote versions newer than " "the latest checksummed version",
+        help="only list remote versions newer than the latest checksummed version",
     )
     subparser.add_argument(
         "-c", "--concurrency", default=32, type=int, help="number of concurrent requests"

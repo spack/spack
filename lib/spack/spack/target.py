@@ -32,7 +32,7 @@ def _ensure_other_is_target(method):
     return _impl
 
 
-class Target(object):
+class Target:
     def __init__(self, name, module_name=None):
         """Target models microarchitectures and their compatibility.
 

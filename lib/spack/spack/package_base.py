@@ -125,7 +125,7 @@ def preferred_version(pkg):
     return max(pkg.versions, key=key_fn)
 
 
-class WindowsRPath(object):
+class WindowsRPath:
     """Collection of functionality surrounding Windows RPATH specific features
 
     This is essentially meaningless for all other platforms
@@ -175,7 +175,7 @@ class WindowsRPath(object):
 detectable_packages = collections.defaultdict(list)
 
 
-class DetectablePackageMeta(object):
+class DetectablePackageMeta:
     """Check if a package is detectable and add default implementations
     for the detection function.
     """
@@ -365,7 +365,7 @@ def on_package_attributes(**attr_dict):
     return _execute_under_condition
 
 
-class PackageViewMixin(object):
+class PackageViewMixin:
     """This collects all functionality related to adding installed Spack
     package to views. Packages can customize how they are added to views by
     overriding these functions.
@@ -639,7 +639,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def __init__(self, spec):
         # this determines how the package should be built.
-        self.spec = spec
+        self.spec: "spack.spec.Spec" = spec
 
         # Allow custom staging paths for packages
         self.path = None
@@ -668,7 +668,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pkg_cls = spack.repo.path.get_pkg_class(self.extendee_spec.name)
             pkg_cls(self.extendee_spec)._check_extendable()
 
-        super(PackageBase, self).__init__()
+        super().__init__()
 
     @classmethod
     def possible_dependencies(
@@ -2511,7 +2511,7 @@ class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
 
     def __init__(self, spec, dependents):
-        super(PackageStillNeededError, self).__init__("Cannot uninstall %s" % spec)
+        super().__init__("Cannot uninstall %s" % spec)
         self.spec = spec
         self.dependents = dependents
 
@@ -2520,14 +2520,14 @@ class PackageError(spack.error.SpackError):
     """Raised when something is wrong with a package definition."""
 
     def __init__(self, message, long_msg=None):
-        super(PackageError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class NoURLError(PackageError):
     """Raised when someone tries to build a URL for a package with no URLs."""
 
     def __init__(self, cls):
-        super(NoURLError, self).__init__("Package %s has no version with a URL." % cls.__name__)
+        super().__init__("Package %s has no version with a URL." % cls.__name__)
 
 
 class InvalidPackageOpError(PackageError):
@@ -2542,13 +2542,11 @@ class ActivationError(ExtensionError):
     """Raised when there are problems activating an extension."""
 
     def __init__(self, msg, long_msg=None):
-        super(ActivationError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)
 
 
 class DependencyConflictError(spack.error.SpackError):
     """Raised when the dependencies cannot be flattened as asked for."""
 
     def __init__(self, conflict):
-        super(DependencyConflictError, self).__init__(
-            "%s conflicts with another file in the flattened directory." % (conflict)
-        )
+        super().__init__("%s conflicts with another file in the flattened directory." % (conflict))
