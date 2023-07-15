@@ -21,6 +21,7 @@ class PyEprosimaFastdds(CMakePackage, PythonExtension):
 
     depends_on("cmake@3.15:")
     depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-pytest", type="test")
     depends_on("swig", type=("build"))
     depends_on("eprosima-fastdds")
     depends_on("openssl")
