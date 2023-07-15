@@ -16,7 +16,7 @@ class PyShiboken(PythonPackage):
 
     version("1.2.2", sha256="0baee03c6244ab56e42e4200d0cb5e234682b11cc296ed0a192fe457d054972f")
 
-    depends_on("cmake", type="build")
+    depends_on("cmake@2.6:", type="build")
 
     # to prevent error: 'PyTypeObject' {aka 'struct _typeobject'} has no member
     # named 'tp_print'
