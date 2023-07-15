@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PyZstandard(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Zstandard bindings for Python."""
 
     homepage = "https://github.com/indygreg/python-zstandard"
     pypi = "zstandard/zstandard-0.21.0.tar.gz"
