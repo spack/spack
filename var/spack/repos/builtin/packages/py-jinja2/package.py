@@ -41,4 +41,4 @@ class PyJinja2(PythonPackage):
     depends_on("py-babel@0.8:", when="+i18n", type=("build", "run"))
 
     # https://github.com/pallets/jinja/issues/1585
-    conflicts("^py-markupsafe@2.0.2:", when="@:2.11.3")
+    conflicts("^py-markupsafe@2.1:", when="@:2")
