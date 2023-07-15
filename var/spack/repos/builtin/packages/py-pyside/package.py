@@ -62,6 +62,9 @@ class PyPyside(PythonPackage):
         )
         filter_file("^    if subprocess.mswindows:", "    if mswindows:", "popenasync.py")
 
+        # Remove check for python version because the above patch adds support for newer versions
+        filter_file("^check_allowed_python_version()", "", "setup.py")
+
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.
         filter_file(
@@ -86,9 +89,6 @@ class PyPyside(PythonPackage):
         # TODO: rpath handling for PySide 1.2.4 still doesn't work.
         # PySide can't find the Shiboken library, even though it comes
         # bundled with it and is installed in the same directory.
-
-        # Remove check for python version because the above patch adds support for newer versions
-        filter_file("^check_allowed_python_version()", "", "setup.py")
 
     def install_options(self, spec, prefix):
         return ["--jobs={0}".format(make_jobs)]
