@@ -1787,8 +1787,19 @@ class Environment:
         self.specs_by_hash[h] = concrete
 
     def _get_overwrite_specs(self):
+        """Gather all specs that should be overwritten. There are three instances
+        where this is the case:
+
+        * The spec is a "develop" spec, and a user has (outside of spack)
+          modified one of the source files.
+        * Any parent of such a spec.
+        * A dependency that is a "develop" spec was installed more-recently
+          this can occur if, for example, x->y, you change and reinstall
+          the in-development spec y, and then later reinstall the whole
+          environment.
+        """
+
         # Perform installation-time check
-        import collections
         transitive_install_times = collections.defaultdict(int)
         for spec in traverse.traverse_nodes(self.concrete_roots(), direction="children", order="post"):
             if not spec.installed:
@@ -1805,7 +1816,6 @@ class Environment:
                     transitive_install_times[parent],
                     when_this_spec_was_installed
                 )
-
         specs_where_a_dependency_was_installed_more_recently = list()
         for spec, transitive_install_time in transitive_install_times.items():
             if not spec.installed:
