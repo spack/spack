@@ -1815,7 +1815,9 @@ class Environment:
             when_this_spec_was_installed = record.installation_time
 
             if when_this_spec_was_installed < transitive_install_time:
-                specs_where_a_dependency_was_installed_more_recently.append(spec)
+                specs_where_a_dependency_was_installed_more_recently.append(
+                    spec.dag_hash()
+                )
 
         # Find all dev specs that were modified.
         changed_dev_specs = [
