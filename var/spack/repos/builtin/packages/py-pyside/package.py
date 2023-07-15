@@ -87,8 +87,7 @@ class PyPyside(PythonPackage):
         # PySide can't find the Shiboken library, even though it comes
         # bundled with it and is installed in the same directory.
 
-        # remove check for python version becaus Python 3.5 is not officially
-        # supported, but it should work fine
+        # Remove check for python version because the above patch adds support for newer versions
         filter_file("^check_allowed_python_version()", "", "setup.py")
 
     def install_options(self, spec, prefix):
