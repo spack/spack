@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyEprosimaFastdds(CMakePackage):
+class PyEprosimaFastdds(CMakePackage, PythonExtension):
     """eprosima Fast DDS (formerly Fast RTPS) is a C++ implementation of the DDS
     (Data Distribution Service) standard of the OMG (Object Management Group).
     eProsima Fast DDS implements the RTPS (Real Time Publish Subscribe) protocol,
@@ -19,7 +19,7 @@ class PyEprosimaFastdds(CMakePackage):
 
     version("1.2.2", sha256="78c53739a66544b8c91d0016560c267e11bd7fdaf727b3bfbffd44ae65c93c62")
 
-    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"))
     depends_on("swig")
     depends_on("eprosima-fastdds")
     depends_on("openssl")
