@@ -58,10 +58,18 @@ class Xpmem(AutotoolsPackage):
 
     # It will become possible to disable the kernel module only starting 2.6.6:
     # https://github.com/hjelmn/xpmem/pull/24
-    conflicts("~kernel-module", when="@:2.6.5")
+    conflicts(
+        "~kernel-module",
+        when="@:2.6.5",
+        msg="Xpmem: cannot disable kernel module with versions prior to 2.6.5.",
+    )
 
     # Ideally, we should list all non-Linux-based platforms here:
-    conflicts("+kernel-module", when="platform=darwin")
+    conflicts(
+        "+kernel-module",
+        when="platform=darwin",
+        msg="Xpmem: cannot build kernel module on non-Linux platforms.",
+    )
 
     # All compilers except for gcc are in conflict with +kernel-module:
     for __compiler in spack.compilers.supported_compilers():
@@ -69,7 +77,7 @@ class Xpmem(AutotoolsPackage):
             conflicts(
                 "+kernel-module",
                 when="%{0}".format(__compiler),
-                msg="Linux kernel module must be compiled with gcc",
+                msg="Xpmem Linux kernel module must be compiled with gcc",
             )
 
     def autoreconf(self, spec, prefix):
