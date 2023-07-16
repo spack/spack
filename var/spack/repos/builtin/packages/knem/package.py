@@ -44,16 +44,21 @@ class Knem(AutotoolsPackage):
     depends_on("m4", type="build", when="@master")
 
     # The support for hwloc was added in 0.9.1:
-    conflicts("+hwloc", when="@:0.9.0")
+    conflicts(
+        "+hwloc",
+        when="@:0.9.0",
+        msg="Knem: Cannot build with hwloc with versions lower than 0.9.0",
+    )
 
     # Ideally, we should list all non-Linux-based platforms here:
-    conflicts("platform=darwin")
+    conflicts("platform=darwin", msg="Knem: cannot build on MacOS")
 
     # All compilers except for gcc are in conflict:
     for __compiler in spack.compilers.supported_compilers():
         if __compiler != "gcc":
             conflicts(
-                "%{0}".format(__compiler), msg="Linux kernel module must be compiled with gcc"
+                "%{0}".format(__compiler),
+                msg="Knem: Linux kernel module must be compiled with gcc",
             )
 
     @run_before("build")
