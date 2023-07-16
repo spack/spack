@@ -215,6 +215,10 @@ spack:
         with open(outputfile) as f:
             contents = f.read()
             yaml_contents = syaml.load(contents)
+            assert "workflow" in yaml_contents
+            assert "rules" in yaml_contents["workflow"]
+            assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
+
             assert "stages" in yaml_contents
             assert len(yaml_contents["stages"]) == 5
             assert yaml_contents["stages"][0] == "stage-0"
@@ -1102,15 +1106,18 @@ spack:
             with open(outputfile_pruned) as f:
                 contents = f.read()
                 yaml_contents = syaml.load(contents)
-                assert "no-specs-to-rebuild" in yaml_contents
                 # Make sure there are no other spec jobs or rebuild-index
-                assert len(yaml_contents.keys()) == 1
+                assert set(yaml_contents.keys()) == {"no-specs-to-rebuild", "workflow"}
+
                 the_elt = yaml_contents["no-specs-to-rebuild"]
                 assert "tags" in the_elt
                 assert "nonbuildtag" in the_elt["tags"]
                 assert "image" in the_elt
                 assert the_elt["image"] == "basicimage"
                 assert the_elt["custom_attribute"] == "custom!"
+
+                assert "rules" in yaml_contents["workflow"]
+                assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
 
             outputfile_not_pruned = str(tmpdir.join("unpruned_pipeline.yml"))
             ci_cmd("generate", "--no-prune-dag", "--output-file", outputfile_not_pruned)
