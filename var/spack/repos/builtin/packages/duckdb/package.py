@@ -14,6 +14,8 @@ class Duckdb(MakefilePackage):
     url = "https://github.com/duckdb/duckdb/archive/refs/tags/v0.8.1.tar.gz"
     git = "https://github.com/duckdb/duckdb.git"
 
+    maintainers("teaguesterling")
+
     version("master", branch="master")
     version("0.8.1", sha256="a0674f7e320dc7ebcf51990d7fc1c0e7f7b2c335c08f5953702b5285e6c30694")
     version("0.8.0", sha256="df3b8e0b72bce38914f0fb1cd02235d8b616df9209beb14beb06bfbcaaf2e97f")
