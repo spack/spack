@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import os
 import shutil
 import sys
@@ -43,41 +44,18 @@ def compr_support_check(monkeypatch):
 def archive_file_and_extension(tmpdir_factory, request):
     """Copy example archive to temp directory into an extension-less file for test"""
     archive_file_stub = os.path.join(datadir, "Foo")
-    extension = request.param
+    extension,add_extension = request.param
     tmpdir = tmpdir_factory.mktemp("compression")
-    tmp_archive_file = os.path.join(str(tmpdir), "Foo")
+    tmp_archive_file = os.path.join(str(tmpdir), "Foo" + (("." + extension) if add_extension else ""))
     shutil.copy(archive_file_stub + "." + extension, tmp_archive_file)
     return (tmp_archive_file, extension)
 
 
-@pytest.mark.parametrize("archive_file_and_extension", native_archive_list, indirect=True)
-def test_native_unpacking_no_ext(tmpdir_factory, archive_file_and_extension):
+@pytest.mark.parametrize("archive_file_and_extension", itertools.product(
+    native_archive_list, [True, False]), indirect=True)
+def test_native_unpacking(tmpdir_factory, archive_file_and_extension):
     archive_file, extension = archive_file_and_extension
     util = scomp.decompressor_for(archive_file, extension)
-    tmpdir = tmpdir_factory.mktemp("comp_test")
-    with working_dir(str(tmpdir)):
-        assert not os.listdir(os.getcwd())
-        util(archive_file)
-        files = os.listdir(os.getcwd())
-        assert len(files) == 1
-        with open(files[0], "r") as f:
-            contents = f.read()
-        assert "TEST" in contents
-
-
-@pytest.fixture
-def archive_file(tmpdir_factory, request):
-    """Copy example archive to temp directory for test"""
-    archive_file_stub = os.path.join(datadir, "Foo")
-    extension = request.param
-    tmpdir = tmpdir_factory.mktemp("compression")
-    shutil.copy(archive_file_stub + "." + extension, str(tmpdir))
-    return os.path.join(str(tmpdir), "Foo.%s" % extension)
-
-
-@pytest.mark.parametrize("archive_file", native_archive_list, indirect=True)
-def test_native_unpacking(tmpdir_factory, archive_file):
-    util = scomp.decompressor_for(archive_file)
     tmpdir = tmpdir_factory.mktemp("comp_test")
     with working_dir(str(tmpdir)):
         assert not os.listdir(os.getcwd())
