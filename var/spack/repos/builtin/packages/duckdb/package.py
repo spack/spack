@@ -60,13 +60,11 @@ class Duckdb(MakefilePackage):
         # and thus defaults to something arbitrary and breaks extensions.
         # We use the Spack version to inject it in the right place during the build
         filter_file(
-            '(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, version \$\{DUCKDB_VERSION\}"\))',
-            'message(STATUS "[spack overriding DUCKDB_VERSION to v{0}]")\nset(DUCKDB_VERSION "v{0}")\n\\1'.format(self.spec.version),
-            'CMakeLists.txt'
+            r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, version \$\{DUCKDB_VERSION\}"\))',
+            'set(DUCKDB_VERSION "v{0}")\n\\1'.format(self.spec.version),
+            "CMakeLists.txt",
         )
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install("build/release/duckdb", prefix.bin)
-
-
