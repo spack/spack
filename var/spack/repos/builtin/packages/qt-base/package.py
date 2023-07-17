@@ -36,7 +36,7 @@ class QtPackage(CMakePackage):
     # Default dependencies for all qt-* components
     generator("ninja")
     depends_on("cmake@3.16:", type="build")
-    depends_on("pkgconfig", type="build")
+    depends_on("pkgconfig", type="build", when="platform=linux")
     depends_on("python", type="build")
 
     # List of unnecessary directories in src/3rdparty
@@ -130,8 +130,7 @@ class QtBase(QtPackage):
     depends_on("zstd")
     with when("platform=linux"):
         depends_on("libdrm")
-
-    depends_on("at-spi2-core", when="+accessibility")
+        depends_on("at-spi2-core", when="+accessibility")
     depends_on("dbus", when="+dbus")
     depends_on("gl", when="+opengl")
     depends_on("sqlite", when="+sql")
@@ -148,11 +147,23 @@ class QtBase(QtPackage):
             depends_on("libxrender")
 
     with when("+network"):
-        depends_on("libproxy")
         depends_on("openssl")
+        with when("platform=linux"):
+            depends_on("libproxy")
 
     # Qt6 requires newer compilers: see https://github.com/spack/spack/issues/34418
     conflicts("%gcc@:7")
+
+    # ensure that Qt links against GSS framework on macOS: https://bugreports.qt.io/browse/QTBUG-114537
+    with when("@6.3.2:6.5.1"):
+        patch(
+            "https://github.com/qt/qtbase/commit/c3d3e7312499189dde2ff9c0cb14bd608d6fd1cd.patch?full_index=1",
+            sha256="85c16db15406b0094831bb57016dab7e0c0fd0978b082a1dc103c87334db7915",
+        )
+        patch(
+            "https://github.com/qt/qtbase/commit/1bf144ba78ff10d712b4de55d2797b9256948a1d.patch?full_index=1",
+            sha256="e4d9f1aee0566558e77eef5609b63c1fde3f3986bea1b9d5d7930b297f916a5e",
+        )
 
     @property
     def archive_files(self):
@@ -211,7 +222,9 @@ class QtBase(QtPackage):
         if "+dbus" in spec:
             features.append("dbus_linked")
         if "+network" in spec:
-            features += ["openssl_linked", "openssl", "libproxy"]
+            features.extend(["openssl_linked", "openssl"])
+            if sys.platform == "linux":
+                features.append("libproxy")
         for k in features:
             define("FEATURE_" + k, True)
 
