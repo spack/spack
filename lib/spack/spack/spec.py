@@ -4940,7 +4940,9 @@ class SpecfileReaderBase:
                     spec.compiler_flags.add_flag(name, val, False)
             else:
                 if isinstance(values, tuple):
-                    spec.variants[name] = vt.MultiValuedVariant.from_node_dict(name, values[0], values[1])
+                    spec.variants[name] = vt.MultiValuedVariant.from_node_dict(
+                        name, values[0], values[1]
+                    )
                 else:
                     spec.variants[name] = vt.MultiValuedVariant.from_node_dict(name, values)
 
