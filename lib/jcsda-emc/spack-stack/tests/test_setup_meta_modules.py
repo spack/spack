@@ -36,7 +36,7 @@ def test_setup_meta_modules():
 
     # Create empty env
     env_dir = os.path.join(env_dir, 'modtest')
-    env = ev.Environment(path=env_dir, init_file=os.path.join(env_dir, 'spack.yaml'))
+    env = ev.Environment(manifest_dir=env_dir)
     ev.activate(env)
 
     comp = 'gcc'
