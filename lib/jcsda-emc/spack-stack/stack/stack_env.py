@@ -8,12 +8,7 @@ import spack
 import spack.config
 import spack.environment as ev
 import spack.util.spack_yaml as syaml
-from spack.extensions.stack.stack_paths import (
-    common_path,
-    site_path,
-    stack_path,
-    template_path,
-)
+from spack.extensions.stack.stack_paths import common_path, site_path, stack_path, template_path
 
 default_manifest_yaml = """\
 # This is a Spack Environment file.
@@ -31,12 +26,15 @@ spack:
 # Hidden file in top-level spack-stack dir so this module can
 # find relative config files. Assuming Spack is a submodule of
 # spack-stack.
-check_file = '.spackstack'
+check_file = ".spackstack"
 
 
 def get_git_revision_short_hash(path) -> str:
-    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
-                                   cwd=path).decode('ascii').strip()
+    return (
+        subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=path)
+        .decode("ascii")
+        .strip()
+    )
 
 
 def stack_hash():
@@ -48,7 +46,7 @@ def spack_hash():
 
 
 class StackEnv(object):
-    """ Represents a spack.yaml environment based on different
+    """Represents a spack.yaml environment based on different
     configurations of sites and specs. Uses the Spack library
     to maintain an internal state that represents the yaml and
     can be written out with write(). The output is a pure
