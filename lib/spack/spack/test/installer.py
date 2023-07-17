@@ -564,6 +564,8 @@ def test_clear_failures_success(install_mockery):
 
     # Ensure the core directory and failure lock file still exist
     assert os.path.isdir(spack.store.db._failure_dir)
+    if sys.platform != "win32":
+        assert os.path.isfile(spack.store.db.prefix_fail_path)
 
 
 def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
