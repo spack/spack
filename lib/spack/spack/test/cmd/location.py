@@ -97,7 +97,7 @@ def test_location_with_active_env(mutable_mock_env_path):
         assert location("--env").strip() == e.path
 
 
-def test_location_env_flag_interference(mutable_mock_env_path, tmpdir):
+def test_location_env_flag_interference(mutable_mock_env_path):
     """
     Tests that specifying an active environment using `spack -e x location ...`
     does not interfere with the location command flags.

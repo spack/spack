@@ -288,17 +288,19 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
     prepared_db = spack.database.Database(mock_db_root)
     upstream_layout = gen_mock_layout("/a/")
+    spack.config.config.push_scope(
+        spack.config.InternalConfigScope(
+            name="install-upstream-fixture",
+            data={"upstreams": {"mock1": {"install_tree": prepared_db.root}}},
+        )
+    )
 
     def _install_upstream(*specs):
         for spec_str in specs:
             s = spack.spec.Spec(spec_str).concretized()
             prepared_db.add(s, upstream_layout)
-
         downstream_root = str(tmpdir_factory.mktemp("mock_downstream_db_root"))
-        db_for_test = spack.database.Database(downstream_root, upstream_dbs=[prepared_db])
-        store = spack.store.Store(downstream_root)
-        store.db = db_for_test
-        return store, upstream_layout
+        return downstream_root, upstream_layout
 
     return _install_upstream
 
@@ -307,8 +309,8 @@ def test_installed_upstream_external(install_upstream, mock_fetch):
     """Check that when a dependency package is recorded as installed in
     an upstream database that it is not reinstalled.
     """
-    s, _ = install_upstream("externaltool")
-    with spack.store.use_store(s):
+    store_root, _ = install_upstream("externaltool")
+    with spack.store.use_store(store_root):
         dependent = spack.spec.Spec("externaltest")
         dependent.concretize()
 
@@ -326,8 +328,8 @@ def test_installed_upstream(install_upstream, mock_fetch):
     """Check that when a dependency package is recorded as installed in
     an upstream database that it is not reinstalled.
     """
-    s, upstream_layout = install_upstream("dependency-install")
-    with spack.store.use_store(s):
+    store_root, upstream_layout = install_upstream("dependency-install")
+    with spack.store.use_store(store_root):
         dependency = spack.spec.Spec("dependency-install").concretized()
         dependent = spack.spec.Spec("dependent-install").concretized()
 
@@ -379,9 +381,8 @@ def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmpdi
     Test that different specs with coinciding install prefixes will fail
     to install.
     """
-    projections = {"all": "all-specs-project-to-this-prefix"}
-    store = spack.store.Store(str(tmpdir), projections=projections)
-    with spack.store.use_store(store):
+    projections = {"projections": {"all": "all-specs-project-to-this-prefix"}}
+    with spack.store.use_store(str(tmpdir), extra_data=projections):
         with spack.config.override("config:checksum", False):
             pkg_a = Spec("libelf@0.8.13").concretized().package
             pkg_b = Spec("libelf@0.8.12").concretized().package
