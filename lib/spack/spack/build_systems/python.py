@@ -173,7 +173,7 @@ class PythonExtension(spack.package_base.PackageBase):
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
-        python = inspect.getmodule(self).python.path
+        python = inspect.getmodule(self).python
         for module in self.import_modules:
             with test_part(
                 self,
