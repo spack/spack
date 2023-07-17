@@ -21,6 +21,7 @@ from spack.util.executable import CommandNotFoundError, which
 PRE_EXTS = ["tar", "TAR"]
 EXTS = ["gz", "bz2", "xz", "Z"]
 NOTAR_EXTS = ["zip", "tgz", "tbz2", "tbz", "txz"]
+CONTRACTION_MAP = {"tgz": "tar.gz", "txz": "tar.xz", "tbz": "tar.bz2", "tbz2": "tar.bz2"}
 
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
 ALLOWED_ARCHIVE_TYPES = (
@@ -716,7 +717,8 @@ def extension_from_path(path):
 
 
 def strip_compression_extension(path, ext=None):
-    """Returns path with last supported or provided archive extension stripped"""
+    """Returns path with last supported (can be combined with tar) or
+    provided archive extension stripped"""
     path_ext = extension_from_path(path)
     if path_ext:
         path = expand_contracted_extension_in_path(path)
@@ -792,8 +794,7 @@ def expand_contracted_extension(extension):
     """Return expanded version of contracted extension
     i.e. .tgz -> .tar.gz, no op on non contracted extensions"""
     extension = extension.strip(".")
-    contraction_map = {"tgz": "tar.gz", "txz": "tar.xz", "tbz": "tar.bz2", "tbz2": "tar.bz2"}
-    return contraction_map.get(extension, extension)
+    return CONTRACTION_MAP.get(extension, extension)
 
 
 def compression_ext_from_compressed_archive(extension):

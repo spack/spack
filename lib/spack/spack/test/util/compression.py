@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import itertools
+from itertools import product
 import os
 import shutil
 import sys
@@ -51,7 +51,7 @@ def archive_file_and_extension(tmpdir_factory, request):
     return (tmp_archive_file, extension)
 
 
-@pytest.mark.parametrize("archive_file_and_extension", itertools.product(
+@pytest.mark.parametrize("archive_file_and_extension", product(
     native_archive_list, [True, False]), indirect=True)
 def test_native_unpacking(tmpdir_factory, archive_file_and_extension):
     archive_file, extension = archive_file_and_extension
@@ -106,3 +106,16 @@ def test_get_bad_extension():
 @pytest.mark.parametrize("path", ext_archive.values())
 def test_allowed_archive(path):
     assert scomp.allowed_archive(path)
+
+
+@pytest.mark.parametrize("ext_path", ext_archive.items())
+def test_strip_compression_extension(ext_path):
+    ext, path = ext_path
+    stripped = scomp.strip_compression_extension(path)
+    if (ext == "zip"):
+        assert(stripped == 'Foo.zip')
+    elif ext == "tar" or ext in scomp.CONTRACTION_MAP.keys() or ext in [
+            ".".join(ext) for ext in product(scomp.PRE_EXTS, scomp.EXTS)]:
+        assert(stripped == 'Foo.tar' or stripped == 'Foo.TAR')
+    else:
+        assert(stripped == 'Foo')
