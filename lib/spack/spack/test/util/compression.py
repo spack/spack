@@ -72,9 +72,11 @@ def test_native_unpacking(tmpdir_factory, archive_file_and_extension):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Only Python unpacking available on Windows")
-@pytest.mark.parametrize("archive_file", ext_archive.keys(), indirect=True)
-def test_system_unpacking(tmpdir_factory, archive_file, compr_support_check):
+@pytest.mark.parametrize("archive_file_and_extension",
+                         [(ext, True) for ext in ext_archive.keys()], indirect=True)
+def test_system_unpacking(tmpdir_factory, archive_file_and_extension, compr_support_check):
     # actually run test
+    archive_file, _ = archive_file_and_extension
     util = scomp.decompressor_for(archive_file)
     tmpdir = tmpdir_factory.mktemp("system_comp_test")
     with working_dir(str(tmpdir)):
