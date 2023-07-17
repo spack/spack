@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from itertools import product
+
 import os
 import shutil
 import sys
+from itertools import product
 
 import pytest
 
@@ -44,15 +45,18 @@ def compr_support_check(monkeypatch):
 def archive_file_and_extension(tmpdir_factory, request):
     """Copy example archive to temp directory into an extension-less file for test"""
     archive_file_stub = os.path.join(datadir, "Foo")
-    extension,add_extension = request.param
+    extension, add_extension = request.param
     tmpdir = tmpdir_factory.mktemp("compression")
-    tmp_archive_file = os.path.join(str(tmpdir), "Foo" + (("." + extension) if add_extension else ""))
+    tmp_archive_file = os.path.join(
+        str(tmpdir), "Foo" + (("." + extension) if add_extension else "")
+    )
     shutil.copy(archive_file_stub + "." + extension, tmp_archive_file)
     return (tmp_archive_file, extension)
 
 
-@pytest.mark.parametrize("archive_file_and_extension", product(
-    native_archive_list, [True, False]), indirect=True)
+@pytest.mark.parametrize(
+    "archive_file_and_extension", product(native_archive_list, [True, False]), indirect=True
+)
 def test_native_unpacking(tmpdir_factory, archive_file_and_extension):
     archive_file, extension = archive_file_and_extension
     util = scomp.decompressor_for(archive_file, extension)
@@ -112,12 +116,15 @@ def test_allowed_archive(path):
 def test_strip_compression_extension(ext_path):
     ext, path = ext_path
     stripped = scomp.strip_compression_extension(path)
-    if (ext == "zip"):
-        assert(stripped == 'Foo.zip')
+    if ext == "zip":
+        assert stripped == "Foo.zip"
         stripped = scomp.strip_compression_extension(path, "zip")
-        assert(stripped == 'Foo')
-    elif ext == "tar" or ext in scomp.CONTRACTION_MAP.keys() or ext in [
-            ".".join(ext) for ext in product(scomp.PRE_EXTS, scomp.EXTS)]:
-        assert(stripped == 'Foo.tar' or stripped == 'Foo.TAR')
+        assert stripped == "Foo"
+    elif (
+        ext == "tar"
+        or ext in scomp.CONTRACTION_MAP.keys()
+        or ext in [".".join(ext) for ext in product(scomp.PRE_EXTS, scomp.EXTS)]
+    ):
+        assert stripped == "Foo.tar" or stripped == "Foo.TAR"
     else:
-        assert(stripped == 'Foo')
+        assert stripped == "Foo"
