@@ -14,7 +14,6 @@ import spack.repo
 from spack.fetch_strategy import HgFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import which
 from spack.version import Version
 
 
