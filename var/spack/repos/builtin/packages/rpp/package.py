@@ -17,7 +17,7 @@ class Rpp(CMakePackage):
     git = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git"
     url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/0.97.tar.gz"
 
-    maintainers = ['srekolam', 'afzpatel']
+    maintainers = ["srekolam", "afzpatel"]
     tags = ["rocm"]
 
     version("1.1.0", sha256="9b1b9e721df27ee577819710b261071c68b2dccba96d9daf5d0535ee5f0e045f")
@@ -43,10 +43,7 @@ class Rpp(CMakePackage):
     def patch(self):
         if self.spec.satisfies("+hip"):
             filter_file(
-                "${ROCM_PATH}/llvm",
-                self.spec["llvm-amdgpu"].prefix,
-                "CMakeLists.txt",
-                string=True,
+                "${ROCM_PATH}/llvm", self.spec["llvm-amdgpu"].prefix, "CMakeLists.txt", string=True
             )
         if self.spec.satisfies("+opencl"):
             filter_file(
@@ -55,6 +52,7 @@ class Rpp(CMakePackage):
                 "cmake/FindOpenCL.cmake",
                 string=True,
             )
+
     depends_on("cmake@3.5:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on(Boost.with_default_variants)
@@ -81,9 +79,7 @@ class Rpp(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
-        args.append(self.define(
-            "ROCM_OPENMP_EXTRAS_DIR", spec["rocm-openmp-extras"].prefix
-        ))
+        args.append(self.define("ROCM_OPENMP_EXTRAS_DIR", spec["rocm-openmp-extras"].prefix))
         if self.spec.satisfies("+opencl"):
             args.append(self.define("BACKEND", "OPENCL"))
         if self.spec.satisfies("+cpu"):
@@ -91,7 +87,9 @@ class Rpp(CMakePackage):
         if self.spec.satisfies("+hip"):
             args.append(self.define("BACKEND", "HIP"))
             args.append(self.define("HIP_PATH", spec["hip"].prefix))
-            args.append(self.define(
-                "COMPILER_FOR_HIP", "{0}/bin/clang++".format(spec["llvm-amdgpu"].prefix)
-            ))
+            args.append(
+                self.define(
+                    "COMPILER_FOR_HIP", "{0}/bin/clang++".format(spec["llvm-amdgpu"].prefix)
+                )
+            )
         return args
