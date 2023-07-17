@@ -254,19 +254,19 @@ class AbstractVariant:
         self.value = value
 
     @staticmethod
-    def from_node_dict(name, value):
+    def from_node_dict(name, value, propagate=False):
         """Reconstruct a variant from a node dict."""
         if isinstance(value, list):
             # read multi-value variants in and be faithful to the YAML
-            mvar = MultiValuedVariant(name, ())
+            mvar = MultiValuedVariant(name, (), propagate)
             mvar._value = tuple(value)
             mvar._original_value = mvar._value
             return mvar
 
         elif str(value).upper() == "TRUE" or str(value).upper() == "FALSE":
-            return BoolValuedVariant(name, value)
+            return BoolValuedVariant(name, value, propagate)
 
-        return SingleValuedVariant(name, value)
+        return SingleValuedVariant(name, value, propagate)
 
     def yaml_entry(self):
         """Returns a key, value tuple suitable to be an entry in a yaml dict.

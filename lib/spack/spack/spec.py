@@ -2022,6 +2022,9 @@ class Spec:
 
         params = syaml.syaml_dict(sorted(v.yaml_entry() for _, v in self.variants.items()))
 
+        for k, v in params.items():
+            params[k] = (params[k], self.variants[k].propagate)
+
         # Only need the string compiler flag for yaml file
         params.update(
             sorted(
@@ -4936,7 +4939,10 @@ class SpecfileReaderBase:
                 for val in values:
                     spec.compiler_flags.add_flag(name, val, False)
             else:
-                spec.variants[name] = vt.MultiValuedVariant.from_node_dict(name, values)
+                if isinstance(values, tuple):
+                    spec.variants[name] = vt.MultiValuedVariant.from_node_dict(name, values[0], values[1])
+                else:
+                    spec.variants[name] = vt.MultiValuedVariant.from_node_dict(name, values)
 
         spec.external_path = None
         spec.external_modules = None
