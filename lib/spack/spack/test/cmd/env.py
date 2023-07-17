@@ -2802,11 +2802,11 @@ spack:
             install_root
         )
     )
-    current_store_root = str(spack.store.root)
+    current_store_root = str(spack.store.STORE.root)
     assert str(current_store_root) != install_root
     with spack.environment.Environment(str(tmpdir)):
-        assert str(spack.store.root) == install_root
-    assert str(spack.store.root) == current_store_root
+        assert str(spack.store.STORE.root) == install_root
+    assert str(spack.store.STORE.root) == current_store_root
 
 
 def test_activate_temp(monkeypatch, tmpdir):
