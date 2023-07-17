@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import errno
 import getpass
 import glob
@@ -201,7 +199,7 @@ def _mirror_roots():
     ]
 
 
-class Stage(object):
+class Stage:
     """Manages a temporary stage directory for building.
 
     A Stage object is a context manager that handles a directory where
@@ -451,22 +449,11 @@ class Stage(object):
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
-            mirror_urls = {}
-            for mirror in spack.mirror.MirrorCollection().values():
-                for rel_path in self.mirror_paths:
-                    mirror_url = url_util.join(mirror.fetch_url, rel_path)
-                    mirror_urls[mirror_url] = {}
-                    if (
-                        mirror.get_access_pair("fetch")
-                        or mirror.get_access_token("fetch")
-                        or mirror.get_profile("fetch")
-                    ):
-                        mirror_urls[mirror_url] = {
-                            "access_token": mirror.get_access_token("fetch"),
-                            "access_pair": mirror.get_access_pair("fetch"),
-                            "access_profile": mirror.get_profile("fetch"),
-                            "endpoint_url": mirror.get_endpoint_url("fetch"),
-                        }
+            mirror_urls = [
+                url_util.join(mirror.fetch_url, rel_path)
+                for mirror in spack.mirror.MirrorCollection(source=True).values()
+                for rel_path in self.mirror_paths
+            ]
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -485,16 +472,9 @@ class Stage(object):
 
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
-            for url in reversed(list(mirror_urls.keys())):
+            for url in reversed(mirror_urls):
                 fetchers.insert(
-                    0,
-                    fs.from_url_scheme(
-                        url,
-                        digest,
-                        expand=expand,
-                        extension=extension,
-                        connection=mirror_urls[url],
-                    ),
+                    0, fs.from_url_scheme(url, digest, expand=expand, extension=extension)
                 )
 
             if self.default_fetcher.cachable:
@@ -676,16 +656,16 @@ class Stage(object):
 
 class ResourceStage(Stage):
     def __init__(self, url_or_fetch_strategy, root, resource, **kwargs):
-        super(ResourceStage, self).__init__(url_or_fetch_strategy, **kwargs)
+        super().__init__(url_or_fetch_strategy, **kwargs)
         self.root_stage = root
         self.resource = resource
 
     def restage(self):
-        super(ResourceStage, self).restage()
+        super().restage()
         self._add_to_root_stage()
 
     def expand_archive(self):
-        super(ResourceStage, self).expand_archive()
+        super().expand_archive()
         self._add_to_root_stage()
 
     def _add_to_root_stage(self):
@@ -746,7 +726,7 @@ class StageComposite(pattern.Composite):
     #
 
     def __init__(self):
-        super(StageComposite, self).__init__(
+        super().__init__(
             [
                 "fetch",
                 "create",
@@ -792,7 +772,7 @@ class StageComposite(pattern.Composite):
         return self[0].archive_file
 
 
-class DIYStage(object):
+class DIYStage:
     """
     Simple class that allows any directory to be a spack stage.  Consequently,
     it does not expect or require that the source path adhere to the standard

@@ -61,8 +61,6 @@ spack:
     openblas:
       require: '@0.3.20'
       variants: threads=openmp
-    python:
-      require: '@3.7.15'
     xz:
       variants: +pic
     elfutils:

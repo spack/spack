@@ -22,7 +22,7 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.epilog = (
-        "If called without argument returns " "the list of all valid extendable packages"
+        "If called without argument returns the list of all valid extendable packages"
     )
     arguments.add_common_arguments(subparser, ["long", "very_long"])
     subparser.add_argument(

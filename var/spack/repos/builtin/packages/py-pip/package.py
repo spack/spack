@@ -18,6 +18,11 @@ class PyPip(Package, PythonExtension):
     maintainers("adamjstewart", "pradyunsg")
 
     version(
+        "23.1.2",
+        sha256="3ef6ac33239e4027d9a5598a381b9d30880a1477e50039db2eac6e8a8f6d1b18",
+        expand=False,
+    )
+    version(
         "23.0",
         sha256="b5f88adff801f5ef052bcdef3daa31b55eb67b0fccd6d0106c206fa248e0463c",
         expand=False,
@@ -80,11 +85,6 @@ class PyPip(Package, PythonExtension):
 
     extends("python")
     depends_on("python@3.7:", when="@22:", type=("build", "run"))
-    depends_on("python@3.6:", when="@21:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@19.2:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@18:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.3:", when="@10:", type=("build", "run"))
-    depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/{0}/p/pip/pip-{1}-{0}-none-any.whl"

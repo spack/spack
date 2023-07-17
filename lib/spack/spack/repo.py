@@ -105,19 +105,17 @@ class RepoLoader(_PrependFileLoader):
     #: Spack packages are expected to call `from spack.package import *`
     #: themselves, but we are allowing a deprecation period before breaking
     #: external repos that don't do this yet.
-    _package_prepend = "from __future__ import absolute_import;" "from spack.package import *"
+    _package_prepend = "from spack.package import *"
 
     def __init__(self, fullname, repo, package_name):
         self.repo = repo
         self.package_name = package_name
         self.package_py = repo.filename_for_package_name(package_name)
         self.fullname = fullname
-        super(RepoLoader, self).__init__(
-            self.fullname, self.package_py, prepend=self._package_prepend
-        )
+        super().__init__(self.fullname, self.package_py, prepend=self._package_prepend)
 
 
-class SpackNamespaceLoader(object):
+class SpackNamespaceLoader:
     def create_module(self, spec):
         return SpackNamespace(spec.name)
 
@@ -125,7 +123,7 @@ class SpackNamespaceLoader(object):
         module.__loader__ = self
 
 
-class ReposFinder(object):
+class ReposFinder:
     """MetaPathFinder class that loads a Python module corresponding to a Spack package
 
     Return a loader based on the inspection of the current global repository list.
@@ -326,7 +324,7 @@ class SpackNamespace(types.ModuleType):
     """Allow lazy loading of modules."""
 
     def __init__(self, namespace):
-        super(SpackNamespace, self).__init__(namespace)
+        super().__init__(namespace)
         self.__file__ = "(spack namespace)"
         self.__path__ = []
         self.__name__ = namespace
@@ -542,7 +540,7 @@ class PatchIndexer(Indexer):
         self.index.update_package(pkg_fullname)
 
 
-class RepoIndex(object):
+class RepoIndex:
     """Container class that manages a set of Indexers for a Repo.
 
     This class is responsible for checking packages in a repository for
@@ -641,7 +639,7 @@ class RepoIndex(object):
         return indexer.index
 
 
-class RepoPath(object):
+class RepoPath:
     """A RepoPath is a list of repos that function as one.
 
     It functions exactly like a Repo, but it operates on the combined
@@ -903,7 +901,7 @@ class RepoPath(object):
         return self.exists(pkg_name)
 
 
-class Repo(object):
+class Repo:
     """Class representing a package repository in the filesystem.
 
     Each package repository must have a top-level configuration file
@@ -1421,7 +1419,7 @@ def use_repositories(*paths_and_repos, **kwargs):
         path = saved
 
 
-class MockRepositoryBuilder(object):
+class MockRepositoryBuilder:
     """Build a mock repository in a directory"""
 
     def __init__(self, root_directory, namespace=None):
@@ -1500,7 +1498,7 @@ class UnknownPackageError(UnknownEntityError):
             else:
                 long_msg = "You may need to run 'spack clean -m'."
 
-        super(UnknownPackageError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)
         self.name = name
 
 
@@ -1512,14 +1510,14 @@ class UnknownNamespaceError(UnknownEntityError):
         if name == "yaml":
             long_msg = "Did you mean to specify a filename with './{}.{}'?"
             long_msg = long_msg.format(namespace, name)
-        super(UnknownNamespaceError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)
 
 
 class FailedConstructorError(RepoError):
     """Raised when a package's class constructor fails."""
 
     def __init__(self, name, exc_type, exc_obj, exc_tb):
-        super(FailedConstructorError, self).__init__(
+        super().__init__(
             "Class constructor failed for package '%s'." % name,
             "\nCaused by:\n"
             + ("%s: %s\n" % (exc_type.__name__, exc_obj))

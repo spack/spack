@@ -179,7 +179,7 @@ class Changing(Package):
 
     with spack.repo.use_repositories(str(repo_dir), override=False) as repository:
 
-        class _ChangingPackage(object):
+        class _ChangingPackage:
             default_context = [
                 ("delete_version", True),
                 ("delete_variant", False),
@@ -224,7 +224,7 @@ class Changing(Package):
 # adjusting_default_target_based_on_compiler uses the current_host fixture,
 # which changes the config.
 @pytest.mark.usefixtures("mutable_config", "mock_packages")
-class TestConcretize(object):
+class TestConcretize:
     def test_concretize(self, spec):
         check_concretize(spec)
 

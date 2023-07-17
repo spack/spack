@@ -132,7 +132,7 @@ class AppleClang(spack.compilers.clang.Clang):
         the 'DEVELOPER_DIR' environment variables to cause the xcrun and
         related tools to use this Xcode.app.
         """
-        super(AppleClang, self).setup_custom_environment(pkg, env)
+        super().setup_custom_environment(pkg, env)
 
         if not pkg.use_xcode:
             # if we do it for all packages, we get into big troubles with MPI:

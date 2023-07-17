@@ -62,7 +62,7 @@ def sbang_line():
     yield "#!/bin/sh %s/bin/sbang\n" % spack.store.layout.root
 
 
-class ScriptDirectory(object):
+class ScriptDirectory:
     """Directory full of test scripts to run sbang instrumentation on."""
 
     def __init__(self, sbang_line):
@@ -368,7 +368,7 @@ def test_install_sbang_too_long(tmpdir):
         add = min(num_extend, 255)
         long_path = os.path.join(long_path, "e" * add)
         num_extend -= add
-    with spack.store.use_store(spack.store.Store(long_path)):
+    with spack.store.use_store(long_path):
         with pytest.raises(sbang.SbangPathError) as exc_info:
             sbang.sbang_install_path()
 

@@ -232,6 +232,6 @@ class HipRocclr(CMakePackage):
         return args
 
     def __init__(self, spec):
-        super(HipRocclr, self).__init__(spec)
+        super().__init__(spec)
         if self.spec.satisfies("@4.5.0:"):
             self.phases = ["cmake", "build"]
