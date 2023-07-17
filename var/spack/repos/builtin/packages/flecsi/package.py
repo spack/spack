@@ -19,12 +19,13 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "http://flecsi.org/"
     git = "https://github.com/flecsi/flecsi.git"
-    maintainers("rspavel", "ktsai7", "rbberger")
+    maintainers("ktsai7", "rbberger")
 
     tags = ["e4s"]
 
     version("develop", branch="develop")
-    version("2.2.0", tag="v2.2.0", preferred=True)
+    version("2.2.1", tag="v2.2.1", preferred=True)
+    version("2.2.0", tag="v2.2.0")
     version("2.1.0", tag="v2.1.0")
     version("2.0.0", tag="v2.0.0")
     version("1.4.1", tag="v1.4.1", submodules=True)
@@ -133,8 +134,9 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("legion+shared", when="backend=legion +shared @2.0:")
     depends_on("legion+hdf5", when="backend=legion +hdf5 @2.0:")
     depends_on("legion +kokkos +cuda", when="backend=legion +kokkos +cuda @2.0:")
+    depends_on("legion +kokkos +rocm", when="backend=legion +kokkos +rocm @2.0:")
     depends_on("hdf5@1.10.7:", when="backend=legion +hdf5 @2.0:")
-    depends_on("hpx@1.3.0 cxxstd=17 malloc=system", when="backend=hpx @2.0:")
+    depends_on("hpx@1.8.1: cxxstd=17 malloc=system", when="backend=hpx @2.0:")
     depends_on("mpi", when="@2.0:")
     depends_on("mpich@3.4.1:", when="@2.0: ^mpich")
     depends_on("openmpi@4.1.0:", when="@2.0: ^openmpi")
@@ -156,6 +158,10 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     # Propagate amdgpu_target requirement to dependencies
     for _flag in ROCmPackage.amdgpu_targets:
         depends_on("kokkos amdgpu_target=" + _flag, when="+kokkos +rocm amdgpu_target=" + _flag)
+        depends_on(
+            "legion amdgpu_target=" + _flag,
+            when="backend=legion +rocm amdgpu_target=" + _flag + " @2.0:",
+        )
 
     conflicts("%gcc@:8", when="@2.1:")
 

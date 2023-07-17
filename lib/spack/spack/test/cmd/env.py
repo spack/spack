@@ -19,10 +19,12 @@ import llnl.util.link_tree
 import spack.cmd.env
 import spack.config
 import spack.environment as ev
+import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
 import spack.error
 import spack.modules
+import spack.package_base
 import spack.paths
 import spack.repo
 import spack.util.spack_json as sjson
@@ -3132,6 +3134,57 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
     specs_that_make_would_install = _parse_dry_run_package_installs(out)
 
     # Check that all specs are there (without duplicates)
+    assert set(specs_that_make_would_install) == set(expected_installs)
+    assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
+
+
+def test_depfile_safe_format():
+    """Test that depfile.MakefileSpec.safe_format() escapes target names."""
+
+    class SpecLike:
+        def format(self, _):
+            return "abc@def=ghi"
+
+    spec = depfile.MakefileSpec(SpecLike())
+    assert spec.safe_format("{name}") == "abc_def_ghi"
+    assert spec.unsafe_format("{name}") == "abc@def=ghi"
+
+
+def test_depfile_works_with_gitversions(tmpdir, mock_packages, monkeypatch):
+    """Git versions may contain = chars, which should be escaped in targets,
+    otherwise they're interpreted as makefile variable assignments."""
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", "repo.git", raising=False)
+    env("create", "test")
+
+    make = Executable("make")
+    makefile = str(tmpdir.join("Makefile"))
+
+    # Create an environment with dttop and dtlink1 both at a git version,
+    # and generate a depfile
+    with ev.read("test"):
+        add(f"dttop@{'a' * 40}=1.0 ^dtlink1@{'b' * 40}=1.0")
+        concretize()
+        env("depfile", "-o", makefile, "--make-disable-jobserver", "--make-prefix=prefix")
+
+    # Do a dry run on the generated depfile
+    out = make("-n", "-f", makefile, output=str)
+
+    # Check that all specs are there (without duplicates)
+    specs_that_make_would_install = _parse_dry_run_package_installs(out)
+    expected_installs = [
+        "dtbuild1",
+        "dtbuild2",
+        "dtbuild3",
+        "dtlink1",
+        "dtlink2",
+        "dtlink3",
+        "dtlink4",
+        "dtlink5",
+        "dtrun1",
+        "dtrun2",
+        "dtrun3",
+        "dttop",
+    ]
     assert set(specs_that_make_would_install) == set(expected_installs)
     assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
 

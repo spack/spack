@@ -40,6 +40,9 @@ class DamaskGrid(CMakePackage):
     depends_on("fftw+mpi")
     depends_on("libfyaml", when="@3.0.0-alpha7:")
 
+    # proper initialization of temperature to avoid segmentation fault. created by @MarDiehl
+    patch("T-init.patch", when="@3.0.0-alpha7")
+    # relax Fortran sourc limit to 132 char to enable PETSc macro expansion. created by @MarDiehl
     patch("long-lines.patch", when="@3.0.0-alpha7")
     patch("CMakeDebugRelease.patch", when="@3.0.0-alpha4")
 

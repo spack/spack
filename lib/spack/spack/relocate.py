@@ -39,7 +39,7 @@ class InstallRootStringError(spack.error.SpackError):
             file_path (str): path of the binary
             root_path (str): original Spack's store root string
         """
-        super(InstallRootStringError, self).__init__(
+        super().__init__(
             "\n %s \ncontains string\n %s \n"
             "after replacing it in rpaths.\n"
             "Package should not be relocated.\n Use -a to override." % (file_path, root_path)

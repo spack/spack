@@ -17,6 +17,7 @@ class Nccl(MakefilePackage, CudaPackage):
     maintainers("adamjstewart")
     libraries = ["libnccl.so"]
 
+    version("2.18.3-1", sha256="b4f5d7d9eea2c12e32e7a06fe138b2cfc75969c6d5c473aa6f819a792db2fc96")
     version("2.18.1-1", sha256="0e4ede5cf8df009bff5aeb3a9f194852c03299ae5664b5a425b43358e7a9eef2")
     version("2.17.1-1", sha256="1311a6fd7cd44ad6d4523ba03065ce694605843fd30a5c0f77aa3d911abe706d")
     version("2.16.2-1", sha256="7f7c738511a8876403fc574d13d48e7c250d934d755598d82e14bab12236fc64")
@@ -46,20 +47,10 @@ class Nccl(MakefilePackage, CudaPackage):
     version("2.4.2-1", sha256="e3dd04b22eb541394bd818e5f78ac23a09cc549690d5d55d6fccc1a36155385a")
     version("2.3.7-1", sha256="e6eff80d9d2db13c61f8452e1400ca2f098d2dfe42857cb23413ce081c5b9e9b")
     version("2.3.5-5", sha256="bac9950b4d3980c25baa8e3e4541d2dfb4d21edf32ad3b89022d04920357142f")
-    version(
-        "1.3.4-1",
-        sha256="11e4eb44555bb28b9cbad973dacb4640b82710c9769e719afc2013b63ffaf884",
-        deprecated=True,
-    )
-    version(
-        "1.3.0-1",
-        sha256="53f36151061907bdcafad1c26c1d9370a0a8400f561a83704a5138213ba51003",
-        deprecated=True,
-    )
 
     variant("cuda", default=True, description="Build with CUDA")
 
-    depends_on("rdma-core", when="@2.3.5-5:")
+    depends_on("rdma-core")
 
     # https://github.com/NVIDIA/nccl/issues/244
     patch("so_reuseport.patch", when="@2.3.7-1:2.4.8-1")
