@@ -20,10 +20,6 @@ class Executable:
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        # if " " in name:
-        # raise NotImplementedError("Space in name: `%s`" % name)
-        # names = name.split()
-
         file_path = which_string(name)
         if not file_path:
             # the file does not currently exist but it will exist in the cwd by
