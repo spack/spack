@@ -1081,7 +1081,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def metadata_dir(self):
         """Return the install metadata directory."""
-        return spack.store.layout.metadata_path(self.spec)
+        return spack.store.STORE.layout.metadata_path(self.spec)
 
     @property
     def install_env_path(self):
@@ -1352,7 +1352,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Removes the prefix for a package along with any empty parent
         directories
         """
-        spack.store.layout.remove_install_directory(self.spec)
+        spack.store.STORE.layout.remove_install_directory(self.spec)
 
     @property
     def download_instr(self):
@@ -2260,7 +2260,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 # test if spec is already deprecated, not whether we want to
                 # deprecate it now
                 deprecated = bool(spack.store.STORE.db.deprecator(spec))
-                spack.store.layout.remove_install_directory(spec, deprecated)
+                spack.store.STORE.layout.remove_install_directory(spec, deprecated)
             # Delete DB entry
             if deprecator:
                 msg = "deprecating DB entry [{0}] in favor of [{1}]"
@@ -2306,12 +2306,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         old_deprecator = spack.store.STORE.db.deprecator(spec)
         if old_deprecator:
             # Find this specs yaml file from its old deprecation
-            self_yaml = spack.store.layout.deprecated_file_path(spec, old_deprecator)
+            self_yaml = spack.store.STORE.layout.deprecated_file_path(spec, old_deprecator)
         else:
-            self_yaml = spack.store.layout.spec_file_path(spec)
+            self_yaml = spack.store.STORE.layout.spec_file_path(spec)
 
         # copy spec metadata to "deprecated" dir of deprecator
-        depr_yaml = spack.store.layout.deprecated_file_path(spec, deprecator)
+        depr_yaml = spack.store.STORE.layout.deprecated_file_path(spec, deprecator)
         fsys.mkdirp(os.path.dirname(depr_yaml))
         shutil.copy2(self_yaml, depr_yaml)
 
@@ -2333,7 +2333,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Extensions added to this view will modify the installation prefix of
         this package.
         """
-        return YamlFilesystemView(self.prefix, spack.store.layout)
+        return YamlFilesystemView(self.prefix, spack.store.STORE.layout)
 
     def do_restage(self):
         """Reverts expanded/checked out source to a pristine state."""
@@ -2460,7 +2460,7 @@ def flatten_dependencies(spec, flat_dir):
     for dep in spec.traverse(root=False):
         name = dep.name
 
-        dep_path = spack.store.layout.path_for_spec(dep)
+        dep_path = spack.store.STORE.layout.path_for_spec(dep)
         dep_files = LinkTree(dep_path)
 
         os.mkdir(flat_dir + "/" + name)

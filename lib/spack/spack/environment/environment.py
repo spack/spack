@@ -582,7 +582,7 @@ class ViewDescriptor:
             raise SpackEnvironmentViewError(msg)
         return SimpleFilesystemView(
             root,
-            spack.store.layout,
+            spack.store.STORE.layout,
             ignore_conflicts=True,
             projections=self.projections,
             link=self.link_type,

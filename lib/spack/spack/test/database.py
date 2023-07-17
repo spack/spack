@@ -340,7 +340,7 @@ def _check_merkleiness():
 
 def _check_db_sanity(database):
     """Utility function to check db against install layout."""
-    pkg_in_layout = sorted(spack.store.layout.all_specs())
+    pkg_in_layout = sorted(spack.store.STORE.layout.all_specs())
     actual = sorted(database.query())
 
     externals = sorted([x for x in actual if x.external])
@@ -376,7 +376,7 @@ def _check_remove_and_add_package(database, spec):
     assert concrete_spec not in remaining
 
     # add it back and make sure everything is ok.
-    database.add(concrete_spec, spack.store.layout)
+    database.add(concrete_spec, spack.store.STORE.layout)
     installed = database.query()
     assert concrete_spec in installed
     assert installed == original
@@ -454,7 +454,7 @@ def test_005_db_exists(database):
 
 def test_010_all_install_sanity(database):
     """Ensure that the install layout reflects what we think it does."""
-    all_specs = spack.store.layout.all_specs()
+    all_specs = spack.store.STORE.layout.all_specs()
     assert len(all_specs) == 15
 
     # Query specs with multiple configurations
@@ -626,7 +626,7 @@ def test_080_root_ref_counts(mutable_database):
     assert mutable_database.get_record("mpich").ref_count == 1
 
     # Put the spec back
-    mutable_database.add(rec.spec, spack.store.layout)
+    mutable_database.add(rec.spec, spack.store.STORE.layout)
 
     # record is present again
     assert len(mutable_database.query("mpileaks ^mpich", installed=any)) == 1

@@ -844,7 +844,7 @@ class Database:
                     % (version, _DB_VERSION)
                 )
 
-                self.reindex(spack.store.layout)
+                self.reindex(spack.store.STORE.layout)
                 installs = dict(
                     (k, v.to_dict(include_fields=self._record_fields))
                     for k, v in self._data.items()

@@ -240,27 +240,14 @@ def _create_global() -> Store:
 STORE: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_create_global)
 
 
-def _store_layout() -> spack.directory_layout.DirectoryLayout:
-    return STORE.layout
-
-
-# convenience accessors for parts of the singleton store
-layout: Union[
-    llnl.util.lang.LazyReference, "spack.directory_layout.DirectoryLayout"
-] = llnl.util.lang.LazyReference(_store_layout)
-
-
 def reinitialize():
     """Restore globals to the same state they would have at start-up. Return a token
     containing the state of the store before reinitialization.
     """
     global STORE
-    global layout
 
-    token = STORE, layout
-
+    token = STORE
     STORE = llnl.util.lang.Singleton(_create_global)
-    layout = llnl.util.lang.LazyReference(_store_layout)
 
     return token
 
@@ -268,8 +255,7 @@ def reinitialize():
 def restore(token):
     """Restore the environment from a token returned by reinitialize"""
     global STORE
-    global layout
-    STORE, layout = token
+    STORE = token
 
 
 def _construct_upstream_dbs_from_install_roots(
@@ -369,7 +355,7 @@ def use_store(
     Yields:
         Store object associated with the context manager's store
     """
-    global STORE, layout
+    global STORE
 
     assert not isinstance(path, Store), "cannot pass a store anymore"
     scope_name = "use-store-{}".format(uuid.uuid4())
@@ -384,14 +370,12 @@ def use_store(
     )
     temporary_store = create(configuration=spack.config.config)
     original_store, STORE = STORE, temporary_store
-    layout = STORE.layout
 
     try:
         yield temporary_store
     finally:
         # Restore the original store
         STORE = original_store
-        layout = original_store.layout
         spack.config.config.remove_scope(scope_name=scope_name)
 
 

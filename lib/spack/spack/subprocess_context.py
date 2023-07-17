@@ -107,7 +107,7 @@ class TestState:
 
             spack.store.STORE = self.store
             spack.store.STORE.db = self.store.db
-            spack.store.layout = self.store.layout
+            spack.store.STORE.layout = self.store.layout
 
             self.test_patches.restore()
 

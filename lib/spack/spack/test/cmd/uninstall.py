@@ -78,7 +78,7 @@ def test_recursive_uninstall(mutable_database):
     """Test recursive uninstall."""
     uninstall("-y", "-a", "--dependents", "callpath")
 
-    all_specs = spack.store.layout.all_specs()
+    all_specs = spack.store.STORE.layout.all_specs()
     assert len(all_specs) == 9
     # query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies("mpileaks")]
@@ -98,7 +98,7 @@ def test_uninstall_spec_with_multiple_roots(
 ):
     uninstall("-y", "-a", "--dependents", constraint)
 
-    all_specs = spack.store.layout.all_specs()
+    all_specs = spack.store.STORE.layout.all_specs()
     assert len(all_specs) == expected_number_of_specs
 
 
@@ -109,7 +109,7 @@ def test_force_uninstall_spec_with_ref_count_not_zero(
 ):
     uninstall("-f", "-y", constraint)
 
-    all_specs = spack.store.layout.all_specs()
+    all_specs = spack.store.STORE.layout.all_specs()
     assert len(all_specs) == expected_number_of_specs
 
 
@@ -164,7 +164,7 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
 
     # BUT, make sure that the removed callpath spec is not in queries
     def db_specs():
-        all_specs = spack.store.layout.all_specs()
+        all_specs = spack.store.STORE.layout.all_specs()
         return (
             all_specs,
             [s for s in all_specs if s.satisfies("mpileaks")],

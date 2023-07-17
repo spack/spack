@@ -200,7 +200,7 @@ def view(parser, args):
 
     view = YamlFilesystemView(
         path,
-        spack.store.layout,
+        spack.store.STORE.layout,
         projections=ordered_projections,
         ignore_conflicts=getattr(args, "ignore_conflicts", False),
         link=link_fn,

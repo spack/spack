@@ -261,7 +261,7 @@ def _do_fake_install(pkg: "spack.package_base.PackageBase") -> None:
     # Install fake man page
     fs.mkdirp(pkg.prefix.man.man1)
 
-    packages_dir = spack.store.layout.build_packages_path(pkg.spec)
+    packages_dir = spack.store.STORE.layout.build_packages_path(pkg.spec)
     dump_packages(pkg.spec, packages_dir)
 
 
@@ -485,7 +485,7 @@ def _process_binary_cache_tarball(
         )
 
         pkg.installed_from_binary_cache = True
-        spack.store.STORE.db.add(pkg.spec, spack.store.layout, explicit=explicit)
+        spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=explicit)
         return True
 
 
@@ -566,7 +566,7 @@ def dump_packages(spec: "spack.spec.Spec", path: str) -> None:
         if node is not spec:
             # Locate the dependency package in the install tree and find
             # its provenance information.
-            source = spack.store.layout.build_packages_path(node)
+            source = spack.store.STORE.layout.build_packages_path(node)
             source_repo_root = os.path.join(source, node.namespace)
 
             # If there's no provenance installed for the package, skip it.
@@ -659,7 +659,7 @@ def log(pkg: "spack.package_base.PackageBase") -> None:
     Args:
         pkg: the package that was built and installed
     """
-    packages_dir = spack.store.layout.build_packages_path(pkg.spec)
+    packages_dir = spack.store.STORE.layout.build_packages_path(pkg.spec)
 
     # Remove first if we're overwriting another build
     try:
@@ -681,7 +681,9 @@ def log(pkg: "spack.package_base.PackageBase") -> None:
     # Finally, archive files that are specific to each package
     with fs.working_dir(pkg.stage.path):
         errors = io.StringIO()
-        target_dir = os.path.join(spack.store.layout.metadata_path(pkg.spec), "archived-files")
+        target_dir = os.path.join(
+            spack.store.STORE.layout.metadata_path(pkg.spec), "archived-files"
+        )
 
         for glob_expr in pkg.builder.archive_files:
             # Check that we are trying to copy things that are
@@ -1153,7 +1155,7 @@ class PackageInstaller:
         self.installed: Set[str] = set()
 
         # Data store layout
-        self.layout = spack.store.layout
+        self.layout = spack.store.STORE.layout
 
         # Locks on specs being built, keyed on the package's unique id
         self.locks: Dict[str, Tuple[str, Optional[lk.Lock]]] = {}
@@ -1705,7 +1707,7 @@ class PackageInstaller:
             pkg.windows_establish_runtime_linkage()
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
-            spack.store.STORE.db.add(pkg.spec, spack.store.layout, explicit=explicit)
+            spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=explicit)
 
             # If a compiler, ensure it is added to the configuration
             if task.compiler:
@@ -1848,7 +1850,7 @@ class PackageInstaller:
         if not os.path.exists(pkg.spec.prefix):
             path = spack.util.path.debug_padded_filter(pkg.spec.prefix)
             tty.debug("Creating the installation directory {0}".format(path))
-            spack.store.layout.create_install_directory(pkg.spec)
+            spack.store.STORE.layout.create_install_directory(pkg.spec)
         else:
             # Set the proper group for the prefix
             group = prefs.get_package_group(pkg.spec)
@@ -1864,10 +1866,10 @@ class PackageInstaller:
                 os.chmod(pkg.spec.prefix, perms)
 
             # Ensure the metadata path exists as well
-            fs.mkdirp(spack.store.layout.metadata_path(pkg.spec), mode=perms)
+            fs.mkdirp(spack.store.STORE.layout.metadata_path(pkg.spec), mode=perms)
 
         # Always write host environment - we assume this can change
-        spack.store.layout.write_host_environment(pkg.spec)
+        spack.store.STORE.layout.write_host_environment(pkg.spec)
 
     def _update_failed(
         self, task: BuildTask, mark: bool = False, exc: Optional[BaseException] = None

@@ -557,7 +557,7 @@ def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
 
 def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     """Test error paths for dump_packages with dependencies."""
-    orig_bpp = spack.store.layout.build_packages_path
+    orig_bpp = spack.store.STORE.layout.build_packages_path
     orig_dirname = spack.repo.Repo.dirname_for_package_name
     repo_err_msg = "Mock dirname_for_package_name"
 
@@ -576,7 +576,7 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
 
     # Now mock the creation of the required directory structure to cover
     # the try-except block
-    monkeypatch.setattr(spack.store.layout, "build_packages_path", bpp_path)
+    monkeypatch.setattr(spack.store.STORE.layout, "build_packages_path", bpp_path)
 
     spec = spack.spec.Spec("simple-inheritance").concretized()
     path = str(tmpdir)
@@ -932,7 +932,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     spec = installer.build_requests[0].pkg.spec
 
     fs.touchp(spec.prefix)
-    metadatadir = spack.store.layout.metadata_path(spec)
+    metadatadir = spack.store.STORE.layout.metadata_path(spec)
     # Regex matching with Windows style paths typically fails
     # so we skip the match check here
     if sys.platform == "win32":

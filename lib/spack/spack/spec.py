@@ -1832,7 +1832,7 @@ class Spec:
             if record and record.path:
                 self.prefix = record.path
             else:
-                self.prefix = spack.store.layout.path_for_spec(self)
+                self.prefix = spack.store.STORE.layout.path_for_spec(self)
         return self._prefix
 
     @prefix.setter
@@ -4377,7 +4377,7 @@ class Spec:
                 write(morph(spec, spack.paths.spack_root))
                 return
             elif attribute == "spack_install":
-                write(morph(spec, spack.store.layout.root))
+                write(morph(spec, spack.store.STORE.layout.root))
                 return
             elif re.match(r"hash(:\d)?", attribute):
                 col = "#"
