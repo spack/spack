@@ -150,10 +150,8 @@ def sanitize_filename(filename: str) -> str:
         return re.sub("[\0/]", "_", filename)
 
     # On Windows, things are more involved.
-    # NOTE: this is incomplete, missing:
-    # 1. non-printable characters
-    # 2. reserved names
-    return re.sub(r'[<>?:"|*\\/]', "_", filename)
+    # NOTE: this is incomplete, missing reserved names
+    return re.sub(r'[\x00-\x1F\x7F"*/:<>?\\|]', "_", filename)
 
 
 def system_path_filter(_func=None, arg_slice=None):
