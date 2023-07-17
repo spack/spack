@@ -150,7 +150,7 @@ def test_env_list(mutable_mock_env_path):
     assert "baz" in out
 
     # make sure `spack env list` skips invalid things in var/spack/env
-    mutable_mock_env_path.join(".DS_Store").ensure(file=True)
+    (mutable_mock_env_path / ".DS_Store").touch()
     out = env("list")
 
     assert "foo" in out
@@ -1118,12 +1118,12 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
 
 
 @pytest.mark.usefixtures("config")
-def test_indirect_build_dep(tmpdir):
+def test_indirect_build_dep(tmp_path):
     """Simple case of X->Y->Z where Y is a build/link dep and Z is a
     build-only dep. Make sure this concrete DAG is preserved when writing the
     environment out and reading it back.
     """
-    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder = spack.repo.MockRepositoryBuilder(tmp_path / "repo")
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", "build", None)])
     builder.add_package("x", dependencies=[("y", None, None)])
@@ -1146,7 +1146,7 @@ def test_indirect_build_dep(tmpdir):
 
 
 @pytest.mark.usefixtures("config")
-def test_store_different_build_deps(tmpdir):
+def test_store_different_build_deps(tmp_path):
     r"""Ensure that an environment can store two instances of a build-only
     dependency::
 
@@ -1157,7 +1157,7 @@ def test_store_different_build_deps(tmpdir):
               z1
 
     """
-    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder = spack.repo.MockRepositoryBuilder(tmp_path / "mirror")
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", "build", None)])
     builder.add_package("x", dependencies=[("y", None, None), ("z", "build", None)])
@@ -3350,12 +3350,11 @@ def test_relative_view_path_on_command_line_is_made_absolute(tmp_path, config):
         assert os.path.samefile("view", environment.default_view.root)
 
 
-def test_environment_created_in_users_location(mutable_config, tmpdir):
+def test_environment_created_in_users_location(mutable_mock_env_path, tmp_path):
     """Test that an environment is created in a location based on the config"""
-    spack.config.set("config:environments_root", str(tmpdir.join("envs")))
-    env_dir = spack.config.get("config:environments_root")
+    env_dir = str(mutable_mock_env_path)
 
-    assert tmpdir.strpath in env_dir
+    assert str(tmp_path) in env_dir
     assert not os.path.isdir(env_dir)
 
     dir_name = "user_env"
