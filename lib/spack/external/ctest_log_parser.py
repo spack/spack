@@ -208,7 +208,7 @@ _file_line_matches = [
 ]
 
 
-class LogEvent(object):
+class LogEvent:
     """Class representing interesting events (e.g., errors) in a build log."""
     def __init__(self, text, line_no,
                  source_file=None, source_line_no=None,
@@ -345,7 +345,7 @@ def _parse_unpack(args):
     return _parse(*args)
 
 
-class CTestLogParser(object):
+class CTestLogParser:
     """Log file parser that extracts errors and warnings."""
     def __init__(self, profile=False):
         # whether to record timing information

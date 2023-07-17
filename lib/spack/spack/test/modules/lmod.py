@@ -44,7 +44,7 @@ def provider(request):
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestLmod(object):
+class TestLmod:
     @pytest.mark.regression("37788")
     @pytest.mark.parametrize("modules_config", ["core_compilers", "core_compilers_at_equal"])
     def test_layout_for_specs_compiled_with_core_compilers(

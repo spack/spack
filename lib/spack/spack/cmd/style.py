@@ -60,7 +60,7 @@ def is_package(f):
 
 
 #: decorator for adding tools to the list
-class tool(object):
+class tool:
     def __init__(self, name, required=False):
         self.name = name
         self.required = required

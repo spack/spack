@@ -57,7 +57,7 @@ class Postgresql(AutotoolsPackage):
     depends_on("libedit", when="lineedit=libedit")
     depends_on("openssl")
     depends_on("tcl", when="+tcl")
-    depends_on("perl", when="+perl")
+    depends_on("perl+opcode", when="+perl")
     depends_on("python", when="+python")
     depends_on("libxml2", when="+xml")
 
@@ -101,7 +101,7 @@ class Postgresql(AutotoolsPackage):
                 with working_dir(os.path.join("src", subdir)):
                     make("install")
         else:
-            super(Postgresql, self).install(spec, prefix)
+            super().install(spec, prefix)
 
     def setup_run_environment(self, env):
         spec = self.spec

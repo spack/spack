@@ -10,7 +10,7 @@ import llnl.util.tty
 import spack.container
 import spack.container.images
 
-description = "creates recipes to build images for different" " container runtimes"
+description = "creates recipes to build images for different container runtimes"
 section = "container"
 level = "long"
 
