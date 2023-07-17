@@ -401,7 +401,8 @@ class PythonPipBuilder(BaseBuilder):
 
     def config_settings(self, spec, prefix):
         """Configuration settings to be passed to the PEP 517 build backend.
-        Requires pip 22.1+, which requires Python 3.7+.
+
+        Requires pip 22.1 or newer.
 
         Args:
             spec (spack.spec.Spec): build spec
@@ -415,6 +416,8 @@ class PythonPipBuilder(BaseBuilder):
     def install_options(self, spec, prefix):
         """Extra arguments to be supplied to the setup.py install command.
 
+        Requires pip 23.0 or older.
+
         Args:
             spec (spack.spec.Spec): build spec
             prefix (spack.util.prefix.Prefix): installation prefix
@@ -427,6 +430,8 @@ class PythonPipBuilder(BaseBuilder):
     def global_options(self, spec, prefix):
         """Extra global options to be supplied to the setup.py call before the install
         or bdist_wheel command.
+
+        Deprecated in pip 23.1.
 
         Args:
             spec (spack.spec.Spec): build spec

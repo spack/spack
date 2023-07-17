@@ -91,12 +91,7 @@ create = SpackCommand("create")
         (
             ["-t", "python", "/test-python"],
             "py-test-python",
-            [
-                r"PyTestPython(PythonPackage)",
-                r'depends_on("py-',
-                r"def global_options(self",
-                r"def install_options(self",
-            ],
+            [r"PyTestPython(PythonPackage)", r'depends_on("py-', r"def config_settings(self"],
         ),
         (
             ["-t", "qmake", "/test-qmake"],
