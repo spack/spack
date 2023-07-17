@@ -37,7 +37,7 @@ patch_compilers_yaml() {
 
     # System ld is too old for amzn linux2
     spack_gcc_version=$(spack find --format '{version}' gcc)
-    binutils_path=$(spack find -p binutils | awk '/binutils/ {print $2}')
+    binutils_path=$(spack find -p binutils | awk '/binutils/ {print $2}' | head -n1)
     if [ -d "${binutils_path}" ] && [ -n "${spack_gcc_version}" ]; then python3 <<EOF
 import yaml
 
@@ -55,7 +55,7 @@ EOF
     fi
     # Oneapi needs extra_rpath to gcc libstdc++.so.6
     if oneapi_gcc_version=$(spack find --format '{compiler}' intel-oneapi-compilers | sed -e 's/=//g') && \
-            [ -n "${oneapi_gcc_version}" ] && oneapi_gcc_path=$(spack find -p "${oneapi_gcc_version}" | grep "${oneapi_gcc_version}" | awk '{print $2}') && \
+            [ -n "${oneapi_gcc_version}" ] && oneapi_gcc_path=$(spack find -p "${oneapi_gcc_version}" | grep "${oneapi_gcc_version}" | awk '{print $2}' | head -n1) && \
             [ -d "${oneapi_gcc_path}" ]; then python3 <<EOF
 import yaml
 
