@@ -60,9 +60,9 @@ class StackEnv(object):
         args for command-line usage.
         """
 
-        self.dir = kwargs.get('dir')
-        self.template = kwargs.get('template', None)
-        self.name = kwargs.get('name')
+        self.dir = kwargs.get("dir")
+        self.template = kwargs.get("template", None)
+        self.name = kwargs.get("name")
 
         self.includes = []
 
@@ -78,27 +78,27 @@ class StackEnv(object):
                 template = self.template
             elif os.path.exists(os.path.join(template_path, self.template)):
                 self.template_path = os.path.join(template_path, self.template)
-                template = os.path.join(self.template_path, 'spack.yaml')
+                template = os.path.join(self.template_path, "spack.yaml")
             else:
                 raise Exception('Template: "{}" does not exist'.format(self.template))
 
-            with open(template, 'r') as f:
+            with open(template, "r") as f:
                 self.env_yaml = syaml.load_config(f)
 
-        self.site = kwargs.get('site', None)
-        if self.site == 'none':
+        self.site = kwargs.get("site", None)
+        if self.site == "none":
             self.site = None
-        self.desc = kwargs.get('desc', None)
-        self.compiler = kwargs.get('compiler', None)
-        self.mpi = kwargs.get('mpi', None)
-        self.base_packages = kwargs.get('base_packages', None)
-        self.install_prefix = kwargs.get('install_prefix', None)
-        self.mirror = kwargs.get('mirror', None)
-        self.upstream = kwargs.get('upstreams', None)
+        self.desc = kwargs.get("desc", None)
+        self.compiler = kwargs.get("compiler", None)
+        self.mpi = kwargs.get("mpi", None)
+        self.base_packages = kwargs.get("base_packages", None)
+        self.install_prefix = kwargs.get("install_prefix", None)
+        self.mirror = kwargs.get("mirror", None)
+        self.upstream = kwargs.get("upstreams", None)
 
         if not self.name:
             # site = self.site if self.site else 'default'
-            self.name = '{}.{}'.format(self.template, self.site)
+            self.name = "{}.{}".format(self.template, self.site)
 
     def env_dir(self):
         """env_dir is <dir>/<name>"""
@@ -109,8 +109,8 @@ class StackEnv(object):
 
     def _copy_common_includes(self):
         """Copy common directory into environment"""
-        self.includes.append('common')
-        env_common_dir = os.path.join(self.env_dir(), 'common')
+        self.includes.append("common")
+        env_common_dir = os.path.join(self.env_dir(), "common")
         shutil.copytree(common_path, env_common_dir)
 
     def site_configs_dir(self):
@@ -120,16 +120,16 @@ class StackEnv(object):
     def _copy_site_includes(self):
         """Copy site directory into environment"""
         if not self.site:
-            raise Exception('Site is not set')
+            raise Exception("Site is not set")
 
-        site_name = 'site'
+        site_name = "site"
         self.includes.append(site_name)
         env_site_dir = os.path.join(self.env_dir(), site_name)
         shutil.copytree(self.site_configs_dir(), env_site_dir)
 
     def _copy_package_includes(self):
         """Overwrite base packages in environment common dir"""
-        env_common_dir = os.path.join(self.env_dir(), 'common')
+        env_common_dir = os.path.join(self.env_dir(), "common")
         shutil.copy(self.base_packages, env_common_dir)
 
     def write(self):
@@ -145,7 +145,7 @@ class StackEnv(object):
         os.makedirs(env_dir, exist_ok=True)
 
         # Copy site config first so that it takes precedence in env
-        if self.site != 'none':
+        if self.site != "none":
             self._copy_site_includes()
 
         # Copy common include files
@@ -156,15 +156,14 @@ class StackEnv(object):
             self._copy_package_includes()
 
         # No way to add to env includes using pure Spack.
-        env_yaml['spack']['include'] = self.includes
+        env_yaml["spack"]["include"] = self.includes
 
         # Write out file with includes filled in.
-        env_file = os.path.join(env_dir, 'spack.yaml')
-        with open(env_file, 'w') as f:
+        env_file = os.path.join(env_dir, "spack.yaml")
+        with open(env_file, "w") as f:
             # Write header with hashes.
-            header = 'spack-stack hash: {}\nspack hash: {}'
-            env_yaml.yaml_set_start_comment(
-                header.format(stack_hash(), spack_hash()))
+            header = "spack-stack hash: {}\nspack hash: {}"
+            env_yaml.yaml_set_start_comment(header.format(stack_hash(), spack_hash()))
             syaml.dump_config(env_yaml, stream=f)
 
         # Activate environment
@@ -184,18 +183,18 @@ class StackEnv(object):
 
         # Commonly used config settings
         if self.compiler:
-            compiler = 'packages:all::compiler:[{}]'.format(self.compiler)
+            compiler = "packages:all::compiler:[{}]".format(self.compiler)
             spack.config.add(compiler, scope=env_scope)
         if self.mpi:
-            mpi = 'packages:all::providers:mpi:[{}]'.format(self.mpi)
+            mpi = "packages:all::providers:mpi:[{}]".format(self.mpi)
             spack.config.add(mpi, scope=env_scope)
         if self.install_prefix:
             # Modules can go in <prefix>/modulefiles by default
-            prefix = 'config:install_tree:root:{}'.format(self.install_prefix)
+            prefix = "config:install_tree:root:{}".format(self.install_prefix)
             spack.config.add(prefix, scope=env_scope)
             module_prefix = os.path.join(self.install_prefix, "modulefiles")
-            lmod_prefix = 'modules:default:roots:lmod:{}'.format(module_prefix)
-            tcl_prefix = 'modules:default:roots:tcl:{}'.format(module_prefix)
+            lmod_prefix = "modules:default:roots:lmod:{}".format(module_prefix)
+            tcl_prefix = "modules:default:roots:tcl:{}".format(module_prefix)
             spack.config.add(lmod_prefix, scope=env_scope)
             spack.config.add(tcl_prefix, scope=env_scope)
 
@@ -213,7 +212,7 @@ class StackEnv(object):
 
         ev.deactivate()
 
-        logging.info('Successfully wrote environment at {}'.format(env_file))
+        logging.info("Successfully wrote environment at {}".format(env_file))
 
     def check_umask(self):
         """Check if the user's umask will create environments that are not readable
@@ -227,13 +226,13 @@ class StackEnv(object):
         oldmask = os.umask(newmask)
         if oldmask == 18:
             # 18 = 0o022
-            logging.info('\nChecked user umask and found no issues (0022)\n')
+            logging.info("\nChecked user umask and found no issues (0022)\n")
         elif oldmask == 23:
             # 23 = 0o027
             logging.warning(
-                '\nWARNING! User umask only allows owner and group to read the env (0027)\n'
+                "\nWARNING! User umask only allows owner and group to read the env (0027)\n"
             )
         else:
             logging.warning(
-                '\nWARNING! User umask is neither 0022 nor 0027, check before proceeding\n'
+                "\nWARNING! User umask is neither 0022 nor 0027, check before proceeding\n"
             )
