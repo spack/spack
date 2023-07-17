@@ -788,7 +788,8 @@ class BaseContext(tengine.Context):
                 if naming_dir != conflict_dir:
                     errors.extend(
                         [
-                            f"spec={self.spec.cshort_spec}" f"conflict_scheme={item}",
+                            f"spec={self.spec.cshort_spec}",
+                            f"conflict_scheme={item}",
                             f"naming_scheme={projection}",
                         ]
                     )
