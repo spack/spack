@@ -267,7 +267,7 @@ class MockS3Client:
 
 
 def test_gather_s3_information(monkeypatch, capfd):
-    mirror = spack.mirror.Mirror.from_dict(
+    mirror = spack.mirror.Mirror(
         {
             "fetch": {
                 "access_token": "AAAAAAA",

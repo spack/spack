@@ -29,7 +29,7 @@ def setup_parser(subparser):
         action="store_true",
         default=False,
         dest="dump_json",
-        help="Dump json output instead of pretty printing.",
+        help="dump json output instead of pretty printing",
     )
     subparser.add_argument(
         "--first",
