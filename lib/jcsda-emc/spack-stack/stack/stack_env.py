@@ -170,7 +170,7 @@ class StackEnv(object):
             syaml.dump_config(env_yaml, stream=f)
 
         # Activate environment
-        env = ev.Environment(path=env_dir, init_file=env_file)
+        env = ev.Environment(manifest_dir=env_dir)
         ev.activate(env)
         env_scope = env.env_file_config_scope_name()
 
