@@ -307,7 +307,7 @@ class TestLmod:
 
         # This configuration is inconsistent, check an error is raised
         module_configuration("wrong_conflicts")
-        with pytest.raises(SystemExit):
+        with pytest.raises(spack.modules.common.ModulesError):
             modulefile_content("mpileaks")
 
     def test_override_template_in_package(self, modulefile_content, module_configuration):

@@ -774,23 +774,29 @@ class BaseContext(tengine.Context):
         """List of conflicts for the module file."""
         fmts = []
         projection = proj.get_projection(self.conf.projections, self.spec)
-        f = string.Formatter()
         for item in self.conf.conflicts:
-            if len([x for x in f.parse(item)]) > 1:
-                for naming_dir, conflict_dir in zip(projection.split("/"), item.split("/")):
-                    if naming_dir != conflict_dir:
-                        message = "conflict scheme does not match naming "
-                        message += "scheme [{spec}]\n\n"
-                        message += 'naming scheme   : "{nformat}"\n'
-                        message += 'conflict scheme : "{cformat}"\n\n'
-                        message += "** You may want to check your "
-                        message += "`modules.yaml` configuration file **\n"
-                        tty.error(message.format(spec=self.spec, nformat=projection, cformat=item))
-                        raise SystemExit("Module generation aborted.")
-                item = self.spec.format(item)
+            self._verify_conflict_naming_consistency_or_raise(item, projection)
+            item = self.spec.format(item)
             fmts.append(item)
-        # Substitute spec tokens if present
-        return [self.spec.format(x) for x in fmts]
+        return fmts
+
+    def _verify_conflict_naming_consistency_or_raise(self, item, projection):
+        f = string.Formatter()
+        errors = []
+        if len([x for x in f.parse(item)]) > 1:
+            for naming_dir, conflict_dir in zip(projection.split("/"), item.split("/")):
+                if naming_dir != conflict_dir:
+                    errors.extend(
+                        [
+                            f"spec={self.spec.cshort_spec}" f"conflict_scheme={item}",
+                            f"naming_scheme={projection}",
+                        ]
+                    )
+        if errors:
+            raise ModulesError(
+                message="conflict scheme does not match naming scheme",
+                long_message="\n".join(errors),
+            )
 
     @tengine.context_property
     def autoload(self):
