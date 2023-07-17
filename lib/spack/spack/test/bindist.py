@@ -148,14 +148,14 @@ def install_dir_default_layout(tmpdir):
     scheme = os.path.join(
         "${architecture}", "${compiler.name}-${compiler.version}", "${name}-${version}-${hash}"
     )
-    real_store, real_layout = spack.store.store, spack.store.layout
+    real_store, real_layout = spack.store.STORE, spack.store.layout
     opt_dir = tmpdir.join("opt")
-    spack.store.store = spack.store.Store(str(opt_dir))
+    spack.store.STORE = spack.store.Store(str(opt_dir))
     spack.store.layout = DirectoryLayout(str(opt_dir), path_scheme=scheme)
     try:
         yield spack.store
     finally:
-        spack.store.store = real_store
+        spack.store.STORE = real_store
         spack.store.layout = real_layout
 
 
@@ -165,14 +165,14 @@ def install_dir_non_default_layout(tmpdir):
     scheme = os.path.join(
         "${name}", "${version}", "${architecture}-${compiler.name}-${compiler.version}-${hash}"
     )
-    real_store, real_layout = spack.store.store, spack.store.layout
+    real_store, real_layout = spack.store.STORE, spack.store.layout
     opt_dir = tmpdir.join("opt")
-    spack.store.store = spack.store.Store(str(opt_dir))
+    spack.store.STORE = spack.store.Store(str(opt_dir))
     spack.store.layout = DirectoryLayout(str(opt_dir), path_scheme=scheme)
     try:
         yield spack.store
     finally:
-        spack.store.store = real_store
+        spack.store.STORE = real_store
         spack.store.layout = real_layout
 
 

@@ -97,7 +97,7 @@ class TestState:
             self.config = spack.config.config
             self.platform = spack.platforms.host
             self.test_patches = store_patches()
-            self.store = spack.store.store
+            self.store = spack.store.STORE
 
     def restore(self):
         if _SERIALIZE:
@@ -105,7 +105,7 @@ class TestState:
             spack.repo.path = spack.repo.create(self.config)
             spack.platforms.host = self.platform
 
-            spack.store.store = self.store
+            spack.store.STORE = self.store
             spack.store.root = self.store.root
             spack.store.unpadded_root = self.store.unpadded_root
             spack.store.db = self.store.db

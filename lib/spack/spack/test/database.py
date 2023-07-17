@@ -517,7 +517,7 @@ def test_020_db_sanity(database):
 
 def test_025_reindex(mutable_database):
     """Make sure reindex works and ref counts are valid."""
-    spack.store.store.reindex()
+    spack.store.STORE.reindex()
     _check_db_sanity(mutable_database)
 
 
@@ -527,7 +527,7 @@ def test_026_reindex_after_deprecate(mutable_database):
     zmpi = mutable_database.query_one("zmpi")
     mutable_database.deprecate(mpich, zmpi)
 
-    spack.store.store.reindex()
+    spack.store.STORE.reindex()
     _check_db_sanity(mutable_database)
 
 
@@ -702,7 +702,7 @@ def test_115_reindex_with_packages_not_in_repo(mutable_database, tmpdir):
     # packages should not have to be defined in the repository once they
     # are installed
     with spack.repo.use_repositories(spack.repo.MockRepositoryBuilder(tmpdir).root):
-        spack.store.store.reindex()
+        spack.store.STORE.reindex()
         _check_db_sanity(mutable_database)
 
 
@@ -969,7 +969,7 @@ def test_reindex_removed_prefix_is_not_installed(mutable_database, mock_store, c
     shutil.rmtree(prefix)
 
     # Reindex should pick up libelf as a dependency of libdwarf
-    spack.store.store.reindex()
+    spack.store.STORE.reindex()
 
     # Reindexing should warn about libelf not being found on the filesystem
     err = capfd.readouterr()[1]
@@ -992,7 +992,7 @@ def test_reindex_when_all_prefixes_are_removed(mutable_database, mock_store):
     assert num > 0
 
     # Reindex uses the current index to repopulate itself
-    spack.store.store.reindex()
+    spack.store.STORE.reindex()
 
     # Make sure all explicit specs are still there, but are now uninstalled.
     specs = mutable_database.query_local(installed=False, explicit=True)

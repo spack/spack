@@ -1946,4 +1946,4 @@ def nullify_globals(request, monkeypatch):
     monkeypatch.setattr(spack.config, "config", None)
     monkeypatch.setattr(spack.caches, "misc_cache", None)
     monkeypatch.setattr(spack.repo, "path", None)
-    monkeypatch.setattr(spack.store, "store", None)
+    monkeypatch.setattr(spack.store, "STORE", None)
