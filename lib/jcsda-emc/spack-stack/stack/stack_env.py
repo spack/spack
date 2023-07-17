@@ -225,13 +225,17 @@ class StackEnv(object):
         # os.mask requires a new value for the mask and returns the old mask.
         # The new value doesn't matter, since it is forgotten when the Python
         # script terminates. See https://www.geeksforgeeks.org/python-os-umask-method/
-        newmask = 18 # decimal, same as 0o022 in octal
+        newmask = 18  # decimal, same as 0o022 in octal
         oldmask = os.umask(newmask)
-        if oldmask ==  18:
+        if oldmask == 18:
             # 18 = 0o022
             logging.info('\nChecked user umask and found no issues (0022)\n')
-        elif oldmask ==  23:
+        elif oldmask == 23:
             # 23 = 0o027
-            logging.warning('\nWARNING! User umask only allows owner and group to read the env (0027)\n')
+            logging.warning(
+                '\nWARNING! User umask only allows owner and group to read the env (0027)\n'
+            )
         else:
-            logging.warning('\nWARNING! User umask is neither 0022 nor 0027, check before proceeding\n')
+            logging.warning(
+                '\nWARNING! User umask is neither 0022 nor 0027, check before proceeding\n'
+            )
