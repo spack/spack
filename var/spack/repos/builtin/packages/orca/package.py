@@ -21,23 +21,7 @@ class Orca(Package):
     url = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())
     maintainers("snehring")
     manual_download = True
-    _FACCTS_VERSIONS = ["@5.0.3-f.1", "@5.0.3-f.4", "@5.0.4-f.1"]
 
-    version(
-        "5.0.4-f.1",
-        sha256="256b446fca33ce637a87ee6f22951ae1bc167fbc6ee5cef033bbe0979279dbad",
-        url="file://{0}/orca-5.0.4-f.1_linux_x86-64_openmpi41.tar.xz".format(os.getcwd()),
-    )
-    version(
-        "5.0.3-f.4",
-        sha256="c53feb9d0f2ae998a79d7cfe91726598e38304bd86e80c772dfda011125d5b99",
-        url="file://{0}/orca-5.0.3-f.4_linux_x86-64_openmpi41.tar.xz".format(os.getcwd()),
-    )
-    version(
-        "5.0.3-f.1",
-        sha256="dea377459d61ef7d7e822e366420197ee2a4864991dfcdc4ea1a683f9be26c7f",
-        url="file://{0}/orca-5.0.3-f.1_linux_x86-64_openmpi41.tar.xz".format(os.getcwd()),
-    )
     version(
         "5.0.3",
         sha256="b8b9076d1711150a6d6cb3eb30b18e2782fa847c5a86d8404b9339faef105043",
@@ -69,9 +53,6 @@ class Orca(Package):
         "4.2.0": "3.1.4",
         "4.2.1": "3.1.4",
         "5.0.3": "4.1.2",
-        "5.0.3-f.1": "4.1.2",
-        "5.0.3-f.4": "4.1.2",
-        "5.0.4-f.1": "4.1.2",
     }
     for orca_version, openmpi_version in openmpi_versions.items():
         depends_on(
@@ -96,9 +77,6 @@ class Orca(Package):
 
             # there are READMEs in there but they don't hurt anyone
             install_tree(vername, prefix.bin)
-        if any(self.spec.satisfies(_version) for _version in self._FACCTS_VERSIONS):
-            install_tree("bin", prefix.bin)
-            install_tree("lib", prefix.lib)
         else:
             install_tree(".", prefix.bin)
 
@@ -110,9 +88,7 @@ class Orca(Package):
             install(mpirun_srun, prefix.bin.mpirun)
 
     def setup_run_environment(self, env):
-        # In the Faccts distributed versions an RPATH is set to $ORGIN/../lib
-        if all(not self.spec.satisfies(_version) for _version in self._FACCTS_VERSIONS):
-            env.prepend_path("LD_LIBRARY_PATH", self.prefix.bin)
-            env.prepend_path("LD_LIBRARY_PATH", self.spec["libevent"].prefix.lib)
-            env.prepend_path("LD_LIBRARY_PATH", self.spec["libpciaccess"].prefix.lib)
-            env.prepend_path("LD_LIBRARY_PATH", self.spec["openmpi"].prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.bin)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["libevent"].prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["libpciaccess"].prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["openmpi"].prefix.lib)
