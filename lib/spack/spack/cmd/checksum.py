@@ -194,6 +194,7 @@ def verify_checksums(pkg, version_hashes):
 
     # Terminate at the end of function to prevent additional output.
     if failed:
+        print()
         tty.die("Invalid checksums found.")
 
     exit(0)
