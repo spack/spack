@@ -982,20 +982,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         return None
 
-    def _make_resource_stage(self, root_stage, fetcher, resource):
-        resource_stage_folder = self._resource_stage(resource)
-        mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, "%s-%s" % (resource.name, self.version))
-        )
-        stage = ResourceStage(
+    def _make_resource_stage(self, root_stage, resource):
+        return ResourceStage(
             resource.fetcher,
             root=root_stage,
             resource=resource,
-            name=resource_stage_folder,
-            mirror_paths=mirror_paths,
+            name=self._resource_stage(resource),
+            mirror_paths=spack.mirror.mirror_archive_paths(
+                resource.fetcher, os.path.join(self.name, f"{resource.name}-{self.version}")
+            ),
             path=self.path,
         )
-        return stage
 
     def _download_search(self):
         dynamic_fetcher = fs.from_list_url(self)
@@ -1031,8 +1028,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         all_stages = StageComposite()
         all_stages.append(source_stage)
         all_stages.extend(
-            self._make_resource_stage(source_stage, self.fetcher, r)
-            for r in self._get_needed_resources()
+            self._make_resource_stage(source_stage, r) for r in self._get_needed_resources()
         )
         all_stages.extend(
             p.stage for p in self.spec.patches if isinstance(p, spack.patch.UrlPatch)
