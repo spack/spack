@@ -583,9 +583,7 @@ class BaseFileLayout:
             projection = self.conf.default_projections["all"]
 
         name = self.spec.format(projection)
-        # Not everybody is working on linux...
-        parts = name.split("/")
-        name = os.path.join(*parts)
+
         # Add optional suffixes based on constraints
         path_elements = [name] + self.conf.suffixes
         return "-".join(path_elements)
