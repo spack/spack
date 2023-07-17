@@ -17,15 +17,16 @@ from spack.hooks.sbang import filter_shebangs_in_directory
 
 
 def test_read_unicode(tmpdir, working_env):
-    script_name = "print_unicode.py"
-    # read the unicode back in and see whether things work
-    if sys.platform == "win32":
-        script = ex.Executable("%s" % (sys.executable))
-        script_args = [script_name]
-    else:
-        script = ex.Executable("./%s" % script_name)
-        script_args = []
     with tmpdir.as_cwd():
+        script_name = "print_unicode.py"
+        # read the unicode back in and see whether things work
+        if sys.platform == "win32":
+            script = ex.Executable("%s" % (sys.executable))
+            script_args = [script_name]
+        else:
+            script = ex.Executable("./%s" % script_name)
+            script_args = []
+
         os.environ["LD_LIBRARY_PATH"] = spack.main.spack_ld_library_path
         # make a script that prints some unicode
         with open(script_name, "w") as f:
