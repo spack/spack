@@ -311,6 +311,16 @@ class TestCMakePackage:
         with pytest.raises(KeyError, match="not a variant"):
             s.package.define_from_variant("NONEXISTENT")
 
+    def test_cmake_std_args_cuda(self, default_mock_concretization):
+        s = default_mock_concretization("vtk-m +cuda cuda_arch=70 ^cmake@3.23")
+        option = spack.build_systems.cmake.CMakeBuilder.define_cuda_architectures(s.package)
+        assert "-DCMAKE_CUDA_ARCHITECTURES:STRING=70" == option
+
+    def test_cmake_std_args_hip(self, default_mock_concretization):
+        s = default_mock_concretization("vtk-m +rocm amdgpu_target=gfx900 ^cmake@3.23")
+        option = spack.build_systems.cmake.CMakeBuilder.define_hip_architectures(s.package)
+        assert "-DCMAKE_HIP_ARCHITECTURES:STRING=gfx900" == option
+
 
 @pytest.mark.usefixtures("config", "mock_packages")
 class TestDownloadMixins:

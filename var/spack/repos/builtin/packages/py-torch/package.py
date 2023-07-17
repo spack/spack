@@ -23,7 +23,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # core libraries to ensure that the package was successfully installed.
     import_modules = ["torch", "torch.autograd", "torch.nn", "torch.utils"]
 
-    version("master", branch="master", submodules=True)
+    version("main", branch="main", submodules=True)
+    version("master", branch="main", submodules=True, deprecated=True)
     version("2.0.1", tag="v2.0.1", submodules=True)
     version("2.0.0", tag="v2.0.0", submodules=True)
     version("1.13.1", tag="v1.13.1", submodules=True)
@@ -545,7 +546,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         elif "~onnx_ml" in self.spec:
             env.set("ONNX_ML", "OFF")
 
-        if not self.spec.satisfies("@master"):
+        if not self.spec.satisfies("@main,master"):
             env.set("PYTORCH_BUILD_VERSION", self.version)
             env.set("PYTORCH_BUILD_NUMBER", 0)
 

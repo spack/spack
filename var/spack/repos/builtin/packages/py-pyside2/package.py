@@ -42,6 +42,8 @@ class PyPyside2(PythonPackage):
     depends_on("py-wheel", type="build")
     # https://bugreports.qt.io/browse/PYSIDE-1385
     depends_on("py-wheel@:0.34", when="@:5.14", type="build")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
     depends_on("qt@5.11:+opengl")
 
     depends_on("graphviz", when="+doc", type="build")

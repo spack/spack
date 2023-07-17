@@ -265,7 +265,7 @@ def recurse_dependents():
         "--dependents",
         action="store_true",
         dest="dependents",
-        help="also uninstall any packages that depend on the ones given " "via command line",
+        help="also uninstall any packages that depend on the ones given via command line",
     )
 
 
@@ -286,7 +286,7 @@ def deptype():
         "--deptype",
         action=DeptypeAction,
         default=dep.all_deptypes,
-        help="comma-separated list of deptypes to traverse\ndefault=%s"
+        help="comma-separated list of deptypes to traverse\n\ndefault=%s"
         % ",".join(dep.all_deptypes),
     )
 
@@ -350,9 +350,9 @@ def install_status():
         "--install-status",
         action="store_true",
         default=True,
-        help="show install status of packages. packages can be: "
+        help="show install status of packages\n\npackages can be: "
         "installed [+], missing and needed by an installed package [-], "
-        "installed in and upstream instance [^], "
+        "installed in an upstream instance [^], "
         "or not installed (no annotation)",
     )
 
@@ -393,24 +393,23 @@ def add_cdash_args(subparser, add_help):
     cdash_help = {}
     if add_help:
         cdash_help["upload-url"] = "CDash URL where reports will be uploaded"
-        cdash_help[
-            "build"
-        ] = """The name of the build that will be reported to CDash.
-Defaults to spec of the package to operate on."""
-        cdash_help[
-            "site"
-        ] = """The site name that will be reported to CDash.
-Defaults to current system hostname."""
-        cdash_help[
-            "track"
-        ] = """Results will be reported to this group on CDash.
-Defaults to Experimental."""
-        cdash_help[
-            "buildstamp"
-        ] = """Instead of letting the CDash reporter prepare the
-buildstamp which, when combined with build name, site and project,
-uniquely identifies the build, provide this argument to identify
-the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
+        cdash_help["build"] = (
+            "name of the build that will be reported to CDash\n\n"
+            "defaults to spec of the package to operate on"
+        )
+        cdash_help["site"] = (
+            "site name that will be reported to CDash\n\n" "defaults to current system hostname"
+        )
+        cdash_help["track"] = (
+            "results will be reported to this group on CDash\n\n" "defaults to Experimental"
+        )
+        cdash_help["buildstamp"] = (
+            "use custom buildstamp\n\n"
+            "instead of letting the CDash reporter prepare the "
+            "buildstamp which, when combined with build name, site and project, "
+            "uniquely identifies the build, provide this argument to identify "
+            "the build yourself. format: %%Y%%m%%d-%%H%%M-[cdash-track]"
+        )
     else:
         cdash_help["upload-url"] = argparse.SUPPRESS
         cdash_help["build"] = argparse.SUPPRESS
@@ -542,16 +541,16 @@ def add_s3_connection_args(subparser, add_help):
         "--s3-access-key-id", help="ID string to use to connect to this S3 mirror"
     )
     subparser.add_argument(
-        "--s3-access-key-secret", help="Secret string to use to connect to this S3 mirror"
+        "--s3-access-key-secret", help="secret string to use to connect to this S3 mirror"
     )
     subparser.add_argument(
-        "--s3-access-token", help="Access Token to use to connect to this S3 mirror"
+        "--s3-access-token", help="access token to use to connect to this S3 mirror"
     )
     subparser.add_argument(
         "--s3-profile", help="S3 profile name to use to connect to this S3 mirror", default=None
     )
     subparser.add_argument(
-        "--s3-endpoint-url", help="Endpoint URL to use to connect to this S3 mirror"
+        "--s3-endpoint-url", help="endpoint URL to use to connect to this S3 mirror"
     )
 
 
