@@ -114,6 +114,8 @@ def test_strip_compression_extension(ext_path):
     stripped = scomp.strip_compression_extension(path)
     if (ext == "zip"):
         assert(stripped == 'Foo.zip')
+        stripped = scomp.strip_compression_extension(path, "zip")
+        assert(stripped == 'Foo')
     elif ext == "tar" or ext in scomp.CONTRACTION_MAP.keys() or ext in [
             ".".join(ext) for ext in product(scomp.PRE_EXTS, scomp.EXTS)]:
         assert(stripped == 'Foo.tar' or stripped == 'Foo.TAR')
