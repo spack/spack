@@ -15,6 +15,11 @@ class PySetuptools(Package, PythonExtension):
     list_url = "https://pypi.org/simple/setuptools/"
 
     version(
+        "68.0.0",
+        sha256="11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f",
+        expand=False,
+    )
+    version(
         "67.6.0",
         sha256="b78aaa36f6b90a074c1fa651168723acbf45d14cb1196b6f02c0fd07f17623b2",
         expand=False,
