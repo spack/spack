@@ -490,55 +490,6 @@ data-vis-sdk-build:
       job: data-vis-sdk-generate
 
 ########################################
-# AWS AHUG Applications (x86_64)
-########################################
-
-# Include this AFTER .*-generate in "extends" lists
-.aws-ahug-overrides:
-  # This controls image for generate step; build step is controlled by spack.yaml
-  # Note that generator emits OS info for build so these should be the same.
-  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
-
-.aws-ahug:
-  extends: [ ".linux_x86_64_v3" ]
-  variables:
-    SPACK_CI_STACK_NAME: aws-ahug
-
-aws-ahug-generate:
-  extends: [ ".aws-ahug", ".generate", ".aws-ahug-overrides", ".tags-x86_64_v4" ]
-
-aws-ahug-build:
-  extends: [ ".aws-ahug", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-ahug-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-ahug-generate
-
-# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
-.aws-ahug-aarch64:
-  extends: [ ".linux_aarch64" ]
-  variables:
-    SPACK_CI_STACK_NAME: aws-ahug-aarch64
-
-aws-ahug-aarch64-generate:
-  extends: [ ".aws-ahug-aarch64", ".generate-aarch64", ".aws-ahug-overrides" ]
-
-aws-ahug-aarch64-build:
-  extends: [ ".aws-ahug-aarch64", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-ahug-aarch64-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-ahug-aarch64-generate
-
-########################################
 # AWS ISC Applications (x86_64)
 ########################################
 
