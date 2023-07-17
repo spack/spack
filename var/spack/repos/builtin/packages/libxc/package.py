@@ -30,8 +30,8 @@ class Libxc(AutotoolsPackage, CudaPackage):
     version("2.2.1", sha256="ade61c1fa4ed238edd56408fd8ee6c2e305a3d5753e160017e2a71817c98fd00")
 
     variant("shared", default=True, description="Build shared libraries")
-    variant("kxc", default=False, when="@5.0:", description="Build with third derivatives")
-    variant("lxc", default=False, when="@5.0:", description="Build with fourth derivatives")
+    variant("kxc", default=False, when="@5:", description="Build with third derivatives")
+    variant("lxc", default=False, when="@5:", description="Build with fourth derivatives")
 
     conflicts("+shared +cuda", msg="Only ~shared supported with +cuda")
     conflicts("+cuda", when="@:4", msg="CUDA support only in libxc 5.0.0 and above")
