@@ -159,7 +159,7 @@ def test_update_key_index(
     # Put installed package in the buildcache, which, because we're signing
     # it, should result in the public key getting pushed to the buildcache
     # as well.
-    buildcache("push", "-a", mirror_dir.strpath, s.name)
+    buildcache("push", mirror_dir.strpath, s.name)
 
     # Now make sure that when we pass the "--keys" argument to update-index
     # it causes the index to get update.
@@ -213,13 +213,13 @@ def test_buildcache_sync(
     # Install a package and put it in the buildcache
     s = Spec(out_env_pkg).concretized()
     install(s.name)
-    buildcache("push", "-u", "-f", "-a", src_mirror_url, s.name)
+    buildcache("push", "-u", "-f", src_mirror_url, s.name)
 
     env("create", "test")
     with ev.read("test"):
         add(in_env_pkg)
         install()
-        buildcache("push", "-u", "-f", "-a", src_mirror_url, in_env_pkg)
+        buildcache("push", "-u", "-f", src_mirror_url, in_env_pkg)
 
         # Now run the spack buildcache sync command with all the various options
         # for specifying mirrors

@@ -1206,9 +1206,6 @@ class PushOptions(NamedTuple):
     #: Overwrite existing tarball/metadata files in buildcache
     force: bool = False
 
-    #: Allow absolute paths to package prefixes when creating a tarball
-    allow_root: bool = False
-
     #: Regenerated indices after pushing
     regenerate_index: bool = False
 

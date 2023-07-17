@@ -72,7 +72,7 @@ def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
         parser = argparse.ArgumentParser()
         buildcache.setup_parser(parser)
 
-        create_args = ["create", "-a", "-f", mirror_path, pkghash]
+        create_args = ["create", "-f", "--rebuild-index", mirror_path, pkghash]
         # Create a private key to sign package with if gpg2 available
         spack.util.gpg.create(
             name="test key 1",
@@ -80,8 +80,6 @@ def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
             email="spack@googlegroups.com",
             comment="Spack test key",
         )
-
-        create_args.insert(create_args.index("-a"), "--rebuild-index")
 
         args = parser.parse_args(create_args)
         buildcache.buildcache(parser, args)
