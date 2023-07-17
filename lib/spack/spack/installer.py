@@ -430,9 +430,9 @@ def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: b
         # Check if the package was already registered in the DB.
         # If this is the case, then only make explicit if required.
         tty.debug("{0} already registered in DB".format(pre))
-        record = spack.store.db.get_record(spec)
+        record = spack.store.STORE.db.get_record(spec)
         if explicit and not record.explicit:
-            spack.store.db.update_explicit(spec, explicit)
+            spack.store.STORE.db.update_explicit(spec, explicit)
 
     except KeyError:
         # If not, register it and generate the module file.
@@ -443,7 +443,7 @@ def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: b
 
         # Add to the DB
         tty.debug("{0} registering into DB".format(pre))
-        spack.store.db.add(spec, None, explicit=explicit)
+        spack.store.STORE.db.add(spec, None, explicit=explicit)
 
 
 def _process_binary_cache_tarball(
@@ -485,7 +485,7 @@ def _process_binary_cache_tarball(
         )
 
         pkg.installed_from_binary_cache = True
-        spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
+        spack.store.STORE.db.add(pkg.spec, spack.store.layout, explicit=explicit)
         return True
 
 
@@ -523,7 +523,7 @@ def clear_failures() -> None:
     """
     Remove all failure tracking markers for the Spack instance.
     """
-    spack.store.db.clear_all_failures()
+    spack.store.STORE.db.clear_all_failures()
 
 
 def combine_phase_logs(phase_log_files: List[str], log_path: str) -> None:
@@ -1264,7 +1264,7 @@ class PackageInstaller:
                 that's ``True`` iff the spec is considered installed
         """
         try:
-            rec = spack.store.db.get_record(spec)
+            rec = spack.store.STORE.db.get_record(spec)
             installed_in_db = rec.installed if rec else False
         except KeyError:
             # KeyError is raised if there is no matching spec in the database
@@ -1285,7 +1285,7 @@ class PackageInstaller:
             dep_id = package_id(dep_pkg)
 
             # Check for failure since a prefix lock is not required
-            if spack.store.db.prefix_failed(dep):
+            if spack.store.STORE.db.prefix_failed(dep):
                 action = "'spack install' the dependency"
                 msg = "{0} is marked as an install failure: {1}".format(dep_id, action)
                 raise InstallError(err.format(request.pkg_id, msg), pkg=dep_pkg)
@@ -1349,7 +1349,7 @@ class PackageInstaller:
 
         if not installed_in_db:
             # Ensure there is no other installed spec with the same prefix dir
-            if spack.store.db.is_occupied_install_prefix(task.pkg.spec.prefix):
+            if spack.store.STORE.db.is_occupied_install_prefix(task.pkg.spec.prefix):
                 raise InstallError(
                     "Install prefix collision for {0}".format(task.pkg_id),
                     long_msg="Prefix directory {0} already used by another "
@@ -1381,7 +1381,7 @@ class PackageInstaller:
 
             # Only update the explicit entry once for the explicit package
             if task.explicit:
-                spack.store.db.update_explicit(task.pkg.spec, True)
+                spack.store.STORE.db.update_explicit(task.pkg.spec, True)
 
     def _cleanup_all_tasks(self) -> None:
         """Cleanup all build tasks to include releasing their locks."""
@@ -1500,7 +1500,7 @@ class PackageInstaller:
             if lock is None:
                 tty.debug(msg.format("Acquiring", desc, pkg_id, pretty_seconds(timeout or 0)))
                 op = "acquire"
-                lock = spack.store.db.prefix_lock(pkg.spec, timeout)
+                lock = spack.store.STORE.db.prefix_lock(pkg.spec, timeout)
                 if timeout != lock.default_timeout:
                     tty.warn(
                         "Expected prefix lock timeout {0}, not {1}".format(
@@ -1625,12 +1625,12 @@ class PackageInstaller:
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
                 # of the spec.
-                spack.store.db.clear_failure(dep, force=False)
+                spack.store.STORE.db.clear_failure(dep, force=False)
 
         install_package = request.install_args.get("install_package")
         if install_package and request.pkg_id not in self.build_tasks:
             # Be sure to clear any previous failure
-            spack.store.db.clear_failure(request.spec, force=True)
+            spack.store.STORE.db.clear_failure(request.spec, force=True)
 
             # If not installing dependencies, then determine their
             # installation status before proceeding
@@ -1705,7 +1705,7 @@ class PackageInstaller:
             pkg.windows_establish_runtime_linkage()
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
-            spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
+            spack.store.STORE.db.add(pkg.spec, spack.store.layout, explicit=explicit)
 
             # If a compiler, ensure it is added to the configuration
             if task.compiler:
@@ -1886,7 +1886,7 @@ class PackageInstaller:
         err = "" if exc is None else ": {0}".format(str(exc))
         tty.debug("Flagging {0} as failed{1}".format(pkg_id, err))
         if mark:
-            self.failed[pkg_id] = spack.store.db.mark_failed(task.pkg.spec)
+            self.failed[pkg_id] = spack.store.STORE.db.mark_failed(task.pkg.spec)
         else:
             self.failed[pkg_id] = None
         task.status = STATUS_FAILED
@@ -2072,7 +2072,7 @@ class PackageInstaller:
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
             # assume using a separate (failed) prefix lock file.
-            if pkg_id in self.failed or spack.store.db.prefix_failed(spec):
+            if pkg_id in self.failed or spack.store.STORE.db.prefix_failed(spec):
                 term_status.clear()
                 tty.warn("{0} failed to install".format(pkg_id))
                 self._update_failed(task)
@@ -2168,9 +2168,9 @@ class PackageInstaller:
                 if action == InstallAction.INSTALL:
                     self._install_task(task, install_status)
                 elif action == InstallAction.OVERWRITE:
-                    # spack.store.db is not really a Database object, but a small
+                    # spack.store.STORE.db is not really a Database object, but a small
                     # wrapper -- silence mypy
-                    OverwriteInstall(self, spack.store.db, task, install_status).install()  # type: ignore[arg-type] # noqa: E501
+                    OverwriteInstall(self, spack.store.STORE.db, task, install_status).install()  # type: ignore[arg-type] # noqa: E501
 
                 self._update_installed(task)
 

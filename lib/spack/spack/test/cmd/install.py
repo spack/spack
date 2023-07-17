@@ -699,7 +699,7 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
     assert "was not installed" in out
 
     # Check that failure prefix locks are still cached
-    failure_lock_prefixes = ",".join(spack.store.db._prefix_failures.keys())
+    failure_lock_prefixes = ",".join(spack.store.STORE.db._prefix_failures.keys())
     assert "libelf" in failure_lock_prefixes
     assert "libdwarf" in failure_lock_prefixes
 

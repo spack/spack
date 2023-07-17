@@ -240,18 +240,11 @@ def _create_global() -> Store:
 STORE: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_create_global)
 
 
-def _store_db() -> spack.database.Database:
-    return STORE.db
-
-
 def _store_layout() -> spack.directory_layout.DirectoryLayout:
     return STORE.layout
 
 
 # convenience accessors for parts of the singleton store
-db: Union[llnl.util.lang.LazyReference, spack.database.Database] = llnl.util.lang.LazyReference(
-    _store_db
-)
 layout: Union[
     llnl.util.lang.LazyReference, "spack.directory_layout.DirectoryLayout"
 ] = llnl.util.lang.LazyReference(_store_layout)
@@ -262,12 +255,11 @@ def reinitialize():
     containing the state of the store before reinitialization.
     """
     global STORE
-    global db, layout
+    global layout
 
-    token = STORE, db, layout
+    token = STORE, layout
 
     STORE = llnl.util.lang.Singleton(_create_global)
-    db = llnl.util.lang.LazyReference(_store_db)
     layout = llnl.util.lang.LazyReference(_store_layout)
 
     return token
@@ -276,8 +268,8 @@ def reinitialize():
 def restore(token):
     """Restore the environment from a token returned by reinitialize"""
     global STORE
-    global db, layout
-    STORE, db, layout = token
+    global layout
+    STORE, layout = token
 
 
 def _construct_upstream_dbs_from_install_roots(
@@ -319,7 +311,7 @@ def find(
         constraints: spec(s) to be matched against installed packages
         multiple: if True multiple matches per constraint are admitted
         query_fn (Callable): query function to get matching specs. By default,
-            ``spack.store.db.query``
+            ``spack.store.STORE.db.query``
         **kwargs: keyword arguments forwarded to the query function
     """
     if isinstance(constraints, str):
@@ -327,7 +319,7 @@ def find(
 
     matching_specs: List[spack.spec.Spec] = []
     errors = []
-    query_fn = query_fn or spack.store.db.query
+    query_fn = query_fn or spack.store.STORE.db.query
     for spec in constraints:
         current_matches = query_fn(spec, **kwargs)
 
@@ -377,7 +369,7 @@ def use_store(
     Yields:
         Store object associated with the context manager's store
     """
-    global STORE, db, layout
+    global STORE, layout
 
     assert not isinstance(path, Store), "cannot pass a store anymore"
     scope_name = "use-store-{}".format(uuid.uuid4())
@@ -392,14 +384,14 @@ def use_store(
     )
     temporary_store = create(configuration=spack.config.config)
     original_store, STORE = STORE, temporary_store
-    db, layout = STORE.db, STORE.layout
+    layout = STORE.layout
 
     try:
         yield temporary_store
     finally:
         # Restore the original store
         STORE = original_store
-        db, layout = original_store.db, original_store.layout
+        layout = original_store.layout
         spack.config.config.remove_scope(scope_name=scope_name)
 
 

@@ -38,7 +38,7 @@ def test_rewire_db(mock_fetch, install_mockery, transitive):
     assert os.path.exists(spliced_spec.prefix)
 
     # test that it made it into the database
-    rec = spack.store.db.get_record(spliced_spec)
+    rec = spack.store.STORE.db.get_record(spliced_spec)
     installed_in_db = rec.installed if rec else False
     assert installed_in_db
 
@@ -68,7 +68,7 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
     assert os.path.exists(spliced_spec.prefix)
 
     # test that it made it into the database
-    rec = spack.store.db.get_record(spliced_spec)
+    rec = spack.store.STORE.db.get_record(spliced_spec)
     installed_in_db = rec.installed if rec else False
     assert installed_in_db
 
@@ -128,7 +128,7 @@ def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
     spliced_spec = spec.splice(dep, transitive=transitive)
     spack.rewiring.rewire(spliced_spec)
     spliced_spec.package.do_uninstall()
-    assert len(spack.store.db.query(spliced_spec)) == 0
+    assert len(spack.store.STORE.db.query(spliced_spec)) == 0
     assert not os.path.exists(spliced_spec.prefix)
 
 

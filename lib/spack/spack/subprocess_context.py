@@ -106,7 +106,7 @@ class TestState:
             spack.platforms.host = self.platform
 
             spack.store.STORE = self.store
-            spack.store.db = self.store.db
+            spack.store.STORE.db = self.store.db
             spack.store.layout = self.store.layout
 
             self.test_patches.restore()

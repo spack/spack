@@ -63,7 +63,7 @@ def graph(parser, args):
         if env:
             specs = env.all_specs()
         else:
-            specs = spack.store.db.query()
+            specs = spack.store.STORE.db.query()
 
     else:
         specs = spack.cmd.parse_specs(args.specs, concretize=not args.static)

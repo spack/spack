@@ -249,7 +249,7 @@ def generate_module_index(root, modules, overwrite=False):
 def _generate_upstream_module_index():
     module_indices = read_module_indices()
 
-    return UpstreamModuleIndex(spack.store.db, module_indices)
+    return UpstreamModuleIndex(spack.store.STORE.db, module_indices)
 
 
 upstream_module_index = llnl.util.lang.Singleton(_generate_upstream_module_index)
@@ -354,7 +354,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
     try:
         upstream = spec.installed_upstream
     except spack.repo.UnknownPackageError:
-        upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+        upstream, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
     if upstream:
         module = spack.modules.common.upstream_module_index.upstream_module(spec, module_type)
         if not module:

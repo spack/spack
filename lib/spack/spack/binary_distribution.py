@@ -1369,7 +1369,7 @@ def specs_to_be_packaged(
     packageable = lambda n: not n.external and n.installed
 
     # Mass install check
-    with spack.store.db.read_transaction():
+    with spack.store.STORE.db.read_transaction():
         return list(filter(packageable, nodes))
 
 
@@ -1952,7 +1952,7 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, unsigned, force)
         spack.hooks.post_install(spec, False)
-        spack.store.db.add(spec, spack.store.layout)
+        spack.store.STORE.db.add(spec, spack.store.layout)
 
 
 def install_single_spec(spec, unsigned=False, force=False):
