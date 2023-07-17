@@ -43,18 +43,11 @@ from spack.spec import Spec
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
-def fake_fetchify(url, pkg):
-    """Fake the URL for a package so it downloads from a file."""
-    pkg.fetcher = URLFetchStrategy(url)
-
-
 @pytest.mark.usefixtures("install_mockery", "mock_gnupghome")
 def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
     # Install a test package
     spec = Spec("trivial-install-test-package").concretized()
-    fetcher = FetchStrategyComposite()
-    fetcher.append(URLFetchStrategy(mock_archive.url))
-    monkeypatch.setattr(spec.package, "fetcher", fetcher)
+    monkeypatch.setattr(spec.package, "fetcher", URLFetchStrategy(mock_archive.url))
     spec.package.do_install()
     pkghash = "/" + str(spec.dag_hash(7))
 
