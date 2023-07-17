@@ -179,12 +179,12 @@ def test_key_ordering():
     with pytest.raises(TypeError):
 
         @llnl.util.lang.key_ordering
-        class ClassThatHasNoCmpKeyMethod(object):
+        class ClassThatHasNoCmpKeyMethod:
             # this will raise b/c it does not define _cmp_key
             pass
 
     @llnl.util.lang.key_ordering
-    class KeyComparable(object):
+    class KeyComparable:
         def __init__(self, t):
             self.t = t
 

@@ -11,6 +11,7 @@ from spack.package import *
 _versions = [
     # LAPACK++,     BLAS++
     ["master", "master"],
+    ["2023.06.00", "2023.06.00"],
     ["2022.07.00", "2022.07.00"],
     ["2022.05.00", "2022.05.00"],
     ["2020.10.00", "2020.10.00"],
@@ -31,6 +32,9 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("teonnik", "Sely85", "G-Ragghianti", "mgates3")
 
     version("master", branch="master")
+    version(
+        "2023.06.00", sha256="93df8392c859071120e00239feb96a0e060c0bb5176ee3a4f03eb9777c4edead"
+    )
     version(
         "2022.07.00", sha256="11e59efcc7ea0764a2bfc0e0f7b1abf73cee2943c1df11a19601780641a9aa18"
     )
@@ -93,8 +97,8 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
 
     def check(self):
         # If the tester fails to build, ensure that the check() fails.
-        if os.path.isfile(join_path(self.build_directory, "test", "tester")):
-            with working_dir(self.build_directory):
+        if os.path.isfile(join_path(self.builder.build_directory, "test", "tester")):
+            with working_dir(self.builder.build_directory):
                 make("check")
         else:
             raise Exception("The tester was not built!")

@@ -32,6 +32,8 @@ class PySymengine(PythonPackage):
     depends_on("py-setuptools@:60", type="build", when="@:0.9.2")
     depends_on("py-cython@0.19.1:", type="build", when="@0.2.0")
     depends_on("py-cython@0.29.24:", type="build", when="@0.8.1:")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
     depends_on("cmake@2.8.12:", type="build")
     # see symengine_version.txt
     depends_on("symengine@0.2.0", when="@0.2.0")

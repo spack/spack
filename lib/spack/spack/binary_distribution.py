@@ -80,14 +80,14 @@ class FetchCacheError(Exception):
         else:
             err = errors[0]
             self.message = "{0}: {1}".format(err.__class__.__name__, str(err))
-        super(FetchCacheError, self).__init__(self.message)
+        super().__init__(self.message)
 
 
 class ListMirrorSpecsError(spack.error.SpackError):
     """Raised when unable to retrieve list of specs from the mirror"""
 
 
-class BinaryCacheIndex(object):
+class BinaryCacheIndex:
     """
     The BinaryCacheIndex tracks what specs are available on (usually remote)
     binary caches.
@@ -317,9 +317,9 @@ class BinaryCacheIndex(object):
         from each configured mirror and stored locally (both in memory and
         on disk under ``_index_cache_root``)."""
         self._init_local_index_cache()
-
-        mirrors = spack.mirror.MirrorCollection()
-        configured_mirror_urls = [m.fetch_url for m in mirrors.values()]
+        configured_mirror_urls = [
+            m.fetch_url for m in spack.mirror.MirrorCollection(binary=True).values()
+        ]
         items_to_remove = []
         spec_cache_clear_needed = False
         spec_cache_regenerate_needed = not self._mirrors_for_spec
@@ -517,9 +517,7 @@ class NoOverwriteException(spack.error.SpackError):
     """Raised when a file would be overwritten"""
 
     def __init__(self, file_path):
-        super(NoOverwriteException, self).__init__(
-            f"Refusing to overwrite the following file: {file_path}"
-        )
+        super().__init__(f"Refusing to overwrite the following file: {file_path}")
 
 
 class NoGpgException(spack.error.SpackError):
@@ -528,7 +526,7 @@ class NoGpgException(spack.error.SpackError):
     """
 
     def __init__(self, msg):
-        super(NoGpgException, self).__init__(msg)
+        super().__init__(msg)
 
 
 class NoKeyException(spack.error.SpackError):
@@ -537,7 +535,7 @@ class NoKeyException(spack.error.SpackError):
     """
 
     def __init__(self, msg):
-        super(NoKeyException, self).__init__(msg)
+        super().__init__(msg)
 
 
 class PickKeyException(spack.error.SpackError):
@@ -548,7 +546,7 @@ class PickKeyException(spack.error.SpackError):
     def __init__(self, keys):
         err_msg = "Multiple keys available for signing\n%s\n" % keys
         err_msg += "Use spack buildcache create -k <key hash> to pick a key."
-        super(PickKeyException, self).__init__(err_msg)
+        super().__init__(err_msg)
 
 
 class NoVerifyException(spack.error.SpackError):
@@ -565,7 +563,7 @@ class NoChecksumException(spack.error.SpackError):
     """
 
     def __init__(self, path, size, contents, algorithm, expected, computed):
-        super(NoChecksumException, self).__init__(
+        super().__init__(
             f"{algorithm} checksum failed for {path}",
             f"Expected {expected} but got {computed}. "
             f"File size = {size} bytes. Contents = {contents!r}",
@@ -578,7 +576,7 @@ class NewLayoutException(spack.error.SpackError):
     """
 
     def __init__(self, msg):
-        super(NewLayoutException, self).__init__(msg)
+        super().__init__(msg)
 
 
 class UnsignedPackageException(spack.error.SpackError):
@@ -1467,8 +1465,9 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
            "signature_verified": "true-if-binary-pkg-was-already-verified"
        }
     """
-    if not spack.mirror.MirrorCollection():
-        tty.die("Please add a spack mirror to allow " + "download of pre-compiled packages.")
+    configured_mirrors = spack.mirror.MirrorCollection(binary=True).values()
+    if not configured_mirrors:
+        tty.die("Please add a spack mirror to allow download of pre-compiled packages.")
 
     tarball = tarball_path_name(spec, ".spack")
     specfile_prefix = tarball_name(spec, ".spec")
@@ -1485,11 +1484,7 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
     # we need was in an un-indexed mirror.  No need to check any
     # mirror for the spec twice though.
     try_first = [i["mirror_url"] for i in mirrors_for_spec] if mirrors_for_spec else []
-    try_next = [
-        i.fetch_url
-        for i in spack.mirror.MirrorCollection().values()
-        if i.fetch_url not in try_first
-    ]
+    try_next = [i.fetch_url for i in configured_mirrors if i.fetch_url not in try_first]
 
     for url in try_first + try_next:
         mirrors_to_try.append(
@@ -1982,7 +1977,9 @@ def try_direct_fetch(spec, mirrors=None):
     specfile_is_signed = False
     found_specs = []
 
-    for mirror in spack.mirror.MirrorCollection(mirrors=mirrors).values():
+    binary_mirrors = spack.mirror.MirrorCollection(mirrors=mirrors, binary=True).values()
+
+    for mirror in binary_mirrors:
         buildcache_fetch_url_json = url_util.join(
             mirror.fetch_url, _build_cache_relative_path, specfile_name
         )
@@ -2045,7 +2042,7 @@ def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
     if spec is None:
         return []
 
-    if not spack.mirror.MirrorCollection(mirrors=mirrors_to_check):
+    if not spack.mirror.MirrorCollection(mirrors=mirrors_to_check, binary=True):
         tty.debug("No Spack mirrors are currently configured")
         return {}
 
@@ -2084,7 +2081,7 @@ def clear_spec_cache():
 
 def get_keys(install=False, trust=False, force=False, mirrors=None):
     """Get pgp public keys available on mirror with suffix .pub"""
-    mirror_collection = mirrors or spack.mirror.MirrorCollection()
+    mirror_collection = mirrors or spack.mirror.MirrorCollection(binary=True)
 
     if not mirror_collection:
         tty.die("Please add a spack mirror to allow " + "download of build caches.")
@@ -2245,7 +2242,7 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None):
 
     """
     rebuilds = {}
-    for mirror in spack.mirror.MirrorCollection(mirrors).values():
+    for mirror in spack.mirror.MirrorCollection(mirrors, binary=True).values():
         tty.debug("Checking for built specs at {0}".format(mirror.fetch_url))
 
         rebuild_list = []
@@ -2289,7 +2286,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
 
 
 def download_buildcache_entry(file_descriptions, mirror_url=None):
-    if not mirror_url and not spack.mirror.MirrorCollection():
+    if not mirror_url and not spack.mirror.MirrorCollection(binary=True):
         tty.die(
             "Please provide or add a spack mirror to allow " + "download of buildcache entries."
         )
@@ -2298,7 +2295,7 @@ def download_buildcache_entry(file_descriptions, mirror_url=None):
         mirror_root = os.path.join(mirror_url, _build_cache_relative_path)
         return _download_buildcache_entry(mirror_root, file_descriptions)
 
-    for mirror in spack.mirror.MirrorCollection().values():
+    for mirror in spack.mirror.MirrorCollection(binary=True).values():
         mirror_root = os.path.join(mirror.fetch_url, _build_cache_relative_path)
 
         if _download_buildcache_entry(mirror_root, file_descriptions):
@@ -2337,7 +2334,7 @@ def download_single_spec(concrete_spec, destination, mirror_url=None):
     return download_buildcache_entry(files_to_fetch, mirror_url)
 
 
-class BinaryCacheQuery(object):
+class BinaryCacheQuery:
     """Callable object to query if a spec is in a binary cache"""
 
     def __init__(self, all_architectures):
