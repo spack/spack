@@ -106,8 +106,6 @@ class TestState:
             spack.platforms.host = self.platform
 
             spack.store.STORE = self.store
-            spack.store.STORE.root = self.store.root
-            spack.store.unpadded_root = self.store.unpadded_root
             spack.store.db = self.store.db
             spack.store.layout = self.store.layout
 

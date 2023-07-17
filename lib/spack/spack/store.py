@@ -240,10 +240,6 @@ def _create_global() -> Store:
 STORE: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_create_global)
 
 
-def _store_unpadded_root() -> str:
-    return STORE.unpadded_root
-
-
 def _store_db() -> spack.database.Database:
     return STORE.db
 
@@ -253,9 +249,6 @@ def _store_layout() -> spack.directory_layout.DirectoryLayout:
 
 
 # convenience accessors for parts of the singleton store
-unpadded_root: Union[llnl.util.lang.LazyReference, str] = llnl.util.lang.LazyReference(
-    _store_unpadded_root
-)
 db: Union[llnl.util.lang.LazyReference, spack.database.Database] = llnl.util.lang.LazyReference(
     _store_db
 )
@@ -269,12 +262,11 @@ def reinitialize():
     containing the state of the store before reinitialization.
     """
     global STORE
-    global unpadded_root, db, layout
+    global db, layout
 
-    token = STORE, unpadded_root, db, layout
+    token = STORE, db, layout
 
     STORE = llnl.util.lang.Singleton(_create_global)
-    unpadded_root = llnl.util.lang.LazyReference(_store_unpadded_root)
     db = llnl.util.lang.LazyReference(_store_db)
     layout = llnl.util.lang.LazyReference(_store_layout)
 
@@ -284,8 +276,8 @@ def reinitialize():
 def restore(token):
     """Restore the environment from a token returned by reinitialize"""
     global STORE
-    global unpadded_root, db, layout
-    STORE, unpadded_root, db, layout = token
+    global db, layout
+    STORE, db, layout = token
 
 
 def _construct_upstream_dbs_from_install_roots(
@@ -385,7 +377,7 @@ def use_store(
     Yields:
         Store object associated with the context manager's store
     """
-    global STORE, db, layout, unpadded_root
+    global STORE, db, layout
 
     assert not isinstance(path, Store), "cannot pass a store anymore"
     scope_name = "use-store-{}".format(uuid.uuid4())
@@ -401,7 +393,6 @@ def use_store(
     temporary_store = create(configuration=spack.config.config)
     original_store, STORE = STORE, temporary_store
     db, layout = STORE.db, STORE.layout
-    unpadded_root = STORE.unpadded_root
 
     try:
         yield temporary_store
@@ -409,7 +400,6 @@ def use_store(
         # Restore the original store
         STORE = original_store
         db, layout = original_store.db, original_store.layout
-        unpadded_root = original_store.unpadded_root
         spack.config.config.remove_scope(scope_name=scope_name)
 
 
