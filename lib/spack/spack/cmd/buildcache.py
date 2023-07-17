@@ -419,6 +419,9 @@ def preview_fn(args):
         print("--------------------------------")
         print(spec.tree(status_fn=lambda s: True))
 
+    # Print deprecation message last, so it doesn't get lost in the output
+    tty.warn("`spack buildcache preview` is deprecated and will be removed in Spack 0.22")
+
 
 def check_fn(args):
     """check specs against remote binary mirror(s) to see if any need to be rebuilt
