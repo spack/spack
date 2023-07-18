@@ -59,7 +59,7 @@ class Gnina(CMakePackage, CudaPackage):
     depends_on("openbabel@3:~gui~cairo~maeparser~coordgen")
     depends_on("rdkit", when="+gninavis")
 
-    depends_on("python@:3.10", type="build")
+    depends_on("python", type="build")
     depends_on("py-numpy", type="build")
     depends_on("py-pytest", type="build")
 
