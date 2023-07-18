@@ -37,6 +37,12 @@ def setup_parser(subparser):
 
 
 def fetch(parser, args):
+    if args.no_checksum:
+        spack.config.set("config:checksum", False, scope="command_line")
+
+    if args.deprecated:
+        spack.config.set("config:deprecated", True, scope="command_line")
+
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs, concretize=True)
     else:
@@ -55,12 +61,6 @@ def fetch(parser, args):
                 tty.die("No uninstalled specs in environment. Did you run `spack concretize` yet?")
         else:
             tty.die("fetch requires at least one spec argument")
-
-    if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
-
-    if args.deprecated:
-        spack.config.set("config:deprecated", True, scope="command_line")
 
     if args.dependencies or args.missing:
         to_be_fetched = spack.traverse.traverse_nodes(specs, key=spack.traverse.by_dag_hash)

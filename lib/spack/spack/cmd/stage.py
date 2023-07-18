@@ -30,17 +30,17 @@ def setup_parser(subparser):
 
 
 def stage(parser, args):
-    if not args.specs:
-        env = ev.active_environment()
-        if not env:
-            tty.die("`spack stage` requires a spec or an active environment")
-        return _stage_env(env)
-
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
 
     if args.deprecated:
         spack.config.set("config:deprecated", True, scope="command_line")
+
+    if not args.specs:
+        env = ev.active_environment()
+        if not env:
+            tty.die("`spack stage` requires a spec or an active environment")
+        return _stage_env(env)
 
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
 
