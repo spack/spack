@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,11 +16,16 @@ class Adios2(CMakePackage, CudaPackage):
     url = "https://github.com/ornladios/ADIOS2/archive/v2.8.0.tar.gz"
     git = "https://github.com/ornladios/ADIOS2.git"
 
-    maintainers = ["ax3l", "chuckatkins", "vicentebolea", "williamfgc"]
+    maintainers("ax3l", "vicentebolea", "williamfgc")
 
     tags = ["e4s"]
 
     version("master", branch="master")
+    version(
+        "2.9.0",
+        sha256="69f98ef58c818bb5410133e1891ac192653b0ec96eb9468590140f2552b6e5d1",
+        preferred=True,
+    )
     version("2.8.3", sha256="4906ab1899721c41dd918dddb039ba2848a1fb0cf84f3a563a1179b9d6ee0d9f")
     version("2.8.2", sha256="9909f6409dc44b2c28c1fda0042dab4b711f25ec3277ef0cb6ffc40f5483910d")
     version("2.8.1", sha256="3f515b442bbd52e3189866b121613fe3b59edb8845692ea86fad83d1eba35d93")
@@ -31,14 +36,6 @@ class Adios2(CMakePackage, CudaPackage):
     version("2.5.0", sha256="7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329")
     version("2.4.0", sha256="50ecea04b1e41c88835b4b3fd4e7bf0a0a2a3129855c9cc4ba6cf6a1575106e2")
     version("2.3.1", sha256="3bf81ccc20a7f2715935349336a76ba4c8402355e1dc3848fcd6f4c3c5931893")
-
-    # General build options
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
 
     # There's not really any consistency about how static and shared libs are
     # implemented across spack.  What we're trying to support is specifically three
@@ -54,7 +51,6 @@ class Adios2(CMakePackage, CudaPackage):
     # change how we're supporting differnt library types in the package at anytime if
     # spack decides on a standardized way of doing it across packages
     variant("shared", default=True, when="+pic", description="Build shared libraries")
-    variant("pic", default=True, description="Build pic-enabled static libraries")
 
     # Features
     variant("mpi", default=True, description="Enable MPI")
@@ -80,6 +76,18 @@ class Adios2(CMakePackage, CudaPackage):
     variant("dataspaces", default=False, when="@2.5:", description="Enable support for DATASPACES")
     variant("ssc", default=True, description="Enable the SSC staging engine")
     variant("hdf5", default=False, description="Enable the HDF5 engine")
+    variant(
+        "aws",
+        default=False,
+        when="@2.9:",
+        description="Enable support for S3 compatible storage using AWS SDK's S3 module",
+    )
+    variant(
+        "libcatalyst",
+        default=True,
+        when="@2.9:",
+        description="Enable support for in situ visualization plugin using ParaView Catalyst",
+    )
 
     # Optional language bindings, C++11 and C always provided
     variant("cuda", default=False, when="@2.8:", description="Enable CUDA support")
@@ -91,13 +99,28 @@ class Adios2(CMakePackage, CudaPackage):
     conflicts("%intel@:15")
     conflicts("%pgi@:14")
 
-    depends_on("cmake@3.12.0:", type="build")
-    depends_on("pkgconfig", type="build")
+    # ifx does not support submodules in separate files
+    conflicts("%oneapi@:2022.1.0", when="+fortran")
 
-    depends_on("libffi", when="+sst")  # optional in DILL
-    depends_on("libfabric@1.6.0:", when="+sst")  # optional in EVPath and SST
-    # depends_on('bison', when='+sst')     # optional in FFS, broken package
-    # depends_on('flex', when='+sst')      # optional in FFS, depends on BISON
+    depends_on("cmake@3.12.0:", type="build")
+
+    for _platform in ["linux", "darwin", "cray"]:
+        depends_on("pkgconfig", type="build", when="platform=%s" % _platform)
+        variant(
+            "pic",
+            default=False,
+            description="Build pic-enabled static libraries",
+            when="platform=%s" % _platform,
+        )
+        # libffi and libfabric and not currently supported on Windows
+        # see Paraview's superbuild handling of libfabric at
+        # https://gitlab.kitware.com/paraview/paraview-superbuild/-/blob/master/projects/adios2.cmake#L3
+        depends_on("libffi", when="+sst platform=%s" % _platform)  # optional in DILL
+        depends_on(
+            "libfabric@1.6.0:", when="+sst platform=%s" % _platform
+        )  # optional in EVPath and SST
+        # depends_on('bison', when='+sst')     # optional in FFS, broken package
+        # depends_on('flex', when='+sst')      # optional in FFS, depends on BISON
 
     depends_on("mpi", when="+mpi")
     depends_on("libzmq", when="+dataman")
@@ -120,6 +143,8 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("python@3.5:", when="@2.5.0:", type="test")
     depends_on("py-numpy@1.6.1:", when="+python", type=("build", "run"))
     depends_on("py-mpi4py@2.0.0:", when="+mpi +python", type=("build", "run"))
+    depends_on("aws-sdk-cpp", when="+aws")
+    depends_on("libcatalyst@2", when="+libcatalyst")
 
     # Fix findmpi when called by dependees
     # See https://github.com/ornladios/ADIOS2/pull/1632
@@ -168,6 +193,7 @@ class Adios2(CMakePackage, CudaPackage):
         args = [
             from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             from_variant("BUILD_SHARED_LIBS", "shared"),
+            from_variant("ADIOS2_USE_AWSSDK", "aws"),
             from_variant("ADIOS2_USE_Blosc", "blosc"),
             from_variant("ADIOS2_USE_BZip2", "bzip2"),
             from_variant("ADIOS2_USE_DataMan", "dataman"),
@@ -182,6 +208,7 @@ class Adios2(CMakePackage, CudaPackage):
             from_variant("ADIOS2_USE_SZ", "sz"),
             from_variant("ADIOS2_USE_ZFP", "zfp"),
             from_variant("ADIOS2_USE_CUDA", "cuda"),
+            from_variant("ADIOS2_USE_Catalyst", "libcatalyst"),
             from_variant("ADIOS2_USE_LIBPRESSIO", "libpressio"),
             self.define("BUILD_TESTING", self.run_tests),
             self.define("ADIOS2_BUILD_EXAMPLES", False),
@@ -208,6 +235,7 @@ class Adios2(CMakePackage, CudaPackage):
 
         if "+python" in spec or self.run_tests:
             args.append("-DPYTHON_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path)
+            args.append("-DPython_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path)
 
         return args
 

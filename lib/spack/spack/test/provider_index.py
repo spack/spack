@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ Tests assume that mock packages provide this::
                     mpi@:10.0: set([zmpi])},
     'stuff': {stuff: set([externalvirtual])}}
 """
-from six import StringIO
+import io
 
 import spack.repo
 from spack.provider_index import ProviderIndex
@@ -28,10 +28,10 @@ from spack.spec import Spec
 def test_provider_index_round_trip(mock_packages):
     p = ProviderIndex(specs=spack.repo.all_package_names(), repository=spack.repo.path)
 
-    ostream = StringIO()
+    ostream = io.StringIO()
     p.to_json(ostream)
 
-    istream = StringIO(ostream.getvalue())
+    istream = io.StringIO(ostream.getvalue())
     q = ProviderIndex.from_json(istream, repository=spack.repo.path)
 
     assert p == q

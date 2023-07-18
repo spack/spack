@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,14 @@ class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = "https://www.openblas.net"
-    url = "https://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz"
+    url = "https://github.com/xianyi/OpenBLAS/releases/download/v0.2.19/OpenBLAS-0.2.19.tar.gz"
     git = "https://github.com/xianyi/OpenBLAS.git"
 
     libraries = ["libopenblas"]
 
     version("develop", branch="develop")
+    version("0.3.23", sha256="5d9491d07168a5d00116cdc068a40022c3455bf9293c7cb86a65b1054d7e5114")
+    version("0.3.22", sha256="7fa9685926ba4f27cfe513adbf9af64d6b6b63f9dcabb37baefad6a65ff347a7")
     version("0.3.21", sha256="f36ba3d7a60e7c8bcc54cd9aaa9b1223dd42eaf02c811791c37e8ca707c241ca")
     version("0.3.20", sha256="8495c9affc536253648e942908e88e097f2ec7753ede55aca52e5dead3029e3c")
     version("0.3.19", sha256="947f51bfe50c2a0749304fbe373e00e7637600b0a47b78a51382aeb30ca08562")
@@ -51,7 +53,7 @@ class Openblas(MakefilePackage):
 
     variant(
         "fortran",
-        default="True",
+        default=True,
         when="@0.3.21:",
         description="w/o a Fortran compiler, OpenBLAS will build an f2c-converted LAPACK",
     )
@@ -94,6 +96,7 @@ class Openblas(MakefilePackage):
 
     # https://github.com/spack/spack/issues/31732
     patch("f_check-oneapi.patch", when="@0.3.20 %oneapi")
+    patch("f_check-intel.patch", when="@0.3.21 %intel")
 
     # OpenBLAS >=3.0 has an official way to disable internal parallel builds
     patch("make.patch", when="@0.2.16:0.2.20")
@@ -168,8 +171,23 @@ class Openblas(MakefilePackage):
     # See <https://github.com/xianyi/OpenBLAS/issues/3760>
     patch("linktest.patch", when="@0.3.20")
 
+    # Fix build on ARM Neoverse N1 when using gcc@:9. The 1st patch is context for the 2nd patch:
+    patch(
+        "https://github.com/xianyi/OpenBLAS/commit/68277282df4adaafaf9b4a01c2eeb629eed99528.patch?full_index=1",
+        sha256="a4c642fbaeafbf4178558368212594e99c74a7b6c2a119fd0627f7b54f1ebfb3",
+        when="@0.3.21 %gcc@:9",
+    )
+    # gcc@:9 doesn't support sve2 and bf16 architecture features, apply upstream fix:
+    patch(
+        "https://github.com/xianyi/OpenBLAS/commit/c957ad684ed6b8ca64f332221b376f2ad0fdc51a.patch?full_index=1",
+        sha256="c20f5188a9145395c37c22ae5c1f72bfc24edfbccbb636cc8f9227345615daa8",
+        when="@0.3.21 %gcc@:9",
+    )
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
-    conflicts("%gcc@7.0.0:7.3,8.0.0:8.2", when="@0.3.11:")
+    # Notice: fixed on Amazon Linux GCC 7.3.1 (which is an unofficial version
+    # as GCC only has major.minor releases. But the bound :7.3.0 doesn't hurt)
+    conflicts("%gcc@7:7.3.0,8:8.2", when="@0.3.11:")
 
     # See https://github.com/xianyi/OpenBLAS/issues/3074
     conflicts("%gcc@:10.1", when="@0.3.13 target=ppc64le:")
@@ -196,7 +214,7 @@ class Openblas(MakefilePackage):
         spec = self.spec
         iflags = []
         if name == "cflags":
-            if spec.satisfies("@0.3.20: %oneapi"):
+            if spec.satisfies("@0.3.20: %oneapi") or spec.satisfies("@0.3.20: %arm"):
                 iflags.append("-Wno-error=implicit-function-declaration")
         return (iflags, None, None)
 
@@ -223,7 +241,10 @@ class Openblas(MakefilePackage):
         # a f2c translated LAPACK version
         #   https://github.com/xianyi/OpenBLAS/releases/tag/v0.3.21
         if self.compiler.fc is None and "~fortran" not in self.spec:
-            raise InstallError("OpenBLAS requires both C and Fortran compilers!")
+            raise InstallError(
+                self.compiler.cc
+                + " has no Fortran compiler added in spack. Add it or use openblas~fortran!"
+            )
 
     @staticmethod
     def _read_targets(target_file):
@@ -320,6 +341,15 @@ class Openblas(MakefilePackage):
 
         return args
 
+    def setup_build_environment(self, env):
+        # When building OpenBLAS with threads=openmp, `make all`
+        # runs tests, so we set the max number of threads at runtime
+        # accordingly
+        if self.spec.satisfies("threads=openmp"):
+            env.set("OMP_NUM_THREADS", str(make_jobs))
+        elif self.spec.satisfies("threads=pthreads"):
+            env.set("OPENBLAS_NUM_THREADS", str(make_jobs))
+
     @property
     def make_defs(self):
         # Configure fails to pick up fortran from FC=/abs/path/to/fc, but
@@ -382,8 +412,9 @@ class Openblas(MakefilePackage):
         if "+consistent_fpcsr" in self.spec:
             make_defs += ["CONSISTENT_FPCSR=1"]
 
-        # Flang/f18 does not provide ETIME as an intrinsic
-        if self.spec.satisfies("%clang"):
+        # Flang/f18 does not provide ETIME as an intrinsic.
+        # Do not set TIMER variable if fortran is disabled.
+        if self.spec.satisfies("+fortran%clang"):
             make_defs.append("TIMER=INT_CPU_TIME")
 
         # Prevent errors in `as` assembler from newer instructions
@@ -401,6 +432,10 @@ class Openblas(MakefilePackage):
 
         if self.spec.satisfies("+bignuma"):
             make_defs.append("BIGNUMA=1")
+
+        # Avoid that NUM_THREADS gets initialized with the host's number of CPUs.
+        if self.spec.satisfies("threads=openmp") or self.spec.satisfies("threads=pthreads"):
+            make_defs.append("NUM_THREADS=512")
 
         return make_defs
 
@@ -428,13 +463,7 @@ class Openblas(MakefilePackage):
 
     @property
     def build_targets(self):
-        targets = ["libs", "netlib"]
-
-        # Build shared if variant is set.
-        if "+shared" in self.spec:
-            targets += ["shared"]
-
-        return self.make_defs + targets
+        return ["-s"] + self.make_defs + ["all"]
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
@@ -443,10 +472,7 @@ class Openblas(MakefilePackage):
 
     @property
     def install_targets(self):
-        make_args = [
-            "install",
-            "PREFIX={0}".format(self.prefix),
-        ]
+        make_args = ["install", "PREFIX={0}".format(self.prefix)]
         return make_args + self.make_defs
 
     @run_after("install")

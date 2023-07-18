@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Salmon(CMakePackage):
 
     homepage = "https://combine-lab.github.io/salmon/"
     url = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("1.9.0", sha256="450d953a5c43fe63fd745733f478d3fbaf24d926cb52731fd38ee21c4990d613")
     version("1.4.0", sha256="6d3e25387450710f0aa779a1e9aaa9b4dec842324ff8551d66962d7c7606e71d")
@@ -85,6 +85,15 @@ class Salmon(CMakePackage):
             when="@{0}".format(ver),
         )
 
+    # `%gcc13:` requires `<cstdint>` to be manually included. Fixed upstream,
+    # so we patch to allow building of previous salmon versions
+    patch(
+        "https://github.com/COMBINE-lab/salmon/commit/ffb2a11.patch?full_index=1",
+        sha256="5ed3512bae665c1d72002911ab9ee6d213f10df63019ebd9e8e0ecde03823a73",
+        when="@:1.10.1%gcc@13:",
+        level=1,
+    )
+
     def patch(self):
         # remove static linking to libstdc++
         filter_file("-static-libstdc++", "", "CMakeLists.txt", string=True)
@@ -113,8 +122,6 @@ class Salmon(CMakePackage):
             filter_file("curl -k.*", "", "scripts/fetchPufferfish.sh")
 
     def cmake_args(self):
-        args = [
-            "-DBOOST_ROOT=%s" % self.spec["boost"].prefix,
-        ]
+        args = ["-DBOOST_ROOT=%s" % self.spec["boost"].prefix]
 
         return args

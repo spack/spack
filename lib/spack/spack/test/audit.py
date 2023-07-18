@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ import spack.config
         (["wrong-variant-in-depends-on"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a GitHub patch URL without full_index=1
         (["invalid-github-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
-        # This package has a stand-alone 'test' method in build-time callbacks
+        # This package has a stand-alone 'test*' method in build-time callbacks
         (["fail-test-audit"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has no issues
         (["mpileaks"], None),

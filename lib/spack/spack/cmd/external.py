@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from __future__ import print_function
-
 import argparse
 import errno
 import os
@@ -38,12 +36,13 @@ def setup_parser(subparser):
         default=False,
         help="packages with detected externals won't be built with Spack",
     )
+    find_parser.add_argument("--exclude", action="append", help="packages to exclude from search")
     find_parser.add_argument(
         "-p",
         "--path",
         default=None,
         action="append",
-        help="Alternative search paths for finding externals. May be repeated",
+        help="one or more alternative search paths for finding externals",
     )
     find_parser.add_argument(
         "--scope",
@@ -67,16 +66,20 @@ def setup_parser(subparser):
 
     read_cray_manifest = sp.add_parser(
         "read-cray-manifest",
-        help=(
-            "consume a Spack-compatible description of externally-installed "
-            "packages, including dependency relationships"
-        ),
+        help="consume a Spack-compatible description of externally-installed packages, including "
+        "dependency relationships",
     )
     read_cray_manifest.add_argument(
         "--file", default=None, help="specify a location other than the default"
     )
     read_cray_manifest.add_argument(
         "--directory", default=None, help="specify a directory storing a group of manifest files"
+    )
+    read_cray_manifest.add_argument(
+        "--ignore-default-dir",
+        action="store_true",
+        default=False,
+        help="ignore the default directory of manifest files",
     )
     read_cray_manifest.add_argument(
         "--dry-run",
@@ -87,7 +90,7 @@ def setup_parser(subparser):
     read_cray_manifest.add_argument(
         "--fail-on-error",
         action="store_true",
-        help=("if a manifest file cannot be parsed, fail and report the " "full stack trace"),
+        help="if a manifest file cannot be parsed, fail and report the full stack trace",
     )
 
 
@@ -106,14 +109,14 @@ def external_find(args):
             # For most exceptions, just print a warning and continue.
             # Note that KeyboardInterrupt does not subclass Exception
             # (so CTRL-C will terminate the program as expected).
-            skip_msg = "Skipping manifest and continuing with other external " "checks"
+            skip_msg = "Skipping manifest and continuing with other external checks"
             if (isinstance(e, IOError) or isinstance(e, OSError)) and e.errno in [
                 errno.EPERM,
                 errno.EACCES,
             ]:
                 # The manifest file does not have sufficient permissions enabled:
                 # print a warning and keep going
-                tty.warn("Unable to read manifest due to insufficient " "permissions.", skip_msg)
+                tty.warn("Unable to read manifest due to insufficient permissions.", skip_msg)
             else:
                 tty.warn("Unable to read manifest, unexpected error: {0}".format(str(e)), skip_msg)
 
@@ -151,6 +154,10 @@ def external_find(args):
     if not args.tags and not pkg_cls_to_check:
         pkg_cls_to_check = list(spack.repo.path.all_package_classes())
 
+    # If the user specified any packages to exclude from external find, add them here
+    if args.exclude:
+        pkg_cls_to_check = [pkg for pkg in pkg_cls_to_check if pkg.name not in args.exclude]
+
     detected_packages = spack.detection.by_executable(pkg_cls_to_check, path_hints=args.path)
     detected_packages.update(spack.detection.by_library(pkg_cls_to_check, path_hints=args.path))
 
@@ -159,7 +166,7 @@ def external_find(args):
     )
     if new_entries:
         path = spack.config.config.get_config_filename(args.scope, "packages")
-        msg = "The following specs have been detected on this system " "and added to {0}"
+        msg = "The following specs have been detected on this system and added to {0}"
         tty.msg(msg.format(path))
         spack.cmd.display_specs(new_entries)
     else:
@@ -172,13 +179,17 @@ def external_read_cray_manifest(args):
         manifest_directory=args.directory,
         dry_run=args.dry_run,
         fail_on_error=args.fail_on_error,
+        ignore_default_dir=args.ignore_default_dir,
     )
 
 
 def _collect_and_consume_cray_manifest_files(
-    manifest_file=None, manifest_directory=None, dry_run=False, fail_on_error=False
+    manifest_file=None,
+    manifest_directory=None,
+    dry_run=False,
+    fail_on_error=False,
+    ignore_default_dir=False,
 ):
-
     manifest_files = []
     if manifest_file:
         manifest_files.append(manifest_file)
@@ -187,7 +198,7 @@ def _collect_and_consume_cray_manifest_files(
     if manifest_directory:
         manifest_dirs.append(manifest_directory)
 
-    if os.path.isdir(cray_manifest.default_path):
+    if not ignore_default_dir and os.path.isdir(cray_manifest.default_path):
         tty.debug(
             "Cray manifest path {0} exists: collecting all files to read.".format(
                 cray_manifest.default_path
@@ -223,7 +234,7 @@ def _collect_and_consume_cray_manifest_files(
             if fail_on_error:
                 raise
             else:
-                tty.warn("Failure reading manifest file: {0}" "\n\t{1}".format(path, str(e)))
+                tty.warn("Failure reading manifest file: {0}\n\t{1}".format(path, str(e)))
 
 
 def external_list(args):

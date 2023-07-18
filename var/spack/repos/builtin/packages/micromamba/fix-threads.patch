@@ -1,0 +1,19 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -13,6 +13,16 @@ cmake_policy(SET CMP0077 NEW)
+ #  cmake_policy(SET CMP0028 NEW)
+ #endif()
+ 
++# https://stackoverflow.com/questions/54587052/cmake-on-mac-could-not-find-threads-missing-threads-found
++# assume built-in pthreads on Unix
++IF(UNIX)
++    set(CMAKE_THREAD_LIBS_INIT "-lpthread")
++    set(CMAKE_HAVE_THREADS_LIBRARY 1)
++    set(CMAKE_USE_WIN32_THREADS_INIT 0)
++    set(CMAKE_USE_PTHREADS_INIT 1)
++    set(THREADS_PREFER_PTHREAD_FLAG ON)
++ENDIF()
++
+ project(mamba)
+ 
+ # Build options

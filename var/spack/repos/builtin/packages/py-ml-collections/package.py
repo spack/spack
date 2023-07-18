@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,5 +22,3 @@ class PyMlCollections(PythonPackage):
     depends_on("py-absl-py", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
     depends_on("py-contextlib2", type=("build", "run"))
-    depends_on("py-dataclasses", type=("build", "run"), when="^python@:3.6")
-    depends_on("py-typing", type=("build", "run"), when="^python@:3.4")

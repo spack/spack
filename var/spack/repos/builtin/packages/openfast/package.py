@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,13 @@ class Openfast(CMakePackage):
     homepage = "https://openfast.readthedocs.io/en/latest/"
     git = "https://github.com/OpenFAST/openfast.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers("jrood-nrel")
 
     version("develop", branch="dev")
     version("master", branch="main")
+    version("3.4.1", tag="v3.4.1")
+    version("3.4.0", tag="v3.4.0")
+    version("3.3.0", tag="v3.3.0")
     version("3.2.1", tag="v3.2.1")
     version("3.2.0", tag="v3.2.0")
     version("3.1.0", tag="v3.1.0")
@@ -98,18 +101,10 @@ class Openfast(CMakePackage):
                 options.extend([self.define("NETCDF_ROOT", spec["netcdf-c"].prefix)])
 
         if "~shared" in spec:
-            options.extend(
-                [
-                    self.define("HDF5_USE_STATIC_LIBRARIES", True),
-                ]
-            )
+            options.extend([self.define("HDF5_USE_STATIC_LIBRARIES", True)])
 
         if "+openmp" in spec:
-            options.extend(
-                [
-                    self.define("OPENMP", True),
-                ]
-            )
+            options.extend([self.define("OPENMP", True)])
 
         return options
 

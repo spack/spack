@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -89,7 +89,7 @@ def test_stage_with_env_inside_env(mutable_mock_env_path, monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "do_stage", fake_stage)
 
     e = ev.create("test")
-    e.add("mpileaks@100.100")
+    e.add("mpileaks@=100.100")
     e.concretize()
 
     with e:
@@ -101,7 +101,7 @@ def test_stage_full_env(mutable_mock_env_path, monkeypatch):
     """Verify that stage filters specs in environment."""
 
     e = ev.create("test")
-    e.add("mpileaks@100.100")
+    e.add("mpileaks@=100.100")
     e.concretize()
 
     # list all the package names that should be staged

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,15 +25,15 @@ def setup_parser(subparser):
         "--installed",
         action="store_true",
         default=False,
-        help="List installed dependents of an installed spec, "
-        "instead of possible dependents of a package.",
+        help="list installed dependents of an installed spec "
+        "instead of possible dependents of a package",
     )
     subparser.add_argument(
         "-t",
         "--transitive",
         action="store_true",
         default=False,
-        help="Show all transitive dependents.",
+        help="show all transitive dependents",
     )
     arguments.add_common_arguments(subparser, ["spec"])
 

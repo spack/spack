@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,18 +7,79 @@ import os
 
 from spack.package import *
 
-_os_map = {
+_os_map_before_23 = {
     "ubuntu18.04": "Ubuntu-18.04",
     "ubuntu20.04": "Ubuntu-20.04",
+    "ubuntu22.04": "Ubuntu-20.04",
     "sles15": "SLES-15",
     "centos7": "RHEL-7",
     "centos8": "RHEL-8",
+    "rhel7": "RHEL-7",
+    "rhel8": "RHEL-8",
     "rocky8": "RHEL-8",
     "amzn2": "RHEL-7",
+    "amzn2023": "RHEL-7",
 }
 
+_os_map = {
+    "ubuntu20.04": "Ubuntu-20.04",
+    "ubuntu22.04": "Ubuntu-22.04",
+    "sles15": "SLES-15",
+    "centos7": "RHEL-7",
+    "centos8": "RHEL-8",
+    "rhel7": "RHEL-7",
+    "rhel8": "RHEL-8",
+    "rhel9": "RHEL-9",
+    "rocky8": "RHEL-8",
+    "amzn2": "AmazonLinux-2",
+    "amzn2023": "AmazonLinux-2023",
+}
 
 _versions = {
+    "23.04.1_gcc-12.2": {
+        "RHEL-7": ("789cc093cb7e0d9294aff0fdf94b74987435a09cdff4c1b7118a03350548d03c"),
+        "RHEL-8": ("1b668baec6d3df2d48c5aedc70baa6a9b638983b94bf2cd58d378859a1da49f0"),
+        "RHEL-9": ("8a4d7aec2fe109aedcb9e8fdec566dc1ba3adcb3ba79e5c08b78b9717578db1c"),
+        "SLES-15": ("9c8aa114907d3ac9311301b991d732d535422e73516e0f337395637ce6a14c4a"),
+        "Ubuntu-20.04": ("c0a67afb6989b2bdb172052ff7d20a9e3197356714df06c862edd3ac71ef62f0"),
+        "Ubuntu-22.04": ("02e59d834c341164f5acf633555024bf614726aed8a85c1b0b46d024ce7840e2"),
+        "AmazonLinux-2": ("1cbb9a3d777353b42bfb5af327419c231640e7744ab46ab3a13e97802b1ce227"),
+        "AmazonLinux-2023": ("ee9b0b6ee0d881280e473390007020504a147b75bf6076d245832f101b01653e"),
+    },
+    "23.04.1_gcc-11.3": {
+        "RHEL-7": ("522e0269ca03d6251c10ee3aa8d94ceec4618887f47847defb535849434439a5"),
+        "RHEL-8": ("00f6fee4ba4bbff5be6d5ad34137973ab89505fc61a23d8e0c302b8860c70484"),
+        "RHEL-9": ("2402165267b25d07fd64b6d444b3120354dfd27594b11a1f082e85e76465e712"),
+        "SLES-15": ("a928539efe5af760fc86a009e3d87c9648e4d4e91490c13bc136a837591549c3"),
+        "Ubuntu-20.04": ("5754d8a6040bb6d0b1df326c9ab61901a72e5cc6d2d4195e52ca9271e55fb9f6"),
+        "Ubuntu-22.04": ("8af5aca7512a604b051a7808701a5c0285e92d88232138612d8caf973b7b1252"),
+        "AmazonLinux-2": ("8c710cb7bb21694130b915cc2650cfb85fb00cfca7e5fca9bbdec5c59a09c007"),
+        "AmazonLinux-2023": ("8b9c69a72c5b1ed5814e28ddd122ab09dbe5dd3585e4c395242ed590eea6ea79"),
+    },
+    "23.04.1_gcc-10.2": {
+        "RHEL-7": ("40d62517bd978516c308b2e57ab88772699fd8bb579d98bbc10ea397c0bab431"),
+        "RHEL-8": ("76554ea1f3d143f1236afea67e33eea74660f57718ef57c12986843da75e03d3"),
+        "SLES-15": ("63a6acb00300a9e85cfafd2141515ecb28dac82c1f441778d74e8add038724e2"),
+        "Ubuntu-20.04": ("7b6bcb8d1b9ca8be2d29e7620862fa961d965f479fa04873616ac8cc9bb399fc"),
+        "AmazonLinux-2": ("c6410ce2c109ae72568186bb7e162fcf4a9b05ea89da36d17db695b7df34f506"),
+    },
+    "23.04.1_gcc-9.3": {
+        "RHEL-7": ("782bbc27c77c230426086c226a78b8951501066d631947438e65ca51d33f24c3"),
+        "RHEL-8": ("8d3be6381b3e5032c5068a1d2e3d0e69c308a93496f85af42d43a579f9f7d9a3"),
+        "SLES-15": ("abe2245674a66ec93cff3c93dac7ae04a99c6c7e43e2733de214ec188e0d6cae"),
+        "Ubuntu-20.04": ("a7d385b901f2d1c07f243c816030ad19543e00667615dea1969ce16d29759271"),
+        "AmazonLinux-2": ("7113b6e2c795933ce8d18d468889168732d3a52a0df4a48ef4bf4497e891083a"),
+    },
+    "23.04.1_gcc-8.2": {
+        "RHEL-7": ("4e077813121c1cbd8abd1afe5348cafcce5b70f96affa725c7c2d8671e2d5eed"),
+        "RHEL-8": ("772aaab9304191e3a398cba2dec21ec22fd0abadcaf44d44f32114968bd3b59d"),
+        "SLES-15": ("33766ac351fb4628c6b39f16d6bdb310ad09d88b6a6f43740349405c960d4d21"),
+        "AmazonLinux-2": ("c215ed8de77b5144a60b6552f79ef2b59ccbfac5350f083ef135305ddf643a4e"),
+    },
+    "23.04.1_gcc-7.5": {
+        "RHEL-7": ("7b2239b2ce5315e1be14dbd8fe15aff2d3b07968d64b5c80c8ab57140b6a17a8"),
+        "AmazonLinux-2": ("a2e0f176df627c50f851924ac57994f582f63b0f3d42ad0b65c915ea04dc0467"),
+    },
     "22.1_gcc-11.2": {
         "RHEL-7": ("9ce7858525109cca8f4e1d533113b6410d55f10cc4db16c4742562da87a32f2b"),
         "RHEL-8": ("24f9f4496e41c2314d4ace25b6e3d63127bd586ff7bdd8a732471cbc65a8023e"),
@@ -115,24 +176,29 @@ _versions = {
 }
 
 
-def get_os():
+def get_os(ver):
     spack_os = spack.platforms.host().default_os
-    return _os_map.get(spack_os, "RHEL-7")
+    if ver.startswith("22."):
+        return _os_map_before_23.get(spack_os, "")
+    else:
+        return _os_map.get(spack_os, "RHEL-7")
 
 
 def get_package_url(version):
-    os = get_os()
-    os_no_dash = get_os().replace("-", "")
-    os_lower = os.split(".")[0].lower()
     base_url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/"
     armpl_version = version.split("_")[0]
     armpl_version_dashed = armpl_version.replace(".", "-")
     gcc_version = version.split("_")[1]
+    os = get_os(armpl_version)
     filename = "arm-performance-libraries_" + armpl_version + "_" + os + "_" + gcc_version + ".tar"
-    if armpl_version == "22.1":
-        return base_url + armpl_version_dashed + "/" + os_lower + "/" + filename
+    os_short = ""
+    if armpl_version.startswith("22.0."):
+        os_short = os.replace("-", "")
     else:
-        return base_url + armpl_version_dashed + "/" + os_no_dash + "/" + filename
+        os_short = os.split(".")[0].lower()
+        if "amazonlinux" in os_short:
+            os_short = os_short.replace("amazonlinux", "al")
+    return base_url + armpl_version_dashed + "/" + os_short + "/" + filename
 
 
 def get_armpl_prefix(spec):
@@ -144,12 +210,12 @@ class ArmplGcc(Package):
     high-performance computing applications on Arm processors."""
 
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries"
-    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/22-1/ubuntu-20/arm-performance-libraries_22.1_Ubuntu-20.04_gcc-11.2.tar"
+    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/23-04-1/ubuntu-22/arm-performance-libraries_23.04.1_Ubuntu-22.04_gcc-12.2.tar"
 
-    maintainers = ["annop-w"]
+    maintainers("annop-w")
 
     for ver, packages in _versions.items():
-        key = "{0}".format(get_os())
+        key = "{0}".format(get_os(ver))
         sha256sum = packages.get(key)
         url = get_package_url(ver)
         if sha256sum:
@@ -158,6 +224,13 @@ class ArmplGcc(Package):
     conflicts("target=x86:", msg="Only available on Aarch64")
     conflicts("target=ppc64:", msg="Only available on Aarch64")
     conflicts("target=ppc64le:", msg="Only available on Aarch64")
+
+    conflicts("%gcc@:11", when="@23.04.1_gcc-12.2")
+    conflicts("%gcc@:10", when="@23.04.1_gcc-11.3")
+    conflicts("%gcc@:9", when="@23.04.1_gcc-10.2")
+    conflicts("%gcc@:8", when="@23.04.1_gcc-9.3")
+    conflicts("%gcc@:7", when="@23.04.1_gcc-8.2")
+    conflicts("%gcc@:6", when="@23.04.1_gcc-7.5")
 
     conflicts("%gcc@:10", when="@22.1_gcc-11.2")
     conflicts("%gcc@:9", when="@22.1_gcc-10.2")
@@ -196,28 +269,35 @@ class ArmplGcc(Package):
         if self.compiler.name != "gcc":
             raise spack.error.SpackError(("Only compatible with GCC.\n"))
 
-        armpl_version = "{}".format(spec.version.up_to(3)).split("_")[0]
-        exe = Executable("./arm-performance-libraries_{0}_{1}.sh".format(armpl_version, get_os()))
+        with when("@:22"):
+            armpl_version = "{}".format(spec.version.up_to(3)).split("_")[0]
+        with when("@23:"):
+            armpl_version = "{}".format(spec.version).split("_")[0]
+
+        exe = Executable(
+            "./arm-performance-libraries_{0}_{1}.sh".format(armpl_version, get_os(armpl_version))
+        )
         exe("--accept", "--force", "--install-to", prefix)
 
     @property
-    def blas_libs(self):
+    def lib_suffix(self):
+        suffix = ""
+        suffix += "_ilp64" if self.spec.satisfies("+ilp64") else ""
+        suffix += "_mp" if self.spec.satisfies("threads=openmp") else ""
+        return suffix
 
+    @property
+    def blas_libs(self):
         armpl_prefix = get_armpl_prefix(self.spec)
 
-        shared = True if "+shared" in self.spec else False
-        if "+ilp64" in self.spec and self.spec.satisfies("threads=openmp"):
-            libname = "libarmpl_ilp64_mp"
-        elif "+ilp64" in self.spec:
-            libname = "libarmpl_ilp64"
-        elif self.spec.satisfies("threads=openmp"):
-            libname = "libarmpl_mp"
-        else:
-            libname = "libarmpl"
+        libname = "libarmpl" + self.lib_suffix
 
         # Get ArmPL Lib
         armpl_libs = find_libraries(
-            [libname, "libamath", "libastring"], root=armpl_prefix, shared=shared, recursive=True
+            [libname, "libamath", "libastring"],
+            root=armpl_prefix,
+            shared=self.spec.satisfies("+shared"),
+            recursive=True,
         )
 
         armpl_libs += find_system_libraries(["libm"])
@@ -239,11 +319,9 @@ class ArmplGcc(Package):
     @property
     def headers(self):
         armpl_dir = get_armpl_prefix(self.spec)
-        suffix = "include"
-        if self.spec.satisfies("+ilp64"):
-            suffix += "_ilp64"
-        if self.spec.satisfies("threads=openmp"):
-            suffix += "_mp"
+
+        suffix = "include" + self.lib_suffix
+
         incdir = join_path(armpl_dir, suffix)
 
         hlist = find_all_headers(incdir)
@@ -253,3 +331,28 @@ class ArmplGcc(Package):
     def setup_run_environment(self, env):
         armpl_dir = get_armpl_prefix(self.spec)
         env.prepend_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
+
+    @run_after("install")
+    def check_install(self):
+        armpl_dir = get_armpl_prefix(self.spec)
+        armpl_example_dir = join_path(armpl_dir, "examples")
+        # run example makefile
+        make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir)
+        # clean up
+        make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir, "clean")
+
+    @run_after("install")
+    def make_pkgconfig_files(self):
+        if self.spec.satisfies("@:22"):
+            # ArmPL pkgconfig files do not have .pc extension and are thus not found by pkg-config
+            armpl_dir = get_armpl_prefix(self.spec)
+            for f in find(join_path(armpl_dir, "pkgconfig"), "*"):
+                symlink(f, f + ".pc")
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        armpl_dir = get_armpl_prefix(self.spec)
+        if self.spec.satisfies("@:22"):
+            # pkgconfig directory is not in standard ("lib", "lib64", "share") location
+            env.append_path("PKG_CONFIG_PATH", join_path(armpl_dir, "pkgconfig"))
+        else:
+            env.append_path("PKG_CONFIG_PATH", join_path(armpl_dir, "lib/pkgconfig"))

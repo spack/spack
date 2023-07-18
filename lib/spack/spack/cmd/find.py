@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import copy
 import sys
@@ -31,6 +29,14 @@ def setup_parser(subparser):
         action="store",
         default=None,
         help="output specs with the specified format string",
+    )
+    format_group.add_argument(
+        "-H",
+        "--hashes",
+        action="store_const",
+        dest="format",
+        const="{/hash}",
+        help="same as '--format {/hash}'; use with xargs or $()",
     )
     format_group.add_argument(
         "--json",
@@ -140,13 +146,6 @@ def setup_parser(subparser):
 
     subparser.add_argument("--start-date", help="earliest date of installation [YYYY-MM-DD]")
     subparser.add_argument("--end-date", help="latest date of installation [YYYY-MM-DD]")
-    subparser.add_argument(
-        "-b",
-        "--bootstrap",
-        action="store_true",
-        help="show software in the internal bootstrap store",
-    )
-
     arguments.add_common_arguments(subparser, ["constraint"])
 
 
@@ -251,23 +250,6 @@ def display_env(env, args, decorator, results):
 
 
 def find(parser, args):
-    if args.bootstrap:
-        tty.warn(
-            "`spack find --bootstrap` is deprecated and will be removed in v0.19.",
-            "Use `spack --bootstrap find` instead.",
-        )
-
-    if args.bootstrap:
-        bootstrap_store_path = spack.bootstrap.store_path()
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            msg = 'Showing internal bootstrap store at "{0}"'
-            tty.msg(msg.format(bootstrap_store_path))
-            _find(parser, args)
-        return
-    _find(parser, args)
-
-
-def _find(parser, args):
     q_args = query_arguments(args)
     results = args.specs(**q_args)
 

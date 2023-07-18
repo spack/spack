@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,6 @@ class Sox(AutotoolsPackage):
 
     depends_on("bzip2")
     depends_on("flac")
-    depends_on("id3lib")
     depends_on("libvorbis")
     depends_on("opus")
     depends_on("lame", when="+mp3")

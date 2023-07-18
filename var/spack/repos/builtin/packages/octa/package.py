@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Octa(AutotoolsPackage):
 
     version(
         "8.4",
-        "b76d25f333fef76601bfe8262e9a748154280d5408ea823fa6530a6f3f86b51b",
+        sha256="b76d25f333fef76601bfe8262e9a748154280d5408ea823fa6530a6f3f86b51b",
         extension="tar.gz",
     )
 

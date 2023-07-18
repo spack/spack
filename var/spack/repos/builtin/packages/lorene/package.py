@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Lorene(MakefilePackage):
     homepage = "https://lorene.obspm.fr/index.html"
     cvs = ":pserver:anonymous:anonymous@octane.obspm.fr:/cvsroot%module=Lorene"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("2021.4.22", date="2021-04-22")
 
@@ -106,7 +106,7 @@ class Lorene(MakefilePackage):
                     "init_bin_regu",
                     "analyse",
                     "prepare_seq",
-                    *args
+                    *args,
                 )
 
     def install(self, spec, prefix):

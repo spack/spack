@@ -1,11 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import io
 import sys
-
-import six
 
 import llnl.util.tty.colify as colify
 
@@ -18,9 +17,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.epilog = (
-        "If called without argument returns " "the list of all valid virtual packages"
-    )
+    subparser.epilog = "If called without argument returns the list of all valid virtual packages"
     subparser.add_argument(
         "virtual_package", nargs="*", help="find packages that provide this virtual package"
     )
@@ -29,7 +26,7 @@ def setup_parser(subparser):
 def providers(parser, args):
     valid_virtuals = sorted(spack.repo.path.provider_index.providers.keys())
 
-    buffer = six.StringIO()
+    buffer = io.StringIO()
     isatty = sys.stdout.isatty()
     if isatty:
         buffer.write("Virtual packages:\n")

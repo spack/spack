@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,7 +54,7 @@ class PySip(PythonPackage):
             return "https://www.riverbankcomputing.com/hg/sip/archive/{0}.tar.gz".format(
                 version.dotted
             )
-        return super(PySip, self).url_for_version(version)
+        return super().url_for_version(version)
 
     @when("@:4")
     def install(self, spec, prefix):

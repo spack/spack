@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ from spack.package import *
 _versions = [
     # LAPACK++,     BLAS++
     ["master", "master"],
+    ["2023.06.00", "2023.06.00"],
     ["2022.07.00", "2022.07.00"],
     ["2022.05.00", "2022.05.00"],
     ["2020.10.00", "2020.10.00"],
@@ -25,12 +26,15 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     by the Innovative Computing Laboratory at the University of Tennessee,
     Knoxville."""
 
-    homepage = "https://bitbucket.org/icl/lapackpp"
+    homepage = "https://github.com/icl-utk-edu/lapackpp"
     git = homepage
-    url = "https://bitbucket.org/icl/lapackpp/downloads/lapackpp-2020.09.00.tar.gz"
-    maintainers = ["teonnik", "Sely85", "G-Ragghianti", "mgates3"]
+    url = "https://github.com/icl-utk-edu/lapackpp/releases/download/v2023.01.00/lapackpp-2023.01.00.tar.gz"
+    maintainers("teonnik", "Sely85", "G-Ragghianti", "mgates3")
 
     version("master", branch="master")
+    version(
+        "2023.06.00", sha256="93df8392c859071120e00239feb96a0e060c0bb5176ee3a4f03eb9777c4edead"
+    )
     version(
         "2022.07.00", sha256="11e59efcc7ea0764a2bfc0e0f7b1abf73cee2943c1df11a19601780641a9aa18"
     )
@@ -53,7 +57,7 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared library")
 
     # Match each LAPACK++ version to a specific BLAS++ version
-    for (lpp_ver, bpp_ver) in _versions:
+    for lpp_ver, bpp_ver in _versions:
         depends_on("blaspp@" + bpp_ver, when="@" + lpp_ver)
 
     depends_on("blaspp ~cuda", when="~cuda")
@@ -93,8 +97,8 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
 
     def check(self):
         # If the tester fails to build, ensure that the check() fails.
-        if os.path.isfile(join_path(self.build_directory, "test", "tester")):
-            with working_dir(self.build_directory):
+        if os.path.isfile(join_path(self.builder.build_directory, "test", "tester")):
+            with working_dir(self.builder.build_directory):
                 make("check")
         else:
             raise Exception("The tester was not built!")

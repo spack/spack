@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,6 @@ import socket
 import sys
 import time
 from datetime import datetime
-from typing import Dict, Tuple  # novm
 
 import llnl.util.tty as tty
 from llnl.util.lang import pretty_seconds
@@ -40,7 +39,7 @@ __all__ = [
 true_fn = lambda: True
 
 
-class OpenFile(object):
+class OpenFile:
     """Record for keeping track of open lockfiles (with reference counting).
 
     There's really only one ``OpenFile`` per inode, per process, but we record the
@@ -54,7 +53,7 @@ class OpenFile(object):
         self.refs = 0
 
 
-class OpenFileTracker(object):
+class OpenFileTracker:
     """Track open lockfiles, to minimize number of open file descriptors.
 
     The ``fcntl`` locks that Spack uses are associated with an inode and a process.
@@ -81,7 +80,7 @@ class OpenFileTracker(object):
 
     def __init__(self):
         """Create a new ``OpenFileTracker``."""
-        self._descriptors = {}  # type: Dict[Tuple[int, int], OpenFile]
+        self._descriptors = {}
 
     def get_fh(self, path):
         """Get a filehandle for a lockfile.
@@ -103,7 +102,7 @@ class OpenFileTracker(object):
         try:
             # see whether we've seen this inode/pid before
             stat = os.stat(path)
-            key = (stat.st_ino, pid)
+            key = (stat.st_dev, stat.st_ino, pid)
             open_file = self._descriptors.get(key)
 
         except OSError as e:
@@ -129,31 +128,31 @@ class OpenFileTracker(object):
 
             # if we just created the file, we'll need to get its inode here
             if not stat:
-                inode = os.fstat(fd).st_ino
-                key = (inode, pid)
+                stat = os.fstat(fd)
+                key = (stat.st_dev, stat.st_ino, pid)
 
             self._descriptors[key] = open_file
 
         open_file.refs += 1
         return open_file.fh
 
-    def release_fh(self, path):
-        """Release a filehandle, only closing it if there are no more references."""
-        try:
-            inode = os.stat(path).st_ino
-        except OSError as e:
-            if e.errno != errno.ENOENT:  # only handle file not found
-                raise
-            inode = None  # this will not be in self._descriptors
-
-        key = (inode, os.getpid())
+    def release_by_stat(self, stat):
+        key = (stat.st_dev, stat.st_ino, os.getpid())
         open_file = self._descriptors.get(key)
-        assert open_file, "Attempted to close non-existing lock path: %s" % path
+        assert open_file, "Attempted to close non-existing inode: %s" % stat.st_inode
 
         open_file.refs -= 1
         if not open_file.refs:
             del self._descriptors[key]
             open_file.fh.close()
+
+    def release_by_fh(self, fh):
+        self.release_by_stat(os.fstat(fh.fileno()))
+
+    def purge(self):
+        for key in list(self._descriptors.keys()):
+            self._descriptors[key].fh.close()
+            del self._descriptors[key]
 
 
 #: Open file descriptors for locks in this process. Used to prevent one process
@@ -170,7 +169,7 @@ def _attempts_str(wait_time, nattempts):
     return " after {} and {}".format(pretty_seconds(wait_time), attempts)
 
 
-class LockType(object):
+class LockType:
     READ = 0
     WRITE = 1
 
@@ -193,7 +192,7 @@ class LockType(object):
         return op == LockType.READ or op == LockType.WRITE
 
 
-class Lock(object):
+class Lock:
     """This is an implementation of a filesystem lock using Python's lockf.
 
     In Python, ``lockf`` actually calls ``fcntl``, so this should work with
@@ -432,8 +431,7 @@ class Lock(object):
 
         """
         fcntl.lockf(self._file, fcntl.LOCK_UN, self._length, self._start, os.SEEK_SET)
-
-        file_tracker.release_fh(self.path)
+        file_tracker.release_by_fh(self._file)
         self._file = None
         self._reads = 0
         self._writes = 0
@@ -683,7 +681,7 @@ class Lock(object):
         )
 
 
-class LockTransaction(object):
+class LockTransaction:
     """Simple nested transaction context manager that uses a file lock.
 
     Arguments:
@@ -772,7 +770,7 @@ class LockDowngradeError(LockError):
 
     def __init__(self, path):
         msg = "Cannot downgrade lock from write to read on file: %s" % path
-        super(LockDowngradeError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class LockLimitError(LockError):
@@ -784,7 +782,7 @@ class LockTimeoutError(LockError):
 
     def __init__(self, lock_type, path, time, attempts):
         fmt = "Timed out waiting for a {} lock after {}.\n    Made {} {} on file: {}"
-        super(LockTimeoutError, self).__init__(
+        super().__init__(
             fmt.format(
                 lock_type,
                 pretty_seconds(time),
@@ -800,7 +798,7 @@ class LockUpgradeError(LockError):
 
     def __init__(self, path):
         msg = "Cannot upgrade lock from read to write on file: %s" % path
-        super(LockUpgradeError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class LockPermissionError(LockError):
@@ -812,7 +810,7 @@ class LockROFileError(LockPermissionError):
 
     def __init__(self, path):
         msg = "Can't take write lock on read-only file: %s" % path
-        super(LockROFileError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class CantCreateLockError(LockPermissionError):
@@ -821,4 +819,4 @@ class CantCreateLockError(LockPermissionError):
     def __init__(self, path):
         msg = "cannot create lock '%s': " % path
         msg += "file does not exist and location is not writable"
-        super(LockError, self).__init__(msg)
+        super().__init__(msg)

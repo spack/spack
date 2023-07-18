@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,6 @@ import os
 import shutil
 
 from spack.package import *
-from spack.pkg.builtin.boost import Boost
 
 
 class RangeV3(CMakePackage):
@@ -20,7 +19,7 @@ class RangeV3(CMakePackage):
     homepage = "https://github.com/ericniebler/range-v3"
     url = "https://github.com/ericniebler/range-v3/archive/0.3.6.tar.gz"
     git = "https://github.com/ericniebler/range-v3.git"
-    maintainers = ["chissg"]
+    maintainers("greenc-FNAL")
 
     version("master", branch="master")
     version("0.11.0", sha256="376376615dbba43d3bef75aa590931431ecb49eb36d07bb726a19f680c75e20c")
@@ -66,13 +65,16 @@ class RangeV3(CMakePackage):
 
     depends_on("cmake@3.6:", type="build")
     depends_on("doxygen+graphviz", type="build", when="+doc")
-    depends_on("boost@1.59.0: cxxstd=14", type="build", when="+examples cxxstd=14")
-    depends_on("boost@1.59.0: cxxstd=17", type="build", when="+examples cxxstd=17")
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, type="build")
+    depends_on(
+        "boost+date_time+program_options@1.59.0: cxxstd=14",
+        type="build",
+        when="+examples cxxstd=14",
+    )
+    depends_on(
+        "boost+date_time+program_options@1.59.0: cxxstd=17",
+        type="build",
+        when="+examples cxxstd=17",
+    )
 
     # Fix reported upstream issue
     # https://github.com/ericniebler/range-v3/issues/1196 per PR

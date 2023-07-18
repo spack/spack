@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,24 +12,14 @@ class TracyClient(CMakePackage):
 
     homepage = "https://github.com/wolfpld/tracy"
     url = "https://github.com/wolfpld/tracy/archive/v0.0.0.tar.gz"
-    maintainers = ["msimberg"]
+    maintainers("msimberg")
 
     version("master", git="https://github.com/wolfpld/tracy.git", branch="master")
     version("0.9", sha256="93a91544e3d88f3bc4c405bad3dbc916ba951cdaadd5fcec1139af6fa56e6bfc")
-    version(
-        "0.8.2",
-        sha256="4784eddd89c17a5fa030d408392992b3da3c503c872800e9d3746d985cfcc92a",
-    )
-    version(
-        "0.8.1",
-        sha256="004992012b2dc879a9f6d143cbf94d7ea30e88135db3ef08951605d214892891",
-    )
+    version("0.8.2", sha256="4784eddd89c17a5fa030d408392992b3da3c503c872800e9d3746d985cfcc92a")
+    version("0.8.1", sha256="004992012b2dc879a9f6d143cbf94d7ea30e88135db3ef08951605d214892891")
 
-    variant(
-        "shared",
-        default=True,
-        description="Build the client library as a shared library",
-    )
+    variant("shared", default=True, description="Build the client library as a shared library")
 
     tracy_options = {
         "enable": (True, "Enable profiling"),
@@ -38,10 +28,7 @@ class TracyClient(CMakePackage):
         "no_callstack": (False, "Disable all callstack related functionality"),
         "no_callstack_inlines": (False, "Disables the inline functions in callstacks"),
         "only_localhost": (False, "Only listen on the localhost interface"),
-        "no_broadcast": (
-            False,
-            "Disable client discovery by broadcast to local network",
-        ),
+        "no_broadcast": (False, "Disable client discovery by broadcast to local network"),
         "only_ipv4": (
             False,
             "Tracy will only accept connections on IPv4 addresses (disable IPv6)",
@@ -61,10 +48,7 @@ class TracyClient(CMakePackage):
             False,
             "Enable delayed initialization of the library (init on first call)",
         ),
-        "manual_lifetime": (
-            False,
-            "Enable the manual lifetime management of the profile",
-        ),
+        "manual_lifetime": (False, "Enable the manual lifetime management of the profile"),
         "fibers": (False, "Enable fibers support"),
         "no_crash_handler": (False, "Disable crash handling"),
         "timer_fallback": (False, "Use lower resolution timers"),

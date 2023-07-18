@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class H5cpp(CMakePackage):
     url = "https://github.com/steven-varga/h5cpp/archive/v1.10.4-5.tar.gz"
     git = "https://github.com/steven-varga/h5cpp.git"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("master", branch="master")
     version("1.10.4-6", sha256="4fbc8e777dc78a37ec2fe8c7b6a47114080ffe587f083e83a2046b5e794aef93")

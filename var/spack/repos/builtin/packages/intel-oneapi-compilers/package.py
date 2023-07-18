@@ -1,15 +1,57 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import platform
 
 import spack.compilers
 from spack.build_environment import dso_suffix
 from spack.package import *
 
-linux_versions = [
+versions = [
+    {
+        "version": "2023.2.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/748687b0-5a22-467c-86c6-c312fa0206b2/l_dpcpp-cpp-compiler_p_2023.2.0.49256_offline.sh",
+            "sha256": "21497b2dd2bc874794c2321561af313082725f61e3101e05a050f98b7351e08f",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/237236c4-434b-4576-96ac-020ceeb22619/l_fortran-compiler_p_2023.2.0.49254_offline.sh",
+            "sha256": "37c0ad6f0013512d98e385f8708ca29b23c45fddc9ec76069f1d93663668d511",
+        },
+    },
+    {
+        "version": "2023.1.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/89283df8-c667-47b0-b7e1-c4573e37bd3e/l_dpcpp-cpp-compiler_p_2023.1.0.46347_offline.sh",
+            "sha256": "3ac1c1179501a2646cbb052b05426554194573b4f8e2344d7699eed03fbcfa1d",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/150e0430-63df-48a0-8469-ecebff0a1858/l_fortran-compiler_p_2023.1.0.46348_offline.sh",
+            "sha256": "7639af4b6c928e9e3ba92297a054f78a55f4f4d0db9db0d144cc6653004e4f24",
+        },
+    },
+    {
+        "version": "2023.0.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/19123/l_dpcpp-cpp-compiler_p_2023.0.0.25393_offline.sh",
+            "sha256": "473eb019282c2735d65c6058f6890e60b79a5698ae18d2c1e4489fed8dd18a02",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/19105/l_fortran-compiler_p_2023.0.0.25394_offline.sh",
+            "sha256": "fd7525bf90646c8e43721e138f29c9c6f99e96dfe5648c13633f30ec64ac8b1b",
+        },
+    },
+    {
+        "version": "2022.2.1",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/19049/l_dpcpp-cpp-compiler_p_2022.2.1.16991_offline.sh",
+            "sha256": "3f0f02f9812a0cdf01922d2df9348910c6a4cb4f9dfe50fc7477a59bbb1f7173",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/18998/l_fortran-compiler_p_2022.2.1.16992_offline.sh",
+            "sha256": "64f1d1efbcdc3ac2182bec18313ca23f800d94f69758db83a1394490d9d4b042",
+        },
+    },
     {
         "version": "2022.2.0",
         "cpp": {
@@ -108,7 +150,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
@@ -123,20 +165,23 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 "%{0}".format(__compiler), msg="intel-oneapi-compilers must be installed with %gcc"
             )
 
-    if platform.system() == "Linux":
-        for v in linux_versions:
-            version(v["version"], expand=False, **v["cpp"])
-            resource(
-                name="fortran-installer",
-                placement="fortran-installer",
-                when="@{0}".format(v["version"]),
-                expand=False,
-                **v["ftn"]
-            )
+    for v in versions:
+        version(v["version"], expand=False, **v["cpp"])
+        resource(
+            name="fortran-installer",
+            placement="fortran-installer",
+            when="@{0}".format(v["version"]),
+            expand=False,
+            **v["ftn"],
+        )
 
     @property
     def component_dir(self):
         return "compiler"
+
+    @property
+    def compiler_search_prefix(self):
+        return self.prefix.compiler.join(str(self.version)).linux.bin
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
@@ -149,7 +194,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
         and from setting CC/CXX/F77/FC
         """
-        super(IntelOneapiCompilers, self).setup_run_environment(env)
+        super().setup_run_environment(env)
 
         env.set("CC", self.component_prefix.linux.bin.icx)
         env.set("CXX", self.component_prefix.linux.bin.icpx)
@@ -158,10 +203,10 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     def install(self, spec, prefix):
         # Copy instead of install to speed up debugging
-        # install_tree('/opt/intel/oneapi/compiler', self.prefix)
+        # install_tree("/opt/intel/oneapi/compiler", self.prefix)
 
         # install cpp
-        super(IntelOneapiCompilers, self).install(spec, prefix)
+        super().install(spec, prefix)
 
         # install fortran
         self.install_component(find("fortran-installer", "*")[0])

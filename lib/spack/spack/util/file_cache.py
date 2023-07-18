@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ from spack.error import SpackError
 from spack.util.lock import Lock, ReadTransaction, WriteTransaction
 
 
-class FileCache(object):
+class FileCache:
     """This class manages cached data in the filesystem.
 
     - Cache files are fetched and stored by unique keys.  Keys can be relative
@@ -126,7 +126,7 @@ class FileCache(object):
         # TODO: is pretty hard to reason about in llnl.util.lock. At some
         # TODO: point we should just replace it with functions and simplify
         # TODO: the locking code.
-        class WriteContextManager(object):
+        class WriteContextManager:
             def __enter__(cm):
                 cm.orig_filename = self.cache_path(key)
                 cm.orig_file = None
@@ -144,8 +144,7 @@ class FileCache(object):
                 cm.tmp_file.close()
 
                 if value:
-                    # remove tmp on exception & raise it
-                    shutil.rmtree(cm.tmp_filename, True)
+                    os.remove(cm.tmp_filename)
 
                 else:
                     rename(cm.tmp_filename, cm.orig_filename)

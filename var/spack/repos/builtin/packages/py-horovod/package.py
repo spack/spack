@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,12 @@ class PyHorovod(PythonPackage, CudaPackage):
     homepage = "https://github.com/horovod"
     git = "https://github.com/horovod/horovod.git"
 
-    maintainers = ["adamjstewart", "aweits", "tgaddair"]
+    maintainers("adamjstewart", "aweits", "tgaddair", "thomas-bouvier")
 
     version("master", branch="master", submodules=True)
+    version("0.28.1", tag="v0.28.1", submodules=True)
+    version("0.28.0", tag="v0.28.0", submodules=True)
+    version("0.27.0", tag="v0.27.0", submodules=True)
     version("0.26.1", tag="v0.26.1", submodules=True)
     version("0.26.0", tag="v0.26.0", submodules=True)
     version("0.25.0", tag="v0.25.0", submodules=True)
@@ -87,7 +90,6 @@ class PyHorovod(PythonPackage, CudaPackage):
     depends_on("py-psutil", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-six", type=("build", "run"), when="@:0.19")
-    depends_on("py-dataclasses", type=("build", "run"), when="@0.20: ^python@:3.6")
     depends_on("py-packaging", type=("build", "run"), when="@0.26:")
 
     # Framework dependencies
@@ -119,7 +121,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     depends_on("py-petastorm@0.9.8:", type=("build", "run"), when="frameworks=spark @0.21.1:")
     depends_on("py-petastorm@0.11:", type=("build", "run"), when="frameworks=spark @0.22:")
     depends_on("py-petastorm@0.12:", type=("build", "run"), when="frameworks=spark @0.26:")
-    depends_on("py-pyarrow@0.15.0:", type=("build", "run"), when="frameworks=spark")
+    depends_on("py-pyarrow@0.15.0:10", type=("build", "run"), when="frameworks=spark")
     depends_on("py-pyspark@2.3.2:", type=("build", "run"), when="frameworks=spark ^python@:3.7")
     depends_on("py-pyspark@3.0.0:", type=("build", "run"), when="frameworks=spark ^python@3.8:")
     depends_on("py-fsspec", type=("build", "run"), when="frameworks=spark @0.22.1:0.24.1")
@@ -160,7 +162,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     # Patch vendored copy of eigen to fix build on aarch64
     # https://github.com/horovod/horovod/issues/3605
     # https://gitlab.com/libeigen/eigen/-/commit/fd1dcb6b45a2c797ad4c4d6cc7678ee70763b4ed
-    patch("eigen.patch", when="@0.21: target=aarch64:")
+    patch("eigen.patch", when="@0.21:0.25 target=aarch64:")
 
     @property
     def import_modules(self):
@@ -273,6 +275,7 @@ class PyHorovod(PythonPackage, CudaPackage):
         else:
             env.set("HOROVOD_CPU_OPERATIONS", self.spec.variants["tensor_ops"].value.upper())
 
-    def test(self):
-        super(PyHorovod, self).test()
-        self.run_test(self.prefix.bin.horovodrun, "--check-build")
+    def test_check_build(self):
+        """run horovodrun --check-build"""
+        horovodrun = which(self.prefix.bin.horovodrun)
+        horovodrun("--check-build")

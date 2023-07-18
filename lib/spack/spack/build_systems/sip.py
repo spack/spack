@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import find, join_path, working_dir
 
 import spack.builder
+import spack.install_test
 import spack.package_base
 from spack.directives import build_system, depends_on, extends
 from spack.multimethod import when
@@ -30,8 +31,8 @@ class SIPPackage(spack.package_base.PackageBase):
     #: Name of private sip module to install alongside package
     sip_module = "sip"
 
-    #: Callback names for install-time test
-    install_time_test_callbacks = ["test"]
+    #: Callback names for install-time testing
+    install_time_test_callbacks = ["test_imports"]
     #: Legacy buildsystem attribute used to deserialize and install old specs
     legacy_buildsystem = "sip"
 
@@ -61,10 +62,7 @@ class SIPPackage(spack.package_base.PackageBase):
             list: list of strings of module names
         """
         modules = []
-        root = os.path.join(
-            self.prefix,
-            self.spec["python"].package.platlib,
-        )
+        root = os.path.join(self.prefix, self.spec["python"].package.platlib)
 
         # Some Python libraries are packages: collections of modules
         # distributed in directories containing __init__.py files
@@ -90,18 +88,20 @@ class SIPPackage(spack.package_base.PackageBase):
         """The python ``Executable``."""
         inspect.getmodule(self).python(*args, **kwargs)
 
-    def test(self):
+    def test_imports(self):
         """Attempts to import modules of the installed package."""
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
+        python = inspect.getmodule(self).python
         for module in self.import_modules:
-            self.run_test(
-                inspect.getmodule(self).python.path,
-                ["-c", "import {0}".format(module)],
+            with spack.install_test.test_part(
+                self,
+                "test_imports_{0}".format(module),
                 purpose="checking import of {0}".format(module),
                 work_dir="spack-test",
-            )
+            ):
+                python("-c", "import {0}".format(module))
 
 
 @spack.builder.builder("sip")
@@ -157,7 +157,7 @@ class SIPBuilder(BaseBuilder):
             ]
         )
 
-        self.python(configure, *args)
+        self.pkg.python(configure, *args)
 
     def configure_args(self):
         """Arguments to pass to configure."""

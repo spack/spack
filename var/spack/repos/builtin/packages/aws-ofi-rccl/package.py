@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,9 @@ class AwsOfiRccl(AutotoolsPackage):
     url = "https://github.com/ROCmSoftwarePlatform/aws-ofi-rccl.git"
     tags = ["rocm"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
-    version("cxi", branch="cxi", default=True)
+    version("cxi", branch="cxi", preferred=True)
     version("master", branch="master")
 
     variant("trace", default=False, description="Enable printing trace messages")

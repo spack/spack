@@ -1,16 +1,13 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import collections.abc
 import copy
 import functools
 import inspect
 from typing import List, Optional, Tuple
-
-import six
-
-import llnl.util.compat
 
 import spack.build_environment
 
@@ -66,7 +63,7 @@ def create(pkg):
     return _BUILDERS[id(pkg)]
 
 
-class _PhaseAdapter(object):
+class _PhaseAdapter:
     def __init__(self, builder, phase_fn):
         self.builder = builder
         self.phase_fn = phase_fn
@@ -118,7 +115,7 @@ def _create(pkg):
     # package. The semantic should be the same as the method in the base builder were still
     # present in the base class of the package.
 
-    class _ForwardToBaseBuilder(object):
+    class _ForwardToBaseBuilder:
         def __init__(self, wrapped_pkg_object, root_builder):
             self.wrapped_package_object = wrapped_pkg_object
             self.root_builder = root_builder
@@ -127,7 +124,19 @@ def _create(pkg):
             wrapper_cls = type(self)
             bases = (package_cls, wrapper_cls)
             new_cls_name = package_cls.__name__ + "Wrapper"
-            new_cls = type(new_cls_name, bases, {})
+            # Forward attributes that might be monkey patched later
+            new_cls = type(
+                new_cls_name,
+                bases,
+                {
+                    "run_tests": property(lambda x: x.wrapped_package_object.run_tests),
+                    "test_requires_compiler": property(
+                        lambda x: x.wrapped_package_object.test_requires_compiler
+                    ),
+                    "test_suite": property(lambda x: x.wrapped_package_object.test_suite),
+                    "tester": property(lambda x: x.wrapped_package_object.tester),
+                },
+            )
             new_cls.__module__ = package_cls.__module__
             self.__class__ = new_cls
             self.__dict__.update(wrapped_pkg_object.__dict__)
@@ -168,7 +177,7 @@ def _create(pkg):
             property(forward_property_to_getattr(attribute_name)),
         )
 
-    class Adapter(six.with_metaclass(_PackageAdapterMeta, base_cls)):
+    class Adapter(base_cls, metaclass=_PackageAdapterMeta):
         def __init__(self, pkg):
             # Deal with custom phases in packages here
             if hasattr(pkg, "phases"):
@@ -179,7 +188,7 @@ def _create(pkg):
             # Attribute containing the package wrapped in dispatcher with a `__getattr__`
             # method that will forward certain calls to the default builder.
             self.pkg_with_dispatcher = _ForwardToBaseBuilder(pkg, root_builder=self)
-            super(Adapter, self).__init__(pkg)
+            super().__init__(pkg)
 
         # These two methods don't follow the (self, spec, prefix) signature of phases nor
         # the (self) signature of methods, so they are added explicitly to avoid using a
@@ -237,7 +246,8 @@ class PhaseCallbacksMeta(type):
                 callbacks_from_base = getattr(base, temporary_stage.attribute_name, None)
                 if callbacks_from_base:
                     break
-            callbacks_from_base = callbacks_from_base or []
+            else:
+                callbacks_from_base = []
 
             # Set the callbacks in this class and flush the temporary stage
             attr_dict[temporary_stage.attribute_name] = staged_callbacks[:] + callbacks_from_base
@@ -280,7 +290,7 @@ class PhaseCallbacksMeta(type):
         return _decorator
 
 
-class BuilderMeta(PhaseCallbacksMeta, type(llnl.util.compat.Sequence)):  # type: ignore
+class BuilderMeta(PhaseCallbacksMeta, type(collections.abc.Sequence)):  # type: ignore
     pass
 
 
@@ -378,7 +388,7 @@ class _PackageAdapterMeta(BuilderMeta):
         return super(_PackageAdapterMeta, mcs).__new__(mcs, name, bases, attr_dict)
 
 
-class InstallationPhase(object):
+class InstallationPhase:
     """Manages a single phase of the installation.
 
     This descriptor stores at creation time the name of the method it should
@@ -457,7 +467,7 @@ class InstallationPhase(object):
         return copy.deepcopy(self)
 
 
-class Builder(six.with_metaclass(BuilderMeta, llnl.util.compat.Sequence)):
+class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
     """A builder is a class that, given a package object (i.e. associated with
     concrete spec), knows how to install it.
 
@@ -469,19 +479,23 @@ class Builder(six.with_metaclass(BuilderMeta, llnl.util.compat.Sequence)):
     """
 
     #: Sequence of phases. Must be defined in derived classes
-    phases = ()  # type: Tuple[str, ...]
+    phases: Tuple[str, ...] = ()
     #: Build system name. Must also be defined in derived classes.
-    build_system = None  # type: Optional[str]
+    build_system: Optional[str] = None
 
-    legacy_methods = ()  # type: Tuple[str, ...]
-    legacy_attributes = ()  # type: Tuple[str, ...]
+    legacy_methods: Tuple[str, ...] = ()
+    legacy_attributes: Tuple[str, ...] = ()
+
+    # type hints for some of the legacy methods
+    build_time_test_callbacks: List[str]
+    install_time_test_callbacks: List[str]
 
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.
     #: Matching artifacts found at the end of the build process will be
     #: copied in the same directory tree as _spack_build_logfile and
     #: _spack_build_envfile.
-    archive_files = []  # type: List[str]
+    archive_files: List[str] = []
 
     def __init__(self, pkg):
         self.pkg = pkg
@@ -516,9 +530,9 @@ class Builder(six.with_metaclass(BuilderMeta, llnl.util.compat.Sequence)):
                 modifications to be applied when the package is built. Package authors
                 can call methods on it to alter the build environment.
         """
-        if not hasattr(super(Builder, self), "setup_build_environment"):
+        if not hasattr(super(), "setup_build_environment"):
             return
-        super(Builder, self).setup_build_environment(env)
+        super().setup_build_environment(env)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Sets up the build environment of packages that depend on this one.
@@ -549,9 +563,9 @@ class Builder(six.with_metaclass(BuilderMeta, llnl.util.compat.Sequence)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        if not hasattr(super(Builder, self), "setup_dependent_build_environment"):
+        if not hasattr(super(), "setup_dependent_build_environment"):
             return
-        super(Builder, self).setup_dependent_build_environment(env, dependent_spec)
+        super().setup_dependent_build_environment(env, dependent_spec)
 
     def __getitem__(self, idx):
         key = self.phases[idx]

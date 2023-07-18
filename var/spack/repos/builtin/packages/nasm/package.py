@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class Nasm(AutotoolsPackage):
+class Nasm(AutotoolsPackage, Package):
     """NASM (Netwide Assembler) is an 80x86 assembler designed for
     portability and modularity. It includes a disassembler as well."""
 
@@ -16,6 +16,7 @@ class Nasm(AutotoolsPackage):
     url = "https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.gz"
     list_url = "https://www.nasm.us/pub/nasm/releasebuilds"
     list_depth = 1
+    tags = ["windows"]
 
     build_system("autotools", conditional("generic", when="platform=windows"), default="autotools")
 
@@ -39,6 +40,8 @@ class Nasm(AutotoolsPackage):
 
     conflicts("%intel@:14", when="@2.14:", msg="Intel <= 14 lacks support for C11")
 
+    build_system("autotools", "generic", default="autotools")
+
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
         if self.spec.satisfies("%nvhpc@:20.11"):
@@ -55,7 +58,7 @@ class Nasm(AutotoolsPackage):
 
 
 class GenericBuilder(spack.build_systems.generic.GenericBuilder):
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         with working_dir(self.stage.source_path, create=True):
             # build NASM with nmake
             touch("asm\\warnings.time")

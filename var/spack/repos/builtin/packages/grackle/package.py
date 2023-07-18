@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,7 @@ class Grackle(Package):
         template_name = "{0.architecture}-{0.compiler.name}"
         grackle_architecture = template_name.format(spec)
         link_variables = (
-            "MACH_AR = ar" if spec.version < Version(2.2) else "MACH_LIBTOOL = libtool"
+            "MACH_AR = ar" if spec.version < Version("2.2") else "MACH_LIBTOOL = libtool"
         )
         substitutions = {
             "@ARCHITECTURE": grackle_architecture,

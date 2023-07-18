@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class RRanger(RPackage):
 
     cran = "ranger"
 
+    version("0.15.1", sha256="4d65d9ee7c5f2704a0e303a27222c02aa53e49f3c28dc0b4451371e37ada2b2e")
     version("0.14.1", sha256="5d99401d555da1cfb11c70e59d1bb545ce48720073a06a2a32eb396f622dee1b")
     version("0.13.1", sha256="60934f0accc21edeefddbb4ddebfdd7cd10a3d3e90b31aa2e6e4b7f50d632d0a")
     version("0.12.1", sha256="fc308e0ac06718272799928e1a19612de16b05bde481d8f38e11a101df5425ef")

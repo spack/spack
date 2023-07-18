@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libzmq(AutotoolsPackage):
     homepage = "https://zguide.zeromq.org/"
     url = "https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz"
     git = "https://github.com/zeromq/libzmq.git"
+
+    maintainers("dennisklein")
 
     version("master", branch="master")
     version("4.3.4", sha256="c593001a89f5a85dd2ddf564805deb860e02471171b3f204944857336295c3e5")
@@ -80,6 +82,13 @@ class Libzmq(AutotoolsPackage):
         when="@4.3.4 %gcc@12:",
     )
 
+    # Fix static assertion failure with gcc-13
+    patch(
+        "https://github.com/zeromq/libzmq/commit/438d5d88392baffa6c2c5e0737d9de19d6686f0d.patch?full_index=1",
+        sha256="e15a8bfe8131f3e648fd79f3c1c931f99cd896b2733a7df1760f5b4354a0687c",
+        when="@4.3.3:4.3.4 %gcc@13:",
+    )
+
     def url_for_version(self, version):
         if version <= Version("4.1.4"):
             url = "http://download.zeromq.org/zeromq-{0}.tar.gz"
@@ -100,7 +109,7 @@ class Libzmq(AutotoolsPackage):
         config_args.extend(self.enable_or_disable("libunwind"))
 
         if "+libsodium" in self.spec:
-            config_args.append("--with-libsodium")
+            config_args.append("--with-libsodium=" + self.spec["libsodium"].prefix)
         if "~docs" in self.spec:
             config_args.append("--without-docs")
         if "clang" in self.compiler.cc:

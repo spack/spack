@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,13 +13,11 @@ class Pasta(PythonPackage):
 
     homepage = "https://github.com/smirarab/pasta"
     git = "https://github.com/smirarab/pasta"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("1.9.0", commit="370ae2d21ef461bcb2cef7c20cb5a4a1db7ff99d")
-    version("1.8.3", commit="738bec5e0d5a18d013c193d7453374bed47456c9")
 
-    depends_on("python@3:", when="@1.9.0:", type=("build", "run"))
-    depends_on("python@:2", when="@:1.8.3", type=("build", "run"))
+    depends_on("python@3:", type=("build", "run"))
     depends_on("py-dendropy@4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("java", type="run")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ from spack.package_base import (
     _spack_build_envfile,
     _spack_build_logfile,
     _spack_configure_argsfile,
+    spack_times_log,
 )
 from spack.spec import Spec
 
@@ -107,7 +108,7 @@ def mock_remove_prefix(*args):
     raise MockInstallError("Intentional error", "Mock remove_prefix method intentionally fails")
 
 
-class RemovePrefixChecker(object):
+class RemovePrefixChecker:
     def __init__(self, wrapped_rm_prefix):
         self.removed = False
         self.wrapped_rm_prefix = wrapped_rm_prefix
@@ -117,7 +118,7 @@ class RemovePrefixChecker(object):
         self.wrapped_rm_prefix()
 
 
-class MockStage(object):
+class MockStage:
     def __init__(self, wrapped_stage):
         self.wrapped_stage = wrapped_stage
         self.test_destroyed = False
@@ -243,7 +244,7 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
     spec.package.do_install()
 
     # Ensure dependency directory exists after the installation.
-    install_times = os.path.join(spec.package.prefix, ".spack", "install_times.json")
+    install_times = os.path.join(spec.package.prefix, ".spack", spack_times_log)
     assert os.path.isfile(install_times)
 
     # Ensure the phases are included
@@ -252,12 +253,8 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
 
     # The order should be maintained
     phases = [x["name"] for x in times["phases"]]
-    total = sum([x["seconds"] for x in times["phases"]])
-    for name in ["one", "two", "three", "install"]:
-        assert name in phases
-
-    # Give a generous difference threshold
-    assert abs(total - times["total"]["seconds"]) < 5
+    assert phases == ["stage", "one", "two", "three", "install", "post-install"]
+    assert all(isinstance(x["seconds"], float) for x in times["phases"])
 
 
 def test_flatten_deps(install_mockery, mock_fetch, mutable_mock_repo):
@@ -291,17 +288,19 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
     prepared_db = spack.database.Database(mock_db_root)
     upstream_layout = gen_mock_layout("/a/")
+    spack.config.config.push_scope(
+        spack.config.InternalConfigScope(
+            name="install-upstream-fixture",
+            data={"upstreams": {"mock1": {"install_tree": prepared_db.root}}},
+        )
+    )
 
     def _install_upstream(*specs):
         for spec_str in specs:
             s = spack.spec.Spec(spec_str).concretized()
             prepared_db.add(s, upstream_layout)
-
         downstream_root = str(tmpdir_factory.mktemp("mock_downstream_db_root"))
-        db_for_test = spack.database.Database(downstream_root, upstream_dbs=[prepared_db])
-        store = spack.store.Store(downstream_root)
-        store.db = db_for_test
-        return store, upstream_layout
+        return downstream_root, upstream_layout
 
     return _install_upstream
 
@@ -310,8 +309,8 @@ def test_installed_upstream_external(install_upstream, mock_fetch):
     """Check that when a dependency package is recorded as installed in
     an upstream database that it is not reinstalled.
     """
-    s, _ = install_upstream("externaltool")
-    with spack.store.use_store(s):
+    store_root, _ = install_upstream("externaltool")
+    with spack.store.use_store(store_root):
         dependent = spack.spec.Spec("externaltest")
         dependent.concretize()
 
@@ -329,8 +328,8 @@ def test_installed_upstream(install_upstream, mock_fetch):
     """Check that when a dependency package is recorded as installed in
     an upstream database that it is not reinstalled.
     """
-    s, upstream_layout = install_upstream("dependency-install")
-    with spack.store.use_store(s):
+    store_root, upstream_layout = install_upstream("dependency-install")
+    with spack.store.use_store(store_root):
         dependency = spack.spec.Spec("dependency-install").concretized()
         dependent = spack.spec.Spec("dependent-install").concretized()
 
@@ -382,9 +381,8 @@ def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmpdi
     Test that different specs with coinciding install prefixes will fail
     to install.
     """
-    projections = {"all": "all-specs-project-to-this-prefix"}
-    store = spack.store.Store(str(tmpdir), projections=projections)
-    with spack.store.use_store(store):
+    projections = {"projections": {"all": "all-specs-project-to-this-prefix"}}
+    with spack.store.use_store(str(tmpdir), extra_data=projections):
         with spack.config.override("config:checksum", False):
             pkg_a = Spec("libelf@0.8.13").concretized().package
             pkg_b = Spec("libelf@0.8.12").concretized().package
@@ -429,7 +427,7 @@ def test_uninstall_by_spec_errors(mutable_database):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages, capfd):
+def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages, capfd, ensure_debug):
     """Test install phases with the nosource package."""
     spec = Spec("nosource").concretized()
     pkg = spec.package
@@ -444,7 +442,9 @@ def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages, capfd)
 
 
 @pytest.mark.disable_clean_stage_check
-def test_nosource_bundle_pkg_install(install_mockery, mock_fetch, mock_packages, capfd):
+def test_nosource_bundle_pkg_install(
+    install_mockery, mock_fetch, mock_packages, capfd, ensure_debug
+):
     """Test install phases with the nosource-bundle package."""
     spec = Spec("nosource-bundle").concretized()
     pkg = spec.package

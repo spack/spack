@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Embree(CMakePackage):
 
     homepage = "https://embree.org"
     url = "https://github.com/embree/embree/archive/v3.7.0.tar.gz"
-    maintainers = ["aumuell"]
+    maintainers("aumuell")
 
     version("3.13.1", sha256="00dbd852f19ae2b95f5106dd055ca4b304486436ced0ccf842aec4e38a4df425")
     version("3.13.0", sha256="4d86a69508a7e2eb8710d571096ad024b5174834b84454a8020d3a910af46f4f")
@@ -23,14 +23,6 @@ class Embree(CMakePackage):
     version("3.9.0", sha256="53855e2ceb639289b20448ae9deab991151aa5f0bc7f9cc02f2af4dd6199d5d1")
     version("3.8.0", sha256="40cbc90640f63c318e109365d29aea00003e4bd14aaba8bb654fc1010ea5753a")
     version("3.7.0", sha256="2b6300ebe30bb3d2c6e5f23112b4e21a25a384a49c5e3c35440aa6f3c8d9fe84")
-
-    # default to Release, as RelWithDebInfo creates a lot of overhead
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
 
     variant("ispc", default=True, description="Enable ISPC support")
     depends_on("ispc", when="+ispc", type="build")

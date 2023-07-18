@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ args = ["strings", "file"]
 if sys.platform == "darwin":
     args.extend(["/usr/bin/clang++", "install_name_tool"])
 else:
-    args.extend(["/usr/bin/g++", "patchelf"])
+    args.extend(["g++", "patchelf"])
 
 
 @pytest.mark.requires_executables(*args)

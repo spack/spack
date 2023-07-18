@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Pism(CMakePackage):
     url = "https://github.com/pism/pism/archive/v1.1.4.tar.gz"
     git = "https://github.com/pism/pism.git"
 
-    maintainers = ["citibeth"]
+    maintainers("citibeth")
 
     version("develop", branch="dev")
     version("1.1.4", sha256="8ccb867af3b37e8d103351dadc1d7e77512e64379519fe8a2592668deb27bc44")
@@ -22,7 +22,7 @@ class Pism(CMakePackage):
 
     variant("extra", default=False, description="Build extra executables (testing/verification)")
     variant("shared", default=True, description="Build shared Pism libraries")
-    variant("python", default=False, description="Build python bindings")
+    variant("python", default=False, description="Build python bindings", when="@1.1:")
     variant("icebin", default=False, description="Build classes needed by IceBin")
     variant(
         "proj",
@@ -80,8 +80,7 @@ class Pism(CMakePackage):
     depends_on("everytrace", when="+everytrace")
 
     extends("python", when="+python")
-    depends_on("python@2.7:2.8,3.3:", when="@1.1: +python")
-    depends_on("python@2.7:2.8", when="@:1.0 +python")
+    depends_on("python@2.7:2.8,3.3:", when="+python")
     depends_on("py-matplotlib", when="+python")
     depends_on("py-numpy", when="+python")
 

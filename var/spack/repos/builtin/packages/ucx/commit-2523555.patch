@@ -1,0 +1,31 @@
+From 38e5b912dd737b5673ea34f885fe6222276a6f9f Mon Sep 17 00:00:00 2001
+From: Sergey Oblomov <sergeyo@nvidia.com>
+Date: Fri, 14 Oct 2022 12:15:11 +0300
+Subject: [PATCH] IB/MD: fixed build on SLES SP3
+
+---
+ src/uct/ib/base/ib_md.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/uct/ib/base/ib_md.c b/src/uct/ib/base/ib_md.c
+index 225d1de9234..1618f35c03d 100644
+--- a/src/uct/ib/base/ib_md.c
++++ b/src/uct/ib/base/ib_md.c
+@@ -2059,7 +2059,7 @@ uct_component_t uct_ib_component = {
+ 
+ void UCS_F_CTOR uct_ib_init()
+ {
+-    int i;
++    ssize_t i;
+ 
+     uct_component_register(&uct_ib_component);
+ 
+@@ -2070,7 +2070,7 @@ void UCS_F_CTOR uct_ib_init()
+ 
+ void UCS_F_DTOR uct_ib_cleanup()
+ {
+-    int i;
++    ssize_t i;
+ 
+     for (i = ucs_static_array_size(uct_ib_tls) - 1; i >= 0; i--) {
+         uct_tl_unregister(uct_ib_tls[i]);

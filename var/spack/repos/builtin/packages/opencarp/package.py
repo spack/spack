@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,11 @@ class Opencarp(CMakePackage):
     homepage = "https://www.opencarp.org"
     git = "https://git.opencarp.org/openCARP/openCARP.git"
 
-    maintainers = ["MarieHouillon"]
+    maintainers("MarieHouillon")
 
-    version("11.0", commit="fd8419d5", submodules=False, no_cache=True, preferred=True)
+    version("13.0", commit="e1e0deca", submodules=False, no_cache=True, preferred=True)
+    version("12.0", commit="a34c11af", submodules=False, no_cache=True)
+    version("11.0", commit="fd8419d5", submodules=False, no_cache=True)
     version("10.0", commit="7aec7900", submodules=False, no_cache=True)
     version("9.0", commit="c0167599", submodules=False, no_cache=True)
     version("8.2", commit="dbfd16fd", submodules=False, no_cache=True)
@@ -32,7 +34,7 @@ class Opencarp(CMakePackage):
     # Patch removing problematic steps in CMake process
     patch("opencarp7.patch", when="@7.0")
 
-    depends_on("git")
+    depends_on("git", type=("build", "run"))
     depends_on("petsc")
     depends_on("binutils")
     depends_on("gengetopt")
@@ -41,10 +43,10 @@ class Opencarp(CMakePackage):
     depends_on("zlib")
     depends_on("perl")
 
-    depends_on("py-carputils", when="+carputils")
-    depends_on("meshtool", when="+meshtool")
+    depends_on("py-carputils", when="+carputils", type=("build", "run"))
+    depends_on("meshtool", when="+meshtool", type=("build", "run"))
     # Use specific versions of carputils and meshtool for releases
-    for ver in ["11.0", "10.0", "9.0", "8.2", "7.0", "8.1"]:
+    for ver in ["13.0", "12.0", "11.0", "10.0", "9.0", "8.2", "7.0", "8.1"]:
         depends_on("py-carputils@oc" + ver, when="@" + ver + " +carputils")
         depends_on("meshtool@oc" + ver, when="@" + ver + " +meshtool")
 

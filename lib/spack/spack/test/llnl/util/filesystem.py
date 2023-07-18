@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -315,7 +315,6 @@ def test_paths_containing_libs(dirs_with_libfiles):
 
 
 def test_move_transaction_commit(tmpdir):
-
     fake_library = tmpdir.mkdir("lib").join("libfoo.so")
     fake_library.write("Just some fake content.")
 
@@ -330,7 +329,6 @@ def test_move_transaction_commit(tmpdir):
 
 
 def test_move_transaction_rollback(tmpdir):
-
     fake_library = tmpdir.mkdir("lib").join("libfoo.so")
     fake_library.write("Initial content.")
 
@@ -498,12 +496,44 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
     # This should not raise exceptions
     fs.filter_file(regex, replacement, target_file, **keyword_args)
     # Check the strings have been replaced
-    extra_kwargs = {}
-    if sys.version_info > (3, 0):
-        extra_kwargs = {"errors": "surrogateescape"}
+    extra_kwargs = {"errors": "surrogateescape"}
 
     with open(target_file, mode="r", **extra_kwargs) as f:
         assert replacement in f.read()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="chgrp isn't used on Windows")
+def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
+    with fs.working_dir(tmpdir):
+        os.mkdir("test-dir_chgrp_dont_set_group_if_already_set")
+
+    def _fail(*args, **kwargs):
+        raise Exception("chrgrp should not be called")
+
+    class FakeStat(object):
+        def __init__(self, gid):
+            self.st_gid = gid
+
+    original_stat = os.stat
+
+    def _stat(*args, **kwargs):
+        path = args[0]
+        if path == "test-dir_chgrp_dont_set_group_if_already_set":
+            return FakeStat(gid=1001)
+        else:
+            # Monkeypatching stat can interfere with post-test cleanup, so for
+            # paths that aren't part of the test, we want the original behavior
+            # of stat
+            return original_stat(*args, **kwargs)
+
+    monkeypatch.setattr(os, "chown", _fail)
+    monkeypatch.setattr(os, "lchown", _fail)
+    monkeypatch.setattr(os, "stat", _stat)
+
+    with fs.working_dir(tmpdir):
+        with pytest.raises(Exception):
+            fs.chgrp("test-dir_chgrp_dont_set_group_if_already_set", 1002)
+        fs.chgrp("test-dir_chgrp_dont_set_group_if_already_set", 1001)
 
 
 def test_filter_files_multiple(tmpdir):
@@ -518,9 +548,7 @@ def test_filter_files_multiple(tmpdir):
     fs.filter_file(r"\<string.h\>", "<unistd.h>", target_file)
     fs.filter_file(r"\<stdio.h\>", "<unistd.h>", target_file)
     # Check the strings have been replaced
-    extra_kwargs = {}
-    if sys.version_info > (3, 0):
-        extra_kwargs = {"errors": "surrogateescape"}
+    extra_kwargs = {"errors": "surrogateescape"}
 
     with open(target_file, mode="r", **extra_kwargs) as f:
         assert "<malloc.h>" not in f.read()
@@ -816,28 +844,10 @@ def test_visit_directory_tree_follow_all(noncyclical_dir_structure):
         j("c", "file_2"),
         j("file_3"),
     ]
-    assert visitor.dirs_before == [
-        j("a"),
-        j("a", "d"),
-        j("b", "d"),
-        j("c"),
-    ]
-    assert visitor.dirs_after == [
-        j("a", "d"),
-        j("a"),
-        j("b", "d"),
-        j("c"),
-    ]
-    assert visitor.symlinked_dirs_before == [
-        j("a", "to_c"),
-        j("b"),
-        j("b", "to_c"),
-    ]
-    assert visitor.symlinked_dirs_after == [
-        j("a", "to_c"),
-        j("b", "to_c"),
-        j("b"),
-    ]
+    assert visitor.dirs_before == [j("a"), j("a", "d"), j("b", "d"), j("c")]
+    assert visitor.dirs_after == [j("a", "d"), j("a"), j("b", "d"), j("c")]
+    assert visitor.symlinked_dirs_before == [j("a", "to_c"), j("b"), j("b", "to_c")]
+    assert visitor.symlinked_dirs_after == [j("a", "to_c"), j("b", "to_c"), j("b")]
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Requires symlinks")
@@ -853,20 +863,9 @@ def test_visit_directory_tree_follow_dirs(noncyclical_dir_structure):
         j("c", "file_2"),
         j("file_3"),
     ]
-    assert visitor.dirs_before == [
-        j("a"),
-        j("a", "d"),
-        j("c"),
-    ]
-    assert visitor.dirs_after == [
-        j("a", "d"),
-        j("a"),
-        j("c"),
-    ]
-    assert visitor.symlinked_dirs_before == [
-        j("a", "to_c"),
-        j("b"),
-    ]
+    assert visitor.dirs_before == [j("a"), j("a", "d"), j("c")]
+    assert visitor.dirs_after == [j("a", "d"), j("a"), j("c")]
+    assert visitor.symlinked_dirs_before == [j("a", "to_c"), j("b")]
     assert not visitor.symlinked_dirs_after
 
 
@@ -876,17 +875,10 @@ def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
     visitor = RegisterVisitor(root, follow_dirs=False, follow_symlink_dirs=False)
     fs.visit_directory_tree(root, visitor)
     j = os.path.join
-    assert visitor.files == [
-        j("file_3"),
-    ]
-    assert visitor.dirs_before == [
-        j("a"),
-        j("c"),
-    ]
+    assert visitor.files == [j("file_3")]
+    assert visitor.dirs_before == [j("a"), j("c")]
     assert not visitor.dirs_after
-    assert visitor.symlinked_dirs_before == [
-        j("b"),
-    ]
+    assert visitor.symlinked_dirs_before == [j("b")]
     assert not visitor.symlinked_dirs_after
 
 
@@ -903,3 +895,44 @@ def test_remove_linked_tree_doesnt_change_file_permission(tmpdir, initial_mode):
     fs.remove_linked_tree(str(file_instead_of_dir))
     final_stat = os.stat(str(file_instead_of_dir))
     assert final_stat == initial_stat
+
+
+def test_filesummary(tmpdir):
+    p = str(tmpdir.join("xyz"))
+    with open(p, "wb") as f:
+        f.write(b"abcdefghijklmnopqrstuvwxyz")
+
+    assert fs.filesummary(p, print_bytes=8) == (26, b"abcdefgh...stuvwxyz")
+    assert fs.filesummary(p, print_bytes=13) == (26, b"abcdefghijklmnopqrstuvwxyz")
+    assert fs.filesummary(p, print_bytes=100) == (26, b"abcdefghijklmnopqrstuvwxyz")
+
+
+@pytest.mark.parametrize("bfs_depth", [1, 2, 10])
+def test_find_first_file(tmpdir, bfs_depth):
+    # Create a structure: a/a/a/{file1,file2}, b/a, c/a, d/{a,file1}
+    tmpdir.join("a", "a", "a").ensure(dir=True)
+    tmpdir.join("b", "a").ensure(dir=True)
+    tmpdir.join("c", "a").ensure(dir=True)
+    tmpdir.join("d", "a").ensure(dir=True)
+    tmpdir.join("e").ensure(dir=True)
+
+    fs.touch(tmpdir.join("a", "a", "a", "file1"))
+    fs.touch(tmpdir.join("a", "a", "a", "file2"))
+    fs.touch(tmpdir.join("d", "file1"))
+
+    root = str(tmpdir)
+
+    # Iterative deepening: should find low-depth file1.
+    assert os.path.samefile(
+        fs.find_first(root, "file*", bfs_depth=bfs_depth), os.path.join(root, "d", "file1")
+    )
+
+    assert fs.find_first(root, "nonexisting", bfs_depth=bfs_depth) is None
+
+    assert os.path.samefile(
+        fs.find_first(root, ["nonexisting", "file2"], bfs_depth=bfs_depth),
+        os.path.join(root, "a", "a", "a", "file2"),
+    )
+
+    # Should find first dir
+    assert os.path.samefile(fs.find_first(root, "a", bfs_depth=bfs_depth), os.path.join(root, "a"))

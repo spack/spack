@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class ParallelNetcdf(AutotoolsPackage):
     url = "https://parallel-netcdf.github.io/Release/pnetcdf-1.11.0.tar.gz"
     list_url = "https://parallel-netcdf.github.io/wiki/Download.html"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     tags = ["e4s"]
 
@@ -79,23 +79,6 @@ class ParallelNetcdf(AutotoolsPackage):
     # (see below).
     conflicts("+shared", when="@:1.9%nag+fortran")
 
-    # https://github.com/Parallel-NetCDF/PnetCDF/pull/59
-    patch("nag_libtool.patch", when="@1.9:1.12.1%nag")
-
-    # We could apply the patch unconditionally. However, it fixes a problem
-    # that manifests itself only when we build shared libraries with Spack on
-    # a Cray system with PGI compiler. Based on the name of the $CC executable,
-    # Libtool "thinks" that it works with PGI compiler directly but on a Cray
-    # system it actually works with the Cray's wrapper. PGI compiler (at least
-    # since the version 15.7) "understands" two formats of the
-    # '--whole-archive' argument. Unluckily, Cray's wrapper "understands" only
-    # one of them but Libtool switches to another one. The following patch
-    # discards the switching.
-    patch("cray_pgi_libtool_release.patch", when="@1.8:999%pgi+shared platform=cray")
-    # Given that the bug manifests itself in rather specific conditions, it is
-    # not reported upstream.
-    patch("cray_pgi_libtool_master.patch", when="@master%pgi+shared platform=cray")
-
     @property
     def libs(self):
         libraries = ["libpnetcdf"]
@@ -132,12 +115,7 @@ class ParallelNetcdf(AutotoolsPackage):
         args += self.enable_or_disable("cxx")
         args += self.enable_or_disable("fortran")
 
-        flags = {
-            "CFLAGS": [],
-            "CXXFLAGS": [],
-            "FFLAGS": [],
-            "FCFLAGS": [],
-        }
+        flags = {"CFLAGS": [], "CXXFLAGS": [], "FFLAGS": [], "FCFLAGS": []}
 
         if "+pic" in self.spec:
             flags["CFLAGS"].append(self.compiler.cc_pic_flag)

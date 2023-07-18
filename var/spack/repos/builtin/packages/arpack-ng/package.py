@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,6 +42,7 @@ class ArpackNg(CMakePackage, AutotoolsPackage):
     build_system("cmake", "autotools", default="cmake")
 
     version("develop", branch="master")
+    version("3.9.0", sha256="24f2a2b259992d3c797d80f626878aa8e2ed5009d549dad57854bbcfb95e1ed0")
     version("3.8.0", sha256="ada5aeb3878874383307239c9235b716a8a170c6d096a6625bfd529844df003d")
     version("3.7.0", sha256="972e3fc3cd0b9d6b5a737c9bf6fd07515c0d6549319d4ffb06970e64fa3cc2d6")
     version("3.6.3", sha256="64f3551e5a2f8497399d82af3076b6a33bf1bc95fc46bbcabe66442db366f453")
@@ -57,6 +58,7 @@ class ArpackNg(CMakePackage, AutotoolsPackage):
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
+    variant("icb", default=False, when="@3.6:", description="Activates iso_c_binding support")
 
     # The function pdlamch10 does not set the return variable.
     # This is fixed upstream
@@ -126,6 +128,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define("BLAS_INCLUDE_DIRS", spec["blas"].prefix.include),
             self.define("BLAS_LIBRARIES", blas_libs),
             self.define_from_variant("MPI", "mpi"),
+            self.define_from_variant("ICB", "icb"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
         ]

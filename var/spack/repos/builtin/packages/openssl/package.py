@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,15 +20,36 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     homepage = "https://www.openssl.org"
 
     # URL must remain http:// so Spack can bootstrap curl
-    url = "https://www.openssl.org/source/openssl-1.1.1d.tar.gz"
+    url = "http://www.openssl.org/source/openssl-1.1.1d.tar.gz"
     list_url = "https://www.openssl.org/source/old/"
     list_depth = 1
 
-    tags = ["core-packages"]
+    tags = ["core-packages", "windows"]
 
     executables = ["openssl"]
 
-    version("3.0.5", sha256="aa7d8d9bef71ad6525c55ba11e5f4397889ce49c2c9349dcea6d3e4f0b024a7a")
+    version("3.1.1", sha256="b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674")
+    version(
+        "3.1.0",
+        sha256="aaa925ad9828745c4cad9d9efeb273deca820f2cdcf2c3ac7d7c1212b7c497b4",
+        deprecated=True,
+    )
+    version("3.0.9", sha256="eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90")
+    version(
+        "3.0.8",
+        sha256="6c13d2bf38fdf31eac3ce2a347073673f5d63263398f1f69d0df4a41253e4b3e",
+        deprecated=True,
+    )
+    version(
+        "3.0.7",
+        sha256="83049d042a260e696f62406ac5c08bf706fd84383f945cf21bd61e9ed95c396e",
+        deprecated=True,
+    )
+    version(
+        "3.0.5",
+        sha256="aa7d8d9bef71ad6525c55ba11e5f4397889ce49c2c9349dcea6d3e4f0b024a7a",
+        deprecated=True,
+    )
     version(
         "3.0.4",
         sha256="2831843e9a668a0ab478e7020ad63d2d65e51f72977472dc73efcefbafc0c00f",
@@ -52,10 +73,21 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
+    version("1.1.1u", sha256="e2f8d84b523eecd06c7be7626830370300fbcc15386bf5142d72758f6963ebc6")
+    version(
+        "1.1.1t",
+        sha256="8dee9b24bdb1dcbf0c3d1e9b02fb8f6bf22165e807f45adeb7c9677536859d3b",
+        deprecated=True,
+    )
+    version(
+        "1.1.1s",
+        sha256="c5ac01e760ee6ff0dab61d6b2bbd30146724d063eb322180c6f18a6f74e4b6aa",
+        deprecated=True,
+    )
     version(
         "1.1.1q",
         sha256="d7939ce614029cdff0b6c20f0e2e5703158a489a72b2507b8bd51bf8c8fd10ca",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "1.1.1p",
@@ -367,6 +399,10 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             # nvhpc segfaults NVC++-F-0000-Internal compiler error.
             # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
             options.append("no-asm")
+        elif spec.satisfies("@3: %oneapi"):
+            # Last tested on oneapi@2023.1.0 for x86_64:
+            # crypto/md5/md5-x86_64.s:684:31: error: expected string
+            options.append("no-asm")
 
         # The default glibc provided by CentOS 7 does not provide proper
         # atomic support when using the NVIDIA compilers
@@ -380,11 +416,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         ]
         if spec.satisfies("platform=windows"):
             base_args.extend(
-                [
-                    'CC="%s"' % os.environ.get("CC"),
-                    'CXX="%s"' % os.environ.get("CXX"),
-                    "VC-WIN64A",
-                ]
+                ['CC="%s"' % os.environ.get("CC"), 'CXX="%s"' % os.environ.get("CXX"), "VC-WIN64A"]
             )
             if spec.satisfies("~shared"):
                 base_args.append("no-shared")
@@ -409,11 +441,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         # present e.g. on Darwin. They are non-standard, i.e. most compilers
         # (e.g. gcc) will not accept them.
         filter_file(r"-arch x86_64", "", "Makefile")
-
-        if spec.satisfies("+dynamic"):
-            # This variant only makes sense for Windows
-            if spec.satisfies("platform=windows"):
-                filter_file(r"MT", "MD", "makefile")
 
         if spec.satisfies("platform=windows"):
             host_make = nmake

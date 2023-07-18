@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Numamma(CMakePackage):
 
     homepage = "https://numamma.github.io/numamma/"
     url = "https://github.com/numamma/numamma/archive/numamma-1.1.1.tar.gz"
-    maintainers = ["trahay"]
+    maintainers("trahay")
 
     version("1.1.1", sha256="f79ca22a95df33a1af529ddd653d043f7f0d32a6d196e559aee8bef8fc74771f")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -142,7 +142,7 @@ class IntelPackage(Package):
         # The Intel libraries are provided without requiring a license as of
         # version 2017.2. Trying to specify one anyway will fail. See:
         # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        return self._has_compilers or self.version < ver("2017.2")
+        return self._has_compilers or self.version < Version("2017.2")
 
     #: Comment symbol used in the license.lic file
     license_comment = "#"
@@ -341,7 +341,7 @@ class IntelPackage(Package):
                     v_year = year
                     break
 
-        return ver("%s.%s" % (v_year, v_tail))
+        return Version("%s.%s" % (v_year, v_tail))
 
     # ---------------------------------------------------------------------
     # Directory handling common to all Intel components
@@ -764,9 +764,9 @@ class IntelPackage(Package):
         elif matches:
             # TODO: Confirm that this covers clang (needed on Linux only)
             gcc_version = Version(matches.groups()[1])
-            if gcc_version >= ver("4.7"):
+            if gcc_version >= Version("4.7"):
                 abi = "gcc4.7"
-            elif gcc_version >= ver("4.4"):
+            elif gcc_version >= Version("4.4"):
                 abi = "gcc4.4"
             else:
                 abi = "gcc4.1"  # unlikely, one hopes.
@@ -857,10 +857,7 @@ class IntelPackage(Package):
             raise_lib_error("Cannot find a BLACS library for the given MPI.")
 
         int_suff = "_" + self.intel64_int_suffix
-        scalapack_libnames = [
-            "libmkl_scalapack" + int_suff,
-            blacs_lib + int_suff,
-        ]
+        scalapack_libnames = ["libmkl_scalapack" + int_suff, blacs_lib + int_suff]
         sca_libs = find_libraries(
             scalapack_libnames, root=self.component_lib_dir("mkl"), shared=("+shared" in self.spec)
         )
@@ -1022,7 +1019,7 @@ class IntelPackage(Package):
             # Intel MPI since 2019 depends on libfabric which is not in the
             # lib directory but in a directory of its own which should be
             # included in the rpath
-            if self.version_yearlike >= ver("2019"):
+            if self.version_yearlike >= Version("2019"):
                 d = ancestor(self.component_lib_dir("mpi"))
                 if "+external-libfabric" in self.spec:
                     result += self.spec["libfabric"].libs
@@ -1101,6 +1098,7 @@ class IntelPackage(Package):
                 "CMAKE_PREFIX_PATH": self.normalize_path("mkl"),
                 "CMAKE_LIBRARY_PATH": self.component_lib_dir("mkl"),
                 "CMAKE_INCLUDE_PATH": self.component_include_dir("mkl"),
+                "PKG_CONFIG_PATH": os.path.join(self.normalize_path("mkl"), "bin", "pkgconfig"),
             }
 
             env.set("MKLROOT", env_mods["MKLROOT"])
@@ -1108,6 +1106,7 @@ class IntelPackage(Package):
             env.append_path("CMAKE_PREFIX_PATH", env_mods["CMAKE_PREFIX_PATH"])
             env.append_path("CMAKE_LIBRARY_PATH", env_mods["CMAKE_LIBRARY_PATH"])
             env.append_path("CMAKE_INCLUDE_PATH", env_mods["CMAKE_INCLUDE_PATH"])
+            env.append_path("PKG_CONFIG_PATH", env_mods["PKG_CONFIG_PATH"])
 
             debug_print("adding/modifying build env:", env_mods)
 
@@ -1159,9 +1158,7 @@ class IntelPackage(Package):
         #
         # Ideally, we just tell the installer to look around on the system.
         # Thankfully, we neither need to care nor emulate where it looks:
-        license_type = {
-            "ACTIVATION_TYPE": "exist_lic",
-        }
+        license_type = {"ACTIVATION_TYPE": "exist_lic"}
 
         # However (and only), if the spack-internal Intel license file has been
         # populated beyond its templated explanatory comments, proffer it to

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ import spack.repo
 hashes = []
 
 
-class SpecHashDescriptor(object):
+class SpecHashDescriptor:
     """This class defines how hashes are generated on Spec objects.
 
     Spec hashes in Spack are generated from a serialized (e.g., with

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import pytest
 
 import spack.environment as ev
 import spack.error
+import spack.parser
 import spack.spec
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
@@ -85,10 +86,9 @@ def test_spec_parse_unquoted_flags_report():
         # cflags, we just explain how to fix it for the immediate next arg.
         spec("gcc cflags=-Os -pipe -other-arg-that-gets-ignored cflags=-I /usr/include")
     # Verify that the generated error message is nicely formatted.
-    assert str(cm.value) == dedent(
-        '''\
-    No installed spec matches the hash: 'usr'
 
+    expected_message = dedent(
+        '''\
     Some compiler or linker flags were provided without quoting their arguments,
     which now causes spack to try to parse the *next* argument as a spec component
     such as a variant instead of an additional compiler or linker flag. If the
@@ -98,6 +98,8 @@ def test_spec_parse_unquoted_flags_report():
     (1) cflags=-Os -pipe => cflags="-Os -pipe"
     (2) cflags=-I /usr/include => cflags="-I /usr/include"'''
     )
+
+    assert expected_message in str(cm.value)
 
     # Verify that the same unquoted cflags report is generated in the error message even
     # if it fails during concretization, not just during parsing.
@@ -155,7 +157,7 @@ def _parse_types(string):
 
 
 def test_spec_deptypes_nodes():
-    output = spec("--types", "--cover", "nodes", "dt-diamond")
+    output = spec("--types", "--cover", "nodes", "--no-install-status", "dt-diamond")
     types = _parse_types(output)
 
     assert types["dt-diamond"] == ["    "]
@@ -165,7 +167,7 @@ def test_spec_deptypes_nodes():
 
 
 def test_spec_deptypes_edges():
-    output = spec("--types", "--cover", "edges", "dt-diamond")
+    output = spec("--types", "--cover", "edges", "--no-install-status", "dt-diamond")
     types = _parse_types(output)
 
     assert types["dt-diamond"] == ["    "]
@@ -181,13 +183,11 @@ def test_spec_returncode():
 
 
 def test_spec_parse_error():
-    with pytest.raises(spack.error.SpackError) as e:
+    with pytest.raises(spack.parser.SpecSyntaxError) as e:
         spec("1.15:")
 
     # make sure the error is formatted properly
-    error_msg = """\
-    1.15:
-        ^"""
+    error_msg = "unexpected tokens in the spec string\n1.15:\n    ^"
     assert error_msg in str(e.value)
 
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,8 +31,7 @@ class PyWorkloadAutomation(PythonPackage):
     depends_on("py-pyyaml@5.1:", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-wrapt", type=("build", "run"))
-    depends_on("py-pandas@0.23.0:", type=("build", "run"), when="^python@3.5.3:")
-    depends_on("py-pandas@0.23.0:0.24.2", type=("build", "run"), when="^python@:3.5.2")
+    depends_on("py-pandas@0.23.0:", type=("build", "run"))
     depends_on("py-future", type=("build", "run"))
     depends_on("py-louie", type=("build", "run"))
     depends_on("py-devlib", type=("build", "run"))

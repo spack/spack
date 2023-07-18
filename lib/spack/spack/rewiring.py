@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,7 +70,7 @@ def rewire_node(spec, explicit):
         for rel_path in manifest.get("text_to_relocate", [])
     ]
     if text_to_relocate:
-        relocate.unsafe_relocate_text(files=text_to_relocate, prefixes=prefix_to_prefix)
+        relocate.relocate_text(files=text_to_relocate, prefixes=prefix_to_prefix)
 
     bins_to_relocate = [
         os.path.join(tempdir, spec.dag_hash(), rel_path)
@@ -97,7 +97,7 @@ def rewire_node(spec, explicit):
                 spec.build_spec.prefix,
                 spec.prefix,
             )
-        relocate.unsafe_relocate_text_bin(binaries=bins_to_relocate, prefixes=prefix_to_prefix)
+        relocate.relocate_text_bin(binaries=bins_to_relocate, prefixes=prefix_to_prefix)
     # Copy package into place, except for spec.json (because spec.json
     # describes the old spec and not the new spliced spec).
     shutil.copytree(
@@ -119,21 +119,21 @@ def rewire_node(spec, explicit):
     spack.store.db.add(spec, spack.store.layout, explicit=explicit)
 
     # run post install hooks
-    spack.hooks.post_install(spec)
+    spack.hooks.post_install(spec, explicit)
 
 
 class RewireError(spack.error.SpackError):
     """Raised when something goes wrong with rewiring."""
 
     def __init__(self, message, long_msg=None):
-        super(RewireError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class PackageNotInstalledError(RewireError):
     """Raised when the build_spec for a splice was not installed."""
 
     def __init__(self, spliced_spec, build_spec, dep):
-        super(PackageNotInstalledError, self).__init__(
+        super().__init__(
             """Rewire of {0}
             failed due to missing install of build spec {1}
             for spec {2}""".format(

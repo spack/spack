@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Charmpp(Package):
     url = "https://charm.cs.illinois.edu/distrib/charm-6.8.2.tar.gz"
     git = "https://github.com/UIUC-PPL/charm.git"
 
-    maintainers = ["matthiasdiener"]
+    maintainers("matthiasdiener")
 
     version("main", branch="main")
 
@@ -226,7 +226,6 @@ class Charmpp(Package):
     #            build-target=LIBS backend={0}'.format(b))
 
     def install(self, spec, prefix):
-
         if not ("backend=mpi" in self.spec) or not ("backend=netlrts" in self.spec):
             if "+pthreads" in self.spec:
                 raise InstallError(

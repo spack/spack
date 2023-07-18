@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,9 +22,6 @@ parser = spack.main.make_argument_parser()
 spack.main.add_all_commands(parser)
 
 
-@pytest.mark.skipif(
-    sys.version_info[:2] == (2, 7), reason="Fails as the output contains a warning on Python 2.7"
-)
 def test_names():
     """Test default output of spack commands."""
     out1 = commands().strip().split("\n")
@@ -198,7 +195,7 @@ def test_update_completion_arg(tmpdir, monkeypatch):
             "format": "bash",
             "header": str(mock_infile),
             "update": str(mock_bashfile),
-        },
+        }
     }
 
     # make a mock completion file missing the --update-completion argument

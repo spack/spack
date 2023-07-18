@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,6 @@ import spack.detection
 import spack.detection.path
 from spack.main import SpackCommand
 from spack.spec import Spec
-
-is_windows = sys.platform == "win32"
 
 
 @pytest.fixture
@@ -39,16 +37,15 @@ def _platform_executables(monkeypatch):
 
 
 def define_plat_exe(exe):
-    if is_windows:
+    if sys.platform == "win32":
         exe += ".bat"
     return exe
 
 
 def test_find_external_single_package(mock_executable, executables_found, _platform_executables):
     pkgs_to_check = [spack.repo.path.get_pkg_class("cmake")]
-    executables_found(
-        {mock_executable("cmake", output="echo cmake version 1.foo"): define_plat_exe("cmake")}
-    )
+    cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
+    executables_found({str(cmake_path): define_plat_exe("cmake")})
 
     pkg_to_entries = spack.detection.by_executable(pkgs_to_check)
 
@@ -73,7 +70,7 @@ def test_find_external_two_instances_same_package(
         "cmake", output="echo cmake version 3.17.2", subdir=("base2", "bin")
     )
     cmake_exe = define_plat_exe("cmake")
-    executables_found({cmake_path1: cmake_exe, cmake_path2: cmake_exe})
+    executables_found({str(cmake_path1): cmake_exe, str(cmake_path2): cmake_exe})
 
     pkg_to_entries = spack.detection.by_executable(pkgs_to_check)
 
@@ -107,11 +104,9 @@ def test_find_external_update_config(mutable_config):
 
 def test_get_executables(working_env, mock_executable):
     cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
-
-    os.environ["PATH"] = os.pathsep.join([os.path.dirname(cmake_path1)])
-    path_to_exe = spack.detection.executables_in_path()
+    path_to_exe = spack.detection.executables_in_path([os.path.dirname(cmake_path1)])
     cmake_exe = define_plat_exe("cmake")
-    assert path_to_exe[cmake_path1] == cmake_exe
+    assert path_to_exe[str(cmake_path1)] == cmake_exe
 
 
 external = SpackCommand("external")
@@ -162,6 +157,21 @@ def test_find_external_cmd_full_repo(
     pkg_externals = pkg_cfg["externals"]
 
     assert {"spec": "find-externals1@1.foo", "prefix": prefix} in pkg_externals
+
+
+def test_find_external_cmd_exclude(
+    mutable_config, working_env, mock_executable, mutable_mock_repo, _platform_executables
+):
+    """Test invoking 'spack external find --all --exclude', to ensure arbitary
+    external packages can be ignored.
+    """
+    exe_path1 = mock_executable("find-externals1-exe", output="echo find-externals1 version 1.foo")
+    os.environ["PATH"] = os.pathsep.join([os.path.dirname(exe_path1)])
+    external("find", "--all", "--exclude=find-externals1")
+
+    pkgs_cfg = spack.config.get("packages")
+
+    assert "find-externals1" not in pkgs_cfg.keys()
 
 
 def test_find_external_no_manifest(
@@ -323,7 +333,7 @@ def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _pla
     assert "extra_attributes" in external_gcc
     extra_attributes = external_gcc["extra_attributes"]
     assert "prefix" not in extra_attributes
-    assert extra_attributes["compilers"]["c"] == gcc_exe
+    assert extra_attributes["compilers"]["c"] == str(gcc_exe)
 
 
 def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platform_executables):
@@ -349,7 +359,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     assert "externals" in packages_yaml["gcc"]
     externals = packages_yaml["gcc"]["externals"]
     assert len(externals) == 1
-    assert externals[0]["prefix"] == "/opt/gcc/bin"
+    assert externals[0]["prefix"] == os.path.sep + os.path.join("opt", "gcc", "bin")
 
 
 def test_new_entries_are_reported_correctly(
@@ -370,13 +380,7 @@ def test_new_entries_are_reported_correctly(
     assert "No new external packages detected" in output
 
 
-@pytest.mark.parametrize(
-    "command_args",
-    [
-        ("-t", "build-tools"),
-        ("-t", "build-tools", "cmake"),
-    ],
-)
+@pytest.mark.parametrize("command_args", [("-t", "build-tools"), ("-t", "build-tools", "cmake")])
 def test_use_tags_for_detection(command_args, mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake cmake
     cmake_exe = mock_executable("cmake", output="echo cmake version 3.19.1")
@@ -392,3 +396,30 @@ def test_use_tags_for_detection(command_args, mock_executable, mutable_config, m
     assert "The following specs have been" in output
     assert "cmake" in output
     assert "openssl" not in output
+
+
+@pytest.mark.regression("38733")
+@pytest.mark.skipif(sys.platform == "win32", reason="the test uses bash scripts")
+def test_failures_in_scanning_do_not_result_in_an_error(
+    mock_executable, monkeypatch, mutable_config
+):
+    """Tests that scanning paths with wrong permissions, won't cause `external find` to error."""
+    cmake_exe1 = mock_executable(
+        "cmake", output="echo cmake version 3.19.1", subdir=("first", "bin")
+    )
+    cmake_exe2 = mock_executable(
+        "cmake", output="echo cmake version 3.23.3", subdir=("second", "bin")
+    )
+
+    # Remove access from the first directory executable
+    cmake_exe1.parent.chmod(0o600)
+
+    value = os.pathsep.join([str(cmake_exe1.parent), str(cmake_exe2.parent)])
+    monkeypatch.setenv("PATH", value)
+
+    output = external("find", "cmake")
+    assert external.returncode == 0
+    assert "The following specs have been" in output
+    assert "cmake" in output
+    assert "3.23.3" in output
+    assert "3.19.1" not in output

@@ -1,7 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from typing import Optional
+
 import llnl.util.lang
 
 import spack.error
@@ -10,11 +12,11 @@ import spack.error
 class NoPlatformError(spack.error.SpackError):
     def __init__(self):
         msg = "Could not determine a platform for this machine"
-        super(NoPlatformError, self).__init__(msg)
+        super().__init__(msg)
 
 
 @llnl.util.lang.lazy_lexicographic_ordering
-class Platform(object):
+class Platform:
     """Platform is an abstract class extended by subclasses.
 
     To add a new type of platform (such as cray_xe), create a subclass and set all the
@@ -37,18 +39,18 @@ class Platform(object):
     """
 
     # Subclass sets number. Controls detection order
-    priority = None  # type: int
+    priority: Optional[int] = None
 
     #: binary formats used on this platform; used by relocation logic
     binary_formats = ["elf"]
 
-    front_end = None  # type: str
-    back_end = None  # type: str
-    default = None  # type: str # The default back end target.
+    front_end: Optional[str] = None
+    back_end: Optional[str] = None
+    default: Optional[str] = None  # The default back end target.
 
-    front_os = None  # type: str
-    back_os = None  # type: str
-    default_os = None  # type: str
+    front_os: Optional[str] = None
+    back_os: Optional[str] = None
+    default_os: Optional[str] = None
 
     reserved_targets = ["default_target", "frontend", "fe", "backend", "be"]
     reserved_oss = ["default_os", "frontend", "fe", "backend", "be"]

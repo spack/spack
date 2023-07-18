@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
 
 
-class ABI(object):
+class ABI:
     """This class provides methods to test ABI compatibility between specs.
     The current implementation is rather rough and could be improved."""
 
@@ -25,7 +25,7 @@ class ABI(object):
         return (
             not target.architecture
             or not constraint.architecture
-            or target.architecture.satisfies(constraint.architecture)
+            or target.architecture.intersects(constraint.architecture)
         )
 
     @memoized
@@ -104,7 +104,7 @@ class ABI(object):
             for cversion in child.compiler.versions:
                 # For a few compilers use specialized comparisons.
                 # Otherwise match on version match.
-                if pversion.satisfies(cversion):
+                if pversion.intersects(cversion):
                     return True
                 elif parent.compiler.name == "gcc" and self._gcc_compiler_compare(
                     pversion, cversion

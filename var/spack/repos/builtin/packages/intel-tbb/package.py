@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,12 +25,14 @@ class IntelTbb(CMakePackage, MakefilePackage):
     url = url_prefix + "archive/v2020.1.tar.gz"
     git = "https://github.com/oneapi-src/oneTBB.git"
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
 
     version("master", branch="master")
+    version("2021.9.0", sha256="1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e")
+    version("2021.8.0", sha256="eee380323bb7ce864355ed9431f85c43955faaae9e9bce35c62b372d7ffd9f8b")
     version("2021.7.0", sha256="2cae2a80cda7d45dc7c072e4295c675fff5ad8316691f26f40539f7e7e54c0cc")
     version("2021.6.0", sha256="4897dd106d573e9dacda8509ca5af1a0e008755bf9c383ef6777ac490223031f")
     version("2021.5.0", sha256="e5b57537c741400cf6134b428fc1689a649d7d38d9bb9c1b6d64f092ea28178a")
@@ -122,6 +124,10 @@ class IntelTbb(CMakePackage, MakefilePackage):
     patch("gcc_generic-pedantic-2019.patch", level=1, when="@2019.1:2019.5")
     patch("gcc_generic-pedantic-4.4.patch", level=1, when="@:2019.0")
 
+    # Patch and conflicts for GCC 13 support (#1031).
+    patch("gcc_13-2021.patch", when="@2021.1:")
+    conflicts("%gcc@13", when="@:2021.3")
+
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
     patch("tbb_cmakeConfig-2019.5.patch", level=0, when="@2019.5:2021.0")
     patch("tbb_cmakeConfig.patch", level=0, when="@2017.7:2019.4")
@@ -137,6 +143,9 @@ class IntelTbb(CMakePackage, MakefilePackage):
     # https://github.com/oneapi-src/oneTBB/pull/258
     # https://github.com/oneapi-src/oneTBB/commit/86f6dcdc17a8f5ef2382faaef860cfa5243984fe.patch?full_index=1
     patch("macos-arm64.patch", when="@:2021.0")
+
+    # build older tbb with %oneapi
+    patch("intel-tbb.2020.3-icx.patch", when="@2020.3 %oneapi")
 
     # Support for building with %nvhpc
     # 1) remove flags nvhpc compilers do not recognize
@@ -175,7 +184,7 @@ class IntelTbb(CMakePackage, MakefilePackage):
         return find_libraries("libtbb*", root=self.prefix, shared=shared, recursive=True)
 
 
-class SetupEnvironment(object):
+class SetupEnvironment:
     # We set OS here in case the user has it set to something else
     # that TBB doesn't expect.
     def setup_build_environment(self, env):
@@ -200,7 +209,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
         # pkg-config generation is introduced in May 5, 2021.
         # It must not be overwritten by spack-generated tbb.pc.
         # https://github.com/oneapi-src/oneTBB/commit/478de5b1887c928e52f029d706af6ea640a877be
-        if self.spec.satisfies("@:2021.2.0", strict=True):
+        if self.spec.satisfies("@:2021.2.0"):
             mkdirp(self.prefix.lib.pkgconfig)
 
             with open(join_path(self.prefix.lib.pkgconfig, "tbb.pc"), "w") as f:
@@ -255,7 +264,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
         #
         self.coerce_to_spack("build")
 
-        if spec.satisfies("%clang") or spec.satisfies("%apple-clang"):
+        if spec.satisfies("%clang") or spec.satisfies("%apple-clang") or spec.satisfies("%rocmcc"):
             tbb_compiler = "clang"
         elif spec.satisfies("%intel"):
             tbb_compiler = "icc"
@@ -296,7 +305,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
             # install debug libs if they exist
             install(join_path("build", "*debug", lib_name + "_debug.*"), prefix.lib)
 
-        if spec.satisfies("@2017.8,2018.1:", strict=True):
+        if spec.satisfies("@2017.8,2018.1:"):
             # Generate and install the CMake Config file.
             cmake_args = (
                 "-DTBB_ROOT={0}".format(prefix),

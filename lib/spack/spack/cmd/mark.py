@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import sys
 
@@ -27,12 +25,7 @@ error_message = """You can either:
 """
 
 # Arguments for display_specs when we find ambiguity
-display_args = {
-    "long": True,
-    "show_flags": False,
-    "variants": False,
-    "indent": 4,
-}
+display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 
 
 def setup_parser(subparser):
@@ -42,10 +35,7 @@ def setup_parser(subparser):
         "--all",
         action="store_true",
         dest="all",
-        help="Mark ALL installed packages that match each "
-        "supplied spec. If you `mark --all libelf`,"
-        " ALL versions of `libelf` are marked. If no spec is "
-        "supplied, all installed packages will be marked.",
+        help="mark ALL installed packages that match each supplied spec",
     )
     exim = subparser.add_mutually_exclusive_group(required=True)
     exim.add_argument(
@@ -53,14 +43,14 @@ def setup_parser(subparser):
         "--explicit",
         action="store_true",
         dest="explicit",
-        help="Mark packages as explicitly installed.",
+        help="mark packages as explicitly installed",
     )
     exim.add_argument(
         "-i",
         "--implicit",
         action="store_true",
         dest="implicit",
-        help="Mark packages as implicitly installed.",
+        help="mark packages as implicitly installed",
     )
 
 

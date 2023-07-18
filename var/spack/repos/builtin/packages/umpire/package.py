@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/Umpire.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers = ["davidbeckingsale"]
+    maintainers("davidbeckingsale")
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
@@ -84,7 +84,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.8:", type="build")
     depends_on("cmake@3.9:", when="+cuda", type="build")
-    depends_on("cmake@:3.20", when="+rocm", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:")
 
     depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
@@ -99,6 +98,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp@main", when="@main")
     depends_on("camp@main", when="@develop")
     depends_on("camp+openmp", when="+openmp")
+    depends_on("camp~cuda", when="~cuda")
 
     with when("@5.0.0:"):
         with when("+cuda"):
@@ -147,7 +147,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
-        entries = super(Umpire, self).initconfig_compiler_entries()
+        entries = super().initconfig_compiler_entries()
 
         if "+rocm" in spec:
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
@@ -165,7 +165,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        entries = super(Umpire, self).initconfig_hardware_entries()
+        entries = super().initconfig_hardware_entries()
 
         option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 
@@ -198,6 +198,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
                 arch_str = ",".join(archs)
                 entries.append(
                     cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
+                )
+                entries.append(
+                    cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
                 )
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,15 +15,30 @@ class Libcap(MakefilePackage):
     homepage = "https://sites.google.com/site/fullycapable/"
     url = "https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.25.tar.gz"
 
+    version("2.68", sha256="046e55716e0643b565efcd1dab1d26c5625709fcd0b5c271290c7ea1524cf906")
+    version("2.67", sha256="2d0b679a431c06afd8651a8ada906303eda8b3ac67c308e5fe1937eea5c018aa")
+    version("2.66", sha256="5f65dc5b2e9f63a0748ea1b05be7965a38548db1cbfd53b30271ff02186b3a4a")
     version("2.65", sha256="25718d9c45ef6beccb55b509ed4bae94ae2bdfeb808709662b264aec0a7016f4")
     version("2.64", sha256="e9ec608ae5720989d7274531f9898d64b6bca2491a231b8091229e49891933dd")
     version("2.25", sha256="4ca80dc6f9f23d14747e4b619fd9784434c570e24a7346f326c692784ed83a86")
 
     patch("libcap-fix-the-libcap-native-building-failure-on-CentOS-6.7.patch", when="@2.25")
 
-    def install(self, spec, prefix):
-        make_args = ["RAISE_SETFCAP=no", "lib=lib", "prefix={0}".format(prefix), "install"]
-        make(*make_args)
+    def makeflags(self, prefix):
+        return [
+            "RAISE_SETFCAP=no",
+            "GOLANG=no",
+            "USE_GPERF=no",
+            "SHARED=yes",
+            "lib=lib",
+            "prefix={}".format(prefix),
+        ]
 
-        chmod = which("chmod")
-        chmod("+x", join_path(prefix.lib, "libcap.so"))
+    def build(self, spec, prefix):
+        make(*self.makeflags(prefix))
+
+    def install(self, spec, prefix):
+        make(*self.makeflags(prefix), "install")
+
+        # this is a shared library that prints some info when executed
+        set_executable(join_path(prefix.lib, "libcap.so"))

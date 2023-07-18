@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,13 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/cp2k/dbcsr/releases/download/v2.2.0/dbcsr-2.2.0.tar.gz"
     list_url = "https://github.com/cp2k/dbcsr/releases"
 
-    maintainers = ["dev-zero"]
+    maintainers("dev-zero", "mtaillefumier")
 
     version("develop", branch="develop")
+    version("2.6.0", sha256="c67b02ff9abc7c1f529af446a9f01f3ef9e5b0574f220259128da8d5ca7e9dc6")
+    version("2.5.0", sha256="91fda9b2502e5d0a2a6cdd5a73ef096253cc7e75bd01ba5189a4726ad86aef08")
+    version("2.4.1", sha256="b3d5ae62ca582b72707a2c932e8074a4f2f61d61085d97bd374213c70b8dbdcf")
+    version("2.4.0", sha256="cf2b774328c9a30677501f49b79955841bd08915a7ca53c8533bfdf14a8f9bd4")
     version("2.3.0", sha256="f750de586cffa66852b646f7f85eb831eeb64fa2d25ce50ed10e1df016dd3364")
     version("2.2.0", sha256="245b0382ddc7b80f85af8288f75bd03d56ec51cdfb6968acb4931529b35173ec")
     version("2.1.0", sha256="9e58fd998f224632f356e479d18b5032570d00d87b86736b6a6ac2d03f8d4b3c")
@@ -42,15 +46,20 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     variant("opencl", default=False, description="Enable OpenCL backend")
+    variant("mpi_f08", default=False, when="@2.6:", description="Use mpi F08 module")
 
     depends_on("blas")
     depends_on("lapack")
     depends_on("mpi", when="+mpi")
     depends_on("libxsmm@1.11:~header-only", when="smm=libxsmm")
 
-    depends_on("cmake@3.17:", type="build", when="@2.1:")
     depends_on("cmake@3.10:", type="build")
+    depends_on("cmake@3.12:", type="build", when="@2.1:")
+    depends_on("cmake@3.17:", type="build", when="@2.2:")
+    depends_on("cmake@3.22:", type="build", when="@2.3:")
+
     depends_on("py-fypp", type="build")
+    depends_on("py-fypp@3.1:", type="build", when="@2.6:")
     depends_on("pkgconfig", type="build")
     depends_on("python@3.6:", type="build", when="+cuda")
 
@@ -62,7 +71,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     # for optimal kernels. Note that we don't override the parent class arch
     # properties, since the parent class defines constraints for different archs
     # Instead just mark all unsupported cuda archs as conflicting.
-    dbcsr_cuda_archs = ("35", "37", "60", "70")
+    dbcsr_cuda_archs = ("35", "37", "60", "70", "80")
     cuda_msg = "dbcsr only supports cuda_arch {0}".format(dbcsr_cuda_archs)
 
     for arch in CudaPackage.cuda_arch_values:
@@ -71,7 +80,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+cuda", when="cuda_arch=none", msg=cuda_msg)
 
-    dbcsr_amdgpu_targets = "gfx906"
+    dbcsr_amdgpu_targets = {"gfx906", "gfx910", "gfx90a", "gfx90a:xnack-", "gfx90a:xnack+"}
     amd_msg = "DBCSR only supports amdgpu_target {0}".format(dbcsr_amdgpu_targets)
 
     for arch in ROCmPackage.amdgpu_targets:
@@ -89,7 +98,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("smm=blas", when="+opencl")
 
-    generator = "Ninja"
+    generator("ninja")
     depends_on("ninja@1.10:", type="build")
 
     def cmake_args(self):
@@ -121,18 +130,9 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value[0]
 
-            gpu_map = {
-                "35": "K40",
-                "37": "K80",
-                "60": "P100",
-                "70": "V100",
-            }
-
-            if "@2.3:" in spec:
-                gpu_map["80"] = "A100"
+            gpu_map = {"35": "K40", "37": "K80", "60": "P100", "70": "V100", "80": "A100"}
 
             gpuver = gpu_map[cuda_arch]
-
             if cuda_arch == "35" and self.spec.satisfies("+cuda_arch_35_k20x"):
                 gpuver = "K20X"
 
@@ -140,13 +140,21 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
         if self.spec.satisfies("+rocm"):
             amd_arch = self.spec.variants["amdgpu_target"].value[0]
-
-            gpuver = {"gfx906": "Mi50"}[amd_arch]
+            gpuver = {
+                "gfx906": "Mi50",
+                "gfx908": "Mi100",
+                "gfx90a": "Mi250",
+                "gfx90a:xnack-": "Mi250",
+                "gfx90a:xnack+": "Mi250",
+            }[amd_arch]
 
             args += ["-DWITH_GPU={0}".format(gpuver), "-DUSE_ACCEL=hip"]
 
         if self.spec.satisfies("+opencl"):
             args += ["-DUSE_ACCEL=opencl"]
+
+        if self.spec.satisfies("+mpi_f08"):
+            args += ["-DUSE_MPI_F08=ON"]
 
         return args
 

@@ -1,13 +1,13 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
 import itertools
-
-import six
+from typing import Dict, List, Optional, Set
 
 import spack.error
+import spack.spec
 import spack.util.spack_json as sjson
 
 
@@ -38,7 +38,7 @@ def _cross_provider_maps(lmap, rmap):
     return result
 
 
-class _IndexBase(object):
+class _IndexBase:
     #: This is a dict of dicts used for finding providers of particular
     #: virtual dependencies. The dict of dicts looks like:
     #:
@@ -55,7 +55,7 @@ class _IndexBase(object):
     #: Calling providers_for(spec) will find specs that provide a
     #: matching implementation of MPI. Derived class need to construct
     #: this attribute according to the semantics above.
-    providers = None
+    providers: Dict[str, Dict[str, Set[str]]]
 
     def providers_for(self, virtual_spec):
         """Return a list of specs of all packages that provide virtual
@@ -66,13 +66,13 @@ class _IndexBase(object):
         """
         result = set()
         # Allow string names to be passed as input, as well as specs
-        if isinstance(virtual_spec, six.string_types):
+        if isinstance(virtual_spec, str):
             virtual_spec = spack.spec.Spec(virtual_spec)
 
         # Add all the providers that satisfy the vpkg spec.
         if virtual_spec.name in self.providers:
             for p_spec, spec_set in self.providers[virtual_spec.name].items():
-                if p_spec.satisfies(virtual_spec, deps=False):
+                if p_spec.intersects(virtual_spec, deps=False):
                     result.update(spec_set)
 
         # Return providers in order. Defensively copy.
@@ -129,11 +129,16 @@ class _IndexBase(object):
 
 
 class ProviderIndex(_IndexBase):
-    def __init__(self, repository, specs=None, restrict=False):
+    def __init__(
+        self,
+        repository: "spack.repo.RepoType",
+        specs: Optional[List["spack.spec.Spec"]] = None,
+        restrict: bool = False,
+    ):
         """Provider index based on a single mapping of providers.
 
         Args:
-            specs (list of specs): if provided, will call update on each
+            specs: if provided, will call update on each
                 single spec to initialize this provider index.
 
             restrict: "restricts" values to the verbatim input specs; do not
@@ -174,14 +179,14 @@ class ProviderIndex(_IndexBase):
         assert not self.repository.is_virtual_safe(spec.name), msg
 
         pkg_provided = self.repository.get_pkg_class(spec.name).provided
-        for provided_spec, provider_specs in six.iteritems(pkg_provided):
+        for provided_spec, provider_specs in pkg_provided.items():
             for provider_spec_readonly in provider_specs:
                 # TODO: fix this comment.
                 # We want satisfaction other than flags
                 provider_spec = provider_spec_readonly.copy()
                 provider_spec.compiler_flags = spec.compiler_flags.copy()
 
-                if spec.satisfies(provider_spec, deps=False):
+                if spec.intersects(provider_spec, deps=False):
                     provided_name = provided_spec.name
 
                     provider_map = self.providers.setdefault(provided_name, {})
@@ -287,8 +292,8 @@ class ProviderIndex(_IndexBase):
         index.providers = _transform(
             providers,
             lambda vpkg, plist: (
-                spack.spec.Spec.from_node_dict(vpkg),
-                set(spack.spec.Spec.from_node_dict(p) for p in plist),
+                spack.spec.SpecfileV4.from_node_dict(vpkg),
+                set(spack.spec.SpecfileV4.from_node_dict(p) for p in plist),
             ),
         )
         return index
@@ -310,7 +315,7 @@ def _transform(providers, transform_fun, out_mapping_type=dict):
 
     def mapiter(mappings):
         if isinstance(mappings, dict):
-            return six.iteritems(mappings)
+            return mappings.items()
         else:
             return iter(mappings)
 
