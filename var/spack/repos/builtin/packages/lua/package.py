@@ -29,7 +29,7 @@ class LuaImplPackage(MakefilePackage):
     lua_version_override = None
 
     def __init__(self, *args, **kwargs):
-        super(LuaImplPackage, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.lua_dir_name = "lua"
         pass
 

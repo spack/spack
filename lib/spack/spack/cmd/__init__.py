@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import argparse
 import os
 import re
@@ -149,7 +147,7 @@ def get_command(cmd_name):
     return getattr(get_module(cmd_name), pname)
 
 
-class _UnquotedFlags(object):
+class _UnquotedFlags:
     """Use a heuristic in `.extract()` to detect whether the user is trying to set
     multiple flags like the docker ENV attribute allows (e.g. 'cflags=-Os -pipe').
 
@@ -547,7 +545,7 @@ class PythonNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super(PythonNameError, self).__init__("{0} is not a permissible Python name.".format(name))
+        super().__init__("{0} is not a permissible Python name.".format(name))
 
 
 class CommandNameError(spack.error.SpackError):
@@ -555,9 +553,7 @@ class CommandNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super(CommandNameError, self).__init__(
-            "{0} is not a permissible Spack command name.".format(name)
-        )
+        super().__init__("{0} is not a permissible Spack command name.".format(name))
 
 
 ########################################

@@ -20,7 +20,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument("-p", "--path", help="Source location of package")
+    subparser.add_argument("-p", "--path", help="source location of package")
 
     clone_group = subparser.add_mutually_exclusive_group()
     clone_group.add_argument(
@@ -28,18 +28,18 @@ def setup_parser(subparser):
         action="store_false",
         dest="clone",
         default=None,
-        help="Do not clone. The package already exists at the source path",
+        help="do not clone, the package already exists at the source path",
     )
     clone_group.add_argument(
         "--clone",
         action="store_true",
         dest="clone",
         default=None,
-        help="Clone the package even if the path already exists",
+        help="clone the package even if the path already exists",
     )
 
     subparser.add_argument(
-        "-f", "--force", help="Remove any files or directories that block cloning source code"
+        "-f", "--force", help="remove any files or directories that block cloning source code"
     )
 
     arguments.add_common_arguments(subparser, ["spec"])

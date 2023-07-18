@@ -396,17 +396,16 @@ def test_dev_build_rebuild_on_source_changes(
     with envdir.as_cwd():
         with open("spack.yaml", "w") as f:
             f.write(
-                """\
+                f"""\
 spack:
   specs:
-  - %s@0.0.0
+  - {test_spec}@0.0.0
 
   develop:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
-      path: %s
+      path: {build_dir}
 """
-                % (test_spec, build_dir)
             )
 
         env("create", "test", "./spack.yaml")

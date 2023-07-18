@@ -2,8 +2,6 @@
 #
 # SPDX-License-Identifier: Python-2.0
 "Usage: unparse.py <path to source file>"
-from __future__ import print_function, unicode_literals
-
 import ast
 import sys
 from contextlib import contextmanager

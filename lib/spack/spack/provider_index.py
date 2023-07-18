@@ -38,7 +38,7 @@ def _cross_provider_maps(lmap, rmap):
     return result
 
 
-class _IndexBase(object):
+class _IndexBase:
     #: This is a dict of dicts used for finding providers of particular
     #: virtual dependencies. The dict of dicts looks like:
     #:

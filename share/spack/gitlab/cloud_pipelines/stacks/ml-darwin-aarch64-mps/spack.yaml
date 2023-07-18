@@ -20,6 +20,8 @@ spack:
       variants: +mps~cuda~rocm
     mpi:
       require: openmpi
+    openblas:
+      require: ~fortran
 
   specs:
   # Hugging Face
