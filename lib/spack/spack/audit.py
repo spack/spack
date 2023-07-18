@@ -60,7 +60,7 @@ CALLBACKS = {}
 GROUPS = collections.defaultdict(list)
 
 
-class Error(object):
+class Error:
     """Information on an error reported in a test."""
 
     def __init__(self, summary, details):
@@ -725,11 +725,22 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
 
             dependencies_to_check.extend([edge.spec for edge in dependency_data.values()])
 
+        host_architecture = spack.spec.ArchSpec.default_arch()
         for s in dependencies_to_check:
             dependency_pkg_cls = None
             try:
                 dependency_pkg_cls = spack.repo.path.get_pkg_class(s.name)
-                assert any(v.intersects(s.versions) for v in list(dependency_pkg_cls.versions))
+                # Some packages have hacks that might cause failures on some platform
+                # Allow to explicitly set conditions to skip version checks in that case
+                skip_conditions = getattr(dependency_pkg_cls, "skip_version_audit", [])
+                skip_version_check = False
+                for condition in skip_conditions:
+                    if host_architecture.satisfies(spack.spec.Spec(condition).architecture):
+                        skip_version_check = True
+                        break
+                assert skip_version_check or any(
+                    v.intersects(s.versions) for v in list(dependency_pkg_cls.versions)
+                )
             except Exception:
                 summary = (
                     "{0}: dependency on {1} cannot be satisfied " "by known versions of {1.name}"

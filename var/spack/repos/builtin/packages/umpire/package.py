@@ -147,7 +147,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
-        entries = super(Umpire, self).initconfig_compiler_entries()
+        entries = super().initconfig_compiler_entries()
 
         if "+rocm" in spec:
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
@@ -165,7 +165,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        entries = super(Umpire, self).initconfig_hardware_entries()
+        entries = super().initconfig_hardware_entries()
 
         option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 

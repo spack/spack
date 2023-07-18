@@ -51,9 +51,7 @@ def fetch(parser, args):
             else:
                 specs = env.all_specs()
             if specs == []:
-                tty.die(
-                    "No uninstalled specs in environment. Did you " "run `spack concretize` yet?"
-                )
+                tty.die("No uninstalled specs in environment. Did you run `spack concretize` yet?")
         else:
             tty.die("fetch requires at least one spec argument")
 

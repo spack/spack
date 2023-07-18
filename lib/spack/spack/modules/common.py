@@ -35,6 +35,7 @@ import inspect
 import os.path
 import pathlib
 import re
+import string
 import warnings
 from typing import Optional
 
@@ -294,7 +295,7 @@ def read_module_indices():
     return module_indices
 
 
-class UpstreamModuleIndex(object):
+class UpstreamModuleIndex:
     """This is responsible for taking the individual module indices of all
     upstream Spack installations and locating the module for a given spec
     based on which upstream install it is located in."""
@@ -388,7 +389,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             return writer.layout.use_name
 
 
-class BaseConfiguration(object):
+class BaseConfiguration:
     """Manipulates the information needed to generate a module file to make
     querying easier. It needs to be sub-classed for specific module types.
     """
@@ -471,6 +472,11 @@ class BaseConfiguration(object):
         return None
 
     @property
+    def conflicts(self):
+        """Conflicts for this module file"""
+        return self.conf.get("conflict", [])
+
+    @property
     def excluded(self):
         """Returns True if the module has been excluded, False otherwise."""
 
@@ -551,7 +557,7 @@ class BaseConfiguration(object):
         return self.conf.get("verbose")
 
 
-class BaseFileLayout(object):
+class BaseFileLayout:
     """Provides information on the layout of module files. Needs to be
     sub-classed for specific module types.
     """
@@ -764,6 +770,36 @@ class BaseContext(tengine.Context):
             return False
 
     @tengine.context_property
+    def conflicts(self):
+        """List of conflicts for the module file."""
+        fmts = []
+        projection = proj.get_projection(self.conf.projections, self.spec)
+        for item in self.conf.conflicts:
+            self._verify_conflict_naming_consistency_or_raise(item, projection)
+            item = self.spec.format(item)
+            fmts.append(item)
+        return fmts
+
+    def _verify_conflict_naming_consistency_or_raise(self, item, projection):
+        f = string.Formatter()
+        errors = []
+        if len([x for x in f.parse(item)]) > 1:
+            for naming_dir, conflict_dir in zip(projection.split("/"), item.split("/")):
+                if naming_dir != conflict_dir:
+                    errors.extend(
+                        [
+                            f"spec={self.spec.cshort_spec}",
+                            f"conflict_scheme={item}",
+                            f"naming_scheme={projection}",
+                        ]
+                    )
+        if errors:
+            raise ModulesError(
+                message="conflict scheme does not match naming scheme",
+                long_message="\n    ".join(errors),
+            )
+
+    @tengine.context_property
     def autoload(self):
         """List of modules that needs to be loaded automatically."""
         # From 'autoload' configuration option
@@ -821,7 +857,7 @@ def ensure_modules_are_enabled_or_warn():
     warnings.warn(msg)
 
 
-class BaseModuleFileWriter(object):
+class BaseModuleFileWriter:
     def __init__(self, spec, module_set_name, explicit=None):
         self.spec = spec
 

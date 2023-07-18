@@ -24,6 +24,6 @@ class PyTestCallback(mp.Python):
 
     # TODO (post-34236): "test" -> "test_callback" once remove "test" support
     def test(self):
-        super(PyTestCallback, self).test()
+        super().test()
 
         print("PyTestCallback test")

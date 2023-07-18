@@ -19,3 +19,4 @@ class Xmlto(AutotoolsPackage):
 
     # FIXME: missing a lot of dependencies
     depends_on("libxslt")
+    depends_on("util-linux", type=("build", "run"))  # getopt with support for longopts

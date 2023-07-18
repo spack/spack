@@ -22,7 +22,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "mock_module_filename")
-class TestTcl(object):
+class TestTcl:
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Tcl module file."""
 
@@ -311,9 +311,12 @@ class TestTcl(object):
         assert len([x for x in content if x == "conflict mpileaks"]) == 1
         assert len([x for x in content if x == "conflict intel/14.0.1"]) == 1
 
+    def test_inconsistent_conflict_in_modules_yaml(self, modulefile_content, module_configuration):
+        """Tests inconsistent conflict definition in `modules.yaml`."""
+
         # This configuration is inconsistent, check an error is raised
         module_configuration("wrong_conflicts")
-        with pytest.raises(SystemExit):
+        with pytest.raises(spack.modules.common.ModulesError):
             modulefile_content("mpileaks")
 
     def test_module_index(self, module_configuration, factory, tmpdir_factory):
