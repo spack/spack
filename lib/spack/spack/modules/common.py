@@ -796,7 +796,7 @@ class BaseContext(tengine.Context):
         if errors:
             raise ModulesError(
                 message="conflict scheme does not match naming scheme",
-                long_message="\n".join(errors),
+                long_message="\n    ".join(errors),
             )
 
     @tengine.context_property
