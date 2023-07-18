@@ -66,6 +66,8 @@ spack:
     elfutils:
       variants: +bzip2 ~nls +xz
       require: '%gcc'
+    unzip:
+      require: '%gcc'
 
     # EXTERNALS
     cray-mpich:
