@@ -5,7 +5,6 @@
 
 import errno
 import os
-import platform
 import shutil
 import sys
 
@@ -49,11 +48,8 @@ def mock_get_specs_multiarch(database, monkeypatch):
     monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: specs)
 
 
-@pytest.mark.skipif(
-    platform.system().lower() != "linux", reason="implementation for MacOS still missing"
-)
-@pytest.mark.db
-def test_buildcache_preview_just_runs(database):
+def test_buildcache_preview_just_runs():
+    # TODO: remove in Spack 0.21
     buildcache("preview", "mpileaks")
 
 

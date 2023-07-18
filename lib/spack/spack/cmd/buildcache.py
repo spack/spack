@@ -414,17 +414,10 @@ def keys_fn(args):
 
 def preview_fn(args):
     """analyze an installed spec and reports whether executables and libraries are relocatable"""
-    constraints = spack.cmd.parse_specs(args.specs)
-    specs = spack.store.find(constraints, multiple=True)
-
-    # Cycle over the specs that match
-    for spec in specs:
-        print("Relocatable nodes")
-        print("--------------------------------")
-        print(spec.tree(status_fn=lambda s: True))
-
-    # Print deprecation message last, so it doesn't get lost in the output
-    tty.warn("`spack buildcache preview` is deprecated and will be removed in Spack 0.22")
+    tty.warn(
+        "`spack buildcache preview` is deprecated since `spack buildcache push --allow-root` is "
+        "now the default. This command will be removed in Spack 0.22"
+    )
 
 
 def check_fn(args):
