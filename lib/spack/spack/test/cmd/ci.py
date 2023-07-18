@@ -895,7 +895,7 @@ spack:
     )
 
     install_cmd("archive-files")
-    buildcache_cmd("push", "-a", "-f", "-u", mirror_url, "archive-files")
+    buildcache_cmd("push", "-f", "-u", mirror_url, "archive-files")
 
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -1458,7 +1458,7 @@ spack:
                 ypfd.write(spec_json)
 
             install_cmd("--add", "--keep-stage", "-f", json_path)
-            buildcache_cmd("push", "-u", "-a", "-f", mirror_url, "callpath")
+            buildcache_cmd("push", "-u", "-f", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
             buildcache_path = os.path.join(mirror_dir.strpath, "build_cache")

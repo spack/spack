@@ -29,7 +29,6 @@ import spack.util.url as url_util
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import (
-    ensure_binary_is_relocatable,
     macho_find_paths,
     macho_make_paths_normal,
     macho_make_paths_relative,
@@ -73,7 +72,7 @@ def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
         parser = argparse.ArgumentParser()
         buildcache.setup_parser(parser)
 
-        create_args = ["create", "-a", "-f", mirror_path, pkghash]
+        create_args = ["create", "-f", "--rebuild-index", mirror_path, pkghash]
         # Create a private key to sign package with if gpg2 available
         spack.util.gpg.create(
             name="test key 1",
@@ -81,8 +80,6 @@ def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
             email="spack@googlegroups.com",
             comment="Spack test key",
         )
-
-        create_args.insert(create_args.index("-a"), "--rebuild-index")
 
         args = parser.parse_args(create_args)
         buildcache.buildcache(parser, args)
@@ -141,7 +138,6 @@ def test_relocate_text(tmp_path):
     dummy_txt = tmp_path / "dummy.txt"
     dummy_txt.write_text(original_dir)
 
-    ensure_binary_is_relocatable(os.path.realpath(dummy_txt))
     relocate_text([str(dummy_txt)], {original_dir: relocation_dir})
     text = dummy_txt.read_text()
 

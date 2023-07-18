@@ -71,8 +71,8 @@ class Spack(Package):
     depends_on("lmod@7.5.12:", type="run", when="@0.18:")
 
     # Buildcache
-    # We really just need the 'strings' from binutils
-    depends_on("binutils", type="run")
+    # We really just need the 'strings' from binutils for older versions of spack
+    depends_on("binutils", type="run", when="@:0.20")
     depends_on("gnupg", type="run")
     depends_on("patchelf", type="run", when="platform=linux")
     depends_on("patchelf", type="run", when="platform=cray")

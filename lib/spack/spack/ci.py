@@ -1419,9 +1419,7 @@ def _push_mirror_contents(input_spec, sign_binaries, mirror_url):
     unsigned = not sign_binaries
     tty.debug("Creating buildcache ({0})".format("unsigned" if unsigned else "signed"))
     push_url = spack.mirror.Mirror.from_url(mirror_url).push_url
-    return bindist.push(
-        input_spec, push_url, bindist.PushOptions(force=True, allow_root=True, unsigned=unsigned)
-    )
+    return bindist.push(input_spec, push_url, bindist.PushOptions(force=True, unsigned=unsigned))
 
 
 def push_mirror_contents(input_spec: spack.spec.Spec, mirror_url, sign_binaries):
