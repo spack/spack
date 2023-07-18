@@ -11,6 +11,7 @@ import shutil
 import sys
 
 from llnl.util import filesystem, tty
+from llnl.util.tty import color
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -347,14 +348,20 @@ def refresh(module_type, specs, args):
     spack.modules.common.generate_module_index(
         module_type_root, writers, overwrite=args.delete_tree
     )
+    errors = []
     for x in writers:
         try:
             x.write(overwrite=True)
+        except spack.error.SpackError as e:
+            msg = f"{x.layout.filename}: {e.message}"
+            errors.append(msg)
         except Exception as e:
-            tty.debug(e)
-            msg = "Could not write module file [{0}]"
-            tty.warn(msg.format(x.layout.filename))
-            tty.warn("\t--> {0} <--".format(str(e)))
+            msg = f"{x.layout.filename}: {str(e)}"
+            errors.append(msg)
+
+    if errors:
+        errors.insert(0, color.colorize("@*{some module files could not be written}"))
+        tty.warn("\n".join(errors))
 
 
 #: Dictionary populated with the list of sub-commands.

@@ -35,6 +35,7 @@ import inspect
 import os.path
 import pathlib
 import re
+import string
 import warnings
 from typing import Optional
 
@@ -471,6 +472,11 @@ class BaseConfiguration:
         return None
 
     @property
+    def conflicts(self):
+        """Conflicts for this module file"""
+        return self.conf.get("conflict", [])
+
+    @property
     def excluded(self):
         """Returns True if the module has been excluded, False otherwise."""
 
@@ -762,6 +768,36 @@ class BaseContext(tengine.Context):
                 return True
         else:
             return False
+
+    @tengine.context_property
+    def conflicts(self):
+        """List of conflicts for the module file."""
+        fmts = []
+        projection = proj.get_projection(self.conf.projections, self.spec)
+        for item in self.conf.conflicts:
+            self._verify_conflict_naming_consistency_or_raise(item, projection)
+            item = self.spec.format(item)
+            fmts.append(item)
+        return fmts
+
+    def _verify_conflict_naming_consistency_or_raise(self, item, projection):
+        f = string.Formatter()
+        errors = []
+        if len([x for x in f.parse(item)]) > 1:
+            for naming_dir, conflict_dir in zip(projection.split("/"), item.split("/")):
+                if naming_dir != conflict_dir:
+                    errors.extend(
+                        [
+                            f"spec={self.spec.cshort_spec}",
+                            f"conflict_scheme={item}",
+                            f"naming_scheme={projection}",
+                        ]
+                    )
+        if errors:
+            raise ModulesError(
+                message="conflict scheme does not match naming scheme",
+                long_message="\n    ".join(errors),
+            )
 
     @tengine.context_property
     def autoload(self):

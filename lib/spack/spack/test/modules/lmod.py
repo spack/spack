@@ -290,6 +290,26 @@ class TestLmod:
         with pytest.raises(spack.modules.lmod.NonVirtualInHierarchyError):
             module.write()
 
+    def test_conflicts(self, modulefile_content, module_configuration):
+        """Tests adding conflicts to the module."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration("conflicts")
+        content = modulefile_content("mpileaks")
+
+        assert len([x for x in content if x.startswith("conflict")]) == 2
+        assert len([x for x in content if x == 'conflict("mpileaks")']) == 1
+        assert len([x for x in content if x == 'conflict("intel/14.0.1")']) == 1
+
+    def test_inconsistent_conflict_in_modules_yaml(self, modulefile_content, module_configuration):
+        """Tests inconsistent conflict definition in `modules.yaml`."""
+
+        # This configuration is inconsistent, check an error is raised
+        module_configuration("wrong_conflicts")
+        with pytest.raises(spack.modules.common.ModulesError):
+            modulefile_content("mpileaks")
+
     def test_override_template_in_package(self, modulefile_content, module_configuration):
         """Tests overriding a template from and attribute in the package."""
 
