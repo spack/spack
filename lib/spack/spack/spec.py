@@ -180,6 +180,11 @@ CLEARSIGN_FILE_REGEX = re.compile(
 SPECFILE_FORMAT_VERSION = 4
 
 
+PropagateValue = collections.namedtuple("PropagateValue", ["value", "propagate"])
+
+
+# InstallStatus is used to map install statuses to symbols for display
+# Options are artificially disjoint for dispay purposes
 class InstallStatus(enum.Enum):
     """Maps install statuses to symbols for display.
 
@@ -2023,7 +2028,8 @@ class Spec:
         params = syaml.syaml_dict(sorted(v.yaml_entry() for _, v in self.variants.items()))
 
         for k, v in params.items():
-            params[k] = (params[k], self.variants[k].propagate)
+            if self.variants[k].propagate:
+                params[k] = PropagateValue(params[k], self.variants[k].propagate)
 
         # Only need the string compiler flag for yaml file
         params.update(
@@ -4939,12 +4945,10 @@ class SpecfileReaderBase:
                 for val in values:
                     spec.compiler_flags.add_flag(name, val, False)
             else:
-                if isinstance(values, tuple):
-                    spec.variants[name] = vt.MultiValuedVariant.from_node_dict(
-                        name, values[0], values[1]
-                    )
+                if isinstance(values, PropagateValue):
+                    spec.variants[name] = vt.AbstractVariant.from_node_dict(name, values.value, values.propagate)
                 else:
-                    spec.variants[name] = vt.MultiValuedVariant.from_node_dict(name, values)
+                    spec.variants[name] = vt.AbstractVariant.from_node_dict(name, values)
 
         spec.external_path = None
         spec.external_modules = None
