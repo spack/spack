@@ -687,8 +687,8 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         with pytest.raises(lk.LockROFileError):
             lock.acquire_write()
 
-        # TODO: lk.file_tracker does not release private_lock_path
-        lk.file_tracker.release_by_stat(os.stat(private_lock_path))
+        # TODO: lk.FILE_TRACKER does not release private_lock_path
+        lk.FILE_TRACKER.release_by_stat(os.stat(private_lock_path))
 
 
 class ComplexAcquireAndRelease:
@@ -1345,8 +1345,7 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
     with tmpdir.as_cwd():
         lockfile = "lockfile"
         lock = lk.Lock(lockfile)
-
-        touch(lockfile)
+        lock.acquire_read()
 
         monkeypatch.setattr(fcntl, "lockf", _lockf)
 
@@ -1355,6 +1354,9 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
         else:
             with pytest.raises(IOError, match=err_msg):
                 lock._poll_lock(fcntl.LOCK_EX)
+
+        monkeypatch.undo()
+        lock.release_read()
 
 
 def test_upgrade_read_okay(tmpdir):
