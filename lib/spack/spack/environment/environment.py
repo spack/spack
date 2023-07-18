@@ -29,6 +29,7 @@ import spack.compilers
 import spack.concretize
 import spack.config
 import spack.error
+import spack.fetch_strategy
 import spack.hash_types as ht
 import spack.hooks
 import spack.main
@@ -1265,12 +1266,12 @@ class Environment:
             # We construct a package class ourselves, rather than asking for
             # Spec.package, since Spec only allows this when it is concrete
             package = pkg_cls(spec)
-            if isinstance(package.fetcher[0], spack.fetch_strategy.GitFetchStrategy):
-                package.fetcher[0].get_full_repo = True
+            if isinstance(package.fetcher, spack.fetch_strategy.GitFetchStrategy):
+                package.fetcher.get_full_repo = True
                 # If we retrieved this version before and cached it, we may have
                 # done so without cloning the full git repo; likewise, any
                 # mirror might store an instance with truncated history.
-                package.stage[0].disable_mirrors()
+                package.stage.disable_mirrors()
 
             package.stage.steal_source(abspath)
 

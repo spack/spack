@@ -744,6 +744,7 @@ class StageComposite(pattern.Composite):
                 "cache_local",
                 "cache_mirror",
                 "steal_source",
+                "disable_mirrors",
                 "managed_by_spack",
             ]
         )
