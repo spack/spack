@@ -46,7 +46,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     variant("opencl", default=False, description="Enable OpenCL backend")
-    variant("mpi_f08", default=False, description="Use mpi F08 module")
+    variant("mpi_f08", default=False, when="@2.6:", description="Use mpi F08 module")
 
     depends_on("blas")
     depends_on("lapack")
