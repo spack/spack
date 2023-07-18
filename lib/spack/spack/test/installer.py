@@ -596,7 +596,6 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     assert "Couldn't copy in provenance for cmake" in out
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_clear_failures_success(install_mockery):
     """Test the clear_failures happy path."""
 
@@ -622,7 +621,9 @@ def test_clear_failures_success(install_mockery):
 
     # Ensure the core directory and failure lock file still exist
     assert os.path.isdir(spack.store.db._failure_dir)
-    assert os.path.isfile(spack.store.db.prefix_fail_path)
+    # Locks on windows are a no-op
+    if sys.platform != "win32":
+        assert os.path.isfile(spack.store.db.prefix_fail_path)
 
 
 def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
