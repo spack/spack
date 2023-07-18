@@ -1270,7 +1270,7 @@ class Environment:
                 # If we retrieved this version before and cached it, we may have
                 # done so without cloning the full git repo; likewise, any
                 # mirror might store an instance with truncated history.
-                package.stage[0].mirror_paths = []
+                package.stage[0].disable_mirrors()
 
             package.stage.steal_source(abspath)
 
