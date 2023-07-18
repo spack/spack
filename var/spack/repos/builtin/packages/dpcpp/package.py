@@ -21,6 +21,12 @@ class Dpcpp(CMakePackage):
     version("2021.12", commit="27f59d8906fcc8aece7ff6aa570ccdee52168c2d")
 
     maintainers("ravil-mobile")
+
+    for __compiler in spack.compilers.supported_compilers():
+        if __compiler != "gcc":
+            conflicts(
+                "%{0}".format(__compiler), msg="DPC++ must be installed with %gcc"
+            )
     
     variant("cuda", default=False, description="switch from OpenCL to CUDA")
     variant("hip", default=False, description="switch from OpenCL to HIP")
