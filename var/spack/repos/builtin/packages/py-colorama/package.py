@@ -21,5 +21,5 @@ class PyColorama(PythonPackage):
     depends_on("python@2.7:2,3.7:", when="@0.4.6:", type=("build", "run"))
     depends_on("python@2.7:2,3.5:", when="@0.4.2:", type=("build", "run"))
     depends_on("python@2.7:2,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", when="@:0.4.5", type="build")
     depends_on("py-hatchling@0.25.1:", when="@0.4.6:", type="build")
