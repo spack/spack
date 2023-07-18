@@ -538,19 +538,18 @@ def copy_buildcache_file(src_url: str, dest_url: str, only_verified: bool = Fals
     Returns:
         bool: Return True if file was transferred, False otherwise.
     """
-    tmpdir = tempfile.mkdtemp()
-    local_path = os.path.join(tmpdir, os.path.basename(src_url))
-    temp_stage = Stage(src_url, path=tmpdir)
+    temp_stage = Stage(src_url)
     transferred = False
 
     try:
         temp_stage.create()
         temp_stage.fetch()
+        local_path = temp_stage.save_filename
 
         if only_verified:
             spack.util.gpg.verify(local_path, suppress_warnings=True)
 
-        tty.debug("Copying {0} to {1}".format(src_url, dest_url))
+        tty.debug("Copying {0} to {1} via {2}".format(src_url, dest_url, local_path))
         web_util.push_to_url(local_path, dest_url, keep_original=True)
         transferred = True
     except spack.util.executable.ProcessError as pe:
