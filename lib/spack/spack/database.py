@@ -344,7 +344,7 @@ def lock_configuration(configuration):
     return LockConfiguration(
         enable=configuration.get("config:locks", True),
         database_timeout=configuration.get("config:db_lock_timeout"),
-        package_timeout=configuration.get("config:db_lock_timeout"),
+        package_timeout=configuration.get("config:package_lock_timeout"),
     )
 
 
