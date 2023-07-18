@@ -25,6 +25,12 @@ class IntelOneapiAdvisor(IntelOneApiPackage):
     )
 
     version(
+        "2023.2.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/0b0e8bf2-30e4-4a26-b1ef-e369b0181b35/l_oneapi_advisor_p_2023.2.0.49489_offline.sh",
+        sha256="48ab7fa2b828a273d467c8f07efd64d6cf2fcdcfe0ff567bd1d1be7a5d5d8539",
+        expand=False,
+    )
+    version(
         "2023.1.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/a1ef7661-8921-4f19-ba40-2901231439f4/l_oneapi_advisor_p_2023.1.0.43480_offline.sh",
         sha256="64788f6f4cbe23a2123dcd01d91de9154dcb2b83390bb18da6e0f2928575855e",
