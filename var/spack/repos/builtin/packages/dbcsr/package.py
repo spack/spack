@@ -56,7 +56,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.10:", type="build")
     depends_on("cmake@3.12:", type="build", when="@2.1:")
     depends_on("cmake@3.17:", type="build", when="@2.2:")
-    depends_on("cmake"3.22:", type="build", when="@2.3:")
+    depends_on("cmake@3.22:", type="build", when="@2.3:")
     
     depends_on("py-fypp", type="build")
     depends_on("py-fypp@3.1:", type="build", when="@2.6:")
