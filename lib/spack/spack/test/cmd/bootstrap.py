@@ -99,7 +99,7 @@ def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     assert os.path.exists(backup_file)
 
 
-def test_list_sources(capsys):
+def test_list_sources(config, capsys):
     # Get the merged list and ensure we get our defaults
     with capsys.disabled():
         output = _bootstrap("list")
