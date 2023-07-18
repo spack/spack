@@ -1218,9 +1218,6 @@ class PushOptions(NamedTuple):
     #: Overwrite existing tarball/metadata files in buildcache
     force: bool = False
 
-    #: Allow absolute paths to package prefixes when creating a tarball
-    allow_root: bool = False
-
     #: Regenerated indices after pushing
     regenerate_index: bool = False
 
@@ -1292,9 +1289,6 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
 
     # create info for later relocation and create tar
     buildinfo = get_buildinfo_dict(spec)
-
-    if not options.allow_root:
-        ensure_package_relocatable(buildinfo, binaries_dir)
 
     _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
 
@@ -1572,12 +1566,6 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
         )
 
     return None
-
-
-def ensure_package_relocatable(buildinfo, binaries_dir):
-    """Check if package binaries are relocatable."""
-    binaries = [os.path.join(binaries_dir, f) for f in buildinfo["relocate_binaries"]]
-    relocate.ensure_binaries_are_relocatable(binaries)
 
 
 def dedupe_hardlinks_if_necessary(root, buildinfo):

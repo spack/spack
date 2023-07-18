@@ -176,7 +176,7 @@ def install_dir_non_default_layout(tmpdir):
         spack.store.layout = real_layout
 
 
-args = ["strings", "file"]
+args = ["file"]
 if sys.platform == "darwin":
     args.extend(["/usr/bin/clang++", "install_name_tool"])
 else:
@@ -201,12 +201,14 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     install_cmd("--no-cache", sy_spec.name)
 
     # Create a buildache
-    buildcache_cmd("push", "-au", mirror_dir, cspec.name, sy_spec.name)
+    buildcache_cmd("push", "-u", mirror_dir, cspec.name, sy_spec.name)
+
     # Test force overwrite create buildcache (-f option)
-    buildcache_cmd("push", "-auf", mirror_dir, cspec.name)
+    buildcache_cmd("push", "-uf", mirror_dir, cspec.name)
 
     # Create mirror index
     buildcache_cmd("update-index", mirror_dir)
+
     # List the buildcaches in the mirror
     buildcache_cmd("list", "-alv")
 
@@ -376,7 +378,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     install_cmd(s.name)
 
     # Put installed package in the buildcache
-    buildcache_cmd("push", "-u", "-a", mirror_dir.strpath, s.name)
+    buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
 
     rebuild = bindist.needs_rebuild(s, mirror_url)
 
@@ -405,7 +407,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     install_cmd("--no-cache", s.name)
 
     # Create a buildcache and update index
-    buildcache_cmd("push", "-ua", mirror_dir.strpath, s.name)
+    buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
     buildcache_cmd("update-index", mirror_dir.strpath)
 
     # Check package and dependency in buildcache
@@ -491,7 +493,7 @@ def test_update_sbang(tmpdir, test_mirror):
     install_cmd("--no-cache", old_spec.name)
 
     # Create a buildcache with the installed spec.
-    buildcache_cmd("push", "-u", "-a", mirror_dir, old_spec_hash_str)
+    buildcache_cmd("push", "-u", mirror_dir, old_spec_hash_str)
 
     # Need to force an update of the buildcache index
     buildcache_cmd("update-index", mirror_dir)
