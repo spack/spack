@@ -90,7 +90,6 @@ spack:
   - amrex
   - butterflypack
   - conduit
-  - datatransferkit
   - flux-core
   - h5bench
   - hdf5-vol-async
