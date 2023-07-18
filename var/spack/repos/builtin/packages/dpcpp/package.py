@@ -180,19 +180,8 @@ class Dpcpp(CMakePackage):
         os.symlink(real_clang_cpp_path, dpcpp_path)
 
     def setup_run_environment(self, env):
-        bin_path = self.spec.prefix.bin
-        for env_var_name, compiler in zip(["CC", "CXX"], ["clang", "clang++"]):
-            env.set(env_var_name, os.path.join(bin_path, compiler))
-
-        include_env_vars = ["C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "INCLUDE"]
-        for var in include_env_vars:
-            env.prepend_path(var, self.prefix.include)
-            env.prepend_path(var, self.prefix.include.sycl)
-
-        sycl_build_pi_hip_platform = self.spec.variants["hip-platform"].value
-        if "+cuda" in self.spec or sycl_build_pi_hip_platform == "NVIDIA":
-            env.prepend_path("PATH", self.spec["cuda"].prefix.bin)
-            env.set("CUDA_TOOLKIT_ROOT_DIR", self.spec["cuda"].prefix)
+        env.set("CC", join_path(self.spec.prefix.bin, "clang"))
+        env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
 
 def get_llvm_targets_to_build(family):
     host_target = ""
