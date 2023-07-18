@@ -34,7 +34,6 @@ class Rmgdft(CMakePackage, CudaPackage):
 
     variant("local_orbitals", default=True, description="Build O(N) variant.")
 
-    variant("cuda", default=False, description="Build cuda enabled variant.")
 
     variant("rocm", default=False, description="Build rocm enabled variant.")
 
