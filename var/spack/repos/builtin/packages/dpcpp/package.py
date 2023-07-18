@@ -44,11 +44,15 @@ class Dpcpp(CMakePackage):
     variant("shared-libs", default=False, description="build shared libraries")
     variant("lld", default=False, description="use LLD linker for build")
     variant("fusion", default=True, description="Enable the kernel fusion JIT compiler")
-    variant("security_flags", 
-            default="none", 
+    variant("security_flags",
+            default="none",
             values=("none", "default", "sanitize"), 
             multi=False,
             description="Enables security flags for compile & link")
+    variant("llvm-external-projects",
+            values=str,
+            default="none",
+            description="Add external projects to build. Add as a comma seperated list.")
 
     depends_on("cmake@3.16.2:", type="build")
     depends_on("ninja@1.10.0:", type="build")
@@ -112,6 +116,9 @@ class Dpcpp(CMakePackage):
                 libclc_targets_to_build += libclc_nvidia_target_names
             libclc_gen_remangled_variants = 'ON'
             sycl_enabled_plugins += ";hip"
+
+        if "+llvm-external-projects" in self.spec:
+           llvm_external_projects += ";" + self.spec.variants["llvm-external-projects"].value.replace(",", ";")
 
         args = [
             self.define_from_variant("LLVM_ENABLE_ASSERTIONS", "assertions"),
