@@ -61,6 +61,22 @@ _build_cache_relative_path = "build_cache"
 _build_cache_keys_relative_path = "_pgp"
 
 
+class BuildCacheDatabase(spack_db.Database):
+    """A database for binary buildcaches.
+
+    A database supports writing buildcache index files, in which case certain fields are not
+    needed in each install record, and no locking is required. To use this feature, it provides
+    ``lock_cfg=NO_LOCK``, and override the list of ``record_fields``.
+    """
+
+    record_fields = ("spec", "ref_count", "in_buildcache")
+
+    def __init__(self, root):
+        super().__init__(root, lock_cfg=spack_db.NO_LOCK)
+        self._write_transaction_impl = llnl.util.lang.nullcontext
+        self._read_transaction_impl = llnl.util.lang.nullcontext
+
+
 class FetchCacheError(Exception):
     """Error thrown when fetching the cache failed, usually a composite error list."""
 
@@ -190,8 +206,7 @@ class BinaryCacheIndex:
         tmpdir = tempfile.mkdtemp()
 
         try:
-            db_root_dir = os.path.join(tmpdir, "db_root")
-            db = spack_db.Database(None, db_dir=db_root_dir, enable_transaction_locking=False)
+            db = BuildCacheDatabase(tmpdir)
 
             try:
                 self._index_file_cache.init_entry(cache_key)
@@ -1059,13 +1074,10 @@ def generate_package_index(cache_prefix, concurrency=32):
     tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
 
     tmpdir = tempfile.mkdtemp()
-    db_root_dir = os.path.join(tmpdir, "db_root")
-    db = spack_db.Database(
-        None,
-        db_dir=db_root_dir,
-        enable_transaction_locking=False,
-        record_fields=["spec", "ref_count", "in_buildcache"],
-    )
+
+    db = BuildCacheDatabase(tmpdir)
+    db.root = None
+    db_root_dir = db.database_directory
 
     try:
         _read_specs_and_push_index(file_list, read_fn, cache_prefix, db, db_root_dir, concurrency)
@@ -1206,9 +1218,6 @@ class PushOptions(NamedTuple):
     #: Overwrite existing tarball/metadata files in buildcache
     force: bool = False
 
-    #: Allow absolute paths to package prefixes when creating a tarball
-    allow_root: bool = False
-
     #: Regenerated indices after pushing
     regenerate_index: bool = False
 
@@ -1280,9 +1289,6 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
 
     # create info for later relocation and create tar
     buildinfo = get_buildinfo_dict(spec)
-
-    if not options.allow_root:
-        ensure_package_relocatable(buildinfo, binaries_dir)
 
     _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
 
@@ -1560,12 +1566,6 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
         )
 
     return None
-
-
-def ensure_package_relocatable(buildinfo, binaries_dir):
-    """Check if package binaries are relocatable."""
-    binaries = [os.path.join(binaries_dir, f) for f in buildinfo["relocate_binaries"]]
-    relocate.ensure_binaries_are_relocatable(binaries)
 
 
 def dedupe_hardlinks_if_necessary(root, buildinfo):

@@ -17,7 +17,6 @@ from llnl.util.lock import LockUpgradeError  # noqa: F401
 from llnl.util.lock import ReadTransaction  # noqa: F401
 from llnl.util.lock import WriteTransaction  # noqa: F401
 
-import spack.config
 import spack.error
 import spack.paths
 
@@ -31,8 +30,13 @@ class Lock(llnl.util.lock.Lock):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._enable = spack.config.get("config:locks", sys.platform != "win32")
+        enable_lock = kwargs.pop("enable", None)
+        if sys.platform == "win32":
+            enable_lock = False
+        elif sys.platform != "win32" and enable_lock is None:
+            enable_lock = True
+        self._enable = enable_lock
+        super(Lock, self).__init__(*args, **kwargs)
 
     def _lock(self, op, timeout=0):
         if self._enable:

@@ -10,8 +10,6 @@ import sys
 
 import pytest
 
-import llnl.util.filesystem
-
 import spack.concretize
 import spack.paths
 import spack.platforms
@@ -47,30 +45,6 @@ def text_in_bin(text, binary):
         if not pat.search(data):
             return False
         return True
-
-
-@pytest.fixture(params=[True, False])
-def is_relocatable(request):
-    return request.param
-
-
-@pytest.fixture()
-def source_file(tmpdir, is_relocatable):
-    """Returns the path to a source file of a relocatable executable."""
-    if is_relocatable:
-        template_src = os.path.join(spack.paths.test_path, "data", "templates", "relocatable.c")
-        src = tmpdir.join("relocatable.c")
-        shutil.copy(template_src, str(src))
-    else:
-        template_dirs = (os.path.join(spack.paths.test_path, "data", "templates"),)
-        env = spack.tengine.make_environment(template_dirs)
-        template = env.get_template("non_relocatable.c")
-        text = template.render({"prefix": spack.store.layout.root})
-
-        src = tmpdir.join("non_relocatable.c")
-        src.write(text)
-
-    return src
 
 
 @pytest.fixture()
@@ -154,42 +128,6 @@ def copy_binary(prefix_like):
     return _copy_somewhere
 
 
-@pytest.mark.requires_executables("/usr/bin/gcc", "patchelf", "strings", "file")
-@skip_unless_linux
-def test_ensure_binary_is_relocatable(source_file, is_relocatable):
-    compiler = spack.util.executable.Executable("/usr/bin/gcc")
-    executable = str(source_file).replace(".c", ".x")
-    compiler_env = {"PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
-    compiler(str(source_file), "-o", executable, env=compiler_env)
-
-    assert spack.relocate.is_binary(executable)
-
-    try:
-        spack.relocate.ensure_binary_is_relocatable(executable)
-        relocatable = True
-    except spack.relocate.InstallRootStringError:
-        relocatable = False
-
-    assert relocatable == is_relocatable
-
-
-@skip_unless_linux
-def test_ensure_binary_is_relocatable_errors(tmpdir):
-    # The file passed in as argument must exist...
-    with pytest.raises(ValueError) as exc_info:
-        spack.relocate.ensure_binary_is_relocatable("/usr/bin/does_not_exist")
-    assert "does not exist" in str(exc_info.value)
-
-    # ...and the argument must be an absolute path to it
-    file = tmpdir.join("delete.me")
-    file.write("foo")
-
-    with llnl.util.filesystem.working_dir(str(tmpdir)):
-        with pytest.raises(ValueError) as exc_info:
-            spack.relocate.ensure_binary_is_relocatable("delete.me")
-        assert "is not an absolute path" in str(exc_info.value)
-
-
 @pytest.mark.parametrize(
     "start_path,path_root,paths,expected",
     [
@@ -233,7 +171,7 @@ def test_normalize_relative_paths(start_path, relative_paths, expected):
     assert normalized == expected
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "file", "gcc")
 @skip_unless_linux
 def test_relocate_text_bin(binary_with_rpaths, prefix_like):
     prefix = "/usr/" + prefix_like
@@ -250,7 +188,7 @@ def test_relocate_text_bin(binary_with_rpaths, prefix_like):
     assert "%s/lib:%s/lib64" % (new_prefix, new_prefix) in rpaths_for(executable)
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "file", "gcc")
 @skip_unless_linux
 def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, prefix_tmpdir):
     # Create an executable, set some RPATHs, copy it to another location
@@ -272,7 +210,7 @@ def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, p
     assert "/foo/lib:/usr/lib64" in rpaths_for(new_binary)
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "file", "gcc")
 @skip_unless_linux
 def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
@@ -293,7 +231,7 @@ def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
     assert "/foo/lib:/foo/lib64:/opt/local/lib" in rpaths_for(new_binary)
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "file", "gcc")
 @skip_unless_linux
 def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
@@ -313,7 +251,7 @@ def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpd
     assert "$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib" in rpaths_for(new_binary)
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "file", "gcc")
 @skip_unless_linux
 def test_relocate_text_bin_with_message(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
