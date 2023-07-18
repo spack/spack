@@ -84,11 +84,23 @@ spack:
         - cray-libsci/23.02.1.1
 
   specs:
+  - adios2
+  - amrex
   - butterflypack
+  - conduit
+  - datatransferkit
+  - flux-core
+  - h5bench
+  - hdf5-vol-async
+  - hdf5-vol-cache
+  - hdf5-vol-log
   - hypre
   - kokkos
   - kokkos-kernels
+  - legion
+  - mfem
   - petsc
+  - py-petsc4py
   - raja
   - slepc
   - superlu-dist
