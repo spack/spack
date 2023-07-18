@@ -429,6 +429,12 @@ class Stage:
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
+    def disable_mirrors(self):
+        """The Stage will not attempt to look for the associated fetcher
+        target in any of Spack's mirrors (including the local download cache).
+        """
+        self.mirror_paths = []
+
     def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
 

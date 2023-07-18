@@ -1256,16 +1256,23 @@ class Environment:
             tty.msg("Configuring spec %s for development at path %s" % (spec, path))
 
         if clone:
-            # "steal" the source code via staging API
-            abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
-
-            # Stage, at the moment, requires a concrete Spec, since it needs the
-            # dag_hash for the stage dir name. Below though we ask for a stage
-            # to be created, to copy it afterwards somewhere else. It would be
+            # "steal" the source code via staging API. We ask for a stage
+            # to be created, then copy it afterwards somewhere else. It would be
             # better if we can create the `source_path` directly into its final
             # destination.
+            abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
             pkg_cls = spack.repo.path.get_pkg_class(spec.name)
-            pkg_cls(spec).stage.steal_source(abspath)
+            # We construct a package class ourselves, rather than asking for
+            # Spec.package, since Spec only allows this when it is concrete
+            package = pkg_cls(spec)
+            if isinstance(package.fetcher[0], spack.fetch_strategy.GitFetchStrategy):
+                package.fetcher[0].get_full_repo = True
+                # If we retrieved this version before and cached it, we may have
+                # done so without cloning the full git repo; likewise, any
+                # mirror might store an instance with truncated history.
+                package.stage[0].disable_mirrors()
+
+            package.stage.steal_source(abspath)
 
         # If it wasn't already in the list, append it
         entry = {"path": path, "spec": str(spec)}
