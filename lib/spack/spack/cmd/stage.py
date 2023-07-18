@@ -69,7 +69,6 @@ def _stage_env(env: ev.Environment):
 
 
 def _stage(pkg: spack.package_base.PackageBase):
-
     # Use context manager to ensure we don't restage while an installation is in progress
     # keep = True ensures that the stage is not removed after exiting the context manager
     pkg.stage.keep = True

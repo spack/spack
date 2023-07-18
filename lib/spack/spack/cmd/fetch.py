@@ -10,6 +10,7 @@ import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.repo
+import spack.traverse
 
 description = "fetch archives for packages"
 section = "build"
@@ -61,14 +62,17 @@ def fetch(parser, args):
     if args.deprecated:
         spack.config.set("config:deprecated", True, scope="command_line")
 
-    for spec in specs:
-        if args.missing or args.dependencies:
-            for s in spec.traverse(root=False):
-                # Skip already-installed packages with --missing
-                if args.missing and s.installed:
-                    continue
+    if args.dependencies or args.missing:
+        to_be_fetched = spack.traverse.traverse_nodes(specs, key=spack.traverse.by_dag_hash)
+    else:
+        to_be_fetched = specs
 
-                with s.package.stage:
-                    s.package.do_fetch()
-        with spec.package.stage:
-            spec.package.do_fetch()
+    for spec in to_be_fetched:
+        if args.missing and spec.installed:
+            continue
+
+        pkg = spec.package
+
+        pkg.stage.keep = True
+        with pkg.stage:
+            pkg.do_fetch()
