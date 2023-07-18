@@ -5,6 +5,7 @@
 
 
 import os
+import sys
 
 from spack.package import *
 
@@ -54,6 +55,9 @@ class Dpcpp(CMakePackage):
     depends_on("ninja@1.10.0:", type="build")
 
     depends_on("cuda@10.2.0:", when="+cuda")
+
+    conflicts("~lld", when="+hip hip-platform=AMD", msg="lld is needed for HIP plugin on AMD")
+    conflicts("~lld", when=(sys.platform == "windows"), msg="lld is needed on Windows")
 
     # NOTE: AMD HIP needs to be tested; it will be done in the next update
     # depends_on('cuda@10.2.0:10.2.999', when='rocm-platform=NVIDIA', type='build')
