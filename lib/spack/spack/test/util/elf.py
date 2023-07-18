@@ -170,17 +170,16 @@ def test_drop_redundant_rpath(tmpdir, binary_with_rpaths):
     # Use existing and non-existing dirs in tmpdir
     non_existing_dirs = [str(tmpdir.join("a")), str(tmpdir.join("b"))]
     existing_dirs = [str(tmpdir.join("c")), str(tmpdir.join("d"))]
+    all_dirs = non_existing_dirs + existing_dirs
+
     tmpdir.ensure("c", dir=True)
     tmpdir.ensure("d", dir=True)
 
     # Create a binary with rpaths to both existing and non-existing dirs
-    all_dirs = non_existing_dirs + existing_dirs
-
     binary = binary_with_rpaths(rpaths=all_dirs)
 
     # Verify that the binary has all the rpaths
     # sometimes compilers add extra rpaths, so we test for a subset
-    print(elf.get_rpaths(binary))
     assert set(all_dirs).issubset(elf.get_rpaths(binary))
 
     # Test whether the right rpaths are dropped
