@@ -153,7 +153,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+opencl"):
             args += ["-DUSE_ACCEL=opencl"]
 
-        if self.spec.satisfies("@2.6: +mpi_f08"):
+        if self.spec.satisfies("+mpi_f08"):
             args += ["-DUSE_MPI_F08=ON"]
 
         return args
