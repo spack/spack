@@ -73,7 +73,6 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "aggressive_vectorization": [False, "Aggressively vectorize loops"],
         "compiler_warnings": [False, "Print all compiler warnings"],
         "cuda_constexpr": [False, "Activate experimental constexpr features"],
-        "cuda_lambda": [False, "Activate experimental lambda features"],
         "cuda_ldg_intrinsic": [False, "Use CUDA LDG intrinsics"],
         "cuda_relocatable_device_code": [False, "Enable RDC for CUDA"],
         "cuda_uvm": [False, "Enable unified virtual memory (UVM) for CUDA"],
@@ -187,6 +186,20 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         dflt, desc = options_variants[opt]
         variant(opt, default=dflt, description=desc)
 
+    conflicts("+cuda_lambda", when="~cuda", msg="Must enable CUDA to use cuda_lambda")
+    variant(
+        "cuda_lambda",
+        default=False,
+        when="@:3",
+        description="Activate experimental lambda features",
+    )
+    variant(
+        "cuda_lambda",
+        default=True,
+        when="@4:",
+        description="Activate experimental lambda features",
+    )
+
     tpls_values = list(tpls_variants.keys())
     for tpl in tpls_values:
         dflt, desc = tpls_variants[tpl]
@@ -284,6 +297,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             from_variant("CMAKE_CXX_STANDARD", "std"),
             from_variant("BUILD_SHARED_LIBS", "shared"),
+            from_variant("Kokkos_ENABLE_CUDA_LAMBDA", "cuda_lambda"),
         ]
 
         spack_microarches = []
