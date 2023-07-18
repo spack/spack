@@ -103,9 +103,6 @@ class Palace(CMakePackage):
     conflicts("^mumps+int64", msg="Palace requires MUMPS without 64 bit integers")
     conflicts("^slepc+arpack", msg="Palace requires SLEPc without ARPACK")
 
-    # No install phase for Palace (always performed during build)
-    phases = ["cmake", "build"]
-
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
@@ -117,7 +114,7 @@ class Palace(CMakePackage):
             self.define_from_variant("PALACE_WITH_MUMPS", "mumps"),
             self.define_from_variant("PALACE_WITH_SLEPC", "slepc"),
             self.define_from_variant("PALACE_WITH_ARPACK", "arpack"),
-            "-DPALACE_BUILD_EXTERNAL_DEPS=OFF",
+            self.define("PALACE_BUILD_EXTERNAL_DEPS", False),
         ]
 
         # HYPRE is always built with external BLAS/LAPACK
@@ -139,3 +136,7 @@ class Palace(CMakePackage):
         ]
 
         return args
+
+    def install(self, pkg, spec, prefix):
+        # No install phase for Palace (always performed during build)
+        pass
