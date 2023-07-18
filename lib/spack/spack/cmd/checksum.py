@@ -214,7 +214,7 @@ def add_versions_to_package(pkg, version_lines):
     filename = spack.repo.path.filename_for_package_name(pkg.name)
 
     version_statement_re = re.compile(r"([\t ]+version\([^\)]*\))")
-    version_re = re.compile(r'[\t ]+version\("([^"]+)"[^\)]*\)')
+    version_re = re.compile(r'[\t ]+version\(\s*"([^"]+)"[^\)]*\)')
 
     # Split rendered version lines into tuple of (version, version_line)
     # We reverse sort here to make sure the versions match the version_lines
