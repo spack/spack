@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import json
+import multiprocessing.pool
 import os
 import shutil
 import sys
@@ -12,7 +13,7 @@ from typing import List
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
-from llnl.util.lang import elide_list
+from llnl.util.lang import elide_list, star
 
 import spack.binary_distribution as bindist
 import spack.cmd
@@ -623,7 +624,7 @@ def sync_fn(args):
             )
         )
 
-    for meta_paths, archive_path in zip(meta_rel_paths, archive_rel_paths):
+    def _process_spec_files(meta_paths, archive_path):
         # Attempt to sync the metadata file, exit loop upon first success
         meta_success = False
         for meta_path in meta_paths:
@@ -643,6 +644,19 @@ def sync_fn(args):
             tty.debug(
                 "Skipping archive {0} because metadata was not transferred".format(archive_src_url)
             )
+
+    tp = multiprocessing.pool.ThreadPool(processes=32)
+    try:
+        tp.map(
+            star(_process_spec_files),
+            [
+                (meta_paths, archive_path)
+                for meta_paths, archive_path in zip(meta_rel_paths, archive_rel_paths)
+            ],
+        )
+    finally:
+        tp.terminate()
+        tp.join()
 
 
 def manifest_copy(manifest_file_list: List[str], only_verified: bool = False):
