@@ -149,6 +149,28 @@ class Dpcpp(CMakePackage):
         if "+cuda" in self.spec:
             env.set("CUDA_LIB_PATH", "{0}/lib64/stubs".format(self.spec["cuda"].prefix))
 
+    @property
+    def cc(self):
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes["compilers"].get("c", None)
+        result = None
+        if "+clang" in self.spec:
+            result = os.path.join(self.spec.prefix.bin, "clang")
+        return result
+
+    @property
+    def cxx(self):
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes["compilers"].get("cxx", None)
+        result = None
+        if "+clang" in self.spec:
+            result = os.path.join(self.spec.prefix.bin, "clang++")
+        return result
+
     @run_after("install")
     def post_install(self):
         clang_cpp_path = os.path.join(self.spec.prefix.bin, "clang++")
