@@ -57,7 +57,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.12:", type="build", when="@2.1:")
     depends_on("cmake@3.17:", type="build", when="@2.2:")
     depends_on("cmake@3.22:", type="build", when="@2.3:")
-    
+
     depends_on("py-fypp", type="build")
     depends_on("py-fypp@3.1:", type="build", when="@2.6:")
     depends_on("pkgconfig", type="build")
@@ -151,11 +151,11 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             args += ["-DWITH_GPU={0}".format(gpuver), "-DUSE_ACCEL=hip"]
 
         if self.spec.satisfies("+opencl"):
-            args += ["-DUSE_ACCEL=opencl")
-            
+            args += ["-DUSE_ACCEL=opencl"]
+
         if self.spec.satisfies("@2.6: +mpi_f08"):
             args += ["-DUSE_MPI_F08=ON"]
-        
+
         return args
 
     def check(self):
