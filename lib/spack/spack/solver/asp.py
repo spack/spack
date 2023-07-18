@@ -2953,6 +2953,7 @@ class Solver:
           setup_only (bool): if True, stop after setup and don't solve (default False).
         """
         # Check upfront that the variants are admissible
+        specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
@@ -2976,6 +2977,7 @@ class Solver:
             stats (bool): print internal statistics if set to True
             tests (bool): add test dependencies to the solve
         """
+        specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
