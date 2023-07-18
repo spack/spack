@@ -37,7 +37,6 @@ class PySqlalchemy(PythonPackage):
     conflicts("^py-greenlet@0.4.17", when="@1.4.0:")
     depends_on("py-typing-extensions@4.2.0", when="@2:", type="run")
 
-
     # >=1.4.0
     depends_on("py-mysqlclient@1.4:", when="backend=mysql @1.4:", type=("build", "run"))
     depends_on("py-psycopg2@2.7:", when="backend=postgresql @1.4:", type=("build", "run"))
