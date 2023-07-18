@@ -11,7 +11,7 @@ class PyHtmlmin(PythonPackage):
 
     pypi = "htmlmin/htmlmin-0.1.12.tar.gz"
 
-    #maintainers = ["wscullin"]
+    # maintainers = ["wscullin"]
 
     version("0.1.12", sha256="50c1ef4630374a5d723900096a961cff426dff46b48f34d194a81bbe14eca178")
 
