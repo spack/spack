@@ -232,6 +232,18 @@ class TestLmod:
         )
         assert help_msg in "".join(content)
 
+        content = modulefile_content("module-long-help target=core2")
+
+        help_msg = (
+            "help([[Name   : module-long-help]])"
+            "help([[Version: 1.0]])"
+            "help([[Target : core2]])"
+            "help()"
+            "help([[Package to test long description message generated in modulefile."
+            "Message too long is wrapped over multiple lines.]])"
+        )
+        assert help_msg in "".join(content)
+
     def test_exclude(self, modulefile_content, module_configuration):
         """Tests excluding the generation of selected modules."""
         module_configuration("exclude")
