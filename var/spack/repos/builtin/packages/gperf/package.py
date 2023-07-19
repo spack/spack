@@ -20,4 +20,10 @@ class Gperf(AutotoolsPackage, GNUMirrorPackage):
     version("3.1", sha256="588546b945bba4b70b6a3a616e80b4ab466e3f33024a352fc2198112cdbb3ae2")
     version("3.0.4", sha256="767112a204407e62dbc3106647cf839ed544f3cf5d0f0523aaa2508623aad63e")
 
+    # This patch removes all instances of the register keyword within gperf
+    # which is necessary to build gperf with recent compilers that default to
+    # c++17 where using the register keyword results in a compile-time error.
+    # This has no impact on correctness.
+    patch("register.patch")
+
     # NOTE: `make check` is known to fail tests
