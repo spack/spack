@@ -121,5 +121,29 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                         + ["-march=native"]
                     )
 
+                    for key, value in self.config_settings(spec, prefix).items():
+                        if spec["py-pip"].version < Version("22.1"):
+                            raise SpecError(
+                                "'{}' package uses 'config_settings' which is only supported by "
+                                "pip 22.1+. Add the following line to the package to fix this:\n\n"
+                                '    depends_on("py-pip@22.1:", type="build")'.format(spec.name)
+                            )
+
+                        args.append("--config-settings={}={}".format(key, value))
+
+                    for option in self.install_options(spec, prefix):
+                        args.append("--install-option=" + option)
+                    for option in self.global_options(spec, prefix):
+                        args.append("--global-option=" + option)
+
+                    if pkg.stage.archive_file and pkg.stage.archive_file.endswith(".whl"):
+                        args.append(pkg.stage.archive_file)
+                    else:
+                        args.append(".")
+
+                    pip = inspect.getmodule(pkg).pip
+                    with fs.working_dir(self.build_directory):
+                        pip(*args)
+
             customPip = CustomPythonPipBuilder(pkg, self.build_dirname)
             customPip.install(pkg, spec, prefix)
