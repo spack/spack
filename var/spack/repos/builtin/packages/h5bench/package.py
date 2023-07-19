@@ -62,13 +62,13 @@ class H5bench(CMakePackage):
 
     @run_after("install")
     def setup_build_tests(self):
+        launcher = self.mpi_launcher()
+
+        filter_file(r"-n 2", "-n 2 --timeout 240", "samples/sync-write-1d-contig-contig.json")
+
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(["tests", "samples"])
-
-        launcher = self.mpi_launcher()
-
-        filter_file(r"mpirun", launcher.command, "samples/sync-write-1d-contig-contig.json")
 
     def mpi_launcher(self):
         searchpath = [self.spec["mpi"].prefix.bin]
@@ -80,12 +80,12 @@ class H5bench(CMakePackage):
         return which(*commands, path=searchpath) or which(*commands)
 
     def test_help(self):
-        """Stand-alone/smoke test."""
+        """Run h5bench help."""
         h5bench = which(self.prefix.bin.h5bench)
         h5bench("-h")
 
     def test_h5bench(self):
-        """Perform stand-alone/smoke tests on the installed package."""
+        """Run h5bench synchronous write test."""
         with working_dir(self.test_suite.current_test_cache_dir):
             h5bench = which(self.prefix.bin.h5bench)
             h5bench("--debug", "--abort", "samples/sync-write-1d-contig-contig.json")
