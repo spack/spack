@@ -5,6 +5,7 @@
 import glob
 import json
 import os
+import shutil
 import sys
 import tempfile
 from typing import List
@@ -538,13 +539,15 @@ def copy_buildcache_file(src_url: str, dest_url: str, only_verified: bool = Fals
     Returns:
         bool: Return True if file was transferred, False otherwise.
     """
-    temp_stage = Stage(src_url)
+    tmpdir = tempfile.mkdtemp()
+    local_path = os.path.join(tmpdir, os.path.basename(src_url))
     transferred = False
 
     try:
-        temp_stage.create()
-        temp_stage.fetch()
-        local_path = temp_stage.save_filename
+        _, _, stream = web_util.read_from_url(src_url)
+
+        with open(local_path, "wb") as f:
+            shutil.copyfileobj(stream, f)
 
         if only_verified:
             spack.util.gpg.verify(local_path, suppress_warnings=True)
@@ -563,7 +566,7 @@ def copy_buildcache_file(src_url: str, dest_url: str, only_verified: bool = Fals
         tty.debug("could not fetch: {0}".format(src_url))
         tty.debug(e)
     finally:
-        temp_stage.destroy()
+        shutil.rmtree(tmpdir)
 
     return transferred
 
