@@ -675,12 +675,9 @@ def create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats):
     num_retries = 3
     while num_retries > 0:
         try:
+            # Includes patches and resources
             with pkg_obj.stage as pkg_stage:
                 pkg_stage.cache_mirror(mirror_cache, mirror_stats)
-                for patch in pkg_obj.all_patches():
-                    if patch.stage:
-                        patch.stage.cache_mirror(mirror_cache, mirror_stats)
-                    patch.clean()
             exception = None
             break
         except Exception as e:

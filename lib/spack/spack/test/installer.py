@@ -20,6 +20,7 @@ import spack.compilers
 import spack.concretize
 import spack.config
 import spack.installer as inst
+import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
 import spack.spec
@@ -1139,6 +1140,7 @@ def _test_install_fail_fast_on_except_patch(installer, **kwargs):
     raise RuntimeError("mock patch failure")
 
 
+@pytest.mark.disable_clean_stage_check
 def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     """Test fail_fast install when an install failure results from an error."""
     const_arg = installer_args(["a"], {"fail_fast": True})

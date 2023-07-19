@@ -2341,28 +2341,28 @@ class BuildProcessInstaller:
     def run(self) -> bool:
         """Main entry point from ``build_process`` to kick off install in child."""
 
-        self.timer.start("stage")
-
-        if not self.fake:
-            if not self.skip_patch:
-                self.pkg.do_patch()
-            else:
-                self.pkg.do_stage()
-
-        self.timer.stop("stage")
-
-        tty.debug(
-            "{0} Building {1} [{2}]".format(self.pre, self.pkg_id, self.pkg.build_system_class)  # type: ignore[attr-defined] # noqa: E501
-        )
-
-        # get verbosity from do_install() parameter or saved value
-        self.echo = self.verbose
-        if spack.package_base.PackageBase._verbose is not None:
-            self.echo = spack.package_base.PackageBase._verbose
-
         self.pkg.stage.keep = self.keep_stage
 
         with self.pkg.stage:
+            self.timer.start("stage")
+
+            if not self.fake:
+                if not self.skip_patch:
+                    self.pkg.do_patch()
+                else:
+                    self.pkg.do_stage()
+
+            self.timer.stop("stage")
+
+            tty.debug(
+                "{0} Building {1} [{2}]".format(self.pre, self.pkg_id, self.pkg.build_system_class)  # type: ignore[attr-defined] # noqa: E501
+            )
+
+            # get verbosity from do_install() parameter or saved value
+            self.echo = self.verbose
+            if spack.package_base.PackageBase._verbose is not None:
+                self.echo = spack.package_base.PackageBase._verbose
+
             # Run the pre-install hook in the child process after
             # the directory is created.
             spack.hooks.pre_install(self.pkg.spec)

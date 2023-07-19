@@ -115,9 +115,11 @@ third line
 """
                 )
         # apply the patch and compare files
-        patch.fetch()
-        patch.apply(stage)
-        patch.clean()
+        with patch.stage:
+            patch.stage.create()
+            patch.stage.fetch()
+            patch.stage.expand_archive()
+            patch.apply(stage)
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-expected.txt")
