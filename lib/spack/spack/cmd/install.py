@@ -266,7 +266,7 @@ def require_user_confirmation_for_overwrite(concrete_specs, args):
     if args.yes_to_all:
         return
 
-    installed = list(filter(lambda x: x, map(spack.store.db.query_one, concrete_specs)))
+    installed = list(filter(lambda x: x, map(spack.store.STORE.db.query_one, concrete_specs)))
     display_args = {"long": True, "show_flags": True, "variants": True}
 
     if installed:

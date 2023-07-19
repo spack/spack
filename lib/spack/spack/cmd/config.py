@@ -399,8 +399,8 @@ def config_prefer_upstream(args):
     if scope is None:
         scope = spack.config.default_modify_scope("packages")
 
-    all_specs = set(spack.store.db.query(installed=True))
-    local_specs = set(spack.store.db.query_local(installed=True))
+    all_specs = set(spack.store.STORE.db.query(installed=True))
+    local_specs = set(spack.store.STORE.db.query_local(installed=True))
     pref_specs = local_specs if args.local else all_specs - local_specs
 
     conflicting_variants = set()

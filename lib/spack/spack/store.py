@@ -217,78 +217,30 @@ def create(configuration: ConfigurationType) -> Store:
 
 
 def _create_global() -> Store:
-    # Check that the user is not trying to install software into the store
-    # reserved by Spack to bootstrap its own dependencies, since this would
-    # lead to bizarre behaviors (e.g. cleaning the bootstrap area would wipe
-    # user installed software)
-    import spack.bootstrap
-
-    enable_bootstrap = spack.config.config.get("bootstrap:enable", True)
-    if enable_bootstrap and spack.bootstrap.store_path() == root:
-        msg = (
-            'please change the install tree root "{0}" in your '
-            "configuration [path reserved for Spack internal use]"
-        )
-        raise ValueError(msg.format(root))
-    return create(configuration=spack.config.config)
+    result = create(configuration=spack.config.config)
+    return result
 
 
 #: Singleton store instance
-store: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_create_global)
-
-
-def _store_root() -> str:
-    return store.root
-
-
-def _store_unpadded_root() -> str:
-    return store.unpadded_root
-
-
-def _store_db() -> spack.database.Database:
-    return store.db
-
-
-def _store_layout() -> spack.directory_layout.DirectoryLayout:
-    return store.layout
-
-
-# convenience accessors for parts of the singleton store
-root: Union[llnl.util.lang.LazyReference, str] = llnl.util.lang.LazyReference(_store_root)
-unpadded_root: Union[llnl.util.lang.LazyReference, str] = llnl.util.lang.LazyReference(
-    _store_unpadded_root
-)
-db: Union[llnl.util.lang.LazyReference, spack.database.Database] = llnl.util.lang.LazyReference(
-    _store_db
-)
-layout: Union[
-    llnl.util.lang.LazyReference, "spack.directory_layout.DirectoryLayout"
-] = llnl.util.lang.LazyReference(_store_layout)
+STORE: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_create_global)
 
 
 def reinitialize():
     """Restore globals to the same state they would have at start-up. Return a token
     containing the state of the store before reinitialization.
     """
-    global store
-    global root, unpadded_root, db, layout
+    global STORE
 
-    token = store, root, unpadded_root, db, layout
-
-    store = llnl.util.lang.Singleton(_create_global)
-    root = llnl.util.lang.LazyReference(_store_root)
-    unpadded_root = llnl.util.lang.LazyReference(_store_unpadded_root)
-    db = llnl.util.lang.LazyReference(_store_db)
-    layout = llnl.util.lang.LazyReference(_store_layout)
+    token = STORE
+    STORE = llnl.util.lang.Singleton(_create_global)
 
     return token
 
 
 def restore(token):
     """Restore the environment from a token returned by reinitialize"""
-    global store
-    global root, unpadded_root, db, layout
-    store, root, unpadded_root, db, layout = token
+    global STORE
+    STORE = token
 
 
 def _construct_upstream_dbs_from_install_roots(
@@ -330,7 +282,7 @@ def find(
         constraints: spec(s) to be matched against installed packages
         multiple: if True multiple matches per constraint are admitted
         query_fn (Callable): query function to get matching specs. By default,
-            ``spack.store.db.query``
+            ``spack.store.STORE.db.query``
         **kwargs: keyword arguments forwarded to the query function
     """
     if isinstance(constraints, str):
@@ -338,7 +290,7 @@ def find(
 
     matching_specs: List[spack.spec.Spec] = []
     errors = []
-    query_fn = query_fn or spack.store.db.query
+    query_fn = query_fn or spack.store.STORE.db.query
     for spec in constraints:
         current_matches = query_fn(spec, **kwargs)
 
@@ -388,7 +340,7 @@ def use_store(
     Yields:
         Store object associated with the context manager's store
     """
-    global store, db, layout, root, unpadded_root
+    global STORE
 
     assert not isinstance(path, Store), "cannot pass a store anymore"
     scope_name = "use-store-{}".format(uuid.uuid4())
@@ -397,22 +349,18 @@ def use_store(
         data.update(extra_data)
 
     # Swap the store with the one just constructed and return it
-    _ = store.db
+    _ = STORE.db
     spack.config.config.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={"config": {"install_tree": data}})
     )
     temporary_store = create(configuration=spack.config.config)
-    original_store, store = store, temporary_store
-    db, layout = store.db, store.layout
-    root, unpadded_root = store.root, store.unpadded_root
+    original_store, STORE = STORE, temporary_store
 
     try:
         yield temporary_store
     finally:
         # Restore the original store
-        store = original_store
-        db, layout = original_store.db, original_store.layout
-        root, unpadded_root = original_store.root, original_store.unpadded_root
+        STORE = original_store
         spack.config.config.remove_scope(scope_name=scope_name)
 
 

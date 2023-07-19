@@ -703,7 +703,7 @@ def fixup_macos_rpath(root, filename):
     args = []
 
     # Check dependencies for non-rpath entries
-    spack_root = spack.store.layout.root
+    spack_root = spack.store.STORE.layout.root
     for name in deps:
         if name.startswith(spack_root):
             tty.debug("Spack-installed dependency for {0}: {1}".format(abspath, name))

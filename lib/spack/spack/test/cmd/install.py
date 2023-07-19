@@ -216,7 +216,9 @@ def test_install_overwrite(mock_packages, mock_archive, mock_fetch, config, inst
 
     # Ignore manifest and install times
     manifest = os.path.join(
-        spec.prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
+        spec.prefix,
+        spack.store.STORE.layout.metadata_dir,
+        spack.store.STORE.layout.manifest_file_name,
     )
     ignores = [manifest, spec.package.times_log_path]
 
@@ -291,7 +293,9 @@ def test_install_overwrite_multiple(
     install("cmake")
 
     ld_manifest = os.path.join(
-        libdwarf.prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
+        libdwarf.prefix,
+        spack.store.STORE.layout.metadata_dir,
+        spack.store.STORE.layout.manifest_file_name,
     )
 
     ld_ignores = [ld_manifest, libdwarf.package.times_log_path]
@@ -300,7 +304,9 @@ def test_install_overwrite_multiple(
     expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
 
     cm_manifest = os.path.join(
-        cmake.prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
+        cmake.prefix,
+        spack.store.STORE.layout.metadata_dir,
+        spack.store.STORE.layout.manifest_file_name,
     )
 
     cm_ignores = [cm_manifest, cmake.package.times_log_path]
@@ -512,7 +518,7 @@ def test_extra_files_are_archived(
 
     install("archive-files")
 
-    archive_dir = os.path.join(spack.store.layout.metadata_path(s), "archived-files")
+    archive_dir = os.path.join(spack.store.STORE.layout.metadata_path(s), "archived-files")
     config_log = os.path.join(archive_dir, mock_archive.expanded_archive_basedir, "config.log")
     assert os.path.exists(config_log)
 
@@ -699,7 +705,7 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
     assert "was not installed" in out
 
     # Check that failure prefix locks are still cached
-    failure_lock_prefixes = ",".join(spack.store.db._prefix_failures.keys())
+    failure_lock_prefixes = ",".join(spack.store.STORE.db._prefix_failures.keys())
     assert "libelf" in failure_lock_prefixes
     assert "libdwarf" in failure_lock_prefixes
 

@@ -159,7 +159,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
         s.package.remove_prefix = rm_prefix_checker.remove_prefix
 
         # must clear failure markings for the package before re-installing it
-        spack.store.db.clear_failure(s, True)
+        spack.store.STORE.db.clear_failure(s, True)
 
         s.package.set_install_succeed()
         s.package.stage = MockStage(s.package.stage)
@@ -354,7 +354,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, w
     assert os.path.exists(s.package.prefix)
 
     # must clear failure markings for the package before re-installing it
-    spack.store.db.clear_failure(s, True)
+    spack.store.STORE.db.clear_failure(s, True)
 
     s.package.set_install_succeed()
     s.package.stage = MockStage(s.package.stage)

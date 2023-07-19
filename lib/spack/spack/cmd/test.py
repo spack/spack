@@ -174,7 +174,7 @@ def test_run(args):
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
     specs_to_test = []
     for spec in specs:
-        matching = spack.store.db.query_local(spec, hashes=hashes, explicit=explicit)
+        matching = spack.store.STORE.db.query_local(spec, hashes=hashes, explicit=explicit)
         if spec and not matching:
             tty.warn("No {0}installed packages match spec {1}".format(explicit_str, spec))
             """
@@ -252,7 +252,7 @@ def test_list(args):
     env = ev.active_environment()
     hashes = env.all_hashes() if env else None
 
-    specs = spack.store.db.query(hashes=hashes)
+    specs = spack.store.STORE.db.query(hashes=hashes)
     specs = list(filter(lambda s: has_test_and_tags(s.package_class), specs))
 
     spack.cmd.display_specs(specs, long=True)
@@ -329,7 +329,7 @@ def _report_suite_results(test_suite, args, constraints):
         qspecs = spack.cmd.parse_specs(constraints)
         specs = {}
         for spec in qspecs:
-            for s in spack.store.db.query(spec, installed=True):
+            for s in spack.store.STORE.db.query(spec, installed=True):
                 specs[s.dag_hash()] = s
         specs = sorted(specs.values())
         test_specs = dict((test_suite.test_pkg_id(s), s) for s in test_suite.specs if s in specs)

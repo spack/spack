@@ -80,8 +80,8 @@ def rewire_node(spec, explicit):
         if "macho" in platform.binary_formats:
             relocate.relocate_macho_binaries(
                 bins_to_relocate,
-                str(spack.store.layout.root),
-                str(spack.store.layout.root),
+                str(spack.store.STORE.layout.root),
+                str(spack.store.STORE.layout.root),
                 prefix_to_prefix,
                 False,
                 spec.build_spec.prefix,
@@ -90,8 +90,8 @@ def rewire_node(spec, explicit):
         if "elf" in platform.binary_formats:
             relocate.relocate_elf_binaries(
                 bins_to_relocate,
-                str(spack.store.layout.root),
-                str(spack.store.layout.root),
+                str(spack.store.STORE.layout.root),
+                str(spack.store.STORE.layout.root),
                 prefix_to_prefix,
                 False,
                 spec.build_spec.prefix,
@@ -114,9 +114,9 @@ def rewire_node(spec, explicit):
     # (spliced) spec into spec.json, without this, Database.add would fail on
     # the next line (because it checks the spec.json in the prefix against the
     # spec being added to look for mismatches)
-    spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
+    spack.store.STORE.layout.write_spec(spec, spack.store.STORE.layout.spec_file_path(spec))
     # add to database, not sure about explicit
-    spack.store.db.add(spec, spack.store.layout, explicit=explicit)
+    spack.store.STORE.db.add(spec, spack.store.STORE.layout, explicit=explicit)
 
     # run post install hooks
     spack.hooks.post_install(spec, explicit)

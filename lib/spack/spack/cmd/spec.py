@@ -100,7 +100,7 @@ def spec(parser, args):
     # spec in the DAG.  This avoids repeatedly querying the DB.
     tree_context = lang.nullcontext
     if args.install_status:
-        tree_context = spack.store.db.read_transaction
+        tree_context = spack.store.STORE.db.read_transaction
 
     # Use command line specified specs, otherwise try to use environment specs.
     if args.specs:

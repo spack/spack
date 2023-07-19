@@ -670,7 +670,7 @@ class TestSpecSemantics:
 
         other_segments = [
             ("{spack_root}", spack.paths.spack_root),
-            ("{spack_install}", spack.store.layout.root),
+            ("{spack_install}", spack.store.STORE.layout.root),
         ]
 
         def depify(depname, fmt_str, sigil):

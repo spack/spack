@@ -106,7 +106,7 @@ def emulate_env_utility(cmd_name, context, args):
     visitor = AreDepsInstalledVisitor(context=context)
 
     # Mass install check needs read transaction.
-    with spack.store.db.read_transaction():
+    with spack.store.STORE.db.read_transaction():
         traverse.traverse_breadth_first_with_visitor([spec], traverse.CoverNodesVisitor(visitor))
 
     if visitor.has_uninstalled_deps:

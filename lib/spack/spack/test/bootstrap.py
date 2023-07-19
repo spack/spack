@@ -25,11 +25,11 @@ def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmpdir):
     """Tests that the store is correctly swapped during bootstrapping, and restored afterward."""
     user_path = str(tmpdir.join("store"))
     with spack.store.use_store(user_path):
-        assert spack.store.root == user_path
+        assert spack.store.STORE.root == user_path
         assert spack.config.config.get("config:install_tree:root") == user_path
         with spack.bootstrap.ensure_bootstrap_configuration():
-            assert spack.store.root == spack.bootstrap.config.store_path()
-        assert spack.store.root == user_path
+            assert spack.store.STORE.root == spack.bootstrap.config.store_path()
+        assert spack.store.STORE.root == user_path
         assert spack.config.config.get("config:install_tree:root") == user_path
 
 
@@ -42,7 +42,7 @@ def test_store_padding_length_is_zero_during_bootstrapping(mutable_config, tmpdi
     with spack.store.use_store(user_path, extra_data={"padded_length": 512}):
         assert spack.config.config.get("config:install_tree:padded_length") == 512
         with spack.bootstrap.ensure_bootstrap_configuration():
-            assert spack.store.root == spack.bootstrap.config.store_path()
+            assert spack.store.STORE.root == spack.bootstrap.config.store_path()
             assert spack.config.config.get("config:install_tree:padded_length") == 0
         assert spack.config.config.get("config:install_tree:padded_length") == 512
 
@@ -161,7 +161,7 @@ spack:
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
-        assert str(spack.store.root) == install_root
+        assert str(spack.store.STORE.root) == install_root
 
 
 def test_nested_use_of_context_manager(mutable_config):

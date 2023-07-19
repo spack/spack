@@ -1780,7 +1780,7 @@ class Spec:
         try:
             # If the spec is in the DB, check the installed
             # attribute of the record
-            return spack.store.db.get_record(self).installed
+            return spack.store.STORE.db.get_record(self).installed
         except KeyError:
             # If the spec is not in the DB, the method
             #  above raises a Key error
@@ -1796,7 +1796,7 @@ class Spec:
         if not self.concrete:
             return False
 
-        upstream, _ = spack.store.db.query_by_spec_hash(self.dag_hash())
+        upstream, _ = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
         return upstream
 
     def traverse(self, **kwargs):
@@ -1828,11 +1828,11 @@ class Spec:
             raise spack.error.SpecError("Spec is not concrete: " + str(self))
 
         if self._prefix is None:
-            upstream, record = spack.store.db.query_by_spec_hash(self.dag_hash())
+            upstream, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
             if record and record.path:
                 self.prefix = record.path
             else:
-                self.prefix = spack.store.layout.path_for_spec(self)
+                self.prefix = spack.store.STORE.layout.path_for_spec(self)
         return self._prefix
 
     @prefix.setter
@@ -1933,7 +1933,7 @@ class Spec:
             env_matches = active_env.get_by_hash(self.abstract_hash) or []
             matches = [m for m in env_matches if m._satisfies(self)]
         if not matches:
-            db_matches = spack.store.db.get_by_hash(self.abstract_hash) or []
+            db_matches = spack.store.STORE.db.get_by_hash(self.abstract_hash) or []
             matches = [m for m in db_matches if m._satisfies(self)]
         if not matches:
             query = spack.binary_distribution.BinaryCacheQuery(True)
@@ -2942,9 +2942,9 @@ class Spec:
             SpecDeprecatedError: if any deprecated spec is found
         """
         deprecated = []
-        with spack.store.db.read_transaction():
+        with spack.store.STORE.db.read_transaction():
             for x in root.traverse():
-                _, rec = spack.store.db.query_by_spec_hash(x.dag_hash())
+                _, rec = spack.store.STORE.db.query_by_spec_hash(x.dag_hash())
                 if rec and rec.deprecated_for:
                     deprecated.append(rec)
         if deprecated:
@@ -4377,7 +4377,7 @@ class Spec:
                 write(morph(spec, spack.paths.spack_root))
                 return
             elif attribute == "spack_install":
-                write(morph(spec, spack.store.layout.root))
+                write(morph(spec, spack.store.STORE.layout.root))
                 return
             elif re.match(r"hash(:\d)?", attribute):
                 col = "#"
@@ -4497,7 +4497,7 @@ class Spec:
         if self.external:
             return InstallStatus.external
 
-        upstream, record = spack.store.db.query_by_spec_hash(self.dag_hash())
+        upstream, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
         if not record:
             return InstallStatus.absent
         elif upstream and record.installed:
@@ -4512,7 +4512,7 @@ class Spec:
         if not self.concrete:
             return None
         try:
-            record = spack.store.db.get_record(self)
+            record = spack.store.STORE.db.get_record(self)
             return record.explicit
         except KeyError:
             return None

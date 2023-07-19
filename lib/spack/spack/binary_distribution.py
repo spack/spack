@@ -718,7 +718,7 @@ def get_buildfile_manifest(spec):
     # look for them to decide if text file needs to be relocated or not
     prefixes = [d.prefix for d in spec.traverse(root=True, deptype="all") if not d.external]
     prefixes.append(spack.hooks.sbang.sbang_install_path())
-    prefixes.append(str(spack.store.layout.root))
+    prefixes.append(str(spack.store.STORE.layout.root))
 
     # Create a giant regex that matches all prefixes
     regex = utf8_paths_to_single_binary_regex(prefixes)
@@ -731,7 +731,7 @@ def get_buildfile_manifest(spec):
     for rel_path in visitor.symlinks:
         abs_path = os.path.join(root, rel_path)
         link = os.readlink(abs_path)
-        if os.path.isabs(link) and link.startswith(spack.store.layout.root):
+        if os.path.isabs(link) and link.startswith(spack.store.STORE.layout.root):
             data["link_to_relocate"].append(rel_path)
 
     # Non-symlinks.
@@ -779,9 +779,9 @@ def get_buildinfo_dict(spec):
 
     return {
         "sbang_install_path": spack.hooks.sbang.sbang_install_path(),
-        "buildpath": spack.store.layout.root,
+        "buildpath": spack.store.STORE.layout.root,
         "spackprefix": spack.paths.prefix,
-        "relative_prefix": os.path.relpath(spec.prefix, spack.store.layout.root),
+        "relative_prefix": os.path.relpath(spec.prefix, spack.store.STORE.layout.root),
         "relocate_textfiles": manifest["text_to_relocate"],
         "relocate_binaries": manifest["binary_to_relocate"],
         "relocate_links": manifest["link_to_relocate"],
@@ -1262,7 +1262,7 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     # without concretizing with the current spack packages
     # and preferences
 
-    spec_file = spack.store.layout.spec_file_path(spec)
+    spec_file = spack.store.STORE.layout.spec_file_path(spec)
     specfile_name = tarball_name(spec, ".spec.json")
     specfile_path = os.path.realpath(os.path.join(cache_prefix, specfile_name))
     signed_specfile_path = "{0}.sig".format(specfile_path)
@@ -1311,7 +1311,7 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     # Add original install prefix relative to layout root to spec.json.
     # This will be used to determine is the directory layout has changed.
     buildinfo = {}
-    buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.layout.root)
+    buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.STORE.layout.root)
     spec_dict["buildinfo"] = buildinfo
 
     with open(specfile_path, "w") as outfile:
@@ -1369,7 +1369,7 @@ def specs_to_be_packaged(
     packageable = lambda n: not n.external and n.installed
 
     # Mass install check
-    with spack.store.db.read_transaction():
+    with spack.store.STORE.db.read_transaction():
         return list(filter(packageable, nodes))
 
 
@@ -1606,7 +1606,7 @@ def relocate_package(spec):
     """
     workdir = str(spec.prefix)
     buildinfo = read_buildinfo_file(workdir)
-    new_layout_root = str(spack.store.layout.root)
+    new_layout_root = str(spack.store.STORE.layout.root)
     new_prefix = str(spec.prefix)
     new_rel_prefix = str(os.path.relpath(new_prefix, new_layout_root))
     new_spack_prefix = str(spack.paths.prefix)
@@ -1854,7 +1854,7 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
                 tarfile_path, size, contents, "sha256", expected, local_checksum
             )
 
-    new_relative_prefix = str(os.path.relpath(spec.prefix, spack.store.layout.root))
+    new_relative_prefix = str(os.path.relpath(spec.prefix, spack.store.STORE.layout.root))
     # if the original relative prefix is in the spec file use it
     buildinfo = spec_dict.get("buildinfo", {})
     old_relative_prefix = buildinfo.get("relative_prefix", new_relative_prefix)
@@ -1866,7 +1866,7 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
     # The directory created is the base directory name of the old prefix.
     # Moving the old prefix name to the new prefix location should preserve
     # hard links and symbolic links.
-    extract_tmp = os.path.join(spack.store.layout.root, ".tmp")
+    extract_tmp = os.path.join(spack.store.STORE.layout.root, ".tmp")
     mkdirp(extract_tmp)
     extracted_dir = os.path.join(extract_tmp, old_relative_prefix.split(os.path.sep)[-1])
 
@@ -1893,7 +1893,9 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
         raise e
     else:
         manifest_file = os.path.join(
-            spec.prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
+            spec.prefix,
+            spack.store.STORE.layout.metadata_dir,
+            spack.store.STORE.layout.manifest_file_name,
         )
         if not os.path.exists(manifest_file):
             spec_id = spec.format("{name}/{hash:7}")
@@ -1952,7 +1954,7 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, unsigned, force)
         spack.hooks.post_install(spec, False)
-        spack.store.db.add(spec, spack.store.layout)
+        spack.store.STORE.db.add(spec, spack.store.STORE.layout)
 
 
 def install_single_spec(spec, unsigned=False, force=False):
