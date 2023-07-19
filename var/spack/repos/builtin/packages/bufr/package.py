@@ -49,6 +49,7 @@ class Bufr(CMakePackage, PythonExtension):
         with when("@:11.7.1"):
             filter_file("_lenslmax 120", "_lenslmax 60", "CMakeLists.txt")
 
+
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
@@ -85,9 +86,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         shared = True if "+shared" in self.spec else False
         # Bufr has _DA (dynamic allocation) libs in versions <= 11.5.0
         append = "" if self.spec.satisfies("@11.5.0:") else "_DA"
-        lib = find_libraries(libname+append, root=self.prefix, shared=shared, recursive=True)
-        lib_envname = "BUFR_LIB{0}".format(suffix)+append
-        inc_envname = "BUFR_INC{0}".format(suffix)+append
+        lib = find_libraries(libname + append, root=self.prefix, shared=shared, recursive=True)
+        lib_envname = "BUFR_LIB{0}".format(suffix) + append
+        inc_envname = "BUFR_INC{0}".format(suffix) + append
         include_dir = "include_{0}".format(suffix)
 
         env.set(lib_envname, lib[0])
@@ -114,8 +115,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                     return os.path.join(self.pkg.stage.path, self.build_dirname, "python")
 
                 def install(self, pkg, spec, prefix):
-                    args = spack.build_systems.python.PythonPipBuilder.std_args(pkg) + ["--prefix=" + prefix] + ["-march=native"]
+                    args = (
+                        spack.build_systems.python.PythonPipBuilder.std_args(pkg)
+                        + ["--prefix=" + prefix]
+                        + ["-march=native"]
+                    )
 
             customPip = CustomPythonPipBuilder(pkg, self.build_dirname)
             customPip.install(pkg, spec, prefix)
-
