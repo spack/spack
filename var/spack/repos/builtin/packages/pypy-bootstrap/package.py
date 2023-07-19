@@ -21,7 +21,7 @@ class PypyBootstrap(Package):
             version(
                 "2.7-v7.3.12", "1a61a2574b79466f606010f2999a2b995bd96cd085f91a78ebdd3d5c2c40e81d"
             )
-        elif platform.machine() == "aarc64":
+        elif platform.machine() == "aarch64":
             version(
                 "2.7-v7.3.12", "e04dcb6286a7b4724ec3f0e50d3cc1ba8583301dd1658c06d7f37599e4201c59"
             )
