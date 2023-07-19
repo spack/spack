@@ -76,6 +76,12 @@ class Proj(CMakePackage, AutotoolsPackage):
         when="@:6",
     )
 
+    patch(
+        "https://github.com/OSGeo/PROJ/commit/3f38a67a354a3a1e5cca97793b9a43860c380d95.patch?full_index=1",
+        sha256="ff09e573b54c41208899b4abd66a494d3e0a3fbafdb0d024a2a262c22b9526b6",
+        when="@7:7.2.1",
+    )
+
     # https://proj.org/install.html#build-requirements
     with when("build_system=cmake"):
         depends_on("cmake@3.9:", when="@6:", type="build")
