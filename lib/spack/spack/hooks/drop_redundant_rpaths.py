@@ -13,9 +13,8 @@ from spack.util.elf import ElfParsingError, parse_elf
 
 
 def should_keep(path: bytes):
-    """Return True iff p is a path to keep.
-    Either it starts with $ (typically for $ORIGIN/${ORIGIN}) or it
-    should be absolute and existing"""
+    """Return True iff path starts with $ (typically for $ORIGIN/${ORIGIN}) or is
+    absolute and exists."""
     return path.startswith(b"$") or (os.path.isabs(path) and os.path.lexists(path))
 
 
