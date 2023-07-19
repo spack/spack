@@ -150,6 +150,7 @@ def _add_compilers_if_missing() -> None:
 
 @contextlib.contextmanager
 def _ensure_bootstrap_configuration() -> Generator:
+    spack.store.ensure_singleton_created()
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
     with spack.environment.no_active_environment():
