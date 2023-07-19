@@ -104,11 +104,7 @@ class TestState:
             spack.config.config = self.config
             spack.repo.path = spack.repo.create(self.config)
             spack.platforms.host = self.platform
-
             spack.store.STORE = self.store
-            spack.store.STORE.db = self.store.db
-            spack.store.STORE.layout = self.store.layout
-
             self.test_patches.restore()
 
 
