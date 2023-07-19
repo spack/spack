@@ -44,6 +44,7 @@ import spack.hooks
 import spack.mirror
 import spack.mixins
 import spack.multimethod
+import spack.patch
 import spack.paths
 import spack.repo
 import spack.spec
@@ -62,7 +63,7 @@ from spack.install_test import (
     install_test_root,
 )
 from spack.installer import InstallError, PackageInstaller
-from spack.stage import ResourceStage, Stage, StageComposite, compute_stage_name
+from spack.stage import DIYStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.web import FetchError
@@ -981,20 +982,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         return None
 
-    def _make_resource_stage(self, root_stage, fetcher, resource):
-        resource_stage_folder = self._resource_stage(resource)
-        mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, "%s-%s" % (resource.name, self.version))
-        )
-        stage = ResourceStage(
+    def _make_resource_stage(self, root_stage, resource):
+        return ResourceStage(
             resource.fetcher,
             root=root_stage,
             resource=resource,
-            name=resource_stage_folder,
-            mirror_paths=mirror_paths,
+            name=self._resource_stage(resource),
+            mirror_paths=spack.mirror.mirror_archive_paths(
+                resource.fetcher, os.path.join(self.name, f"{resource.name}-{self.version}")
+            ),
             path=self.path,
         )
-        return stage
 
     def _download_search(self):
         dynamic_fetcher = fs.from_list_url(self)
@@ -1003,7 +1001,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, "%s-%s" % (self.name, self.version)), self.spec
+            fetcher, os.path.join(self.name, f"{self.name}-{self.version}"), self.spec
         )
         # Construct a path where the stage should build..
         s = self.spec
@@ -1021,24 +1019,21 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If it's a dev package (not transitively), use a DIY stage object
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
-            return spack.stage.DIYStage(dev_path_var.value)
+            return DIYStage(dev_path_var.value)
 
-        # Construct a composite stage on top of the composite FetchStrategy
-        composite_fetcher = self.fetcher
-        composite_stage = StageComposite()
-        resources = self._get_needed_resources()
-        for ii, fetcher in enumerate(composite_fetcher):
-            if ii == 0:
-                # Construct root stage first
-                stage = self._make_root_stage(fetcher)
-            else:
-                # Construct resource stage
-                resource = resources[ii - 1]  # ii == 0 is root!
-                stage = self._make_resource_stage(composite_stage[0], fetcher, resource)
-            # Append the item to the composite
-            composite_stage.append(stage)
+        # To fetch the current version
+        source_stage = self._make_root_stage(self.fetcher)
 
-        return composite_stage
+        # Extend it with all resources and patches
+        all_stages = StageComposite()
+        all_stages.append(source_stage)
+        all_stages.extend(
+            self._make_resource_stage(source_stage, r) for r in self._get_needed_resources()
+        )
+        all_stages.extend(
+            p.stage for p in self.spec.patches if isinstance(p, spack.patch.UrlPatch)
+        )
+        return all_stages
 
     @property
     def stage(self):
@@ -1187,26 +1182,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         warnings.warn(msg)
         return self.spec.installed_upstream
 
-    def _make_fetcher(self):
-        # Construct a composite fetcher that always contains at least
-        # one element (the root package). In case there are resources
-        # associated with the package, append their fetcher to the
-        # composite.
-        root_fetcher = fs.for_package_version(self)
-        fetcher = fs.FetchStrategyComposite()  # Composite fetcher
-        fetcher.append(root_fetcher)  # Root fetcher is always present
-        resources = self._get_needed_resources()
-        for resource in resources:
-            fetcher.append(resource.fetcher)
-        fetcher.set_package(self)
-        return fetcher
-
     @property
     def fetcher(self):
         if not self.spec.versions.concrete:
             raise ValueError("Cannot retrieve fetcher for package without concrete version.")
         if not self._fetcher:
-            self._fetcher = self._make_fetcher()
+            self._fetcher = fs.for_package_version(self)
         return self._fetcher
 
     @fetcher.setter
@@ -1444,11 +1425,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             self.stage.check()
 
         self.stage.cache_local()
-
-        for patch in self.spec.patches:
-            patch.fetch()
-            if patch.stage:
-                patch.stage.cache_local()
 
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball."""
@@ -2341,9 +2317,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def do_clean(self):
         """Removes the package's build stage and source tarball."""
-        for patch in self.spec.patches:
-            patch.clean()
-
         self.stage.destroy()
 
     @classmethod
