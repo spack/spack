@@ -7,6 +7,7 @@
 import os
 import stat
 import sys
+from typing import Optional, Tuple
 
 import llnl.util.lock
 
@@ -30,8 +31,16 @@ class Lock(llnl.util.lock.Lock):
     """
 
     def __init__(
-        self, path, *, start=0, length=0, default_timeout=None, debug=False, desc="", enable=None
-    ):
+        self,
+        path: str,
+        *,
+        start: int = 0,
+        length: int = 0,
+        default_timeout: Optional[float] = None,
+        debug: bool = False,
+        desc: str = "",
+        enable: Optional[bool] = None,
+    ) -> None:
         enable_lock = enable
         if sys.platform == "win32":
             enable_lock = False
@@ -47,27 +56,23 @@ class Lock(llnl.util.lock.Lock):
             desc=desc,
         )
 
-    def _lock(self, op, timeout=0):
+    def _lock(self, op: int, timeout: Optional[float] = 0.0) -> Tuple[float, int]:
         if self._enable:
             return super()._lock(op, timeout)
         else:
-            return 0, 0
+            return 0.0, 0
 
-    def _unlock(self):
+    def _unlock(self) -> None:
         """Unlock call that always succeeds."""
         if self._enable:
             super()._unlock()
 
-    def _debug(self, *args):
-        if self._enable:
-            super()._debug(*args)
-
-    def cleanup(self, *args):
+    def cleanup(self, *args) -> None:
         if self._enable:
             super().cleanup(*args)
 
 
-def check_lock_safety(path):
+def check_lock_safety(path: str) -> None:
     """Do some extra checks to ensure disabling locks is safe.
 
     This will raise an error if ``path`` can is group- or world-writable
