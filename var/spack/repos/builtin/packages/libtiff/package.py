@@ -103,6 +103,12 @@ class Libtiff(CMakePackage, AutotoolsPackage):
     # https://gitlab.com/libtiff/libtiff/-/merge_requests/243
     conflicts("platform=darwin", when="@4.3.0")
 
+    # cmake 3.19 and newer turn on pic automatically when shared is enabled
+    # for older cmake versions enabling shared without pic results in
+    # relocation R_X86_64_32 against `.rodata.str1.1' can not
+    # be used when making a shared object; recompile with -fPIC
+    conflicts("~pic", when="+shared ^cmake@:3.18")
+
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
         if self.spec.satisfies("%nvhpc@:20.11"):
