@@ -645,6 +645,10 @@ def sync_fn(args):
                 "Skipping archive {0} because metadata was not transferred".format(archive_src_url)
             )
 
+    # Try to trigger the bootstrapping in serial to avoid all the threads doing it
+    if args.only_verified:
+        spack.util.gpg.list(True, True)
+
     tp = multiprocessing.pool.ThreadPool(processes=32)
     try:
         tp.map(
