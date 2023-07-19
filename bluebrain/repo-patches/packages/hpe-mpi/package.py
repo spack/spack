@@ -104,9 +104,12 @@ class HpeMpi(Package):
         #             LD_PRELOAD env variable of the container to make sure that
         #             the executable that might have hardcoded RPATH use this
         #             HPE-MPI implementation
-        libdir = self.prefix.lib
-        for lib in libdir:
-            env.append_path("SINGULARITY_CONTAINLIBS", lib, separator=",")
+        lib_directory = self.prefix.lib
+        for lib in os.listdir(lib_directory):
+            if os.path.isfile(os.path.join(lib_directory, lib)):
+                env.append_path(
+                    "SINGULARITY_CONTAINLIBS", os.path.join(lib_directory, lib), separator=","
+                )
         env.prepend_path(
             "SINGULARITYENV_LD_PRELOAD", "/.singularity.d/libs/libmpi.so", separator=","
         )
