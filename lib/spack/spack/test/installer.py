@@ -557,7 +557,7 @@ def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
 
 def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     """Test error paths for dump_packages with dependencies."""
-    orig_bpp = spack.store.layout.build_packages_path
+    orig_bpp = spack.store.STORE.layout.build_packages_path
     orig_dirname = spack.repo.Repo.dirname_for_package_name
     repo_err_msg = "Mock dirname_for_package_name"
 
@@ -576,7 +576,7 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
 
     # Now mock the creation of the required directory structure to cover
     # the try-except block
-    monkeypatch.setattr(spack.store.layout, "build_packages_path", bpp_path)
+    monkeypatch.setattr(spack.store.STORE.layout, "build_packages_path", bpp_path)
 
     spec = spack.spec.Spec("simple-inheritance").concretized()
     path = str(tmpdir)
@@ -601,29 +601,29 @@ def test_clear_failures_success(install_mockery):
 
     # Set up a test prefix failure lock
     lock = lk.Lock(
-        spack.store.db.prefix_fail_path, start=1, length=1, default_timeout=1e-9, desc="test"
+        spack.store.STORE.db.prefix_fail_path, start=1, length=1, default_timeout=1e-9, desc="test"
     )
     try:
         lock.acquire_write()
     except lk.LockTimeoutError:
         tty.warn("Failed to write lock the test install failure")
-    spack.store.db._prefix_failures["test"] = lock
+    spack.store.STORE.db._prefix_failures["test"] = lock
 
     # Set up a fake failure mark (or file)
-    fs.touch(os.path.join(spack.store.db._failure_dir, "test"))
+    fs.touch(os.path.join(spack.store.STORE.db._failure_dir, "test"))
 
     # Now clear failure tracking
     inst.clear_failures()
 
     # Ensure there are no cached failure locks or failure marks
-    assert len(spack.store.db._prefix_failures) == 0
-    assert len(os.listdir(spack.store.db._failure_dir)) == 0
+    assert len(spack.store.STORE.db._prefix_failures) == 0
+    assert len(os.listdir(spack.store.STORE.db._failure_dir)) == 0
 
     # Ensure the core directory and failure lock file still exist
-    assert os.path.isdir(spack.store.db._failure_dir)
+    assert os.path.isdir(spack.store.STORE.db._failure_dir)
     # Locks on windows are a no-op
     if sys.platform != "win32":
-        assert os.path.isfile(spack.store.db.prefix_fail_path)
+        assert os.path.isfile(spack.store.STORE.db.prefix_fail_path)
 
 
 def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
@@ -635,7 +635,7 @@ def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
         raise OSError(err_msg)
 
     # Set up a fake failure mark (or file)
-    fs.touch(os.path.join(spack.store.db._failure_dir, "test"))
+    fs.touch(os.path.join(spack.store.STORE.db._failure_dir, "test"))
 
     monkeypatch.setattr(os, "remove", _raise_except)
 
@@ -932,7 +932,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     spec = installer.build_requests[0].pkg.spec
 
     fs.touchp(spec.prefix)
-    metadatadir = spack.store.layout.metadata_path(spec)
+    metadatadir = spack.store.STORE.layout.metadata_path(spec)
     # Regex matching with Windows style paths typically fails
     # so we skip the match check here
     if sys.platform == "win32":
@@ -1388,7 +1388,7 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     s = spack.spec.Spec(pkg).concretized()
     s.external_path = "/usr"
     create_installer([(s, explicit_args)]).install()
-    assert spack.store.db.get_record(pkg).explicit == is_explicit
+    assert spack.store.STORE.db.get_record(pkg).explicit == is_explicit
 
 
 @pytest.mark.parametrize("run_tests", [True, False])

@@ -959,7 +959,7 @@ def install_mockery(temporary_store, mutable_config, mock_packages):
     # Also wipe out any cached prefix failure locks (associated with
     # the session-scoped mock archive).
     for pkg_id in list(temporary_store.db._prefix_failures.keys()):
-        lock = spack.store.db._prefix_failures.pop(pkg_id, None)
+        lock = spack.store.STORE.db._prefix_failures.pop(pkg_id, None)
         if lock:
             try:
                 lock.release_write()
@@ -1946,4 +1946,4 @@ def nullify_globals(request, monkeypatch):
     monkeypatch.setattr(spack.config, "config", None)
     monkeypatch.setattr(spack.caches, "misc_cache", None)
     monkeypatch.setattr(spack.repo, "path", None)
-    monkeypatch.setattr(spack.store, "store", None)
+    monkeypatch.setattr(spack.store, "STORE", None)

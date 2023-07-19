@@ -542,7 +542,7 @@ class Database:
         containing the spec, in a subdirectory of the database to enable
         persistence across overlapping but separate related build processes.
 
-        The failure lock file, ``spack.store.db.prefix_failures``, lives
+        The failure lock file, ``spack.store.STORE.db.prefix_failures``, lives
         alongside the install DB. ``n`` is the sys.maxsize-bit prefix of the
         associated DAG hash to make the likelihood of collision very low with
         no cleanup required.
@@ -620,7 +620,7 @@ class Database:
 
         Prefix lock is a byte range lock on the nth byte of a file.
 
-        The lock file is ``spack.store.db.prefix_lock`` -- the DB
+        The lock file is ``spack.store.STORE.db.prefix_lock`` -- the DB
         tells us what to call it and it lives alongside the install DB.
 
         n is the sys.maxsize-bit prefix of the DAG hash.  This makes
@@ -844,7 +844,7 @@ class Database:
                     % (version, _DB_VERSION)
                 )
 
-                self.reindex(spack.store.layout)
+                self.reindex(spack.store.STORE.layout)
                 installs = dict(
                     (k, v.to_dict(include_fields=self._record_fields))
                     for k, v in self._data.items()
