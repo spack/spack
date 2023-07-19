@@ -798,17 +798,19 @@ def test_install_spliced(install_mockery, default_mock_concretization, monkeypat
     # Do the splice.
     # TODO: Make parameterized on transitivity
     out = spec.splice(dep, False)
-    installer = create_installer([(out, {})])
+    installer = create_installer([(out, {"vebose": True})])
     installer._init_queue()
     for _, task in installer.build_pq:
         assert isinstance(task, inst.RewireTask if task.pkg.spec.spliced else inst.BuildTask)
     assert installer.build_pq[-1][0][0] == 3
     print([key for key, _ in installer.build_pq])
-    # task = installer._pop_task()
-    # installer._install_task(task)
-    # installer._update_installed(task)
-    # installer._cleanup_task(task.pkg)
-    # print([key for key, _ in installer.build_pq])
+    for key, task in installer.build_pq:
+        print(task.pkg_id, task.dependents, task.dependencies)
+    task = installer._pop_task()
+    installer._install_task(task)
+    installer._update_installed(task)
+    installer._cleanup_task(task.pkg)
+    print([key for key, _ in installer.build_pq])
     installer.install()
     assert False
 
