@@ -1637,7 +1637,7 @@ def relocate_package(spec: Spec):
     # Remove identity mappings
     prefix_to_prefix = dict((k, v) for (k, v) in prefix_to_prefix.items() if k != v)
 
-    # Early exit when installig to the same prefix.
+    # Early exit when installing to the same prefix.
     if not prefix_to_prefix:
         return
 
