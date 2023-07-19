@@ -14,7 +14,7 @@ class PyTokenFetch(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/dke/apps/blue_brain_nexus_token_fetch"
     git = "ssh://git@bbpgitlab.epfl.ch/dke/apps/blue_brain_nexus_token_fetch.git"
 
-    version("0.1.0", tag="v0.1.0")
+    version("0.2.0", tag="v0.2.0")
 
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-click@7.0:", type=("build", "run"))
