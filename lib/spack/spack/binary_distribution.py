@@ -1616,10 +1616,7 @@ def relocate_package(spec: Spec):
     elif "prefix_to_hash" in buildinfo:
         hash_to_old_prefix = dict((v, k) for (k, v) in buildinfo["prefix_to_hash"].items())
     else:
-        raise NewLayoutException(
-            f"Broken binary tarball for {spec.short_spec}: cannot construct "
-            "prefix to prefix mapping from buildinfo"
-        )
+        hash_to_old_prefix = {}
 
     # Construct the prefix to prefix mapping, which is *ordered* and first
     # lists the most specific package prefixes.
@@ -1643,6 +1640,34 @@ def relocate_package(spec: Spec):
     # Early exit when installig to the same prefix.
     if not prefix_to_prefix:
         return
+
+    # Tarballs created with Spack <= 0.19 may have used buildcache create --rel.
+    # This would make rpaths relative to the store (with padding), for example:
+    # `pkg-1.2.3-hash/bin/app` has rpath `$ORIGIN/../../zlib-1.2.3-hash/lib`
+    # However, this is rather brittle and would still require relocation, when
+    # (a) different projections are used during installation
+    # (b) upstreams are used.
+    # --rel was removed because of (a) and (b), but also because $ORIGIN *outside*
+    # the package prefix cannot be combined with default environment views that are
+    # based on symlinking to a tradition FHS structure, as $ORIGIN will then become
+    # relative to the *symlink* instead of its target. That is, even if the install
+    # projections are correct, there are view projections that will break things.
+    # So, to support old --rel tarballs, we just verify that at least the projection
+    # of the current spec is the same as when it was pushed to the binary cache.
+    if buildinfo.get("relative_rpaths", False) is True:
+        old_relative_path = buildinfo.get("relative_prefix")
+        if not isinstance(old_relative_path, str):
+            raise NewLayoutException(
+                f"Broken binary tarball for {spec.short_spec}: no relative prefix found"
+            )
+        new_relative_path = os.path.relpath(spec.prefix, spack.store.STORE.root)
+        if old_relative_path != new_relative_path:
+            raise NewLayoutException(
+                f"Cannot install {spec.format('{name}{@version}{/hash:7}')} because it uses "
+                f"relative rpaths, and its original relative directory {old_relative_path} "
+                f"does not match the new one at {new_relative_path}. Make sure your install "
+                "tree projections are identical."
+            )
 
     # Old archives maybe have hardlinks repeated.
     dedupe_hardlinks_if_necessary(spec.prefix, buildinfo)
