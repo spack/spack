@@ -326,6 +326,11 @@ def specfile_matches(filename: str, **kwargs) -> List["spack.spec.Spec"]:
     return spack.store.find(query, **kwargs)
 
 
+def ensure_singleton_created() -> None:
+    """Ensures the lazily evaluated singleton is created"""
+    _ = STORE.db
+
+
 @contextlib.contextmanager
 def use_store(
     path: Union[str, pathlib.Path], extra_data: Optional[Dict[str, Any]] = None
@@ -349,7 +354,7 @@ def use_store(
         data.update(extra_data)
 
     # Swap the store with the one just constructed and return it
-    _ = STORE.db
+    ensure_singleton_created()
     spack.config.config.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={"config": {"install_tree": data}})
     )
