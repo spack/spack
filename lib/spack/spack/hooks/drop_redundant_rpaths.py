@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from typing import Optional, Tuple
+from typing import IO, Optional, Tuple
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
@@ -12,17 +12,26 @@ from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
 from spack.util.elf import ElfParsingError, parse_elf
 
 
-def should_keep(p: bytes):
+def should_keep(path: bytes):
     """Return True iff p is a path to keep.
     Either it starts with $ (typically for $ORIGIN/${ORIGIN}) or it
     should be absolute and existing"""
-    return p.startswith(b"$") or (os.path.isabs(p) and os.path.lexists(p))
+    return path.startswith(b"$") or (os.path.isabs(path) and os.path.lexists(path))
 
 
-def _drop_redundant_rpaths(f) -> Optional[Tuple[bytes, bytes]]:
-    """Drop invalid rpaths from an elf file.
-    Returns True if the file was modified, False otherwise."""
-    elf = parse_elf(f, interpreter=False, dynamic_section=True)
+def _drop_redundant_rpaths(f: IO) -> Optional[Tuple[bytes, bytes]]:
+    """Drop redundant entries from rpath.
+
+    Args:
+        f: File object to patch opened in r+b mode.
+
+    Returns:
+        A tuple of the old and new rpath if the rpath was patched, None otherwise.
+    """
+    try:
+        elf = parse_elf(f, interpreter=False, dynamic_section=True)
+    except ElfParsingError:
+        return None
 
     # Nothing to do.
     if not elf.has_rpath:
@@ -52,10 +61,18 @@ def _drop_redundant_rpaths(f) -> Optional[Tuple[bytes, bytes]]:
 
 
 def drop_redundant_rpaths(path: str) -> Optional[Tuple[bytes, bytes]]:
+    """Drop redundant entries from rpath.
+
+    Args:
+        path: Path to a potential ELF file to patch.
+
+    Returns:
+        A tuple of the old and new rpath if the rpath was patched, None otherwise.
+    """
     try:
         with open(path, "r+b") as f:
             return _drop_redundant_rpaths(f)
-    except (IOError, OSError, ElfParsingError):
+    except OSError:
         return None
 
 
