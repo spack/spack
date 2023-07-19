@@ -29,14 +29,23 @@ class Lock(llnl.util.lock.Lock):
     the actual locking mechanism can be disabled via ``_enable_locks``.
     """
 
-    def __init__(self, *args, **kwargs):
-        enable_lock = kwargs.pop("enable", None)
+    def __init__(
+        self, path, *, start=0, length=0, default_timeout=None, debug=False, desc="", enable=None
+    ):
+        enable_lock = enable
         if sys.platform == "win32":
             enable_lock = False
         elif sys.platform != "win32" and enable_lock is None:
             enable_lock = True
         self._enable = enable_lock
-        super(Lock, self).__init__(*args, **kwargs)
+        super(Lock, self).__init__(
+            path,
+            start=start,
+            length=length,
+            default_timeout=default_timeout,
+            debug=debug,
+            desc=desc,
+        )
 
     def _lock(self, op, timeout=0):
         if self._enable:
