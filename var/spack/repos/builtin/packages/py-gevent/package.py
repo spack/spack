@@ -23,7 +23,7 @@ class PyGevent(PythonPackage):
     depends_on("py-setuptools@40.8:", when="@20.5.1:", type=("build", "run"))
     depends_on("py-setuptools@40.8:", when="@1.5:", type="build")
     depends_on("py-setuptools@24.2:", when="@:1.4", type="build")
-    depends_on("py-cython@3.0.0a9:", when="@20.5.1:", type="build")
+    depends_on("py-cython@3:", when="@20.5.1:", type="build")
     depends_on("py-cython@0.29.14:", when="@1.5:", type="build")
     depends_on("py-cython@0.27:", when="@:1.4", type="build")
     depends_on("py-cython@0.27:", when="@:1.4", type="build")
@@ -35,6 +35,9 @@ class PyGevent(PythonPackage):
     depends_on("py-greenlet@0.4.13:", when="@:1.4", type=("build", "run"))
     depends_on("py-zope-event", when="@20.5.1:", type=("build", "run"))
     depends_on("py-zope-interface", when="@20.5.1:", type=("build", "run"))
+
+    # https://github.com/gevent/gevent/issues/1599
+    conflicts("^py-cython@3:", when="@:20.5.0")
 
     # Deprecated compiler options. upstream PR: https://github.com/gevent/gevent/pull/1896
     patch("icc.patch", when="%intel")

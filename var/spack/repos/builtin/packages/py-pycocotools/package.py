@@ -22,3 +22,5 @@ class PyPycocotools(PythonPackage):
     depends_on("py-setuptools@18.0:", when="@:2.0.3", type=("build", "run"))
     depends_on("py-matplotlib@2.1.0:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "link", "run"))
+
+    conflicts("^py-cython@3:", when="@:2.0.4")
