@@ -540,6 +540,13 @@ def copy_buildcache_file(src_url: str, dest_url: str, only_verified: bool = Fals
     Returns:
         bool: Return True if file was transferred, False otherwise.
     """
+    if not only_verified:
+        try:
+            web_util.copy(src_url, dest_url)
+            return True
+        except web_util.UnsupportedCopyError as uce:
+            tty.msg("Unable to copy directly, falling back to read/push")
+
     tmpdir = tempfile.mkdtemp()
     local_path = os.path.join(tmpdir, os.path.basename(src_url))
     transferred = False

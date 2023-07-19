@@ -129,6 +129,53 @@ def read_from_url(url, accept_content_type=None):
     return response.geturl(), response.headers, response
 
 
+def copy(src_path, dest_path):
+    src_url = urllib.parse.urlparse(src_path)
+    dest_url = urllib.parse.urlparse(dest_path)
+
+    if src_url.scheme != dest_url.scheme:
+        msg = (
+            "copy method can only be used when source and destination schemes match "
+            "(src scheme: {0}, dest scheme: {1})".format(src_url.scheme, dest_url.scheme)
+        )
+        raise UnsupportedCopyError(msg)
+
+    if src_url.scheme == "file":
+        dest_dir = os.path.dirname(dest_url)
+        mkdirp(dest_dir)
+        shutil.copy(src_url, dest_url)
+    elif src_url.scheme == "s3" or src_url.scheme == "gs":
+        src_bucket = src_url.netloc
+        src_prefix = re.sub(r"^/*", "", src_url.path)
+        dest_bucket = dest_url.netloc
+        dest_prefix = re.sub(r"^/*", "", dest_url.path)
+        tty.debug("src bucket: {0}, src prefix: {1}".format(src_bucket, src_prefix))
+        tty.debug("dest bucket: {0}, dest prefix: {1}".format(dest_bucket, dest_prefix))
+
+        if src_url.scheme == "s3":
+            s3_client = s3_util.get_s3_session(dest_url)
+
+            # TODO: copy_object returns a response, do something with it
+            s3_client.copy_object(
+                Bucket=dest_bucket,
+                CopySource={"Bucket": src_bucket, "Key": src_prefix},
+                Key=dest_prefix,
+            )
+        else:
+            gcs_client = gcs_util.gcs_client()
+
+            source_bucket = gcs_client.bucket(src_bucket)
+            source_blob = source_bucket.blob(src_prefix)
+            destination_bucket = gcs_client.bucket(dest_bucket)
+
+            # TODO: copy_blob returns a response, do something with it
+            source_bucket.copy_blob(
+                source_blob, destination_bucket, dest_prefix
+            )
+    else:
+        raise UnsupportedCopyError("Did not recognize source url scheme {0}".format(src_url))
+
+
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
     remote_url = urllib.parse.urlparse(remote_path)
     if remote_url.scheme == "file":
@@ -872,3 +919,7 @@ class NoNetworkConnectionError(SpackWebError):
     def __init__(self, message, url):
         super().__init__("No network connection: " + str(message), "URL was: " + str(url))
         self.url = url
+
+
+class UnsupportedCopyError(spack.error.SpackError):
+    """Raised when copy spack.util.web.copy is called with urls having different schemes"""
