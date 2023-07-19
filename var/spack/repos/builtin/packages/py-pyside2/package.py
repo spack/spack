@@ -17,6 +17,7 @@ class PyPyside2(PythonPackage):
     # https://wiki.qt.io/Qt_for_Python_Development_Getting_Started
 
     version("develop", tag="dev")
+    version("5.15.10", tag="v5.15.10-lts-lgpl", submodules=True)
     version("5.15.2.1", tag="v5.15.2.1", submodules=True)
     version("5.14.2.1", tag="v5.14.2.1", submodules=True)
     version("5.13.2", tag="v5.13.2", submodules=True)
@@ -30,8 +31,12 @@ class PyPyside2(PythonPackage):
         description="Enables the generation of html and man page documentation",
     )
 
-    depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:", type=("build", "run"))
-    depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.8", when="@:5.14", type=("build", "run"))
+    # dependency matrix from: https://wiki.qt.io/Qt_for_Python
+    depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.8", when="@:5.15.0", type=("build", "run"))
+    depends_on(
+        "python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.9", when="@5.15.1:5.15.7", type=("build", "run")
+    )
+    depends_on("python@3.5:3.10", when="@5.15.9:5.15.10", type=("build", "run"))
 
     depends_on("cmake@3.1:", type="build")
     # libclang versioning from sources/shiboken2/doc/gettingstarted.rst
