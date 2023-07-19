@@ -12,7 +12,7 @@ from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
 from spack.util.elf import ElfParsingError, parse_elf
 
 
-def should_keep(path: bytes):
+def should_keep(path: bytes) -> bool:
     """Return True iff path starts with $ (typically for $ORIGIN/${ORIGIN}) or is
     absolute and exists."""
     return path.startswith(b"$") or (os.path.isabs(path) and os.path.lexists(path))
