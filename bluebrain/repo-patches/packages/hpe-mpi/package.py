@@ -98,3 +98,20 @@ class HpeMpi(Package):
         #         issue affects HPE-MPI v2.24 and above.
         if self.spec.version >= Version("2.24") and self.spec.version < Version("2.28"):
             env.set("ROMIO_TUNEGATHER", "0")
+        # BBPP154-53: append to SINGULARITY_CONTAINLIBS env variable all the
+        #             HPE-MPI libraries to mount them to the container image.
+        #             Also make sure that `libmpi.so` is prepended to the
+        #             LD_PRELOAD env variable of the container to make sure that
+        #             the executable that might have hardcoded RPATH use this
+        #             HPE-MPI implementation
+        libdir = self.prefix.lib
+        for lib in libdir:
+            env.append_path("SINGULARITY_CONTAINLIBS", lib, separator=",")
+        env.prepend_path(
+            "SINGULARITYENV_LD_PRELOAD", "/.singularity.d/libs/libmpi.so", separator=","
+        )
+        # BBPP154-53: append to SINGULARITY_CONTAINLIBS env variable the libpm2
+        #             library needed for the communication of slurm and the
+        #             container runtime MPI. This is BB5/RedHat 7 specific and
+        #             might require changes in other systems/OSs
+        env.append_path("SINGULARITY_CONTAINLIBS", "/lib64/libpmi2.so", separator=",")

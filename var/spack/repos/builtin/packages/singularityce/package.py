@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class SingularityBase(MakefilePackage):
     variant("network", default=True, description="install network plugins")
 
     depends_on("pkgconfig", type="build")
+    depends_on("conmon", type=("build", "run"))
+    depends_on("squashfs", type=("build", "run"))
     depends_on("go@1.16:")
     depends_on("uuid")
     depends_on("libgpg-error")
@@ -24,9 +26,6 @@ class SingularityBase(MakefilePackage):
     depends_on("git", when="@develop")  # mconfig uses it for version info
     depends_on("shadow", type="run", when="@3.3:")
     depends_on("cryptsetup", type=("build", "run"), when="@3.4:")
-    # BlueBrain: build failed due to missing dependency
-    # It's not in repo-patches because then the build fails due to missing spack_perms_fix.sh
-    depends_on('glib@2', type=('build', 'run'))
 
     conflicts("platform=darwin", msg="singularity requires a Linux VM on Windows & Mac")
 
@@ -71,10 +70,17 @@ class SingularityBase(MakefilePackage):
     def build_directory(self):
         return self.singularity_gopath_dir
 
+    # Allow overriding config options
+    @property
+    def config_options(self):
+        # Using conmon from spack
+        return ["--without-conmon"]
+
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
             confstring = "./mconfig --prefix=%s" % prefix
+            confstring += " " + " ".join(self.config_options)
             if "~suid" in spec:
                 confstring += " --without-suid"
             if "~network" in spec:
@@ -119,6 +125,8 @@ class SingularityBase(MakefilePackage):
         return join_path(self.spec.prefix.bin, self.perm_script())
 
     def _build_script(self, filename, variable_data):
+        with open(join_path(self.package_dir, self.perm_script_tmpl()), "w") as f_tmpl:
+            f_tmpl.write(SINGULARITY_SETUID_TEMPLATE)
         with open(filename, "w") as f:
             env = spack.tengine.make_environment(dirs=self.package_dir)
             t = env.get_template(self.perm_script_tmpl())
@@ -191,9 +199,10 @@ class Singularityce(SingularityBase):
     url = "https://github.com/sylabs/singularity/releases/download/v3.9.1/singularity-ce-3.9.1.tar.gz"
     git = "https://github.com/sylabs/singularity.git"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
     version("master", branch="master")
 
+    version("3.11.3", sha256="a77ede063fd115f85f98f82d2e30459b5565db7d098665497bcd684bf8edaec9")
     version("3.10.3", sha256="f87d8e212ce209c5212d6faf253b97a24b5d0b6e6b17b5e58b316cdda27a332f")
     version("3.10.2", sha256="b4f279856ea4bf28a1f34f89320c02b545d6e57d4143679920e1ac4267f540e1")
     version("3.10.1", sha256="e3af12edc0260bc3a3a481459a3a4457de9235025e6b37288da80e3cdc011a7a")
@@ -201,3 +210,17 @@ class Singularityce(SingularityBase):
     version("3.9.9", sha256="1381433d64138c08e93ffacdfb4844e82c2288f1e39a9d2c631a1c4021381f2a")
     version("3.9.1", sha256="1ba3bb1719a420f48e9b0a6afdb5011f6c786d0f107ef272528c632fff9fd153")
     version("3.8.0", sha256="5fa2c0e7ef2b814d8aa170826b833f91e5031a85d85cd1292a234e6c55da1be1")
+
+
+SINGULARITY_SETUID_TEMPLATE = """#!/bin/sh -eu
+
+{% for cf in chown_files %}
+chown root {{ prefix }}/{{ cf }}
+{% endfor %}
+
+{% for sf in setuid_files %}
+chmod 4555 {{ prefix }}/{{ sf }}
+{% endfor %}
+
+# end
+"""
