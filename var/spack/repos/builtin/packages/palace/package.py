@@ -118,23 +118,23 @@ class Palace(CMakePackage):
         ]
 
         # HYPRE is always built with external BLAS/LAPACK
-        args += self.define("HYPRE_REQUIRED_PACKAGES", "LAPACK;BLAS")
+        args += [
+            self.define("HYPRE_REQUIRED_PACKAGES", "LAPACK;BLAS"),
+            self.define("BLAS_LIBRARIES", "{0}".format(self.spec["blas"].libs.joined(";"))),
+            self.define("LAPACK_LIBRARIES", "{0}".format(self.spec["lapack"].libs.joined(";"))),
+        ]
 
         # MPI compiler wrappers are not required, but MFEM test builds need to know to link
         # against MPI libraries
         if "+superlu-dist" in self.spec:
-            args += self.define("SuperLUDist_REQUIRED_PACKAGES", "LAPACK;BLAS;MPI")
+            args += [self.define("SuperLUDist_REQUIRED_PACKAGES", "LAPACK;BLAS;MPI")]
         if "+strumpack" in self.spec:
-            args += self.define("STRUMPACK_REQUIRED_PACKAGES", "LAPACK;BLAS;MPI;MPI_Fortran")
+            args += [self.define("STRUMPACK_REQUIRED_PACKAGES", "LAPACK;BLAS;MPI;MPI_Fortran")]
         if "+mumps" in self.spec:
-            args += self.define("MUMPS_REQUIRED_PACKAGES", "LAPACK;BLAS;MPI;MPI_Fortran")
-
-        # BLAS/LAPACK linkage
-        args += self.define("BLAS_LIBRARIES", "{0}".format(self.spec["blas"].libs.joined(";")))
-        args += self.define("LAPACK_LIBRARIES", "{0}".format(self.spec["lapack"].libs.joined(";")))
+            args += [self.define("MUMPS_REQUIRED_PACKAGES", "LAPACK;BLAS;MPI;MPI_Fortran")]
 
         return args
 
-    def install(self, pkg, spec, prefix):
+    def install(self, spec, prefix):
         # No install phase for Palace (always performed during build)
         pass
