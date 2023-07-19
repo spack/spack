@@ -36,6 +36,10 @@ class MesaGlu(AutotoolsPackage):
 
     provides("glu@1.3")
 
+    # When using -std=c++17, using register long will throw an error. This
+    # patch switches all instances of register long to long to fix this.
+    patch("register-long.patch")
+
     def configure_args(self):
         args = ["--disable-libglvnd"]
 
