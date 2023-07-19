@@ -56,6 +56,7 @@ import spack.mirror
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
+import spack.rewiring
 import spack.spec
 import spack.store
 import spack.util.executable
@@ -864,10 +865,6 @@ class PackageInstaller:
                 setattr(task, attr, value)
                 self.build_pq[i] = (key, task)
 
-    def _add_rewire_task(self):
-        # TODO: Fill in this method
-        pass
-
     def _add_init_task(
         self,
         pkg: "spack.package_base.PackageBase",
@@ -887,7 +884,11 @@ class PackageInstaller:
             all_deps (defaultdict(set)): dictionary of all dependencies and
                 associated dependents
         """
-        task = BuildTask(pkg, request, is_compiler, 0, 0, STATUS_ADDED, self.installed)
+        if pkg.spec.spliced:
+            task = RewireTask(pkg, request, 0, 0, STATUS_ADDED, self.installed)
+        else:
+            task = BuildTask(pkg, request, is_compiler, 0, 0, STATUS_ADDED, self.installed)
+
         for dep_id in task.dependencies:
             all_deps[dep_id].add(package_id(pkg))
 
@@ -1261,11 +1262,8 @@ class PackageInstaller:
 
                 dep_id = package_id(dep_pkg)
                 if dep_id not in self.build_tasks:
-                    # TODO: Add init tasks for build dependency
                     self._add_init_task(dep_pkg, request, False, all_deps)
-                if dep.spliced:
-                    # TODO: retrieve the build spec of the spliced spec or bona fide build deps?
-                    pass
+
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
                 # of the spec.
@@ -1282,10 +1280,7 @@ class PackageInstaller:
                 self._check_deps_status(request)
 
             # Now add the package itself, if appropriate
-            # TODO: Add init task for build spec
             self._add_init_task(request.pkg, request, False, all_deps)
-
-            # TODO: Add rewire tasks for spec if request.spec.spliced.
 
         # Ensure if one request is to fail fast then all requests will.
         fail_fast = bool(request.install_args.get("fail_fast"))
@@ -1302,8 +1297,7 @@ class PackageInstaller:
         # TODO: use install_status
         # try:
         rc = task.execute()
-        # TODO: RewireTask.execute gets the rewiring logic
-        # DONE: _add_compiler_package_to_config goes to module scope?
+        # TODO: Error handling here?
         # except InstallError as e:
         #     # wrap exception and reraise
         #     raise InstallError(
@@ -1526,7 +1520,7 @@ class PackageInstaller:
 
         # Add any missing dependents to ensure proper uninstalled dependency
         # tracking when installing multiple specs
-        # TODO: Modify to make sure dependencies across rewire and build tasks are properly
+        # TODO: Modify to make sure dependencies across rewire and build tasks are properly ordered
         tty.debug("Ensure all dependencies know all dependents across specs")
         for dep_id in all_dependencies:
             if dep_id in self.build_tasks:
@@ -1998,7 +1992,6 @@ class BuildProcessInstaller:
 
                     break
                 except Exception:
-                    # TODO: Fill in this block.
                     pass
 
             # cache debug settings
@@ -2190,7 +2183,7 @@ class Task:
         deptypes = self.request.get_deptypes(self.pkg)
         self.dependencies = set(
             package_id(d.package)
-            for d in self.pkg.spec.dependencies(deptype=deptypes)
+            for d in self.pkg.spec.install_dependencies(deptype=deptypes)
             if package_id(d.package) != self.pkg_id
         )
 
@@ -2357,7 +2350,7 @@ class Task:
 class BuildTask(Task):
     """Class for representing a build task for a package."""
 
-    # Consider adding pid as a parameter here:
+    # TODO: Consider adding pid as a parameter here:
     def __init__(self, pkg, request, compiler, start, attempts, status, installed):
         super(BuildTask, self).__init__(pkg, request, start, attempts, status, installed)
         """
@@ -2405,10 +2398,7 @@ class BuildTask(Task):
         # Refactor to put most of the work in BuildTask
         # Also could put a switch at the top that would determine build or rewire
 
-        # explicit = task.explicit
         install_args = self.request.install_args
-        # cache_only = task.cache_only
-        # use_cache = task.use_cache
         tests = install_args.get("tests")
         unsigned = install_args.get("unsigned")
 
@@ -2465,10 +2455,44 @@ class BuildTask(Task):
 
 
 class RewireTask(Task):
-    """Class for representing a rewiring of splcied specs."""
+    """Class for representing a build task for a package."""
 
-    # TODO: Implement class
-    pass
+    # TODO: Consider adding pid as a parameter here:
+    def __init__(self, pkg, request, start, attempts, status, installed):
+        super(RewireTask, self).__init__(pkg, request, start, attempts, status, installed)
+        """
+        Instantiate a rewire task for a package.
+
+        Args:
+            pkg (spack.package_base.PackageBase): the package to be built and installed
+            request (BuildRequest or None): the associated install request
+                 where ``None`` can be used to indicate the package was
+                 explicitly requested by the user
+            start (int): the initial start time for the package, in seconds
+            attempts (int): the number of attempts to install the package
+            status (str): the installation status
+            installed (list): the identifiers of packages that have
+                been installed so far
+        """
+
+    def execute(self):
+
+        tests = self.request.install_args.get("tests")
+        tty.msg(install_msg(self.pkg_id, self.pid))
+        self.start = self.start or time.time()
+        self.status = STATUS_INSTALLING
+        self.pkg.run_tests = tests is True or tests and self.pkg.name in tests
+        try:
+            spack.rewiring.rewire(self.pkg.spec)
+        except spack.build_environment.StopPhase as e:
+            # A StopPhase exception means that do_install was asked to
+            # stop early from clients, and is not an error at this point
+            # TODO: I *think* this would be okay for rewire because changes are transactional?
+            spack.hooks.on_install_failure(self.request.pkg.spec)
+            pid = "{0}: ".format(self.pid) if tty.show_pid() else ""
+            tty.debug("{0}{1}".format(pid, str(e)))
+            tty.debug("Package stage directory: {0}".format(self.pkg.stage.source_path))
+        return "updated_installed"
 
 
 class BuildRequest:
@@ -2613,7 +2637,7 @@ class BuildRequest:
             visited = set()
         deptype = self.get_deptypes(spec.package)
 
-        for dep in spec.dependencies(deptype=deptype):
+        for dep in spec.install_dependencies(deptype=deptype):
             hash = dep.dag_hash()
             if hash in visited:
                 continue
