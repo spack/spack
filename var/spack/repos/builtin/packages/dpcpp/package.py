@@ -17,7 +17,11 @@ class Dpcpp(CMakePackage):
     git = "https://github.com/intel/llvm.git"
 
     version("develop", branch="sycl")
-    version("2023-03", sha256="ca85303d712c58316a91a7c97f7c78fa563a29f1669d8b2368d0c8bd92a63068", url="https://github.com/intel/llvm/tarball/cb91c232")
+    version(
+        "2023-03",
+        sha256="ca85303d712c58316a91a7c97f7c78fa563a29f1669d8b2368d0c8bd92a63068",
+        url="https://github.com/intel/llvm/tarball/cb91c232",
+    )
     version("2021.09", commit="bd68232bb96386bf7649345c0557ba520e73c02d")
     version("2021.12", commit="27f59d8906fcc8aece7ff6aa570ccdee52168c2d")
 
@@ -41,15 +45,19 @@ class Dpcpp(CMakePackage):
     variant("shared-libs", default=False, description="build shared libraries")
     variant("lld", default=False, description="use LLD linker for build")
     variant("fusion", default=True, description="Enable the kernel fusion JIT compiler")
-    variant("security_flags",
-            default="none",
-            values=("none", "default", "sanitize"), 
-            multi=False,
-            description="Enables security flags for compile & link")
-    variant("llvm-external-projects",
-            values=str,
-            default="none",
-            description="Add external projects to build. Add as a comma seperated list.")
+    variant(
+        "security_flags",
+        default="none",
+        values=("none", "default", "sanitize"),
+        multi=False,
+        description="Enables security flags for compile & link",
+    )
+    variant(
+        "llvm-external-projects",
+        values=str,
+        default="none",
+        description="Add external projects to build. Add as a comma seperated list.",
+    )
 
     depends_on("cmake@3.16.2:", type="build")
     depends_on("ninja@1.10.0:", type="build")
@@ -68,8 +76,8 @@ class Dpcpp(CMakePackage):
 
     def cmake_args(self):
         llvm_external_projects = "sycl;llvm-spirv;opencl;xpti;xptifw"
-        libclc_amd_target_names = ';amdgcn--amdhsa'
-        libclc_nvidia_target_names = ';nvptx64--nvidiacl'
+        libclc_amd_target_names = ";amdgcn--amdhsa"
+        libclc_nvidia_target_names = ";nvptx64--nvidiacl"
 
         if self.spec.platform != "darwin":
             llvm_external_projects += ";libdevice"
@@ -85,11 +93,11 @@ class Dpcpp(CMakePackage):
         fusion_dir = os.path.join(self.stage.source_path, "sycl-fusion")
         llvm_enable_projects = "clang;" + llvm_external_projects
         libclc_targets_to_build = ""
-        libclc_gen_remangled_variants = 'OFF'
+        libclc_gen_remangled_variants = "OFF"
         sycl_build_pi_hip_platform = self.spec.variants["hip-platform"].value
         sycl_enabled_plugins = "opencl"
         llvm_targets_to_build = get_llvm_targets_to_build(self.spec.target.family)
-        
+
         if self.spec.platform != "darwin":
             sycl_enabled_plugins += ";level_zero"
 
@@ -104,7 +112,7 @@ class Dpcpp(CMakePackage):
         if is_cuda:
             llvm_targets_to_build += ";NVPTX"
             libclc_targets_to_build = libclc_nvidia_target_names
-            libclc_gen_remangled_variants = 'ON'
+            libclc_gen_remangled_variants = "ON"
             sycl_enabled_plugins += ";cuda"
 
         if is_hip:
@@ -114,11 +122,13 @@ class Dpcpp(CMakePackage):
             elif sycl_build_pi_hip_platform and not is_cuda:
                 llvm_targets_to_build += ";NVPTX"
                 libclc_targets_to_build += libclc_nvidia_target_names
-            libclc_gen_remangled_variants = 'ON'
+            libclc_gen_remangled_variants = "ON"
             sycl_enabled_plugins += ";hip"
 
         if "+llvm-external-projects" in self.spec:
-           llvm_external_projects += ";" + self.spec.variants["llvm-external-projects"].value.replace(",", ";")
+            llvm_external_projects += ";" + self.spec.variants[
+                "llvm-external-projects"
+            ].value.replace(",", ";")
 
         args = [
             self.define_from_variant("LLVM_ENABLE_ASSERTIONS", "assertions"),
@@ -195,6 +205,7 @@ class Dpcpp(CMakePackage):
     def setup_run_environment(self, env):
         env.set("CC", join_path(self.spec.prefix.bin, "clang"))
         env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
+
 
 def get_llvm_targets_to_build(family):
     host_target = ""
