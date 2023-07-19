@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
-import os.path
 import re
 import shutil
 import sys
@@ -19,6 +17,7 @@ import spack.spec
 import spack.store
 import spack.tengine
 import spack.util.executable
+from spack.util.elf import get_rpaths
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
 
@@ -28,13 +27,6 @@ def skip_unless_linux(f):
         str(spack.platforms.real_host()) != "linux",
         reason="implementation currently requires linux",
     )(f)
-
-
-def rpaths_for(new_binary):
-    """Return the RPATHs or RUNPATHs of a binary."""
-    patchelf = spack.util.executable.which("patchelf")
-    output = patchelf("--print-rpath", str(new_binary), output=str)
-    return output.strip()
 
 
 def text_in_bin(text, binary):
@@ -128,64 +120,22 @@ def copy_binary(prefix_like):
     return _copy_somewhere
 
 
-@pytest.mark.parametrize(
-    "start_path,path_root,paths,expected",
-    [
-        (
-            "/usr/bin/test",
-            "/usr",
-            ["/usr/lib", "/usr/lib64", "/opt/local/lib"],
-            [
-                os.path.join("$ORIGIN", "..", "lib"),
-                os.path.join("$ORIGIN", "..", "lib64"),
-                "/opt/local/lib",
-            ],
-        )
-    ],
-)
-def test_make_relative_paths(start_path, path_root, paths, expected):
-    relatives = spack.relocate._make_relative(start_path, path_root, paths)
-    assert relatives == expected
-
-
-@pytest.mark.parametrize(
-    "start_path,relative_paths,expected",
-    [
-        # $ORIGIN will be replaced with os.path.dirname('usr/bin/test')
-        # and then normalized
-        (
-            "/usr/bin/test",
-            ["$ORIGIN/../lib", "$ORIGIN/../lib64", "/opt/local/lib"],
-            [
-                os.sep + os.path.join("usr", "lib"),
-                os.sep + os.path.join("usr", "lib64"),
-                "/opt/local/lib",
-            ],
-        ),
-        # Relative path without $ORIGIN
-        ("/usr/bin/test", ["../local/lib"], ["../local/lib"]),
-    ],
-)
-def test_normalize_relative_paths(start_path, relative_paths, expected):
-    normalized = spack.relocate._normalize_relative_paths(start_path, relative_paths)
-    assert normalized == expected
-
-
 @pytest.mark.requires_executables("patchelf", "file", "gcc")
 @skip_unless_linux
 def test_relocate_text_bin(binary_with_rpaths, prefix_like):
     prefix = "/usr/" + prefix_like
-    prefix_bytes = prefix.encode("utf-8")
     new_prefix = "/foo/" + prefix_like
-    new_prefix_bytes = new_prefix.encode("utf-8")
     # Compile an "Hello world!" executable and set RPATHs
-    executable = binary_with_rpaths(rpaths=[prefix + "/lib", prefix + "/lib64"])
+    rpaths = [prefix + "/lib", prefix + "/lib64"]
+    executable = binary_with_rpaths(rpaths=rpaths)
 
     # Relocate the RPATHs
-    spack.relocate.relocate_text_bin([str(executable)], {prefix_bytes: new_prefix_bytes})
+    spack.relocate.relocate_text_bin(
+        [str(executable)], {prefix.encode("utf-8"): new_prefix.encode("utf-8")}
+    )
 
     # Some compilers add rpaths so ensure changes included in final result
-    assert "%s/lib:%s/lib64" % (new_prefix, new_prefix) in rpaths_for(executable)
+    assert set((f"{new_prefix}/lib", f"{new_prefix}/lib64")).issubset(get_rpaths(str(executable)))
 
 
 @pytest.mark.requires_executables("patchelf", "file", "gcc")
@@ -196,18 +146,11 @@ def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, p
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
-        binaries=[str(new_binary)],
-        orig_root=str(orig_binary.dirpath()),
-        new_root=None,  # Not needed when relocating absolute paths
-        new_prefixes={str(orig_binary.dirpath()): "/foo"},
-        rel=False,
-        # Not needed when relocating absolute paths
-        orig_prefix=None,
-        new_prefix=None,
+        binaries=[str(new_binary)], prefix_to_prefix={str(orig_binary.dirpath()): "/foo"}
     )
 
     # Some compilers add rpaths so ensure changes included in final result
-    assert "/foo/lib:/usr/lib64" in rpaths_for(new_binary)
+    assert set(("/foo/lib", "/usr/lib64")).issubset(get_rpaths(str(new_binary)))
 
 
 @pytest.mark.requires_executables("patchelf", "file", "gcc")
@@ -218,37 +161,13 @@ def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
-        binaries=[str(new_binary)],
-        orig_root=str(orig_binary.dirpath()),
-        new_root=str(new_binary.dirpath()),
-        new_prefixes={str(orig_binary.dirpath()): "/foo"},
-        rel=True,
-        orig_prefix=str(orig_binary.dirpath()),
-        new_prefix=str(new_binary.dirpath()),
+        binaries=[str(new_binary)], prefix_to_prefix={str(orig_binary.dirpath()): "/foo"}
     )
 
     # Some compilers add rpaths so ensure changes included in final result
-    assert "/foo/lib:/foo/lib64:/opt/local/lib" in rpaths_for(new_binary)
-
-
-@pytest.mark.requires_executables("patchelf", "file", "gcc")
-@skip_unless_linux
-def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpdir):
-    orig_binary = binary_with_rpaths(
-        rpaths=[
-            str(prefix_tmpdir.mkdir("lib")),
-            str(prefix_tmpdir.mkdir("lib64")),
-            "/opt/local/lib",
-        ]
+    assert set(("$ORIGIN/lib", "$ORIGIN/lib64", "/opt/local/lib")).issubset(
+        get_rpaths(str(new_binary))
     )
-    new_binary = copy_binary(orig_binary)
-
-    spack.relocate.make_elf_binaries_relative(
-        [str(new_binary)], [str(orig_binary)], str(orig_binary.dirpath())
-    )
-
-    # Some compilers add rpaths so ensure changes included in final result
-    assert "$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib" in rpaths_for(new_binary)
 
 
 @pytest.mark.requires_executables("patchelf", "file", "gcc")

@@ -410,18 +410,23 @@ def _eval_conditional(string):
 def _is_dev_spec_and_has_changed(spec):
     """Check if the passed spec is a dev build and whether it has changed since the
     last installation"""
-    # First check if this is a dev build and in the process already try to get
-    # the dev_path
+    # First check if this is a dev spec
     dev_path_var = spec.variants.get("dev_path", None)
     if not dev_path_var:
         return False
 
-    # Now we can check whether the code changed since the last installation
-    if not spec.installed:
-        # Not installed -> nothing to compare against
+    # Then figure out if it is locally installed
+    result = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+
+    if not result:
         return False
 
-    _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+    record_db, record = result
+
+    if record_db.is_upstream or not record.installed:
+        return False
+
+    # If locally installed, check if it has changed.
     mtime = fs.last_modification_time_recursive(dev_path_var.value)
     return mtime > record.installation_time
 

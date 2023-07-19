@@ -40,7 +40,6 @@ import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
-from spack.hooks import sbang
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 

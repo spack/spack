@@ -119,11 +119,11 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
         new_spec = spack.spec.Spec("w").concretized()
         downstream_db.add(new_spec, downstream_layout)
         for dep in new_spec.traverse(root=False):
-            upstream, record = downstream_db.query_by_spec_hash(dep.dag_hash())
-            assert upstream
+            record_db, record = downstream_db.query_by_spec_hash(dep.dag_hash())
+            assert record_db.is_upstream
             assert record.path == upstream_layout.path_for_spec(dep)
-        upstream, record = downstream_db.query_by_spec_hash(new_spec.dag_hash())
-        assert not upstream
+        record_db, record = downstream_db.query_by_spec_hash(new_spec.dag_hash())
+        assert not record_db.is_upstream
         assert record.installed
 
         upstream_db._check_ref_counts()
@@ -186,10 +186,12 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
         upstream_write_db.add(spec, upstream_layout)
         upstream_db._read()
 
-        upstream, record = downstream_db.query_by_spec_hash(spec.dag_hash())
+        result = downstream_db.query_by_spec_hash(spec.dag_hash())
         # Even though the package is recorded as installed in the upstream DB,
         # we prefer the locally-installed instance
-        assert not upstream
+        assert result is not None
+        record_db, _ = result
+        assert not record_db.is_upstream
 
         qresults = downstream_db.query("x")
         assert len(qresults) == 1

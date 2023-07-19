@@ -63,7 +63,7 @@ def sbang_shebang_line():
     This should be the only place in Spack that knows about what
     interpreter we use for ``sbang``.
     """
-    return "#!/bin/sh %s" % sbang_install_path()
+    return f"#!/bin/sh {sbang_install_path()}"
 
 
 def get_interpreter(binary_string):
