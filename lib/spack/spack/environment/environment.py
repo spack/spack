@@ -894,9 +894,6 @@ class Environment:
         else:
             self.views = {}
 
-        # Retrieve unification scheme for the concretizer
-        self.unify = spack.config.get("concretizer:unify", False)
-
     @property
     def user_specs(self):
         return self.spec_lists[user_speclist_name]
