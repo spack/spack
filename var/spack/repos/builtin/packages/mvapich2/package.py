@@ -117,6 +117,7 @@ class Mvapich2(AutotoolsPackage):
         values=auto_or_any_combination_of("lustre", "gpfs", "nfs", "ufs"),
     )
 
+    depends_on("automake@1.15", type="build")  # needed for torque patch
     depends_on("findutils", type="build")
     depends_on("bison", type="build")
     depends_on("pkgconfig", type="build")
@@ -134,6 +135,8 @@ class Mvapich2(AutotoolsPackage):
     depends_on("slurm", when="process_managers=slurm")
 
     conflicts("fabrics=psm2", when="@:2.1")  # psm2 support was added at version 2.2
+
+    patch("fix-torque.patch", when="@2.3.7-1")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
