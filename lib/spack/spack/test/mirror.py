@@ -65,7 +65,7 @@ def check_mirror():
             assert os.path.isdir(mirror_root)
 
             for spec in specs:
-                fetcher = spec.package.fetcher[0]
+                fetcher = spec.package.fetcher
                 per_package_ref = os.path.join(spec.name, "-".join([spec.name, str(spec.version)]))
                 mirror_paths = spack.mirror.mirror_archive_paths(fetcher, per_package_ref)
                 expected_path = os.path.join(mirror_root, mirror_paths.storage_path)
