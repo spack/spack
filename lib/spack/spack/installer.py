@@ -997,8 +997,6 @@ class BuildTask:
         # List of uninstalled dependencies, which is used to establish
         # the priority of the build task.
         #
-        Update completion
-
         self.uninstalled_deps = set(
             pkg_id for pkg_id in self.dependencies if pkg_id not in installed
         )

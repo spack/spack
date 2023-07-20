@@ -40,9 +40,6 @@ class BaseTimer:
     def measure(self, name):
         yield NullTimer()
 
-    def subtimer(self, name):
-        return NullTimer()
-
     @property
     def phases(self):
         return []
