@@ -12,7 +12,7 @@ class Gotcha(CMakePackage):
 
     homepage = "https://github.com/LLNL/gotcha"
     git = "https://github.com/LLNL/gotcha.git"
-
+    maintainers("hariharan-devarajan")
     tags = ["e4s"]
 
     version("develop", branch="develop")
