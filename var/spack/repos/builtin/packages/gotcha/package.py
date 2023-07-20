@@ -16,6 +16,7 @@ class Gotcha(CMakePackage):
     tags = ["e4s"]
 
     version("develop", branch="develop")
+    version("master", branch="master")
     version("1.0.4", tag="1.0.4")
     version("1.0.3", tag="1.0.3")
     version("1.0.2", tag="1.0.2")
