@@ -479,9 +479,6 @@ def test_update_sbang(tmpdir, test_mirror):
     into the non-default directory layout scheme, triggering an update of the
     sbang.
     """
-    scheme = os.path.join(
-        "${name}", "${version}", "${architecture}-${compiler.name}-${compiler.version}-${hash}"
-    )
     spec_str = "old-sbang"
     # Concretize a package with some old-fashioned sbang lines.
     old_spec = Spec(spec_str).concretized()
@@ -504,12 +501,8 @@ def test_update_sbang(tmpdir, test_mirror):
 
     # Switch the store to the new install tree locations
     newtree_dir = tmpdir.join("newtree")
-    s = spack.store.Store(str(newtree_dir))
-    s.layout = DirectoryLayout(str(newtree_dir), path_scheme=scheme)
-
-    with spack.store.use_store(s):
-        new_spec = Spec("old-sbang")
-        new_spec.concretize()
+    with spack.store.use_store(str(newtree_dir)):
+        new_spec = Spec("old-sbang").concretized()
         assert new_spec.dag_hash() == old_spec.dag_hash()
 
         # Install package from buildcache

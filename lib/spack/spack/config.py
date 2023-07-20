@@ -767,7 +767,7 @@ def _add_command_line_scopes(cfg, command_line_scopes):
         _add_platform_scope(cfg, ImmutableConfigScope, name, path)
 
 
-def _config():
+def create():
     """Singleton Configuration instance.
 
     This constructs one instance associated with this module and returns
@@ -825,7 +825,7 @@ def _config():
 
 
 #: This is the singleton configuration instance for Spack.
-config: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_config)
+config: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(create)
 
 
 def add_from_file(filename, scope=None):
