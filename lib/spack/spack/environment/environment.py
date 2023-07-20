@@ -897,15 +897,6 @@ class Environment:
         # Retrieve unification scheme for the concretizer
         self.unify = spack.config.get("concretizer:unify", False)
 
-        # Retrieve dev-build packages:
-        self.dev_specs = copy.deepcopy(env_configuration.get("develop", {}))
-        for name, entry in self.dev_specs.items():
-            # spec must include a concrete version
-            assert Spec(entry["spec"]).versions.concrete_range_as_version
-            # default path is the spec name
-            if "path" not in entry:
-                self.dev_specs[name]["path"] = name
-
     @property
     def user_specs(self):
         return self.spec_lists[user_speclist_name]

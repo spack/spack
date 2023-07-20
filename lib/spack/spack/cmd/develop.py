@@ -70,6 +70,25 @@ def _update_config(spec, path, abspath, modify_scope):
     spack.config.set("develop", dev_specs, modify_scope)
 
 
+def _retrieve_develop_source(spec, abspath):
+    # "steal" the source code via staging API. We ask for a stage
+    # to be created, then copy it afterwards somewhere else. It would be
+    # better if we can create the `source_path` directly into its final
+    # destination.
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    # We construct a package class ourselves, rather than asking for
+    # Spec.package, since Spec only allows this when it is concrete
+    package = pkg_cls(spec)
+    if isinstance(package.stage[0].fetcher, spack.fetch_strategy.GitFetchStrategy):
+        package.stage[0].fetcher.get_full_repo = True
+        # If we retrieved this version before and cached it, we may have
+        # done so without cloning the full git repo; likewise, any
+        # mirror might store an instance with truncated history.
+        package.stage[0].disable_mirrors()
+
+    package.stage.steal_source(abspath)
+
+
 def develop(parser, args):
     if not args.spec:
         env = spack.cmd.require_active_env(cmd_name="develop")
@@ -90,7 +109,7 @@ def develop(parser, args):
             # Both old syntax `spack develop pkg@x` and new syntax `spack develop pkg@=x`
             # are currently supported.
             spec = spack.spec.parse_with_version_concrete(entry["spec"])
-            env.develop(spec=spec, path=path, clone=True)
+            _retrieve_develop_source(spec, abspath)
 
         if not env.dev_specs:
             tty.warn("No develop specs to download")
@@ -137,13 +156,7 @@ def develop(parser, args):
                 msg += " Use `spack develop -f` to overwrite."
                 raise SpackError(msg)
 
-        # Stage, at the moment, requires a concrete Spec, since it needs the
-        # dag_hash for the stage dir name. Below though we ask for a stage
-        # to be created, to copy it afterwards somewhere else. It would be
-        # better if we can create the `source_path` directly into its final
-        # destination.
-        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
-        pkg_cls(spec).stage.steal_source(abspath)
+        _retrieve_develop_source(spec, abspath)
 
     if not args.scope:
         env = spack.cmd.require_active_env(cmd_name="develop")
