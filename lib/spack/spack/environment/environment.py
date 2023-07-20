@@ -2716,11 +2716,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             raise SpackEnvironmentError(msg) from e
         self.changed = True
 
-    def update_included_configs(self, config_paths):
-        # config_dict(init_env.manifest).get("include", [])
-        config_dict(self.yaml_content)["include"] = config_paths
-        self.changed = True
-
     def add_definition(self, user_spec: str, list_name: str) -> None:
         """Appends a user spec to the first active definition mathing the name passed as argument.
 
