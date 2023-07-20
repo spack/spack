@@ -2,13 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os.path
 import re
-import shutil
 
 import llnl.util.lang
-import llnl.util.tty as tty
-from llnl.util.symlink import symlink
 
 import spack.compiler
 import spack.compilers.clang
