@@ -642,12 +642,6 @@ class Database:
         if not is_upstream and not os.path.exists(self.database_directory):
             fs.mkdirp(self.database_directory)
 
-        self.failure_tracker = None
-        if not is_upstream:
-            self.failure_tracker = FailureTracker(
-                self.root, default_timeout=lock_cfg.package_timeout
-            )
-
         self.is_upstream = is_upstream
         self.last_seen_verifier = ""
         # Failed write transactions (interrupted by exceptions) will alert
@@ -661,8 +655,6 @@ class Database:
 
         # initialize rest of state.
         self.db_lock_timeout = lock_cfg.database_timeout
-        self.package_lock_timeout = lock_cfg.package_timeout
-
         tty.debug("DATABASE LOCK TIMEOUT: {0}s".format(str(self.db_lock_timeout)))
 
         self.lock: Union[ForbiddenLock, lk.Lock]
@@ -702,23 +694,6 @@ class Database:
     def read_transaction(self):
         """Get a read lock context manager for use in a `with` block."""
         return self._read_transaction_impl(self.lock, acquire=self._read)
-
-    def clear_all_failures(self) -> None:
-        """Force remove install failure tracking files."""
-        assert self.failure_tracker is not None
-        self.failure_tracker.clear_all_failures()
-
-    def clear_failure(self, spec: "spack.spec.Spec", force: bool = False) -> None:
-        assert self.failure_tracker is not None
-        self.failure_tracker.clear_failure(spec, force)
-
-    def mark_failed(self, spec: "spack.spec.Spec") -> lk.Lock:
-        assert self.failure_tracker is not None
-        return self.failure_tracker.mark_failed(spec)
-
-    def prefix_failed(self, spec: "spack.spec.Spec") -> bool:
-        assert self.failure_tracker is not None
-        return self.failure_tracker.prefix_failed(spec)
 
     def _write_to_file(self, stream):
         """Write out the database in JSON format to the stream passed

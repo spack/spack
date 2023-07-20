@@ -957,7 +957,7 @@ def install_mockery(temporary_store, mutable_config, mock_packages):
         yield
 
     # Wipe out any cached prefix failure locks (associated with the session-scoped mock archive)
-    temporary_store.db.failure_tracker.clear_all_failures()
+    temporary_store.clear_all_failures()
 
 
 @pytest.fixture(scope="function")

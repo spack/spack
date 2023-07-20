@@ -602,30 +602,30 @@ def test_clear_failures_success(install_mockery):
 
     # Set up a test prefix failure lock
     s = spack.spec.Spec("a").concretized()
-    spack.store.STORE.db.mark_failed(s)
-    assert spack.store.STORE.db.prefix_failed(s)
+    spack.store.STORE.mark_failed(s)
+    assert spack.store.STORE.prefix_failed(s)
 
     # Now clear failure tracking
     inst.clear_failures()
 
     # Ensure there are no cached failure locks or failure marks
-    assert len(spack.store.STORE.db.failure_tracker.failures_lock.all_keys()) == 0
-    assert len(os.listdir(spack.store.STORE.db.failure_tracker.failure_dir)) == 0
+    assert len(spack.store.STORE.failure_tracker.failures_lock.all_keys()) == 0
+    assert len(os.listdir(spack.store.STORE.failure_tracker.failure_dir)) == 0
 
     # Ensure the core directory and failure lock file still exist
-    assert os.path.isdir(spack.store.STORE.db.failure_tracker.failure_dir)
+    assert os.path.isdir(spack.store.STORE.failure_tracker.failure_dir)
     # Locks on windows are a no-op
     if sys.platform != "win32":
         assert os.path.isfile(spack.database.failures_lock_path(spack.store.STORE.root))
 
 
-def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
+def test_clear_failures_errs(install_mockery, capsys):
     """Test the clear_failures exception paths."""
     s = spack.spec.Spec("a").concretized()
-    spack.store.STORE.db.mark_failed(s)
+    spack.store.STORE.mark_failed(s)
 
     # Make the file marker not writeable, so that clearing_failures fails
-    spack.store.STORE.db.failure_tracker.failure_dir.chmod(0o000)
+    spack.store.STORE.failure_tracker.failure_dir.chmod(0o000)
 
     # Clear failure tracking
     inst.clear_failures()
@@ -633,7 +633,7 @@ def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
     # Ensure expected warning generated
     out = str(capsys.readouterr()[1])
     assert "Unable to remove failure" in out
-    spack.store.STORE.db.failure_tracker.failure_dir.chmod(0o750)
+    spack.store.STORE.failure_tracker.failure_dir.chmod(0o750)
 
 
 def test_combine_phase_logs(tmpdir):
@@ -679,12 +679,16 @@ def test_combine_phase_logs_does_not_care_about_encoding(tmpdir):
 
 
 def test_check_deps_status_install_failure(install_mockery, monkeypatch):
+    """Tests that checking the dependency status on a request to install
+    'a' fails, if we mark the dependency as failed.
+    """
+    s = spack.spec.Spec("a").concretized()
+    for dep in s.traverse(root=False):
+        spack.store.STORE.mark_failed(dep)
+
     const_arg = installer_args(["a"], {})
     installer = create_installer(const_arg)
     request = installer.build_requests[0]
-
-    # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.database.Database, "prefix_failed", _true)
 
     with pytest.raises(inst.InstallError, match="install failure"):
         installer._check_deps_status(request)
@@ -990,7 +994,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     installer = create_installer(const_arg)
 
     # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.database.Database, "prefix_failed", _true)
+    monkeypatch.setattr(spack.store.Store, "prefix_failed", _true)
 
     with pytest.raises(inst.InstallError, match="request failed"):
         installer.install()
@@ -1006,7 +1010,7 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     installer = create_installer(const_arg)
 
     # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.database.Database, "prefix_failed", _true)
+    monkeypatch.setattr(spack.store.Store, "prefix_failed", _true)
 
     with pytest.raises(inst.InstallError, match="request failed"):
         installer.install()
@@ -1105,7 +1109,7 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     #
     # This will prevent b from installing, which will cause the build of a
     # to be skipped.
-    monkeypatch.setattr(spack.database.Database, "prefix_failed", _true)
+    monkeypatch.setattr(spack.store.Store, "prefix_failed", _true)
 
     with pytest.raises(inst.InstallError, match="after first install failure"):
         installer.install()

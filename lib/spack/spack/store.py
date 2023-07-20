@@ -25,7 +25,7 @@ import uuid
 from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
 import llnl.util.lang
-from llnl.util import lock, tty
+from llnl.util import tty
 
 import spack.config
 import spack.database
@@ -33,6 +33,7 @@ import spack.directory_layout
 import spack.error
 import spack.paths
 import spack.util.path
+from spack.util import lock
 
 #: default installation root, relative to the Spack install path
 DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
@@ -179,9 +180,26 @@ class Store:
         self.prefix_locker = spack.database.SpecLocker(
             spack.database.prefix_lock_path(root), default_timeout=lock_cfg.package_timeout
         )
+        self.failure_tracker = spack.database.FailureTracker(
+            self.root, default_timeout=lock_cfg.package_timeout
+        )
+
         self.layout = spack.directory_layout.DirectoryLayout(
             root, projections=projections, hash_length=hash_length
         )
+
+    def clear_all_failures(self) -> None:
+        """Force remove install failure tracking files."""
+        self.failure_tracker.clear_all_failures()
+
+    def clear_failure(self, spec: "spack.spec.Spec", force: bool = False) -> None:
+        self.failure_tracker.clear_failure(spec, force)
+
+    def mark_failed(self, spec: "spack.spec.Spec") -> lock.Lock:
+        return self.failure_tracker.mark_failed(spec)
+
+    def prefix_failed(self, spec: "spack.spec.Spec") -> bool:
+        return self.failure_tracker.prefix_failed(spec)
 
     def prefix_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lock.Lock:
         return self.prefix_locker.lock(spec, timeout=timeout)
