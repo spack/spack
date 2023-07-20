@@ -170,6 +170,12 @@ class Store:
         self.upstreams = upstreams
         self.lock_cfg = lock_cfg
         self.db = spack.database.Database(root, upstream_dbs=upstreams, lock_cfg=lock_cfg)
+
+        timeout_format_str = (
+            f"{str(lock_cfg.package_timeout)}s" if lock_cfg.package_timeout else "No timeout"
+        )
+        tty.debug("PACKAGE LOCK TIMEOUT: {0}".format(str(timeout_format_str)))
+
         self.prefix_locker = spack.database.SpecLocker(
             spack.database.prefix_lock_path(root), default_timeout=lock_cfg.package_timeout
         )

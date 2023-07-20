@@ -601,44 +601,31 @@ def test_clear_failures_success(install_mockery):
     """Test the clear_failures happy path."""
 
     # Set up a test prefix failure lock
-    lock = lk.Lock(
-        spack.store.STORE.db.prefix_fail_path, start=1, length=1, default_timeout=1e-9, desc="test"
-    )
-    try:
-        lock.acquire_write()
-    except lk.LockTimeoutError:
-        tty.warn("Failed to write lock the test install failure")
-    spack.store.STORE.db._prefix_failures["test"] = lock
-
-    # Set up a fake failure mark (or file)
-    fs.touch(os.path.join(spack.store.STORE.db._failure_dir, "test"))
+    s = spack.spec.Spec("a").concretized()
+    spack.store.STORE.db.mark_failed(s)
+    assert spack.store.STORE.db.prefix_failed(s)
 
     # Now clear failure tracking
     inst.clear_failures()
 
     # Ensure there are no cached failure locks or failure marks
-    assert len(spack.store.STORE.db._prefix_failures) == 0
-    assert len(os.listdir(spack.store.STORE.db._failure_dir)) == 0
+    assert len(spack.store.STORE.db.failure_tracker.failures_lock.all_keys()) == 0
+    assert len(os.listdir(spack.store.STORE.db.failure_tracker.failure_dir)) == 0
 
     # Ensure the core directory and failure lock file still exist
-    assert os.path.isdir(spack.store.STORE.db._failure_dir)
+    assert os.path.isdir(spack.store.STORE.db.failure_tracker.failure_dir)
     # Locks on windows are a no-op
     if sys.platform != "win32":
-        assert os.path.isfile(spack.store.STORE.db.prefix_fail_path)
+        assert os.path.isfile(spack.database.failures_lock_path(spack.store.STORE.root))
 
 
 def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
     """Test the clear_failures exception paths."""
-    orig_fn = os.remove
-    err_msg = "Mock os remove"
+    s = spack.spec.Spec("a").concretized()
+    spack.store.STORE.db.mark_failed(s)
 
-    def _raise_except(path):
-        raise OSError(err_msg)
-
-    # Set up a fake failure mark (or file)
-    fs.touch(os.path.join(spack.store.STORE.db._failure_dir, "test"))
-
-    monkeypatch.setattr(os, "remove", _raise_except)
+    # Make the file marker not writeable, so that clearing_failures fails
+    spack.store.STORE.db.failure_tracker.failure_dir.chmod(0o000)
 
     # Clear failure tracking
     inst.clear_failures()
@@ -646,10 +633,7 @@ def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
     # Ensure expected warning generated
     out = str(capsys.readouterr()[1])
     assert "Unable to remove failure" in out
-    assert err_msg in out
-
-    # Restore remove for teardown
-    monkeypatch.setattr(os, "remove", orig_fn)
+    spack.store.STORE.db.failure_tracker.failure_dir.chmod(0o750)
 
 
 def test_combine_phase_logs(tmpdir):
