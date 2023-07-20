@@ -22,7 +22,7 @@ import spack.util.executable
 
 from .config import spec_for_current_python
 
-QueryInfo = Dict[str, Union["spack.spec.Spec", Optional[spack.util.executable.Executable]]]
+QueryInfo = Dict[str, "spack.spec.Spec"]
 
 
 def _python_import(module: str) -> bool:
