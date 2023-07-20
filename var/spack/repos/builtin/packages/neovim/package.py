@@ -86,7 +86,7 @@ class Neovim(CMakePackage):
 
     # dependencies to allow regular lua to work
     depends_on("lua-ffi", when="^lua", type=("link", "run"))
-    depends_on("lua-bitlib", type="link", when="^lua")
+    depends_on("lua-bitlib", type=("link", "run"), when="^lua")
 
     # base dependencies
     depends_on("cmake@3.0:", type="build")
