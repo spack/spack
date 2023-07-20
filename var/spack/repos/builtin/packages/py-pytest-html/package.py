@@ -22,7 +22,7 @@ class PyPytestHtml(PythonPackage):
     depends_on("py-setuptools-scm", type="build")
     depends_on("py-pytest@5.0:5,6.0.1:", type=("build", "run"))
     depends_on("py-pytest-metadata", type=("build", "run"))
-    depends_on("py-py", when="^py-pytest@7.2.0:", type=("build", "run"))
+    depends_on("py-py@1.8.2:", when="^py-pytest@7.2.0:", type=("build", "run"))
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
