@@ -327,8 +327,10 @@ def setup_meta_modules():
     logging.info("Creating compiler modules ...")
     compiler_config = spack.config.get('compilers')
     for compiler in compiler_config:
-        if compiler['compiler']['spec'] in flattened_compiler_list:
-            (compiler_name, compiler_version) = compiler['compiler']['spec'].split('@')
+        # On macOS, since July 2023, spack compiler find creates 'apple-clang@=14.0.0' etc.
+        compiler_spec = compiler['compiler']['spec'].replace("@=","@")
+        if compiler_spec in flattened_compiler_list:
+            (compiler_name, compiler_version) = compiler_spec.split('@')
             logging.info(
                 "  ... configuring stack compiler {}@{}"
                 .format(compiler_name, compiler_version))
