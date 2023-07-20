@@ -2103,14 +2103,14 @@ class PackageInstaller:
             # other process may be hung).
             install_status.set_term_title("Acquiring lock for {0}".format(pkg.name))
             term_status.add(pkg_id)
-            t.start("aquire_lock")
+            t.start("acquire_lock")
             ltype, lock = self._ensure_locked("write", pkg)
             if lock is None:
                 # Attempt to get a read lock instead.  If this fails then
                 # another process has a write lock so must be (un)installing
                 # the spec (or that process is hung).
                 ltype, lock = self._ensure_locked("read", pkg)
-            t.stop("aquire_lock")
+            t.stop("acquire_lock")
             # Requeue the spec if we cannot get at least a read lock so we
             # can check the status presumably established by another process
             # -- failed, installed, or uninstalled -- on the next pass.
@@ -2135,9 +2135,9 @@ class PackageInstaller:
                 # Downgrade to a read lock to preclude other processes from
                 # uninstalling the package until we're done installing its
                 # dependents.
-                t.start("aquire_lock")
+                t.start("acquire_lock")
                 ltype, lock = self._ensure_locked("read", pkg)
-                t.stop("aquire_lock")
+                t.stop("acquire_lock")
                 if lock is not None:
                     self._update_installed(task)
                     path = spack.util.path.debug_padded_filter(pkg.prefix)
@@ -2280,13 +2280,13 @@ class PackageInstaller:
 
         t.stop()
 
-        phases = ["{}: {}.".format(p.capitalize(), _hms(t.duration(p))) for p in t.phases]
-        phases.append("Total: {}".format(_hms(t.duration())))
-        tty.msg("Installer time summary", "  ".join(phases))
-
         if self.build_requests:
             timer_summary_file = self.build_requests[0].install_args.get("timer_summary_file")
             if timer_summary_file:
+                phases = ["{}: {}.".format(p.capitalize(), _hms(t.duration(p))) for p in t.phases]
+                phases.append("Total: {}".format(_hms(t.duration())))
+                tty.msg("Installer time summary", "  ".join(phases))
+
                 with open(timer_summary_file, "w") as fd:
                     t.write_json(out=fd, extra_attributes={"name": "install_all"})
 

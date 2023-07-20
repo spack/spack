@@ -88,10 +88,13 @@ def setup_parser(subparser):
         default=None,
         help="phase to stop after when installing (default None)",
     )
-    arguments.add_common_arguments(subparser, ["jobs"])
     subparser.add_argument(
-        "--timer-summary-file", help="File to record the top level install timer summary"
+        "--timer-summary-file",
+        type=str,
+        default=None,
+        help="File to record the top level install timer summary",
     )
+    arguments.add_common_arguments(subparser, ["jobs"])
     subparser.add_argument(
         "--overwrite",
         action="store_true",
