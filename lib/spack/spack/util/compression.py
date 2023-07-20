@@ -84,12 +84,13 @@ def _system_untar(archive_file):
         # the archive file has no extension. Tar on windows cannot untar onto itself
         # archive_file can be a tar file (which causes the problem on windows) but it can
         # also have other extensions (on Unix) such as tgz, tbz2, ...
-        archive_file = archive_file.parent / (archive_file.stem + "-input")
-        shutil.move(archive_file.with_suffix(""), archive_file)
+        new_archive_file = archive_file.parent / (archive_file.stem + "-input")
+        shutil.move(archive_file, new_archive_file)
+        archive_file = new_archive_file
 
     tar = which("tar", required=True)
     tar.add_default_arg("-oxf")
-    tar(archive_file)
+    tar(str(archive_file))
     return outfile
 
 
