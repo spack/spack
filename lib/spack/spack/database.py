@@ -351,42 +351,41 @@ def lock_configuration(configuration):
 class SpecLocker:
     """Manages acquiring and releasing read or write locks on concrete specs."""
 
-    #: Per-process lock objects for each install prefix
-    _prefix_locks: Dict[str, lk.Lock] = {}
+    #: Maps (lockfile, spec.dag_hash()) to the corresponding lock object
+    locks: Dict[Tuple[str, str], lk.Lock] = {}
 
     def __init__(self, lock_path: str, default_timeout: Optional[float]):
         self.lock_path = lock_path
         self.default_timeout = default_timeout
 
     def lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
-        """Get a lock on a particular spec's installation directory.
+        """Returns a lock on a concrete spec.
 
-        NOTE: The installation directory **does not** need to exist.
+        The lock is a byte range lock on the nth byte of a file.
 
-        Prefix lock is a byte range lock on the nth byte of a file.
+        The lock file is ``self.lock_path``.
 
-        The lock file is ``spack.store.STORE.db.prefix_lock`` -- the DB
-        tells us what to call it and it lives alongside the install DB.
-
-        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
-        likelihood of collision is very low AND it gives us
-        readers-writer lock semantics with just a single lockfile, so no
-        cleanup required.
+        n is the sys.maxsize-bit prefix of the DAG hash.  This makes likelihood of collision is
+        very low AND it gives us readers-writer lock semantics with just a single lockfile, so
+        no cleanup required.
         """
+        assert spec.concrete, "cannot lock a non-concrete spec"
         timeout = timeout or self.default_timeout
-        prefix = spec.prefix
-        if prefix not in self._prefix_locks:
-            self._prefix_locks[prefix] = lk.Lock(
+        key = (self.lock_path, spec.dag_hash())
+
+        if key not in self.locks:
+            self.locks[key] = lk.Lock(
                 self.lock_path,
                 start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
                 length=1,
                 default_timeout=timeout,
                 desc=spec.name,
             )
-        elif timeout != self._prefix_locks[prefix].default_timeout:
-            self._prefix_locks[prefix].default_timeout = timeout
 
-        return self._prefix_locks[prefix]
+        if timeout != self.locks[key].default_timeout:
+            self.locks[key].default_timeout = timeout
+
+        return self.locks[key]
 
     @contextlib.contextmanager
     def read_lock(self, spec: "spack.spec.Spec") -> Generator["SpecLocker", None, None]:

@@ -364,7 +364,7 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
     """Test _ensure_locked when a non-lock exception is raised."""
     mock_err_msg = "Mock exception error"
 
-    def _raise(lock, timeout):
+    def _raise(lock, timeout=None):
         raise RuntimeError(mock_err_msg)
 
     const_arg = installer_args(["trivial-install-test-package"], {})
