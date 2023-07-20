@@ -876,11 +876,11 @@ def test_stage_create_replace_path(tmp_build_stage_dir):
     touch(nondir)
     path = url_util.path_to_file_url(str(nondir))
 
-    stage = Stage(path, name="")
+    stage = Stage(path, name="afile")
     stage.create()
 
     # Ensure the stage path is "converted" to a directory
-    assert os.path.isdir(stage.path)
+    assert os.path.isdir(nondir)
 
 
 def test_cannot_access(capsys):
