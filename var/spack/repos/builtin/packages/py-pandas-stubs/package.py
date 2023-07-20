@@ -22,5 +22,5 @@ class PyPandasStubs(PythonPackage):
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-poetry-core@1:", type="build")
-    depends_on("py-numpy@:1.24.3", type=("build", "run"))
+    depends_on("py-numpy@1.24.3:", type=("build", "run"))
     depends_on("py-types-pytz@2022.1.1:", type=("build", "run"))
