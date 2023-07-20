@@ -52,7 +52,7 @@ class Xyce(CMakePackage):
     # this defaults to 11, consistent with what will be used,
     # and produces an error if any other value is attempted
     cxxstd_choices = ["11"]
-    variant("cxxstd", default="11", values=cxxstd_choices, multi=False)
+    variant("cxxstd", default="11", description="C++ standard", values=cxxstd_choices, multi=False)
 
     variant("pymi", default=False, description="Enable Python Model Interpreter for Xyce")
     # Downstream dynamic library symbols from pip installed numpy and other

@@ -23,16 +23,22 @@ class NimrodAai(CMakePackage):
     version("main", branch="main")
     version("23.6", sha256="1794b89a5a64ff2b3c548818b90d17eef85d819ba4f63a76c41a682d5b76c14f")
 
-    variant("debug", default=False)
-    variant("openacc", default=False)
-    variant("openacc_autocompare", default=False)
-    variant("enable_shared", default=True)
-    variant("mpi", default=False)
-    variant("time_level1", default=False)
-    variant("time_level2", default=False)
-    variant("nvtx_profile", default=False)
-    variant("openacc_cc", default="native")
-    variant("trap_fp_exceptions", default=False)
+    variant("debug", default=False, description="Whether to enable debug code")
+    variant("openacc", default=False, description="Whether to enable OpenACC")
+    variant(
+        "openacc_autocompare", default=False, description="Whether to enable OpenACC autocompare"
+    )
+    variant("enable_shared", default=True, description="Whether to build and use shared libraries")
+    variant("mpi", default=False, description="Whether to enable MPI")
+    variant("time_level1", default=False, description="Whether to add timings at level 1")
+    variant("time_level2", default=False, description="Whether to add timings at level 2")
+    variant("nvtx_profile", default=False, description="Whether to enable NVTX profiling")
+    variant("openacc_cc", default="native", description="OpenACC compute capability")
+    variant(
+        "trap_fp_exceptions",
+        default=False,
+        description="Whether to enable trapping of floating point exceptions",
+    )
 
     depends_on("cmake", type="build")
     depends_on("hdf5+fortran", type="build")

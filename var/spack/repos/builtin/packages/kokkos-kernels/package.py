@@ -97,7 +97,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
     }
     for eti in numeric_etis:
         deflt, cmake_name, vals = numeric_etis[eti]
-        variant(eti, default=deflt, values=vals, multi=True)
+        variant(eti, default=deflt, description=eti, values=vals, multi=True)
 
     tpls = {
         # variant name   #deflt   #spack name   #root var name #docstring
