@@ -47,6 +47,25 @@ def test_store_padding_length_is_zero_during_bootstrapping(mutable_config, tmpdi
         assert spack.config.config.get("config:install_tree:padded_length") == 512
 
 
+@pytest.mark.regression("38963")
+def test_install_tree_customization_is_respected(mutable_config, tmp_path):
+    """Tests that a custom user store is respected when we exit the bootstrapping
+    environment.
+    """
+    spack.store.reinitialize()
+    store_dir = tmp_path / "store"
+    spack.config.config.set("config:install_tree:root", str(store_dir))
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.store.STORE.root == spack.bootstrap.config.store_path()
+        assert (
+            spack.config.config.get("config:install_tree:root")
+            == spack.bootstrap.config.store_path()
+        )
+        assert spack.config.config.get("config:install_tree:padded_length") == 0
+    assert spack.config.config.get("config:install_tree:root") == str(store_dir)
+    assert spack.store.STORE.root == str(store_dir)
+
+
 @pytest.mark.parametrize(
     "config_value,expected",
     [
