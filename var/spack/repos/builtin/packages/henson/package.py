@@ -23,12 +23,17 @@ class Henson(CMakePackage):
     depends_on("py-mpi4py", when="+python", type=("build", "run"))
     variant("mpi-wrappers", default=False, description="Build MPI wrappers (PMPI)")
 
+    variant("boost", default=False, description="Use Boost for coroutine support")
+    depends_on("boost+context", when="+boost", type=("build", "run"))
+    conflicts("~boost", when="target=aarch64:")
+
     conflicts("^openmpi", when="+mpi-wrappers")
 
     def cmake_args(self):
         args = [
             self.define_from_variant("python", "python"),
             self.define_from_variant("mpi-wrappers", "mpi-wrappers"),
+            self.define_from_variant("use_boost", "boost"),
         ]
 
         if self.spec.satisfies("+python"):
