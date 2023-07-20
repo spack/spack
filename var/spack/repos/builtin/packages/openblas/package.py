@@ -510,7 +510,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
         compare_output_file(output, blessed_file)
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         cmake_defs = [self.define("TARGET", "GENERIC")]
         if self.spec.satisfies("platform=windows"):

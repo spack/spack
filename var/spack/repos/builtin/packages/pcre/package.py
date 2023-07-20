@@ -39,7 +39,7 @@ class Pcre(AutotoolsPackage, CMakePackage):
     )
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, SetupEnvironment):
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
 
