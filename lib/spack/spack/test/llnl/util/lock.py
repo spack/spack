@@ -307,7 +307,7 @@ class AcquireWrite:
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         lock.acquire_write()  # grab exclusive lock
         barrier.wait()
         barrier.wait()  # hold the lock until timeout in other procs.
@@ -324,7 +324,7 @@ class AcquireRead:
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         lock.acquire_read()  # grab shared lock
         barrier.wait()
         barrier.wait()  # hold the lock until timeout in other procs.
@@ -341,7 +341,7 @@ class TimeoutWrite:
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         barrier.wait()  # wait for lock acquire in first process
         with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
@@ -359,7 +359,7 @@ class TimeoutRead:
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         barrier.wait()  # wait for lock acquire in first process
         with pytest.raises(lk.LockTimeoutError):
             lock.acquire_read(lock_fail_timeout)
