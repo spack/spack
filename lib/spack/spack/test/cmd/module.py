@@ -16,8 +16,6 @@ import spack.store
 
 module = spack.main.SpackCommand("module")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-
 
 #: make sure module files are generated for all the tests here
 @pytest.fixture(scope="module", autouse=True)
@@ -170,6 +168,9 @@ def test_loads_recursive_excluded(database, module_configuration):
 writer_cls = spack.modules.lmod.LmodModulefileWriter
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="True symlinks need admin permissions on windows"
+)
 @pytest.mark.db
 def test_setdefault_command(mutable_database, mutable_config):
     data = {
