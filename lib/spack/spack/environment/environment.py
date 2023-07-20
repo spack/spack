@@ -1815,7 +1815,7 @@ class Environment:
             if not spec.installed:
                 continue
 
-            _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+            _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
             when_this_spec_was_installed = record.installation_time
             transitive_install_times[spec] = max(
                 transitive_install_times[spec], when_this_spec_was_installed
@@ -1829,7 +1829,7 @@ class Environment:
             if not spec.installed:
                 continue
 
-            _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+            _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
             when_this_spec_was_installed = record.installation_time
 
             if when_this_spec_was_installed < transitive_install_time:
