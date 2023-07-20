@@ -218,7 +218,7 @@ class Legion(CMakePackage, ROCmPackage):
     conflicts("+cuda_hijack", when="~cuda")
 
     variant("fortran", default=False, description="Enable Fortran bindings.")
-    conflicts("+fortran", when="~bindings")
+    requires("+bindings", when="+fortran")
 
     variant("hdf5", default=False, description="Enable support for HDF5.")
 
@@ -241,8 +241,8 @@ class Legion(CMakePackage, ROCmPackage):
     variant("papi", default=False, description="Enable PAPI performance measurements.")
 
     variant("python", default=False, description="Enable Python support.")
-    conflicts("+python", when="~bindings")
-    conflicts("+python", when="~shared")
+    requires("+bindings", when="+python")
+    requires("+shared", when="+python")
 
     variant("zlib", default=True, description="Enable zlib support.")
 
