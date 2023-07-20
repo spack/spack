@@ -1222,7 +1222,7 @@ class TestConcretize:
             return [first_spec]
 
         if mock_db:
-            monkeypatch.setattr(spack.store.db, "query", mock_fn)
+            monkeypatch.setattr(spack.store.STORE.db, "query", mock_fn)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
@@ -1275,7 +1275,7 @@ class TestConcretize:
 
         spack.config.set("concretizer:reuse", True)
         spec = Spec("a cflags=-g cxxflags=-g").concretized()
-        spack.store.db.add(spec, None)
+        spack.store.STORE.db.add(spec, None)
 
         testspec = Spec("a cflags=-g")
         testspec.concretize()
@@ -2013,7 +2013,7 @@ class TestConcretize:
 
         # install python external
         python = Spec("python").concretized()
-        monkeypatch.setattr(spack.store.db, "query", lambda x: [python])
+        monkeypatch.setattr(spack.store.STORE.db, "query", lambda x: [python])
 
         # ensure that we can't be faking this by getting it from config
         external_conf.pop("python")

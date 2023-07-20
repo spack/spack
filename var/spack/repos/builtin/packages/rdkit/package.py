@@ -14,7 +14,7 @@ class Rdkit(CMakePackage):
     homepage = "https://www.rdkit.org"
     url = "https://github.com/rdkit/rdkit/archive/refs/tags/Release_2021_03_2.tar.gz"
 
-    maintainers("bvanessen")
+    maintainers("bvanessen", "RMeli")
 
     version("2023_03_1", sha256="db346afbd0ba52c843926a2a62f8a38c7b774ffab37eaf382d789a824f21996c")
     version("2022_09_5", sha256="2efe7ce3b527df529ed3e355e2aaaf14623e51876be460fa4ad2b7f7ad54c9b1")
@@ -46,17 +46,57 @@ class Rdkit(CMakePackage):
 
     variant("freetype", default=True, description="Build freetype support")
 
-    depends_on("python@3:")
+    with when("@2022_09_5:"):
+        variant(
+            "python",
+            default=True,
+            when="@2022_09_5:",
+            description="Build standard Python wrappers",
+        )
+        variant("contrib", default=False, description="Build Contrib directory")
+        variant("freesasa", default=False, description="Build freesasa wrapper")
+        variant("coordgen", default=True, description="Build coordgen wrapper")
+        variant("maeparser", default=True, description="Build MAE parser wrapper")
+        variant("yaehmop", default=True, description="Build YAeHMOP wrapper")
+        variant("xyz2mol", default=False, description="Build support for RDKit xyz2mol")
+        variant("descriptors3d", default=True, description="Build 3D descriptors calculators")
+
+        depends_on("freesasa", when="+freesasa")
+        depends_on("coordgen", when="+coordgen")
+        depends_on("maeparser", when="+maeparser")
+        depends_on("eigen@3:", when="+descriptors3d")
+        depends_on("python@3:", when="+python")
+        depends_on("py-numpy", when="+python")
+
+        extends("python", when="+python")
+
+        conflicts("+xyz2mol", when="~yaehmop", msg="XY2MOL requires YAeHMOP")
+
     depends_on("boost@1.53.0: +python +serialization +iostreams +system")
-
-    depends_on("py-numpy")
     depends_on("sqlite")
-
     depends_on("freetype", when="@2020_09_1: +freetype")
 
-    extends("python")
+    with when("@:2021_09_5"):
+        depends_on("python@3:")
+        depends_on("py-numpy")
+        extends("python")
 
     def cmake_args(self):
-        args = ["-DCMAKE_CXX_STANDARD=14", "-DRDK_INSTALL_INTREE=OFF"]
-        args.append(self.define_from_variant("RDK_BUILD_FREETYPE_SUPPORT", "freetype"))
+        args = [
+            "-DRDK_INSTALL_INTREE=OFF",
+            self.define_from_variant("RDK_BUILD_FREETYPE_SUPPORT", "freetype"),
+        ]
+        if "@2022_09_5:" in self.spec:
+            args.extend(
+                [
+                    self.define_from_variant("RDK_BUILD_PYTHON_WRAPPERS", "python"),
+                    self.define_from_variant("RDK_BUILD_CONTRIB", "contrib"),
+                    self.define_from_variant("RDK_BUILD_FREESASA_SUPPORT", "freesasa"),
+                    self.define_from_variant("RDK_BUILD_COORDGEN_SUPPORT", "coordgen"),
+                    self.define_from_variant("RDK_BUILD_MAEPARSER_SUPPORT", "maeparser"),
+                    self.define_from_variant("RDK_BUILD_XYZ2MOL_SUPPORT", "xyz2mol"),
+                    self.define_from_variant("RDK_BUILD_DESCRIPTORS3D", "descriptors3d"),
+                ]
+            )
+
         return args

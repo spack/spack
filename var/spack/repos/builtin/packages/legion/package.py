@@ -27,6 +27,7 @@ class Legion(CMakePackage, ROCmPackage):
 
     maintainers("pmccormick", "streichler", "elliottslaughter")
     tags = ["e4s"]
+    version("23.06.0", tag="legion-23.06.0")
     version("23.03.0", tag="legion-23.03.0")
     version("22.12.0", tag="legion-22.12.0")
     version("22.09.0", tag="legion-22.09.0")
@@ -46,17 +47,19 @@ class Legion(CMakePackage, ROCmPackage):
     # use for general (not legion development) use cases.
     depends_on("mpi", when="network=mpi")
     depends_on("mpi", when="network=gasnet")  # MPI is required to build gasnet (needs mpicc).
+    depends_on("ucx", when="network=ucx")
     depends_on("ucx", when="conduit=ucx")
     depends_on("mpi", when="conduit=mpi")
-    depends_on("cuda@10.0:11.9", when="+cuda_unsupported_compiler")
-    depends_on("cuda@10.0:11.9", when="+cuda")
+    depends_on("cray-pmi", when="conduit=ofi-slingshot11 ^cray-mpich")
+    depends_on("cuda@10.0:11.9", when="+cuda_unsupported_compiler @:23.03.0")
+    depends_on("cuda@10.0:11.9", when="+cuda @:23.03.0")
+    depends_on("cuda@10.0:12.2", when="+cuda_unsupported_compiler @23.06.0:")
+    depends_on("cuda@10.0:12.2", when="+cuda @23.06.0:")
     depends_on("hdf5", when="+hdf5")
     depends_on("hwloc", when="+hwloc")
 
     # cuda-centric
-    # reminder for arch numbers to names: 60=pascal, 70=volta, 75=turing, 80=ampere
-    # TODO: we could use a map here to clean up and use naming vs. numbers.
-    cuda_arch_list = ("60", "70", "75", "80")
+    cuda_arch_list = CudaPackage.cuda_arch_values
     for nvarch in cuda_arch_list:
         depends_on(
             "kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={0}".format(nvarch),
@@ -118,7 +121,7 @@ class Legion(CMakePackage, ROCmPackage):
     variant(
         "network",
         default="none",
-        values=("gasnet", "mpi", "none"),
+        values=("gasnet", "mpi", "ucx", "none"),
         description="The network communications/transport layer to use.",
         multi=False,
     )
@@ -160,7 +163,7 @@ class Legion(CMakePackage, ROCmPackage):
             "conduit",
             default="none",
             values=("none", "aries", "ibv", "udp", "mpi", "ucx", "ofi-slingshot11"),
-            description="The gasnet conduit(s) to enable.",
+            description="The GASNet conduit(s) to enable.",
             sticky=True,
             multi=False,
         )
@@ -261,7 +264,12 @@ class Legion(CMakePackage, ROCmPackage):
         default=512,
         description="Maximum number of fields allowed in a logical region.",
     )
-    depends_on("cray-pmi", when="conduit=ofi-slingshot11 ^cray-mpich")
+    variant(
+        "max_num_nodes",
+        values=int,
+        default=1024,
+        description="Maximum number of nodes supported by Legion.",
+    )
 
     def setup_build_environment(self, build_env):
         spec = self.spec
@@ -297,6 +305,8 @@ class Legion(CMakePackage, ROCmPackage):
                 options.append("-DLegion_EMBED_GASNet_CONFIGURE_ARGS=--enable-debug")
         elif "network=mpi" in spec:
             options.append("-DLegion_NETWORKS=mpi")
+        elif "network=ucx" in spec:
+            options.append("-DLegion_NETWORKS=ucx")
         else:
             options.append("-DLegion_EMBED_GASNet=OFF")
 
@@ -409,6 +419,17 @@ class Legion(CMakePackage, ROCmPackage):
                 maxfields = maxfields & maxfields - 1
             maxfields = maxfields << 1
         options.append("-DLegion_MAX_FIELDS=%d" % maxfields)
+
+        maxnodes = int(spec.variants["max_num_nodes"].value)
+        if maxnodes <= 0:
+            maxnodes = 1024
+        # make sure maxnodes is a power of two.  if not,
+        # find the next largest power of two and use that...
+        if maxnodes & (maxnodes - 1) != 0:
+            while maxnodes & maxnodes - 1:
+                maxnodes = maxnodes & maxnodes - 1
+            maxnodes = maxnodes << 1
+        options.append("-DLegion_MAX_NUM_NODES=%d" % maxnodes)
 
         # This disables Legion's CMake build system's logic for targeting the native
         # CPU architecture in favor of Spack-provided compiler flags

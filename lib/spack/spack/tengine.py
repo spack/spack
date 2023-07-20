@@ -100,9 +100,15 @@ def quote(text):
     return ['"{0}"'.format(line) for line in text]
 
 
+def curly_quote(text):
+    """Encloses each line of text in curly braces"""
+    return ["{{{0}}}".format(line) for line in text]
+
+
 def _set_filters(env):
     """Sets custom filters to the template engine environment"""
     env.filters["textwrap"] = textwrap.wrap
     env.filters["prepend_to_line"] = prepend_to_line
     env.filters["join"] = "\n".join
     env.filters["quote"] = quote
+    env.filters["curly_quote"] = curly_quote

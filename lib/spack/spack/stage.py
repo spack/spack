@@ -12,7 +12,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Dict
+from typing import Dict, Iterable
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -50,7 +50,7 @@ stage_prefix = "spack-stage-"
 
 def compute_stage_name(spec):
     """Determine stage name given a spec"""
-    default_stage_structure = "spack-stage-{name}-{version}-{hash}"
+    default_stage_structure = stage_prefix + "{name}-{version}-{hash}"
     stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
     return spec.format(format_string=stage_name_structure)
 
@@ -337,7 +337,7 @@ class Stage:
 
                 tty.debug("Creating stage lock {0}".format(self.name))
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
-                    stage_lock_path, lock_id, 1, desc=self.name
+                    stage_lock_path, start=lock_id, length=1, desc=self.name
                 )
 
             self._lock = Stage.stage_locks[self.name]
@@ -428,6 +428,12 @@ class Stage:
     def source_path(self):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
+
+    def disable_mirrors(self):
+        """The Stage will not attempt to look for the associated fetcher
+        target in any of Spack's mirrors (including the local download cache).
+        """
+        self.mirror_paths = []
 
     def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
@@ -738,9 +744,17 @@ class StageComposite(pattern.Composite):
                 "cache_local",
                 "cache_mirror",
                 "steal_source",
+                "disable_mirrors",
                 "managed_by_spack",
             ]
         )
+
+    @classmethod
+    def from_iterable(cls, iterable: Iterable[Stage]) -> "StageComposite":
+        """Create a new composite from an iterable of stages."""
+        composite = cls()
+        composite.extend(iterable)
+        return composite
 
     def __enter__(self):
         for item in self:
@@ -749,7 +763,6 @@ class StageComposite(pattern.Composite):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         for item in reversed(self):
-            item.keep = getattr(self, "keep", False)
             item.__exit__(exc_type, exc_val, exc_tb)
 
     #
@@ -770,6 +783,15 @@ class StageComposite(pattern.Composite):
     @property
     def archive_file(self):
         return self[0].archive_file
+
+    @property
+    def keep(self):
+        return self[0].keep
+
+    @keep.setter
+    def keep(self, value):
+        for item in self:
+            item.keep = value
 
 
 class DIYStage:
