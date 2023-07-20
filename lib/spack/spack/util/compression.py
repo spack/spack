@@ -111,7 +111,7 @@ def _bunzip2(archive_file):
 def _py_bunzip(archive_file):
     """Returns path to decompressed file.
     Decompresses bz2 compressed archives/files via python's bz2 module"""
-    decompressed_file = PurePath(strip_compression_extension(archive_file, "bz2")).name
+    decompressed_file = PurePath(archive_file).stem
     working_dir = Path.cwd()
     archive_out = working_dir / decompressed_file
     f_bz = bz2.BZ2File(archive_file, mode="rb")
@@ -125,7 +125,7 @@ def _system_bunzip(archive_file):
     """Returns path to decompressed file.
     Decompresses bz2 compressed archives/files via system bzip2 utility"""
     compressed_file_name = PurePath(archive_file).name
-    decompressed_file = PurePath(strip_compression_extension(archive_file, "bz2")).name
+    decompressed_file = PurePath(archive_file).stem
     working_dir = Path.cwd()
     archive_out = working_dir / decompressed_file
     copy_path = str(working_dir / compressed_file_name)
@@ -155,7 +155,7 @@ def _gunzip(archive_file):
 def _py_gunzip(archive_file):
     """Returns path to gunzip'd file
     Decompresses `.gz` compressed archvies via python gzip module"""
-    decompressed_file = PurePath(strip_compression_extension(archive_file, "gz")).name
+    decompressed_file = PurePath(archive_file).stem
     working_dir = Path.cwd()
     destination_abspath = working_dir / decompressed_file
     f_in = gzip.open(archive_file, "rb")
@@ -194,7 +194,7 @@ def _unzip(archive_file):
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
-    extracted_file = PurePath(strip_extension(archive_file, "zip")).name
+    extracted_file = PurePath(archive_file).stem
     if sys.platform == "win32":
         return _system_untar(archive_file)
     else:
@@ -261,7 +261,7 @@ def _win_compressed_tarball_handler(decompressor):
 def _py_lzma(archive_file):
     """Returns path to decompressed .xz files
     Decompress lzma compressed .xz files via python lzma module"""
-    decompressed_file = PurePath(strip_compression_extension(archive_file, "xz")).name
+    decompressed_file = PurePath(archive_file).stem
     archive_out = Path.cwd() / decompressed_file
     with open(archive_out, "wb") as ar:
         with lzma.open(archive_file) as lar:
@@ -274,7 +274,7 @@ def _xz(archive_file):
     Decompress lzma compressed .xz files via xz command line
     tool.
     """
-    decompressed_file = PurePath(strip_extension(archive_file, "xz")).name
+    decompressed_file = PurePath(archive_file).stem
     working_dir = Path.cwd()
     destination_abspath = working_dir / decompressed_file
     compressed_file = PurePath(archive_file).name
@@ -299,7 +299,7 @@ def _system_7zip(archive_file):
     Args:
         archive_file (str): absolute path of file to be unarchived
     """
-    outfile = PurePath(strip_compression_extension(archive_file)).name
+    outfile = PurePath(archive_file).stem
     _7z = which("7z")
     if not _7z:
         raise CommandNotFoundError(
