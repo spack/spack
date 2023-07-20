@@ -905,7 +905,7 @@ def test_prefix_read_lock_error(default_mock_concretization, mutable_database, m
     monkeypatch.setattr(lk.Lock, "acquire_read", _raise)
 
     with pytest.raises(Exception):
-        with spack.store.STORE.db.prefix_read_lock(s):
+        with spack.store.STORE.prefix_read_lock(s):
             assert False
 
 
@@ -921,7 +921,7 @@ def test_prefix_write_lock_error(default_mock_concretization, mutable_database, 
     monkeypatch.setattr(lk.Lock, "acquire_write", _raise)
 
     with pytest.raises(Exception):
-        with spack.store.STORE.db.prefix_write_lock(s):
+        with spack.store.STORE.prefix_write_lock(s):
             assert False
 
 

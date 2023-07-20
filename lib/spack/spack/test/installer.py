@@ -432,7 +432,7 @@ def test_ensure_locked_new_lock(install_mockery, tmpdir, lock_type, reads, write
 
 
 def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
-    orig_pl = spack.database.Database.prefix_lock
+    orig_pl = spack.store.Store.prefix_lock
 
     def _pl(db, spec, timeout):
         lock = orig_pl(db, spec, timeout)
@@ -444,7 +444,7 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
     installer = create_installer(const_arg)
     spec = installer.build_requests[0].pkg.spec
 
-    monkeypatch.setattr(spack.database.Database, "prefix_lock", _pl)
+    monkeypatch.setattr(spack.store.Store, "prefix_lock", _pl)
 
     lock_type = "read"
     ltype, lock = installer._ensure_locked(lock_type, spec.package)

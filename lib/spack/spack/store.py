@@ -25,7 +25,7 @@ import uuid
 from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
 import llnl.util.lang
-import llnl.util.tty as tty
+from llnl.util import lock, tty
 
 import spack.config
 import spack.database
@@ -170,9 +170,29 @@ class Store:
         self.upstreams = upstreams
         self.lock_cfg = lock_cfg
         self.db = spack.database.Database(root, upstream_dbs=upstreams, lock_cfg=lock_cfg)
+        self.prefix_locker = spack.database.SpecLocker(
+            spack.database.prefix_lock_path(root), default_timeout=lock_cfg.package_timeout
+        )
         self.layout = spack.directory_layout.DirectoryLayout(
             root, projections=projections, hash_length=hash_length
         )
+
+    def prefix_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lock.Lock:
+        return self.prefix_locker.lock(spec, timeout=timeout)
+
+    @contextlib.contextmanager
+    def prefix_read_lock(
+        self, spec: "spack.spec.Spec"
+    ) -> Generator[spack.database.SpecLocker, None, None]:
+        with self.prefix_locker.read_lock(spec) as locker:
+            yield locker
+
+    @contextlib.contextmanager
+    def prefix_write_lock(
+        self, spec: "spack.spec.Spec"
+    ) -> Generator[spack.database.SpecLocker, None, None]:
+        with self.prefix_locker.write_lock(spec) as locker:
+            yield locker
 
     def reindex(self) -> None:
         """Convenience function to reindex the store DB with its own layout."""

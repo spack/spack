@@ -21,6 +21,7 @@ filesystem.
 import contextlib
 import datetime
 import os
+import pathlib
 import socket
 import sys
 import time
@@ -306,15 +307,16 @@ _QUERY_DOCSTRING = """
 
         """
 
-#: Data class to configure locks in Database objects
-#:
-#: Args:
-#:    enable (bool): whether to enable locks or not.
-#:    database_timeout (int or None): timeout for the database lock
-#:    package_timeout (int or None): timeout for the package lock
-
 
 class LockConfiguration(NamedTuple):
+    """Data class to configure locks in Database objects
+
+    Args:
+        enable: whether to enable locks or not.
+        database_timeout: timeout for the database lock
+        package_timeout: timeout for the package lock
+    """
+
     enable: bool
     database_timeout: Optional[int]
     package_timeout: Optional[int]
@@ -348,14 +350,23 @@ def lock_configuration(configuration):
     )
 
 
+def prefix_lock_path(root_dir: Union[str, pathlib.Path]) -> pathlib.Path:
+    """Returns the path of the prefix lock file, given the root directory.
+
+    Args:
+        root_dir: root directory containing the database directory
+    """
+    return pathlib.Path(root_dir) / _DB_DIRNAME / "prefix_lock"
+
+
 class SpecLocker:
     """Manages acquiring and releasing read or write locks on concrete specs."""
 
     #: Maps (lockfile, spec.dag_hash()) to the corresponding lock object
     locks: Dict[Tuple[str, str], lk.Lock] = {}
 
-    def __init__(self, lock_path: str, default_timeout: Optional[float]):
-        self.lock_path = lock_path
+    def __init__(self, lock_path: Union[str, pathlib.Path], default_timeout: Optional[float]):
+        self.lock_path = pathlib.Path(lock_path)
         self.default_timeout = default_timeout
 
     def lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
@@ -371,11 +382,11 @@ class SpecLocker:
         """
         assert spec.concrete, "cannot lock a non-concrete spec"
         timeout = timeout or self.default_timeout
-        key = (self.lock_path, spec.dag_hash())
+        key = (str(self.lock_path), spec.dag_hash())
 
         if key not in self.locks:
             self.locks[key] = lk.Lock(
-                self.lock_path,
+                str(self.lock_path),
                 start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
                 length=1,
                 default_timeout=timeout,
@@ -462,12 +473,6 @@ class Database:
         self._index_path = os.path.join(self.database_directory, "index.json")
         self._verifier_path = os.path.join(self.database_directory, "index_verifier")
         self._lock_path = os.path.join(self.database_directory, "lock")
-
-        # This is for other classes to use to lock prefix directories.
-        self.prefix_locker = SpecLocker(
-            os.path.join(self.database_directory, "prefix_lock"),
-            default_timeout=lock_cfg.package_timeout,
-        )
 
         # Ensure a persistent location for dealing with parallel installation
         # failures (e.g., across near-concurrent processes).
@@ -686,19 +691,6 @@ class Database:
     def prefix_failure_marked(self, spec: "spack.spec.Spec") -> bool:
         """Determine if the spec has a persistent failure marking."""
         return os.path.exists(self._failed_spec_path(spec))
-
-    def prefix_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
-        return self.prefix_locker.lock(spec, timeout=timeout)
-
-    @contextlib.contextmanager
-    def prefix_read_lock(self, spec):
-        with self.prefix_locker.read_lock(spec) as locker:
-            yield locker
-
-    @contextlib.contextmanager
-    def prefix_write_lock(self, spec):
-        with self.prefix_locker.write_lock(spec) as locker:
-            yield locker
 
     def _write_to_file(self, stream):
         """Write out the database in JSON format to the stream passed
