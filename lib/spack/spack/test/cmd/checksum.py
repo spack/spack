@@ -12,6 +12,7 @@ import llnl.util.tty as tty
 
 import spack.cmd.checksum
 import spack.repo
+import spack.spec
 from spack.main import SpackCommand
 
 spack_checksum = SpackCommand("checksum")
@@ -97,3 +98,29 @@ def test_checksum_deprecated_version(mock_packages, mock_clone_repo, mock_fetch,
     )
     assert "Version 1.1.0 is deprecated" in output
     assert "Added 0 new versions to" not in output
+
+
+def test_checksum_at(mock_packages):
+    pkg_cls = spack.repo.path.get_pkg_class("zlib")
+    versions = [str(v) for v in pkg_cls.versions]
+    output = spack_checksum(f"zlib@{versions[0]}")
+    assert "Found 1 version" in output
+
+
+def test_checksum_url(mock_packages):
+    pkg_cls = spack.repo.path.get_pkg_class("zlib")
+    output = spack_checksum(f"{pkg_cls.url}", fail_on_error=False)
+    assert "accepts package names" in output
+
+
+def test_checksum_verification_fails(install_mockery, capsys):
+    spec = spack.spec.Spec("zlib").concretized()
+    pkg = spec.package
+    versions = list(pkg.versions.keys())
+    version_hashes = {versions[0]: "abadhash", spack.version.Version("0.1"): "123456789"}
+    with pytest.raises(SystemExit):
+        spack.cmd.checksum.verify_checksums(pkg, version_hashes)
+    out = str(capsys.readouterr())
+    assert out.count("Correct") == 0
+    assert "No previous checksum" in out
+    assert "Invalid checksum" in out
