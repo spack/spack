@@ -24,7 +24,7 @@ import os
 import socket
 import sys
 import time
-from typing import Dict, List, NamedTuple, Set, Type, Union
+from typing import Dict, Generator, List, NamedTuple, Set, Type, Union
 
 try:
     import uuid
@@ -348,10 +348,82 @@ def lock_configuration(configuration):
     )
 
 
-class Database:
+class SpecLocker:
+    """Manages acquiring and releasing read or write locks on concrete specs."""
+
     #: Per-process lock objects for each install prefix
     _prefix_locks: Dict[str, lk.Lock] = {}
 
+    def __init__(self, lock_path: str, default_timeout: Optional[float]):
+        self.lock_path = lock_path
+        self.default_timeout = default_timeout
+
+    def lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
+        """Get a lock on a particular spec's installation directory.
+
+        NOTE: The installation directory **does not** need to exist.
+
+        Prefix lock is a byte range lock on the nth byte of a file.
+
+        The lock file is ``spack.store.STORE.db.prefix_lock`` -- the DB
+        tells us what to call it and it lives alongside the install DB.
+
+        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
+        likelihood of collision is very low AND it gives us
+        readers-writer lock semantics with just a single lockfile, so no
+        cleanup required.
+        """
+        timeout = timeout or self.default_timeout
+        prefix = spec.prefix
+        if prefix not in self._prefix_locks:
+            self._prefix_locks[prefix] = lk.Lock(
+                self.lock_path,
+                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+                length=1,
+                default_timeout=timeout,
+                desc=spec.name,
+            )
+        elif timeout != self._prefix_locks[prefix].default_timeout:
+            self._prefix_locks[prefix].default_timeout = timeout
+
+        return self._prefix_locks[prefix]
+
+    @contextlib.contextmanager
+    def read_lock(self, spec: "spack.spec.Spec") -> Generator["SpecLocker", None, None]:
+        lock = self.lock(spec)
+        lock.acquire_read()
+
+        try:
+            yield self
+        except lk.LockError:
+            # This addresses the case where a nested lock attempt fails inside
+            # of this context manager
+            raise
+        except (Exception, KeyboardInterrupt):
+            lock.release_read()
+            raise
+        else:
+            lock.release_read()
+
+    @contextlib.contextmanager
+    def write_lock(self, spec: "spack.spec.Spec") -> Generator["SpecLocker", None, None]:
+        lock = self.lock(spec)
+        lock.acquire_write()
+
+        try:
+            yield self
+        except lk.LockError:
+            # This addresses the case where a nested lock attempt fails inside
+            # of this context manager
+            raise
+        except (Exception, KeyboardInterrupt):
+            lock.release_write()
+            raise
+        else:
+            lock.release_write()
+
+
+class Database:
     #: Per-process failure (lock) objects for each install prefix
     _prefix_failures: Dict[str, lk.Lock] = {}
 
@@ -393,7 +465,10 @@ class Database:
         self._lock_path = os.path.join(self.database_directory, "lock")
 
         # This is for other classes to use to lock prefix directories.
-        self.prefix_lock_path = os.path.join(self.database_directory, "prefix_lock")
+        self.prefix_locker = SpecLocker(
+            os.path.join(self.database_directory, "prefix_lock"),
+            default_timeout=lock_cfg.package_timeout,
+        )
 
         # Ensure a persistent location for dealing with parallel installation
         # failures (e.g., across near-concurrent processes).
@@ -614,68 +689,17 @@ class Database:
         return os.path.exists(self._failed_spec_path(spec))
 
     def prefix_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
-        """Get a lock on a particular spec's installation directory.
-
-        NOTE: The installation directory **does not** need to exist.
-
-        Prefix lock is a byte range lock on the nth byte of a file.
-
-        The lock file is ``spack.store.STORE.db.prefix_lock`` -- the DB
-        tells us what to call it and it lives alongside the install DB.
-
-        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
-        likelihood of collision is very low AND it gives us
-        readers-writer lock semantics with just a single lockfile, so no
-        cleanup required.
-        """
-        timeout = timeout or self.package_lock_timeout
-        prefix = spec.prefix
-        if prefix not in self._prefix_locks:
-            self._prefix_locks[prefix] = lk.Lock(
-                self.prefix_lock_path,
-                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
-                length=1,
-                default_timeout=timeout,
-                desc=spec.name,
-            )
-        elif timeout != self._prefix_locks[prefix].default_timeout:
-            self._prefix_locks[prefix].default_timeout = timeout
-
-        return self._prefix_locks[prefix]
+        return self.prefix_locker.lock(spec, timeout=timeout)
 
     @contextlib.contextmanager
     def prefix_read_lock(self, spec):
-        prefix_lock = self.prefix_lock(spec)
-        prefix_lock.acquire_read()
-
-        try:
-            yield self
-        except lk.LockError:
-            # This addresses the case where a nested lock attempt fails inside
-            # of this context manager
-            raise
-        except (Exception, KeyboardInterrupt):
-            prefix_lock.release_read()
-            raise
-        else:
-            prefix_lock.release_read()
+        with self.prefix_locker.read_lock(spec) as locker:
+            yield locker
 
     @contextlib.contextmanager
     def prefix_write_lock(self, spec):
-        prefix_lock = self.prefix_lock(spec)
-        prefix_lock.acquire_write()
-
-        try:
-            yield self
-        except lk.LockError:
-            # This addresses the case where a nested lock attempt fails inside
-            # of this context manager
-            raise
-        except (Exception, KeyboardInterrupt):
-            prefix_lock.release_write()
-            raise
-        else:
-            prefix_lock.release_write()
+        with self.prefix_locker.write_lock(spec) as locker:
+            yield locker
 
     def _write_to_file(self, stream):
         """Write out the database in JSON format to the stream passed
