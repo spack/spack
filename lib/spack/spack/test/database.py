@@ -818,9 +818,8 @@ def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
     def _is(self, spec):
         return True
 
-    # FIXME (failure tracker)
     # Pretend the spec has been failure locked
-    monkeypatch.setattr(spack.database.FailureTracker, "prefix_failure_locked", _is)
+    monkeypatch.setattr(spack.database.FailureTracker, "failure_lock_taken", _is)
 
     s = spack.spec.Spec("a").concretized()
     spack.store.STORE.clear_failure(s)
@@ -836,9 +835,9 @@ def test_clear_failure_forced(default_mock_concretization, mutable_database, mon
         return True
 
     # Pretend the spec has been failure locked
-    monkeypatch.setattr(spack.database.FailureTracker, "prefix_failure_locked", _is)
+    monkeypatch.setattr(spack.database.FailureTracker, "failure_lock_taken", _is)
     # Ensure raise OSError when try to remove the non-existent marking
-    monkeypatch.setattr(spack.database.FailureTracker, "prefix_failure_marked", _is)
+    monkeypatch.setattr(spack.database.FailureTracker, "persistent_failure_mark", _is)
 
     s = default_mock_concretization("a")
     spack.store.STORE.clear_failure(s, force=True)
@@ -888,7 +887,7 @@ def test_prefix_failed(default_mock_concretization, mutable_database, monkeypatc
     assert not spack.store.STORE.prefix_failed(s)
 
     # Now pretend that the prefix failure is locked
-    monkeypatch.setattr(spack.database.FailureTracker, "prefix_failure_locked", _is)
+    monkeypatch.setattr(spack.database.FailureTracker, "failure_lock_taken", _is)
     assert spack.store.STORE.prefix_failed(s)
 
 

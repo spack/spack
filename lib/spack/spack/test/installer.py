@@ -606,7 +606,7 @@ def test_clear_failures_success(install_mockery):
     assert spack.store.STORE.prefix_failed(s)
 
     # Now clear failure tracking
-    inst.clear_failures()
+    spack.store.STORE.clear_all_failures()
 
     # Ensure there are no cached failure locks or failure marks
     assert len(spack.store.STORE.failure_tracker.failures_lock.all_keys()) == 0
@@ -628,7 +628,7 @@ def test_clear_failures_errs(install_mockery, capsys):
     spack.store.STORE.failure_tracker.failure_dir.chmod(0o000)
 
     # Clear failure tracking
-    inst.clear_failures()
+    spack.store.STORE.clear_all_failures()
 
     # Ensure expected warning generated
     out = str(capsys.readouterr()[1])
@@ -678,7 +678,7 @@ def test_combine_phase_logs_does_not_care_about_encoding(tmpdir):
         assert f.read() == data * 2
 
 
-def test_check_deps_status_install_failure(install_mockery, monkeypatch):
+def test_check_deps_status_install_failure(install_mockery):
     """Tests that checking the dependency status on a request to install
     'a' fails, if we mark the dependency as failed.
     """

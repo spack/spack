@@ -519,14 +519,6 @@ def _try_install_from_binary_cache(
     )
 
 
-# FIXME (failure tracking): This masks using a global
-def clear_failures() -> None:
-    """
-    Remove all failure tracking markers for the Spack instance.
-    """
-    spack.store.STORE.clear_all_failures()
-
-
 def combine_phase_logs(phase_log_files: List[str], log_path: str) -> None:
     """
     Read set or list of logs and combine them into one file.
@@ -1127,15 +1119,13 @@ class PackageInstaller:
     instance.
     """
 
-    def __init__(self, installs: List[Tuple["spack.package_base.PackageBase", dict]] = []):
+    def __init__(self, installs: List[Tuple["spack.package_base.PackageBase", dict]] = []) -> None:
         """Initialize the installer.
 
         Args:
             installs (list): list of tuples, where each
                 tuple consists of a package (PackageBase) and its associated
                  install arguments (dict)
-        Return:
-            PackageInstaller: instance
         """
         # List of build requests
         self.build_requests = [BuildRequest(pkg, install_args) for pkg, install_args in installs]

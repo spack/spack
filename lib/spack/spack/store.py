@@ -135,18 +135,21 @@ def parse_install_tree(config_dict):
 class Store:
     """A store is a path full of installed Spack packages.
 
-    Stores consist of packages installed according to a
-    ``DirectoryLayout``, along with an index, or _database_ of their
-    contents.  The directory layout controls what paths look like and how
-    Spack ensures that each unique spec gets its own unique directory (or
-    not, though we don't recommend that). The database is a single file
-    that caches metadata for the entire Spack installation.  It prevents
-    us from having to spider the install tree to figure out what's there.
+    Stores consist of packages installed according to a ``DirectoryLayout``, along with a database
+    of their contents.
+
+    The directory layout controls what paths look like and how Spack ensures that each unique spec
+    gets its own unique directory (or not, though we don't recommend that).
+
+    The database is a single file that caches metadata for the entire Spack installation. It
+    prevents us from having to spider the install tree to figure out what's there.
+
+    The store is also able to lock installation prefixes, and to mark installation failures.
 
     Args:
         root: path to the root of the install tree
-        unpadded_root: path to the root of the install tree without padding.
-            The sbang script has to be installed here to work with padded roots
+        unpadded_root: path to the root of the install tree without padding. The sbang script has
+            to be installed here to work with padded roots
         projections: expression according to guidelines that describes how to construct a path to
             a package prefix in this store
         hash_length: length of the hashes used in the directory layout. Spec hash suffixes will be
@@ -189,17 +192,27 @@ class Store:
         )
 
     def clear_all_failures(self) -> None:
-        """Force remove install failure tracking files."""
+        """Removes all the install failure tracking files."""
         self.failure_tracker.clear_all_failures()
 
     def clear_failure(self, spec: "spack.spec.Spec", force: bool = False) -> None:
+        """Clears a failure for a single spec.
+
+        Args:
+            spec: spec to be cleared
+            force: True if the failure information should be cleared when a failure lock
+                exists for the file, or False if the failure should not be cleared (e.g.,
+                it may be associated with a concurrent build)
+        """
         self.failure_tracker.clear_failure(spec, force)
 
     def mark_failed(self, spec: "spack.spec.Spec") -> lock.Lock:
+        """Marks a spec installation as failed"""
         return self.failure_tracker.mark_failed(spec)
 
     def prefix_failed(self, spec: "spack.spec.Spec") -> bool:
-        return self.failure_tracker.prefix_failed(spec)
+        """True if the installation of the spec failed."""
+        return self.failure_tracker.failed(spec)
 
     def prefix_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lock.Lock:
         return self.prefix_locker.lock(spec, timeout=timeout)

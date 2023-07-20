@@ -705,7 +705,6 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
     assert "was not installed" in out
 
     # Check that failure prefix locks are still cached
-    # FIXME: (failure tracker)
     failed_packages = [
         key[2] for key in spack.store.STORE.failure_tracker.failures_lock.all_keys()
     ]

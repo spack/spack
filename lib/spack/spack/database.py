@@ -507,7 +507,7 @@ class FailureTracker:
                 exists for the file, or False if the failure should not be cleared (e.g.,
                 it may be associated with a concurrent build)
         """
-        failure_locked = self.prefix_failure_locked(spec)
+        failure_locked = self.failure_lock_taken(spec)
         if failure_locked and not force:
             tty.msg(f"Retaining failure marking for {spec.name} due to lock")
             return
@@ -519,7 +519,7 @@ class FailureTracker:
         if succeeded and lock is not None:
             lock.release_write()
 
-        if self.prefix_failure_marked(spec):
+        if self.persistent_failure_mark(spec):
             path = self._failed_spec_path(spec)
             tty.debug(f"Removing failure marking for {spec.name}")
             try:
@@ -570,27 +570,27 @@ class FailureTracker:
 
         return self.failures_lock.lock(spec)
 
-    def prefix_failed(self, spec: "spack.spec.Spec") -> bool:
-        """Return True if the prefix (installation) is marked as failed."""
+    def failed(self, spec: "spack.spec.Spec") -> bool:
+        """Return True if the spec is marked as failed."""
         # The failure was detected in this process.
         if self.failures_lock.has_lock(spec):
             return True
 
         # The failure was detected by a concurrent process (e.g., an srun),
         # which is expected to be holding a write lock if that is the case.
-        if self.prefix_failure_locked(spec):
+        if self.failure_lock_taken(spec):
             return True
 
         # Determine if the spec may have been marked as failed by a separate
         # spack build process running concurrently.
-        return self.prefix_failure_marked(spec)
+        return self.persistent_failure_mark(spec)
 
-    def prefix_failure_locked(self, spec: "spack.spec.Spec") -> bool:
-        """Return True if a process has a failure lock on the spec."""
+    def failure_lock_taken(self, spec: "spack.spec.Spec") -> bool:
+        """Return True if another process has a failure lock on the spec."""
         check = self.failures_lock.raw_lock(spec)
         return check.is_write_locked()
 
-    def prefix_failure_marked(self, spec: "spack.spec.Spec") -> bool:
+    def persistent_failure_mark(self, spec: "spack.spec.Spec") -> bool:
         """Determine if the spec has a persistent failure marking."""
         return self._failed_spec_path(spec).exists()
 
