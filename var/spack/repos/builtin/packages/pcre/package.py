@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Pcre(CMakePackage, AutotoolsPackage):
+class Pcre(AutotoolsPackage, CMakePackage):
     """The PCRE package contains Perl Compatible Regular Expression
     libraries. These are useful for implementing regular expression
     pattern matching using the same syntax and semantics as Perl 5."""
