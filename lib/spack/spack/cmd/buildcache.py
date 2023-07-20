@@ -270,15 +270,10 @@ def _matching_specs(specs, spec_file):
         constraints = spack.cmd.parse_specs(specs)
         return spack.store.find(constraints, hashes=hashes)
 
-    if env:
-        return [concrete for _, concrete in env.concretized_specs()]
+    if not env:
+        return spack.store.db.query()
 
-    tty.die(
-        "build cache file creation requires at least one"
-        " installed package spec, an active environment,"
-        " or else a path to a json or yaml file containing a spec"
-        " to install"
-    )
+    return env.concrete_roots()
 
 
 def _concrete_spec_from_args(args):
