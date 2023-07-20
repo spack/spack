@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.build_systems.autotools
+import spack.build_systems.cmake
 from spack.package import *
 
 
@@ -37,7 +39,7 @@ class Pcre(AutotoolsPackage, CMakePackage):
     )
 
 
-class AutotoolsBuilder(spack.build_systems.cmake.AutotoolsBuilder, SetupEnvironment):
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, SetupEnvironment):
     def configure_args(self):
         args = []
 
