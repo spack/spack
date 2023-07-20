@@ -695,6 +695,7 @@ class Opencv(CMakePackage, CudaPackage):
         "mfx",
         "ngraph",
         "nvcuvid",  # disabled, details: https://github.com/opencv/opencv/issues/14850
+        "nvcuvenc",  # disabled, depends on nvcuvid being enabled
         "opencl_svm",
         "openclamdblas",
         "openclamdfft",
