@@ -1149,7 +1149,7 @@ def start_build_process(pkg, function, kwargs):
     For more information on `multiprocessing` child process creation
     mechanisms, see https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
     """
-    parent_pipe, child_pipe = multiprocessing.Pipe()
+    parent_pipe, child_pipe = multiprocessing.Pipe(duplex=False)
     input_multiprocess_fd = None
     jobserver_fd1 = None
     jobserver_fd2 = None
@@ -1183,6 +1183,12 @@ def start_build_process(pkg, function, kwargs):
 
         p.start()
 
+        # We close the writable end of the pipe now to be sure that p is the
+        # only process which owns a handle for it. This ensures that when p
+        # closes its handle for the writable end, parent_pipe.recv() will
+        # promptly report the readable end as being ready.
+        child_pipe.close()
+
     except InstallError as e:
         e.pkg = pkg
         raise
@@ -1192,7 +1198,16 @@ def start_build_process(pkg, function, kwargs):
         if input_multiprocess_fd is not None:
             input_multiprocess_fd.close()
 
-    child_result = parent_pipe.recv()
+    def exitcode_msg(p):
+        typ = "exit" if p.exitcode >= 0 else "signal"
+        return f"{typ} {abs(p.exitcode)}"
+
+    try:
+        child_result = parent_pipe.recv()
+    except EOFError:
+        p.join()
+        raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(p)})")
+
     p.join()
 
     # If returns a StopPhase, raise it
@@ -1211,6 +1226,10 @@ def start_build_process(pkg, function, kwargs):
         # see spack.main.SpackCommand.
         child_result.print_context()
         raise child_result
+
+    # Fallback. Usually caught beforehand in EOFError above.
+    if p.exitcode != 0:
+        raise InstallError(f"The process failed unexpectedly ({exitcode_msg(p)})")
 
     return child_result
 
