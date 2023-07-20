@@ -66,8 +66,7 @@ def develop(parser, args):
             # Both old syntax `spack develop pkg@x` and new syntax `spack develop pkg@=x`
             # are currently supported.
             spec = spack.spec.parse_with_version_concrete(entry["spec"])
-            pkg_cls = spack.repo.path.get_pkg_class(spec.name)
-            pkg_cls(spec).stage.steal_source(abspath)
+            env.develop(spec=spec, path=path, clone=True)
 
         if not env.dev_specs:
             tty.warn("No develop specs to download")

@@ -252,7 +252,7 @@ class Curl(NMakePackage, AutotoolsPackage):
         ),
         multi=True,
     )
-    variant("nghttp2", default=False, description="build nghttp2 library (requires C++11)")
+    variant("nghttp2", default=True, description="build nghttp2 library (requires C++11)")
     variant("libssh2", default=False, description="enable libssh2 support")
     variant("libssh", default=False, description="enable libssh support", when="@7.58:")
     variant("gssapi", default=False, description="enable Kerberos support")

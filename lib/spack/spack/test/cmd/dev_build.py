@@ -72,7 +72,7 @@ def test_dev_build_until(tmpdir, mock_packages, install_mockery):
             assert f.read() == spec.package.replacement_string
 
     assert not os.path.exists(spec.prefix)
-    assert not spack.store.db.query(spec, installed=True)
+    assert not spack.store.STORE.db.query(spec, installed=True)
 
 
 def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
@@ -91,7 +91,7 @@ def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
             assert f.read() == spec.package.replacement_string
 
     assert os.path.exists(spec.prefix)
-    assert spack.store.db.query(spec, installed=True)
+    assert spack.store.STORE.db.query(spec, installed=True)
     assert os.path.exists(str(tmpdir))
 
 

@@ -14,6 +14,8 @@ class PyTypesPytz(PythonPackage):
     homepage = "https://github.com/python/typeshed"
     pypi = "types-pytz/types-pytz-2023.3.0.0.tar.gz"
 
-    version("2023.3.0.0", sha256="ecdc70d543aaf3616a7e48631543a884f74205f284cefd6649ddf44c6a820aac")
+    version(
+        "2023.3.0.0", sha256="ecdc70d543aaf3616a7e48631543a884f74205f284cefd6649ddf44c6a820aac"
+    )
 
     depends_on("py-setuptools", type="build")
