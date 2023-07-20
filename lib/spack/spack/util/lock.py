@@ -47,7 +47,7 @@ class Lock(llnl.util.lock.Lock):
         elif sys.platform != "win32" and enable_lock is None:
             enable_lock = True
         self._enable = enable_lock
-        super(Lock, self).__init__(
+        super().__init__(
             path,
             start=start,
             length=length,
@@ -59,8 +59,7 @@ class Lock(llnl.util.lock.Lock):
     def _lock(self, op: int, timeout: Optional[float] = 0.0) -> Tuple[float, int]:
         if self._enable:
             return super()._lock(op, timeout)
-        else:
-            return 0.0, 0
+        return 0.0, 0
 
     def _unlock(self) -> None:
         """Unlock call that always succeeds."""
@@ -96,9 +95,9 @@ def check_lock_safety(path: str) -> None:
             writable = "world"
 
         if writable:
-            msg = "Refusing to disable locks: spack is {0}-writable.".format(writable)
+            msg = f"Refusing to disable locks: spack is {writable}-writable."
             long_msg = (
-                "Running a shared spack without locks is unsafe. You must "
-                "restrict permissions on {0} or enable locks."
-            ).format(path)
+                f"Running a shared spack without locks is unsafe. You must "
+                f"restrict permissions on {path} or enable locks."
+            )
             raise spack.error.SpackError(msg, long_msg)
