@@ -100,8 +100,10 @@ class Legion(CMakePackage, ROCmPackage):
 
     depends_on("kokkos@3.3.01:+rocm", when="+kokkos+rocm")
 
-    depends_on("python@3", when="+python")
+    # https://github.com/StanfordLegion/legion/#dependencies
+    depends_on("python@3.8:", when="+python")
     depends_on("py-cffi", when="+python")
+    depends_on("py-numpy", when="+python")
     depends_on("papi", when="+papi")
     depends_on("zlib", when="+zlib")
 
@@ -111,8 +113,6 @@ class Legion(CMakePackage, ROCmPackage):
     # here.
     cpp_stds = ["11", "14", "17", "20"]
     variant("cxxstd", default="11", values=cpp_stds, multi=False)
-
-    # TODO: Need a AMD/HIP variant to match support landing in 21.03.0.
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
