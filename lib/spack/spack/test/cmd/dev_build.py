@@ -465,12 +465,13 @@ spack:
             install()
 
             reset_string()  # so the package will accept rebuilds
-
-            # We are using real time, here, so make sure it advances
-            time.sleep(0.1)
             fs.touch(os.path.join(str(build_dir), "test"))
             # Here we reinstall only the dependency
             install("dev-build-test-install")
+            # At this point we have a newer install of the dependency, but
+            # time tracking may be too coarse-grained to actually recognize
+            # that, so explicitly advance time a "significant" amount
+            spack.store.STORE.db._update_install_time("dev-build-test-install", delta=1)
 
             # At this point, the dependent should be reinstalled too, because
             # there is a more-recent version of the dependency

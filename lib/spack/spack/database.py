@@ -1238,6 +1238,19 @@ class Database:
         with self.write_transaction():
             self._add(spec, directory_layout, explicit=explicit)
 
+    @_autospec
+    def _update_install_time(self, spec, absolute_time=None, delta=None):
+        """For testing: change the install time."""
+        with self.write_transaction():
+            match = self.query_one(spec)
+            _, record = self.query_by_spec_hash(match.dag_hash())
+            if absolute_time:
+                record.installation_time = absolute_time
+            elif delta:
+                record.installation_time += delta
+            else:
+                raise ValueError("Must set absolute time or time delta")
+
     def _get_matching_spec_key(self, spec, **kwargs):
         """Get the exact spec OR get a single spec that matches."""
         key = spec.dag_hash()
