@@ -41,15 +41,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("14.2.0", sha256="c96606e5cd7fc9d25b9dc20719cd388658520d7cbbd2b4de77a118440d1e0ccb")
     version("14.0.0", sha256="054d2fabdf70fce0dfaeb20eed265bd7894045d3e00c3d1ddb72d1c77c339ca1")
     version("13.4.1", sha256="5465cbff3de7ef4ac7d40eeff9d99342c00d9d20eee0a5f64f0a523093f5f1b3")
     version("13.4.0", sha256="39550006e059043b7e2177f10467ae2f77fe639901aee91cbc1e359516ff8d3e")
     version("13.2.0", sha256="0ddb47784ba7b8a6b9a07a4822b33be508feb4ccd54301b2a5d10c9e54524b90")
-    version(
-        "13.0.1",
-        sha256="0bce7066c27e83085bc189bf524e535e5225636c9ee4b16291a38849d6c2216d",
-        preferred=True,
-    )
+    version("13.0.1", sha256="0bce7066c27e83085bc189bf524e535e5225636c9ee4b16291a38849d6c2216d")
     version("13.0.0", sha256="d44e8181b3ef5eae4e90aad40a33486f0b2ae6ba1c34b419ce8cbc70fd5dd6bd")
     version(
         "12.18.1", commit="55a75997332636a28afc9db1aee4ae46fe8d93e7"
@@ -376,6 +373,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     #
     depends_on("cgns", when="+exodus")
+    depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
     depends_on("hypre~internal-superlu~int64", when="+hypre")
     depends_on("kokkos-nvcc-wrapper", when="+wrapper")
@@ -655,9 +653,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_from_variant("Amesos2_ENABLE_MUMPS", "mumps"),
             ]
         )
-
-        if spec.satisfies("@develop +stokhos"):
-            options.append(self.define("Stokhos_ENABLE_PCE_Scalar_Type", False))
 
         if "+dtk" in spec:
             options.extend(

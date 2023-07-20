@@ -76,6 +76,53 @@ To build with with ``icx``, do ::
 
   spack install patchelf%oneapi
 
+
+Using oneAPI Spack environment
+-------------------------------
+
+In this example, we build lammps with ``icx`` using Spack environment for oneAPI packages created by Intel. The
+compilers are installed with Spack like in example above.
+
+Install the oneAPI compilers::
+
+  spack install intel-oneapi-compilers
+
+Add the compilers to your ``compilers.yaml`` so Spack can use them::
+
+  spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/linux/bin/intel64
+  spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/linux/bin
+
+Verify that the compilers are available::
+
+  spack compiler list
+
+Clone `spack-configs <https://github.com/spack/spack-configs>`_ repo and activate Intel oneAPI CPU environment::
+
+  git clone https://github.com/spack/spack-configs
+  spack env activate spack-configs/INTEL/CPU
+  spack concretize -f
+
+`Intel oneAPI CPU environment <https://github.com/spack/spack-configs/blob/main/INTEL/CPU/spack.yaml>`_  contains applications tested and validated by Intel, this list is constantly extended. And currently it supports:
+
+- `GROMACS <https://www.gromacs.org/>`_
+- `HPCG <https://www.hpcg-benchmark.org/>`_
+- `HPL <https://netlib.org/benchmark/hpl/>`_
+- `LAMMPS <https://www.lammps.org/#gsc.tab=0>`_
+- `OpenFOAM <https://www.openfoam.com/>`_
+- `STREAM <https://www.cs.virginia.edu/stream/>`_
+- `WRF <https://github.com/wrf-model/WRF>`_
+
+To build lammps with oneAPI compiler from this environment just run::
+
+  spack install lammps
+
+Compiled binaries can be find using::
+
+  spack cd -i lammps
+
+You can do the same for all other applications from this environment.
+
+
 Using oneAPI MPI to Satisfy a Virtual Dependence
 ------------------------------------------------------
 

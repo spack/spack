@@ -9,6 +9,17 @@ from spack.package import *
 
 versions = [
     {
+        "version": "2023.2.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/748687b0-5a22-467c-86c6-c312fa0206b2/l_dpcpp-cpp-compiler_p_2023.2.0.49256_offline.sh",
+            "sha256": "21497b2dd2bc874794c2321561af313082725f61e3101e05a050f98b7351e08f",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/237236c4-434b-4576-96ac-020ceeb22619/l_fortran-compiler_p_2023.2.0.49254_offline.sh",
+            "sha256": "37c0ad6f0013512d98e385f8708ca29b23c45fddc9ec76069f1d93663668d511",
+        },
+    },
+    {
         "version": "2023.1.0",
         "cpp": {
             "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/89283df8-c667-47b0-b7e1-c4573e37bd3e/l_dpcpp-cpp-compiler_p_2023.1.0.46347_offline.sh",
@@ -183,7 +194,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
         and from setting CC/CXX/F77/FC
         """
-        super(IntelOneapiCompilers, self).setup_run_environment(env)
+        super().setup_run_environment(env)
 
         env.set("CC", self.component_prefix.linux.bin.icx)
         env.set("CXX", self.component_prefix.linux.bin.icpx)
@@ -195,7 +206,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # install_tree("/opt/intel/oneapi/compiler", self.prefix)
 
         # install cpp
-        super(IntelOneapiCompilers, self).install(spec, prefix)
+        super().install(spec, prefix)
 
         # install fortran
         self.install_component(find("fortran-installer", "*")[0])

@@ -20,13 +20,15 @@ spack:
       variants: +mps~cuda~rocm
     mpi:
       require: openmpi
+    openblas:
+      require: ~fortran
 
   specs:
   # Hugging Face
   - py-transformers
 
   # JAX
-  - py-jax
+  # - py-jax        # bazel codesign
   # - py-jaxlib     # bazel codesign
 
   # Keras
