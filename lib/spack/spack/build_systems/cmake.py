@@ -248,7 +248,8 @@ class CMakeBuilder(BaseBuilder):
     @staticmethod
     def std_args(pkg, generator=None):
         """Computes the standard cmake arguments for a generic package"""
-        generator = generator or "Unix Makefiles"
+        default_generator = "Ninja" if sys.platform == "win32" else "Unix Makefiles"
+        generator = generator or default_generator
         valid_primary_generators = ["Unix Makefiles", "Ninja"]
         primary_generator = _extract_primary_generator(generator)
         if primary_generator not in valid_primary_generators:

@@ -24,7 +24,6 @@ from spack.util.executable import which
 DATA_PATH = os.path.join(spack.paths.test_path, "data")
 
 
-
 @pytest.fixture()
 def concretize_and_setup(default_mock_concretization):
     def _func(spec_str):
@@ -42,6 +41,7 @@ def test_dir(tmpdir):
         return str(tmpdir)
 
     return _func
+
 
 @pytest.mark.skipif(sys.platform == "win32", reason="autotools not available on Windows")
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
