@@ -37,6 +37,7 @@ class Pmix(AutotoolsPackage):
 
     # Branches 4.2 & 5.0 will also need submodules
     version("master", branch="master", submodules=True)
+    version("4.2.4", sha256="c4699543f2278d3a78bdac72b4b2da9cd92d11d18478d66522b8991764b021c8")
     version("4.2.3", sha256="c3d9d6885ae39c15627a86dc4718e050baf604acda71b8b9e2ee3b12ad5c2d2a")
     version("4.2.2", sha256="935b2f492e4bc409017f1425a83366aa72a7039605ea187c9fac7bb1371cd73c")
     version("4.2.1", sha256="3c992fa0d653b56e0e409bbaec9de8fc1b82c948364dbb28545442315ed2a179")
@@ -118,7 +119,7 @@ class Pmix(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        config_args = ["--enable-shared", "--enable-static", "--disable-sphinx"]
+        config_args = ["--enable-shared", "--enable-static", "--disable-sphinx", "--without-munge"]
 
         config_args.append("--with-libevent=" + spec["libevent"].prefix)
         config_args.append("--with-hwloc=" + spec["hwloc"].prefix)
