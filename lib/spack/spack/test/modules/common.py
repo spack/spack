@@ -8,6 +8,8 @@ import sys
 
 import pytest
 
+import spack.cmd.modules
+import spack.config
 import spack.error
 import spack.modules.tcl
 import spack.package_base
@@ -80,7 +82,7 @@ def test_modules_default_symlink(
     assert not os.path.lexists(link_path)
 
 
-class MockDb(object):
+class MockDb:
     def __init__(self, db_ids, spec_hash_to_db):
         self.upstream_dbs = db_ids
         self.spec_hash_to_db = spec_hash_to_db
@@ -89,7 +91,7 @@ class MockDb(object):
         return self.spec_hash_to_db.get(spec_hash)
 
 
-class MockSpec(object):
+class MockSpec:
     def __init__(self, unique_id):
         self.unique_id = unique_id
 
@@ -187,3 +189,31 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
     assert module_path
 
     spack.package_base.PackageBase.uninstall_by_spec(spec)
+
+
+@pytest.mark.regression("37649")
+def test_check_module_set_name(mutable_config):
+    """Tests that modules set name are validated correctly and an error is reported if the
+    name we require does not exist or is reserved by the configuration."""
+
+    # Minimal modules.yaml config.
+    spack.config.set(
+        "modules",
+        {
+            "prefix_inspections": {"./bin": ["PATH"]},
+            # module sets
+            "first": {},
+            "second": {},
+        },
+    )
+
+    # Valid module set name
+    spack.cmd.modules.check_module_set_name("first")
+
+    # Invalid module set names
+    msg = "Valid module set names are"
+    with pytest.raises(spack.config.ConfigError, match=msg):
+        spack.cmd.modules.check_module_set_name("prefix_inspections")
+
+    with pytest.raises(spack.config.ConfigError, match=msg):
+        spack.cmd.modules.check_module_set_name("third")

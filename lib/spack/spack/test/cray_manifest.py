@@ -71,7 +71,7 @@ example_compiler_entry = """\
 """
 
 
-class JsonSpecEntry(object):
+class JsonSpecEntry:
     def __init__(self, name, hash, prefix, version, arch, compiler, dependencies, parameters):
         self.name = name
         self.hash = hash
@@ -98,7 +98,7 @@ class JsonSpecEntry(object):
         return (self.name, {"hash": self.hash, "type": list(deptypes)})
 
 
-class JsonArchEntry(object):
+class JsonArchEntry:
     def __init__(self, platform, os, target):
         self.platform = platform
         self.os = os
@@ -108,7 +108,7 @@ class JsonArchEntry(object):
         return {"platform": self.platform, "platform_os": self.os, "target": {"name": self.target}}
 
 
-class JsonCompilerEntry(object):
+class JsonCompilerEntry:
     def __init__(self, name, version, arch=None, executables=None):
         self.name = name
         self.version = version
@@ -338,7 +338,7 @@ def test_read_cray_manifest(tmpdir, mutable_config, mock_packages, mutable_datab
         with open(test_db_fname, "w") as db_file:
             json.dump(create_manifest_content(), db_file)
         cray_manifest.read(test_db_fname, True)
-        query_specs = spack.store.db.query("openmpi")
+        query_specs = spack.store.STORE.db.query("openmpi")
         assert any(x.dag_hash() == "openmpifakehasha" for x in query_specs)
 
         concretized_specs = spack.cmd.parse_specs(

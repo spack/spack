@@ -12,6 +12,7 @@ class PyFypp(PythonPackage):
     homepage = "https://github.com/aradi/fypp"
     url = "https://github.com/aradi/fypp/archive/2.1.1.zip"
 
+    version("3.1", sha256="bac9d02be308b6bff7fd17da835f01fb9ce9b2dddaaad1ccd22ac7628b2dc53c")
     version("2.1.1", sha256="3744ad17045e91466bbb75a33ce0cab0f65bc2c377127067a932cdf15655e049")
 
     depends_on("py-setuptools", type="build")

@@ -123,6 +123,10 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
                     "HIP_HIPCC_FLAGS", "--amdgpu-target=" + ",".join(rocm_archs) + " -I/" + mpiinc
                 )
 
+        # Workaround for linking issue on Mac:
+        if spec.satisfies("%apple-clang"):
+            append_define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc)
+
         append_from_variant("BUILD_SHARED_LIBS", "shared")
         return cmake_args
 
@@ -156,27 +160,3 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         """Copy the example matrices after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
-
-    def test(self):
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
-        superludriver = join_path(self.prefix.lib, "EXAMPLE", "pddrive")
-        with working_dir(test_dir, create=False):
-            # Smoke test input parameters: -r 2 -c 2 g20.rua
-            test_args = ["-n", "4", superludriver, "-r", "2", "-c", "2", "g20.rua"]
-            # Find the correct mpirun command
-            mpiexe_f = which("srun", "mpirun", "mpiexec")
-            if mpiexe_f:
-                if self.spec.satisfies("@7.2.0:"):
-                    self.run_test(
-                        mpiexe_f.command,
-                        test_args,
-                        work_dir=".",
-                        purpose="superlu-dist smoke test",
-                    )
-                else:
-                    self.run_test(
-                        "echo",
-                        options=["skip test"],
-                        work_dir=".",
-                        purpose="superlu-dist smoke test",
-                    )

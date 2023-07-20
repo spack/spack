@@ -177,6 +177,14 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     # both include a fix.
     conflicts("boost@:1.77.0", when="@:1.7 +rocm")
 
+    # libstdc++ has a broken valarray in some versions that clang/hipcc refuses
+    # to compile:
+    # https://github.com/spack/spack/issues/38104
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=103022
+    conflicts("%gcc@9.1:9.4", when="+rocm")
+    conflicts("%gcc@10.1:10.3", when="+rocm")
+    conflicts("%gcc@11.2", when="+rocm")
+
     # boost 1.73.0 build problem with HPX 1.4.0 and 1.4.1
     # https://github.com/STEllAR-GROUP/hpx/issues/4728#issuecomment-640685308
     depends_on("boost@:1.72.0", when="@:1.4")
@@ -187,8 +195,13 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/spack/spack/pull/17654
     # https://github.com/STEllAR-GROUP/hpx/issues/4829
     depends_on("boost+context", when="+generic_coroutines")
-    _msg_generic_coroutines = "This platform requires +generic_coroutines"
-    conflicts("~generic_coroutines", when="platform=darwin", msg=_msg_generic_coroutines)
+
+    _msg_generic_coroutines_platform = "This platform requires +generic_coroutines"
+    conflicts("~generic_coroutines", when="platform=darwin", msg=_msg_generic_coroutines_platform)
+
+    _msg_generic_coroutines_target = "This target requires +generic_coroutines"
+    conflicts("~generic_coroutines", when="target=aarch64:", msg=_msg_generic_coroutines_target)
+    conflicts("~generic_coroutines", when="target=arm:", msg=_msg_generic_coroutines_target)
 
     # Patches APEX
     patch("git_external.patch", when="@1.3.0 instrumentation=apex")

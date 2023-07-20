@@ -277,11 +277,13 @@ class Root(CMakePackage):
     depends_on("sqlite", when="+sqlite")
     depends_on("tbb", when="+tbb")
     # See: https://github.com/root-project/root/issues/6933
-    conflicts("^intel-tbb@2021.1:", when="@:6.22", msg="Please use an older intel-tbb version")
+    conflicts(
+        "^intel-tbb@2021.1:", when="@:6.22", msg="Please use an older intel-tbb version for ROOT"
+    )
     conflicts(
         "^intel-oneapi-tbb@2021.1:",
         when="@:6.22",
-        msg="Please use an older intel-tbb/intel-oneapi-tbb version",
+        msg="Please use an older intel-tbb/intel-oneapi-tbb version for ROOT",
     )
     # depends_on('intel-tbb@:2021.0', when='@:6.22 ^intel-tbb')
     depends_on("unuran", when="+unuran")
@@ -311,20 +313,22 @@ class Root(CMakePackage):
 
     # Incompatible variants
     if sys.platform != "darwin":
-        conflicts("+opengl", when="~x", msg="OpenGL requires X")
-    conflicts("+math", when="~gsl", msg="Math requires GSL")
-    conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
-    conflicts("+tmva", when="~mlp", msg="TVMA requires MLP")
+        conflicts("+opengl", when="~x", msg="root+opengl requires X")
+    conflicts("+math", when="~gsl", msg="root+math requires GSL")
+    conflicts("+tmva", when="~gsl", msg="root+tmva requires GSL")
+    conflicts("+tmva", when="~mlp", msg="root+tmva requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
     conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root requires at least C++14")
-    conflicts("cxxstd=20", when="@:6.28.02", msg="C++20 support requires at least version 6.28.04")
+    conflicts(
+        "cxxstd=20", when="@:6.28.02", msg="C++20 support requires root version at least 6.28.04"
+    )
 
     # See https://github.com/root-project/root/issues/11128
-    conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in 6.26.08")
+    conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in root 6.26.08")
 
     # See https://github.com/root-project/root/issues/11714
     if sys.platform == "darwin" and macos_version() >= Version("13"):
-        conflicts("@:6.26.09", msg="macOS 13 support was added in 6.26.10")
+        conflicts("@:6.26.09", msg="macOS 13 support was added in root 6.26.10")
 
     # ROOT <6.14 is incompatible with Python >=3.7, which is the minimum supported by spack
     conflicts("+python", when="@:6.13", msg="Spack wants python >=3.7, too new for ROOT <6.14")
@@ -408,8 +412,11 @@ class Root(CMakePackage):
         _add_variant(v, f, ("qt", "qtgsi"), "+qt4")
         _add_variant(v, f, "r", "+r")
         _add_variant(v, f, "roofit", "+roofit")
-        _add_variant(v, f, ("root7", "webgui"), "+webgui")  # for root version >= 6.18.00
-        _add_variant(v, f, ("root7", "webui"), "+webgui")  # for root version <= 6.17.02
+        # webui feature renamed to webgui in 6.18
+        if Version(version_str).satisfies("@6.18:"):
+            _add_variant(v, f, ("root7", "webgui"), "+webgui")
+        else:
+            _add_variant(v, f, ("root7", "webui"), "+webgui")
         _add_variant(v, f, "rpath", "+rpath")
         _add_variant(v, f, "shadowpw", "+shadow")
         _add_variant(v, f, "spectrum", "+spectrum")

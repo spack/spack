@@ -8,8 +8,6 @@
 In a normal Spack installation, this is invoked from the bin/spack script
 after the system path is set up.
 """
-from __future__ import print_function
-
 import argparse
 import inspect
 import io
@@ -197,7 +195,7 @@ def index_commands():
 class SpackHelpFormatter(argparse.RawTextHelpFormatter):
     def _format_actions_usage(self, actions, groups):
         """Formatter with more concise usage strings."""
-        usage = super(SpackHelpFormatter, self)._format_actions_usage(actions, groups)
+        usage = super()._format_actions_usage(actions, groups)
 
         # Eliminate any occurrence of two or more consecutive spaces
         usage = re.sub(r"[ ]{2,}", " ", usage)
@@ -212,7 +210,7 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
 
     def add_arguments(self, actions):
         actions = sorted(actions, key=operator.attrgetter("option_strings"))
-        super(SpackHelpFormatter, self).add_arguments(actions)
+        super().add_arguments(actions)
 
 
 class SpackArgumentParser(argparse.ArgumentParser):
@@ -332,7 +330,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         if sys.version_info[:2] > (3, 6):
             kwargs.setdefault("required", True)
 
-        sp = super(SpackArgumentParser, self).add_subparsers(**kwargs)
+        sp = super().add_subparsers(**kwargs)
         # This monkey patching is needed for Python 3.6, which supports
         # having a required subparser but don't expose the API used above
         if sys.version_info[:2] == (3, 6):
@@ -382,7 +380,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
             return self.format_help_sections(level)
         else:
             # in subparsers, self.prog is, e.g., 'spack install'
-            return super(SpackArgumentParser, self).format_help()
+            return super().format_help()
 
     def _check_value(self, action, value):
         # converted value must be one of the choices (if specified)
@@ -438,7 +436,7 @@ def make_argument_parser(**kwargs):
         default=None,
         action="append",
         dest="config_vars",
-        help="add one or more custom, one off config settings.",
+        help="add one or more custom, one off config settings",
     )
     parser.add_argument(
         "-C",
@@ -453,9 +451,9 @@ def make_argument_parser(**kwargs):
         "--debug",
         action="count",
         default=0,
-        help="write out debug messages " "(more d's for more verbosity: -d, -dd, -ddd, etc.)",
+        help="write out debug messages\n\n(more d's for more verbosity: -d, -dd, -ddd, etc.)",
     )
-    parser.add_argument("--timestamp", action="store_true", help="Add a timestamp to tty output")
+    parser.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
     parser.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
 
     env_group = parser.add_mutually_exclusive_group()
@@ -529,8 +527,7 @@ def make_argument_parser(**kwargs):
         "--sorted-profile",
         default=None,
         metavar="STAT",
-        help="profile and sort by one or more of:\n[%s]"
-        % ",\n ".join([", ".join(line) for line in stat_lines]),
+        help=f"profile and sort\n\none or more of: {stat_lines[0]}",
     )
     parser.add_argument(
         "--lines",
@@ -557,7 +554,7 @@ def make_argument_parser(**kwargs):
         "-V", "--version", action="store_true", help="show version number and exit"
     )
     parser.add_argument(
-        "--print-shell-vars", action="store", help="print info needed by setup-env.[c]sh"
+        "--print-shell-vars", action="store", help="print info needed by setup-env.*sh"
     )
 
     return parser
@@ -653,7 +650,7 @@ def _invoke_command(command, parser, args, unknown_args):
     return 0 if return_val is None else return_val
 
 
-class SpackCommand(object):
+class SpackCommand:
     """Callable object that invokes a spack command (for testing).
 
     Example usage::
@@ -850,11 +847,28 @@ def print_setup_info(*info):
     if "modules" in info:
         generic_arch = archspec.cpu.host().family
         module_spec = "environment-modules target={0}".format(generic_arch)
-        specs = spack.store.db.query(module_spec)
+        specs = spack.store.STORE.db.query(module_spec)
         if specs:
             shell_set("_sp_module_prefix", specs[-1].prefix)
         else:
             shell_set("_sp_module_prefix", "not_installed")
+
+
+def restore_macos_dyld_vars():
+    """
+    Spack mutates DYLD_* variables in `spack load` and `spack env activate`.
+    Unlike Linux, macOS SIP clears these variables in new processes, meaning
+    that os.environ["DYLD_*"] in our Python process is not the same as the user's
+    shell. Therefore, we store the user's DYLD_* variables in SPACK_DYLD_* and
+    restore them here.
+    """
+    if not sys.platform == "darwin":
+        return
+
+    for dyld_var in ("DYLD_LIBRARY_PATH", "DYLD_FALLBACK_LIBRARY_PATH"):
+        stored_var_name = f"SPACK_{dyld_var}"
+        if stored_var_name in os.environ:
+            os.environ[dyld_var] = os.environ[stored_var_name]
 
 
 def _main(argv=None):
@@ -889,18 +903,6 @@ def _main(argv=None):
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args, unknown = parser.parse_known_args(argv)
 
-    # Recover stored LD_LIBRARY_PATH variables from spack shell function
-    # This is necessary because MacOS System Integrity Protection clears
-    # (DY?)LD_LIBRARY_PATH variables on process start.
-    # Spack clears these variables before building and installing packages,
-    # but needs to know the prior state for commands like `spack load` and
-    # `spack env activate that modify the user environment.
-    recovered_vars = ("LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "DYLD_FALLBACK_LIBRARY_PATH")
-    for var in recovered_vars:
-        stored_var_name = "SPACK_%s" % var
-        if stored_var_name in os.environ:
-            os.environ[var] = os.environ[stored_var_name]
-
     # Just print help and exit if run with no arguments at all
     no_args = (len(sys.argv) == 1) if argv is None else (len(argv) == 0)
     if no_args:
@@ -922,6 +924,9 @@ def _main(argv=None):
     # We set command line options (like --debug), then command line config
     # scopes, then environment configuration here.
     # ------------------------------------------------------------------------
+
+    # Make spack load / env activate work on macOS
+    restore_macos_dyld_vars()
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:

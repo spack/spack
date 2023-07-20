@@ -148,7 +148,7 @@ class MakeExecutable(Executable):
 
     def __init__(self, name, jobs, **kwargs):
         supports_jobserver = kwargs.pop("supports_jobserver", True)
-        super(MakeExecutable, self).__init__(name, **kwargs)
+        super().__init__(name, **kwargs)
         self.supports_jobserver = supports_jobserver
         self.jobs = jobs
 
@@ -175,7 +175,7 @@ class MakeExecutable(Executable):
             if jobs_env_jobs is not None:
                 kwargs["extra_env"] = {jobs_env: str(jobs_env_jobs)}
 
-        return super(MakeExecutable, self).__call__(*args, **kwargs)
+        return super().__call__(*args, **kwargs)
 
 
 def _on_cray():
@@ -589,7 +589,6 @@ def set_module_variables_for_package(pkg):
 
     # TODO: make these build deps that can be installed if not found.
     m.make = MakeExecutable("make", jobs)
-    m.gmake = MakeExecutable("gmake", jobs)
     m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
     # TODO: johnwparent: add package or builder support to define these build tools
     # for now there is no entrypoint for builders to define these on their
@@ -1216,6 +1215,9 @@ def start_build_process(pkg, function, kwargs):
     return child_result
 
 
+CONTEXT_BASES = (spack.package_base.PackageBase, spack.build_systems._checks.BaseBuilder)
+
+
 def get_package_context(traceback, context=3):
     """Return some context for an error message when the build fails.
 
@@ -1244,32 +1246,38 @@ def get_package_context(traceback, context=3):
 
     stack = make_stack(traceback)
 
+    basenames = tuple(base.__name__ for base in CONTEXT_BASES)
     for tb in stack:
         frame = tb.tb_frame
         if "self" in frame.f_locals:
-            # Find the first proper subclass of PackageBase.
+            # Find the first proper subclass of the PackageBase or BaseBuilder, but
+            # don't provide context if the code is actually in the base classes.
             obj = frame.f_locals["self"]
-            if isinstance(obj, spack.package_base.PackageBase):
+            func = getattr(obj, tb.tb_frame.f_code.co_name, "")
+            if func:
+                typename, *_ = func.__qualname__.partition(".")
+
+            if isinstance(obj, CONTEXT_BASES) and typename not in basenames:
                 break
     else:
         return None
 
     # We found obj, the Package implementation we care about.
     # Point out the location in the install method where we failed.
-    lines = [
-        "{0}:{1:d}, in {2}:".format(
-            inspect.getfile(frame.f_code),
-            frame.f_lineno - 1,  # subtract 1 because f_lineno is 0-indexed
-            frame.f_code.co_name,
-        )
-    ]
+    filename = inspect.getfile(frame.f_code)
+    lineno = frame.f_lineno
+    if os.path.basename(filename) == "package.py":
+        # subtract 1 because we inject a magic import at the top of package files.
+        # TODO: get rid of the magic import.
+        lineno -= 1
+
+    lines = ["{0}:{1:d}, in {2}:".format(filename, lineno, frame.f_code.co_name)]
 
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
 
     # Calculate lineno of the error relative to the start of the function.
-    # Subtract 1 because f_lineno is 0-indexed.
-    fun_lineno = frame.f_lineno - start - 1
+    fun_lineno = lineno - start
     start_ctx = max(0, fun_lineno - context)
     sourcelines = sourcelines[start_ctx : fun_lineno + context + 1]
 
@@ -1324,7 +1332,7 @@ class ChildError(InstallError):
     build_errors = [("spack.util.executable", "ProcessError")]
 
     def __init__(self, msg, module, classname, traceback_string, log_name, log_type, context):
-        super(ChildError, self).__init__(msg)
+        super().__init__(msg)
         self.module = module
         self.name = classname
         self.traceback = traceback_string
@@ -1365,7 +1373,7 @@ class ChildError(InstallError):
             test_log = join_path(os.path.dirname(self.log_name), spack_install_test_log)
             if os.path.isfile(test_log):
                 out.write("\nSee test log for details:\n")
-                out.write("  {0}n".format(test_log))
+                out.write("  {0}\n".format(test_log))
 
         return out.getvalue()
 

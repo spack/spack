@@ -150,7 +150,8 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     variant("vdwxc", default=False, description="Enable libvdwxc support")
     variant("scalapack", default=False, description="Enable scalapack support")
     variant("magma", default=False, description="Enable MAGMA support")
-    variant("nlcglib", default=False, description="enable robust wave function optimization")
+    variant("nlcglib", default=False, description="Enable robust wave function optimization")
+    variant("wannier90", default=False, description="Enable Wannier90 library")
     variant(
         "build_type",
         default="Release",
@@ -203,12 +204,15 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("spla+openmp", when="+openmp ^spla")
 
     depends_on("nlcglib", when="+nlcglib")
+    depends_on("nlcglib+rocm", when="+nlcglib+rocm")
+    depends_on("nlcglib+cuda", when="+nlcglib+cuda")
 
     depends_on("libvdwxc@0.3.0:+mpi", when="+vdwxc")
 
     depends_on("scalapack", when="+scalapack")
 
     depends_on("rocblas", when="+rocm")
+    depends_on("rocsolver", when="@7.5.0: +rocm")
 
     # FindHIP cmake script only works for < 4.1
     depends_on("hip@:4.0", when="@:7.2.0 +rocm")
@@ -224,6 +228,9 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("amdblis threads=openmp", when="+openmp ^amdblis")
     depends_on("blis threads=openmp", when="+openmp ^blis")
     depends_on("intel-mkl threads=openmp", when="+openmp ^intel-mkl")
+
+    depends_on("wannier90", when="@7.5.0: +wannier90")
+    depends_on("wannier90+shared", when="@7.5.0: +wannier90+shared")
 
     depends_on("elpa+openmp", when="+elpa+openmp")
     depends_on("elpa~openmp", when="+elpa~openmp")
@@ -266,23 +273,28 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
 
+        cm_label = ""
+        if "@7.5:" in spec:
+            cm_label = "SIRIUS_"
+
         args = [
-            self.define_from_variant("USE_OPENMP", "openmp"),
-            self.define_from_variant("USE_ELPA", "elpa"),
-            self.define_from_variant("USE_MAGMA", "magma"),
-            self.define_from_variant("USE_NLCGLIB", "nlcglib"),
-            self.define_from_variant("USE_VDWXC", "vdwxc"),
-            self.define_from_variant("USE_MEMORY_POOL", "memory_pool"),
-            self.define_from_variant("USE_SCALAPACK", "scalapack"),
-            self.define_from_variant("CREATE_FORTRAN_BINDINGS", "fortran"),
-            self.define_from_variant("CREATE_PYTHON_MODULE", "python"),
-            self.define_from_variant("USE_CUDA", "cuda"),
-            self.define_from_variant("USE_ROCM", "rocm"),
-            self.define_from_variant("BUILD_TESTING", "tests"),
-            self.define_from_variant("BUILD_APPS", "apps"),
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("USE_FP32", "single_precision"),
-            self.define_from_variant("USE_PROFILER", "profiler"),
+            self.define_from_variant(cm_label + "USE_OPENMP", "openmp"),
+            self.define_from_variant(cm_label + "USE_ELPA", "elpa"),
+            self.define_from_variant(cm_label + "USE_MAGMA", "magma"),
+            self.define_from_variant(cm_label + "USE_NLCGLIB", "nlcglib"),
+            self.define_from_variant(cm_label + "USE_VDWXC", "vdwxc"),
+            self.define_from_variant(cm_label + "USE_MEMORY_POOL", "memory_pool"),
+            self.define_from_variant(cm_label + "USE_SCALAPACK", "scalapack"),
+            self.define_from_variant(cm_label + "CREATE_FORTRAN_BINDINGS", "fortran"),
+            self.define_from_variant(cm_label + "CREATE_PYTHON_MODULE", "python"),
+            self.define_from_variant(cm_label + "USE_CUDA", "cuda"),
+            self.define_from_variant(cm_label + "USE_ROCM", "rocm"),
+            self.define_from_variant(cm_label + "BUILD_TESTING", "tests"),
+            self.define_from_variant(cm_label + "BUILD_APPS", "apps"),
+            self.define_from_variant(cm_label + "BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant(cm_label + "USE_FP32", "single_precision"),
+            self.define_from_variant(cm_label + "USE_PROFILER", "profiler"),
+            self.define_from_variant(cm_label + "USE_WANNIER90", "wannier90"),
         ]
 
         lapack = spec["lapack"]
@@ -300,21 +312,25 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         if "+scalapack" in spec and "^cray-libsci" not in spec:
             args.extend(
                 [
-                    self.define("SCALAPACK_FOUND", "true"),
-                    self.define("SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
-                    self.define("SCALAPACK_LIBRARIES", spec["scalapack"].libs.joined(";")),
+                    self.define(cm_label + "SCALAPACK_FOUND", "true"),
+                    self.define(
+                        cm_label + "SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include
+                    ),
+                    self.define(
+                        cm_label + "SCALAPACK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
                 ]
             )
 
         if "^cray-libsci" in spec:
-            args.append(self.define("USE_CRAY_LIBSCI", "ON"))
+            args.append(self.define(cm_label + "USE_CRAY_LIBSCI", "ON"))
 
-        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio"]:
-            args.append(self.define("USE_MKL", "ON"))
+        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            args.append(self.define(cm_label + "USE_MKL", "ON"))
 
         if "+elpa" in spec:
             elpa_incdir = os.path.join(spec["elpa"].headers.directories[0], "elpa")
-            args.append(self.define("ELPA_INCLUDE_DIR", elpa_incdir))
+            args.append(self.define(cm_label + "ELPA_INCLUDE_DIR", elpa_incdir))
 
         if "+cuda" in spec:
             cuda_arch = spec.variants["cuda_arch"].value

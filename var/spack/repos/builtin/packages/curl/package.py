@@ -26,6 +26,7 @@ class Curl(NMakePackage, AutotoolsPackage):
 
     maintainers("alecbcs")
 
+    version("8.1.2", sha256="b54974d32fd610acace92e3df1f643144015ac65847f0a041fdc17db6f43f243")
     version("8.0.1", sha256="9b6b1e96b748d04b968786b6bdf407aa5c75ab53a3d37c1c8c81cdb736555ccf")
     version("7.88.1", sha256="8224b45cce12abde039c12dc0711b7ea85b104b9ad534d6e4c5b4e188a61c907")
 
@@ -251,7 +252,7 @@ class Curl(NMakePackage, AutotoolsPackage):
         ),
         multi=True,
     )
-    variant("nghttp2", default=False, description="build nghttp2 library (requires C++11)")
+    variant("nghttp2", default=True, description="build nghttp2 library (requires C++11)")
     variant("libssh2", default=False, description="enable libssh2 support")
     variant("libssh", default=False, description="enable libssh support", when="@7.58:")
     variant("gssapi", default=False, description="enable Kerberos support")
@@ -277,16 +278,19 @@ class Curl(NMakePackage, AutotoolsPackage):
     depends_on("mbedtls@2: +pic", when="@7.79: tls=mbedtls")
     depends_on("mbedtls@:2 +pic", when="@:7.78 tls=mbedtls")
     depends_on("nss", when="tls=nss")
-    depends_on("openssl", when="tls=openssl")
+
+    with when("tls=openssl"):
+        depends_on("openssl")
+        # Since https://github.com/curl/curl/commit/ee36e86ce8f77a017c49b8312814c33f4b969565
+        # there is OpenSSL 3 detection.
+        depends_on("openssl@:1", when="@:7.76")
+
     depends_on("libidn2", when="+libidn2")
     depends_on("zlib")
     depends_on("nghttp2", when="+nghttp2")
     depends_on("libssh2", when="+libssh2")
     depends_on("libssh", when="+libssh")
     depends_on("krb5", when="+gssapi")
-
-    # curl queries pkgconfig for openssl compilation flags
-    depends_on("pkgconfig", type="build")
 
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
@@ -445,7 +449,7 @@ class NMakeBuilder(NMakeBuilder):
         args.append("WITH_PREFIX=%s" % self.prefix + "\\")
         return args
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         # Spack's env CC and CXX values will cause an error
         # if there is a path in the space, and escaping with
         # double quotes raises a syntax issues, instead

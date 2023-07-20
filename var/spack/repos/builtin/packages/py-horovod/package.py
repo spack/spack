@@ -14,9 +14,12 @@ class PyHorovod(PythonPackage, CudaPackage):
     homepage = "https://github.com/horovod"
     git = "https://github.com/horovod/horovod.git"
 
-    maintainers("adamjstewart", "aweits", "tgaddair")
+    maintainers("adamjstewart", "aweits", "tgaddair", "thomas-bouvier")
 
     version("master", branch="master", submodules=True)
+    version("0.28.1", tag="v0.28.1", submodules=True)
+    version("0.28.0", tag="v0.28.0", submodules=True)
+    version("0.27.0", tag="v0.27.0", submodules=True)
     version("0.26.1", tag="v0.26.1", submodules=True)
     version("0.26.0", tag="v0.26.0", submodules=True)
     version("0.25.0", tag="v0.25.0", submodules=True)
@@ -118,7 +121,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     depends_on("py-petastorm@0.9.8:", type=("build", "run"), when="frameworks=spark @0.21.1:")
     depends_on("py-petastorm@0.11:", type=("build", "run"), when="frameworks=spark @0.22:")
     depends_on("py-petastorm@0.12:", type=("build", "run"), when="frameworks=spark @0.26:")
-    depends_on("py-pyarrow@0.15.0:", type=("build", "run"), when="frameworks=spark")
+    depends_on("py-pyarrow@0.15.0:10", type=("build", "run"), when="frameworks=spark")
     depends_on("py-pyspark@2.3.2:", type=("build", "run"), when="frameworks=spark ^python@:3.7")
     depends_on("py-pyspark@3.0.0:", type=("build", "run"), when="frameworks=spark ^python@3.8:")
     depends_on("py-fsspec", type=("build", "run"), when="frameworks=spark @0.22.1:0.24.1")
@@ -272,6 +275,7 @@ class PyHorovod(PythonPackage, CudaPackage):
         else:
             env.set("HOROVOD_CPU_OPERATIONS", self.spec.variants["tensor_ops"].value.upper())
 
-    def test(self):
-        super(PyHorovod, self).test()
-        self.run_test(self.prefix.bin.horovodrun, "--check-build")
+    def test_check_build(self):
+        """run horovodrun --check-build"""
+        horovodrun = which(self.prefix.bin.horovodrun)
+        horovodrun("--check-build")

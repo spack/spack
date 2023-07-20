@@ -26,8 +26,8 @@ def setup_parser(subparser):
         "--installed",
         action="store_true",
         default=False,
-        help="List installed dependencies of an installed spec, "
-        "instead of possible dependencies of a package.",
+        help="list installed dependencies of an installed spec "
+        "instead of possible dependencies of a package",
     )
     subparser.add_argument(
         "-t",
@@ -60,7 +60,7 @@ def dependencies(parser, args):
         format_string = "{name}{@version}{%compiler}{/hash:7}"
         if sys.stdout.isatty():
             tty.msg("Dependencies of %s" % spec.format(format_string, color=True))
-        deps = spack.store.db.installed_relatives(
+        deps = spack.store.STORE.db.installed_relatives(
             spec, "children", args.transitive, deptype=args.deptype
         )
         if deps:

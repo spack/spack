@@ -46,11 +46,14 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda@8:", when="@2.5.1: +cuda")  # See PR #14471
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
+    depends_on("python", when="@master", type="build")
 
-    conflicts("~cuda", when="~rocm", msg="Either CUDA or HIP support must be enabled")
-    conflicts("+rocm", when="+cuda", msg="CUDA must be disabled to support HIP (ROCm)")
-    conflicts("+rocm", when="@:2.5.4", msg="HIP support starts in version 2.6.0")
-    conflicts("cuda_arch=none", when="+cuda", msg="Please indicate a CUDA arch value or values")
+    conflicts("~cuda", when="~rocm", msg="magma: Either CUDA or HIP support must be enabled")
+    conflicts("+rocm", when="+cuda", msg="magma: CUDA must be disabled to support HIP (ROCm)")
+    conflicts("+rocm", when="@:2.5.4", msg="magma: HIP support starts in version 2.6.0")
+    conflicts(
+        "cuda_arch=none", when="+cuda", msg="magma: Please indicate a CUDA arch value or values"
+    )
 
     # currently not compatible with CUDA-11
     # https://bitbucket.org/icl/magma/issues/22/cuda-11-changes-issue
@@ -62,11 +65,11 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("cuda_arch={}".format(target))
 
     # Some cuda_arch values had support added recently
-    conflicts("cuda_arch=37", when="@:2.5")
-    conflicts("cuda_arch=60", when="@:2.2")
-    conflicts("cuda_arch=70", when="@:2.2")
-    conflicts("cuda_arch=75", when="@:2.5.0")
-    conflicts("cuda_arch=80", when="@:2.5.3")
+    conflicts("cuda_arch=37", when="@:2.5", msg="magma: cuda_arch=37 needs a version > 2.5")
+    conflicts("cuda_arch=60", when="@:2.2", msg="magma: cuda_arch=60 needs a version > 2.2")
+    conflicts("cuda_arch=70", when="@:2.2", msg="magma: cuda_arch=70 needs a version > 2.2")
+    conflicts("cuda_arch=75", when="@:2.5.0", msg="magma: cuda_arch=75 needs a version > 2.5.0")
+    conflicts("cuda_arch=80", when="@:2.5.3", msg="magma: cuda_arch=80 needs a version > 2.5.3")
 
     patch("ibm-xl.patch", when="@2.2:2.5.0%xl")
     patch("ibm-xl.patch", when="@2.2:2.5.0%xl_r")

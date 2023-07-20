@@ -37,7 +37,7 @@ def _check_concrete(spec):
         raise ValueError("Specs passed to a DirectoryLayout must be concrete!")
 
 
-class DirectoryLayout(object):
+class DirectoryLayout:
     """A directory layout is used to associate unique paths with specs.
     Different installations are going to want different layouts for their
     install, and they can use this to customize the nesting structure of
@@ -325,7 +325,7 @@ class DirectoryLayout(object):
         if spec.external:
             return spec.external_path
         if self.check_upstream:
-            upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+            upstream, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
             if upstream:
                 raise SpackError(
                     "Internal error: attempted to call path_for_spec on"
@@ -388,14 +388,14 @@ class DirectoryLayoutError(SpackError):
     """Superclass for directory layout errors."""
 
     def __init__(self, message, long_msg=None):
-        super(DirectoryLayoutError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class RemoveFailedError(DirectoryLayoutError):
     """Raised when a DirectoryLayout cannot remove an install prefix."""
 
     def __init__(self, installed_spec, prefix, error):
-        super(RemoveFailedError, self).__init__(
+        super().__init__(
             "Could not remove prefix %s for %s : %s" % (prefix, installed_spec.short_spec, error)
         )
         self.cause = error
@@ -405,7 +405,7 @@ class InconsistentInstallDirectoryError(DirectoryLayoutError):
     """Raised when a package seems to be installed to the wrong place."""
 
     def __init__(self, message, long_msg=None):
-        super(InconsistentInstallDirectoryError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class SpecReadError(DirectoryLayoutError):
@@ -416,7 +416,7 @@ class InvalidDirectoryLayoutParametersError(DirectoryLayoutError):
     """Raised when a invalid directory layout parameters are supplied"""
 
     def __init__(self, message, long_msg=None):
-        super(InvalidDirectoryLayoutParametersError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class InvalidExtensionSpecError(DirectoryLayoutError):
@@ -427,16 +427,14 @@ class ExtensionAlreadyInstalledError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
 
     def __init__(self, spec, ext_spec):
-        super(ExtensionAlreadyInstalledError, self).__init__(
-            "%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec)
-        )
+        super().__init__("%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec))
 
 
 class ExtensionConflictError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
 
     def __init__(self, spec, ext_spec, conflict):
-        super(ExtensionConflictError, self).__init__(
+        super().__init__(
             "%s cannot be installed in %s because it conflicts with %s"
             % (ext_spec.short_spec, spec.short_spec, conflict.short_spec)
         )
