@@ -214,6 +214,7 @@ class Lock:
     def __init__(
         self,
         path: str,
+        *,
         start: int = 0,
         length: int = 0,
         default_timeout: Optional[float] = None,
