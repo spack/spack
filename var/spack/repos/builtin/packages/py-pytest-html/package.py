@@ -18,11 +18,13 @@ class PyPytestHtml(PythonPackage):
     version("3.1.1", sha256="3ee1cf319c913d19fe53aeb0bc400e7b0bc2dbeb477553733db1dad12eb75ee3")
 
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
+    depends_on("py-setuptools@42:", type="build")
+    depends_on("py-setuptools-scm+toml@3.5.0:", type="build")
+    depends_on("py-setuptools-scm-git-archive@1.1:", type="build")
+    depends_on("py-wheel@0.33.6:", type="build")
     depends_on("py-pytest@5.0:5,6.0.1:", type=("build", "run"))
     depends_on("py-pytest-metadata", type=("build", "run"))
-    depends_on("py-py@1.8.2:", when="^py-pytest@7.2.0:", type=("build", "run"))
+    depends_on("py-py@1.8.2:", type=("build", "run"))
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
