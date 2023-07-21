@@ -16,7 +16,7 @@ schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": {
-        # `buildinfo` is no longer as of Spack 0.21
+        # `buildinfo` is no longer needed as of Spack 0.21
         "buildinfo": {"type": "object"},
         "spec": {
             "type": "object",
