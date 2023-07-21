@@ -3,7 +3,7 @@ ci:
   - build-job-remove:
       image: no-image
   - build-job:
-      env:
+      variables:
         CI_GPG_KEY_ROOT: /etc/protected-runner
   - match_behavior: first
     submapping:
