@@ -7,8 +7,8 @@
 import os
 import stat
 import sys
-from typing import Optional, Tuple
 from pathlib import Path
+from typing import Optional, Tuple
 
 import llnl.util.lock
 
