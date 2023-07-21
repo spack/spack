@@ -475,7 +475,7 @@ spack:
             assert not e._dev_dep_changed_after_install_time()
             to_reinstall = e._dev_dep_was_installed_more_recently()
             assert len(to_reinstall) == 1
-            reinstall_hash, = to_reinstall
+            (reinstall_hash,) = to_reinstall
             assert e.get_one_by_hash(reinstall_hash).name == "dependent-of-dev-build"
 
             # At this point, the dependent should be reinstalled too, because
