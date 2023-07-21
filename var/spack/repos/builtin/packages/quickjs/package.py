@@ -15,9 +15,15 @@ class Quickjs(MakefilePackage):
     url = "https://bellard.org/quickjs/quickjs-2021-03-27.tar.xz"
 
     version("master", branch="master")
-    version("2021-03-27", sha256="a45bface4c3379538dea8533878d694e289330488ea7028b105f72572fe7fe1a")
-    version("2020-11-08", sha256="2e9d63dab390a95ed365238f21d8e9069187f7ed195782027f0ab311bb64187b")
-    version("2020-09-06", sha256="0021a3e8cdc6b61e225411d05e2841d2437e1ccf4b4cabb9a5f7685ebfb57717")
+    version(
+        "2021-03-27", sha256="a45bface4c3379538dea8533878d694e289330488ea7028b105f72572fe7fe1a"
+    )
+    version(
+        "2020-11-08", sha256="2e9d63dab390a95ed365238f21d8e9069187f7ed195782027f0ab311bb64187b"
+    )
+    version(
+        "2020-09-06", sha256="0021a3e8cdc6b61e225411d05e2841d2437e1ccf4b4cabb9a5f7685ebfb57717"
+    )
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
