@@ -27,4 +27,4 @@ class PyIsort(PythonPackage):
     depends_on("py-colorama@0.4.3:", when="+colors @5.12:", type=("build", "run"))
     depends_on("py-colorama@0.4.3:0.4", when="+colors @:5.11", type=("build", "run"))
 
-    conflicts("^py-poetry-core@1.6.1:", when="@:5.11.3")
+    conflicts("^py-poetry-core@1.5:", when="@:5.11")
