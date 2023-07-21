@@ -18,7 +18,7 @@ class Freesurfer(Package):
 
     maintainers("robgics")
 
-    version("7.4.1", sha256="eb6545d1ffdee17a90abd2e7dc444aa1091a6138e257f6f956a7ff214635b092")
+    version("7.4.1", sha256="313a96caeb246c5985f483633b5cf43f86ed8f7ccc6d6acfac8eedb638443010")
     version("7.4.0", sha256="6b65c2edf3b88973ced0324269a88966c541f221b799337c6570c38c2f884431")
     version("7.3.2", sha256="58518d3ee5abd2e05109208aed2eef145c4e3b994164df8c4e0033c1343b9e56")
     version("7.2.0", sha256="4cca78602f898bf633428b9d82cbb9b07e3ab97a86c620122050803779c86d62")
