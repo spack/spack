@@ -1806,8 +1806,40 @@ class Environment:
           the in-development spec y, and then later reinstall the whole
           environment.
         """
+        return (
+            self._dev_dep_changed_after_install_time() +
+            self._dev_dep_was_installed_more_recently()
+        )
 
-        # Perform installation-time check
+    def _dev_dep_changed_after_install_time(self):
+        # Find all dev specs that were modified.
+        changed_dev_specs = [
+            s
+            for s in traverse.traverse_nodes(
+                self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
+            )
+            if _is_dev_spec_and_has_changed(s)
+        ]
+
+        # Collect their hashes, and the hashes of their installed parents.
+        # Notice: with order=breadth all changed dev specs are at depth 0,
+        # even if they occur as parents of one another.
+        return [
+            spec.dag_hash()
+            for depth, spec in traverse.traverse_nodes(
+                changed_dev_specs,
+                root=True,
+                order="breadth",
+                depth=True,
+                direction="parents",
+                key=traverse.by_dag_hash,
+            )
+            if depth == 0 or spec.installed
+        ]
+
+    def _dev_dep_was_installed_more_recently(self):
+        # Gather specs which have some dependency (transitive) that is
+        # being developed and was installed more-recently
         transitive_dev_install_times = collections.defaultdict(int)
         for spec in traverse.traverse_nodes(
             self.concrete_roots(), direction="children", order="post"
@@ -1843,30 +1875,7 @@ class Environment:
             if when_this_spec_was_installed < transitive_install_time:
                 dev_dep_was_installed_more_recently.append(spec.dag_hash())
 
-        # Find all dev specs that were modified.
-        changed_dev_specs = [
-            s
-            for s in traverse.traverse_nodes(
-                self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
-            )
-            if _is_dev_spec_and_has_changed(s)
-        ]
-
-        # Collect their hashes, and the hashes of their installed parents.
-        # Notice: with order=breadth all changed dev specs are at depth 0,
-        # even if they occur as parents of one another.
-        return [
-            spec.dag_hash()
-            for depth, spec in traverse.traverse_nodes(
-                changed_dev_specs,
-                root=True,
-                order="breadth",
-                depth=True,
-                direction="parents",
-                key=traverse.by_dag_hash,
-            )
-            if depth == 0 or spec.installed
-        ] + dev_dep_was_installed_more_recently
+        return dev_dep_was_installed_more_recently
 
     def _install_log_links(self, spec):
         if not spec.external:
