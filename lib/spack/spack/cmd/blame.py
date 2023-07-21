@@ -59,7 +59,7 @@ def setup_parser(subparser):
 
     subparser.add_argument(
         "package_or_file",
-        help="name of package to show contributions for, " "or path to a file in the spack repo",
+        help="name of package to show contributions for, or path to a file in the spack repo",
     )
 
 

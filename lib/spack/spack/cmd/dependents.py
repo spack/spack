@@ -25,15 +25,15 @@ def setup_parser(subparser):
         "--installed",
         action="store_true",
         default=False,
-        help="List installed dependents of an installed spec, "
-        "instead of possible dependents of a package.",
+        help="list installed dependents of an installed spec "
+        "instead of possible dependents of a package",
     )
     subparser.add_argument(
         "-t",
         "--transitive",
         action="store_true",
         default=False,
-        help="Show all transitive dependents.",
+        help="show all transitive dependents",
     )
     arguments.add_common_arguments(subparser, ["spec"])
 
@@ -96,7 +96,7 @@ def dependents(parser, args):
         format_string = "{name}{@version}{%compiler}{/hash:7}"
         if sys.stdout.isatty():
             tty.msg("Dependents of %s" % spec.cformat(format_string))
-        deps = spack.store.db.installed_relatives(spec, "parents", args.transitive)
+        deps = spack.store.STORE.db.installed_relatives(spec, "parents", args.transitive)
         if deps:
             spack.cmd.display_specs(deps, long=True)
         else:

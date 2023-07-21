@@ -75,10 +75,9 @@ def setup_parser(subparser):
         default="package,dependencies",
         dest="things_to_install",
         choices=["package", "dependencies"],
-        help="""select the mode of installation.
-the default is to install the package along with all its dependencies.
-alternatively one can decide to install only the package or only
-the dependencies""",
+        help="select the mode of installation\n\n"
+        "default is to install the package along with all its dependencies. "
+        "alternatively, one can decide to install only the package or only the dependencies",
     )
     subparser.add_argument(
         "-u",
@@ -143,12 +142,11 @@ the dependencies""",
         type=arguments.use_buildcache,
         default="package:auto,dependencies:auto",
         metavar="[{auto,only,never},][package:{auto,only,never},][dependencies:{auto,only,never}]",
-        help="""select the mode of buildcache for the 'package' and 'dependencies'.
-Default: package:auto,dependencies:auto
-- `auto` behaves like --use-cache
-- `only` behaves like --cache-only
-- `never` behaves like --no-cache
-""",
+        help="select the mode of buildcache for the 'package' and 'dependencies'\n\n"
+        "default: package:auto,dependencies:auto\n\n"
+        "- `auto` behaves like --use-cache\n"
+        "- `only` behaves like --cache-only\n"
+        "- `never` behaves like --no-cache",
     )
 
     subparser.add_argument(
@@ -156,8 +154,8 @@ Default: package:auto,dependencies:auto
         action="store_true",
         dest="include_build_deps",
         default=False,
-        help="""include build deps when installing from cache,
-which is useful for CI pipeline troubleshooting""",
+        help="include build deps when installing from cache, "
+        "useful for CI pipeline troubleshooting",
     )
 
     subparser.add_argument(
@@ -186,7 +184,7 @@ which is useful for CI pipeline troubleshooting""",
         dest="install_verbose",
         help="display verbose build output while installing",
     )
-    subparser.add_argument("--fake", action="store_true", help="fake install for debug purposes.")
+    subparser.add_argument("--fake", action="store_true", help="fake install for debug purposes")
     subparser.add_argument(
         "--only-concrete",
         action="store_true",
@@ -199,14 +197,13 @@ which is useful for CI pipeline troubleshooting""",
         "--add",
         action="store_true",
         default=False,
-        help="""(with environment) add spec to the environment as a root.""",
+        help="(with environment) add spec to the environment as a root",
     )
     updateenv_group.add_argument(
         "--no-add",
         action="store_false",
         dest="add",
-        help="""(with environment) do not add spec to the environment as a
-root (the default behavior).""",
+        help="(with environment) do not add spec to the environment as a root",
     )
 
     subparser.add_argument(
@@ -216,7 +213,7 @@ root (the default behavior).""",
         default=[],
         dest="specfiles",
         metavar="SPEC_YAML_FILE",
-        help="install from file. Read specs to install from .yaml files",
+        help="read specs to install from .yaml files",
     )
 
     cd_group = subparser.add_mutually_exclusive_group()
@@ -227,19 +224,12 @@ root (the default behavior).""",
         "--test",
         default=None,
         choices=["root", "all"],
-        help="""If 'root' is chosen, run package tests during
-installation for top-level packages (but skip tests for dependencies).
-if 'all' is chosen, run package tests during installation for all
-packages. If neither are chosen, don't run tests for any packages.""",
+        help="run tests on only root packages or all packages",
     )
     arguments.add_common_arguments(subparser, ["log_format"])
+    subparser.add_argument("--log-file", default=None, help="filename for the log file")
     subparser.add_argument(
-        "--log-file",
-        default=None,
-        help="filename for the log file. if not passed a default will be used",
-    )
-    subparser.add_argument(
-        "--help-cdash", action="store_true", help="Show usage instructions for CDash reporting"
+        "--help-cdash", action="store_true", help="show usage instructions for CDash reporting"
     )
     arguments.add_cdash_args(subparser, False)
     arguments.add_common_arguments(subparser, ["yes_to_all", "spec"])
@@ -276,11 +266,11 @@ def require_user_confirmation_for_overwrite(concrete_specs, args):
     if args.yes_to_all:
         return
 
-    installed = list(filter(lambda x: x, map(spack.store.db.query_one, concrete_specs)))
+    installed = list(filter(lambda x: x, map(spack.store.STORE.db.query_one, concrete_specs)))
     display_args = {"long": True, "show_flags": True, "variants": True}
 
     if installed:
-        tty.msg("The following package specs will be " "reinstalled:\n")
+        tty.msg("The following package specs will be reinstalled:\n")
         spack.cmd.display_specs(installed, **display_args)
 
     not_installed = list(filter(lambda x: x not in installed, concrete_specs))

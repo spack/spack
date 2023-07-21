@@ -23,6 +23,7 @@ import spack.spec
 import spack.store
 from spack.directives import build_system, depends_on, extends, maintainers
 from spack.error import NoHeadersError, NoLibrariesError, SpecError
+from spack.install_test import test_part
 from spack.version import Version
 
 from ._checks import BaseBuilder, execute_install_time_tests
@@ -167,18 +168,65 @@ class PythonExtension(spack.package_base.PackageBase):
 
         view.remove_files(to_remove)
 
-    def test(self):
+    def test_imports(self):
         """Attempts to import modules of the installed package."""
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
+        python = inspect.getmodule(self).python
         for module in self.import_modules:
-            self.run_test(
-                inspect.getmodule(self).python.path,
-                ["-c", "import {0}".format(module)],
-                purpose="checking import of {0}".format(module),
+            with test_part(
+                self,
+                f"test_imports_{module}",
+                purpose=f"checking import of {module}",
                 work_dir="spack-test",
-            )
+            ):
+                python("-c", f"import {module}")
+
+    def update_external_dependencies(self, extendee_spec=None):
+        """
+        Ensure all external python packages have a python dependency
+
+        If another package in the DAG depends on python, we use that
+        python for the dependency of the external. If not, we assume
+        that the external PythonPackage is installed into the same
+        directory as the python it depends on.
+        """
+        # TODO: Include this in the solve, rather than instantiating post-concretization
+        if "python" not in self.spec:
+            if extendee_spec:
+                python = extendee_spec
+            elif "python" in self.spec.root:
+                python = self.spec.root["python"]
+            else:
+                python = self.get_external_python_for_prefix()
+                if not python.concrete:
+                    repo = spack.repo.path.repo_for_pkg(python)
+                    python.namespace = repo.namespace
+
+                    # Ensure architecture information is present
+                    if not python.architecture:
+                        host_platform = spack.platforms.host()
+                        host_os = host_platform.operating_system("default_os")
+                        host_target = host_platform.target("default_target")
+                        python.architecture = spack.spec.ArchSpec(
+                            (str(host_platform), str(host_os), str(host_target))
+                        )
+                    else:
+                        if not python.architecture.platform:
+                            python.architecture.platform = spack.platforms.host()
+                        if not python.architecture.os:
+                            python.architecture.os = "default_os"
+                        if not python.architecture.target:
+                            python.architecture.target = archspec.cpu.host().family.name
+
+                    # Ensure compiler information is present
+                    if not python.compiler:
+                        python.compiler = self.spec.compiler
+
+                    python.external_path = self.spec.external_path
+                    python._mark_concrete()
+            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"), virtuals=())
 
 
 class PythonPackage(PythonExtension):
@@ -225,51 +273,6 @@ class PythonPackage(PythonExtension):
             name = cls.pypi.split("/")[0]
             return "https://pypi.org/simple/" + name + "/"
 
-    def update_external_dependencies(self, extendee_spec=None):
-        """
-        Ensure all external python packages have a python dependency
-
-        If another package in the DAG depends on python, we use that
-        python for the dependency of the external. If not, we assume
-        that the external PythonPackage is installed into the same
-        directory as the python it depends on.
-        """
-        # TODO: Include this in the solve, rather than instantiating post-concretization
-        if "python" not in self.spec:
-            if extendee_spec:
-                python = extendee_spec
-            elif "python" in self.spec.root:
-                python = self.spec.root["python"]
-            else:
-                python = self.get_external_python_for_prefix()
-                if not python.concrete:
-                    repo = spack.repo.path.repo_for_pkg(python)
-                    python.namespace = repo.namespace
-
-                    # Ensure architecture information is present
-                    if not python.architecture:
-                        host_platform = spack.platforms.host()
-                        host_os = host_platform.operating_system("default_os")
-                        host_target = host_platform.target("default_target")
-                        python.architecture = spack.spec.ArchSpec(
-                            (str(host_platform), str(host_os), str(host_target))
-                        )
-                    else:
-                        if not python.architecture.platform:
-                            python.architecture.platform = spack.platforms.host()
-                        if not python.architecture.os:
-                            python.architecture.os = "default_os"
-                        if not python.architecture.target:
-                            python.architecture.target = archspec.cpu.host().family.name
-
-                    # Ensure compiler information is present
-                    if not python.compiler:
-                        python.compiler = self.spec.compiler
-
-                    python.external_path = self.spec.external_path
-                    python._mark_concrete()
-            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"))
-
     def get_external_python_for_prefix(self):
         """
         For an external package that extends python, find the most likely spec for the python
@@ -283,7 +286,7 @@ class PythonPackage(PythonExtension):
           spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
         """
         python_externals_installed = [
-            s for s in spack.store.db.query("python") if s.prefix == self.spec.external_path
+            s for s in spack.store.STORE.db.query("python") if s.prefix == self.spec.external_path
         ]
         if python_externals_installed:
             return python_externals_installed[0]
@@ -398,7 +401,8 @@ class PythonPipBuilder(BaseBuilder):
 
     def config_settings(self, spec, prefix):
         """Configuration settings to be passed to the PEP 517 build backend.
-        Requires pip 22.1+, which requires Python 3.7+.
+
+        Requires pip 22.1 or newer.
 
         Args:
             spec (spack.spec.Spec): build spec
@@ -412,6 +416,8 @@ class PythonPipBuilder(BaseBuilder):
     def install_options(self, spec, prefix):
         """Extra arguments to be supplied to the setup.py install command.
 
+        Requires pip 23.0 or older.
+
         Args:
             spec (spack.spec.Spec): build spec
             prefix (spack.util.prefix.Prefix): installation prefix
@@ -424,6 +430,8 @@ class PythonPipBuilder(BaseBuilder):
     def global_options(self, spec, prefix):
         """Extra global options to be supplied to the setup.py call before the install
         or bdist_wheel command.
+
+        Deprecated in pip 23.1.
 
         Args:
             spec (spack.spec.Spec): build spec

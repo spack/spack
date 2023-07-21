@@ -54,7 +54,9 @@ def test_direct_installed_dependencies(mock_packages, database):
     lines = [line for line in out.strip().split("\n") if not line.startswith("--")]
     hashes = set([re.split(r"\s+", line)[0] for line in lines])
 
-    expected = set([spack.store.db.query_one(s).dag_hash(7) for s in ["mpich", "callpath^mpich"]])
+    expected = set(
+        [spack.store.STORE.db.query_one(s).dag_hash(7) for s in ["mpich", "callpath^mpich"]]
+    )
 
     assert expected == hashes
 
@@ -69,7 +71,7 @@ def test_transitive_installed_dependencies(mock_packages, database):
 
     expected = set(
         [
-            spack.store.db.query_one(s).dag_hash(7)
+            spack.store.STORE.db.query_one(s).dag_hash(7)
             for s in ["zmpi", "callpath^zmpi", "fake", "dyninst", "libdwarf", "libelf"]
         ]
     )

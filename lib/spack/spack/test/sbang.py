@@ -53,16 +53,16 @@ php_in_text = ("line\n") * 100 + "php\n" + ("line\n" * 100)
 php_line_patched = "<?php #!/this/" + ("x" * too_long) + "/is/php\n"
 php_line_patched2 = "?>\n"
 
-sbang_line = "#!/bin/sh %s/bin/sbang\n" % spack.store.store.unpadded_root
+sbang_line = "#!/bin/sh %s/bin/sbang\n" % spack.store.STORE.unpadded_root
 last_line = "last!\n"
 
 
 @pytest.fixture  # type: ignore[no-redef]
 def sbang_line():
-    yield "#!/bin/sh %s/bin/sbang\n" % spack.store.layout.root
+    yield "#!/bin/sh %s/bin/sbang\n" % spack.store.STORE.layout.root
 
 
-class ScriptDirectory(object):
+class ScriptDirectory:
     """Directory full of test scripts to run sbang instrumentation on."""
 
     def __init__(self, sbang_line):
@@ -309,7 +309,7 @@ all:
 def check_sbang_installation(group=False):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
-    assert sbang_path.startswith(spack.store.store.unpadded_root)
+    assert sbang_path.startswith(spack.store.STORE.unpadded_root)
 
     assert os.path.exists(sbang_path)
     assert fs.is_exe(sbang_path)
@@ -333,7 +333,7 @@ def run_test_install_sbang(group):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
 
-    assert sbang_path.startswith(spack.store.store.unpadded_root)
+    assert sbang_path.startswith(spack.store.STORE.unpadded_root)
     assert not os.path.exists(sbang_bin_dir)
 
     sbang.install_sbang()
@@ -368,7 +368,7 @@ def test_install_sbang_too_long(tmpdir):
         add = min(num_extend, 255)
         long_path = os.path.join(long_path, "e" * add)
         num_extend -= add
-    with spack.store.use_store(spack.store.Store(long_path)):
+    with spack.store.use_store(long_path):
         with pytest.raises(sbang.SbangPathError) as exc_info:
             sbang.sbang_install_path()
 
