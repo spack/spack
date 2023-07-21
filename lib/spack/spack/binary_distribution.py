@@ -1210,7 +1210,7 @@ def tar_add_metadata(tar: tarfile.TarFile, path: str, data: dict):
 
 def deterministic_tarinfo_without_buildinfo(tarinfo: tarfile.TarInfo):
     """Skip buildinfo file when creating a tarball, and normalize other tarinfo fields."""
-    if tarinfo.name.endswith(".spack/binary_distribution"):
+    if tarinfo.name.endswith("/.spack/binary_distribution"):
         return None
 
     return deterministic_tarinfo(tarinfo)
