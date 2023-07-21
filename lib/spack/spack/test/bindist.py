@@ -177,6 +177,33 @@ def install_dir_non_default_layout(tmpdir):
         spack.store.STORE.layout = real_layout
 
 
+@pytest.fixture(scope="function")
+def dummy_prefix(tmpdir):
+    """Dummy prefix used for testing tarball creation, validation, extraction"""
+    p = tmpdir.mkdir("prefix")
+    assert os.path.isabs(p)
+
+    p.mkdir("bin")
+    p.mkdir("share")
+    p.mkdir(".spack")
+
+    app = p.join("bin", "app")
+    relative_app_link = p.join("bin", "relative_app_link")
+    absolute_app_link = p.join("bin", "absolute_app_link")
+    data = p.join("share", "file")
+
+    with open(app, "w") as f:
+        f.write("hello world")
+
+    with open(data, "w") as f:
+        f.write("hello world")
+
+    os.symlink("app", relative_app_link)
+    os.symlink(app, absolute_app_link)
+
+    return str(p)
+
+
 args = ["file"]
 if sys.platform == "darwin":
     args.extend(["/usr/bin/clang++", "install_name_tool"])
@@ -933,33 +960,6 @@ def test_tarball_normalized_permissions(tmpdir):
 
     # not-executable-by-user files should be 0o644
     assert path_to_member["pkg/share/file"].mode == 0o644
-
-
-# create a fixture that sets up a dummy prefix with a few files
-@pytest.fixture(scope="function")
-def dummy_prefix(tmpdir):
-    p = tmpdir.mkdir("prefix")
-    assert os.path.isabs(p)
-
-    p.mkdir("bin")
-    p.mkdir("share")
-    p.mkdir(".spack")
-
-    app = p.join("bin", "app")
-    relative_app_link = p.join("bin", "relative_app_link")
-    absolute_app_link = p.join("bin", "absolute_app_link")
-    data = p.join("share", "file")
-
-    with open(app, "w") as f:
-        f.write("hello world")
-
-    with open(data, "w") as f:
-        f.write("hello world")
-
-    os.symlink("app", relative_app_link)
-    os.symlink(app, absolute_app_link)
-
-    return str(p)
 
 
 def test_tarball_common_prefix(dummy_prefix, tmpdir):
