@@ -1808,24 +1808,32 @@ class Environment:
         """
 
         # Perform installation-time check
-        transitive_install_times = collections.defaultdict(int)
+        transitive_dev_install_times = collections.defaultdict(int)
         for spec in traverse.traverse_nodes(
             self.concrete_roots(), direction="children", order="post"
         ):
             if not spec.installed:
                 continue
 
-            _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
-            when_this_spec_was_installed = record.installation_time
-            transitive_install_times[spec] = max(
-                transitive_install_times[spec], when_this_spec_was_installed
-            )
-            for parent in spec.dependents():
-                transitive_install_times[parent] = max(
-                    transitive_install_times[parent], when_this_spec_was_installed
+            dev_path_var = spec.variants.get("dev_path", None)
+            if dev_path_var:
+                _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+                when_this_spec_was_installed = record.installation_time
+
+                transitive_dev_install_times[spec] = max(
+                    transitive_dev_install_times[spec], when_this_spec_was_installed
                 )
-        specs_where_a_dependency_was_installed_more_recently = list()
-        for spec, transitive_install_time in transitive_install_times.items():
+            # else: this is not a develop spec, and we don't want to record the
+            # installation time (we could have done an overwrite install of a
+            # non-develop spec, in which case it should not be necessary to
+            # reinstall the parent)
+            transitive_dev_install_time_child = transitive_dev_install_times[spec]
+            for parent in spec.dependents():
+                transitive_dev_install_times[parent] = max(
+                    transitive_dev_install_times[parent], transitive_dev_install_time_child
+                )
+        dev_dep_was_installed_more_recently = list()
+        for spec, transitive_install_time in transitive_dev_install_times.items():
             if not spec.installed:
                 continue
 
@@ -1833,7 +1841,7 @@ class Environment:
             when_this_spec_was_installed = record.installation_time
 
             if when_this_spec_was_installed < transitive_install_time:
-                specs_where_a_dependency_was_installed_more_recently.append(spec.dag_hash())
+                dev_dep_was_installed_more_recently.append(spec.dag_hash())
 
         # Find all dev specs that were modified.
         changed_dev_specs = [
@@ -1858,7 +1866,7 @@ class Environment:
                 key=traverse.by_dag_hash,
             )
             if depth == 0 or spec.installed
-        ] + specs_where_a_dependency_was_installed_more_recently
+        ] + dev_dep_was_installed_more_recently
 
     def _install_log_links(self, spec):
         if not spec.external:
