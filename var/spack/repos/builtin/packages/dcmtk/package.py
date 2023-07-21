@@ -13,6 +13,7 @@ class Dcmtk(CMakePackage):
     homepage = "https://dicom.offis.de"
     url = "https://github.com/DCMTK/dcmtk/archive/DCMTK-3.6.3.tar.gz"
 
+    version("3.6.7", sha256="17705dcdb2047d1266bb4e92dbf4aa6d4967819e8e3e94f39b7df697661b4860")
     version("3.6.6", sha256="117097da6d50ddbad0e48bb1e6cdc61468e82ba1d32001dd8e2366b445133a8c")
     version("3.6.5", sha256="37dad355d5513b4de4a86b5b7b0c3e9ec059860d88781b80916bba2a04e6d5b8")
     version("3.6.4", sha256="e4b1de804a3fef38fe8cb9edd00262c3cbbd114b305511c14479dd888a9337d2")
@@ -43,6 +44,8 @@ class Dcmtk(CMakePackage):
 
     variant("cxx11", default=False, description="Enable c++11 features")
     variant("stl", default=True, description="Use native STL implementation")
+
+    conflicts("platform=darwin", when="@:3.6.6")
 
     def patch(self):
         # Backport 3.6.4
