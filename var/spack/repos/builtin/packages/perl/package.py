@@ -134,6 +134,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch("protect-quotes-in-ccflags.patch", when="@5.22.0")
 
+    # Support zlib-ng 2.1.2 and above for recent Perl
+    # Restrict zlib-ng to older versions for older Perl
+    # See https://github.com/pmqs/Compress-Raw-Zlib/issues/24
+    patch("zlib-ng.patch", when="@5.38 ^zlib-ng@2.1.2:")
+    conflicts("zlib-ng@2.1.2:", when="@:5.37")
+
     # Fix the Time-Local testase http://blogs.perl.org/users/tom_wyant/2020/01/my-y2020-bug.html
     patch(
         "https://rt.cpan.org/Public/Ticket/Attachment/1776857/956088/0001-Fix-Time-Local-tests.patch",
