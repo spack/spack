@@ -947,8 +947,7 @@ def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="ArchSpec gives test platform debian rather than windows",
+    sys.platform == "win32", reason="ArchSpec gives test platform debian rather than windows"
 )
 def test_compiler_bootstrap(
     install_mockery_mutable_config,
@@ -1008,8 +1007,7 @@ def test_compiler_bootstrap_from_binary_mirror(
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="ArchSpec gives test platform debian rather than windows",
+    sys.platform == "win32", reason="ArchSpec gives test platform debian rather than windows"
 )
 @pytest.mark.regression("16221")
 def test_compiler_bootstrap_already_installed(
