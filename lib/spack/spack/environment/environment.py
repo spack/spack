@@ -1807,8 +1807,8 @@ class Environment:
           environment.
         """
         return (
-            self._dev_dep_changed_after_install_time() +
-            self._dev_dep_was_installed_more_recently()
+            self._dev_dep_changed_after_install_time()
+            + self._dev_dep_was_installed_more_recently()
         )
 
     def _dev_dep_changed_after_install_time(self):
