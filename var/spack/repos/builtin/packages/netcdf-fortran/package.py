@@ -129,10 +129,8 @@ class NetcdfFortran(AutotoolsPackage):
 
         return config_args
 
-    @when("@:4.4.5")
     def check(self):
-        with working_dir(self.build_directory):
-            make("check", parallel=False)
+        make("check", parallel=self.spec.satisfies("@4.5:"))
 
     @run_after("install")
     def cray_module_filenames(self):
