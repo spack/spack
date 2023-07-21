@@ -758,25 +758,25 @@ class TestSpecSemantics:
             name = "PKG"
 
         # We can't use names that are reserved by Spack
-        fn = variant("patches")
+        fn = variant("patches", description="")
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
         assert "The name 'patches' is reserved" in str(exc_info.value)
 
         # We can't have conflicting definitions for arguments
-        fn = variant("foo", values=spack.variant.any_combination_of("fee", "foom"), default="bar")
+        fn = variant("foo", values=spack.variant.any_combination_of("fee", "foom"), default="bar", description="")
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
         assert " it is handled by an attribute of the 'values' " "argument" in str(exc_info.value)
 
         # We can't leave None as a default value
-        fn = variant("foo", default=None)
+        fn = variant("foo", default=None, description="")
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
         assert "either a default was not explicitly set, or 'None' was used" in str(exc_info.value)
 
         # We can't use an empty string as a default value
-        fn = variant("foo", default="")
+        fn = variant("foo", default="", description="")
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
         assert "the default cannot be an empty string" in str(exc_info.value)
