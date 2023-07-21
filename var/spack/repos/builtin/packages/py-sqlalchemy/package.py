@@ -33,9 +33,12 @@ class PySqlalchemy(PythonPackage):
 
     depends_on("py-setuptools@47:", when="@2:", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-importlib-metadata", when="@1.4.0: ^python@:3.7", type="run")
+    depends_on("py-cython@0.28.24:", when="@2:", type="build")
+
+    depends_on("py-importlib-metadata", when="@1.4.0: ^python@:3.7", type=("build", "run"))
+    depends_on("py-greenlet", when="@1.4.0:", type=("build", "run"))
     conflicts("^py-greenlet@0.4.17", when="@1.4.0:")
-    depends_on("py-typing-extensions@4.2.0", when="@2:", type="run")
+    depends_on("py-typing-extensions@4.2.0", when="@2:", type=("build", "run"))
 
     # >=1.4.0
     depends_on("py-mysqlclient@1.4:", when="backend=mysql @1.4:", type=("build", "run"))
