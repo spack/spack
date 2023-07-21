@@ -1786,18 +1786,19 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
 
 def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
     """Strip the top-level directory `prefix` from the member names in a tarfile."""
-    # Tarfile members use '/' as the path separator.
-    regex = re.compile(re.escape(prefix) + "(/+|$)")
+    # Including trailing /, otherwise we end up with absolute paths.
+    regex = re.compile(re.escape(prefix) + "/*")
 
-    # Remove the top-level directory from the member names.
+    # Remove the top-level directory from the member (link)names.
+    # Note: when a tarfile is created, relative in-prefix symlinks are
+    # expanded to matching member names of tarfile entries. So, we have
+    # to ensure that those are updated too.
+    # Absolute symlinks are copied verbatim -- relocation should take care of
+    # them.
     for m in tar.getmembers():
         result = regex.match(m.name)
-        if not result:
-            continue
-
+        assert result is not None
         m.name = m.name[result.end() :]
-
-        # Both symlinks and hardlinks use linkname.
         if m.linkname:
             result = regex.match(m.linkname)
             if result:
@@ -1875,16 +1876,15 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
                 tarfile_path, size, contents, "sha256", expected, local_checksum
             )
 
-    with closing(tarfile.open(tarfile_path, "r")) as tar:
-        # Remove install prefix from tarfil to extract directly into spec.prefix
-        _tar_strip_component(tar, prefix=_ensure_common_prefix(tar))
-
-        try:
+    try:
+        with closing(tarfile.open(tarfile_path, "r")) as tar:
+            # Remove install prefix from tarfil to extract directly into spec.prefix
+            _tar_strip_component(tar, prefix=_ensure_common_prefix(tar))
             tar.extractall(path=spec.prefix)
-        except Exception:
-            shutil.rmtree(spec.prefix, ignore_errors=True)
-            _delete_staged_downloads(download_result)
-            raise
+    except Exception:
+        shutil.rmtree(spec.prefix, ignore_errors=True)
+        _delete_staged_downloads(download_result)
+        raise
 
     os.remove(tarfile_path)
     os.remove(specfile_path)
@@ -1913,9 +1913,10 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
 
 def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
     # Get the shortest length directory.
-    # Notice: we don't care about repeated directory separators as we require
-    # each member to start with the same prefix.
-    common_prefix = min((e.name for e in tar.getmembers() if e.isdir()), key=len)
+    common_prefix = min((e.name for e in tar.getmembers() if e.isdir()), key=len, default=None)
+
+    if common_prefix is None:
+        raise ValueError("Tarball does not contain a common prefix")
 
     # Validate that each file starts with the prefix
     for member in tar.getmembers():
