@@ -764,7 +764,12 @@ class TestSpecSemantics:
         assert "The name 'patches' is reserved" in str(exc_info.value)
 
         # We can't have conflicting definitions for arguments
-        fn = variant("foo", values=spack.variant.any_combination_of("fee", "foom"), default="bar", description="")
+        fn = variant(
+            "foo",
+            values=spack.variant.any_combination_of("fee", "foom"),
+            default="bar",
+            description="",
+        )
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
         assert " it is handled by an attribute of the 'values' " "argument" in str(exc_info.value)
