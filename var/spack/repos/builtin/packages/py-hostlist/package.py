@@ -16,7 +16,7 @@ class PyHostlist(PythonPackage):
     version(
         "1.23",
         sha256="56e0156b501f792c078114f07324f34f37827041581ee5d1ffdce89cca533219",
-        url="https://www.nsc.liu.se/~kent/python-hostlist/python-hostlist-1.23.tar.gz"
+        url="https://www.nsc.liu.se/~kent/python-hostlist/python-hostlist-1.23.tar.gz",
     )
 
     # build dependencies
