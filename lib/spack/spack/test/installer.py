@@ -619,6 +619,7 @@ def test_clear_failures_success(install_mockery):
         assert os.path.isfile(spack.database.failures_lock_path(spack.store.STORE.root))
 
 
+@pytest.mark.xfail(sys.platform == "win32", reason="chmod does not prevent removal on Win")
 def test_clear_failures_errs(install_mockery, capsys):
     """Test the clear_failures exception paths."""
     s = spack.spec.Spec("a").concretized()
