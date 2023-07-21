@@ -18,9 +18,9 @@ class PyOpenai(PythonPackage):
 
     version("0.27.8", sha256="2483095c7db1eee274cebac79e315a986c4e55207bb4fa7b82d185b3a2ed9536")
 
-    variant("datalib", default=False)
-    variant("wandb", default=False)
-    variant("embeddings", default=False)
+    variant("datalib", default=False, description="facilities for data loading")
+    variant("wandb", default=False, description="keeps track of hyperparameters, system metrics, and predictions")
+    variant("embeddings", default=False, description="represents a text string vector")
 
     depends_on("python@3.7.1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
@@ -38,7 +38,7 @@ class PyOpenai(PythonPackage):
     with when("+wandb"):
         depends_on("py-wandb", type=("build", "run"))
         depends_on("py-numpy", type=("build", "run"))
-        depends_on("py-pandas@1.2.4:", type=("build", "run"))
+        depends_on("py-pandas@1.2.3:", type=("build", "run"))
         depends_on("py-pandas-stubs@1.1.0.11:", type=("build", "run"))
         depends_on("py-openpyxl@3.0.7:", type=("build", "run"))
 
@@ -49,6 +49,6 @@ class PyOpenai(PythonPackage):
         depends_on("py-plotly", type=("build", "run"))
         depends_on("py-numpy", type=("build", "run"))
         depends_on("py-scipy", type=("build", "run"))
-        depends_on("py-pandas@1.2.4:", type=("build", "run"))
+        depends_on("py-pandas@1.2.3:", type=("build", "run"))
         depends_on("py-pandas-stubs@1.1.0.11:", type=("build", "run"))
         depends_on("py-openpyxl@3.0.7:", type=("build", "run"))
