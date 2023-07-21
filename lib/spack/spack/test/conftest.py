@@ -50,7 +50,7 @@ import spack.util.git
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
-from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
+from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
 from spack.util.web import FetchError
 
@@ -959,7 +959,7 @@ def install_mockery(temporary_store, mutable_config, mock_packages):
     # Also wipe out any cached prefix failure locks (associated with
     # the session-scoped mock archive).
     for pkg_id in list(temporary_store.db._prefix_failures.keys()):
-        lock = spack.store.db._prefix_failures.pop(pkg_id, None)
+        lock = spack.store.STORE.db._prefix_failures.pop(pkg_id, None)
         if lock:
             try:
                 lock.release_write()
@@ -993,10 +993,9 @@ def install_mockery_mutable_config(temporary_store, mutable_config, mock_package
 @pytest.fixture()
 def mock_fetch(mock_archive, monkeypatch):
     """Fake the URL for a package so it downloads from a file."""
-    mock_fetcher = FetchStrategyComposite()
-    mock_fetcher.append(URLFetchStrategy(mock_archive.url))
-
-    monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", mock_fetcher)
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "fetcher", URLFetchStrategy(mock_archive.url)
+    )
 
 
 class MockLayout:
@@ -1701,15 +1700,15 @@ def mock_test_stage(mutable_config, tmpdir):
 
 @pytest.fixture(autouse=True)
 def inode_cache():
-    llnl.util.lock.file_tracker.purge()
+    llnl.util.lock.FILE_TRACKER.purge()
     yield
     # TODO: it is a bug when the file tracker is non-empty after a test,
     # since it means a lock was not released, or the inode was not purged
     # when acquiring the lock failed. So, we could assert that here, but
     # currently there are too many issues to fix, so look for the more
     # serious issue of having a closed file descriptor in the cache.
-    assert not any(f.fh.closed for f in llnl.util.lock.file_tracker._descriptors.values())
-    llnl.util.lock.file_tracker.purge()
+    assert not any(f.fh.closed for f in llnl.util.lock.FILE_TRACKER._descriptors.values())
+    llnl.util.lock.FILE_TRACKER.purge()
 
 
 @pytest.fixture(autouse=True)
@@ -1946,4 +1945,4 @@ def nullify_globals(request, monkeypatch):
     monkeypatch.setattr(spack.config, "config", None)
     monkeypatch.setattr(spack.caches, "misc_cache", None)
     monkeypatch.setattr(spack.repo, "path", None)
-    monkeypatch.setattr(spack.store, "store", None)
+    monkeypatch.setattr(spack.store, "STORE", None)

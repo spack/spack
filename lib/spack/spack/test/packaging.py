@@ -26,10 +26,9 @@ import spack.repo
 import spack.store
 import spack.util.gpg
 import spack.util.url as url_util
-from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
+from spack.fetch_strategy import URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import (
-    ensure_binary_is_relocatable,
     macho_find_paths,
     macho_make_paths_normal,
     macho_make_paths_relative,
@@ -47,9 +46,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
     # Install a test package
     spec = Spec("trivial-install-test-package").concretized()
-    fetcher = FetchStrategyComposite()
-    fetcher.append(URLFetchStrategy(mock_archive.url))
-    monkeypatch.setattr(spec.package, "fetcher", fetcher)
+    monkeypatch.setattr(spec.package, "fetcher", URLFetchStrategy(mock_archive.url))
     spec.package.do_install()
     pkghash = "/" + str(spec.dag_hash(7))
 
@@ -73,7 +70,7 @@ def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
         parser = argparse.ArgumentParser()
         buildcache.setup_parser(parser)
 
-        create_args = ["create", "-a", "-f", mirror_path, pkghash]
+        create_args = ["create", "-f", "--rebuild-index", mirror_path, pkghash]
         # Create a private key to sign package with if gpg2 available
         spack.util.gpg.create(
             name="test key 1",
@@ -81,8 +78,6 @@ def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
             email="spack@googlegroups.com",
             comment="Spack test key",
         )
-
-        create_args.insert(create_args.index("-a"), "--rebuild-index")
 
         args = parser.parse_args(create_args)
         buildcache.buildcache(parser, args)
@@ -141,7 +136,6 @@ def test_relocate_text(tmp_path):
     dummy_txt = tmp_path / "dummy.txt"
     dummy_txt.write_text(original_dir)
 
-    ensure_binary_is_relocatable(os.path.realpath(dummy_txt))
     relocate_text([str(dummy_txt)], {original_dir: relocation_dir})
     text = dummy_txt.read_text()
 
@@ -489,8 +483,7 @@ def mock_download():
                 "<non-existent URL>", "This FetchStrategy always fails"
             )
 
-    fetcher = FetchStrategyComposite()
-    fetcher.append(FailedDownloadStrategy())
+    fetcher = FailedDownloadStrategy()
 
     @property
     def fake_fn(self):
@@ -536,9 +529,7 @@ def fetching_not_allowed(monkeypatch):
         def fetch(self):
             raise Exception("Sources are fetched but shouldn't have been")
 
-    fetcher = FetchStrategyComposite()
-    fetcher.append(FetchingNotAllowed())
-    monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", fetcher)
+    monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", FetchingNotAllowed())
 
 
 def test_fetch_without_code_is_noop(

@@ -50,7 +50,7 @@ stage_prefix = "spack-stage-"
 
 def compute_stage_name(spec):
     """Determine stage name given a spec"""
-    default_stage_structure = "spack-stage-{name}-{version}-{hash}"
+    default_stage_structure = stage_prefix + "{name}-{version}-{hash}"
     stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
     return spec.format(format_string=stage_name_structure)
 
@@ -337,7 +337,7 @@ class Stage:
 
                 tty.debug("Creating stage lock {0}".format(self.name))
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
-                    stage_lock_path, lock_id, 1, desc=self.name
+                    stage_lock_path, start=lock_id, length=1, desc=self.name
                 )
 
             self._lock = Stage.stage_locks[self.name]
@@ -428,6 +428,12 @@ class Stage:
     def source_path(self):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
+
+    def disable_mirrors(self):
+        """The Stage will not attempt to look for the associated fetcher
+        target in any of Spack's mirrors (including the local download cache).
+        """
+        self.mirror_paths = []
 
     def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
@@ -738,6 +744,7 @@ class StageComposite(pattern.Composite):
                 "cache_local",
                 "cache_mirror",
                 "steal_source",
+                "disable_mirrors",
                 "managed_by_spack",
             ]
         )
