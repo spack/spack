@@ -1472,10 +1472,6 @@ class UnknownEntityError(RepoError):
     """Raised when we encounter a package spack doesn't have."""
 
 
-class IndexError(RepoError):
-    """Raised when there's an error with an index."""
-
-
 class UnknownPackageError(UnknownEntityError):
     """Raised when we encounter a package spack doesn't have."""
 
