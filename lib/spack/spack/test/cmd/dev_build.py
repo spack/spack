@@ -460,7 +460,7 @@ spack:
             )
 
         env("create", "test", "./spack.yaml")
-        with ev.read("test"):
+        with ev.read("test") as e:
             install()
 
             reset_string()  # so the package will accept rebuilds
@@ -471,6 +471,12 @@ spack:
             # time tracking may be too coarse-grained to actually recognize
             # that, so explicitly advance time a "significant" amount
             spack.store.STORE.db._update_install_time("dev-build-test-install", delta=1)
+
+            assert not e._dev_dep_changed_after_install_time()
+            to_reinstall = e._dev_dep_was_installed_more_recently()
+            assert len(to_reinstall) == 1
+            reinstall_hash, = to_reinstall
+            assert e.get_one_by_hash(reinstall_hash).name == "dependent-of-dev-build"
 
             # At this point, the dependent should be reinstalled too, because
             # there is a more-recent version of the dependency
