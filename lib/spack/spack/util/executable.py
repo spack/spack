@@ -281,6 +281,7 @@ def which_string(*args, **kwargs):
         paths = [Path(x) for x in path.split(os.pathsep)]
 
     for search_item in args:
+        is_cwd = True if search_item.startswith(".") else False
         search_item = Path(search_item)
         candidate_items = [Path(search_item)]
         if sys.platform == "win32":
@@ -295,7 +296,7 @@ def which_string(*args, **kwargs):
                     paths.append(p.parent)
 
         for candidate_item in candidate_items:
-            search_paths = [Path.cwd()] + paths
+            search_paths = [Path.cwd()] + paths if is_cwd else paths
 
             for directory in search_paths:
                 exe = directory / candidate_item
