@@ -36,7 +36,7 @@ if sys.platform == "win32":
     ]
     SUFFIXES = []
 else:
-    SYSTEM_PATHS = ["/", "/usr", "/usr/local"]
+    SYSTEM_PATHS = ["/", "/usr", "/usr/local", "/opt/homebrew"]
     SUFFIXES = ["bin", "bin64", "include", "lib", "lib64"]
 
 SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
