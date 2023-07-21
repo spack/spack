@@ -330,7 +330,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                 self.define("CMAKE_CXX_COMPILER", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             )
 
-        if "+sycl" in self.spec:
+        if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
             options.append(self.define("CMAKE_CXX_FLAGS", "-fp-model=precise"))
 
         return options
