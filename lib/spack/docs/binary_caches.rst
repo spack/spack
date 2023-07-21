@@ -51,7 +51,7 @@ Here is an example where a build cache is created in a local directory named
     $ spack buildcache push ./spack-cache ninja
     ==> Pushing binary packages to file:///home/spackuser/spack/spack-cache/build_cache
 
-Not that ``ninja`` must be installed locally for this to work.
+Note that ``ninja`` must be installed locally for this to work.
 
 Once you have a build cache, you can add it as a mirror, discussed next.
 
