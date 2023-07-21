@@ -33,7 +33,7 @@ class PySqlalchemy(PythonPackage):
 
     depends_on("py-setuptools@47:", when="@2:", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython@0.28.24:", when="@2:", type="build")
+    depends_on("py-cython@0.29.24:", when="@2:", type="build")
 
     depends_on("py-importlib-metadata", when="@1.4.0: ^python@:3.7", type=("build", "run"))
     depends_on("py-greenlet", when="@1.4.0:", type=("build", "run"))
