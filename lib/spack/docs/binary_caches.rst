@@ -51,7 +51,7 @@ Here is an example where a build cache is created in a local directory named
     $ spack buildcache push --allow-root ./spack-cache ninja
     ==> Pushing binary packages to file:///home/spackuser/spack/spack-cache/build_cache
 
-Not that ``ninja`` must be installed locally for this to work.
+Note that ``ninja`` must be installed locally for this to work.
 
 We're using the ``--allow-root`` flag to tell Spack that is OK when any of
 the binaries we're pushing contain references to the local Spack install
