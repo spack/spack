@@ -1,0 +1,48 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: false
+
+  packages:
+    all:
+      require: '%gcc'
+      providers:
+        blas: [cray-libsci]
+        lapack: [cray-libsci]
+        mpi: [cray-mpich]
+        tbb: [intel-tbb]
+        scalapack: [netlib-scalapack]
+      target: [zen4]
+      variants: +mpi
+
+    binutils:
+      variants: +ld +gold +headers +libiberty ~nls
+    hdf5:
+      variants: +fortran +hl +shared
+    libunwind:
+      variants: +pic +xz
+    ncurses:
+      require: '@6.3 +termlib'
+    openblas:
+      require: '@0.3.20'
+      variants: threads=openmp
+    xz:
+      variants: +pic
+    elfutils:
+      variants: +bzip2 ~nls +xz
+      require: '%gcc'
+
+  specs:
+  - butterflypack
+  - hypre
+  - kokkos
+  - kokkos-kernels
+  - raja
+  - superlu-dist
+
+  mirrors: { "mirror": "s3://spack-binaries-cray/develop/e4s-cray-sles" }
+
+  cdash:
+    build-group: E4S Cray SLES

@@ -4,9 +4,14 @@ default:
   image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
 
 # CI Platform-Arch
-.cray_zen4:
+.cray_rhel_zen4:
   variables:
-    SPACK_TARGET_PLATFORM: "cray"
+    SPACK_TARGET_PLATFORM: "cray-rhel"
+    SPACK_TARGET_ARCH: "zen4"
+
+.cray_sles_zen4:
+  variables:
+    SPACK_TARGET_PLATFORM: "cray-sles"
     SPACK_TARGET_ARCH: "zen4"
 
 .darwin_x86_64:
@@ -797,7 +802,6 @@ deprecated-ci-build:
         SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
 
 .generate-cray:
-  tags: [ "cce@15.0.1", "cray-zen4", "public" ]
   extends: [ ".base-cray-job" ]
   stage: generate
   script:
@@ -835,28 +839,60 @@ deprecated-ci-build:
     when:
       - always
 
+.generate-cray-rhel:
+  tags: [ "cray-rhel-zen4", "public" ]
+  extends: [ ".generate-cray" ]
+
+.generate-cray-sles:
+  tags: [ "cray-sles-zen4", "public" ]
+  extends: [ ".generate-cray" ]
+
+
 .build-cray:
   extends: [ ".base-cray-job" ]
   stage: build
 
+
 #######################################
-# E4S - Cray
+# E4S - Cray RHEL
 #######################################
-.e4s-cray:
-  extends: [ ".cray_zen4" ]
+.e4s-cray-rhel:
+  extends: [ ".cray_rhel_zen4" ]
   variables:
-    SPACK_CI_STACK_NAME: e4s-cray
+    SPACK_CI_STACK_NAME: e4s-cray-rhel
 
-e4s-cray-generate:
-  extends: [ ".generate-cray", ".e4s-cray" ]
+e4s-cray-rhel-generate:
+  extends: [ ".generate-cray-rhel", ".e4s-cray-rhel" ]
 
-e4s-cray-build:
-  extends: [ ".build-cray", ".e4s-cray" ]
+e4s-cray-rhel-build:
+  extends: [ ".build-cray", ".e4s-cray-rhel" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-cray-generate
+        job: e4s-cray-rhel-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: e4s-cray-generate
+      job: e4s-cray-rhel-generate
+
+#######################################
+# E4S - Cray SLES
+#######################################
+.e4s-cray-sles:
+  extends: [ ".cray_sles_zen4" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-cray-sles
+
+e4s-cray-sles-generate:
+  extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
+
+e4s-cray-sles-build:
+  extends: [ ".build-cray", ".e4s-cray-sles" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-sles-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-sles-generate
