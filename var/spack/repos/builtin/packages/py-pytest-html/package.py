@@ -13,6 +13,7 @@ class PyPytestHtml(PythonPackage):
 
     homepage = "https://github.com/pytest-dev/pytest-html"
     pypi = "pytest-html/pytest-html-3.1.1.tar.gz"
+    git = "https://github.com/pytest-dev/pytest-html.git"
 
     version("3.2.0", sha256="c4e2f4bb0bffc437f51ad2174a8a3e71df81bbc2f6894604e604af18fbe687c3")
     version("3.1.1", sha256="3ee1cf319c913d19fe53aeb0bc400e7b0bc2dbeb477553733db1dad12eb75ee3")
