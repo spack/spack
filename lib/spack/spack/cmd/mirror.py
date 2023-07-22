@@ -253,12 +253,12 @@ def _configure_mirror(args):
 
 
 def mirror_set(args):
-    """Configure the connection details of a mirror"""
+    """configure the connection details of a mirror"""
     _configure_mirror(args)
 
 
 def mirror_set_url(args):
-    """Change the URL of a mirror."""
+    """change the URL of a mirror"""
     _configure_mirror(args)
 
 
