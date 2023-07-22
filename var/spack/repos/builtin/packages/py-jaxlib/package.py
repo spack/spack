@@ -49,7 +49,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
 
     conflicts("~cuda")
     conflicts(
-        "cuda_arch=none",
+        "+cuda cuda_arch=none",
         msg="Must specify CUDA compute capabilities of your GPU, see "
         "https://developer.nvidia.com/cuda-gpus",
     )
