@@ -480,6 +480,7 @@ class CMakeBuilder(CMakeBuilder):
             self.define("GDAL_USE_JSONC", True),
             self.define("GDAL_USE_TIFF", True),
             self.define("GDAL_USE_ZLIB", True),
+            self.define("ENABLE_DEFLATE64", False),
             # Optional dependencies
             self.define_from_variant("GDAL_USE_ARMADILLO", "armadillo"),
             self.define_from_variant("GDAL_USE_ARROW", "arrow"),
