@@ -8,6 +8,7 @@ import os
 import pathlib
 import platform
 import re
+import shutil
 import sys
 from typing import List, Optional, Tuple
 
@@ -161,6 +162,20 @@ class CMakePackage(spack.package_base.PackageBase):
 
     def define_from_variant(self, *args, **kwargs):
         return self.builder.define_from_variant(*args, **kwargs)
+
+    def do_clean(self):
+        """
+        add functionality for cleaning up a develop build
+        """
+        super().do_clean()
+        if not self.stage.managed_by_spack:
+            build_dir = self.builder.build_directory
+            logs = self.phase_log_files
+            if os.path.isdir(build_dir):
+                shutil.rmtree(build_dir)
+            for log in logs:
+                if os.path.isfile(log):
+                    os.remove(log)
 
 
 @spack.builder.builder("cmake")
