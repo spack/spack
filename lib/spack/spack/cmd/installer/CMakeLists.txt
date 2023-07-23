@@ -1,9 +1,10 @@
 ﻿cmake_minimum_required (VERSION 3.13)
 project(spack_installer NONE)
-
+set(ARCH "64" CACHE STRING "Targeted architecture of Python/Git")
 set(PYTHON_VERSION "3.9.0" CACHE STRING "Version of Python to build.")
+set(PYTHON_HASH "f6aeebc6d1ff77418678ed5612b64ce61be6bc9ef3ab9c291ac557abb1783420" CACHE STRING "SHA256 for Python distribution")
 set(PY_DOWNLOAD_LINK "https://www.paraview.org/files/dependencies")
-set(PY_FILENAME "Python-${PYTHON_VERSION}-win64.tar.xz")
+set(PY_FILENAME "Python-${PYTHON_VERSION}-win${ARCH}.tar.xz")
 set(PYTHON_DIR "Python-${PYTHON_VERSION}")
 
 if (SPACK_VERSION)
@@ -34,17 +35,24 @@ if (SPACK_VERSION)
   SET(SPACK_SOURCE "${CMAKE_CURRENT_BINARY_DIR}/${SPACK_DIR}")
 elseif(SPACK_SOURCE)
   get_filename_component(SPACK_DIR ${SPACK_SOURCE} NAME)
+  # Get current version of Spack being bundled to tag the installer
+  execute_process(COMMAND spack.bat --version OUTPUT_VARIABLE SPACK_FULL_VERSION)
+  # Strip off commit hash, just need version
+  string(REGEX REPLACE " \\([A-Za-z0-9]+\\) *\n*$" "" SPACK_VERSION ${SPACK_FULL_VERSION})
 else()
   message(FATAL_ERROR "Must specify SPACK_VERSION or SPACK_SOURCE")
 endif()
 
 
 # GIT DOWNLOAD----------------------------------------------------
-set(GIT_FILENAME "Git-2.31.1-64-bit.exe")
-file(DOWNLOAD "https://github.com/git-for-windows/git/releases/download/v2.31.1.windows.1/Git-2.31.1-64-bit.exe"
+# If user does not specify Git version, default to 2.31.1
+set(GIT_VESION "2.31.1" CACHE STRING "Version of Git to install")
+set(GIT_HASH "c43611eb73ad1f17f5c8cc82ae51c3041a2e7279e0197ccf5f739e9129ce426e" CACHE STRING "SHA256 for Git installer")
+set(GIT_FILENAME "Git-${GIT_VERSION}-64-bit.exe")
+file(DOWNLOAD "https://github.com/git-for-windows/git/releases/download/v${GIT_VERSION}.windows.1/Git-${GIT_VERSION}-${ARCH}-bit.exe"
     "${CMAKE_CURRENT_BINARY_DIR}/${GIT_FILENAME}"
     STATUS download_status
-    EXPECTED_HASH "SHA256=c43611eb73ad1f17f5c8cc82ae51c3041a2e7279e0197ccf5f739e9129ce426e"
+    EXPECTED_HASH "SHA256=${GIT_HASH}"
 )
 list(GET download_status 0 res)
 if(res)
@@ -58,7 +66,7 @@ message(STATUS "Successfully downloaded ${GIT_FILENAME}")
 file(DOWNLOAD "${PY_DOWNLOAD_LINK}/${PY_FILENAME}"
   "${CMAKE_CURRENT_BINARY_DIR}/${PY_FILENAME}"
   STATUS download_status
-  EXPECTED_HASH "SHA256=f6aeebc6d1ff77418678ed5612b64ce61be6bc9ef3ab9c291ac557abb1783420"
+  EXPECTED_HASH "SHA256=${PYTHON_HASH}"
 )
 list(GET download_status 0 res)
 if(res)
@@ -89,7 +97,7 @@ install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Python-${PYTHON_VERSION}-win64/"
 # CPACK Installer Instructions
 set(CPACK_PACKAGE_NAME "Spack")
 set(CPACK_PACKAGE_VENDOR "Lawrence Livermore National Laboratories")
-set(CPACK_PACKAGE_VERSION "0.16.0")
+set(CPACK_PACKAGE_VERSION "${SPACK_VERSION}")
 set(CPACK_PACKAGE_DESCRIPTION "A flexible package manager designed to support multiple versions, configurations, platforms, and compilers.")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://spack.io")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}")

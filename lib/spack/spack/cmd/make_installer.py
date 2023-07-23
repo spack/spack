@@ -6,6 +6,8 @@ import os
 import posixpath
 import sys
 
+from llnl.util import tty
+
 import spack.paths
 import spack.util.executable
 from spack.spec import Spec
@@ -55,6 +57,36 @@ def setup_parser(subparser):
         action="store",
         dest="git_verbosity",
     )
+    subparser.add_argument(
+        "-a",
+        "--arch",
+        default="64",
+        choices=["64", "32"],
+        help="Architecture targeted by bundled Git/Python",
+    )
+    python_version_group = subparser.add_argument_group("Python version and hash")
+    python_version_group.add_argument(
+        "-pv", "--python-version", default="", help="Python version to be bundled with installer"
+    )
+    python_version_group.add_argument(
+        "-ph",
+        "--python-hash",
+        default="",
+        help="Python distribution hash for associated version,"
+        " must be provided if --python-version is specified",
+    )
+
+    git_version_group = subparser.add_argument_group("Git version and hash")
+    git_version_group.add_argument(
+        "-gv", "--git-version", default="", help="Git version to be bundled with installer"
+    )
+    git_version_group.add_argument(
+        "-gh",
+        "--git-hash",
+        default="",
+        help="Git installer hash for associated version"
+        " must be provided if --git-version is specified",
+    )
 
     subparser.add_argument("output_dir", help="output directory")
 
@@ -64,11 +96,38 @@ def make_installer(parser, args):
     Use CMake to generate WIX installer in newly created build directory
     """
     if sys.platform == "win32":
+        git_version = args.git_version
+        python_version = args.python_version
+        if git_version and not args.git_hash:
+            parser.error(
+                "Git version specified without hash"
+                "\nPlease specify sha256 hash for installer if specifying Git version"
+            )
+        git_hash = args.git_hash
+        if python_version and not args.python_hash:
+            parser.error(
+                "Python version specified without hash"
+                "\nPlease specify sha256 hash for distribution if specifying Python version"
+            )
+        python_hash = args.python_hash
         output_dir = args.output_dir
         cmake_spec = Spec("cmake")
         cmake_spec.concretize()
-        cmake_path = os.path.join(cmake_spec.prefix, "bin", "cmake.exe")
-        cpack_path = os.path.join(cmake_spec.prefix, "bin", "cpack.exe")
+        if not (cmake_spec.installed or cmake_spec.external):
+            # Spack is not aware of a CMake, fallback on one being present in PATH
+            # but warn user it may not be available.
+            cmake_path = "cmake.exe"
+            cpack_path = "cpack.exe"
+            tty.warn(
+                "Spack is not aware of a CMake installation."
+                " Defaulting to what is available on the PATH to create the installer"
+                "\nYou may want to consider installing or externally detecting via"
+                " Spack for better results."
+            )
+        else:
+            cmake_path = os.path.join(cmake_spec.prefix, "bin", "cmake.exe")
+            cpack_path = os.path.join(cmake_spec.prefix, "bin", "cpack.exe")
+
         spack_source = args.spack_source
         git_verbosity = ""
         if args.git_verbosity:
@@ -98,29 +157,38 @@ def make_installer(parser, args):
                 raise RuntimeError("Failed to generate properly formatted license file")
         spack_logo = posixpath.join(posix_root, "share/spack/logo/favicon.ico")
 
-        try:
-            spack.util.executable.Executable(cmake_path)(
-                "-S",
-                source_dir,
-                "-B",
-                output_dir,
-                "-DSPACK_VERSION=%s" % spack_version,
-                "-DSPACK_SOURCE=%s" % spack_source,
-                "-DSPACK_LICENSE=%s" % spack_license,
-                "-DSPACK_LOGO=%s" % spack_logo,
-                "-DSPACK_GIT_VERBOSITY=%s" % git_verbosity,
+        cmake_args = [
+            "-S",
+            source_dir,
+            "-B",
+            output_dir,
+            "-DSPACK_VERSION=%s" % spack_version,
+            "-DSPACK_SOURCE=%s" % spack_source,
+            "-DSPACK_LICENSE=%s" % spack_license,
+            "-DSPACK_LOGO=%s" % spack_logo,
+            "-DSPACK_GIT_VERBOSITY=%s" % git_verbosity,
+            "-DARCH=%s" % args.arch,
+        ]
+        if python_version:
+            cmake_args.extend(
+                ["-DPYTHON_VERSION=%s" % python_version, "-DPYTHON_HASH=%s" % python_hash]
             )
-        except spack.util.executable.ProcessError:
-            print("Failed to generate installer")
-            return spack.util.executable.ProcessError.returncode
+        if git_version:
+            cmake_args.extend(["-DGIT_VERSION=%s" % git_version, "-DGIT_HASH=%s" % git_hash])
+
+        try:
+            spack.util.executable.Executable(cmake_path)(*cmake_args)
+        except spack.util.executable.ProcessError as pe:
+            tty.error("Failed to generate installer")
+            raise pe
 
         try:
             spack.util.executable.Executable(cpack_path)(
                 "--config", "%s/CPackConfig.cmake" % output_dir, "-B", "%s/" % output_dir
             )
-        except spack.util.executable.ProcessError:
-            print("Failed to generate installer")
-            return spack.util.executable.ProcessError.returncode
+        except spack.util.executable.ProcessError as pe:
+            tty.error("Failed to generate installer")
+            raise pe
         try:
             spack.util.executable.Executable(os.environ.get("WIX") + "/bin/candle.exe")(
                 "-ext",
@@ -129,9 +197,9 @@ def make_installer(parser, args):
                 "-out",
                 "%s/bundle.wixobj" % output_dir,
             )
-        except spack.util.executable.ProcessError:
-            print("Failed to generate installer chain")
-            return spack.util.executable.ProcessError.returncode
+        except spack.util.executable.ProcessError as pe:
+            tty.error("Failed to generate installer chain")
+            raise pe
         try:
             spack.util.executable.Executable(os.environ.get("WIX") + "/bin/light.exe")(
                 "-sw1134",
@@ -141,9 +209,9 @@ def make_installer(parser, args):
                 "-out",
                 "%s/Spack.exe" % output_dir,
             )
-        except spack.util.executable.ProcessError:
-            print("Failed to generate installer chain")
-            return spack.util.executable.ProcessError.returncode
-        print("Successfully generated Spack.exe in %s" % (output_dir))
+        except spack.util.executable.ProcessError as pe:
+            tty.error("Failed to generate installer chain")
+            raise pe
+        tty.info("Successfully generated Spack.exe in %s" % (output_dir))
     else:
-        print("The make-installer command is currently only supported on Windows.")
+        tty.error("The make-installer command is currently only supported on Windows.")
