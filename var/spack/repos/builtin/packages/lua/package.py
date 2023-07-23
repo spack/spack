@@ -7,15 +7,14 @@ import glob
 import os
 
 import spack.build_environment
+import spack.build_systems.cmake
+import spack.build_systems.makefile
 from spack.package import *
 from spack.util.executable import Executable
 
 
-class LuaImplPackage(MakefilePackage):
-    """Specialized class for lua *implementations*
-
-    This exists to ensure that lua, luajit and luajit-openresty all initialize extension
-    packages the same way and provide luarocks the same way."""
+class LuaBaseMixin(MakefilePackage):
+    """Base class defining common Lua implementation package details"""
 
     extendable = True
 
@@ -53,7 +52,8 @@ class LuaImplPackage(MakefilePackage):
         return os.path.join("share", self.lua_dir_name, self.__verdir())
 
     # luarocks needs unzip for some packages (e.g. lua-luaposix)
-    depends_on("unzip", type="run")
+    for plat in ["linux", "cray", "darwin"]:
+        depends_on("unzip", type="run", when=f"platform={plat}")
 
     # luarocks needs a fetcher (curl/wget), unfortunately I have not found
     # how to force a choice for curl or wget, but curl seems the default.
@@ -113,6 +113,14 @@ class LuaImplPackage(MakefilePackage):
         paths.append(os.path.join(path, "?", "init.lua"))
         cpaths.append(os.path.join(path, "?.so"))
 
+    @property
+    def lua(self):
+        return Executable(self.spec.prefix.bin.lua)
+
+    @property
+    def luarocks(self):
+        return Executable(self.spec.prefix.bin.luarocks)
+
     def _setup_dependent_env_helper(self, env, dependent_spec):
         lua_paths = []
         for d in dependent_spec.traverse(deptype=("build", "run")):
@@ -136,12 +144,6 @@ class LuaImplPackage(MakefilePackage):
             self.append_paths(lua_patterns, lua_cpatterns, p)
 
         return lua_patterns, lua_cpatterns
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        lua_patterns, lua_cpatterns = self._setup_dependent_env_helper(env, dependent_spec)
-
-        env.prepend_path("LUA_PATH", ";".join(lua_patterns), separator=";")
-        env.prepend_path("LUA_CPATH", ";".join(lua_cpatterns), separator=";")
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         # For run time environment set only the path for dependent_spec and
@@ -173,14 +175,6 @@ class LuaImplPackage(MakefilePackage):
             "LUA_CPATH", os.path.join(self.spec.prefix, self.lua_lib_dir, "?.so"), separator=";"
         )
 
-    @property
-    def lua(self):
-        return Executable(self.spec.prefix.bin.lua)
-
-    @property
-    def luarocks(self):
-        return Executable(self.spec.prefix.bin.luarocks)
-
     def setup_dependent_package(self, module, dependent_spec):
         """
         Called before lua modules's install() methods.
@@ -194,7 +188,30 @@ class LuaImplPackage(MakefilePackage):
         module.luarocks = Executable(self.spec.prefix.bin.luarocks)
 
 
-class Lua(LuaImplPackage):
+class LuaBuilderMixin:
+    """Class containing common methods needed to setup the build environment
+    for Lua and dependent packages typically found in the builder class"""
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # This can be invoked from either the builder or package context
+        # this circuitous routing ensures it works from both
+        # without this method needing to understand its calling context
+        lua_patterns, lua_cpatterns = self.spec.package._setup_dependent_env_helper(
+            env, dependent_spec
+        )
+
+        env.prepend_path("LUA_PATH", ";".join(lua_patterns), separator=";")
+        env.prepend_path("LUA_CPATH", ";".join(lua_cpatterns), separator=";")
+
+
+class LuaImplPackage(LuaBaseMixin, LuaBuilderMixin):
+    """Specialized class for lua *implementations*
+
+    This exists to ensure that lua, luajit and luajit-openresty all initialize extension
+    packages the same way and provide luarocks the same way."""
+
+
+class Lua(LuaBaseMixin, CMakePackage):
     """The Lua programming language interpreter and library."""
 
     homepage = "https://www.lua.org"
@@ -227,16 +244,21 @@ class Lua(LuaImplPackage):
     provides("lua-lang@5.2", when="@5.2:5.2.99")
     provides("lua-lang@5.3", when="@5.3:5.3.99")
     provides("lua-lang@5.4", when="@5.4:5.4.99")
+    for plat in ["cray", "darwin", "linux"]:
+        depends_on("ncurses+termlib", when=f"platform={plat}")
+        depends_on("readline", when=f"platform={plat}")
 
-    depends_on("ncurses+termlib")
-    depends_on("readline")
+    build_system("cmake", "makefile", default="makefile")
 
     patch(
         "http://lua.2524044.n2.nabble.com/attachment/7666421/0/pkg-config.patch",
         sha256="208316c2564bdd5343fa522f3b230d84bd164058957059838df7df56876cb4ae",
         when="+pcfile @:5.3.9999",
     )
+    patch("lua_cmake.patch", when="platform=windows build_system=cmake")
 
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, LuaBuilderMixin):
     def build(self, spec, prefix):
         if spec.satisfies("platform=darwin"):
             target = "macosx"
@@ -290,3 +312,8 @@ class Lua(LuaImplPackage):
                 join_path(self.prefix.lib, "pkgconfig", versioned_pc_file_name),
                 join_path(self.prefix.lib, "pkgconfig", "lua.pc"),
             )
+
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, LuaBuilderMixin):
+    def cmake_args(self):
+        return [self.define("BUILD_SHARED_LIBS", True)]
