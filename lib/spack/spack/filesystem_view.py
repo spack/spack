@@ -40,7 +40,6 @@ import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
-from spack.hooks import sbang
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -89,12 +88,6 @@ def view_copy(src: str, dst: str, view, spec: Optional[spack.spec.Spec] = None):
         spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
     else:
         prefix_to_projection[spack.store.STORE.layout.root] = view._root
-
-        # This is vestigial code for the *old* location of sbang.
-        prefix_to_projection[
-            "#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)
-        ] = sbang.sbang_shebang_line()
-
         spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
 
     try:

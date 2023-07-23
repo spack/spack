@@ -738,26 +738,21 @@ class Database:
             if hash_key in db._data:
                 return db
 
-    def query_by_spec_hash(
-        self, hash_key: str, data: Optional[Dict[str, InstallRecord]] = None
-    ) -> Tuple[bool, Optional[InstallRecord]]:
+    def query_by_spec_hash(self, hash_key: str) -> Optional[Tuple["Database", InstallRecord]]:
         """Get a spec for hash, and whether it's installed upstream.
 
-        Return:
-            (tuple): (bool, optional InstallRecord): bool tells us whether
-                the spec is installed upstream. Its InstallRecord is also
-                returned if it's installed at all; otherwise None.
+        Return: (Database, InstallRecord) when installed (locally or upstream), otherwise None.
         """
-        if data and hash_key in data:
-            return False, data[hash_key]
-        if not data:
-            with self.read_transaction():
-                if hash_key in self._data:
-                    return False, self._data[hash_key]
+        with self.read_transaction():
+            if hash_key in self._data:
+                return self, self._data[hash_key]
+        return self.query_by_spec_hash_upstream(hash_key)
+
+    def query_by_spec_hash_upstream(self, hash_key) -> Optional[Tuple["Database", InstallRecord]]:
         for db in self.upstream_dbs:
             if hash_key in db._data:
-                return True, db._data[hash_key]
-        return False, None
+                return db, db._data[hash_key]
+        return None
 
     def query_local_by_spec_hash(self, hash_key):
         """Get a spec by hash in the local database
@@ -768,7 +763,9 @@ class Database:
         with self.read_transaction():
             return self._data.get(hash_key, None)
 
-    def _assign_dependencies(self, spec_reader, hash_key, installs, data):
+    def _assign_dependencies(
+        self, spec_reader, hash_key, installs, data: Dict[str, InstallRecord]
+    ):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         spec = data[hash_key].spec
@@ -789,19 +786,22 @@ class Database:
                 # enough information to determine which one a local package
                 # depends on, so the convention ensures that this isn't an
                 # issue.
-                upstream, record = self.query_by_spec_hash(dhash, data=data)
-                child = record.spec if record else None
+                if dhash in data:
+                    child = data[dhash].spec
+                else:
+                    entry = self.query_by_spec_hash_upstream(dhash)
 
-                if not child:
-                    msg = "Missing dependency not in database: " "%s needs %s-%s" % (
-                        spec.cformat("{name}{/hash:7}"),
-                        dname,
-                        dhash[:7],
-                    )
-                    if self._fail_when_missing_deps:
-                        raise MissingDependenciesError(msg)
-                    tty.warn(msg)
-                    continue
+                    if not entry:
+                        spec_fmt = spec.cformat("{name}{/hash:7}")
+                        msg = (
+                            f"Missing dependency in database: {spec_fmt} needs {dname}-{dhash[:7]}"
+                        )
+                        if self._fail_when_missing_deps:
+                            raise MissingDependenciesError(msg)
+                        tty.warn(msg)
+                        continue
+
+                    child = entry[1].spec
 
                 spec._add_dependency(child, deptypes=dtypes, virtuals=virtuals)
 
@@ -1147,8 +1147,9 @@ class Database:
 
         key = spec.dag_hash()
         spec_pkg_hash = spec._package_hash
-        upstream, record = self.query_by_spec_hash(key)
-        if upstream:
+
+        # Skip if in an upstream database
+        if self.query_by_spec_hash_upstream(key) is not None:
             return
 
         # Retrieve optional arguments
@@ -1208,9 +1209,9 @@ class Database:
             # Connect dependencies from the DB to the new copy.
             for dep in spec.edges_to_dependencies(deptype=_TRACKED_DEPENDENCIES):
                 dkey = dep.spec.dag_hash()
-                upstream, record = self.query_by_spec_hash(dkey)
+                dep_database, record = self.query_by_spec_hash(dkey)
                 new_spec._add_dependency(record.spec, deptypes=dep.deptypes, virtuals=dep.virtuals)
-                if not upstream:
+                if not dep_database.is_upstream:
                     record.ref_count += 1
 
             # Mark concrete once everything is built, and preserve
@@ -1241,18 +1242,17 @@ class Database:
     def _get_matching_spec_key(self, spec, **kwargs):
         """Get the exact spec OR get a single spec that matches."""
         key = spec.dag_hash()
-        upstream, record = self.query_by_spec_hash(key)
-        if not record:
-            match = self.query_one(spec, **kwargs)
-            if match:
-                return match.dag_hash()
-            raise NoSuchSpecError(spec)
-        return key
+        if self.query_by_spec_hash(key):
+            return key
+        match = self.query_one(spec, **kwargs)
+        if match:
+            return match.dag_hash()
+        raise NoSuchSpecError(spec)
 
     @_autospec
     def get_record(self, spec, **kwargs):
         key = self._get_matching_spec_key(spec, **kwargs)
-        upstream, record = self.query_by_spec_hash(key)
+        _, record = self.query_by_spec_hash(key)
         return record
 
     def _decrement_ref_count(self, spec):
@@ -1395,8 +1395,8 @@ class Database:
 
             for relative in to_add:
                 hash_key = relative.dag_hash()
-                upstream, record = self.query_by_spec_hash(hash_key)
-                if not record:
+                result = self.query_by_spec_hash(hash_key)
+                if not result:
                     reltype = "Dependent" if direction == "parents" else "Dependency"
                     msg = "Inconsistent state! %s %s of %s not in DB" % (
                         reltype,
@@ -1407,6 +1407,8 @@ class Database:
                         raise MissingDependenciesError(msg)
                     tty.warn(msg)
                     continue
+
+                _, record = result
 
                 if not record.installed:
                     continue
@@ -1616,8 +1618,8 @@ class Database:
 
     def missing(self, spec):
         key = spec.dag_hash()
-        upstream, record = self.query_by_spec_hash(key)
-        return record and not record.installed
+        result = self.query_by_spec_hash(key)
+        return result and not result[0].installed
 
     def is_occupied_install_prefix(self, path):
         with self.read_transaction():

@@ -52,6 +52,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
+from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.spec import Spec
 from spack.stage import Stage
@@ -777,11 +778,15 @@ def get_buildinfo_dict(spec):
     """Create metadata for a tarball"""
     manifest = get_buildfile_manifest(spec)
 
+    # Get the relvant database.
+    result = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+    assert result is not None
+
+    database, _ = result
+
     return {
-        "sbang_install_path": spack.hooks.sbang.sbang_install_path(),
-        "buildpath": spack.store.STORE.layout.root,
-        "spackprefix": spack.paths.prefix,
-        "relative_prefix": os.path.relpath(spec.prefix, spack.store.STORE.layout.root),
+        "database_root": database.root,
+        "relative_prefix": os.path.relpath(spec.prefix, database.root),
         "relocate_textfiles": manifest["text_to_relocate"],
         "relocate_binaries": manifest["binary_to_relocate"],
         "relocate_links": manifest["link_to_relocate"],
@@ -1304,15 +1309,7 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
         else:
             raise ValueError("{0} not a valid spec file type".format(spec_file))
     spec_dict["buildcache_layout_version"] = 1
-    bchecksum = {}
-    bchecksum["hash_algorithm"] = "sha256"
-    bchecksum["hash"] = checksum
-    spec_dict["binary_cache_checksum"] = bchecksum
-    # Add original install prefix relative to layout root to spec.json.
-    # This will be used to determine is the directory layout has changed.
-    buildinfo = {}
-    buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.STORE.layout.root)
-    spec_dict["buildinfo"] = buildinfo
+    spec_dict["binary_cache_checksum"] = {"hash_algorithm": "sha256", "hash": checksum}
 
     with open(specfile_path, "w") as outfile:
         # Note: when using gpg clear sign, we need to avoid long lines (19995 chars).
@@ -1600,25 +1597,17 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
-def relocate_package(spec):
-    """
-    Relocate the given package
-    """
-    workdir = str(spec.prefix)
-    buildinfo = read_buildinfo_file(workdir)
-    new_layout_root = str(spack.store.STORE.layout.root)
-    new_prefix = str(spec.prefix)
-    new_rel_prefix = str(os.path.relpath(new_prefix, new_layout_root))
-    new_spack_prefix = str(spack.paths.prefix)
+def relocate_package(spec: Spec):
+    """Relocate the given package"""
+    buildinfo = read_buildinfo_file(spec.prefix)
 
-    old_sbang_install_path = None
-    if "sbang_install_path" in buildinfo:
-        old_sbang_install_path = str(buildinfo["sbang_install_path"])
-    old_layout_root = str(buildinfo["buildpath"])
-    old_spack_prefix = str(buildinfo.get("spackprefix"))
-    old_rel_prefix = buildinfo.get("relative_prefix")
-    old_prefix = os.path.join(old_layout_root, old_rel_prefix)
-    rel = buildinfo.get("relative_rpaths", False)
+    relocate_textfiles = buildinfo.get("relocate_textfiles")
+    relocate_binaries = buildinfo.get("relocate_binaries")
+    relocate_links = buildinfo.get("relocate_links")
+
+    # Early exit if nothing to relocate.
+    if not relocate_textfiles and not relocate_binaries and not relocate_links:
+        return
 
     # In the past prefix_to_hash was the default and externals were not dropped, so prefixes
     # were not unique.
@@ -1627,120 +1616,94 @@ def relocate_package(spec):
     elif "prefix_to_hash" in buildinfo:
         hash_to_old_prefix = dict((v, k) for (k, v) in buildinfo["prefix_to_hash"].items())
     else:
-        hash_to_old_prefix = dict()
+        hash_to_old_prefix = {}
 
-    if old_rel_prefix != new_rel_prefix and not hash_to_old_prefix:
-        msg = "Package tarball was created from an install "
-        msg += "prefix with a different directory layout and an older "
-        msg += "buildcache create implementation. It cannot be relocated."
-        raise NewLayoutException(msg)
+    # Construct the prefix to prefix mapping, which is *ordered* and first
+    # lists the most specific package prefixes.
+    prefix_to_prefix = {
+        hash_to_old_prefix[dag_hash]: new_dep_prefix
+        for dag_hash, new_dep_prefix in hashes_to_prefixes(spec).items()
+        if dag_hash in hash_to_old_prefix
+    }
 
-    # Spurious replacements (e.g. sbang) will cause issues with binaries
-    # For example, the new sbang can be longer than the old one.
-    # Hence 2 dictionaries are maintained here.
-    prefix_to_prefix_text = collections.OrderedDict()
-    prefix_to_prefix_bin = collections.OrderedDict()
+    # Only then add the old to new database path mapping. It goes last because
+    # it's a substring of almost all package prefixes (except external / upstream)
+    # We *also* add this because sbang is not installed in the padded root, but
+    # directly in the database root, because it must reside in a short prefix.
+    db_root = buildinfo.get("database_root") or buildinfo.get("buildpath")
+    if isinstance(db_root, str):
+        prefix_to_prefix[db_root] = spack.store.STORE.db.root
 
-    if old_sbang_install_path:
-        install_path = spack.hooks.sbang.sbang_install_path()
-        prefix_to_prefix_text[old_sbang_install_path] = install_path
+    # Remove identity mappings
+    prefix_to_prefix = dict((k, v) for (k, v) in prefix_to_prefix.items() if k != v)
 
-    # First match specific prefix paths. Possibly the *local* install prefix
-    # of some dependency is in an upstream, so we cannot assume the original
-    # spack store root can be mapped uniformly to the new spack store root.
-    for dag_hash, new_dep_prefix in hashes_to_prefixes(spec).items():
-        if dag_hash in hash_to_old_prefix:
-            old_dep_prefix = hash_to_old_prefix[dag_hash]
-            prefix_to_prefix_bin[old_dep_prefix] = new_dep_prefix
-            prefix_to_prefix_text[old_dep_prefix] = new_dep_prefix
+    # Early exit when installing to the same prefix.
+    if not prefix_to_prefix:
+        return
 
-    # Only then add the generic fallback of install prefix -> install prefix.
-    prefix_to_prefix_text[old_prefix] = new_prefix
-    prefix_to_prefix_bin[old_prefix] = new_prefix
-    prefix_to_prefix_text[old_layout_root] = new_layout_root
-    prefix_to_prefix_bin[old_layout_root] = new_layout_root
-
-    # This is vestigial code for the *old* location of sbang. Previously,
-    # sbang was a bash script, and it lived in the spack prefix. It is
-    # now a POSIX script that lives in the install prefix. Old packages
-    # will have the old sbang location in their shebangs.
-    orig_sbang = "#!/bin/bash {0}/bin/sbang".format(old_spack_prefix)
-    new_sbang = spack.hooks.sbang.sbang_shebang_line()
-    prefix_to_prefix_text[orig_sbang] = new_sbang
-
-    tty.debug("Relocating package from", "%s to %s." % (old_layout_root, new_layout_root))
+    # Tarballs created with Spack <= 0.19 may have used buildcache create --rel.
+    # This would make rpaths relative to the store (with padding), for example:
+    # `pkg-1.2.3-hash/bin/app` has rpath `$ORIGIN/../../zlib-1.2.3-hash/lib`
+    # However, this is rather brittle and would still require relocation, when
+    # (a) different projections are used during installation
+    # (b) upstreams are used.
+    # --rel was removed because of (a) and (b), but also because $ORIGIN *outside*
+    # the package prefix cannot be combined with default environment views that are
+    # based on symlinking to a tradition FHS structure, as $ORIGIN will then become
+    # relative to the *symlink* instead of its target. That is, even if the install
+    # projections are correct, there are view projections that will break things.
+    # So, to support old --rel tarballs, we just verify that at least the projection
+    # of the current spec is the same as when it was pushed to the binary cache.
+    if buildinfo.get("relative_rpaths", False) is True:
+        old_relative_path = buildinfo.get("relative_prefix")
+        if not isinstance(old_relative_path, str):
+            raise NewLayoutException(
+                f"Broken binary tarball for {spec.short_spec}: no relative prefix found"
+            )
+        new_relative_path = os.path.relpath(spec.prefix, spack.store.STORE.root)
+        if old_relative_path != new_relative_path:
+            raise NewLayoutException(
+                f"Cannot install {spec.format('{name}{@version}{/hash:7}')} because it uses "
+                f"relative rpaths, and its original relative directory {old_relative_path} "
+                f"does not match the new one at {new_relative_path}. Make sure your install "
+                "tree projections are identical."
+            )
 
     # Old archives maybe have hardlinks repeated.
-    dedupe_hardlinks_if_necessary(workdir, buildinfo)
-
-    def is_backup_file(file):
-        return file.endswith("~")
+    dedupe_hardlinks_if_necessary(spec.prefix, buildinfo)
 
     # Text files containing the prefix text
-    text_names = list()
-    for filename in buildinfo["relocate_textfiles"]:
-        text_name = os.path.join(workdir, filename)
-        # Don't add backup files generated by filter_file during install step.
-        if not is_backup_file(text_name):
-            text_names.append(text_name)
+    absolutify = lambda f: os.path.join(spec.prefix, f)
+    textfiles = [absolutify(f) for f in relocate_textfiles]
+    binaries = [absolutify(f) for f in relocate_binaries]
+    links = [absolutify(f) for f in relocate_links]
 
-    # If we are not installing back to the same install tree do the relocation
-    if old_prefix != new_prefix:
-        files_to_relocate = [
-            os.path.join(workdir, filename) for filename in buildinfo.get("relocate_binaries")
-        ]
-        # If the buildcache was not created with relativized rpaths
-        # do the relocation of path in binaries
-        platform = spack.platforms.by_name(spec.platform)
-        if "macho" in platform.binary_formats:
-            relocate.relocate_macho_binaries(
-                files_to_relocate,
-                old_layout_root,
-                new_layout_root,
-                prefix_to_prefix_bin,
-                rel,
-                old_prefix,
-                new_prefix,
-            )
-        elif "elf" in platform.binary_formats and not rel:
-            # The new ELF dynamic section relocation logic only handles absolute to
-            # absolute relocation.
-            relocate.new_relocate_elf_binaries(files_to_relocate, prefix_to_prefix_bin)
-        elif "elf" in platform.binary_formats and rel:
-            relocate.relocate_elf_binaries(
-                files_to_relocate,
-                old_layout_root,
-                new_layout_root,
-                prefix_to_prefix_bin,
-                rel,
-                old_prefix,
-                new_prefix,
-            )
+    if not textfiles and not binaries and not links:
+        return
 
-        # Relocate links to the new install prefix
-        links = [os.path.join(workdir, f) for f in buildinfo.get("relocate_links", [])]
-        relocate.relocate_links(links, prefix_to_prefix_bin)
+    # First relocate dynamic sections in binaries
+    platform = spack.platforms.by_name(spec.platform)
+    if "macho" in platform.binary_formats:
+        relocate.relocate_macho_binaries(binaries, prefix_to_prefix)
+    elif "elf" in platform.binary_formats:
+        relocate.relocate_elf_binaries(binaries, prefix_to_prefix)
 
-        # For all buildcaches
-        # relocate the install prefixes in text files including dependencies
-        relocate.relocate_text(text_names, prefix_to_prefix_text)
+    # Relocate links to the new install prefix
+    relocate.relocate_links(links, prefix_to_prefix)
 
-        # relocate the install prefixes in binary files including dependencies
-        changed_files = relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
+    # relocate the install prefixes in binary files including dependencies
+    patched_binaries = relocate.relocate_text_bin(binaries, prefix_to_prefix)
 
-        # Add ad-hoc signatures to patched macho files when on macOS.
-        if "macho" in platform.binary_formats and sys.platform == "darwin":
-            codesign = which("codesign")
-            if not codesign:
-                return
-            for binary in changed_files:
-                codesign("-fs-", binary)
+    # Relocate textfiles if any path has changed
+    relocate.relocate_text(textfiles, prefix_to_prefix)
 
-    # If we are installing back to the same location
-    # relocate the sbang location if the spack directory changed
-    else:
-        if old_spack_prefix != new_spack_prefix:
-            relocate.relocate_text(text_names, prefix_to_prefix_text)
+    # Add ad-hoc signatures to patched macho files when on macOS.
+    if "macho" in platform.binary_formats and sys.platform == "darwin":
+        codesign = which("codesign")
+        if not codesign:
+            return
+        for binary in patched_binaries:
+            codesign("-fs-", binary)
 
 
 def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum):
@@ -1791,15 +1754,41 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
     return tarfile_path
 
 
+def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
+    """Strip the top-level directory `prefix` from the member names in a tarfile."""
+    # Tarfile members use '/' as the path separator.
+    regex = re.compile(re.escape(prefix) + "(/+|$)")
+
+    # Remove the top-level directory from the member names.
+    for m in tar.getmembers():
+        result = regex.match(m.name)
+        if not result:
+            continue
+
+        m.name = m.name[result.end() :]
+
+        # Both symlinks and hardlinks use linkname.
+        if m.linkname:
+            result = regex.match(m.linkname)
+            if result:
+                m.linkname = m.linkname[result.end() :]
+
+
 def extract_tarball(spec, download_result, unsigned=False, force=False):
-    """
-    extract binary tarball for given package into install area
-    """
+    """Extract binary tarball for given package into install prefix"""
     if os.path.exists(spec.prefix):
         if force:
             shutil.rmtree(spec.prefix)
         else:
             raise NoOverwriteException(str(spec.prefix))
+
+    # Create the install prefix
+    fsys.mkdirp(
+        spec.prefix,
+        mode=get_package_dir_permissions(spec),
+        group=get_package_group(spec),
+        default_perms="parents",
+    )
 
     specfile_path = download_result["specfile_stage"].save_filename
 
@@ -1854,42 +1843,38 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
                 tarfile_path, size, contents, "sha256", expected, local_checksum
             )
 
-    new_relative_prefix = str(os.path.relpath(spec.prefix, spack.store.STORE.layout.root))
-    # if the original relative prefix is in the spec file use it
-    buildinfo = spec_dict.get("buildinfo", {})
-    old_relative_prefix = buildinfo.get("relative_prefix", new_relative_prefix)
-    rel = buildinfo.get("relative_rpaths")
-    info = "old relative prefix %s\nnew relative prefix %s\nrelative rpaths %s"
-    tty.debug(info % (old_relative_prefix, new_relative_prefix, rel), level=2)
-
-    # Extract the tarball into the store root, presumably on the same filesystem.
-    # The directory created is the base directory name of the old prefix.
-    # Moving the old prefix name to the new prefix location should preserve
-    # hard links and symbolic links.
-    extract_tmp = os.path.join(spack.store.STORE.layout.root, ".tmp")
-    mkdirp(extract_tmp)
-    extracted_dir = os.path.join(extract_tmp, old_relative_prefix.split(os.path.sep)[-1])
-
     with closing(tarfile.open(tarfile_path, "r")) as tar:
+        # Get the top-level directory in the tarball.
+        by_depth = lambda e: len([p for p in e.name.split("/") if p])
+        entry = min((e for e in tar.getmembers() if e.isdir()), key=by_depth)
+
+        common_prefix = entry.name
+
+        # Validate that each file starts with the prefix
+        for member in tar.getmembers():
+            if not member.name.startswith(common_prefix):
+                raise ValueError(
+                    f"Tarball contains file {member.name} outside of prefix {common_prefix}"
+                )
+
+        # Remove the top-level directory from the member names, we're extracting
+        # directly into the install prefix.
+        _tar_strip_component(tar, prefix=common_prefix)
+
+        # Attempt to extract the tarball in the install prefix.
         try:
-            tar.extractall(path=extract_tmp)
-        except Exception as e:
+            tar.extractall(path=spec.prefix)
+        except Exception:
+            shutil.rmtree(spec.prefix, ignore_errors=True)
             _delete_staged_downloads(download_result)
-            shutil.rmtree(extracted_dir)
-            raise e
-    try:
-        shutil.move(extracted_dir, spec.prefix)
-    except Exception as e:
-        _delete_staged_downloads(download_result)
-        shutil.rmtree(extracted_dir)
-        raise e
+            raise
     os.remove(tarfile_path)
     os.remove(specfile_path)
 
     try:
         relocate_package(spec)
     except Exception as e:
-        shutil.rmtree(spec.prefix)
+        shutil.rmtree(spec.prefix, ignore_errors=True)
         raise e
     else:
         manifest_file = os.path.join(

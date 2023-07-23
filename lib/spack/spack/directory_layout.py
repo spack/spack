@@ -18,6 +18,7 @@ import llnl.util.tty as tty
 import spack.config
 import spack.hash_types as ht
 import spack.spec
+import spack.store
 import spack.util.spack_json as sjson
 from spack.error import SpackError
 
@@ -325,8 +326,8 @@ class DirectoryLayout:
         if spec.external:
             return spec.external_path
         if self.check_upstream:
-            upstream, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
-            if upstream:
+            result = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+            if result and result[0].is_upstream:
                 raise SpackError(
                     "Internal error: attempted to call path_for_spec on"
                     " upstream-installed package."

@@ -6,7 +6,7 @@
 """Schema for a buildcache spec.yaml file
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/buildcache_spec.py
-   :lines: 14-
+   :lines: 13-
 """
 import spack.schema.spec
 
@@ -19,7 +19,6 @@ schema = {
         "buildinfo": {
             "type": "object",
             "additionalProperties": False,
-            "required": ["relative_prefix"],
             "properties": {
                 "relative_prefix": {"type": "string"},
                 "relative_rpaths": {"type": "boolean"},

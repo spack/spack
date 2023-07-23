@@ -515,23 +515,11 @@ def test_update_sbang(tmpdir, test_mirror):
         spack.stage.purge()
 
         # test that the sbang was updated by the move
-        sbang_style_1_expected = """{0}
+        sbang_style_2_expected = f"""{sbang.sbang_shebang_line()}
 #!/usr/bin/env python
 
-{1}
-""".format(
-            sbang.sbang_shebang_line(), new_spec.prefix.bin
-        )
-        sbang_style_2_expected = """{0}
-#!/usr/bin/env python
-
-{1}
-""".format(
-            sbang.sbang_shebang_line(), new_spec.prefix.bin
-        )
-
-        installed_script_style_1_path = new_spec.prefix.bin.join("sbang-style-1.sh")
-        assert sbang_style_1_expected == open(str(installed_script_style_1_path)).read()
+{new_spec.prefix.bin}
+"""
 
         installed_script_style_2_path = new_spec.prefix.bin.join("sbang-style-2.sh")
         assert sbang_style_2_expected == open(str(installed_script_style_2_path)).read()
