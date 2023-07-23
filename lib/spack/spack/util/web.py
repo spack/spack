@@ -35,7 +35,6 @@ import spack.util.s3 as s3_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 from spack.util.executable import CommandNotFoundError, which
-from spack.util.path import convert_to_posix_path
 
 
 def _urlopen():
@@ -488,21 +487,22 @@ def _iter_s3_prefix(client, url, num_entries=1024):
 def _iter_local_prefix(path):
     for root, _, files in os.walk(path):
         for f in files:
-            yield os.path.relpath(os.path.join(root, f), path)
+            yield Path(root, f).relative_to(path)
 
 
 def list_url(url, recursive=False):
     url = urllib.parse.urlparse(url)
     local_path = url_util.local_file_path(url)
-
     if local_path:
+        local_path = Path(local_path)
         if recursive:
             # convert backslash to forward slash as required for URLs
-            return [str(PurePosixPath(Path(p))) for p in list(_iter_local_prefix(local_path))]
+            return [p.as_posix() for p in list(_iter_local_prefix(local_path))]
+
         return [
-            subpath
-            for subpath in os.listdir(local_path)
-            if os.path.isfile(os.path.join(local_path, subpath))
+            str(subpath.relative_to(local_path))
+            for subpath in local_path.iterdir()
+            if subpath.is_file()
         ]
 
     if url.scheme == "s3":
@@ -769,7 +769,6 @@ def find_versions_of_archive(
     versions = {}
     matched = set()
     for url in sorted(links):
-        url = convert_to_posix_path(url)
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)
@@ -790,7 +789,6 @@ def find_versions_of_archive(
                 continue
 
     for url in archive_urls:
-        url = convert_to_posix_path(url)
         ver = spack.url.parse_version(url)
         if ver not in versions:
             versions[ver] = url

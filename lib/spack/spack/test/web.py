@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import os
+from pathlib import Path
 
 import pytest
 
@@ -198,19 +199,19 @@ def test_etag_parser():
 
 
 def test_list_url(tmpdir):
-    testpath = str(tmpdir)
+    testpath = Path(tmpdir)
     testpath_url = url_util.path_to_file_url(testpath)
 
-    os.mkdir(os.path.join(testpath, "dir"))
+    os.mkdir(testpath / "dir")
 
-    with open(os.path.join(testpath, "file-0.txt"), "w"):
+    with open(testpath / "file-0.txt", "w"):
         pass
-    with open(os.path.join(testpath, "file-1.txt"), "w"):
+    with open(testpath / "file-1.txt", "w"):
         pass
-    with open(os.path.join(testpath, "file-2.txt"), "w"):
+    with open(testpath / "file-2.txt", "w"):
         pass
 
-    with open(os.path.join(testpath, "dir", "another-file.txt"), "w"):
+    with open(testpath / "dir" / "another-file.txt", "w"):
         pass
 
     list_url = lambda recursive: list(

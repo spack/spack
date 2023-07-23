@@ -8,8 +8,8 @@ This file contains the definition of the GCS Blob storage Class used to
 integrate GCS Blob storage with spack buildcache.
 """
 
-import os
 import sys
+from pathlib import Path
 
 import llnl.util.tty as tty
 
@@ -126,7 +126,7 @@ class GCSBucket:
             return blob_list
 
     def _relative_blob_name(self, blob_name):
-        return os.path.relpath(blob_name, self.prefix)
+        return str(Path(blob_name).relative_to(self.prefix))
 
     def destroy(self, recursive=False, **kwargs):
         """Bucket destruction method

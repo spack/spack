@@ -7,6 +7,7 @@
 import os
 import stat
 import sys
+from pathlib import Path
 from typing import Optional, Tuple
 
 import llnl.util.lock
@@ -81,8 +82,9 @@ def check_lock_safety(path: str) -> None:
     This is intended to run on the Spack prefix, but can be run on any
     path for testing.
     """
+    path = Path(path)
     if os.access(path, os.W_OK):
-        stat_result = os.stat(path)
+        stat_result = path.stat()
         uid, gid = stat_result.st_uid, stat_result.st_gid
         mode = stat_result[stat.ST_MODE]
 
