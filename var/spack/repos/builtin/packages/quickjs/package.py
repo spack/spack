@@ -32,7 +32,7 @@ class Quickjs(MakefilePackage):
         makefile.filter("prefix=/usr/local", "prefix={}".format(prefix))
         makefile.filter("lib/quickjs", "lib")
         makefile.filter("CFLAGS=", "CFLAGS+=-fPIC ")
-        if not "+lto" in spec:
+        if "+lto" not in spec:
             makefile.filter("CONFIG_LTO=y", "")
         cc = self.compiler.cc
         makefile.filter("^ *CC=.*", "  CC={}".format(cc))
