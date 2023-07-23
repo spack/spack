@@ -29,3 +29,8 @@ class Quickjs(MakefilePackage):
         makefile = FileFilter("Makefile")
         makefile.filter("prefix=/usr/local", "prefix={}".format(prefix))
         makefile.filter("lib/quickjs", "lib")
+        makefile.filter("CFLAGS=", "CFLAGS+=-fPIC ")
+        makefile.filter("^ *CC=.*", "")
+        makefile.filter("HOST_CC=.*", "HOST_CC=$(CC)")
+        makefile.filter("CONFIG_LTO=y", "")
+
