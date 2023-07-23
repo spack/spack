@@ -354,9 +354,9 @@ def reset_compiler_cache():
     This cache can cause later tests to fail if left in a state incompatible
     with the new configuration. Since tests can make almost unlimited changes
     to their setup, default to not use the compiler cache across tests."""
-    spack.compilers._compiler_cache = {}
+    spack.compilers.CACHE.clear()
     yield
-    spack.compilers._compiler_cache = {}
+    spack.compilers.CACHE.clear()
 
 
 def onerror(func, path, error_info):

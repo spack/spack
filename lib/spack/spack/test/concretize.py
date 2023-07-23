@@ -335,8 +335,10 @@ class TestConcretize:
         # Correct arch to use test compiler that has flags
         spec = Spec("a %clang@12.2.0 platform=test os=fe target=fe")
 
-        # Get the compiler that matches the spec (
-        compiler = spack.compilers.compiler_for_spec("clang@=12.2.0", spec.architecture)
+        # Get the compiler that matches the spec
+        compiler = spack.compilers.CompilerQuery("clang@=12.2.0").ensure_one(
+            arch_spec=spec.architecture
+        )
 
         # Configure spack to have two identical compilers with different flags
         default_dict = spack.compilers._to_dict(compiler)

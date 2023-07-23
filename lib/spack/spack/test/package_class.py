@@ -273,10 +273,10 @@ def test_package_no_extendees():
 
 
 def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
-    def compilers(compiler, arch_spec):
-        return None
+    def compilers(self, **kwargs):
+        return []
 
-    monkeypatch.setattr(spack.compilers, "compilers_for_spec", compilers)
+    monkeypatch.setattr(spack.compilers.CompilerQuery, "all_compilers", compilers)
 
     s = spack.spec.Spec("a")
     pkg = BaseTestPackage(s)

@@ -10,7 +10,7 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-from typing import Dict
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 import archspec.cpu
 
@@ -28,31 +28,14 @@ import spack.version
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
-_path_instance_vars = ["cc", "cxx", "f77", "fc"]
-_flags_instance_vars = ["cflags", "cppflags", "cxxflags", "fflags"]
-_other_instance_vars = [
-    "modules",
-    "operating_system",
-    "environment",
-    "implicit_rpaths",
-    "extra_rpaths",
-]
+_PATH_INSTANCE_VARS = ["cc", "cxx", "f77", "fc"]
 
-# TODO: Caches at module level make it difficult to mock configurations in
-# TODO: unit tests. It might be worth reworking their implementation.
 #: cache of compilers constructed from config data, keyed by config entry id.
-_compiler_cache: Dict[str, "spack.compiler.Compiler"] = {}
+CACHE: Dict["CacheReference", "spack.compiler.Compiler"] = {}
 
-_compiler_to_pkg = {
-    "clang": "llvm+clang",
-    "oneapi": "intel-oneapi-compilers",
-    "rocmcc": "llvm-amdgpu",
-    "intel@2020:": "intel-oneapi-compilers-classic",
-    "arm": "acfl",
-}
 
-# TODO: generating this from the previous dict causes docs errors
-package_name_to_compiler_name = {
+#: Maps package names in Spack to the compiler name they provide
+PACKAGE_TO_COMPILER = {
     "llvm": "clang",
     "intel-oneapi-compilers": "oneapi",
     "llvm-amdgpu": "rocmcc",
@@ -61,44 +44,126 @@ package_name_to_compiler_name = {
 }
 
 
-def pkg_spec_for_compiler(cspec):
-    """Return the spec of the package that provides the compiler."""
-    for spec, package in _compiler_to_pkg.items():
-        if cspec.satisfies(spec):
-            spec_str = "%s@%s" % (package, cspec.versions)
+class CompilerQuery:
+    def __init__(self, compiler_query: Union[str, spack.spec.CompilerSpec]) -> None:
+        if not isinstance(compiler_query, spack.spec.CompilerSpec):
+            compiler_query = spack.spec.CompilerSpec(compiler_query)
+        self.compiler_spec: spack.spec.CompilerSpec = compiler_query
+
+    def supported(self) -> bool:
+        """Returns True if the compiler is currently supported by Spack, False otherwise."""
+        return self.compiler_spec.name in supported_compilers()
+
+    def ensure_one(self, *, arch_spec: spack.spec.ArchSpec) -> spack.compiler.Compiler:
+        """Ensures that there is at least one compiler in the configuration matching the query,
+        and returns the first match.
+
+        Args:
+            arch_spec: architecture targeted by the compiler
+
+        Raises:
+            NoCompilerForSpecError: if there is no matching compiler
+        """
+        assert self.compiler_spec.concrete
+        assert arch_spec.concrete
+
+        compilers = self.all_compilers(arch_spec=arch_spec)
+
+        if len(compilers) < 1:
+            raise NoCompilerForSpecError(self.compiler_spec, arch_spec.os)
+
+        if len(compilers) > 1:
+            msg = (
+                f"Multiple definitions of '{self.compiler_spec}' for architecture"
+                f" {arch_spec}:\n {compilers}"
+            )
+            tty.debug(msg)
+
+        return compilers[0]
+
+    def all_compilers(
+        self,
+        *,
+        arch_spec: Optional[spack.spec.ArchSpec] = None,
+        scope: Optional[str] = None,
+        init_config: bool = True,
+    ) -> List[spack.compiler.Compiler]:
+        """Returns all the compilers that satisfy the query and arguments.
+
+        Args:
+            arch_spec: architecture targeted by the compiler
+            scope: configuration scope to look into
+            init_config: if True, initialize the configuration  when no
+                compiler is available
+        """
+        cfg = compiler_config(scope=scope, init_config=init_config)
+        matches = set(self.all_specs(scope=scope, init_config=init_config))
+        compilers = []
+        for current_compiler in matches:
+            compilers.extend(get_compilers(cfg, current_compiler, arch_spec))
+        return compilers
+
+    def all_specs(
+        self,
+        *,
+        arch_spec: Optional[spack.spec.ArchSpec] = None,
+        scope: Optional[str] = None,
+        init_config: bool = True,
+    ) -> List[spack.spec.CompilerSpec]:
+        """Returns all the compiler specs that satisfy the query and arguments.
+
+        Args:
+            arch_spec: architecture targeted by the compiler
+            scope: configuration scope to look into
+            init_config: if True, initialize the configuration  when no
+                compiler is available
+        """
+        return [
+            c
+            for c in all_compiler_specs(arch_spec=arch_spec, scope=scope, init_config=init_config)
+            if c.satisfies(self.compiler_spec)
+        ]
+
+
+def pkg_spec_for_compiler(compiler_spec: spack.spec.CompilerSpec) -> spack.spec.Spec:
+    """Returns the spec of the package that provides the compiler spec passed as input."""
+    compiler_to_package = {
+        "clang": "llvm+clang",
+        "oneapi": "intel-oneapi-compilers",
+        "rocmcc": "llvm-amdgpu",
+        "intel@2020:": "intel-oneapi-compilers-classic",
+        "arm": "acfl",
+    }
+    for compiler_constraint, package in compiler_to_package.items():
+        if compiler_spec.satisfies(compiler_constraint):
+            spec_str = f"{package}@{compiler_spec.versions}"
             break
     else:
-        spec_str = str(cspec)
+        spec_str = str(compiler_spec)
     return spack.spec.parse_with_version_concrete(spec_str)
 
 
-def _auto_compiler_spec(function):
-    def converter(cspec_like, *args, **kwargs):
-        if not isinstance(cspec_like, spack.spec.CompilerSpec):
-            cspec_like = spack.spec.CompilerSpec(cspec_like)
-        return function(cspec_like, *args, **kwargs)
-
-    return converter
-
-
-def _to_dict(compiler):
+def _to_dict(compiler: spack.compiler.Compiler) -> Any:
     """Return a dict version of compiler suitable to insert in YAML."""
-    d = {}
-    d["spec"] = str(compiler.spec)
-    d["paths"] = dict((attr, getattr(compiler, attr, None)) for attr in _path_instance_vars)
-    d["flags"] = dict((fname, " ".join(fvals)) for fname, fvals in compiler.flags.items())
-    d["flags"].update(
-        dict(
-            (attr, getattr(compiler, attr, None))
-            for attr in _flags_instance_vars
+    flags = {fname: " ".join(fvals) for fname, fvals in compiler.flags.items()}
+    flags.update(
+        {
+            attr: getattr(compiler, attr, None)
+            for attr in spack.spec.FlagMap.valid_compiler_flags()
             if hasattr(compiler, attr)
-        )
+        }
     )
-    d["operating_system"] = str(compiler.operating_system)
-    d["target"] = str(compiler.target)
-    d["modules"] = compiler.modules or []
-    d["environment"] = compiler.environment or {}
-    d["extra_rpaths"] = compiler.extra_rpaths or []
+    d = {
+        "spec": str(compiler.spec),
+        "paths": {attr: getattr(compiler, attr, None) for attr in _PATH_INSTANCE_VARS},
+        "flags": flags,
+        "operating_system": str(compiler.operating_system),
+        "target": str(compiler.target),
+        "modules": compiler.modules or [],
+        "environment": compiler.environment or {},
+        "extra_rpaths": compiler.extra_rpaths or [],
+    }
+
     if compiler.enable_implicit_rpaths is not None:
         d["implicit_rpaths"] = compiler.enable_implicit_rpaths
 
@@ -108,9 +173,15 @@ def _to_dict(compiler):
     return {"compiler": d}
 
 
-def get_compiler_config(scope=None, init_config=True):
-    """Return the compiler configuration for the specified architecture."""
+def compiler_config(*, scope: Optional[str] = None, init_config: bool = True) -> Any:
+    """Returns the compiler configuration for a given scope.
 
+    If scope is None, the merged configuration is returned.
+
+    Args:
+        scope: configuration scope to get
+        init_config: if True, initialize configuration files if no compilers are available
+    """
     config = spack.config.get("compilers", scope=scope) or []
     if config or not init_config:
         return config
@@ -124,7 +195,7 @@ def get_compiler_config(scope=None, init_config=True):
     return config
 
 
-def _init_compiler_config(*, scope):
+def _init_compiler_config(*, scope: Optional[str]) -> None:
     """Compiler search used when Spack has no compilers."""
     compilers = find_compilers()
     compilers_dict = []
@@ -133,43 +204,45 @@ def _init_compiler_config(*, scope):
     spack.config.set("compilers", compilers_dict, scope=scope)
 
 
-def compiler_config_files():
-    config_files = list()
-    config = spack.config.config
-    for scope in config.file_scopes:
-        name = scope.name
-        compiler_config = config.get("compilers", scope=name)
-        if compiler_config:
-            config_files.append(config.get_config_filename(name, "compilers"))
-    return config_files
-
-
-def add_compilers_to_config(compilers, scope=None, init_config=True):
-    """Add compilers to the config for the specified architecture.
+def add_compilers_to_config(
+    compilers: List[spack.compiler.Compiler],
+    *,
+    scope: Optional[str] = None,
+    init_config: bool = True,
+) -> None:
+    """Add the compilers passed as arguments to the configuration.
 
     Arguments:
-        compilers: a list of Compiler objects.
-        scope: configuration scope to modify.
+        compilers: compilers to be added
+        scope: configuration scope to modify
+        init_config: if True, initialize configuration files if no compilers are available
     """
-    compiler_config = get_compiler_config(scope, init_config)
+    compiler_cfg = compiler_config(scope=scope, init_config=init_config)
     for compiler in compilers:
-        compiler_config.append(_to_dict(compiler))
-    spack.config.set("compilers", compiler_config, scope=scope)
+        compiler_cfg.append(_to_dict(compiler))
+    spack.config.set("compilers", compiler_cfg, scope=scope)
 
 
-@_auto_compiler_spec
-def remove_compiler_from_config(compiler_spec, scope=None):
+def remove_compiler_from_config(
+    compiler_spec: Union[str, spack.spec.CompilerSpec], *, scope: Optional[str] = None
+) -> bool:
     """Remove compilers from configuration by spec.
 
     If scope is None, all the scopes are searched for removal.
 
-    Arguments:
+    Args:
         compiler_spec: compiler to be removed
         scope: configuration scope to modify
+
+    Returns:
+        True if any compiler has been removed, False otherwise
     """
+    if not isinstance(compiler_spec, spack.spec.CompilerSpec):
+        compiler_spec = spack.spec.CompilerSpec(compiler_spec)
+
     candidate_scopes = [scope]
     if scope is None:
-        candidate_scopes = spack.config.config.scopes.keys()
+        candidate_scopes = list(spack.config.config.scopes.keys())
 
     removal_happened = False
     for current_scope in candidate_scopes:
@@ -189,47 +262,51 @@ def _remove_compiler_from_scope(compiler_spec, scope):
          True if one or more compiler entries were actually removed, False otherwise
     """
     assert scope is not None, "a specific scope is needed when calling this function"
-    compiler_config = get_compiler_config(scope)
+    compiler_cfg = compiler_config(scope=scope)
     filtered_compiler_config = [
         compiler_entry
-        for compiler_entry in compiler_config
+        for compiler_entry in compiler_cfg
         if not spack.spec.parse_with_version_concrete(
             compiler_entry["compiler"]["spec"], compiler=True
         ).satisfies(compiler_spec)
     ]
 
-    if len(filtered_compiler_config) == len(compiler_config):
+    if len(filtered_compiler_config) == len(compiler_cfg):
         return False
 
     # We need to preserve the YAML type for comments, hence we are copying the
     # items in the list that has just been retrieved
-    compiler_config[:] = filtered_compiler_config
-    spack.config.set("compilers", compiler_config, scope=scope)
+    compiler_cfg[:] = filtered_compiler_config
+    spack.config.set("compilers", compiler_cfg, scope=scope)
     return True
 
 
-def all_compilers_config(scope=None, init_config=True):
-    """Return a set of specs for all the compiler versions currently
-    available to build with.  These are instances of CompilerSpec.
+def all_compiler_specs(
+    *,
+    arch_spec: Optional[spack.spec.ArchSpec] = None,
+    scope: Optional[str] = None,
+    init_config: bool = True,
+) -> List[spack.spec.CompilerSpec]:
+    """Returns the list of compiler specs matching the argument passed as input.
+
+    Args:
+        arch_spec: architecture targeted by the compiler
+        scope: configuration scope to look into
+        init_config: if True, initialize the configuration when no compiler is available
     """
-    return get_compiler_config(scope, init_config)
-
-
-def all_compiler_specs(scope=None, init_config=True):
-    # Return compiler specs from the merged config.
+    config_entries = compiler_config(scope=scope, init_config=init_config)
     return [
         spack.spec.parse_with_version_concrete(s["compiler"]["spec"], compiler=True)
-        for s in all_compilers_config(scope, init_config)
+        for s in filter_configuration_entries(config_entries, arch_spec=arch_spec)
     ]
 
 
-def find_compilers(path_hints=None):
-    """Return the list of compilers found in the paths given as arguments.
+def find_compilers(path_hints: Optional[List[str]] = None) -> List[spack.compiler.Compiler]:
+    """Returns the list of compilers found in the paths given as arguments.
 
     Args:
-        path_hints (list or None): list of path hints where to look for.
-            A sensible default based on the ``PATH`` environment variable
-            will be used if the value is None
+        path_hints: list of path hints where to look for. If None, use defaults extracted from the
+            ``PATH`` environment variable
     """
     if path_hints is None:
         path_hints = get_path("PATH")
@@ -239,7 +316,7 @@ def find_compilers(path_hints=None):
     # of function calls to different workers. Here we construct the list
     # of arguments for each call.
     arguments = []
-    for o in all_os_classes():
+    for o in _all_os_classes():
         search_paths = getattr(o, "compiler_search_paths", default_paths)
         arguments.extend(arguments_to_detect_version_fn(o, search_paths))
 
@@ -266,44 +343,49 @@ def find_compilers(path_hints=None):
         value, _ = item
         return value
 
-    return make_compiler_list(map(remove_errors, filter(valid_version, detected_versions)))
+    filtered_version_list = list(map(remove_errors, filter(valid_version, detected_versions)))
+    return make_compiler_list(filtered_version_list)
 
 
-def find_new_compilers(path_hints=None, scope=None):
+def find_new_compilers(
+    path_hints: Optional[List[str]] = None, scope: Optional[str] = None
+) -> List[spack.compiler.Compiler]:
     """Same as ``find_compilers`` but return only the compilers that are not
     already in compilers.yaml.
 
     Args:
-        path_hints (list or None): list of path hints where to look for.
-            A sensible default based on the ``PATH`` environment variable
-            will be used if the value is None
-        scope (str): scope to look for a compiler. If None consider the
-            merged configuration.
+        path_hints: list of path hints where to look for. If None, use defaults extracted from the
+            ``PATH`` environment variable
+        scope: scope to look for a compiler. If None, consider the merged configuration
     """
     compilers = find_compilers(path_hints)
     return select_new_compilers(compilers, scope)
 
 
-def select_new_compilers(compilers, scope=None):
-    """Given a list of compilers, remove those that are already defined in
+def select_new_compilers(
+    compilers: List[spack.compiler.Compiler], scope: Optional[str] = None
+) -> List[spack.compiler.Compiler]:
+    """Given a list of compilers, returns the one that are not already defined in
     the configuration.
+
+    Args:
+        compilers: list of compilers to be considered
+        scope: scope to look for a compiler. If None, consider the merged configuration
     """
     compilers_not_in_config = []
     for c in compilers:
         arch_spec = spack.spec.ArchSpec((None, c.operating_system, c.target))
-        same_specs = compilers_for_spec(c.spec, arch_spec, scope=scope, init_config=False)
+        same_specs = CompilerQuery(c.spec).all_compilers(
+            arch_spec=arch_spec, scope=scope, init_config=False
+        )
         if not same_specs:
             compilers_not_in_config.append(c)
 
     return compilers_not_in_config
 
 
-def supported_compilers():
-    """Return a set of names of compilers supported by Spack.
-
-    See available_compilers() to get a list of all the available
-    versions of supported compilers.
-    """
+def supported_compilers() -> List[str]:
+    """List of compiler names supported by Spack."""
     # Hack to be able to call the compiler `apple-clang` while still
     # using a valid python name for the module
     return sorted(
@@ -312,28 +394,16 @@ def supported_compilers():
     )
 
 
-@_auto_compiler_spec
-def supported(compiler_spec):
-    """Test if a particular compiler is supported."""
-    return compiler_spec.name in supported_compilers()
+def all_compilers(
+    scope: Optional[str] = None, init_config: bool = True
+) -> List[spack.compiler.Compiler]:
+    """Returns all the compilers matching the arguments.
 
-
-@_auto_compiler_spec
-def find(compiler_spec, scope=None, init_config=True):
-    """Return specs of available compilers that match the supplied
-    compiler spec.  Return an empty list if nothing found."""
-    return [c for c in all_compiler_specs(scope, init_config) if c.satisfies(compiler_spec)]
-
-
-@_auto_compiler_spec
-def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
-    """Return specs of available compilers that match the supplied
-    compiler spec.  Return an empty list if nothing found."""
-    return [c.spec for c in compilers_for_spec(compiler_spec, arch_spec, scope, True, init_config)]
-
-
-def all_compilers(scope=None, init_config=True):
-    config = get_compiler_config(scope, init_config=init_config)
+    Args:
+        scope: configuration scope to look into
+        init_config: if True, initialize the configuration when no compiler is available
+    """
+    config = compiler_config(scope=scope, init_config=init_config)
     compilers = list()
     for items in config:
         items = items["compiler"]
@@ -341,31 +411,16 @@ def all_compilers(scope=None, init_config=True):
     return compilers
 
 
-@_auto_compiler_spec
-def compilers_for_spec(
-    compiler_spec, arch_spec=None, scope=None, use_cache=True, init_config=True
-):
-    """This gets all compilers that satisfy the supplied CompilerSpec.
-    Returns an empty list if none are found.
-    """
-    if use_cache:
-        config = all_compilers_config(scope, init_config)
-    else:
-        config = get_compiler_config(scope, init_config)
-
-    matches = set(find(compiler_spec, scope, init_config))
-    compilers = []
-    for cspec in matches:
-        compilers.extend(get_compilers(config, cspec, arch_spec))
-    return compilers
-
-
-def compilers_for_arch(arch_spec, scope=None):
-    config = all_compilers_config(scope)
+def compilers_for_arch(
+    arch_spec: spack.spec.ArchSpec, scope: Optional[str] = None
+) -> List[spack.compiler.Compiler]:
+    config = compiler_config(scope=scope, init_config=True)
     return list(get_compilers(config, arch_spec=arch_spec))
 
 
-def compiler_specs_for_arch(arch_spec, scope=None):
+def compiler_specs_for_arch(
+    arch_spec: spack.spec.ArchSpec, scope: Optional[str] = None
+) -> List[spack.spec.CompilerSpec]:
     return [c.spec for c in compilers_for_arch(arch_spec, scope)]
 
 
@@ -384,22 +439,22 @@ class CacheReference:
     def __hash__(self):
         return self.id
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, CacheReference) and self.id == other.id
 
 
-def compiler_from_dict(items):
+def compiler_from_dict(items: Any) -> spack.compiler.Compiler:
     cspec = spack.spec.parse_with_version_concrete(items["spec"], compiler=True)
     os = items.get("operating_system", None)
     target = items.get("target", None)
 
-    if not ("paths" in items and all(n in items["paths"] for n in _path_instance_vars)):
+    if not ("paths" in items and all(n in items["paths"] for n in _PATH_INSTANCE_VARS)):
         raise InvalidCompilerConfigurationError(cspec)
 
     cls = class_for_compiler_name(cspec.name)
 
     compiler_paths = []
-    for c in _path_instance_vars:
+    for c in _PATH_INSTANCE_VARS:
         compiler_path = items["paths"][c]
         if compiler_path != "None":
             compiler_paths.append(compiler_path)
@@ -436,7 +491,7 @@ def compiler_from_dict(items):
     )
 
 
-def _compiler_from_config_entry(items):
+def _compiler_from_config_entry(items: Any) -> spack.compiler.Compiler:
     """Note this is intended for internal use only. To avoid re-parsing
     the same config dictionary this keeps track of its location in
     memory. If you provide the same dictionary twice it will return
@@ -444,29 +499,32 @@ def _compiler_from_config_entry(items):
     entries have changed).
     """
     config_id = CacheReference(items)
-    compiler = _compiler_cache.get(config_id, None)
+    compiler = CACHE.get(config_id, None)
 
     if compiler is None:
         compiler = compiler_from_dict(items)
-        _compiler_cache[config_id] = compiler
+        CACHE[config_id] = compiler
 
     return compiler
 
 
-def get_compilers(config, cspec=None, arch_spec=None):
-    compilers = []
-
-    for items in config:
-        items = items["compiler"]
+def filter_configuration_entries(
+    config: List[Any],
+    cspec: Optional[spack.spec.CompilerSpec] = None,
+    arch_spec: Optional[spack.spec.ArchSpec] = None,
+) -> List[Any]:
+    result = []
+    for entry in config:
+        compiler_entry = entry["compiler"]
 
         # NOTE: in principle this should be equality not satisfies, but config can still
         # be written in old format gcc@10.1.0 instead of gcc@=10.1.0.
-        if cspec and not cspec.satisfies(items["spec"]):
+        if cspec and not cspec.satisfies(compiler_entry["spec"]):
             continue
 
         # If an arch spec is given, confirm that this compiler
         # is for the given operating system
-        os = items.get("operating_system", None)
+        os = compiler_entry.get("operating_system", None)
         if arch_spec and os != arch_spec.os:
             continue
 
@@ -474,17 +532,16 @@ def get_compilers(config, cspec=None, arch_spec=None):
         # is for the given target. If the target is 'any', match
         # any given arch spec. If the compiler has no assigned
         # target this is an old compiler config file, skip this logic.
-        target = items.get("target", None)
+        target = compiler_entry.get("target", None)
 
-        try:
-            current_target = archspec.cpu.TARGETS[str(arch_spec.target)]
-            family = str(current_target.family)
-        except KeyError:
-            # TODO: Check if this exception handling makes sense, or if we
-            # TODO: need to change / refactor tests
-            family = arch_spec.target
-        except AttributeError:
-            assert arch_spec is None
+        if arch_spec is not None:
+            try:
+                current_target = archspec.cpu.TARGETS[str(arch_spec.target)]
+                family = str(current_target.family)
+            except KeyError:
+                # TODO: Check if this exception handling makes sense, or if we
+                # TODO: need to change / refactor tests
+                family = arch_spec.target
 
         if arch_spec and target and (target != family and target != "any"):
             # If the family of the target is the family we are seeking,
@@ -495,40 +552,33 @@ def get_compilers(config, cspec=None, arch_spec=None):
                     'target families [replace "{0}" with "{1}"'
                     ' in "{2}" specification]'
                 )
-                msg = msg.format(str(target), family, items.get("spec", "??"))
+                msg = msg.format(str(target), family, compiler_entry.get("spec", "??"))
                 raise ValueError(msg)
             continue
 
-        compilers.append(_compiler_from_config_entry(items))
+        result.append(entry)
 
-    return compilers
-
-
-@_auto_compiler_spec
-def compiler_for_spec(compiler_spec, arch_spec):
-    """Get the compiler that satisfies compiler_spec.  compiler_spec must
-    be concrete."""
-    assert compiler_spec.concrete
-    assert arch_spec.concrete
-
-    compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec)
-    if len(compilers) < 1:
-        raise NoCompilerForSpecError(compiler_spec, arch_spec.os)
-    if len(compilers) > 1:
-        msg = "Multiple definitions of compiler %s " % compiler_spec
-        msg += "for architecture %s:\n %s" % (arch_spec, compilers)
-        tty.debug(msg)
-    return compilers[0]
+    return result
 
 
-@_auto_compiler_spec
-def get_compiler_duplicates(compiler_spec, arch_spec):
+def get_compilers(
+    config: Any,
+    cspec: Optional[spack.spec.CompilerSpec] = None,
+    arch_spec: Optional[spack.spec.ArchSpec] = None,
+) -> List[spack.compiler.Compiler]:
+    candidate_entries = filter_configuration_entries(config, cspec=cspec, arch_spec=arch_spec)
+    return [_compiler_from_config_entry(x["compiler"]) for x in candidate_entries]
+
+
+def get_compiler_duplicates(
+    compiler_spec: spack.spec.CompilerSpec, arch_spec: spack.spec.ArchSpec
+) -> Dict[str, List[spack.compiler.Compiler]]:
     config = spack.config.config
 
     scope_to_compilers = {}
     for scope in config.scopes:
-        compilers = compilers_for_spec(
-            compiler_spec, arch_spec=arch_spec, scope=scope, use_cache=False
+        compilers = CompilerQuery(compiler_spec).all_compilers(
+            arch_spec=arch_spec, scope=scope, init_config=True
         )
         if compilers:
             scope_to_compilers[scope] = compilers
@@ -542,9 +592,9 @@ def get_compiler_duplicates(compiler_spec, arch_spec):
 
 
 @llnl.util.lang.memoized
-def class_for_compiler_name(compiler_name):
+def class_for_compiler_name(compiler_name: str) -> Type[spack.compiler.Compiler]:
     """Given a compiler module name, get the corresponding Compiler class."""
-    if not supported(compiler_name):
+    if not CompilerQuery(compiler_name).supported():
         raise UnknownCompilerError(compiler_name)
 
     # Hack to be able to call the compiler `apple-clang` while still
@@ -554,7 +604,7 @@ def class_for_compiler_name(compiler_name):
         submodule_name = compiler_name.replace("-", "_")
 
     module_name = ".".join(["spack", "compilers", submodule_name])
-    module_obj = __import__(module_name, fromlist=[None])
+    module_obj = __import__(module_name, fromlist=[""])
     cls = getattr(module_obj, mod_to_class(compiler_name))
 
     # make a note of the name in the module so we can get to it easily.
@@ -563,9 +613,8 @@ def class_for_compiler_name(compiler_name):
     return cls
 
 
-def all_os_classes():
-    """
-    Return the list of classes for all operating systems available on
+def _all_os_classes():
+    """Return the list of classes for all operating systems available on
     this platform
     """
     classes = []
@@ -577,7 +626,7 @@ def all_os_classes():
     return classes
 
 
-def all_compiler_types():
+def all_compiler_types() -> List[Type[spack.compiler.Compiler]]:
     return [class_for_compiler_name(c) for c in supported_compilers()]
 
 
@@ -607,7 +656,9 @@ DetectVersionArgs = collections.namedtuple(
 )
 
 
-def arguments_to_detect_version_fn(operating_system, paths):
+def arguments_to_detect_version_fn(
+    operating_system: spack.operating_systems.OperatingSystem, paths: List[str]
+) -> List[DetectVersionArgs]:
     """Returns a list of DetectVersionArgs tuples to be used in a
     corresponding function to detect compiler versions.
 
@@ -615,8 +666,7 @@ def arguments_to_detect_version_fn(operating_system, paths):
     function by providing a method called with the same name.
 
     Args:
-        operating_system (spack.operating_systems.OperatingSystem): the operating system
-            on which we are looking for compilers
+        operating_system: the operating system on which we are looking for compilers
         paths: paths to search for compilers
 
     Returns:
@@ -653,7 +703,9 @@ def arguments_to_detect_version_fn(operating_system, paths):
     return fn(paths)
 
 
-def detect_version(detect_version_args):
+def detect_version(
+    detect_version_args: DetectVersionArgs,
+) -> Tuple[DetectVersionArgs, Optional[str]]:
     """Computes the version of a compiler and adds it to the information
     passed as input.
 
@@ -668,7 +720,7 @@ def detect_version(detect_version_args):
     Returns:
         A ``(DetectVersionArgs, error)`` tuple. If ``error`` is ``None`` the
         version of the compiler was computed correctly and the first argument
-        of the tuple will contain it. Otherwise ``error`` is a string
+        of the tuple will contain it. Otherwise, ``error`` is a string
         containing an explanation on why the version couldn't be computed.
     """
 
@@ -679,7 +731,7 @@ def detect_version(detect_version_args):
         path = fn_args.path
 
         # Get compiler names and the callback to detect their versions
-        callback = getattr(compiler_cls, "{0}_version".format(language))
+        callback = getattr(compiler_cls, f"{language}_version")
 
         try:
             version = callback(path)
@@ -687,13 +739,13 @@ def detect_version(detect_version_args):
                 value = fn_args._replace(id=compiler_id._replace(version=version))
                 return value, None
 
-            error = "Couldn't get version for compiler {0}".format(path)
+            error = f"Couldn't get version for compiler {path}"
         except spack.util.executable.ProcessError as e:
-            error = "Couldn't get version for compiler {0}\n".format(path) + str(e)
+            error = f"Couldn't get version for compiler {path}\n" + str(e)
         except Exception as e:
             # Catching "Exception" here is fine because it just
             # means something went wrong running a candidate executable.
-            error = "Error while executing candidate compiler {0}" "\n{1}: {2}".format(
+            error = "Error while executing candidate compiler {}" "\n{}: {}".format(
                 path, e.__class__.__name__, str(e)
             )
         return None, error
@@ -703,13 +755,14 @@ def detect_version(detect_version_args):
     return fn(detect_version_args)
 
 
-def make_compiler_list(detected_versions):
+def make_compiler_list(
+    detected_versions: List[DetectVersionArgs],
+) -> List[spack.compiler.Compiler]:
     """Process a list of detected versions and turn them into a list of
     compiler specs.
 
     Args:
-        detected_versions (list): list of DetectVersionArgs containing a
-            valid version
+        detected_versions: list of DetectVersionArgs containing a valid version
 
     Returns:
         list: list of Compiler objects
@@ -718,7 +771,7 @@ def make_compiler_list(detected_versions):
     sorted_compilers = sorted(detected_versions, key=group_fn)
 
     # Gather items in a dictionary by the id, name variation and language
-    compilers_d = {}
+    compilers_d: Dict[Any, Any] = {}
     for sort_key, group in itertools.groupby(sorted_compilers, key=group_fn):
         compiler_id, name_variation, language = sort_key
         by_compiler_id = compilers_d.setdefault(compiler_id, {})
@@ -772,12 +825,12 @@ def make_compiler_list(detected_versions):
     return compilers
 
 
-def is_mixed_toolchain(compiler):
+def is_mixed_toolchain(compiler: spack.compiler.Compiler) -> bool:
     """Returns True if the current compiler is a mixed toolchain,
     False otherwise.
 
     Args:
-        compiler (spack.compiler.Compiler): a valid compiler object
+        compiler: a valid compiler object
     """
     cc = os.path.basename(compiler.cc or "")
     cxx = os.path.basename(compiler.cxx or "")
@@ -802,17 +855,17 @@ def is_mixed_toolchain(compiler):
                 name_matches(fc, compiler_cls.fc_names),
             ]
         ):
-            tty.debug("[TOOLCHAIN] MATCH {0}".format(compiler_cls.__name__))
+            tty.debug(f"[TOOLCHAIN] MATCH {compiler_cls.__name__}")
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
         if (
-            toolchains == set(["Clang", "AppleClang", "Aocc"])
+            toolchains == {"Clang", "AppleClang", "Aocc"}
             # Msvc toolchain uses Intel ifx
-            or toolchains == set(["Msvc", "Dpcpp", "Oneapi"])
+            or toolchains == {"Msvc", "Dpcpp", "Oneapi"}
         ):
             return False
-        tty.debug("[TOOLCHAINS] {0}".format(toolchains))
+        tty.debug(f"[TOOLCHAINS] {toolchains}")
         return True
 
     return False
@@ -821,9 +874,8 @@ def is_mixed_toolchain(compiler):
 class InvalidCompilerConfigurationError(spack.error.SpackError):
     def __init__(self, compiler_spec):
         super().__init__(
-            'Invalid configuration for [compiler "%s"]: ' % compiler_spec,
-            "Compiler configuration must contain entries for all compilers: %s"
-            % _path_instance_vars,
+            f'Invalid configuration for [compiler "{compiler_spec}"]: ',
+            f"Compiler configuration must contain the following entries: {_PATH_INSTANCE_VARS}",
         )
 
 
@@ -834,13 +886,13 @@ class NoCompilersError(spack.error.SpackError):
 
 class UnknownCompilerError(spack.error.SpackError):
     def __init__(self, compiler_name):
-        super().__init__("Spack doesn't support the requested compiler: {0}".format(compiler_name))
+        super().__init__(f"Spack doesn't support the requested compiler: {compiler_name}")
 
 
 class NoCompilerForSpecError(spack.error.SpackError):
     def __init__(self, compiler_spec, target):
         super().__init__(
-            "No compilers for operating system %s satisfy spec %s" % (target, compiler_spec)
+            f"No compilers for operating system {target} satisfy spec {compiler_spec}"
         )
 
 
@@ -849,12 +901,12 @@ class CompilerDuplicateError(spack.error.SpackError):
         config_file_to_duplicates = get_compiler_duplicates(compiler_spec, arch_spec)
         duplicate_table = list((x, len(y)) for x, y in config_file_to_duplicates.items())
         descriptor = lambda num: "time" if num == 1 else "times"
-        duplicate_msg = lambda cfgfile, count: "{0}: {1} {2}".format(
+        duplicate_msg = lambda cfgfile, count: "{}: {} {}".format(
             cfgfile, str(count), descriptor(count)
         )
         msg = (
             "Compiler configuration contains entries with duplicate"
-            + " specification ({0}, {1})".format(compiler_spec, arch_spec)
+            + f" specification ({compiler_spec}, {arch_spec})"
             + " in the following files:\n\t"
             + "\n\t".join(duplicate_msg(x, y) for x, y in duplicate_table)
         )
@@ -863,4 +915,4 @@ class CompilerDuplicateError(spack.error.SpackError):
 
 class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
     def __init__(self, compiler_spec):
-        super().__init__("Multiple compilers satisfy spec %s" % compiler_spec)
+        super().__init__(f"Multiple compilers satisfy spec {compiler_spec}")

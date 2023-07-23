@@ -615,7 +615,7 @@ class CompilerSpec:
         for version in version_list:
             self.versions.add(version)
 
-    def _autospec(self, compiler_spec_like):
+    def _autospec(self, compiler_spec_like: Union[str, "CompilerSpec"]) -> "CompilerSpec":
         if isinstance(compiler_spec_like, CompilerSpec):
             return compiler_spec_like
         return CompilerSpec(compiler_spec_like)
@@ -632,7 +632,7 @@ class CompilerSpec:
         other = self._autospec(other)
         return self.name == other.name and self.versions.intersects(other.versions)
 
-    def satisfies(self, other: "CompilerSpec") -> bool:
+    def satisfies(self, other: Union[str, "CompilerSpec"]) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         For compiler specs this means that the name of the compiler must be the same for
@@ -2917,8 +2917,8 @@ class Spec:
     @staticmethod
     def ensure_external_path_if_external(external_spec):
         if external_spec.external_modules and not external_spec.external_path:
-            compiler = spack.compilers.compiler_for_spec(
-                external_spec.compiler, external_spec.architecture
+            compiler = spack.compilers.CompilerQuery(external_spec.compiler).ensure_one(
+                arch_spec=external_spec.architecture
             )
             for mod in compiler.modules:
                 md.load_module(mod)
@@ -3460,10 +3460,9 @@ class Spec:
             if (not spec.virtual) and spec.name:
                 spack.repo.path.get_pkg_class(spec.fullname)
 
-            # validate compiler in addition to the package name.
-            if spec.compiler:
-                if not spack.compilers.supported(spec.compiler):
-                    raise UnsupportedCompilerError(spec.compiler.name)
+            # Validate the compiler in addition to the package name
+            if spec.compiler and not spack.compilers.CompilerQuery(spec.compiler).supported():
+                raise UnsupportedCompilerError(spec.compiler.name)
 
             # Ensure correctness of variants (if the spec is not virtual)
             if not spec.virtual:

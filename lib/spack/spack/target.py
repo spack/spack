@@ -145,7 +145,7 @@ class Target:
             # is called we might get either a CompilerSpec or a fully fledged
             # compiler object.
             if isinstance(compiler, spack.spec.CompilerSpec):
-                compiler = spack.compilers.compilers_for_spec(compiler).pop()
+                compiler = spack.compilers.CompilerQuery(compiler).all_compilers().pop()
             try:
                 compiler_version = compiler.real_version
             except spack.util.executable.ProcessError as e:

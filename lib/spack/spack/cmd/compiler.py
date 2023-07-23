@@ -88,24 +88,31 @@ def compiler_find(args):
     # Below scope=None because we want new compilers that don't appear
     # in any other configuration.
     new_compilers = spack.compilers.find_new_compilers(paths, scope=None)
+    config = spack.config.config
     if new_compilers:
         spack.compilers.add_compilers_to_config(new_compilers, scope=args.scope, init_config=False)
         n = len(new_compilers)
         s = "s" if n > 1 else ""
 
-        config = spack.config.config
         filename = config.get_config_filename(args.scope, "compilers")
         tty.msg("Added %d new compiler%s to %s" % (n, s, filename))
         colify(reversed(sorted(c.spec.display_str for c in new_compilers)), indent=4)
     else:
         tty.msg("Found no new compilers")
     tty.msg("Compilers are defined in the following files:")
-    colify(spack.compilers.compiler_config_files(), indent=4)
+    config_files = [
+        config.get_config_filename(scope.name, "compilers")
+        for scope in config.file_scopes
+        if config.get("compilers", scope=scope.name)
+    ]
+    colify(config_files, indent=4)
 
 
 def compiler_remove(args):
     compiler_spec = spack.spec.CompilerSpec(args.compiler_spec)
-    candidate_compilers = spack.compilers.compilers_for_spec(compiler_spec, scope=args.scope)
+    candidate_compilers = spack.compilers.CompilerQuery(compiler_spec).all_compilers(
+        scope=args.scope
+    )
 
     if not candidate_compilers:
         tty.die("No compilers match spec %s" % compiler_spec)
@@ -124,7 +131,7 @@ def compiler_remove(args):
 def compiler_info(args):
     """Print info about all compilers matching a spec."""
     cspec = spack.spec.CompilerSpec(args.compiler_spec)
-    compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
+    compilers = spack.compilers.CompilerQuery(cspec).all_compilers(scope=args.scope)
 
     if not compilers:
         tty.die("No compilers match spec %s" % cspec)
