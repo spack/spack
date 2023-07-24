@@ -10,9 +10,7 @@ class PyCwlRegistry(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/cwl-registry.git"
 
     version("develop", branch="main")
-    version("0.3.8", tag="cwl-registry-v0.3.8")
-    version("0.3.7", tag="cwl-registry-v0.3.7")
-    version("0.3.6", tag="cwl-registry-v0.3.6")
+    version("0.3.9", tag="cwl-registry-v0.3.9")
 
     depends_on("python@3.9:", type=("build", "run"))
 
@@ -25,7 +23,7 @@ class PyCwlRegistry(PythonPackage):
     depends_on("py-pandas", type=("build", "run"))
 
     depends_on("py-libsonata", type=("build", "run"))
-    depends_on("py-nexusforge", type=("build", "run"))
+    depends_on("py-nexusforge@0.8.1:", type=("build", "run"))
     depends_on("py-bba-data-push@1.0.4:", type=("build", "run"))
     depends_on("py-joblib", type=("build", "run"))
     depends_on("py-cwl-luigi@0.3.1:", type=("build", "run"))
