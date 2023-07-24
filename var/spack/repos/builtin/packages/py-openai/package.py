@@ -19,7 +19,11 @@ class PyOpenai(PythonPackage):
     version("0.27.8", sha256="2483095c7db1eee274cebac79e315a986c4e55207bb4fa7b82d185b3a2ed9536")
 
     variant("datalib", default=False, description="facilities for data loading")
-    variant("wandb", default=False, description="keeps track of hyperparameters, system metrics, and predictions")
+    variant(
+        "wandb",
+        default=False,
+        description="keeps track of hyperparameters, system metrics, and predictions",
+    )
     variant("embeddings", default=False, description="represents a text string vector")
 
     depends_on("python@3.7.1:", type=("build", "run"))
