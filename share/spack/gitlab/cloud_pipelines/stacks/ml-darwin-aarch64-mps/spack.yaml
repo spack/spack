@@ -92,7 +92,7 @@ spack:
   # - py-vector-quantize-pytorch  # py-torch
   # - r-xgboost                   # r
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-cpu" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-mps" }
 
   ci:
     pipeline-gen:
