@@ -10,6 +10,7 @@ import urllib.parse
 
 import pytest
 
+import spack.util.path
 import spack.util.url as url_util
 
 
@@ -278,3 +279,16 @@ def test_git_url_parse(url, parts):
             url_util.parse_git_url(url)
     else:
         assert parts == url_util.parse_git_url(url)
+
+
+def test_default_download_name():
+    url = "https://example.com:1234/path/to/file.txt;params?abc=def#file=blob.tar"
+    filename = url_util.default_download_filename(url)
+    assert filename == spack.util.path.sanitize_filename(filename)
+
+
+def test_default_download_name_dot_dot():
+    """Avoid that downloaded files get names computed as ., .. or any hidden file."""
+    assert url_util.default_download_filename("https://example.com/.") == "_"
+    assert url_util.default_download_filename("https://example.com/..") == "_."
+    assert url_util.default_download_filename("https://example.com/.abcdef") == "_abcdef"

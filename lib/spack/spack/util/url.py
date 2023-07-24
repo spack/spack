@@ -15,7 +15,7 @@ import sys
 import urllib.parse
 import urllib.request
 
-from spack.util.path import convert_to_posix_path
+from spack.util.path import convert_to_posix_path, sanitize_filename
 
 
 def validate_scheme(scheme):
@@ -294,3 +294,22 @@ def parse_git_url(url):
             raise ValueError("bad port in git url: %s" % url)
 
     return (scheme, user, hostname, port, path)
+
+
+def default_download_filename(url: str) -> str:
+    """This method computes a default file name for a given URL.
+    Note that it makes no request, so this is not the same as the
+    option curl -O, which uses the remote file name from the response
+    header."""
+    parsed_url = urllib.parse.urlparse(url)
+    # Only use the last path component + params + query + fragment
+    name = urllib.parse.urlunparse(
+        parsed_url._replace(scheme="", netloc="", path=posixpath.basename(parsed_url.path))
+    )
+    valid_name = sanitize_filename(name)
+
+    # Don't download to hidden files please
+    if valid_name[0] == ".":
+        valid_name = "_" + valid_name[1:]
+
+    return valid_name
