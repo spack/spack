@@ -1287,9 +1287,6 @@ def generate_gitlab_ci_yaml(
         if spack_stack_name:
             output_object["variables"]["SPACK_CI_STACK_NAME"] = spack_stack_name
 
-        # Ensure the child pipeline always runs
-        output_object["workflow"] = {"rules": [{"when": "always"}]}
-
         if spack_buildcache_copy:
             # Write out the file describing specs that should be copied
             copy_specs_dir = os.path.join(pipeline_artifacts_dir, "specs_to_copy")
@@ -1305,21 +1302,17 @@ def generate_gitlab_ci_yaml(
             with open(copy_specs_file, "w") as fd:
                 fd.write(json.dumps(buildcache_copies))
 
-        sorted_output = {}
-        for output_key, output_value in sorted(output_object.items()):
-            sorted_output[output_key] = output_value
-
         # TODO(opadron): remove this or refactor
         if run_optimizer:
             import spack.ci_optimization as ci_opt
 
-            sorted_output = ci_opt.optimizer(sorted_output)
+            output_object = ci_opt.optimizer(output_object)
 
         # TODO(opadron): remove this or refactor
         if use_dependencies:
             import spack.ci_needs_workaround as cinw
 
-            sorted_output = cinw.needs_to_dependencies(sorted_output)
+            output_object = cinw.needs_to_dependencies(output_object)
     else:
         # No jobs were generated
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
@@ -1330,10 +1323,17 @@ def generate_gitlab_ci_yaml(
             noop_job["script"] = [
                 'echo "copy-only pipelines are not supported with deprecated ci configs"'
             ]
-            sorted_output = {"unsupported-copy": noop_job}
+            output_object = {"unsupported-copy": noop_job}
         else:
             tty.debug("No specs to rebuild, generating no-op job")
-            sorted_output = {"no-specs-to-rebuild": noop_job}
+            output_object = {"no-specs-to-rebuild": noop_job}
+
+    # Ensure the child pipeline always runs
+    output_object["workflow"] = {"rules": [{"when": "always"}]}
+
+    sorted_output = {}
+    for output_key, output_value in sorted(output_object.items()):
+        sorted_output[output_key] = output_value
 
     if known_broken_specs_encountered:
         tty.error("This pipeline generated hashes known to be broken on develop:")
