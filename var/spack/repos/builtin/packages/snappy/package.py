@@ -30,6 +30,11 @@ class Snappy(CMakePackage):
         when="@1.1.9%nvhpc",
     )
 
+    # nvhpc@:22.3 does not know flag '-fno-rtti'
+    # nvhpc@:22.7 fails to compile snappy.cc: line 126: error: excessive recursion at instantiation
+    #   of class "snappy::<unnamed>::make_index_sequence<
+    conflicts("@1.1.9:", when="%nvhpc@:22.7")
+
     def cmake_args(self):
         return [
             self.define("CMAKE_INSTALL_LIBDIR", self.prefix.lib),
