@@ -1020,7 +1020,6 @@ def test_tarfile_without_common_directory_prefix_fails(tmpdir):
 def test_tarfile_with_files_outside_common_prefix(tmpdir, dummy_prefix):
     """If a file is outside of the common prefix, we should fail."""
     with tmpdir.as_cwd():
-        # Create a broken tarball with just a file, no directories.
         with tarfile.open("broken.tar", mode="w") as tar:
             tar.add(name=dummy_prefix)
             tar.addfile(tarfile.TarInfo(name="/etc/config_file"), fileobj=io.BytesIO(b"hello"))
