@@ -480,7 +480,10 @@ class CMakeBuilder(CMakeBuilder):
             self.define("GDAL_USE_JSONC", True),
             self.define("GDAL_USE_TIFF", True),
             self.define("GDAL_USE_ZLIB", True),
-            self.define("ENABLE_DEFLATE64", False),
+            # zlib-ng + deflate64 doesn't compile (heavily relies on zlib)
+            # but since zlib-ng is faster than zlib, it deflate shouldn't
+            # be necessary.
+            self.define("ENABLE_DEFLATE64", "zlib-ng" not in self.spec),
             # Optional dependencies
             self.define_from_variant("GDAL_USE_ARMADILLO", "armadillo"),
             self.define_from_variant("GDAL_USE_ARROW", "arrow"),
