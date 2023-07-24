@@ -18,10 +18,9 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="master")
     version("0.4.0", sha256="de54e02e0222420976a2f4cf0a6230e4bb625b443c66500fa1441032db206df9")
-    version("0.3.0", sha256="e7444a403c0a69eeeb34a4068be4d6f4e5b54cbfd275629019b9236a538a739e")
     version(
-        "0.2.0",
-        sha256="cf26e3a16a83eba6fb297fb106b0934046f17cf978f96243b44d9d17ad186db6",
+        "0.3.0",
+        sha256="e7444a403c0a69eeeb34a4068be4d6f4e5b54cbfd275629019b9236a538a739e",
         deprecated=True,
     )
 
@@ -48,7 +47,6 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("xsdk@0.7.0", when="@0.3.0")
     depends_on("xsdk@0.7.0 ^mfem+strumpack", when="@0.3.0 ^xsdk+strumpack")
     depends_on("xsdk@0.7.0 ^sundials+magma", when="@0.3.0 +cuda")
-    depends_on("xsdk@0.6.0", when="@0.2.0")
     depends_on("mpi")
     depends_on("cmake@3.21:", type="build", when="@0.3.0:")
 
