@@ -122,8 +122,8 @@ class MakefileBuilder(MakefileBuilder):
     def install(self, pkg, spec, prefix):
         args = ["VERBOSE=1", "PREFIX=" + prefix]
 
-        # Tested %nvhpc@22.3. No support for -MP
-        if "%nvhpc" in self.spec:
+        # Tested %nvhpc@23.5. No support for -MP
+        if self.spec.satisfies("@1.4.7:%nvhpc"):
             args.append("DEPFLAGS=-MT $@ -MMD -MF")
         # library targets
         lib_args = ["-C", "lib"] + args + ["install-pc", "install-includes"]
