@@ -42,6 +42,7 @@ class Dcmtk(CMakePackage):
     variant("iconv", default=True, description="Charset conversion support (iconv)")
     depends_on("iconv", type=("build", "link"))
 
+    variant("pic", default=False, description="Produce position-independent code")
     variant("cxx11", default=False, description="Enable c++11 features")
     variant("stl", default=True, description="Use native STL implementation")
 
@@ -66,4 +67,5 @@ class Dcmtk(CMakePackage):
         args += ["-DDCMTK_WITH_ICONV={0}".format("ON" if "+iconv" in self.spec else "OFF")]
         args += ["-DDCMTK_ENABLE_CXX11={0}".format("ON" if "+cxx11" in self.spec else "OFF")]
         args += ["-DDCMTK_ENABLE_STL={0}".format("ON" if "+stl" in self.spec else "OFF")]
+        args += ["-DCMAKE_POSITION_INDEPENDENT_CODE={0}".format("ON" if "+pic" in self.spec else "OFF")]
         return args
