@@ -30,6 +30,10 @@ class Freesasa(AutotoolsPackage):
     depends_on("json-c", when="+json")
     depends_on("libxml2", when="+xml")
 
+    # Remove hard-coded -lc++ flag from Makefile, preventing successful
+    # compilation with GCC 11 (see #36566 for details)
+    patch("libcpp.patch", when="@2.1.2")
+
     def autoreconf(self, spec, prefix):
         autoreconf("--install", "--verbose", "--force")
 

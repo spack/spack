@@ -86,11 +86,13 @@ def test_config_blame_defaults():
         if match:
             filename, line, key, val = match.groups()
             line = int(line)
-            val = val.strip("'\"")
+            lines = get_file_lines(filename)
+            assert key in lines[line]
 
+            val = val.strip("'\"")
+            printed_line = lines[line]
             if val.lower() in ("true", "false"):
                 val = val.lower()
+                printed_line = printed_line.lower()
 
-            lines = get_file_lines(filename)
-            assert key in lines[line], filename
-            assert val in lines[line]
+            assert val in printed_line, filename
