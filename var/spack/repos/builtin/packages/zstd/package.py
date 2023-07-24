@@ -99,8 +99,7 @@ class CMakeBuilder(CMakeBuilder):
 
     def cmake_args(self):
         spec = self.spec
-        args = []
-        args.append(self.define_from_variant("ZSTD_BUILD_PROGRAMS", "programs"))
+        args = [self.define_from_variant("ZSTD_BUILD_PROGRAMS", "programs")]
         args.extend(
             [
                 self.define("ZSTD_BUILD_STATIC", self.spec.satisfies("libs=static")),
