@@ -27,7 +27,8 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     # reused.
     build_system("autotools", "cmake", default="autotools")
 
-    conflicts("@2.1.3", when="platform=darwin")
+    # rpath shenanigans, see https://github.com/zlib-ng/zlib-ng/pull/1546
+    patch("pr-1546.patch", when="@2.1.3 platform=darwin")
 
     with when("build_system=cmake"):
         depends_on("cmake@3.5.1:", type="build")
