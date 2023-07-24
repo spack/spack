@@ -57,10 +57,6 @@ class Zstd(CMakePackage, MakefilePackage):
     depends_on("lz4", when="compression=lz4")
     depends_on("xz", when="compression=lzma")
 
-    # +programs builds vendored xxhash, which uses unsupported builtins
-    # (last tested: nvhpc@22.3)
-    conflicts("+programs %nvhpc")
-
     build_system("cmake", "makefile", default="makefile")
 
     def flag_handler(self, name, flags):
