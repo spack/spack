@@ -1208,9 +1208,17 @@ def tar_add_metadata(tar: tarfile.TarFile, path: str, data: dict):
     tar.addfile(deterministic_tarinfo(tarinfo), io.BytesIO(bstring))
 
 
-def _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo):
+def deterministic_tarinfo_without_buildinfo(tarinfo: tarfile.TarInfo):
+    """Skip buildinfo file when creating a tarball, and normalize other tarinfo fields."""
+    if tarinfo.name.endswith("/.spack/binary_distribution"):
+        return None
+
+    return deterministic_tarinfo(tarinfo)
+
+
+def _do_create_tarball(tarfile_path: str, binaries_dir: str, pkg_dir: str, buildinfo: dict):
     with gzip_compressed_tarfile(tarfile_path) as tar:
-        tar.add(name=binaries_dir, arcname=pkg_dir, filter=deterministic_tarinfo)
+        tar.add(name=binaries_dir, arcname=pkg_dir, filter=deterministic_tarinfo_without_buildinfo)
         tar_add_metadata(tar, buildinfo_file_name(pkg_dir), buildinfo)
 
 
