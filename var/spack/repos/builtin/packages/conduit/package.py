@@ -184,6 +184,8 @@ class Conduit(CMakePackage):
     depends_on("py-sphinx-rtd-theme", when="+python+doc", type="build")
     depends_on("doxygen", when="+doc+doxygen")
 
+    conflicts("+parmetis", when="~mpi", msg="Parmetis support requires MPI")
+
     # Tentative patch for fj compiler
     # Cmake will support fj compiler and this patch will be removed
     patch("fj_flags.patch", when="%fj")
