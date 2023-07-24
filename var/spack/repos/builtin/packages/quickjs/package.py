@@ -25,7 +25,16 @@ class Quickjs(MakefilePackage):
         "2020-09-06", sha256="0021a3e8cdc6b61e225411d05e2841d2437e1ccf4b4cabb9a5f7685ebfb57717"
     )
 
+    variant("lto", default=True, when="%gcc", description="Enable link-time optimization")
+
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
         makefile.filter("prefix=/usr/local", "prefix={}".format(prefix))
         makefile.filter("lib/quickjs", "lib")
+        makefile.filter("CFLAGS=", "CFLAGS+=-fPIC ")
+        if "+lto" not in spec:
+            makefile.filter("CONFIG_LTO=y", "")
+        cc = self.compiler.cc
+        makefile.filter("^ *CC=.*", "  CC={}".format(cc))
+        makefile.filter("^ *HOST_CC=.*", "  HOST_CC={}".format(cc))
+        makefile.filter("gcc-ar", "{}-ar".format(cc))
