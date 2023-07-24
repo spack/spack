@@ -9,7 +9,7 @@ import io
 import re
 import sys
 from argparse import ArgumentParser
-from typing import IO, Optional, Sequence, Tuple
+from typing import IO, Any, Iterable, List, Optional, Sequence, Tuple, Union
 
 
 class Command:
@@ -25,9 +25,9 @@ class Command:
         prog: str,
         description: Optional[str],
         usage: str,
-        positionals: Sequence[Tuple[str, str]],
-        optionals: Sequence[Tuple[Sequence[str], str, str]],
-        subcommands: Sequence[Tuple[ArgumentParser, str]],
+        positionals: List[Tuple[str, Optional[Iterable[Any]], Union[int, str, None], str]],
+        optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
+        subcommands: List[Tuple[ArgumentParser, str, str]],
     ) -> None:
         """Initialize a new Command instance.
 
@@ -96,13 +96,30 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
             if action.option_strings:
                 flags = action.option_strings
                 dest_flags = fmt._format_action_invocation(action)
-                help = self._expand_help(action) if action.help else ""
-                help = help.replace("\n", " ")
-                optionals.append((flags, dest_flags, help))
+                nargs = action.nargs
+                help = (
+                    self._expand_help(action)
+                    if action.help and action.help != argparse.SUPPRESS
+                    else ""
+                )
+                help = help.split("\n")[0]
+
+                if action.choices is not None:
+                    dest = [str(choice) for choice in action.choices]
+                else:
+                    dest = [action.dest]
+
+                optionals.append((flags, dest, dest_flags, nargs, help))
             elif isinstance(action, argparse._SubParsersAction):
                 for subaction in action._choices_actions:
                     subparser = action._name_parser_map[subaction.dest]
-                    subcommands.append((subparser, subaction.dest))
+                    help = (
+                        self._expand_help(subaction)
+                        if subaction.help and action.help != argparse.SUPPRESS
+                        else ""
+                    )
+                    help = help.split("\n")[0]
+                    subcommands.append((subparser, subaction.dest, help))
 
                     # Look for aliases of the form 'name (alias, ...)'
                     if self.aliases and isinstance(subaction.metavar, str):
@@ -111,12 +128,22 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                             aliases = match.group(2).split(", ")
                             for alias in aliases:
                                 subparser = action._name_parser_map[alias]
-                                subcommands.append((subparser, alias))
+                                help = (
+                                    self._expand_help(subaction)
+                                    if subaction.help and action.help != argparse.SUPPRESS
+                                    else ""
+                                )
+                                help = help.split("\n")[0]
+                                subcommands.append((subparser, alias, help))
             else:
                 args = fmt._format_action_invocation(action)
-                help = self._expand_help(action) if action.help else ""
-                help = help.replace("\n", " ")
-                positionals.append((args, help))
+                help = (
+                    self._expand_help(action)
+                    if action.help and action.help != argparse.SUPPRESS
+                    else ""
+                )
+                help = help.split("\n")[0]
+                positionals.append((args, action.choices, action.nargs, help))
 
         return Command(prog, description, usage, positionals, optionals, subcommands)
 
@@ -146,7 +173,7 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
         cmd = self.parse(parser, prog)
         self.out.write(self.format(cmd))
 
-        for subparser, prog in cmd.subcommands:
+        for subparser, prog, help in cmd.subcommands:
             self._write(subparser, prog, level=level + 1)
 
     def write(self, parser: ArgumentParser) -> None:
@@ -205,13 +232,13 @@ class ArgparseRstWriter(ArgparseWriter):
 
         if cmd.positionals:
             string.write(self.begin_positionals())
-            for args, help in cmd.positionals:
+            for args, choices, nargs, help in cmd.positionals:
                 string.write(self.positional(args, help))
             string.write(self.end_positionals())
 
         if cmd.optionals:
             string.write(self.begin_optionals())
-            for flags, dest_flags, help in cmd.optionals:
+            for flags, dest, dest_flags, nargs, help in cmd.optionals:
                 string.write(self.optional(dest_flags, help))
             string.write(self.end_optionals())
 
@@ -338,7 +365,7 @@ class ArgparseRstWriter(ArgparseWriter):
         """
         return ""
 
-    def begin_subcommands(self, subcommands: Sequence[Tuple[ArgumentParser, str]]) -> str:
+    def begin_subcommands(self, subcommands: List[Tuple[ArgumentParser, str, str]]) -> str:
         """Table with links to other subcommands.
 
         Arguments:
@@ -355,114 +382,8 @@ class ArgparseRstWriter(ArgparseWriter):
 
 """
 
-        for cmd, _ in subcommands:
+        for cmd, _, _ in subcommands:
             prog = re.sub(r"^[^ ]* ", "", cmd.prog)
             string += "   * :ref:`{0} <{1}>`\n".format(prog, cmd.prog.replace(" ", "-"))
 
         return string + "\n"
-
-
-class ArgparseCompletionWriter(ArgparseWriter):
-    """Write argparse output as shell programmable tab completion functions."""
-
-    def format(self, cmd: Command) -> str:
-        """Return the string representation of a single node in the parser tree.
-
-        Args:
-            cmd: Parsed information about a command or subcommand.
-
-        Returns:
-            String representation of this subcommand.
-        """
-
-        assert cmd.optionals  # we should always at least have -h, --help
-        assert not (cmd.positionals and cmd.subcommands)  # one or the other
-
-        # We only care about the arguments/flags, not the help messages
-        positionals: Tuple[str, ...] = ()
-        if cmd.positionals:
-            positionals, _ = zip(*cmd.positionals)
-        optionals, _, _ = zip(*cmd.optionals)
-        subcommands: Tuple[str, ...] = ()
-        if cmd.subcommands:
-            _, subcommands = zip(*cmd.subcommands)
-
-        # Flatten lists of lists
-        optionals = [x for xx in optionals for x in xx]
-
-        return (
-            self.start_function(cmd.prog)
-            + self.body(positionals, optionals, subcommands)
-            + self.end_function(cmd.prog)
-        )
-
-    def start_function(self, prog: str) -> str:
-        """Return the syntax needed to begin a function definition.
-
-        Args:
-            prog: Program name.
-
-        Returns:
-            Function definition beginning.
-        """
-        name = prog.replace("-", "_").replace(" ", "_")
-        return "\n_{0}() {{".format(name)
-
-    def end_function(self, prog: str) -> str:
-        """Return the syntax needed to end a function definition.
-
-        Args:
-            prog: Program name
-
-        Returns:
-            Function definition ending.
-        """
-        return "}\n"
-
-    def body(
-        self, positionals: Sequence[str], optionals: Sequence[str], subcommands: Sequence[str]
-    ) -> str:
-        """Return the body of the function.
-
-        Args:
-            positionals: List of positional arguments.
-            optionals: List of optional arguments.
-            subcommands: List of subcommand parsers.
-
-        Returns:
-            Function body.
-        """
-        return ""
-
-    def positionals(self, positionals: Sequence[str]) -> str:
-        """Return the syntax for reporting positional arguments.
-
-        Args:
-            positionals: List of positional arguments.
-
-        Returns:
-            Syntax for positional arguments.
-        """
-        return ""
-
-    def optionals(self, optionals: Sequence[str]) -> str:
-        """Return the syntax for reporting optional flags.
-
-        Args:
-            optionals: List of optional arguments.
-
-        Returns:
-            Syntax for optional flags.
-        """
-        return ""
-
-    def subcommands(self, subcommands: Sequence[str]) -> str:
-        """Return the syntax for reporting subcommands.
-
-        Args:
-            subcommands: List of subcommand parsers.
-
-        Returns:
-            Syntax for subcommand parsers
-        """
-        return ""

@@ -77,7 +77,7 @@ class Whizard(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
-    depends_on("pkgconf", type="build")
+    depends_on("pkgconfig", type="build")
 
     conflicts(
         "%gcc@:5.0",
