@@ -25,7 +25,13 @@ class PyPytestHtml(PythonPackage):
     depends_on("py-wheel@0.33.6:", type="build")
     depends_on("py-pytest@5.0:5,6.0.1:", type=("build", "run"))
     depends_on("py-pytest-metadata", type=("build", "run"))
-    depends_on("py-py@1.8.2:", type=("build", "run"))
+
+    # https://github.com/spack/spack/pull/38989
+    # py-pytest@7.2 removed py-py dependency, but now py-pytest conflicts with py-py. And
+    # py-pytest-htm@:3 requires py-py.
+    # One workaround is to always add py-py *before* py-pytest in PYTHONPATH, but we cannot ensure
+    # that. So don't allow this configuration, pending py-pytest-html@4.
+    conflicts("^py-pytest@7.2:", when="@:3")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
