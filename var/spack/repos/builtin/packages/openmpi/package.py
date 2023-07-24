@@ -495,6 +495,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # Variants to use internal packages
     variant("internal-hwloc", default=False, description="Use internal hwloc")
     variant("internal-pmix", default=False, description="Use internal pmix")
+    variant("openshmem", default=False, description="Enable building OpenSHMEM")
 
     provides("mpi")
     provides("mpi@:2.2", when="@1.6.5")
@@ -1038,6 +1039,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if spec.satisfies("%nvhpc@:20.11"):
             # Workaround compiler issues
             config_args.append("CFLAGS=-O1")
+
+        if "+openshmem" in spec:
+            config_args.append("--enable-oshmem")
 
         if "+wrapper-rpath" in spec:
             config_args.append("--enable-wrapper-rpath")
