@@ -143,7 +143,7 @@ and then install from it exclusively, you would do:
 
     $ spack mirror add E4S https://cache.e4s.io
     $ spack buildcache keys --install --trust
-    $ spack install --use-buildache only <package>
+    $ spack install --use-buildcache only <package>
 
 We use ``--install`` and ``--trust`` to say that we are installing keys to our
 keyring, and trusting all downloaded keys.
