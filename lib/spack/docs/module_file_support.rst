@@ -400,28 +400,30 @@ that are already in the Lmod hierarchy.
 
 
 .. note::
-   Tcl modules
-     Tcl modules also allow for explicit conflicts between modulefiles.
+   Tcl and Lua modules also allow for explicit conflicts between modulefiles.
 
-     .. code-block:: yaml
+   .. code-block:: yaml
 
-        modules:
-          default:
-            enable:
-              - tcl
-            tcl:
-              projections:
-                all: '{name}/{version}-{compiler.name}-{compiler.version}'
-              all:
-                conflict:
-                  - '{name}'
-                  - 'intel/14.0.1'
+      modules:
+        default:
+          enable:
+            - tcl
+          tcl:
+            projections:
+              all: '{name}/{version}-{compiler.name}-{compiler.version}'
+            all:
+              conflict:
+                - '{name}'
+                - 'intel/14.0.1'
 
-     will create module files that will conflict with ``intel/14.0.1`` and with the
-     base directory of the same module, effectively preventing the possibility to
-     load two or more versions of the same software at the same time. The tokens
-     that are available for use in this directive are the same understood by
-     the :meth:`~spack.spec.Spec.format` method.
+   will create module files that will conflict with ``intel/14.0.1`` and with the
+   base directory of the same module, effectively preventing the possibility to
+   load two or more versions of the same software at the same time. The tokens
+   that are available for use in this directive are the same understood by the
+   :meth:`~spack.spec.Spec.format` method.
+
+   For Lmod and Environment Modules versions prior 4.2, it is important to
+   express the conflict on both modulefiles conflicting with each other.
 
 
 .. note::

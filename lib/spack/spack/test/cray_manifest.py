@@ -338,7 +338,7 @@ def test_read_cray_manifest(tmpdir, mutable_config, mock_packages, mutable_datab
         with open(test_db_fname, "w") as db_file:
             json.dump(create_manifest_content(), db_file)
         cray_manifest.read(test_db_fname, True)
-        query_specs = spack.store.db.query("openmpi")
+        query_specs = spack.store.STORE.db.query("openmpi")
         assert any(x.dag_hash() == "openmpifakehasha" for x in query_specs)
 
         concretized_specs = spack.cmd.parse_specs(

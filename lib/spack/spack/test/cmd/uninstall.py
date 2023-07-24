@@ -46,7 +46,7 @@ def test_correct_installed_dependents(mutable_database):
     # Test whether we return the right dependents.
 
     # Take callpath from the database
-    callpath = spack.store.db.query_local("callpath")[0]
+    callpath = spack.store.STORE.db.query_local("callpath")[0]
 
     # Ensure it still has dependents and dependencies
     dependents = callpath.dependents(deptype=("run", "link"))
@@ -78,7 +78,7 @@ def test_recursive_uninstall(mutable_database):
     """Test recursive uninstall."""
     uninstall("-y", "-a", "--dependents", "callpath")
 
-    all_specs = spack.store.layout.all_specs()
+    all_specs = spack.store.STORE.layout.all_specs()
     assert len(all_specs) == 9
     # query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies("mpileaks")]
@@ -98,7 +98,7 @@ def test_uninstall_spec_with_multiple_roots(
 ):
     uninstall("-y", "-a", "--dependents", constraint)
 
-    all_specs = spack.store.layout.all_specs()
+    all_specs = spack.store.STORE.layout.all_specs()
     assert len(all_specs) == expected_number_of_specs
 
 
@@ -109,7 +109,7 @@ def test_force_uninstall_spec_with_ref_count_not_zero(
 ):
     uninstall("-f", "-y", constraint)
 
-    all_specs = spack.store.layout.all_specs()
+    all_specs = spack.store.STORE.layout.all_specs()
     assert len(all_specs) == expected_number_of_specs
 
 
@@ -117,41 +117,41 @@ def test_force_uninstall_spec_with_ref_count_not_zero(
 def test_force_uninstall_and_reinstall_by_hash(mutable_database):
     """Test forced uninstall and reinstall of old specs."""
     # this is the spec to be removed
-    callpath_spec = spack.store.db.query_one("callpath ^mpich")
+    callpath_spec = spack.store.STORE.db.query_one("callpath ^mpich")
     dag_hash = callpath_spec.dag_hash()
 
     # ensure can look up by hash and that it's a dependent of mpileaks
     def validate_callpath_spec(installed):
         assert installed is True or installed is False
 
-        specs = spack.store.db.get_by_hash(dag_hash, installed=installed)
+        specs = spack.store.STORE.db.get_by_hash(dag_hash, installed=installed)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
-        specs = spack.store.db.get_by_hash(dag_hash[:7], installed=installed)
+        specs = spack.store.STORE.db.get_by_hash(dag_hash[:7], installed=installed)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
-        specs = spack.store.db.get_by_hash(dag_hash, installed=any)
+        specs = spack.store.STORE.db.get_by_hash(dag_hash, installed=any)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
-        specs = spack.store.db.get_by_hash(dag_hash[:7], installed=any)
+        specs = spack.store.STORE.db.get_by_hash(dag_hash[:7], installed=any)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
-        specs = spack.store.db.get_by_hash(dag_hash, installed=not installed)
+        specs = spack.store.STORE.db.get_by_hash(dag_hash, installed=not installed)
         assert specs is None
 
-        specs = spack.store.db.get_by_hash(dag_hash[:7], installed=not installed)
+        specs = spack.store.STORE.db.get_by_hash(dag_hash[:7], installed=not installed)
         assert specs is None
 
-        mpileaks_spec = spack.store.db.query_one("mpileaks ^mpich")
+        mpileaks_spec = spack.store.STORE.db.query_one("mpileaks ^mpich")
         assert callpath_spec in mpileaks_spec
 
-        spec = spack.store.db.query_one("callpath ^mpich", installed=installed)
+        spec = spack.store.STORE.db.query_one("callpath ^mpich", installed=installed)
         assert spec == callpath_spec
 
-        spec = spack.store.db.query_one("callpath ^mpich", installed=any)
+        spec = spack.store.STORE.db.query_one("callpath ^mpich", installed=any)
         assert spec == callpath_spec
 
-        spec = spack.store.db.query_one("callpath ^mpich", installed=not installed)
+        spec = spack.store.STORE.db.query_one("callpath ^mpich", installed=not installed)
         assert spec is None
 
     validate_callpath_spec(True)
@@ -164,7 +164,7 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
 
     # BUT, make sure that the removed callpath spec is not in queries
     def db_specs():
-        all_specs = spack.store.layout.all_specs()
+        all_specs = spack.store.STORE.layout.all_specs()
         return (
             all_specs,
             [s for s in all_specs if s.satisfies("mpileaks")],
