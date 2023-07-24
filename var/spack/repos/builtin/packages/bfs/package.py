@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack.package import *
 
 
@@ -21,9 +20,6 @@ class Bfs(MakefilePackage):
     depends_on("attr", when="platform=linux")
     depends_on("libcap", when="platform=linux")
     depends_on("oniguruma")
-
-    def build(self, spec, prefix):
-        make("release", f"PREFIX={prefix}")
 
     def install(self, spec, prefix):
         make("install", f"PREFIX={prefix}")
