@@ -23,6 +23,7 @@ class Proj(CMakePackage, AutotoolsPackage):
     # Many packages that depend on proj do not yet support the newer API.
     # See https://github.com/OSGeo/PROJ/wiki/proj.h-adoption-status
 
+    version("9.2.1", sha256="15ebf4afa8744b9e6fccb5d571fc9f338dc3adcf99907d9e62d1af815d4971a1")
     version("9.2.0", sha256="dea816f5aa732ae6b2ee3977b9bdb28b1d848cf56a1aad8faf6708b89f0ed50e")
     version("9.1.1", sha256="003cd4010e52bb5eb8f7de1c143753aa830c8902b6ed01209f294846e40e6d39")
     version("9.1.0", sha256="81b2239b94cad0886222cde4f53cb49d34905aad2a1317244a0c30a553db2315")
@@ -74,6 +75,12 @@ class Proj(CMakePackage, AutotoolsPackage):
         sha256="3ff6618a0acc9f0b9b4f6a62e7ff0f7bf538fb4f74de47ad04da1317408fcc15",
         placement=join_path("share", "proj"),
         when="@:6",
+    )
+
+    patch(
+        "https://github.com/OSGeo/PROJ/commit/3f38a67a354a3a1e5cca97793b9a43860c380d95.patch?full_index=1",
+        sha256="dc620ff1bbcc0ef4130d53a40a8693a1e2e72ebf83bd6289f1139d0f1aad2a40",
+        when="@7:7.2.1",
     )
 
     # https://proj.org/install.html#build-requirements
