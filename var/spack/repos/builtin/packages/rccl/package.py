@@ -198,6 +198,7 @@ class Rccl(CMakePackage):
 
     for ver in ["5.5.0", "5.5.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
+    depends_on("googletest@1.11.0:", when="@5.3:")
 
     @classmethod
     def determine_version(cls, lib):
