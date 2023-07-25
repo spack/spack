@@ -18,6 +18,7 @@ class Fms(CMakePackage):
 
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett", "rem1776")
 
+    version("2023.01", sha256="6079ea885e9365513b453c77aadfc7c305bf413b840656bb333db1eabba0f18e")
     version("2022.04", sha256="f741479128afc2b93ca8291a4c5bcdb024a8cbeda1a26bf77a236c0f629e1b03")
     version("2022.03", sha256="42d2ac53d3c889a8177a6d7a132583364c0f6e5d5cbde0d980443b6797ad4838")
     version("2022.02", sha256="ad4978302b219e11b883b2f52519e1ee455137ad947474abb316c8654f72c874")
@@ -70,7 +71,7 @@ class Fms(CMakePackage):
         when="@2022.02:",
     )
     variant(
-        "fpic", default=False, description="Build with position independent code", when="@2022.02:"
+        "pic", default=False, description="Build with position independent code", when="@2022.02:"
     )
 
     depends_on("netcdf-c")
@@ -85,9 +86,9 @@ class Fms(CMakePackage):
             self.define_from_variant("ENABLE_QUAD_PRECISION", "quad_precision"),
             self.define_from_variant("WITH_YAML", "yaml"),
             self.define_from_variant("CONSTANTS"),
-            self.define_from_variant("FPIC"),
             self.define("32BIT", "precision=32" in self.spec),
             self.define("64BIT", "precision=64" in self.spec),
+            self.define_from_variant("FPIC", "pic"),
         ]
 
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))

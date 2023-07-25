@@ -267,6 +267,11 @@ class Openfoam(Package):
 
     version("develop", branch="develop", submodules="True")
     version("master", branch="master", submodules="True")
+    version("2306", sha256="d7fba773658c0f06ad17f90199565f32e9bf502b7bb03077503642064e1f5344")
+    version(
+        "2212_230612", sha256="604cd731173ec2a3645c838cf2468fae050a35c6340e2ca7c157699899d904c0"
+    )
+    version("2212", sha256="0a3ddbfea9abca04c3a811e72fcbb184c6b1f92c295461e63b231f1a97e96476")
     version("2206", sha256="db95eda4afb97ca870733b2d4201ef539099d0778e3f3eca9a075d4f1a0eea46")
     version(
         "2112_220610", sha256="e07fd7220520e4bcfd6c8100a7e027fba13eeca2b11085c9dd4642758422a63d"
@@ -325,8 +330,6 @@ class Openfoam(Package):
     version("1706", sha256="7779048bb53798d9a5bd2b2be0bf302c5fd3dff98e29249d6e0ef7eeb83db79a")
     version("1612", sha256="2909c43506a68e1f23efd0ca6186a6948ae0fc8fe1e39c78cc23ef0d69f3569d")
 
-    variant("float32", default=False, description="Use single-precision")
-    variant("spdp", default=False, description="Use single/double mixed precision")
     variant("int64", default=False, description="With 64-bit labels")
     variant("knl", default=False, description="Use KNL compiler settings")
     variant("kahip", default=False, description="With kahip decomposition")
@@ -340,6 +343,13 @@ class Openfoam(Package):
     variant("vtk", default=False, description="With VTK runTimePostProcessing")
     variant(
         "source", default=True, description="Install library/application sources and tutorials"
+    )
+    variant(
+        "precision",
+        default="dp",
+        description="Precision option",
+        values=("sp", "dp", conditional("spdp", when="@1906:")),
+        multi=False,
     )
 
     depends_on("mpi")
@@ -876,7 +886,7 @@ class Openfoam(Package):
 # -----------------------------------------------------------------------------
 
 
-class OpenfoamArch(object):
+class OpenfoamArch:
     """OpenfoamArch represents architecture/compiler settings for OpenFOAM.
     The string representation is WM_OPTIONS.
 
@@ -895,7 +905,7 @@ class OpenfoamArch(object):
         self.compiler = None  # <- %compiler
         self.arch_option = ""  # Eg, -march=knl
         self.label_size = None  # <- +int64
-        self.precision_option = "DP"  # <- +float32 | +spdp
+        self.precision_option = "DP"  # <- precision= sp | dp | spdp
         self.compile_option = kwargs.get("compile-option", "-spack")
         self.arch = None
         self.options = None
@@ -908,10 +918,10 @@ class OpenfoamArch(object):
             self.label_size = "32"
 
         # WM_PRECISION_OPTION
-        if "+spdp" in spec:
-            self.precision_option = "SPDP"
-        elif "+float32" in spec:
+        if "precision=sp" in spec:
             self.precision_option = "SP"
+        elif "precision=spdp" in spec:
+            self.precision_option = "SPDP"
 
         # Processor/architecture-specific optimizations
         if "+knl" in spec:

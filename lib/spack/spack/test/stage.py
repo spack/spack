@@ -340,7 +340,7 @@ def failing_fetch_strategy():
 def search_fn():
     """Returns a search function that always succeeds."""
 
-    class _Mock(object):
+    class _Mock:
         performed_search = False
 
         def __call__(self):
@@ -385,7 +385,7 @@ def check_stage_dir_perms(prefix, path):
 
 
 @pytest.mark.usefixtures("mock_packages")
-class TestStage(object):
+class TestStage:
     stage_name = "spack-test-stage"
 
     def test_setup_and_destroy_name_with_tmp(self, mock_stage_archive):
@@ -717,56 +717,17 @@ class TestStage(object):
             except OSError:
                 pass
 
-    @pytest.mark.nomockstage
-    def test_create_stage_root_bad_uid(self, tmpdir, monkeypatch):
-        """
-        Test the code path that uses an existing user path -- whether `$user`
-        in `$tempdir` or not -- and triggers the generation of the UID
-        mismatch warning.
-
-        This situation can happen with some `config:build_stage` settings
-        for teams using a common service account for installing software.
-        """
-        orig_stat = os.stat
-
-        class MinStat:
-            st_mode = -1
-            st_uid = -1
-
-        def _stat(path):
-            p_stat = orig_stat(path)
-
-            fake_stat = MinStat()
-            fake_stat.st_mode = p_stat.st_mode
-            return fake_stat
-
-        user_dir = tmpdir.join(getpass.getuser())
-        user_dir.ensure(dir=True)
-        user_path = str(user_dir)
-
-        # TODO: If we could guarantee access to the monkeypatch context
-        # function (i.e., 3.6.0 on), the call and assertion could be moved
-        # to a with block, such as:
-        #
-        #  with monkeypatch.context() as m:
-        #      m.setattr(os, 'stat', _stat)
-        #      spack.stage.create_stage_root(user_path)
-        #      assert os.stat(user_path).st_uid != os.getuid()
-        monkeypatch.setattr(os, "stat", _stat)
-        spack.stage.create_stage_root(user_path)
-
-        # The following check depends on the patched os.stat as a poor
-        # substitute for confirming the generated warnings.
-        assert os.stat(user_path).st_uid != getuid()
-
     def test_resolve_paths(self):
         """Test _resolve_paths."""
         assert spack.stage._resolve_paths([]) == []
 
         # resolved path without user appends user
         paths = [os.path.join(os.path.sep, "a", "b", "c")]
+        can_paths = [paths[0]]
         user = getpass.getuser()
-        can_paths = [os.path.join(paths[0], user)]
+
+        if sys.platform != "win32":
+            can_paths = [os.path.join(paths[0], user)]
         assert spack.stage._resolve_paths(paths) == can_paths
 
         # resolved path with node including user does not append user
@@ -789,7 +750,7 @@ class TestStage(object):
             res_paths[1] = can_tempdir
             res_paths[2] = os.path.join(can_tempdir, user)
             res_paths[3] = os.path.join(can_tempdir, "stage", user)
-        else:
+        elif sys.platform != "win32":
             res_paths[0] = os.path.join(res_paths[0], user)
 
         assert spack.stage._resolve_paths(paths) == res_paths
@@ -929,3 +890,24 @@ def test_cannot_access(capsys):
 
     captured = capsys.readouterr()
     assert "Insufficient permissions" in str(captured)
+
+
+def test_override_keep_in_composite_stage():
+    stage_1 = Stage("file:///does-not-exist", keep=True)
+    stage_2 = Stage("file:///does-not-exist", keep=False)
+    stage_3 = Stage("file:///does-not-exist", keep=True)
+    stages = spack.stage.StageComposite.from_iterable((stage_1, stage_2, stage_3))
+
+    # The getter for the composite stage just returns the value of the first stage
+    # its just there so we have a setter too.
+    assert stages.keep
+    assert stage_1.keep
+    assert not stage_2.keep
+    assert stage_3.keep
+
+    # This should override all stages
+    stages.keep = False
+    assert not stages.keep
+    assert not stage_1.keep
+    assert not stage_2.keep
+    assert not stage_3.keep

@@ -20,17 +20,5 @@ spack.main.add_all_commands(parser)
 
 
 def test_format_not_overridden():
-    writer = aw.ArgparseWriter("spack")
-
-    with pytest.raises(NotImplementedError):
-        writer.write(parser)
-
-
-def test_completion_format_not_overridden():
-    writer = aw.ArgparseCompletionWriter("spack")
-
-    assert writer.positionals([]) == ""
-    assert writer.optionals([]) == ""
-    assert writer.subcommands([]) == ""
-
-    writer.write(parser)
+    with pytest.raises(TypeError):
+        aw.ArgparseWriter("spack")

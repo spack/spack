@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import division, print_function
-
 import argparse
 import collections
 import io
@@ -26,7 +24,6 @@ import spack.paths
 description = "run spack's unit tests (wrapper around pytest)"
 section = "developer"
 level = "long"
-is_windows = sys.platform == "win32"
 
 
 def setup_parser(subparser):
@@ -212,7 +209,7 @@ def unit_test(parser, args, unknown_args):
     # mock configuration used by unit tests
     # Note: skip on windows here because for the moment,
     # clingo is wholly unsupported from bootstrap
-    if not is_windows:
+    if sys.platform != "win32":
         with spack.bootstrap.ensure_bootstrap_configuration():
             spack.bootstrap.ensure_core_dependencies()
             if pytest is None:

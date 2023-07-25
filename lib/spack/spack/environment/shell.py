@@ -42,6 +42,8 @@ def activate_header(env, shell, prompt=None):
         cmds += 'set "SPACK_ENV=%s"\n' % env.path
         # TODO: despacktivate
         # TODO: prompt
+    elif shell == "pwsh":
+        cmds += "$Env:SPACK_ENV=%s\n" % env.path
     else:
         if "color" in os.getenv("TERM", "") and prompt:
             prompt = colorize("@G{%s}" % prompt, color=True, enclose=True)
@@ -79,6 +81,8 @@ def deactivate_header(shell):
         cmds += 'set "SPACK_ENV="\n'
         # TODO: despacktivate
         # TODO: prompt
+    elif shell == "pwsh":
+        cmds += "Remove-Item Env:SPACK_ENV"
     else:
         cmds += "if [ ! -z ${SPACK_ENV+x} ]; then\n"
         cmds += "unset SPACK_ENV; export SPACK_ENV;\n"
@@ -126,7 +130,7 @@ def activate(env, use_env_repo=False, add_view=True):
     #
     try:
         if add_view and ev.default_view_name in env.views:
-            with spack.store.db.read_transaction():
+            with spack.store.STORE.db.read_transaction():
                 env.add_default_view_to_env(env_mods)
     except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
         tty.error(e)
@@ -161,7 +165,7 @@ def deactivate():
 
     if ev.default_view_name in active.views:
         try:
-            with spack.store.db.read_transaction():
+            with spack.store.STORE.db.read_transaction():
                 active.rm_default_view_from_env(env_mods)
         except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
             tty.warn(e)

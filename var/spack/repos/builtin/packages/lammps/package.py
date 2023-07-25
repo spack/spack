@@ -9,7 +9,7 @@ import archspec
 from spack.package import *
 
 
-class Lammps(CMakePackage, CudaPackage):
+class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
     Parallel Simulator.
     """
@@ -28,14 +28,23 @@ class Lammps(CMakePackage, CudaPackage):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
+    version("20230615", sha256="8470ed7b26ccd3728f4b44a7f1c520f1af23a648af685fd30b42b840fdfae2ff")
+    version("20230328", sha256="14f5a5c37e4b46466e90d8b35476800e66acee74999f7358f4c12dfe662bfd99")
+    version("20230208", sha256="60221242145da4479e5b207d9a0eed90af4168d7a297b4dc8c0e7f2b3215602e")
     version("20221222", sha256="75372ee7ef982767fc4ed4dc95e20ddca8247419adeb0c1276c40e43d1eab955")
     version("20221103", sha256="d28517b84b157d4e46a1a64ed787b4662d8f2f5ade3f5a04bb0caed068f32f7e")
     version("20220915", sha256="392b8d35fc7919b0efaf8b389259a9b795a817e58e75e380467c63d03a0dab75")
     version("20220803", sha256="f37cb0b35c1682ffceae5826aadce47278aa7003099a1655fcea43acd7d37926")
     version(
+        "20220623.3",
+        sha256="8a276a01b50d37eecfe6eb36f420f354cde51936d20aca7944dea60d3c098c89",
+        preferred=True,
+    )
+    version(
         "20220623.2",
         sha256="8a560213e83919623525c4a7c4b5f0eda35cdf3b0c0e6548fd891379e04ca9e6",
         preferred=True,
+        deprecated=True,
     )
     version(
         "20220623.1",
@@ -378,7 +387,8 @@ class Lammps(CMakePackage, CudaPackage):
         "kokkos": {},
         "kspace": {"default": True},
         "latboltz": {"when": "@20210702:"},
-        "latte": {"when": "@20170922:"},
+        "latte": {"when": "@20170922:20230328"},
+        "lepton": {"when": "@20230208:"},
         "machdyn": {"when": "@20210702:"},
         "manifold": {"when": "@20210702:"},
         "manybody": {"default": True},
@@ -513,10 +523,19 @@ class Lammps(CMakePackage, CudaPackage):
         values=("single", "double"),
         multi=False,
     )
+    variant(
+        "gpu_precision",
+        default="mixed",
+        when="~kokkos",
+        description="Select GPU precision (used by GPU package)",
+        values=("double", "mixed", "single"),
+        multi=False,
+    )
 
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+mpiio")
     depends_on("fftw-api@3", when="+kspace")
+    depends_on("hipfft", when="+kspace+kokkos+rocm")
     depends_on("voropp+pic", when="+voronoi")
     depends_on("netcdf-c+mpi", when="+user-netcdf")
     depends_on("netcdf-c+mpi", when="+netcdf")
@@ -528,7 +547,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("latte@1.0.1", when="@:20180222+latte")
     depends_on("latte@1.1.1:", when="@20180316:20180628+latte")
     depends_on("latte@1.2.1:", when="@20180629:20200505+latte")
-    depends_on("latte@1.2.2:", when="@20200602:+latte")
+    depends_on("latte@1.2.2:", when="@20200602:20230328+latte")
     depends_on("blas", when="+latte")
     depends_on("lapack", when="+latte")
     depends_on("python", when="+python")
@@ -545,6 +564,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("ffmpeg", when="+ffmpeg")
     depends_on("kokkos+deprecated_code+shared@3.0.00", when="@20200303+kokkos")
     depends_on("kokkos+shared@3.1:", when="@20200505:+kokkos")
+    depends_on("kokkos@3.7.01:", when="@20230208: +kokkos")
     depends_on("adios2", when="+user-adios")
     depends_on("adios2", when="+adios")
     depends_on("plumed", when="+user-plumed")
@@ -561,6 +581,17 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("n2p2+shared", when="+lib ^n2p2")
     depends_on("vtk", when="+user-vtk")
     depends_on("vtk", when="+vtk")
+    depends_on("hipcub", when="~kokkos +rocm")
+    depends_on("llvm-amdgpu +openmp", when="+rocm +openmp", type="build")
+
+    # propagate CUDA and ROCm architecture when +kokkos
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on("kokkos+cuda cuda_arch=%s" % arch, when="+kokkos+cuda cuda_arch=%s" % arch)
+
+    for arch in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos+rocm amdgpu_target=%s" % arch, when="+kokkos+rocm amdgpu_target=%s" % arch
+        )
 
     depends_on("googletest", type="test")
     depends_on("libyaml", type="test")
@@ -568,6 +599,7 @@ class Lammps(CMakePackage, CudaPackage):
     extends("python", when="+python")
 
     conflicts("+cuda", when="+opencl")
+    conflicts("+rocm", when="+opencl")
     conflicts("+body", when="+poems@:20180628")
     conflicts("+latte", when="@:20170921")
     conflicts("+python", when="~lib")
@@ -605,15 +637,38 @@ class Lammps(CMakePackage, CudaPackage):
         when="^adios2+mpi",
         msg="With +adios, mpi setting for adios2 and lammps must be the same",
     )
+    conflicts(
+        "~kokkos+rocm",
+        when="@:20220602",
+        msg="ROCm builds of the GPU package not maintained prior to version 20220623",
+    )
+    conflicts("+intel", when="%aocc@:3.2.9999", msg="+intel with AOCC requires version 4 or newer")
+
+    # Backport of https://github.com/lammps/lammps/pull/3726
+    conflicts("+kokkos+rocm+kspace", when="@:20210929.3")
+    patch(
+        "https://github.com/lammps/lammps/commit/ebb8eee941e52c98054fdf96ea78ee4d5f606f47.patch?full_index=1",
+        sha256="3dedd807f63a21c543d1036439099f05c6031fd98e7cb1ea7825822fc074106e",
+        when="@20220623.3:20230208 +kokkos +rocm +kspace",
+    )
+
+    # Older LAMMPS does not compile with Kokkos 4.x
+    conflicts(
+        "^kokkos @4:",
+        when="@:20230615",
+        msg="LAMMPS is incompatible with Kokkos 4.x until @20230615",
+    )
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
     patch("gtest_fix.patch", when="@:20210310 %aocc@3.2.0")
+    patch("intel-aocc.patch", when="@20220324:20221103 +intel %aocc")
     patch(
         "https://github.com/lammps/lammps/commit/562300996285fdec4ef74542383276898555af06.patch?full_index=1",
         sha256="e6f1b62bbfdc79d632f4cea98019202d0dd25aa4ae61a70df1164cb4f290df79",
         when="@20200721 +cuda",
     )
+    patch("hip_cmake.patch", when="@20220623:20221222 ~kokkos+rocm")
 
     root_cmakelists_dir = "cmake"
 
@@ -641,6 +696,7 @@ class Lammps(CMakePackage, CudaPackage):
             if "+cuda" in spec:
                 args.append(self.define("PKG_GPU", True))
                 args.append(self.define("GPU_API", "cuda"))
+                args.append(self.define_from_variant("GPU_PREC", "gpu_precision"))
                 cuda_arch = spec.variants["cuda_arch"].value
                 if cuda_arch != "none":
                     args.append(self.define("GPU_ARCH", "sm_{0}".format(cuda_arch[0])))
@@ -650,6 +706,12 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append(self.define("USE_STATIC_OPENCL_LOADER", False))
                 args.append(self.define("PKG_GPU", True))
                 args.append(self.define("GPU_API", "opencl"))
+                args.append(self.define_from_variant("GPU_PREC", "gpu_precision"))
+            elif "+rocm" in spec:
+                args.append(self.define("PKG_GPU", True))
+                args.append(self.define("GPU_API", "hip"))
+                args.append(self.define_from_variant("GPU_PREC", "gpu_precision"))
+                args.append(self.define_from_variant("HIP_ARCH", "amdgpu_target"))
             else:
                 args.append(self.define("PKG_GPU", False))
 
@@ -657,8 +719,19 @@ class Lammps(CMakePackage, CudaPackage):
             args.append(self.define("BUILD_LIB", True))
 
         if spec.satisfies("%aocc"):
-            cxx_flags = "-Ofast -mfma -fvectorize -funroll-loops"
+            if spec.satisfies("+intel"):
+                cxx_flags = (
+                    "-Ofast -fno-math-errno -fno-unroll-loops "
+                    "-fveclib=AMDLIBM -muse-unaligned-vector-move"
+                )
+                # add -fopenmp-simd if OpenMP not already turned on
+                if spec.satisfies("~openmp"):
+                    cxx_flags += " -fopenmp-simd"
+                cxx_flags += " -DLMP_SIMD_COMPILER -DUSE_OMP_SIMD -DLMP_INTEL_USELRT"
+            else:
+                cxx_flags = "-Ofast -mfma -fvectorize -funroll-loops"
             args.append(self.define("CMAKE_CXX_FLAGS_RELEASE", cxx_flags))
+            args.append(self.define("CMAKE_CXX_FLAGS_RELWITHDEBINFO", cxx_flags))
 
         # Overwrite generic cpu tune option
         cmake_tune_flags = archspec.cpu.TARGETS[spec.target.name].optimization_flags(
@@ -684,7 +757,7 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append(self.define("FFT", "FFTW3"))
             elif "^mkl" in spec:
                 args.append(self.define("FFT", "MKL"))
-            elif "^armpl-gcc" in spec:
+            elif "^armpl-gcc" in spec or "^acfl" in spec:
                 args.append(self.define("FFT", "FFTW3"))
                 args.append(self.define("FFTW3_LIBRARY", self.spec["fftw-api"].libs[0]))
                 args.append(
@@ -712,7 +785,14 @@ class Lammps(CMakePackage, CudaPackage):
             args.append(self.define("DOWNLOAD_N2P2", False))
             args.append(self.define("N2P2_DIR", self.spec["n2p2"].prefix))
 
+        if "+rocm" in spec:
+            args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+intel %aocc"):
+            env.append_flags("LDFLAGS", "-lalm -lm")
 
     def setup_run_environment(self, env):
         env.set("LAMMPS_POTENTIALS", self.prefix.share.lammps.potentials)

@@ -18,7 +18,7 @@ your Spack mirror and then downloaded and installed by others.
 
 Whenever a mirror provides prebuilt packages, Spack will take these packages
 into account during concretization and installation, making ``spack install``
-signficantly faster.
+significantly faster.
 
 
 .. note::
@@ -36,7 +36,7 @@ Build caches are created via:
 
 .. code-block:: console
 
-    $ spack buildcache create <path/url/mirror name> <spec>
+    $ spack buildcache push <path/url/mirror name> <spec>
 
 This command takes the locally installed spec and its dependencies, and
 creates tarballs of their install prefixes. It also generates metadata files,
@@ -48,14 +48,10 @@ Here is an example where a build cache is created in a local directory named
 
 .. code-block:: console
 
-    $ spack buildcache create --allow-root ./spack-cache ninja
+    $ spack buildcache push ./spack-cache ninja
     ==> Pushing binary packages to file:///home/spackuser/spack/spack-cache/build_cache
 
-Not that ``ninja`` must be installed locally for this to work.
-
-We're using the ``--allow-root`` flag to tell Spack that is OK when any of
-the binaries we're pushing contain references to the local Spack install
-directory.
+Note that ``ninja`` must be installed locally for this to work.
 
 Once you have a build cache, you can add it as a mirror, discussed next.
 
@@ -147,7 +143,7 @@ and then install from it exclusively, you would do:
 
     $ spack mirror add E4S https://cache.e4s.io
     $ spack buildcache keys --install --trust
-    $ spack install --use-buildache only <package>
+    $ spack install --use-buildcache only <package>
 
 We use ``--install`` and ``--trust`` to say that we are installing keys to our
 keyring, and trusting all downloaded keys.
@@ -177,7 +173,7 @@ need to be adjusted for better re-locatability.
 --------------------
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-``spack buildcache create``
+``spack buildcache push``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create tarball of installed Spack package and all dependencies.

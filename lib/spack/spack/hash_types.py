@@ -10,7 +10,7 @@ import spack.repo
 hashes = []
 
 
-class SpecHashDescriptor(object):
+class SpecHashDescriptor:
     """This class defines how hashes are generated on Spec objects.
 
     Spec hashes in Spack are generated from a serialized (e.g., with

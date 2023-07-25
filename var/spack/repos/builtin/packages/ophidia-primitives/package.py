@@ -30,9 +30,6 @@ class OphidiaPrimitives(AutotoolsPackage):
         autoreconf("--install", "--verbose", "--force")
 
     def configure_args(self):
-        args = [
-            "--with-gsl-lib-path={0}".format(self.spec["gsl"].prefix.lib),
-            "--with-gsl-header-path={0}".format(self.spec["gsl"].prefix.include),
-        ]
+        args = ["--with-matheval-path={0}".format(self.spec["libmatheval"].prefix.lib)]
 
         return args

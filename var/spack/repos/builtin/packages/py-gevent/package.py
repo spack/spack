@@ -23,7 +23,7 @@ class PyGevent(PythonPackage):
     depends_on("py-setuptools@40.8:", when="@20.5.1:", type=("build", "run"))
     depends_on("py-setuptools@40.8:", when="@1.5:", type="build")
     depends_on("py-setuptools@24.2:", when="@:1.4", type="build")
-    depends_on("py-cython@3.0.0a9:", when="@20.5.1:", type="build")
+    depends_on("py-cython@3:", when="@20.5.1:", type="build")
     depends_on("py-cython@0.29.14:", when="@1.5:", type="build")
     depends_on("py-cython@0.27:", when="@:1.4", type="build")
     depends_on("py-cython@0.27:", when="@:1.4", type="build")
@@ -36,8 +36,20 @@ class PyGevent(PythonPackage):
     depends_on("py-zope-event", when="@20.5.1:", type=("build", "run"))
     depends_on("py-zope-interface", when="@20.5.1:", type=("build", "run"))
 
+    # https://github.com/gevent/gevent/issues/1599
+    conflicts("^py-cython@3:", when="@:20.5.0")
+
     # Deprecated compiler options. upstream PR: https://github.com/gevent/gevent/pull/1896
     patch("icc.patch", when="%intel")
+
+    @run_before("install")
+    def recythonize(self):
+        # Clean pre-generated cython files -- we've seen issues with Python 3.8 due to
+        # an old cython that was used to generate the C sources.
+        # On top of that, they specify a prerequisite on a file in cython's prefix,
+        # meaning that cython runs again depending on whether it was installed before e.g.
+        # 2020... So, just clean and re-run from scratch instead.
+        python("setup.py", "clean")
 
     def flag_handler(self, name, flags):
         if name == "cflags":

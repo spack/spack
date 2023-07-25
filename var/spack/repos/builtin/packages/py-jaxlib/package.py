@@ -31,7 +31,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     depends_on("py-scipy@1.5:", type=("build", "run"))
 
     # .bazelversion
-    depends_on("bazel@5.1.1:", when="@0.3:", type="build")
+    depends_on("bazel@5.1.1:5.9", when="@0.3:", type="build")
     # https://github.com/google/jax/issues/8440
     depends_on("bazel@4.1:4", when="@0.1", type="build")
 
@@ -47,22 +47,39 @@ class PyJaxlib(PythonPackage, CudaPackage):
     depends_on("py-absl-py", when="@:0.3", type=("build", "run"))
     depends_on("py-flatbuffers@1.12:2", when="@0.1", type=("build", "run"))
 
+    conflicts(
+        "cuda_arch=none",
+        when="+cuda",
+        msg="Must specify CUDA compute capabilities of your GPU, see "
+        "https://developer.nvidia.com/cuda-gpus",
+    )
+
     def patch(self):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
         self.buildtmp = tempfile.mkdtemp(prefix="spack")
-        # triple quotes necessary because of a variety
-        # of other embedded quote(s)
         filter_file(
-            """f"--output_path={output_path}",""",
-            """f"--output_path={output_path}","""
-            """f"--sources_path=%s","""
-            """f"--nohome_rc'","""
-            """f"--nosystem_rc'",""" % self.tmp_path,
+            "build --spawn_strategy=standalone",
+            f"""
+# Limit CPU workers to spack jobs instead of using all HOST_CPUS.
+build --spawn_strategy=standalone
+build --local_cpu_resources={make_jobs}
+""".strip(),
+            ".bazelrc",
+            string=True,
+        )
+        filter_file(
+            'f"--output_path={output_path}",',
+            'f"--output_path={output_path}",'
+            f' "--sources_path={self.tmp_path}",'
+            ' "--nohome_rc",'
+            ' "--nosystem_rc",'
+            f' "--jobs={make_jobs}",',
             "build/build.py",
+            string=True,
         )
         filter_file(
             "args = parser.parse_args()",
-            "args,junk = parser.parse_known_args()",
+            "args, junk = parser.parse_known_args()",
             "build/build_wheel.py",
             string=True,
         )
