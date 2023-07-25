@@ -48,7 +48,7 @@ import spack.util.path
 import spack.util.timer
 import spack.variant
 import spack.version as vn
-import spack.version.git_commit_lookup
+import spack.version.git_ref_lookup
 
 # these are from clingo.ast and bootstrapped later
 ASTType = None
@@ -2674,7 +2674,7 @@ class SpecBuilder:
             for spec in root.traverse():
                 if isinstance(spec.version, vn.GitVersion):
                     spec.version.attach_lookup(
-                        spack.version.git_commit_lookup.GitRefLookup(spec.fullname)
+                        spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                     )
 
         return self._specs
