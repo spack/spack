@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class OdgiGit(CMakePackage):
+class Odgi(CMakePackage):
     """Optimized dynamic genome/graph implementation.
     Odgi provides an efficient and succinct dynamic DNA sequence graph model, as
     well as a host of algorithms that allow the use of such graphs in
