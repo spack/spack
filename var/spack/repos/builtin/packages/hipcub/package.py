@@ -112,13 +112,6 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
 

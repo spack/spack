@@ -115,13 +115,6 @@ class Rocsolver(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.8:", type="build", when="@4.1.0:")
     depends_on("cmake@3.5:", type="build")
     depends_on("fmt@7:", type="build", when="@4.5.0:")

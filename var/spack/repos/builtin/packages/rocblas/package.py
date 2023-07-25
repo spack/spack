@@ -106,12 +106,6 @@ class Rocblas(CMakePackage):
 
     variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
     variant("tensile", default=True, description="Use Tensile as a backend")
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
 
     # gfx906, gfx908,gfx803,gfx900 are valid for @:4.0.0
     # gfx803,gfx900,gfx:xnack-,gfx908:xnack- are valid gpus for @4.1.0:4.2.0
