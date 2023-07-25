@@ -1750,13 +1750,17 @@ def find(root, files, recursive=True):
     Returns:
         list: The files that have been found
     """
+    tty.debug("Find (enter): {0} {1}".format(root, str(files)))
     if isinstance(files, str):
         files = [files]
 
     if recursive:
-        return _find_recursive(root, files)
+        result = _find_recursive(root, files)
     else:
-        return _find_non_recursive(root, files)
+        result = _find_non_recursive(root, files)
+
+    tty.debug("Find (leave): {0} {1}".format(root, str(files)))
+    return result
 
 
 @system_path_filter
