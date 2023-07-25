@@ -181,6 +181,10 @@ class Sgpp(SConsPackage):
 
         return self.args
 
+    def install_args(self, spec, prefix):
+        # SGpp expects the same args for the install and build commands
+        return self.args
+
     @run_after("install")
     def python_install(self):
         if "+python" in self.spec:
