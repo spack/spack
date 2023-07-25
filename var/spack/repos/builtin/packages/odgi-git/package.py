@@ -43,7 +43,6 @@ class OdgiGit(CMakePackage):
 
     def cmake_args(self):
         args = [
-            "-DCMAKE_CXX_STANDARD:STRING=11",
             "-DCMAKE_CXX_STANDARD_REQUIRED:BOOL=ON",
             "-DPYTHON_EXECUTABLE:FILEPATH={0}".format(self.spec["python"].command),
         ]
