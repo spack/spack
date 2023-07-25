@@ -11,8 +11,7 @@ ci:
       before_script-:
       - - spack list --count  # ensure that spack's cache is populated
       script::
-      - - export SPACK_USER_CACHE_PATH="${CI_PROJECT_DIR}/_user_cache/"
-        - spack compiler find
+      - - spack compiler find
         - cd ${SPACK_CONCRETE_ENV_DIR}
         - spack env activate --without-view .
         - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
@@ -92,6 +91,7 @@ ci:
       tags: ["spack"]
       image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
       before_script:
+      - - export SPACK_USER_CACHE_PATH="${CI_PROJECT_DIR}/_user_cache/"
       - - uname -a || true
         - grep -E "vendor|model name" /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
         - nproc || true
