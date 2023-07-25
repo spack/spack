@@ -27,6 +27,7 @@ class OdgiGit(CMakePackage):
     generator("make", default="make")
 
     # the range is required to successfully build the program
+    requires("%gcc", msg="Package odgi depends on the gcc C++ compiler")
     conflicts(
         "%gcc@:9.2,12.3.1:", msg="Unsupported compiler version. Recommended range is 9.3 -> 12.3"
     )
