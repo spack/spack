@@ -32,6 +32,13 @@ show_options = ("asp", "opt", "output", "solutions")
 def setup_parser(subparser):
     # Solver arguments
     subparser.add_argument(
+        "--depth",
+        action="store",
+        default="1",
+        help="specify DAG depth for optimization"
+    )
+        
+    subparser.add_argument(
         "--show",
         action="store",
         default="opt,solutions",
@@ -132,6 +139,7 @@ def _process_result(result, show, required_format, kwargs):
 
         print()
 
+
     if "solutions" in show:
         for spec in result.specs:
             # With -y, just print YAML to output.
@@ -176,6 +184,13 @@ def solve(parser, args):
                 % (d, ", ".join(show_options + ("all",)))
             )
 
+    # process depth options
+    depth = int(args.depth)
+    if depth not in range(1,11):
+        raise ValueError(
+            "Invalid option for '--depth': '%d'\nchoose from integers 1 through 10"
+            % depth)
+    
     # Format required for the output (JSON, YAML or None)
     required_format = args.format
 
@@ -186,11 +201,11 @@ def solve(parser, args):
         raise RuntimeError(msg)
 
     specs = list(env.user_specs) if env else spack.cmd.parse_specs(args.specs)
-
     solver = asp.Solver()
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {"asp"}
     unify = spack.config.get("concretizer:unify")
+
     if unify != "when_possible":
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
@@ -200,6 +215,7 @@ def solve(parser, args):
             timers=args.timers,
             stats=args.stats,
             setup_only=setup_only,
+            depth=depth
         )
         if not setup_only:
             _process_result(result, show, required_format, kwargs)

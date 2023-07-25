@@ -201,6 +201,8 @@ def build_criteria_names(
         name = fn.args[2]
         criteria["build: " + name] = build_costs[i :: len(leveled_criteria)]
 
+        
+
     add_fixed(1, build_index)
 
     for i, fn in enumerate(leveled_criteria):
@@ -682,7 +684,9 @@ class PyclingoDriver(object):
         # TODO: this raises early -- we should handle multiple errors if there are any.
         raise UnsatisfiableSpecError(msg)
 
-    def solve(self, setup, specs, reuse=None, output=None, control=None):
+    
+            
+    def solve(self, setup, specs, reuse=None, output=None, control=None, depth=1):
         """Set up the input and solve for dependencies of ``specs``.
 
         Arguments:
@@ -698,6 +702,8 @@ class PyclingoDriver(object):
             A tuple of the solve result, the timer for the different phases of the
             solve, and the internal statistics from clingo.
         """
+
+        
         output = output or DEFAULT_OUTPUT_CONFIGURATION
         # allow solve method to override the output stream
         if output.out is not None:
@@ -708,6 +714,7 @@ class PyclingoDriver(object):
         # Initialize the control object for the solver
         self.control = control or default_clingo_control()
         # set up the problem -- this generates facts and rules
+
         self.assumptions = []
         with timer.measure("setup"):
             with self.control.backend() as backend:
@@ -736,14 +743,19 @@ class PyclingoDriver(object):
             path = os.path.join(parent_dir, "concretize.lp")
             parse_files([path], visit)
 
+        
         # If we're only doing setup, just return an empty solve result
         if output.setup_only:
             return Result(specs), None, None
 
         # Load the file itself
+
+        
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
+
+        self.control.add("depth", [], "#const max_depth = " + str(depth) + ".")
         timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
@@ -759,6 +771,7 @@ class PyclingoDriver(object):
 
         def on_model(model):
             priorities = getattr(model, "priority", None)
+            #shown variable determines if results from display.lp are included in the model representation
             models.append((model.cost, priorities, model.symbols(shown=True, terms=True)))
 
         solve_kwargs = {
@@ -777,11 +790,14 @@ class PyclingoDriver(object):
         # once done, construct the solve result
         result.satisfiable = solve_result.satisfiable
 
+                
         if result.satisfiable:
+                            
             # get the best model
             builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
             min_cost, priorities, best_model = min(models)
 
+            
             # first check for errors
             error_args = [fn.args for fn in extract_functions(best_model, "error")]
             errors = sorted((int(priority), msg, args) for priority, msg, *args in error_args)
@@ -792,20 +808,20 @@ class PyclingoDriver(object):
             spec_attrs = extract_functions(best_model, "attr")
             with timer.measure("build"):
                 answers = builder.build_specs(spec_attrs)
-
+ 
             # add best spec to the results
             result.answers.append((list(min_cost), 0, answers, spec_attrs))
-
+            
             # get optimization criteria
             criteria = extract_functions(best_model, "opt_criterion")
             depths = extract_functions(best_model, "depth")
             max_depth = max(d.args[1] for d in depths)
-
+            
             result.criteria = build_criteria_names(min_cost, criteria, max_depth)
-
+            
             # record the number of models the solver considered
             result.nmodels = len(models)
-
+            
             # record the possible dependencies in the solve
             result.possible_dependencies = setup.pkgs
 
@@ -2043,6 +2059,7 @@ class SpackSolverSetup(object):
                 if spec.concrete:
                     self._facts_from_concrete_spec(spec, possible)
 
+        
     def setup(self, driver, specs, reuse=None):
         """Generate an ASP program with relevant constraints for specs.
 
@@ -2498,7 +2515,8 @@ class Solver(object):
         # These properties are settable via spack configuration, and overridable
         # by setting them directly as properties.
         self.reuse = spack.config.get("concretizer:reuse", False)
-
+        
+            
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):
         reusable = []
@@ -2536,13 +2554,14 @@ class Solver(object):
         return reusable_specs
 
     def solve(
-        self,
-        specs,
-        out=None,
-        timers=False,
-        stats=False,
-        tests=False,
-        setup_only=False,
+            self,
+            specs,
+            out=None,
+            timers=False,
+            stats=False,
+            tests=False,
+            setup_only=False, #true if the user asks for --show asp
+            depth=1,
     ):
         """
         Arguments:
@@ -2560,7 +2579,8 @@ class Solver(object):
         reusable_specs.extend(self._reusable_specs())
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
-        result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
+
+        result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output,depth=depth)
         return result
 
     def solve_in_rounds(
