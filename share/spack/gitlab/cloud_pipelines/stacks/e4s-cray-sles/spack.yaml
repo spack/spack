@@ -36,12 +36,24 @@ spack:
     elfutils:
       variants: +bzip2 ~nls +xz
       require: '%gcc'
+    unzip:
+      require: '%gcc'
 
   specs:
+  - adios2
+  - amrex  
   - butterflypack
+  - conduit
+  - flux-core
+  - h5bench
+  - hdf5-vol-async
+  - hdf5-vol-cache
+  - hdf5-vol-log  
   - hypre
   - kokkos
   - kokkos-kernels
+  - legion
+  - mfem
   - raja
   - superlu-dist
 
