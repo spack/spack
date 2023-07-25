@@ -28,8 +28,8 @@ class Pcl(CMakePackage):
     # fix build with clang: #30653
     with when("@:1.12"):
         patch(
-             "https://github.com/PointCloudLibrary/pcl/commit/dff16af269fbd2c15772d53064882b2bf8c2ffe9.patch?full_index=1",
-             sha256="17a7a7aec8e63701294612cbb25d46ac1ce58f643dbc68e1517329ae0b68956d",
+            "https://github.com/PointCloudLibrary/pcl/commit/dff16af269fbd2c15772d53064882b2bf8c2ffe9.patch?full_index=1",
+            sha256="17a7a7aec8e63701294612cbb25d46ac1ce58f643dbc68e1517329ae0b68956d",
         )
 
     # TODO: replace this with an explicit list of components of Boost,
