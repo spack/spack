@@ -5,7 +5,9 @@ from typing import Dict, Optional, Tuple
 from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.caches
+import spack.fetch_strategy
 import spack.paths
+import spack.repo
 import spack.util.executable
 import spack.util.spack_json as sjson
 import spack.util.url
@@ -23,9 +25,9 @@ SEMVER_REGEX = re.compile(
 
 
 class GitRefLookup(AbstractRefLookup):
-    """An object for cached lookups of git commits
+    """An object for cached lookups of git refs
 
-    CommitLookup objects delegate to the misc_cache for locking. CommitLookup objects may
+    GitRefLookup objects delegate to the misc_cache for locking. GitRefLookup objects may
     be attached to a GitVersion to allow for comparisons between git refs and versions as
     represented by tags in the git repository.
     """
@@ -66,8 +68,6 @@ class GitRefLookup(AbstractRefLookup):
     @property
     def pkg(self):
         if not self._pkg:
-            import spack.repo  # break cycle
-
             try:
                 pkg = spack.repo.path.get_pkg_class(self.pkg_name)
                 pkg.git
@@ -80,8 +80,6 @@ class GitRefLookup(AbstractRefLookup):
     def fetcher(self):
         if not self._fetcher:
             # We require the full git repository history
-            import spack.fetch_strategy  # break cycle
-
             fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git)
             fetcher.get_full_repo = True
             self._fetcher = fetcher
