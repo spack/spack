@@ -42,6 +42,10 @@ class Sgpp(SConsPackage):
     # Fixes compilation with AVX512 and datadriven
     # Fixed in SGpp in PR https://github.com/SGpp/SGpp/pull/229
     patch("avx512_datadriven_compilation.patch", when="@:3.3.0+datadriven")
+    # Continue despite distutils deprecation warning!
+    # distutils will be removed in future SGpp versions
+    # TODO Once distutils is removed from SGpp, limit patch to @:3.4.0
+    patch("disable_disutils_deprecation_warning.patch", when="^python@3.10:3.11")
 
     variant("python", default=True, description="Provide Python bindings for SGpp", when="@3.2:")
     variant("optimization", default=True, description="Builds the optimization module of SGpp")
@@ -63,15 +67,16 @@ class Sgpp(SConsPackage):
     # extends('openjdk', when='+java')
 
     # Mandatory dependencies
-    depends_on("scons", type=("build"))
-    depends_on("scons@3:", when="@3.2.0:", type=("build"))
+    depends_on("scons@3:", type=("build"))
     depends_on("zlib-api", type=("link"))
     # Python dependencies
     extends("python", when="+python")
     depends_on("py-pip", when="+python", type="build")
     depends_on("py-wheel", when="+python", type="build")
-    depends_on("py-setuptools", when="+python", type=("build"))
-    depends_on("python@3.7:", when="+python", type=("build", "run"))
+    # TODO allow newer versions once distutils is removed from SGpp
+    depends_on("py-setuptools@:59", type=("build"))
+    # TODO allow newer versions once distutils is removed from SGpp
+    depends_on("python@3.7:3.11", type=("build", "run"))
     depends_on("swig@3:", when="+python", type=("build"))
     depends_on("py-numpy@1.17:", when="+python", type=("build", "run"))
     depends_on("py-scipy@1.3:", when="+python", type=("build", "run"))
