@@ -718,100 +718,6 @@ class ClosedOpenRange:
         return ClosedOpenRange(max_lo, min_hi) if max_lo < min_hi else VersionList()
 
 
-def next_str(s: str) -> str:
-    """Produce the next string of A-Z and a-z characters"""
-    return (
-        (s + "A")
-        if (len(s) == 0 or s[-1] == "z")
-        else s[:-1] + ("a" if s[-1] == "Z" else chr(ord(s[-1]) + 1))
-    )
-
-
-def prev_str(s: str) -> str:
-    """Produce the previous string of A-Z and a-z characters"""
-    return (
-        s[:-1]
-        if (len(s) == 0 or s[-1] == "A")
-        else s[:-1] + ("Z" if s[-1] == "a" else chr(ord(s[-1]) - 1))
-    )
-
-
-def next_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
-    """
-    Produce the next VersionStrComponent, where
-    masteq -> mastes
-    master -> main
-    """
-    # First deal with the infinity case.
-    data = v.data
-    if isinstance(data, int):
-        return VersionStrComponent(data + 1)
-
-    # Find the next non-infinity string.
-    while True:
-        data = next_str(data)
-        if data not in infinity_versions:
-            break
-
-    return VersionStrComponent(data)
-
-
-def prev_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
-    """
-    Produce the previous VersionStrComponent, where
-    mastes -> masteq
-    master -> head
-    """
-    # First deal with the infinity case. Allow underflows
-    data = v.data
-    if isinstance(data, int):
-        return VersionStrComponent(data - 1)
-
-    # Find the next string.
-    while True:
-        data = prev_str(data)
-        if data not in infinity_versions:
-            break
-
-    return VersionStrComponent(data)
-
-
-def next_version(v: StandardVersion) -> StandardVersion:
-    if len(v.version) == 0:
-        nxt = VersionStrComponent("A")
-    elif isinstance(v.version[-1], VersionStrComponent):
-        nxt = next_version_str_component(v.version[-1])
-    else:
-        nxt = v.version[-1] + 1
-
-    # Construct a string-version for printing
-    string_components = []
-    for part, sep in zip(v.version[:-1], v.separators):
-        string_components.append(str(part))
-        string_components.append(str(sep))
-    string_components.append(str(nxt))
-
-    return StandardVersion("".join(string_components), v.version[:-1] + (nxt,), v.separators)
-
-
-def prev_version(v: StandardVersion) -> StandardVersion:
-    if len(v.version) == 0:
-        return v
-    elif isinstance(v.version[-1], VersionStrComponent):
-        prev = prev_version_str_component(v.version[-1])
-    else:
-        prev = v.version[-1] - 1
-
-    # Construct a string-version for printing
-    string_components = []
-    for part, sep in zip(v.version[:-1], v.separators):
-        string_components.append(str(part))
-        string_components.append(str(sep))
-    string_components.append(str(prev))
-
-    return StandardVersion("".join(string_components), v.version[:-1] + (prev,), v.separators)
-
-
 class VersionList:
     """Sorted, non-redundant list of Version and ClosedOpenRange elements."""
 
@@ -1039,6 +945,100 @@ class VersionList:
 
     def __repr__(self):
         return str(self.versions)
+
+
+def next_str(s: str) -> str:
+    """Produce the next string of A-Z and a-z characters"""
+    return (
+        (s + "A")
+        if (len(s) == 0 or s[-1] == "z")
+        else s[:-1] + ("a" if s[-1] == "Z" else chr(ord(s[-1]) + 1))
+    )
+
+
+def prev_str(s: str) -> str:
+    """Produce the previous string of A-Z and a-z characters"""
+    return (
+        s[:-1]
+        if (len(s) == 0 or s[-1] == "A")
+        else s[:-1] + ("Z" if s[-1] == "a" else chr(ord(s[-1]) - 1))
+    )
+
+
+def next_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
+    """
+    Produce the next VersionStrComponent, where
+    masteq -> mastes
+    master -> main
+    """
+    # First deal with the infinity case.
+    data = v.data
+    if isinstance(data, int):
+        return VersionStrComponent(data + 1)
+
+    # Find the next non-infinity string.
+    while True:
+        data = next_str(data)
+        if data not in infinity_versions:
+            break
+
+    return VersionStrComponent(data)
+
+
+def prev_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
+    """
+    Produce the previous VersionStrComponent, where
+    mastes -> masteq
+    master -> head
+    """
+    # First deal with the infinity case. Allow underflows
+    data = v.data
+    if isinstance(data, int):
+        return VersionStrComponent(data - 1)
+
+    # Find the next string.
+    while True:
+        data = prev_str(data)
+        if data not in infinity_versions:
+            break
+
+    return VersionStrComponent(data)
+
+
+def next_version(v: StandardVersion) -> StandardVersion:
+    if len(v.version) == 0:
+        nxt = VersionStrComponent("A")
+    elif isinstance(v.version[-1], VersionStrComponent):
+        nxt = next_version_str_component(v.version[-1])
+    else:
+        nxt = v.version[-1] + 1
+
+    # Construct a string-version for printing
+    string_components = []
+    for part, sep in zip(v.version[:-1], v.separators):
+        string_components.append(str(part))
+        string_components.append(str(sep))
+    string_components.append(str(nxt))
+
+    return StandardVersion("".join(string_components), v.version[:-1] + (nxt,), v.separators)
+
+
+def prev_version(v: StandardVersion) -> StandardVersion:
+    if len(v.version) == 0:
+        return v
+    elif isinstance(v.version[-1], VersionStrComponent):
+        prev = prev_version_str_component(v.version[-1])
+    else:
+        prev = v.version[-1] - 1
+
+    # Construct a string-version for printing
+    string_components = []
+    for part, sep in zip(v.version[:-1], v.separators):
+        string_components.append(str(part))
+        string_components.append(str(sep))
+    string_components.append(str(prev))
+
+    return StandardVersion("".join(string_components), v.version[:-1] + (prev,), v.separators)
 
 
 def Version(string: Union[str, int]) -> Union[GitVersion, StandardVersion]:
