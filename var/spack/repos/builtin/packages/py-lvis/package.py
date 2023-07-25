@@ -29,5 +29,4 @@ class PyLvis(PythonPackage):
         ln = which("ln")
         ln("-s",
            join_path(self.stage.source_path, "lvis.egg-info", "requires.txt"),
-           join_path(self.stage.source_path, "requirements.txt")
-        )
+           join_path(self.stage.source_path, "requirements.txt"))
