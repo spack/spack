@@ -14,17 +14,21 @@ class PyConnectomeManipulator(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/conn/structural/connectome_manipulator.git"
 
     version("develop", branch="main")
+    version("0.0.6", tag="connectome-manipulator-v0.0.6")
     version("0.0.4", tag="connectome-manipulator-v0.0.4")
 
     depends_on("parquet-converters@0.8.0:", type="run")
 
     depends_on("py-bluepysnap@1.0.5:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"))
     depends_on("py-progressbar", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-scikit-learn", type=("build", "run"))
-    depends_on("py-submitit", type=("build", "run"))
     depends_on("py-voxcell", type=("build", "run"))
     depends_on("py-pyarrow+parquet@3.0.0:", type=("build", "run"))
     depends_on("py-jsonpickle", type=("build", "run"))
-    depends_on("py-submitit", type=("build", "run"))
+    depends_on("py-distributed", type=("build", "run"), when="@0.0.6:")
+    depends_on("py-dask-mpi", type=("build", "run"), when="@0.0.6:")
+
+    depends_on("py-submitit", type=("build", "run"), when="@:0.0.4")
