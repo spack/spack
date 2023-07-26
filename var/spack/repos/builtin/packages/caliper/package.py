@@ -18,7 +18,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/Caliper"
     git = "https://github.com/LLNL/Caliper.git"
-    url = "https://github.com/LLNL/Caliper/archive/v2.9.0.tar.gz"
+    url = "https://github.com/LLNL/Caliper/archive/v2.10.0.tar.gz"
     tags = ["e4s", "radiuss"]
 
     maintainers("daboehme")
@@ -26,6 +26,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("2.10.0", sha256="14c4fb5edd5e67808d581523b4f8f05ace8549698c0e90d84b53171a77f58565")
     version("2.9.0", sha256="507ea74be64a2dfd111b292c24c4f55f459257528ba51a5242313fa50978371f")
     version("2.8.0", sha256="17807b364b5ac4b05997ead41bd173e773f9a26ff573ff2fe61e0e70eab496e4")
     version("2.7.0", sha256="b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b")
