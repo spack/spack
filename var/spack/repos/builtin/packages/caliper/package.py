@@ -58,6 +58,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     variant("sampler", default=is_linux, description="Enable sampling support on Linux")
     variant("sosflow", default=False, description="Enable SOSflow support")
     variant("fortran", default=False, description="Enable Fortran support")
+    variant("variorum", default=False, description="Enable Variorum support")
 
     depends_on("adiak@0.1:0", when="@2.2: +adiak")
 
@@ -69,6 +70,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("unwind@1.2:1", when="+libunwind")
     depends_on("elfutils", when="+libdw")
+    depends_on("variorum", when="+variorum")
 
     depends_on("sosflow@spack", when="@1.0:1+sosflow")
 
@@ -106,6 +108,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("WITH_NVTX", "cuda"),
             self.define_from_variant("WITH_ROCTRACER", "rocm"),
             self.define_from_variant("WITH_ROCTX", "rocm"),
+            self.define_from_variant("WITH_VARIORUM", "variorum"),
         ]
 
         if "+papi" in spec:
@@ -116,6 +119,8 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DLIBPFM_INSTALL=%s" % spec["libpfm4"].prefix)
         if "+sosflow" in spec:
             args.append("-DSOS_PREFIX=%s" % spec["sosflow"].prefix)
+        if "+variorum" in spec:
+            args.append("-DVARIORUM_PREFIX=%s" % spec["variorum"].prefix)
 
         # -DWITH_CALLPATH was renamed -DWITH_LIBUNWIND in 2.5
         callpath_flag = "LIBUNWIND" if spec.satisfies("@2.5:") else "CALLPATH"
