@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Mruby(Package):
@@ -32,6 +32,7 @@ class Mruby(Package):
     def patch(self):
         """Create a config.rb file for rake to use"""
         import os
+
         here = os.path.dirname(os.path.abspath(__file__))
         copy(os.path.join(here, "config.rb"), os.path.join("build_config", "spack.rb"))
 
