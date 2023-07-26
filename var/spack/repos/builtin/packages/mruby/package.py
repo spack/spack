@@ -11,8 +11,8 @@ class Mruby(Package):
     to (part of) the ISO standard. Its syntax is Ruby 2.x compatible."""
 
     homepage = "https://mruby.org/"
-    url      = "https://github.com/mruby/mruby/archive/refs/tags/3.0.0.tar.gz"
-    git      = "https://github.com/mruby/mruby.git"
+    url = "https://github.com/mruby/mruby/archive/refs/tags/3.0.0.tar.gz"
+    git = "https://github.com/mruby/mruby.git"
 
     maintainers = ["mdorier"]
 
@@ -24,8 +24,7 @@ class Mruby(Package):
     version("2.1.1", sha256="bb27397ee9cb7e0ddf4ff51caf5b0a193d636b7a3c52399684c8c383b41c362a")
     version("2.1.0", sha256="d6733742a07e553c52ab71df08b0604b3b571768bbc0c2729fbf0389d1bb5d13")
 
-    variant("cxx_exception", description="Enable C++ exceptions",
-            default=False, when="@3.1.0:")
+    variant("cxx_exception", description="Enable C++ exceptions", default=False, when="@3.1.0:")
 
     depends_on("ruby@3.0.0:", type=("build"))
     depends_on("bison", type=("build"))
@@ -34,15 +33,16 @@ class Mruby(Package):
         """Create a config.rb file for rake to use"""
         import os
         here = os.path.dirname(os.path.abspath(__file__))
-        copy(os.path.join(here, "config.rb"),
-             os.path.join("build_config", "spack.rb"))
+        copy(os.path.join(here, "config.rb"), os.path.join("build_config", "spack.rb"))
 
     def install(self, spec, prefix):
         import os
+
         rb = spec["ruby"]
         env["MRUBY_CONFIG"] = os.path.join("build_config", "spack.rb")
         env["GEM_PATH"] = os.path.join(
-            rb.prefix, "lib", "ruby", "gems", str(rb.version.up_to(2)) + ".0")
+            rb.prefix, "lib", "ruby", "gems", str(rb.version.up_to(2)) + ".0"
+        )
         if "+cxx_exception" in spec:
             env["MRUBY_ENABLE_CXX_EXCEPTION"] = "ON"
         rake()
