@@ -40,7 +40,7 @@ class Mruby(Package):
     def install(self, spec, prefix):
         import os
         rb = spec["ruby"]
-        env["MRUBY_CONFIG"] = "build_config/spack.rb"
+        env["MRUBY_CONFIG"] = os.path.join("build_config", "spack.rb")
         env["GEM_PATH"] = os.path.join(
             rb.prefix, "lib", "ruby", "gems", str(rb.version.up_to(2)) + ".0")
         if "+cxx_exception" in spec:
