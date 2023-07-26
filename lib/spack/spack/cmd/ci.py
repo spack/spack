@@ -18,6 +18,7 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
+import spack.util.gpg as gpg_util
 import spack.util.url as url_util
 import spack.util.web as web_util
 
@@ -270,6 +271,13 @@ def ci_rebuild(args):
     spack_ci_stack_name = os.environ.get("SPACK_CI_STACK_NAME")
     shared_pr_mirror_url = os.environ.get("SPACK_CI_SHARED_PR_MIRROR_URL")
     rebuild_everything = os.environ.get("SPACK_REBUILD_EVERYTHING")
+    require_signing = os.environ.get("SPACK_REQUIRE_SIGNING")
+
+    # Fail early if signing is required but we don't have a signing key
+    sign_binaries = require_signing is not None and require_signing.lower() == "true"
+    if sign_binaries and not spack_ci.can_sign_binaries():
+        gpg_util.list(False, True)
+        tty.die("SPACK_REQUIRE_SIGNING=True => spack must have exactly one signing key")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
     ci_project_dir = os.environ.get("CI_PROJECT_DIR")
@@ -655,7 +663,7 @@ def ci_rebuild(args):
                 input_spec=job_spec,
                 buildcache_mirror_url=buildcache_mirror_url,
                 pipeline_mirror_url=pipeline_mirror_url,
-                pr_pipeline=spack_is_pr_pipeline,
+                sign_binaries=sign_binaries,
             ):
                 msg = tty.msg if result.success else tty.warn
                 msg(

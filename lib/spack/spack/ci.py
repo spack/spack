@@ -1278,6 +1278,7 @@ def generate_gitlab_ci_yaml(
             "SPACK_CI_SHARED_PR_MIRROR_URL": shared_pr_mirror or "None",
             "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
+            "SPACK_REQUIRE_SIGNING": os.environ.get("SPACK_REQUIRE_SIGNING", "False"),
         }
 
         if remote_mirror_override:
@@ -1957,9 +1958,9 @@ def process_command(name, commands, repro_dir):
 def create_buildcache(
     input_spec: spack.spec.Spec,
     *,
-    pr_pipeline: bool,
     pipeline_mirror_url: Optional[str] = None,
     buildcache_mirror_url: Optional[str] = None,
+    sign_binaries: bool = False,
 ) -> List[PushResult]:
     """Create the buildcache at the provided mirror(s).
 
@@ -1967,12 +1968,10 @@ def create_buildcache(
         input_spec: Installed spec to package and push
         buildcache_mirror_url: URL for the buildcache mirror
         pipeline_mirror_url: URL for the pipeline mirror
-        pr_pipeline: True if the CI job is for a PR
+        sign_binaries: Whether or not to sign buildcache entry
 
     Returns: A list of PushResults, indicating success or failure.
     """
-    sign_binaries = pr_pipeline is False and can_sign_binaries()
-
     results = []
 
     # Create buildcache in either the main remote mirror, or in the

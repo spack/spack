@@ -457,7 +457,6 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
 
     results = ci.create_buildcache(
         None,
-        pr_pipeline=True,
         buildcache_mirror_url="file:///fake-url-one",
         pipeline_mirror_url="file:///fake-url-two",
     )
@@ -469,9 +468,7 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
     assert result2.success
     assert result2.url == "file:///fake-url-two"
 
-    results = ci.create_buildcache(
-        None, pr_pipeline=True, buildcache_mirror_url="file:///fake-url-one"
-    )
+    results = ci.create_buildcache(None, buildcache_mirror_url="file:///fake-url-one")
 
     assert len(results) == 1
     assert results[0].success
