@@ -247,22 +247,19 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("mmg", when="+parmmg")
     depends_on("parmmg", when="+parmmg")
     depends_on("tetgen+pic", when="+tetgen")
-    # hypre+/~fortran based on wheter fortran is enabled/disabled
+
     depends_on("hypre+fortran", when="+hypre+fortran")
     depends_on("hypre~fortran", when="+hypre~fortran")
-    # Hypre does not support complex numbers.
-    # Also PETSc prefer to build it without internal superlu, likely due to
-    # conflict in headers see
-    # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on("hypre@2.14:2.18.2~internal-superlu", when="@3.11:3.13+hypre")
-    depends_on("hypre@2.14:2.22.0~internal-superlu", when="@3.14:3.15+hypre")
-    depends_on("hypre@2.14:~internal-superlu", when="@3.16:+hypre")
-    depends_on("hypre@develop~internal-superlu", when="@main+hypre")
     depends_on("hypre+complex", when="+hypre+complex")
     depends_on("hypre~complex", when="+hypre~complex")
     depends_on("hypre+int64", when="+hypre+int64")
     depends_on("hypre~int64", when="+hypre~int64")
-    depends_on("hypre+mpi", when="+hypre+mpi")
+    depends_on("hypre+mpi~internal-superlu", when="+hypre")
+    depends_on("hypre@2.14:2.18.2", when="@3.11:3.13+hypre")
+    depends_on("hypre@2.14:2.22.0", when="@3.14:3.15+hypre")
+    depends_on("hypre@2.14:2.28.0", when="@3.16:3.19+hypre")
+    depends_on("hypre@2.14:", when="@3.20+hypre")
+    depends_on("hypre@develop", when="@main+hypre")
 
     depends_on("superlu-dist@:4.3~int64", when="@3.4.4:3.6.4+superlu-dist+mpi~int64")
     depends_on("superlu-dist@:4.3+int64", when="@3.4.4:3.6.4+superlu-dist+mpi+int64")
