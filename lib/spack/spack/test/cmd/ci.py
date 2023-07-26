@@ -860,6 +860,43 @@ def test_ci_rebuild(
         env_cmd("deactivate")
 
 
+def test_ci_require_signing(
+    tmpdir, working_env, mutable_mock_env_path, mock_gnupghome, ci_base_environment
+):
+    spack_yaml_contents = """
+spack:
+ specs:
+   - archive-files
+ mirrors:
+   test-mirror: file:///no-such-mirror
+ ci:
+   pipeline-gen:
+   - submapping:
+     - match:
+         - archive-files
+       build-job:
+         tags:
+           - donotcare
+         image: donotcare
+"""
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(spack_yaml_contents)
+
+    with tmpdir.as_cwd():
+        env_cmd("activate", "--without-view", "--sh", "-d", ".")
+
+        # Run without the variable to make sure we don't accidentally require signing
+        output = ci_cmd("rebuild", output=str, fail_on_error=False)
+        assert "spack must have exactly one signing key" not in output
+
+        # Now run with the variable to make sure it works
+        os.environ.update({"SPACK_REQUIRE_SIGNING": "True"})
+        output = ci_cmd("rebuild", output=str, fail_on_error=False)
+
+        assert "spack must have exactly one signing key" in output
+
+
 def test_ci_nothing_to_rebuild(
     tmpdir,
     working_env,
