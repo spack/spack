@@ -86,6 +86,8 @@ spack:
     - build-job-remove:
         tags: [ spack, public ]
     - build-job:
+        variables:
+          CI_GPG_KEY_ROOT: /etc/protected-runner
         tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
 
   cdash:
