@@ -1210,14 +1210,23 @@ node_flag_inherited(DependencyNode, FlagType, Flag)
 :- node_flag_inherited(PackageNode, FlagType, Flag),
    can_inherit_flags(PackageNode, DependencyNode, FlagType),
    attr("node_flag_propagate", PackageNode, FlagType).
+=======
+attr("node_flag_propagate", Package, FlagType, Flag, Source) :-
+  node_compiler(Source, CompilerID),
+  node_compiler(Package, CompilerID),
+  depends_on(Parent, Package),
+  attr("node_flag_propagate", Parent, _, _, Source),
+  attr("node_flag_value", Source, FlagType, Flag),
+  not attr("node_flag_set", Package, FlagType, _).
+  compiler_id(CompilerID),
+  flag_type(FlagType).
+>>>>>>> b44c47bc83 (Simplify node_flag_propagate and propagate past 1st level dependencies)
 
 error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
   depends_on(Source1, Package),
   depends_on(Source2, Package),
-  attr("node_flag_propagate", Source1, FlagType),
-  attr("node_flag_propagate", Source2, FlagType),
-  can_inherit_flags(Source1, Package, FlagType),
-  can_inherit_flags(Source2, Package, FlagType),
+  attr("node_flag_propagate", _, FlagType, _, Source1),
+  attr("node_flag_propagate", _, FlagType, _, Source2),
   Source1 < Source2.
 
 % remember where flags came from
