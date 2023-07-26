@@ -47,6 +47,13 @@ import spack.util.git
 import spack.util.path
 from spack.error import SpackError
 
+try:
+    import boto3
+except ImportError:
+    pass
+else:
+    boto3.set_stream_logger("")
+
 #: names of profile statistics
 stat_names = pstats.Stats.sort_arg_dict_default
 

@@ -16,9 +16,6 @@ s3_client_cache: Dict[Tuple[str, str], Any] = dict()
 def get_s3_session(url, method="fetch"):
     # import boto and friends as late as possible.  We don't want to require boto as a
     # dependency unless the user actually wants to access S3 mirrors.
-    import boto3
-
-    boto3.set_stream_logger("")
     from boto3 import Session
     from botocore import UNSIGNED
     from botocore.client import Config
