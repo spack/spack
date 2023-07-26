@@ -33,8 +33,6 @@ class Odgi(CMakePackage):
     )
 
     # <<< Dependencies list starts here
-    requires("%gcc@9.3:12", when="%gcc")
-
     depends_on("python")
     depends_on("py-pybind11")
     depends_on("sdsl-lite")
