@@ -56,7 +56,7 @@ class Amg2023(MakefilePackage):
             makefile.filter("#MPIFLAGS", "MPIFLAGS")
         else:
             makefile.filter(r"CC\s*=.*", "CC = {0}".format(spack_cc))
-            makefile.filter("CXX\s*=.*", "CXX = {0}".format(spack_cxx))
+            makefile.filter(r"CXX\s*=.*", "CXX = {0}".format(spack_cxx))
 
         makefile.filter(r"HYPRE_DIR = .*", f'HYPRE_DIR = {spec["hypre"].prefix}')
 
