@@ -14,7 +14,7 @@ class Miopengemm(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM"
     git = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -26,6 +26,8 @@ class Miopengemm(CMakePackage):
         url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version("5.5.1", sha256="a997b560521641e7173613cf547ecde5d15ac6fac1786d392b0f133c91f99a40")
+    version("5.5.0", sha256="ffd9775129564662b338952588057a088f7e9723b4a9a766b2dd96fdc0992c26")
     version("5.4.3", sha256="5051051cab60ca0f6347a981da6c9dbeddf8b0de698d4e5409a0db0c622acafc")
     version("5.4.0", sha256="a39faa8f4ab73e0cd6505a667bf10c07f93b9612af0711405c65043c4755129d")
     version("5.3.3", sha256="4a9c92bebe59bf6e08bd48861b68b1801d9e8dc406250dc8637d36614a5884c8")
@@ -133,6 +135,8 @@ class Miopengemm(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("rocm-opencl@" + ver, when="@" + ver)

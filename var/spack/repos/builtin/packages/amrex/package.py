@@ -137,6 +137,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.22:", type="build", when="+sycl")
     depends_on("hdf5@1.10.4: +mpi", when="+hdf5")
     depends_on("rocrand", type="build", when="+rocm")
+    depends_on("hiprand", type="build", when="+rocm")
     depends_on("rocprim", type="build", when="@21.05: +rocm")
     depends_on("hypre@2.18.2:", type="link", when="@:21.02 +hypre")
     depends_on("hypre@2.19.0:", type="link", when="@21.03: ~cuda +hypre")

@@ -16,7 +16,7 @@ class Rocrand(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
     git = "https://github.com/ROCmSoftwarePlatform/rocRAND.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
@@ -24,6 +24,9 @@ class Rocrand(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+
+    version("5.5.1", sha256="e8bed3741b19e296bd698fc55b43686206f42f4deea6ace71513e0c48258cc6e")
+    version("5.5.0", sha256="0481e7ef74c181026487a532d1c17e62dd468e508106edde0279ca1adeee6f9a")
     version("5.4.3", sha256="463aa760e9f74e45b326765040bb8a8a4fa27aaeaa5e5df16f8289125f88a619")
     version("5.4.0", sha256="0f6a0279b8b5a6dfbe32b45e1598218fe804fee36170d5c1f7b161c600544ef2")
     version("5.3.3", sha256="b0aae79dce7f6f9ef76ad2594745fe1f589a7b675b22f35b4d2369e7d5e1985a")
@@ -118,7 +121,9 @@ class Rocrand(CMakePackage):
     # own directory first thanks to the $ORIGIN RPATH setting. Otherwise,
     # libhiprand.so cannot find dependency librocrand.so despite being in the
     # same directory.
-    patch("hiprand_prefer_samedir_rocrand.patch", working_dir="hiprand", when="@5.2.0: +hiprand")
+    patch(
+        "hiprand_prefer_samedir_rocrand.patch", working_dir="hiprand", when="@5.2.0:5.4 +hiprand"
+    )
 
     # Add hiprand sources thru the below
     for d_version, d_commit in [
@@ -181,12 +186,14 @@ class Rocrand(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
     def patch(self):
-        if self.spec.satisfies("@5.1.0: +hiprand"):
+        if self.spec.satisfies("@5.1.0:5.4 +hiprand"):
             os.rmdir("hipRAND")
             os.rename("hiprand", "hipRAND")
 
@@ -264,7 +271,9 @@ class Rocrand(CMakePackage):
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 
-        if self.spec.satisfies("@5.1.0:"):
+        if self.spec.satisfies("@5.1.0:5.4"):
             args.append(self.define_from_variant("BUILD_HIPRAND", "hiprand"))
+        else:
+            args.append(self.define("BUILD_HIPRAND", "OFF"))
 
         return args

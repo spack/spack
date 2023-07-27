@@ -18,14 +18,15 @@ class RocmSmiLib(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm_smi_lib"
     git = "https://github.com/RadeonOpenCompute/rocm_smi_lib.git"
-    url = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm_smi64"]
 
     version("master", branch="master")
-
+    version("5.5.1", sha256="37f32350bfaf6c697312628696d1b1d5fd9165f183882759bc6cb9a5d65b9430")
+    version("5.5.0", sha256="0703f49b1c2924cc1d3f613258eabdff1925cb5bcf7cf22bb6b955dd065e4ce8")
     version("5.4.3", sha256="34d550272e420684230ceb7845aefcef79b155e51cf9ec55e31fdba2a4ed177b")
     version("5.4.0", sha256="4b110c9ec104ec39fc458b1b6f693662ab75395b75ed402b671d8e58c7ae63fe")
     version("5.3.3", sha256="c2c2a377c2e84f0c40297a97b6060dddc49183c2771b833ebe91ed98a98e4119")
@@ -111,6 +112,8 @@ class RocmSmiLib(CMakePackage):
     depends_on("cmake@3:", type="build")
     depends_on("python@3:", type=("build", "run"), when="@3.9.0:")
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
     patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@4.5.2:")
 
     def cmake_args(self):

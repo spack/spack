@@ -14,7 +14,7 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipRAND"
     git = "https://github.com/ROCmSoftwarePlatform/hipRAND.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipRAND/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipRAND/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
@@ -22,6 +22,8 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("5.5.1", sha256="5df9d78eae0991be5ec9f60e8d3530fabc23793d9f9cf274b075d689675db04e")
+    version("5.5.0", sha256="7c7dde7b989d5da9c0b0251233245f955b477c090462c7d34e3e0284c5fca761")
     version("5.4.3", sha256="7d3d04476880ec90c088dff81f69aac8699eaef972476000e5c4726584ffa98f")
     version("5.4.0", sha256="9456d4b4d5fd5c0b728f4aa4f8c224f829fe6fbf08e397848475293f71029a22")
     version("5.3.3", sha256="f72626b00d61ed2925b3124b7f094ccfaf7750f02bee6bac6b79317e1c5576ef")
@@ -73,6 +75,8 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
         "master",
         "develop",
     ]:
