@@ -110,6 +110,10 @@ class HpeMpi(Package):
                 env.append_path(
                     "SINGULARITY_CONTAINLIBS", os.path.join(lib_directory, lib), separator=","
                 )
+        # Shared libraries needed to be loaded by libmpi.so
+        # They are available in both compute and login nodes
+        env.append_path("SINGULARITY_CONTAINLIBS", "/lib64/libcpuset.so.1", separator=",")
+        env.append_path("SINGULARITY_CONTAINLIBS", "/lib64/libbitmask.so.1", separator=",")
         env.prepend_path(
             "SINGULARITYENV_LD_PRELOAD", "/.singularity.d/libs/libmpi.so", separator=","
         )
