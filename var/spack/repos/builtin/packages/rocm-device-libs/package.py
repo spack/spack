@@ -99,13 +99,6 @@ class RocmDeviceLibs(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
     depends_on("cmake@3.4.3:", type="build")
 

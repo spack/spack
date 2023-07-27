@@ -103,12 +103,6 @@ class HsakmtRoct(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
     variant("shared", default=True, description="Build shared or static library")
 
     depends_on("pkgconfig", type="build", when="@4.5.0:")

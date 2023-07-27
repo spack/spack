@@ -26,12 +26,6 @@ class Rocsparse(CMakePackage):
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
     variant("test", default=False, description="Build rocsparse-test client")
 
     version("5.4.3", sha256="9fb633f235eb0567cc54fae6bdc779f16bf0bb4e6f5bdddb40312c6d11ca8478")

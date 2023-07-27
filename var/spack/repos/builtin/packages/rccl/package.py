@@ -105,12 +105,6 @@ class Rccl(CMakePackage):
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
 
     patch("0001-Fix-numactl-path-issue.patch", when="@3.7.0:4.3.2")
     patch("0002-Fix-numactl-rocm-smi-path-issue.patch", when="@4.5.0:5.2.1")
