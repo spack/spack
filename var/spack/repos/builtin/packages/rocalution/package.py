@@ -107,12 +107,6 @@ class Rocalution(CMakePackage):
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
 
     depends_on("cmake@3.5:", type="build")
     for ver in ["3.5.0", "3.7.0", "3.8.0"]:

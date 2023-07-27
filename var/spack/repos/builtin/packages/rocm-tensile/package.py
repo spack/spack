@@ -113,12 +113,6 @@ class RocmTensile(CMakePackage):
         "gfx1030",
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
     variant("tensile_architecture", default="all", values=tensile_architecture, multi=True)
     variant("openmp", default=True, description="Enable OpenMP")
     conflicts("tensile_architecture=gfx906", when="@4.0.1:")

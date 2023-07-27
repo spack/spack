@@ -100,13 +100,6 @@ class MiopenOpencl(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.5:", type="build")
     depends_on("boost@1.67.0:1.73.0", type="link")
 

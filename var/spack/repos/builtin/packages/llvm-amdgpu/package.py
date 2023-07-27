@@ -105,12 +105,6 @@ class LlvmAmdgpu(CMakePackage):
     )
 
     variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-    variant(
         "rocm-device-libs",
         default=True,
         description=(

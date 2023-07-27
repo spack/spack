@@ -105,12 +105,6 @@ class HsaRocrDev(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
     variant("shared", default=True, description="Build shared or static library")
     variant("image", default=True, description="build with or without image support")
 

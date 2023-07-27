@@ -108,13 +108,6 @@ class HipRocclr(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3:", type="build")
     depends_on("gl@4.5:", type="link")
     depends_on("libelf", type="link", when="@3.7.0:3.8.0")

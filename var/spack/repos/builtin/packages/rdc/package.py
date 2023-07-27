@@ -94,13 +94,6 @@ class Rdc(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.15:3.19.7", type="build", when="@:4.3.1")
     depends_on("cmake@3.15:", type="build", when="@4.5.0:")
     depends_on("grpc@1.28.1+shared", type="build", when="@:5.3")
