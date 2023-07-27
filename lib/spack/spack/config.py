@@ -81,7 +81,7 @@ section_schemas = {
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
 all_schemas = copy.deepcopy(section_schemas)
-all_schemas.update(dict((key, spack.schema.env.schema) for key in spack.schema.env.keys))
+all_schemas.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
 #: Path to the default configuration
 configuration_defaults_path = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
@@ -111,15 +111,7 @@ scopes_metavar = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
 overrides_base_name = "overrides-"
 
 
-def first_existing(dictionary, keys):
-    """Get the value of the first key in keys that is in the dictionary."""
-    try:
-        return next(k for k in keys if k in dictionary)
-    except StopIteration:
-        raise KeyError("None of %s is in dict!" % str(keys))
-
-
-class ConfigScope(object):
+class ConfigScope:
     """This class represents a configuration scope.
 
     A scope is one directory containing named configuration files.
@@ -190,7 +182,7 @@ class SingleFileScope(ConfigScope):
                        config:
                          install_tree: $spack/opt/spack
         """
-        super(SingleFileScope, self).__init__(name, path)
+        super().__init__(name, path)
         self._raw_data = None
         self.schema = schema
         self.yaml_path = yaml_path or []
@@ -318,7 +310,7 @@ class InternalConfigScope(ConfigScope):
     """
 
     def __init__(self, name, data=None):
-        super(InternalConfigScope, self).__init__(name, None)
+        super().__init__(name, None)
         self.sections = syaml.syaml_dict()
 
         if data:
@@ -390,7 +382,7 @@ def _config_mutator(method):
     return _method
 
 
-class Configuration(object):
+class Configuration:
     """A full Spack configuration, from a hierarchy of config files.
 
     This class makes it easy to add a new scope on top of an existing one.
@@ -775,7 +767,7 @@ def _add_command_line_scopes(cfg, command_line_scopes):
         _add_platform_scope(cfg, ImmutableConfigScope, name, path)
 
 
-def _config():
+def create():
     """Singleton Configuration instance.
 
     This constructs one instance associated with this module and returns
@@ -833,17 +825,15 @@ def _config():
 
 
 #: This is the singleton configuration instance for Spack.
-config: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_config)
+config: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(create)
 
 
 def add_from_file(filename, scope=None):
     """Add updates to a config from a filename"""
-    import spack.environment as ev
-
-    # Get file as config dict
+    # Extract internal attributes, if we are dealing with an environment
     data = read_config_file(filename)
-    if any(k in data for k in spack.schema.env.keys):
-        data = ev.config_dict(data)
+    if spack.schema.env.TOP_LEVEL_KEY in data:
+        data = data[spack.schema.env.TOP_LEVEL_KEY]
 
     # update all sections from config dict
     # We have to iterate on keys to keep overrides from the file
@@ -1353,17 +1343,11 @@ def use_configuration(*scopes_or_paths):
     configuration = _config_from(scopes_or_paths)
     config.clear_caches(), configuration.clear_caches()
 
-    # Save and clear the current compiler cache
-    saved_compiler_cache = spack.compilers._cache_config_file
-    spack.compilers._cache_config_file = []
-
     saved_config, config = config, configuration
 
     try:
         yield configuration
     finally:
-        # Restore previous config files
-        spack.compilers._cache_config_file = saved_compiler_cache
         config = saved_config
 
 
@@ -1511,7 +1495,7 @@ class ConfigFormatError(ConfigError):
             location += ":%d" % line
 
         message = "%s: %s" % (location, validation_error.message)
-        super(ConfigError, self).__init__(message)
+        super().__init__(message)
 
     def _get_mark(self, validation_error, data):
         """Get the file/line mark fo a validation error from a Spack YAML file."""

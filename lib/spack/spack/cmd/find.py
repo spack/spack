@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import copy
 import sys
 
@@ -31,6 +29,14 @@ def setup_parser(subparser):
         action="store",
         default=None,
         help="output specs with the specified format string",
+    )
+    format_group.add_argument(
+        "-H",
+        "--hashes",
+        action="store_const",
+        dest="format",
+        const="{/hash}",
+        help="same as '--format {/hash}'; use with xargs or $()",
     )
     format_group.add_argument(
         "--json",

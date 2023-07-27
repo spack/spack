@@ -104,6 +104,13 @@ class Ffmpeg(AutotoolsPackage):
 
     conflicts("%nvhpc")
 
+    # Patch solving a build failure when vulkan is enabled
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/eb0455d64690",
+        sha256="967d25a67297c53dde7151f7bc5eb37ae674525ee468880f973b9ebc3e12ed2c",
+        when="@5.1.2",
+    )
+
     @property
     def libs(self):
         return find_libraries("*", self.prefix, recursive=True)

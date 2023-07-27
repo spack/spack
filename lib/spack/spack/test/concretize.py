@@ -179,7 +179,7 @@ class Changing(Package):
 
     with spack.repo.use_repositories(str(repo_dir), override=False) as repository:
 
-        class _ChangingPackage(object):
+        class _ChangingPackage:
             default_context = [
                 ("delete_version", True),
                 ("delete_variant", False),
@@ -224,7 +224,7 @@ class Changing(Package):
 # adjusting_default_target_based_on_compiler uses the current_host fixture,
 # which changes the config.
 @pytest.mark.usefixtures("mutable_config", "mock_packages")
-class TestConcretize(object):
+class TestConcretize:
     def test_concretize(self, spec):
         check_concretize(spec)
 
@@ -337,8 +337,6 @@ class TestConcretize(object):
 
         # Get the compiler that matches the spec (
         compiler = spack.compilers.compiler_for_spec("clang@=12.2.0", spec.architecture)
-        # Clear cache for compiler config since it has its own cache mechanism outside of config
-        spack.compilers._cache_config_file = []
 
         # Configure spack to have two identical compilers with different flags
         default_dict = spack.compilers._to_dict(compiler)
@@ -1224,7 +1222,7 @@ class TestConcretize(object):
             return [first_spec]
 
         if mock_db:
-            monkeypatch.setattr(spack.store.db, "query", mock_fn)
+            monkeypatch.setattr(spack.store.STORE.db, "query", mock_fn)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
@@ -1277,7 +1275,7 @@ class TestConcretize(object):
 
         spack.config.set("concretizer:reuse", True)
         spec = Spec("a cflags=-g cxxflags=-g").concretized()
-        spack.store.db.add(spec, None)
+        spack.store.STORE.db.add(spec, None)
 
         testspec = Spec("a cflags=-g")
         testspec.concretize()
@@ -2015,7 +2013,7 @@ class TestConcretize(object):
 
         # install python external
         python = Spec("python").concretized()
-        monkeypatch.setattr(spack.store.db, "query", lambda x: [python])
+        monkeypatch.setattr(spack.store.STORE.db, "query", lambda x: [python])
 
         # ensure that we can't be faking this by getting it from config
         external_conf.pop("python")
@@ -2137,7 +2135,7 @@ class TestConcretize(object):
             {
                 "compiler": {
                     "spec": "gcc@foo",
-                    "paths": {"cc": gcc_path, "cxx": gcc_path, "f77": None, "fc": None},
+                    "paths": {"cc": str(gcc_path), "cxx": str(gcc_path), "f77": None, "fc": None},
                     "operating_system": "debian6",
                     "modules": [],
                 }
@@ -2172,3 +2170,14 @@ class TestConcretize(object):
         with spack.config.override("compilers", compiler_configuration):
             s = spack.spec.Spec("a").concretized()
         assert s.satisfies("%gcc@12.1.0")
+
+    @pytest.mark.parametrize("spec_str", ["mpileaks", "mpileaks ^mpich"])
+    def test_virtuals_are_annotated_on_edges(self, spec_str, default_mock_concretization):
+        """Tests that information on virtuals is annotated on DAG edges"""
+        spec = default_mock_concretization(spec_str)
+        mpi_provider = spec["mpi"].name
+
+        edges = spec.edges_to_dependencies(name=mpi_provider)
+        assert len(edges) == 1 and edges[0].virtuals == ("mpi",)
+        edges = spec.edges_to_dependencies(name="callpath")
+        assert len(edges) == 1 and edges[0].virtuals == ()

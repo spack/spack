@@ -18,12 +18,9 @@ class Hdf5VolLog(AutotoolsPackage):
     version("master-1.1", branch="master")
 
     version("1.4.0", tag="logvol.1.4.0")
-    version("1.3.0", tag="logvol.1.3.0")
-    version("1.2.0", tag="logvol.1.2.0")
-    version("1.1.0", tag="logvol.1.1.0")
 
     depends_on("hdf5@1.14.0:", when="@1.4.0:")
-    depends_on("hdf5@1.13.2", when="@:1.3.0")
+    depends_on("mpi")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
@@ -33,9 +30,8 @@ class Hdf5VolLog(AutotoolsPackage):
         env.prepend_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
 
     def configure_args(self):
-        args = []
-
-        args.append("--enable-shared")
-        args.append("--enable-zlib")
-
-        return args
+        return [
+            "--enable-shared",
+            "--enable-zlib",
+            "--with-mpi={}".format(self.spec["mpi"].prefix),
+        ]

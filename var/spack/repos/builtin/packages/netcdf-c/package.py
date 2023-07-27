@@ -79,6 +79,18 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         )
         _force_autoreconf_when.append("@4.8.1")
 
+        # See https://github.com/Unidata/netcdf-c/pull/2710
+        # Versions 4.9.0 and 4.9.1 had a bug in the configure script, which worked to our benefit.
+        # The bug has been fixed in
+        # https://github.com/Unidata/netcdf-c/commit/267b26f1239310ca7ba8304315834939f7cc9886 and
+        # now we need a patch in cases when we build for macOS with DAP disabled:
+        patch(
+            "https://github.com/Unidata/netcdf-c/commit/cfe6231aa6b018062b443cbe2fd9073f15283344.patch?full_index=1",
+            sha256="4e105472de95a1bb5d8b0b910d6935ce9152777d4fe18b678b58347fa0122abc",
+            when="@4.9.2~dap platform=darwin",
+        )
+        _force_autoreconf_when.append("@4.9.2~dap platform=darwin")
+
     with when("@4.7.2"):
         # Fix headers
         # See https://github.com/Unidata/netcdf-c/pull/1505
@@ -97,6 +109,13 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         "https://github.com/Unidata/netcdf-c/commit/00a722b253bae186bba403d0f92ff1eba719591f.patch?full_index=1",
         sha256="25b83de1e081f020efa9e21c94c595220849f78c125ad43d8015631d453dfcb9",
         when="@4.9.0:4.9.1~mpi+parallel-netcdf",
+    )
+
+    # See https://github.com/Unidata/netcdf-c/issues/2674
+    patch(
+        "https://github.com/Unidata/netcdf-c/commit/f8904d5a1d89420dde0f9d2c0e051ba08d08e086.patch?full_index=1",
+        sha256="0161eb870fdfaf61be9d70132c9447a537320342366362e76b8460c823bf95ca",
+        when="@4.9.0:4.9.2",
     )
 
     variant("mpi", default=True, description="Enable parallel I/O for netcdf-4")

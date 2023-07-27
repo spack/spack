@@ -21,7 +21,6 @@ import spack.spec
 import spack.util.path
 import spack.util.web as web_util
 from spack.error import SpackError
-from spack.util.spack_yaml import syaml_dict
 
 description = "manage mirrors (source and binary)"
 section = "config"
@@ -55,13 +54,13 @@ def setup_parser(subparser):
     )
     create_parser.add_argument(
         "--exclude-specs",
-        help="specs which Spack should not try to add to a mirror" " (specified on command line)",
+        help="specs which Spack should not try to add to a mirror (specified on command line)",
     )
 
     create_parser.add_argument(
         "--skip-unstable-versions",
         action="store_true",
-        help="don't cache versions unless they identify a stable (unchanging)" " source code",
+        help="don't cache versions unless they identify a stable (unchanging) source code",
     )
     create_parser.add_argument(
         "-D", "--dependencies", action="store_true", help="also fetch all dependencies"
@@ -104,6 +103,15 @@ def setup_parser(subparser):
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
+    add_parser.add_argument(
+        "--type",
+        action="append",
+        choices=("binary", "source"),
+        help=(
+            "specify the mirror type: for both binary "
+            "and source use `--type binary --type source` (default)"
+        ),
+    )
     arguments.add_s3_connection_args(add_parser, False)
     # Remove
     remove_parser = sp.add_parser("remove", aliases=["rm"], help=mirror_remove.__doc__)
@@ -120,8 +128,12 @@ def setup_parser(subparser):
     set_url_parser = sp.add_parser("set-url", help=mirror_set_url.__doc__)
     set_url_parser.add_argument("name", help="mnemonic name for mirror", metavar="mirror")
     set_url_parser.add_argument("url", help="url of mirror directory from 'spack mirror create'")
-    set_url_parser.add_argument(
-        "--push", action="store_true", help="set only the URL used for uploading new packages"
+    set_url_push_or_fetch = set_url_parser.add_mutually_exclusive_group(required=False)
+    set_url_push_or_fetch.add_argument(
+        "--push", action="store_true", help="set only the URL used for uploading"
+    )
+    set_url_push_or_fetch.add_argument(
+        "--fetch", action="store_true", help="set only the URL used for downloading"
     )
     set_url_parser.add_argument(
         "--scope",
@@ -131,6 +143,35 @@ def setup_parser(subparser):
         help="configuration scope to modify",
     )
     arguments.add_s3_connection_args(set_url_parser, False)
+
+    # Set
+    set_parser = sp.add_parser("set", help=mirror_set.__doc__)
+    set_parser.add_argument("name", help="mnemonic name for mirror", metavar="mirror")
+    set_parser_push_or_fetch = set_parser.add_mutually_exclusive_group(required=False)
+    set_parser_push_or_fetch.add_argument(
+        "--push", action="store_true", help="modify just the push connection details"
+    )
+    set_parser_push_or_fetch.add_argument(
+        "--fetch", action="store_true", help="modify just the fetch connection details"
+    )
+    set_parser.add_argument(
+        "--type",
+        action="append",
+        choices=("binary", "source"),
+        help=(
+            "specify the mirror type: for both binary "
+            "and source use `--type binary --type source`"
+        ),
+    )
+    set_parser.add_argument("--url", help="url of mirror directory from 'spack mirror create'")
+    set_parser.add_argument(
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
+        default=spack.config.default_modify_scope(),
+        help="configuration scope to modify",
+    )
+    arguments.add_s3_connection_args(set_parser, False)
 
     # List
     list_parser = sp.add_parser("list", help=mirror_list.__doc__)
@@ -144,105 +185,85 @@ def setup_parser(subparser):
 
 
 def mirror_add(args):
-    """Add a mirror to Spack."""
+    """add a mirror to Spack"""
     if (
         args.s3_access_key_id
         or args.s3_access_key_secret
         or args.s3_access_token
         or args.s3_profile
         or args.s3_endpoint_url
+        or args.type
     ):
         connection = {"url": args.url}
         if args.s3_access_key_id and args.s3_access_key_secret:
-            connection["access_pair"] = (args.s3_access_key_id, args.s3_access_key_secret)
+            connection["access_pair"] = [args.s3_access_key_id, args.s3_access_key_secret]
         if args.s3_access_token:
             connection["access_token"] = args.s3_access_token
         if args.s3_profile:
             connection["profile"] = args.s3_profile
         if args.s3_endpoint_url:
             connection["endpoint_url"] = args.s3_endpoint_url
-        mirror = spack.mirror.Mirror(fetch_url=connection, push_url=connection, name=args.name)
+        if args.type:
+            connection["binary"] = "binary" in args.type
+            connection["source"] = "source" in args.type
+        mirror = spack.mirror.Mirror(connection, name=args.name)
     else:
         mirror = spack.mirror.Mirror(args.url, name=args.name)
     spack.mirror.add(mirror, args.scope)
 
 
 def mirror_remove(args):
-    """Remove a mirror by name."""
+    """remove a mirror by name"""
     spack.mirror.remove(args.name, args.scope)
 
 
-def mirror_set_url(args):
-    """Change the URL of a mirror."""
-    url = args.url
+def _configure_mirror(args):
     mirrors = spack.config.get("mirrors", scope=args.scope)
-    if not mirrors:
-        mirrors = syaml_dict()
 
     if args.name not in mirrors:
-        tty.die("No mirror found with name %s." % args.name)
+        tty.die(f"No mirror found with name {args.name}.")
 
-    entry = mirrors[args.name]
-    key_values = ["s3_access_key_id", "s3_access_token", "s3_profile"]
+    entry = spack.mirror.Mirror(mirrors[args.name], args.name)
+    direction = "fetch" if args.fetch else "push" if args.push else None
+    changes = {}
+    if args.url:
+        changes["url"] = args.url
+    if args.s3_access_key_id and args.s3_access_key_secret:
+        changes["access_pair"] = [args.s3_access_key_id, args.s3_access_key_secret]
+    if args.s3_access_token:
+        changes["access_token"] = args.s3_access_token
+    if args.s3_profile:
+        changes["profile"] = args.s3_profile
+    if args.s3_endpoint_url:
+        changes["endpoint_url"] = args.s3_endpoint_url
 
-    if any(value for value in key_values if value in args):
-        incoming_data = {
-            "url": url,
-            "access_pair": (args.s3_access_key_id, args.s3_access_key_secret),
-            "access_token": args.s3_access_token,
-            "profile": args.s3_profile,
-            "endpoint_url": args.s3_endpoint_url,
-        }
-    try:
-        fetch_url = entry["fetch"]
-        push_url = entry["push"]
-    except TypeError:
-        fetch_url, push_url = entry, entry
+    # argparse cannot distinguish between --binary and --no-binary when same dest :(
+    # notice that set-url does not have these args, so getattr
+    if getattr(args, "type", None):
+        changes["binary"] = "binary" in args.type
+        changes["source"] = "source" in args.type
 
-    changes_made = False
+    changed = entry.update(changes, direction)
 
-    if args.push:
-        if isinstance(push_url, dict):
-            changes_made = changes_made or push_url != incoming_data
-            push_url = incoming_data
-        else:
-            changes_made = changes_made or push_url != url
-            push_url = url
-    else:
-        if isinstance(push_url, dict):
-            changes_made = changes_made or push_url != incoming_data or push_url != incoming_data
-            fetch_url, push_url = incoming_data, incoming_data
-        else:
-            changes_made = changes_made or push_url != url
-            fetch_url, push_url = url, url
-
-    items = [
-        (
-            (n, u)
-            if n != args.name
-            else (
-                (n, {"fetch": fetch_url, "push": push_url})
-                if fetch_url != push_url
-                else (n, {"fetch": fetch_url, "push": fetch_url})
-            )
-        )
-        for n, u in mirrors.items()
-    ]
-
-    mirrors = syaml_dict(items)
-    spack.config.set("mirrors", mirrors, scope=args.scope)
-
-    if changes_made:
-        tty.msg(
-            "Changed%s url or connection information for mirror %s."
-            % ((" (push)" if args.push else ""), args.name)
-        )
+    if changed:
+        mirrors[args.name] = entry.to_dict()
+        spack.config.set("mirrors", mirrors, scope=args.scope)
     else:
         tty.msg("No changes made to mirror %s." % args.name)
 
 
+def mirror_set(args):
+    """configure the connection details of a mirror"""
+    _configure_mirror(args)
+
+
+def mirror_set_url(args):
+    """change the URL of a mirror"""
+    _configure_mirror(args)
+
+
 def mirror_list(args):
-    """Print out available mirrors to the console."""
+    """print out available mirrors to the console"""
 
     mirrors = spack.mirror.MirrorCollection(scope=args.scope)
     if not mirrors:
@@ -395,9 +416,7 @@ def process_mirror_stats(present, mirrored, error):
 
 
 def mirror_create(args):
-    """Create a directory to be used as a spack mirror, and fill it with
-    package archives.
-    """
+    """create a directory to be used as a spack mirror, and fill it with package archives"""
     if args.specs and args.all:
         raise SpackError(
             "cannot specify specs on command line if you chose to mirror all specs with '--all'"
@@ -470,7 +489,7 @@ def create_mirror_for_all_specs_inside_environment(path, skip_unstable_versions,
 
 
 def mirror_destroy(args):
-    """Given a url, recursively delete everything under it."""
+    """given a url, recursively delete everything under it"""
     mirror_url = None
 
     if args.mirror_name:
@@ -490,6 +509,7 @@ def mirror(parser, args):
         "remove": mirror_remove,
         "rm": mirror_remove,
         "set-url": mirror_set_url,
+        "set": mirror_set,
         "list": mirror_list,
     }
 

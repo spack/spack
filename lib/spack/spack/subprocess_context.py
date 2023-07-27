@@ -27,7 +27,7 @@ import spack.platforms
 import spack.repo
 import spack.store
 
-_serialize = sys.platform == "win32" or (sys.version_info >= (3, 8) and sys.platform == "darwin")
+_SERIALIZE = sys.platform == "win32" or (sys.version_info >= (3, 8) and sys.platform == "darwin")
 
 
 patches = None
@@ -47,7 +47,7 @@ def serialize(obj):
     return serialized_obj
 
 
-class SpackTestProcess(object):
+class SpackTestProcess:
     def __init__(self, fn):
         self.fn = fn
 
@@ -60,13 +60,13 @@ class SpackTestProcess(object):
         return multiprocessing.Process(target=self._restore_and_run, args=(self.fn, test_state))
 
 
-class PackageInstallContext(object):
+class PackageInstallContext:
     """Captures the in-memory process state of a package installation that
     needs to be transmitted to a child process.
     """
 
     def __init__(self, pkg):
-        if _serialize:
+        if _SERIALIZE:
             self.serialized_pkg = serialize(pkg)
             self.serialized_env = serialize(spack.environment.active_environment())
         else:
@@ -78,14 +78,14 @@ class PackageInstallContext(object):
     def restore(self):
         self.test_state.restore()
         spack.main.spack_working_dir = self.spack_working_dir
-        env = pickle.load(self.serialized_env) if _serialize else self.env
-        pkg = pickle.load(self.serialized_pkg) if _serialize else self.pkg
+        env = pickle.load(self.serialized_env) if _SERIALIZE else self.env
+        pkg = pickle.load(self.serialized_pkg) if _SERIALIZE else self.pkg
         if env:
             spack.environment.activate(env)
         return pkg
 
 
-class TestState(object):
+class TestState:
     """Spack tests may modify state that is normally read from disk in memory;
     this object is responsible for properly serializing that state to be
     applied to a subprocess. This isn't needed outside of a testing environment
@@ -93,30 +93,22 @@ class TestState(object):
     """
 
     def __init__(self):
-        if _serialize:
-            self.repo_dirs = list(r.root for r in spack.repo.path.repos)
+        if _SERIALIZE:
             self.config = spack.config.config
             self.platform = spack.platforms.host
             self.test_patches = store_patches()
-            self.store_token = spack.store.store.serialize()
+            self.store = spack.store.STORE
 
     def restore(self):
-        if _serialize:
+        if _SERIALIZE:
             spack.config.config = self.config
-            spack.repo.path = spack.repo._path(self.config)
+            spack.repo.path = spack.repo.create(self.config)
             spack.platforms.host = self.platform
-
-            new_store = spack.store.Store.deserialize(self.store_token)
-            spack.store.store = new_store
-            spack.store.root = new_store.root
-            spack.store.unpadded_root = new_store.unpadded_root
-            spack.store.db = new_store.db
-            spack.store.layout = new_store.layout
-
+            spack.store.STORE = self.store
             self.test_patches.restore()
 
 
-class TestPatches(object):
+class TestPatches:
     def __init__(self, module_patches, class_patches):
         self.module_patches = list((x, y, serialize(z)) for (x, y, z) in module_patches)
         self.class_patches = list((x, y, serialize(z)) for (x, y, z) in class_patches)

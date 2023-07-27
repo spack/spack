@@ -935,7 +935,7 @@ def test_inclusion_upperbound():
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_git_version_repo_attached_after_serialization(
-    mock_git_version_info, mock_packages, monkeypatch
+    mock_git_version_info, mock_packages, config, monkeypatch
 ):
     """Test that a GitVersion instance can be serialized and deserialized
     without losing its repository reference.
@@ -954,7 +954,9 @@ def test_git_version_repo_attached_after_serialization(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
-def test_resolved_git_version_is_shown_in_str(mock_git_version_info, mock_packages, monkeypatch):
+def test_resolved_git_version_is_shown_in_str(
+    mock_git_version_info, mock_packages, config, monkeypatch
+):
     """Test that a GitVersion from a commit without a user supplied version is printed
     as <hash>=<version>, and not just <hash>."""
     repo_path, _, commits = mock_git_version_info
@@ -968,7 +970,7 @@ def test_resolved_git_version_is_shown_in_str(mock_git_version_info, mock_packag
     assert str(spec.version) == f"{commit}=1.0-git.1"
 
 
-def test_unresolvable_git_versions_error(mock_packages):
+def test_unresolvable_git_versions_error(config, mock_packages):
     """Test that VersionLookupError is raised when a git prop is not set on a package."""
     with pytest.raises(VersionLookupError):
         # The package exists, but does not have a git property set. When dereferencing

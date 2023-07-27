@@ -20,13 +20,15 @@ spack:
       variants: +mps~cuda~rocm
     mpi:
       require: openmpi
+    openblas:
+      require: ~fortran
 
   specs:
   # Hugging Face
   - py-transformers
 
   # JAX
-  - py-jax
+  # - py-jax        # bazel codesign
   # - py-jaxlib     # bazel codesign
 
   # Keras
@@ -90,7 +92,7 @@ spack:
   # - py-vector-quantize-pytorch  # py-torch
   # - r-xgboost                   # r
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-cpu" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-mps" }
 
   ci:
     pipeline-gen:

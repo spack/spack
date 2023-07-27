@@ -25,8 +25,10 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("4.1.00", sha256="cf725ea34ba766fdaf29c884cfe2daacfdc6dc2d6af84042d1c78d0f16866275")
     version("4.0.01", sha256="bb942de8afdd519fd6d5d3974706bfc22b6585a62dd565c12e53bdb82cd154f0")
     version("4.0.00", sha256="1829a423883d4b44223c7c3a53d3c51671145aad57d7d23e6a1a4bebf710dcf6")
+    version("3.7.02", sha256="5024979f06bc8da2fb696252a66297f3e0e67098595a0cc7345312b3b4aa0f54")
     version("3.7.01", sha256="0481b24893d1bcc808ec68af1d56ef09b82a1138a1226d6be27c3b3c3da65ceb")
     version("3.7.00", sha256="62e3f9f51c798998f6493ed36463f66e49723966286ef70a9dcba329b8443040")
     version("3.6.01", sha256="1b80a70c5d641da9fefbbb652e857d7c7a76a0ebad1f477c253853e209deb8db")
@@ -207,7 +209,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("std=14", when="@4.0:")
 
     conflicts("+cuda", when="std=17 ^cuda@:10")
-    conflicts("+cuda", when="std=20 ^cuda@:12")
+    conflicts("+cuda", when="std=20 ^cuda@:11")
 
     # SYCL and OpenMPTarget require C++17 or higher
     for stdver in stds[: stds.index("17")]:
@@ -327,6 +329,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             options.append(
                 self.define("CMAKE_CXX_COMPILER", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             )
+
+        if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
+            options.append(self.define("CMAKE_CXX_FLAGS", "-fp-model=precise"))
 
         return options
 

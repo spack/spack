@@ -17,6 +17,12 @@ class GmapGsnap(AutotoolsPackage):
     maintainers("snehring")
 
     version(
+        "2023-06-01", sha256="c7e6f6cf644e6f66f9f5a0811a49da8cc81f095a4bd7b7cef2ab10aa5b314430"
+    )
+    version(
+        "2023-04-28", sha256="6e73fab2e8043ebf735c43fe8460d2abd7c1398d1e796dc5b22ba68717f4160c"
+    )
+    version(
         "2023-03-24", sha256="eec93a2a693c1bc5bf3026b39522f45e8a8aad6e8b8b4239a94aa17f37600762"
     )
     version(

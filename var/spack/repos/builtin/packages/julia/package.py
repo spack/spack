@@ -50,14 +50,14 @@ class Julia(MakefilePackage):
     # Note, we just use link_llvm_dylib so that we not only get a libLLVM,
     # but also so that llvm-config --libfiles gives only the dylib. Without
     # it it also gives static libraries, and breaks Julia's build.
-    depends_on("llvm targets=amdgpu,bpf,nvptx,webassembly version_suffix=jl +link_llvm_dylib")
+    depends_on(
+        "llvm"
+        " targets=amdgpu,bpf,nvptx,webassembly"
+        " version_suffix=jl +link_llvm_dylib libunwind=none"
+    )
     depends_on("libuv", when="@:1.7")
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
-
-    # Do not use internal unwind.  We need to use a conflict, because
-    # `internal_unwind` is defined only when `+clang`.
-    conflicts("^llvm+internal_unwind")
 
     with when("@1.9.0:1.9"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -123,7 +123,7 @@ class Julia(MakefilePackage):
         when="^llvm@12.0.1",
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch",
-            sha256="10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4",
+            sha256="6383aed07cf5dba52efa3a8197dacf19eb8f5c413faeb7fc923d25d1e0eaf5ee",
         ),
     )
     depends_on(
@@ -131,15 +131,15 @@ class Julia(MakefilePackage):
         when="^llvm@13.0.1",
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch",
-            sha256="45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f",
+            sha256="9a38ca275d46f53847f37fa6278c0f20b27baa2a408c889f6b623b91f73b965c",
         ),
     )
     depends_on(
         "llvm",
         when="^llvm@14.0.6",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...5c82f5309b10fab0adf6a94969e0dddffdb3dbce.patch",
-            sha256="9f2bc98e876e85a3edb158064aae782281ea7099e4c34e83ac456609cb7acd10",
+            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff",
+            sha256="7314e392f9e2070bbc01c257f2b6ab4e9ffbd8cb9046f3272366f73c4c01e2a5",
         ),
     )
 

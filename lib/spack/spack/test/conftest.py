@@ -50,7 +50,7 @@ import spack.util.git
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
-from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
+from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
 from spack.util.web import FetchError
 
@@ -462,7 +462,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
         assert not files_in_stage
 
 
-class MockCache(object):
+class MockCache:
     def store(self, copy_cmd, relative_dest):
         pass
 
@@ -470,7 +470,7 @@ class MockCache(object):
         return MockCacheFetcher()
 
 
-class MockCacheFetcher(object):
+class MockCacheFetcher:
     def fetch(self):
         raise FetchError("Mock cache always fails for tests")
 
@@ -950,7 +950,7 @@ def disable_compiler_execution(monkeypatch, request):
 
 
 @pytest.fixture(scope="function")
-def install_mockery(temporary_store, config, mock_packages):
+def install_mockery(temporary_store, mutable_config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override("config:checksum", False):
@@ -959,7 +959,7 @@ def install_mockery(temporary_store, config, mock_packages):
     # Also wipe out any cached prefix failure locks (associated with
     # the session-scoped mock archive).
     for pkg_id in list(temporary_store.db._prefix_failures.keys()):
-        lock = spack.store.db._prefix_failures.pop(pkg_id, None)
+        lock = spack.store.STORE.db._prefix_failures.pop(pkg_id, None)
         if lock:
             try:
                 lock.release_write()
@@ -968,8 +968,9 @@ def install_mockery(temporary_store, config, mock_packages):
 
 
 @pytest.fixture(scope="function")
-def temporary_store(tmpdir):
+def temporary_store(tmpdir, request):
     """Hooks a temporary empty store for the test function."""
+    ensure_configuration_fixture_run_before(request)
     temporary_store_path = tmpdir.join("opt")
     with spack.store.use_store(str(temporary_store_path)) as s:
         yield s
@@ -992,13 +993,12 @@ def install_mockery_mutable_config(temporary_store, mutable_config, mock_package
 @pytest.fixture()
 def mock_fetch(mock_archive, monkeypatch):
     """Fake the URL for a package so it downloads from a file."""
-    mock_fetcher = FetchStrategyComposite()
-    mock_fetcher.append(URLFetchStrategy(mock_archive.url))
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "fetcher", URLFetchStrategy(mock_archive.url)
+    )
 
-    monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", mock_fetcher)
 
-
-class MockLayout(object):
+class MockLayout:
     def __init__(self, root):
         self.root = root
 
@@ -1021,7 +1021,7 @@ def gen_mock_layout(tmpdir):
     yield create_layout
 
 
-class MockConfig(object):
+class MockConfig:
     def __init__(self, configuration, writer_key):
         self._configuration = configuration
         self.writer_key = writer_key
@@ -1033,7 +1033,7 @@ class MockConfig(object):
         return self.configuration(module_set_name)[self.writer_key]
 
 
-class ConfigUpdate(object):
+class ConfigUpdate:
     def __init__(self, root_for_conf, writer_mod, writer_key, monkeypatch):
         self.root_for_conf = root_for_conf
         self.writer_mod = writer_mod
@@ -1536,13 +1536,12 @@ def mock_svn_repository(tmpdir_factory):
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_env_path(tmpdir_factory, mutable_config):
+def mutable_mock_env_path(tmp_path, mutable_config, monkeypatch):
     """Fixture for mocking the internal spack environments directory."""
-    saved_path = ev.environment.default_env_path
-    mock_path = tmpdir_factory.mktemp("mock-env-path")
-    ev.environment.default_env_path = str(mock_path)
-    yield mock_path
-    ev.environment.default_env_path = saved_path
+    mock_path = tmp_path / "mock-env-path"
+    mutable_config.set("config:environments_root", str(mock_path))
+    monkeypatch.setattr(ev.environment, "default_env_path", str(mock_path))
+    return mock_path
 
 
 @pytest.fixture()
@@ -1646,7 +1645,7 @@ repo:
 ##########
 
 
-class MockBundle(object):
+class MockBundle:
     has_code = False
     name = "mock-bundle"
 
@@ -1669,22 +1668,21 @@ def clear_directive_functions():
 
 
 @pytest.fixture
-def mock_executable(tmpdir):
+def mock_executable(tmp_path):
     """Factory to create a mock executable in a temporary directory that
     output a custom string when run.
     """
-    import jinja2
-
     shebang = "#!/bin/sh\n" if sys.platform != "win32" else "@ECHO OFF"
 
     def _factory(name, output, subdir=("bin",)):
-        f = tmpdir.ensure(*subdir, dir=True).join(name)
+        executable_dir = tmp_path.joinpath(*subdir)
+        executable_dir.mkdir(parents=True, exist_ok=True)
+        executable_path = executable_dir / name
         if sys.platform == "win32":
-            f += ".bat"
-        t = jinja2.Template("{{ shebang }}{{ output }}\n")
-        f.write(t.render(shebang=shebang, output=output))
-        f.chmod(0o755)
-        return str(f)
+            executable_path = executable_dir / (name + ".bat")
+        executable_path.write_text(f"{ shebang }{ output }\n")
+        executable_path.chmod(0o755)
+        return executable_path
 
     return _factory
 
@@ -1702,15 +1700,15 @@ def mock_test_stage(mutable_config, tmpdir):
 
 @pytest.fixture(autouse=True)
 def inode_cache():
-    llnl.util.lock.file_tracker.purge()
+    llnl.util.lock.FILE_TRACKER.purge()
     yield
     # TODO: it is a bug when the file tracker is non-empty after a test,
     # since it means a lock was not released, or the inode was not purged
     # when acquiring the lock failed. So, we could assert that here, but
     # currently there are too many issues to fix, so look for the more
     # serious issue of having a closed file descriptor in the cache.
-    assert not any(f.fh.closed for f in llnl.util.lock.file_tracker._descriptors.values())
-    llnl.util.lock.file_tracker.purge()
+    assert not any(f.fh.closed for f in llnl.util.lock.FILE_TRACKER._descriptors.values())
+    llnl.util.lock.FILE_TRACKER.purge()
 
 
 @pytest.fixture(autouse=True)
@@ -1786,7 +1784,7 @@ def mock_curl_configs(mock_config_data, monkeypatch):
     """
     config_data_dir, config_files = mock_config_data
 
-    class MockCurl(object):
+    class MockCurl:
         def __init__(self):
             self.returncode = None
 
@@ -1921,3 +1919,30 @@ def default_mock_concretization(config, mock_packages, concretized_specs_cache):
         return concretized_specs_cache[key].copy()
 
     return _func
+
+
+@pytest.fixture
+def shell_as(shell):
+    if sys.platform != "win32":
+        yield
+        return
+    if shell not in ("pwsh", "bat"):
+        raise RuntimeError("Shell must be one of supported Windows shells (pwsh|bat)")
+    try:
+        # fetch and store old shell type
+        _shell = os.environ.get("SPACK_SHELL", None)
+        os.environ["SPACK_SHELL"] = shell
+        yield
+    finally:
+        # restore old shell if one was set
+        if _shell:
+            os.environ["SPACK_SHELL"] = _shell
+
+
+@pytest.fixture()
+def nullify_globals(request, monkeypatch):
+    ensure_configuration_fixture_run_before(request)
+    monkeypatch.setattr(spack.config, "config", None)
+    monkeypatch.setattr(spack.caches, "misc_cache", None)
+    monkeypatch.setattr(spack.repo, "path", None)
+    monkeypatch.setattr(spack.store, "STORE", None)
