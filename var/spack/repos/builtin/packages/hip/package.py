@@ -120,9 +120,11 @@ class Hip(CMakePackage):
 
     depends_on("cuda", when="+cuda")
 
-    depends_on("cmake@3.16.8:", type=("build", "run"), when="@4.5.0:")
+    depends_on("cmake@3.16.8:", type=("build"), when="@4.5.0:")
     depends_on("cmake@3.4.3:", type="build")
     depends_on("perl@5.10:", type=("build", "run"))
+
+    test_requires_compiler = True
 
     with when("+rocm"):
         depends_on("gl@4.5:")
@@ -621,8 +623,7 @@ class Hip(CMakePackage):
     def test_samples(self):
         # configure, build and run all hip samples
         if self.spec.satisfies("@:5.1.0"):
-            print("Skipping: stand-alone tests")
-            return
+            raise SkipTest("Test is only available for specs after version 5.1.0")
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         prefixes = ";".join(
             [
@@ -637,6 +638,8 @@ class Hip(CMakePackage):
         amdclang_path = join_path(self.spec["llvm-amdgpu"].prefix, "bin", "amdclang++")
         os.environ["CXX"] = amdclang_path
         os.environ["FC"] = "/usr/bin/gfortran"
+
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
 
         for root, dirs, files in os.walk(test_dir):
             dirs.sort()
@@ -656,7 +659,7 @@ class Hip(CMakePackage):
 
                         print("Building test " + test_name)
                         make(parallel=False)
-                        # itterate through the files in dir to find the newly built binary
+                        # iterate through the files in dir to find the newly built binary
                         for file in os.listdir("."):
                             if (
                                 file not in files
@@ -671,4 +674,3 @@ class Hip(CMakePackage):
                                 else:
                                     options = []
                                 exe(*options)
-                        make("clean")
