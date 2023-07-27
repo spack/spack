@@ -460,7 +460,8 @@ class PackageTest:
             elif self.counts[TestStatus.PASSED] > 0:
                 status = TestStatus.PASSED
 
-        _add_msg_to_file(self.tested_file, f"{status.value}")
+        with open(self.tested_file, "w") as f:
+            f.write(f"{status.value}\n")
 
 
 @contextlib.contextmanager

@@ -441,6 +441,30 @@ def test_write_tested_status(
         assert TestStatus(status) == expected
 
 
+@pytest.mark.regression("37840")
+def test_write_tested_status_no_repeats(
+    tmpdir, install_mockery_mutable_config, mock_fetch, mock_test_stage
+):
+    """Emulate re-running the same stand-alone tests a second time."""
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+    statuses = [TestStatus.PASSED, TestStatus.PASSED]
+    for i, status in enumerate(statuses):
+        pkg.tester.test_parts[f"test_{i}"] = status
+        pkg.tester.counts[status] += 1
+
+    pkg.tester.tested_file = tmpdir.join("test-log.txt")
+    pkg.tester.write_tested_status()
+    pkg.tester.write_tested_status()
+
+    # The test should NOT result in a ValueError: invalid literal for int()
+    # with base 10: '2\n2' (i.e., the results being appended instead of
+    # written to the file).
+    with open(pkg.tester.tested_file, "r") as f:
+        status = int(f.read().strip("\n"))
+        assert TestStatus(status) == TestStatus.PASSED
+
+
 def test_check_special_outputs(tmpdir):
     """This test covers two related helper methods"""
     contents = """CREATE TABLE packages (

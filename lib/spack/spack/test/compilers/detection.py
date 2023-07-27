@@ -281,7 +281,7 @@ def test_oneapi_version_detection(version_str, expected_version):
         (
             "NAG Fortran Compiler Release 6.0(Hibiya) Build 1037\n"
             "Product NPL6A60NA for x86-64 Linux\n",
-            "6.0",
+            "6.0.1037",
         )
     ],
 )

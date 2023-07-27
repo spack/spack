@@ -5,8 +5,6 @@
 
 """Utility classes for logging the output of blocks of code.
 """
-from __future__ import unicode_literals
-
 import atexit
 import ctypes
 import errno
@@ -67,7 +65,7 @@ def _strip(line):
     return _escape.sub("", line)
 
 
-class keyboard_input(object):
+class keyboard_input:
     """Context manager to disable line editing and echoing.
 
     Use this with ``sys.stdin`` for keyboard input, e.g.::
@@ -244,7 +242,7 @@ class keyboard_input(object):
                 signal.signal(signum, old_handler)
 
 
-class Unbuffered(object):
+class Unbuffered:
     """Wrapper for Python streams that forces them to be unbuffered.
 
     This is implemented by forcing a flush after each write.
@@ -289,7 +287,7 @@ def _file_descriptors_work(*streams):
         return False
 
 
-class FileWrapper(object):
+class FileWrapper:
     """Represents a file. Can be an open stream, a path to a file (not opened
     yet), or neither. When unwrapped, it returns an open file (or file-like)
     object.
@@ -331,7 +329,7 @@ class FileWrapper(object):
             self.file.close()
 
 
-class MultiProcessFd(object):
+class MultiProcessFd:
     """Return an object which stores a file descriptor and can be passed as an
     argument to a function run with ``multiprocessing.Process``, such that
     the file descriptor is available in the subprocess."""
@@ -431,7 +429,7 @@ def log_output(*args, **kwargs):
         return nixlog(*args, **kwargs)
 
 
-class nixlog(object):
+class nixlog:
     """
     Under the hood, we spawn a daemon and set up a pipe between this
     process and the daemon.  The daemon writes our output to both the
@@ -752,7 +750,7 @@ class StreamWrapper:
                 os.close(self.saved_stream)
 
 
-class winlog(object):
+class winlog:
     """
     Similar to nixlog, with underlying
     functionality ported to support Windows.

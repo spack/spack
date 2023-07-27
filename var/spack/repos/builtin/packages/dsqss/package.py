@@ -50,13 +50,17 @@ class Dsqss(CMakePackage):
 
         return args
 
-    def test(self):
+    def test_dla(self):
+        """prepare, run, and confirm dla results"""
         test01 = find(self.prefix.share, "01_spindimer")[0]
         copy(join_path(test01, "std.toml"), ".")
+
         # prepare
-        pythonexe = self.spec["python"].command.path
+        python = self.spec["python"].command
         opts = [self.spec.prefix.bin.dla_pre, "std.toml"]
-        self.run_test(pythonexe, options=opts)
+        with test_part(self, "test_dla_pre", purpose="prepare dla"):
+            python(*opts)
+
         # (mpi) run
         opts = []
         if self.spec.satisfies("+mpi"):
@@ -66,6 +70,11 @@ class Dsqss(CMakePackage):
         else:
             exe_name = "dla"
         opts.append("param.in")
-        expected = ["R ene = -3.74300000e-01 2.96344394e-03"]
-        self.run_test(exe_name, options=opts)
-        self.run_test("cat", options=["sample.log"], expected=expected)
+        with test_part(self, "test_dla_run", purpose="run dla"):
+            exe = which(exe_name)
+            exe(*opts)
+
+        with test_part(self, "test_dla_results", purpose="confirming dla results"):
+            cat = which("cat")
+            out = cat("sample.log", output=str.split, error=str.split)
+            assert "R ene = -3.74300000e-01 2.96344394e-03" in out

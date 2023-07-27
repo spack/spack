@@ -26,7 +26,6 @@ class PySetuptoolsCpp(PythonPackage):
     depends_on("py-chardet", type=("build", "run"))
     depends_on("py-certifi", type=("build", "run"))
     depends_on("py-click", type=("build", "run"))
-    depends_on("py-codecov", type=("build", "run"))
     depends_on("py-coverage", type=("build", "run"))
     depends_on("py-entrypoints", type=("build", "run"))
     depends_on("py-flake8", type=("build", "run"))

@@ -179,6 +179,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("EXAGO_ENABLE_IPOPT", "ipopt"),
                 self.define_from_variant("EXAGO_ENABLE_PYTHON", "python"),
                 self.define_from_variant("EXAGO_ENABLE_LOGGING", "logging"),
+                self.define("LAPACK_LIBRARIES", spec["lapack"].libs + spec["blas"].libs),
             ]
         )
 

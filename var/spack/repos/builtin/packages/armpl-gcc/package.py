@@ -36,49 +36,49 @@ _os_map = {
 }
 
 _versions = {
-    "23.04_gcc-12.2": {
-        "RHEL-7": ("e159f84f14d885aa5e47ca17c16ef3d95128f834a655827bf6b48fcf8d6ec459"),
-        "RHEL-8": ("6ac1974ec9bd814d3a4eecf330cefd67cf2c878f026a8b04bc2928368948671a"),
-        "RHEL-9": ("71fc8ac9e48ec531b24d5641481070daa8561a5c0373dfbd8915847c8b45641c"),
-        "SLES-15": ("b26a22123294c161519dce398869626e6a793ce94b76648cce46b0111d17d215"),
-        "Ubuntu-20.04": ("c410e1aebb1465f8ae7b264fa74f847137e3c1d9f28c1a9332bf69c59b6f9eec"),
-        "Ubuntu-22.04": ("9f9179336d14ea253462701c96c13d0b01b7c8a09a3fb987c0b22ad647598410"),
-        "AmazonLinux-2": ("3ef5556d7ac5a269af432eb24ed25d2504bcd0070f8b899231f2a45cea6f1a1d"),
-        "AmazonLinux-2023": ("037c70ffdcbdf152ddcb7a4f9e1e1acb7c6cd7ea7337966a2b101e684493653d"),
+    "23.04.1_gcc-12.2": {
+        "RHEL-7": ("789cc093cb7e0d9294aff0fdf94b74987435a09cdff4c1b7118a03350548d03c"),
+        "RHEL-8": ("1b668baec6d3df2d48c5aedc70baa6a9b638983b94bf2cd58d378859a1da49f0"),
+        "RHEL-9": ("8a4d7aec2fe109aedcb9e8fdec566dc1ba3adcb3ba79e5c08b78b9717578db1c"),
+        "SLES-15": ("9c8aa114907d3ac9311301b991d732d535422e73516e0f337395637ce6a14c4a"),
+        "Ubuntu-20.04": ("c0a67afb6989b2bdb172052ff7d20a9e3197356714df06c862edd3ac71ef62f0"),
+        "Ubuntu-22.04": ("02e59d834c341164f5acf633555024bf614726aed8a85c1b0b46d024ce7840e2"),
+        "AmazonLinux-2": ("1cbb9a3d777353b42bfb5af327419c231640e7744ab46ab3a13e97802b1ce227"),
+        "AmazonLinux-2023": ("ee9b0b6ee0d881280e473390007020504a147b75bf6076d245832f101b01653e"),
     },
-    "23.04_gcc-11.3": {
-        "RHEL-7": ("75f53d160c2254db38f670e86b5381b6d4d778cb0325bfc6fed772c1a8f4c7d7"),
-        "RHEL-8": ("3d10bd5d3b82a2affcea94fdb235eb046c622abf82306682aabdf3abd9e8fc4e"),
-        "RHEL-9": ("df3a7c3571af2e6c3e071cf88afdc3352cd32428c22859d833e68afb3d39b4de"),
-        "SLES-15": ("6dda1320be97d4e5bd2f192b8c6743a6975aab17499554d5506506a620f27e04"),
-        "Ubuntu-20.04": ("57cc91b3b43fd663f827f5a2f3e2b3bddf76ea0f80d95e227a95d961fae64b5d"),
-        "Ubuntu-22.04": ("aa56ea09ded38e17bf26ea449b5d45fb112b0feb34a5408c629fe030011c83a4"),
-        "AmazonLinux-2": ("26494f69237eaf123356b41265f6531d8049dd7aa04898e7b3cd3e8d67d2f25a"),
-        "AmazonLinux-2023": ("30a1a7d14b567c2e68b11cf40890d09899d4cb5fdc3605b9a0c271867ff0f4b9"),
+    "23.04.1_gcc-11.3": {
+        "RHEL-7": ("522e0269ca03d6251c10ee3aa8d94ceec4618887f47847defb535849434439a5"),
+        "RHEL-8": ("00f6fee4ba4bbff5be6d5ad34137973ab89505fc61a23d8e0c302b8860c70484"),
+        "RHEL-9": ("2402165267b25d07fd64b6d444b3120354dfd27594b11a1f082e85e76465e712"),
+        "SLES-15": ("a928539efe5af760fc86a009e3d87c9648e4d4e91490c13bc136a837591549c3"),
+        "Ubuntu-20.04": ("5754d8a6040bb6d0b1df326c9ab61901a72e5cc6d2d4195e52ca9271e55fb9f6"),
+        "Ubuntu-22.04": ("8af5aca7512a604b051a7808701a5c0285e92d88232138612d8caf973b7b1252"),
+        "AmazonLinux-2": ("8c710cb7bb21694130b915cc2650cfb85fb00cfca7e5fca9bbdec5c59a09c007"),
+        "AmazonLinux-2023": ("8b9c69a72c5b1ed5814e28ddd122ab09dbe5dd3585e4c395242ed590eea6ea79"),
     },
-    "23.04_gcc-10.2": {
-        "RHEL-7": ("08bb8a78dc27989e044f5154744355699e2896d60ae8838b0e6ce4318a9462ab"),
-        "RHEL-8": ("29415b6d6bce9176aa372ac794769541775573f8302e801a4bf5cdfad5b07851"),
-        "SLES-15": ("aa3ea267a4d02a9c01fa9ef9fd5ac9e0b8687bac8b19047b52ea57ca587ee838"),
-        "Ubuntu-20.04": ("d68a66d85e4cd7e99b66308fe563a623b902e49cb01a2ba0342f575beb192a55"),
-        "AmazonLinux-2": ("a9eded299ea08ba32c91b6e99e1fe24240fcbee0a60696d1dba6d20b2bb39d5c"),
+    "23.04.1_gcc-10.2": {
+        "RHEL-7": ("40d62517bd978516c308b2e57ab88772699fd8bb579d98bbc10ea397c0bab431"),
+        "RHEL-8": ("76554ea1f3d143f1236afea67e33eea74660f57718ef57c12986843da75e03d3"),
+        "SLES-15": ("63a6acb00300a9e85cfafd2141515ecb28dac82c1f441778d74e8add038724e2"),
+        "Ubuntu-20.04": ("7b6bcb8d1b9ca8be2d29e7620862fa961d965f479fa04873616ac8cc9bb399fc"),
+        "AmazonLinux-2": ("c6410ce2c109ae72568186bb7e162fcf4a9b05ea89da36d17db695b7df34f506"),
     },
-    "23.04_gcc-9.3": {
-        "RHEL-7": ("0550fafeecfd8a23500f8fdd3cddf49ed574ae274894f2ca7935a69618dbd418"),
-        "RHEL-8": ("d041b3b8ffd4752f0180999bdfc3c6764659097f0b042482bc1058d4c9a504cb"),
-        "SLES-15": ("dcf8107423dc54068765a3e5f39bfed18df1c9662743f93c785554d0a223a727"),
-        "Ubuntu-20.04": ("577dc2ceb34f1e0aaf3e28953ed406de02e3e245eeafd7f9d6666866509fb1a1"),
-        "AmazonLinux-2": ("50df0ee6067c2d3b888545beaa34936bb3b8a8736d52535badf2ab48acc866e2"),
+    "23.04.1_gcc-9.3": {
+        "RHEL-7": ("782bbc27c77c230426086c226a78b8951501066d631947438e65ca51d33f24c3"),
+        "RHEL-8": ("8d3be6381b3e5032c5068a1d2e3d0e69c308a93496f85af42d43a579f9f7d9a3"),
+        "SLES-15": ("abe2245674a66ec93cff3c93dac7ae04a99c6c7e43e2733de214ec188e0d6cae"),
+        "Ubuntu-20.04": ("a7d385b901f2d1c07f243c816030ad19543e00667615dea1969ce16d29759271"),
+        "AmazonLinux-2": ("7113b6e2c795933ce8d18d468889168732d3a52a0df4a48ef4bf4497e891083a"),
     },
-    "23.04_gcc-8.2": {
-        "RHEL-7": ("a579d3790c60ff05952cf4f778089843555413686037ab8b743c2756df8c4070"),
-        "RHEL-8": ("6c90eb65cdd472a16eaebbcd7455840048814ced5986f31a0daaf10f9a2d33fd"),
-        "SLES-15": ("9c3a8323f47db78128751ae74fb3dea11b6237d8433aae0c6e2c8e7951c3ea00"),
-        "AmazonLinux-2": ("02819c958976530e6363d629c5b6d5097892eef5ee4904e27b25e18f52e08c17"),
+    "23.04.1_gcc-8.2": {
+        "RHEL-7": ("4e077813121c1cbd8abd1afe5348cafcce5b70f96affa725c7c2d8671e2d5eed"),
+        "RHEL-8": ("772aaab9304191e3a398cba2dec21ec22fd0abadcaf44d44f32114968bd3b59d"),
+        "SLES-15": ("33766ac351fb4628c6b39f16d6bdb310ad09d88b6a6f43740349405c960d4d21"),
+        "AmazonLinux-2": ("c215ed8de77b5144a60b6552f79ef2b59ccbfac5350f083ef135305ddf643a4e"),
     },
-    "23.04_gcc-7.5": {
-        "RHEL-7": ("2141340617d9a053ed03f9da5b1a787bc96bf065eceee3bf350184a4d3fd8a44"),
-        "AmazonLinux-2": ("27dfc5f52e6c44a84d99b6d0841e526ea9ff5878262094760c3c82a6863eceb4"),
+    "23.04.1_gcc-7.5": {
+        "RHEL-7": ("7b2239b2ce5315e1be14dbd8fe15aff2d3b07968d64b5c80c8ab57140b6a17a8"),
+        "AmazonLinux-2": ("a2e0f176df627c50f851924ac57994f582f63b0f3d42ad0b65c915ea04dc0467"),
     },
     "22.1_gcc-11.2": {
         "RHEL-7": ("9ce7858525109cca8f4e1d533113b6410d55f10cc4db16c4742562da87a32f2b"),
@@ -210,7 +210,7 @@ class ArmplGcc(Package):
     high-performance computing applications on Arm processors."""
 
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries"
-    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/22-1/ubuntu-20/arm-performance-libraries_22.1_Ubuntu-20.04_gcc-11.2.tar"
+    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/23-04-1/ubuntu-22/arm-performance-libraries_23.04.1_Ubuntu-22.04_gcc-12.2.tar"
 
     maintainers("annop-w")
 
@@ -225,12 +225,12 @@ class ArmplGcc(Package):
     conflicts("target=ppc64:", msg="Only available on Aarch64")
     conflicts("target=ppc64le:", msg="Only available on Aarch64")
 
-    conflicts("%gcc@:11", when="@23.04_gcc-12.2")
-    conflicts("%gcc@:10", when="@23.04_gcc-11.3")
-    conflicts("%gcc@:9", when="@23.04_gcc-10.2")
-    conflicts("%gcc@:8", when="@23.04_gcc-9.3")
-    conflicts("%gcc@:7", when="@23.04_gcc-8.2")
-    conflicts("%gcc@:6", when="@23.04_gcc-7.5")
+    conflicts("%gcc@:11", when="@23.04.1_gcc-12.2")
+    conflicts("%gcc@:10", when="@23.04.1_gcc-11.3")
+    conflicts("%gcc@:9", when="@23.04.1_gcc-10.2")
+    conflicts("%gcc@:8", when="@23.04.1_gcc-9.3")
+    conflicts("%gcc@:7", when="@23.04.1_gcc-8.2")
+    conflicts("%gcc@:6", when="@23.04.1_gcc-7.5")
 
     conflicts("%gcc@:10", when="@22.1_gcc-11.2")
     conflicts("%gcc@:9", when="@22.1_gcc-10.2")

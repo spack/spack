@@ -17,6 +17,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    version("0.16.0", sha256="59f2baec91cc9bf71ca96d21d0da1ec0092bf59da106efa51789089e0d7adcbb")
     version("0.15.1", sha256="b68b87cf956ad1448f5c2327a72ba4d9fb339ecabeabb0a87b8ea819457e293b")
     version("0.15.0", sha256="4ecd5b64bd8067283a161e1aeacfbab7658d89fe1504b788fd3236298fe66b00")
     version("0.14.0", sha256="c0fc10a3c2c24bccbdc292c22a3373a2ad579583ee9d8bd31aaf1755e49958a4")
@@ -90,8 +91,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("boost@1.71:")
     depends_on("fmt@9:", when="@0.11:")
     # https://github.com/pika-org/pika/issues/686
-    conflicts("fmt@10:", when="+cuda")
-    conflicts("fmt@10:", when="+rocm")
+    conflicts("fmt@10:", when="@:0.15 +cuda")
+    conflicts("fmt@10:", when="@:0.15 +rocm")
     depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")

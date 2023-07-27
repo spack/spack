@@ -145,23 +145,39 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def test_install(self):
+    def check_install(self):
         if "conduits=smp" in self.spec:
             make("-C", "smp-conduit", "run-tests")
-        if "conduits=none" not in self.spec:
-            self.run_test(
-                join_path(self.prefix.tests, "testtools"),
-                expected=["Done."],
-                status=0,
-                installed=True,
-                purpose="Running testtools",
-            )
+        self.test_testtools()
 
-    def test(self):
+    def _setup_test_env(self):
+        """Set up key stand-alone test environment variables."""
+        os.environ["GASNET_VERBOSEENV"] = "1"  # include diagnostic info
+
+        # The following are not technically relevant to test_testtools
+        os.environ["GASNET_SPAWN_VERBOSE"] = "1"  # include spawning diagnostics
+        if "GASNET_SSH_SERVERS" not in os.environ:
+            os.environ["GASNET_SSH_SERVERS"] = "localhost " * 4
+
+    def test_testtools(self):
+        """run testtools and check output"""
         if "conduits=none" in self.spec:
-            spack.main.send_warning_to_tty("No conduit libraries built -- SKIPPED")
-            return
+            raise SkipTest("Test requires conduit libraries")
 
+        testtools_path = join_path(self.prefix.tests, "testtools")
+        assert os.path.exists(testtools_path), "Test requires testtools"
+
+        self._setup_test_env()
+        testtools = which(testtools_path, required=True)
+        out = testtools(output=str.split, error=str.split)
+        assert "Done." in out
+
+    def test_testgasnet(self):
+        """run testgasnet and check output"""
+        if "conduits=none" in self.spec:
+            raise SkipTest("Test requires conduit libraries")
+
+        self._setup_test_env()
         ranks = "4"
         spawner = {
             "smp": ["env", "GASNET_PSHM_NODES=" + ranks],
@@ -172,27 +188,18 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
             "udp": [join_path(self.prefix.bin, "amudprun"), "-spawn", "L", "-np", ranks],
         }
 
-        os.environ["GASNET_VERBOSEENV"] = "1"  # include diagnostic info
-        os.environ["GASNET_SPAWN_VERBOSE"] = "1"  # include spawning diagnostics
-        if "GASNET_SSH_SERVERS" not in os.environ:
-            os.environ["GASNET_SSH_SERVERS"] = "localhost " * 4
-
-        self.run_test(
-            join_path(self.prefix.tests, "testtools"),
-            expected=["Done."],
-            status=0,
-            installed=True,
-            purpose="Running testtools",
-        )
-
+        expected = "done."
         for c in self.spec.variants["conduits"].value:
             os.environ["GASNET_SUPERNODE_MAXSIZE"] = "0" if (c == "smp") else "1"
             test = join_path(self.prefix.tests, c, "testgasnet")
-            self.run_test(
-                spawner[c][0],
-                spawner[c][1:] + [test],
-                expected=["done."],
-                status=0,
-                installed=(c != "smp"),
-                purpose="Running %s-conduit/testgasnet" % c,
-            )
+
+            with test_part(
+                self,
+                "test_testgasnet_{0}".format(c),
+                purpose="run {0}-conduit/testgasnet".format(c),
+            ):
+                exe = which(spawner[c][0], required=True)
+
+                args = spawner[c][1:] + [test]
+                out = exe(*args, output=str.split, error=str.split)
+                assert expected in out

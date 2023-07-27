@@ -4,6 +4,16 @@ default:
   image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
 
 # CI Platform-Arch
+.cray_rhel_zen4:
+  variables:
+    SPACK_TARGET_PLATFORM: "cray-rhel"
+    SPACK_TARGET_ARCH: "zen4"
+
+.cray_sles_zen4:
+  variables:
+    SPACK_TARGET_PLATFORM: "cray-sles"
+    SPACK_TARGET_ARCH: "zen4"
+
 .darwin_x86_64:
   variables:
     SPACK_TARGET_PLATFORM: "darwin"
@@ -57,6 +67,7 @@ default:
       variables:
         SPACK_PIPELINE_TYPE: "spack_protected_branch"
         SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+        SPACK_REQUIRE_SIGNING: "True"
         AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
     - if: $CI_COMMIT_REF_NAME =~ /^releases\/v.*/
@@ -67,6 +78,7 @@ default:
         SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
         SPACK_PRUNE_UNTOUCHED: "False"
         SPACK_PRUNE_UP_TO_DATE: "False"
+        SPACK_REQUIRE_SIGNING: "True"
         AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
     - if: $CI_COMMIT_TAG =~ /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/ || $CI_COMMIT_TAG =~ /^v.*/
@@ -245,6 +257,11 @@ protected-publish:
 # you should inlclude your custom definitions at the end of the of the
 # extends list.
 #
+# Also note that if extending .base-job, the mirror url given in your
+# spack.yaml should take the form:
+#
+#     s3://spack-binaries/develop/${SPACK_CI_STACK_NAME}
+#
 ########################################
 # My Super Cool Pipeline
 ########################################
@@ -324,7 +341,7 @@ gpu-tests-build:
 
 e4s-oneapi-generate:
   extends: [ ".e4s-oneapi", ".generate"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2023-01-01
+  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2023.07.21
 
 e4s-oneapi-build:
   extends: [ ".e4s-oneapi", ".build" ]
@@ -483,55 +500,6 @@ data-vis-sdk-build:
   needs:
     - artifacts: True
       job: data-vis-sdk-generate
-
-########################################
-# AWS AHUG Applications (x86_64)
-########################################
-
-# Include this AFTER .*-generate in "extends" lists
-.aws-ahug-overrides:
-  # This controls image for generate step; build step is controlled by spack.yaml
-  # Note that generator emits OS info for build so these should be the same.
-  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
-
-.aws-ahug:
-  extends: [ ".linux_x86_64_v3" ]
-  variables:
-    SPACK_CI_STACK_NAME: aws-ahug
-
-aws-ahug-generate:
-  extends: [ ".aws-ahug", ".generate", ".aws-ahug-overrides", ".tags-x86_64_v4" ]
-
-aws-ahug-build:
-  extends: [ ".aws-ahug", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-ahug-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-ahug-generate
-
-# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
-.aws-ahug-aarch64:
-  extends: [ ".linux_aarch64" ]
-  variables:
-    SPACK_CI_STACK_NAME: aws-ahug-aarch64
-
-aws-ahug-aarch64-generate:
-  extends: [ ".aws-ahug-aarch64", ".generate-aarch64", ".aws-ahug-overrides" ]
-
-aws-ahug-aarch64-build:
-  extends: [ ".aws-ahug-aarch64", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-ahug-aarch64-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-ahug-aarch64-generate
 
 ########################################
 # AWS ISC Applications (x86_64)
@@ -731,12 +699,15 @@ deprecated-ci-build:
     # Use gcc from local container buildcache
     - - . "./share/spack/setup-env.sh"
       - . /etc/profile.d/modules.sh
+      - spack buildcache rebuild-index /bootstrap/local-cache/
       - spack mirror add local-cache /bootstrap/local-cache
       - spack gpg trust /bootstrap/public-key
       - cd "${CI_PROJECT_DIR}" && curl -sOL https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh
       - sed -i -e "s/spack arch -t/echo ${SPACK_TARGET_ARCH}/g" postinstall.sh
+      - sed -i.bkp s/"spack install gcc"/"spack install --cache-only --reuse gcc"/ postinstall.sh
+      - diff postinstall.sh postinstall.sh.bkp || echo Done
       - /bin/bash postinstall.sh -fg
-      - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
+      - spack config --scope site add "packages:all:target:[${SPACK_TARGET_ARCH}]"
   after_script:
     - - mv "${CI_PROJECT_DIR}/postinstall.sh" "${CI_PROJECT_DIR}/jobs_scratch_dir/"
 
@@ -745,73 +716,191 @@ deprecated-ci-build:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-icelake
 
-aws-pcluster-generate-icelake:
-  extends: [ ".linux_icelake", ".aws-pcluster-icelake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+# aws-pcluster-generate-icelake:
+#   extends: [ ".linux_icelake", ".aws-pcluster-icelake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
-aws-pcluster-build-icelake:
-  extends: [ ".linux_icelake", ".aws-pcluster-icelake", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-pcluster-generate-icelake
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-pcluster-generate-icelake
+# aws-pcluster-build-icelake:
+#   extends: [ ".linux_icelake", ".aws-pcluster-icelake", ".build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: aws-pcluster-generate-icelake
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: aws-pcluster-generate-icelake
 
 # Skylake_avx512 (one pipeline per target)
 .aws-pcluster-skylake:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-skylake
 
-aws-pcluster-generate-skylake:
-  extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+# aws-pcluster-generate-skylake:
+#   extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
-aws-pcluster-build-skylake:
-  extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-pcluster-generate-skylake
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-pcluster-generate-skylake
+# aws-pcluster-build-skylake:
+#   extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: aws-pcluster-generate-skylake
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: aws-pcluster-generate-skylake
 
 # Neoverse_n1 (one pipeline per target)
 .aws-pcluster-neoverse_n1:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-neoverse_n1
 
-aws-pcluster-generate-neoverse_n1:
-  extends: [ ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+# aws-pcluster-generate-neoverse_n1:
+#   extends: [ ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
-aws-pcluster-build-neoverse_n1:
-  extends: [  ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-pcluster-generate-neoverse_n1
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-pcluster-generate-neoverse_n1
+# aws-pcluster-build-neoverse_n1:
+#   extends: [  ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: aws-pcluster-generate-neoverse_n1
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: aws-pcluster-generate-neoverse_n1
 
 # Neoverse_v1 (one pipeline per target)
 .aws-pcluster-neoverse_v1:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-neoverse_v1
 
-aws-pcluster-generate-neoverse_v1:
-  extends: [ ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+# aws-pcluster-generate-neoverse_v1:
+#   extends: [ ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
-aws-pcluster-build-neoverse_v1:
-  extends: [  ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".build" ]
+# aws-pcluster-build-neoverse_v1:
+#   extends: [  ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: aws-pcluster-generate-neoverse_v1
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: aws-pcluster-generate-neoverse_v1
+
+# Cray definitions
+.base-cray-job:
+  variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-cray/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    AWS_ACCESS_KEY_ID: ${CRAY_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${CRAY_MIRRORS_AWS_SECRET_ACCESS_KEY}
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "develop"
+      # Pipelines on develop only rebuild what is missing from the mirror
+      when: always
+      variables:
+        SPACK_PIPELINE_TYPE: "spack_protected_branch"
+        SPACK_REQUIRE_SIGNING: "True"
+    - if: $CI_COMMIT_REF_NAME =~ /^pr[\d]+_.*$/
+      # Pipelines on PR branches rebuild only what's missing, and do extra pruning
+      when: always
+      variables:
+        SPACK_PIPELINE_TYPE: "spack_pull_request"
+        SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-cray/prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+        SPACK_PRUNE_UNTOUCHED: "True"
+        SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
+
+.generate-cray:
+  extends: [ ".base-cray-job" ]
+  stage: generate
+  script:
+    - echo $PATH
+    - module avail
+    - module list
+    - export SPACK_DISABLE_LOCAL_CONFIG=1
+    - export SPACK_USER_CACHE_PATH=$(pwd)/_user_cache
+    - uname -a || true
+    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+    - nproc || true
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - export SPACK_CI_CONFIG_ROOT="${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
+    - spack
+      --config-scope "${SPACK_CI_CONFIG_ROOT}"
+      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
+      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
+      ${CI_STACK_CONFIG_SCOPES}
+      ci generate --check-index-only
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  after_script:
+    - cat /proc/loadavg || true
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  interruptible: true
+  timeout: 60 minutes
+  retry:
+    max: 2
+    when:
+      - always
+
+.generate-cray-rhel:
+  tags: [ "cray-rhel-zen4", "public" ]
+  extends: [ ".generate-cray" ]
+
+.generate-cray-sles:
+  tags: [ "cray-sles-zen4", "public" ]
+  extends: [ ".generate-cray" ]
+
+
+.build-cray:
+  extends: [ ".base-cray-job" ]
+  stage: build
+
+
+#######################################
+# E4S - Cray RHEL
+#######################################
+.e4s-cray-rhel:
+  extends: [ ".cray_rhel_zen4" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-cray-rhel
+
+e4s-cray-rhel-generate:
+  extends: [ ".generate-cray-rhel", ".e4s-cray-rhel" ]
+
+e4s-cray-rhel-build:
+  extends: [ ".build-cray", ".e4s-cray-rhel" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-pcluster-generate-neoverse_v1
+        job: e4s-cray-rhel-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: aws-pcluster-generate-neoverse_v1
+      job: e4s-cray-rhel-generate
+
+#######################################
+# E4S - Cray SLES
+#######################################
+.e4s-cray-sles:
+  extends: [ ".cray_sles_zen4" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-cray-sles
+
+e4s-cray-sles-generate:
+  extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
+
+e4s-cray-sles-build:
+  extends: [ ".build-cray", ".e4s-cray-sles" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-sles-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-sles-generate
