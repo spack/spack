@@ -16,14 +16,15 @@ class RocmDbgapi(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCdbgapi"
     git = "https://github.com/ROCm-Developer-Tools/ROCdbgapi.git"
-    url = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm-dbgapi"]
 
     version("master", branch="amd-master")
-
+    version("5.5.1", sha256="c41dfc62591bcf42003fe744d8bd03a51311d54e4b012f946ca0ede0c14dd977")
+    version("5.5.0", sha256="ce572340a3fe99e4f1538eb614933153456003f8dfe9306a5735cdd25b451e25")
     version("5.4.3", sha256="d647c9121a50f2c54367c567d8f39a145cb135e1ceed931581659f57f49f61e5")
     version("5.4.0", sha256="895eb7056864daada40c3f9cd37645b0bdf4b6dc408b5f8cc974fc4cd9ab7ccb")
     version("5.3.3", sha256="3c81cb23fe671d391557a63c13b6a13d4dc367db5cb5de55592a6758284d8a3f")
@@ -105,6 +106,7 @@ class RocmDbgapi(CMakePackage):
     )
 
     depends_on("cmake@3:", type="build")
+    depends_on("hwdata", when="@5.5.0:")
 
     for ver in [
         "3.5.0",
@@ -130,10 +132,15 @@ class RocmDbgapi(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
         "master",
     ]:
         depends_on("hsa-rocr-dev@" + ver, type="build", when="@" + ver)
         depends_on("comgr@" + ver, type=("build", "link"), when="@" + ver)
+
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
 
     @classmethod
     def determine_version(cls, lib):

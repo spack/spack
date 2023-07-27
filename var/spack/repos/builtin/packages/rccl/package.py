@@ -16,12 +16,13 @@ class Rccl(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rccl"
     git = "https://github.com/ROCmSoftwarePlatform/rccl.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librccl"]
-
+    version("5.5.1", sha256="f6b9dc6dafeb49d95c085825876b09317d8252771c746ccf5aa19a9204a404b2")
+    version("5.5.0", sha256="be2964b408741d046bcd606d339a233d1d1deac7b841647ec53d6d62d71452ba")
     version("5.4.3", sha256="a2524f602bd7b3b6afeb8ba9aff660216ee807fa836e46442d068b5ed5f51a4d")
     version("5.4.0", sha256="213f4f3d75389be588673e43f563e5c0d6908798228b0b6a71f27138fd4ed0c7")
     version("5.3.3", sha256="8995a2d010ad0748fc85ac06e8da7e8d110ba996db04d42b77526c9c059c05bb")
@@ -135,6 +136,8 @@ class Rccl(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -164,6 +167,8 @@ class Rccl(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("numactl@2:", when="@" + ver)
     for ver in [
@@ -180,9 +185,14 @@ class Rccl(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.1",
     ]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
         depends_on("chrpath", when="@5.3.0:")
+
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+    depends_on("googletest@1.11.0:", when="@5.3:")
 
     @classmethod
     def determine_version(cls, lib):
