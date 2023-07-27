@@ -429,13 +429,24 @@ class RemovePath(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemovePath: {self.name}-{str(self.value)}", level=3)
         environment_value = env.get(self.name, "")
-        directories = environment_value.split(self.separator) if environment_value else []
+        # Short circuit here, if there is no env value for the modification
+        # we are trying to make, we shouldn't continue trying to modify
+        if not environment_value:
+            return
+        directories = environment_value.split(self.separator)
         directories = [
             path_to_os_path(os.path.normpath(x)).pop()
             for x in directories
             if x != path_to_os_path(os.path.normpath(self.value)).pop()
         ]
-        env[self.name] = self.separator.join(directories)
+        # If the path only has a single value, that is the value
+        # being unset here, clear out the variable to
+        # indicate it should be unset entirely
+        env_path = self.separator.join(directories)
+        if env_path:
+            env[self.name] = env_path
+        else:
+            env.pop(self.name)
 
 
 class DeprioritizeSystemPaths(NameModifier):
