@@ -22,7 +22,7 @@ class Mongodb(SConsPackage):
     requires(
         "%gcc", "%clang", policy="one_of", msg="<myNicePackage> builds only with GCC or Clang"
     )
-
+    depends_on("xz")
     depends_on("curl")
     depends_on("py-cryptography@36.0.1")
     depends_on("py-requirements-parser")
@@ -74,7 +74,7 @@ class Mongodb(SConsPackage):
         for dep in spec.dependencies(deptype="link"):  # iterate through the dependencies
             query = self.spec[dep.name]
             lib = query.prefix.lib
-            if dep.name.startswith("curl") or dep.name.startswith("ninja"):
+            if dep.name in ["curl", "ninja", "xz"]:
                 # For the non python packages, we just extract the
                 # package-prefix/lib and package-prefix/include
                 try:
@@ -106,7 +106,7 @@ class Mongodb(SConsPackage):
             "MONGO_VERSION=6.2.0",
             "CC=%s" % self.compiler.cc,
             "CXX=%s" % self.compiler.cxx,
-            "CCFLAGS=%s" % CXXFLAGS,
+            "CCFLAGS=%s" % CXXFLAGS + " " + LINKFLAGS,
             "LINKFLAGS=%s" % LINKFLAGS,
         )
 
