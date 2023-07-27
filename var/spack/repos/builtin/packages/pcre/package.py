@@ -28,6 +28,8 @@ class Pcre(AutotoolsPackage, CMakePackage):
     maintainers("drkennetz")
     patch("intel.patch", when="@8.38")
 
+    build_system("autotools", "cmake", default="autotools")
+
     variant("jit", default=False, description="Enable JIT support.")
 
     variant("multibyte", default=True, description="Enable support for 16 and 32 bit characters.")
