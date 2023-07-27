@@ -13,11 +13,13 @@ class RocmTensile(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/Tensile/"
     git = "https://github.com/ROCmSoftwarePlatform/Tensile.git"
-    url = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
+    version("5.5.1", sha256="b65cb7335abe51ba33be9d46a5ede992b4e5932fa33797397899a6bf33a770e9")
+    version("5.5.0", sha256="70fd736d40bb4c3461f07c77ad3ae6c485e3e842671ce9b223d023d836884ae2")
     version("5.4.3", sha256="a4c5e62edd33ea6b8528eb3f017a14c28eaa67c540f5c9023f6a245340198b0f")
     version("5.4.0", sha256="2da9c1df3c6d9b44afdad621ef59a03389fb1a38a61a8b8bad9c9991b97157eb")
     version("5.3.3", sha256="ecb99243edf1cd2bb5e953915a7dae7867c3cdb0cd8ed15b8618aaaeb2bd7b29")
@@ -147,13 +149,26 @@ class RocmTensile(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
         depends_on("rocminfo@" + ver, type="build", when="@" + ver)
-
-    for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3", "5.4.0", "5.4.3"]:
+    for ver in [
+        "5.1.0",
+        "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+    ]:
         depends_on("rocm-openmp-extras@" + ver, when="@" + ver)
 
     for ver in ["3.5.0", "3.7.0", "3.8.0", "3.9.0"]:
@@ -178,6 +193,8 @@ class RocmTensile(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-smi-lib@" + ver, type="build", when="@" + ver)
 
@@ -190,6 +207,7 @@ class RocmTensile(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+        env.append_flags("LDFLAGS", "-pthread")
 
     def get_gpulist_for_tensile_support(self):
         arch = self.spec.variants["tensile_architecture"].value
