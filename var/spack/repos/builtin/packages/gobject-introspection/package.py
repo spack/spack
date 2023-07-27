@@ -44,7 +44,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     depends_on("glib@2.48.1", when="@1.48.0")
     # version 1.76.1 build fails with glib < 2.76.0
     # https://github.com/spack/spack/issues/39113
-    depends_on("glib@2.76.0", when="@1.76.1:")
+    depends_on("glib@2.76.0:", when="@1.76.1:")
     depends_on("libffi")
     # https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/283
     depends_on("libffi@:3.3", when="@:1.72")  # libffi 3.4 caused seg faults
