@@ -18,14 +18,15 @@ class Hip(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/HIP"
     git = "https://github.com/ROCm-Developer-Tools/HIP.git"
-    url = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libamdhip64"]
 
     version("master", branch="master")
-
+    version("5.5.1", sha256="1f5f6bb72d8d64335ccc8242ef2e2ea8efeb380cce2997f475b1ee77528d9fb4")
+    version("5.5.0", sha256="5b0d0253e62f85cc21d043513f7c11c64e4a4ec416159668f0b160d732d09a3c")
     version("5.4.3", sha256="23e51d3af517cd63019f8d199e46b84d5a18251d148e727f3985e8d99ccb0e58")
     version("5.4.0", sha256="e290f835d69ef23e8b5833a7e616b0a989ff89ada4412d9742430819546efc6c")
     version("5.3.3", sha256="51d4049dc37d261afb9e1270e60e112708ff06b470721ff21023e16e040e4403")
@@ -106,13 +107,6 @@ class Hip(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     variant("rocm", default=True, description="Enable ROCm support")
     variant("cuda", default=False, description="Build with CUDA")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
@@ -164,6 +158,8 @@ class Hip(CMakePackage):
             "5.3.3",
             "5.4.0",
             "5.4.3",
+            "5.5.0",
+            "5.5.1",
         ]:
             depends_on("hsakmt-roct@" + ver, when="@" + ver)
             depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -172,8 +168,11 @@ class Hip(CMakePackage):
             depends_on("rocminfo@" + ver, when="@" + ver)
             depends_on("roctracer-dev-api@" + ver, when="@" + ver)
 
-        for ver in ["5.4.0", "5.4.3"]:
+        for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
             depends_on("hipify-clang", when="@" + ver)
+
+        for ver in ["5.5.0", "5.5.1"]:
+            depends_on("rocm-core@" + ver, when="@" + ver)
         # hipcc likes to add `-lnuma` by default :(
         # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")
@@ -184,6 +183,8 @@ class Hip(CMakePackage):
 
     # Add hip-amd sources thru the below
     for d_version, d_shasum in [
+        ("5.5.1", "9c8cb7611b3a496a0e9db92269143ee33b608eb69a8384957ace04e135ac90e9"),
+        ("5.5.0", "bf87ed3919987c1a3a3f293418d26b65b3f02b97464e48f0cfcdd8f35763a0b7"),
         ("5.4.3", "475edce0f29c4ccd82e5ee21d4cce4836f2b1e3b13cbc891475e423d38a0ebb9"),
         ("5.4.0", "c4b79738eb6e669160382b6c47d738ac59bd493fc681ca400ff012a2e8212955"),
         ("5.3.3", "36acce92af39b0fa06002e164f5a7f5a9c7daa19bf96645361325775a325499d"),
@@ -211,6 +212,8 @@ class Hip(CMakePackage):
         )
     # Add opencl sources thru the below
     for d_version, d_shasum in [
+        ("5.5.1", "a8a62a7c6fc5398406d2203b8cb75621a24944688e545d917033d87de2724498"),
+        ("5.5.0", "0df9fa0b8aa0c8e6711d34eec0fdf1ed356adcd9625bc8f1ce9b3e72090f3e4f"),
         ("5.4.3", "b0f8339c844a2e62773bd85cd1e7c5ecddfe71d7c8e8d604e1a1d60900c30873"),
         ("5.4.0", "a294639478e76c75dac0e094b418f9bd309309b07faf6af126cdfad9aab3c5c7"),
         ("5.3.3", "cab394e6ef16c35bab8de29a66b96a7dc0e7d1297aaacba3718fa1d369233c9f"),
@@ -237,6 +240,8 @@ class Hip(CMakePackage):
             when="@{0}".format(d_version),
         )
     for d_version, d_shasum in [
+        ("5.5.1", "1375fc7723cfaa0ae22a78682186d4804188b0a54990bfd9c0b8eb421b85e37e"),
+        ("5.5.0", "efbae9a1ef2ab3de5ca44091e9bb78522e76759c43524c1349114f9596cc61d1"),
         ("5.4.3", "71d9668619ab57ec8a4564d11860438c5aad5bd161a3e58fbc49555fbd59182d"),
         ("5.4.0", "46a1579310b3ab9dc8948d0fb5bed4c6b312f158ca76967af7ab69e328d43138"),
         ("5.3.3", "f8133a5934f9c53b253d324876d74f08a19e2f5b073bc94a62fe64b0d2183a18"),
@@ -293,7 +298,7 @@ class Hip(CMakePackage):
         ".5.2.1.patch",
         when="@5.2.1:5.2.3",
     )
-    patch("0013-remove-compiler-rt-linkage-for-host.5.3.0.patch", when="@5.3.0:")
+    patch("0013-remove-compiler-rt-linkage-for-host.5.3.0.patch", when="@5.3.0:5.4")
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
     patch("0002-Fix-detection-of-HIP_CLANG_ROOT.patch", when="@:3.9.0")
@@ -325,6 +330,7 @@ class Hip(CMakePackage):
 
     patch("Add_missing_open_cl_header_file_for_4.3.0.patch", when="@4.3.0:4.3.2")
     patch("0014-hip-test-file-reorg-5.4.0.patch", when="@5.4.0:")
+    patch("0014-remove-compiler-rt-linkage-for-host.5.5.0.patch", when="@5.5")
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/3206
     patch(
