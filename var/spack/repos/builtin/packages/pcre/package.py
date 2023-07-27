@@ -57,7 +57,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         return args
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = []
 
