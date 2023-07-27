@@ -947,6 +947,10 @@ print(json.dumps(config))
         # in either lib or lib64, so we need to ask Python where its LIBDIR is.
         libdir = self.config_vars["LIBDIR"]
 
+        # Debian and derivatives use a triplet subdir under /usr/lib, LIBPL can be used
+        # to get the Python library directory
+        libpldir = self.config_vars["LIBPL"]
+
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
         frameworkprefix = self.config_vars["PYTHONFRAMEWORKPREFIX"]
@@ -962,7 +966,7 @@ print(json.dumps(config))
         win_bin_dir = self.config_vars["BINDIR"]
         win_root_dir = self.config_vars["prefix"]
 
-        directories = [libdir, frameworkprefix, macos_developerdir, win_bin_dir, win_root_dir]
+        directories = [libdir, libpldir, frameworkprefix, macos_developerdir, win_bin_dir, win_root_dir]
 
         # The Python shipped with Xcode command line tools isn't in any of these locations
         for subdir in ["lib", "lib64"]:
