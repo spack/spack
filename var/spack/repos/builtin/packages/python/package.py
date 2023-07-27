@@ -972,7 +972,7 @@ print(json.dumps(config))
             frameworkprefix,
             macos_developerdir,
             win_bin_dir,
-            win_root_dir
+            win_root_dir,
         ]
 
         # The Python shipped with Xcode command line tools isn't in any of these locations
