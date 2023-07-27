@@ -956,8 +956,8 @@ class SpackSolverSetup:
         return [fn.attr("node_target_satisfies", spec.name, target)]
 
     def conflict_rules(self, pkg):
-        default_msg = "{0} '{1}' conflicts with '{2}'"
-        no_constraint_msg = "{0} conflicts with '{1}'"
+        default_msg = "{0}: '{1}' conflicts with '{2}'"
+        no_constraint_msg = "{0}: conflicts with '{1}'"
         for trigger, constraints in pkg.conflicts.items():
             trigger_msg = "conflict trigger %s" % str(trigger)
             trigger_id = self.condition(spack.spec.Spec(trigger), name=pkg.name, msg=trigger_msg)
