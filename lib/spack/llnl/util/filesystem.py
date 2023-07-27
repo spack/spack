@@ -1306,16 +1306,18 @@ def traverse_tree(
         dest_child = os.path.join(dest_path, f)
         rel_child = os.path.join(rel_path, f)
 
-        # If the source path is a link and the link's source is ignored, then ignore the link too.
-        if islink(source_child) and not follow_links:
-            target = readlink(source_child)
-            all_parents = accumulate(target.split(os.sep), lambda x, y: os.path.join(x, y))
-            if any(map(ignore, all_parents)):
-                tty.warn(
-                    f"Skipping {source_path} because the source or a part of the source's "
-                    f"path is included in the ignores."
-                )
-                continue
+        # If the source path is a link and the link's source is ignored, then ignore the link too,
+        # but only do this if the ignore is defined.
+        if ignore is not None:
+            if islink(source_child) and not follow_links:
+                target = readlink(source_child)
+                all_parents = accumulate(target.split(os.sep), lambda x, y: os.path.join(x, y))
+                if any(map(ignore, all_parents)):
+                    tty.warn(
+                        f"Skipping {source_path} because the source or a part of the source's "
+                        f"path is included in the ignores."
+                    )
+                    continue
 
         # Treat as a directory
         # TODO: for symlinks, os.path.isdir looks for the link target. If the
