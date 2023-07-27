@@ -18,7 +18,7 @@ class PyWarpx(PythonPackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/23.06.tar.gz"
+    url = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/23.07.tar.gz"
     git = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers("ax3l", "dpgrote", "RemiLehe")
@@ -27,6 +27,7 @@ class PyWarpx(PythonPackage):
 
     # NOTE: if you update the versions here, also see warpx
     version("develop", branch="development")
+    version("23.07", sha256="511633f94c0d0205013609bde5bbf92a29c2e69f6e69b461b80d09dc25602945")
     version("23.06", sha256="75fcac949220c44dce04de581860c9a2caa31a0eee8aa7d49455fa5fc928514b")
     version("23.05", sha256="34306a98fdb1f5f44ab4fb92f35966bfccdcf1680a722aa773af2b59a3060d73")
     version("23.04", sha256="e5b285c73e13a0d922eba5d83760c168d4fd388e54a519830003b2e692dab823")
@@ -58,6 +59,7 @@ class PyWarpx(PythonPackage):
     variant("mpi", default=True, description="Enable MPI support")
 
     for v in [
+        "23.07",
         "23.06",
         "23.05",
         "23.04",
@@ -101,7 +103,8 @@ class PyWarpx(PythonPackage):
     depends_on("py-picmistandard@0.0.20", type=("build", "run"), when="@22.10:22.11")
     depends_on("py-picmistandard@0.0.22", type=("build", "run"), when="@22.12:23.03")
     depends_on("py-picmistandard@0.23.2", type=("build", "run"), when="@23.04:23.05")
-    depends_on("py-picmistandard@0.24.0", type=("build", "run"), when="@23.06:")
+    depends_on("py-picmistandard@0.24.0", type=("build", "run"), when="@23.06")
+    depends_on("py-picmistandard@0.25.0", type=("build", "run"), when="@23.07:")
     depends_on("py-setuptools@42:", type="build")
     # Since we use PYWARPX_LIB_DIR to pull binaries out of the
     # 'warpx' spack package, we don't need py-cmake as declared
