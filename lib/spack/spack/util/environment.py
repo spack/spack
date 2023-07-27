@@ -56,8 +56,7 @@ _SHELL_UNSET_STRINGS = {
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
     "bat": 'set "{0}="\n',
-    # "pwsh": "Remove-Item Env:{0}\n",
-     "pwsh": "$Env:{0}=\n",
+    "pwsh": "$Env:{0}=\n",
 }
 
 
