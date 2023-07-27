@@ -7,13 +7,18 @@ from spack.package import *
 
 
 class PyRequirementsParser(PythonPackage):
-    """This is a small Python module for parsing Pip requirement files."""
+    """This is a small Python module for parsing Pip requirement files.
+    The goal is to parse everything in the Pip requirement file format spec."""
 
-    homepage = "https://github.com/madpah/requirements-parser/tree/master"
-    url = "https://files.pythonhosted.org/packages/c2/f9/76106e710015f0f8da37bff8db378ced99ae2553cc4b1cffb0aef87dc4ac/requirements-parser-0.5.0.tar.gz"
+    homepage = "https://github.com/madpah/requirements-parser"
+    pypi = "requirements-parser/requirements-parser-0.5.0.tar.gz"
 
-    maintainers("DaxLynch")
-
-    depends_on("py-poetry-core", type="build")
+    maintainers("DaxLynch", "eugeneswalker")
 
     version("0.5.0", sha256="3336f3a3ae23e06d3f0f88595e4052396e3adf91688787f637e5d2ca1a904069")
+
+    depends_on("python@3.6:3.99", type=("build", "run"))
+
+    depends_on("py-poetry-core@1:", type="build")
+
+    depends_on("py-types-setuptools@57:", type=("build", "run"))
