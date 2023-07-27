@@ -76,6 +76,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
         description="Compile with PNFFT - Parallel Nonequispaced FFT library",
     )
     variant("debug", default=False, description="Compile with debug flags")
+    variant("gdlib", default=True, description="Compile with GD image-processing library")
 
     depends_on("autoconf", type="build", when="@develop")
     depends_on("automake", type="build", when="@develop")
@@ -251,6 +252,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
         # --with-berkeleygw-prefix=${prefix}
         if "+berkeleygw" in spec:
             args.append("--with-berkeleygw-prefix=%s" % spec["berkeleygw"].prefix)
+
+        args.extend(self.enable_or_disable("gdlib"))
 
         # When preprocessor expands macros (i.e. CFLAGS) defined as quoted
         # strings the result may be > 132 chars and is terminated.
