@@ -42,7 +42,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     depends_on("glib@2.49.2:", when="@1.49.2:")
     # version 1.48.0 build fails with glib 2.49.4
     depends_on("glib@2.48.1", when="@1.48.0")
-    # version 1.76.1 build fails with glib < 2.76.0 
+    # version 1.76.1 build fails with glib < 2.76.0
     # https://github.com/spack/spack/issues/39113
     depends_on("glib@2.76.0", when="@1.76.1:")
     depends_on("libffi")
