@@ -966,7 +966,14 @@ print(json.dumps(config))
         win_bin_dir = self.config_vars["BINDIR"]
         win_root_dir = self.config_vars["prefix"]
 
-        directories = [libdir, libpldir, frameworkprefix, macos_developerdir, win_bin_dir, win_root_dir]
+        directories = [
+            libdir,
+            libpldir,
+            frameworkprefix,
+            macos_developerdir,
+            win_bin_dir,
+            win_root_dir
+        ]
 
         # The Python shipped with Xcode command line tools isn't in any of these locations
         for subdir in ["lib", "lib64"]:
