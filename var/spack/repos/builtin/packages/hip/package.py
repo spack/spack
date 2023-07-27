@@ -106,13 +106,6 @@ class Hip(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     variant("rocm", default=True, description="Enable ROCm support")
     variant("cuda", default=False, description="Build with CUDA")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")

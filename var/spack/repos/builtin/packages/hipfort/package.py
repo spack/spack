@@ -86,13 +86,6 @@ class Hipfort(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.0.2:", type="build")
 
     depends_on("rocm-cmake@3.8.0:", type="build")

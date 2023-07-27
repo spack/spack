@@ -106,13 +106,6 @@ class Miopengemm(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3:", type="build")
     depends_on("rocm-cmake@3.5.0", type="build", when="@1.1.6")
     depends_on("rocm-opencl@3.5.0", when="@1.1.6")
