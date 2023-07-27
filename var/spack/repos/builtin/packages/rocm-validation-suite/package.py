@@ -101,13 +101,6 @@ class RocmValidationSuite(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     patch("001-fixes-for-rocblas-rocm-smi-install-prefix-path.patch", when="@4.1.0:4.3.2")
     patch("002-remove-force-setting-hip-inc-path.patch", when="@4.1.0:4.3.2")
     patch("003-cmake-change-to-remove-installs-and-sudo.patch", when="@4.1.0:4.3.2")

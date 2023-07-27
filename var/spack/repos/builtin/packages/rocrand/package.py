@@ -107,12 +107,6 @@ class Rocrand(CMakePackage):
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
     variant("hiprand", default=True, when="@5.1.0:", description="Build the hiprand library")
 
     depends_on("cmake@3.10.2:", type="build", when="@4.5.0:")
