@@ -1750,16 +1750,17 @@ def find(root, files, recursive=True):
     Returns:
         list: The files that have been found
     """
-    tty.debug("Find (enter): {0} {1}".format(root, str(files)))
     if isinstance(files, str):
         files = [files]
 
     if recursive:
+        tty.debug(f"Find (recursive): {root} {str(files)}")
         result = _find_recursive(root, files)
     else:
+        tty.debug(f"Find (not recursive): {root} {str(files)}")
         result = _find_non_recursive(root, files)
 
-    tty.debug("Find (leave): {0} {1}".format(root, str(files)))
+    tty.debug(f"Find complete: {root} {str(files)}")
     return result
 
 
