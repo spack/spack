@@ -325,7 +325,7 @@ class DirectoryLayout:
         if spec.external:
             return spec.external_path
         if self.check_upstream:
-            upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+            upstream, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
             if upstream:
                 raise SpackError(
                     "Internal error: attempted to call path_for_spec on"

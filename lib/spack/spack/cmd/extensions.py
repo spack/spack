@@ -91,7 +91,7 @@ def extensions(parser, args):
 
     if args.show in ("installed", "all"):
         # List specs of installed extensions.
-        installed = [s.spec for s in spack.store.db.installed_extensions_for(spec)]
+        installed = [s.spec for s in spack.store.STORE.db.installed_extensions_for(spec)]
 
         if args.show == "all":
             print

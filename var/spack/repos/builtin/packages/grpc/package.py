@@ -12,7 +12,11 @@ class Grpc(CMakePackage):
 
     homepage = "https://grpc.io"
     url = "https://github.com/grpc/grpc/archive/v1.39.0.tar.gz"
-
+    version("1.55.0", sha256="9cf1a69a921534ac0b760dcbefb900f3c2f735f56070bf0536506913bb5bfd74")
+    version("1.50.0", sha256="76900ab068da86378395a8e125b5cc43dfae671e09ff6462ddfef18676e2165a")
+    version("1.47.0", sha256="271bdc890bf329a8de5b65819f0f9590a5381402429bca37625b63546ed19e54")
+    version("1.46.0", sha256="67423a4cd706ce16a88d1549297023f0f9f0d695a96dd684adc21e67b021f9bc")
+    version("1.45.0", sha256="ec19657a677d49af59aa806ec299c070c882986c9fcc022b1c22c2a3caf01bcd")
     version("1.44.0", sha256="8c05641b9f91cbc92f51cc4a5b3a226788d7a63f20af4ca7aaca50d92cc94a0d")
     version("1.39.0", sha256="b16992aa1c949c10d5d5ce2a62f9d99fa7de77da2943e643fb66dcaf075826d6")
     version("1.38.1", sha256="f60e5b112913bf776a22c16a3053cc02cf55e60bf27a959fd54d7aaf8e2da6e8")

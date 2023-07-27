@@ -173,7 +173,7 @@ class PythonExtension(spack.package_base.PackageBase):
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
-        python = inspect.getmodule(self).python.path
+        python = inspect.getmodule(self).python
         for module in self.import_modules:
             with test_part(
                 self,
@@ -286,7 +286,7 @@ class PythonPackage(PythonExtension):
           spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
         """
         python_externals_installed = [
-            s for s in spack.store.db.query("python") if s.prefix == self.spec.external_path
+            s for s in spack.store.STORE.db.query("python") if s.prefix == self.spec.external_path
         ]
         if python_externals_installed:
             return python_externals_installed[0]

@@ -307,6 +307,11 @@ def push_fn(args):
     """create a binary package and push it to a mirror"""
     mirror = arguments.mirror_name_or_url(args.mirror)
 
+    if args.allow_root:
+        tty.warn(
+            "The flag `--allow-root` is the default in Spack 0.21, will be removed in Spack 0.22"
+        )
+
     url = mirror.push_url
 
     specs = bindist.specs_to_be_packaged(
@@ -336,7 +341,6 @@ def push_fn(args):
                 bindist.PushOptions(
                     force=args.force,
                     unsigned=args.unsigned,
-                    allow_root=args.allow_root,
                     key=args.key,
                     regenerate_index=args.update_index,
                 ),
@@ -410,14 +414,10 @@ def keys_fn(args):
 
 def preview_fn(args):
     """analyze an installed spec and reports whether executables and libraries are relocatable"""
-    constraints = spack.cmd.parse_specs(args.specs)
-    specs = spack.store.find(constraints, multiple=True)
-
-    # Cycle over the specs that match
-    for spec in specs:
-        print("Relocatable nodes")
-        print("--------------------------------")
-        print(spec.tree(status_fn=spack.relocate.is_relocatable))
+    tty.warn(
+        "`spack buildcache preview` is deprecated since `spack buildcache push --allow-root` is "
+        "now the default. This command will be removed in Spack 0.22"
+    )
 
 
 def check_fn(args):

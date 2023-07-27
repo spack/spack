@@ -16,13 +16,15 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipFFT"
     git = "https://github.com/ROCmSoftwarePlatform/hipFFT.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("renjithravindrankannath", "srekolam")
 
     version("master", branch="master")
 
+    version("5.5.1", sha256="3addd15a459752ad657e84c2a7b6b6289600d1d0a5f90d6e0946ba11e8148fc0")
+    version("5.5.0", sha256="47ec6f7da7346c312b80daaa8f763e86c7bdc33ac8617cfa3344068e5b20dd9e")
     version("5.4.3", sha256="ae37f40b6019a11f10646ef193716836f366d269eab3c5cc2ed09af85355b945")
     version("5.4.0", sha256="d0a8e790182928b3d19774b8db1eece9b881a422f6a7055c051b12739fded624")
     version("5.3.3", sha256="fd1662cd5b1e1bce9db53b320c0fe614179cd196251efc2ef3365d38922b5cdc")
@@ -89,13 +91,6 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.5:", type="build")
 
     depends_on("hip +cuda", when="+cuda")
@@ -118,6 +113,8 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("rocfft@" + ver, when="+rocm @" + ver)

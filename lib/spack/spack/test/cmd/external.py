@@ -275,7 +275,7 @@ def test_find_external_nonempty_default_manifest_dir(
     monkeypatch.setenv("PATH", "")
     monkeypatch.setattr(spack.cray_manifest, "default_path", str(directory_with_manifest))
     external("find")
-    specs = spack.store.db.query("hwloc")
+    specs = spack.store.STORE.db.query("hwloc")
     assert any(x.dag_hash() == "hwlocfakehashaaa" for x in specs)
 
 

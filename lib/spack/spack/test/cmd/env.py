@@ -250,8 +250,8 @@ def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install("dependent-install")
 
     # Check one explicit, one implicit install
-    dependent = spack.store.db.query(explicit=True)
-    dependency = spack.store.db.query(explicit=False)
+    dependent = spack.store.STORE.db.query(explicit=True)
+    dependency = spack.store.STORE.db.query(explicit=False)
     assert len(dependent) == 1
     assert len(dependency) == 1
 
@@ -262,7 +262,7 @@ def test_env_roots_marked_explicit(install_mockery, mock_fetch):
         e.concretize()
         e.install_all()
 
-    explicit = spack.store.db.query(explicit=True)
+    explicit = spack.store.STORE.db.query(explicit=True)
     assert len(explicit) == 2
 
 
@@ -362,10 +362,10 @@ spack:
     assert "depb: Executing phase:" in out
     assert "a: Executing phase:" in out
 
-    depb = spack.store.db.query_one("depb", installed=True)
+    depb = spack.store.STORE.db.query_one("depb", installed=True)
     assert depb, "Expected depb to be installed"
 
-    a = spack.store.db.query_one("a", installed=True)
+    a = spack.store.STORE.db.query_one("a", installed=True)
     assert a, "Expected a to be installed"
 
 
@@ -2802,11 +2802,11 @@ spack:
             install_root
         )
     )
-    current_store_root = str(spack.store.root)
+    current_store_root = str(spack.store.STORE.root)
     assert str(current_store_root) != install_root
     with spack.environment.Environment(str(tmpdir)):
-        assert str(spack.store.root) == install_root
-    assert str(spack.store.root) == current_store_root
+        assert str(spack.store.STORE.root) == install_root
+    assert str(spack.store.STORE.root) == current_store_root
 
 
 def test_activate_temp(monkeypatch, tmpdir):

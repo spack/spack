@@ -35,6 +35,7 @@ import inspect
 import os.path
 import pathlib
 import re
+import string
 import warnings
 from typing import Optional
 
@@ -248,7 +249,7 @@ def generate_module_index(root, modules, overwrite=False):
 def _generate_upstream_module_index():
     module_indices = read_module_indices()
 
-    return UpstreamModuleIndex(spack.store.db, module_indices)
+    return UpstreamModuleIndex(spack.store.STORE.db, module_indices)
 
 
 upstream_module_index = llnl.util.lang.Singleton(_generate_upstream_module_index)
@@ -353,7 +354,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
     try:
         upstream = spec.installed_upstream
     except spack.repo.UnknownPackageError:
-        upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+        upstream, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
     if upstream:
         module = spack.modules.common.upstream_module_index.upstream_module(spec, module_type)
         if not module:
@@ -469,6 +470,11 @@ class BaseConfiguration:
         if hash_length != 0:
             return self.spec.dag_hash(length=hash_length)
         return None
+
+    @property
+    def conflicts(self):
+        """Conflicts for this module file"""
+        return self.conf.get("conflict", [])
 
     @property
     def excluded(self):
@@ -762,6 +768,36 @@ class BaseContext(tengine.Context):
                 return True
         else:
             return False
+
+    @tengine.context_property
+    def conflicts(self):
+        """List of conflicts for the module file."""
+        fmts = []
+        projection = proj.get_projection(self.conf.projections, self.spec)
+        for item in self.conf.conflicts:
+            self._verify_conflict_naming_consistency_or_raise(item, projection)
+            item = self.spec.format(item)
+            fmts.append(item)
+        return fmts
+
+    def _verify_conflict_naming_consistency_or_raise(self, item, projection):
+        f = string.Formatter()
+        errors = []
+        if len([x for x in f.parse(item)]) > 1:
+            for naming_dir, conflict_dir in zip(projection.split("/"), item.split("/")):
+                if naming_dir != conflict_dir:
+                    errors.extend(
+                        [
+                            f"spec={self.spec.cshort_spec}",
+                            f"conflict_scheme={item}",
+                            f"naming_scheme={projection}",
+                        ]
+                    )
+        if errors:
+            raise ModulesError(
+                message="conflict scheme does not match naming scheme",
+                long_message="\n    ".join(errors),
+            )
 
     @tengine.context_property
     def autoload(self):
