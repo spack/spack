@@ -13,8 +13,11 @@ class Openexr(CMakePackage):
     url = "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.1.5.tar.gz"
 
     # New versions should come from github now
+    version("3.1.9", sha256="103e902d3902800ab07b5f3a298be7afd2755312737b2cdbfa01326ff99dac07")
     version("3.1.7", sha256="78dbca39115a1c526e6728588753955ee75fa7f5bb1a6e238bed5b6d66f91fd7")
     version("3.1.5", sha256="93925805c1fc4f8162b35f0ae109c4a75344e6decae5a240afdfce25f8a433ec")
+    version("2.5.8", sha256="db261a7fcc046ec6634e4c5696a2fc2ce8b55f50aac6abe034308f54c8495f55")
+    version("2.4.2", sha256="8e5bfd89f4ae1221f84216a163003edddf0d37b8aac4ee42b46edb55544599b9")
     version(
         "2.3.0",
         sha256="fd6cb3a87f8c1a233be17b94c74799e6241d50fc5efd4df75c7a4b9cf4e25ea6",
@@ -64,11 +67,19 @@ class Openexr(CMakePackage):
 
     variant("debug", default=False, description="Builds a debug version of the libraries")
 
-    depends_on("cmake@3.12:", when="@3:", type="build")
+    depends_on("cmake@3.12:", when="@2.4:", type="build")
     depends_on("pkgconfig", when="@:2", type="build")
     depends_on("imath", when="@3:")
     depends_on("ilmbase", when="@:2")
     depends_on("zlib")
+
+    # fix build of 2.5 with GCC 13
+    patch(
+            "https://github.com/AcademySoftwareFoundation/openexr/pull/1499/commits/8bb802a4ea1c9628e6b77a4bfa9e6ec9bb97ca05.patch?full_index=1",
+            sha256="5919bfeb3f87acc455373a774d6b24a6db6c089f09e6ff1821d46cd1491dbdbf",
+            when="@2.5"
+         )
+    conflicts("@:2.4 %gcc@13")
 
     @property
     def build_directory(self):
@@ -87,6 +98,6 @@ class Openexr(CMakePackage):
 
         return args
 
-    @when("@:2")
+    @when("@:2.3")
     def cmake(self, spec, prefix):
         configure(*self.configure_args())
