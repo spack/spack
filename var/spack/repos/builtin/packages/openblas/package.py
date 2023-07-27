@@ -279,7 +279,7 @@ class Openblas(CMakePackage, MakefilePackage):
         return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnvironment):
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     @staticmethod
     def _read_targets(target_file):
         """Parse a list of available targets from the OpenBLAS/TargetList.txt
