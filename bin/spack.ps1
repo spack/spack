@@ -41,20 +41,12 @@ function Read-SpackArgs {
 
 function Set-SpackEnv {
     foreach($envop in $args[0]){
-        $envop = $envop -replace '[$]',""
+        $envop = $envop.Trim("`$")
         $path, $value = $envop -split "="
         Set-Item -Path $path -Value $value
     }
 }
 
-function Remove-SpackEnv {
-    $args[1]
-    foreach($envop in $args[0]) {
-        $envop
-        "`n"
-        $ExecutionContext.InvokeCommand.InvokeScript("$envop")
-    }
-}
 
 function Invoke-SpackCD {
     if (Compare-CommonArgs $SpackSubCommandArgs) {
@@ -108,7 +100,7 @@ function Invoke-SpackEnv {
                 }
                 else {
                     $SpackEnv = $(python $Env:SPACK_ROOT/bin/spack $SpackCMD_params env deactivate "--pwsh")
-                    Remove-SpackEnv $SpackEnv
+                    Set-SpackEnv $SpackEnv
                 }
             }
             default {python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs}
@@ -129,19 +121,6 @@ function Invoke-SpackLoad {
     }
 }
 
-function Invoke-SpackUnLoad {
-    if (Compare-CommonArgs $SpackSubCommandArgs) {
-        python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
-    }
-    elseif ([bool]($SpackSubCommandArgs.Where({($_ -eq "--pwsh")}))) {
-        python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
-    }
-    else {
-        $SpackEnv = $(python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand "--pwsh" $SpackSubCommandArgs)
-        Remove-SpackEnv $SpackEnv
-    }
-}
-
 
 $SpackCMD_params, $SpackSubCommand, $SpackSubCommandArgs = Read-SpackArgs $args
 
@@ -157,6 +136,6 @@ switch($SpackSubCommand)
     "cd"     {Invoke-SpackCD}
     "env"    {Invoke-SpackEnv}
     "load"   {Invoke-SpackLoad}
-    "unload" {Invoke-SpackUnLoad}
+    "unload" {Invoke-SpackLoad}
     default  {python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs}
 }

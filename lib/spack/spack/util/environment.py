@@ -56,7 +56,8 @@ _SHELL_UNSET_STRINGS = {
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
     "bat": 'set "{0}="\n',
-    "pwsh": "Remove-Item Env:{0}\n",
+    # "pwsh": "Remove-Item Env:{0}\n",
+     "pwsh": "$Env:{0}=\n",
 }
 
 
@@ -439,7 +440,7 @@ class RemovePath(NameValueModifier):
             for x in directories
             if x != path_to_os_path(os.path.normpath(self.value)).pop()
         ]
-        # If the path only has a single value, that is the value
+        # If the path only has a single value that is the value
         # being unset here, clear out the variable to
         # indicate it should be unset entirely
         env_path = self.separator.join(directories)
