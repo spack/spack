@@ -1238,19 +1238,6 @@ class Database:
         with self.write_transaction():
             self._add(spec, directory_layout, explicit=explicit)
 
-    @_autospec
-    def _update_install_time(self, spec, absolute_time=None, delta=None):
-        """For testing: change the install time."""
-        with self.write_transaction():
-            match = self.query_one(spec)
-            _, record = self.query_by_spec_hash(match.dag_hash())
-            if absolute_time:
-                record.installation_time = absolute_time
-            elif delta:
-                record.installation_time += delta
-            else:
-                raise ValueError("Must set absolute time or time delta")
-
     def _get_matching_spec_key(self, spec, **kwargs):
         """Get the exact spec OR get a single spec that matches."""
         key = spec.dag_hash()
@@ -1267,6 +1254,21 @@ class Database:
         key = self._get_matching_spec_key(spec, **kwargs)
         upstream, record = self.query_by_spec_hash(key)
         return record
+
+    def installed(self, spec):
+        """Installation status of a package.
+
+        Returns:
+            True if the spec has been installed, False otherwise.
+        """
+        try:
+            # If the spec is in the DB, check the installed
+            # attribute of the record
+            return self.get_record(spec).installed
+        except KeyError:
+            # If the spec is not in the DB, the method
+            #  above raises a Key error
+            return False
 
     def _decrement_ref_count(self, spec):
         key = spec.dag_hash()

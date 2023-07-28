@@ -1837,19 +1837,22 @@ class Environment:
             if depth == 0 or spec.installed
         ]
 
-    def _dev_dep_was_installed_more_recently(self):
+    def _dev_dep_was_installed_more_recently(self, _database=None):
         # Gather specs which have some dependency (transitive) that is
         # being developed and was installed more-recently
+
+        db = _database or spack.store.STORE.db
+
         transitive_dev_install_times = collections.defaultdict(int)
         for spec in traverse.traverse_nodes(
             self.concrete_roots(), direction="children", order="post"
         ):
-            if not spec.installed:
+            if not db.installed(spec):
                 continue
 
             dev_path_var = spec.variants.get("dev_path", None)
             if dev_path_var:
-                _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+                _, record = db.query_by_spec_hash(spec.dag_hash())
                 when_this_spec_was_installed = record.installation_time
 
                 transitive_dev_install_times[spec] = max(
@@ -1866,10 +1869,10 @@ class Environment:
                 )
         dev_dep_was_installed_more_recently = list()
         for spec, transitive_install_time in transitive_dev_install_times.items():
-            if not spec.installed:
+            if not db.installed(spec):
                 continue
 
-            _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+            _, record = db.query_by_spec_hash(spec.dag_hash())
             when_this_spec_was_installed = record.installation_time
 
             if when_this_spec_was_installed < transitive_install_time:

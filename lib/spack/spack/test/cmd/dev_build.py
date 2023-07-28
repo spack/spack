@@ -421,65 +421,34 @@ spack:
 
 
 def test_dev_build_rebuild_dependent_delayed(
-    tmpdir, mock_packages, install_mockery, mutable_mock_env_path, mock_fetch
+    tmpdir, mock_packages, mutable_database, mutable_mock_env_path,
 ):
     """Install X->Y; change Y; perform "spack install Y" (not rebuilding X);
     and then do "spack install". In this case, The final command should
     reinstall X. This makes sure we don't lose track of when dependents
     should be reinstalled.
     """
-    # setup dev-build-test-install package for dev build
-    build_dir = tmpdir.mkdir("build")
-    spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % build_dir)
-    spec.concretize()
+    develop = SpackCommand("develop")
+    add = SpackCommand("add")
+    concretize = SpackCommand("concretize")
 
-    def reset_string():
-        with build_dir.as_cwd():
-            with open(spec.package.filename, "w") as f:
-                f.write(spec.package.original_string)
+    existing_dev_path = tmpdir.ensure("dev-path", dir=True)
 
-    reset_string()
+    env("create", "test")
+    with ev.read("test") as e:
+        add("dependent-of-dev-build")
+        develop(f"--path={existing_dev_path}", "dev-build-test-install@0.0.0")
+        concretize()
 
-    # setup environment
-    envdir = tmpdir.mkdir("env")
-    with envdir.as_cwd():
-        with open("spack.yaml", "w") as f:
-            f.write(
-                """\
-spack:
-  specs:
-  - dependent-of-dev-build@0.0.0
+    with ev.read("test") as e:
+        user_to_concretized = list(e.concretized_specs())
+        root = user_to_concretized[0][1]
+        dependent = root['dependent-of-dev-build']
+        child = root['dev-build-test-install']
 
-  develop:
-    dev-build-test-install:
-      spec: dev-build-test-install@0.0.0
-      path: {0}
-""".format(
-                    build_dir
-                )
-            )
+        db = spack.database.Database(tmpdir.join('db'), lock_cfg=spack.database.NO_LOCK)
+        db._add(child, installation_time=1)
+        db._add(dependent, installation_time=0)
 
-        env("create", "test", "./spack.yaml")
-        with ev.read("test") as e:
-            install()
-
-            reset_string()  # so the package will accept rebuilds
-            fs.touch(os.path.join(str(build_dir), "test"))
-            # Here we reinstall only the dependency
-            install("dev-build-test-install")
-            # At this point we have a newer install of the dependency, but
-            # time tracking may be too coarse-grained to actually recognize
-            # that, so explicitly advance time a "significant" amount
-            spack.store.STORE.db._update_install_time("dev-build-test-install", delta=1)
-
-            assert not e._dev_dep_changed_after_install_time()
-            to_reinstall = e._dev_dep_was_installed_more_recently()
-            assert len(to_reinstall) == 1
-            (reinstall_hash,) = to_reinstall
-            assert e.get_one_by_hash(reinstall_hash).name == "dependent-of-dev-build"
-
-            # At this point, the dependent should be reinstalled too, because
-            # there is a more-recent version of the dependency
-            output = install()
-
-    assert "Installing dependent-of-dev-build" in output
+        needs_reinstall = e._dev_dep_was_installed_more_recently(_database=db)
+        assert needs_reinstall == [dependent.dag_hash()]
