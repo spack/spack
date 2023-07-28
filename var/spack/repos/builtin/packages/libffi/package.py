@@ -40,7 +40,11 @@ class Libffi(AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         if name == "cflags":
-            if self.spec.satisfies("%oneapi@2023:") or self.spec.satisfies("%arm@23.04:"):
+            if (
+                self.spec.satisfies("%oneapi@2023:")
+                or self.spec.satisfies("%arm@23.04:")
+                or self.spec.satisfies("%clang@16:")
+            ):
                 flags.append("-Wno-error=implicit-function-declaration")
         return (flags, None, None)
 
