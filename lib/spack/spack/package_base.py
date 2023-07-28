@@ -514,6 +514,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # These are default values for instance variables.
     #
 
+    # Declare versions dictionary to fix MyPy missing attribute errors.
+    versions: dict
+
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
     virtual = False

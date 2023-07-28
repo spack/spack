@@ -23,7 +23,7 @@ from spack.util.format import get_version_lines
 from spack.util.naming import valid_fully_qualified_module_name
 from spack.version import Version
 
-Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")  # type: ignore
+Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")
 
 description = "checksum available versions of a package"
 section = "packaging"
