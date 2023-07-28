@@ -6,7 +6,6 @@
 import argparse
 import re
 import sys
-from typing import TypeVar
 
 import llnl.util.lang
 from llnl.util import tty
@@ -17,13 +16,11 @@ import spack.spec
 import spack.stage
 import spack.util.crypto
 from spack.cmd.common import arguments
-from spack.package_base import deprecated_version, preferred_version
+from spack.package_base import PackageBase, deprecated_version, preferred_version
 from spack.util.editor import editor
 from spack.util.format import get_version_lines
 from spack.util.naming import valid_fully_qualified_module_name
 from spack.version import Version
-
-Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")
 
 description = "checksum available versions of a package"
 section = "packaging"
@@ -159,7 +156,7 @@ def checksum(parser, args):
         add_versions_to_package(pkg, version_lines)
 
 
-def print_checksum_status(pkg: Pb, version_hashes: dict):
+def print_checksum_status(pkg: PackageBase, version_hashes: dict):
     """
     Verify checksums present in version_hashes against those present
     in the package's instructions.
@@ -202,7 +199,7 @@ def print_checksum_status(pkg: Pb, version_hashes: dict):
         tty.die("Invalid checksums found.")
 
 
-def add_versions_to_package(pkg: Pb, version_lines: str):
+def add_versions_to_package(pkg: PackageBase, version_lines: str):
     """
     Add checksumed versions to a package's instructions and open a user's
     editor so they may double check the work of the function.
