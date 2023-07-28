@@ -105,7 +105,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on("llvm", when="+llvm")
     depends_on("gl", when="+opengl")
     depends_on("gl", when="+fltk")
-    depends_on("pcre2", when="+bz2")    
+    depends_on("pcre2", when="+pcre2")    
     depends_on("qhull", when="+qhull")
     depends_on("qrupdate", when="+qrupdate")
     depends_on("qscintilla", when="+qscintilla")
@@ -192,7 +192,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
             config_args.append("--enable-readline")
         else:
             config_args.append("--disable-readline")
-        
+
         if "+bz2" in spec:
             config_args.extend(
                 [
