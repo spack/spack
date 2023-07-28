@@ -810,9 +810,9 @@ def test_install_spliced(install_mockery, mock_fetch, default_mock_concretizatio
     #     assert isinstance(task, inst.RewireTask if task.pkg.spec.spliced else inst.BuildTask)
     # assert installer.build_pq[-1][0][0] == 2
     installer.install()
-    for node in out.traverse(order="post"):
+    for node in out.traverse():
         assert node.installed
-        # assert node.build_spec.installed
+        assert node.build_spec.installed
     # captured = capsys.readouterr().out
     # assert captured
     # for node in out.traverse():
@@ -839,7 +839,12 @@ def test_install_spliced_build_spec_installed(install_mockery, default_mock_conc
         assert isinstance(task, inst.RewireTask if task.pkg.spec.spliced else inst.BuildTask)
     assert installer.build_pq[-1][0][0] == 2
     installer.install()
-    # Raises on error.
+    for node in out.traverse():
+        assert node.installed
+        assert node.build_spec.installed
+
+
+# TODO: write test for rewiring direct from binary case
 
 
 def test_install_task_use_cache(install_mockery, monkeypatch):

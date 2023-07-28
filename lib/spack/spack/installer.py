@@ -1263,6 +1263,7 @@ class PackageInstaller:
         build_spec_task = self.build_tasks[build_pkg_id]
         spec_pkg_id = package_id(spec.package)
         spec_task = task.next_attempt(self.installed)
+        spec_task.status = STATUS_ADDED
         # Convey a build spec as a dependency of a deployed spec.
         build_spec_task.add_dependent(spec_pkg_id)
         spec_task.add_dependency(build_pkg_id)
@@ -1377,10 +1378,12 @@ class PackageInstaller:
             install_status: the installation status for the package"""
         # TODO: use install_status
         rc = task.execute()
-        if rc == ExecuteResult.SUCCESS:
-            self._update_installed(task)
-        elif rc == ExecuteResult.MISSING_BUILD_SPEC:
+        if rc == ExecuteResult.MISSING_BUILD_SPEC:
             self._requeue_with_build_spec_tasks(task)
+        else: # if rc == ExecuteResult.SUCCESS or rc == ExecuteResult.FAILED
+            self._update_installed(task)
+
+
 
     def _next_is_pri0(self) -> bool:
         """
@@ -1804,8 +1807,6 @@ class PackageInstaller:
                     # wrapper -- silence mypy
                     OverwriteInstall(self, spack.store.STORE.db, task, install_status).install()  # type: ignore[arg-type] # noqa: E501
 
-                self._update_installed(task)
-
                 # If we installed then we should keep the prefix
                 stop_before_phase = getattr(pkg, "stop_before_phase", None)
                 last_phase = getattr(pkg, "last_phase", None)
@@ -1874,7 +1875,8 @@ class PackageInstaller:
 
             # Perform basic task cleanup for the installed spec to
             # include downgrading the write to a read lock
-            self._cleanup_task(pkg)
+            if pkg.installed:
+                self._cleanup_task(pkg)
 
         # Cleanup, which includes releasing all of the read locks
         self._cleanup_all_tasks()
@@ -2163,7 +2165,7 @@ class OverwriteInstall:
         """
         try:
             with fs.replace_directory_transaction(self.task.pkg.prefix):
-                self.installer._install_task(self.task, self.install_status)
+                return self.installer._install_task(self.task, self.install_status)
         except fs.CouldNotRestoreDirectoryBackup as e:
             self.database.remove(self.task.pkg.spec)
             tty.error(
@@ -2560,6 +2562,7 @@ class RewireTask(Task):
             installed (list): the identifiers of packages that have
                 been installed so far
         """
+        self.compiler = False
 
     def execute(self):
         if not self.pkg.spec.build_spec.installed:
@@ -2570,7 +2573,7 @@ class RewireTask(Task):
         self.start = self.start or time.time()
         self.status = STATUS_INSTALLING
         self.pkg.run_tests = tests is True or tests and self.pkg.name in tests
-        spack.rewiring.rewire_node(self.pkg.spec)
+        spack.rewiring.rewire_node(self.pkg.spec, self.explicit)
         return ExecuteResult.SUCCESS
 
 
