@@ -90,6 +90,9 @@ ci:
   - any-job:
       tags: ["spack"]
       image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
+      variables:
+        # Disable local configs to avoid issues on shell runners
+        SPACK_DISABLE_LOCAL_CONFIG: "1"
       before_script:
       - - export SPACK_USER_CACHE_PATH="${CI_PROJECT_DIR}/_user_cache/"
       - - uname -a || true
