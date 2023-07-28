@@ -27,6 +27,7 @@ installations of packages in a Spack instance.
 """
 
 import copy
+import enum
 import glob
 import heapq
 import io
@@ -101,7 +102,16 @@ def _write_timer_json(pkg, timer, cache):
         return
 
 
-class InstallAction:
+class ExecuteResult(enum.Enum):
+    # Task succeeded
+    SUCCESS = enum.auto()
+    # Task failed
+    FAILED = enum.auto()
+    # Task is missing build spec and will be requeued
+    MISSING_BUILD_SPEC = enum.auto()
+
+
+class InstallAction(enum.Enum):
     #: Don't perform an install
     NONE = 0
     #: Do a standard install
@@ -801,6 +811,9 @@ class PackageInstaller:
         # fast then that option applies to all build requests.
         self.fail_fast = False
 
+        # Initializing all_dependencies to None. This will be set later in _init_queue.
+        self.all_dependencies = None
+
     def __repr__(self) -> str:
         """Returns a formal representation of the package installer."""
         rep = "{0}(".format(self.__class__.__name__)
@@ -1187,6 +1200,74 @@ class PackageInstaller:
         self.locks[pkg_id] = (lock_type, lock)
         return self.locks[pkg_id]
 
+    def _requeue_with_build_spec_tasks(self, task):
+        """TODO: Docstring"""
+        # Full install of the build_spec is necessary because it didn't already exist somewhere
+        # TODO: Bootstrap compilers first (from add_tasks)
+        install_compilers = spack.config.get("config:install_missing_compilers", False)
+
+        spec = task.pkg.spec
+
+        if install_compilers:
+            packages_per_compiler = {}
+
+            # Queue all dependencies of the build spec.
+            for dep in spec.build_spec.traverse():
+                pkg = dep.package
+                compiler = pkg.spec.compiler
+                arch = pkg.spec.architecture
+                if compiler not in packages_per_compiler:
+                    packages_per_compiler[compiler] = {}
+
+                if arch not in packages_per_compiler[compiler]:
+                    packages_per_compiler[compiler][arch] = []
+
+                packages_per_compiler[compiler][arch].append(pkg)
+                pkg_id = package_id(pkg)
+                if pkg_id not in self.build_tasks:
+                    spack.store.db.clear_failure(dep, force=False)
+                    self._add_init_task(dep.package, task.request, False, self.all_dependencies)
+
+            compiler = spec.build_spec.compiler
+            arch = spec.build_spec.architecture
+
+            if compiler not in packages_per_compiler:
+                packages_per_compiler[compiler] = {}
+
+            if arch not in packages_per_compiler[compiler]:
+                packages_per_compiler[compiler][arch] = []
+
+            packages_per_compiler[compiler][arch].append(spec.build_spec.package)
+
+            for compiler, archs in packages_per_compiler.items():
+                for arch, packages in archs.items():
+                    # TODO: Ensure that this works w.r.t all deps
+                    self._add_bootstrap_compilers(
+                        compiler, arch, packages, task.request, self.all_dependencies
+                    )
+
+        for dep in spec.build_spec.traverse():
+            dep_pkg = dep.package
+
+            dep_id = package_id(dep_pkg)
+            if dep_id not in self.build_tasks:
+                self._add_init_task(dep_pkg, task.request, False, self.all_dependencies)
+
+            # Clear any persistent failure markings _unless_ they are
+            # associated with another process in this parallel build
+            # of the spec.
+            spack.store.db.clear_failure(dep, force=False)
+
+        # Queue the build spec.
+        build_pkg_id = package_id(spec.build_spec.package)
+        build_spec_task = self.build_tasks[build_pkg_id]
+        spec_pkg_id = package_id(spec.package)
+        spec_task = task.next_attempt(self.installed)
+        # Convey a build spec as a dependency of a deployed spec.
+        build_spec_task.add_dependent(spec_pkg_id)
+        spec_task.add_dependency(build_pkg_id)
+        self._push_task(spec_task)
+
     def _add_tasks(self, request: BuildRequest, all_deps):
         """Add tasks to the priority queue for the given build request.
 
@@ -1295,21 +1376,11 @@ class PackageInstaller:
             task: the installation build task for a package
             install_status: the installation status for the package"""
         # TODO: use install_status
-        # try:
         rc = task.execute()
-        # TODO: Error handling here?
-        # except InstallError as e:
-        #     # wrap exception and reraise
-        #     raise InstallError(
-        #             "Cannot proceed with {0}: {1}".format(
-        #                 self.pid, e.message
-        #             )
-        #         )
-        # else:
-        if rc == "updated_installed":  # probably just use true for this
+        if rc == ExecuteResult.SUCCESS:
             self._update_installed(task)
-        # TODO: Logic for Update Failed?
-
+        elif rc == ExecuteResult.MISSING_BUILD_SPEC:
+            self._requeue_with_build_spec_tasks(task)
 
     def _next_is_pri0(self) -> bool:
         """
@@ -1430,7 +1501,6 @@ class PackageInstaller:
         new_task.status = STATUS_INSTALLING
         self._push_task(new_task)
 
-
     def _update_failed(
         self, task: BuildTask, mark: bool = False, exc: Optional[BaseException] = None
     ) -> None:
@@ -1520,7 +1590,6 @@ class PackageInstaller:
 
         # Add any missing dependents to ensure proper uninstalled dependency
         # tracking when installing multiple specs
-        # TODO: Modify to make sure dependencies across rewire and build tasks are properly ordered
         tty.debug("Ensure all dependencies know all dependents across specs")
         for dep_id in all_dependencies:
             if dep_id in self.build_tasks:
@@ -1528,6 +1597,7 @@ class PackageInstaller:
                 task = self.build_tasks[dep_id]
                 for dependent_id in dependents.difference(task.dependents):
                     task.add_dependent(dependent_id)
+        self.all_dependencies = all_dependencies
 
     def _install_action(self, task: BuildTask) -> int:
         """
@@ -2111,6 +2181,7 @@ class OverwriteInstall:
 
 class Task:
     """Base class for representing a task for a package."""
+
     def __init__(
         self,
         pkg: "spack.package_base.PackageBase",
@@ -2183,7 +2254,7 @@ class Task:
         deptypes = self.request.get_deptypes(self.pkg)
         self.dependencies = set(
             package_id(d.package)
-            for d in self.pkg.spec.install_dependencies(deptype=deptypes)
+            for d in self.pkg.spec.dependencies(deptype=deptypes)
             if package_id(d.package) != self.pkg_id
         )
 
@@ -2250,6 +2321,21 @@ class Task:
         if pkg_id != self.pkg_id and pkg_id not in self.dependents:
             tty.debug("Adding {0} as a dependent of {1}".format(pkg_id, self.pkg_id))
             self.dependents.add(pkg_id)
+
+    def add_dependency(self, pkg_id, installed=False):
+        """
+        Ensure the dependency package id is in the task's list so the task priority will be
+        correct.
+
+        Args:
+            pkg_id (str):  package identifier of the dependency package
+            installed (boolean):  install status of the dependency package
+        """
+        if pkg_id != self.pkg_id and pkg_id not in self.dependencies:
+            tty.debug("Adding {0} as a depencency of {1}".format(pkg_id, self.pkg_id))
+            self.dependencies.add(pkg_id)
+            if not installed:
+                self.uninstalled_deps.add(pkg_id)
 
     def flag_installed(self, installed: List[str]) -> None:
         """
@@ -2412,14 +2498,14 @@ class BuildTask(Task):
         if self.use_cache and _install_from_cache(pkg, self.cache_only, self.explicit, unsigned):
             if self.compiler:
                 _add_compiler_package_to_config(pkg)
-            return "updated_installed"
+            return ExecuteResult.SUCCESS
 
         pkg.run_tests = tests is True or tests and pkg.name in tests
 
         # hook that allows tests to inspect the Package before installation
         # see unit_test_check() docs.
         if not pkg.unit_test_check():
-            return
+            return ExecuteResult.FAILED
 
         # Injecting information to know if this installation request is the root one
         # to determine in BuildProcessInstaller whether installation is explicit or not
@@ -2451,7 +2537,7 @@ class BuildTask(Task):
             pid = "{0}: ".format(self.pid) if tty.show_pid() else ""
             tty.debug("{0}{1}".format(pid, str(e)))
             tty.debug("Package stage directory: {0}".format(pkg.stage.source_path))
-        return "updated_installed"
+        return ExecuteResult.SUCCESS
 
 
 class RewireTask(Task):
@@ -2476,23 +2562,16 @@ class RewireTask(Task):
         """
 
     def execute(self):
-
+        if not self.pkg.spec.build_spec.installed:
+            return ExecuteResult.MISSING_BUILD_SPEC
+        self.status = STATUS_INSTALLING
         tests = self.request.install_args.get("tests")
         tty.msg(install_msg(self.pkg_id, self.pid))
         self.start = self.start or time.time()
         self.status = STATUS_INSTALLING
         self.pkg.run_tests = tests is True or tests and self.pkg.name in tests
-        try:
-            spack.rewiring.rewire(self.pkg.spec)
-        except spack.build_environment.StopPhase as e:
-            # A StopPhase exception means that do_install was asked to
-            # stop early from clients, and is not an error at this point
-            # TODO: I *think* this would be okay for rewire because changes are transactional?
-            spack.hooks.on_install_failure(self.request.pkg.spec)
-            pid = "{0}: ".format(self.pid) if tty.show_pid() else ""
-            tty.debug("{0}{1}".format(pid, str(e)))
-            tty.debug("Package stage directory: {0}".format(self.pkg.stage.source_path))
-        return "updated_installed"
+        spack.rewiring.rewire_node(self.pkg.spec)
+        return ExecuteResult.SUCCESS
 
 
 class BuildRequest:
@@ -2637,7 +2716,7 @@ class BuildRequest:
             visited = set()
         deptype = self.get_deptypes(spec.package)
 
-        for dep in spec.install_dependencies(deptype=deptype):
+        for dep in spec.dependencies(deptype=deptype):
             hash = dep.dag_hash()
             if hash in visited:
                 continue

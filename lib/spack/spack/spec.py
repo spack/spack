@@ -1492,13 +1492,6 @@ class Spec:
         deptype = dp.canonical_deptype(deptype)
         return [d for d in self._dependencies.select(child=name, deptypes=deptype)]
 
-    def install_dependencies(self, *args, **kwargs):
-        # TODO: docs
-        deps = self.dependencies(*args, **kwargs)
-        if self.spliced:
-            deps.append(self.build_spec)
-        return deps
-
     def dependencies(self, name=None, deptype="all"):
         """Return a list of direct dependencies (nodes in the DAG).
 

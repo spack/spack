@@ -789,30 +789,57 @@ def test_installer_init_requests(install_mockery):
         assert request.pkg.name == spec_name
 
 
-def test_install_spliced(install_mockery, default_mock_concretization, monkeypatch):
-    """todo: description"""
-    monkeypatch.setattr(inst.BuildTask, "execute", lambda x: "updated_installed")
+@pytest.mark.parametrize("transitive", [True, False])
+def test_install_spliced(install_mockery, mock_fetch, default_mock_concretization, monkeypatch, capsys,
+                         transitive):
+    """TODO: description"""
+    # monkeypatch.setattr(inst.BuildTask, "execute", lambda x: "updated_installed")
+    # monkeypatch.setattr(inst.RewireTask, "execute", lambda x: "updated_installed")
+    # def _print(*args, **kwargs):
+    #     print(*args)
+    # monkeypatch.setattr(inst.tty, "debug", _print)
+    # monkeypatch.setattr(inst.tty, "msg", print)
     spec = default_mock_concretization("splice-t")
     dep = default_mock_concretization("splice-h+foo")
 
     # Do the splice.
-    # TODO: Make parameterized on transitivity
-    out = spec.splice(dep, False)
-    installer = create_installer([(out, {"vebose": True})])
+    out = spec.splice(dep, transitive)
+    installer = create_installer([(out, {"vebose": True, "fail_fast": True})])
+    # installer._init_queue()
+    # for _, task in installer.build_pq:
+    #     assert isinstance(task, inst.RewireTask if task.pkg.spec.spliced else inst.BuildTask)
+    # assert installer.build_pq[-1][0][0] == 2
+    installer.install()
+    for node in out.traverse(order="post"):
+        assert node.installed
+        # assert node.build_spec.installed
+    # captured = capsys.readouterr().out
+    # assert captured
+    # for node in out.traverse():
+    #     print(node)
+    #     assert node.dag_hash() in captured
+    #     assert node.build_spec.dag_hash() in captured
+
+
+@pytest.mark.parametrize("transitive", [True, False])
+def test_install_spliced_build_spec_installed(install_mockery, default_mock_concretization,
+                                              monkeypatch, capfd, transitive):
+    """TODO: description"""
+    monkeypatch.setattr(inst.BuildTask, "execute", lambda x: "updated_installed")
+    monkeypatch.setattr(inst.RewireTask, "execute", lambda x: "updated_installed")
+    spec = default_mock_concretization("splice-t")
+    dep = default_mock_concretization("splice-h+foo")
+
+    # Do the splice.
+    out = spec.splice(dep, transitive)
+    out.build_spec.package.do_install()
+    installer = create_installer([(out, {"vebose": True, "fail_fast": True})])
     installer._init_queue()
     for _, task in installer.build_pq:
         assert isinstance(task, inst.RewireTask if task.pkg.spec.spliced else inst.BuildTask)
-    assert installer.build_pq[-1][0][0] == 3
-    print([key for key, _ in installer.build_pq])
-    for key, task in installer.build_pq:
-        print(task.pkg_id, task.dependents, task.dependencies)
-    task = installer._pop_task()
-    installer._install_task(task)
-    installer._update_installed(task)
-    installer._cleanup_task(task.pkg)
-    print([key for key, _ in installer.build_pq])
+    assert installer.build_pq[-1][0][0] == 2
     installer.install()
-    assert False
+    # Raises on error.
 
 
 def test_install_task_use_cache(install_mockery, monkeypatch):
