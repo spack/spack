@@ -6,21 +6,24 @@
 import argparse
 import re
 import sys
+from typing import TypeVar
 
 import llnl.util.lang
-import llnl.util.tty as tty
+from llnl.util import tty
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.crypto
+from spack.cmd.common import arguments
 from spack.package_base import deprecated_version, preferred_version
 from spack.util.editor import editor
 from spack.util.format import get_version_lines
 from spack.util.naming import valid_fully_qualified_module_name
 from spack.version import Version
+
+Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")
 
 description = "checksum available versions of a package"
 section = "packaging"
@@ -110,7 +113,7 @@ def checksum(parser, args):
 
     for version in versions:
         if deprecated_version(pkg, version):
-            tty.warn("Version {0} is deprecated".format(version))
+            tty.warn(f"Version {version} is deprecated")
 
         url = pkg.find_valid_url_for_version(version)
         if url is not None:
@@ -129,7 +132,7 @@ def checksum(parser, args):
         url_dict = remote_versions
 
     if not url_dict:
-        tty.die("Could not find any remote versions for {0}".format(pkg.name))
+        tty.die(f"Could not find any remote versions for {pkg.name}")
 
     # print an empty line to create a new output section block
     print()
@@ -143,7 +146,8 @@ def checksum(parser, args):
     )
 
     if args.verify:
-        verify_checksums(pkg, version_hashes)
+        print_checksum_status(pkg, version_hashes)
+        sys.exit(0)
 
     # convert dict into package.py version statements
     version_lines = get_version_lines(version_hashes, url_dict)
@@ -155,7 +159,7 @@ def checksum(parser, args):
         add_versions_to_package(pkg, version_lines)
 
 
-def verify_checksums(pkg, version_hashes):
+def print_checksum_status(pkg: Pb, version_hashes: dict):
     """
     Verify checksums present in version_hashes against those present
     in the package's instructions.
@@ -197,10 +201,8 @@ def verify_checksums(pkg, version_hashes):
         print()
         tty.die("Invalid checksums found.")
 
-    exit(0)
 
-
-def add_versions_to_package(pkg, version_lines):
+def add_versions_to_package(pkg: Pb, version_lines: str):
     """
     Add checksumed versions to a package's instructions and open a user's
     editor so they may double check the work of the function.
@@ -226,13 +228,13 @@ def add_versions_to_package(pkg, version_lines):
         contents = f.read()
         split_contents = version_statement_re.split(contents)
 
-        for i, section in enumerate(split_contents):
+        for i, subsection in enumerate(split_contents):
             # If there are no more versions to add we should exit
             if len(new_versions) <= 0:
                 break
 
             # Check if the section contains a version
-            contents_version = version_re.match(section)
+            contents_version = version_re.match(subsection)
             if contents_version is not None:
                 parsed_version = Version(contents_version.group(1))
 
