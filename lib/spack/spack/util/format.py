@@ -22,7 +22,11 @@ def get_version_lines(version_hashes_dict: dict, url_dict: Optional[dict] = None
 
     for v, h in version_hashes_dict.items():
         expand_arg = ""
-        url = url_dict[v] if v in url_dict else ""
+
+        # Extract the url for a version if url_dict is provided.
+        url = ""
+        if url_dict is not None and v in url_dict:
+            url = url_dict[v]
 
         # Add expand_arg since wheels should not be expanded during stanging
         if url.endswith(".whl") or ".whl#" in url:
