@@ -335,7 +335,6 @@ class Hip(CMakePackage):
     patch("0016-hip-sample-fix-hipMalloc-call.patch", when="@5.4.3:")
     patch("0014-remove-compiler-rt-linkage-for-host.5.5.0.patch", when="@5.5")
 
-
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/3206
     patch(
         "https://github.com/ROCm-Developer-Tools/HIP/commit/50ee82f6bc4aad10908ce09198c9f7ebfb2a3561.patch?full_index=1",
