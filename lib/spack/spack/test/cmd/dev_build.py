@@ -421,7 +421,7 @@ spack:
 
 
 def test_dev_build_rebuild_dependent_delayed(
-    tmpdir, mock_packages, mutable_database, mutable_mock_env_path,
+    tmpdir, mock_packages, mutable_database, mutable_mock_env_path
 ):
     """Install X->Y; change Y; perform "spack install Y" (not rebuilding X);
     and then do "spack install". In this case, The final command should
@@ -443,10 +443,10 @@ def test_dev_build_rebuild_dependent_delayed(
     with ev.read("test") as e:
         user_to_concretized = list(e.concretized_specs())
         root = user_to_concretized[0][1]
-        dependent = root['dependent-of-dev-build']
-        child = root['dev-build-test-install']
+        dependent = root["dependent-of-dev-build"]
+        child = root["dev-build-test-install"]
 
-        db = spack.database.Database(tmpdir.join('db'), lock_cfg=spack.database.NO_LOCK)
+        db = spack.database.Database(tmpdir.join("db"), lock_cfg=spack.database.NO_LOCK)
         db._add(child, installation_time=2)
         db._add(dependent, installation_time=1)
 
