@@ -352,7 +352,7 @@ def test_find_loaded(database, working_env):
     assert output == ""
 
     os.environ[uenv.spack_loaded_hashes_var] = ":".join(
-        [x.dag_hash() for x in spack.store.db.query()]
+        [x.dag_hash() for x in spack.store.STORE.db.query()]
     )
     output = find("--loaded")
     expected = find()

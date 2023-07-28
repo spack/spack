@@ -12,7 +12,7 @@ import spack.repo
 import spack.store
 import spack.tag
 
-description = "Show package tags and associated packages"
+description = "show package tags and associated packages"
 section = "basic"
 level = "long"
 

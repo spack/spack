@@ -53,7 +53,7 @@ class SingularityBase(MakefilePackage):
     # Unpack the tarball as usual, then move the src dir into
     # its home within GOPATH.
     def do_stage(self, mirror_only=False):
-        super(SingularityBase, self).do_stage(mirror_only)
+        super().do_stage(mirror_only)
         if not os.path.exists(self.singularity_gopath_dir):
             # Move the expanded source to its destination
             tty.debug(

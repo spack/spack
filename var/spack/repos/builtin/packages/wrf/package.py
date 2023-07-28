@@ -164,6 +164,7 @@ class Wrf(Package):
 
     patch("patches/4.4/arch.postamble.patch", when="@4.4:")
     patch("patches/4.4/configure.patch", when="@4.4:4.4.2")
+    patch("patches/4.4/ifx.patch", when="@4.4: %oneapi")
 
     patch("patches/4.5/configure.patch", when="@4.5:")
     # Fix WRF to remove deprecated ADIOS2 functions
@@ -191,6 +192,17 @@ class Wrf(Package):
         "https://github.com/wrf-model/WRF/commit/238a7d219b7c8e285db28fe4f0c96ebe5068d91c.patch?full_index=1",
         sha256="27c7268f6c84b884d21e4afad0bab8554b06961cf4d6bfd7d0f5a457dcfdffb1",
         when="@4.3.1",
+    )
+    # Add ARM compiler support
+    patch(
+        "https://github.com/wrf-model/WRF/pull/1888/commits/4a084e03575da65f254917ef5d8eb39074abd3fc.patch",
+        sha256="c522c4733720df9a18237c06d8ab6199fa9674d78375b644aec7017cb38af9c5",
+        when="@4.5: %arm",
+    )
+    patch(
+        "https://github.com/wrf-model/WRF/pull/1888/commits/6087d9192f7f91967147e50f5bc8b9e49310cf98.patch",
+        sha256="f82a18cf7334e0cbbfdf4ef3aa91ca26d4a372709f114ce0116b3fbb136ffac6",
+        when="@4.5: %arm",
     )
 
     depends_on("pkgconfig", type=("build"))
@@ -240,14 +252,6 @@ class Wrf(Package):
         env.set("JASPERINC", self.spec["jasper"].prefix.include)
         env.set("JASPERLIB", self.spec["jasper"].prefix.lib)
 
-        # These flags should be used also in v3, but FCFLAGS/FFLAGS aren't used
-        # consistently in that version of WRF, so we have to force them through
-        # `flag_handler` below.
-        if self.spec.satisfies("@4.0: %gcc@10:"):
-            args = "-w -O2 -fallow-argument-mismatch -fallow-invalid-boz"
-            env.set("FCFLAGS", args)
-            env.set("FFLAGS", args)
-
         if self.spec.satisfies("%aocc"):
             env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
             env.set("HDF5", self.spec["hdf5"].prefix)
@@ -257,10 +261,9 @@ class Wrf(Package):
             env.set("ADIOS2", self.spec["adios2"].prefix)
 
     def flag_handler(self, name, flags):
-        # Same flags as FCFLAGS/FFLAGS above, but forced through the compiler
-        # wrapper when compiling v3.9.1.1.
-        if self.spec.satisfies("@3.9.1.1 %gcc@10:") and name == "fflags":
-            flags.extend(["-w", "-O2", "-fallow-argument-mismatch", "-fallow-invalid-boz"])
+        # Force FCFLAGS/FFLAGS by adding directly into spack compiler wrappers.
+        if self.spec.satisfies("@3.9.1.1: %gcc@10:") and name == "fflags":
+            flags.extend(["-fallow-argument-mismatch", "-fallow-invalid-boz"])
         return (flags, None, None)
 
     def patch(self):
@@ -337,11 +340,17 @@ class Wrf(Package):
             config.filter("^DM_FC.*mpif90", "DM_FC = {0}".format(self.spec["mpi"].mpifc))
             config.filter("^DM_CC.*mpicc", "DM_CC = {0}".format(self.spec["mpi"].mpicc))
 
+    @run_before("configure")
+    def fortran_check(self):
+        if not self.compiler.fc:
+            msg = "cannot build WRF without a Fortran compiler"
+            raise RuntimeError(msg)
+
     def configure(self, spec, prefix):
         # Remove broken default options...
         self.do_configure_fixup()
 
-        if self.spec.compiler.name not in ["intel", "gcc", "aocc", "fj"]:
+        if self.spec.compiler.name not in ["intel", "gcc", "arm", "aocc", "fj", "oneapi"]:
             raise InstallError(
                 "Compiler %s not currently supported for WRF build." % self.spec.compiler.name
             )

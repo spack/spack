@@ -89,12 +89,9 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     # and https://github.com/libarchive/libarchive/issues/1819
     conflicts("^libarchive@3.6.2 +iconv", when="+debuginfod")
 
-    # Elfutils uses nested functions in C code, which is implemented
-    # in gcc, but not in clang. C code compiled with gcc is
-    # binary-compatible with clang, so it should be possible to build
-    # elfutils with gcc, and then link it to clang-built libraries.
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=24964
     conflicts("%apple-clang")
-    conflicts("%clang")
+    conflicts("%clang", when="@:0.185")
     conflicts("%cce")
 
     # Elfutils uses -Wall and we don't want to fail the build over a

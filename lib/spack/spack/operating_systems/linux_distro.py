@@ -67,4 +67,4 @@ class LinuxDistro(OperatingSystem):
         else:
             version = version[0]
 
-        super(LinuxDistro, self).__init__(distname, version)
+        super().__init__(distname, version)

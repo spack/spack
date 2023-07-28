@@ -30,6 +30,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("lapackpp@2022.05.00:")
 
     depends_on("umpire~examples")
+    depends_on("umpire~cuda", when="~cuda")
+    depends_on("umpire~rocm", when="~rocm")
     depends_on("umpire+cuda~shared", when="+cuda")
     depends_on("umpire+rocm~shared", when="+rocm")
     depends_on("umpire@4.1.0:")

@@ -11,11 +11,13 @@ class Rocprim(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
     git = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
 
+    version("5.5.1", sha256="63cdc682afb39efd18f097faf695ce64c851c4a550a8ad96fa89d694451b6a42")
+    version("5.5.0", sha256="968d9059f93d3f0f8a602f7b989e54e36cff2f9136486b6869e4534a5bf8c7d9")
     version("5.4.3", sha256="7be6314a46195912d3203e7e59cb8880a46ed7c1fd221e92fadedd20532e0e48")
     version("5.4.0", sha256="1740dca11c70ed350995331c292f7e3cb86273614e4a5ce9f0ea64dea5364318")
     version("5.3.3", sha256="21a6b352ad3f5b2b7d05a5ed55e612feb3c5c19d34fdb8f80260b6d25af18b2d")
@@ -99,12 +101,6 @@ class Rocprim(CMakePackage):
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
 
     depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
@@ -135,6 +131,8 @@ class Rocprim(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)

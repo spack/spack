@@ -8,8 +8,6 @@
 The YAML and JSON formats preserve DAG information in the spec.
 
 """
-from __future__ import print_function
-
 import ast
 import collections
 import collections.abc

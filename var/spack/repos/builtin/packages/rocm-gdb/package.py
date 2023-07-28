@@ -12,11 +12,12 @@ class RocmGdb(AutotoolsPackage):
     based on GDB, the GNU source-level debugger."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCgdb/"
-    url = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
-
+    version("5.5.1", sha256="359258548bc7e6abff16bb13c301339fb96560b2b961433c9e0712e4aaf2d9e1")
+    version("5.5.0", sha256="d3b100e332facd9635e328f5efd9f0565250edbe05be986baa2e0470a19bcd79")
     version("5.4.3", sha256="28c1ce39fb1fabe61f86f6e3c6940c10f9a8b8de77f7bb4fdd73b04e172f85f6")
     version("5.4.0", sha256="7ee984d99818da04733030b140c1f0929639bc719a5e418d53cc2c2a8cbc9a79")
     version("5.3.3", sha256="9fc3ccd9378ad40f2f0c9577bc400cc9a202d0ae4656378813b67653b9023c46")
@@ -132,9 +133,14 @@ class RocmGdb(AutotoolsPackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-dbgapi@" + ver, type="link", when="@" + ver)
         depends_on("comgr@" + ver, type="link", when="@" + ver)
+
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
 
     build_directory = "spack-build"
 

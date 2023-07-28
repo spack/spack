@@ -289,6 +289,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             "# CMake executable path: {0}".format(self.pkg.spec["cmake"].command.path),
             "#------------------{0}\n".format("-" * 60),
             cmake_cache_path("CMAKE_PREFIX_PATH", cmake_prefix_path),
+            self.define_cmake_cache_from_variant("CMAKE_BUILD_TYPE", "build_type"),
         ]
 
     def initconfig_package_entries(self):
@@ -311,7 +312,7 @@ class CachedCMakeBuilder(CMakeBuilder):
 
     @property
     def std_cmake_args(self):
-        args = super(CachedCMakeBuilder, self).std_cmake_args
+        args = super().std_cmake_args
         args.extend(["-C", self.cache_path])
         return args
 

@@ -494,6 +494,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     )
     # Variants to use internal packages
     variant("internal-hwloc", default=False, description="Use internal hwloc")
+    variant("internal-pmix", default=False, description="Use internal pmix")
+    variant("openshmem", default=False, description="Enable building OpenSHMEM")
 
     provides("mpi")
     provides("mpi@:2.2", when="@1.6.5")
@@ -552,9 +554,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # OpenMPI @2: includes a vendored version:
     # depends_on('pmix@1.1.2', when='@2.1.6')
     # depends_on('pmix@3.2.3', when='@4.1.2')
-    depends_on("pmix@1.0:1", when="@2.0:2")
-    depends_on("pmix@3.2:", when="@4.0:4")
-    depends_on("pmix@4.2:", when="@5.0:5")
+    depends_on("pmix@1.0:1", when="@2.0:2 ~internal-pmix")
+    depends_on("pmix@3.2:", when="@4.0:4 ~internal-pmix")
+    depends_on("pmix@4.2:", when="@5.0:5 ~internal-pmix")
 
     # Libevent is required when *vendored* PMIx is used
     depends_on("libevent@2:", when="@main")
@@ -959,13 +961,22 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(["--enable-debug"])
 
         # Package dependencies
-        for dep in ["libevent", "lustre", "pmix", "singularity", "valgrind", "zlib"]:
+        for dep in ["libevent", "lustre", "singularity", "valgrind", "zlib"]:
             if "^" + dep in spec:
                 config_args.append("--with-{0}={1}".format(dep, spec[dep].prefix))
 
+        # PMIx support
+        if spec.satisfies("+internal-pmix"):
+            config_args.append("--with-pmix=internal")
+        elif "^pmix" in spec:
+            config_args.append("--with-pmix={0}".format(spec["pmix"].prefix))
+
         # Hwloc support
-        if "^hwloc" in spec:
+        if spec.satisfies("+internal-hwloc"):
+            config_args.append("--with-hwloc=internal")
+        elif "^hwloc" in spec:
             config_args.append("--with-hwloc=" + spec["hwloc"].prefix)
+
         # Java support
         if "+java" in spec:
             config_args.extend(
@@ -1028,6 +1039,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if spec.satisfies("%nvhpc@:20.11"):
             # Workaround compiler issues
             config_args.append("CFLAGS=-O1")
+
+        if "+openshmem" in spec:
+            config_args.append("--enable-oshmem")
 
         if "+wrapper-rpath" in spec:
             config_args.append("--enable-wrapper-rpath")
@@ -1140,28 +1154,27 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         """
         self.cache_extra_test_sources(self.extra_install_tests)
 
-    def _test_bin_ops(self):
-        info = ([], ["Ident string: {0}".format(self.spec.version), "MCA"], 0)
+    def run_installed_binary(self, bin, options, expected):
+        """run and check outputs for the installed binary"""
+        exe_path = join_path(self.prefix.bin, bin)
+        if not os.path.exists(exe_path):
+            raise SkipTest(f"{bin} is not installed")
 
-        ls = (["-n", "1", "ls", ".."], ["openmpi-{0}".format(self.spec.version)], 0)
+        exe = which(exe_path)
+        out = exe(*options, output=str.split, error=str.split)
+        check_outputs(expected, out)
 
-        checks = {
-            "mpirun": ls,
-            "ompi_info": info,
-            "oshmem_info": info,
-            "oshrun": ls,
-            "shmemrun": ls,
-        }
+    def test_mpirun(self):
+        """test installed mpirun"""
+        options = ["-n", "1", "ls", ".."]
+        self.run_installed_binary("mpirun", options, [f"openmpi-{self.spec.version}"])
 
-        for binary in checks:
-            options, expected, status = checks[binary]
-            exe = join_path(self.prefix.bin, binary)
-            reason = "test: checking {0} output".format(binary)
-            self.run_test(
-                exe, options, expected, status, installed=True, purpose=reason, skip_missing=True
-            )
+    def test_opmpi_info(self):
+        """test installed mpirun"""
+        self.run_installed_binary("ompi_info", [], [f"Ident string: {self.spec.version}", "MCA"])
 
-    def _test_check_versions(self):
+    def test_version(self):
+        """check versions of installed software"""
         comp_vers = str(self.spec.compiler.version)
         spec_vers = str(self.spec.version)
         checks = {
@@ -1178,116 +1191,62 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             "ompi_info": spec_vers,
             "ortecc": comp_vers,
             "orterun": spec_vers,
-            # Binaries available in versions 2.0.0 through 2.1.6
-            "ompi-submit": spec_vers,
-            "orte-submit": spec_vers,
-            # Binaries available in versions 2.0.0 through 3.1.5
-            "ompi-dvm": spec_vers,
-            "orte-dvm": spec_vers,
-            "oshcc": comp_vers,
-            "oshfort": comp_vers,
-            "oshmem_info": spec_vers,
-            "oshrun": spec_vers,
-            "shmemcc": comp_vers,
-            "shmemfort": comp_vers,
-            "shmemrun": spec_vers,
-            # Binary available in version 3.1.0 through 3.1.5
-            "prun": spec_vers,
-            # Binaries available in versions 3.0.0 through 3.1.5
-            "oshCC": comp_vers,
-            "oshc++": comp_vers,
-            "oshcxx": comp_vers,
-            "shmemCC": comp_vers,
-            "shmemc++": comp_vers,
-            "shmemcxx": comp_vers,
         }
 
-        for binary in checks:
-            expected = checks[binary]
-            purpose = "test: ensuring version of {0} is {1}".format(binary, expected)
-            exe = join_path(self.prefix.bin, binary)
-            self.run_test(
-                exe, "--version", expected, installed=True, purpose=purpose, skip_missing=True
-            )
+        for bin in checks:
+            expected = checks[bin]
+            with test_part(
+                self, f"test_version_{bin}", purpose=f"ensure version of {bin} is {expected}"
+            ):
+                self.run_installed_binary(bin, ["--version"], [expected])
 
     @property
     def _cached_tests_work_dir(self):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
 
-    def _test_examples(self):
+    def test_example(self):
         """Run test examples copied from source at build-time."""
         # Build the copied, cached test examples
-        self.run_test(
-            "make",
-            ["all"],
-            [],
+        with test_part(
+            self,
+            "test_example_make",
             purpose="test: building cached test examples",
             work_dir=self._cached_tests_work_dir,
-        )
+        ):
+            make("all")
 
-        # Run examples with known, simple-to-verify results
-        have_spml = self.spec.satisfies("@2:2.1.6")
-
-        hello_world = (["Hello, world", "I am", "0 of", "1"], 0)
-
-        max_red = (["0/1 dst = 0 1 2"], 0)
-
-        missing_spml = (["No available spml components"], 1)
-
-        no_out = ([""], 0)
-
-        ring_out = (["1 processes in ring", "0 exiting"], 0)
-
-        strided = (["not in valid range"], 255)
+        # Run basic examples with known, simple-to-verify results
+        hello_world = ["Hello, world", "I am", "0 of", "1"]
+        ring_out = ["1 processes in ring", "0 exiting"]
 
         checks = {
             "hello_c": hello_world,
             "hello_cxx": hello_world,
             "hello_mpifh": hello_world,
-            "hello_oshmem": hello_world if have_spml else missing_spml,
-            "hello_oshmemcxx": hello_world if have_spml else missing_spml,
-            "hello_oshmemfh": hello_world if have_spml else missing_spml,
             "hello_usempi": hello_world,
             "hello_usempif08": hello_world,
-            "oshmem_circular_shift": ring_out if have_spml else missing_spml,
-            "oshmem_max_reduction": max_red if have_spml else missing_spml,
-            "oshmem_shmalloc": no_out if have_spml else missing_spml,
-            "oshmem_strided_puts": strided if have_spml else missing_spml,
-            "oshmem_symmetric_data": no_out if have_spml else missing_spml,
             "ring_c": ring_out,
             "ring_cxx": ring_out,
             "ring_mpifh": ring_out,
-            "ring_oshmem": ring_out if have_spml else missing_spml,
-            "ring_oshmemfh": ring_out if have_spml else missing_spml,
             "ring_usempi": ring_out,
             "ring_usempif08": ring_out,
         }
 
-        for exe in checks:
-            expected, status = checks[exe]
-            reason = "test: checking {0} example output and status ({1})".format(exe, status)
-            self.run_test(
-                exe,
-                [],
-                expected,
-                status,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
+        for binary in checks:
+            expected = checks[binary]
+            with test_part(
+                self,
+                f"test_example_{binary}",
+                purpose="run and check output",
                 work_dir=self._cached_tests_work_dir,
-            )
+            ):
+                exe = which(binary)
+                if not exe:
+                    raise SkipTest(f"{binary} is missing")
 
-    def test(self):
-        """Perform stand-alone/smoke tests on the installed package."""
-        # Simple version check tests on selected installed binaries
-        self._test_check_versions()
-
-        # Test the operation of selected executables
-        self._test_bin_ops()
-
-        # Test example programs pulled from the build
-        self._test_examples()
+                out = exe(output=str.split, error=str.split)
+                check_outputs(expected, out)
 
 
 def get_spack_compiler_spec(compiler):

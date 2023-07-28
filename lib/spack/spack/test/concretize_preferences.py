@@ -61,7 +61,7 @@ def assert_variant_values(spec, **variants):
 
 
 @pytest.mark.usefixtures("concretize_scope", "mock_packages")
-class TestConcretizePreferences(object):
+class TestConcretizePreferences:
     @pytest.mark.parametrize(
         "package_name,variant_value,expected_results",
         [
@@ -178,11 +178,11 @@ class TestConcretizePreferences(object):
             {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
         )
         spec = concretize("mpileaks")
-        assert spec.package.fetcher[0].url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
+        assert spec.package.fetcher.url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
 
         update_packages("mpileaks", "package_attributes", {})
         spec = concretize("mpileaks")
-        assert spec.package.fetcher[0].url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
+        assert spec.package.fetcher.url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
 
     def test_config_set_pkg_property_new(self, mutable_mock_repo):
         """Test that you can set arbitrary attributes on the Package class"""

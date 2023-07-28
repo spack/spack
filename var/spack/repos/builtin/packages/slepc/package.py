@@ -183,48 +183,36 @@ class Slepc(Package, CudaPackage, ROCmPackage):
             join_path(self.stage.source_path, "make.log"),
         ]
 
-    def run_hello_test(self):
-        """Run stand alone test: hello"""
+    def test_hello(self):
+        """build and run hello"""
         test_dir = self.test_suite.current_test_data_dir
-
         if not os.path.exists(test_dir):
-            print("Skipping slepc test")
-            return
+            raise SkipTest(f"Test data directory ({test_dir}) is missing")
 
-        exe = "hello"
-        cc_exe = os.environ["CC"]
+        test_exe = "hello"
+        options = [
+            f"-I{self.prefix.include}",
+            "-L",
+            self.prefix.lib,
+            "-l",
+            "slepc",
+            "-L",
+            self.spec["petsc"].prefix.lib,
+            "-l",
+            "petsc",
+            "-L",
+            self.spec["mpi"].prefix.lib,
+            "-l",
+            "mpi",
+            "-o",
+            test_exe,
+            join_path(test_dir, f"{test_exe}.c"),
+        ]
 
-        self.run_test(
-            exe=cc_exe,
-            options=[
-                "-I{0}".format(self.prefix.include),
-                "-L",
-                self.prefix.lib,
-                "-l",
-                "slepc",
-                "-L",
-                self.spec["petsc"].prefix.lib,
-                "-l",
-                "petsc",
-                "-L",
-                self.spec["mpi"].prefix.lib,
-                "-l",
-                "mpi",
-                "-o",
-                exe,
-                join_path(test_dir, "hello.c"),
-            ],
-            purpose="test: compile {0} example".format(exe),
-            work_dir=test_dir,
-        )
+        cc = which(os.environ["CC"])
+        with working_dir(test_dir):
+            cc(*options)
 
-        self.run_test(
-            exe=exe,
-            options=[],
-            expected=["Hello world"],
-            purpose="test: run {0} example".format(exe),
-            work_dir=test_dir,
-        )
-
-    def test(self):
-        self.run_hello_test()
+            hello = which(test_exe)
+            out = hello(output=str.split, error=str.split)
+            assert "Hello world" in out

@@ -121,7 +121,7 @@ Since v0.19, Spack supports  two ways of writing a package recipe. The most comm
 
        def url_for_version(self, version):
            if version >= Version("2.1.1"):
-               return super(Openjpeg, self).url_for_version(version)
+               return super().url_for_version(version)
            url_fmt = "https://github.com/uclouvain/openjpeg/archive/version.{0}.tar.gz"
            return url_fmt.format(version)
 
@@ -155,7 +155,7 @@ builder class explicitly. Using the same example as above, this reads:
 
        def url_for_version(self, version):
            if version >= Version("2.1.1"):
-               return super(Openjpeg, self).url_for_version(version)
+               return super().url_for_version(version)
            url_fmt = "https://github.com/uclouvain/openjpeg/archive/version.{0}.tar.gz"
            return url_fmt.format(version)
 

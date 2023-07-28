@@ -178,6 +178,8 @@ class Hpcviewer(Package):
 
     system = platform.system().lower()
     machine = platform.machine().lower()
+    if machine == "arm64":
+        machine = "aarch64"
 
     # Versions for MacOSX / Darwin
     if system == "darwin":

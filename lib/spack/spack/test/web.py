@@ -12,6 +12,7 @@ import llnl.util.tty as tty
 import spack.config
 import spack.mirror
 import spack.paths
+import spack.util.path
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
@@ -222,12 +223,12 @@ def test_list_url(tmpdir):
     assert list_url(True) == ["dir/another-file.txt", "file-0.txt", "file-1.txt", "file-2.txt"]
 
 
-class MockPages(object):
+class MockPages:
     def search(self, *args, **kwargs):
         return [{"Key": "keyone"}, {"Key": "keytwo"}, {"Key": "keythree"}]
 
 
-class MockPaginator(object):
+class MockPaginator:
     def paginate(self, *args, **kwargs):
         return MockPages()
 
@@ -240,7 +241,7 @@ class MockClientError(Exception):
         }
 
 
-class MockS3Client(object):
+class MockS3Client:
     def get_paginator(self, *args, **kwargs):
         return MockPaginator()
 
@@ -267,7 +268,7 @@ class MockS3Client(object):
 
 
 def test_gather_s3_information(monkeypatch, capfd):
-    mirror = spack.mirror.Mirror.from_dict(
+    mirror = spack.mirror.Mirror(
         {
             "fetch": {
                 "access_token": "AAAAAAA",
