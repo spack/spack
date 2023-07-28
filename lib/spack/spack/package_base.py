@@ -25,18 +25,7 @@ import textwrap
 import time
 import traceback
 import warnings
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    no_type_check,
-)
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -438,7 +427,6 @@ class PackageViewMixin:
 Pb = TypeVar("Pb", bound="PackageBase")
 
 
-@no_type_check
 class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
 
