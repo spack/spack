@@ -145,6 +145,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("boost", default=False, description="Enable callbacks that use Boost libraries")
     variant("asan", default=False, description="Build with support for address-sanitizer")
     variant("unit_tests", default=False, description="Support for unit testing")
+    variant("caliper", default=False, description="Support for instrumentation with caliper")
 
     # LBANN benefits from high performance linkers, but passing these in as command
     # line options forces the linker flags to unnecessarily propagate to all
@@ -316,6 +317,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("spdlog", when="@:0.90,0.102:")
     depends_on("zstr")
 
+    depends_on("caliper+adiak+mpi", when="+caliper")
+
     generator("ninja")
 
     def setup_build_environment(self, env):
@@ -411,6 +414,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             ("LBANN_WITH_ALUMINUM", "al"),
             ("LBANN_WITH_ADDRESS_SANITIZER", "asan"),
             ("LBANN_WITH_BOOST", "boost"),
+            ("LBANN_WITH_CALIPER", "caliper"),
             ("LBANN_WITH_CONDUIT", "conduit"),
             ("LBANN_WITH_NVSHMEM", "nvshmem"),
             ("LBANN_WITH_FFT", "fft"),
