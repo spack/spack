@@ -36,6 +36,7 @@ class Cpmd(MakefilePackage):
         else:
             fc = spack_fc
             cc = spack_cc
+            cp.filter(r"FFLAGS='([^']*)'", "FFLAGS='\\1 -fallow-argument-mismatch'")
 
         cp.filter("FC=.+", "FC='{0}'".format(fc))
         cp.filter("CC=.+", "CC='{0}'".format(cc))
