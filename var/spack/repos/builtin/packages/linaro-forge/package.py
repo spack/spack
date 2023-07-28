@@ -24,6 +24,9 @@ class LinaroForge(Package):
     maintainers("kenche-linaro")
 
     if platform.machine() in ["aarch64", "arm64"]:
+        version(
+            "23.0.1", sha256="552e4a3f408ed4eb5f1bfbb83c94530ee8733579c56c3e98050c0ad2d43eb433"
+        )
         version("23.0", sha256="7ae20bb27d539751d1776d1e09a65dcce821fc6a75f924675439f791261783fb")
         version(
             "22.1.4", sha256="4e2af481a37b4c99dba0de6fac75ac945316955fc4170d06e321530adea7ac9f"
@@ -32,6 +35,9 @@ class LinaroForge(Package):
             "21.1.3", sha256="4a4ff7372aad5a31fc9e18b7b6c493691ab37d8d44a3158584e62d1ab82b0eeb"
         )
     elif platform.machine() == "ppc64le":
+        version(
+            "23.0.1", sha256="08cffef2195ea96872d56e827f320eed40aaa82fd3b62d4c661a598fb2fb3a47"
+        )
         version("23.0", sha256="0962c7e0da0f450cf6daffe1156e1f59e02c9f643df458ec8458527afcde5b4d")
         version(
             "22.1.3", sha256="6479c3a4ae6ce6648c37594eb0266161f06d9f89010fca9299855848661dda49"
@@ -43,6 +49,9 @@ class LinaroForge(Package):
             "21.1.3", sha256="eecbc5686d60994c5468b2d7cd37bebe5d9ac0ba37bd1f98fbfc69b071db541e"
         )
     elif platform.machine() == "x86_64":
+        version(
+            "23.0.1", sha256="1d681891c0c725363f0f45584c9b79e669d5c9782158453b7d24b4b865d72755"
+        )
         version("23.0", sha256="f4ab12289c992dd07cb1a15dd985ef4713d1f9c0cf362ec5e9c995cca9b1cf81")
         version(
             "22.1.3", sha256="4f8a8b1df6ad712e89c82eedf4bd85b93b57b3c8d5b37d13480ff058fa8f4467"
