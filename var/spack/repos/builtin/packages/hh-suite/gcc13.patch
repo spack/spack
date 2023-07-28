@@ -1,0 +1,10 @@
+--- src/a3m_compress.h	2020-08-17 00:16:36.000000000 +0100
++++ src/a3m_compress.h.patched	2023-07-28 19:31:38.599795859 +0100
+@@ -16,6 +16,7 @@
+ #include <algorithm>
+ #include <cstring>
+ #include <climits>
++#include <cstdint>
+ 
+ extern "C" {
+   #include <ffindex.h>     // fast index-based database reading

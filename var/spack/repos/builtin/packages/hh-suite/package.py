@@ -24,6 +24,9 @@ class HhSuite(CMakePackage):
     depends_on("cmake@2.8.12:", type="build")
     depends_on("mpi", when="+mpi")
 
+    # patch to fix include requirements for gcc13
+    patch("gcc13.patch", level=0, when="%gcc@13:")
+
     def build_args(self, spec, prefix):
         args = []
         if "+mpi" in self.spec:
