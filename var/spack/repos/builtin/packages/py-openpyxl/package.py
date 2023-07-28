@@ -23,8 +23,3 @@ class PyOpenpyxl(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-et-xmlfile", when="@2.4:", type=("build", "run"))
     depends_on("py-jdcal", when="@2.2.0:3.0.6", type=("build", "run"))
-    depends_on("py-pip@18.0:", when="@3.1.2:", type=("build", "run"))
-    depends_on("py-lxml@4.2.0:", when="@3.1.2:", type=("build", "run"))
-    depends_on("py-pillow", when="@3.1.2:", type=("build", "run"))
-    depends_on("py-tox", when="@3.1.2:", type=("build", "run"))
-    depends_on("py-pandas", when="@3.1.2:", type=("build", "run"))
