@@ -19,7 +19,7 @@ class Nextdenovo(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
-        makefile.filter(r"^TOP_DIR.*",  "TOP_DIR={0}".format(self.build_directory))
+        makefile.filter(r"^TOP_DIR.*", "TOP_DIR={0}".format(self.build_directory))
         runfile = FileFilter("nextDenovo")
         runfile.filter(r"^SCRIPT_PATH.*", "SCRIPT_PATH = '{0}'".format(prefix))
 
