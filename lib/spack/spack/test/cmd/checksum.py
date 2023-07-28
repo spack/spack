@@ -119,7 +119,7 @@ def test_checksum_verification_fails(install_mockery, capsys):
     versions = list(pkg.versions.keys())
     version_hashes = {versions[0]: "abadhash", spack.version.Version("0.1"): "123456789"}
     with pytest.raises(SystemExit):
-        spack.cmd.checksum.verify_checksums(pkg, version_hashes)
+        spack.cmd.checksum.print_checksum_status(pkg, version_hashes)
     out = str(capsys.readouterr())
     assert out.count("Correct") == 0
     assert "No previous checksum" in out

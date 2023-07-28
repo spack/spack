@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-def get_version_lines(version_hashes_dict, url_dict={}):
+def get_version_lines(version_hashes_dict: dict, url_dict: dict = None) -> str:
     """
     Renders out a set of versions like those found in a package's
     package.py file for a given set of versions and hashes.
