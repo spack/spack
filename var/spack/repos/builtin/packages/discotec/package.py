@@ -30,12 +30,12 @@ class Discotec(CMakePackage):
     variant("vtk", default=False, description="Build with VTK support")
 
     depends_on(
-        "boost +test +serialization +filesystem +system +program_options", type=("build", "run")
+        "boost +test +serialization +filesystem +system +program_options +date_time"
     )
     depends_on("cmake@3.24.2:", type="build")
     depends_on("glpk")
     depends_on("highfive+mpi+boost+ipo", when="+hdf5")
-    depends_on("mpi", type=("build", "run"))
+    depends_on("mpi", type=("build", "link", "run"))
     depends_on("vtk", when="+vtk")
 
     def cmake_args(self):
