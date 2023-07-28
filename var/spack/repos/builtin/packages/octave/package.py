@@ -105,7 +105,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on("llvm", when="+llvm")
     depends_on("gl", when="+opengl")
     depends_on("gl", when="+fltk")
-    depends_on("pcre2", when="+pcre2")    
+    depends_on("pcre2", when="+pcre2")
     depends_on("qhull", when="+qhull")
     depends_on("qrupdate", when="+qrupdate")
     depends_on("qscintilla", when="+qscintilla")
@@ -321,7 +321,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
             )
         else:
             config_args.append("--without-pcre2")
-        
+
         if "~opengl" and "~fltk" in spec:
             config_args.extend(["--without-opengl", "--without-framework-opengl"])
         # TODO:  opengl dependency and package is missing?
