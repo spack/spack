@@ -447,8 +447,8 @@ def test_dev_build_rebuild_dependent_delayed(
         child = root['dev-build-test-install']
 
         db = spack.database.Database(tmpdir.join('db'), lock_cfg=spack.database.NO_LOCK)
-        db._add(child, installation_time=1)
-        db._add(dependent, installation_time=0)
+        db._add(child, installation_time=2)
+        db._add(dependent, installation_time=1)
 
         needs_reinstall = e._dev_dep_was_installed_more_recently(_database=db)
         assert needs_reinstall == [dependent.dag_hash()]
