@@ -26,7 +26,7 @@ class PyMorphTool(PythonPackage):
     depends_on("py-xmltodict@0.12:", type=("build", "run"))
 
     depends_on("py-plotly@4.1:", type=("build", "run"))
-    depends_on("py-dask+bag@2.19:", type=("build", "run"))
+    depends_on("py-dask@2.19:", type=("build", "run"))
     depends_on("neuron+python@7.8:", type=("build", "run"))
     depends_on("py-bluepyopt@1.9.37:", type=("build", "run"))
 

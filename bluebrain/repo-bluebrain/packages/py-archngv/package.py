@@ -47,7 +47,7 @@ class PyArchngv(PythonPackage):
     # needed for trimesh marchingcubes
     depends_on("py-scikit-image", type=("build", "run"))
 
-    depends_on("py-dask+distributed+bag@2.0:", type=("build", "run"))
+    depends_on("py-dask+distributed@2.0:", type=("build", "run"))
     depends_on("py-distributed@2.0:", type=("build", "run"))
     depends_on("py-dask-mpi@2.0:", type=("build", "run"))
 

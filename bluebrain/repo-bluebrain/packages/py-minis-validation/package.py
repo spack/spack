@@ -23,7 +23,7 @@ class PyMinisValidation(PythonPackage):
     depends_on("py-h5py@3.0:3.999", type=("build", "run"))
     depends_on("py-click@7.0:7.999", type=("build", "run"))
     depends_on("py-pyyaml@5.1:5.999", type=("build", "run"))
-    depends_on("py-dask+distributed+bag", type=("build", "run"))
+    depends_on("py-dask+distributed", type=("build", "run"))
     depends_on("py-dask-mpi", type=("build", "run"))
     depends_on("py-distributed", type=("build", "run"))
     depends_on("neuron+python@7.8:", type=("build", "run"))
