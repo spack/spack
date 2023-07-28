@@ -29,9 +29,7 @@ class Discotec(CMakePackage):
     variant("selalib", default=False, description="Build selalib example")
     variant("vtk", default=False, description="Build with VTK support")
 
-    depends_on(
-        "boost +test +serialization +filesystem +system +program_options +date_time"
-    )
+    depends_on("boost +test +serialization +filesystem +system +program_options +date_time")
     depends_on("cmake@3.24.2:", type="build")
     depends_on("glpk")
     depends_on("highfive+mpi+boost+ipo", when="+hdf5")
