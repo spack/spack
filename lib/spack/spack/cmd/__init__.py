@@ -273,9 +273,9 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, fir
             See ``spack.database.Database._query`` for details.
     """
     if local:
-        matching_specs = spack.store.db.query_local(spec, hashes=hashes, installed=installed)
+        matching_specs = spack.store.STORE.db.query_local(spec, hashes=hashes, installed=installed)
     else:
-        matching_specs = spack.store.db.query(spec, hashes=hashes, installed=installed)
+        matching_specs = spack.store.STORE.db.query(spec, hashes=hashes, installed=installed)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
@@ -473,7 +473,7 @@ def display_specs(specs, args=None, **kwargs):
         out = ""
         # getting lots of prefixes requires DB lookups. Ensure
         # all spec.prefix calls are in one transaction.
-        with spack.store.db.read_transaction():
+        with spack.store.STORE.db.read_transaction():
             for string, spec in formatted:
                 if not string:
                     # print newline from above

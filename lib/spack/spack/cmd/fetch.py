@@ -10,6 +10,7 @@ import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.repo
+import spack.traverse
 
 description = "fetch archives for packages"
 section = "build"
@@ -36,6 +37,12 @@ def setup_parser(subparser):
 
 
 def fetch(parser, args):
+    if args.no_checksum:
+        spack.config.set("config:checksum", False, scope="command_line")
+
+    if args.deprecated:
+        spack.config.set("config:deprecated", True, scope="command_line")
+
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs, concretize=True)
     else:
@@ -55,18 +62,17 @@ def fetch(parser, args):
         else:
             tty.die("fetch requires at least one spec argument")
 
-    if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+    if args.dependencies or args.missing:
+        to_be_fetched = spack.traverse.traverse_nodes(specs, key=spack.traverse.by_dag_hash)
+    else:
+        to_be_fetched = specs
 
-    if args.deprecated:
-        spack.config.set("config:deprecated", True, scope="command_line")
+    for spec in to_be_fetched:
+        if args.missing and spec.installed:
+            continue
 
-    for spec in specs:
-        if args.missing or args.dependencies:
-            for s in spec.traverse(root=False):
-                # Skip already-installed packages with --missing
-                if args.missing and s.installed:
-                    continue
+        pkg = spec.package
 
-                s.package.do_fetch()
-        spec.package.do_fetch()
+        pkg.stage.keep = True
+        with pkg.stage:
+            pkg.do_fetch()

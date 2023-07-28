@@ -130,7 +130,7 @@ def activate(env, use_env_repo=False, add_view=True):
     #
     try:
         if add_view and ev.default_view_name in env.views:
-            with spack.store.db.read_transaction():
+            with spack.store.STORE.db.read_transaction():
                 env.add_default_view_to_env(env_mods)
     except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
         tty.error(e)
@@ -165,7 +165,7 @@ def deactivate():
 
     if ev.default_view_name in active.views:
         try:
-            with spack.store.db.read_transaction():
+            with spack.store.STORE.db.read_transaction():
                 active.rm_default_view_from_env(env_mods)
         except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
             tty.warn(e)

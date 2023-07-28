@@ -2733,11 +2733,11 @@ class Solver:
         reusable_specs = []
         if self.reuse:
             # Specs from the local Database
-            with spack.store.db.read_transaction():
+            with spack.store.STORE.db.read_transaction():
                 reusable_specs.extend(
                     [
                         s
-                        for s in spack.store.db.query(installed=True)
+                        for s in spack.store.STORE.db.query(installed=True)
                         if not s.satisfies("dev_path=*")
                     ]
                 )

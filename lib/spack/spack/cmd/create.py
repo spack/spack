@@ -325,6 +325,7 @@ class PythonPackageTemplate(PackageTemplate):
     # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
     # exists, use setuptools.
     # depends_on("py-setuptools", type="build")
+    # depends_on("py-hatchling", type="build")
     # depends_on("py-flit-core", type="build")
     # depends_on("py-poetry-core", type="build")
 
@@ -332,17 +333,11 @@ class PythonPackageTemplate(PackageTemplate):
     # depends_on("py-foo", type=("build", "run"))"""
 
     body_def = """\
-    def global_options(self, spec, prefix):
-        # FIXME: Add options to pass to setup.py
+    def config_settings(self, spec, prefix):
+        # FIXME: Add configuration settings to be passed to the build backend
         # FIXME: If not needed, delete this function
-        options = []
-        return options
-
-    def install_options(self, spec, prefix):
-        # FIXME: Add options to pass to setup.py install
-        # FIXME: If not needed, delete this function
-        options = []
-        return options"""
+        settings = {}
+        return settings"""
 
     def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy

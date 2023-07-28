@@ -194,7 +194,7 @@ def read(path, apply_updates):
         spack.compilers.add_compilers_to_config(compilers, init_config=False)
     if apply_updates:
         for spec in specs.values():
-            spack.store.db.add(spec, directory_layout=None)
+            spack.store.STORE.db.add(spec, directory_layout=None)
 
 
 class ManifestValidationError(spack.error.SpackError):

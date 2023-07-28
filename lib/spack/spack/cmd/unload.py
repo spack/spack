@@ -71,7 +71,7 @@ def unload(parser, args):
             for spec in spack.cmd.parse_specs(args.specs)
         ]
     else:
-        specs = spack.store.db.query(hashes=hashes)
+        specs = spack.store.STORE.db.query(hashes=hashes)
 
     if not args.shell:
         specs_str = " ".join(args.specs) or "SPECS"

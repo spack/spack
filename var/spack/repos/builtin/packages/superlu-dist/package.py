@@ -160,18 +160,3 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         """Copy the example matrices after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
-
-    def test_pddrive(self):
-        """run cached pddrive"""
-        if not self.spec.satisfies("@7.2.0:"):
-            raise SkipTest("Test is only available for v7.2.0 on")
-
-        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
-        superludriver = join_path(self.prefix.lib, "EXAMPLE", "pddrive")
-
-        with working_dir(test_dir):
-            # Smoke test input parameters: -r 2 -c 2 g20.rua
-            test_args = ["-n", "4", superludriver, "-r", "2", "-c", "2", "g20.rua"]
-            # Find the correct mpirun command
-            mpiexe_f = which("srun", "mpirun", "mpiexec")
-            mpiexe_f(*test_args)
