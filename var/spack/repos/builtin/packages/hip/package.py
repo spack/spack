@@ -114,9 +114,11 @@ class Hip(CMakePackage):
 
     depends_on("cuda", when="+cuda")
 
-    depends_on("cmake@3.16.8:", type="build", when="@4.5.0:")
+    depends_on("cmake@3.16.8:", type=("build"), when="@4.5.0:")
     depends_on("cmake@3.4.3:", type="build")
     depends_on("perl@5.10:", type=("build", "run"))
+
+    test_requires_compiler = True
 
     with when("+rocm"):
         depends_on("gl@4.5:")
@@ -330,6 +332,7 @@ class Hip(CMakePackage):
 
     patch("Add_missing_open_cl_header_file_for_4.3.0.patch", when="@4.3.0:4.3.2")
     patch("0014-hip-test-file-reorg-5.4.0.patch", when="@5.4.0:")
+    patch("0016-hip-sample-fix-hipMalloc-call.patch", when="@5.4.3:")
     patch("0014-remove-compiler-rt-linkage-for-host.5.5.0.patch", when="@5.5")
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/3206
@@ -612,3 +615,68 @@ class Hip(CMakePackage):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
+
+    test_src_dir = "samples"
+
+    @run_after("install")
+    def cache_test_sources(self):
+        """Copy the tests source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        if self.spec.satisfies("@:5.1.0"):
+            return
+        self.cache_extra_test_sources([self.test_src_dir])
+
+    def test_samples(self):
+        # configure, build and run all hip samples
+        if self.spec.satisfies("@:5.1.0"):
+            raise SkipTest("Test is only available for specs after version 5.1.0")
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+        prefixes = ";".join(
+            [
+                self.spec["hip"].prefix,
+                self.spec["llvm-amdgpu"].prefix,
+                self.spec["comgr"].prefix,
+                self.spec["hsa-rocr-dev"].prefix,
+            ]
+        )
+        cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."]
+
+        amdclang_path = join_path(self.spec["llvm-amdgpu"].prefix, "bin", "amdclang++")
+        os.environ["CXX"] = amdclang_path
+        os.environ["FC"] = "/usr/bin/gfortran"
+
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+
+        for root, dirs, files in os.walk(test_dir):
+            dirs.sort()
+            if "CMakeLists.txt" in files or "Makefile" in files:
+                with working_dir(root, create=True):
+                    head, test_name = os.path.split(root)
+                    with test_part(
+                        self,
+                        "test_sample_{0}".format(test_name),
+                        purpose="configure, build and run test: {0}".format(test_name),
+                    ):
+                        if "CMakeLists.txt" in files:
+                            print("Configuring  test " + test_name)
+                            os.mkdir("build")
+                            os.chdir("build")
+                            cmake(*cc_options)
+
+                        print("Building test " + test_name)
+                        make(parallel=False)
+                        # iterate through the files in dir to find the newly built binary
+                        for file in os.listdir("."):
+                            if (
+                                file not in files
+                                and os.path.isfile(file)
+                                and os.access(file, os.X_OK)
+                                and not file.endswith(".o")
+                            ):
+                                print("Executing test binary: " + file)
+                                exe = which(file)
+                                if file == "hipDispatchEnqueueRateMT":
+                                    options = ["16", "0"]
+                                else:
+                                    options = []
+                                exe(*options)
