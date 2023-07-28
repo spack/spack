@@ -17,6 +17,7 @@ class RAffyplm(RPackage):
 
     bioc = "affyPLM"
 
+    version("1.76.0", commit="45557df5a32f56aa5240439737c5718738fb4c27")
     version("1.74.0", commit="5f76ef92e69deabc19c5395eaec4adb85c66b63d")
     version("1.72.0", commit="394c0a8e213f188d0b1d01e20516df8bf1bc5c09")
     version("1.70.0", commit="64abfec92b347aa340b54a8c7b2fbd524fe9c312")
@@ -34,3 +35,4 @@ class RAffyplm(RPackage):
     depends_on("r-gcrma", type=("build", "run"))
     depends_on("r-preprocesscore@1.5.1:", type=("build", "run"))
     depends_on("r-zlibbioc", type=("build", "run"))
+    depends_on("zlib")

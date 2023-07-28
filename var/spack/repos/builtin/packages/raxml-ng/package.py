@@ -21,6 +21,7 @@ class RaxmlNg(CMakePackage):
     url = "https://github.com/amkozlov/raxml-ng/archive/1.0.1.tar.gz"
     git = "https://github.com/amkozlov/raxml-ng.git"
 
+    version("1.1.0", submodules=True)
     version("1.0.2", submodules=True)
     version("1.0.1", submodules=True)
 

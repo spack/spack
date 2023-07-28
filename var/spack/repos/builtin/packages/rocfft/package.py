@@ -13,12 +13,15 @@ class Rocfft(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
     git = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.3.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocfft"]
-
+    version("5.5.1", sha256="57423a64f5cdb1c37ff0891b6c17b59f73198d46be42db4ae23781ef2c0cd49d")
+    version("5.5.0", sha256="9288152e66504b06082e4eed8cdb791b4f9ae2836b3defbeb4d2b54901b96485")
+    version("5.4.3", sha256="ed9664adc9825c237327497bc4b23f020d50be7645647f14a45f4d943dd506e7")
+    version("5.4.0", sha256="d35a67332f4425fba1824eed78cf98d5c9a17a422614ff3f4cba2461df952336")
     version("5.3.3", sha256="678c18710578c1fb36a0009311bb79de7607c3468f9102cfba56a866ebb7ff78")
     version("5.3.0", sha256="d655c5541c4aff4267e80e36d002fc3a55c2f84a0ae8631197c12af3bf03fa7d")
     version("5.2.3", sha256="0cee37886f01f1afb3ae5dad1164c819573c13c6675bff4eb668de334adbff27")
@@ -99,12 +102,6 @@ class Rocfft(CMakePackage):
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
     variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
     variant(
         "amdgpu_target_sram_ecc", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True
@@ -146,6 +143,10 @@ class Rocfft(CMakePackage):
         "5.2.3",
         "5.3.0",
         "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
@@ -154,6 +155,8 @@ class Rocfft(CMakePackage):
     # Patch to add spack build test support. No longer required from 5.2
     patch("0002-Fix-clients-fftw3-include-dirs-rocm-4.2.patch", when="@4.2.0:4.3.1")
     patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@4.5.0:5.1")
+    # Patch to add install prefix header location for sqlite for 5.4
+    patch("0004-fix-missing-sqlite-include-paths.patch", when="@5.4.0:5.5")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -170,9 +173,7 @@ class Rocfft(CMakePackage):
         return ver
 
     def cmake_args(self):
-        args = [
-            self.define("BUILD_CLIENTS_TESTS", self.run_tests),
-        ]
+        args = [self.define("BUILD_CLIENTS_TESTS", self.run_tests)]
         tgt = self.spec.variants["amdgpu_target"]
 
         if "auto" not in tgt:
@@ -205,4 +206,5 @@ class Rocfft(CMakePackage):
 
         if self.spec.satisfies("@5.3.0:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+
         return args

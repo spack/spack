@@ -13,7 +13,7 @@ class Libunwind(AutotoolsPackage):
     homepage = "https://www.nongnu.org/libunwind/"
     url = "http://download.savannah.gnu.org/releases/libunwind/libunwind-1.1.tar.gz"
     git = "https://github.com/libunwind/libunwind"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     version("master", branch="master")
     version("1.6-stable", branch="v1.6-stable")

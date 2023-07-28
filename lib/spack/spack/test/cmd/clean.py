@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -17,15 +16,12 @@ import spack.stage
 
 clean = spack.main.SpackCommand("clean")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-
 
 @pytest.fixture()
 def mock_calls_for_clean(monkeypatch):
-
     counts = {}
 
-    class Counter(object):
+    class Counter:
         def __init__(self, name):
             self.name = name
             counts[name] = 0
@@ -61,7 +57,6 @@ all_effects = ["stages", "downloads", "caches", "failures", "python_cache"]
     ],
 )
 def test_function_calls(command_line, effects, mock_calls_for_clean):
-
     # Call the command with the supplied command line
     clean(command_line)
 

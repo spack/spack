@@ -13,10 +13,7 @@ import pytest
 
 import spack.paths
 import spack.repo
-from spack.directory_layout import (
-    DirectoryLayout,
-    InvalidDirectoryLayoutParametersError,
-)
+from spack.directory_layout import DirectoryLayout, InvalidDirectoryLayoutParametersError
 from spack.spec import Spec
 from spack.util.path import path_to_os_path
 

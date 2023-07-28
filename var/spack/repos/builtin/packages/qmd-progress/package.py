@@ -16,7 +16,7 @@ class QmdProgress(CMakePackage):
     url = "https://github.com/lanl/qmd-progress/archive/refs/tags/v1.2.0.tar.gz"
     git = "https://github.com/lanl/qmd-progress.git"
 
-    maintainers = ["jeanlucf22"]
+    maintainers("jeanlucf22")
 
     version("master", branch="master")
     version("1.2.0", sha256="d41708f0e9c12d0e421a9fa883f8b12478cf4faa7453703143f32c093626638e")

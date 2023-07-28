@@ -17,10 +17,11 @@ class Upp(CMakePackage):
     git = "https://github.com/NOAA-EMC/UPP.git"
     url = "https://github.com/NOAA-EMC/UPP/archive/refs/tags/upp_v10.0.10.tar.gz"
 
-    maintainers = ["AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA"]
+    maintainers("AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA")
 
     version("10.0.10", sha256="0c96a88d0e79b554d5fcee9401efcf4d6273da01d15e3413845274f73d70b66e")
     version("10.0.9", tag="upp_v10.0.9", submodules=True)
+    version("10.0.8", tag="upp_v10.0.8", submodules=True)
 
     variant("openmp", default=True)
     variant("postexec", default=True)
@@ -34,6 +35,7 @@ class Upp(CMakePackage):
     depends_on("g2")
     depends_on("g2tmpl")
     depends_on("ip")
+    depends_on("gfsio", when="@:10.0.8")
 
     depends_on("nemsio", when="+postexec")
     depends_on("sfcio", when="+postexec")

@@ -1,0 +1,42 @@
+diff --git a/configure b/configure
+index d95c5b6..e299dc2 100755
+--- a/configure
++++ b/configure
+@@ -117,11 +117,13 @@ fi
+ 
+ if [ -n "$NETCDF" ] ; then
+   echo "Will use NETCDF in dir: $NETCDF"
++  echo "Will use NETCDFF in dir: $NETCDFF"
+   # for 3.6.2 and greater there might be a second library, libnetcdff.a .  Check for this and use
+   # if available
+-  NETCDFF=" "
+-  if [ -f "$NETCDF/lib/libnetcdff.a" ] ; then
+-    NETCDFF="-lnetcdff"
++  NETCDFF="$NETCDFF"
++  export NETCDFF
++  if [ -f "$NETCDFF/lib/libnetcdff.a" ] ; then
++    NETCDFF_LIB="-lnetcdff"
+   fi
+ else
+   echo "Will configure for use without NetCDF"
+@@ -190,7 +192,7 @@ if [ $wrf_dir = "none" ]; then
+ fi
+ 
+ # Found perl, so proceed with configuration
+-perl arch/Config.pl -perl=$PERL -netcdf=$NETCDF -netcdff=$NETCDFF -os=$os -mach=$mach -wrfdir=$wrf_dir -grib2dir=$grib2dir
++perl arch/Config.pl -perl=$PERL -netcdf=$NETCDF -netcdff=$NETCDFF -netcdfflib=$NETCDFF_LIB -os=$os -mach=$mach -wrfdir=$wrf_dir
+ 
+ 
+ #Checking cross-compiling capability for some particular environment 
+@@ -356,9 +358,9 @@ cat > fort_netcdf.f <<EOF
+         end program
+ EOF
+     FFLAGS=`grep ^FFLAGS configure.wps | cut -d"=" -f2-`
+-    cp $NETCDF/include/netcdf.inc .
++    cp $NETCDFF/include/netcdf.inc .
+     FC=`grep ^SFC configure.wps | cut -d"=" -f2-`
+-    $FC ${FFLAGS} fort_netcdf.f -o fort_netcdf -L${NETCDF}/lib $NETCDFF -lnetcdf > /dev/null 2>&1 
++    $FC ${FFLAGS} fort_netcdf.f -o fort_netcdf -L${NETCDF}/lib -L${NETCDFF}/lib ${NETCDFF_LIB} -lnetcdf > /dev/null 2>&1
+     if [ -f "fort_netcdf" ] ; then
+       ./fort_netcdf > /dev/null 2>&1
+       if [ $? = 0 ]; then

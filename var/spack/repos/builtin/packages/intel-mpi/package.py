@@ -10,7 +10,7 @@ from spack.package import *
 class IntelMpi(IntelPackage):
     """Intel MPI. This package has been replaced by intel-oneapi-mpi."""
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
@@ -146,7 +146,7 @@ class IntelMpi(IntelPackage):
         )
 
     def setup_run_environment(self, env):
-        super(IntelMpi, self).setup_run_environment(env)
+        super().setup_run_environment(env)
 
         for name, value in self.mpi_compiler_wrappers.items():
             env.set(name, value)

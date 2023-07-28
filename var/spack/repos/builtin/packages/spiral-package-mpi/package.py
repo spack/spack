@@ -13,7 +13,7 @@ class SpiralPackageMpi(Package):
     url = "https://github.com/spiral-software/spiral-package-mpi/archive/refs/tags/1.0.0.tar.gz"
     git = "https://github.com/spiral-software/spiral-package-mpi.git"
 
-    maintainers = ["spiralgen"]
+    maintainers("spiralgen")
     extends("spiral-software")
 
     version("develop", branch="develop")

@@ -14,7 +14,7 @@ class SysSage(CMakePackage):
     url = "https://github.com/stepanvanecek/sys-sage/archive/refs/tags/v0.1.1-alpha.2.tar.gz"
     git = "https://github.com/stepanvanecek/sys-sage.git"
 
-    maintainers = ["stepanvanecek"]
+    maintainers("stepanvanecek")
 
     version("master", branch="master")
     version(

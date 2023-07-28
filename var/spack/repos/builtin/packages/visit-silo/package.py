@@ -25,7 +25,7 @@ class VisitSilo(CMakePackage):
     git = "https://github.com/visit-dav/visit.git"
     url = "https://github.com/visit-dav/visit/releases/download/v3.1.1/visit3.1.1.tar.gz"
 
-    maintainers = ["cyrush", "cessenat"]
+    maintainers("cyrush", "cessenat")
 
     # Here we provide a local file that contains only the plugin in a flat directory
     version("local", url="file://{0}/visit-Silo.tgz".format(os.getcwd()))

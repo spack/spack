@@ -26,7 +26,7 @@ class PalisadeDevelopment(CMakePackage):
 
     homepage = "https://gitlab.com/palisade/palisade-development"
     git = "https://gitlab.com/palisade/palisade-development.git"
-    maintainers = ["wohlbier"]
+    maintainers("wohlbier")
 
     version("feature-fixed-point-encoding", branch="feature-fixed-point-encoding", submodules=True)
     version("fppe-logreg-v1.0", tag="fppe-logreg-v1.0", submodules=True)

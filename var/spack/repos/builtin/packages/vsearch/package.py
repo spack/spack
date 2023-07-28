@@ -11,7 +11,7 @@ class Vsearch(AutotoolsPackage):
 
     homepage = "https://github.com/torognes/vsearch"
     url = "https://github.com/torognes/vsearch/archive/v2.4.3.tar.gz"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("2.22.1", sha256="c62bf69e7cc3d011a12e3b522ba8c0c91fb90deea782359e9569677d0c991778")
     version("2.14.1", sha256="388529a39eb0618a09047bf91e0a8ae8c9fd851a05f8d975e299331748f97741")

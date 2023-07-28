@@ -20,7 +20,7 @@ class Pngwriter(CMakePackage):
     url = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
     git = "https://github.com/pngwriter/pngwriter.git"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("develop", branch="dev")
     version("master", branch="master")

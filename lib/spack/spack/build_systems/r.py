@@ -71,8 +71,6 @@ class RPackage(Package):
 
     GenericBuilder = RBuilder
 
-    maintainers = ["glennpj"]
-
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = "RPackage"

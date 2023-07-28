@@ -17,7 +17,7 @@ class P4est(AutotoolsPackage):
     # Github repository lack important parts.
     url = "https://p4est.github.io/release/p4est-2.8.tar.gz"
 
-    maintainers = ["davydden"]
+    maintainers("davydden")
 
     version("2.8", sha256="6a0586e3abac06c20e31b1018f3a82a564a6a0d9ff6b7f6c772a9e6b0f0cc5e4")
     version("2.3.2", sha256="076df9e5578e0e7fcfbe12e1a0b080104001f8c986ab1d5a69ec2220050df8e6")

@@ -15,7 +15,7 @@ class Libquo(AutotoolsPackage):
     url = "https://lanl.github.io/libquo/dists/libquo-1.3.1.tar.gz"
     git = "https://github.com/lanl/libquo.git"
 
-    maintainers = ["samuelkgutierrez"]
+    maintainers("samuelkgutierrez")
 
     tags = ["e4s"]
 

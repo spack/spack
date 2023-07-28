@@ -32,7 +32,7 @@ class Autogen(AutotoolsPackage, GNUMirrorPackage):
         args = [
             # `make check` fails without this
             # Adding a gettext dependency does not help
-            "--disable-nls",
+            "--disable-nls"
         ]
 
         if "+xml" in spec:

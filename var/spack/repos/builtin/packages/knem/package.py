@@ -15,7 +15,7 @@ class Knem(AutotoolsPackage):
     list_url = "https://knem.gitlabpages.inria.fr/download"
     git = "https://gitlab.inria.fr/knem/knem.git"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     version("master", branch="master")
     version(

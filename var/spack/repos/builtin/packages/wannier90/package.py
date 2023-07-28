@@ -17,7 +17,9 @@ class Wannier90(MakefilePackage):
 
     homepage = "http://wannier.org"
     url = "https://github.com/wannier-developers/wannier90/archive/v3.1.0.tar.gz"
+    git = "https://github.com/wannier-developers/wannier90.git"
 
+    version("develop", branch="develop")
     version("3.1.0", sha256="40651a9832eb93dec20a8360dd535262c261c34e13c41b6755fa6915c936b254")
     version("3.0.0", sha256="f196e441dcd7b67159a1d09d2d7de2893b011a9f03aab6b30c4703ecbf20fe5b")
     version("2.1.0", sha256="ee90108d4bc4aa6a1cf16d72abebcb3087cf6c1007d22dda269eb7e7076bddca")
@@ -63,7 +65,6 @@ class Wannier90(MakefilePackage):
         return abspath
 
     def edit(self, spec, prefix):
-
         lapack = self.spec["lapack"].libs
         blas = self.spec["blas"].libs
         mpi = self.spec["mpi"].libs
@@ -81,9 +82,7 @@ class Wannier90(MakefilePackage):
             filter_file(key, value, self.makefile_name)
 
         if self.spec.satisfies("%gcc@10:"):
-            fflags = [
-                "-fallow-argument-mismatch",
-            ]
+            fflags = ["-fallow-argument-mismatch"]
             filter_file(r"(^FCOPTS=.*)", r"\1 {0}".format(" ".join(fflags)), self.makefile_name)
 
         if "@:2 +shared" in self.spec:

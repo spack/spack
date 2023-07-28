@@ -16,7 +16,7 @@ class Linktest(MakefilePackage):
     )
     url = "https://apps.fz-juelich.de/jsc/linktest/download.php?version=1.2p1"
 
-    maintainers = ["pramodk"]
+    maintainers("pramodk")
 
     version(
         "1.2p1",

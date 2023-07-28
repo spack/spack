@@ -17,7 +17,7 @@ class NodeJs(Package):
     list_url = "https://nodejs.org/dist/"
     list_depth = 1
 
-    maintainers = ["cosmicexplorer"]
+    maintainers("cosmicexplorer")
 
     # Current (latest features) - odd major number
     version("19.2.0", sha256="aac9d1a366fb57d68f4639f9204d1de5d6387656959a97ed929a5ba9e62c033a")

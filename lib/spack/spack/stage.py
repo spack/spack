@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import errno
 import getpass
 import glob
@@ -14,7 +12,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Dict
+from typing import Dict, Iterable
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -35,6 +33,7 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.mirror
 import spack.paths
+import spack.spec
 import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
@@ -47,6 +46,13 @@ _source_path_subdir = "spack-src"
 
 # The temporary stage name prefix.
 stage_prefix = "spack-stage-"
+
+
+def compute_stage_name(spec):
+    """Determine stage name given a spec"""
+    default_stage_structure = stage_prefix + "{name}-{version}-{hash}"
+    stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
+    return spec.format(format_string=stage_name_structure)
 
 
 def create_stage_root(path: str) -> None:
@@ -150,7 +156,10 @@ def _resolve_paths(candidates):
 
         # Ensure the path is unique per user.
         can_path = sup.canonicalize_path(path)
-        if user not in can_path:
+        # When multiple users share a stage root, we can avoid conflicts between
+        # them by adding a per-user subdirectory.
+        # Avoid doing this on Windows to keep stage absolute path as short as possible.
+        if user not in can_path and not sys.platform == "win32":
             can_path = os.path.join(can_path, user)
 
         paths.append(can_path)
@@ -190,7 +199,7 @@ def _mirror_roots():
     ]
 
 
-class Stage(object):
+class Stage:
     """Manages a temporary stage directory for building.
 
     A Stage object is a context manager that handles a directory where
@@ -328,7 +337,7 @@ class Stage(object):
 
                 tty.debug("Creating stage lock {0}".format(self.name))
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
-                    stage_lock_path, lock_id, 1, desc=self.name
+                    stage_lock_path, start=lock_id, length=1, desc=self.name
                 )
 
             self._lock = Stage.stage_locks[self.name]
@@ -378,8 +387,7 @@ class Stage(object):
         expanded = True
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             expanded = self.default_fetcher.expand_archive
-            clean_url = os.path.basename(sup.sanitize_file_path(self.default_fetcher.url))
-            fnames.append(clean_url)
+            fnames.append(url_util.default_download_filename(self.default_fetcher.url))
 
         if self.mirror_paths:
             fnames.extend(os.path.basename(x) for x in self.mirror_paths)
@@ -420,6 +428,12 @@ class Stage(object):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
+    def disable_mirrors(self):
+        """The Stage will not attempt to look for the associated fetcher
+        target in any of Spack's mirrors (including the local download cache).
+        """
+        self.mirror_paths = []
+
     def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
 
@@ -440,22 +454,11 @@ class Stage(object):
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
-            mirror_urls = {}
-            for mirror in spack.mirror.MirrorCollection().values():
-                for rel_path in self.mirror_paths:
-                    mirror_url = url_util.join(mirror.fetch_url, rel_path)
-                    mirror_urls[mirror_url] = {}
-                    if (
-                        mirror.get_access_pair("fetch")
-                        or mirror.get_access_token("fetch")
-                        or mirror.get_profile("fetch")
-                    ):
-                        mirror_urls[mirror_url] = {
-                            "access_token": mirror.get_access_token("fetch"),
-                            "access_pair": mirror.get_access_pair("fetch"),
-                            "access_profile": mirror.get_profile("fetch"),
-                            "endpoint_url": mirror.get_endpoint_url("fetch"),
-                        }
+            mirror_urls = [
+                url_util.join(mirror.fetch_url, rel_path)
+                for mirror in spack.mirror.MirrorCollection(source=True).values()
+                for rel_path in self.mirror_paths
+            ]
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -474,16 +477,9 @@ class Stage(object):
 
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
-            for url in reversed(list(mirror_urls.keys())):
+            for url in reversed(mirror_urls):
                 fetchers.insert(
-                    0,
-                    fs.from_url_scheme(
-                        url,
-                        digest,
-                        expand=expand,
-                        extension=extension,
-                        connection=mirror_urls[url],
-                    ),
+                    0, fs.from_url_scheme(url, digest, expand=expand, extension=extension)
                 )
 
             if self.default_fetcher.cachable:
@@ -665,16 +661,16 @@ class Stage(object):
 
 class ResourceStage(Stage):
     def __init__(self, url_or_fetch_strategy, root, resource, **kwargs):
-        super(ResourceStage, self).__init__(url_or_fetch_strategy, **kwargs)
+        super().__init__(url_or_fetch_strategy, **kwargs)
         self.root_stage = root
         self.resource = resource
 
     def restage(self):
-        super(ResourceStage, self).restage()
+        super().restage()
         self._add_to_root_stage()
 
     def expand_archive(self):
-        super(ResourceStage, self).expand_archive()
+        super().expand_archive()
         self._add_to_root_stage()
 
     def _add_to_root_stage(self):
@@ -735,7 +731,7 @@ class StageComposite(pattern.Composite):
     #
 
     def __init__(self):
-        super(StageComposite, self).__init__(
+        super().__init__(
             [
                 "fetch",
                 "create",
@@ -747,9 +743,17 @@ class StageComposite(pattern.Composite):
                 "cache_local",
                 "cache_mirror",
                 "steal_source",
+                "disable_mirrors",
                 "managed_by_spack",
             ]
         )
+
+    @classmethod
+    def from_iterable(cls, iterable: Iterable[Stage]) -> "StageComposite":
+        """Create a new composite from an iterable of stages."""
+        composite = cls()
+        composite.extend(iterable)
+        return composite
 
     def __enter__(self):
         for item in self:
@@ -758,7 +762,6 @@ class StageComposite(pattern.Composite):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         for item in reversed(self):
-            item.keep = getattr(self, "keep", False)
             item.__exit__(exc_type, exc_val, exc_tb)
 
     #
@@ -780,8 +783,17 @@ class StageComposite(pattern.Composite):
     def archive_file(self):
         return self[0].archive_file
 
+    @property
+    def keep(self):
+        return self[0].keep
 
-class DIYStage(object):
+    @keep.setter
+    def keep(self, value):
+        for item in self:
+            item.keep = value
+
+
+class DIYStage:
     """
     Simple class that allows any directory to be a spack stage.  Consequently,
     it does not expect or require that the source path adhere to the standard

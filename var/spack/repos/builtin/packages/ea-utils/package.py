@@ -16,7 +16,7 @@ class EaUtils(MakefilePackage):
     homepage = "https://expressionanalysis.github.io/ea-utils/"
     url = "https://github.com/ExpressionAnalysis/ea-utils/archive/1.04.807.tar.gz"
     git = "https://github.com/ExpressionAnalysis/ea-utils.git"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("2021-10-20", commit="10c21926a4dce4289d5052acfd73b8e744d4fede")
     version(

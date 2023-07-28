@@ -21,7 +21,7 @@ class Rpm(AutotoolsPackage):
     url = "https://github.com/rpm-software-management/rpm/archive/rpm-4.16.0-release.tar.gz"
     git = "https://github.com/rpm-software-management/rpm.git"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("master", branch="master")
     version("4.16.1.2", sha256="3d2807807a8ccaa92a8ced74e09b5bf5b2417a5bbf9bee4abc7c6aa497547bf3")

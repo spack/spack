@@ -13,6 +13,7 @@ class Listres(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/listres"
     xorg_mirror_path = "app/listres-1.0.3.tar.gz"
 
+    version("1.0.5", sha256="ed068e63dfb6e42cfbcea568d161e53e1d120d99da9aa16c1f822803ebb38504")
     version("1.0.3", sha256="87d5698b8aa4d841e45e6556932c9914210cbd8b10003d664b31185b087981be")
 
     depends_on("libxaw")

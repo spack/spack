@@ -14,7 +14,7 @@ class PyUnyt(PythonPackage):
     pypi = "unyt/unyt-2.8.0.tar.gz"
     git = "https://github.com/yt-project/unyt.git"
 
-    maintainers = ["charmoniumq"]
+    maintainers("charmoniumq")
 
     version("main", branch="main")
     version("2.9.2", sha256="8d4bf3dd3f7b4c29580728c0359caa17d62239673eeab436448d0777adeee5e1")

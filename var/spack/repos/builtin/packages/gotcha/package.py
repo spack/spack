@@ -12,12 +12,12 @@ class Gotcha(CMakePackage):
 
     homepage = "https://github.com/LLNL/gotcha"
     git = "https://github.com/LLNL/gotcha.git"
-
+    maintainers("hariharan-devarajan")
     tags = ["e4s"]
 
     version("develop", branch="develop")
     version("master", branch="master")
-    version("1.0.4", commit="08a5279cef051ed39bc92c5f77f55ca5b41a405e")
+    version("1.0.4", tag="1.0.4")
     version("1.0.3", tag="1.0.3")
     version("1.0.2", tag="1.0.2")
     version("0.0.2", tag="0.0.2")

@@ -14,7 +14,7 @@ class Clara(CMakePackage, Package):
     homepage = "https://github.com/catchorg/Clara"
     url = "https://github.com/catchorg/Clara/archive/v1.1.5.tar.gz"
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     build_system(
         conditional("generic", when="+single_header"),

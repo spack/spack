@@ -15,7 +15,7 @@ class PyMaestrowf(PythonPackage):
     git = "https://github.com/LLNL/maestrowf/"
     tags = ["radiuss"]
 
-    maintainers = ["FrankD412"]
+    maintainers("FrankD412")
 
     # git branches
     version("develop", branch="develop")

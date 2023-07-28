@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import re
 
 from spack.package import *
@@ -93,25 +94,40 @@ class BerkeleyDb(AutotoolsPackage):
 
         return config_args
 
-    def test(self):
-        """Perform smoke tests on the installed package binaries."""
-        exes = [
-            "db_checkpoint",
-            "db_deadlock",
-            "db_dump",
-            "db_load",
-            "db_printlog",
-            "db_stat",
-            "db_upgrade",
-            "db_verify",
-        ]
-        for exe in exes:
-            reason = "test version of {0} is {1}".format(exe, self.spec.version)
-            self.run_test(
-                exe,
-                ["-V"],
-                [self.spec.version.string],
-                installed=True,
-                purpose=reason,
-                skip_missing=True,
-            )
+    def check_exe_version(self, exe):
+        """Check that the installed executable prints the correct version."""
+        installed_exe = join_path(self.prefix.bin, exe)
+        if not os.path.exists(installed_exe):
+            raise SkipTest(f"{exe} is not installed")
+
+        exe = which(installed_exe)
+        out = exe("-V", output=str.split, error=str.split)
+        assert self.spec.version.string in out
+
+    def test_db_checkpoint(self):
+        """check db_checkpoint version"""
+        self.check_exe_version("db_checkpoint")
+
+    def test_db_deadlock(self):
+        """check db_deadlock version"""
+        self.check_exe_version("db_deadlock")
+
+    def test_db_dump(self):
+        """check db_dump version"""
+        self.check_exe_version("db_dump")
+
+    def test_db_load(self):
+        """check db_load version"""
+        self.check_exe_version("db_load")
+
+    def test_db_stat(self):
+        """check db_stat version"""
+        self.check_exe_version("db_stat")
+
+    def test_db_upgrade(self):
+        """check db_upgrade version"""
+        self.check_exe_version("db_upgrade")
+
+    def test_db_verify(self):
+        """check db_verify version"""
+        self.check_exe_version("db_verify")

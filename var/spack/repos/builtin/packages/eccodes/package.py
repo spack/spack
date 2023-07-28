@@ -45,7 +45,7 @@ class Eccodes(CMakePackage):
     git = "https://github.com/ecmwf/eccodes.git"
     list_url = "https://confluence.ecmwf.int/display/ECC/Releases"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     version("develop", branch="develop")
     version("2.25.0", sha256="8975131aac54d406e5457706fd4e6ba46a8cc9c7dd817a41f2aa64ce1193c04e")
@@ -82,19 +82,15 @@ class Eccodes(CMakePackage):
 
     variant(
         "definitions",
-        values=disjoint_sets(
-            ("auto",),
-            ("default",) + tuple(_definitions.keys()),
-        ).with_default("auto"),
+        values=disjoint_sets(("auto",), ("default",) + tuple(_definitions.keys())).with_default(
+            "auto"
+        ),
         description="List of definitions to install",
     )
 
     variant(
         "samples",
-        values=disjoint_sets(
-            ("auto",),
-            ("default",),
-        ).with_default("auto"),
+        values=disjoint_sets(("auto",), ("default",)).with_default("auto"),
         description="List of samples to install",
     )
 
@@ -325,6 +321,9 @@ class Eccodes(CMakePackage):
             self.define_from_variant("ENABLE_ECCODES_THREADS", "pthreads"),
             self.define_from_variant("ENABLE_ECCODES_OMP_THREADS", "openmp"),
             self.define_from_variant("ENABLE_MEMFS", "memfs"),
+            self.define(
+                "ENABLE_PYTHON{0}".format("2" if self.spec.satisfies("@2.20.0:") else ""), False
+            ),
             self.define_from_variant("ENABLE_FORTRAN", "fortran"),
             self.define("BUILD_SHARED_LIBS", "BOTH" if "+shared" in self.spec else "OFF"),
             self.define("ENABLE_TESTS", self.run_tests),
@@ -336,15 +335,14 @@ class Eccodes(CMakePackage):
         ]
 
         if "+netcdf" in self.spec:
-            args.extend(
-                [
-                    # Prevent possible overriding by environment variables
-                    # NETCDF_ROOT, NETCDF_DIR, and NETCDF_PATH:
-                    self.define("NETCDF_PATH", self.spec["netcdf-c"].prefix),
-                    # Prevent overriding by environment variable HDF5_ROOT:
-                    self.define("HDF5_ROOT", self.spec["hdf5"].prefix),
-                ]
-            )
+            # Prevent possible overriding by environment variables NETCDF_ROOT, NETCDF_DIR, and
+            # NETCDF_PATH:
+            args.append(self.define("NETCDF_PATH", self.spec["netcdf-c"].prefix))
+            # Prevent overriding by environment variable HDF5_ROOT (starting version 2.14.0,
+            # ecCodes is shipped with ecBuild 3.1.0+, which does not seem to rely on the HDF5_ROOT
+            # variable):
+            if self.spec.satisfies("@:2.13"):
+                args.append(self.define("HDF5_ROOT", self.spec["hdf5"].prefix))
 
         if jp2k == "openjpeg":
             args.append(self.define("OPENJPEG_PATH", self.spec["openjpeg"].prefix))
@@ -356,7 +354,7 @@ class Eccodes(CMakePackage):
             # Prevent overriding by environment variables AEC_DIR and AEC_PATH:
             args.append(self.define("AEC_DIR", self.spec["libaec"].prefix))
 
-        if "^python" in self.spec:
+        if "+memfs" in self.spec:
             args.append(self.define("PYTHON_EXECUTABLE", python.path))
 
         definitions = self.spec.variants["definitions"].value

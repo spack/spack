@@ -15,7 +15,7 @@ class PyGlobusSdk(PythonPackage):
     homepage = "https://github.com/globus/globus-sdk-python"
     pypi = "globus-sdk/globus-sdk-3.0.2.tar.gz"
 
-    maintainers = ["hategan"]
+    maintainers("hategan")
 
     version("3.10.1", sha256="c20fec55fc7e099f4d0c8224a36e194604577539445c5985cb465b23779baee8")
     version("3.10.0", sha256="7a7e7cd5cfbc40c6dc75bdb92b050c4191f992b5f7081cd08895bf119fd97bbf")

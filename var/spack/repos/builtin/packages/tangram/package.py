@@ -16,7 +16,7 @@ class Tangram(CMakePackage):
     git = "https://github.com/laristra/tangram.git"
     url = "https://github.com/laristra/tangram/releases/download/1.0.5/tangram-1.0.5.tar.gz"
 
-    maintainers = ["raovgarimella"]
+    maintainers("raovgarimella")
 
     version("1.0.5", sha256="4fa61d5fecd67215237ab3df8fe64bc6c4d018b22313f2174923486026e93e53")
     version("1.0.1", sha256="8f2f8c01bb2d726b0f64e5a5bc3aa2bd8057ccaee7a29c68f1439d16e39aaa90")

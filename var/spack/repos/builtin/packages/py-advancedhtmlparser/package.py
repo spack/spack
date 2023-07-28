@@ -14,6 +14,7 @@ class PyAdvancedhtmlparser(PythonPackage):
     homepage = "https://github.com/kata198/AdvancedHTMLParser"
     pypi = "advancedhtmlparser/AdvancedHTMLParser-8.1.4.tar.gz"
 
+    version("9.0.1", sha256="1b7f632ca4c61fca50ee896c84112b97915c07d5b25b9527aefe7cbad8458837")
     version("8.1.4", sha256="21a73137026c8ec3248c654a24cc40064196029256cdf71681149f6835e9ed39")
 
     depends_on("py-setuptools", type="build")

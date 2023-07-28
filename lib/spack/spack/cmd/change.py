@@ -20,9 +20,7 @@ def setup_parser(subparser):
         help="name of the list to remove specs from",
     )
     subparser.add_argument(
-        "--match-spec",
-        dest="match_spec",
-        help="if name is ambiguous, supply a spec to match",
+        "--match-spec", dest="match_spec", help="if name is ambiguous, supply a spec to match"
     )
     subparser.add_argument(
         "-a",

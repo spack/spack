@@ -17,7 +17,7 @@ class Ftk(CMakePackage):
 
     # Add a list of GitHub accounts to
     # notify when the package is updated.
-    maintainers = ["hguo"]
+    maintainers("hguo")
 
     version("master", branch="master")
     version("dev", branch="dev")

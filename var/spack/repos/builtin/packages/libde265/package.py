@@ -15,7 +15,7 @@ class Libde265(CMakePackage):
     homepage = "https://www.libde265.org"
     url = "https://github.com/strukturag/libde265/archive/refs/tags/v1.0.9.tar.gz"
 
-    maintainers = ["benkirk"]
+    maintainers("benkirk")
 
     version("1.0.9", sha256="153554f407718a75f1e0ae197d35b43147ce282118a54f894554dbe27c32163d")
 

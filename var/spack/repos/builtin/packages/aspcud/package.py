@@ -18,6 +18,7 @@ class Aspcud(CMakePackage):
     homepage = "https://potassco.org/aspcud"
     url = "https://github.com/potassco/aspcud/archive/v1.9.4.tar.gz"
 
+    version("1.9.6", sha256="4dddfd4a74e4324887a1ddd7f8ff36231774fc1aa78b383256546e83acdf516c")
     version("1.9.5", sha256="9cd3a9490d377163d87b16fa1a10cc7254bc2dbb9f60e846961ac8233f3835cf")
     version("1.9.4", sha256="3645f08b079e1cc80e24cd2d7ae5172a52476d84e3ec5e6a6c0034492a6ea885")
 

@@ -12,7 +12,7 @@ class Phylip(Package):
 
     homepage = "https://evolution.genetics.washington.edu/phylip/"
     url = "https://evolution.gs.washington.edu/phylip/download/phylip-3.697.tar.gz"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("3.697", sha256="9a26d8b08b8afea7f708509ef41df484003101eaf4beceb5cf7851eb940510c1")
 

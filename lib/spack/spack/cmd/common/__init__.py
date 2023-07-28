@@ -36,7 +36,10 @@ def shell_init_instructions(cmd, equivalent):
         "  source %s/setup-env.fish" % spack.paths.share_path,
         "",
         color.colorize("@*c{For Windows batch:}"),
-        "  source %s/spack_cmd.bat" % spack.paths.share_path,
+        "  %s\\spack_cmd.bat" % spack.paths.bin_path,
+        "",
+        color.colorize("@*c{For PowerShell:}"),
+        "  %s\\setup-env.ps1" % spack.paths.share_path,
         "",
         "Or, if you do not want to use shell support, run "
         + ("one of these" if shell_specific else "this")
@@ -50,6 +53,7 @@ def shell_init_instructions(cmd, equivalent):
             equivalent.format(sh_arg="--csh ") + "  # csh/tcsh",
             equivalent.format(sh_arg="--fish") + "  # fish",
             equivalent.format(sh_arg="--bat ") + "  # batch",
+            equivalent.format(sh_arg="--pwsh") + "  # powershell",
         ]
     else:
         msg += ["  " + equivalent]

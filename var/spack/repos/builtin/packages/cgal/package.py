@@ -17,6 +17,7 @@ class Cgal(CMakePackage):
     homepage = "https://www.cgal.org/"
     url = "https://github.com/CGAL/cgal/releases/download/v5.4.1/CGAL-5.4.1.tar.xz"
 
+    version("5.5.2", sha256="b2b05d5616ecc69facdc24417cce0b04fb4321491d107db45103add520e3d8c3")
     version("5.4.1", sha256="4c3dd7ee4d36d237111a4d72b6e14170093271595d5b695148532daa95323d76")
     version("5.1.5", sha256="b1bb8a6053aa12baa5981aef20a542cd3e617a86826963fb8fb6852b1a0da97c")
     version("5.0.3", sha256="e5a3672e35e5e92e3c1b4452cd3c1d554f3177dc512bd98b29edf21866a4288c")

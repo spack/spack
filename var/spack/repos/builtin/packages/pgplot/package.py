@@ -20,7 +20,7 @@ class Pgplot(MakefilePackage):
     homepage = "https://sites.astro.caltech.edu/~tjp/pgplot/"
     url = "ftp://ftp.astro.caltech.edu/pub/pgplot/pgplot5.2.tar.gz"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version(
         "5.2.2",
@@ -49,7 +49,6 @@ class Pgplot(MakefilePackage):
     depends_on("libpng", when="+png")
 
     def edit(self, spec, prefix):
-
         libs = ""
         if "+X" in spec:
             libs += " " + self.spec["libx11"].libs.ld_flags
@@ -174,5 +173,9 @@ class Pgplot(MakefilePackage):
         return find_libraries(libnames, root=self.prefix, shared=shared, recursive=True)
 
     def setup_run_environment(self, env):
+        env.set("PGPLOT_FONT", self.prefix.include + "/grfont.dat")
+        env.set("PGPLOT_DIR", self.prefix.lib + "/pgplot5")
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
         env.set("PGPLOT_FONT", self.prefix.include + "/grfont.dat")
         env.set("PGPLOT_DIR", self.prefix.lib + "/pgplot5")

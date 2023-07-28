@@ -14,7 +14,7 @@ class Ruby(AutotoolsPackage, NMakePackage):
     simplicity and productivity.
     """
 
-    maintainers = ["Kerilk"]
+    maintainers("Kerilk")
 
     homepage = "https://www.ruby-lang.org/"
     url = "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
@@ -101,7 +101,7 @@ class Ruby(AutotoolsPackage, NMakePackage):
         module.rake = Executable(self.prefix.bin.rake)
 
 
-class SetupEnvironment(object):
+class SetupEnvironment:
     def setup_dependent_build_environment(self, env, dependent_spec):
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories

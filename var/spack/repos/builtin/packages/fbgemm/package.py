@@ -14,7 +14,7 @@ class Fbgemm(CMakePackage):
     homepage = "https://github.com/pytorch/FBGEMM"
     git = "https://github.com/pytorch/FBGEMM.git"
 
-    maintainers = ["dskhudia"]
+    maintainers("dskhudia")
 
     version("master", branch="master", submodules=True)
     version(
@@ -54,14 +54,12 @@ class Fbgemm(CMakePackage):
         "2018-12-04", commit="0d5a159b944252e70a677236b570f291943e0543", submodules=True
     )  # py-torch@1.0.0
 
+    generator("ninja")
     depends_on("cmake@3.5:", type="build")
-    depends_on("ninja", type="build")
     depends_on("python", type="build")
     depends_on("llvm-openmp", when="%apple-clang")
 
     conflicts("%gcc@:4", msg="FBGEMM requires GCC 5+")
-
-    generator = "Ninja"
 
     @run_before("cmake")
     def check_requirements(self):

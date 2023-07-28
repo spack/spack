@@ -14,7 +14,7 @@ class PyPyaestro(PythonPackage):
     pypi = "pyaestro/pyaestro-0.0.1a2.tar.gz"
     git = "https://github.com/FrankD412/pyaestro"
 
-    maintainers = ["FrankD412"]
+    maintainers("FrankD412")
 
     # git branches
     version("main", branch="main")

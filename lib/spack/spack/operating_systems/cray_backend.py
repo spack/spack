@@ -88,7 +88,7 @@ class CrayBackend(LinuxDistro):
             # call the OperatingSystem superclass __init__ method
             super(LinuxDistro, self).__init__(name, version)
         else:
-            super(CrayBackend, self).__init__()
+            super().__init__()
         self.modulecmd = module
 
     def __str__(self):
@@ -161,7 +161,7 @@ class CrayBackend(LinuxDistro):
         compilers = []
         for v in compiler_id.version:
             comp = cmp_cls(
-                spack.spec.CompilerSpec(name + "@" + v),
+                spack.spec.CompilerSpec(name + "@=" + v),
                 self,
                 "any",
                 ["cc", "CC", "ftn"],

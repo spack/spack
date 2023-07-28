@@ -14,7 +14,7 @@ class PyPsijPython(PythonPackage):
     git = "https://github.com/exaworks/psij-python.git"
     pypi = "psij-python/psij-python-0.1.0.post2.tar.gz"
 
-    maintainers = ["andre-merzky"]
+    maintainers("andre-merzky")
 
     version(
         "0.1.0.post2", sha256="78f4fb147248be479aa6128b583dff9052698c49f36c6e9811b4c3f9db326043"

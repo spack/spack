@@ -15,7 +15,7 @@ import sys
 import urllib.parse
 import urllib.request
 
-from spack.util.path import convert_to_posix_path
+from spack.util.path import convert_to_posix_path, sanitize_filename
 
 
 def validate_scheme(scheme):
@@ -147,11 +147,7 @@ def join(base_url, path, *extra, **kwargs):
     last_abs_component = None
     scheme = ""
     for i in range(n - 1, -1, -1):
-        obj = urllib.parse.urlparse(
-            paths[i],
-            scheme="",
-            allow_fragments=False,
-        )
+        obj = urllib.parse.urlparse(paths[i], scheme="", allow_fragments=False)
 
         scheme = obj.scheme
 
@@ -161,11 +157,7 @@ def join(base_url, path, *extra, **kwargs):
                 # Without a scheme, we have to go back looking for the
                 # next-last component that specifies a scheme.
                 for j in range(i - 1, -1, -1):
-                    obj = urllib.parse.urlparse(
-                        paths[j],
-                        scheme="",
-                        allow_fragments=False,
-                    )
+                    obj = urllib.parse.urlparse(paths[j], scheme="", allow_fragments=False)
 
                     if obj.scheme:
                         paths[i] = "{SM}://{NL}{PATH}".format(
@@ -181,11 +173,7 @@ def join(base_url, path, *extra, **kwargs):
     if last_abs_component is not None:
         paths = paths[last_abs_component:]
         if len(paths) == 1:
-            result = urllib.parse.urlparse(
-                paths[0],
-                scheme="file",
-                allow_fragments=False,
-            )
+            result = urllib.parse.urlparse(paths[0], scheme="file", allow_fragments=False)
 
             # another subtlety: If the last argument to join() is an absolute
             # file:// URL component with a relative path, the relative path
@@ -250,12 +238,7 @@ def _join(base_url, path, *extra, **kwargs):
 
     return format(
         urllib.parse.ParseResult(
-            scheme=scheme,
-            netloc=netloc,
-            path=base_path,
-            params=params,
-            query=query,
-            fragment=None,
+            scheme=scheme, netloc=netloc, path=base_path, params=params, query=query, fragment=None
         )
     )
 
@@ -311,3 +294,22 @@ def parse_git_url(url):
             raise ValueError("bad port in git url: %s" % url)
 
     return (scheme, user, hostname, port, path)
+
+
+def default_download_filename(url: str) -> str:
+    """This method computes a default file name for a given URL.
+    Note that it makes no request, so this is not the same as the
+    option curl -O, which uses the remote file name from the response
+    header."""
+    parsed_url = urllib.parse.urlparse(url)
+    # Only use the last path component + params + query + fragment
+    name = urllib.parse.urlunparse(
+        parsed_url._replace(scheme="", netloc="", path=posixpath.basename(parsed_url.path))
+    )
+    valid_name = sanitize_filename(name)
+
+    # Don't download to hidden files please
+    if valid_name[0] == ".":
+        valid_name = "_" + valid_name[1:]
+
+    return valid_name

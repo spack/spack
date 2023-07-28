@@ -13,7 +13,7 @@ class Omnitrace(CMakePackage):
 
     homepage = "https://amdresearch.github.io/omnitrace"
     git = "https://github.com/AMDResearch/omnitrace.git"
-    maintainers = ["jrmadsen"]
+    maintainers("jrmadsen")
 
     version("main", branch="main", submodules=True)
     version("1.7.4", commit="12001d9633328f9f56210c7ebffce065bff06310", submodules=True)
@@ -28,14 +28,6 @@ class Omnitrace(CMakePackage):
     version("1.3.0", commit="4dd144a32c8b83c44e132ef53f2b44fe4b4d5569", submodules=True)
     version("1.2.0", commit="f82845388aab108ed1d1fc404f433a0def391bb3", submodules=True)
 
-    # override build_type to default to Release because this has a significant
-    # impact on build-time and the size of the build
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
     variant(
         "rocm",
         default=True,

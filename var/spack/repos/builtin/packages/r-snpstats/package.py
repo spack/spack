@@ -15,6 +15,7 @@ class RSnpstats(RPackage):
 
     bioc = "snpStats"
 
+    version("1.50.0", commit="b6d42f93f2ce510cc10a1668809218f317c23d2a")
     version("1.48.0", commit="7d4cec7275b9360d98cb59d15c4140bed3e6a74c")
     version("1.46.0", commit="1e70784b113eaca231bc5f91fc8ae5aadb151ddb")
     version("1.44.0", commit="72392dab4e75de2da459b1e95f1d48947811597b")
@@ -30,3 +31,4 @@ class RSnpstats(RPackage):
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-biocgenerics", type=("build", "run"))
     depends_on("r-zlibbioc", type=("build", "run"))
+    depends_on("zlib")

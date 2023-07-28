@@ -23,7 +23,7 @@ class Mallocmc(CMakePackage):
     url = "https://github.com/ComputationalRadiationPhysics/mallocMC/archive/2.2.0crp.tar.gz"
     git = "https://github.com/ComputationalRadiationPhysics/mallocMC.git"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("develop", branch="dev")
     version("master", branch="master")

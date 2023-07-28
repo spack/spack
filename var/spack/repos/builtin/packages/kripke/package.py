@@ -16,7 +16,7 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["proxy-app"]
 
-    maintainers = ["vsrana01"]
+    maintainers("vsrana01")
 
     version("develop", branch="develop", submodules=False)
     version("1.2.4", submodules=False, tag="v1.2.4")

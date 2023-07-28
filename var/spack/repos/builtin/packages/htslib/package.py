@@ -12,6 +12,7 @@ class Htslib(AutotoolsPackage):
     homepage = "https://github.com/samtools/htslib"
     url = "https://github.com/samtools/htslib/releases/download/1.13/htslib-1.13.tar.bz2"
 
+    version("1.17", sha256="763779288c40f07646ec7ad98b96c378c739171d162ad98398868783b721839f")
     version("1.16", sha256="606b7c7aff73734cf033ecd156f40529fa5792f54524952a28938ca0890d7924")
     version("1.15.1", sha256="8d7f8bf9658226942eeab70af2a22aca618577eaa8fe2ed9416ee306d5351aa1")
     version("1.15", sha256="1a9f49911503a22f56817cc82ea9b87fb7e7467b5ff989ca5aa61c12e7d532d9")
@@ -51,6 +52,10 @@ class Htslib(AutotoolsPackage):
     depends_on("autoconf", when="@1.2")
     depends_on("automake", when="@1.2")
     depends_on("libtool", when="@1.2")
+
+    @property
+    def libs(self):
+        return find_libraries("libhts", root=self.prefix, recursive=True)
 
     # v1.2 uses the automagically assembled tarball from .../archive/...
     # everything else uses the tarballs uploaded to the release

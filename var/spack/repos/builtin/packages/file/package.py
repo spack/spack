@@ -15,7 +15,7 @@ class File(AutotoolsPackage):
     homepage = "https://www.darwinsys.com/file/"
     url = "https://astron.com/pub/file/file-5.37.tar.gz"
 
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     version("5.44", sha256="3751c7fba8dbc831cb8d7cc8aff21035459b8ce5155ef8b0880a27d028475f3b")
     version("5.43", sha256="8c8015e91ae0e8d0321d94c78239892ef9dbc70c4ade0008c0e95894abfb1991")

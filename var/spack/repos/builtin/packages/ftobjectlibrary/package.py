@@ -14,6 +14,6 @@ class Ftobjectlibrary(CMakePackage):
     url = "https://github.com/trixi-framework/FTObjectLibrary"
     git = "https://github.com/trixi-framework/FTObjectLibrary.git"
 
-    maintainers = ["schoonovernumerics"]
+    maintainers("schoonovernumerics")
 
     version("main", branch="main")

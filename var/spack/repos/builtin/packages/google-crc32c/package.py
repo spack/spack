@@ -12,9 +12,9 @@ class GoogleCrc32c(CMakePackage):
     homepage = "https://github.com/google/crc32c"
     url = "https://github.com/google/crc32c/archive/refs/tags/1.1.2.tar.gz"
 
-    maintainers = ["marcusboden"]
+    maintainers("marcusboden")
 
-    version("1.1.2", "ac07840513072b7fcebda6e821068aa04889018f24e10e46181068fb214d7e56")
+    version("1.1.2", sha256="ac07840513072b7fcebda6e821068aa04889018f24e10e46181068fb214d7e56")
 
     depends_on("cmake@3.1:", type="build")
 

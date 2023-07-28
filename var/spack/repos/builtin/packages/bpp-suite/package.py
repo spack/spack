@@ -13,7 +13,7 @@ class BppSuite(CMakePackage):
     homepage = "http://biopp.univ-montp2.fr/wiki/index.php/BppSuite"
     url = "https://github.com/BioPP/bppsuite/archive/refs/tags/v2.4.1.tar.gz"
 
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("2.4.1", sha256="0485adcc17e37439069d27e4fac144e5ae38036ba21f31e6d21f070ce4ea5199")
     version(

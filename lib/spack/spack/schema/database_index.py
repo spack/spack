@@ -32,27 +32,17 @@ schema = {
                             "type": "object",
                             "properties": {
                                 "spec": spack.schema.spec.properties,
-                                "path": {
-                                    "oneOf": [
-                                        {"type": "string"},
-                                        {"type": "null"},
-                                    ],
-                                },
+                                "path": {"oneOf": [{"type": "string"}, {"type": "null"}]},
                                 "installed": {"type": "boolean"},
-                                "ref_count": {
-                                    "type": "integer",
-                                    "minimum": 0,
-                                },
+                                "ref_count": {"type": "integer", "minimum": 0},
                                 "explicit": {"type": "boolean"},
-                                "installation_time": {
-                                    "type": "number",
-                                },
+                                "installation_time": {"type": "number"},
                             },
-                        },
+                        }
                     },
                 },
                 "version": {"type": "string"},
             },
-        },
+        }
     },
 }

@@ -14,7 +14,7 @@ class OrTools(CMakePackage):
 
     homepage = "https://developers.google.com/optimization/"
     url = "https://github.com/google/or-tools/archive/v7.8.tar.gz"
-    maintainers = ["hyoklee"]
+    maintainers("hyoklee")
 
     version("7.8", sha256="d93a9502b18af51902abd130ff5f23768fcf47e266e6d1f34b3586387aa2de68")
     variant("coin", default=False, description="Enable COIN-OR solvers.")
