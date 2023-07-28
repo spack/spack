@@ -25,7 +25,18 @@ import textwrap
 import time
 import traceback
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, no_type_check
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    no_type_check,
+)
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
