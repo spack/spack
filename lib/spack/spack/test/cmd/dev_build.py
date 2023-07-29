@@ -428,19 +428,15 @@ def test_dev_build_rebuild_dependent_delayed(
     reinstall X. This makes sure we don't lose track of when dependents
     should be reinstalled.
     """
-    develop = SpackCommand("develop")
-    add = SpackCommand("add")
-    concretize = SpackCommand("concretize")
 
     existing_dev_path = tmpdir.ensure("dev-path", dir=True)
 
     env("create", "test")
     with ev.read("test") as e:
-        add("dependent-of-dev-build")
-        develop(f"--path={existing_dev_path}", "dev-build-test-install@0.0.0")
-        concretize()
+        e.add("dependent-of-dev-build")
+        e.develop(spack.spec.Spec("dev-build-test-install@=0.0.0"), path=str(existing_dev_path))
+        e.concretize()
 
-    with ev.read("test") as e:
         user_to_concretized = list(e.concretized_specs())
         root = user_to_concretized[0][1]
         dependent = root["dependent-of-dev-build"]
