@@ -450,5 +450,5 @@ def test_dev_build_rebuild_dependent_delayed(
         db._add(child, installation_time=2)
         db._add(dependent, installation_time=1)
 
-        needs_reinstall = e._dev_dep_was_installed_more_recently(_database=db)
+        needs_reinstall = e._get_overwrite_specs(_database=db)
         assert needs_reinstall == [dependent.dag_hash()]
