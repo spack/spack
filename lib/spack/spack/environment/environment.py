@@ -1816,7 +1816,7 @@ class Environment:
 
         def update_transitive_dev_install_times(spec):
             dev_path_var = spec.variants.get("dev_path", None)
-            if dev_path_var:
+            if dev_path_var and db.installed(spec):
                 _, record = db.query_by_spec_hash(spec.dag_hash())
                 when_this_spec_was_installed = record.installation_time
 
@@ -1864,7 +1864,6 @@ class Environment:
                 overwrite_specs.add(spec)
 
         return list(spec.dag_hash() for spec in overwrite_specs)
-
 
     def _install_log_links(self, spec):
         if not spec.external:
