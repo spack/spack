@@ -26,9 +26,9 @@ class Mgard(CMakePackage, CudaPackage):
     version("2021-11-12", commit="3c05c80a45a51bb6cc5fb5fffe7b1b16787d3366")
     version("2020-10-01", commit="b67a0ac963587f190e106cc3c0b30773a9455f7a")
 
-    variant("serial", when="@2022-11-18:", default=True, description="Enable SERIAL support")
+    variant("serial", when="@2022-11-18:", default=True, description="Enable the classic non-parallel implmementation")
     variant("openmp", when="@2022-11-18:", default=True, description="Enable OpenMP support")
-    variant("timing", when="@2022-11-18:", default=False, description="Enable timing")
+    variant("timing", when="@2022-11-18:", default=False, description="Enable profile timings")
     variant(
         "unstructured",
         when="@2022-11-18:",
