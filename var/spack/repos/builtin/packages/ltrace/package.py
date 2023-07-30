@@ -18,6 +18,8 @@ class Ltrace(AutotoolsPackage):
 
     conflicts("platform=darwin", msg="ltrace runs only on Linux.")
 
+    depends_on("elf", type="link")
+
     def configure_args(self):
         # Disable -Werror since some functions used by ltrace
         # have been deprecated in recent version of glibc
