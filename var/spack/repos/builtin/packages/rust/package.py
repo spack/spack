@@ -91,10 +91,6 @@ class Rust(Package):
         ar = which("ar", required=True)
         env.set("AR", ar.path)
 
-        # Manually inject the path of openssl's certs for build.
-        certs = join_path(self.spec["openssl"].prefix, "etc/openssl/cert.pem")
-        env.set("CARGO_HTTP_CAINFO", certs)
-
     def configure(self, spec, prefix):
         opts = []
 
@@ -115,6 +111,9 @@ class Rust(Package):
         # Set binary locations for bootstrap rustc and cargo.
         opts.append(f"build.cargo={spec['rust-bootstrap'].prefix.bin.cargo}")
         opts.append(f"build.rustc={spec['rust-bootstrap'].prefix.bin.rustc}")
+
+        # Disable bootstrap LLVM download.
+        opts.append("llvm.download-ci-llvm=false")
 
         # Convert opts to '--set key=value' format.
         flags = [flag for opt in opts for flag in ("--set", opt)]
