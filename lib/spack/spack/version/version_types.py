@@ -731,7 +731,7 @@ class VersionList:
         if vlist is not None:
             if isinstance(vlist, str):
                 vlist = from_string(vlist)
-                if type(vlist) == VersionList:
+                if isinstance(vlist, VersionList):
                     self.versions = vlist.versions
                 else:
                     self.versions = [vlist]
@@ -765,7 +765,7 @@ class VersionList:
 
             self.versions.insert(i, item)
 
-        elif type(item) == VersionList:
+        elif isinstance(item, VersionList):
             for v in item:
                 self.add(v)
 
