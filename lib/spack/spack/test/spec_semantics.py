@@ -515,10 +515,10 @@ class TestSpecSemantics:
         s.normalize()
 
         assert s["callpath"] == s
-        assert type(s["dyninst"]) == Spec
-        assert type(s["libdwarf"]) == Spec
-        assert type(s["libelf"]) == Spec
-        assert type(s["mpi"]) == Spec
+        assert isinstance(s["dyninst"], Spec)
+        assert isinstance(s["libdwarf"], Spec)
+        assert isinstance(s["libelf"], Spec)
+        assert isinstance(s["mpi"], Spec)
 
         assert s["dyninst"].name == "dyninst"
         assert s["libdwarf"].name == "libdwarf"
