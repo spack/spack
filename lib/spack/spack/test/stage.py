@@ -340,7 +340,7 @@ def failing_fetch_strategy():
 def search_fn():
     """Returns a search function that always succeeds."""
 
-    class _Mock(object):
+    class _Mock:
         performed_search = False
 
         def __call__(self):
@@ -385,7 +385,7 @@ def check_stage_dir_perms(prefix, path):
 
 
 @pytest.mark.usefixtures("mock_packages")
-class TestStage(object):
+class TestStage:
     stage_name = "spack-test-stage"
 
     def test_setup_and_destroy_name_with_tmp(self, mock_stage_archive):
@@ -890,3 +890,24 @@ def test_cannot_access(capsys):
 
     captured = capsys.readouterr()
     assert "Insufficient permissions" in str(captured)
+
+
+def test_override_keep_in_composite_stage():
+    stage_1 = Stage("file:///does-not-exist", keep=True)
+    stage_2 = Stage("file:///does-not-exist", keep=False)
+    stage_3 = Stage("file:///does-not-exist", keep=True)
+    stages = spack.stage.StageComposite.from_iterable((stage_1, stage_2, stage_3))
+
+    # The getter for the composite stage just returns the value of the first stage
+    # its just there so we have a setter too.
+    assert stages.keep
+    assert stage_1.keep
+    assert not stage_2.keep
+    assert stage_3.keep
+
+    # This should override all stages
+    stages.keep = False
+    assert not stages.keep
+    assert not stage_1.keep
+    assert not stage_2.keep
+    assert not stage_3.keep

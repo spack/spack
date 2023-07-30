@@ -46,7 +46,7 @@ def test_import_signing_key(mock_gnupghome):
     ci.import_signing_key(signing_key)
 
 
-class FakeWebResponder(object):
+class FakeWebResponder:
     def __init__(self, response_code=200, content_to_read=[]):
         self._resp_code = response_code
         self._content = content_to_read
@@ -153,7 +153,7 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
     assert not ret
     assert "requires git" in err
 
-    class mock_git_cmd(object):
+    class mock_git_cmd:
         def __init__(self, *args, **kwargs):
             self.returncode = 0
             self.check = None
@@ -457,7 +457,6 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
 
     results = ci.create_buildcache(
         None,
-        pr_pipeline=True,
         buildcache_mirror_url="file:///fake-url-one",
         pipeline_mirror_url="file:///fake-url-two",
     )
@@ -469,9 +468,7 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
     assert result2.success
     assert result2.url == "file:///fake-url-two"
 
-    results = ci.create_buildcache(
-        None, pr_pipeline=True, buildcache_mirror_url="file:///fake-url-one"
-    )
+    results = ci.create_buildcache(None, buildcache_mirror_url="file:///fake-url-one")
 
     assert len(results) == 1
     assert results[0].success

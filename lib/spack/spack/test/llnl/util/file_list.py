@@ -66,7 +66,7 @@ plat_shared_ext = "dll" if sys.platform == "win32" else "so"
 plat_apple_shared_ext = "dylib"
 
 
-class TestLibraryList(object):
+class TestLibraryList:
     def test_repr(self, library_list):
         x = eval(repr(library_list))
         assert library_list == x
@@ -156,7 +156,7 @@ class TestLibraryList(object):
         assert type(pylist + library_list) == type(library_list)
 
 
-class TestHeaderList(object):
+class TestHeaderList:
     def test_repr(self, header_list):
         x = eval(repr(header_list))
         assert header_list == x

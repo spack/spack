@@ -8,6 +8,7 @@ depfiles from an environment.
 """
 
 import os
+import re
 from enum import Enum
 from typing import List, Optional
 
@@ -45,8 +46,8 @@ class DepfileNode:
     def __init__(
         self, target: spack.spec.Spec, prereqs: List[spack.spec.Spec], buildcache: UseBuildCache
     ):
-        self.target = target
-        self.prereqs = prereqs
+        self.target = MakefileSpec(target)
+        self.prereqs = list(MakefileSpec(x) for x in prereqs)
         if buildcache == UseBuildCache.ONLY:
             self.buildcache_flag = "--use-buildcache=only"
         elif buildcache == UseBuildCache.NEVER:
@@ -89,6 +90,32 @@ class DepfileSpecVisitor:
         return True
 
 
+class MakefileSpec(object):
+    """Limited interface to spec to help generate targets etc. without
+    introducing unwanted special characters.
+    """
+
+    _pattern = None
+
+    def __init__(self, spec):
+        self.spec = spec
+
+    def safe_name(self):
+        return self.safe_format("{name}-{version}-{hash}")
+
+    def spec_hash(self):
+        return self.spec.dag_hash()
+
+    def safe_format(self, format_str):
+        unsafe_result = self.spec.format(format_str)
+        if not MakefileSpec._pattern:
+            MakefileSpec._pattern = re.compile(r"[^A-Za-z0-9_.-]")
+        return MakefileSpec._pattern.sub("_", unsafe_result)
+
+    def unsafe_format(self, format_str):
+        return self.spec.format(format_str)
+
+
 class MakefileModel:
     """This class produces all data to render a makefile for specs of an environment."""
 
@@ -114,7 +141,7 @@ class MakefileModel:
         self.env_path = env.path
 
         # These specs are built in the default target.
-        self.roots = roots
+        self.roots = list(MakefileSpec(x) for x in roots)
 
         # The SPACK_PACKAGE_IDS variable is "exported", which can be used when including
         # generated makefiles to add post-install hooks, like pushing to a buildcache,
@@ -131,17 +158,19 @@ class MakefileModel:
         # And here we collect a tuple of (target, prereqs, dag_hash, nice_name, buildcache_flag)
         self.make_adjacency_list = [
             (
-                self._safe_name(item.target),
-                " ".join(self._install_target(self._safe_name(s)) for s in item.prereqs),
-                item.target.dag_hash(),
-                item.target.format("{name}{@version}{%compiler}{variants}{arch=architecture}"),
+                item.target.safe_name(),
+                " ".join(self._install_target(s.safe_name()) for s in item.prereqs),
+                item.target.spec_hash(),
+                item.target.unsafe_format(
+                    "{name}{@version}{%compiler}{variants}{arch=architecture}"
+                ),
                 item.buildcache_flag,
             )
             for item in adjacency_list
         ]
 
         # Root specs without deps are the prereqs for the environment target
-        self.root_install_targets = [self._install_target(self._safe_name(s)) for s in roots]
+        self.root_install_targets = [self._install_target(s.safe_name()) for s in self.roots]
 
         self.jobserver_support = "+" if jobserver else ""
 
@@ -157,16 +186,13 @@ class MakefileModel:
         self.phony_convenience_targets: List[str] = []
 
         for node in adjacency_list:
-            tgt = self._safe_name(node.target)
+            tgt = node.target.safe_name()
             self.all_pkg_identifiers.append(tgt)
             self.all_install_related_targets.append(self._install_target(tgt))
             self.all_install_related_targets.append(self._install_deps_target(tgt))
             if make_prefix is None:
                 self.phony_convenience_targets.append(os.path.join("install", tgt))
                 self.phony_convenience_targets.append(os.path.join("install-deps", tgt))
-
-    def _safe_name(self, spec: spack.spec.Spec) -> str:
-        return spec.format("{name}-{version}-{hash}")
 
     def _target(self, name: str) -> str:
         # The `all` and `clean` targets are phony. It doesn't make sense to

@@ -19,7 +19,7 @@ def _spec_type(component):
     return _lesser_spec_types.get(component, spack.spec.Spec)
 
 
-class PackagePrefs(object):
+class PackagePrefs:
     """Defines the sort order for a set of specs.
 
     Spack's package preference implementation uses PackagePrefss to

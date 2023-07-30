@@ -21,23 +21,23 @@ def test_reindex_basic(mock_packages, mock_archive, mock_fetch, install_mockery)
     install("libelf@0.8.13")
     install("libelf@0.8.12")
 
-    all_installed = spack.store.db.query()
+    all_installed = spack.store.STORE.db.query()
 
     reindex()
 
-    assert spack.store.db.query() == all_installed
+    assert spack.store.STORE.db.query() == all_installed
 
 
 def test_reindex_db_deleted(mock_packages, mock_archive, mock_fetch, install_mockery):
     install("libelf@0.8.13")
     install("libelf@0.8.12")
 
-    all_installed = spack.store.db.query()
+    all_installed = spack.store.STORE.db.query()
 
-    os.remove(spack.store.db._index_path)
+    os.remove(spack.store.STORE.db._index_path)
     reindex()
 
-    assert spack.store.db.query() == all_installed
+    assert spack.store.STORE.db.query() == all_installed
 
 
 def test_reindex_with_deprecated_packages(
@@ -48,11 +48,11 @@ def test_reindex_with_deprecated_packages(
 
     deprecate("-y", "libelf@0.8.12", "libelf@0.8.13")
 
-    all_installed = spack.store.db.query(installed=any)
-    non_deprecated = spack.store.db.query(installed=True)
+    all_installed = spack.store.STORE.db.query(installed=any)
+    non_deprecated = spack.store.STORE.db.query(installed=True)
 
-    os.remove(spack.store.db._index_path)
+    os.remove(spack.store.STORE.db._index_path)
     reindex()
 
-    assert spack.store.db.query(installed=any) == all_installed
-    assert spack.store.db.query(installed=True) == non_deprecated
+    assert spack.store.STORE.db.query(installed=any) == all_installed
+    assert spack.store.STORE.db.query(installed=True) == non_deprecated

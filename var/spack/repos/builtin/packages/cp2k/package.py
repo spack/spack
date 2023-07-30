@@ -5,23 +5,33 @@
 import copy
 import os
 import os.path
+import sys
 
+import spack.platforms
 import spack.util.environment
+import spack.util.executable
+from spack.build_environment import dso_suffix
 from spack.package import *
 
 
-class Cp2k(MakefilePackage, CudaPackage):
+class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     """CP2K is a quantum chemistry and solid state physics software package
     that can perform atomistic simulations of solid state, liquid, molecular,
     periodic, material, crystal, and biological systems
     """
+
+    build_system(
+        conditional("cmake", when="@master:"),
+        conditional("makefile", when="@:2023.1"),
+        default="makefile",
+    )
 
     homepage = "https://www.cp2k.org"
     url = "https://github.com/cp2k/cp2k/releases/download/v3.0.0/cp2k-3.0.tar.bz2"
     git = "https://github.com/cp2k/cp2k.git"
     list_url = "https://github.com/cp2k/cp2k/releases"
 
-    maintainers("dev-zero")
+    maintainers("dev-zero", "mtaillefumier")
 
     version("2023.1", sha256="dff343b4a80c3a79363b805429bdb3320d3e1db48e0ff7d20a3dfd1c946a51ce")
     version("2022.2", sha256="1a473dea512fe264bb45419f83de432d441f90404f829d89cbc3a03f723b8354")
@@ -52,7 +62,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant(
         "pexsi",
         default=False,
-        description=("Enable the alternative PEXSI method" "for density matrix evaluation"),
+        description="Enable the alternative PEXSI method for density matrix evaluation",
     )
     variant(
         "elpa",
@@ -63,15 +73,31 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant(
         "sirius",
         default=False,
-        description=("Enable planewave electronic structure" " calculations via SIRIUS"),
+        description="Enable planewave electronic structure calculations via SIRIUS",
     )
     variant("cosma", default=False, description="Use COSMA for p?gemm")
     variant(
         "libvori",
         default=False,
-        description=("Enable support for Voronoi integration" " and BQB compression"),
+        description="Enable support for Voronoi integration and BQB compression",
     )
     variant("spglib", default=False, description="Enable support for spglib")
+    variant(
+        "spla",
+        default=False,
+        description="Use SPLA off-loading functionality. Only relevant when CUDA or ROCM"
+        " are enabled",
+    )
+    variant("pytorch", default=False, description="Enable libtorch support")
+    variant("quip", default=False, description="Enable quip support")
+
+    variant(
+        "enable_regtests",
+        default=False,
+        description="Configure cp2k to run the regtests afterwards."
+        " It build cp2k normally but put the executables in exe/cmake-build-* instead of the"
+        " conventional location. This option is only relevant when regtests need to be run.",
+    )
 
     with when("+cuda"):
         variant(
@@ -147,13 +173,13 @@ class Cp2k(MakefilePackage, CudaPackage):
             )
 
     with when("+libxc"):
-        depends_on("pkgconfig", type="build", when="@7.0:")
-        depends_on("libxc@2.2.2:3", when="@:5", type="build")
-        depends_on("libxc@4.0.3:4", when="@6.0:6.9", type="build")
+        depends_on("pkgconfig", when="@7.0:")
+        depends_on("libxc@2.2.2:3", when="@:5")
+        depends_on("libxc@4.0.3:4", when="@6.0:6.9")
         depends_on("libxc@4.0.3:4", when="@7.0:8.1")
         depends_on("libxc@5.1.3:5.1", when="@8.2:8")
-        depends_on("libxc@5.1.7:5.1", when="@9:2022")
-        depends_on("libxc@6:6.1", when="@2023:")
+        depends_on("libxc@5.1.7:5.1", when="@9:2022.2")
+        depends_on("libxc@6.1:", when="@2023.1:")
 
     with when("+mpi"):
         depends_on("mpi@2:")
@@ -163,6 +189,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     with when("+cosma"):
         depends_on("cosma+scalapack")
         depends_on("cosma@2.5.1:", when="@9:")
+        depends_on("cosma@2.6.3:", when="@master:")
         depends_on("cosma+cuda", when="+cuda")
         conflicts("~mpi")
         # COSMA support was introduced in 8+
@@ -198,27 +225,37 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on("sirius@7.0.0:7.0", when="@8:8.2")
         depends_on("sirius@7.2", when="@8.3:8.9")
         depends_on("sirius@7.3:", when="@9.1")
-        conflicts("~mpi")
+        depends_on("sirius@7.4:", when="@master")
+        conflicts("~mpi", msg="SIRIUS requires MPI")
         # sirius support was introduced in 7+
         conflicts("@:6")
 
     with when("+libvori"):
-        depends_on("libvori@201219:", when="@8.1", type="build")
-        depends_on("libvori@210412:", when="@8.2:", type="build")
+        depends_on("libvori@201219:", when="@8.1")
+        depends_on("libvori@210412:", when="@8.2:")
+        depends_on("libvori@220621:", when="@2023.1:")
         # libvori support was introduced in 8+
         conflicts("@:7")
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
     # which is written using Python 3
-    depends_on("py-numpy", when="@7:+cuda", type="build")
-    depends_on("python@3.6:", when="@7:+cuda", type="build")
+    depends_on("py-numpy", when="@7:+cuda")
+    depends_on("python@3.6:", when="@7:+cuda")
+    depends_on("py-fypp")
 
     depends_on("spglib", when="+spglib")
 
     # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
     # which is only available contacting the developer directly. See INSTALL
     # in the stage of cp2k@4.1
-    depends_on("wannier90", when="@3.0+mpi", type="build")
+    depends_on("wannier90", when="@3.0+mpi")
+
+    with when("build_system=cmake"):
+        depends_on("dbcsr")
+        depends_on("dbcsr@2.6:", when="@2023.2:")
+        depends_on("dbcsr+openmp", when="+openmp")
+        depends_on("dbcsr+cuda", when="+cuda")
+        depends_on("dbcsr+rocm", when="+rocm")
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts("%apple-clang")
@@ -231,14 +268,37 @@ class Cp2k(MakefilePackage, CudaPackage):
     # for optimal kernels. Note that we don't override the cuda_archs property
     # from the parent class, since the parent class defines constraints for all
     # versions. Instead just mark all unsupported cuda archs as conflicting.
-    dbcsr_cuda_archs = ("35", "37", "60", "70")
-    cuda_msg = "cp2k only supports cuda_arch {0}".format(dbcsr_cuda_archs)
 
-    for arch in CudaPackage.cuda_arch_values:
-        if arch not in dbcsr_cuda_archs:
-            conflicts("+cuda", when="cuda_arch={0}".format(arch), msg=cuda_msg)
+    supported_cuda_arch_list = ("35", "37", "60", "70", "80")
+    supported_rocm_arch_list = ("gfx906", "gfx908", "gfx90a", "gfx90a:xnack-", "gfx90a:xnack+")
+    gpu_map = {
+        "35": "K40",
+        "37": "K80",
+        "60": "P100",
+        "70": "V100",
+        "80": "A100",
+        "gfx906": "Mi50",
+        "gfx908": "Mi100",
+        "gfx90a": "Mi250",
+        "gfx90a:xnack-": "Mi250",
+        "gfx90a:xnack+": "Mi250",
+    }
+    cuda_msg = "cp2k only supports cuda_arch {0}".format(supported_cuda_arch_list)
+    rocm_msg = "cp2k only supports amdgpu_target {0}".format(supported_rocm_arch_list)
 
-    conflicts("+cuda", when="cuda_arch=none", msg=cuda_msg)
+    conflicts("+cuda", when="cuda_arch=none")
+
+    # ROCm already emits an error if +rocm amdgpu_target=none is given
+
+    with when("+cuda"):
+        for arch in CudaPackage.cuda_arch_values:
+            if arch not in supported_cuda_arch_list:
+                conflicts("+cuda", when="cuda_arch={0}".format(arch), msg=cuda_msg)
+
+    with when("+rocm"):
+        for arch in ROCmPackage.amdgpu_targets:
+            if arch not in supported_rocm_arch_list:
+                conflicts("+rocm", when="amdgpu_target={0}".format(arch), msg=rocm_msg)
 
     # Fix 2- and 3-center integral calls to libint
     patch(
@@ -311,7 +371,6 @@ class Cp2k(MakefilePackage, CudaPackage):
         nvflags = ["-O3"]
         ldflags = []
         libs = []
-        gpuver = ""
 
         # CP2K Makefile doesn't set C standard, but the source code uses
         # C99-style for-loops with inline definition of iterating variable.
@@ -534,6 +593,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             fcflags += ["-I{0}".format(sirius.prefix.include.sirius)]
             libs += list(sirius.libs)
 
+        gpuver = ""
         if spec.satisfies("+cuda"):
             libs += [
                 "-L{}".format(spec["cuda"].libs.directories[0]),
@@ -576,11 +636,25 @@ class Cp2k(MakefilePackage, CudaPackage):
                     libs += ["-lcufft", "-lcublas"]
 
             cuda_arch = spec.variants["cuda_arch"].value[0]
-            if cuda_arch:
-                gpuver = {"35": "K40", "37": "K80", "60": "P100", "70": "V100"}[cuda_arch]
+            gpuver = gpu_map[cuda_arch]
+            if cuda_arch == "35" and spec.satisfies("+cuda_arch_35_k20x"):
+                gpuver = "K20X"
 
-                if cuda_arch == "35" and spec.satisfies("+cuda_arch_35_k20x"):
-                    gpuver = "K20X"
+        if "@2022: +rocm" in spec:
+            libs += [
+                "-L{}".format(spec["rocm"].libs.directories[0]),
+                "-L{}/stubs".format(spec["rocm"].libs.directories[0]),
+                "-lhipblas",
+                "-lhipfft",
+                "-lstdc++",
+            ]
+
+            cppflags += ["-D__OFFLOAD_HIP"]
+            acc_compiler_var = "hipcc"
+            acc_flags_var = "NVFLAGS"
+            cppflags += ["-D__ACC"]
+            cppflags += ["-D__DBCSR_ACC"]
+            gpuver = gpu_map[spec.variants["amdgpu_target"].value[0]]
 
         if "smm=libsmm" in spec:
             lib_dir = join_path("lib", self.makefile_architecture, self.makefile_version)
@@ -705,7 +779,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         # Apparently the Makefile bases its paths on PWD
         # so we need to set PWD = self.build_directory
         with spack.util.environment.set_env(PWD=self.build_directory):
-            super(Cp2k, self).build(spec, prefix)
+            super().build(spec, prefix)
 
             with working_dir(self.build_directory):
                 make("libcp2k", *self.build_targets)
@@ -763,3 +837,113 @@ class Cp2k(MakefilePackage, CudaPackage):
         with spack.util.environment.set_env(CP2K_DATA_DIR=data_dir, PWD=self.build_directory):
             with working_dir(self.build_directory):
                 make("test", *self.build_targets)
+
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    """Use the new cmake build system to build cp2k. It is the default when
+    building the master branch of cp2k."""
+
+    def cmake_args(self):
+        spec = self.spec
+        args = []
+
+        gpu_map = {
+            "35": "K40",
+            "37": "K80",
+            "60": "P100",
+            "70": "V100",
+            "80": "A100",
+            "gfx906": "Mi50",
+            "gfx908": "Mi100",
+            "gfx90a": "Mi250",
+            "gfx90a:xnack-": "Mi250",
+            "gfx90a:xnack+": "Mi250",
+        }
+
+        if "+cuda" in spec:
+            if (len(spec.variants["cuda_arch"].value) > 1) or spec.satisfies("cuda_arch=none"):
+                raise InstallError("CP2K supports only one cuda_arch at a time.")
+            else:
+                gpu_ver = gpu_map[spec.variants["cuda_arch"].value[0]]
+                args += ["-DCP2K_USE_ACCEL=CUDA"]
+                args += [self.define("CP2K_WITH_GPU", gpu_ver)]
+
+        if "+rocm" in spec:
+            if len(spec.variants["amdgpu_target"].value) > 1:
+                raise InstallError("CP2K supports only one amdgpu_target at a time.")
+            else:
+                gpu_ver = gpu_map[spec.variants["amdgpu_target"].value[0]]
+                args += ["-DCP2K_USE_ACCEL=HIP"]
+                args += [self.define("CP2K_WITH_GPU", gpu_ver)]
+
+        args += [
+            self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
+            self.define_from_variant("CP2K_USE_ELPA", "elpa"),
+            self.define_from_variant("CP2K_USE_LIBINT2", "libint"),
+            self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
+            self.define_from_variant("CP2K_USE_SPLA", "spla"),
+            self.define_from_variant("CP2K_USE_COSMA", "cosma"),
+            self.define_from_variant("CP2K_USE_LIBXC", "libxc"),
+            self.define_from_variant("CP2K_USE_LIBTORCH", "pytorch"),
+            self.define_from_variant("CP2K_USE_METIS", "pexsi"),
+            self.define_from_variant("CP2K_USE_SUPERLU", "pexsi"),
+            self.define_from_variant("CP2K_USE_PLUMED", "plumed"),
+            self.define_from_variant("CP2K_USE_SPGLIB", "spglib"),
+            self.define_from_variant("CP2K_USE_VORI", "libvori"),
+            self.define_from_variant("CP2K_USE_SPLA", "spla"),
+            self.define_from_variant("CP2K_USE_QUIP", "quip"),
+        ]
+
+        # we force the use elpa openmp threading support. might need to be revisited though
+        args += [
+            self.define(
+                "CP2K_ENABLE_ELPA_OPENMP_SUPPORT",
+                ("+elpa +openmp" in spec) or ("^elpa +openmp" in spec),
+            )
+        ]
+
+        if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
+            args += ["-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON"]
+
+        args += ["-DCP2K_USE_FFTW3=ON"]
+
+        if spec.satisfies("smm=libxsmm"):
+            args += ["-DCP2K_USE_LIBXSMM=ON"]
+        else:
+            args += ["-DCP2K_USE_LIBXSMM=OFF"]
+
+        lapack = spec["lapack"]
+        blas = spec["blas"]
+
+        if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            args += ["-DCP2K_BLAS_VENDOR=MKL"]
+            if sys.platform == "darwin":
+                args += [
+                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
+                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
+                    self.define(
+                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
+                ]
+            else:
+                args += ["-DCP2K_SCALAPACK_VENDOR=MKL"]
+        else:
+            args.extend(
+                [
+                    self.define("CP2K_LAPACK_FOUND", True),
+                    self.define("CP2K_LAPACK_LINK_LIBRARIES", lapack.libs.joined(";")),
+                    self.define("CP2K_BLAS_FOUND", True),
+                    self.define("CP2K_BLAS_LINK_LIBRARIES", blas.libs.joined(";")),
+                    self.define("CP2K_SCALAPACK_FOUND", True),
+                    self.define("CP2K_SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
+                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
+                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
+                    self.define(
+                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
+                ]
+            )
+
+        return args
+
+    pass
