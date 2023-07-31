@@ -29,7 +29,7 @@ class PyRdflib(PythonPackage):
     depends_on("python@3.7:3", when="@6.3:", type=("build", "run"))
     depends_on("py-poetry-core@1.4:", when="@6.3:", type="build")
 
-    depends_on("py-isodate@0.6:0", when="@6.3:", type=("build", "run"))
+    depends_on("py-isodate@0.6", when="@6.3:", type=("build", "run"))
     depends_on("py-isodate", type=("build", "run"))
     depends_on("py-pyparsing@2.1:3", when="@6.3:", type=("build", "run"))
     depends_on("py-pyparsing", type=("build", "run"))
