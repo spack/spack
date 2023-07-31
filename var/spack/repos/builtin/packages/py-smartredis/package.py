@@ -18,15 +18,29 @@ class PySmartredis(PythonPackage):
     version("0.4.1", sha256="fff16ed1eb09648ac3c3f845373beb37f3ffe7414d8745ae36af9daf585f8c5b")
     version("0.4.0", sha256="d12779aa8bb038e837c25eac41b178aab9e16b729d50ee360b5af8f813d9f1dd")
 
-    depends_on("python@3.8:3.10", type=("build", "run"))
+    depends_on("python@3.7:3.10", type=("build", "run"))
     depends_on("py-setuptools@42:", type=("build",))
+
     depends_on("cmake@3.13:", type=("build",))
-    depends_on("hiredis@1.0:", type=("build", "link", "run"))
-    depends_on("redis-plus-plus@1.3: cxxstd=17", type=("build", "link"))
-    depends_on("py-pybind11@2.6:", type=("build",))
+
+    depends_on("hiredis@1.1.0", type=("build", "link", "run"), when="@0.4.1")
+    depends_on("hiredis@1.0.0", type=("build", "link", "run"), when="@0.4.0")
+
+    depends_on("redis-plus-plus@1.3.5 cxxstd=17", type=("build", "link"), when="@0.4.1")
+    depends_on("redis-plus-plus@1.2.3 cxxstd=17", type=("build", "link"), when="@0.4.0")
+
+    # Unlisted dependency needed to build the python client. The version restriction
+    # can be found:
+    #  - in the `build-scripts/build_deps.sh` for SmartRedis <= v0.4.0
+    #  - in the `Makefile` under the `pybind` target for SmartRedis >= v0.4.1
+    depends_on("py-pybind11@2.10", type=("build",))
 
     depends_on("py-numpy@1.18.2:", type=("build", "run"))
 
+    # By default, the `setup.py` for SmartRedis <= v0.4.1 will fetch dependencies and
+    # use them to build the extension library; it does not allow users to supply
+    # their own previously obtained dependencies. These patches remove the 'autofetch'
+    # behavior and use the dependencies provided through spack.
     patch("sr_0_4_1_no_deps.patch", when="@0.4.1")
     patch("sr_0_4_0_no_deps.patch", when="@0.4.0")
 
