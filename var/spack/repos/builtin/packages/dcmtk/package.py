@@ -67,5 +67,7 @@ class Dcmtk(CMakePackage):
         args += ["-DDCMTK_WITH_ICONV={0}".format("ON" if "+iconv" in self.spec else "OFF")]
         args += ["-DDCMTK_ENABLE_CXX11={0}".format("ON" if "+cxx11" in self.spec else "OFF")]
         args += ["-DDCMTK_ENABLE_STL={0}".format("ON" if "+stl" in self.spec else "OFF")]
-        args += ["-DCMAKE_POSITION_INDEPENDENT_CODE={0}".format("ON" if "+pic" in self.spec else "OFF")]
+        args += [
+            "-DCMAKE_POSITION_INDEPENDENT_CODE={0}".format("ON" if "+pic" in self.spec else "OFF")
+        ]
         return args
