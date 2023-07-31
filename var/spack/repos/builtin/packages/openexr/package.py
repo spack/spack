@@ -75,10 +75,10 @@ class Openexr(CMakePackage):
 
     # fix build of 2.5 with GCC 13
     patch(
-            "https://github.com/AcademySoftwareFoundation/openexr/pull/1499/commits/8bb802a4ea1c9628e6b77a4bfa9e6ec9bb97ca05.patch?full_index=1",
-            sha256="5919bfeb3f87acc455373a774d6b24a6db6c089f09e6ff1821d46cd1491dbdbf",
-            when="@2.5"
-         )
+        "https://github.com/AcademySoftwareFoundation/openexr/pull/1499/commits/8bb802a4ea1c9628e6b77a4bfa9e6ec9bb97ca05.patch?full_index=1",
+        sha256="5919bfeb3f87acc455373a774d6b24a6db6c089f09e6ff1821d46cd1491dbdbf",
+        when="@2.5",
+    )
     conflicts("@:2.4 %gcc@13")
 
     @property
