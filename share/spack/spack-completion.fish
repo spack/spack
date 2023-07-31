@@ -882,7 +882,7 @@ complete -c spack -n '__fish_spack_using_command change' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command change' -s a -l all -d 'change all matching specs (allow changing more than one spec)'
 
 # spack checksum
-set -g __fish_spack_optspecs_spack_checksum h/help keep-stage b/batch l/latest p/preferred a/add-to-package
+set -g __fish_spack_optspecs_spack_checksum h/help keep-stage b/batch l/latest p/preferred a/add-to-package verify
 complete -c spack -n '__fish_spack_using_command_pos 0 checksum' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 checksum' -f -a '(__fish_spack_package_versions $__fish_spack_argparse_argv[1])'
 complete -c spack -n '__fish_spack_using_command checksum' -s h -l help -f -a help
@@ -892,11 +892,13 @@ complete -c spack -n '__fish_spack_using_command checksum' -l keep-stage -d 'don
 complete -c spack -n '__fish_spack_using_command checksum' -s b -l batch -f -a batch
 complete -c spack -n '__fish_spack_using_command checksum' -s b -l batch -d 'don\'t ask which versions to checksum'
 complete -c spack -n '__fish_spack_using_command checksum' -s l -l latest -f -a latest
-complete -c spack -n '__fish_spack_using_command checksum' -s l -l latest -d 'checksum the latest available version only'
+complete -c spack -n '__fish_spack_using_command checksum' -s l -l latest -d 'checksum the latest available version'
 complete -c spack -n '__fish_spack_using_command checksum' -s p -l preferred -f -a preferred
-complete -c spack -n '__fish_spack_using_command checksum' -s p -l preferred -d 'checksum the preferred version only'
+complete -c spack -n '__fish_spack_using_command checksum' -s p -l preferred -d 'checksum the known Spack preferred version'
 complete -c spack -n '__fish_spack_using_command checksum' -s a -l add-to-package -f -a add_to_package
 complete -c spack -n '__fish_spack_using_command checksum' -s a -l add-to-package -d 'add new versions to package'
+complete -c spack -n '__fish_spack_using_command checksum' -l verify -f -a verify
+complete -c spack -n '__fish_spack_using_command checksum' -l verify -d 'verify known package checksums'
 
 # spack ci
 set -g __fish_spack_optspecs_spack_ci h/help

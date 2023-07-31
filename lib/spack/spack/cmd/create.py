@@ -17,6 +17,7 @@ from spack.spec import Spec
 from spack.url import UndetectableNameError, UndetectableVersionError, parse_name, parse_version
 from spack.util.editor import editor
 from spack.util.executable import ProcessError, which
+from spack.util.format import get_version_lines
 from spack.util.naming import mod_to_class, simplify_name, valid_fully_qualified_module_name
 
 description = "create a new package file"
@@ -832,13 +833,15 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        versions = spack.stage.get_checksums_for_versions(
+        version_hashes = spack.stage.get_checksums_for_versions(
             url_dict,
             name,
             first_stage_function=guesser,
             keep_stage=args.keep_stage,
             batch=(args.batch or len(url_dict) == 1),
         )
+
+        versions = get_version_lines(version_hashes, url_dict)
     else:
         versions = unhashed_versions
 

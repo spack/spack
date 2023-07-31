@@ -514,6 +514,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # These are default values for instance variables.
     #
 
+    # Declare versions dictionary as placeholder for values.
+    # This allows analysis tools to correctly interpret the class attributes.
+    versions: dict
+
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
     virtual = False
