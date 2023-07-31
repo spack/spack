@@ -149,7 +149,7 @@ class InstallStatuses:
             return [query_arg]
         else:
             try:  # Try block catches if it is not an iterable at all
-                if any(type(x) != InstallStatus for x in query_arg):
+                if any((not isinstance(x, InstallStatus)) for x in query_arg):
                     raise TypeError
             except TypeError:
                 raise TypeError(
