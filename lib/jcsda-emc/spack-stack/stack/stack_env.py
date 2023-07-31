@@ -1,6 +1,7 @@
 import copy
 import logging
 import os
+import re
 import shutil
 import subprocess
 
@@ -94,7 +95,7 @@ class StackEnv(object):
         self.base_packages = kwargs.get("base_packages", None)
         self.install_prefix = kwargs.get("install_prefix", None)
         self.mirror = kwargs.get("mirror", None)
-        self.upstream = kwargs.get("upstreams", None)
+        self.upstreams = kwargs.get("upstreams", None)
 
         if not self.name:
             # site = self.site if self.site else 'default'
@@ -197,6 +198,27 @@ class StackEnv(object):
             tcl_prefix = "modules:default:roots:tcl:{}".format(module_prefix)
             spack.config.add(lmod_prefix, scope=env_scope)
             spack.config.add(tcl_prefix, scope=env_scope)
+        if self.upstreams:
+            for upstream_path in self.upstreams:
+                upstream_path = upstream_path[0]
+                if not re.match(".+/install/*$", upstream_path):
+                    logging.warning(
+                        "WARNING: Upstream path '%s' is not an 'install/' directory!"
+                        % upstream_path
+                    )
+                if not os.path.isdir(upstream_path):
+                    logging.warning(
+                        "WARNING: Upstream path '%s' does not appear to exist!" % upstream_path
+                    )
+                re_pattern = ".+/(?P<spack_stack_ver>spack-stack-[^/]+)/envs/(?P<env_name>[^/]+)"
+                path_parts = re.match(re_pattern, upstream_path)
+                if path_parts:
+                    name = path_parts["spack_stack_ver"] + "-" + path_parts["env_name"]
+                else:
+                    name = os.path.basename(upstream_path)
+                upstream = "upstreams:%s:install_tree:'%s'" % (name, upstream_path)
+                logging.info("Adding upstream path '%s'" % upstream_path)
+                spack.config.add(upstream, scope=env_scope)
 
         # Merge the original spack.yaml template back in
         # so it has the higest precedence
