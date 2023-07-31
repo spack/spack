@@ -24,6 +24,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("develop", branch="master")
+    version("2.29.0", sha256="98b72115407a0e24dbaac70eccae0da3465f8f999318b2c9241631133f42d511")
     version("2.28.0", sha256="2eea68740cdbc0b49a5e428f06ad7af861d1e169ce6a12d2cf0aa2fc28c4a2ae")
     version("2.27.0", sha256="507a3d036bb1ac21a55685ae417d769dd02009bde7e09785d0ae7446b4ae1f98")
     version("2.26.0", sha256="c214084bddc61a06f3758d82947f7f831e76d7e3edeac2c78bb82d597686e05d")

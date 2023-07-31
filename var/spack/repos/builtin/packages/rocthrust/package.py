@@ -14,11 +14,13 @@ class Rocthrust(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocThrust"
     git = "https://github.com/ROCmSoftwarePlatform/rocThrust.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
 
+    version("5.5.1", sha256="66f126e5ea46ca761533411f81e83402773f95d3184cb7645ca73df227413023")
+    version("5.5.0", sha256="c031f71cd4b6eaf98664fd2ad50fc18f7ccbfa67be415dca425169d2d1c81e9e")
     version("5.4.3", sha256="d133e14ea6d27d358d1bd4d31b79fb1562d1aea7c400e5a2d28d0f159cb6c8a8")
     version("5.4.0", sha256="a4799fb1086da3f70c9b95effb1f5f9033c861685e960a8759278463cc55a971")
     version("5.3.3", sha256="0c2fc8d437efaf5c4c859d97adb049d4025025d0be0e0908f59a8112508234e5")
@@ -104,12 +106,6 @@ class Rocthrust(CMakePackage):
     # the rocthrust library itself is header-only, but the build_type and amdgpu_target
     # are relevant to the test client
     variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
     depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
 
@@ -139,6 +135,8 @@ class Rocthrust(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)

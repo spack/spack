@@ -100,7 +100,10 @@ class Legion(CMakePackage, ROCmPackage):
 
     depends_on("kokkos@3.3.01:+rocm", when="+kokkos+rocm")
 
-    depends_on("python@3", when="+python")
+    # https://github.com/StanfordLegion/legion/#dependencies
+    depends_on("python@3.8:", when="+python")
+    depends_on("py-cffi", when="+python")
+    depends_on("py-numpy", when="+python")
     depends_on("papi", when="+papi")
     depends_on("zlib", when="+zlib")
 
@@ -110,8 +113,6 @@ class Legion(CMakePackage, ROCmPackage):
     # here.
     cpp_stds = ["11", "14", "17", "20"]
     variant("cxxstd", default="11", values=cpp_stds, multi=False)
-
-    # TODO: Need a AMD/HIP variant to match support landing in 21.03.0.
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
@@ -185,12 +186,6 @@ class Legion(CMakePackage, ROCmPackage):
     )
 
     variant(
-        "enable_tls",
-        default=False,
-        description="Enable thread-local-storage of the Legion context.",
-    )
-
-    variant(
         "output_level",
         default="warning",
         # Note: these values are dependent upon those used in the cmake config.
@@ -223,6 +218,7 @@ class Legion(CMakePackage, ROCmPackage):
     conflicts("+cuda_hijack", when="~cuda")
 
     variant("fortran", default=False, description="Enable Fortran bindings.")
+    requires("+bindings", when="+fortran")
 
     variant("hdf5", default=False, description="Enable support for HDF5.")
 
@@ -245,6 +241,8 @@ class Legion(CMakePackage, ROCmPackage):
     variant("papi", default=False, description="Enable PAPI performance measurements.")
 
     variant("python", default=False, description="Enable Python support.")
+    requires("+bindings", when="+python")
+    requires("+shared", when="+python")
 
     variant("zlib", default=True, description="Enable zlib support.")
 
@@ -321,9 +319,6 @@ class Legion(CMakePackage, ROCmPackage):
         if "+privilege_checks" in spec:
             # default is off.
             options.append("-DLegion_PRIVILEGE_CHECKS=ON")
-        if "+enable_tls" in spec:
-            # default is off.
-            options.append("-DLegion_ENABLE_TLS=ON")
         if "output_level" in spec:
             level = str.upper(spec.variants["output_level"].value)
             options.append("-DLegion_OUTPUT_LEVEL=%s" % level)
@@ -400,7 +395,6 @@ class Legion(CMakePackage, ROCmPackage):
             # default is off.
             options.append("-DLegion_BUILD_BINDINGS=ON")
             options.append("-DLegion_REDOP_COMPLEX=ON")  # required for bindings
-            options.append("-DLegion_USE_Fortran=ON")
 
         if spec.variants["build_type"].value == "Debug":
             cmake_cxx_flags.extend(["-DDEBUG_REALM", "-DDEBUG_LEGION", "-ggdb"])

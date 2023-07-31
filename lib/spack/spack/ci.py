@@ -1278,6 +1278,7 @@ def generate_gitlab_ci_yaml(
             "SPACK_CI_SHARED_PR_MIRROR_URL": shared_pr_mirror or "None",
             "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
+            "SPACK_REQUIRE_SIGNING": os.environ.get("SPACK_REQUIRE_SIGNING", "False"),
         }
 
         if remote_mirror_override:
@@ -1286,9 +1287,6 @@ def generate_gitlab_ci_yaml(
         spack_stack_name = os.environ.get("SPACK_CI_STACK_NAME", None)
         if spack_stack_name:
             output_object["variables"]["SPACK_CI_STACK_NAME"] = spack_stack_name
-
-        # Ensure the child pipeline always runs
-        output_object["workflow"] = {"rules": [{"when": "always"}]}
 
         if spack_buildcache_copy:
             # Write out the file describing specs that should be copied
@@ -1305,21 +1303,17 @@ def generate_gitlab_ci_yaml(
             with open(copy_specs_file, "w") as fd:
                 fd.write(json.dumps(buildcache_copies))
 
-        sorted_output = {}
-        for output_key, output_value in sorted(output_object.items()):
-            sorted_output[output_key] = output_value
-
         # TODO(opadron): remove this or refactor
         if run_optimizer:
             import spack.ci_optimization as ci_opt
 
-            sorted_output = ci_opt.optimizer(sorted_output)
+            output_object = ci_opt.optimizer(output_object)
 
         # TODO(opadron): remove this or refactor
         if use_dependencies:
             import spack.ci_needs_workaround as cinw
 
-            sorted_output = cinw.needs_to_dependencies(sorted_output)
+            output_object = cinw.needs_to_dependencies(output_object)
     else:
         # No jobs were generated
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
@@ -1330,10 +1324,17 @@ def generate_gitlab_ci_yaml(
             noop_job["script"] = [
                 'echo "copy-only pipelines are not supported with deprecated ci configs"'
             ]
-            sorted_output = {"unsupported-copy": noop_job}
+            output_object = {"unsupported-copy": noop_job}
         else:
             tty.debug("No specs to rebuild, generating no-op job")
-            sorted_output = {"no-specs-to-rebuild": noop_job}
+            output_object = {"no-specs-to-rebuild": noop_job}
+
+    # Ensure the child pipeline always runs
+    output_object["workflow"] = {"rules": [{"when": "always"}]}
+
+    sorted_output = {}
+    for output_key, output_value in sorted(output_object.items()):
+        sorted_output[output_key] = output_value
 
     if known_broken_specs_encountered:
         tty.error("This pipeline generated hashes known to be broken on develop:")
@@ -1957,9 +1958,9 @@ def process_command(name, commands, repro_dir):
 def create_buildcache(
     input_spec: spack.spec.Spec,
     *,
-    pr_pipeline: bool,
     pipeline_mirror_url: Optional[str] = None,
     buildcache_mirror_url: Optional[str] = None,
+    sign_binaries: bool = False,
 ) -> List[PushResult]:
     """Create the buildcache at the provided mirror(s).
 
@@ -1967,12 +1968,10 @@ def create_buildcache(
         input_spec: Installed spec to package and push
         buildcache_mirror_url: URL for the buildcache mirror
         pipeline_mirror_url: URL for the pipeline mirror
-        pr_pipeline: True if the CI job is for a PR
+        sign_binaries: Whether or not to sign buildcache entry
 
     Returns: A list of PushResults, indicating success or failure.
     """
-    sign_binaries = pr_pipeline is False and can_sign_binaries()
-
     results = []
 
     # Create buildcache in either the main remote mirror, or in the
