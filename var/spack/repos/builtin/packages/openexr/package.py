@@ -16,6 +16,7 @@ class Openexr(CMakePackage):
     version("3.1.9", sha256="103e902d3902800ab07b5f3a298be7afd2755312737b2cdbfa01326ff99dac07")
     version("3.1.7", sha256="78dbca39115a1c526e6728588753955ee75fa7f5bb1a6e238bed5b6d66f91fd7")
     version("3.1.5", sha256="93925805c1fc4f8162b35f0ae109c4a75344e6decae5a240afdfce25f8a433ec")
+    version("2.5.9", sha256="05bb9c2da3ff3508eee51c30f59c7f2c59bf068f3b636d12d5991e8bbaf13e01")
     version("2.5.8", sha256="db261a7fcc046ec6634e4c5696a2fc2ce8b55f50aac6abe034308f54c8495f55")
     version("2.4.2", sha256="8e5bfd89f4ae1221f84216a163003edddf0d37b8aac4ee42b46edb55544599b9")
     version(
@@ -77,7 +78,7 @@ class Openexr(CMakePackage):
     patch(
         "https://github.com/AcademySoftwareFoundation/openexr/pull/1499/commits/8bb802a4ea1c9628e6b77a4bfa9e6ec9bb97ca05.patch?full_index=1",
         sha256="5919bfeb3f87acc455373a774d6b24a6db6c089f09e6ff1821d46cd1491dbdbf",
-        when="@2.5",
+        when="@2.5:2.5.8",
     )
     conflicts("@:2.4 %gcc@13:")
 
