@@ -98,6 +98,6 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
 
             env.set("CUPY_INCLUDE_PATH", ":".join(inc_dirs))
 
-            env.set("HIPCC", "{0}/bin/hipcc".format(self.spec["hip"].prefix))
+            env.set("HIPCC", self.spec["hip"].hipcc)
             env.set("ROCM_HOME", self.spec["hipcub"].prefix)
             env.set("CUPY_INSTALL_USE_HIP", 1)

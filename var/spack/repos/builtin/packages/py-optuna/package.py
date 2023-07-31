@@ -17,15 +17,17 @@ class PyOptuna(PythonPackage):
     homepage = "https://optuna.org/"
     pypi = "optuna/optuna-3.2.0.tar.gz"
 
-    # maintainers("elliottslaughter", "eugeneswalker")
+    maintainers("elliottslaughter", "eugeneswalker")
 
     version("3.2.0", sha256="683d8693643a761a41d251a6b8e13263b24acacf9fc46a9233d5f6aa3ce5c683")
 
-    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-setuptools@61.1:", type="build")
 
     depends_on("py-alembic@1.5:", type=("build", "run"))
+    depends_on("py-cmaes@0.9.1:", type=("build", "run"))
     depends_on("py-colorlog", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-packaging@20:", type=("build", "run"))
-    depends_on("py-sqlalchemy@1.3:", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
+    depends_on("py-sqlalchemy@1.3:", type=("build", "run"))
+    depends_on("py-tqdm", type=("build", "run"))

@@ -17,6 +17,6 @@ class PyCmaes(PythonPackage):
 
     version("0.10.0", sha256="48afc70df027114739872b50489ae6b32461c307b92d084a63c7090a9742faf9")
 
-    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-setuptools@61:", type="build")
 
     depends_on("py-numpy", type=("build", "run"))
