@@ -79,7 +79,7 @@ class Openexr(CMakePackage):
         sha256="5919bfeb3f87acc455373a774d6b24a6db6c089f09e6ff1821d46cd1491dbdbf",
         when="@2.5",
     )
-    conflicts("@:2.4 %gcc@13")
+    conflicts("@:2.4 %gcc@13:")
 
     @property
     def build_directory(self):
