@@ -36,8 +36,8 @@ class Xtb(MesonPackage):
         elif lapack != "openblas":
             lapack = "netlib"
 
-        lapack_opt = "-Dlapack={0}" if self.version <= Version("6.6.0") else "-Dla_backend={0}"
-
+        lapack_opt = "-Dlapack={0}" if self.version >= Version("6.6.0") else "-Dla_backend={0}"
+        
         return [
             lapack_opt.format(lapack),
             "-Dopenmp={0}".format(str("+openmp" in self.spec).lower()),
