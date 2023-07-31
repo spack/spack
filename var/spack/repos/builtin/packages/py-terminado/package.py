@@ -10,7 +10,7 @@ from spack.package import *
 class PyTerminado(PythonPackage):
     """Terminals served to term.js using Tornado websockets"""
 
-    homepagge = "https://github.com/jupyter/terminado"
+    homepage = "https://github.com/jupyter/terminado"
     pypi = "terminado/terminado-0.8.3.tar.gz"
 
     version("0.17.1", sha256="6ccbbcd3a4f8a25a5ec04991f39a0b8db52dfcd487ea0e578d977e6752380333")
