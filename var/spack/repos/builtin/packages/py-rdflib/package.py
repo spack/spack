@@ -37,7 +37,6 @@ class PyRdflib(PythonPackage):
     depends_on("py-importlib-metadata", when="@6.1: ^python@:3.7", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("python@3.7:", when="@6:6.2", type=("build", "run"))
     depends_on("py-setuptools", when="@6:6.2", type=("build", "run"))
     depends_on("py-setuptools", when="@:5", type="build")
     depends_on("py-six", when="@:5", type=("build", "run"))
