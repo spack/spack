@@ -68,7 +68,7 @@ class H5bench(CMakePackage):
 
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(["tests", "samples"])
+        cache_extra_test_sources(self, ["tests", "samples"])
 
     def mpi_launcher(self):
         searchpath = [self.spec["mpi"].prefix.bin]
