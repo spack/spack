@@ -27,7 +27,8 @@ class PyTerminado(PythonPackage):
     depends_on("py-ptyprocess", type=("build", "run"))
     depends_on("py-tornado@6.1.0:", when="@0.15:", type=("build", "run"))
     depends_on("py-tornado@4:", type=("build", "run"))
-    # depends_on("py-pywinpty@1.1:", when="platform=windows", type=("build", "run"))  # not yet in spack
+    # not yet in spack
+    # depends_on("py-pywinpty@1.1:", when="platform=windows", type=("build", "run"))
 
     # Historical dependencies
     depends_on("py-setuptools@40.8.0:", when="@0.12.1", type="build")
