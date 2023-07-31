@@ -38,6 +38,7 @@ class Libtiff(CMakePackage, AutotoolsPackage):
 
     maintainers("adamjstewart")
 
+    version("4.5.1", sha256="d7f38b6788e4a8f5da7940c5ac9424f494d8a79eba53d555f4a507167dca5e2b")
     version("4.5.0", sha256="c7a1d9296649233979fa3eacffef3fa024d73d05d589cb622727b5b08c423464")
     version("4.4.0", sha256="917223b37538959aca3b790d2d73aa6e626b688e02dcda272aec24c2f498abed")
     version("4.3.0", sha256="0e46e5acb087ce7d1ac53cf4f56a09b221537fc86dfc5daaad1c2e89e1b37ac8")
