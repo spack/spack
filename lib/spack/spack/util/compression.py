@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import contextlib
 import inspect
 import io
 import os
@@ -80,15 +81,26 @@ def _system_untar(archive_file):
     """
     archive_file_no_ext = strip_extension(archive_file)
     outfile = os.path.basename(archive_file_no_ext)
-    if archive_file_no_ext == archive_file:
-        # the archive file has no extension. Tar on windows cannot untar onto itself
-        # archive_file can be a tar file (which causes the problem on windows) but it can
-        # also have other extensions (on Unix) such as tgz, tbz2, ...
-        archive_file = archive_file_no_ext + "-input"
-        shutil.move(archive_file_no_ext, archive_file)
-    tar = which("tar", required=True)
-    tar.add_default_arg("-oxf")
-    tar(archive_file)
+    @contextlib.contextmanager
+    def tar_name_saftey():
+        try:
+            nonlocal archive_file
+            renamed = False
+            if archive_file_no_ext == archive_file:
+                # the archive file has no extension. Tar on windows cannot untar onto itself
+                # archive_file can be a tar file (which causes the problem on windows) but it can
+                # also have other extensions (on Unix) such as tgz, tbz2, ...
+                archive_file = archive_file_no_ext + "-input"
+                shutil.move(archive_file_no_ext, archive_file)
+                renamed = True
+            yield
+        finally:
+            if renamed:
+                shutil.move(archive_file, archive_file_no_ext)
+    with tar_name_saftey():
+        tar = which("tar", required=True)
+        tar.add_default_arg("-oxf")
+        tar(archive_file)
     return outfile
 
 
