@@ -23,9 +23,11 @@ class Xtb(MesonPackage):
     depends_on("meson@0.57.2:", type="build")
     depends_on("mctc-lib")
     depends_on("pkgconfig", type="build")
-    depends_on("tblite", when="@6.6.0:")
+    depends_on("tblite", when="+tblite")
+    depends_on("test-drive", type="build")
 
     variant("openmp", default=True, description="Use OpenMP parallelisation")
+    variant("tblite", default=True, when="@6.6.0:", description="Use tblite for xTB calculations")
 
     def meson_args(self):
         lapack = self.spec["lapack"].libs.names[0]
