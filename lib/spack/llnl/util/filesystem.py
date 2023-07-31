@@ -845,7 +845,13 @@ def copy_tree(
 
 
 @system_path_filter
-def install_tree(src, dest, symlinks=True, ignore=None, allow_broken_symlinks=False):
+def install_tree(
+        src,
+        dest,
+        symlinks=True,
+        ignore=None,
+        allow_broken_symlinks=sys.platform != 'win32'
+):
     """Recursively install an entire directory tree rooted at *src*.
 
     Same as :py:func:`copy_tree` with the addition of setting proper
