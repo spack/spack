@@ -17,6 +17,8 @@ class Libgeotiff(AutotoolsPackage):
 
     maintainers("adamjstewart")
 
+    version("1.7.1", sha256="05ab1347aaa471fc97347d8d4269ff0c00f30fa666d956baba37948ec87e55d6")
+    version("1.7.0", sha256="fc304d8839ca5947cfbeb63adb9d1aa47acef38fc6d6689e622926e672a99a7e")
     version("1.6.0", sha256="9311017e5284cffb86f2c7b7a9df1fb5ebcdc61c30468fb2e6bca36e4272ebca")
     version("1.5.1", sha256="f9e99733c170d11052f562bcd2c7cb4de53ed405f7acdde4f16195cd3ead612c")
     version("1.5.0", sha256="1c0bef329c60f770ed128e8b273945100f1a4b5abd161ac61e93bc947b0624dd")
