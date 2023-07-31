@@ -123,7 +123,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
 
         for f in files:
             # Ignore files in the exclude locations
-            if any(os.path.realpath(f).startswith(e) for e in excludes):
+            if not f or any(os.path.realpath(f).startswith(e) for e in excludes):
                 continue
 
             changed.add(f)
