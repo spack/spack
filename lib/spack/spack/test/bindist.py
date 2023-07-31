@@ -28,6 +28,7 @@ import spack.mirror
 import spack.repo
 import spack.store
 import spack.util.gpg
+import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.binary_distribution import get_buildfile_manifest
@@ -854,6 +855,39 @@ def test_default_index_json_404():
 
     with pytest.raises(bindist.FetchIndexError, match="Could not fetch index"):
         fetcher.conditional_fetch()
+
+
+def test_tarball_doesnt_include_buildinfo_twice(tmpdir):
+    """When tarballing a package that was installed from a buildcache, make
+    sure that the buildinfo file is not included twice in the tarball."""
+    p = tmpdir.mkdir("prefix")
+    p.mkdir(".spack")
+
+    # Create a binary_distribution file in the .spack folder
+    with open(p.join(".spack", "binary_distribution"), "w") as f:
+        f.write(syaml.dump({"metadata", "old"}))
+
+    # Now create a tarball, which should include a new binary_distribution file
+    tarball = str(tmpdir.join("prefix.tar.gz"))
+
+    bindist._do_create_tarball(
+        tarfile_path=tarball,
+        binaries_dir=str(p),
+        pkg_dir="my-pkg-prefix",
+        buildinfo={"metadata": "new"},
+    )
+
+    # Verify we don't have a repeated binary_distribution file,
+    # and that the tarball contains the new one, not the old one.
+    with tarfile.open(tarball) as tar:
+        assert syaml.load(tar.extractfile("my-pkg-prefix/.spack/binary_distribution")) == {
+            "metadata": "new"
+        }
+        assert tar.getnames() == [
+            "my-pkg-prefix",
+            "my-pkg-prefix/.spack",
+            "my-pkg-prefix/.spack/binary_distribution",
+        ]
 
 
 def test_reproducible_tarball_is_reproducible(tmpdir):

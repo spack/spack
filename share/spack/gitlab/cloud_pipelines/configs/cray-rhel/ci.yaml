@@ -3,12 +3,8 @@ ci:
   - build-job-remove:
       image: no-image
   - build-job:
-      script+:
-      # AWS runners mount E4S public key (verification), UO runners mount public/private (signing/verification)
-      - if [[ -r /etc/protected-runner/e4s.gpg ]]; then spack gpg trust /etc/protected-runner/e4s.gpg; fi
-      # UO runners mount intermediate ci public key (verification), AWS runners mount public/private (signing/verification)
-      - if [[ -r /etc/protected-runner/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /etc/protected-runner/intermediate_ci_signing_key.gpg; fi
-      - if [[ -r /etc/protected-runner/spack_public_key.gpg ]]; then spack gpg trust /etc/protected-runner/spack_public_key.gpg; fi
+      variables:
+        CI_GPG_KEY_ROOT: /etc/protected-runner
   - match_behavior: first
     submapping:
     - match:
