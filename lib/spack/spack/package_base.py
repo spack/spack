@@ -515,8 +515,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #
 
     # Declare versions dictionary as placeholder for values.
-    # This allows analysis tools such as to correctly understand the
-    # class attributes.
+    # This allows analysis tools to correctly interpret the class attributes.
     versions: dict
 
     #: By default, packages are not virtual
