@@ -26,8 +26,7 @@ class PySmartredis(PythonPackage):
     depends_on("hiredis@1.1.0", type=("build", "link", "run"), when="@0.4.1")
     depends_on("hiredis@1.0.0", type=("build", "link", "run"), when="@0.4.0")
 
-    depends_on("redis-plus-plus@1.3.5 cxxstd=17", type=("build", "link"), when="@0.4.1")
-    depends_on("redis-plus-plus@1.2.3 cxxstd=17", type=("build", "link"), when="@0.4.0")
+    depends_on("redis-plus-plus@1.3.5 cxxstd=17", type=("build", "link"))
 
     # Unlisted dependency needed to build the python client. The version restriction
     # can be found:
