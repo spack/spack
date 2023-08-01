@@ -2986,6 +2986,8 @@ class Spec:
 
         concretized = answer[name]
         self._dup(concretized)
+        for spec in self.traverse():
+            setattr(spec.package, "pdb", True)
 
     def concretize(self, tests=False):
         """Concretize the current spec.
