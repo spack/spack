@@ -18,7 +18,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/Caliper"
     git = "https://github.com/LLNL/Caliper.git"
-    url = "https://github.com/LLNL/Caliper/archive/v2.9.0.tar.gz"
+    url = "https://github.com/LLNL/Caliper/archive/v2.10.0.tar.gz"
     tags = ["e4s", "radiuss"]
 
     maintainers("daboehme")
@@ -26,6 +26,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("2.10.0", sha256="14c4fb5edd5e67808d581523b4f8f05ace8549698c0e90d84b53171a77f58565")
     version("2.9.0", sha256="507ea74be64a2dfd111b292c24c4f55f459257528ba51a5242313fa50978371f")
     version("2.8.0", sha256="17807b364b5ac4b05997ead41bd173e773f9a26ff573ff2fe61e0e70eab496e4")
     version("2.7.0", sha256="b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b")
@@ -58,6 +59,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     variant("sampler", default=is_linux, description="Enable sampling support on Linux")
     variant("sosflow", default=False, description="Enable SOSflow support")
     variant("fortran", default=False, description="Enable Fortran support")
+    variant("variorum", default=False, description="Enable Variorum support")
 
     depends_on("adiak@0.1:0", when="@2.2: +adiak")
 
@@ -69,6 +71,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("unwind@1.2:1", when="+libunwind")
     depends_on("elfutils", when="+libdw")
+    depends_on("variorum", when="+variorum")
 
     depends_on("sosflow@spack", when="@1.0:1+sosflow")
 
@@ -106,6 +109,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("WITH_NVTX", "cuda"),
             self.define_from_variant("WITH_ROCTRACER", "rocm"),
             self.define_from_variant("WITH_ROCTX", "rocm"),
+            self.define_from_variant("WITH_VARIORUM", "variorum"),
         ]
 
         if "+papi" in spec:
@@ -116,6 +120,8 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DLIBPFM_INSTALL=%s" % spec["libpfm4"].prefix)
         if "+sosflow" in spec:
             args.append("-DSOS_PREFIX=%s" % spec["sosflow"].prefix)
+        if "+variorum" in spec:
+            args.append("-DVARIORUM_PREFIX=%s" % spec["variorum"].prefix)
 
         # -DWITH_CALLPATH was renamed -DWITH_LIBUNWIND in 2.5
         callpath_flag = "LIBUNWIND" if spec.satisfies("@2.5:") else "CALLPATH"
