@@ -31,6 +31,7 @@ fortran_mapping = {
 
 class CmdCall:
     """Compose a call to `cmd` for an ordered series of cmd commands/scripts"""
+
     def __init__(self, *cmds):
         if not cmds:
             raise RuntimeError(
@@ -145,8 +146,14 @@ class Msvc(Compiler):
     # file based on compiler executable path.
 
     def __init__(self, *args, **kwargs):
-        new_pth = [pth if pth else get_valid_fortran_pth(args[0].version) for pth in args[3]]
-        args[3][:] = new_pth
+        # This positional argument "paths" is later parsed and process by the base class
+        # via the call to `super` later in this method
+        paths = args[3]
+        # This positional argument "cspec" is also parsed and handled by the base class
+        # constructor
+        cspec = args[0]
+        new_pth = [pth if pth else get_valid_fortran_pth(cspec.version) for pth in paths]
+        paths[:] = new_pth
         super().__init__(*args, **kwargs)
         # To use the MSVC compilers, VCVARS must be invoked
         # VCVARS is located at a fixed location, referencable
@@ -164,15 +171,19 @@ class Msvc(Compiler):
         self.vcvars_call = VCVarsInvocation(self.vcvarsall, arch, self.msvc_version)
         env_cmds.append(self.vcvars_call)
         # Below is a check for a valid fortran path
-        if args[3][2]:
+        # paths has c, cxx, fc, and f77 paths in that order
+        # paths[2] refers to the fc path and is a generic check
+        # for a fortran compiler
+        if paths[2]:
             # If this found, it sets all the vars
             oneapi_root = os.getenv("ONEAPI_ROOT")
             oneapi_root_setvars = os.path.join(oneapi_root, "setvars.bat")
             oneapi_version_setvars = os.path.join(
                 oneapi_root, "compiler", str(self.ifx_version), "env", "vars.bat"
             )
-            # order matters here, the specific version env must be invoked first, otherwise it will be
-            # ignored if the root setvars sets up the oneapi env first
+            # order matters here, the specific version env must be invoked first,
+            # otherwise it will be ignored if the root setvars sets up the oneapi
+            # env first
             env_cmds.extend(
                 [VarsInvocation(oneapi_version_setvars), VarsInvocation(oneapi_root_setvars)]
             )
@@ -207,6 +218,9 @@ class Msvc(Compiler):
 
     def _compiler_version(self, compiler):
         """Returns version object for given compiler"""
+        # ignore_errors below is true here due to ifx's
+        # non zero return code if it is not provided
+        # and input file
         return Version(
             re.search(
                 Msvc.version_regex,
