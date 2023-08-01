@@ -514,6 +514,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # These are default values for instance variables.
     #
 
+    # Declare versions dictionary as placeholder for values.
+    # This allows analysis tools to correctly interpret the class attributes.
+    versions: dict
+
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
     virtual = False
@@ -527,10 +531,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     #: By default do not run tests within package's install()
     run_tests = False
-
-    # FIXME: this is a bad object-oriented design, should be moved to Clang.
-    #: By default do not setup mockup XCode on macOS with Clang
-    use_xcode = False
 
     #: Keep -Werror flags, matches config:flags:keep_werror to override config
     # NOTE: should be type Optional[Literal['all', 'specific', 'none']] in 3.8+
