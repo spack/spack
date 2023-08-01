@@ -170,10 +170,14 @@ class Msvc(Compiler):
             # If this found, it sets all the vars
             oneapi_root = os.getenv("ONEAPI_ROOT")
             oneapi_root_setvars = os.path.join(oneapi_root, "setvars.bat")
-            oneapi_version_setvars = os.path.join(oneapi_root, "compiler", str(self.ifx_version), "env", "vars.bat")
+            oneapi_version_setvars = os.path.join(
+                oneapi_root, "compiler", str(self.ifx_version), "env", "vars.bat"
+            )
             # order matters here, the specific version env must be invoked first, otherwise it will be
             # ignored if the root setvars sets up the oneapi env first
-            env_cmds.extend([VarsInvocation(oneapi_version_setvars), VarsInvocation(oneapi_root_setvars)])
+            env_cmds.extend(
+                [VarsInvocation(oneapi_version_setvars), VarsInvocation(oneapi_root_setvars)]
+            )
         self.msvc_compiler_environment = CmdCall(*env_cmds)
 
     @property
@@ -208,7 +212,9 @@ class Msvc(Compiler):
         return Version(
             re.search(
                 Msvc.version_regex,
-                spack.compiler.get_compiler_version_output(compiler, version_arg=None, ignore_errors=True),
+                spack.compiler.get_compiler_version_output(
+                    compiler, version_arg=None, ignore_errors=True
+                ),
             ).group(1)
         )
 
