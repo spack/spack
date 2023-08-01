@@ -207,6 +207,7 @@ class Dpcpp(CMakePackage):
         env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
         env.prepend_path("LD_LIBRARY_PATH", join_path(self.spec.prefix, "lib"))
 
+
 def get_llvm_targets_to_build(family):
     host_target = ""
     if family in ("x86", "x86_64"):
