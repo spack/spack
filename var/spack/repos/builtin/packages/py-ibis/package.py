@@ -38,5 +38,4 @@ class PyIbis(PythonPackage):
         depends_on("py-scikit-learn", type=("build", "run"))
         depends_on("py-matplotlib", type=("build", "run"))
         depends_on("py-networkx", type=("build", "run"))
-        depends_on("py-trata", type=("build", "run"))
-        
+        depends_on("py-trata", type=("build", "run"))  
