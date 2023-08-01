@@ -23,16 +23,20 @@ class PySmartredis(PythonPackage):
 
     depends_on("cmake@3.13:", type=("build",))
 
-    depends_on("hiredis@1.1.0", type=("build", "link", "run"), when="@0.4.1")
-    depends_on("hiredis@1.0.0", type=("build", "link", "run"), when="@0.4.0")
+    # Documented dependencies. Allow them to float according to semeantic versioning
+    # rules for easier concretization
+    depends_on("hiredis@1.1.0:1", type=("build", "link", "run"), when="@0.4.1")
+    depends_on("hiredis@1.0.0:1", type=("build", "link", "run"), when="@0.4.0")
+    depends_on("redis-plus-plus@1.3:1 cxxstd=17", type=("build", "link"))
 
-    depends_on("redis-plus-plus@1.3.5 cxxstd=17", type=("build", "link"))
-
-    # Unlisted dependency needed to build the python client. The version restriction
+    # Unlisted dependency needed to build the python client. The pybind requirement
     # can be found:
     #  - in the `build-scripts/build_deps.sh` for SmartRedis <= v0.4.0
     #  - in the `Makefile` under the `pybind` target for SmartRedis >= v0.4.1
-    depends_on("py-pybind11@2.10", type=("build",))
+    # This dependency is intentionally left looser than the one used by SmartRedis
+    # as it does not use the features of the newer versions of pybind and allows for
+    # easier concretization
+    depends_on("py-pybind11@2.6:2", type=("build",))
 
     depends_on("py-numpy@1.18.2:", type=("build", "run"))
 
