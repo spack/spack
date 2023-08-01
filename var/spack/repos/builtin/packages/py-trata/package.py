@@ -35,4 +35,3 @@ class PyTrata(PythonPackage):
         depends_on("py-scipy", type=("build", "run"))
         depends_on("py-scikit-learn", type=("build", "run"))
         depends_on("py-matplotlib", type=("build", "run"))
-        
