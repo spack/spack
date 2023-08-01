@@ -19,7 +19,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_dev_build_rebuild_dependent_delayed(
+def test_dev_rebuild_dependent_delayed(
     tmpdir, mock_packages, mutable_database, mutable_mock_env_path
 ):
     """Install X->Y; change Y; perform "spack install Y" (not rebuilding X);
