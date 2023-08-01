@@ -217,6 +217,13 @@
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave"
           }
         ],
+        "intel": [
+          {
+            "versions": "19.1:",
+            "name": "x86-64-v3",
+            "flags": "-march=core-avx2 -mtune=generic"
+          }
+        ],
         "oneapi": [
           {
             "versions": "2021.2.0:",
