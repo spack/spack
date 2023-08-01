@@ -50,7 +50,7 @@ class PyLibensemble(PythonPackage):
 
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"), when="@0.7.1:")
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools", type=("build"))
     depends_on("py-pydantic@:2", type=("build", "run"), when="@0.10:")
     depends_on("py-tomli", type=("build", "run"), when="@0.10:")
     depends_on("py-pyyaml", type=("build", "run"), when="@0.10:")
