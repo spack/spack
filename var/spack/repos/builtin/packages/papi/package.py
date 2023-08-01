@@ -54,6 +54,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared libraries")
     # PAPI requires building static libraries, so there is no "static" variant
     variant("static_tools", default=False, description="Statically link the PAPI tools")
+    variant("debug", default=False, description="Enable debug symbols in PAPI")
     # The PAPI configure option "--with-shlib-tools" is deprecated
     # and therefore not implemented here
 
@@ -145,6 +146,9 @@ class Papi(AutotoolsPackage, ROCmPackage):
 
         if "+static_tools" in spec:
             options.append("--with-static-tools")
+
+        if "+debug" in spec:
+            options.append("--with-debug=yes")
 
         return options
 
