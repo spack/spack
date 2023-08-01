@@ -671,12 +671,14 @@ ml-darwin-aarch64-mps-build:
 ##########################################
 .ml-linux-power64le-cpu:
   extends: [ ".linux_power" ]
-  tags: ["spack", "public", "large", "ppc64le"]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-power64le-cpu
 
+.tags-ml-power:
+  tags: ["spack", "public", "large", "ppc64le"]
+
 ml-linux-power64le-cpu-ubuntu-generate:
-  extends: [ ".generate", ".ml-linux-power64le-cpu" ]
+  extends: [ ".generate", ".ml-linux-power64le-cpu", ".tags-ml-power" ]
   image: { "name": "ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01", "entrypoint": [""] }
 
 ml-linux-x86_64-cpu-ubuntu-build:
@@ -691,7 +693,7 @@ ml-linux-x86_64-cpu-ubuntu-build:
       job: ml-linux-power64le-cpu-ubuntu-generate
 
 ml-linux-power64le-cpu-fedora-generate:
-  extends: [ ".generate", ".ml-linux-power64le-cpu" ]
+  extends: [ ".generate", ".ml-linux-power64le-cpu", ".tags-ml-power" ]
   image: { "name": "ecpe4s/fedora36-runner-ppc64le:latest", "entrypoint": [""] }
 
 ml-linux-x86_64-cpu-fedora-build:
@@ -710,12 +712,11 @@ ml-linux-x86_64-cpu-fedora-build:
 ###########################################
 .ml-linux-power64le-cuda:
   extends: [ ".linux_power" ]
-  tags: ["spack", "public", "large", "ppc64le"]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-power64le-cuda
 
 ml-linux-power64le-cuda-ubuntu-generate:
-  extends: [ ".generate", ".ml-linux-power64le-cuda" ]
+  extends: [ ".generate", ".ml-linux-power64le-cuda", ".tags-ml-power" ]
   image: { "name": "ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01", "entrypoint": [""] }
 
 ml-linux-power64le-cuda-ubuntu-build:
@@ -730,7 +731,7 @@ ml-linux-power64le-cuda-ubuntu-build:
       job: ml-linux-power64le-cuda-ubuntu-generate
 
 ml-linux-power64le-cuda-fedora-generate:
-  extends: [ ".generate", ".ml-linux-power64le-cuda" ]
+  extends: [ ".generate", ".ml-linux-power64le-cuda", ".tags-ml-power" ]
   image: { "name": "ecpe4s/fedora36-runner-ppc64le:latest", "entrypoint": [""] }
 
 ml-linux-power64le-cuda-fedora-build:
