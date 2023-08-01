@@ -19,7 +19,6 @@ class PyOpenpyxl(PythonPackage):
     version("2.2.0", sha256="c34e3f7e3106dbe6d792f35d9a2f01c08fdd21a6fe582a2f540e39a70e7443c4")
     version("1.8.6", sha256="aa11a4acd2765392808bca2041f6f9ba17565c72dccc3f5d876bf78effa06126")
 
-    depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-et-xmlfile", when="@2.4:", type=("build", "run"))
     depends_on("py-jdcal", when="@2.2.0:3.0.6", type=("build", "run"))
