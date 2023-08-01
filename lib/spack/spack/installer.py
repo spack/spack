@@ -2473,7 +2473,7 @@ class BuildProcessInstaller:
                         filter_fn=self.filter_fn,
                     )
 
-                    if getattr(pkg, 'pdb', False):
+                    if getattr(pkg, "pdb", False):
                         log_contextmanager = NoopLogger()
 
                     with log_contextmanager as logger:
