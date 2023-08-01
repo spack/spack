@@ -9,6 +9,7 @@ import pytest
 
 import spack.directives
 import spack.fetch_strategy
+import spack.package_base
 import spack.repo
 from spack.paths import mock_packages_path
 from spack.spec import Spec
@@ -318,3 +319,21 @@ def test_package_deprecated_version(mock_packages, mock_fetch, mock_stage):
 
     assert spack.package_base.deprecated_version(pkg_cls, "1.1.0")
     assert not spack.package_base.deprecated_version(pkg_cls, "1.0.0")
+
+
+def test_package_with_deprecated_magic_import_has_a_useful_error(tmpdir, mutable_config):
+    """Test that a package that's missing `from spack.package import *` gets a useful error,
+    suggesting that it be added."""
+    tmpdir.join("repo.yaml").write("repo:\n  namespace: old_package")
+    tmpdir.join("packages", "old-package").ensure(dir=True).join("package.py").write(
+        """\
+class OldPackage(Package):
+    version('1.0', '0123456789abcdef0123456789abcdef')
+"""
+    )
+    with spack.repo.use_repositories(str(tmpdir)) as repo:
+        with pytest.raises(
+            spack.repo.RepoError,
+            match=r"This usually means it's missing `from spack.package import \*`.",
+        ):
+            repo.get_pkg_class("old-package")

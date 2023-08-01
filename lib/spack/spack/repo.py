@@ -1214,6 +1214,8 @@ class Repo:
             raise UnknownPackageError(fullname)
         except Exception as e:
             msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
+            if isinstance(e, NameError):
+                msg += ". This usually means it's missing `from spack.package import *`."
             raise RepoError(msg) from e
 
         cls = getattr(module, class_name)
