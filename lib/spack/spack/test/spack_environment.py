@@ -14,7 +14,9 @@ from spack.main import SpackCommand
 
 env = SpackCommand("env")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Environments are not supported on Windows yet")
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32", reason="Environments are not supported on Windows yet"
+)
 
 
 def test_dev_build_rebuild_dependent_delayed(
