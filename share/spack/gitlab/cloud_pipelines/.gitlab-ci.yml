@@ -659,6 +659,82 @@ ml-darwin-aarch64-mps-build:
     - artifacts: True
       job: ml-darwin-aarch64-mps-generate
 
+##########################################
+# Machine Learning - Linux power64le (CPU)
+##########################################
+.ml-linux-power64le-cpu:
+  extends: [ ".linux_power" ]
+  variables:
+    SPACK_CI_STACK_NAME: ml-linux-power64le-cpu
+
+ml-linux-power64le-cpu-ubuntu-generate:
+  extends: [ ".generate", ".ml-linux-power64le-cpu", ".tags-power64le" ]
+  image: ghcr.io/spack/e4s-ubuntu-20.04-ppc64le:nightly
+
+ml-linux-x86_64-cpu-ubuntu-build:
+  extends: [ ".build", ".ml-linux-power64le-cpu" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-power64le-cpu-ubuntu-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-power64le-cpu-ubuntu-generate
+
+ml-linux-power64le-cpu-fedora-generate:
+  extends: [ ".generate", ".ml-linux-power64le-cpu", ".tags-power64le" ]
+  image: ghcr.io/spack/e4s-fedora-36-ppc64le:nightly
+
+ml-linux-x86_64-cpu-fedora-build:
+  extends: [ ".build", ".ml-linux-power64le-cpu" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-power64le-cpu-fedora-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-power64le-cpu-fedora-generate
+
+########################################
+# Machine Learning - Linux x86_64 (CUDA)
+########################################
+.ml-linux-power64le-cuda:
+  extends: [ ".linux_power" ]
+  variables:
+    SPACK_CI_STACK_NAME: ml-linux-power64le-cuda
+
+ml-linux-power64le-cuda-ubuntu-generate:
+  extends: [ ".generate", ".ml-linux-power64le-cuda", ".tags-x86_64_v4" ]
+  image: ghcr.io/spack/e4s-ubuntu-20.04-ppc64le:nightly
+
+ml-linux-power64le-cuda-ubuntu-build:
+  extends: [ ".build", ".ml-linux-power64le-cuda"  ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-power64le-cuda-ubuntu-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-power64le-cuda-ubuntu-generate
+
+ml-linux-power64le-cuda-fedora-generate:
+  extends: [ ".generate", ".ml-linux-power64le-cuda", ".tags-x86_64_v4" ]
+  image: ghcr.io/spack/e4s-fedora-36-ppc64le:nightly
+
+ml-linux-power64le-cuda-fedora-build:
+  extends: [ ".build", ".ml-linux-power64le-cuda"  ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-power64le-cuda-fedora-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-power64le-cuda-fedora-generate
+
 ########################################
 # Deprecated CI testing
 ########################################
