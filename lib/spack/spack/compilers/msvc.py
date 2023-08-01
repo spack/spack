@@ -30,22 +30,23 @@ fortran_mapping = {
 
 
 class CmdCall:
+    """Compose a call to `cmd` for an ordered series of cmd commands/scripts"""
     def __init__(self, *cmds):
-        self._cmds = cmds
-
-    def __call__(self):
-        if not self._cmds:
+        if not cmds:
             raise RuntimeError(
                 """Attempting to run commands from CMD without specifying commands.
                 Please add commands to be run."""
             )
+        self._cmds = cmds
+
+    def __call__(self):
         out = subprocess.check_output(self.cmd_line, stderr=subprocess.STDOUT)  # novermin
         return out.decode("utf-16le", errors="replace")  # novermin
 
     @property
     def cmd_line(self):
         base_call = "cmd /u /c "
-        commands = " && ".join([str(x) for x in self._cmds])
+        commands = " && ".join([x.command_str() for x in self._cmds])
         # If multiple commands are being invoked by a single subshell
         # they must be encapsulated by a double quote. Always double
         # quote to be sure of proper handling
@@ -56,15 +57,12 @@ class CmdCall:
         # state so it should always be appended
         return base_call + f'"{commands} && set"'
 
-    def add_command(self, cmd):
-        self._cmds.append(cmd)
-
 
 class VarsInvocation:
     def __init__(self, script):
         self._script = script
 
-    def __str__(self):
+    def command_str(self):
         return f'"{self._script}"'
 
     @property
@@ -96,7 +94,7 @@ class VCVarsInvocation(VarsInvocation):
     def vcvars_ver(self):
         return f"-vcvars_ver={self._msvc_version}"
 
-    def __str__(self):
+    def command_str(self):
         script = super(VCVarsInvocation, self).__str__()
         return f"{script} {self.arch} {self.sdk_ver} {self.vcvars_ver}"
 
