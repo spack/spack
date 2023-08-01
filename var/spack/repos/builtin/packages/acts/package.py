@@ -40,6 +40,7 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("28.0.0", commit="0d8aa418c00e8f79bab2cf88234f3433670b447c", submodules=True)
     version("23.2.1", commit="a9fe5167d4d3b6b53b28d3b17060a5f3e380cf3a", submodules=True)
     version("23.2.0", commit="bc3120d23a72cfdd0ea8f9a0997f59caf311672b", submodules=True)
     version("23.1.0", commit="4479f182a37650a538344f749b967d6f757bdf60", submodules=True)
@@ -216,14 +217,14 @@ class Acts(CMakePackage, CudaPackage):
     )
     variant("sycl", default=False, description="Build the SyCL plugin", when="@1:")
     variant("tgeo", default=False, description="Build the TGeo plugin", when="+identification")
-
-    # Variants that only affect Acts examples for now
     variant(
         "edm4hep",
         default=False,
-        description="Build the EDM4hep examples",
-        when="@19.4.0: +examples",
+        description="Build the EDM4hep plugin",
+        when="@19.4.0:25.0.0 +examples",
     )
+
+    # Variants that only affect Acts examples for now
     variant(
         "geant4",
         default=False,
@@ -347,6 +348,7 @@ class Acts(CMakePackage, CudaPackage):
             example_cmake_variant("DD4HEP", "dd4hep"),
             plugin_cmake_variant("DIGITIZATION", "digitization"),
             example_cmake_variant("EDM4HEP", "edm4hep"),
+            plugin_cmake_variant("EDM4HEP", "edm4hep"),
             cmake_variant("EXAMPLES", "examples"),
             cmake_variant("FATRAS", "fatras"),
             cmake_variant("FATRAS_GEANT4", "fatras_geant4"),
