@@ -17,7 +17,7 @@ class PyMelissaCore(PythonPackage):
     git = "https://gitlab.inria.fr/melissa/melissa.git"
     maintainers("robcaulk", "mschouler", "raffino")
 
-    version("develop", branch="develop")
+    version("develop", branch="develop", preferred=True)
     version("joss", tag="JOSS_v2")
     version("sc23", tag="SC23")
 
