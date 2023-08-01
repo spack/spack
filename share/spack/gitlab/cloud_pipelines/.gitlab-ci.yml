@@ -671,6 +671,7 @@ ml-darwin-aarch64-mps-build:
 ##########################################
 .ml-linux-power64le-cpu:
   extends: [ ".linux_power" ]
+  tags: ["spack", "public", "large", "ppc64le"]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-power64le-cpu
 
@@ -709,6 +710,7 @@ ml-linux-x86_64-cpu-fedora-build:
 ###########################################
 .ml-linux-power64le-cuda:
   extends: [ ".linux_power" ]
+  tags: ["spack", "public", "large", "ppc64le"]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-power64le-cuda
 
