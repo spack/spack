@@ -5,10 +5,8 @@
 
 from spack.package import *
 
-
 class PyPydv(PythonPackage):
-    """PyDV is a 1D graphics and data analysis tool, heavily based on the
-    ULTRA plotting tool"""
+    """PyDV is a 1D graphics and data analysis tool, heavily based on the ULTRA plotting tool."""
 
     homepage = "https://github.com/griffin28/PyDV"
     # url = "https://github.com/griffin28/PyDV/archive/pydv-3.1.15.tar.gz"
@@ -23,7 +21,7 @@ class PyPydv(PythonPackage):
     version("master", branch="master")
 
     # pypi releases
-    version("3.1.15", sha256="a47bae3aa5d0872674292bc87270b09885d7ccee8b6fbec72193371ba2599a04", preferred = True)
+    version("3.1.15", sha256="a47bae3aa5d0872674292bc87270b09885d7ccee8b6fbec72193371ba2599a04", preferred=True)
 
     depends_on("py-setuptools", type="build")
     depends_on("py-cycler", type=("build", "run"))
@@ -31,4 +29,3 @@ class PyPydv(PythonPackage):
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-pyside", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
-    
