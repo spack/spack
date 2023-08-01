@@ -66,6 +66,7 @@ import llnl.util.tty.color as clr
 import spack.compiler
 import spack.compilers
 import spack.config
+import spack.debug
 import spack.dependency as dp
 import spack.error
 import spack.hash_types as ht
@@ -2986,7 +2987,7 @@ class Spec:
 
         concretized = answer[name]
         self._dup(concretized)
-        if getattr(spack.cmd.install, "_pdb"):
+        if getattr(spack.debug, "_pdb"):
             for spec in self.traverse():
                 setattr(spec.package, "pdb", True)
 

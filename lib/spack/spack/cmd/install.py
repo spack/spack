@@ -16,6 +16,7 @@ import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
+import spack.debug
 import spack.environment as ev
 import spack.fetch_strategy
 import spack.package_base
@@ -29,9 +30,6 @@ from spack.installer import PackageInstaller
 description = "build and install packages"
 section = "build"
 level = "short"
-
-
-_pdb = False
 
 
 # Determine value of cache flag
@@ -334,8 +332,7 @@ def install(parser, args):
         return
 
     if args.interactive_pdb:
-        global _pdb
-        _pdb = True
+        spack.debug._pdb = True
 
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
