@@ -897,7 +897,8 @@ def requires(*requirement_specs, policy="one_of", when=None, msg=None):
 
         # Save in a list the requirements and the associated custom messages
         when_spec_list = pkg.requirements.setdefault(tuple(requirement_specs), [])
-        when_spec_list.append((when_spec, policy, msg))
+        msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
+        when_spec_list.append((when_spec, policy, msg_with_name))
 
     return _execute_requires
 
