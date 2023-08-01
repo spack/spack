@@ -78,17 +78,6 @@ def namespace_from_fullname(fullname):
     return namespace
 
 
-class RepoLoader(importlib.machinery.SourceFileLoader):
-    """Loads a Python module associated with a package in specific repository"""
-
-    def __init__(self, fullname, repo, package_name):
-        self.repo = repo
-        self.package_name = package_name
-        self.package_py = repo.filename_for_package_name(package_name)
-        self.fullname = fullname
-        super().__init__(self.fullname, self.package_py)
-
-
 class SpackNamespaceLoader:
     def create_module(self, spec):
         return SpackNamespace(spec.name)
@@ -129,7 +118,9 @@ class ReposFinder:
                 # With 2 nested conditionals we can call "repo.real_name" only once
                 package_name = repo.real_name(module_name)
                 if package_name:
-                    return RepoLoader(fullname, repo, package_name)
+                    return importlib.machinery.SourceFileLoader(
+                        fullname, repo.filename_for_package_name(package_name)
+                    )
 
             # We are importing a full namespace like 'spack.pkg.builtin'
             if fullname == repo.full_namespace:
