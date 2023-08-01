@@ -205,7 +205,7 @@ class Dpcpp(CMakePackage):
     def setup_run_environment(self, env):
         env.set("CC", join_path(self.spec.prefix.bin, "clang"))
         env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
-
+        env.prepend_path("LD_LIBRARY_PATH", join_path(self.spec.prefix, "lib"))
 
 def get_llvm_targets_to_build(family):
     host_target = ""
