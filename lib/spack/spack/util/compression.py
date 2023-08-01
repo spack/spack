@@ -81,7 +81,8 @@ def _system_untar(archive_file):
     archive_file_no_ext = strip_extension(archive_file)
     outfile = os.path.basename(archive_file_no_ext)
     tar = which("tar", required=True)
-    tar.add_default_arg("-C ..")
+    parent_dir = os.path.dirname(os.getcwd())
+    tar.add_default_arg(f"-C {parent_dir}")
     tar.add_default_arg("-oxf")
     tar(archive_file)
     return outfile
