@@ -61,6 +61,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     variant("count_flops", default=False, description="Build with flop counters")
     variant("task_timers", default=False, description="Build with timers for internal routines")
     variant("slate", default=True, description="Build with SLATE support")
+    variant("magma", default=False, description="Build with MAGMA support")
 
     depends_on("cmake@3.11:", when="@:6.2.9", type="build")
     depends_on("cmake@3.17:", when="@6.3.0:", type="build")
@@ -100,6 +101,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+cuda")
     conflicts("+slate", when="@:5.1.1")
     conflicts("+slate", when="~mpi")
+    conflicts("+magma", when="~cuda")
+    conflicts("+magma", when="~rocm")
 
     patch("intel-19-compile.patch", when="@3.1.1")
     patch("shared-rocm.patch", when="@5.1.1")
@@ -118,6 +121,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("TPL_ENABLE_PARMETIS", "parmetis"),
             self.define_from_variant("TPL_ENABLE_SCOTCH", "scotch"),
             self.define_from_variant("TPL_ENABLE_BPACK", "butterflypack"),
+            self.define_from_variant("TPL_ENABLE_MAGMA", "magma"),
             self.define_from_variant("STRUMPACK_COUNT_FLOPS", "count_flops"),
             self.define_from_variant("STRUMPACK_TASK_TIMERS", "task_timers"),
             "-DTPL_BLAS_LIBRARIES=%s" % spec["blas"].libs.joined(";"),
