@@ -1217,7 +1217,7 @@ attr("node_flag_propagate", Package, FlagType, Flag, Source) :-
   depends_on(Parent, Package),
   attr("node_flag_propagate", Parent, _, _, Source),
   attr("node_flag_value", Source, FlagType, Flag),
-  not attr("node_flag_set", Package, FlagType, _).
+  not attr("node_flag_set", Package, FlagType, _),
   compiler_id(CompilerID),
   flag_type(FlagType).
 >>>>>>> b44c47bc83 (Simplify node_flag_propagate and propagate past 1st level dependencies)
