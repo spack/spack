@@ -5,12 +5,12 @@
 
 from spack.package import *
 
+
 class UcscBedclip(Package):
     """Remove lines from bed file that refer to off-chromosome locations."""
 
     homepage = "http://hgdownload.cse.ucsc.edu/admin/exe/"
     url = "http://hgdownload.cse.ucsc.edu/admin/exe/userApps.archive/userApps.v449.src.tgz"
-
 
     version("377", sha256="932f149c19641064a9cd3f2382cbb54b45a9292b8444792872d531346925d676")
     version("449", sha256="b5a86863d6cfe2120f6c796a13b1572ad05b22622f6534b95c9d26ccbede09b7")
@@ -44,4 +44,3 @@ class UcscBedclip(Package):
             make()
             make("install")
             install("bin/bedClip", prefix.bin)
-
