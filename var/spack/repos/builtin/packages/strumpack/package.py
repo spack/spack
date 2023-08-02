@@ -101,8 +101,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+cuda")
     conflicts("+slate", when="@:5.1.1")
     conflicts("+slate", when="~mpi")
-    conflicts("+magma", when="~cuda")
-    conflicts("+magma", when="~rocm")
+    conflicts("+magma", when="~rocm~cuda")
 
     patch("intel-19-compile.patch", when="@3.1.1")
     patch("shared-rocm.patch", when="@5.1.1")
