@@ -102,6 +102,8 @@ class R(AutotoolsPackage):
     # temporary fix to lower the optimization level.
     patch("change_optflags_tmp.patch", when="%fj@4.1.0")
 
+    build_directory = "spack-build"
+
     # R custom URL version
     def url_for_version(self, version):
         """Handle R's customed URL versions"""
