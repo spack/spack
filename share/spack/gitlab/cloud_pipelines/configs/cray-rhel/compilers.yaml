@@ -7,7 +7,7 @@ compilers:
       f77: ftn
       fc: ftn
     flags: {}
-    operating_system: rhel8
+    operating_system: glibc2.28
     target: any
     modules:
     - PrgEnv-cray/8.3.3
@@ -23,7 +23,7 @@ compilers:
       f77: gfortran
       fc: gfortran
     flags: {}
-    operating_system: rhel8
+    operating_system: glibc2.28
     target: any
     modules:
     - PrgEnv-gnu

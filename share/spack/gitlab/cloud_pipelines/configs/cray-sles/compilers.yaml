@@ -7,7 +7,7 @@ compilers:
       f77: /opt/cray/pe/gcc/10.3.0/bin/gfortran
       fc: /opt/cray/pe/gcc/10.3.0/bin/gfortran
     flags: {}
-    operating_system: sle_hpc15
+    operating_system: os=glibc2.31
     target: x86_64
     modules: [PrgEnv-gnu-amd]
     environment: {}
