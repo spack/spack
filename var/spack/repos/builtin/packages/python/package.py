@@ -1035,8 +1035,8 @@ print(json.dumps(config))
                 return lib
 
         raise spack.error.NoLibrariesError(
-            "Unable to find {} libraries with the following names:".format(self.name),
-            "\n".join(candidates),
+            "Unable to find {} libraries with the following names:\n\n* ".format(self.name)
+            + "\n* ".join(candidates)
         )
 
     @property
@@ -1061,8 +1061,8 @@ print(json.dumps(config))
                 break
         else:
             raise spack.error.NoHeadersError(
-                "Unable to locate {} headers in any of these locations:".format(self.name),
-                "\n".join(candidates),
+                "Unable to locate {} headers in any of these locations:\n\n* ".format(self.name)
+                + "\n* ".join(candidates)
             )
 
         headers.directories = [os.path.dirname(config_h)]
