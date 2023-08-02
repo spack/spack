@@ -1690,7 +1690,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
     return True
 
 
-def reproduce_ci_job(url, work_dir):
+def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
     """Given a url to gitlab artifacts.zip from a failed 'spack ci rebuild' job,
     attempt to setup an environment in which the failure can be reproduced
     locally.  This entails the following:
@@ -1705,6 +1705,11 @@ def reproduce_ci_job(url, work_dir):
     """
     work_dir = os.path.realpath(work_dir)
     download_and_extract_artifacts(url, work_dir)
+
+    gpg_path = None
+    if gpg_url:
+        gpg_path = web_util.fetch_url_text(gpg_url, dest_dir=os.path.join(work_dir, "_pgp"))
+        rel_gpg_path = gpg_path.replace(work_dir, "").lstrip(os.path.sep)
 
     lock_file = fs.find(work_dir, "spack.lock")[0]
     repro_lock_dir = os.path.dirname(lock_file)
@@ -1798,60 +1803,63 @@ def reproduce_ci_job(url, work_dir):
         # more faithful reproducer if everything appears to run in the same
         # absolute path used during the CI build.
         mount_as_dir = "/work"
+        mounted_workdir = "/reproducer"
         if repro_details:
             mount_as_dir = repro_details["ci_project_dir"]
             mounted_repro_dir = os.path.join(mount_as_dir, rel_repro_dir)
             mounted_env_dir = os.path.join(mount_as_dir, relative_concrete_env_dir)
+            if gpg_path:
+                mounted_gpg_path = os.path.join(mounted_workdir, rel_gpg_path)
 
-        # We will also try to clone spack from your local checkout and
-        # reproduce the state present during the CI build, and put that into
-        # the bind-mounted reproducer directory.
+    # We will also try to clone spack from your local checkout and
+    # reproduce the state present during the CI build, and put that into
+    # the bind-mounted reproducer directory.
 
-        # Regular expressions for parsing that HEAD commit.  If the pipeline
-        # was on the gitlab spack mirror, it will have been a merge commit made by
-        # gitub and pushed by the sync script.  If the pipeline was run on some
-        # environment repo, then the tested spack commit will likely have been
-        # a regular commit.
-        commit_1 = None
-        commit_2 = None
-        commit_regex = re.compile(r"commit\s+([^\s]+)")
-        merge_commit_regex = re.compile(r"Merge\s+([^\s]+)\s+into\s+([^\s]+)")
+    # Regular expressions for parsing that HEAD commit.  If the pipeline
+    # was on the gitlab spack mirror, it will have been a merge commit made by
+    # gitub and pushed by the sync script.  If the pipeline was run on some
+    # environment repo, then the tested spack commit will likely have been
+    # a regular commit.
+    commit_1 = None
+    commit_2 = None
+    commit_regex = re.compile(r"commit\s+([^\s]+)")
+    merge_commit_regex = re.compile(r"Merge\s+([^\s]+)\s+into\s+([^\s]+)")
 
-        # Try the more specific merge commit regex first
-        m = merge_commit_regex.search(spack_info)
+    # Try the more specific merge commit regex first
+    m = merge_commit_regex.search(spack_info)
+    if m:
+        # This was a merge commit and we captured the parents
+        commit_1 = m.group(1)
+        commit_2 = m.group(2)
+    else:
+        # Not a merge commit, just get the commit sha
+        m = commit_regex.search(spack_info)
         if m:
-            # This was a merge commit and we captured the parents
             commit_1 = m.group(1)
-            commit_2 = m.group(2)
+
+    setup_result = False
+    if commit_1:
+        if commit_2:
+            setup_result = setup_spack_repro_version(work_dir, commit_2, merge_commit=commit_1)
         else:
-            # Not a merge commit, just get the commit sha
-            m = commit_regex.search(spack_info)
-            if m:
-                commit_1 = m.group(1)
+            setup_result = setup_spack_repro_version(work_dir, commit_1)
 
-        setup_result = False
-        if commit_1:
-            if commit_2:
-                setup_result = setup_spack_repro_version(work_dir, commit_2, merge_commit=commit_1)
-            else:
-                setup_result = setup_spack_repro_version(work_dir, commit_1)
-
-        if not setup_result:
-            setup_msg = """
-        This can happen if the spack you are using to run this command is not a git
-        repo, or if it is a git repo, but it does not have the commits needed to
-        recreate the tested merge commit.  If you are trying to reproduce a spack
-        PR pipeline job failure, try fetching the latest develop commits from
-        mainline spack and make sure you have the most recent commit of the PR
-        branch in your local spack repo.  Then run this command again.
-        Alternatively, you can also manually clone spack if you know the version
-        you want to test.
-            """
-            tty.error(
-                "Failed to automatically setup the tested version of spack "
-                "in your local reproduction directory."
-            )
-            print(setup_msg)
+    if not setup_result:
+        setup_msg = """
+    This can happen if the spack you are using to run this command is not a git
+    repo, or if it is a git repo, but it does not have the commits needed to
+    recreate the tested merge commit.  If you are trying to reproduce a spack
+    PR pipeline job failure, try fetching the latest develop commits from
+    mainline spack and make sure you have the most recent commit of the PR
+    branch in your local spack repo.  Then run this command again.
+    Alternatively, you can also manually clone spack if you know the version
+    you want to test.
+        """
+        tty.error(
+            "Failed to automatically setup the tested version of spack "
+            "in your local reproduction directory."
+        )
+        print(setup_msg)
 
     # In cases where CI build was run on a shell runner, it might be useful
     # to see what tags were applied to the job so the user knows what shell
@@ -1862,45 +1870,92 @@ def reproduce_ci_job(url, work_dir):
         job_tags = job_yaml["tags"]
         tty.msg("Job ran with the following tags: {0}".format(job_tags))
 
-    inst_list = []
+    entrypoint_script = [
+        ["git", "config", "--global", "--add", "safe.directory", mount_as_dir],
+        [".", os.path.join(mount_as_dir if job_image else work_dir, "share/spack/setup-env.sh")],
+        ["spack", "gpg", "trust", mounted_gpg_path if job_image else gpg_path] if gpg_path else [],
+        ["spack", "env", "activate", mounted_env_dir if job_image else repro_dir],
+        [os.path.join(mounted_repro_dir, "install.sh") if job_image else install_script],
+    ]
 
+    inst_list = []
     # Finally, print out some instructions to reproduce the build
     if job_image:
-        inst_list.append("\nRun the following command:\n\n")
-        inst_list.append(
-            "    $ docker run --rm --name spack_reproducer -v {0}:{1}:Z -ti {2}\n".format(
-                work_dir, mount_as_dir, job_image
-            )
+        # Allow interactive
+        entrypoint_script.extend(
+            [
+                [
+                    "echo",
+                    "Re-run install script using:\n\t{0}".format(
+                        os.path.join(mounted_repro_dir, "install.sh")
+                        if job_image
+                        else install_script
+                    ),
+                ],
+                # Allow interactive
+                ["exec", "$@"],
+            ]
         )
-        inst_list.append("\nOnce inside the container:\n\n")
+        process_command(
+            "entrypoint", entrypoint_script, work_dir, run=False, exit_on_failure=False
+        )
+
+        docker_command = [
+            [
+                runtime,
+                "run",
+                "-i",
+                "-t",
+                "--rm",
+                "--name",
+                "spack_reproducer",
+                "-v",
+                ":".join([work_dir, mounted_workdir, "Z"]),
+                "-v",
+                ":".join(
+                    [
+                        os.path.join(work_dir, "jobs_scratch_dir"),
+                        os.path.join(mount_as_dir, "jobs_scratch_dir"),
+                        "Z",
+                    ]
+                ),
+                "-v",
+                ":".join([os.path.join(work_dir, "spack"), mount_as_dir, "Z"]),
+                "--entrypoint",
+                os.path.join(mounted_workdir, "entrypoint.sh"),
+                job_image,
+                "bash",
+            ]
+        ]
+        autostart = autostart and setup_result
+        process_command("start", docker_command, work_dir, run=autostart)
+
+        if not autostart:
+            inst_list.append("\nTo run the docker reproducer:\n\n")
+            inst_list.extend(
+                [
+                    "    - Start the docker container install",
+                    "       $ {0}/start.sh".format(work_dir),
+                ]
+            )
     else:
+        process_command("reproducer", entrypoint_script, work_dir, run=False)
+
         inst_list.append("\nOnce on the tagged runner:\n\n")
+        inst_list.extent(
+            ["    - Run the reproducer script", "       $ {0}/reproducer.sh".format(work_dir)]
+        )
 
     if not setup_result:
-        inst_list.append("    - Clone spack and acquire tested commit\n")
-        inst_list.append("{0}".format(spack_info))
-        spack_root = "<spack-clone-path>"
-    else:
-        spack_root = "{0}/spack".format(mount_as_dir)
+        inst_list.append("\n    - Clone spack and acquire tested commit")
+        inst_list.append("\n        {0}\n".format(spack_info))
+        inst_list.append("\n")
+        inst_list.append("\n        Path to clone spack: {0}/spack\n\n".format(work_dir))
 
-    inst_list.append("    - Activate the environment\n\n")
-    inst_list.append("        $ source {0}/share/spack/setup-env.sh\n".format(spack_root))
-    inst_list.append(
-        "        $ spack env activate --without-view {0}\n\n".format(
-            mounted_env_dir if job_image else repro_dir
-        )
-    )
-    inst_list.append("    - Run the install script\n\n")
-    inst_list.append(
-        "        $ {0}\n".format(
-            os.path.join(mounted_repro_dir, "install.sh") if job_image else install_script
-        )
-    )
-
-    print("".join(inst_list))
+    tty.msg("".join(inst_list))
 
 
-def process_command(name, commands, repro_dir):
+def process_command(name, commands, repro_dir, run=True, exit_on_failure=True):
     """
     Create a script for and run the command. Copy the script to the
     reproducibility directory.
@@ -1910,6 +1965,7 @@ def process_command(name, commands, repro_dir):
         commands (list): list of arguments for single command or list of lists of
             arguments for multiple commands. No shell escape is performed.
         repro_dir (str): Job reproducibility directory
+        run (bool): Run the script and return the exit code if True
 
     Returns: the exit code from processing the command
     """
@@ -1928,7 +1984,8 @@ def process_command(name, commands, repro_dir):
     with open(script, "w") as fd:
         fd.write("#!/bin/sh\n\n")
         fd.write("\n# spack {0} command\n".format(name))
-        fd.write("set -e\n")
+        if exit_on_failure:
+            fd.write("set -e\n")
         if os.environ.get("SPACK_VERBOSE_SCRIPT"):
             fd.write("set -x\n")
         fd.write(full_command)
@@ -1939,19 +1996,27 @@ def process_command(name, commands, repro_dir):
 
     copy_path = os.path.join(repro_dir, script)
     shutil.copyfile(script, copy_path)
+    st = os.stat(copy_path)
+    os.chmod(copy_path, st.st_mode | stat.S_IEXEC)
 
     # Run the generated install.sh shell script as if it were being run in
     # a login shell.
-    try:
-        cmd_process = subprocess.Popen(["/bin/sh", "./{0}".format(script)])
-        cmd_process.wait()
-        exit_code = cmd_process.returncode
-    except (ValueError, subprocess.CalledProcessError, OSError) as err:
-        tty.error("Encountered error running {0} script".format(name))
-        tty.error(err)
-        exit_code = 1
+    exit_code = None
+    if run:
+        try:
+            cmd_process = subprocess.Popen(["/bin/sh", "./{0}".format(script)])
+            cmd_process.wait()
+            exit_code = cmd_process.returncode
+        except (ValueError, subprocess.CalledProcessError, OSError) as err:
+            tty.error("Encountered error running {0} script".format(name))
+            tty.error(err)
+            exit_code = 1
 
-    tty.debug("spack {0} exited {1}".format(name, exit_code))
+        tty.debug("spack {0} exited {1}".format(name, exit_code))
+    else:
+        # Delete the script, it is copied to the destination dir
+        os.remove(script)
+
     return exit_code
 
 

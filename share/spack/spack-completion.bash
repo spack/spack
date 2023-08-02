@@ -638,7 +638,7 @@ _spack_ci_rebuild() {
 _spack_ci_reproduce_build() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --working-dir"
+        SPACK_COMPREPLY="-h --help --runtime --working-dir -s --autostart --gpg-file --gpg-url"
     else
         SPACK_COMPREPLY=""
     fi
