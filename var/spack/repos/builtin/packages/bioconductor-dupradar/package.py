@@ -19,4 +19,3 @@ class BioconductorDupradar(RPackage):
     depends_on("r-kernsmooth")
     depends_on("subread")
     depends_on("bioconductor-rsubread")
-
