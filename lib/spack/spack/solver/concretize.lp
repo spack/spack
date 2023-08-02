@@ -1216,7 +1216,7 @@ attr("node_flag_propagate", Package, FlagType, Flag, Source) :-
   node_compiler(Package, CompilerID),
   depends_on(Parent, Package),
   attr("node_flag_propagate", Parent, _, _, Source),
-  attr("node_flag_value", Source, FlagType, Flag),
+  attr("node_flag", Source, FlagType, Flag),
   not attr("node_flag_set", Package, FlagType, _),
   compiler_id(CompilerID),
   flag_type(FlagType).
