@@ -949,12 +949,20 @@ complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -f -a 
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -d 'stop stand-alone tests after the first failure'
 
 # spack ci reproduce-build
-set -g __fish_spack_optspecs_spack_ci_reproduce_build h/help working-dir=
+set -g __fish_spack_optspecs_spack_ci_reproduce_build h/help runtime= working-dir= s/autostart gpg-file= gpg-url=
 complete -c spack -n '__fish_spack_using_command_pos 0 ci reproduce-build' -f
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l runtime -r -f -a 'docker podman'
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l runtime -r -d 'Container runtime to use.'
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l working-dir -r -f -a working_dir
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l working-dir -r -d 'where to unpack artifacts'
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -s s -l autostart -f -a autostart
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -s s -l autostart -d 'Run docker reproducer automatically'
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-file -r -f -a gpg_file
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-file -r -d 'Path to public GPG key for validating binary cache installs'
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-url -r -f -a gpg_url
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-url -r -d 'URL to public GPG key for validating binary cache installs'
 
 # spack clean
 set -g __fish_spack_optspecs_spack_clean h/help s/stage d/downloads f/failures m/misc-cache p/python-cache b/bootstrap a/all
