@@ -78,19 +78,19 @@ spack:
   - xgboost
 
   # ERRORS
-  # - py-efficientnet-pytorch     # py-torch
-  # - py-horovod                  # py-torch
-  # - py-kornia                   # py-torch
-  # - py-lightning                # py-torch
-  # - py-pytorch-lightning        # py-torch
-  # - py-torch-nvidia-apex        # py-torch
-  # - py-torch-scatter            # py-torch
-  # - py-torch-spline-conv        # py-torch
-  # - py-torchaudio               # py-torchaudio
-  # - py-torchmetrics             # py-torch
-  # - py-torchtext                # py-torchtext
-  # - py-vector-quantize-pytorch  # py-torch
-  # - r-xgboost                   # r
+  - py-efficientnet-pytorch     # py-torch
+  - py-horovod                  # py-torch
+  - py-kornia                   # py-torch
+  - py-lightning                # py-torch
+  - py-pytorch-lightning        # py-torch
+  - py-torch-nvidia-apex        # py-torch
+  - py-torch-scatter            # py-torch
+  - py-torch-spline-conv        # py-torch
+  - py-torchaudio               # py-torchaudio
+  - py-torchmetrics             # py-torch
+  - py-torchtext                # py-torchtext
+  - py-vector-quantize-pytorch  # py-torch
+  - r-xgboost                   # r
 
   mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-mps" }
 
