@@ -48,12 +48,7 @@ class DetailedHTTPError(HTTPError):
         # Note: HTTPError, is actually a kind of non-seekable response object, so
         # best not to read the response body here (even if it may include a human-readable
         # error message).
-        msg = f"{self.req.get_method()} {self.url} returned {self.code}: {self.msg}"
-        if self.hdrs:
-            msg += "\n    Response headers:"
-            for key, value in self.hdrs.items():
-                msg += f"\n    - {key}: {value}"
-        return msg
+        return f"{self.req.get_method()} {self.url} returned {self.code}: {self.msg}"
 
 
 class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
