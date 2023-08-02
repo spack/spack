@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class BioconductorTximeta(RPackage):
     """Transcript Quantification Import with Automatic Metadata
 
@@ -20,7 +21,7 @@ class BioconductorTximeta(RPackage):
 
     version("1.18.1", sha256="ee486fc4b2352e2998a3c0c2064449ebcf09b5815f982597ea58311dc8064408")
 
-    depends_on("r",type=("build", "run"))
+    depends_on("r", type=("build", "run"))
     depends_on("r-annotationdbi")
     depends_on("r-annotationhub")
     depends_on("r-biocfilecache")
