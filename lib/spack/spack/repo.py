@@ -423,7 +423,7 @@ class FastPackageChecker(collections.abc.Mapping):
         return max(sinfo.st_mtime for sinfo in self._packages_to_stats.values())
 
     def modified_since(self, since):
-        return [name for name, sinfo in self._packages_to_stats.items() if sinfo.st_mtime > since]
+        return [name for name, sinfo in self._packages_to_stats.items() if sinfo.st_mtime >= since]
 
     def __getitem__(self, item):
         return self._packages_to_stats[item]
