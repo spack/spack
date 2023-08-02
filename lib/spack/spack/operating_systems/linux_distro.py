@@ -10,7 +10,7 @@ from subprocess import PIPE, run
 from typing import Optional, Tuple
 
 import spack.util.elf
-from spack.version import Version, StandardVersion
+from spack.version import StandardVersion, Version
 
 from ._operating_system import OperatingSystem
 
