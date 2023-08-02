@@ -4,12 +4,54 @@ spack:
     all:
       require: target=power64le
       variants: ~cuda~rocm
+    pkgconfig:
+      require: pkgconf
+    pil:
+      require: py-pillow
     mpi:
       require: openmpi
+    python:
+      require: "+libxml2"
+    py-pybind11:
+      require: "build_system=cmake"
+    py-keras-applications:
+      require: "build_system=python_pip"
+    curl:
+      require: "tls=gnutls"
+    py-pytorch-gradual-warmup-lr:
+      require: "build_system=python_pip"
+    py-pytorch-lightning:
+      require: "build_system=python_pip"
+    jpeg:
+      require: "libjpeg-turbo"
+    py-torch-cluster:
+      require: "~cuda"
+    py-torch-geometric:
+      require: "~cuda"
+    py-torch-scatter:
+      require: "~cuda"
+    py-torch-spline-conv:
+      require: "~cuda"
+    py-torchaudio:
+      require: "build_system=python_pip"
+    py-torchfile:
+      require: "build_system=python_pip"
+    py-torchvision:
+      require: "build_system=python_pip"
+    py-numpy:
+      require: "build_system=python_pip"
+    py-tensorboard-data-server:
+      require: "build_system=python_pip"
+    py-tensorboard-plugin-wit:
+      require: "build_system=python_pip"
+    swig:
+      require: "@4.1.1"
+    xgboost:
+      require: "generator=ninja"
 
   specs:
     # Horovod
-    - py-horovod
+    - py-horovod~tensor_ops controllers=mpi frameworks=pytorch
 
     # Hugging Face
     - py-transformers
