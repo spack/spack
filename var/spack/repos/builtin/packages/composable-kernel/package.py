@@ -31,12 +31,7 @@ class ComposableKernel(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("cmake@3.16:", type="build")
 
-    for ver in [
-        "5.5.1",
-        "5.5.0",
-        "5.4.3",
-        "5.4.0",
-    ]:
+    for ver in ["5.5.1", "5.5.0", "5.4.3", "5.4.0"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocm-cmake@" + ver, when="@" + ver, type="build")
