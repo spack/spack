@@ -25,9 +25,9 @@ class PySmartredis(PythonPackage):
 
     # Documented dependencies. Allow them to float according to semeantic versioning
     # rules for easier concretization
-    depends_on("hiredis@1.1.0:1", type=("build", "link", "run"), when="@0.4.1")
-    depends_on("hiredis@1.0.0:1", type=("build", "link", "run"), when="@0.4.0")
-    depends_on("redis-plus-plus@1.3:1 cxxstd=17", type=("build", "link"))
+    depends_on("hiredis@1.1:", type=("build", "link", "run"), when="@0.4.1")
+    depends_on("hiredis@1.0:", type=("build", "link", "run"), when="@0.4.0")
+    depends_on("redis-plus-plus@1.3.5: cxxstd=17", type=("build", "link"))
 
     # Unlisted dependency needed to build the python client. The pybind requirement
     # can be found:
@@ -49,8 +49,8 @@ class PySmartredis(PythonPackage):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        env.set("REDISPP_LIB_DIR", spec["redis-plus-plus"].prefix.lib64)
-        env.set("REDISPP_INC_DIR", spec["redis-plus-plus"].prefix.include)
-        env.set("HIREDIS_LIB_DIR", spec["hiredis"].prefix.lib)
-        env.set("HIREDIS_INC_DIR", spec["hiredis"].prefix.include)
+        env.set("REDISPP_LIB_DIR", spec["redis-plus-plus"].libs.directories[0])
+        env.set("REDISPP_INC_DIR", spec["redis-plus-plus"].headers.directories[0])
+        env.set("HIREDIS_LIB_DIR", spec["hiredis"].libs.directories[0])
+        env.set("HIREDIS_INC_DIR", spec["hiredis"].headers.directories[0])
         env.set("PYBIND11_TOOLS", spec["py-pybind11"].prefix.share.cmake.pybind11)
