@@ -60,5 +60,5 @@ class ComposableKernel(CMakePackage):
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
-            #only instances is necessary to build and install
+            # only instances is necessary to build and install
             make("instances")
