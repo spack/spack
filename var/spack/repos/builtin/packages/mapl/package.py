@@ -24,7 +24,14 @@ class Mapl(CMakePackage):
     list_url = "https://github.com/GEOS-ESM/MAPL/tags"
     git = "https://github.com/GEOS-ESM/MAPL.git"
 
-    maintainers("mathomp4", "tclune", "climbfuji", "edwardhartnett", "Hang-Lei-NOAA", "AlexanderRichert-NOAA")
+    maintainers(
+        "mathomp4",
+        "tclune",
+        "climbfuji",
+        "edwardhartnett",
+        "Hang-Lei-NOAA",
+        "AlexanderRichert-NOAA",
+    )
 
     version("develop", branch="develop")
     version("main", branch="main")
@@ -197,11 +204,11 @@ class Mapl(CMakePackage):
 
     def patch(self):
         if "~shared" in self.spec["netcdf-c"]:
-            nc_pc_cmd = ["nc-config","--static","--libs"]
-            nc_flags = \
-              subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
-            filter_file("(target_link_libraries[^)]+PUBLIC )", \
-              r'\1 %s '%nc_flags, "pfio/CMakeLists.txt")
+            nc_pc_cmd = ["nc-config", "--static", "--libs"]
+            nc_flags = subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
+            filter_file(
+                "(target_link_libraries[^)]+PUBLIC )", r"\1 %s " % nc_flags, "pfio/CMakeLists.txt"
+            )
 
     def setup_build_environment(self, env):
         # esma_cmake, an internal dependency of mapl, is
