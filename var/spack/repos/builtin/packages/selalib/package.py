@@ -6,7 +6,7 @@
 from spack import *
 
 class Selalib(CMakePackage):
-    """Modular library for the kinetic and gyrokinetic simulation of tokamak plasmas by the semi-lagrangian or particle-in-cell methods"""
+    """SeLaLib is a modular library for the kinetic and gyrokinetic simulation of tokamak plasmas by the semi-lagrangian or particle-in-cell methods"""
 
     homepage = "https://selalib.github.io/selalib"
     url = "https://github.com/selalib/selalib"
@@ -15,7 +15,7 @@ class Selalib(CMakePackage):
     maintainers = ["pnavaro", "freifrauvonbleifrei"]
 
     version("main", branch="main")
-    
+
     variant("fmempool", default=False)
     variant("mpi", default=True)
     variant("openmp", default=True)
@@ -35,5 +35,13 @@ class Selalib(CMakePackage):
             self.define_from_variant("OPENMP_ENABLED", "openmp"),
             self.define_from_variant("HDF5_PARALLEL_ENABLED", "mpi"),
             self.define_from_variant("USE_FMEMPOOOL", "fmempool"),
+            self.define("FFTW_ENABLED", "ON"),
+            #self.define("CMAKE_Fortran_FLAGS","-ffree-line-length-512")
         ]
         return args
+
+    # selalib needs fftw to be found, will try to compile things with line truncation errors otherwise
+    def setup_build_environment(self, env):
+        env.set('FFTW_INCLUDE', self.spec['fftw'].prefix.include)
+        #env.set('FFTW_LIB', self.spec['fftw'].prefix.lib)
+        env.set('FFTW_ROOT', self.spec['fftw'].prefix)
