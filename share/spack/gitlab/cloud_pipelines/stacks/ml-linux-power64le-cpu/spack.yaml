@@ -1,57 +1,63 @@
 spack:
+    #  config:
+    #    install_tree:
+    #      projections:
+    #        all: 'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+    #  concretizer:
+    #    unify: false
   view: false
   packages:
     all:
-      require: target=power64le
+      require: target=ppc64le
       variants: ~cuda~rocm
-    pkgconfig:
-      require: pkgconf
-    pil:
-      require: py-pillow
-    mpi:
-      require: openmpi
-    python:
-      require: "+libxml2"
-    py-pybind11:
-      require: "build_system=cmake"
-    py-keras-applications:
-      require: "build_system=python_pip"
-    curl:
-      require: "tls=gnutls"
-    py-pytorch-gradual-warmup-lr:
-      require: "build_system=python_pip"
-    py-pytorch-lightning:
-      require: "build_system=python_pip"
-    jpeg:
-      require: "libjpeg-turbo"
-    py-torch-cluster:
-      require: "~cuda"
-    py-torch-geometric:
-      require: "~cuda"
-    py-torch-scatter:
-      require: "~cuda"
-    py-torch-spline-conv:
-      require: "~cuda"
-    py-torchaudio:
-      require: "build_system=python_pip"
-    py-torchfile:
-      require: "build_system=python_pip"
-    py-torchvision:
-      require: "build_system=python_pip"
-    py-numpy:
-      require: "build_system=python_pip"
-    py-tensorboard-data-server:
-      require: "build_system=python_pip"
-    py-tensorboard-plugin-wit:
-      require: "build_system=python_pip"
-    swig:
-      require: "@4.1.1"
-    xgboost:
-      require: "generator=ninja"
+#    pkgconfig:
+#      require: pkgconf
+#    pil:
+#      require: py-pillow
+#    mpi:
+#      require: openmpi
+#    python:
+#      require: "+libxml2"
+#    py-pybind11:
+#      require: "build_system=cmake"
+#    py-keras-applications:
+#      require: "build_system=python_pip"
+#    curl:
+#      require: "tls=gnutls"
+#    py-pytorch-gradual-warmup-lr:
+#      require: "build_system=python_pip"
+#    py-pytorch-lightning:
+#      require: "build_system=python_pip"
+#    jpeg:
+#      require: "libjpeg-turbo"
+#    py-torch-cluster:
+#      require: "~cuda"
+#    py-torch-geometric:
+#      require: "~cuda"
+#    py-torch-scatter:
+#      require: "~cuda"
+#    py-torch-spline-conv:
+#      require: "~cuda"
+#    py-torchaudio:
+#      require: "build_system=python_pip"
+#    py-torchfile:
+#      require: "build_system=python_pip"
+#    py-torchvision:
+#      require: "build_system=python_pip"
+#    py-numpy:
+#      require: "build_system=python_pip"
+#    py-tensorboard-data-server:
+#      require: "build_system=python_pip"
+#    py-tensorboard-plugin-wit:
+#      require: "build_system=python_pip"
+#    swig:
+#      require: "@4.1.1"
+#    xgboost:
+#      require: "build_system=cmake generator=ninja"
 
   specs:
     # Horovod
-    - py-horovod~tensor_ops controllers=mpi frameworks=pytorch
+    - py-horovod tensor_ops=mpi controllers=mpi frameworks=pytorch
 
     # Hugging Face
     - py-transformers
@@ -118,19 +124,19 @@ spack:
     # - r-xgboost
     - xgboost
 
-  mirrors:
-    mirror: s3://spack-binaries/develop/ml-linux-power64le-cpu
-
-  ci:
-    pipeline-gen:
-    - build-job:
-        image:
-          name: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
-          entrypoint: ['']
-    - build-job:
-        image:
-          name: ecpe4s/fedora36-runner-ppc64le:2023-01-01
-          entrypoint: ['']
-
-  cdash:
-    build-group: Machine Learning
+    mirrors:
+      mirror: s3://spack-binaries/develop/ml-linux-power64le-cpu
+  
+    ci:
+      pipeline-gen:
+      - build-job:
+          image:
+            name: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
+            entrypoint: ['']
+      - build-job:
+          image:
+            name: ecpe4s/fedora36-runner-ppc64le:2023-01-01
+            entrypoint: ['']
+  
+    cdash:
+      build-group: Machine Learning
