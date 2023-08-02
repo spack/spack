@@ -20,6 +20,7 @@ import llnl.util.tty as tty
 import spack.cmd.common.arguments
 import spack.cmd.install
 import spack.compilers as compilers
+import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
@@ -29,7 +30,8 @@ import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
 from spack.parser import SpecSyntaxError
-from spack.spec import CompilerSpec, Spec
+from spack.spec import Spec
+from spack.util.url import path_to_file_url
 
 install = SpackCommand("install")
 env = SpackCommand("env")
@@ -958,12 +960,42 @@ def test_compiler_bootstrap(
     mutable_config,
     monkeypatch,
 ):
-    monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
-    spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@=12.0") not in compilers.all_compiler_specs()
+    compiler = "gcc@12.2.0"
+
+    # Ensure this compiler was not configured
+    assert not any(c.satisfies(compiler) for c in compilers.all_compiler_specs())
 
     # Test succeeds if it does not raise an error
-    install("a%gcc@=12.0")
+    with spack.concretize.require_compiler_in_config(False), spack.config.override(
+        "config:install_missing_compilers", True
+    ):
+        install(f"a%{compiler}")
+
+
+def test_compiler_bootstrap_greedy_match(
+    install_mockery_mutable_config,
+    mock_packages,
+    mock_fetch,
+    mock_archive,
+    mutable_config,
+    monkeypatch,
+):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not select matching compiler from package")
+
+    compiler = "gcc@12"
+
+    # Ensure this compiler was not configured
+    assert not any(c.satisfies(compiler) for c in compilers.all_compiler_specs())
+
+    # Test succeeds if it does not raise an error
+    with spack.concretize.require_compiler_in_config(False), spack.config.override(
+        "config:install_missing_compilers", True
+    ):
+        install(f"a%{compiler}")
+
+    # Picks the preferred version greedily (at least in the clingo case)
+    assert any(c.satisfies("gcc@=12.1.0") for c in compilers.all_compiler_specs())
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Binary mirrors not supported on windows")
@@ -982,20 +1014,19 @@ def test_compiler_bootstrap_from_binary_mirror(
 
     # Create a temp mirror directory for buildcache usage
     mirror_dir = tmpdir.join("mirror_dir")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
+    mirror_url = path_to_file_url(mirror_dir.strpath)
+    compiler = "gcc@12.2.0"
 
     # Install a compiler, because we want to put it in a buildcache
-    install("gcc@=10.2.0")
+    install(compiler)
 
     # Put installed compiler in the buildcache
-    buildcache("push", "-u", "-f", mirror_dir.strpath, "gcc@10.2.0")
+    buildcache("push", "-u", "-f", mirror_dir.strpath, compiler)
 
     # Now uninstall the compiler
-    uninstall("-y", "gcc@10.2.0")
+    uninstall("-y", compiler)
 
-    monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
-    spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@=10.2.0") not in compilers.all_compiler_specs()
+    assert not any(c.satisfies(compiler) for c in compilers.all_compiler_specs())
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror("add", "test-mirror", mirror_url)
@@ -1003,8 +1034,11 @@ def test_compiler_bootstrap_from_binary_mirror(
     # Now make sure that when the compiler is installed from binary mirror,
     # it also gets configured as a compiler.  Test succeeds if it does not
     # raise an error
-    install("--no-check-signature", "--cache-only", "--only", "dependencies", "b%gcc@=10.2.0")
-    install("--no-cache", "--only", "package", "b%gcc@10.2.0")
+    with spack.concretize.require_compiler_in_config(False), spack.config.override(
+        "config:install_missing_compilers", True
+    ):
+        install("--no-check-signature", "--cache-only", "--only", "dependencies", f"b%{compiler}")
+        install("--no-cache", "--only", "package", f"b%{compiler}")
 
 
 @pytest.mark.skipif(
@@ -1019,14 +1053,15 @@ def test_compiler_bootstrap_already_installed(
     mutable_config,
     monkeypatch,
 ):
-    monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
-    spack.config.set("config:install_missing_compilers", True)
-
-    assert CompilerSpec("gcc@=12.0") not in compilers.all_compiler_specs()
+    compiler = "gcc@12.2.0"
+    assert not any(c.satisfies(compiler) for c in compilers.all_compiler_specs())
 
     # Test succeeds if it does not raise an error
-    install("gcc@=12.0")
-    install("a%gcc@=12.0")
+    with spack.concretize.require_compiler_in_config(False), spack.config.override(
+        "config:install_missing_compilers", True
+    ):
+        install(compiler)
+        install(f"a%{compiler}")
 
 
 def test_install_fails_no_args(tmpdir):

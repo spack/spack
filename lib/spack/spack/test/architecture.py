@@ -213,7 +213,7 @@ def test_concretize_target_ranges(root_target_range, dep_target_range, result, m
         dep_target_range,
     )
     spec = spack.spec.Spec(spec_str)
-    with spack.concretize.disable_compiler_existence_check():
+    with spack.concretize.require_compiler_in_config(False):
         spec.concretize()
 
     assert str(spec).count("arch=test-debian6-%s" % result) == 2

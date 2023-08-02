@@ -331,7 +331,7 @@ def extend_with_dependencies(specs):
 
 def concrete_specs_from_cli_or_file(args):
     tty.msg("Concretizing input specs")
-    with spack.concretize.disable_compiler_existence_check():
+    with spack.concretize.require_compiler_in_config(False):
         if args.specs:
             specs = spack.cmd.parse_specs(args.specs, concretize=True)
             if not specs:

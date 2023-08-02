@@ -12,9 +12,11 @@ class Gcc(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/gcc-1.0.tar.gz"
 
-    version("1.0", md5="0123456789abcdef0123456789abcdef")
-    version("2.0", md5="abcdef0123456789abcdef0123456789")
+    version("12.2.0", md5="0123456789abcdef0123456789abcdef")
+    version("12.1.0", md5="abcdef0123456789abcdef0123456789", preferred=True)
     version("3.0", md5="def0123456789abcdef0123456789abc")
+    version("2.0", md5="abcdef0123456789abcdef0123456789")
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     depends_on("conflict", when="@3.0")
 

@@ -702,7 +702,7 @@ def generate_gitlab_ci_yaml(
             criteria.  Spack protected pipelines populate different mirrors based
             on branch name, facilitated by this option.
     """
-    with spack.concretize.disable_compiler_existence_check():
+    with spack.concretize.require_compiler_in_config(False):
         with env.write_transaction():
             env.concretize()
             env.write()
