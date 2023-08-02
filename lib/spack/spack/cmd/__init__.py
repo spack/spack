@@ -584,14 +584,14 @@ def require_active_env(cmd_name):
 
     if env:
         return env
-    else:
-        tty.die(
-            "`spack %s` requires an environment" % cmd_name,
-            "activate an environment first:",
-            "    spack env activate ENV",
-            "or use:",
-            "    spack -e ENV %s ..." % cmd_name,
-        )
+
+    tty.die(
+        "`spack %s` requires an environment" % cmd_name,
+        "activate an environment first:",
+        "    spack env activate ENV",
+        "or use:",
+        "    spack -e ENV %s ..." % cmd_name,
+    )
 
 
 def find_environment(args):
