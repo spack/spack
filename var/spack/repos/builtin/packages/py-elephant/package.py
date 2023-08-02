@@ -16,7 +16,7 @@ class PyElephant(PythonPackage):
     # list of GitHub accounts to notify when the package is updated.
     maintainers = ["Moritz-Alexander-Kern"]
 
-    version('develop', branch='master')
+    version("develop", branch="master")
     version("0.13.0", sha256="2c6463cf9ace41631f2af196c5b80b468bf1c4b264d3a6b1ea0fb587d9e7dd67")
     version("0.12.0", sha256="81f8d668f92d8688344bb7a9c5abaa8438d824560c935a411e6e36ddf7dc7c72")
     version("0.11.2", sha256="f8759fff0bbb136ae4ffc8d1eacadeea8ba56610d705c3bf207de87ada3ba240")
@@ -72,4 +72,4 @@ class PyElephant(PythonPackage):
     depends_on("py-six@1.10.0:", type=("build", "run"), when="@0.6.4:")
     depends_on("py-tqdm", type=("build", "run"), when="@0.6.4:")
     depends_on("py-pytest", type=("test"), when="@0.6.4:")
-    depends_on("py-statsmodels@0.12.1:", type=("test"),when="@0.6.4:")
+    depends_on("py-statsmodels@0.12.1:", type=("test"), when="@0.6.4:")
