@@ -332,6 +332,17 @@ def tags():
 
 
 @arg
+def namespaces():
+    return Args(
+        "-N",
+        "--namespaces",
+        action="store_true",
+        default=False,
+        help="show fully qualified package names",
+    )
+
+
+@arg
 def jobs():
     return Args(
         "-j",
