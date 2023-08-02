@@ -69,14 +69,6 @@ def setup_parser(subparser):
         dest="load_first",
         help="load the first match if multiple packages match the spec",
     )
-    subparser.add_argument(
-        "--only",
-        default="package,dependencies",
-        dest="things_to_load",
-        choices=["package", "dependencies"],
-        help="deprecated: spack load always applies changes to the environment "
-        "for dependencies to work.",
-    )
 
     subparser.add_argument(
         "--only",
