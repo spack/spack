@@ -33,6 +33,8 @@ class QtPackage(CMakePackage):
 
     maintainers("wdconinc", "sethrj")
 
+    provides("qmake")
+
     # Default dependencies for all qt-* components
     generator("ninja")
     depends_on("cmake@3.16:", type="build")
