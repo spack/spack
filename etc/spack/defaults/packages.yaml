@@ -49,6 +49,7 @@ packages:
       pbs: [openpbs, torque]
       pil: [py-pillow]
       pkgconfig: [pkgconf, pkg-config]
+      qmake: [qt-base, qt]
       rpc: [libtirpc]
       scalapack: [netlib-scalapack, amdscalapack]
       sycl: [hipsycl]

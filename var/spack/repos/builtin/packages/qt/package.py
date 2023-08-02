@@ -69,6 +69,8 @@ class Qt(Package):
     variant("tools", default=True, description="Build tools, including Qt Designer.")
     variant("webkit", default=False, description="Build the Webkit extension")
 
+    provides("qmake")
+
     # Patches for qt@3
     patch("qt3-accept.patch", when="@3")
     patch("qt3-headers.patch", when="@3")
