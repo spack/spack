@@ -26,7 +26,7 @@ class PyQuantities(PythonPackage):
     depends_on("python@3.8:3.11", type=("build", "run"), when="@0.14:")
 
     # pip silently replaces distutils with setuptools
-    # py-setuptools@:61 doesn"t support PEP 621
+    # py-setuptools@:61 doesn't support PEP 621
     depends_on("py-setuptools@61:", type="build", when="@0.14:")
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")
