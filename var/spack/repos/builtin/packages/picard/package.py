@@ -173,8 +173,8 @@ class Picard(Package):
         # explicitly codes the path for java and the jar file.
 
         script_sh = join_path(
-                os.path.dirname(__file__),
-                "picard_with_parameters.sh" if "+parameters" in self.variants else "picard.sh",
+            os.path.dirname(__file__),
+            "picard_with_parameters.sh" if "+parameters" in self.variants else "picard.sh",
         )
 
         script = prefix.bin.picard
