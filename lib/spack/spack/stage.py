@@ -884,23 +884,19 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
         keep_stage (bool): whether to keep staging area when command completes
         batch (bool): whether to ask user how many versions to fetch (false)
             or fetch all versions (true)
-        latest (bool): whether to take the latest version (true) or all (false)
         fetch_options (dict): Options used for the fetcher (such as timeout
             or cookies)
 
     Returns:
-        (str): A multi-line string containing versions and corresponding hashes
+        (dict): A dictionary of the form: version -> checksum
 
     """
     batch = kwargs.get("batch", False)
     fetch_options = kwargs.get("fetch_options", None)
     first_stage_function = kwargs.get("first_stage_function", None)
     keep_stage = kwargs.get("keep_stage", False)
-    latest = kwargs.get("latest", False)
 
     sorted_versions = sorted(url_dict.keys(), reverse=True)
-    if latest:
-        sorted_versions = sorted_versions[:1]
 
     # Find length of longest string in the list for padding
     max_len = max(len(str(v)) for v in sorted_versions)
@@ -915,7 +911,7 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     )
     print()
 
-    if batch or latest:
+    if batch:
         archives_to_fetch = len(sorted_versions)
     else:
         archives_to_fetch = tty.get_number(
@@ -929,14 +925,10 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     urls = [url_dict[v] for v in versions]
 
     tty.debug("Downloading...")
-    version_hashes = []
+    version_hashes = {}
     i = 0
     errors = []
     for url, version in zip(urls, versions):
-        # Wheels should not be expanded during staging
-        expand_arg = ""
-        if url.endswith(".whl") or ".whl#" in url:
-            expand_arg = ", expand=False"
         try:
             if fetch_options:
                 url_or_fs = fs.URLFetchStrategy(url, fetch_options=fetch_options)
@@ -951,8 +943,8 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
                     first_stage_function(stage, url)
 
                 # Checksum the archive and add it to the list
-                version_hashes.append(
-                    (version, spack.util.crypto.checksum(hashlib.sha256, stage.archive_file))
+                version_hashes[version] = spack.util.crypto.checksum(
+                    hashlib.sha256, stage.archive_file
                 )
                 i += 1
         except FailedDownloadError:
@@ -966,17 +958,12 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     if not version_hashes:
         tty.die("Could not fetch any versions for {0}".format(name))
 
-    # Generate the version directives to put in a package.py
-    version_lines = "\n".join(
-        ['    version("{0}", sha256="{1}"{2})'.format(v, h, expand_arg) for v, h in version_hashes]
-    )
-
     num_hash = len(version_hashes)
     tty.debug(
         "Checksummed {0} version{1} of {2}:".format(num_hash, "" if num_hash == 1 else "s", name)
     )
 
-    return version_lines
+    return version_hashes
 
 
 class StageError(spack.error.SpackError):
