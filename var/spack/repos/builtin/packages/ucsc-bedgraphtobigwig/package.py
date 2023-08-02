@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class UcscBedgraphtobigwig(Package):
     """Convert a bedGraph file to bigWig format."""
 
@@ -47,4 +48,3 @@ class UcscBedgraphtobigwig(Package):
             make()
             make("install")
             install("bin/bedGraphToBigWig", prefix.bin)
-
