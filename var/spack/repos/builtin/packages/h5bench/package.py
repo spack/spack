@@ -64,7 +64,10 @@ class H5bench(CMakePackage):
     def setup_build_tests(self):
         launcher = self.mpi_launcher()
 
-        filter_file(r"-n 2", "-n 2 --timeout 240", "samples/sync-write-1d-contig-contig.json")
+        exe = os.path.basename(launcher.path)
+        filename = "samples/sync-write-1d-contig-contig.json"
+        filter_file(f"{exe}", f"{launcher}", filename)
+        filter_file(r"-n 2", "-n 2 --timeout 240", filename)
 
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
