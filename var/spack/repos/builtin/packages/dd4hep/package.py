@@ -195,7 +195,9 @@ class Dd4hep(CMakePackage):
             self.define_from_variant("DD4HEP_USE_GEANT4_UNITS", "geant4units"),
             self.define_from_variant("DD4HEP_BUILD_DEBUG", "debug"),
             # DD4hep@1.26: with hepmc3@3.2.6: allows compressed hepmc3 files
-            self.define("DD4HEP_HEPMC3_COMPRESSION_SUPPORT", self.spec.satisfies("@1.26: ^hepmc3@3.2.6:")),
+            self.define(
+                "DD4HEP_HEPMC3_COMPRESSION_SUPPORT", self.spec.satisfies("@1.26: ^hepmc3@3.2.6:")
+            ),
             # Downloads assimp from github and builds it on the fly.
             # However, with spack it is preferrable to have a proper external
             # dependency, so we disable it.
