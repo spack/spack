@@ -13,7 +13,7 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     git = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
@@ -21,7 +21,8 @@ class Rocblas(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-
+    version("5.5.1", sha256="7916a8d238d51cc239949d799f0b61c9d5cd63c6ccaed0e16749489b89ca8ff3")
+    version("5.5.0", sha256="b5260517f199e806ae18f2c4495f163884e0d7a0a7c67af0770f7428ea50f898")
     version("5.4.3", sha256="d82cd334b7a9b40d16ec4f4bb1fb5662382dcbfc86ee5e262413ed63d9e6a701")
     version("5.4.0", sha256="261e05375024a01e68697c5d175210a07f0f5fc63a756234d996ddedffde78a2")
     version("5.3.3", sha256="62a3b5f415bd8e0dcd0d68233d379f1a928ec0349977c32b4eea72ae5004e805")
@@ -166,6 +167,8 @@ class Rocblas(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -208,6 +211,8 @@ class Rocblas(CMakePackage):
         ("@5.3.3", "006a5d653ce0d82fecb05d5e215d053749b57c04"),
         ("@5.4.0", "5aec08937473b27865fa969bb38a83bcf9463c2b"),
         ("@5.4.3", "5aec08937473b27865fa969bb38a83bcf9463c2b"),
+        ("@5.5.0", "38d444a9f2b6cddfeaeedcb39a5688150fa27093"),
+        ("@5.5.1", "38d444a9f2b6cddfeaeedcb39a5688150fa27093"),
     ]:
         resource(
             name="Tensile",
@@ -230,8 +235,8 @@ class Rocblas(CMakePackage):
     patch("0002-Fix-rocblas-clients-blas.patch", when="@4.2.0:4.3.1")
     patch("0003-Fix-rocblas-gentest.patch", when="@4.2.0:5.1")
     # Finding Python package and set command python as python3
-    patch("0004-Find-python.patch", when="@5.2.0:")
-    patch("0006-Guard-use-of-OpenMP-to-make-it-optional-5.4.patch", when="@5.4:")
+    patch("0004-Find-python.patch", when="@5.2.0:5.4")
+    patch("0006-Guard-use-of-OpenMP-to-make-it-optional-5.4.patch", when="@5.4")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -265,7 +270,6 @@ class Rocblas(CMakePackage):
                 self.define("Tensile_TEST_LOCAL_PATH", tensile_path),
                 self.define("Tensile_COMPILER", "hipcc"),
                 self.define("Tensile_LOGIC", "asm_full"),
-                self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
                 self.define("BUILD_WITH_TENSILE_HOST", "@3.7.0:" in self.spec),
             ]
             if self.spec.satisfies("@3.7.0:"):
@@ -290,5 +294,9 @@ class Rocblas(CMakePackage):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
         if self.spec.satisfies("@5.3.0:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+        if self.spec.satisfies("@:5.4"):
+            args.append(self.define("Tensile_CODE_OBJECT_VERSION", "V3"))
+        else:
+            args.append(self.define("Tensile_CODE_OBJECT_VERSION", "default"))
 
         return args
