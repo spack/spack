@@ -491,29 +491,24 @@ def save_specfile_fn(args):
     successful. if any errors or exceptions are encountered, or if expected command-line arguments
     are not provided, then the exit code will be non-zero
     """
-    if not args.root_spec and not args.root_specfile:
-        tty.msg("No root spec provided, exiting.")
-        sys.exit(1)
-
-    if not args.specs:
-        tty.msg("No dependent specs provided, exiting.")
-        sys.exit(1)
-
-    if not args.specfile_dir:
-        tty.msg("No yaml directory provided, exiting.")
-        sys.exit(1)
-
     if args.root_specfile:
-        with open(args.root_specfile) as fd:
-            root_spec_as_json = fd.read()
-        spec_format = "yaml" if args.root_specfile.endswith("yaml") else "json"
-    else:
-        root_spec = Spec(args.root_spec)
-        root_spec.concretize()
-        root_spec_as_json = root_spec.to_json(hash=ht.dag_hash)
-        spec_format = "json"
+        tty.warn(
+            "The flag `--root-specfile` is deprecated and will be removed in Spack 0.22. "
+            "Use --root-spec instead."
+        )
+
+    specs = spack.cmd.parse_specs(args.root_spec or args.root_specfile)
+
+    if len(specs) != 1:
+        tty.die("a single spec argument is required to save specfile")
+
+    root = specs[0]
+
+    if not root.concrete:
+        root.concretize()
+
     save_dependency_specfiles(
-        root_spec_as_json, args.specfile_dir, args.specs.split(), spec_format
+        root, args.specfile_dir, dependencies=spack.cmd.parse_specs(args.specs)
     )
 
 
