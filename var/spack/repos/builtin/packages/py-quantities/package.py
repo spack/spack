@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
+from spack.package import *
 
 class PyQuantities(PythonPackage):
     """Support for physical quantities with units, based on numpy"""
@@ -20,8 +19,11 @@ class PyQuantities(PythonPackage):
     version("0.12.3", sha256="582f3c7aeba897846761e966615e01202a5e5d06add304492931b05085d19883")
     version("0.12.2", sha256="92e8397938516483f4fd1855097ec11953ab10dd0bf3293954559226679f76f0")
     version("0.12.1", sha256="0a03e8511db603c57ca80dee851c43f08d0457f4d592bcac2e154570756cb934")
-    version("0.11.1", sha256="4382098a501b55bf0fdb3dba2061a161041253697d78811ecfd7c55449836660",
-            url="https://pypi.io/packages/source/q/quantities/quantities-0.11.1.zip")
+    version(
+        "0.11.1",
+        sha256="4382098a501b55bf0fdb3dba2061a161041253697d78811ecfd7c55449836660",
+        url="https://pypi.io/packages/source/q/quantities/quantities-0.11.1.zip"
+    )
 
     conflicts("^py-numpy@1.13:", when="@:0.11")
 
