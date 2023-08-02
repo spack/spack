@@ -31,8 +31,9 @@ spack:
   - py-transformers
 
   # JAX
-  - py-jax
-  - py-jaxlib
+  # Bazel codesign issues
+  # - py-jax
+  # - py-jaxlib
 
   # Keras
   # Bazel codesign issues
