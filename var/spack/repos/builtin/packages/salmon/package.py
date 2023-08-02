@@ -56,7 +56,7 @@ class Salmon(CMakePackage):
     depends_on("libgff")
     depends_on("pkgconfig")
     depends_on("curl", when="@0.14.1:")
-    depends_on("htslib" when="@1.10.2")
+    depends_on("htslib", when="@1.10.2")
 
     patch("fix_hts.patch", when="@1.10.2")
 
