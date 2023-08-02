@@ -2,7 +2,7 @@ spack:
   view: false
   packages:
     all:
-      require: target=power64le
+      require: target=ppc64le
       variants: ~rocm+cuda cuda_arch=80
     llvm:
       # https://github.com/spack/spack/issues/27999
