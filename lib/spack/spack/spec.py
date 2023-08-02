@@ -88,6 +88,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.string
 import spack.variant as vt
 import spack.version as vn
+import spack.version.git_ref_lookup
 
 __all__ = [
     "CompilerSpec",
@@ -4801,7 +4802,7 @@ class Spec:
             return
         for v in self.versions:
             if isinstance(v, vn.GitVersion) and v._ref_version is None:
-                v.attach_git_lookup_from_package(self.fullname)
+                v.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(self.fullname))
 
 
 def parse_with_version_concrete(string: str, compiler: bool = False):
