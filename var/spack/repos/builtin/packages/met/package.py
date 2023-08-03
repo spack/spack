@@ -66,7 +66,6 @@ class Met(AutotoolsPackage):
     patch("apple-clang-no-register.patch", when="@10.1.1: %apple-clang@14:")
 
     def url_for_version(self, version):
-
         if version < Version("11"):
             release_date = {
                 "10.1.1": "20220419",
