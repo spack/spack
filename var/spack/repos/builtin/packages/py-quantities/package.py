@@ -32,5 +32,5 @@ class PyQuantities(PythonPackage):
 
     depends_on("py-numpy@1.8.2:1.16", type=("build", "run"), when="@0.12.3")
     depends_on("py-numpy@1.8.2:1.17", type=("build", "run"), when="@0.12.4:0.12")
-    depends_on("py-numpy@1.16:", type=("build", "run"), when="@0.13.0:0.13.1")
+    depends_on("py-numpy@1.16:", type=("build", "run"), when="@0.13")
     depends_on("py-numpy@1.19:", type=("build", "run"), when="@0.14:")
