@@ -12,8 +12,10 @@ class Sowing(AutotoolsPackage):
     and MPICH.
     """
 
-    homepage = "https://www.mcs.anl.gov/petsc/index.html"
+    homepage = "https://bitbucket.org/petsc/pkg-sowing"
     url = "https://ftp.mcs.anl.gov/pub/petsc/externalpackages/sowing-1.1.23-p1.tar.gz"
+    git = "https://bitbucket.org/petsc/pkg-sowing"
+    maintainers("balay")
 
     version("1.1.26-p8", sha256="2ef4d6db2075230247306e3d0194ffb3e4591aeb05bd244647c72dc1a4e52994")
     version("1.1.26-p1", sha256="fa0bd07295e5d768f2c33c8ab32205cc6411d42cb40bde0700fb57f9ee31c3d9")
