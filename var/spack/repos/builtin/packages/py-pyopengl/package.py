@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PyPyopengl(PythonPackage):
-    """yOpenGL is the most common cross platform Python binding to OpenGL and related APIs."""
+    """PyOpenGL is the most common cross platform Python binding to OpenGL and related APIs."""
 
     homepage = "http://pyopengl.sourceforge.net"
     url = "https://files.pythonhosted.org/packages/py3/p/pyopengl/PyOpenGL-3.1.6-py3-none-any.whl"
