@@ -32,11 +32,9 @@ class PyPyside2(PythonPackage):
     )
 
     # dependency matrix from: https://wiki.qt.io/Qt_for_Python
-    depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.8", when="@:5.15.0", type=("build", "run"))
-    depends_on(
-        "python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.9", when="@5.15.1:5.15.7", type=("build", "run")
-    )
-    depends_on("python@3.5:3.10", when="@5.15.9:5.15.10", type=("build", "run"))
+    depends_on("python@:3.10", when="@5.15.8:", type=("build", "run"))
+    depends_on("python@:3.9", when="@5.15.1:5.15.7", type=("build", "run"))
+    depends_on("python@:3.8", when="@:5.15.0", type=("build", "run"))
 
     depends_on("cmake@3.1:", type="build")
     # libclang versioning from sources/shiboken2/doc/gettingstarted.rst
