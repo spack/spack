@@ -17,14 +17,14 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 JAR_DIR=$DIR
 ENV_PREFIX="$(dirname $(dirname $DIR))"
 # Use Java installed with Anaconda to ensure correct version
-#java="$ENV_PREFIX/bin/java"
+java="$ENV_PREFIX/bin/java"
 
 # if JAVA_HOME is set (non-empty), use it. Otherwise keep "java"
-#if [ -n "${JAVA_HOME:=}" ]; then
-  #if [ -e "$JAVA_HOME/bin/java" ]; then
-      #java="$JAVA_HOME/bin/java"
-  #fi
-#fi
+if [ -n "${JAVA_HOME:=}" ]; then
+  if [ -e "$JAVA_HOME/bin/java" ]; then
+      java="$JAVA_HOME/bin/java"
+  fi
+fi
 
 # extract memory and system property Java arguments from the list of provided arguments
 # http://java.dzone.com/articles/better-java-shell-script
@@ -61,8 +61,8 @@ fi
 pass_arr=($pass_args)
 if [[ ${pass_arr[0]:=} == org* ]]
 then
-    java $jvm_mem_opts $jvm_prop_opts -cp picard.jar $pass_args
+    eval "$java" $jvm_mem_opts $jvm_prop_opts -cp "$JAR_DIR/picard.jar" $pass_args
 else
-    java $jvm_mem_opts $jvm_prop_opts -jar picard.jar $pass_args
+    eval "$java" $jvm_mem_opts $jvm_prop_opts -jar "$JAR_DIR/picard.jar" $pass_args
 fi
 exit

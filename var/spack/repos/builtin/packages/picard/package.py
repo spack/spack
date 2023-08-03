@@ -174,7 +174,7 @@ class Picard(Package):
 
         script_sh = join_path(
             os.path.dirname(__file__),
-            "picard_with_parameters.sh" if "+parameters" in self.variants else "picard.sh",
+            "picard_with_parameters.sh" if "+parameters" in spec else "picard.sh",
         )
 
         script = prefix.bin.picard
