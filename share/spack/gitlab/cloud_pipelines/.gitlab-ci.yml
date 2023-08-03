@@ -220,7 +220,7 @@ protected-publish:
   - /^releases\/v.*/
   - /^v.*/
   - /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/
-  image: "ghcr.io/spack/python-aws-bash:0.0.1"
+  image: "ghcr.io/spack/python-aws-bash:0.0.2"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
   retry:
     max: 2

@@ -41,7 +41,7 @@ ci:
 
   - copy-job:
       tags: ["service", "x86_64"]
-      image: "ghcr.io/spack/python-aws-bash:0.0.1"
+      image: "ghcr.io/spack/python-aws-bash:0.0.2"
       before_script:
       - - if [[ $CI_COMMIT_TAG == "v"* ]]; then export SPACK_REPLACE_VERSION=$(echo "$CI_COMMIT_TAG" | sed 's/\(v[[:digit:]]\+\.[[:digit:]]\+\).*/releases\/\1/'); fi
         - if [[ $CI_COMMIT_TAG == "develop-"* ]]; then export SPACK_REPLACE_VERSION=develop; fi
