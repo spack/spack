@@ -70,7 +70,13 @@ class H5bench(CMakePackage):
         exe = os.path.basename(launcher.path)
         filename = "samples/sync-write-1d-contig-contig.json"
         filter_file(f"{exe}", f"{launcher}", filename)
-        filter_file(r"-n 1", "-n 1 --timeout 240", filename)
+        if self.spec["slurm"]:
+            filter_file(r"mpirun", "srun", filename)
+            filter_file(r"--allow-run-as-root -n 2 --oversubscribe", "-n 1", filename)
+        else:
+            filter_file(
+                r"--allow-run-as-root -n 2 --oversubscribe", "-n 1 --timeout 240", filename
+            )
 
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
