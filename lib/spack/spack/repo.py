@@ -24,7 +24,7 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Dict, Union
+from typing import Any, Dict, List, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.lang
@@ -424,7 +424,7 @@ class FastPackageChecker(collections.abc.Mapping):
     def last_mtime(self):
         return max(sinfo.st_mtime for sinfo in self._packages_to_stats.values())
 
-    def modified_since(self, since):
+    def modified_since(self, since: float) -> List[str]:
         return [name for name, sinfo in self._packages_to_stats.items() if sinfo.st_mtime > since]
 
     def __getitem__(self, item):
@@ -550,35 +550,34 @@ class RepoIndex(object):
     when they're needed.
 
     ``Indexers`` should be added to the ``RepoIndex`` using
-    ``add_index(name, indexer)``, and they should support the interface
+    ``add_indexer(name, indexer)``, and they should support the interface
     defined by ``Indexer``, so that the ``RepoIndex`` can read, generate,
     and update stored indices.
 
-    Generated indexes are accessed by name via ``__getitem__()``.
+    Generated indexes are accessed by name via ``__getitem__()``."""
 
-    """
-
-    def __init__(self, package_checker, namespace, cache):
+    def __init__(
+        self,
+        package_checker: FastPackageChecker,
+        namespace: str,
+        cache: spack.util.file_cache.FileCache,
+    ):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
         if sys.platform == "win32":
             self.packages_path = spack.util.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
-        self.indexers = {}
-        self.indexes = {}
+        self.indexers: Dict[str, Indexer] = {}
+        self.indexes: Dict[str, Any] = {}
         self.cache = cache
 
-    def add_indexer(self, name, indexer):
+    def add_indexer(self, name: str, indexer: Indexer):
         """Add an indexer to the repo index.
 
         Arguments:
-            name (str): name of this indexer
-
-            indexer (object): an object that supports create(), read(),
-                write(), and get_index() operations
-
-        """
+            name: name of this indexer
+            indexer: object implementing the ``Indexer`` interface"""
         self.indexers[name] = indexer
 
     def __getitem__(self, name):
@@ -599,17 +598,15 @@ class RepoIndex(object):
         because the main bottleneck here is loading all the packages.  It
         can take tens of seconds to regenerate sequentially, and we'd
         rather only pay that cost once rather than on several
-        invocations.
-
-        """
+        invocations."""
         for name, indexer in self.indexers.items():
             self.indexes[name] = self._build_index(name, indexer)
 
-    def _build_index(self, name, indexer):
+    def _build_index(self, name: str, indexer: Indexer):
         """Determine which packages need an update, and update indexes."""
 
         # Filename of the provider index cache (we assume they're all json)
-        cache_filename = "{0}/{1}-index.json".format(name, self.namespace)
+        cache_filename = f"{name}/{self.namespace}-index.json"
 
         # Compute which packages needs to be updated in the cache
         index_mtime = self.cache.mtime(cache_filename)
@@ -633,8 +630,7 @@ class RepoIndex(object):
                     needs_update = self.checker.modified_since(new_index_mtime)
 
                 for pkg_name in needs_update:
-                    namespaced_name = "%s.%s" % (self.namespace, pkg_name)
-                    indexer.update(namespaced_name)
+                    indexer.update(f"{self.namespace}.{pkg_name}")
 
                 indexer.write(new)
 
