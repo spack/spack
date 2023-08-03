@@ -2,12 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import glob
 import json
 import os
 import shutil
 import sys
 import tempfile
+from typing import List
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
@@ -18,7 +20,6 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
-import spack.hash_types as ht
 import spack.mirror
 import spack.relocate
 import spack.repo
@@ -28,7 +29,6 @@ import spack.util.crypto
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.cmd import display_specs
-from spack.error import SpecError
 from spack.spec import Spec, save_dependency_specfiles
 from spack.stage import Stage
 from spack.util.string import plural
@@ -38,8 +38,8 @@ section = "packaging"
 level = "long"
 
 
-def setup_parser(subparser):
-    setup_parser.parser = subparser
+def setup_parser(subparser: argparse.ArgumentParser):
+    setattr(setup_parser, "parser", subparser)
     subparsers = subparser.add_subparsers(help="buildcache sub-commands")
 
     push = subparsers.add_parser("push", aliases=["create"], help=push_fn.__doc__)
@@ -158,14 +158,12 @@ def setup_parser(subparser):
         default=spack.config.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
-
-    check.add_argument(
-        "-s", "--spec", default=None, help="check single spec instead of release specs file"
+    check_spec_or_specfile = check.add_mutually_exclusive_group(required=True)
+    check_spec_or_specfile.add_argument(
+        "-s", "--spec", help="check single spec instead of release specs file"
     )
-
-    check.add_argument(
+    check_spec_or_specfile.add_argument(
         "--spec-file",
-        default=None,
         help="check single spec from json or yaml file instead of release specs file",
     )
 
@@ -173,16 +171,19 @@ def setup_parser(subparser):
 
     # Download tarball and specfile
     download = subparsers.add_parser("download", help=download_fn.__doc__)
-    download.add_argument(
-        "-s", "--spec", default=None, help="download built tarball for spec from mirror"
+    download_spec_or_specfile = download.add_mutually_exclusive_group(required=True)
+    download_spec_or_specfile.add_argument(
+        "-s", "--spec", help="download built tarball for spec from mirror"
+    )
+    download_spec_or_specfile.add_argument(
+        "--spec-file", help="download built tarball for spec (from json or yaml file) from mirror"
     )
     download.add_argument(
-        "--spec-file",
+        "-p",
+        "--path",
+        required=True,
         default=None,
-        help="download built tarball for spec (from json or yaml file) from mirror",
-    )
-    download.add_argument(
-        "-p", "--path", default=None, help="path to directory where tarball should be downloaded"
+        help="path to directory where tarball should be downloaded",
     )
     download.set_defaults(func=download_fn)
 
@@ -190,32 +191,32 @@ def setup_parser(subparser):
     getbuildcachename = subparsers.add_parser(
         "get-buildcache-name", help=get_buildcache_name_fn.__doc__
     )
-    getbuildcachename.add_argument(
-        "-s", "--spec", default=None, help="spec string for which buildcache name is desired"
+    getbuildcachename_spec_or_specfile = getbuildcachename.add_mutually_exclusive_group(
+        required=True
     )
-    getbuildcachename.add_argument(
-        "--spec-file",
-        default=None,
-        help="path to spec json or yaml file for which buildcache name is desired",
+    getbuildcachename_spec_or_specfile.add_argument(
+        "-s", "--spec", help="spec string for which buildcache name is desired"
+    )
+    getbuildcachename_spec_or_specfile.add_argument(
+        "--spec-file", help="path to spec json or yaml file for which buildcache name is desired"
     )
     getbuildcachename.set_defaults(func=get_buildcache_name_fn)
 
     # Given the root spec, save the yaml of the dependent spec to a file
     savespecfile = subparsers.add_parser("save-specfile", help=save_specfile_fn.__doc__)
-    savespecfile.add_argument("--root-spec", default=None, help="root spec of dependent spec")
-    savespecfile.add_argument(
-        "--root-specfile",
-        default=None,
-        help="path to json or yaml file containing root spec of dependent spec",
+    savespecfile_spec_or_specfile = savespecfile.add_mutually_exclusive_group(required=True)
+    savespecfile_spec_or_specfile.add_argument("--root-spec", help="root spec of dependent spec")
+    savespecfile_spec_or_specfile.add_argument(
+        "--root-specfile", help="path to json or yaml file containing root spec of dependent spec"
     )
     savespecfile.add_argument(
         "-s",
         "--specs",
-        default=None,
+        required=True,
         help="list of dependent specs for which saved yaml is desired",
     )
     savespecfile.add_argument(
-        "--specfile-dir", default=None, help="path to directory where spec yamls should be saved"
+        "--specfile-dir", required=True, help="path to directory where spec yamls should be saved"
     )
     savespecfile.set_defaults(func=save_specfile_fn)
 
@@ -257,54 +258,24 @@ def setup_parser(subparser):
     update_index.set_defaults(func=update_index_fn)
 
 
-def _matching_specs(specs, spec_file):
-    """Return a list of matching specs read from either a spec file (JSON or YAML),
-    a query over the store or a query over the active environment.
-    """
-    env = ev.active_environment()
-    hashes = env.all_hashes() if env else None
-    if spec_file:
-        return spack.store.specfile_matches(spec_file, hashes=hashes)
-
-    if specs:
-        constraints = spack.cmd.parse_specs(specs)
-        return spack.store.find(constraints, hashes=hashes)
-
-    if env:
-        return [concrete for _, concrete in env.concretized_specs()]
-
-    tty.die(
-        "build cache file creation requires at least one"
-        " installed package spec, an active environment,"
-        " or else a path to a json or yaml file containing a spec"
-        " to install"
-    )
-
-
-def _concrete_spec_from_args(args):
-    spec_str, specfile_path = args.spec, args.spec_file
-
-    if not spec_str and not specfile_path:
-        tty.error("must provide either spec string or path to YAML or JSON specfile")
-        sys.exit(1)
-
-    if spec_str:
-        try:
-            constraints = spack.cmd.parse_specs(spec_str)
-            spec = spack.store.find(constraints)[0]
-            spec.concretize()
-        except SpecError as spec_error:
-            tty.error("Unable to concretize spec {0}".format(spec_str))
-            tty.debug(spec_error)
-            sys.exit(1)
-
-        return spec
-
-    return Spec.from_specfile(specfile_path)
+def _matching_specs(specs: List[Spec]) -> List[Spec]:
+    """Disambiguate specs and return a list of matching specs"""
+    return [spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=any) for s in specs]
 
 
 def push_fn(args):
     """create a binary package and push it to a mirror"""
+    if args.spec_file:
+        tty.warn(
+            "The flag `--spec-file` is deprecated and will be removed in Spack 0.22. "
+            "Use positional arguments instead."
+        )
+
+    if args.specs or args.spec_file:
+        specs = _matching_specs(spack.cmd.parse_specs(args.specs or args.spec_file))
+    else:
+        specs = spack.cmd.require_active_env("buildcache push").all_specs()
+
     mirror = arguments.mirror_name_or_url(args.mirror)
 
     if args.allow_root:
@@ -315,7 +286,7 @@ def push_fn(args):
     url = mirror.push_url
 
     specs = bindist.specs_to_be_packaged(
-        _matching_specs(args.specs, args.spec_file),
+        specs,
         root="package" in args.things_to_install,
         dependencies="dependencies" in args.things_to_install,
     )
@@ -423,16 +394,21 @@ def preview_fn(args):
 def check_fn(args):
     """check specs against remote binary mirror(s) to see if any need to be rebuilt
 
-    either a single spec from --spec, or else the full set of release specs. this command uses the
-    process exit code to indicate its result, specifically, if the exit code is non-zero, then at
-    least one of the indicated specs needs to be rebuilt
+    this command uses the process exit code to indicate its result, specifically, if the
+    exit code is non-zero, then at least one of the indicated specs needs to be rebuilt
     """
-    if args.spec or args.spec_file:
-        specs = [_concrete_spec_from_args(args)]
+    if args.spec_file:
+        tty.warn(
+            "The flag `--spec-file` is deprecated and will be removed in Spack 0.22. "
+            "Use --spec instead."
+        )
+
+    specs = spack.cmd.parse_specs(args.spec or args.spec_file)
+
+    if specs:
+        specs = _matching_specs(specs, specs)
     else:
-        env = spack.cmd.require_active_env(cmd_name="buildcache")
-        env.concretize()
-        specs = env.all_specs()
+        specs = spack.cmd.require_active_env("buildcache check").all_specs()
 
     if not specs:
         tty.msg("No specs provided, exiting.")
@@ -462,26 +438,28 @@ def download_fn(args):
     code indicates that the command failed to download at least one of the required buildcache
     components
     """
-    if not args.spec and not args.spec_file:
-        tty.msg("No specs provided, exiting.")
-        return
+    if args.spec_file:
+        tty.warn(
+            "The flag `--spec-file` is deprecated and will be removed in Spack 0.22. "
+            "Use --spec instead."
+        )
 
-    if not args.path:
-        tty.msg("No download path provided, exiting")
-        return
+    specs = _matching_specs(spack.cmd.parse_specs(args.spec or args.spec_file))
 
-    spec = _concrete_spec_from_args(args)
-    result = bindist.download_single_spec(spec, args.path)
+    if len(specs) != 1:
+        tty.die("a single spec argument is required to download from a buildcache")
 
-    if not result:
+    if not bindist.download_single_spec(specs[0], args.path):
         sys.exit(1)
 
 
 def get_buildcache_name_fn(args):
     """get name (prefix) of buildcache entries for this spec"""
-    spec = _concrete_spec_from_args(args)
-    buildcache_name = bindist.tarball_name(spec, "")
-    print("{0}".format(buildcache_name))
+    tty.warn("This command is deprecated and will be removed in Spack 0.22.")
+    specs = _matching_specs(spack.cmd.parse_specs(args.spec or args.spec_file))
+    if len(specs) != 1:
+        tty.die("a single spec argument is required to get buildcache name")
+    print(bindist.tarball_name(specs[0], ""))
 
 
 def save_specfile_fn(args):
@@ -491,29 +469,24 @@ def save_specfile_fn(args):
     successful. if any errors or exceptions are encountered, or if expected command-line arguments
     are not provided, then the exit code will be non-zero
     """
-    if not args.root_spec and not args.root_specfile:
-        tty.msg("No root spec provided, exiting.")
-        sys.exit(1)
-
-    if not args.specs:
-        tty.msg("No dependent specs provided, exiting.")
-        sys.exit(1)
-
-    if not args.specfile_dir:
-        tty.msg("No yaml directory provided, exiting.")
-        sys.exit(1)
-
     if args.root_specfile:
-        with open(args.root_specfile) as fd:
-            root_spec_as_json = fd.read()
-        spec_format = "yaml" if args.root_specfile.endswith("yaml") else "json"
-    else:
-        root_spec = Spec(args.root_spec)
-        root_spec.concretize()
-        root_spec_as_json = root_spec.to_json(hash=ht.dag_hash)
-        spec_format = "json"
+        tty.warn(
+            "The flag `--root-specfile` is deprecated and will be removed in Spack 0.22. "
+            "Use --root-spec instead."
+        )
+
+    specs = spack.cmd.parse_specs(args.root_spec or args.root_specfile)
+
+    if len(specs) != 1:
+        tty.die("a single spec argument is required to save specfile")
+
+    root = specs[0]
+
+    if not root.concrete:
+        root.concretize()
+
     save_dependency_specfiles(
-        root_spec_as_json, args.specfile_dir, args.specs.split(), spec_format
+        root, args.specfile_dir, dependencies=spack.cmd.parse_specs(args.specs)
     )
 
 
