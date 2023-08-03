@@ -82,6 +82,7 @@ class R(AutotoolsPackage):
     depends_on("xz")
     depends_on("which", type=("build", "run"))
     depends_on("zlib-api")
+    depends_on("zlib@1.2.5:", when="^zlib")
     depends_on("texinfo", type="build")
     depends_on("cairo+X+gobject+pdf", when="+X")
     depends_on("pango+X", when="+X")

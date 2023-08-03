@@ -35,7 +35,7 @@ class Hdf(AutotoolsPackage):
     variant("shared", default=False, description="Enable shared library")
     variant("pic", default=True, description="Produce position-independent code")
 
-    depends_on("zlib-api@1.1.4:")
+    depends_on("zlib-api")
     depends_on("jpeg")
     depends_on("szip", when="+szip")
     depends_on("rpc", when="+external-xdr")
