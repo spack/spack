@@ -25,18 +25,20 @@ class PyNeo(PythonPackage):
     version("0.4.1", sha256="a5a4f3aa31654d52789f679717c9fb622ad4f59b56d227dca490357b9de0a1ce")
     version("0.3.3", sha256="6b80eb5bdc9eb4eca829f7464f861c5f1a3a6289559de037930d529bb3dddefb")
 
+    depends_on("python@3.8:", type=("build", "run"), when="@0.3.3:")
+
     # py-setuptools@:61 doesn't support PEP 621
     depends_on("py-setuptools@62:", type="build", when="@0.12:")
     depends_on("py-setuptools", type="build")
 
     depends_on("py-packaging", type=("build", "run"))
 
-    depends_on("py-numpy@1.7.1:", type=("build", "run"), when="@0.5.2:0.8.0")
-    depends_on("py-numpy@1.13.0:", type=("build", "run"), when="@0.9.0")
-    depends_on("py-numpy@1.16.1:", type=("build", "run"), when="@0.10.0:0.10.2")
-    depends_on("py-numpy@1.18.5:", type=("build", "run"), when="@0.11.0:0.11.1")
     depends_on("py-numpy@1.19.5:", type=("build", "run"), when="@0.12.0:")
+    depends_on("py-numpy@1.18.5:", type=("build", "run"), when="@0.11.0:0.11.1")
+    depends_on("py-numpy@1.16.1:", type=("build", "run"), when="@0.10.0:0.10.2")
+    depends_on("py-numpy@1.13.0:", type=("build", "run"), when="@0.9.0")
+    depends_on("py-numpy@1.7.1:", type=("build", "run"), when="@0.5.2:0.8.0")
 
-    depends_on("py-quantities@0.9.0:", type=("build", "run"), when="@0.5.2:0.8.0")
-    depends_on("py-quantities@0.12.1:", type=("build", "run"), when="@0.9.0:0.11.1")
     depends_on("py-quantities@0.14.1:", type=("build", "run"), when="@0.12.0:")
+    depends_on("py-quantities@0.12.1:", type=("build", "run"), when="@0.9.0:0.11.1")
+    depends_on("py-quantities@0.9.0:", type=("build", "run"), when="@0.5.2:0.8.0")
