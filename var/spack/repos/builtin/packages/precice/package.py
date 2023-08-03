@@ -46,6 +46,18 @@ class Precice(CMakePackage):
     variant("petsc", default=True, description="Enable PETSc support")
     variant("python", default=False, description="Enable Python support", when="@2:")
     variant("shared", default=True, description="Build shared libraries")
+    variant(
+        "release_with_debug_log",
+        default=False,
+        description="Release build with debug log",
+        when="@2.4:",
+    )
+    variant(
+        "release_with_assertions",
+        default=False,
+        description="Release build with assertions",
+        when="@2.4:",
+    )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("cmake@3.10.2:", type="build", when="@1.4:")
@@ -89,7 +101,7 @@ class Precice(CMakePackage):
             "-DTPL_ENABLE_EIGEN3:BOOL=ON",
             "-DTPL_ENABLE_LIBXML2:BOOL=ON",
             self.define_from_variant("TPL_ENABLE_PETSC", "petsc"),
-            self.define_from_variant("TPL_ENABLE_PYTHON", "python")
+            self.define_from_variant("TPL_ENABLE_PYTHON", "python"),
         ]
 
     def cmake_args(self):
@@ -118,6 +130,25 @@ class Precice(CMakePackage):
         # The TPL arguments were removed in 3.0.0.
         if spec.satisfies("@1.6:3"):
             cmake_args.extend(self.xsdk_tpl_args())
+
+        # Release options
+        if spec.satisfies("@2.4:"):
+            cmake_args.extend(
+                [
+                    self.define_from_variant(
+                        "PRECICE_RELEASE_WITH_DEBUG_LOG", "release_with_debug_log"
+                    ),
+                    self.define_from_variant(
+                        "PRECICE_RELEASE_WITH_ASSERTIONS", "release_with_assertions"
+                    ),
+                ]
+            )
+
+        # Disable CPack
+        if spec.satisfies("@3:"):
+            cmake_args.append("-DPRECICE_CONFIGURE_PACKAGE_GENERATION:BOOL=OFF")
+
+        ### Dependencies
 
         # Boost
         cmake_args.append("-DBOOST_ROOT=%s" % spec["boost"].prefix)
