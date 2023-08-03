@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -39,6 +41,7 @@ class H5bench(CMakePackage):
 
     depends_on("cmake@3.10:", type="build")
     depends_on("mpi")
+    depends_on("slurm")
     depends_on("hdf5+mpi@1.12.0:1,develop-1.12:")
     depends_on("hdf5-vol-async@1.5", when="+async")
     depends_on("parallel-netcdf", when="+e3sm")
@@ -67,7 +70,7 @@ class H5bench(CMakePackage):
         exe = os.path.basename(launcher.path)
         filename = "samples/sync-write-1d-contig-contig.json"
         filter_file(f"{exe}", f"{launcher}", filename)
-        filter_file(r"-n 2", "-n 2 --timeout 240", filename)
+        filter_file(r"-n 1", "-n 1 --timeout 240", filename)
 
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
