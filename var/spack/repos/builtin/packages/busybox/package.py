@@ -22,8 +22,8 @@ class Busybox(MakefilePackage):
 
     def build(self, spec, prefix):
         make("defconfig")
-        make()
+        make("CC={0}".format(spack_cc))
 
     def install(self, spec, prefix):
-        make("install")
+        make("install", "CC={0}".format(spack_cc))
         install_tree(".", prefix)
