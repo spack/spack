@@ -72,10 +72,10 @@ class H5bench(CMakePackage):
         filter_file(f"{exe}", f"{launcher}", filename)
         if self.spec["slurm"]:
             filter_file(r"mpirun", "srun", filename)
-            filter_file(r"--allow-run-as-root -n 2 --oversubscribe", "-n 1", filename)
+            filter_file(r"--allow-run-as-root -n 2", "-n 1", filename)
         else:
             filter_file(
-                r"--allow-run-as-root -n 2 --oversubscribe", "-n 1 --timeout 240", filename
+                r"--allow-run-as-root -n 2", "-n 1 --timeout 240", filename
             )
 
         """Copy the example source files after the package is installed to an
