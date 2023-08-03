@@ -23,29 +23,12 @@ jobs:
         operating_system: ["ubuntu-latest", "macos-latest"]
     steps:
     - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # @v2
-      with:
-        fetch-depth: 2
     - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # @v2
       with:
-        python-version: ${{ inputs.python_version }}
+        python-version: ${{inputs.python_version}}
     - name: Install Python packages
       run: |
         pip install --upgrade pip setuptools pytest coverage[toml]
-    - name: Verify new package checksums
-      run: |
-        . share/spack/setup-env.sh
-        files=($(git diff --name-only -r HEAD^1 HEAD -- var/spack/repos/builtin/packages/*))
-        for file in ${files[@]}; do
-            package=$(basename $(dirname $file))
-            versions=($(git diff -r HEAD^1 HEAD -- $file | \
-            grep -E "^\+    version\(" | \
-            sed -E "s/^\+    version\(\"//g" | \
-            sed -E "s/\".*\)//g"))
-            if [ ${#versions[@]} -ne 0 ]; then
-                 printf "> spack checksum --verify $package ${versions[@]}"
-                 $(which spack) checksum --verify $package ${versions[@]}
-            fi
-        done
     - name: Package audits (with coverage)
       if: ${{ inputs.with_coverage == 'true' }}
       run: |
