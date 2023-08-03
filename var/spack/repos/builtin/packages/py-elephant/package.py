@@ -36,7 +36,8 @@ class PyElephant(PythonPackage):
     )
 
     depends_on("py-setuptools", type="build")
-    depends_on("python@3.7:", type=("build", "run"), when="@0.11.0:")
+    depends_on("python@3.8:", type=("build", "run"), when="@0.12.0:")
+    depends_on("python@3.7:", type=("build", "run"), when="@0.11.0:0.11.2")
     depends_on("py-neo@0.3.4:", type=("build", "run"), when="@0.3.0:0.4.1")
     depends_on("py-numpy@1.8.2:", type=("build", "run"), when="@0.3.0:0.4.1")
     depends_on("py-quantities@0.10.1:0.13.0", type=("build", "run"), when="@0.3.0:0.4.1")
@@ -71,5 +72,3 @@ class PyElephant(PythonPackage):
     depends_on("py-scipy@1.5.4:", type=("build", "run"), when="@0.6.4:")
     depends_on("py-six@1.10.0:", type=("build", "run"), when="@0.6.4:")
     depends_on("py-tqdm", type=("build", "run"), when="@0.6.4:")
-    depends_on("py-pytest", type=("test"), when="@0.6.4:")
-    depends_on("py-statsmodels@0.12.1:", type=("test"), when="@0.6.4:")
