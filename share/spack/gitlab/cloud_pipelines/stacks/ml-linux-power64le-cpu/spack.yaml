@@ -125,7 +125,7 @@ spack:
     - xgboost
 
   mirrors:
-    mirror: s3://spack-binaries/develop/ml-linux-power64le-cpu
+    mirror: s3://spack-binaries/develop/ml-linux-ppc64le-cpu
 
   ci:
     pipeline-gen:
