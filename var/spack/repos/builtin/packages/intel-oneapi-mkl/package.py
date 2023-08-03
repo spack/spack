@@ -110,12 +110,13 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         values=("openmp", "tbb", "none"),
         multi=False,
     )
+    variant("fftw", default=True, description="Provides FFTW API")
 
     depends_on("tbb")
     # cluster libraries need mpi
     depends_on("mpi", when="+cluster")
 
-    provides("fftw-api@3")
+    provides("fftw-api@3", when="+fftw")
     provides("scalapack", when="+cluster")
     provides("mkl")
     provides("lapack")
