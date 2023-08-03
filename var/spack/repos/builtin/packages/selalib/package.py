@@ -20,6 +20,11 @@ class Selalib(CMakePackage):
     variant("mpi", default=True)
     variant("openmp", default=True)
 
+    requires("%gcc@10.0.0:", "%clang@16.0.0:", "%intel@18.0:", "%oneapi@18.0:",
+        policy="one_of",
+        msg="SeLaLib requires new-enough Fortran compiler"
+    )
+
     depends_on("cmake@3.6.0:", type=("build"))
     depends_on("blas")
     depends_on("fftw+mpi+openmp")
@@ -40,8 +45,6 @@ class Selalib(CMakePackage):
         ]
         return args
 
-    # selalib needs fftw to be found, will try to compile things with line truncation errors otherwise
     def setup_build_environment(self, env):
         env.set('FFTW_INCLUDE', self.spec['fftw'].prefix.include)
-        #env.set('FFTW_LIB', self.spec['fftw'].prefix.lib)
         env.set('FFTW_ROOT', self.spec['fftw'].prefix)
