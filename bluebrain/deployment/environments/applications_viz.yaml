@@ -6,6 +6,7 @@ spack:
         include:
           - brayns
           - py-brayns
+          - py-brayns-circuit-studio-backend
           - brion
           - meshball
           - ultraliser
@@ -16,5 +17,6 @@ spack:
     - py-brayns
     - py-brayns@3.2.0
     - py-brayns@3.1.2
+    - py-brayns-circuit-studio-backend
     - brion +python
     - ultraliser ^hdf5~mpi
