@@ -19,6 +19,9 @@ class Kafka(Package):
     list_depth = 1
 
     version(
+        "2.13-3.5.0", sha256="2a3a468e069be570f16d612a8196c2f7a9207b7eac865be934d20ce1252eb2f8"
+    )
+    version(
         "2.13-2.4.0", sha256="c1c5246c7075459687b3160b713a001f5cd1cc563b9a3db189868d2f22aa9110"
     )
     version(
