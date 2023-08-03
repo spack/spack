@@ -29,7 +29,7 @@ specs are used instead
 for further documentation regarding the spec syntax, see:
     spack help --spec
 """
-    arguments.add_common_arguments(subparser, ["long", "very_long"])
+    arguments.add_common_arguments(subparser, ["long", "very_long", "namespaces"])
 
     install_status_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
@@ -66,13 +66,6 @@ for further documentation regarding the spec syntax, see:
         default="nodes",
         choices=["nodes", "edges", "paths"],
         help="how extensively to traverse the DAG (default: nodes)",
-    )
-    subparser.add_argument(
-        "-N",
-        "--namespaces",
-        action="store_true",
-        default=False,
-        help="show fully qualified package names",
     )
     subparser.add_argument(
         "-t", "--types", action="store_true", default=False, help="show dependency types"

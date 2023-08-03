@@ -165,7 +165,8 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
-    depends_on("patchelf", type="build")
+    # See https://github.com/spack/spack/issues/39252
+    depends_on("patchelf@:0.17", type="build")
 
     # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
     # cannot express that properly. For now, add conflicts for non-gcc compilers

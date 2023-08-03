@@ -2029,10 +2029,10 @@ spack:
         working_dir.strpath,
         output=str,
     )
-    expect_out = "docker run --rm --name spack_reproducer -v {0}:{0}:Z -ti {1}".format(
-        os.path.realpath(working_dir.strpath), image_name
-    )
-
+    # Make sure the script was generated
+    assert os.path.exists(os.path.join(os.path.realpath(working_dir.strpath), "start.sh"))
+    # Make sure we tell the suer where it is when not in interactive mode
+    expect_out = "$ {0}/start.sh".format(os.path.realpath(working_dir.strpath))
     assert expect_out in rep_out
 
 
