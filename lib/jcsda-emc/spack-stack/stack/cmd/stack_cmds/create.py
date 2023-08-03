@@ -12,8 +12,8 @@ description = "Create spack-stack environment (environment or container)"
 section = "spack-stack"
 level = "long"
 
-default_env_name = 'default'
-default_env_path = stack_path('envs')
+default_env_name = "default"
+default_env_path = stack_path("envs")
 
 
 def default_site():
@@ -24,95 +24,118 @@ def default_site():
 
 
 def site_help():
-    _, site_dirs, _ = next(os.walk(stack_path('configs', 'sites')))
+    _, site_dirs, _ = next(os.walk(stack_path("configs", "sites")))
     help_string = 'Pre-configured platform, or "default" for an empty site.yaml.'
     help_string += os.linesep
     help_string += 'Defaults to "default" if no arg is given'
     help_string += os.linesep
-    help_string += 'Available options are: '
+    help_string += "Available options are: "
     help_string += os.linesep
     for site in site_dirs:
-        help_string += '\t' + site + os.linesep
+        help_string += "\t" + site + os.linesep
     return help_string
 
 
 def template_help():
-    _, template_dirs, _ = next(os.walk(stack_path('configs', 'templates')))
-    help_string = 'Environment template' + os.linesep
-    help_string += 'Default to an empty spack.yaml' + os.linesep
-    help_string += 'Available options are: ' + os.linesep
+    _, template_dirs, _ = next(os.walk(stack_path("configs", "templates")))
+    help_string = "Environment template" + os.linesep
+    help_string += "Default to an empty spack.yaml" + os.linesep
+    help_string += "Available options are: " + os.linesep
     for template in template_dirs:
-        help_string += '\t' + template + os.linesep
+        help_string += "\t" + template + os.linesep
     return help_string
 
 
 def container_config_help():
-    _, _, container_configs = next(os.walk(stack_path('configs', 'containers')))
-    help_string = 'Pre-configured container.' + os.linesep
-    help_string += 'Available options are: ' + os.linesep
+    _, _, container_configs = next(os.walk(stack_path("configs", "containers")))
+    help_string = "Pre-configured container." + os.linesep
+    help_string += "Available options are: " + os.linesep
     for config in container_configs:
-        help_string += '\t' + config.rstrip('.yaml') + os.linesep
+        help_string += "\t" + config.rstrip(".yaml") + os.linesep
     return help_string
 
 
 def setup_common_parser_args(subparser):
     """Shared CLI args for container and environment subcommands"""
     subparser.add_argument(
-        '--template', type=str, required=False, dest='template', default='empty',
-        help=template_help()
+        "--template",
+        type=str,
+        required=False,
+        dest="template",
+        default="empty",
+        help=template_help(),
     )
 
     subparser.add_argument(
-        '--name', type=str, required=False, default=None,
-        help='Environment name, defaults to "{}".'.format(default_env_name)
+        "--name",
+        type=str,
+        required=False,
+        default=None,
+        help='Environment name, defaults to "{}".'.format(default_env_name),
     )
 
     subparser.add_argument(
-        '--dir', type=str, required=False, default=default_env_path,
-        help='Environment will be placed in <dir>/<name>/.'
-        ' Default is {}/<name>/.'.format(default_env_path)
+        "--dir",
+        type=str,
+        required=False,
+        default=default_env_path,
+        help="Environment will be placed in <dir>/<name>/."
+        " Default is {}/<name>/.".format(default_env_path),
     )
 
     subparser.add_argument(
-        '--overwrite', action='store_true', required=False, default=False,
-        help='Overwrite existing environment if it exists.'
-        ' Warning this is dangerous.'
+        "--overwrite",
+        action="store_true",
+        required=False,
+        default=False,
+        help="Overwrite existing environment if it exists." " Warning this is dangerous.",
     )
 
     subparser.add_argument(
-        '--packages', type=str, required=False, default=None,
-        help='Base packages.yaml, use to override common packages.yaml.'
+        "--packages",
+        type=str,
+        required=False,
+        default=None,
+        help="Base packages.yaml, use to override common packages.yaml.",
+    )
+
+    subparser.add_argument(
+        "--upstream",
+        nargs="*",
+        action="append",
+        help="Include upstream environment (/path/to/spack-stack-x.y.z/envs/unified-env)",
     )
 
 
 def setup_ctr_parser(subparser):
-    """ create container-specific parsing options"""
-    subparser.add_argument(
-        'container', help=container_config_help())
+    """create container-specific parsing options"""
+    subparser.add_argument("container", help=container_config_help())
 
     setup_common_parser_args(subparser)
 
 
 def setup_env_parser(subparser):
-    """ create environment-specific parsing options"""
+    """create environment-specific parsing options"""
     setup_common_parser_args(subparser)
     subparser.add_argument(
-        '--site', type=str, required=False, default=default_site(),
-        help=site_help()
+        "--site", type=str, required=False, default=default_site(), help=site_help()
     )
 
     subparser.add_argument(
-        '--prefix', type=str, required=False, default=None,
+        "--prefix",
+        type=str,
+        required=False,
+        default=None,
         help="""Install prefix for spack packages and
-                modules (not the spack environment)."""
+                modules (not the spack environment).""",
     )
 
 
 def setup_create_parser(subparser):
-    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='env_type')
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="env_type")
 
-    env_parser = sp.add_parser('env', help='Create local Spack environment')
-    ctr_parser = sp.add_parser('ctr', help='Create container.')
+    env_parser = sp.add_parser("env", help="Create local Spack environment")
+    ctr_parser = sp.add_parser("ctr", help="Create container.")
 
     setup_env_parser(env_parser)
 
@@ -122,29 +145,29 @@ def setup_create_parser(subparser):
 def container_create(args):
     """Create pre-configured container"""
 
-    container = StackContainer(args.container, args.template, args.name,
-                               args.dir, args.packages)
+    container = StackContainer(args.container, args.template, args.name, args.dir, args.packages)
 
     env_dir = container.env_dir
     if os.path.exists(env_dir):
         if args.overwrite:
-            tty.msg('Env {} exists. Overwriting...'.format(env_dir))
+            tty.msg("Env {} exists. Overwriting...".format(env_dir))
             shutil.rmtree(env_dir)
         else:
-            raise Exception('Env: {} already exists'.format(env_dir))
+            raise Exception("Env: {} already exists".format(env_dir))
 
     container.write()
-    tty.msg('Created container {}'.format(env_dir))
+    tty.msg("Created container {}".format(env_dir))
 
 
 def dict_from_args(args):
     dict = {}
-    dict['site'] = args.site
-    dict['template'] = args.template
-    dict['name'] = args.name
-    dict['install_prefix'] = args.prefix
-    dict['base_packages'] = args.packages
-    dict['dir'] = args.dir
+    dict["site"] = args.site
+    dict["template"] = args.template
+    dict["name"] = args.name
+    dict["install_prefix"] = args.prefix
+    dict["base_packages"] = args.packages
+    dict["dir"] = args.dir
+    dict["upstreams"] = args.upstream
 
     return dict
 
@@ -164,20 +187,20 @@ def env_create(args):
     env_dir = stack_env.env_dir()
     if os.path.exists(env_dir):
         if args.overwrite:
-            tty.msg('Environment {} exists. Overwriting...'.format(env_dir))
+            tty.msg("Environment {} exists. Overwriting...".format(env_dir))
             shutil.rmtree(env_dir)
         else:
-            raise Exception('Environment: {} already exists'.format(env_dir))
+            raise Exception("Environment: {} already exists".format(env_dir))
 
-    logging.debug('Creating environment from command-line args')
+    logging.debug("Creating environment from command-line args")
     stack_env = StackEnv(**stack_settings)
     stack_env.write()
     stack_env.check_umask()
-    tty.msg('Created environment {}'.format(env_dir))
+    tty.msg("Created environment {}".format(env_dir))
 
 
 def stack_create(parser, args):
-    if args.env_type == 'env':
+    if args.env_type == "env":
         env_create(args)
-    elif args.env_type == 'ctr':
+    elif args.env_type == "ctr":
         container_create(args)
