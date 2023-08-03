@@ -1132,6 +1132,9 @@ def generate_gitlab_ci_yaml(
                 },
             )
 
+            if not job_object["artifacts"]["expire_in"]:
+                job_object["artifacts"]["expire_in"] = "30 days"
+
             if enable_artifacts_buildcache:
                 bc_root = os.path.join(local_mirror_dir, "build_cache")
                 job_object["artifacts"]["paths"].extend(

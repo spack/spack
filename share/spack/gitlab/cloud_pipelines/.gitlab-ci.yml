@@ -126,6 +126,7 @@ default:
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      expire_in: 30 days
   variables:
     KUBERNETES_CPU_REQUEST: 4000m
     KUBERNETES_MEMORY_REQUEST: 16G
@@ -161,6 +162,7 @@ default:
   artifacts:
     paths:
     - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+    expire_in: 30 days
   interruptible: true
   timeout: 60 minutes
   retry:
@@ -193,6 +195,7 @@ default:
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+    expire_in: 30 days
   variables:
     KUBERNETES_CPU_REQUEST: 4000m
     KUBERNETES_MEMORY_REQUEST: 16G
@@ -840,6 +843,7 @@ deprecated-ci-build:
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+    expire_in: 30 days
   interruptible: true
   timeout: 60 minutes
   retry:
