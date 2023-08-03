@@ -16,6 +16,14 @@ class ByteUnixbench(MakefilePackage):
 
     build_directory = "UnixBench"
 
+    @property
+    def build_targets(self):
+        targets = []
+
+        targets.append("CC={0}".format(spack_cc))
+
+        return targets
+
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             install_tree(".", prefix)
