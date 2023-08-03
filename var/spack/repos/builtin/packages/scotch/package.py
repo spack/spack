@@ -40,7 +40,7 @@ class Scotch(CMakePackage, MakefilePackage):
     variant("threads", default=True, description="use POSIX Pthreads within Scotch and PT-Scotch")
     variant(
         "mpi_thread",
-        default=True,
+        default=False,
         description="use multi-threaded algorithms in conjunction with MPI",
     )
     variant("mpi", default=True, description="Compile parallel libraries")
