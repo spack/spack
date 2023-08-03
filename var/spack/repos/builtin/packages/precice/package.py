@@ -110,14 +110,16 @@ class Precice(CMakePackage):
 
         # Select the correct CMake variables by version
         mpi_option = "MPI"
-        if spec.satisfies("@2:"):
-            mpi_option = "PRECICE_MPICommunication"
         petsc_option = "PETSC"
-        if spec.satisfies("@2:"):
-            petsc_option = "PRECICE_PETScMapping"
         python_option = "PYTHON"
         if spec.satisfies("@2:"):
+            mpi_option = "PRECICE_MPICommunication"
+            petsc_option = "PRECICE_PETScMapping"
             python_option = "PRECICE_PythonActions"
+        if spec.satisfies("@3:"):
+            mpi_option = "PRECICE_FEATURE_MPI_COMMUNICATION"
+            petsc_option = "PRECICE_FEATURE_PETSC_MAPPING"
+            python_option = "PRECICE_FEATURE_PYTHON_ACTIONS"
 
         cmake_args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
@@ -148,7 +150,7 @@ class Precice(CMakePackage):
         if spec.satisfies("@3:"):
             cmake_args.append("-DPRECICE_CONFIGURE_PACKAGE_GENERATION:BOOL=OFF")
 
-        ### Dependencies
+        # Dependencies
 
         # Boost
         cmake_args.append("-DBOOST_ROOT=%s" % spec["boost"].prefix)
