@@ -22,6 +22,9 @@ class Bioawk(MakefilePackage):
 
     parallel = False
 
+    def build(self, spec, prefix):
+        make("CC={0}".format(spack_cc))
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("bioawk", prefix.bin)
