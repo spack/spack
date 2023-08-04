@@ -515,10 +515,10 @@ class TestSpecSemantics:
         s.normalize()
 
         assert s["callpath"] == s
-        assert isinstance(s["dyninst"], Spec)
-        assert isinstance(s["libdwarf"], Spec)
-        assert isinstance(s["libelf"], Spec)
-        assert isinstance(s["mpi"], Spec)
+        assert type(s["dyninst"]) == Spec
+        assert type(s["libdwarf"]) == Spec
+        assert type(s["libelf"]) == Spec
+        assert type(s["mpi"]) == Spec
 
         assert s["dyninst"].name == "dyninst"
         assert s["libdwarf"].name == "libdwarf"
@@ -758,30 +758,25 @@ class TestSpecSemantics:
             name = "PKG"
 
         # We can't use names that are reserved by Spack
-        fn = variant("patches", description="")
+        fn = variant("patches")
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
         assert "The name 'patches' is reserved" in str(exc_info.value)
 
         # We can't have conflicting definitions for arguments
-        fn = variant(
-            "foo",
-            values=spack.variant.any_combination_of("fee", "foom"),
-            default="bar",
-            description="",
-        )
+        fn = variant("foo", values=spack.variant.any_combination_of("fee", "foom"), default="bar")
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
         assert " it is handled by an attribute of the 'values' " "argument" in str(exc_info.value)
 
         # We can't leave None as a default value
-        fn = variant("foo", default=None, description="")
+        fn = variant("foo", default=None)
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
         assert "either a default was not explicitly set, or 'None' was used" in str(exc_info.value)
 
         # We can't use an empty string as a default value
-        fn = variant("foo", default="", description="")
+        fn = variant("foo", default="")
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
         assert "the default cannot be an empty string" in str(exc_info.value)

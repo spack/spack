@@ -14,8 +14,8 @@ class OptionalDepTest2(Package):
 
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
-    variant("odt", default=False, description="")
-    variant("mpi", default=False, description="")
+    variant("odt", default=False)
+    variant("mpi", default=False)
 
     depends_on("optional-dep-test", when="+odt")
     depends_on("optional-dep-test+mpi", when="+mpi")

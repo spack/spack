@@ -27,8 +27,8 @@ class CmakeClient(CMakePackage):
         description="",
         values=any_combination_of("up", "right", "back").with_default("up"),
     )
-    variant("single", description="", default="blue", values=("blue", "red", "green"), multi=False)
-    variant("truthy", description="", default=True)
+    variant("single", default="blue", values=("blue", "red", "green"), multi=False)
+    variant("truthy", default=True)
 
     callback_counter = 0
 

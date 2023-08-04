@@ -11,4 +11,4 @@ class Mvdefaults(Package):
 
     version("1.0", md5="abcdef1234567890abcdef1234567890")
 
-    variant("foo", values=("a", "b", "c"), default=("a", "b", "c"), multi=True, description="")
+    variant("foo", values=("a", "b", "c"), default=("a", "b", "c"), multi=True)

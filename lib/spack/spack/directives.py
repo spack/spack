@@ -664,9 +664,8 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
 @directive("variants")
 def variant(
     name: str,
-    *,
     default: Optional[Any] = None,
-    description: str,
+    description: str = "",
     values: Optional[Union[Tuple[Any, ...], Callable[[Any], bool]]] = None,
     multi: Optional[bool] = None,
     validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]] = None,

@@ -14,7 +14,7 @@ class Conflict(Package):
     version("0.9", md5="0123456789abcdef0123456789abcdef")
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
-    variant("foo", default=True, description="")
+    variant("foo", default=True)
 
     conflicts("%clang", when="+foo")
 

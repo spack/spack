@@ -9,7 +9,7 @@ from spack.package import *
 class Openmpi(Package):
     version("4.1.1")
 
-    variant("internal-hwloc", default=False, description="")
-    variant("fabrics", description="", values=any_combination_of("psm", "mxm"))
+    variant("internal-hwloc", default=False)
+    variant("fabrics", values=any_combination_of("psm", "mxm"))
 
     depends_on("hwloc", when="~internal-hwloc")

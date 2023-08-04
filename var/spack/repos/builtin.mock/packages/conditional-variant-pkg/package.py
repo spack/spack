@@ -29,8 +29,8 @@ class ConditionalVariantPkg(Package):
         description="Check that variants can depend on variants",
     )
 
-    variant("two_whens", default=False, description="", when="@1.0")
-    variant("two_whens", default=False, description="", when="+variant_based")
+    variant("two_whens", default=False, when="@1.0")
+    variant("two_whens", default=False, when="+variant_based")
 
     def install(self, spec, prefix):
         assert False

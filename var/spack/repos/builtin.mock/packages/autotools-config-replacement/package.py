@@ -18,8 +18,8 @@ class AutotoolsConfigReplacement(AutotoolsPackage):
     has_code = False
 
     version("1.0.0")
-    variant("patch_config_files", default=False, description="")
-    variant("gnuconfig", default=False, description="")
+    variant("patch_config_files", default=False)
+    variant("gnuconfig", default=False)
 
     depends_on("gnuconfig", type="build", when="+gnuconfig")
 
