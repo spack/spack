@@ -13,6 +13,6 @@ class StickyVariant(AutotoolsPackage):
 
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
-    variant("allow-gcc", default=False, sticky=True)
+    variant("allow-gcc", description="", default=False, sticky=True)
 
     conflicts("%gcc", when="~allow-gcc")

@@ -13,7 +13,7 @@ class UnsatProvider(Package):
 
     version("1.0", sha256="0123456789abcdef0123456789abcdef")
 
-    variant("foo", default=True)
+    variant("foo", default=True, description="")
 
     provides("unsatvdep", when="+foo")
     conflicts("+foo")

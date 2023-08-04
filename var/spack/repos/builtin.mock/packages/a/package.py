@@ -15,11 +15,13 @@ class A(AutotoolsPackage):
     version("1.0", md5="0123456789abcdef0123456789abcdef")
     version("2.0", md5="abcdef0123456789abcdef0123456789")
 
-    variant("foo", values=any_combination_of("bar", "baz", "fee").with_default("bar"))
+    variant(
+        "foo", description="", values=any_combination_of("bar", "baz", "fee").with_default("bar")
+    )
 
-    variant("foobar", values=("bar", "baz", "fee"), default="bar", multi=False)
+    variant("foobar", values=("bar", "baz", "fee"), default="bar", description="", multi=False)
 
-    variant("lorem_ipsum", default=False)
+    variant("lorem_ipsum", description="", default=False)
 
     variant("bvv", default=True, description="The good old BV variant")
 
