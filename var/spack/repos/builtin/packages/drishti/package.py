@@ -24,12 +24,9 @@ class Drishti(PythonPackage):
     version("0.5", sha256="08ae82dfa82872cde1f0a219e979b9c10d6c4a01f762066ea864a400cc144d78")
     version("0.4", sha256="bbbb272b4f6f44ae762f6cba28a2c589e15608691c559af0cc2f552590335d7b")
 
-    depends_on("darshan-util@3.4:", type=("run", "test"))
-
-    depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-rich@12.5.1", type=("build", "run"))
-    depends_on("py-darshan@3.4:", type=("build", "run"))
+    depends_on("py-darshan", type=("build", "run"))
 
     def test_help(self):
         """Run drishti help."""
