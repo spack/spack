@@ -15,7 +15,9 @@ class Amdsmi(CMakePackage):
     homepage = "https://github.com/RadeonOpenCompute/amdsmi"
     url = "https://github.com/RadeonOpenCompute/amdsmi/archive/refs/tags/rocm-5.6.0.tar.gz"
 
-    maintainers("srekolam")
+    tags = ["rocm"]
+    maintainers("srekolam", "renjithravindrankannath")
+    libraries = ["libamd_smi"]
 
     version("5.6.0", sha256="595c9d6d79d9071290b2f19ab4ef9222c8d2983b4322b3143fcd9d0b1ce0f6d8")
     version("5.5.1", sha256="b794c7fd562fd92f2c9f2bbdc2d5dded7486101fcd4598f2e8c3484c9a939281")
@@ -28,6 +30,17 @@ class Amdsmi(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("libdrm", type="build")
     depends_on("py-pyyaml", type="build")
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)", lib)
+        if match:
+            ver = "{0}.{1}.{2}".format(
+                int(match.group(1)), int(match.group(2)), int(match.group(3))
+            )
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = []
