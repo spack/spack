@@ -889,9 +889,9 @@ def add(fullpath, scope=None):
             break
 
     if has_existing_value:
-        path, _, value = fullpath.rpartition(":")
-        value = syaml.load_config(value)
-        existing = get(path, scope=scope)
+        path, _, value = escape_colons(fullpath).rpartition(":")
+        value = syaml.load_config(interp_escapes(value))
+        existing = get(interp_escapes(path), scope=scope)
 
     # append values to lists
     if isinstance(existing, list) and not isinstance(value, list):
@@ -1231,11 +1231,74 @@ def merge_yaml(dest, source, prepend=False, append=False):
     return copy.copy(source)
 
 
+def interp_escapes(path):
+    """Interpolate escaped characters based on their hex value
+    when found in the scheme %<hex>"""
+    # local method `set` eclipses builtin python class here
+    # so construct set via direct reference to class
+    known_escape_vals = {58}
+    interped_path = ""
+    i = 0
+    path_len = len(path)
+    while i < path_len:
+        if path[i] == "%":
+            # processing a potential replacement character
+            hex_chars = path[i + 1 : i + 3]
+            try:
+                esc_int = int(hex_chars, base=16)
+                # valid hex may just be coincidence, ensure
+                # value is one of expected escapes
+                if esc_int in known_escape_vals:
+                    rep_text = chr(esc_int)
+                    interped_path = interped_path + rep_text
+                    i += 3
+                    continue
+            except ValueError:
+                # processed characters are not valid hex
+                # and as such not a valid replacement
+                interped_path = interped_path + path[i]
+        else:
+            interped_path = interped_path + path[i]
+        i += 1
+    return interped_path
+
+
+def escape_colons(path):
+    """Replaces colon characters with hex representation
+    in config path arguments so long as the colon is properly escaped
+    with respect to yaml syntax (between two double quotes)"""
+    # Indicator that we are parsing within the context of a potential escape sequence
+    # However, standalone double quotes are not an escape character and they
+    # should be ignored here
+    escaped_colon_idx = 0
+    inside_escape = False
+    path_tokens = []
+    token = ""
+    for current_char in path:
+        if current_char == ":":
+            path_tokens.append(token)
+            token = ""
+        elif current_char == '"' and not (token and token[-1] == "\\"):
+            if inside_escape:
+                token = "%3a".join(path_tokens[escaped_colon_idx:] + [token])
+                path_tokens[escaped_colon_idx:] = ""
+                inside_escape = False
+            else:
+                escaped_colon_idx = len(path_tokens)
+                inside_escape = True
+            token += current_char
+        else:
+            token += current_char
+    path_tokens.append(token)
+    return ":".join(path_tokens)
+
+
 #
 # Process a path argument to config.set() that may contain overrides ('::' or
 # trailing ':')
 #
 def process_config_path(path):
+    path = escape_colons(path)
     result = []
     if path.startswith(":"):
         raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".format(path), "")
@@ -1262,7 +1325,7 @@ def process_config_path(path):
             front = syaml.syaml_str(front)
             front.append = True
 
-        result.append(front)
+        result.append(interp_escapes(front))
     return result
 
 
