@@ -77,7 +77,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
         ),
         "execspace_openmp": (
             "auto",
-            "Whether to pre instantiate kernels for the execution space Kokkos::Experimental::OpenMPTarget",
+            "Whether to pre instantiate kernels for the execution space "
+            "Kokkos::Experimental::OpenMPTarget",
             "openmp",
         ),
         "execspace_threads": (
