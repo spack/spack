@@ -64,7 +64,7 @@ class H5bench(CMakePackage):
     def setup_build_tests(self):
         launcher = self.mpi_launcher()
         filename = "samples/sync-write-1d-contig-contig.json"
-        filter_file("mpirun, f"{launcher}", filename)
+        filter_file("mpirun", f"{launcher}", filename)
         filter_file(r"-n 2", "-n 1 --timeout 240", filename)
 
         """Copy the example source files after the package is installed to an
