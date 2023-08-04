@@ -41,7 +41,6 @@ class H5bench(CMakePackage):
 
     depends_on("cmake@3.10:", type="build")
     depends_on("mpi")
-    depends_on("slurm", type="run")
     depends_on("hdf5+mpi@1.12.0:1,develop-1.12:")
     depends_on("hdf5-vol-async@1.5", when="+async")
     depends_on("parallel-netcdf", when="+e3sm")
@@ -66,28 +65,18 @@ class H5bench(CMakePackage):
     @run_after("install")
     def setup_build_tests(self):
         launcher = self.mpi_launcher()
-
-        exe = os.path.basename(launcher.path)
         filename = "samples/sync-write-1d-contig-contig.json"
-        filter_file(f"{exe}", f"{launcher}", filename)
-        if self.spec["slurm"]:
-            filter_file(r"mpirun", "srun", filename)
-            filter_file(r"--allow-run-as-root -n 2", "-n 1", filename)
-        else:
-            filter_file(r"--allow-run-as-root -n 2", "-n 1 --timeout 240", filename)
+        filter_file(f"mpirun", f"{launcher}", filename)
+        filter_file(r"-n 2", "-n 1 --timeout 240", filename)
 
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         cache_extra_test_sources(self, ["tests", "samples"])
 
     def mpi_launcher(self):
-        searchpath = [self.spec["mpi"].prefix.bin]
-        try:
-            searchpath.insert(0, self.spec["slurm"].prefix.bin)
-        except KeyError:
-            print("Slurm not found, ignoring.")
-        commands = ["srun", "mpirun", "mpiexec"]
-        return which(*commands, path=searchpath) or which(*commands)
+        commands = ["mpirun", "mpiexec"]
+
+        return which(*commands, path=[self.spec["mpi"].prefix.bin]) or which(*commands)
 
     def test_help(self):
         """Run h5bench help."""
