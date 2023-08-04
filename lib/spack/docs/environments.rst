@@ -916,9 +916,9 @@ function, as shown in the example below:
 .. code-block:: yaml
 
    projections:
-     zlib: {name}-{version}
-     ^mpi: {name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}
-     all: {name}-{version}/{compiler.name}-{compiler.version}
+     zlib: "{name}-{version}"
+     ^mpi: "{name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}"
+     all: "{name}-{version}/{compiler.name}-{compiler.version}"
 
 The entries in the projections configuration file must all be either
 specs or the keyword ``all``. For each spec, the projection used will

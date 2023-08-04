@@ -19,11 +19,6 @@ class PyPennylane(PythonPackage):
     version("master", branch="master")
     version("0.30.0", sha256="7fe4821fbc733e3e40d7011e054bd2e31edde3151fd9539025c827a5a3579d6b")
     version("0.29.1", sha256="6ecfb305a3898347df8c539a89a67e748766941d159dbef9e34864872f13c45c")
-    version(
-        "0.28.0",
-        sha256="7736a17dc972d918e3a737ce4360d16ac84b9f9f6fca440f167de579c926c114",
-        deprecated=True,
-    )
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-pip", type=("build", "run"))  # Runtime req for pennylane.about()

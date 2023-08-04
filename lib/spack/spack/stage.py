@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import errno
 import getpass
 import glob
@@ -14,7 +12,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Dict
+from typing import Dict, Iterable
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -52,7 +50,7 @@ stage_prefix = "spack-stage-"
 
 def compute_stage_name(spec):
     """Determine stage name given a spec"""
-    default_stage_structure = "spack-stage-{name}-{version}-{hash}"
+    default_stage_structure = stage_prefix + "{name}-{version}-{hash}"
     stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
     return spec.format(format_string=stage_name_structure)
 
@@ -201,7 +199,7 @@ def _mirror_roots():
     ]
 
 
-class Stage(object):
+class Stage:
     """Manages a temporary stage directory for building.
 
     A Stage object is a context manager that handles a directory where
@@ -339,7 +337,7 @@ class Stage(object):
 
                 tty.debug("Creating stage lock {0}".format(self.name))
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
-                    stage_lock_path, lock_id, 1, desc=self.name
+                    stage_lock_path, start=lock_id, length=1, desc=self.name
                 )
 
             self._lock = Stage.stage_locks[self.name]
@@ -389,8 +387,7 @@ class Stage(object):
         expanded = True
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             expanded = self.default_fetcher.expand_archive
-            clean_url = os.path.basename(sup.sanitize_file_path(self.default_fetcher.url))
-            fnames.append(clean_url)
+            fnames.append(url_util.default_download_filename(self.default_fetcher.url))
 
         if self.mirror_paths:
             fnames.extend(os.path.basename(x) for x in self.mirror_paths)
@@ -431,6 +428,12 @@ class Stage(object):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
+    def disable_mirrors(self):
+        """The Stage will not attempt to look for the associated fetcher
+        target in any of Spack's mirrors (including the local download cache).
+        """
+        self.mirror_paths = []
+
     def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
 
@@ -451,22 +454,11 @@ class Stage(object):
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
-            mirror_urls = {}
-            for mirror in spack.mirror.MirrorCollection().values():
-                for rel_path in self.mirror_paths:
-                    mirror_url = url_util.join(mirror.fetch_url, rel_path)
-                    mirror_urls[mirror_url] = {}
-                    if (
-                        mirror.get_access_pair("fetch")
-                        or mirror.get_access_token("fetch")
-                        or mirror.get_profile("fetch")
-                    ):
-                        mirror_urls[mirror_url] = {
-                            "access_token": mirror.get_access_token("fetch"),
-                            "access_pair": mirror.get_access_pair("fetch"),
-                            "access_profile": mirror.get_profile("fetch"),
-                            "endpoint_url": mirror.get_endpoint_url("fetch"),
-                        }
+            mirror_urls = [
+                url_util.join(mirror.fetch_url, rel_path)
+                for mirror in spack.mirror.MirrorCollection(source=True).values()
+                for rel_path in self.mirror_paths
+            ]
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -485,16 +477,9 @@ class Stage(object):
 
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
-            for url in reversed(list(mirror_urls.keys())):
+            for url in reversed(mirror_urls):
                 fetchers.insert(
-                    0,
-                    fs.from_url_scheme(
-                        url,
-                        digest,
-                        expand=expand,
-                        extension=extension,
-                        connection=mirror_urls[url],
-                    ),
+                    0, fs.from_url_scheme(url, digest, expand=expand, extension=extension)
                 )
 
             if self.default_fetcher.cachable:
@@ -676,16 +661,16 @@ class Stage(object):
 
 class ResourceStage(Stage):
     def __init__(self, url_or_fetch_strategy, root, resource, **kwargs):
-        super(ResourceStage, self).__init__(url_or_fetch_strategy, **kwargs)
+        super().__init__(url_or_fetch_strategy, **kwargs)
         self.root_stage = root
         self.resource = resource
 
     def restage(self):
-        super(ResourceStage, self).restage()
+        super().restage()
         self._add_to_root_stage()
 
     def expand_archive(self):
-        super(ResourceStage, self).expand_archive()
+        super().expand_archive()
         self._add_to_root_stage()
 
     def _add_to_root_stage(self):
@@ -746,7 +731,7 @@ class StageComposite(pattern.Composite):
     #
 
     def __init__(self):
-        super(StageComposite, self).__init__(
+        super().__init__(
             [
                 "fetch",
                 "create",
@@ -758,9 +743,17 @@ class StageComposite(pattern.Composite):
                 "cache_local",
                 "cache_mirror",
                 "steal_source",
+                "disable_mirrors",
                 "managed_by_spack",
             ]
         )
+
+    @classmethod
+    def from_iterable(cls, iterable: Iterable[Stage]) -> "StageComposite":
+        """Create a new composite from an iterable of stages."""
+        composite = cls()
+        composite.extend(iterable)
+        return composite
 
     def __enter__(self):
         for item in self:
@@ -769,7 +762,6 @@ class StageComposite(pattern.Composite):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         for item in reversed(self):
-            item.keep = getattr(self, "keep", False)
             item.__exit__(exc_type, exc_val, exc_tb)
 
     #
@@ -791,8 +783,17 @@ class StageComposite(pattern.Composite):
     def archive_file(self):
         return self[0].archive_file
 
+    @property
+    def keep(self):
+        return self[0].keep
 
-class DIYStage(object):
+    @keep.setter
+    def keep(self, value):
+        for item in self:
+            item.keep = value
+
+
+class DIYStage:
     """
     Simple class that allows any directory to be a spack stage.  Consequently,
     it does not expect or require that the source path adhere to the standard
@@ -883,23 +884,19 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
         keep_stage (bool): whether to keep staging area when command completes
         batch (bool): whether to ask user how many versions to fetch (false)
             or fetch all versions (true)
-        latest (bool): whether to take the latest version (true) or all (false)
         fetch_options (dict): Options used for the fetcher (such as timeout
             or cookies)
 
     Returns:
-        (str): A multi-line string containing versions and corresponding hashes
+        (dict): A dictionary of the form: version -> checksum
 
     """
     batch = kwargs.get("batch", False)
     fetch_options = kwargs.get("fetch_options", None)
     first_stage_function = kwargs.get("first_stage_function", None)
     keep_stage = kwargs.get("keep_stage", False)
-    latest = kwargs.get("latest", False)
 
     sorted_versions = sorted(url_dict.keys(), reverse=True)
-    if latest:
-        sorted_versions = sorted_versions[:1]
 
     # Find length of longest string in the list for padding
     max_len = max(len(str(v)) for v in sorted_versions)
@@ -914,7 +911,7 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     )
     print()
 
-    if batch or latest:
+    if batch:
         archives_to_fetch = len(sorted_versions)
     else:
         archives_to_fetch = tty.get_number(
@@ -928,14 +925,10 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     urls = [url_dict[v] for v in versions]
 
     tty.debug("Downloading...")
-    version_hashes = []
+    version_hashes = {}
     i = 0
     errors = []
     for url, version in zip(urls, versions):
-        # Wheels should not be expanded during staging
-        expand_arg = ""
-        if url.endswith(".whl") or ".whl#" in url:
-            expand_arg = ", expand=False"
         try:
             if fetch_options:
                 url_or_fs = fs.URLFetchStrategy(url, fetch_options=fetch_options)
@@ -950,8 +943,8 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
                     first_stage_function(stage, url)
 
                 # Checksum the archive and add it to the list
-                version_hashes.append(
-                    (version, spack.util.crypto.checksum(hashlib.sha256, stage.archive_file))
+                version_hashes[version] = spack.util.crypto.checksum(
+                    hashlib.sha256, stage.archive_file
                 )
                 i += 1
         except FailedDownloadError:
@@ -965,17 +958,12 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     if not version_hashes:
         tty.die("Could not fetch any versions for {0}".format(name))
 
-    # Generate the version directives to put in a package.py
-    version_lines = "\n".join(
-        ['    version("{0}", sha256="{1}"{2})'.format(v, h, expand_arg) for v, h in version_hashes]
-    )
-
     num_hash = len(version_hashes)
     tty.debug(
         "Checksummed {0} version{1} of {2}:".format(num_hash, "" if num_hash == 1 else "s", name)
     )
 
-    return version_lines
+    return version_hashes
 
 
 class StageError(spack.error.SpackError):

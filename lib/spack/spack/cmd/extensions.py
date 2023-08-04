@@ -22,7 +22,7 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.epilog = (
-        "If called without argument returns " "the list of all valid extendable packages"
+        "If called without argument returns the list of all valid extendable packages"
     )
     arguments.add_common_arguments(subparser, ["long", "very_long"])
     subparser.add_argument(
@@ -91,7 +91,7 @@ def extensions(parser, args):
 
     if args.show in ("installed", "all"):
         # List specs of installed extensions.
-        installed = [s.spec for s in spack.store.db.installed_extensions_for(spec)]
+        installed = [s.spec for s in spack.store.STORE.db.installed_extensions_for(spec)]
 
         if args.show == "all":
             print

@@ -107,7 +107,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         propagate=["cuda", "hdf5", "sz", "zfp", "fortran"] + cuda_arch_variants,
     )
 
-    dav_sdk_depends_on("darshan-runtime+mpi", when="+darshan", propagate=["hdf5"])
+    dav_sdk_depends_on("darshan-runtime+mpi", when="+darshan")
     dav_sdk_depends_on("darshan-util", when="+darshan")
 
     dav_sdk_depends_on("faodel+shared+mpi network=libfabric", when="+faodel", propagate=["hdf5"])

@@ -17,6 +17,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("sethrj")
 
+    version("0.3.0", sha256="f9620b6bcd8c9b5324ef215f8e44461f915c3fff47bf85ae442c9dafacaa79ac")
     version("0.2.2", sha256="ba5e341d636e00e3d7dbac13a2016b97014917489f46b8b387a2adf9d9563872")
     version(
         "0.2.1",
@@ -81,7 +82,8 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("nlohmann-json")
     depends_on("geant4@10.7:11.0", when="@:0.2.0 +geant4")
-    depends_on("geant4@10.6:11.0", when="@0.2.1: +geant4")
+    depends_on("geant4@10.6:11.0", when="@0.2.1:0.2 +geant4")
+    depends_on("geant4@10.6:", when="@0.3: +geant4")
     depends_on("hepmc3", when="+hepmc3")
     depends_on("root", when="+root")
     depends_on("swig", when="+swig")
@@ -104,6 +106,12 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+cuda", msg="AMD and NVIDIA accelerators are incompatible")
     conflicts("+rocm", when="+vecgeom", msg="HIP support is only available with ORANGE")
     conflicts("^vecgeom+shared@1.2.0", when="+vecgeom +cuda")
+
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/celeritas-project/celeritas/pull/830.patch?full_index=1",
+        sha256="9ac1929a95170b497aaac76f62146f313e4b31aea7271acac354270550d0d685",
+        when="@0.3.0 ^geant4@10",
+    )
 
     def cmake_args(self):
         define = self.define

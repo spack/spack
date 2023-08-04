@@ -400,7 +400,7 @@ def test_sanitize_literals(env, exclude, include):
         ({"SHLVL": "1"}, ["SH.*"], [], [], ["SHLVL"]),
         # Check we can include using a regex
         ({"SHLVL": "1"}, ["SH.*"], ["SH.*"], ["SHLVL"], []),
-        # Check regex to exclude Modules v4 related vars
+        # Check regex to exclude Environment Modules related vars
         (
             {"MODULES_LMALTNAME": "1", "MODULES_LMCONFLICT": "2"},
             ["MODULES_(.*)"],
@@ -414,6 +414,13 @@ def test_sanitize_literals(env, exclude, include):
             [],
             [],
             ["A_modquar", "b_modquar", "C_modshare"],
+        ),
+        (
+            {"__MODULES_LMTAG": "1", "__MODULES_LMPREREQ": "2"},
+            ["__MODULES_(.*)"],
+            [],
+            [],
+            ["__MODULES_LMTAG", "__MODULES_LMPREREQ"],
         ),
     ],
 )
@@ -489,3 +496,19 @@ def test_exclude_lmod_variables():
     # Check that variables related to lmod are not in there
     modifications = env.group_by_name()
     assert not any(x.startswith("LMOD_") for x in modifications)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.regression("13504")
+def test_exclude_modules_variables():
+    # Construct the list of environment modifications
+    file = os.path.join(datadir, "sourceme_modules.sh")
+    env = EnvironmentModifications.from_sourcing_file(file)
+
+    # Check that variables related to modules are not in there
+    modifications = env.group_by_name()
+    assert not any(x.startswith("MODULES_") for x in modifications)
+    assert not any(x.startswith("__MODULES_") for x in modifications)
+    assert not any(x.startswith("BASH_FUNC_ml") for x in modifications)
+    assert not any(x.startswith("BASH_FUNC_module") for x in modifications)
+    assert not any(x.startswith("BASH_FUNC__module_raw") for x in modifications)

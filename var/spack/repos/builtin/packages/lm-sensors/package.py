@@ -31,6 +31,14 @@ class LmSensors(MakefilePackage):
     depends_on("flex", type="build")
     depends_on("perl", type="run")
 
+    @property
+    def build_targets(self):
+        targets = []
+
+        targets.append("CC={0}".format(spack_cc))
+
+        return targets
+
     def install(self, spec, prefix):
         make("install", "PREFIX={0}".format(prefix), "ETCDIR={0}/etc".format(prefix))
 

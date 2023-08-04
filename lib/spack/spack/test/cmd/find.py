@@ -117,13 +117,13 @@ def test_tag2_tag3(parser, specs):
     assert len(specs) == 0
 
 
+@pytest.mark.parametrize(
+    "args,with_namespace", [([], False), (["--namespace"], True), (["--namespaces"], True)]
+)
 @pytest.mark.db
-def test_namespaces_shown_correctly(database):
-    out = find()
-    assert "builtin.mock.zmpi" not in out
-
-    out = find("--namespace")
-    assert "builtin.mock.zmpi" in out
+def test_namespaces_shown_correctly(args, with_namespace, database):
+    """Test that --namespace(s) works. Old syntax is --namespace"""
+    assert ("builtin.mock.zmpi" in find(*args)) == with_namespace
 
 
 @pytest.mark.db
@@ -352,7 +352,7 @@ def test_find_loaded(database, working_env):
     assert output == ""
 
     os.environ[uenv.spack_loaded_hashes_var] = ":".join(
-        [x.dag_hash() for x in spack.store.db.query()]
+        [x.dag_hash() for x in spack.store.STORE.db.query()]
     )
     output = find("--loaded")
     expected = find()

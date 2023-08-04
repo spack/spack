@@ -291,7 +291,7 @@ class SpecParser:
                 if root_spec.concrete:
                     raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
 
-                root_spec._add_dependency(dependency, deptypes=())
+                root_spec._add_dependency(dependency, deptypes=(), virtuals=())
 
             else:
                 break

@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import argparse
 import os
 import re
@@ -149,7 +147,7 @@ def get_command(cmd_name):
     return getattr(get_module(cmd_name), pname)
 
 
-class _UnquotedFlags(object):
+class _UnquotedFlags:
     """Use a heuristic in `.extract()` to detect whether the user is trying to set
     multiple flags like the docker ENV attribute allows (e.g. 'cflags=-Os -pipe').
 
@@ -275,9 +273,9 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, fir
             See ``spack.database.Database._query`` for details.
     """
     if local:
-        matching_specs = spack.store.db.query_local(spec, hashes=hashes, installed=installed)
+        matching_specs = spack.store.STORE.db.query_local(spec, hashes=hashes, installed=installed)
     else:
-        matching_specs = spack.store.db.query(spec, hashes=hashes, installed=installed)
+        matching_specs = spack.store.STORE.db.query(spec, hashes=hashes, installed=installed)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
@@ -385,7 +383,7 @@ def display_specs(specs, args=None, **kwargs):
         deps (bool): Display dependencies with specs
         long (bool): Display short hashes with specs
         very_long (bool): Display full hashes with specs (supersedes ``long``)
-        namespace (bool): Print namespaces along with names
+        namespaces (bool): Print namespaces along with names
         show_flags (bool): Show compiler flags with specs
         variants (bool): Show variants with specs
         indent (int): indent each line this much
@@ -409,7 +407,7 @@ def display_specs(specs, args=None, **kwargs):
     paths = get_arg("paths", False)
     deps = get_arg("deps", False)
     hashes = get_arg("long", False)
-    namespace = get_arg("namespace", False)
+    namespaces = get_arg("namespaces", False)
     flags = get_arg("show_flags", False)
     full_compiler = get_arg("show_full_compiler", False)
     variants = get_arg("variants", False)
@@ -430,7 +428,7 @@ def display_specs(specs, args=None, **kwargs):
 
     format_string = get_arg("format", None)
     if format_string is None:
-        nfmt = "{fullname}" if namespace else "{name}"
+        nfmt = "{fullname}" if namespaces else "{name}"
         ffmt = ""
         if full_compiler or flags:
             ffmt += "{%compiler.name}"
@@ -475,7 +473,7 @@ def display_specs(specs, args=None, **kwargs):
         out = ""
         # getting lots of prefixes requires DB lookups. Ensure
         # all spec.prefix calls are in one transaction.
-        with spack.store.db.read_transaction():
+        with spack.store.STORE.db.read_transaction():
             for string, spec in formatted:
                 if not string:
                     # print newline from above
@@ -547,7 +545,7 @@ class PythonNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super(PythonNameError, self).__init__("{0} is not a permissible Python name.".format(name))
+        super().__init__("{0} is not a permissible Python name.".format(name))
 
 
 class CommandNameError(spack.error.SpackError):
@@ -555,9 +553,7 @@ class CommandNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super(CommandNameError, self).__init__(
-            "{0} is not a permissible Spack command name.".format(name)
-        )
+        super().__init__("{0} is not a permissible Spack command name.".format(name))
 
 
 ########################################
@@ -588,14 +584,14 @@ def require_active_env(cmd_name):
 
     if env:
         return env
-    else:
-        tty.die(
-            "`spack %s` requires an environment" % cmd_name,
-            "activate an environment first:",
-            "    spack env activate ENV",
-            "or use:",
-            "    spack -e ENV %s ..." % cmd_name,
-        )
+
+    tty.die(
+        "`spack %s` requires an environment" % cmd_name,
+        "activate an environment first:",
+        "    spack env activate ENV",
+        "or use:",
+        "    spack -e ENV %s ..." % cmd_name,
+    )
 
 
 def find_environment(args):

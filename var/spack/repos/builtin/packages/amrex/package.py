@@ -24,6 +24,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("WeiqunZhang", "asalmgren", "etpalmer63")
 
     version("develop", branch="development")
+    version("23.08", sha256="a83b7249d65ad8b6ac1881377e5f814b6db8ed8410ea5562b8ae9d4ed1f37c29")
+    version("23.07", sha256="4edb991da51bcaad040f852e42c82834d8605301aa7eeb01cd1512d389a58d90")
     version("23.06", sha256="3bddcb07cce3e65e06cac35005c30820d311ce47ae54b46e4af333fa272b236b")
     version("23.05", sha256="a4bf5ad5322e706b9fae46ff52043e2cca5ddba81479647816251e9ab21c0027")
     version("23.04", sha256="b070949611abd2156208e675e40e5e73ed405bf83e3b1e8ba70fbb451a9e7dd7")
@@ -136,6 +138,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.22:", type="build", when="+sycl")
     depends_on("hdf5@1.10.4: +mpi", when="+hdf5")
     depends_on("rocrand", type="build", when="+rocm")
+    depends_on("hiprand", type="build", when="+rocm")
     depends_on("rocprim", type="build", when="@21.05: +rocm")
     depends_on("hypre@2.18.2:", type="link", when="@:21.02 +hypre")
     depends_on("hypre@2.19.0:", type="link", when="@21.03: ~cuda +hypre")

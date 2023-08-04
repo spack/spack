@@ -70,6 +70,11 @@ class Wrf(Package):
     tags = ["windows"]
 
     version(
+        "4.5.0",
+        sha256="14fd78abd4e32c1d99e2e97df0370030a5c58ec84c343591bdc5e74f163c5525",
+        url="https://github.com/wrf-model/WRF/releases/download/v4.5/v4.5.tar.gz",
+    )
+    version(
         "4.4.2",
         sha256="488b992e8e994637c58e3c69e869ad05acfe79419c01fbef6ade1f624e50dc3a",
         url="https://github.com/wrf-model/WRF/releases/download/v4.4.2/v4.4.2.tar.gz",
@@ -118,6 +123,7 @@ class Wrf(Package):
     variant("pnetcdf", default=True, description="Parallel IO support through Pnetcdf library")
     variant("chem", default=False, description="Enable WRF-Chem", when="@4:")
     variant("netcdf_classic", default=False, description="Use NetCDF without HDF5 compression")
+    variant("adios2", default=False, description="Enable IO support through ADIOS2 library")
 
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
     patch("patches/3.9/tirpc_detect.patch", when="@3.9.1.1")
@@ -157,7 +163,14 @@ class Wrf(Package):
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
 
     patch("patches/4.4/arch.postamble.patch", when="@4.4:")
-    patch("patches/4.4/configure.patch", when="@4.4:")
+    patch("patches/4.4/configure.patch", when="@4.4:4.4.2")
+    patch("patches/4.4/ifx.patch", when="@4.4: %oneapi")
+
+    patch("patches/4.5/configure.patch", when="@4.5:")
+    # Fix WRF to remove deprecated ADIOS2 functions
+    # https://github.com/wrf-model/WRF/pull/1860
+    patch("patches/4.5/adios2-remove-deprecated-functions.patch", when="@4.5: ^adios2@2.9:")
+
     # Various syntax fixes found by FPT tool
     patch(
         "https://github.com/wrf-model/WRF/commit/6502d5d9c15f5f9a652dec244cc12434af737c3c.patch?full_index=1",
@@ -179,6 +192,17 @@ class Wrf(Package):
         "https://github.com/wrf-model/WRF/commit/238a7d219b7c8e285db28fe4f0c96ebe5068d91c.patch?full_index=1",
         sha256="27c7268f6c84b884d21e4afad0bab8554b06961cf4d6bfd7d0f5a457dcfdffb1",
         when="@4.3.1",
+    )
+    # Add ARM compiler support
+    patch(
+        "https://github.com/wrf-model/WRF/pull/1888/commits/4a084e03575da65f254917ef5d8eb39074abd3fc.patch",
+        sha256="c522c4733720df9a18237c06d8ab6199fa9674d78375b644aec7017cb38af9c5",
+        when="@4.5: %arm",
+    )
+    patch(
+        "https://github.com/wrf-model/WRF/pull/1888/commits/6087d9192f7f91967147e50f5bc8b9e49310cf98.patch",
+        sha256="f82a18cf7334e0cbbfdf4ef3aa91ca26d4a372709f114ce0116b3fbb136ffac6",
+        when="@4.5: %arm",
     )
 
     depends_on("pkgconfig", type=("build"))
@@ -205,6 +229,7 @@ class Wrf(Package):
     depends_on("time", type=("build"))
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
+    depends_on("adios2", when="@4.5: +adios2")
     phases = ["configure", "build", "install"]
 
     def setup_run_environment(self, env):
@@ -227,24 +252,18 @@ class Wrf(Package):
         env.set("JASPERINC", self.spec["jasper"].prefix.include)
         env.set("JASPERLIB", self.spec["jasper"].prefix.lib)
 
-        # These flags should be used also in v3, but FCFLAGS/FFLAGS aren't used
-        # consistently in that version of WRF, so we have to force them through
-        # `flag_handler` below.
-        if self.spec.satisfies("@4.0: %gcc@10:"):
-            args = "-w -O2 -fallow-argument-mismatch -fallow-invalid-boz"
-            env.set("FCFLAGS", args)
-            env.set("FFLAGS", args)
-
         if self.spec.satisfies("%aocc"):
             env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
             env.set("HDF5", self.spec["hdf5"].prefix)
             env.prepend_path("PATH", ancestor(self.compiler.cc))
 
+        if "+adios2" in self.spec:
+            env.set("ADIOS2", self.spec["adios2"].prefix)
+
     def flag_handler(self, name, flags):
-        # Same flags as FCFLAGS/FFLAGS above, but forced through the compiler
-        # wrapper when compiling v3.9.1.1.
-        if self.spec.satisfies("@3.9.1.1 %gcc@10:") and name == "fflags":
-            flags.extend(["-w", "-O2", "-fallow-argument-mismatch", "-fallow-invalid-boz"])
+        # Force FCFLAGS/FFLAGS by adding directly into spack compiler wrappers.
+        if self.spec.satisfies("@3.9.1.1: %gcc@10:") and name == "fflags":
+            flags.extend(["-fallow-argument-mismatch", "-fallow-invalid-boz"])
         return (flags, None, None)
 
     def patch(self):
@@ -321,11 +340,17 @@ class Wrf(Package):
             config.filter("^DM_FC.*mpif90", "DM_FC = {0}".format(self.spec["mpi"].mpifc))
             config.filter("^DM_CC.*mpicc", "DM_CC = {0}".format(self.spec["mpi"].mpicc))
 
+    @run_before("configure")
+    def fortran_check(self):
+        if not self.compiler.fc:
+            msg = "cannot build WRF without a Fortran compiler"
+            raise RuntimeError(msg)
+
     def configure(self, spec, prefix):
         # Remove broken default options...
         self.do_configure_fixup()
 
-        if self.spec.compiler.name not in ["intel", "gcc", "aocc", "fj"]:
+        if self.spec.compiler.name not in ["intel", "gcc", "arm", "aocc", "fj", "oneapi"]:
             raise InstallError(
                 "Compiler %s not currently supported for WRF build." % self.spec.compiler.name
             )
@@ -379,7 +404,7 @@ class Wrf(Package):
         csh = Executable(csh_bin)
 
         # num of compile jobs capped at 20 in wrf
-        num_jobs = str(min(int(make_jobs), 10))
+        num_jobs = str(min(int(make_jobs), 20))
 
         # Now run the compile script and track the output to check for
         # failure/success We need to do this because upstream use `make -i -k`

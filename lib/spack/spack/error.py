@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import inspect
 import sys
 
@@ -21,7 +19,7 @@ class SpackError(Exception):
     """
 
     def __init__(self, message, long_message=None):
-        super(SpackError, self).__init__()
+        super().__init__()
         self.message = message
         self._long_message = long_message
 
@@ -93,14 +91,14 @@ class UnsupportedPlatformError(SpackError):
     """Raised by packages when a platform is not supported"""
 
     def __init__(self, message):
-        super(UnsupportedPlatformError, self).__init__(message)
+        super().__init__(message)
 
 
 class NoLibrariesError(SpackError):
     """Raised when package libraries are requested but cannot be found"""
 
     def __init__(self, message_or_name, prefix=None):
-        super(NoLibrariesError, self).__init__(
+        super().__init__(
             message_or_name
             if prefix is None
             else "Unable to locate {0} libraries in {1}".format(message_or_name, prefix)
@@ -125,9 +123,7 @@ class UnsatisfiableSpecError(SpecError):
 
     def __init__(self, provided, required, constraint_type):
         # This is only the entrypoint for old concretizer errors
-        super(UnsatisfiableSpecError, self).__init__(
-            "%s does not satisfy %s" % (provided, required)
-        )
+        super().__init__("%s does not satisfy %s" % (provided, required))
 
         self.provided = provided
         self.required = required

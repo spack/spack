@@ -11,7 +11,6 @@ packages.
 
 import base64
 import collections
-import contextlib
 import copy
 import functools
 import glob
@@ -45,6 +44,7 @@ import spack.hooks
 import spack.mirror
 import spack.mixins
 import spack.multimethod
+import spack.patch
 import spack.paths
 import spack.repo
 import spack.spec
@@ -63,7 +63,7 @@ from spack.install_test import (
     install_test_root,
 )
 from spack.installer import InstallError, PackageInstaller
-from spack.stage import ResourceStage, Stage, StageComposite, compute_stage_name
+from spack.stage import DIYStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.web import FetchError
@@ -125,7 +125,7 @@ def preferred_version(pkg):
     return max(pkg.versions, key=key_fn)
 
 
-class WindowsRPath(object):
+class WindowsRPath:
     """Collection of functionality surrounding Windows RPATH specific features
 
     This is essentially meaningless for all other platforms
@@ -175,7 +175,7 @@ class WindowsRPath(object):
 detectable_packages = collections.defaultdict(list)
 
 
-class DetectablePackageMeta(object):
+class DetectablePackageMeta:
     """Check if a package is detectable and add default implementations
     for the detection function.
     """
@@ -365,7 +365,7 @@ def on_package_attributes(**attr_dict):
     return _execute_under_condition
 
 
-class PackageViewMixin(object):
+class PackageViewMixin:
     """This collects all functionality related to adding installed Spack
     package to views. Packages can customize how they are added to views by
     overriding these functions.
@@ -514,6 +514,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # These are default values for instance variables.
     #
 
+    # Declare versions dictionary as placeholder for values.
+    # This allows analysis tools to correctly interpret the class attributes.
+    versions: dict
+
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
     virtual = False
@@ -527,10 +531,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     #: By default do not run tests within package's install()
     run_tests = False
-
-    # FIXME: this is a bad object-oriented design, should be moved to Clang.
-    #: By default do not setup mockup XCode on macOS with Clang
-    use_xcode = False
 
     #: Keep -Werror flags, matches config:flags:keep_werror to override config
     # NOTE: should be type Optional[Literal['all', 'specific', 'none']] in 3.8+
@@ -639,7 +639,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def __init__(self, spec):
         # this determines how the package should be built.
-        self.spec = spec
+        self.spec: "spack.spec.Spec" = spec
 
         # Allow custom staging paths for packages
         self.path = None
@@ -668,7 +668,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pkg_cls = spack.repo.path.get_pkg_class(self.extendee_spec.name)
             pkg_cls(self.extendee_spec)._check_extendable()
 
-        super(PackageBase, self).__init__()
+        super().__init__()
 
     @classmethod
     def possible_dependencies(
@@ -982,20 +982,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         return None
 
-    def _make_resource_stage(self, root_stage, fetcher, resource):
-        resource_stage_folder = self._resource_stage(resource)
-        mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, "%s-%s" % (resource.name, self.version))
-        )
-        stage = ResourceStage(
+    def _make_resource_stage(self, root_stage, resource):
+        return ResourceStage(
             resource.fetcher,
             root=root_stage,
             resource=resource,
-            name=resource_stage_folder,
-            mirror_paths=mirror_paths,
+            name=self._resource_stage(resource),
+            mirror_paths=spack.mirror.mirror_archive_paths(
+                resource.fetcher, os.path.join(self.name, f"{resource.name}-{self.version}")
+            ),
             path=self.path,
         )
-        return stage
 
     def _download_search(self):
         dynamic_fetcher = fs.from_list_url(self)
@@ -1004,7 +1001,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, "%s-%s" % (self.name, self.version)), self.spec
+            fetcher, os.path.join(self.name, f"{self.name}-{self.version}"), self.spec
         )
         # Construct a path where the stage should build..
         s = self.spec
@@ -1022,24 +1019,21 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If it's a dev package (not transitively), use a DIY stage object
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
-            return spack.stage.DIYStage(dev_path_var.value)
+            return DIYStage(dev_path_var.value)
 
-        # Construct a composite stage on top of the composite FetchStrategy
-        composite_fetcher = self.fetcher
-        composite_stage = StageComposite()
-        resources = self._get_needed_resources()
-        for ii, fetcher in enumerate(composite_fetcher):
-            if ii == 0:
-                # Construct root stage first
-                stage = self._make_root_stage(fetcher)
-            else:
-                # Construct resource stage
-                resource = resources[ii - 1]  # ii == 0 is root!
-                stage = self._make_resource_stage(composite_stage[0], fetcher, resource)
-            # Append the item to the composite
-            composite_stage.append(stage)
+        # To fetch the current version
+        source_stage = self._make_root_stage(self.fetcher)
 
-        return composite_stage
+        # Extend it with all resources and patches
+        all_stages = StageComposite()
+        all_stages.append(source_stage)
+        all_stages.extend(
+            self._make_resource_stage(source_stage, r) for r in self._get_needed_resources()
+        )
+        all_stages.extend(
+            p.stage for p in self.spec.patches if isinstance(p, spack.patch.UrlPatch)
+        )
+        return all_stages
 
     @property
     def stage(self):
@@ -1082,7 +1076,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def metadata_dir(self):
         """Return the install metadata directory."""
-        return spack.store.layout.metadata_path(self.spec)
+        return spack.store.STORE.layout.metadata_path(self.spec)
 
     @property
     def install_env_path(self):
@@ -1188,26 +1182,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         warnings.warn(msg)
         return self.spec.installed_upstream
 
-    def _make_fetcher(self):
-        # Construct a composite fetcher that always contains at least
-        # one element (the root package). In case there are resources
-        # associated with the package, append their fetcher to the
-        # composite.
-        root_fetcher = fs.for_package_version(self)
-        fetcher = fs.FetchStrategyComposite()  # Composite fetcher
-        fetcher.append(root_fetcher)  # Root fetcher is always present
-        resources = self._get_needed_resources()
-        for resource in resources:
-            fetcher.append(resource.fetcher)
-        fetcher.set_package(self)
-        return fetcher
-
     @property
     def fetcher(self):
         if not self.spec.versions.concrete:
             raise ValueError("Cannot retrieve fetcher for package without concrete version.")
         if not self._fetcher:
-            self._fetcher = self._make_fetcher()
+            self._fetcher = fs.for_package_version(self)
         return self._fetcher
 
     @fetcher.setter
@@ -1231,6 +1211,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if any(dt in cls.dependencies[name][cond].type for cond in conds for dt in deptypes)
         )
 
+    # TODO: allow more than one active extendee.
     @property
     def extendee_spec(self):
         """
@@ -1246,7 +1227,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if dep.name in self.extendees:
                 deps.append(dep)
 
-        # TODO: allow more than one active extendee.
         if deps:
             assert len(deps) == 1
             return deps[0]
@@ -1256,7 +1236,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if self.spec._concrete:
             return None
         else:
-            # TODO: do something sane here with more than one extendee
             # If it's not concrete, then return the spec from the
             # extends() directive since that is all we know so far.
             spec_str, kwargs = next(iter(self.extendees.items()))
@@ -1354,7 +1333,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Removes the prefix for a package along with any empty parent
         directories
         """
-        spack.store.layout.remove_install_directory(self.spec)
+        spack.store.STORE.layout.remove_install_directory(self.spec)
 
     @property
     def download_instr(self):
@@ -1446,11 +1425,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             self.stage.check()
 
         self.stage.cache_local()
-
-        for patch in self.spec.patches:
-            patch.fetch()
-            if patch.stage:
-                patch.stage.cache_local()
 
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball."""
@@ -1785,13 +1759,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         pieces = ["resource", resource.name, self.spec.dag_hash()]
         resource_stage_folder = "-".join(pieces)
         return resource_stage_folder
-
-    @contextlib.contextmanager
-    def _stage_and_write_lock(self):
-        """Prefix lock nested in a stage."""
-        with self.stage:
-            with spack.store.db.prefix_write_lock(self.spec):
-                yield
 
     def do_install(self, **kwargs):
         """Called by commands to install a package and or its dependencies.
@@ -2216,20 +2183,20 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if not os.path.isdir(spec.prefix):
             # prefix may not exist, but DB may be inconsistent. Try to fix by
             # removing, but omit hooks.
-            specs = spack.store.db.query(spec, installed=True)
+            specs = spack.store.STORE.db.query(spec, installed=True)
             if specs:
                 if deprecator:
-                    spack.store.db.deprecate(specs[0], deprecator)
+                    spack.store.STORE.db.deprecate(specs[0], deprecator)
                     tty.debug("Deprecating stale DB entry for {0}".format(spec.short_spec))
                 else:
-                    spack.store.db.remove(specs[0])
+                    spack.store.STORE.db.remove(specs[0])
                     tty.debug("Removed stale DB entry for {0}".format(spec.short_spec))
                 return
             else:
                 raise InstallError(str(spec) + " is not installed.")
 
         if not force:
-            dependents = spack.store.db.installed_relatives(
+            dependents = spack.store.STORE.db.installed_relatives(
                 spec, direction="parents", transitive=True, deptype=("link", "run")
             )
             if dependents:
@@ -2242,7 +2209,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pkg = None
 
         # Pre-uninstall hook runs first.
-        with spack.store.db.prefix_write_lock(spec):
+        with spack.store.STORE.db.prefix_write_lock(spec):
             if pkg is not None:
                 try:
                     spack.hooks.pre_uninstall(spec)
@@ -2268,17 +2235,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 tty.debug(msg.format(spec.short_spec))
                 # test if spec is already deprecated, not whether we want to
                 # deprecate it now
-                deprecated = bool(spack.store.db.deprecator(spec))
-                spack.store.layout.remove_install_directory(spec, deprecated)
+                deprecated = bool(spack.store.STORE.db.deprecator(spec))
+                spack.store.STORE.layout.remove_install_directory(spec, deprecated)
             # Delete DB entry
             if deprecator:
                 msg = "deprecating DB entry [{0}] in favor of [{1}]"
                 tty.debug(msg.format(spec.short_spec, deprecator.short_spec))
-                spack.store.db.deprecate(spec, deprecator)
+                spack.store.STORE.db.deprecate(spec, deprecator)
             else:
                 msg = "Deleting DB entry [{0}]"
                 tty.debug(msg.format(spec.short_spec))
-                spack.store.db.remove(spec)
+                spack.store.STORE.db.remove(spec)
 
         if pkg is not None:
             try:
@@ -2309,24 +2276,24 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         spec = self.spec
 
         # Install deprecator if it isn't installed already
-        if not spack.store.db.query(deprecator):
+        if not spack.store.STORE.db.query(deprecator):
             deprecator.package.do_install()
 
-        old_deprecator = spack.store.db.deprecator(spec)
+        old_deprecator = spack.store.STORE.db.deprecator(spec)
         if old_deprecator:
             # Find this specs yaml file from its old deprecation
-            self_yaml = spack.store.layout.deprecated_file_path(spec, old_deprecator)
+            self_yaml = spack.store.STORE.layout.deprecated_file_path(spec, old_deprecator)
         else:
-            self_yaml = spack.store.layout.spec_file_path(spec)
+            self_yaml = spack.store.STORE.layout.spec_file_path(spec)
 
         # copy spec metadata to "deprecated" dir of deprecator
-        depr_yaml = spack.store.layout.deprecated_file_path(spec, deprecator)
+        depr_yaml = spack.store.STORE.layout.deprecated_file_path(spec, deprecator)
         fsys.mkdirp(os.path.dirname(depr_yaml))
         shutil.copy2(self_yaml, depr_yaml)
 
         # Any specs deprecated in favor of this spec are re-deprecated in
         # favor of its new deprecator
-        for deprecated in spack.store.db.specs_deprecated_by(spec):
+        for deprecated in spack.store.STORE.db.specs_deprecated_by(spec):
             deprecated.package.do_deprecate(deprecator, link_fn)
 
         # Now that we've handled metadata, uninstall and replace with link
@@ -2342,7 +2309,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Extensions added to this view will modify the installation prefix of
         this package.
         """
-        return YamlFilesystemView(self.prefix, spack.store.layout)
+        return YamlFilesystemView(self.prefix, spack.store.STORE.layout)
 
     def do_restage(self):
         """Reverts expanded/checked out source to a pristine state."""
@@ -2350,9 +2317,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def do_clean(self):
         """Removes the package's build stage and source tarball."""
-        for patch in self.spec.patches:
-            patch.clean()
-
         self.stage.destroy()
 
     @classmethod
@@ -2469,7 +2433,7 @@ def flatten_dependencies(spec, flat_dir):
     for dep in spec.traverse(root=False):
         name = dep.name
 
-        dep_path = spack.store.layout.path_for_spec(dep)
+        dep_path = spack.store.STORE.layout.path_for_spec(dep)
         dep_files = LinkTree(dep_path)
 
         os.mkdir(flat_dir + "/" + name)
@@ -2512,7 +2476,7 @@ class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
 
     def __init__(self, spec, dependents):
-        super(PackageStillNeededError, self).__init__("Cannot uninstall %s" % spec)
+        super().__init__("Cannot uninstall %s" % spec)
         self.spec = spec
         self.dependents = dependents
 
@@ -2521,14 +2485,14 @@ class PackageError(spack.error.SpackError):
     """Raised when something is wrong with a package definition."""
 
     def __init__(self, message, long_msg=None):
-        super(PackageError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class NoURLError(PackageError):
     """Raised when someone tries to build a URL for a package with no URLs."""
 
     def __init__(self, cls):
-        super(NoURLError, self).__init__("Package %s has no version with a URL." % cls.__name__)
+        super().__init__("Package %s has no version with a URL." % cls.__name__)
 
 
 class InvalidPackageOpError(PackageError):
@@ -2543,13 +2507,11 @@ class ActivationError(ExtensionError):
     """Raised when there are problems activating an extension."""
 
     def __init__(self, msg, long_msg=None):
-        super(ActivationError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)
 
 
 class DependencyConflictError(spack.error.SpackError):
     """Raised when the dependencies cannot be flattened as asked for."""
 
     def __init__(self, conflict):
-        super(DependencyConflictError, self).__init__(
-            "%s conflicts with another file in the flattened directory." % (conflict)
-        )
+        super().__init__("%s conflicts with another file in the flattened directory." % (conflict))

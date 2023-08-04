@@ -730,8 +730,8 @@ def test_ambiguous_hash(mutable_database, default_mock_concretization, config):
     x2 = x1.copy()
     x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     x2._hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    mutable_database.add(x1, spack.store.layout)
-    mutable_database.add(x2, spack.store.layout)
+    mutable_database.add(x1, spack.store.STORE.layout)
+    mutable_database.add(x2, spack.store.STORE.layout)
 
     # ambiguity in first hash character
     with pytest.raises(spack.spec.AmbiguousHashError):

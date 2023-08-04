@@ -33,10 +33,12 @@ class QtPackage(CMakePackage):
 
     maintainers("wdconinc", "sethrj")
 
+    provides("qmake")
+
     # Default dependencies for all qt-* components
     generator("ninja")
     depends_on("cmake@3.16:", type="build")
-    depends_on("pkgconfig", type="build")
+    depends_on("pkgconfig", type="build", when="platform=linux")
     depends_on("python", type="build")
 
     # List of unnecessary directories in src/3rdparty
@@ -89,6 +91,9 @@ class QtBase(QtPackage):
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
 
+    version("6.5.2", sha256="221cafd400c0a992a42746b43ea879d23869232e56d9afe72cb191363267c674")
+    version("6.5.1", sha256="fdde60cdc5c899ab7165f1c3f7b93bc727c2484c348f367d155604f5d901bfb6")
+    version("6.5.0", sha256="7b0de20e177335927c55c58a3e1a7e269e32b044936e97e9a82564f0f3e69f99")
     version("6.4.3", sha256="e156692029a5503bad5f681bda856dd9df9dec17baa0ca7ee36b10178503ed40")
     version("6.4.2", sha256="c138ae734cfcde7a92a7efd97a902e53f3cd2c2f89606dfc482d0756f60cdc23")
     version("6.4.1", sha256="0ef6db6b3e1074e03dcae7e689144af66fd51b95a6efe949d40281cc43e6fecf")
@@ -110,7 +115,10 @@ class QtBase(QtPackage):
 
     # GUI-only dependencies
     variant(
-        "accessibility", default=True, when="+gui", description="Build with accessibility support."
+        "accessibility",
+        default=False,
+        when="+gui",
+        description="Build with accessibility support.",
     )
     variant("gtk", default=False, when="+gui", description="Build with gtkplus.")
     variant("opengl", default=False, when="+gui", description="Build with OpenGL support.")
@@ -125,8 +133,7 @@ class QtBase(QtPackage):
     depends_on("zstd")
     with when("platform=linux"):
         depends_on("libdrm")
-
-    depends_on("at-spi2-core", when="+accessibility")
+        depends_on("at-spi2-core", when="+accessibility")
     depends_on("dbus", when="+dbus")
     depends_on("gl", when="+opengl")
     depends_on("sqlite", when="+sql")
@@ -143,11 +150,27 @@ class QtBase(QtPackage):
             depends_on("libxrender")
 
     with when("+network"):
-        depends_on("libproxy")
         depends_on("openssl")
+        with when("platform=linux"):
+            depends_on("libproxy")
 
     # Qt6 requires newer compilers: see https://github.com/spack/spack/issues/34418
     conflicts("%gcc@:7")
+    # The oldest compiler for Qt 6.5 is GCC 9: https://doc.qt.io/qt-6.5/supported-platforms.html
+    with when("@6.5:"):
+        conflicts("%gcc@:8")
+
+    # ensure that Qt links against GSS framework on macOS: https://bugreports.qt.io/browse/QTBUG-114537
+    with when("@6.3.2:6.5.1"):
+        patch(
+            "https://github.com/qt/qtbase/commit/c3d3e7312499189dde2ff9c0cb14bd608d6fd1cd.patch?full_index=1",
+            sha256="85c16db15406b0094831bb57016dab7e0c0fd0978b082a1dc103c87334db7915",
+        )
+    with when("@6.3.2:6.5.2"):
+        patch(
+            "https://github.com/qt/qtbase/commit/1bf144ba78ff10d712b4de55d2797b9256948a1d.patch?full_index=1",
+            sha256="e4d9f1aee0566558e77eef5609b63c1fde3f3986bea1b9d5d7930b297f916a5e",
+        )
 
     @property
     def archive_files(self):
@@ -206,7 +229,9 @@ class QtBase(QtPackage):
         if "+dbus" in spec:
             features.append("dbus_linked")
         if "+network" in spec:
-            features += ["openssl_linked", "openssl", "libproxy"]
+            features.extend(["openssl_linked", "openssl"])
+            if sys.platform == "linux":
+                features.append("libproxy")
         for k in features:
             define("FEATURE_" + k, True)
 

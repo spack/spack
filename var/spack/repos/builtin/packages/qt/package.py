@@ -31,6 +31,7 @@ class Qt(Package):
 
     phases = ["configure", "build", "install"]
 
+    version("5.15.10", sha256="b545cb83c60934adc9a6bbd27e2af79e5013de77d46f5b9f5bb2a3c762bf55ca")
     version("5.15.9", sha256="26d5f36134db03abe4a6db794c7570d729c92a3fc1b0bf9b1c8f86d0573cd02f")
     version("5.15.8", sha256="776a9302c336671f9406a53bd30b8e36f825742b2ec44a57c08217bff0fa86b9")
     version("5.15.7", sha256="8a71986676a3f37a198a9113acedbfd5bc5606a459b6b85816d951458adbe9a0")
@@ -60,12 +61,15 @@ class Qt(Package):
     variant("gtk", default=False, description="Build with gtkplus.")
     variant("gui", default=True, description="Build the Qt GUI module and dependencies")
     variant("opengl", default=False, description="Build with OpenGL support.")
+    variant("location", default=False, when="+opengl", description="Build the Qt Location module.")
     variant("phonon", default=False, description="Build with phonon support.")
     variant("shared", default=True, description="Build shared libraries.")
     variant("sql", default=True, description="Build with SQL support.")
     variant("ssl", default=True, description="Build with OpenSSL support.")
     variant("tools", default=True, description="Build tools, including Qt Designer.")
     variant("webkit", default=False, description="Build the Webkit extension")
+
+    provides("qmake")
 
     # Patches for qt@3
     patch("qt3-accept.patch", when="@3")
@@ -251,8 +255,6 @@ class Qt(Package):
             when="@:5.15.3",
             msg="Apple Silicon requires a very new version of qt",
         )
-
-    use_xcode = True
 
     # Mapping for compilers/systems in the QT 'mkspecs'
     compiler_mapping = {
@@ -711,6 +713,10 @@ class Qt(Package):
             # https://wiki.qt.io/QtWayland
             config_args.extend(["-skip", "wayland"])
 
+        if "~location" in spec:
+            if version >= Version("5.15"):
+                config_args.extend(["-skip", "qtlocation"])
+
         if "~opengl" in spec:
             config_args.extend(["-skip", "multimedia"])
             config_args.extend(["-skip", "qt3d"])
@@ -720,9 +726,6 @@ class Qt(Package):
 
             if version >= Version("5.14"):
                 config_args.extend(["-skip", "qtquick3d"])
-
-            if version >= Version("5.15"):
-                config_args.extend(["-skip", "qtlocation"])
 
         else:
             # v5.0: qt3d uses internal-only libassimp

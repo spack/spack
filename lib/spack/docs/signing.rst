@@ -217,13 +217,7 @@ file would live in the ``build_cache`` directory of a binary mirror::
     "binary_cache_checksum": {
       "hash_algorithm": "sha256",
       "hash": "4f1e46452c35a5e61bcacca205bae1bfcd60a83a399af201a29c95b7cc3e1423"
-     },
-
-    "buildinfo": {
-      "relative_prefix":
-      "linux-ubuntu18.04-haswell/gcc-7.5.0/zlib-1.2.12-llv2ysfdxnppzjrt5ldybb5c52qbmoow",
-      "relative_rpaths": false
-    }
+     }
   }
 
   -----BEGIN PGP SIGNATURE-----

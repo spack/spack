@@ -25,14 +25,14 @@ def setup_parser(subparser):
         "--source-path",
         dest="source_path",
         default=None,
-        help="path to source directory. defaults to the current directory",
+        help="path to source directory (defaults to the current directory)",
     )
     subparser.add_argument(
         "-i",
         "--ignore-dependencies",
         action="store_true",
         dest="ignore_deps",
-        help="don't try to install dependencies of requested packages",
+        help="do not try to install dependencies of requested packages",
     )
     arguments.add_common_arguments(subparser, ["no_checksum", "deprecated"])
     subparser.add_argument(
@@ -55,16 +55,13 @@ def setup_parser(subparser):
         type=str,
         dest="shell",
         default=None,
-        help="drop into a build environment in a new shell, e.g. bash, zsh",
+        help="drop into a build environment in a new shell, e.g., bash",
     )
     subparser.add_argument(
         "--test",
         default=None,
         choices=["root", "all"],
-        help="""If 'root' is chosen, run package tests during
-installation for top-level packages (but skip tests for dependencies).
-if 'all' is chosen, run package tests during installation for all
-packages. If neither are chosen, don't run tests for any packages.""",
+        help="run tests on only root packages or all packages",
     )
     arguments.add_common_arguments(subparser, ["spec"])
 

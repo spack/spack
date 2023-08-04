@@ -369,7 +369,7 @@ def compiler_specs_for_arch(arch_spec, scope=None):
     return [c.spec for c in compilers_for_arch(arch_spec, scope)]
 
 
-class CacheReference(object):
+class CacheReference:
     """This acts as a hashable reference to any object (regardless of whether
     the object itself is hashable) and also prevents the object from being
     garbage-collected (so if two CacheReference objects are equal, they
@@ -515,7 +515,7 @@ def compiler_for_spec(compiler_spec, arch_spec):
     if len(compilers) < 1:
         raise NoCompilerForSpecError(compiler_spec, arch_spec.os)
     if len(compilers) > 1:
-        msg = "Multiple definitions of compiler %s" % compiler_spec
+        msg = "Multiple definitions of compiler %s " % compiler_spec
         msg += "for architecture %s:\n %s" % (arch_spec, compilers)
         tty.debug(msg)
     return compilers[0]
@@ -820,7 +820,7 @@ def is_mixed_toolchain(compiler):
 
 class InvalidCompilerConfigurationError(spack.error.SpackError):
     def __init__(self, compiler_spec):
-        super(InvalidCompilerConfigurationError, self).__init__(
+        super().__init__(
             'Invalid configuration for [compiler "%s"]: ' % compiler_spec,
             "Compiler configuration must contain entries for all compilers: %s"
             % _path_instance_vars,
@@ -829,19 +829,17 @@ class InvalidCompilerConfigurationError(spack.error.SpackError):
 
 class NoCompilersError(spack.error.SpackError):
     def __init__(self):
-        super(NoCompilersError, self).__init__("Spack could not find any compilers!")
+        super().__init__("Spack could not find any compilers!")
 
 
 class UnknownCompilerError(spack.error.SpackError):
     def __init__(self, compiler_name):
-        super(UnknownCompilerError, self).__init__(
-            "Spack doesn't support the requested compiler: {0}".format(compiler_name)
-        )
+        super().__init__("Spack doesn't support the requested compiler: {0}".format(compiler_name))
 
 
 class NoCompilerForSpecError(spack.error.SpackError):
     def __init__(self, compiler_spec, target):
-        super(NoCompilerForSpecError, self).__init__(
+        super().__init__(
             "No compilers for operating system %s satisfy spec %s" % (target, compiler_spec)
         )
 
@@ -860,11 +858,9 @@ class CompilerDuplicateError(spack.error.SpackError):
             + " in the following files:\n\t"
             + "\n\t".join(duplicate_msg(x, y) for x, y in duplicate_table)
         )
-        super(CompilerDuplicateError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
     def __init__(self, compiler_spec):
-        super(CompilerSpecInsufficientlySpecificError, self).__init__(
-            "Multiple compilers satisfy spec %s" % compiler_spec
-        )
+        super().__init__("Multiple compilers satisfy spec %s" % compiler_spec)

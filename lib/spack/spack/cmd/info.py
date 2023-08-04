@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import textwrap
 from itertools import zip_longest
 
@@ -73,7 +71,7 @@ def variant(s):
     return spack.spec.enabled_variant_color + s + plain_format
 
 
-class VariantFormatter(object):
+class VariantFormatter:
     def __init__(self, variants):
         self.variants = variants
         self.headers = ("Name [Default]", "When", "Allowed values", "Description")

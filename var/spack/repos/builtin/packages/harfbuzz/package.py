@@ -116,7 +116,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
         change_sed_delimiter("@", ";", "src/Makefile.in")
 
 
-class SetupEnvironment(object):
+class SetupEnvironment:
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
