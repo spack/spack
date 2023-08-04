@@ -17,8 +17,8 @@ class Hdfview(Package):
 
     version(
         "3.1.3",
-        sha256='566807495305a32d3da65539a529f268fcfc375e6da32ed07c2b5723b9aa0c66',
-        url='https://support.hdfgroup.org/ftp/HDF5/releases/HDF-JAVA/hdfview-3.1.3/src/hdfview-3.1.3.tar.gz'
+        sha256="566807495305a32d3da65539a529f268fcfc375e6da32ed07c2b5723b9aa0c66",
+        url="https://support.hdfgroup.org/ftp/HDF5/releases/HDF-JAVA/hdfview-3.1.3/src/hdfview-3.1.3.tar.gz",
     )
     version("3.3.0", sha256="0916161861c21fa8dd354b445b48eff5a53d80a5c0b383e79eb64b7b108e2430")
     version("3.2.0", sha256="d3c0deff2cbd959508c4da9c712da72fb204ff6818a3434f00a7071f8e8cf2b8")
