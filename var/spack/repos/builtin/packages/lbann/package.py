@@ -367,6 +367,17 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-fuse-ld=gold"))
             entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", "-fuse-ld=gold"))
 
+        # Set the generator in the cached config
+        if self.spec.satisfies("generator=make"):
+            entries.append(cmake_cache_string("CMAKE_GENERATOR", "Unix Makefiles"))
+        if self.spec.satisfies("generator=ninja"):
+            entries.append(cmake_cache_string("CMAKE_GENERATOR", "Ninja"))
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin)
+                )
+            )
+
         return entries
 
     def initconfig_hardware_entries(self):
