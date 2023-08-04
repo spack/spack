@@ -13,6 +13,8 @@ import spack.paths
 import spack.util.executable
 import spack.version
 
+from llnl.util.filesystem import getuid
+
 #: Executable instance for "gpg", initialized lazily
 GPG = None
 #: Executable instance for "gpgconf", initialized lazily
@@ -385,7 +387,7 @@ def _socket_dir(gpgconf):
                 os.mkdir(var_run_user)
                 os.chmod(var_run_user, 0o777)
 
-            user_dir = os.path.join(var_run_user, str(os.getuid()))
+            user_dir = os.path.join(var_run_user, str(getuid()))
 
             if not os.path.exists(user_dir):
                 os.mkdir(user_dir)
