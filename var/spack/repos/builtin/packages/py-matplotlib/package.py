@@ -177,13 +177,16 @@ class PyMatplotlib(PythonPackage):
         depends_on("tk@8.4:8.5,8.6.2:", when="backend=" + backend, type="run")
         depends_on("python+tkinter", when="backend=" + backend, type="run")
     # Qt
+    # matplotlib/backends/qt_compat.py
     for backend in ["qt4agg", "qt4cairo"]:
         depends_on("py-pyqt4@4.6:", when="backend=" + backend, type="run")
+        depends_on("qt+gui", when="backend=" + backend, type="run")
     for backend in ["qt5agg", "qt5cairo"]:
         depends_on("py-pyqt5", when="backend=" + backend, type="run")
-    # https://github.com/spack/spack/pull/32696
-    # for backend in ["qtagg", "qtcairo"]:
-    #     depends_on("py-pyqt6@6.1:", when="backend=" + backend, type="run")
+        depends_on("qt+gui", when="backend=" + backend, type="run")
+    for backend in ["qtagg", "qtcairo"]:
+        depends_on("py-pyqt6@6.1:", when="backend=" + backend, type="run")
+        depends_on("qt-base+gui+widgets", when="backend=" + backend, type="run")
     # GTK
     for backend in ["gtk", "gtkagg", "gtkcairo", "gtk3agg", "gtk3cairo", "gtk4agg", "gtk4cairo"]:
         depends_on("py-pygobject", when="backend=" + backend, type="run")
