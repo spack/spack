@@ -666,7 +666,7 @@ def variant(
     name: str,
     default: Optional[Any] = None,
     description: str = "",
-    values: Optional[Union[collections.abc.Sequence[Any], Callable[[Any], bool]]] = None,
+    values: Optional[Union[collections.abc.Sequence, Callable[[Any], bool]]] = None,
     multi: Optional[bool] = None,
     validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]] = None,
     when: Optional[Union[str, bool]] = None,
