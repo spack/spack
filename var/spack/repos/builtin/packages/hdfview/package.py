@@ -15,6 +15,11 @@ class Hdfview(Package):
     homepage = "https://www.hdfgroup.org/downloads/hdfview/"
     url = "https://support.hdfgroup.org/ftp/HDF5/releases/HDF-JAVA/hdfview-3.1.4/src/hdfview-3.1.4.tar.gz"
 
+    version(
+        "3.1.3",
+        sha256='566807495305a32d3da65539a529f268fcfc375e6da32ed07c2b5723b9aa0c66',
+        url='https://support.hdfgroup.org/ftp/HDF5/releases/HDF-JAVA/hdfview-3.1.3/src/hdfview-3.1.3.tar.gz'
+    )
     version("3.3.0", sha256="0916161861c21fa8dd354b445b48eff5a53d80a5c0b383e79eb64b7b108e2430")
     version("3.2.0", sha256="d3c0deff2cbd959508c4da9c712da72fb204ff6818a3434f00a7071f8e8cf2b8")
     version("3.1.4", sha256="898fcd5227d4e7b697efde5e5a969405f96b72517f9dfbdbdce2991290fd56a0")
@@ -29,12 +34,8 @@ class Hdfview(Package):
     patch("fix_build.patch", when="@3.1.1")
 
     depends_on("ant", type="build")
-    depends_on("hdf5 +java")
+    depends_on("hdf5@1.10.9 +java")
     depends_on("hdf +java -external-xdr +shared")
-
-    depends_on("hdf5@1.10", when="@:3.1")
-    depends_on("hdf5@1.12:", when="@3.2")
-    depends_on("hdf5@1.14:", when="@3.3:")
 
     def install(self, spec, prefix):
         ant = which("ant")
@@ -55,4 +56,5 @@ class Hdfview(Package):
     def setup_build_environment(self, env):
         env.set("HDF5LIBS", self.spec["hdf5"].prefix)
         env.set("HDFLIBS", self.spec["hdf"].prefix)
+        env.set("JAVA_HOME", self.spec["java"].prefix)
         env.set("ANT_HOME", self.spec["ant"].prefix)
