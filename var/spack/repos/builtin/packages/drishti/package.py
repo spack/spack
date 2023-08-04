@@ -24,6 +24,7 @@ class Drishti(PythonPackage):
     version("0.5", sha256="08ae82dfa82872cde1f0a219e979b9c10d6c4a01f762066ea864a400cc144d78")
     version("0.4", sha256="bbbb272b4f6f44ae762f6cba28a2c589e15608691c559af0cc2f552590335d7b")
 
+    # NOTE: py-darshan requires libdarshan-util.so to be loaded in the path
     depends_on("darshan-util", type=("run", "test","link"))
 
     depends_on("py-pandas", type=("build", "run"))
