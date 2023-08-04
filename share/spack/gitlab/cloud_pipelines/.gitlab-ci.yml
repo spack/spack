@@ -669,81 +669,81 @@ ml-darwin-aarch64-mps-build:
 ##########################################
 # Machine Learning - Linux power64le (CPU)
 ##########################################
-.ml-linux-power64le-cpu:
+.ml-linux-ppc64le-cpu:
   extends: [ ".linux_power" ]
   variables:
-    SPACK_CI_STACK_NAME: ml-linux-power64le-cpu
+    SPACK_CI_STACK_NAME: ml-linux-ppc64le-cpu
 
 .tags-ml-power:
   tags: ["spack", "public", "large", "ppc64le"]
 
-ml-linux-power64le-cpu-ubuntu-generate:
-  extends: [ ".generate", ".ml-linux-power64le-cpu", ".tags-ml-power" ]
+ml-linux-ppc64le-cpu-ubuntu-generate:
+  extends: [ ".generate", ".ml-linux-ppc64le-cpu", ".tags-ml-power" ]
   image: { "name": "ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01", "entrypoint": [""] }
 
-ml-linux-x86_64-cpu-ubuntu-build:
-  extends: [ ".build", ".ml-linux-power64le-cpu" ]
+ml-linux-ppc64le-cpu-ubuntu-build:
+  extends: [ ".build", ".ml-linux-ppc64le-cpu" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-linux-power64le-cpu-ubuntu-generate
+        job: ml-linux-ppc64le-cpu-ubuntu-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: ml-linux-power64le-cpu-ubuntu-generate
+      job: ml-linux-ppc64le-cpu-ubuntu-generate
 
-ml-linux-power64le-cpu-fedora-generate:
-  extends: [ ".generate", ".ml-linux-power64le-cpu", ".tags-ml-power" ]
-  image: { "name": "ecpe4s/fedora36-runner-ppc64le:latest", "entrypoint": [""] }
+ml-linux-ppc64le-cpu-rhel8-generate:
+  extends: [ ".generate", ".ml-linux-ppc64le-cpu", ".tags-ml-power" ]
+  image: { "name": "ecpe4s/rhel8-runner-ppc64le:2023-01-01", "entrypoint": [""] }
 
-ml-linux-x86_64-cpu-fedora-build:
-  extends: [ ".build", ".ml-linux-power64le-cpu" ]
+ml-linux-ppc64le-cpu-rhel8-build:
+  extends: [ ".build", ".ml-linux-ppc64le-cpu" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-linux-power64le-cpu-fedora-generate
+        job: ml-linux-ppc64le-cpu-rhel8-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: ml-linux-power64le-cpu-fedora-generate
+      job: ml-linux-ppc64le-cpu-rhel8-generate
 
 ###########################################
 # Machine Learning - Linux power64le (CUDA)
 ###########################################
-.ml-linux-power64le-cuda:
+.ml-linux-ppc64le-cuda:
   extends: [ ".linux_power" ]
   variables:
-    SPACK_CI_STACK_NAME: ml-linux-power64le-cuda
+    SPACK_CI_STACK_NAME: ml-linux-ppc64le-cuda
 
-ml-linux-power64le-cuda-ubuntu-generate:
-  extends: [ ".generate", ".ml-linux-power64le-cuda", ".tags-ml-power" ]
+ml-linux-ppc64le-cuda-ubuntu-generate:
+  extends: [ ".generate", ".ml-linux-ppc64le-cuda", ".tags-ml-power" ]
   image: { "name": "ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01", "entrypoint": [""] }
 
-ml-linux-power64le-cuda-ubuntu-build:
-  extends: [ ".build", ".ml-linux-power64le-cuda"  ]
+ml-linux-ppc64le-cuda-ubuntu-build:
+  extends: [ ".build", ".ml-linux-ppc64le-cuda"  ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-linux-power64le-cuda-ubuntu-generate
+        job: ml-linux-ppc64le-cuda-ubuntu-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: ml-linux-power64le-cuda-ubuntu-generate
+      job: ml-linux-ppc64le-cuda-ubuntu-generate
 
-ml-linux-power64le-cuda-fedora-generate:
-  extends: [ ".generate", ".ml-linux-power64le-cuda", ".tags-ml-power" ]
-  image: { "name": "ecpe4s/fedora36-runner-ppc64le:latest", "entrypoint": [""] }
+ml-linux-ppc64le-cuda-rhel8-generate:
+  extends: [ ".generate", ".ml-linux-ppc64le-cuda", ".tags-ml-power" ]
+  image: { "name": "ecpe4s/rhel8-runner-ppc64le:latest", "entrypoint": [""] }
 
-ml-linux-power64le-cuda-fedora-build:
-  extends: [ ".build", ".ml-linux-power64le-cuda"  ]
+ml-linux-ppc64le-cuda-rhel8-build:
+  extends: [ ".build", ".ml-linux-ppc64le-cuda"  ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-linux-power64le-cuda-fedora-generate
+        job: ml-linux-ppc64le-cuda-rhel8-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: ml-linux-power64le-cuda-fedora-generate
+      job: ml-linux-ppc64le-cuda-rhel8-generate
 
 ########################################
 # Deprecated CI testing

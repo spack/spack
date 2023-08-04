@@ -135,7 +135,7 @@ spack:
           entrypoint: ['']
     - build-job:
         image:
-          name: ecpe4s/fedora36-runner-ppc64le:2023-01-01
+          name: ecpe4s/rhel7-runner-ppc64le:2023-01-01
           entrypoint: ['']
 
   cdash:
