@@ -40,6 +40,16 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("28.0.0", commit="0d8aa418c00e8f79bab2cf88234f3433670b447c", submodules=True)
+    version("27.1.0", commit="219480220738318fbedb943cac85415687d75b66", submodules=True)
+    version("27.0.0", commit="4d7029bd4e9285fcda2770aef6d78a7f833cb14f", submodules=True)
+    version("26.0.0", commit="d43af5c3bcf44f593721940e569ba267579e0334", submodules=True)
+    version("25.0.1", commit="1772d2a1a96acfd918a538c14a9e24fe7ce7f50b", submodules=True)
+    version("25.0.0", commit="c7b538d7b92fe6bffd619de7885b7ea97ddcd26a", submodules=True)
+    version("24.0.0", commit="4da149cd27ae3802a54f21a48e1757e475aa8189", submodules=True)
+    version("23.5.0", commit="8fad985ab78ceb9aaec25d1f658197833e4586fa", submodules=True)
+    version("23.4.0", commit="52723f7e7a2e6f9f59d6d7ca1cf183ca1cd43380", submodules=True)
+    version("23.3.0", commit="ec3e69da90b9dff52bdbe30cb7953417b6184d4b", submodules=True)
     version("23.2.1", commit="a9fe5167d4d3b6b53b28d3b17060a5f3e380cf3a", submodules=True)
     version("23.2.0", commit="bc3120d23a72cfdd0ea8f9a0997f59caf311672b", submodules=True)
     version("23.1.0", commit="4479f182a37650a538344f749b967d6f757bdf60", submodules=True)
@@ -189,6 +199,7 @@ class Acts(CMakePackage, CudaPackage):
         description="Build the geometric digitization plugin",
         when="@:16",
     )
+    variant("edm4hep", default=False, description="Build EDM4hep plugin", when="@25:")
     # FIXME: Can't build Exa.TrkX plugin+examples yet, missing cuGraph dep
     variant(
         "fatras",
@@ -200,6 +211,7 @@ class Acts(CMakePackage, CudaPackage):
     variant("identification", default=False, description="Build the Identification plugin")
     variant("json", default=False, description="Build the Json plugin")
     variant("legacy", default=False, description="Build the Legacy package")
+    variant("mlpack", default=False, description="Build MLpack plugin", when="@25:")
     variant("onnx", default=False, description="Build ONNX plugin")
     variant("odd", default=False, description="Build the Open Data Detector", when="@19.1:")
     variant(
@@ -222,7 +234,7 @@ class Acts(CMakePackage, CudaPackage):
         "edm4hep",
         default=False,
         description="Build the EDM4hep examples",
-        when="@19.4.0: +examples",
+        when="@19.4.0:24 +examples",
     )
     variant(
         "geant4",
@@ -261,6 +273,10 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("acts-dd4hep", when="@19 +dd4hep")
     depends_on("actsvg@0.4.20:", when="@20.1: +svg")
     depends_on("actsvg@0.4.28:", when="@23.2: +svg")
+    depends_on("actsvg@0.4.29:", when="@23.4: +svg")
+    depends_on("actsvg@0.4.30:", when="@23.5: +svg")
+    depends_on("actsvg@0.4.33:", when="@25:27 +svg")
+    depends_on("actsvg@0.4.35:", when="@28: +svg")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")
     depends_on("boost @1.62:1.69 +program_options +test", when="@:0.10.3")
@@ -270,6 +286,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("dd4hep @1.21: +dddetectors +ddrec", when="@20: +dd4hep")
     depends_on("dd4hep +ddg4", when="+dd4hep +geant4 +examples")
     depends_on("edm4hep @0.4.1:", when="+edm4hep")
+    depends_on("edm4hep @0.7:", when="@25: +edm4hep")
     depends_on("eigen @3.3.7:", when="@15.1:")
     depends_on("eigen @3.3.7:3.3.99", when="@:15.0")
     depends_on("geant4", when="+fatras_geant4")
@@ -280,12 +297,18 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("hepmc3 @3.2.1:", when="+hepmc3")
     depends_on("heppdt", when="+hepmc3 @:4.0")
     depends_on("intel-tbb @2020.1:", when="+examples +tbb")
+    depends_on("mlpack@3.1.1:", when="+mlpack")
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
+    depends_on("podio @0.6:", when="@25: +edm4hep")
     depends_on("pythia8", when="+pythia8")
     depends_on("python", when="+python")
     depends_on("python@3.8:", when="+python @19.11:19")
     depends_on("python@3.8:", when="+python @21:")
-    depends_on("py-onnxruntime", when="+onnx")
+    depends_on("py-onnxruntime@:1.12", when="+onnx @:23.2")
+    # FIXME py-onnxruntime@1.12: required but not yet available
+    # Ref: https://github.com/spack/spack/pull/37064
+    # depends_on("py-onnxruntime@1.12:", when="+onnx @23.3:")
+    conflicts("+onnx", when="@23.3:", msg="py-onnxruntime@1.12: required but not yet available")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
     depends_on("root @6.10:", when="+tgeo @:0.8.0")
@@ -346,6 +369,7 @@ class Acts(CMakePackage, CudaPackage):
             plugin_cmake_variant("DD4HEP", "dd4hep"),
             example_cmake_variant("DD4HEP", "dd4hep"),
             plugin_cmake_variant("DIGITIZATION", "digitization"),
+            plugin_cmake_variant("EDM4HEP", "edm4hep"),
             example_cmake_variant("EDM4HEP", "edm4hep"),
             cmake_variant("EXAMPLES", "examples"),
             cmake_variant("FATRAS", "fatras"),
@@ -357,6 +381,7 @@ class Acts(CMakePackage, CudaPackage):
             cmake_variant(integration_tests_label, "integration_tests"),
             plugin_cmake_variant("JSON", "json"),
             cmake_variant(legacy_plugin_label, "legacy"),
+            plugin_cmake_variant("MLPACK", "mlpack"),
             cmake_variant("ODD", "odd"),
             plugin_cmake_variant("ONNX", "onnx"),
             enable_cmake_variant("CPU_PROFILING", "profilecpu"),
