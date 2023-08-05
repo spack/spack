@@ -294,9 +294,12 @@ class Ncl(Package):
                 + self.spec["pixman"].prefix.lib
                 + " "
                 + self.spec["bzip2"].prefix.lib
-                + ((" " + self.spec["jasper"].prefix.lib64)
-                if self.spec.satisfies("+grib")
-                else "") + "\n",
+                + (
+                    (" " + self.spec["jasper"].prefix.lib64)
+                    if self.spec.satisfies("+grib")
+                    else ""
+                )
+                + "\n",
                 # Enter local include search path(s) :
                 # All other paths will be passed by the Spack wrapper.
                 self.spec["freetype"].headers.directories[0] + gribinc + "\n",
