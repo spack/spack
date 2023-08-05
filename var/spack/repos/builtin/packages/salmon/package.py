@@ -13,6 +13,7 @@ class Salmon(CMakePackage):
     url = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
     maintainers("snehring")
 
+    version("1.10.2", sha256="976989182160fef3afb4429ee8b85d8dd39ed6ca212bb14d6a65cde0e985fb98")
     version("1.9.0", sha256="450d953a5c43fe63fd745733f478d3fbaf24d926cb52731fd38ee21c4990d613")
     version("1.4.0", sha256="6d3e25387450710f0aa779a1e9aaa9b4dec842324ff8551d66962d7c7606e71d")
     version("0.14.1", sha256="05289170e69b5f291a8403b40d6b9bff54cc38825e9f721c210192b51a19273e")
@@ -55,10 +56,18 @@ class Salmon(CMakePackage):
     depends_on("libgff")
     depends_on("pkgconfig")
     depends_on("curl", when="@0.14.1:")
+    depends_on("htslib", when="@1.10.2")
+
+    patch("fix_hts.patch", when="@1.10.2")
 
     conflicts("%gcc@:5.1", when="@0.14.1:")
 
     resources = [
+        (
+            "1.10.2",
+            "pufferfish",
+            "f225b74833f71dcf767a565345224357fb091f90ce79717abc836814d9ccd101",
+        ),
         (
             "1.9.0",
             "pufferfish",
