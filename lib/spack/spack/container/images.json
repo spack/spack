@@ -181,7 +181,8 @@
       "clean": "true"
     },
     "apt": {
-      "update": "apt-get -yqq update && apt-get -yqq upgrade",
+      "preinstall": "apt-get -yqq update",
+      "update": "apt-get -yqq upgrade",
       "install": "apt-get -yqq install",
       "clean": "rm -rf /var/lib/apt/lists/*"
     },
