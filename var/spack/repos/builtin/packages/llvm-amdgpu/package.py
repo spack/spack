@@ -307,3 +307,13 @@ class LlvmAmdgpu(CMakePackage):
                     int(match.group(1)), int(match.group(2)), int(match.group(3))
                 )
         return detected_version
+
+    # Make sure that the compiler paths are in the LD_LIBRARY_PATH
+    def setup_run_environment(self, env):
+        llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")
+
+    # Make sure that the compiler paths are in the LD_LIBRARY_PATH
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")
