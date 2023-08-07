@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import archspec
+
 from spack.package import *
 
 
-class Variorum(CMakePackage):
+class Variorum(CMakePackage, CudaPackage, ROCmPackage):
     """Variorum is a library providing vendor-neutral interfaces for
     monitoring and controlling underlying hardware features.
     """
@@ -17,6 +19,7 @@ class Variorum(CMakePackage):
 
     maintainers("slabasan", "rountree")
 
+    version("dev", branch="dev")
     version("0.7.0", sha256="36ec0219379ea2b7c8f9770b3271335c776ff5a3de71585714c33356345b2f0c")
     version("0.6.0", sha256="c0928a0e6901808ee50142d1034de15edc2c90d7d1b9fbce43757226e7c04306")
     version("0.5.0", sha256="de331762e7945ee882d08454ff9c66436e2b6f87f761d2b31c6ab3028723bfed")
@@ -30,12 +33,38 @@ class Variorum(CMakePackage):
     # Variants #
     ############
     variant("shared", default=True, description="Build Variorum as shared lib")
-    variant("docs", default=False, description="Build Variorum's documentation")
     variant(
         "build_type",
         default="Release",
         description="CMake build type",
-        values=("Debug", "Release"),
+        values=("Debug", "Release", "RelWithDebInfo"),
+    )
+    #intel gpu not supported in spack
+    #variant("intel_gpu", default=False, description="Build for Intel GPU architecture")
+
+    # remove which ones we do not support
+    variorum_cuda_arch_values = (
+        "70",
+    )
+    variant(
+        "cuda_arch",
+        description="Nvidia GPU architecture",
+        values=spack.variant.any_combination_of(*variorum_cuda_arch_values),
+        sticky=True,
+        when="+cuda",
+    )
+
+    # remove which ones we do not support
+    amdgpu_targets = (
+            "gfx906",
+            "gfx906:xnack-",
+        )
+    variant(
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=spack.variant.any_combination_of(*amdgpu_targets),
+        sticky=True,
+        when="+rocm",
     )
 
     ########################
@@ -44,11 +73,8 @@ class Variorum(CMakePackage):
     depends_on("cmake@2.8:", type="build")
     depends_on("hwloc")
     depends_on("jansson", type="link")
-
-    #########################
-    # Documentation related #
-    #########################
-    depends_on("py-sphinx", when="+docs", type="build")
+    depends_on("cuda", when="+cuda_arch")
+    depends_on("rocm-smi-lib", when="+rocm")
 
     root_cmakelists_dir = "src"
 
@@ -57,6 +83,8 @@ class Variorum(CMakePackage):
         cmake_args = []
 
         cmake_args.append("-DJANSSON_DIR={0}".format(spec["jansson"].prefix))
+        cmake_args.append("-DHWLOC_DIR={0}".format(spec["hwloc"].prefix))
+        cmake_args.append("-DBUILD_DOCS=OFF")
 
         if spec.satisfies("%cce"):
             cmake_args.append("-DCMAKE_C_FLAGS=-fcommon")
@@ -68,12 +96,23 @@ class Variorum(CMakePackage):
         else:
             cmake_args.append("-DBUILD_SHARED_LIBS=OFF")
 
-        if "+docs" in spec:
-            cmake_args.append("-DBUILD_DOCS=ON")
-            sphinx_build_exe = join_path(spec["py-sphinx"].prefix.bin, "sphinx-build")
-            cmake_args.append("-DSPHINX_EXECUTABLE=" + sphinx_build_exe)
-        else:
-            cmake_args.append("-DBUILD_DOCS=OFF")
+        # should only be building for AMD or NVIDIA GPU architecture
+        if "+cuda" in spec:
+            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=ON")
+        elif "+rocm" in spec:
+            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=ON")
+            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
 
         if "build_type=Debug" in spec:
             cmake_args.append("-DVARIORUM_DEBUG=ON")
@@ -84,5 +123,57 @@ class Variorum(CMakePackage):
             cmake_args.append("-DBUILD_TESTS=ON")
         else:
             cmake_args.append("-DBUILD_TESTS=OFF")
+
+        cpu_uarch = archspec.cpu.host()
+        cpu_vendor = cpu_uarch.to_dict()["vendor"]
+
+        #taken from list of archspec.cpu.TARGETS
+        supported_amd_targets = ["zen2"]
+        supported_arm_targets = ["neoverse_n1"]
+        supported_ibm_targets = ["power9le"]
+        supported_intel_targets = [
+            "sandybridge",
+            "ivybridge",
+            "haswell",
+            "broadwell",
+            "skylake",
+            "cascadelake",
+            "icelake",
+        ]
+
+        if cpu_vendor == "AuthenticAMD" and cpu_uarch in supported_amd_targets:
+            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=ON")
+            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
+        elif cpu_vendor == "ARM" and cpu_uarch in supported_arm_targets:
+            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=ON")
+            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
+        elif cpu_vendor == "IBM" and cpu_uarch in supported_ibm_targets:
+            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=ON")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
+        elif cpu_vendor == "GenuineIntel" and cpu_uarch in supported_intel_targets:
+            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=ON")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
+        #else:
+        #    raise TypeError("unsupported architecture")
 
         return cmake_args
