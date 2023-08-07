@@ -41,7 +41,7 @@ class PyPyopengl(PythonPackage):
         if "+glu" in self.spec:
             lib_dirs.extend(self.spec["glu"].libs.directories)
         if "+glut" in self.spec:
-            lib_dirs.append(self.spec["freeglut"].prefix.lib)
+            lib_dirs.extend(self.spec["freeglut"].libs.directories)
         libs = ":".join(lib_dirs)
         if sys.platform == "darwin":
             env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", libs)
