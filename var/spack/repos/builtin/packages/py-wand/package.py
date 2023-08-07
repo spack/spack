@@ -23,4 +23,4 @@ class PyWand(PythonPackage):
     depends_on("imagemagick")
 
     def setup_build_environment(self, env):
-        env.set('MAGICK_HOME', self.spec['imagemagick'].prefix)
+        env.set("MAGICK_HOME", self.spec["imagemagick"].prefix)
