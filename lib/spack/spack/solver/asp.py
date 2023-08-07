@@ -2567,24 +2567,14 @@ class SpecBuilder:
         # from this dictionary during reconstruction
         self._hash_lookup = hash_lookup or {}
 
-    @staticmethod
-    def extract_pkg(node: NodeArgument) -> str:
-        """Extracts the package name from a node fact, and returns it.
-
-        Args:
-            node: node from which the package name is to be extracted
-        """
-        return node.pkg
-
     def hash(self, node, h):
         if node not in self._specs:
             self._specs[node] = self._hash_lookup[h]
         self._hash_specs.append(node)
 
     def node(self, node):
-        pkg = self.extract_pkg(node)
         if node not in self._specs:
-            self._specs[node] = spack.spec.Spec(pkg)
+            self._specs[node] = spack.spec.Spec(node.pkg)
 
     def _arch(self, node):
         arch = self._specs[node].architecture
@@ -2644,8 +2634,7 @@ class SpecBuilder:
 
         packages_yaml = spack.config.get("packages")
         packages_yaml = _normalize_packages_yaml(packages_yaml)
-        pkg = self.extract_pkg(node)
-        spec_info = packages_yaml[pkg]["externals"][int(idx)]
+        spec_info = packages_yaml[node.pkg]["externals"][int(idx)]
         self._specs[node].external_path = spec_info.get("prefix", None)
         self._specs[node].external_modules = spack.spec.Spec._format_module_list(
             spec_info.get("modules", None)
@@ -2673,11 +2662,10 @@ class SpecBuilder:
             edges[0].update_deptypes(deptypes=(type,))
 
     def virtual_on_edge(self, parent_node, provider_node, virtual):
-        provider = self.extract_pkg(provider_node)
-        dependencies = self._specs[parent_node].edges_to_dependencies(name=provider)
+        dependencies = self._specs[parent_node].edges_to_dependencies(name=(provider_node.pkg))
         provider_spec = self._specs[provider_node]
         dependencies = [x for x in dependencies if id(x.spec) == id(provider_spec)]
-        assert len(dependencies) == 1, f"{virtual}: {provider}"
+        assert len(dependencies) == 1, f"{virtual}: {provider_node.pkg}"
         dependencies[0].update_virtuals((virtual,))
 
     def reorder_flags(self):
@@ -2722,9 +2710,8 @@ class SpecBuilder:
                     for node in sorted_sources:
                         all_src_flags = list()
                         per_pkg_sources = [self._specs[node]]
-                        name = self.extract_pkg(node)
-                        if name in cmd_specs:
-                            per_pkg_sources.append(cmd_specs[name])
+                        if node.pkg in cmd_specs:
+                            per_pkg_sources.append(cmd_specs[node.pkg])
                         for source in per_pkg_sources:
                             all_src_flags.extend(source.compiler_flags.get(flag_type, []))
                         extend_flag_list(from_sources, all_src_flags)
@@ -2795,7 +2782,8 @@ class SpecBuilder:
             # solving but don't construct anything. Do not ignore error
             # predicates on virtual packages.
             if name != "error":
-                pkg = self.extract_pkg(args[0])
+                node = args[0]
+                pkg = node.pkg
                 if spack.repo.PATH.is_virtual(pkg):
                     continue
 
