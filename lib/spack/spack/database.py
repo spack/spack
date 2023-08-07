@@ -371,12 +371,12 @@ def failures_lock_path(root_dir: Union[str, pathlib.Path]) -> pathlib.Path:
 class SpecLocker:
     """Manages acquiring and releasing read or write locks on concrete specs."""
 
-    #: Maps (lockfile, spec.dag_hash(), spec.name) to the corresponding lock object
-    locks: Dict[Tuple[str, str, str], lk.Lock] = {}
-
     def __init__(self, lock_path: Union[str, pathlib.Path], default_timeout: Optional[float]):
         self.lock_path = pathlib.Path(lock_path)
         self.default_timeout = default_timeout
+
+        # Maps (spec.dag_hash(), spec.name) to the corresponding lock object
+        self.locks: Dict[Tuple[str, str], lk.Lock] = {}
 
     def lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
         """Returns a lock on a concrete spec.
@@ -395,8 +395,7 @@ class SpecLocker:
 
         if key not in self.locks:
             self.locks[key] = self.raw_lock(spec, timeout=timeout)
-
-        if timeout != self.locks[key].default_timeout:
+        else:
             self.locks[key].default_timeout = timeout
 
         return self.locks[key]
@@ -413,29 +412,10 @@ class SpecLocker:
 
     def has_lock(self, spec: "spack.spec.Spec") -> bool:
         """Returns True if the spec is already managed by this spec locker"""
-        key = self._lock_key(spec)
-        return key in self.locks
+        return self._lock_key(spec) in self.locks
 
-    def _lock_key(self, spec: "spack.spec.Spec") -> Tuple[str, str, str]:
-        key = (str(self.lock_path), spec.dag_hash(), spec.name)
-        return key
-
-    @contextlib.contextmanager
-    def read_lock(self, spec: "spack.spec.Spec") -> Generator["SpecLocker", None, None]:
-        lock = self.lock(spec)
-        lock.acquire_read()
-
-        try:
-            yield self
-        except lk.LockError:
-            # This addresses the case where a nested lock attempt fails inside
-            # of this context manager
-            raise
-        except (Exception, KeyboardInterrupt):
-            lock.release_read()
-            raise
-        else:
-            lock.release_read()
+    def _lock_key(self, spec: "spack.spec.Spec") -> Tuple[str, str]:
+        return (spec.dag_hash(), spec.name)
 
     @contextlib.contextmanager
     def write_lock(self, spec: "spack.spec.Spec") -> Generator["SpecLocker", None, None]:
@@ -456,19 +436,14 @@ class SpecLocker:
 
     def clear(self, spec: "spack.spec.Spec") -> Tuple[bool, Optional[lk.Lock]]:
         key = self._lock_key(spec)
-        if key in self.locks:
-            lock = self.locks.pop(key)
-            return True, lock
-        return False, None
+        lock = self.locks.pop(key, None)
+        return bool(lock), lock
 
     def clear_all(self, clear_fn: Optional[Callable[[lk.Lock], Any]] = None) -> None:
-        for key in self.all_keys():
-            lock = self.locks.pop(key)
-            if clear_fn is not None:
+        if clear_fn is not None:
+            for lock in self.locks.values():
                 clear_fn(lock)
-
-    def all_keys(self) -> List[Tuple[str, str, str]]:
-        return [key for key in self.locks if key[0] == str(self.lock_path)]
+        self.locks.clear()
 
 
 class FailureTracker:

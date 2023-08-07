@@ -19,6 +19,7 @@ import spack.binary_distribution
 import spack.compilers
 import spack.concretize
 import spack.config
+import spack.database
 import spack.installer as inst
 import spack.package_base
 import spack.package_prefs as prefs
@@ -609,7 +610,7 @@ def test_clear_failures_success(install_mockery):
     spack.store.STORE.clear_all_failures()
 
     # Ensure there are no cached failure locks or failure marks
-    assert len(spack.store.STORE.failure_tracker.failures_lock.all_keys()) == 0
+    assert len(spack.store.STORE.failure_tracker.failures_lock.locks) == 0
     assert len(os.listdir(spack.store.STORE.failure_tracker.failure_dir)) == 0
 
     # Ensure the core directory and failure lock file still exist

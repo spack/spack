@@ -32,6 +32,7 @@ import spack.database
 import spack.directory_layout
 import spack.error
 import spack.paths
+import spack.spec
 import spack.util.path
 from spack.util import lock
 
@@ -216,13 +217,6 @@ class Store:
 
     def prefix_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lock.Lock:
         return self.prefix_locker.lock(spec, timeout=timeout)
-
-    @contextlib.contextmanager
-    def prefix_read_lock(
-        self, spec: "spack.spec.Spec"
-    ) -> Generator[spack.database.SpecLocker, None, None]:
-        with self.prefix_locker.read_lock(spec) as locker:
-            yield locker
 
     @contextlib.contextmanager
     def prefix_write_lock(

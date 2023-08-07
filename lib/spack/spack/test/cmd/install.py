@@ -23,6 +23,7 @@ import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.package_base
+import spack.store
 import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
@@ -706,7 +707,8 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
 
     # Check that failure prefix locks are still cached
     failed_packages = [
-        key[2] for key in spack.store.STORE.failure_tracker.failures_lock.all_keys()
+        pkg_name
+        for dag_hash, pkg_name in spack.store.STORE.failure_tracker.failures_lock.locks.keys()
     ]
     assert "libelf" in failed_packages
     assert "libdwarf" in failed_packages

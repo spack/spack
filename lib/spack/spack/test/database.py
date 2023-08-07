@@ -891,22 +891,6 @@ def test_prefix_failed(default_mock_concretization, mutable_database, monkeypatc
     assert spack.store.STORE.prefix_failed(s)
 
 
-def test_prefix_read_lock_error(default_mock_concretization, mutable_database, monkeypatch):
-    """Cover the prefix read lock exception."""
-
-    def _raise(db, spec):
-        raise lk.LockError("Mock lock error")
-
-    s = default_mock_concretization("a")
-
-    # Ensure subsequent lock operations fail
-    monkeypatch.setattr(lk.Lock, "acquire_read", _raise)
-
-    with pytest.raises(Exception):
-        with spack.store.STORE.prefix_read_lock(s):
-            assert False
-
-
 def test_prefix_write_lock_error(default_mock_concretization, mutable_database, monkeypatch):
     """Cover the prefix write lock exception."""
 
