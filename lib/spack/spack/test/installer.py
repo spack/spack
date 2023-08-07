@@ -598,44 +598,50 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     assert "Couldn't copy in provenance for cmake" in out
 
 
-def test_clear_failures_success(install_mockery):
+def test_clear_failures_success(tmpdir):
     """Test the clear_failures happy path."""
+    failures = spack.database.FailureTracker(str(tmpdir), default_timeout=0.1)
+
+    spec = spack.spec.Spec("a")
+    spec._mark_concrete()
 
     # Set up a test prefix failure lock
-    s = spack.spec.Spec("a").concretized()
-    spack.store.STORE.failure_tracker.mark(s)
-    assert spack.store.STORE.failure_tracker.has_failed(s)
+    failures.mark(spec)
+    assert failures.has_failed(spec)
 
     # Now clear failure tracking
-    spack.store.STORE.failure_tracker.clear_all()
+    failures.clear_all()
 
     # Ensure there are no cached failure locks or failure marks
-    assert len(spack.store.STORE.failure_tracker.locker.locks) == 0
-    assert len(os.listdir(spack.store.STORE.failure_tracker.dir)) == 0
+    assert len(failures.locker.locks) == 0
+    assert len(os.listdir(failures.dir)) == 0
 
     # Ensure the core directory and failure lock file still exist
-    assert os.path.isdir(spack.store.STORE.failure_tracker.dir)
+    assert os.path.isdir(failures.dir)
+
     # Locks on windows are a no-op
     if sys.platform != "win32":
-        assert os.path.isfile(spack.database.failures_lock_path(spack.store.STORE.root))
+        assert os.path.isfile(failures.locker.lock_path)
 
 
 @pytest.mark.xfail(sys.platform == "win32", reason="chmod does not prevent removal on Win")
-def test_clear_failures_errs(install_mockery, capsys):
+def test_clear_failures_errs(tmpdir, capsys):
     """Test the clear_failures exception paths."""
-    s = spack.spec.Spec("a").concretized()
-    spack.store.STORE.failure_tracker.mark(s)
+    failures = spack.database.FailureTracker(str(tmpdir), default_timeout=0.1)
+    spec = spack.spec.Spec("a")
+    spec._mark_concrete()
+    failures.mark(spec)
 
     # Make the file marker not writeable, so that clearing_failures fails
-    spack.store.STORE.failure_tracker.dir.chmod(0o000)
+    failures.dir.chmod(0o000)
 
     # Clear failure tracking
-    spack.store.STORE.failure_tracker.clear_all()
+    failures.clear_all()
 
     # Ensure expected warning generated
     out = str(capsys.readouterr()[1])
     assert "Unable to remove failure" in out
-    spack.store.STORE.failure_tracker.dir.chmod(0o750)
+    failures.dir.chmod(0o750)
 
 
 def test_combine_phase_logs(tmpdir):
