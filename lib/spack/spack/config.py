@@ -1278,7 +1278,7 @@ def escape_colons(path):
         if current_char == ":":
             path_tokens.append(token)
             token = ""
-        elif current_char == '"' and not (token and token[-1] == "\\"):
+        elif current_char == "'" and not (token and token[-1] == "\\"):
             if inside_escape:
                 token = "%3a".join(path_tokens[escaped_colon_idx:] + [token])
                 path_tokens[escaped_colon_idx:] = ""
@@ -1298,6 +1298,7 @@ def escape_colons(path):
 # trailing ':')
 #
 def process_config_path(path):
+    import pdb; pdb.set_trace()
     path = escape_colons(path)
     result = []
     if path.startswith(":"):
