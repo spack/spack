@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems import cmake, makefile
 from spack.package import *
 
 
@@ -32,11 +33,11 @@ class Libdeflate(MakefilePackage, CMakePackage):
         depends_on("cmake@3.7:", type="build")
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
             make("install", f"PREFIX={prefix}")
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     pass
