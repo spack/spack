@@ -17,6 +17,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("sethrj")
 
+    version("0.3.1", sha256="0f1effab306856d66f5079e8cadcb63e8c1f8a79245b94bf44b89251b3fb0cf0")
     version("0.3.0", sha256="f9620b6bcd8c9b5324ef215f8e44461f915c3fff47bf85ae442c9dafacaa79ac")
     version("0.2.2", sha256="ba5e341d636e00e3d7dbac13a2016b97014917489f46b8b387a2adf9d9563872")
     version(
@@ -81,9 +82,10 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.22:", type="build", when="+rocm")
 
     depends_on("nlohmann-json")
-    depends_on("geant4@10.7:11.0", when="@:0.2.0 +geant4")
+    depends_on("geant4@10.5:", when="@0.3.1: +geant4")
+    depends_on("geant4@10.6:", when="@0.3.0 +geant4")
     depends_on("geant4@10.6:11.0", when="@0.2.1:0.2 +geant4")
-    depends_on("geant4@10.6:", when="@0.3: +geant4")
+    depends_on("geant4@10.7:11.0", when="@:0.2.0 +geant4")
     depends_on("hepmc3", when="+hepmc3")
     depends_on("root", when="+root")
     depends_on("swig", when="+swig")
