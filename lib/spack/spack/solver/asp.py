@@ -1805,7 +1805,9 @@ class SpackSolverSetup:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
                 clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
                 if not spec.concrete and flag.propagate is True:
-                    clauses.append(f.node_flag_possible_prop(spec.name, flag_type, flag, spec.name))
+                    clauses.append(
+                        f.node_flag_possible_prop(spec.name, flag_type, flag, spec.name)
+                    )
 
         # dependencies
         if spec.concrete:
