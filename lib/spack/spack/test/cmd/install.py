@@ -707,8 +707,7 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
 
     # Check that failure prefix locks are still cached
     failed_packages = [
-        pkg_name
-        for dag_hash, pkg_name in spack.store.STORE.failure_tracker.failures_lock.locks.keys()
+        pkg_name for dag_hash, pkg_name in spack.store.STORE.failure_tracker.locker.locks.keys()
     ]
     assert "libelf" in failed_packages
     assert "libdwarf" in failed_packages

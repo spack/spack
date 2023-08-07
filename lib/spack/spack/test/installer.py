@@ -603,18 +603,18 @@ def test_clear_failures_success(install_mockery):
 
     # Set up a test prefix failure lock
     s = spack.spec.Spec("a").concretized()
-    spack.store.STORE.failure_tracker.mark_failed(s)
-    assert spack.store.STORE.failure_tracker.failed(s)
+    spack.store.STORE.failure_tracker.mark(s)
+    assert spack.store.STORE.failure_tracker.has_failed(s)
 
     # Now clear failure tracking
-    spack.store.STORE.failure_tracker.clear_all_failures()
+    spack.store.STORE.failure_tracker.clear_all()
 
     # Ensure there are no cached failure locks or failure marks
-    assert len(spack.store.STORE.failure_tracker.failures_lock.locks) == 0
-    assert len(os.listdir(spack.store.STORE.failure_tracker.failure_dir)) == 0
+    assert len(spack.store.STORE.failure_tracker.locker.locks) == 0
+    assert len(os.listdir(spack.store.STORE.failure_tracker.dir)) == 0
 
     # Ensure the core directory and failure lock file still exist
-    assert os.path.isdir(spack.store.STORE.failure_tracker.failure_dir)
+    assert os.path.isdir(spack.store.STORE.failure_tracker.dir)
     # Locks on windows are a no-op
     if sys.platform != "win32":
         assert os.path.isfile(spack.database.failures_lock_path(spack.store.STORE.root))
@@ -624,18 +624,18 @@ def test_clear_failures_success(install_mockery):
 def test_clear_failures_errs(install_mockery, capsys):
     """Test the clear_failures exception paths."""
     s = spack.spec.Spec("a").concretized()
-    spack.store.STORE.failure_tracker.mark_failed(s)
+    spack.store.STORE.failure_tracker.mark(s)
 
     # Make the file marker not writeable, so that clearing_failures fails
-    spack.store.STORE.failure_tracker.failure_dir.chmod(0o000)
+    spack.store.STORE.failure_tracker.dir.chmod(0o000)
 
     # Clear failure tracking
-    spack.store.STORE.failure_tracker.clear_all_failures()
+    spack.store.STORE.failure_tracker.clear_all()
 
     # Ensure expected warning generated
     out = str(capsys.readouterr()[1])
     assert "Unable to remove failure" in out
-    spack.store.STORE.failure_tracker.failure_dir.chmod(0o750)
+    spack.store.STORE.failure_tracker.dir.chmod(0o750)
 
 
 def test_combine_phase_logs(tmpdir):
@@ -686,7 +686,7 @@ def test_check_deps_status_install_failure(install_mockery):
     """
     s = spack.spec.Spec("a").concretized()
     for dep in s.traverse(root=False):
-        spack.store.STORE.failure_tracker.mark_failed(dep)
+        spack.store.STORE.failure_tracker.mark(dep)
 
     const_arg = installer_args(["a"], {})
     installer = create_installer(const_arg)
@@ -996,7 +996,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     installer = create_installer(const_arg)
 
     # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.database.FailureTracker, "failed", _true)
+    monkeypatch.setattr(spack.database.FailureTracker, "has_failed", _true)
 
     with pytest.raises(inst.InstallError, match="request failed"):
         installer.install()
@@ -1012,7 +1012,7 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     installer = create_installer(const_arg)
 
     # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.database.FailureTracker, "failed", _true)
+    monkeypatch.setattr(spack.database.FailureTracker, "has_failed", _true)
 
     with pytest.raises(inst.InstallError, match="request failed"):
         installer.install()
@@ -1111,7 +1111,7 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     #
     # This will prevent b from installing, which will cause the build of a
     # to be skipped.
-    monkeypatch.setattr(spack.database.FailureTracker, "failed", _true)
+    monkeypatch.setattr(spack.database.FailureTracker, "has_failed", _true)
 
     with pytest.raises(inst.InstallError, match="after first install failure"):
         installer.install()

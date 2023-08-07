@@ -126,7 +126,7 @@ def clean(parser, args):
 
     if args.failures:
         tty.msg("Removing install failure marks")
-        spack.store.STORE.failure_tracker.clear_all_failures()
+        spack.store.STORE.failure_tracker.clear_all()
 
     if args.misc_cache:
         tty.msg("Removing cached information on repositories")

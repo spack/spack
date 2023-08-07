@@ -957,7 +957,7 @@ def install_mockery(temporary_store: spack.store.Store, mutable_config, mock_pac
         yield
 
     # Wipe out any cached prefix failure locks (associated with the session-scoped mock archive)
-    temporary_store.failure_tracker.clear_all_failures()
+    temporary_store.failure_tracker.clear_all()
 
 
 @pytest.fixture(scope="function")

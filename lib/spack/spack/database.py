@@ -464,17 +464,15 @@ class FailureTracker:
     def __init__(self, root_dir: Union[str, pathlib.Path], default_timeout: Optional[float]):
         #: Ensure a persistent location for dealing with parallel installation
         #: failures (e.g., across near-concurrent processes).
-        self.failure_dir = pathlib.Path(root_dir) / _DB_DIRNAME / "failures"
-        self.failure_dir.mkdir(parents=True, exist_ok=True)
+        self.dir = pathlib.Path(root_dir) / _DB_DIRNAME / "failures"
+        self.dir.mkdir(parents=True, exist_ok=True)
 
-        self.failures_lock = SpecLocker(
-            failures_lock_path(root_dir), default_timeout=default_timeout
-        )
+        self.locker = SpecLocker(failures_lock_path(root_dir), default_timeout=default_timeout)
 
-    def clear_failure(self, spec: "spack.spec.Spec", force: bool = False) -> None:
+    def clear(self, spec: "spack.spec.Spec", force: bool = False) -> None:
         """Removes any persistent and cached failure tracking for the spec.
 
-        see `mark_failed()`.
+        see `mark()`.
 
         Args:
             spec: the spec whose failure indicators are being removed
@@ -482,20 +480,20 @@ class FailureTracker:
                 exists for the file, or False if the failure should not be cleared (e.g.,
                 it may be associated with a concurrent build)
         """
-        failure_locked = self.failure_lock_taken(spec)
-        if failure_locked and not force:
+        locked = self.lock_taken(spec)
+        if locked and not force:
             tty.msg(f"Retaining failure marking for {spec.name} due to lock")
             return
 
-        if failure_locked:
+        if locked:
             tty.warn(f"Removing failure marking despite lock for {spec.name}")
 
-        succeeded, lock = self.failures_lock.clear(spec)
+        succeeded, lock = self.locker.clear(spec)
         if succeeded and lock is not None:
             lock.release_write()
 
-        if self.persistent_failure_mark(spec):
-            path = self._failed_spec_path(spec)
+        if self.persistent_mark(spec):
+            path = self._path(spec)
             tty.debug(f"Removing failure marking for {spec.name}")
             try:
                 path.unlink()
@@ -504,38 +502,38 @@ class FailureTracker:
                     f"Unable to remove failure marking for {spec.name} ({str(path)}): {str(err)}"
                 )
 
-    def clear_all_failures(self) -> None:
+    def clear_all(self) -> None:
         """Force remove install failure tracking files."""
         tty.debug("Releasing prefix failure locks")
-        self.failures_lock.clear_all(
+        self.locker.clear_all(
             clear_fn=lambda x: x.release_write() if x.is_write_locked() else True
         )
 
         tty.debug("Removing prefix failure tracking files")
         try:
-            for fail_mark in os.listdir(str(self.failure_dir)):
+            for fail_mark in os.listdir(str(self.dir)):
                 try:
-                    (self.failure_dir / fail_mark).unlink()
+                    (self.dir / fail_mark).unlink()
                 except OSError as exc:
                     tty.warn(f"Unable to remove failure marking file {fail_mark}: {str(exc)}")
         except OSError as exc:
             tty.warn(f"Unable to remove failure marking files: {str(exc)}")
 
-    def mark_failed(self, spec: "spack.spec.Spec") -> lk.Lock:
+    def mark(self, spec: "spack.spec.Spec") -> lk.Lock:
         """Marks a spec as failing to install.
 
         Args:
             spec: spec that failed to install
         """
         # Dump the spec to the failure file for (manual) debugging purposes
-        path = self._failed_spec_path(spec)
+        path = self._path(spec)
         path.write_text(spec.to_json())
 
         # Also ensure a failure lock is taken to prevent cleanup removal
         # of failure status information during a concurrent parallel build.
-        if not self.failures_lock.has_lock(spec):
+        if not self.locker.has_lock(spec):
             try:
-                mark = self.failures_lock.lock(spec)
+                mark = self.locker.lock(spec)
                 mark.acquire_write()
             except lk.LockTimeoutError:
                 # Unlikely that another process failed to install at the same
@@ -543,36 +541,36 @@ class FailureTracker:
                 tty.debug(f"PID {os.getpid()} failed to mark install failure for {spec.name}")
                 tty.warn(f"Unable to mark {spec.name} as failed.")
 
-        return self.failures_lock.lock(spec)
+        return self.locker.lock(spec)
 
-    def failed(self, spec: "spack.spec.Spec") -> bool:
+    def has_failed(self, spec: "spack.spec.Spec") -> bool:
         """Return True if the spec is marked as failed."""
         # The failure was detected in this process.
-        if self.failures_lock.has_lock(spec):
+        if self.locker.has_lock(spec):
             return True
 
         # The failure was detected by a concurrent process (e.g., an srun),
         # which is expected to be holding a write lock if that is the case.
-        if self.failure_lock_taken(spec):
+        if self.lock_taken(spec):
             return True
 
         # Determine if the spec may have been marked as failed by a separate
         # spack build process running concurrently.
-        return self.persistent_failure_mark(spec)
+        return self.persistent_mark(spec)
 
-    def failure_lock_taken(self, spec: "spack.spec.Spec") -> bool:
+    def lock_taken(self, spec: "spack.spec.Spec") -> bool:
         """Return True if another process has a failure lock on the spec."""
-        check = self.failures_lock.raw_lock(spec)
+        check = self.locker.raw_lock(spec)
         return check.is_write_locked()
 
-    def persistent_failure_mark(self, spec: "spack.spec.Spec") -> bool:
+    def persistent_mark(self, spec: "spack.spec.Spec") -> bool:
         """Determine if the spec has a persistent failure marking."""
-        return self._failed_spec_path(spec).exists()
+        return self._path(spec).exists()
 
-    def _failed_spec_path(self, spec: "spack.spec.Spec") -> pathlib.Path:
+    def _path(self, spec: "spack.spec.Spec") -> pathlib.Path:
         """Return the path to the spec's failure file, which may not exist."""
         assert spec.concrete, "concrete spec required for failure path"
-        return self.failure_dir / f"{spec.name}-{spec.dag_hash()}"
+        return self.dir / f"{spec.name}-{spec.dag_hash()}"
 
 
 class Database:

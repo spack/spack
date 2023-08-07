@@ -35,9 +35,7 @@ def mock_calls_for_clean(monkeypatch):
     monkeypatch.setattr(spack.stage, "purge", Counter("stages"))
     monkeypatch.setattr(spack.caches.fetch_cache, "destroy", Counter("downloads"), raising=False)
     monkeypatch.setattr(spack.caches.misc_cache, "destroy", Counter("caches"))
-    monkeypatch.setattr(
-        spack.store.STORE.failure_tracker, "clear_all_failures", Counter("failures")
-    )
+    monkeypatch.setattr(spack.store.STORE.failure_tracker, "clear_all", Counter("failures"))
     monkeypatch.setattr(spack.cmd.clean, "remove_python_cache", Counter("python_cache"))
 
     yield counts
