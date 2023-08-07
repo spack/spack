@@ -43,26 +43,26 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
     #variant("intel_gpu", default=False, description="Build for Intel GPU architecture")
 
     # remove which ones we do not support
-    CudaPackage.cuda_arch_values = (
+    local_cuda_arch_values = (
         "70",
     )
     variant(
         "cuda_arch",
         description="Nvidia GPU architecture",
-        values=spack.variant.any_combination_of(*CudaPackage.cuda_arch_values),
+        values=spack.variant.any_combination_of(*local_cuda_arch_values),
         sticky=True,
         when="+cuda",
     )
 
     # remove which ones we do not support
-    ROCmPackage.amdgpu_targets = (
+    local_amdgpu_targets = (
             "gfx906",
             "gfx906:xnack-",
         )
     variant(
         "amdgpu_target",
         description="AMD GPU architecture",
-        values=spack.variant.any_combination_of(*ROCmPackage.amdgpu_targets),
+        values=spack.variant.any_combination_of(*local_amdgpu_targets),
         sticky=True,
         when="+rocm",
     )
@@ -124,8 +124,8 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
         else:
             cmake_args.append("-DBUILD_TESTS=OFF")
 
-        cpu_uarch = archspec.cpu.host()
-        cpu_vendor = cpu_uarch.to_dict()["vendor"]
+        cpu_uarch = spec.target.microarchitecture
+        cpu_vendor = archspec.cpu.host().to_dict()["vendor"]
 
         #taken from list of archspec.cpu.TARGETS
         supported_amd_targets = ["zen2"]
