@@ -132,11 +132,11 @@ default:
       --config-scope $SPACK_CI_CONFIG_ROOT\$env:SPACK_TARGET_PLATFORM
       ci generate --check-index-only
       --buildcache-destination $env:SPACK_BUILDCACHE_DESTINATION
-      --artifacts-root $env:CI_PROJECT_DIR\jobs_scratch_dir
-      --output-file $env:CI_PROJECT_DIR\jobs_scratch_dir\cloud-ci-pipeline.yml
+      --artifacts-root $env:CI_PROJECT_DIR/jobs_scratch_dir
+      --output-file $env:CI_PROJECT_DIR/jobs_scratch_dir/cloud-ci-pipeline.yml
   artifacts:
     paths:
-      - "${CI_PROJECT_DIR}\\jobs_scratch_dir"
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   interruptible: true
   timeout: 60 minutes
   retry:
