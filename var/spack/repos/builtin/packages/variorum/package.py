@@ -49,6 +49,7 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "cuda_arch",
         description="Nvidia GPU architecture",
+        default="70",
         values=spack.variant.any_combination_of(*local_cuda_arch_values),
         sticky=True,
         when="+cuda",
@@ -62,6 +63,7 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "amdgpu_target",
         description="AMD GPU architecture",
+        default="gfx906",
         values=spack.variant.any_combination_of(*local_amdgpu_targets),
         sticky=True,
         when="+rocm",
