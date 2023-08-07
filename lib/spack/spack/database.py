@@ -142,22 +142,23 @@ class InstallStatuses:
     def canonicalize(cls, query_arg):
         if query_arg is True:
             return [cls.INSTALLED]
-        elif query_arg is False:
+        if query_arg is False:
             return [cls.MISSING]
-        elif query_arg is any:
+        if query_arg is any:
             return [cls.INSTALLED, cls.DEPRECATED, cls.MISSING]
-        elif isinstance(query_arg, InstallStatus):
+        if isinstance(query_arg, InstallStatus):
             return [query_arg]
-        else:
-            try:  # Try block catches if it is not an iterable at all
-                if any(type(x) != InstallStatus for x in query_arg):
-                    raise TypeError
-            except TypeError:
-                raise TypeError(
-                    "installation query must be `any`, boolean, "
-                    "InstallStatus, or iterable of InstallStatus"
-                )
-            return query_arg
+        try:
+            statuses = list(query_arg)
+            if all(isinstance(x, InstallStatus) for x in statuses):
+                return statuses
+        except TypeError:
+            pass
+
+        raise TypeError(
+            "installation query must be `any`, boolean, "
+            "InstallStatus, or iterable of InstallStatus"
+        )
 
 
 class InstallRecord:
