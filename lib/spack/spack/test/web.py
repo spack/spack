@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import email.message
 import os
+import pickle
+import urllib.request
 
 import pytest
 
@@ -339,3 +342,25 @@ def test_s3_url_exists(monkeypatch, capfd):
 def test_s3_url_parsing():
     assert spack.util.s3._parse_s3_endpoint_url("example.com") == "https://example.com"
     assert spack.util.s3._parse_s3_endpoint_url("http://example.com") == "http://example.com"
+
+
+def test_detailed_http_error_pickle(tmpdir):
+    tmpdir.join("response").write("response")
+
+    headers = email.message.Message()
+    headers.add_header("Content-Type", "text/plain")
+
+    # Use a temporary file object as a response body
+    with open(str(tmpdir.join("response")), "rb") as f:
+        error = spack.util.web.DetailedHTTPError(
+            urllib.request.Request("http://example.com"), 404, "Not Found", headers, f
+        )
+
+        deserialized = pickle.loads(pickle.dumps(error))
+
+    assert isinstance(deserialized, spack.util.web.DetailedHTTPError)
+    assert deserialized.code == 404
+    assert deserialized.filename == "http://example.com"
+    assert deserialized.reason == "Not Found"
+    assert str(deserialized.info()) == str(headers)
+    assert str(deserialized) == str(error)
