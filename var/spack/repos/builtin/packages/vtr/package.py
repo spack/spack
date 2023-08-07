@@ -5,6 +5,7 @@
 
 import os
 from os.path import join as pjoin
+
 from spack.package import *
 
 
@@ -18,11 +19,7 @@ class Vtr(MakefilePackage):
 
     maintainers("ueqri")  # For maintaining this package in the Spack community.
 
-    variant(
-        "eigen3",
-        default=True,
-        description="Build VTR with Eigen 3 library",
-    )
+    variant("eigen3", default=True, description="Build VTR with Eigen 3 library")
 
     variant(
         "tbb",
@@ -33,11 +30,12 @@ class Vtr(MakefilePackage):
     variant(
         "python",
         default=True,
-        description="Install Python and required Python packages within Spack environment (not system wide)",
+        description="Install Python and required Python packages within Spack "
+        + "environment (not system wide)",
     )
 
-    version("master", branch="master", get_full_repo=True,
-            preferred=True)  # Shallow clones will hinder VTR build.
+    # Shallow clones on the 'master' branch will hinder VTR build.
+    version("master", branch="master", get_full_repo=True, preferred=True)
     version("2023_NoC_Placement", tag="v2023_NoC_Placement")
     version("8.0.0", tag="v8.0.0")
 
@@ -59,7 +57,7 @@ class Vtr(MakefilePackage):
     depends_on("pkg-config", type="build")
     depends_on("ninja", type="build")
     depends_on("wget", type="build")
-    depends_on('binutils', type="build")
+    depends_on("binutils", type="build")
     depends_on("bison", type="build")
     depends_on("flex", type="build")
 
@@ -105,8 +103,7 @@ class Vtr(MakefilePackage):
         env.set("LIBRARY_PATH", ":".join(library))
 
         # Add a missing libstdc++ rpath for yosys build which uses LLVM Clang.
-        libstdcxx_dir = pjoin(os.path.dirname(
-            os.path.dirname(self.compiler.cxx)), "lib")
+        libstdcxx_dir = pjoin(os.path.dirname(os.path.dirname(self.compiler.cxx)), "lib")
 
         for lib_dir in [libstdcxx_dir, libstdcxx_dir + "64"] + library:
             if os.path.exists(lib_dir):
