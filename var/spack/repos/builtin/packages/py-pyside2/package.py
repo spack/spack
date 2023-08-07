@@ -20,10 +20,6 @@ class PyPyside2(PythonPackage):
     version("5.15.10", tag="v5.15.10-lts-lgpl", submodules=True)
     version("5.15.2.1", tag="v5.15.2.1", submodules=True)
     version("5.14.2.1", tag="v5.14.2.1", submodules=True)
-    version("5.13.2", tag="v5.13.2", submodules=True)
-    version("5.13.1", tag="v5.13.1", submodules=True)
-    version("5.13.0", tag="v5.13.0", submodules=True)
-    version("5.12.5", tag="v5.12.5", submodules=True)
 
     variant(
         "doc",
@@ -35,11 +31,12 @@ class PyPyside2(PythonPackage):
     depends_on("python@:3.10", when="@5.15.8:", type=("build", "run"))
     depends_on("python@:3.9", when="@5.15.1:5.15.7", type=("build", "run"))
     depends_on("python@:3.8", when="@:5.15.0", type=("build", "run"))
+    depends_on("python@:3.7", when="@:5.13", type=("build", "run"))
 
     depends_on("cmake@3.1:", type="build")
     # libclang versioning from sources/shiboken2/doc/gettingstarted.rst
-    depends_on("llvm@6+clang", type="build", when="@5.12:5.13")
     depends_on("llvm@10+clang", type="build", when="@5.15")
+    depends_on("llvm@6+clang", type="build", when="@5.12:5.13")
     depends_on("py-setuptools", type="build")
     depends_on("py-packaging", type="build")
     depends_on("py-wheel", type="build")
@@ -47,7 +44,7 @@ class PyPyside2(PythonPackage):
     depends_on("py-wheel@:0.34", when="@:5.14", type="build")
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
-    depends_on("qt@5.11:+opengl")
+    depends_on("qt@5.12:+opengl")
 
     depends_on("graphviz", when="+doc", type="build")
     depends_on("libxml2@2.6.32:", when="+doc", type="build")
