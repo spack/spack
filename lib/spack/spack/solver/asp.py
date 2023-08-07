@@ -13,7 +13,7 @@ import pprint
 import re
 import types
 import warnings
-from typing import List
+from typing import List, NamedTuple
 
 import archspec.cpu
 
@@ -586,6 +586,11 @@ def bootstrap_clingo():
         from clingo import parse_files
 
 
+class NodeArgument(NamedTuple):
+    id: str
+    pkg: str
+
+
 def stringify(sym):
     """Stringify symbols from clingo models.
 
@@ -596,6 +601,14 @@ def stringify(sym):
     # TODO: simplify this when we no longer have to support older clingo versions.
     if isinstance(sym, (list, tuple)):
         return tuple(stringify(a) for a in sym)
+
+    try:
+        if sym.name == "node":
+            return NodeArgument(id=stringify(sym.arguments[0]), pkg=stringify(sym.arguments[1]))
+    except RuntimeError:
+        # This happens when using clingo w/ CFFI and trying to access ".name" for symbols
+        # that are not functions
+        pass
 
     if clingo_cffi:
         # Clingo w/ CFFI will throw an exception on failure
@@ -2532,17 +2545,15 @@ class SpecBuilder:
         )
     )
 
-    node_regex = re.compile(r"node\(\d,\"(.*)\"\)")
-
     @staticmethod
-    def main_node(*, pkg: str) -> str:
+    def main_node(*, pkg: str) -> NodeArgument:
         """Given a package name, returns the string representation of the root node in
         the ASP encoding.
 
         Args:
             pkg: name of a package
         """
-        return f'node(0,"{pkg}")'
+        return NodeArgument(id="0", pkg=pkg)
 
     def __init__(self, specs, hash_lookup=None):
         self._specs = {}
@@ -2557,17 +2568,13 @@ class SpecBuilder:
         self._hash_lookup = hash_lookup or {}
 
     @staticmethod
-    def extract_pkg(node: str) -> str:
+    def extract_pkg(node: NodeArgument) -> str:
         """Extracts the package name from a node fact, and returns it.
 
         Args:
             node: node from which the package name is to be extracted
         """
-        m = SpecBuilder.node_regex.match(node)
-        if m is None:
-            raise spack.error.SpackError(f"cannot extract package information from '{node}'")
-
-        return m.group(1)
+        return node.pkg
 
     def hash(self, node, h):
         if node not in self._specs:

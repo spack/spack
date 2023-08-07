@@ -2984,7 +2984,9 @@ class Spec:
             name = providers[0]
 
         node = spack.solver.asp.SpecBuilder.main_node(pkg=name)
-        assert node in answer, f"cannot find {name} in the list of specs {','.join(answer.keys())}"
+        assert (
+            node in answer
+        ), f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
 
         concretized = answer[node]
         self._dup(concretized)
