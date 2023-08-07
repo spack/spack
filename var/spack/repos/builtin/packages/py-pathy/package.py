@@ -14,8 +14,6 @@ class PyPathy(PythonPackage):
 
     version("0.10.1", sha256="4cd6e71b4cd5ff875cfbb949ad9fa5519d8d1dbe69d5fc1d1b23aa3cb049618b")
 
-    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-smart-open@5.2.1:6", type=("build", "run"))
     depends_on("py-typer@0.3:0", type=("build", "run"))
-    depends_on("py-dataclasses@0.6:0", type=("build", "run"), when="^python@:3.6")
