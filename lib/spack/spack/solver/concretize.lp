@@ -691,11 +691,11 @@ error(10, Message) :-
 %-----------------------------------------------------------------------------
 % a variant is a variant of a package if it is a variant under some condition
 % and that condition holds
-node_has_variant(node(NodeID, Package), variant(Variant)) :-
+node_has_variant(node(NodeID, Package), Variant) :-
   facts(Package, conditional_variant(ID, Variant)),
   condition_holds(ID, node(NodeID, Package)).
 
-node_has_variant(node(ID, Package), variant(Variant)) :-
+node_has_variant(node(ID, Package), Variant) :-
   facts(Package, variant(Variant)),
   attr("node", node(ID, Package)).
 
@@ -707,31 +707,31 @@ attr("variant_propagate", PackageNode, Variant, Value, Source) :-
 
 attr("variant_value", node(ID, Package), Variant, Value) :-
   attr("node", node(ID, Package)),
-  node_has_variant(node(ID, Package), variant(Variant)),
+  node_has_variant(node(ID, Package), Variant),
   attr("variant_propagate", node(ID, Package), Variant, Value, _),
   facts(Package, variant_possible_value(Variant, Value)).
 
 error(100, "{0} and {1} cannot both propagate variant '{2}' to package {3} with values '{4}' and '{5}'", Source1, Source2, Variant, PackageNode, Value1, Value2) :-
   attr("variant_propagate", PackageNode, Variant, Value1, Source1),
   attr("variant_propagate", PackageNode, Variant, Value2, Source2),
-  node_has_variant(PackageNode, variant(Variant)),
+  node_has_variant(PackageNode, Variant),
   Value1 < Value2.
 
 % a variant cannot be set if it is not a variant on the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, PackageNode)
   :- attr("variant_set", PackageNode, Variant),
-     not node_has_variant(PackageNode, variant(Variant)),
+     not node_has_variant(PackageNode, Variant),
      build(PackageNode).
 
 % a variant cannot take on a value if it is not a variant of the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, PackageNode)
   :- attr("variant_value", PackageNode, Variant, _),
-     not node_has_variant(PackageNode, variant(Variant)),
+     not node_has_variant(PackageNode, Variant),
      build(PackageNode).
 
 % if a variant is sticky and not set its value is the default value
 attr("variant_value", node(ID, Package), Variant, Value) :-
-  node_has_variant(node(ID, Package), variant(Variant)),
+  node_has_variant(node(ID, Package), Variant),
   not attr("variant_set", node(ID, Package), Variant),
   facts(Package, variant_sticky(Variant)),
   variant_default_value(Package, Variant, Value),
@@ -743,20 +743,20 @@ attr("variant_value", node(ID, Package), Variant, Value) :-
   : facts(Package, variant_possible_value(Variant, Value))
 }
  :- attr("node", node(ID, Package)),
-    node_has_variant(node(ID, Package), variant(Variant)),
+    node_has_variant(node(ID, Package), Variant),
     build(node(ID, Package)).
 
 
 error(100, "'{0}' required multiple values for single-valued variant '{1}'", Package, Variant)
   :- attr("node", node(ID, Package)),
-     node_has_variant(node(ID, Package), variant(Variant)),
+     node_has_variant(node(ID, Package), Variant),
      facts(Package, variant_single_value(Variant)),
      build(node(ID, Package)),
      2 { attr("variant_value", node(ID, Package), Variant, Value) }.
 
 error(100, "No valid value for variant '{1}' of package '{0}'", PackageNode, Variant)
   :- attr("node", PackageNode),
-     node_has_variant(PackageNode, variant(Variant)),
+     node_has_variant(PackageNode, Variant),
      build(PackageNode),
      not attr("variant_value", PackageNode, Variant, _).
 
@@ -786,7 +786,7 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
 % we revert to the default value. If it is set, we force the set value
 attr("variant_value", PackageNode, Variant, Value)
  :- attr("node", PackageNode),
-    node_has_variant(PackageNode, variant(Variant)),
+    node_has_variant(PackageNode, Variant),
     attr("variant_set", PackageNode, Variant, Value).
 
 % The rules below allow us to prefer default values for variants
@@ -809,7 +809,7 @@ variant_not_default(node(ID, Package), Variant, Value)
 % A default variant value that is not used
 variant_default_not_used(node(ID, Package), Variant, Value)
   :- variant_default_value(Package, Variant, Value),
-     node_has_variant(node(ID, Package), variant(Variant)),
+     node_has_variant(node(ID, Package), Variant),
      not attr("variant_value", node(ID, Package), Variant, Value),
      attr("node", node(ID, Package)).
 
@@ -854,7 +854,7 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and 'none'", PackageNode,
 auto_variant("dev_path").
 auto_variant("patches").
 
-node_has_variant(PackageNode, variant(Variant))
+node_has_variant(PackageNode, Variant)
   :- attr("variant_set", PackageNode, Variant, _), auto_variant(Variant).
 
 facts(Package, variant_single_value("dev_path"))
