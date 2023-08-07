@@ -1298,7 +1298,6 @@ def escape_colons(path):
 # trailing ':')
 #
 def process_config_path(path):
-    import pdb; pdb.set_trace()
     path = escape_colons(path)
     result = []
     if path.startswith(":"):
