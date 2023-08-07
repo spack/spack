@@ -1898,7 +1898,7 @@ class SpackSolverSetup:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
                 clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
                 if not spec.concrete and flag.propagate is True:
-                    clauses.append(f.node_flag_propagate(spec.name, flag_type, flag, spec.name))
+                    clauses.append(f.node_flag_possible_prop(spec.name, flag_type, flag, spec.name))
 
         # dependencies
         if spec.concrete:
@@ -2712,7 +2712,7 @@ class _Head:
     node_compiler_version = fn.attr("node_compiler_version_set")
     node_flag = fn.attr("node_flag_set")
     node_flag_source = fn.attr("node_flag_source")
-    node_flag_propagate = fn.attr("node_flag_propagate")
+    node_flag_propagation_candidate = fn.attr("node_flag_propagation_candidate")
     variant_propagation_candidate = fn.attr("variant_propagation_candidate")
 
 
@@ -2729,7 +2729,7 @@ class _Body:
     node_compiler_version = fn.attr("node_compiler_version")
     node_flag = fn.attr("node_flag")
     node_flag_source = fn.attr("node_flag_source")
-    node_flag_propagate = fn.attr("node_flag_propagate")
+    node_flag_propagation_candidate = fn.attr("node_flag_propagation_candidate")
     variant_propagation_candidate = fn.attr("variant_propagation_candidate")
 
 
