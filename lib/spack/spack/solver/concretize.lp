@@ -1189,38 +1189,25 @@ error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_miss
 % Compiler flags
 %-----------------------------------------------------------------------------
 
-% propagate flags when compiler match
-can_inherit_flags(PackageNode, DependencyNode, FlagType)
-  :- same_compiler(PackageNode, DependencyNode),
-     not attr("node_flag_set", DependencyNode, FlagType, _),
-     flag_type(FlagType).
-
 same_compiler(PackageNode, DependencyNode)
   :- depends_on(PackageNode, DependencyNode),
      node_compiler(PackageNode, CompilerID),
      node_compiler(DependencyNode, CompilerID),
      compiler_id(CompilerID).
 
-node_flag_inherited(DependencyNode, FlagType, Flag)
-  :- attr("node_flag_set", PackageNode, FlagType, Flag),
-     can_inherit_flags(PackageNode, DependencyNode, FlagType),
-     attr("node_flag_propagate", PackageNode, FlagType).
-
-% Ensure propagation
-:- node_flag_inherited(PackageNode, FlagType, Flag),
-   can_inherit_flags(PackageNode, DependencyNode, FlagType),
-   attr("node_flag_propagate", PackageNode, FlagType).
-=======
+% propagate flags when compiler match
 attr("node_flag_propagate", Package, FlagType, Flag, Source) :-
+  attr("node_flag_possible_prop", Package, FlagType, Flag, Source),
+  not attr("node_flag_set", Package, FlagType, _).
+
+attr("node_flag_possible_prop", Package, FlagType, Flag, Source) :-
   node_compiler(Source, CompilerID),
   node_compiler(Package, CompilerID),
   depends_on(Parent, Package),
-  attr("node_flag_propagate", Parent, _, _, Source),
+  attr("node_flag_possible_prop", Parent, _, _, Source),
   attr("node_flag", Source, FlagType, Flag),
-  not attr("node_flag_set", Package, FlagType, _),
   compiler_id(CompilerID),
   flag_type(FlagType).
->>>>>>> b44c47bc83 (Simplify node_flag_propagate and propagate past 1st level dependencies)
 
 error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
   depends_on(Source1, Package),
