@@ -23,6 +23,7 @@ import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.package_base
+import spack.store
 import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
@@ -705,9 +706,11 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
     assert "was not installed" in out
 
     # Check that failure prefix locks are still cached
-    failure_lock_prefixes = ",".join(spack.store.STORE.db._prefix_failures.keys())
-    assert "libelf" in failure_lock_prefixes
-    assert "libdwarf" in failure_lock_prefixes
+    failed_packages = [
+        pkg_name for dag_hash, pkg_name in spack.store.STORE.failure_tracker.locker.locks.keys()
+    ]
+    assert "libelf" in failed_packages
+    assert "libdwarf" in failed_packages
 
 
 def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
