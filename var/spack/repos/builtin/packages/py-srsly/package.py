@@ -26,3 +26,6 @@ class PySrsly(PythonPackage):
 
     # https://github.com/explosion/srsly/pull/24
     patch("subprocess.patch", when="@2.0.0:2.0.1")
+
+    # https://github.com/explosion/srsly/pull/97
+    conflicts("^py-cython@3:", when="@:2.4.6")
