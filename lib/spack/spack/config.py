@@ -1266,9 +1266,9 @@ def interp_escapes(path):
 def escape_colons(path):
     """Replaces colon characters with hex representation
     in config path arguments so long as the colon is properly escaped
-    with respect to yaml syntax (between two double quotes)"""
+    with respect to yaml syntax (between two single quotes)"""
     # Indicator that we are parsing within the context of a potential escape sequence
-    # However, standalone double quotes are not an escape character and they
+    # However, standalone single quotes are not an escape character and they
     # should be ignored here
     escaped_colon_idx = 0
     inside_escape = False
