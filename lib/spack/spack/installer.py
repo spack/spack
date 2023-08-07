@@ -1278,7 +1278,7 @@ class PackageInstaller:
             dep_id = package_id(dep_pkg)
 
             # Check for failure since a prefix lock is not required
-            if spack.store.STORE.prefix_failed(dep):
+            if spack.store.STORE.failure_tracker.failed(dep):
                 action = "'spack install' the dependency"
                 msg = "{0} is marked as an install failure: {1}".format(dep_id, action)
                 raise InstallError(err.format(request.pkg_id, msg), pkg=dep_pkg)
@@ -1493,7 +1493,7 @@ class PackageInstaller:
             if lock is None:
                 tty.debug(msg.format("Acquiring", desc, pkg_id, pretty_seconds(timeout or 0)))
                 op = "acquire"
-                lock = spack.store.STORE.prefix_lock(pkg.spec, timeout)
+                lock = spack.store.STORE.prefix_locker.lock(pkg.spec, timeout)
                 if timeout != lock.default_timeout:
                     tty.warn(
                         "Expected prefix lock timeout {0}, not {1}".format(
@@ -1618,12 +1618,12 @@ class PackageInstaller:
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
                 # of the spec.
-                spack.store.STORE.clear_failure(dep, force=False)
+                spack.store.STORE.failure_tracker.clear_failure(dep, force=False)
 
         install_package = request.install_args.get("install_package")
         if install_package and request.pkg_id not in self.build_tasks:
             # Be sure to clear any previous failure
-            spack.store.STORE.clear_failure(request.spec, force=True)
+            spack.store.STORE.failure_tracker.clear_failure(request.spec, force=True)
 
             # If not installing dependencies, then determine their
             # installation status before proceeding
@@ -1879,7 +1879,7 @@ class PackageInstaller:
         err = "" if exc is None else ": {0}".format(str(exc))
         tty.debug("Flagging {0} as failed{1}".format(pkg_id, err))
         if mark:
-            self.failed[pkg_id] = spack.store.STORE.mark_failed(task.pkg.spec)
+            self.failed[pkg_id] = spack.store.STORE.failure_tracker.mark_failed(task.pkg.spec)
         else:
             self.failed[pkg_id] = None
         task.status = STATUS_FAILED
@@ -2065,7 +2065,7 @@ class PackageInstaller:
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
             # assume using a separate (failed) prefix lock file.
-            if pkg_id in self.failed or spack.store.STORE.prefix_failed(spec):
+            if pkg_id in self.failed or spack.store.STORE.failure_tracker.failed(spec):
                 term_status.clear()
                 tty.warn("{0} failed to install".format(pkg_id))
                 self._update_failed(task)

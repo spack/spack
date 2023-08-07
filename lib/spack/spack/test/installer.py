@@ -433,7 +433,7 @@ def test_ensure_locked_new_lock(install_mockery, tmpdir, lock_type, reads, write
 
 
 def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
-    orig_pl = spack.store.Store.prefix_lock
+    orig_pl = spack.database.SpecLocker.lock
 
     def _pl(db, spec, timeout):
         lock = orig_pl(db, spec, timeout)
@@ -445,7 +445,7 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
     installer = create_installer(const_arg)
     spec = installer.build_requests[0].pkg.spec
 
-    monkeypatch.setattr(spack.store.Store, "prefix_lock", _pl)
+    monkeypatch.setattr(spack.database.SpecLocker, "lock", _pl)
 
     lock_type = "read"
     ltype, lock = installer._ensure_locked(lock_type, spec.package)
@@ -603,11 +603,11 @@ def test_clear_failures_success(install_mockery):
 
     # Set up a test prefix failure lock
     s = spack.spec.Spec("a").concretized()
-    spack.store.STORE.mark_failed(s)
-    assert spack.store.STORE.prefix_failed(s)
+    spack.store.STORE.failure_tracker.mark_failed(s)
+    assert spack.store.STORE.failure_tracker.failed(s)
 
     # Now clear failure tracking
-    spack.store.STORE.clear_all_failures()
+    spack.store.STORE.failure_tracker.clear_all_failures()
 
     # Ensure there are no cached failure locks or failure marks
     assert len(spack.store.STORE.failure_tracker.failures_lock.locks) == 0
@@ -624,13 +624,13 @@ def test_clear_failures_success(install_mockery):
 def test_clear_failures_errs(install_mockery, capsys):
     """Test the clear_failures exception paths."""
     s = spack.spec.Spec("a").concretized()
-    spack.store.STORE.mark_failed(s)
+    spack.store.STORE.failure_tracker.mark_failed(s)
 
     # Make the file marker not writeable, so that clearing_failures fails
     spack.store.STORE.failure_tracker.failure_dir.chmod(0o000)
 
     # Clear failure tracking
-    spack.store.STORE.clear_all_failures()
+    spack.store.STORE.failure_tracker.clear_all_failures()
 
     # Ensure expected warning generated
     out = str(capsys.readouterr()[1])
@@ -686,7 +686,7 @@ def test_check_deps_status_install_failure(install_mockery):
     """
     s = spack.spec.Spec("a").concretized()
     for dep in s.traverse(root=False):
-        spack.store.STORE.mark_failed(dep)
+        spack.store.STORE.failure_tracker.mark_failed(dep)
 
     const_arg = installer_args(["a"], {})
     installer = create_installer(const_arg)
@@ -996,7 +996,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     installer = create_installer(const_arg)
 
     # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.store.Store, "prefix_failed", _true)
+    monkeypatch.setattr(spack.database.FailureTracker, "failed", _true)
 
     with pytest.raises(inst.InstallError, match="request failed"):
         installer.install()
@@ -1012,7 +1012,7 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     installer = create_installer(const_arg)
 
     # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.store.Store, "prefix_failed", _true)
+    monkeypatch.setattr(spack.database.FailureTracker, "failed", _true)
 
     with pytest.raises(inst.InstallError, match="request failed"):
         installer.install()
@@ -1111,7 +1111,7 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     #
     # This will prevent b from installing, which will cause the build of a
     # to be skipped.
-    monkeypatch.setattr(spack.store.Store, "prefix_failed", _true)
+    monkeypatch.setattr(spack.database.FailureTracker, "failed", _true)
 
     with pytest.raises(inst.InstallError, match="after first install failure"):
         installer.install()

@@ -34,7 +34,6 @@ import spack.error
 import spack.paths
 import spack.spec
 import spack.util.path
-from spack.util import lock
 
 #: default installation root, relative to the Spack install path
 DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
@@ -191,39 +190,6 @@ class Store:
         self.layout = spack.directory_layout.DirectoryLayout(
             root, projections=projections, hash_length=hash_length
         )
-
-    def clear_all_failures(self) -> None:
-        """Removes all the install failure tracking files."""
-        self.failure_tracker.clear_all_failures()
-
-    def clear_failure(self, spec: "spack.spec.Spec", force: bool = False) -> None:
-        """Clears a failure for a single spec.
-
-        Args:
-            spec: spec to be cleared
-            force: True if the failure information should be cleared when a failure lock
-                exists for the file, or False if the failure should not be cleared (e.g.,
-                it may be associated with a concurrent build)
-        """
-        self.failure_tracker.clear_failure(spec, force)
-
-    def mark_failed(self, spec: "spack.spec.Spec") -> lock.Lock:
-        """Marks a spec installation as failed"""
-        return self.failure_tracker.mark_failed(spec)
-
-    def prefix_failed(self, spec: "spack.spec.Spec") -> bool:
-        """True if the installation of the spec failed."""
-        return self.failure_tracker.failed(spec)
-
-    def prefix_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lock.Lock:
-        return self.prefix_locker.lock(spec, timeout=timeout)
-
-    @contextlib.contextmanager
-    def prefix_write_lock(
-        self, spec: "spack.spec.Spec"
-    ) -> Generator[spack.database.SpecLocker, None, None]:
-        with self.prefix_locker.write_lock(spec) as locker:
-            yield locker
 
     def reindex(self) -> None:
         """Convenience function to reindex the store DB with its own layout."""
