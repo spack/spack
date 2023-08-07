@@ -93,6 +93,11 @@ class Bufr(CMakePackage):
         env.set(lib_envname, lib[0])
         env.set(inc_envname, include_dir)
 
+        if self.spec.satisfies("+python"):
+            pyver = self.spec["python"].version.up_to(2)
+            pydir = os.path.join(os.path.dirname(lib[0]), "python%s/site-packages" % pyver)
+            env.prepend_path("PYTHONPATH", pydir)
+
     def setup_run_environment(self, env):
         suffixes = ["4"]
         if not self.spec.satisfies("@12:"):
