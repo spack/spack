@@ -7,7 +7,8 @@
 % This logic program implements Spack's concretizer
 %=============================================================================
 
-#const root_node_id = 0.
+% ID of the nodes in the "root" link-run sub-DAG
+#const main_node_id = 0.
 
 #const link_run = 0.
 #const direct_link_run =1.
@@ -41,11 +42,11 @@
 :- provider(_, VirtualNode), not attr("virtual_node", VirtualNode).
 :- provider(PackageNode, _), not attr("node", PackageNode).
 
-:- attr("root", node(ID, PackageNode)), ID > root_node_id.
+:- attr("root", node(ID, PackageNode)), ID > main_node_id.
 
 % Nodes in the "root" unification set cannot depend on non-root nodes if the dependency is "link" or "run"
-:- attr("depends_on", node(root_node_id, Package), node(ID, _), "link"), ID != root_node_id, unification_set("root", node(root_node_id, Package)).
-:- attr("depends_on", node(root_node_id, Package), node(ID, _), "run"),  ID != root_node_id, unification_set("root", node(root_node_id, Package)).
+:- attr("depends_on", node(main_node_id, Package), node(ID, _), "link"), ID != main_node_id, unification_set("root", node(main_node_id, Package)).
+:- attr("depends_on", node(main_node_id, Package), node(ID, _), "run"),  ID != main_node_id, unification_set("root", node(main_node_id, Package)).
 
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
@@ -106,14 +107,14 @@ multiple_nodes_attribute("node_flag_source").
 multiple_nodes_attribute("depends_on").
 
 % Map constraint on the literal ID to facts on the node
-attr(Name, node(root_node_id, A1))             :- literal(LiteralID, Name, A1), solve_literal(LiteralID).
-attr(Name, node(root_node_id, A1), A2)         :- literal(LiteralID, Name, A1, A2), solve_literal(LiteralID).
-attr(Name, node(root_node_id, A1), A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), solve_literal(LiteralID), not multiple_nodes_attribute(Name).
-attr(Name, node(root_node_id, A1), A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), solve_literal(LiteralID).
+attr(Name, node(main_node_id, A1))             :- literal(LiteralID, Name, A1), solve_literal(LiteralID).
+attr(Name, node(main_node_id, A1), A2)         :- literal(LiteralID, Name, A1, A2), solve_literal(LiteralID).
+attr(Name, node(main_node_id, A1), A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), solve_literal(LiteralID), not multiple_nodes_attribute(Name).
+attr(Name, node(main_node_id, A1), A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), solve_literal(LiteralID).
 
 % Special cases where nodes occur in arguments other than A1
-attr("node_flag_source", node(root_node_id, A1), A2, node(root_node_id, A3)) :- literal(LiteralID, "node_flag_source", A1, A2, A3), solve_literal(LiteralID).
-attr("depends_on",       node(root_node_id, A1), node(root_node_id, A2), A3) :- literal(LiteralID, "depends_on",       A1, A2, A3), solve_literal(LiteralID).
+attr("node_flag_source", node(main_node_id, A1), A2, node(main_node_id, A3)) :- literal(LiteralID, "node_flag_source", A1, A2, A3), solve_literal(LiteralID).
+attr("depends_on",       node(main_node_id, A1), node(main_node_id, A2), A3) :- literal(LiteralID, "depends_on",       A1, A2, A3), solve_literal(LiteralID).
 
 #defined concretize_everything/0.
 #defined literal/1.
@@ -832,14 +833,14 @@ external_with_variant_set(node(NodeID, Package), Variant, Value)
 variant_default_value(Package, Variant, Value)
  :- pkg_fact(Package, variant_default_value_from_package_py(Variant, Value)),
     not variant_default_value_from_packages_yaml(Package, Variant, _),
-    not attr("variant_default_value_from_cli", node(root_node_id, Package), Variant, _).
+    not attr("variant_default_value_from_cli", node(main_node_id, Package), Variant, _).
 
 variant_default_value(Package, Variant, Value)
  :- variant_default_value_from_packages_yaml(Package, Variant, Value),
-    not attr("variant_default_value_from_cli", node(root_node_id, Package), Variant, _).
+    not attr("variant_default_value_from_cli", node(main_node_id, Package), Variant, _).
 
 variant_default_value(Package, Variant, Value) :-
-    attr("variant_default_value_from_cli", node(root_node_id, Package), Variant, Value).
+    attr("variant_default_value_from_cli", node(main_node_id, Package), Variant, Value).
 
 % Treat 'none' in a special way - it cannot be combined with other
 % values even if the variant is multi-valued
