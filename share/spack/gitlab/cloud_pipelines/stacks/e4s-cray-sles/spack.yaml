@@ -1,4 +1,7 @@
 spack:
+  include:
+  - $spack/share/spack/gitlab/cloud_pipelines/configs/linux/ci.yaml
+
   view: false
 
   concretizer:

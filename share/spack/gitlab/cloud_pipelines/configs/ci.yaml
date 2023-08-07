@@ -10,19 +10,17 @@ ci:
   - build-job:
       before_script-:
       - - spack list --count  # ensure that spack's cache is populated
-      script::
-      - - spack compiler find
-        - cd ${SPACK_CONCRETE_ENV_DIR}
-        - spack env activate --without-view .
+      - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
+        - spack compiler find
         - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
-        - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
-        - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      - - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
         # AWS runners mount E4S public key (verification), UO runners mount public/private (signing/verification)
-        - k=$CI_GPG_KEY_ROOT/e4s.gpg; [[ -r $k ]] && spack gpg trust $k
+      - - k=$CI_GPG_KEY_ROOT/e4s.gpg; [[ -r $k ]] && spack gpg trust $k
         # UO runners mount intermediate ci public key (verification), AWS runners mount public/private (signing/verification)
         - k=$CI_GPG_KEY_ROOT/intermediate_ci_signing_key.gpg; [[ -r $k ]] && spack gpg trust $k
         - k=$CI_GPG_KEY_ROOT/spack_public_key.gpg; [[ -r $k ]] && spack gpg trust $k
-        - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+      script::
+      - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
       after_script:
       - - cat /proc/loadavg || true
       variables:
@@ -47,8 +45,7 @@ ci:
         - if [[ $CI_COMMIT_TAG == "develop-"* ]]; then export SPACK_REPLACE_VERSION=develop; fi
         - export SPACK_BUILDCACHE_SOURCE=${SPACK_SOURCE_MIRROR//SPACK_REPLACE_VERSION/${SPACK_REPLACE_VERSION}}
       script:
-      - - cd ${SPACK_CONCRETE_ENV_DIR}
-        - spack env activate --without-view .
+      - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
         - echo Copying environment specs from ${SRC_MIRROR} to ${SPACK_BUILDCACHE_DESTINATION}
         - spack buildcache sync "${SPACK_BUILDCACHE_SOURCE}" "${SPACK_BUILDCACHE_DESTINATION}"
         - curl -fLsS https://spack.github.io/keys/spack-public-binary-key.pub -o /tmp/spack-public-binary-key.pub
@@ -89,12 +86,16 @@ ci:
         KUBERNETES_MEMORY_REQUEST: "500M"
 
   - any-job:
-      image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
       tags: ["spack"]
+      image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
+      variables:
+        # Disable local configs to avoid issues on shell runners
+        SPACK_DISABLE_LOCAL_CONFIG: "1"
       before_script:
+      - - export SPACK_USER_CACHE_PATH="${CI_PROJECT_DIR}/_user_cache/"
       - - uname -a || true
         - grep -E "vendor|model name" /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
-        - nproc
+        - nproc || true
       - - . "./share/spack/setup-env.sh"
         - spack --version
         - spack arch
