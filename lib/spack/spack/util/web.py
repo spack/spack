@@ -17,6 +17,7 @@ import traceback
 import urllib.parse
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
+from typing import IO, Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
@@ -40,7 +41,9 @@ from spack.util.path import convert_to_posix_path
 
 
 class DetailedHTTPError(HTTPError):
-    def __init__(self, req: Request, code: int, msg: str, hdrs: email.message.Message, fp) -> None:
+    def __init__(
+        self, req: Request, code: int, msg: str, hdrs: email.message.Message, fp: Optional[IO]
+    ) -> None:
         self.req = req
         super().__init__(req.get_full_url(), code, msg, hdrs, fp)
 
@@ -48,7 +51,13 @@ class DetailedHTTPError(HTTPError):
         # Note: HTTPError, is actually a kind of non-seekable response object, so
         # best not to read the response body here (even if it may include a human-readable
         # error message).
-        return f"{self.req.get_method()} {self.url} returned {self.code}: {self.msg}"
+        # Note: use self.filename, not self.url, because the latter requires fp to be an
+        # IO object, which is not the case after unpickling.
+        return f"{self.req.get_method()} {self.filename} returned {self.code}: {self.msg}"
+
+    def __reduce__(self):
+        # fp is an IO object and not picklable, the rest should be.
+        return DetailedHTTPError, (self.req, self.code, self.msg, self.hdrs, None)
 
 
 class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
