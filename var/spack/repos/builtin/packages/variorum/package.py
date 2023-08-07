@@ -43,26 +43,26 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
     #variant("intel_gpu", default=False, description="Build for Intel GPU architecture")
 
     # remove which ones we do not support
-    variorum_cuda_arch_values = (
+    CudaPackage.cuda_arch_values = (
         "70",
     )
     variant(
         "cuda_arch",
         description="Nvidia GPU architecture",
-        values=spack.variant.any_combination_of(*variorum_cuda_arch_values),
+        values=spack.variant.any_combination_of(*CudaPackage.cuda_arch_values),
         sticky=True,
         when="+cuda",
     )
 
     # remove which ones we do not support
-    amdgpu_targets = (
+    ROCmPackage.amdgpu_targets = (
             "gfx906",
             "gfx906:xnack-",
         )
     variant(
         "amdgpu_target",
         description="AMD GPU architecture",
-        values=spack.variant.any_combination_of(*amdgpu_targets),
+        values=spack.variant.any_combination_of(*ROCmPackage.amdgpu_targets),
         sticky=True,
         when="+rocm",
     )
