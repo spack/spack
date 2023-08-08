@@ -18,3 +18,4 @@ class Chgcentre(CMakePackage):
 
     depends_on("casacore")
     depends_on("gsl")
+    patch('main.patch')
