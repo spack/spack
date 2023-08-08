@@ -85,6 +85,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsolver", when="+rocm")
     depends_on("rocthrust", when="+rocm")
     depends_on("slate", when="+slate")
+    depends_on("magma+cuda", when="+magma+cuda")
+    depends_on("magma+rocm", when="+magma+rocm")
     depends_on("slate+cuda", when="+cuda+slate")
     depends_on("slate+rocm", when="+rocm+slate")
     for val in ROCmPackage.amdgpu_targets:
