@@ -25,3 +25,5 @@ class PyHealpy(PythonPackage):
     depends_on("py-six", type=("build", "run"))
     depends_on("cfitsio", type=("build", "run"))
     depends_on("healpix-cxx", type=("build", "run"))
+
+    patch("cfitsio_version_check.patch", when="@1.13:")
