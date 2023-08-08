@@ -129,7 +129,8 @@ class Visit(CMakePackage):
     depends_on("qwt+opengl", when="+gui")
 
     # python@3.8 doesn't work with VisIt.
-    depends_on("python@3.2:3.7,3.9:", when="+python")
+    depends_on("python@3.2:3.7,3.9:", when="@:3.2 +python")
+    depends_on("python@3.2:", when="@3.3: +python")
     extends("python", when="+python")
 
     # VisIt uses the hdf5 1.8 api
