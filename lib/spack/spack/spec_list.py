@@ -10,7 +10,7 @@ from spack.error import SpackError
 from spack.spec import Spec
 
 
-class SpecList(object):
+class SpecList:
     def __init__(self, name="specs", yaml_list=None, reference=None):
         # Normalize input arguments
         yaml_list = yaml_list or []

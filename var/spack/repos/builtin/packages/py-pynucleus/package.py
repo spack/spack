@@ -19,8 +19,9 @@ class PyPynucleus(PythonPackage):
     for ref in refs:
         version(ref, branch=ref)
 
+    depends_on("python@3.10:", type=("build", "run"))
     depends_on("py-mpi4py@2.0.0:", type=("build", "link", "run"))
-    depends_on("py-cython", type=("build", "run"))
+    depends_on("py-cython@0.29.32:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "link", "run"))
     depends_on("py-scipy", type=("build", "link", "run"))
     depends_on("metis", type=("build", "link", "run"))
@@ -29,7 +30,7 @@ class PyPynucleus(PythonPackage):
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-matplotlib+latex", type=("build", "run"))
     depends_on("py-scikit-sparse", type=("build", "run"))
     depends_on("py-modepy", type=("build", "run"))
     depends_on("py-meshpy", type=("build", "run"))
@@ -47,6 +48,9 @@ class PyPynucleus(PythonPackage):
         "PyNucleus-multilevelSolver",
         "PyNucleus-nl",
     ]
+
+    def setup_build_environment(self, env):
+        env.set("PYNUCLEUS_BUILD_PARALLELISM", make_jobs)
 
     @run_before("install")
     def install_python(self):

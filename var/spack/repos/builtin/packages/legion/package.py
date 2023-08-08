@@ -27,6 +27,7 @@ class Legion(CMakePackage, ROCmPackage):
 
     maintainers("pmccormick", "streichler", "elliottslaughter")
     tags = ["e4s"]
+    version("23.06.0", tag="legion-23.06.0")
     version("23.03.0", tag="legion-23.03.0")
     version("22.12.0", tag="legion-22.12.0")
     version("22.09.0", tag="legion-22.09.0")
@@ -46,17 +47,19 @@ class Legion(CMakePackage, ROCmPackage):
     # use for general (not legion development) use cases.
     depends_on("mpi", when="network=mpi")
     depends_on("mpi", when="network=gasnet")  # MPI is required to build gasnet (needs mpicc).
+    depends_on("ucx", when="network=ucx")
     depends_on("ucx", when="conduit=ucx")
     depends_on("mpi", when="conduit=mpi")
-    depends_on("cuda@10.0:11.9", when="+cuda_unsupported_compiler")
-    depends_on("cuda@10.0:11.9", when="+cuda")
+    depends_on("cray-pmi", when="conduit=ofi-slingshot11 ^cray-mpich")
+    depends_on("cuda@10.0:11.9", when="+cuda_unsupported_compiler @:23.03.0")
+    depends_on("cuda@10.0:11.9", when="+cuda @:23.03.0")
+    depends_on("cuda@10.0:12.2", when="+cuda_unsupported_compiler @23.06.0:")
+    depends_on("cuda@10.0:12.2", when="+cuda @23.06.0:")
     depends_on("hdf5", when="+hdf5")
     depends_on("hwloc", when="+hwloc")
 
     # cuda-centric
-    # reminder for arch numbers to names: 60=pascal, 70=volta, 75=turing, 80=ampere
-    # TODO: we could use a map here to clean up and use naming vs. numbers.
-    cuda_arch_list = ("60", "70", "75", "80")
+    cuda_arch_list = CudaPackage.cuda_arch_values
     for nvarch in cuda_arch_list:
         depends_on(
             "kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={0}".format(nvarch),
@@ -97,7 +100,10 @@ class Legion(CMakePackage, ROCmPackage):
 
     depends_on("kokkos@3.3.01:+rocm", when="+kokkos+rocm")
 
-    depends_on("python@3", when="+python")
+    # https://github.com/StanfordLegion/legion/#dependencies
+    depends_on("python@3.8:", when="+python")
+    depends_on("py-cffi", when="+python")
+    depends_on("py-numpy", when="+python")
     depends_on("papi", when="+papi")
     depends_on("zlib", when="+zlib")
 
@@ -108,8 +114,6 @@ class Legion(CMakePackage, ROCmPackage):
     cpp_stds = ["11", "14", "17", "20"]
     variant("cxxstd", default="11", values=cpp_stds, multi=False)
 
-    # TODO: Need a AMD/HIP variant to match support landing in 21.03.0.
-
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
     # mature.  We have many users that default to using no network layer for
@@ -118,7 +122,7 @@ class Legion(CMakePackage, ROCmPackage):
     variant(
         "network",
         default="none",
-        values=("gasnet", "mpi", "none"),
+        values=("gasnet", "mpi", "ucx", "none"),
         description="The network communications/transport layer to use.",
         multi=False,
     )
@@ -148,42 +152,26 @@ class Legion(CMakePackage, ROCmPackage):
         else:
             return True
 
-    variant(
-        "gasnet_root",
-        default="none",
-        values=validate_gasnet_root,
-        description="Path to a pre-installed version of GASNet (prefix directory).",
-        multi=False,
-    )
-    conflicts("gasnet_root", when="network=mpi")
-
-    variant(
-        "conduit",
-        default="none",
-        values=("aries", "ibv", "udp", "mpi", "ucx", "none"),
-        description="The gasnet conduit(s) to enable.",
-        multi=False,
-    )
-
-    conflicts(
-        "conduit=none",
-        when="network=gasnet",
-        msg="a conduit must be selected when 'network=gasnet'",
-    )
-
-    gasnet_conduits = ("aries", "ibv", "udp", "mpi", "ucx")
-    for c in gasnet_conduits:
-        conflict_str = "conduit=%s" % c
-        conflicts(
-            conflict_str, when="network=mpi", msg="conduit attribute requires 'network=gasnet'."
+    with when("network=gasnet"):
+        variant(
+            "gasnet_root",
+            default="none",
+            values=validate_gasnet_root,
+            description="Path to a pre-installed version of GASNet (prefix directory).",
+            multi=False,
+        )
+        variant(
+            "conduit",
+            default="none",
+            values=("none", "aries", "ibv", "udp", "mpi", "ucx", "ofi-slingshot11"),
+            description="The GASNet conduit(s) to enable.",
+            sticky=True,
+            multi=False,
         )
         conflicts(
-            conflict_str, when="network=none", msg="conduit attribute requires 'network=gasnet'."
+            "conduit=none", msg="the 'conduit' variant must be set to a value other than 'none'"
         )
-
-    variant("gasnet_debug", default=False, description="Build gasnet with debugging enabled.")
-    conflicts("+gasnet_debug", when="network=mpi")
-    conflicts("+gasnet_debug", when="network=none")
+        variant("gasnet_debug", default=False, description="Build gasnet with debugging enabled.")
 
     variant("shared", default=False, description="Build shared libraries.")
 
@@ -195,12 +183,6 @@ class Legion(CMakePackage, ROCmPackage):
         "privilege_checks",
         default=False,
         description="Enable runtime privildge checks in Legion accessors.",
-    )
-
-    variant(
-        "enable_tls",
-        default=False,
-        description="Enable thread-local-storage of the Legion context.",
     )
 
     variant(
@@ -236,6 +218,7 @@ class Legion(CMakePackage, ROCmPackage):
     conflicts("+cuda_hijack", when="~cuda")
 
     variant("fortran", default=False, description="Enable Fortran bindings.")
+    requires("+bindings", when="+fortran")
 
     variant("hdf5", default=False, description="Enable support for HDF5.")
 
@@ -258,6 +241,8 @@ class Legion(CMakePackage, ROCmPackage):
     variant("papi", default=False, description="Enable PAPI performance measurements.")
 
     variant("python", default=False, description="Enable Python support.")
+    requires("+bindings", when="+python")
+    requires("+shared", when="+python")
 
     variant("zlib", default=True, description="Enable zlib support.")
 
@@ -277,11 +262,17 @@ class Legion(CMakePackage, ROCmPackage):
         default=512,
         description="Maximum number of fields allowed in a logical region.",
     )
+    variant(
+        "max_num_nodes",
+        values=int,
+        default=1024,
+        description="Maximum number of nodes supported by Legion.",
+    )
 
     def setup_build_environment(self, build_env):
         spec = self.spec
         if "+rocm" in spec:
-            build_env.set("HIP_PATH", spec["hip"].prefix)
+            build_env.set("HIP_PATH", "{0}/hip".format(spec["hip"].prefix))
 
     def cmake_args(self):
         spec = self.spec
@@ -300,17 +291,21 @@ class Legion(CMakePackage, ROCmPackage):
                 options.append("-DLegion_EMBED_GASNet_LOCALSRC=%s" % gasnet_dir)
 
             gasnet_conduit = spec.variants["conduit"].value
-            options.append("-DGASNet_CONDUIT=%s" % gasnet_conduit)
+
+            if "-" in gasnet_conduit:
+                gasnet_conduit, gasnet_system = gasnet_conduit.split("-")
+                options.append("-DGASNet_CONDUIT=%s" % gasnet_conduit)
+                options.append("-DGASNet_SYSTEM=%s" % gasnet_system)
+            else:
+                options.append("-DGASNet_CONDUIT=%s" % gasnet_conduit)
 
             if "+gasnet_debug" in spec:
                 options.append("-DLegion_EMBED_GASNet_CONFIGURE_ARGS=--enable-debug")
         elif "network=mpi" in spec:
             options.append("-DLegion_NETWORKS=mpi")
-            if spec.variants["gasnet_root"].value != "none":
-                raise InstallError("'gasnet_root' is only valid when 'network=gasnet'.")
+        elif "network=ucx" in spec:
+            options.append("-DLegion_NETWORKS=ucx")
         else:
-            if spec.variants["gasnet_root"].value != "none":
-                raise InstallError("'gasnet_root' is only valid when 'network=gasnet'.")
             options.append("-DLegion_EMBED_GASNet=OFF")
 
         if "+shared" in spec:
@@ -324,9 +319,6 @@ class Legion(CMakePackage, ROCmPackage):
         if "+privilege_checks" in spec:
             # default is off.
             options.append("-DLegion_PRIVILEGE_CHECKS=ON")
-        if "+enable_tls" in spec:
-            # default is off.
-            options.append("-DLegion_ENABLE_TLS=ON")
         if "output_level" in spec:
             level = str.upper(spec.variants["output_level"].value)
             options.append("-DLegion_OUTPUT_LEVEL=%s" % level)
@@ -403,7 +395,6 @@ class Legion(CMakePackage, ROCmPackage):
             # default is off.
             options.append("-DLegion_BUILD_BINDINGS=ON")
             options.append("-DLegion_REDOP_COMPLEX=ON")  # required for bindings
-            options.append("-DLegion_USE_Fortran=ON")
 
         if spec.variants["build_type"].value == "Debug":
             cmake_cxx_flags.extend(["-DDEBUG_REALM", "-DDEBUG_LEGION", "-ggdb"])
@@ -422,6 +413,17 @@ class Legion(CMakePackage, ROCmPackage):
                 maxfields = maxfields & maxfields - 1
             maxfields = maxfields << 1
         options.append("-DLegion_MAX_FIELDS=%d" % maxfields)
+
+        maxnodes = int(spec.variants["max_num_nodes"].value)
+        if maxnodes <= 0:
+            maxnodes = 1024
+        # make sure maxnodes is a power of two.  if not,
+        # find the next largest power of two and use that...
+        if maxnodes & (maxnodes - 1) != 0:
+            while maxnodes & maxnodes - 1:
+                maxnodes = maxnodes & maxnodes - 1
+            maxnodes = maxnodes << 1
+        options.append("-DLegion_MAX_NUM_NODES=%d" % maxnodes)
 
         # This disables Legion's CMake build system's logic for targeting the native
         # CPU architecture in favor of Spack-provided compiler flags

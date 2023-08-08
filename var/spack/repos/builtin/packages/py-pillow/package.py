@@ -40,18 +40,20 @@ class PyPillowBase(PythonPackage):
     variant("raqm", when="@8.2:", default=False, description="RAQM support")
 
     # Required dependencies
-    # https://pillow.readthedocs.io/en/latest/installation.html#notes
-    depends_on("python@3.7:3.11", when="@9.3:", type=("build", "run"))
-    depends_on("python@3.7:3.10", when="@9.0:9.2", type=("build", "run"))
-    depends_on("python@3.6:3.10", when="@8.3.2:8.4", type=("build", "run"))
-    depends_on("python@3.6:3.9", when="@8:8.3.1", type=("build", "run"))
-    depends_on("python@3.5:3.8", when="@7.0:7.2", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:3.8", when="@6.2.1:6.2.2", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:3.7", when="@6.0:6.2.0", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:3.7", when="@5.2:5.4", type=("build", "run"))
+    # https://pillow.readthedocs.io/en/latest/installation.html#python-support
+    depends_on("python@3.8:3.11", when="@10:", type=("build", "link", "run"))
+    depends_on("python@3.7:3.11", when="@9.3:9.5", type=("build", "link", "run"))
+    depends_on("python@3.7:3.10", when="@9.0:9.2", type=("build", "link", "run"))
+    depends_on("python@3.6:3.10", when="@8.3.2:8.4", type=("build", "link", "run"))
+    depends_on("python@3.6:3.9", when="@8:8.3.1", type=("build", "link", "run"))
+    depends_on("python@3.5:3.8", when="@7.0:7.2", type=("build", "link", "run"))
+    depends_on("python@2.7:2.8,3.5:3.8", when="@6.2.1:6.2.2", type=("build", "link", "run"))
+    depends_on("python@2.7:2.8,3.5:3.7", when="@6.0:6.2.0", type=("build", "link", "run"))
+    depends_on("python@2.7:2.8,3.4:3.7", when="@5.2:5.4", type=("build", "link", "run"))
     depends_on("py-setuptools", type="build")
 
     # Optional dependencies
+    # https://pillow.readthedocs.io/en/latest/installation.html#external-libraries
     depends_on("zlib", when="+zlib")
     depends_on("jpeg", when="+jpeg")
     depends_on("libtiff", when="+tiff")
@@ -107,6 +109,7 @@ class PyPillow(PyPillowBase):
     homepage = "https://python-pillow.org/"
     pypi = "Pillow/Pillow-7.2.0.tar.gz"
 
+    version("10.0.0", sha256="9c82b5b3e043c7af0d95792d0d20ccf68f61a1fec6b3530e718b688422727396")
     version("9.5.0", sha256="bf548479d336726d7a0eceb6e767e179fbde37833ae42794602631a070d630f1")
     version("9.4.0", sha256="a1c2d7780448eb93fbcc3789bf3916aa5720d942e37945f4056680317f1cd23e")
     version("9.3.0", sha256="c935a22a557a560108d780f9a0fc426dd7459940dc54faa49d83249c8d3e760f")
@@ -126,6 +129,7 @@ class PyPillow(PyPillowBase):
     version("5.4.1", sha256="5233664eadfa342c639b9b9977190d64ad7aca4edc51a966394d7e08e7f38a9f")
 
     for ver in [
+        "10.0.0",
         "9.5.0",
         "9.4.0",
         "9.3.0",

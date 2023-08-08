@@ -31,8 +31,13 @@ class PyMpi4py(PythonPackage):
     depends_on("python@2.6:2.7,3.2:")
     depends_on("python@2.7:2.8,3.5:", when="@3.1:")
     depends_on("py-setuptools@40.9:", type="build")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
     depends_on("mpi")
     depends_on("py-cython@0.27.0:", type="build")
+
+    # https://github.com/mpi4py/mpi4py/pull/311
+    conflicts("^py-cython@3:")
 
     @when("@3.1:")
     def install_options(self, spec, prefix):

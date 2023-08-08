@@ -30,12 +30,23 @@ class Nwchem(Package):
 
     variant("openmp", default=False, description="Enables OpenMP support")
     variant("mpipr", default=False, description="Enables ARMCI with progress rank")
+    variant("fftw3", default=False, description="Link against the FFTW library")
 
     # This patch is for the modification of the build system (e.g. compiler flags) and
     # Fortran syntax to enable the compilation with Fujitsu compilers. The modification
     # will be merged to the next release of NWChem (see https://github.com/nwchemgit/nwchem/issues/347
     # for more detail.
     patch("fj.patch", when="@7.0.2 %fj")
+    # This patch is for linking the FFTW library in NWChem.
+    # It applys only to the 7.2.0 source code.
+    # will be merged to the next release of NWChem (see https://github.com/nwchemgit/nwchem/issues/792
+    # for more detail.
+    # This patch is the combination of the following commits
+    # https://github.com/nwchemgit/nwchem/commit/b4ec4ade1af434bc80470d6874aebf6fdcd12489
+    # https://github.com/nwchemgit/nwchem/commit/376f86f96eb982e83f10514e9dcd994564f973b4
+    # https://github.com/nwchemgit/nwchem/commit/c89fc9d1eca6689bce12564a63fdea95d962a123
+    # Prior versions of NWChem, including 7.0.2, were not able to link with FFTW
+    patch("fftw_splans.patch", when="@7.2.0")
 
     depends_on("blas")
     depends_on("lapack")
@@ -67,12 +78,16 @@ class Nwchem(Package):
                 "MRCC_METHODS=y",  # TCE extra module
                 "IPCCSD=y",  # TCE extra module
                 "EACCSD=y",  # TCE extra module
+                "V=1",  # verbose build
             ]
         )
         if self.spec.satisfies("@7.2.0:"):
             args.extend(["NWCHEM_MODULES=all python gwmol"])
+            args.extend(["USE_HWOPT=n"])
         else:
             args.extend(["NWCHEM_MODULES=all python"])
+            # archspec flags are injected through the compiler wrapper
+            filter_file("(-mtune=native|-mcpu=native|-xHost)", "", "src/config/makefile.h")
 
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear

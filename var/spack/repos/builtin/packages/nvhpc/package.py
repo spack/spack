@@ -21,6 +21,20 @@ from spack.util.prefix import Prefix
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    "23.7": {
+        "Linux-aarch64": (
+            "d3b9b674045e6e17156b298941be4e1e1e7dea6a3c1938f14ad653b180860ff2",
+            "https://developer.download.nvidia.com/hpc-sdk/23.7/nvhpc_2023_237_Linux_aarch64_cuda_multi.tar.gz",
+        ),
+        "Linux-ppc64le": (
+            "67b137cf67e2c8556ef3952d1ee35f4966c9d1968626825924fb8e4b198a532b",
+            "https://developer.download.nvidia.com/hpc-sdk/23.7/nvhpc_2023_237_Linux_ppc64le_cuda_multi.tar.gz",
+        ),
+        "Linux-x86_64": (
+            "fea91d95ff18bca1ce7afde50371caa02001ade8bed6ddfc5ff70862ccbebece",
+            "https://developer.download.nvidia.com/hpc-sdk/23.7/nvhpc_2023_237_Linux_x86_64_cuda_multi.tar.gz",
+        ),
+    },
     "23.5": {
         "Linux-aarch64": (
             "3af202ad36bbf205b2af56aabe63b971c01b5ec0e82a02effb3c4928f63bc657",
@@ -321,6 +335,8 @@ class Nvhpc(Package):
 
     maintainers("samcmill")
     tags = ["e4s"]
+
+    skip_version_audit = ["platform=darwin"]
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())

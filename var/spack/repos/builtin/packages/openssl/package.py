@@ -28,8 +28,28 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     executables = ["openssl"]
 
-    version("3.1.0", sha256="aaa925ad9828745c4cad9d9efeb273deca820f2cdcf2c3ac7d7c1212b7c497b4")
-    version("3.0.8", sha256="6c13d2bf38fdf31eac3ce2a347073673f5d63263398f1f69d0df4a41253e4b3e")
+    version("3.1.2", sha256="a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539")
+    version(
+        "3.1.1",
+        sha256="b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674",
+        deprecated=True,
+    )
+    version(
+        "3.1.0",
+        sha256="aaa925ad9828745c4cad9d9efeb273deca820f2cdcf2c3ac7d7c1212b7c497b4",
+        deprecated=True,
+    )
+    version("3.0.10", sha256="1761d4f5b13a1028b9b6f3d4b8e17feb0cedc9370f6afe61d7193d2cdce83323")
+    version(
+        "3.0.9",
+        sha256="eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90",
+        deprecated=True,
+    )
+    version(
+        "3.0.8",
+        sha256="6c13d2bf38fdf31eac3ce2a347073673f5d63263398f1f69d0df4a41253e4b3e",
+        deprecated=True,
+    )
     version(
         "3.0.7",
         sha256="83049d042a260e696f62406ac5c08bf706fd84383f945cf21bd61e9ed95c396e",
@@ -63,10 +83,16 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
+    version("1.1.1v", sha256="d6697e2871e77238460402e9362d47d18382b15ef9f246aba6c7bd780d38a6b0")
+    version(
+        "1.1.1u",
+        sha256="e2f8d84b523eecd06c7be7626830370300fbcc15386bf5142d72758f6963ebc6",
+        deprecated=True,
+    )
     version(
         "1.1.1t",
         sha256="8dee9b24bdb1dcbf0c3d1e9b02fb8f6bf22165e807f45adeb7c9677536859d3b",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "1.1.1s",
@@ -387,6 +413,10 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             # Last tested on nvidia@22.3 for x86_64:
             # nvhpc segfaults NVC++-F-0000-Internal compiler error.
             # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
+            options.append("no-asm")
+        elif spec.satisfies("@3: %oneapi"):
+            # Last tested on oneapi@2023.1.0 for x86_64:
+            # crypto/md5/md5-x86_64.s:684:31: error: expected string
             options.append("no-asm")
 
         # The default glibc provided by CentOS 7 does not provide proper

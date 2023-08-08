@@ -24,6 +24,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("develop", branch="master")
+    version("2.29.0", sha256="98b72115407a0e24dbaac70eccae0da3465f8f999318b2c9241631133f42d511")
     version("2.28.0", sha256="2eea68740cdbc0b49a5e428f06ad7af861d1e169ce6a12d2cf0aa2fc28c4a2ae")
     version("2.27.0", sha256="507a3d036bb1ac21a55685ae417d769dd02009bde7e09785d0ae7446b4ae1f98")
     version("2.26.0", sha256="c214084bddc61a06f3758d82947f7f831e76d7e3edeac2c78bb82d597686e05d")
@@ -75,6 +76,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("gptune", default=False, description="Add the GPTune hookup code")
     variant("umpire", default=False, description="Enable Umpire support")
     variant("sycl", default=False, description="Enable SYCL support")
+    variant("caliper", default=False, description="Enable Caliper support")
 
     # Patch to add gptune hookup codes
     patch("ij_gptune.patch", when="+gptune@2.19.0")
@@ -104,6 +106,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("rocrand", when="+rocm")
     depends_on("rocprim", when="+rocm")
     depends_on("umpire", when="+umpire")
+    depends_on("caliper", when="+caliper")
+
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "umpire+cuda cuda_arch={0}".format(sm_), when="+umpire+cuda cuda_arch={0}".format(sm_)
@@ -216,6 +220,11 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append("--with-umpire-host")
             else:
                 configure_args.append("--with-umpire")
+
+        if "+caliper" in spec:
+            configure_args.append("--with-caliper")
+            configure_args.append("--with-caliper-include=%s" % spec["caliper"].prefix.include)
+            configure_args.append("--with-caliper-lib=%s" % spec["caliper"].libs)
 
         configure_args.extend(self.enable_or_disable("debug"))
 

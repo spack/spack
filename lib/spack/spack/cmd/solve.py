@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import argparse
 import re
 import sys
@@ -35,7 +33,7 @@ def setup_parser(subparser):
         "--show",
         action="store",
         default="opt,solutions",
-        help="select outputs: comma-separated list of: \n"
+        help="select outputs\n\ncomma-separated list of:\n"
         "  asp          asp program text\n"
         "  opt          optimization criteria for best model\n"
         "  output       raw clingo output\n"
@@ -44,7 +42,11 @@ def setup_parser(subparser):
     )
 
     # Below are arguments w.r.t. spec display (like spack spec)
-    arguments.add_common_arguments(subparser, ["long", "very_long", "install_status"])
+    arguments.add_common_arguments(subparser, ["long", "very_long", "namespaces"])
+
+    install_status_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+
     subparser.add_argument(
         "-y",
         "--yaml",
@@ -70,13 +72,6 @@ def setup_parser(subparser):
         default="nodes",
         choices=["nodes", "edges", "paths"],
         help="how extensively to traverse the DAG (default: nodes)",
-    )
-    subparser.add_argument(
-        "-N",
-        "--namespaces",
-        action="store_true",
-        default=False,
-        help="show fully qualified package names",
     )
     subparser.add_argument(
         "-t", "--types", action="store_true", default=False, help="show dependency types"

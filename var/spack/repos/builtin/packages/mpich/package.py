@@ -7,6 +7,7 @@ import os
 import re
 import sys
 
+from spack.build_environment import dso_suffix
 from spack.package import *
 
 
@@ -24,7 +25,10 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     tags = ["e4s"]
     executables = ["^mpichversion$"]
 
+    keep_werror = "specific"
+
     version("develop", submodules=True)
+    version("4.1.2", sha256="3492e98adab62b597ef0d292fb2459b6123bc80070a8aa0a30be6962075a12f0")
     version("4.1.1", sha256="ee30471b35ef87f4c88f871a5e2ad3811cd9c4df32fd4f138443072ff4284ca2")
     version("4.1", sha256="8b1ec63bc44c7caa2afbb457bc5b3cd4a70dbe46baba700123d67c48dc5ab6a0")
     version("4.0.3", sha256="17406ea90a6ed4ecd5be39c9ddcbfac9343e6ab4f77ac4e8c5ebe4a3e3b6c501")
@@ -599,27 +603,47 @@ with '-Wl,-commons,use_dylibs' and without
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(["examples", join_path("test", "mpi")])
 
-    def run_mpich_test(self, example_dir, exe):
-        """Run stand alone tests"""
+    def mpi_launcher(self):
+        """Determine the appropriate launcher."""
+        commands = [
+            join_path(self.spec.prefix.bin, "mpirun"),
+            join_path(self.spec.prefix.bin, "mpiexec"),
+        ]
+        if "+slurm" in self.spec:
+            commands.insert(0, join_path(self.spec["slurm"].prefix.bin))
+        return which(*commands)
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, example_dir)
-        exe_source = join_path(test_dir, "{0}.c".format(exe))
+    def run_mpich_test(self, subdir, exe, num_procs=1):
+        """Compile and run the test program."""
+        path = self.test_suite.current_test_cache_dir.join(subdir)
+        with working_dir(path):
+            src = f"{exe}.c"
+            if not os.path.isfile(src):
+                raise SkipTest(f"{src} is missing")
 
-        if not os.path.isfile(exe_source):
-            print("Skipping {0} test".format(exe))
-            return
+            mpicc = which(os.environ["MPICC"])
+            mpicc("-Wall", "-g", "-o", exe, src)
+            if num_procs > 1:
+                launcher = self.mpi_launcher()
+                if launcher is not None:
+                    launcher("-n", str(num_procs), exe)
+                    return
 
-        self.run_test(
-            self.prefix.bin.mpicc,
-            options=[exe_source, "-Wall", "-g", "-o", exe],
-            purpose="test: generate {0} file".format(exe),
-            work_dir=test_dir,
-        )
+            test_exe = which(exe)
+            test_exe()
 
-        self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir)
-
-    def test(self):
-        self.run_mpich_test(join_path("test", "mpi", "init"), "finalized")
-        self.run_mpich_test(join_path("test", "mpi", "basic"), "sendrecv")
-        self.run_mpich_test(join_path("test", "mpi", "perf"), "manyrma")
+    def test_cpi(self):
+        """build and run cpi"""
         self.run_mpich_test("examples", "cpi")
+
+    def test_finalized(self):
+        """build and run finalized"""
+        self.run_mpich_test(join_path("test", "mpi", "init"), "finalized")
+
+    def test_manyrma(self):
+        """build and run manyrma"""
+        self.run_mpich_test(join_path("test", "mpi", "perf"), "manyrma", 2)
+
+    def test_sendrecv(self):
+        """build and run sendrecv"""
+        self.run_mpich_test(join_path("test", "mpi", "basic"), "sendrecv", 2)

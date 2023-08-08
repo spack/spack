@@ -35,6 +35,9 @@ class Llvm(CMakePackage, CudaPackage):
     family = "compiler"  # Used by lmod
 
     version("main", branch="main")
+    version("16.0.6", sha256="56b2f75fdaa95ad5e477a246d3f0d164964ab066b4619a01836ef08e475ec9d5")
+    version("16.0.5", sha256="e0fbca476693fcafa125bc71c8535587b6d9950293122b66b262bb4333a03942")
+    version("16.0.4", sha256="10c3fe1757d2e4f1cd7745dc548ecf687680a71824ec81701c38524c2a0753e2")
     version("16.0.3", sha256="0bd71bc687a4e5a250c40afb0decefc50c85178fcce726137b682039de63919b")
     version("16.0.2", sha256="97c3c6aafb53c4bb0ed2781a18d6f05e75445e24bb1dc57a32b74f8d710ac19f")
     version("16.0.1", sha256="b5a9ff1793b1e2d388a3819bf35797002b1d2e40bb35a10c65605e0ea1435271")
@@ -74,10 +77,6 @@ class Llvm(CMakePackage, CudaPackage):
     version("5.0.2", sha256="fe87aa11558c08856739bfd9bd971263a28657663cb0c3a0af01b94f03b0b795")
     version("5.0.1", sha256="84ca454abf262579814a2a2b846569f6e0cb3e16dc33ca3642b4f1dff6fbafd3")
     version("5.0.0", sha256="1f1843315657a4371d8ca37f01265fa9aae17dbcf46d2d0a95c1fdb3c6a4bab6")
-
-    # NOTE: The debug version of LLVM is an order of magnitude larger than
-    # the release version, and may take up 20-30 GB of space. If you want
-    # to save space, build with `build_type=Release`.
 
     variant(
         "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
@@ -129,6 +128,9 @@ class Llvm(CMakePackage, CudaPackage):
 
     variant("libomptarget", default=True, description="Build the OpenMP offloading library")
     conflicts("+libomptarget", when="~clang")
+    for _p in ["darwin", "windows"]:
+        conflicts("+libomptarget", when="platform={0}".format(_p))
+    del _p
 
     variant(
         "libomptarget_debug",
@@ -395,6 +397,13 @@ class Llvm(CMakePackage, CudaPackage):
         "https://github.com/llvm/llvm-project/commit/b498303066a63a203d24f739b2d2e0e56dca70d1.patch?full_index=1",
         sha256="514926d661635de47972c7d403c9c4669235aa51e22e56d44676d2a2709179b6",
         when="@8:11",
+    )
+    #
+    # fix compilation against libstdc++13
+    patch(
+        "https://github.com/llvm/llvm-project/commit/1b4fdf18bc2aaa2d46bf072475dd9cbcd44a9fee.patch?full_index=1",
+        sha256="82481418766b4b949ea808d956ff3800b9a241a576370114862428bb0e25ee1f",
+        when="@14:15",
     )
 
     # fix building of older versions of llvm with newer versions of glibc
@@ -871,6 +880,10 @@ class Llvm(CMakePackage, CudaPackage):
 
         if self.spec.satisfies("~code_signing platform=darwin"):
             cmake_args.append(define("LLDB_USE_SYSTEM_DEBUGSERVER", True))
+
+        # LLDB test suite requires libc++
+        if "libcxx=none" in spec:
+            cmake_args.append(define("LLDB_INCLUDE_TESTS", False))
 
         # Enable building with CLT [and not require full Xcode]
         # https://github.com/llvm/llvm-project/issues/57037

@@ -40,14 +40,18 @@ class Python(Package):
     install_targets = ["install"]
     build_targets: List[str] = []
 
+    version("3.11.4", sha256="85c37a265e5c9dd9f75b35f954e31fbfc10383162417285e30ad25cc073a0d63")
+    version("3.11.3", sha256="1a79f3df32265d9e6625f1a0b31c28eb1594df911403d11f3320ee1da1b3e048")
     version("3.11.2", sha256="2411c74bda5bbcfcddaf4531f66d1adc73f247f529aee981b029513aefdbf849")
     version("3.11.1", sha256="baed518e26b337d4d8105679caf68c5c32630d702614fc174e98cb95c46bdfa4")
     version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
     version(
-        "3.10.10",
-        sha256="fba64559dde21ebdc953e4565e731573bb61159de8e4d4cedee70fb1196f610d",
+        "3.10.12",
+        sha256="a43cd383f3999a6f4a7db2062b2fc9594fefa73e175b3aedafa295a51a7bb65c",
         preferred=True,
     )
+    version("3.10.11", sha256="f3db31b668efa983508bd67b5712898aa4247899a346f2eb745734699ccd3859")
+    version("3.10.10", sha256="fba64559dde21ebdc953e4565e731573bb61159de8e4d4cedee70fb1196f610d")
     version("3.10.9", sha256="4ccd7e46c8898f4c7862910a1703aa0e63525913a519abb2f55e26220a914d88")
     version("3.10.8", sha256="f400c3fb394b8bef1292f6dc1292c5fadc3533039a5bc0c3e885f3e16738029a")
     version("3.10.7", sha256="1b2e4e2df697c52d36731666979e648beeda5941d0f95740aafbf4163e5cc126")
@@ -58,6 +62,7 @@ class Python(Package):
     version("3.10.2", sha256="3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97")
     version("3.10.1", sha256="b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3")
     version("3.10.0", sha256="c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758")
+    version("3.9.17", sha256="8ead58f669f7e19d777c3556b62fae29a81d7f06a7122ff9bc57f7dd82d7e014")
     version("3.9.16", sha256="1ad539e9dbd2b42df714b69726e0693bc6b9d2d2c8e91c2e43204026605140c5")
     version("3.9.15", sha256="48d1ccb29d5fbaf1fb8f912271d09f7450e426d4dfe95978ef6aaada70ece4d8")
     version("3.9.14", sha256="9201836e2c16361b2b7408680502393737d44f227333fe2e5729c7d5f6041675")
@@ -75,6 +80,7 @@ class Python(Package):
     version("3.9.2", sha256="7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519")
     version("3.9.1", sha256="29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117")
     version("3.9.0", sha256="df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8")
+    version("3.8.17", sha256="def428fa6cf61b66bcde72e3d9f7d07d33b2e4226f04f9d6fce8384c055113ae")
     version("3.8.16", sha256="71ca9d935637ed2feb59e90a368361dc91eca472a90acb1d344a2e8178ccaf10")
     version("3.8.15", sha256="924d46999df82aa2eaa1de5ca51d6800ffb56b4bf52486a28f40634e3362abc4")
     version("3.8.14", sha256="41f959c480c59211feb55d5a28851a56c7e22d02ef91035606ebb21011723c31")
@@ -92,23 +98,96 @@ class Python(Package):
     version("3.8.2", sha256="e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561")
     version("3.8.1", sha256="c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb")
     version("3.8.0", sha256="f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df")
-    version("3.7.16", sha256="0cf2da07fa464636755215415909e22eb1d058817af4824bc15af8390d05fb38")
-    version("3.7.15", sha256="cf2993798ae8430f3af3a00d96d9fdf320719f4042f039380dca79967c25e436")
-    version("3.7.14", sha256="82b2abf8978caa61a9011d166eede831b32de9cbebc0db8162900fa23437b709")
-    version("3.7.13", sha256="e405417f50984bc5870c7e7a9f9aeb93e9d270f5ac67f667a0cd3a09439682b5")
-    version("3.7.12", sha256="33b4daaf831be19219659466d12645f87ecec6eb21d4d9f9711018a7b66cce46")
-    version("3.7.11", sha256="b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a")
-    version("3.7.10", sha256="c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975")
-    version("3.7.9", sha256="39b018bc7d8a165e59aa827d9ae45c45901739b0bbb13721e4f973f3521c166a")
-    version("3.7.8", sha256="0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0")
-    version("3.7.7", sha256="8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a")
-    version("3.7.6", sha256="aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114")
-    version("3.7.5", sha256="8ecc681ea0600bbfb366f2b173f727b205bb825d93d2f0b286bc4e58d37693da")
-    version("3.7.4", sha256="d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3")
-    version("3.7.3", sha256="d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff")
-    version("3.7.2", sha256="f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d")
-    version("3.7.1", sha256="36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06")
-    version("3.7.0", sha256="85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d")
+    version(
+        "3.7.17",
+        sha256="fd50161bc2a04f4c22a0971ff0f3856d98b4bf294f89740a9f06b520aae63b49",
+        deprecated=True,
+    )
+    version(
+        "3.7.16",
+        sha256="0cf2da07fa464636755215415909e22eb1d058817af4824bc15af8390d05fb38",
+        deprecated=True,
+    )
+    version(
+        "3.7.15",
+        sha256="cf2993798ae8430f3af3a00d96d9fdf320719f4042f039380dca79967c25e436",
+        deprecated=True,
+    )
+    version(
+        "3.7.14",
+        sha256="82b2abf8978caa61a9011d166eede831b32de9cbebc0db8162900fa23437b709",
+        deprecated=True,
+    )
+    version(
+        "3.7.13",
+        sha256="e405417f50984bc5870c7e7a9f9aeb93e9d270f5ac67f667a0cd3a09439682b5",
+        deprecated=True,
+    )
+    version(
+        "3.7.12",
+        sha256="33b4daaf831be19219659466d12645f87ecec6eb21d4d9f9711018a7b66cce46",
+        deprecated=True,
+    )
+    version(
+        "3.7.11",
+        sha256="b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a",
+        deprecated=True,
+    )
+    version(
+        "3.7.10",
+        sha256="c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975",
+        deprecated=True,
+    )
+    version(
+        "3.7.9",
+        sha256="39b018bc7d8a165e59aa827d9ae45c45901739b0bbb13721e4f973f3521c166a",
+        deprecated=True,
+    )
+    version(
+        "3.7.8",
+        sha256="0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0",
+        deprecated=True,
+    )
+    version(
+        "3.7.7",
+        sha256="8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a",
+        deprecated=True,
+    )
+    version(
+        "3.7.6",
+        sha256="aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114",
+        deprecated=True,
+    )
+    version(
+        "3.7.5",
+        sha256="8ecc681ea0600bbfb366f2b173f727b205bb825d93d2f0b286bc4e58d37693da",
+        deprecated=True,
+    )
+    version(
+        "3.7.4",
+        sha256="d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3",
+        deprecated=True,
+    )
+    version(
+        "3.7.3",
+        sha256="d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff",
+        deprecated=True,
+    )
+    version(
+        "3.7.2",
+        sha256="f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d",
+        deprecated=True,
+    )
+    version(
+        "3.7.1",
+        sha256="36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06",
+        deprecated=True,
+    )
+    version(
+        "3.7.0",
+        sha256="85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d",
+        deprecated=True,
+    )
 
     extendable = True
 
@@ -172,7 +251,7 @@ class Python(Package):
         depends_on("libnsl", when="+nis")
         depends_on("zlib@1.1.3:", when="+zlib")
         depends_on("bzip2", when="+bz2")
-        depends_on("xz", when="+lzma")
+        depends_on("xz libs=shared", when="+lzma")
         depends_on("expat", when="+pyexpat")
         depends_on("libffi", when="+ctypes")
         # https://docs.python.org/3/whatsnew/3.11.html#build-changes
@@ -230,6 +309,10 @@ class Python(Package):
 
     # https://bugs.python.org/issue45405
     conflicts("@:3.7.2,3.8.0:3.8.12,3.9.0:3.9.10,3.10.0:3.10.2", when="%apple-clang@13:")
+
+    # See https://github.com/python/cpython/issues/106424
+    # datetime.now(timezone.utc) segfaults
+    conflicts("@3.9:", when="%oneapi@2022.2.1:")
 
     # Used to cache various attributes that are expensive to compute
     _config_vars: Dict[str, Dict[str, str]] = {}
@@ -795,6 +878,9 @@ print(json.dumps(config))
                 "INCLUDEPY": self.prefix.include.join("python{}").format(version),
                 "LIBDEST": self.prefix.lib.join("python{}").format(version),
                 "LIBDIR": self.prefix.lib,
+                "LIBPL": self.prefix.lib.join("python{0}")
+                .join("config-{0}-{1}")
+                .format(version, sys.platform),
                 "LDLIBRARY": "{}python{}.{}".format(lib_prefix, version, dso_suffix),
                 "LIBRARY": "{}python{}.{}".format(lib_prefix, version, stat_suffix),
                 "LDSHARED": "cc",
@@ -864,6 +950,10 @@ print(json.dumps(config))
         # in either lib or lib64, so we need to ask Python where its LIBDIR is.
         libdir = self.config_vars["LIBDIR"]
 
+        # Debian and derivatives use a triplet subdir under /usr/lib, LIBPL can be used
+        # to get the Python library directory
+        libpldir = self.config_vars["LIBPL"]
+
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
         frameworkprefix = self.config_vars["PYTHONFRAMEWORKPREFIX"]
@@ -879,7 +969,14 @@ print(json.dumps(config))
         win_bin_dir = self.config_vars["BINDIR"]
         win_root_dir = self.config_vars["prefix"]
 
-        directories = [libdir, frameworkprefix, macos_developerdir, win_bin_dir, win_root_dir]
+        directories = [
+            libdir,
+            libpldir,
+            frameworkprefix,
+            macos_developerdir,
+            win_bin_dir,
+            win_root_dir,
+        ]
 
         # The Python shipped with Xcode command line tools isn't in any of these locations
         for subdir in ["lib", "lib64"]:
@@ -938,8 +1035,8 @@ print(json.dumps(config))
                 return lib
 
         raise spack.error.NoLibrariesError(
-            "Unable to find {} libraries with the following names:".format(self.name),
-            "\n".join(candidates),
+            "Unable to find {} libraries with the following names:\n\n* ".format(self.name)
+            + "\n* ".join(candidates)
         )
 
     @property
@@ -964,8 +1061,8 @@ print(json.dumps(config))
                 break
         else:
             raise spack.error.NoHeadersError(
-                "Unable to locate {} headers in any of these locations:".format(self.name),
-                "\n".join(candidates),
+                "Unable to locate {} headers in any of these locations:\n\n* ".format(self.name)
+                + "\n* ".join(candidates)
             )
 
         headers.directories = [os.path.dirname(config_h)]
@@ -1195,19 +1292,18 @@ print(json.dumps(config))
             else:
                 os.remove(dst)
 
-    def test(self):
+    def test_hello_world(self):
+        """run simple hello world program"""
         # do not use self.command because we are also testing the run env
-        exe = self.spec["python"].command.name
+        python = self.spec["python"].command
 
-        # test hello world
         msg = "hello world!"
-        reason = "test: running {0}".format(msg)
-        options = ["-c", 'print("{0}")'.format(msg)]
-        self.run_test(exe, options=options, expected=[msg], installed=True, purpose=reason)
+        out = python("-c", f'print("{msg}")', output=str.split, error=str.split)
+        assert msg in out
 
-        # checks import works and executable comes from the spec prefix
-        reason = "test: checking import and executable"
-        options = ["-c", "import sys; print(sys.executable)"]
-        self.run_test(
-            exe, options=options, expected=[self.spec.prefix], installed=True, purpose=reason
-        )
+    def test_import_executable(self):
+        """ensure import of installed executable works"""
+        python = self.spec["python"].command
+
+        out = python("-c", "import sys; print(sys.executable)", output=str.split, error=str.split)
+        assert self.spec.prefix in out

@@ -45,7 +45,7 @@ class GromacsChainCoordinate(Gromacs):
                 del self.versions[version_key]
 
     def __init__(self, spec):
-        super(GromacsChainCoordinate, self).__init__(spec)
+        super().__init__(spec)
 
         self.remove_parent_versions()
 

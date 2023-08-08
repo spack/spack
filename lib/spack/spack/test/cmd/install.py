@@ -23,6 +23,7 @@ import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.package_base
+import spack.store
 import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
@@ -216,7 +217,9 @@ def test_install_overwrite(mock_packages, mock_archive, mock_fetch, config, inst
 
     # Ignore manifest and install times
     manifest = os.path.join(
-        spec.prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
+        spec.prefix,
+        spack.store.STORE.layout.metadata_dir,
+        spack.store.STORE.layout.manifest_file_name,
     )
     ignores = [manifest, spec.package.times_log_path]
 
@@ -291,7 +294,9 @@ def test_install_overwrite_multiple(
     install("cmake")
 
     ld_manifest = os.path.join(
-        libdwarf.prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
+        libdwarf.prefix,
+        spack.store.STORE.layout.metadata_dir,
+        spack.store.STORE.layout.manifest_file_name,
     )
 
     ld_ignores = [ld_manifest, libdwarf.package.times_log_path]
@@ -300,7 +305,9 @@ def test_install_overwrite_multiple(
     expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
 
     cm_manifest = os.path.join(
-        cmake.prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
+        cmake.prefix,
+        spack.store.STORE.layout.metadata_dir,
+        spack.store.STORE.layout.manifest_file_name,
     )
 
     cm_ignores = [cm_manifest, cmake.package.times_log_path]
@@ -512,7 +519,7 @@ def test_extra_files_are_archived(
 
     install("archive-files")
 
-    archive_dir = os.path.join(spack.store.layout.metadata_path(s), "archived-files")
+    archive_dir = os.path.join(spack.store.STORE.layout.metadata_path(s), "archived-files")
     config_log = os.path.join(archive_dir, mock_archive.expanded_archive_basedir, "config.log")
     assert os.path.exists(config_log)
 
@@ -699,9 +706,11 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
     assert "was not installed" in out
 
     # Check that failure prefix locks are still cached
-    failure_lock_prefixes = ",".join(spack.store.db._prefix_failures.keys())
-    assert "libelf" in failure_lock_prefixes
-    assert "libdwarf" in failure_lock_prefixes
+    failed_packages = [
+        pkg_name for dag_hash, pkg_name in spack.store.STORE.failure_tracker.locker.locks.keys()
+    ]
+    assert "libelf" in failed_packages
+    assert "libdwarf" in failed_packages
 
 
 def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
@@ -966,7 +975,7 @@ def test_compiler_bootstrap_from_binary_mirror(
     install("gcc@=10.2.0")
 
     # Put installed compiler in the buildcache
-    buildcache("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@10.2.0")
+    buildcache("push", "-u", "-f", mirror_dir.strpath, "gcc@10.2.0")
 
     # Now uninstall the compiler
     uninstall("-y", "gcc@10.2.0")
@@ -1138,7 +1147,7 @@ def test_install_use_buildcache(
 
     # Populate the buildcache
     install(package_name)
-    buildcache("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, package_name, dependency_name)
+    buildcache("push", "-u", "-f", mirror_dir.strpath, package_name, dependency_name)
 
     # Uninstall the all of the packages for clean slate
     uninstall("-y", "-a")

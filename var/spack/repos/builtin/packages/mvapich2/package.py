@@ -110,12 +110,14 @@ class Mvapich2(AutotoolsPackage):
     )
 
     variant("hwlocv2", default=False, description="Builds mvapich2 with hwloc v2")
+    variant("hwloc_graphics", default=False, description="Enables hwloc graphics")
     variant(
         "file_systems",
         description="List of the ROMIO file systems to activate",
         values=auto_or_any_combination_of("lustre", "gpfs", "nfs", "ufs"),
     )
 
+    depends_on("automake@1.15", type="build")  # needed for torque patch
     depends_on("findutils", type="build")
     depends_on("bison", type="build")
     depends_on("pkgconfig", type="build")
@@ -132,7 +134,13 @@ class Mvapich2(AutotoolsPackage):
     depends_on("libfabric", when="fabrics=nemesisofi")
     depends_on("slurm", when="process_managers=slurm")
 
+    # Fix segmentation fault in `MPIR_Attr_delete_list`:
+    # <https://lists.osu.edu/pipermail/mvapich-discuss/2023-January/010695.html>.
+    patch("mpir_attr_delete_list_segfault.patch", when="@2.3.7")
+
     conflicts("fabrics=psm2", when="@:2.1")  # psm2 support was added at version 2.2
+
+    patch("fix-torque.patch", when="@2.3.7-1")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
@@ -431,7 +439,10 @@ class Mvapich2(AutotoolsPackage):
             args.extend(["--enable-cuda", "--with-cuda={0}".format(spec["cuda"].prefix)])
         else:
             args.append("--disable-cuda")
-
+        if "~hwloc_graphics" in self.spec:
+            args.append("--disable-opencl")
+            args.append("--disable-gl")
+            args.append("--disable-nvml")
         if "+hwlocv2" in self.spec:
             args.append("--with-hwloc=v2")
         if "+regcache" in self.spec:

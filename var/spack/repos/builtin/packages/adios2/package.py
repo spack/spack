@@ -16,16 +16,17 @@ class Adios2(CMakePackage, CudaPackage):
     url = "https://github.com/ornladios/ADIOS2/archive/v2.8.0.tar.gz"
     git = "https://github.com/ornladios/ADIOS2.git"
 
-    maintainers("ax3l", "chuckatkins", "vicentebolea", "williamfgc")
+    maintainers("ax3l", "vicentebolea", "williamfgc")
 
     tags = ["e4s"]
 
     version("master", branch="master")
     version(
-        "2.9.0",
-        sha256="69f98ef58c818bb5410133e1891ac192653b0ec96eb9468590140f2552b6e5d1",
+        "2.9.1",
+        sha256="ddfa32c14494250ee8a48ef1c97a1bf6442c15484bbbd4669228a0f90242f4f9",
         preferred=True,
     )
+    version("2.9.0", sha256="69f98ef58c818bb5410133e1891ac192653b0ec96eb9468590140f2552b6e5d1")
     version("2.8.3", sha256="4906ab1899721c41dd918dddb039ba2848a1fb0cf84f3a563a1179b9d6ee0d9f")
     version("2.8.2", sha256="9909f6409dc44b2c28c1fda0042dab4b711f25ec3277ef0cb6ffc40f5483910d")
     version("2.8.1", sha256="3f515b442bbd52e3189866b121613fe3b59edb8845692ea86fad83d1eba35d93")
@@ -76,6 +77,18 @@ class Adios2(CMakePackage, CudaPackage):
     variant("dataspaces", default=False, when="@2.5:", description="Enable support for DATASPACES")
     variant("ssc", default=True, description="Enable the SSC staging engine")
     variant("hdf5", default=False, description="Enable the HDF5 engine")
+    variant(
+        "aws",
+        default=False,
+        when="@2.9:",
+        description="Enable support for S3 compatible storage using AWS SDK's S3 module",
+    )
+    variant(
+        "libcatalyst",
+        default=True,
+        when="@2.9:",
+        description="Enable support for in situ visualization plugin using ParaView Catalyst",
+    )
 
     # Optional language bindings, C++11 and C always provided
     variant("cuda", default=False, when="@2.8:", description="Enable CUDA support")
@@ -131,6 +144,8 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("python@3.5:", when="@2.5.0:", type="test")
     depends_on("py-numpy@1.6.1:", when="+python", type=("build", "run"))
     depends_on("py-mpi4py@2.0.0:", when="+mpi +python", type=("build", "run"))
+    depends_on("aws-sdk-cpp", when="+aws")
+    depends_on("libcatalyst@2", when="+libcatalyst")
 
     # Fix findmpi when called by dependees
     # See https://github.com/ornladios/ADIOS2/pull/1632
@@ -179,6 +194,7 @@ class Adios2(CMakePackage, CudaPackage):
         args = [
             from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             from_variant("BUILD_SHARED_LIBS", "shared"),
+            from_variant("ADIOS2_USE_AWSSDK", "aws"),
             from_variant("ADIOS2_USE_Blosc", "blosc"),
             from_variant("ADIOS2_USE_BZip2", "bzip2"),
             from_variant("ADIOS2_USE_DataMan", "dataman"),
@@ -193,6 +209,7 @@ class Adios2(CMakePackage, CudaPackage):
             from_variant("ADIOS2_USE_SZ", "sz"),
             from_variant("ADIOS2_USE_ZFP", "zfp"),
             from_variant("ADIOS2_USE_CUDA", "cuda"),
+            from_variant("ADIOS2_USE_Catalyst", "libcatalyst"),
             from_variant("ADIOS2_USE_LIBPRESSIO", "libpressio"),
             self.define("BUILD_TESTING", self.run_tests),
             self.define("ADIOS2_BUILD_EXAMPLES", False),
