@@ -897,7 +897,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
         # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+        if (self.compiler.f77 is None) and (self.compiler.fc is None):
             raise InstallError("OpenMPI requires both C and Fortran compilers!")
 
     @when("@main")
