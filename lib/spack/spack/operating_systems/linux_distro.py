@@ -7,7 +7,7 @@ import platform as py_platform
 import re
 import sys
 from subprocess import PIPE, run
-from typing import Optional, Tuple
+from typing import Callable, Optional, Tuple, Union
 
 import spack.util.elf
 from spack.version import StandardVersion, Version
@@ -32,12 +32,15 @@ def kernel_version():
     return Version(clean_version)
 
 
-def _confstr() -> Optional[Tuple[str, StandardVersion]]:
+def _confstr(
+    confstr: Optional[Callable[[Union[str, int]], Optional[str]]] = None
+) -> Optional[Tuple[str, StandardVersion]]:
     """On glibc the version is available in the CS_GNU_LIBC_VERSION,
     this is a runtime, not compile-time constant, so should be fast
     and correct."""
+    confstr = confstr or os.confstr
     try:
-        result = os.confstr("CS_GNU_LIBC_VERSION")
+        result = confstr("CS_GNU_LIBC_VERSION")
         if not result:
             return None
         name, version_str = result.split(maxsplit=1)
@@ -51,12 +54,13 @@ def _confstr() -> Optional[Tuple[str, StandardVersion]]:
     return name, version
 
 
-def _dynamic_linker() -> Optional[Tuple[str, StandardVersion]]:
+def _dynamic_linker(executable: Optional[str] = None) -> Optional[Tuple[str, StandardVersion]]:
     """On musl libc the dynamic linker is executable and can dump
     its version. We retrieve the dynamic linker from the current
     Python interpreter."""
+    executable = executable or sys.executable
     try:
-        with open(sys.executable, "rb") as f:
+        with open(executable, "rb") as f:
             elf = spack.util.elf.parse_elf(f, interpreter=True)
     except (OSError, spack.util.elf.ElfParsingError):
         return None
@@ -80,18 +84,18 @@ def _dynamic_linker() -> Optional[Tuple[str, StandardVersion]]:
     return _parse_musl_output(output)
 
 
-def _ldd() -> Optional[Tuple[str, StandardVersion]]:
+def _ldd(ldd: Optional[str] = None) -> Optional[Tuple[str, StandardVersion]]:
     """Try to derive the libc version from the output of ldd."""
     # It would be slightly better to parse the verdef section of libc.so
     # for glibc, but that requires locating the library. Instead we just
     # rely on ldd being in PATH and hope it's the right one.
+    ldd = ldd or "ldd"
     try:
-        output = run(["ldd", "--version"], check=False, stdout=PIPE, stderr=PIPE)
+        output = run([ldd, "--version"], check=False, stdout=PIPE, stderr=PIPE)
         stdout = output.stdout.decode("utf-8")
         stderr = output.stderr.decode("utf-8")
     except Exception:
         return None
-
     # musl libc prints to stderr, returns with error code
     if stderr.startswith("musl"):
         return _parse_musl_output(stderr)

@@ -5,6 +5,7 @@
 
 
 import io
+import sys
 from collections import OrderedDict
 
 import pytest
@@ -17,17 +18,8 @@ import spack.util.executable
 from spack.hooks.drop_redundant_rpaths import drop_redundant_rpaths
 
 
-# note that our elf parser is platform independent... but I guess creating an elf file
-# is slightly more difficult with system tools on non-linux.
-def skip_unless_linux(f):
-    return pytest.mark.skipif(
-        str(spack.platforms.real_host()) != "linux",
-        reason="implementation currently requires linux",
-    )(f)
-
-
 @pytest.mark.requires_executables("gcc")
-@skip_unless_linux
+@pytest.mark.skipif(sys.platform != "linux", reason="only tested on linux")
 @pytest.mark.parametrize(
     "linker_flag,is_runpath",
     [("-Wl,--disable-new-dtags", False), ("-Wl,--enable-new-dtags", True)],
@@ -121,7 +113,7 @@ def test_parser_doesnt_deal_with_nonzero_offset():
 
 
 @pytest.mark.requires_executables("gcc")
-@skip_unless_linux
+@pytest.mark.skipif(sys.platform != "linux", reason="only tested on linux")
 def test_elf_get_and_replace_rpaths(binary_with_rpaths):
     long_rpaths = ["/very/long/prefix-a/x", "/very/long/prefix-b/y"]
     executable = str(binary_with_rpaths(rpaths=long_rpaths))
@@ -163,7 +155,7 @@ def test_elf_get_and_replace_rpaths(binary_with_rpaths):
 
 
 @pytest.mark.requires_executables("gcc")
-@skip_unless_linux
+@pytest.mark.skipif(sys.platform != "linux", reason="only tested on linux")
 def test_drop_redundant_rpath(tmpdir, binary_with_rpaths):
     """Test the post install hook that drops redundant rpath entries"""
 

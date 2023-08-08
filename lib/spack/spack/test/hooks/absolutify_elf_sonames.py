@@ -5,20 +5,14 @@
 
 
 import os
+import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
-import spack.platforms
 from spack.hooks.absolutify_elf_sonames import SharedLibrariesVisitor, find_and_patch_sonames
 from spack.util.executable import Executable
-
-
-def skip_unless_linux(f):
-    return pytest.mark.skipif(
-        str(spack.platforms.real_host()) != "linux", reason="only tested on linux for now"
-    )(f)
 
 
 class ExecutableIntercept:
@@ -34,7 +28,7 @@ class ExecutableIntercept:
 
 
 @pytest.mark.requires_executables("gcc")
-@skip_unless_linux
+@pytest.mark.skipif(sys.platform != "linux", reason="only tested on linux")
 def test_shared_libraries_visitor(tmpdir):
     """Integration test for soname rewriting"""
     gcc = Executable("gcc")

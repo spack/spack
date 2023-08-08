@@ -23,13 +23,6 @@ import spack.util.executable
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
 
 
-def skip_unless_linux(f):
-    return pytest.mark.skipif(
-        str(spack.platforms.real_host()) != "linux",
-        reason="implementation currently requires linux",
-    )(f)
-
-
 def rpaths_for(new_binary):
     """Return the RPATHs or RUNPATHs of a binary."""
     patchelf = spack.util.executable.which("patchelf")
@@ -172,7 +165,7 @@ def test_normalize_relative_paths(start_path, relative_paths, expected):
 
 
 @pytest.mark.requires_executables("patchelf", "file", "gcc")
-@skip_unless_linux
+@pytest.mark.skipif(sys.platform != "linux", reason="only tested on linux")
 def test_relocate_text_bin(binary_with_rpaths, prefix_like):
     prefix = "/usr/" + prefix_like
     prefix_bytes = prefix.encode("utf-8")
@@ -189,7 +182,7 @@ def test_relocate_text_bin(binary_with_rpaths, prefix_like):
 
 
 @pytest.mark.requires_executables("patchelf", "file", "gcc")
-@skip_unless_linux
+@pytest.mark.skipif(sys.platform != "linux", reason="only tested on linux")
 def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, prefix_tmpdir):
     # Create an executable, set some RPATHs, copy it to another location
     orig_binary = binary_with_rpaths(rpaths=[str(prefix_tmpdir.mkdir("lib")), "/usr/lib64"])
@@ -211,7 +204,7 @@ def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, p
 
 
 @pytest.mark.requires_executables("patchelf", "file", "gcc")
-@skip_unless_linux
+@pytest.mark.skipif(sys.platform != "linux", reason="only tested on linux")
 def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
     orig_binary = binary_with_rpaths(rpaths=["lib", "lib64", "/opt/local/lib"])
@@ -232,7 +225,7 @@ def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
 
 
 @pytest.mark.requires_executables("patchelf", "file", "gcc")
-@skip_unless_linux
+@pytest.mark.skipif(sys.platform != "linux", reason="only tested on linux")
 def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
         rpaths=[
@@ -252,7 +245,7 @@ def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpd
 
 
 @pytest.mark.requires_executables("patchelf", "file", "gcc")
-@skip_unless_linux
+@pytest.mark.skipif(sys.platform != "linux", reason="only tested on linux")
 def test_relocate_text_bin_with_message(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
         rpaths=[
