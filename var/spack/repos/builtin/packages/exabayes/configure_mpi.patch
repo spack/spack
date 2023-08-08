@@ -1,0 +1,297 @@
+--- configure	2020-06-08 14:02:26.000000000 -0500
++++ configure	2021-12-16 02:32:02.000000000 -0600
+@@ -8836,100 +8836,9 @@
+ done
+ test -n "$MPICXX" || MPICXX="not-found"
+ 
+-
+-     # Figure out what the compiler responds to to get it to show us the compile
+-     # and link lines.  After this part of the macro, we'll have a valid
+-     # lx_mpi_command_line
+-
+-     responded=0
+-
+-
+-
+-     # check -showme:compile
+-     echo -n "Checking whether $MPICXX responds to '-showme:compile'... "
+-     lx_mpi_compile_line=`$MPICXX -showme:compile 2>/dev/null`
+-     if [ "$?" -eq 0 ]; then
+-         echo yes
+-         lx_mpi_link_line=`$MPICXX -showme:link 2>/dev/null`
+-         responded=1
+-     else
+-         echo no
+-     fi
+-
+-     # check -showme
+-     if [ "$responded" -eq 0 ]; then
+-        echo -n "Checking whether $MPICXX responds to '-showme'... "
+-
+-        testOutput=`$MPICXX -showme 2>/dev/null`
+-        if [ "$?" -eq 0 ]; then
+-           responded=1
+-           lx_mpi_link_line=$testOutput
+-           lx_mpi_compile_line=$testOutput
+-           echo yes
+-        else
+-           echo no
+-        fi
+-     fi
+-
+-     # check -compile-info
+-     if [ "$responded" -eq 0 ]; then
+-        echo -n "Checking whether $MPICXX responds to '-compile-info'... "
+-        lx_mpi_compile_line=`$MPICXX -compile-info 2>/dev/null`
+-
+-        if [ "$?" -eq 0 ]; then
+-           lx_mpi_link_line=`$MPICXX -link-info 2>/dev/null`
+-           responded=1
+-           echo yes
+-        else
+-           echo no
+-        fi
+-     fi
+-
+-     # check -show
+-     if [ "$responded" -eq 0 ]; then
+-        echo -n "Checking whether $MPICXX responds to '-show'... "
+-
+-        testOutput=`$MPICXX -show 2>/dev/null`
+-        if [ "$?" -eq 0 ]; then
+-           lx_mpi_compile_line=$testOutput
+-           lx_mpi_link_line=$testOutput
+-           responded=1
+-           echo yes
+-        else
+-           echo no
+-        fi
+-     fi
+-
+-     # check -craype-verbose
+-     if [ "$responded" -eq 0 ]; then
+-        echo -n "Checking whether $MPICXX is a Cray MPI wrapper and responds to '-craype-verbose'... "
+-
+-        testOutput=`$MPICXX -craype-verbose 2>/dev/null`
+-        if [ "$?" -eq 0 ]; then
+-           lx_mpi_compile_line=$testOutput
+-           lx_mpi_link_line=$testOutput
+-           responded=1
+-           echo yes
+-        else
+-           echo no
+-        fi
+-     fi
+-
+-     # remove the compiler name
+-     lx_mpi_link_line=`echo "$lx_mpi_link_line" | sed 's/^[^-][^[:space:]]\+//'`
+-     lx_mpi_compile_line=`echo "$lx_mpi_compile_line" | sed 's/^[^-][^[:space:]]\+//'`
+-
+-     if [ ! -z "$lx_mpi_compile_line"  -a ! -z "$lx_mpi_link_line" ]; then
+-
+-         MPI_CXXFLAGS=`echo $lx_mpi_compile_line`
+-         MPI_CXXLDFLAGS=`echo $lx_mpi_link_line`
+-
+-         OLD_LIBS=$LIBS
+-	 OLD_CXXFLAGS=$CXXFLAGS
+-
+-         CXXFLAGS=`echo $MPI_CXXFLAGS `
+-
+-         LIBS=`echo $MPI_CXXLDFLAGS `
++        $as_echo "Testing MPI CXX compiler $MPICXX with simple MPI program." 
++	OLD_CXX=$CXX
++        CXX=$MPICXX
+ 
+          cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+@@ -8961,33 +8870,17 @@
+ rm -f core conftest.err conftest.$ac_objext \
+     conftest$ac_exeext conftest.$ac_ext
+ 
+-         echo ""
+-         echo "RESULT:"
+-	 echo MPI_CXXFLAGS=$MPI_CXXFLAGS
+-	 echo MPI_CXXLDFLAGS=$MPI_CXXLDFLAGS
+-	 echo ""
+-
+-	 if [  "$have_CXX_mpi" == 'no'  ] ; then
+-               as_fn_error $? " \"error: could not setup a working MPI environment. Please contact the exabayes user group with this output and details about your MPI installation. " "$LINENO" 5
+-         fi
+-
+-         # AC_SUBST everything.
+ 
++         CXX=$OLD_CXX
+ 
++         if [  "$have_CXX_mpi" == 'yes'  ] ; then
++	   $as_echo "Found working MPI CXX compiler "
++         else 
++               as_fn_error $? " \"error: could not setup a working MPI environment. Please contact the exabayes user group with this output and details about your MPI installation or set MPICXX. " "$LINENO" 5
++           exit 1
++         fi
+ 
+-
+-	 CXXFLAGS=$OLD_CXXFLAGS
+-         LIBS=$OLD_LIBS
+-     else
+-         echo Unable to find suitable MPI Compiler. Try setting MPICXX.
+-         have_CXX_mpi='no'
+-         exit 1
+-     fi
+-
+-     echo found CXXFLAGS: $MPI_CXXFLAGS
+-     echo found CXXLDFLAGS: $MPI_CXXLDFLAGS
+-
+-         else
++else
+ 
+      # Try to find a working MPI compiler from the supplied names
+      for ac_prog in mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC
+@@ -9036,105 +8929,14 @@
+ done
+ test -n "$MPICXX" || MPICXX="not-found"
+ 
+-
+-     # Figure out what the compiler responds to to get it to show us the compile
+-     # and link lines.  After this part of the macro, we'll have a valid
+-     # lx_mpi_command_line
+-
+-     responded=0
+-
+-
+-
+-     # check -showme:compile
+-     echo -n "Checking whether $MPICXX responds to '-showme:compile'... "
+-     lx_mpi_compile_line=`$MPICXX -showme:compile 2>/dev/null`
+-     if [ "$?" -eq 0 ]; then
+-         echo yes
+-         lx_mpi_link_line=`$MPICXX -showme:link 2>/dev/null`
+-         responded=1
+-     else
+-         echo no
+-     fi
+-
+-     # check -showme
+-     if [ "$responded" -eq 0 ]; then
+-        echo -n "Checking whether $MPICXX responds to '-showme'... "
+-
+-        testOutput=`$MPICXX -showme 2>/dev/null`
+-        if [ "$?" -eq 0 ]; then
+-           responded=1
+-           lx_mpi_link_line=$testOutput
+-           lx_mpi_compile_line=$testOutput
+-           echo yes
+-        else
+-           echo no
+-        fi
+-     fi
+-
+-     # check -compile-info
+-     if [ "$responded" -eq 0 ]; then
+-        echo -n "Checking whether $MPICXX responds to '-compile-info'... "
+-        lx_mpi_compile_line=`$MPICXX -compile-info 2>/dev/null`
+-
+-        if [ "$?" -eq 0 ]; then
+-           lx_mpi_link_line=`$MPICXX -link-info 2>/dev/null`
+-           responded=1
+-           echo yes
+-        else
+-           echo no
+-        fi
+-     fi
+-
+-     # check -show
+-     if [ "$responded" -eq 0 ]; then
+-        echo -n "Checking whether $MPICXX responds to '-show'... "
+-
+-        testOutput=`$MPICXX -show 2>/dev/null`
+-        if [ "$?" -eq 0 ]; then
+-           lx_mpi_compile_line=$testOutput
+-           lx_mpi_link_line=$testOutput
+-           responded=1
+-           echo yes
+-        else
+-           echo no
+-        fi
+-     fi
+-
+-     # check -craype-verbose
+-     if [ "$responded" -eq 0 ]; then
+-        echo -n "Checking whether $MPICXX is a Cray MPI wrapper and responds to '-craype-verbose'... "
+-
+-        testOutput=`$MPICXX -craype-verbose 2>/dev/null`
+-        if [ "$?" -eq 0 ]; then
+-           lx_mpi_compile_line=$testOutput
+-           lx_mpi_link_line=$testOutput
+-           responded=1
+-           echo yes
+-        else
+-           echo no
+-        fi
+-     fi
+-
+-     # remove the compiler name
+-     lx_mpi_link_line=`echo "$lx_mpi_link_line" | sed 's/^[^-][^[:space:]]\+//'`
+-     lx_mpi_compile_line=`echo "$lx_mpi_compile_line" | sed 's/^[^-][^[:space:]]\+//'`
+-
+-     if [ ! -z "$lx_mpi_compile_line"  -a ! -z "$lx_mpi_link_line" ]; then
+-
+-         MPI_CXXFLAGS=`echo $lx_mpi_compile_line`
+-         MPI_CXXLDFLAGS=`echo $lx_mpi_link_line`
+-
+-         OLD_LIBS=$LIBS
+-	 OLD_CXXFLAGS=$CXXFLAGS
+-
+-         CXXFLAGS=`echo $MPI_CXXFLAGS `
+-
+-         LIBS=`echo $MPI_CXXLDFLAGS `
++        $as_echo "Testing MPI CXX compiler $MPICXX with simple MPI program."
++        OLD_CXX=$CXX
++        CXX=$MPICXX
+ 
+          cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+-	 #include <mpi.h>
++         #include <mpi.h>
+ 
+ int
+ main ()
+@@ -9161,31 +8963,15 @@
+ rm -f core conftest.err conftest.$ac_objext \
+     conftest$ac_exeext conftest.$ac_ext
+ 
+-         echo ""
+-         echo "RESULT:"
+-	 echo MPI_CXXFLAGS=$MPI_CXXFLAGS
+-	 echo MPI_CXXLDFLAGS=$MPI_CXXLDFLAGS
+-	 echo ""
+-
+-	 if [  "$have_CXX_mpi" == 'no'  ] ; then
+-               as_fn_error $? " \"error: could not setup a working MPI environment. Please contact the exabayes user group with this output and details about your MPI installation. " "$LINENO" 5
+-         fi
+ 
+-         # AC_SUBST everything.
++         CXX=$OLD_CXX
+ 
+-
+-
+-
+-	 CXXFLAGS=$OLD_CXXFLAGS
+-         LIBS=$OLD_LIBS
+-     else
+-         echo Unable to find suitable MPI Compiler. Try setting MPICXX.
+-         have_CXX_mpi='no'
+-         exit 1
+-     fi
+-
+-     echo found CXXFLAGS: $MPI_CXXFLAGS
+-     echo found CXXLDFLAGS: $MPI_CXXLDFLAGS
++         if [  "$have_CXX_mpi" == 'yes'  ] ; then
++           $as_echo "Found working MPI CXX compiler "
++         else
++               as_fn_error $? " \"error: could not setup a working MPI environment. Please contact the exabayes user group with this output and details about your MPI installation or set MPICXX. " "$LINENO" 5
++           exit 1
++         fi
+ 
+          fi
+ 
