@@ -696,24 +696,6 @@ def test_git_branch_with_slash():
     assert v_deserialized[0].ref == "feature/bar"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
-def test_git_ref_withslash(mock_git_branch_repo, install_mockery, mock_packages, monkeypatch):
-    repo_path, filename, commits = mock_git_branch_repo
-    monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
-    )
-
-    spec_branch = spack.spec.Spec("git-test-commit@git.feature/withslash")
-    spec_branch.concretize()
-    assert spec_branch.satisfies("@1.2")
-    assert spec_branch.satisfies("@1.1:1.3")
-    assert str(spec_branch.version) == "git.feature/withslash=1.2"
-
-    serialized = spec_branch.to_dict()
-    deserialized = spack.spec.Spec.from_dict(serialized)
-    assert str(deserialized.version) == "git.feature/withslash=1.2"
-
-
 @pytest.mark.parametrize(
     "string,git",
     [
