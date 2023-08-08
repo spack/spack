@@ -104,6 +104,15 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         "cluster", default=False, description="Build with cluster support: scalapack, blacs, etc"
     )
     variant(
+        "mpi",
+        default="none",
+        values=("none","mpich","openmpi"),
+        description="MPI family",
+        multi=False
+    )
+    conflicts("mpi=none", when="+cluster")
+
+    variant(
         "threads",
         default="none",
         description="Multithreading support",
@@ -182,18 +191,15 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         libs.append("libmkl_core")
 
         if self.spec.satisfies("+cluster"):
-            if any(
-                self.spec.satisfies(m)
-                for m in ["^intel-oneapi-mpi", "^intel-mpi", "^mpich", "^cray-mpich"]
-            ):
+            if self.spec.satisfies('mpi=mpich'):
                 libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
-            elif self.spec.satisfies("^openmpi"):
+            elif self.spec.satisfies("mpi=openmpi"):
                 libs.append(self._xlp64_lib("libmkl_blacs_openmpi"))
             else:
                 raise RuntimeError(
                     (
                         "intel-oneapi-mpi +cluster requires one of "
-                        "^intel-oneapi-mpi, ^intel-mpi, ^mpich, or ^openmpi"
+                        "mpi=mpich or mpi=openmpi"
                     )
                 )
 
