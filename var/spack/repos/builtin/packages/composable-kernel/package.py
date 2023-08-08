@@ -56,8 +56,8 @@ class ComposableKernel(CMakePackage):
             self.define("CMAKE_CXX_FLAGS", "-O3"),
             self.define("CMAKE_BUILD_TYPE", "Release"),
         ]
-	if "auto" not in self.spec.variants["amdgpu_target"]:
-		args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
+        if "auto" not in self.spec.variants["amdgpu_target"]:
+            args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
         return args
 
     def build(self, spec, prefix):
