@@ -42,13 +42,15 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
     #intel gpu not supported in spack
     #variant("intel_gpu", default=False, description="Build for Intel GPU architecture")
 
-    for value in CudaPackage.cuda_arch_values:
-        if value != "70":
-            conflicts(f"cuda_arch={value}")
+    for cuda_val in CudaPackage.cuda_arch_values:
+        print("RRR", cuda_val)
+        if cuda_val != "70":
+            print(cuda_val)
+            conflicts(f"cuda_arch={cuda_val}", when="+cuda")
 
-    for value in ROCmPackage.amdgpu_targets:
-        if value != "gfx906" or value != "gfx906:xnack-":
-            conflicts(f"amdgpu_target={value}")
+    #for rocm_val in ROCmPackage.amdgpu_targets:
+    #    if rocm_val != "gfx906" or rocm_val != "gfx906:xnack-":
+    #        conflicts(f"amdgpu_target={rocm_val}")
 
     ########################
     # Package dependencies #
