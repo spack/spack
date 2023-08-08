@@ -1,0 +1,21 @@
+--- a/cxxsupport/fitshandle.cc	2022-05-27 10:45:03.000000000 +0800
++++ b/cxxsupport/fitshandle.cc	2022-05-27 10:47:32.000000000 +0800
+@@ -799,12 +799,18 @@
+       float fitsversion;
+       planck_assert(fits_get_version(&fitsversion),
+         "error calling fits_get_version()");
++      // This routine will not work since there is no guarantee that 
++      // the CFITISO_VERSION will be a meaningful number. 
++      // For example, this is often 4.0.0, that is has a patch number 
++      /// thus, this code will be commented out. 
++      /*
+       int v_header  = nearest<int>(1000.*CFITSIO_VERSION),
+           v_library = nearest<int>(1000.*fitsversion);
+       if (v_header!=v_library)
+         cerr << endl << "WARNING: version mismatch between CFITSIO header (v"
+              << dataToString(v_header*0.001) << ") and linked library (v"
+              << dataToString(v_library*0.001) << ")." << endl << endl;
++      */
+       }
+   };
+ 

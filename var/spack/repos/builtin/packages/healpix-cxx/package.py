@@ -17,14 +17,4 @@ class HealpixCxx(AutotoolsPackage):
 
     depends_on("cfitsio")
     depends_on("libsharp", type="build")
-
-    def patch(self):
-        spec = self.spec
-        configure_fix = FileFilter("configure")
-        # Link libsharp static libs
-        configure_fix.filter(
-            r"^SHARP_LIBS=.*$",
-            'SHARP_LIBS="-L{0} -lsharp -lc_utils -lfftpack -lm"'.format(
-                spec["libsharp"].prefix.lib
-            ),
-        )
+    patch("cfitsio_version_check.patch", when="@3.50:")
