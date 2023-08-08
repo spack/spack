@@ -1,0 +1,12 @@
+--- a/cpp/lobes/CMakeLists.txt  2022-05-30 10:06:41.000000000 +0800
++++ b/cpp/lobes/CMakeLists.txt  2022-05-30 10:06:59.000000000 +0800
+@@ -14,7 +14,7 @@
+ add_library(lobes SHARED lobeselementresponse.cc ${CMAKE_SOURCE_DIR}/cpp/common/sphericalharmonics.cc)
+ add_dependencies(lobes download_lobes_coefficients)
+ target_include_directories(lobes PUBLIC ${HDF5_INCLUDE_DIRS})
+-target_link_libraries(lobes PUBLIC ${HDF5_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
++target_link_libraries(lobes PUBLIC ${HDF5_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_HL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+ string(TOLOWER ${CMAKE_PROJECT_NAME} projectname )
+ set_target_properties(lobes PROPERTIES LIBRARY_OUTPUT_NAME "${projectname}-lobes")
+
+
