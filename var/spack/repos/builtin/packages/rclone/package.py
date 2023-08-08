@@ -66,11 +66,15 @@ class Rclone(Package):
 
     depends_on("go@1.15:", type="build")
 
+    phases = ["build", "install"]
+
     def setup_build_environment(self, env):
         # Point GOPATH at the top of the staging dir for the build step.
         env.prepend_path("GOPATH", self.stage.path)
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         go("build")
+
+    def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("rclone", prefix.bin)

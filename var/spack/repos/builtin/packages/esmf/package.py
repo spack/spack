@@ -84,7 +84,11 @@ class Esmf(MakefilePackage):
     variant("esmf_pio", default="auto", description="Override for ESMF_PIO variable")
     # Set the 'snapshot' variant any time a beta snapshot is used in order to obtain
     # correct module name behavior for MAPL.
-    variant("snapshot", default="none", description="Named variant for snapshots versions (e.g., 'b09')")
+    variant(
+        "snapshot",
+        default="none",
+        description="Named variant for snapshots versions (e.g., 'b09')",
+    )
 
     # Optional dependencies
     depends_on("mpi", when="+mpi")
@@ -96,27 +100,19 @@ class Esmf(MakefilePackage):
     depends_on(
         "parallelio@2.5.7: +mpi+pnetcdf", when="@8.3.0:8.3.99+external-parallelio+mpi+pnetcdf"
     )
-    depends_on(
-        "parallelio@2.5.7: +mpi", when="@8.3.0:8.3.99+external-parallelio+mpi~pnetcdf"
-    )
+    depends_on("parallelio@2.5.7: +mpi", when="@8.3.0:8.3.99+external-parallelio+mpi~pnetcdf")
     depends_on(
         "parallelio@2.5.7: ~mpi+pnetcdf", when="@8.3.0:8.3.99+external-parallelio~mpi+pnetcdf"
     )
-    depends_on(
-        "parallelio@2.5.7: ~mpi", when="@8.3.0:8.3.99+external-parallelio~mpi~pnetcdf"
-    )
+    depends_on("parallelio@2.5.7: ~mpi", when="@8.3.0:8.3.99+external-parallelio~mpi~pnetcdf")
     depends_on(
         "parallelio@2.5.9: +mpi+pnetcdf", when="@8.4.0:8.4.99+external-parallelio+mpi+pnetcdf"
     )
-    depends_on(
-        "parallelio@2.5.9: +mpi", when="@8.4.0:8.4.99+external-parallelio+mpi~pnetcdf"
-    )
+    depends_on("parallelio@2.5.9: +mpi", when="@8.4.0:8.4.99+external-parallelio+mpi~pnetcdf")
     depends_on(
         "parallelio@2.5.9: ~mpi+pnetcdf", when="@8.4.0:8.4.99+external-parallelio~mpi+pnetcdf"
     )
-    depends_on(
-        "parallelio@2.5.9: ~mpi", when="@8.4.0:8.4.99+external-parallelio~mpi~pnetcdf"
-    )
+    depends_on("parallelio@2.5.9: ~mpi", when="@8.4.0:8.4.99+external-parallelio~mpi~pnetcdf")
     depends_on("parallelio@2.5.10: +mpi+pnetcdf", when="@8.5.0:+external-parallelio+mpi+pnetcdf")
     depends_on("parallelio@2.5.10: +mpi", when="@8.5.0:+external-parallelio+mpi~pnetcdf")
     depends_on("parallelio@2.5.10: ~mpi+pnetcdf", when="@8.5.0:+external-parallelio~mpi+pnetcdf")
@@ -351,9 +347,14 @@ class Esmf(MakefilePackage):
             # NetCDF format.
             env.set("ESMF_NETCDF", "nc-config")
             env.set("ESMF_NFCONFIG", "nf-config")
-            if spec["netcdf-c"].satisfies("~shared"):
-                ncconfig = which(os.path.join(spec["netcdf-c"].prefix.bin,"nc-config"))
-                nc_flags = ncconfig("--static", "--libs", output=str).strip()
+            netcdfc = spec["netcdf-c"]
+            if netcdfc.satisfies("~shared"):
+                nc_config = which(os.path.join(netcdfc.prefix.bin, "nc-config"))
+                # DH* 20230710
+                # original spack code
+                # nc_flags = nc_config("--libs", output=str).strip()
+                nc_flags = nc_config("--static", "--libs", output=str).strip()
+                # *DH 20230710
                 env.set("ESMF_NETCDF_LIBS", nc_flags)
 
         ###################

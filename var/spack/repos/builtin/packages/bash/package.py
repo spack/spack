@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Bash(AutotoolsPackage, GNUMirrorPackage):
@@ -13,8 +14,6 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/bash/"
     gnu_mirror_path = "bash/bash-5.0.tar.gz"
-
-    maintainers("adamjstewart")
 
     version("5.2", sha256="a139c166df7ff4471c5e0733051642ee5556c1cc8a4a78f145583c5c81ab32fb")
     version("5.1", sha256="cc012bc860406dcf42f64431bcd3d2fa7560c02915a601aba9cd597a39329baa")
@@ -177,8 +176,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
 
     def configure_args(self):
         spec = self.spec
-
-        return [
+        args = [
             # https://github.com/Homebrew/legacy-homebrew/pull/23234
             # https://trac.macports.org/ticket/40603
             "CFLAGS=-DSSH_SOURCE_BASHRC",
@@ -186,8 +184,12 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
             "--with-curses",
             "--enable-readline",
             "--with-installed-readline",
-            "--with-libiconv-prefix={0}".format(spec["iconv"].prefix),
         ]
+        if spec["iconv"].name == "libc":
+            args.append("--without-libiconv-prefix")
+        elif not is_system_path(spec["iconv"].prefix):
+            args.append("--with-libiconv-prefix={0}".format(spec["iconv"].prefix))
+        return args
 
     def check(self):
         make("tests")

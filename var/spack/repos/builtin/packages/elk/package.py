@@ -170,9 +170,12 @@ class Elk(MakefilePackage):
             config["LIB_FFT"] = spec["mkl"].libs.ld_flags
             config["SRC_FFT"] = "mkl_dfti.f90 zfftifc_mkl.f90"
             cp = which("cp")
+            mkl_prefix = spec["mkl"].prefix
+            if spec.satisfies("^intel-mkl"):
+                mkl_prefix = mkl_prefix.mkl
             cp(
-                "{}/mkl/include/mkl_dfti.f90".format(spec["mkl"].prefix),
-                self.build_directory + "/src",
+                join_path(mkl_prefix.include, "mkl_dfti.f90"),
+                join_path(self.build_directory, "src"),
             )
 
         # Define targets

@@ -2,11 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from collections import namedtuple
+
 import pytest
 
 import spack.directives
 import spack.repo
 import spack.spec
+import spack.version
 
 
 def test_false_directives_do_not_exist(mock_packages):
@@ -84,3 +87,20 @@ def test_error_on_anonymous_dependency(config, mock_packages):
 def test_maintainer_directive(config, mock_packages, package_name, expected_maintainers):
     pkg_cls = spack.repo.path.get_pkg_class(package_name)
     assert pkg_cls.maintainers == expected_maintainers
+
+
+def test_version_type_validation():
+    # A version should be a string or an int, not a float, because it leads to subtle issues
+    # such as 3.10 being interpreted as 3.1.
+
+    package = namedtuple("package", ["name"])
+
+    msg = r"python: declared version '.+' in package should be a string or int\."
+
+    # Pass a float
+    with pytest.raises(spack.version.VersionError, match=msg):
+        spack.directives._execute_version(package(name="python"), 3.10)
+
+    # Try passing a bogus type; it's just that we want a nice error message
+    with pytest.raises(spack.version.VersionError, match=msg):
+        spack.directives._execute_version(package(name="python"), {})

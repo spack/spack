@@ -9,7 +9,7 @@ import sys
 
 import pytest
 
-import spack.binary_distribution
+import spack.binary_distribution as bd
 import spack.main
 import spack.spec
 import spack.util.url
@@ -26,22 +26,22 @@ def test_build_tarball_overwrite(install_mockery, mock_fetch, monkeypatch, tmpdi
 
         # Runs fine the first time, throws the second time
         out_url = spack.util.url.path_to_file_url(str(tmpdir))
-        spack.binary_distribution._build_tarball(spec, out_url, unsigned=True)
-        with pytest.raises(spack.binary_distribution.NoOverwriteException):
-            spack.binary_distribution._build_tarball(spec, out_url, unsigned=True)
+        bd.push_or_raise(spec, out_url, bd.PushOptions(unsigned=True))
+        with pytest.raises(bd.NoOverwriteException):
+            bd.push_or_raise(spec, out_url, bd.PushOptions(unsigned=True))
 
         # Should work fine with force=True
-        spack.binary_distribution._build_tarball(spec, out_url, force=True, unsigned=True)
+        bd.push_or_raise(spec, out_url, bd.PushOptions(force=True, unsigned=True))
 
         # Remove the tarball and try again.
         # This must *also* throw, because of the existing .spec.json file
         os.remove(
             os.path.join(
-                spack.binary_distribution.build_cache_prefix("."),
-                spack.binary_distribution.tarball_directory_name(spec),
-                spack.binary_distribution.tarball_name(spec, ".spack"),
+                bd.build_cache_prefix("."),
+                bd.tarball_directory_name(spec),
+                bd.tarball_name(spec, ".spack"),
             )
         )
 
-        with pytest.raises(spack.binary_distribution.NoOverwriteException):
-            spack.binary_distribution._build_tarball(spec, out_url, unsigned=True)
+        with pytest.raises(bd.NoOverwriteException):
+            bd.push_or_raise(spec, out_url, bd.PushOptions(unsigned=True))

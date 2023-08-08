@@ -188,6 +188,7 @@ class Rccl(CMakePackage):
         "5.4.3",
     ]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
+        depends_on("chrpath", when="@5.3.0:")
 
     @classmethod
     def determine_version(cls, lib):
@@ -216,4 +217,14 @@ class Rccl(CMakePackage):
 
         if self.spec.satisfies("@4.5.0:"):
             args.append(self.define("ROCM_SMI_DIR", self.spec["rocm-smi-lib"].prefix))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append(self.define("BUILD_TESTS", "ON"))
         return args
+
+    def test(self):
+        if self.spec.satisfies("@:5.3.0"):
+            print("Skipping: stand-alone tests")
+            return
+        test_dir = join_path(self.spec["rccl"].prefix, "bin")
+        with working_dir(test_dir, create=True):
+            self.run_test("UnitTests")

@@ -14,11 +14,15 @@ class Pythia8(AutotoolsPackage):
 
     homepage = "http://home.thep.lu.se/Pythia/"
     url = "https://pythia.org/download/pythia83/pythia8306.tgz"
+    list_url = "https://pythia.org/releases/"
 
     tags = ["hep"]
 
     maintainers("ChristianTackeGSI")
 
+    version("8.309", sha256="5bdafd9f2c4a1c47fd8a4e82fb9f0d8fcfba4de1003b8e14be4e0347436d6c33")
+    version("8.308", sha256="c2e8c8d38136d85fc0bc9c9fad4c2db679b0819b7d2b6fc9a47f80f99538b4e3")
+    version("8.307", sha256="e5b14d44aa5943332e32dd5dda9a18fdd1a0085c7198e28d840e04167fa6013d")
     version("8.306", sha256="734803b722b1c1b53c8cf2f0d3c30747c80fc2dde5e0ba141bc9397dad37a8f6")
     version("8.304", sha256="d3897018fb6d545eaf93bf43f32580c984a9bff49259d9dd29dff6edfbe9d9a1")
     version("8.303", sha256="cd7c2b102670dae74aa37053657b4f068396988ef7da58fd3c318c84dc37913e")

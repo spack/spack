@@ -19,6 +19,6 @@ class Qjson(CMakePackage):
 
     def cmake_args(self):
         args = []
-        if self.spec["qt"].version.up_to(1) == Version(4):
+        if self.spec["qt"].version.up_to(1) == Version("4"):
             args.append("-DQT4_BUILD=ON")
         return args

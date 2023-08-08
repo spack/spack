@@ -2,7 +2,7 @@ spack:
   view: false
   packages:
     all:
-      target: [x86_64]
+      require: target=x86_64_v3
 
       providers:
         mpi: [mvapich2]

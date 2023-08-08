@@ -7,6 +7,7 @@
 import os
 import re
 import shutil
+import subprocess
 
 from spack.package import *
 
@@ -144,3 +145,69 @@ class RocmSmiLib(CMakePackage):
             shutil.rmtree(self.prefix.rocm_smi)
             os.remove(join_path(self.prefix.bin, "rsmiBindings.py"))
             symlink("../bindings/rsmiBindings.py", join_path(self.prefix.bin, "rsmiBindings.py"))
+
+    test_src_dir = "tests/rocm_smi_test"
+
+    @run_after("install")
+    def cache_test_sources(self):
+        """Copy the tests source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        if self.spec.satisfies("@:5.1.0"):
+            return
+        self.cache_extra_test_sources([self.test_src_dir])
+
+    def test(self):
+        if self.spec.satisfies("@:5.1.0"):
+            print("Skipping: stand-alone tests")
+            return
+        exclude = "rsmitst.exclude"
+        TOPOLOGY_SYSFS_DIR = "/sys/devices/virtual/kfd/kfd/topology/nodes"
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+        with working_dir(test_dir, create=True):
+            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            prefixes = ";".join([self.spec["rocm-smi-lib"].prefix])
+            cc_options = [
+                "-DCMAKE_PREFIX_PATH=" + prefixes,
+                "-DROCM_DIR=" + self.spec["rocm-smi-lib"].prefix,
+                ".",
+            ]
+            self.run_test(cmake_bin, cc_options)
+            make()
+
+            # Since rsmitst internally attempts to run for every gpu the exclude test list will
+            # be the union of all the excludes for all the devices on the system
+            disabled_tests = ""
+            if os.path.exists(TOPOLOGY_SYSFS_DIR):
+                for file in os.listdir(TOPOLOGY_SYSFS_DIR):
+                    name_file = os.path.join(TOPOLOGY_SYSFS_DIR, str(file), "name")
+                    if os.path.exists(name_file):
+                        with open(name_file, "r") as f:
+                            node = f.readline().strip("\n")
+                            if node:
+                                cmd = "source " + exclude + ' && echo "${FILTER[' + node + ']}"'
+                                node_tests = subprocess.check_output(
+                                    cmd, shell=True, executable="/bin/bash"
+                                )
+                                node_tests = node_tests.decode("utf-8").strip("\n")
+                                if node_tests:
+                                    disabled_tests = disabled_tests + node_tests + ":"
+
+            # disable tests under virtualization
+            cmd = "source " + exclude + ' && echo "${FILTER[virtualization]}"'
+            virtualization_tests = subprocess.check_output(cmd, shell=True, executable="/bin/bash")
+            virtualization_tests = virtualization_tests.decode("utf-8").strip("\n")
+            disabled_tests = disabled_tests + virtualization_tests
+
+            # disable test that requires --privileged permissions
+            privileged_tests = ":".join(
+                [
+                    "rsmitstReadWrite.TestPerfLevelReadWrite",
+                    "rsmitstReadWrite.TestFrequenciesReadWrite",
+                    "rsmitstReadWrite.TestPciReadWrite",
+                    "rsmitstReadWrite.TestPerfCntrReadWrite",
+                ]
+            )
+            disabled_tests = disabled_tests + ":" + privileged_tests
+
+            self.run_test("rsmitst64", "--gtest_filter=-" + disabled_tests)
+            make("clean")

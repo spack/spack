@@ -45,4 +45,4 @@ class Munge(AutotoolsPackage):
 
     def install(self, spec, prefix):
         os.makedirs(os.path.join(prefix, "lib/systemd/system"))
-        super(Munge, self).install(spec, prefix)
+        super().install(spec, prefix)

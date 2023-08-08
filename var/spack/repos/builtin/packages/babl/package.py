@@ -19,6 +19,7 @@ class Babl(MesonPackage):
 
     maintainers("benkirk")
 
+    version("0.1.106", sha256="d325135d3304f088c134cc620013acf035de2e5d125a50a2d91054e7377c415f")
     version("0.1.102", sha256="a88bb28506575f95158c8c89df6e23686e50c8b9fea412bf49fe8b80002d84f0")
     version("0.1.98", sha256="f3b222f84e462735de63fa9c3651942f2b78fd314c73a22e05ff7c73afd23af1")
     version("0.1.96", sha256="33673fe459a983f411245a49f81fd7f1966af1ea8eca9b095a940c542b8545f6")

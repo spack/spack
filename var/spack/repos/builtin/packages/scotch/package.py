@@ -129,8 +129,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("MPI_THREAD_MULTIPLE", "mpi_thread"),
         ]
 
-        # TODO should we enable/disable THREADS?
-
         if "+int64" in spec:
             args.append("-DINTSIZE=64")
 

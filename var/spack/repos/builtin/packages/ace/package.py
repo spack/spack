@@ -17,10 +17,10 @@ class Ace(MakefilePackage):
     url = "https://download.dre.vanderbilt.edu/previous_versions/ACE-6.5.1.tar.gz"
 
     version("7.1.0", sha256="d78d9f3f2dee6ccb46a8c296367369349054fd475dff3c5b36e2dff3dee0bf8f")
-    version("6.5.12", "de96c68a6262d6b9ba76b5057c02c7e6964c070b1328a63bf70259e9530a7996")
-    version("6.5.6", "7717cad84d4a9c3d6b2c47963eb555d96de0be657870bcab6fcef4c0423af0de")
-    version("6.5.1", "1f318adadb19da23c9be570a9c600a330056b18950fe0bf0eb1cf5cac8b72a32")
-    version("6.5.0", "b6f9ec922fbdcecb4348e16d851d0d1f135df1836dfe77d2e0b64295ddb83066")
+    version("6.5.12", sha256="de96c68a6262d6b9ba76b5057c02c7e6964c070b1328a63bf70259e9530a7996")
+    version("6.5.6", sha256="7717cad84d4a9c3d6b2c47963eb555d96de0be657870bcab6fcef4c0423af0de")
+    version("6.5.1", sha256="1f318adadb19da23c9be570a9c600a330056b18950fe0bf0eb1cf5cac8b72a32")
+    version("6.5.0", sha256="b6f9ec922fbdcecb4348e16d851d0d1f135df1836dfe77d2e0b64295ddb83066")
 
     def edit(self, spec, prefix):
         # Dictionary mapping: compiler-name : ACE config-label

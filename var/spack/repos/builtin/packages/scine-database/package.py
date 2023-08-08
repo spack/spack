@@ -16,7 +16,7 @@ class ScineDatabase(CMakePackage):
     git = "https://github.com/qcscine/database.git"
 
     version("master", branch="master")
-    version("1.1.0", "a9144631dfb90e06f6924cf58fc5db13719cf8577fcd3bbf788a135060a70c18")
+    version("1.1.0", sha256="a9144631dfb90e06f6924cf58fc5db13719cf8577fcd3bbf788a135060a70c18")
 
     resource(
         name="dev",

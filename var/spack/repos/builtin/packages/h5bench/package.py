@@ -39,7 +39,7 @@ class H5bench(CMakePackage):
     depends_on("cmake@3.10:", type="build")
     depends_on("mpi")
     depends_on("hdf5+mpi@1.12.0:1,develop-1.12:")
-    depends_on("hdf5-vol-async@1.3", when="+async")
+    depends_on("hdf5-vol-async@1.5", when="+async")
     depends_on("parallel-netcdf", when="+e3sm")
     depends_on("parallel-netcdf", when="+all")
 

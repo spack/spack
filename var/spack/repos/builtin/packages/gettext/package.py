@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Gettext(AutotoolsPackage, GNUMirrorPackage):
@@ -80,7 +81,6 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         config_args = [
             "--disable-java",
             "--disable-csharp",
-            "--with-libiconv-prefix={0}".format(spec["iconv"].prefix),
             "--with-included-glib",
             "--with-included-gettext",
             "--with-included-libcroco",
@@ -90,6 +90,11 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         ]
 
         config_args.extend(self.enable_or_disable("shared"))
+
+        if self.spec["iconv"].name == "libc":
+            config_args.append("--without-libiconv-prefix")
+        elif not is_system_path(self.spec["iconv"].prefix):
+            config_args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         if "+curses" in spec:
             config_args.append("--with-ncurses-prefix={0}".format(spec["ncurses"].prefix))

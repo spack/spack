@@ -17,6 +17,7 @@ class Er(CMakePackage):
     maintainers("CamStan", "gonsie")
 
     version("main", branch="main")
+    version("0.4.0", sha256="6cb5b6724ddac5c1f5ed6b326a5f3bf5d4eb1c6958a48218e6ca9bb7c02e48a8")
     version("0.3.0", sha256="01bc71bfb2ebb015ccb948f2bb9138b70972a3e8be0e53f9a4844e46b106a36c")
     version("0.2.0", sha256="9ddfe2b63682ed0e89685f9b7d5259ef82b802aba55c8ee78cc15a7adbad6bc0")
     version("0.1.0", sha256="543afc1c48bb2c67f48c32f6c9efcbf7bb27f2e622ff76f2c2ce5618c77aacfc")
@@ -30,7 +31,15 @@ class Er(CMakePackage):
     depends_on("shuffile")
     depends_on("zlib", type="link")
 
-    depends_on("kvtree@1.3", when="@0.2.0")
+    depends_on("kvtree@:1.2.0", when="@:0.1.0")
+    depends_on("kvtree@1.3.0", when="@0.2.0:0.3.0")
+    depends_on("kvtree@1.4.0:", when="@0.4.0:")
+    depends_on("rankstr@:0.2.0", when="@:0.3.0")
+    depends_on("rankstr@0.3.0:", when="@0.4.0:")
+    depends_on("redset@:0.2.0", when="@:0.3.0")
+    depends_on("redset@0.3.0:", when="@0.4.0:")
+    depends_on("shuffile@:0.2.0", when="@:0.3.0")
+    depends_on("shuffile@0.3.0:", when="@0.4.0:")
 
     deps = ["kvtree", "rankstr", "redset", "shuffile"]
     for dep in deps:

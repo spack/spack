@@ -23,16 +23,21 @@ class Madis(MakefilePackage):
 
     version("4.3", sha256="5d1ee9800c84e623dcf4271653aa66d17a744143e58354e70f8a0646cd6b246c")
 
-    variant("pic", default=True, description="Build with PIC")
+    variant("pic", default=True, description="Build with position-independent code (PIC)")
     variant("pnetcdf", default=False, description="Build with parallel NetCDF")
 
     depends_on("netcdf-fortran")
     depends_on("parallel-netcdf", when="+pnetcdf")
 
     def setup_build_environment(self, env):
+        fflags = []
+        if self.spec.satisfies("%gcc@10:"):
+            fflags += ["-fallow-argument-mismatch"]
+
         if self.spec.satisfies("+pic"):
-            env.set("FFLAGS", "-fPIC")
-            env.set("CFLAGS", "-fPIC")
+            fflags += ["-fPIC"]
+
+        env.set("FFLAGS", " ".join(fflags))
 
         ldflags = []
         libs = []
@@ -66,8 +71,5 @@ class Madis(MakefilePackage):
             copy_tree("static", prefix.static)
 
     def patch(self):
-        filter_file("NETCDF_LIB=", "#NETCDF_LIB=", "src/makefile")
-        filter_file("NETCDF_INC=", "#NETCDF_INC=", "src/makefile")
-        filter_file("FC=", "#FC=", "src/makefile")
-        filter_file("FFLAGS=", "#FFLAGS=", "src/makefile")
-        filter_file("LDFLAGS=", "#LDFLAGS=", "src/makefile")
+        for pattern in ["NETCDF_LIB", "NETCDF_INC", "FC", "FFLAGS", "LDFLAGS"]:
+            filter_file(pattern + "=", "#" + pattern + "=", "src/makefile")

@@ -17,6 +17,7 @@ class StringViewLite(CMakePackage):
     homepage = "https://github.com/martinmoene/string-view-lite"
     url = "https://github.com/martinmoene/string-view-lite/archive/v1.0.0.tar.gz"
 
+    version("1.7.0", sha256="265eaec08c4555259b46f5b03004dbc0f7206384edfac1cd5a837efaa642e01c")
     version("1.2.0", sha256="de5c8be782831bac7e7f9656b7fa185b015ae39fac8123195aeba7cbde019da4")
     version("1.1.0", sha256="88fb33ad7a345a25aca4ddf3244afd81b8d54787e5fb316a7ed60f702bc646cd")
     version("1.0.0", sha256="44e30dedd6f4777e646da26528f9d2d5cc96fd0fa79e2e5c0adc14817d048d63")

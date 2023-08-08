@@ -24,7 +24,7 @@ from spack.variant import (
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestSpecSemantics(object):
+class TestSpecSemantics:
     """Test satisfies(), intersects(), constrain() and other semantic operations on specs."""
 
     @pytest.mark.parametrize(
@@ -238,6 +238,22 @@ class TestSpecSemantics(object):
         c2.constrain(lhs)
         assert c1 == c2
         assert c1 == expected
+
+    def test_constrain_specs_by_hash(self, default_mock_concretization, database):
+        """Test that Specs specified only by their hashes can constrain eachother."""
+        mpich_dag_hash = "/" + database.query_one("mpich").dag_hash()
+        spec = Spec(mpich_dag_hash[:7])
+        assert spec.constrain(Spec(mpich_dag_hash)) is False
+        assert spec.abstract_hash == mpich_dag_hash[1:]
+
+    def test_mismatched_constrain_spec_by_hash(self, default_mock_concretization, database):
+        """Test that Specs specified only by their incompatible hashes fail appropriately."""
+        lhs = "/" + database.query_one("callpath ^mpich").dag_hash()
+        rhs = "/" + database.query_one("callpath ^mpich2").dag_hash()
+        with pytest.raises(spack.spec.InvalidHashError):
+            Spec(lhs).constrain(Spec(rhs))
+        with pytest.raises(spack.spec.InvalidHashError):
+            Spec(lhs[:7]).constrain(Spec(rhs))
 
     @pytest.mark.parametrize(
         "lhs,rhs", [("libelf", Spec()), ("libelf", "@0:1"), ("libelf", "@0:1 %gcc")]
@@ -621,65 +637,63 @@ class TestSpecSemantics(object):
         # Testing named strings ie {string} and whether we get
         # the correct component
         # Mixed case intentional to test both
+        # Fields are as follow
+        # fmt_str: the format string to test
+        # sigil: the portion that is a sigil (may be empty string)
+        # prop: the property to get
+        # component: subcomponent of spec from which to get property
         package_segments = [
-            ("{NAME}", "name"),
-            ("{VERSION}", "versions"),
-            ("{compiler}", "compiler"),
-            ("{compiler_flags}", "compiler_flags"),
-            ("{variants}", "variants"),
-            ("{architecture}", "architecture"),
+            ("{NAME}", "", "name", lambda spec: spec),
+            ("{VERSION}", "", "version", lambda spec: spec),
+            ("{compiler}", "", "compiler", lambda spec: spec),
+            ("{compiler_flags}", "", "compiler_flags", lambda spec: spec),
+            ("{variants}", "", "variants", lambda spec: spec),
+            ("{architecture}", "", "architecture", lambda spec: spec),
+            ("{@VERSIONS}", "@", "versions", lambda spec: spec),
+            ("{%compiler}", "%", "compiler", lambda spec: spec),
+            ("{arch=architecture}", "arch=", "architecture", lambda spec: spec),
+            ("{compiler.name}", "", "name", lambda spec: spec.compiler),
+            ("{compiler.version}", "", "version", lambda spec: spec.compiler),
+            ("{%compiler.name}", "%", "name", lambda spec: spec.compiler),
+            ("{@compiler.version}", "@", "version", lambda spec: spec.compiler),
+            ("{architecture.platform}", "", "platform", lambda spec: spec.architecture),
+            ("{architecture.os}", "", "os", lambda spec: spec.architecture),
+            ("{architecture.target}", "", "target", lambda spec: spec.architecture),
+            ("{prefix}", "", "prefix", lambda spec: spec),
+            ("{external}", "", "external", lambda spec: spec),  # test we print "False"
         ]
 
-        sigil_package_segments = [
-            ("{@VERSIONS}", "@" + str(spec.version)),
-            ("{%compiler}", "%" + str(spec.compiler)),
-            ("{arch=architecture}", "arch=" + str(spec.architecture)),
-        ]
-
-        compiler_segments = [("{compiler.name}", "name"), ("{compiler.version}", "versions")]
-
-        sigil_compiler_segments = [
-            ("{%compiler.name}", "%" + spec.compiler.name),
-            ("{@compiler.version}", "@" + str(spec.compiler.version)),
-        ]
-
-        architecture_segments = [
-            ("{architecture.platform}", "platform"),
-            ("{architecture.os}", "os"),
-            ("{architecture.target}", "target"),
+        hash_segments = [
+            ("{hash:7}", "", lambda s: s.dag_hash(7)),
+            ("{/hash}", "/", lambda s: "/" + s.dag_hash()),
         ]
 
         other_segments = [
             ("{spack_root}", spack.paths.spack_root),
             ("{spack_install}", spack.store.layout.root),
-            ("{hash:7}", spec.dag_hash(7)),
-            ("{/hash}", "/" + spec.dag_hash()),
         ]
 
-        for named_str, prop in package_segments:
-            expected = getattr(spec, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected).strip() == actual
+        def depify(depname, fmt_str, sigil):
+            sig = len(sigil)
+            opening = fmt_str[: 1 + sig]
+            closing = fmt_str[1 + sig :]
+            return spec[depname], opening + f"^{depname}." + closing
 
-        for named_str, expected in sigil_package_segments:
-            actual = spec.format(named_str)
-            assert expected == actual
+        def check_prop(check_spec, fmt_str, prop, getter):
+            actual = spec.format(fmt_str)
+            expected = getter(check_spec)
+            assert actual == str(expected).strip()
 
-        compiler = spec.compiler
-        for named_str, prop in compiler_segments:
-            expected = getattr(compiler, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected) == actual
+        for named_str, sigil, prop, get_component in package_segments:
+            getter = lambda s: sigil + str(getattr(get_component(s), prop, ""))
+            check_prop(spec, named_str, prop, getter)
+            mpi, fmt_str = depify("mpi", named_str, sigil)
+            check_prop(mpi, fmt_str, prop, getter)
 
-        for named_str, expected in sigil_compiler_segments:
-            actual = spec.format(named_str)
-            assert expected == actual
-
-        arch = spec.architecture
-        for named_str, prop in architecture_segments:
-            expected = getattr(arch, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected) == actual
+        for named_str, sigil, getter in hash_segments:
+            assert spec.format(named_str) == getter(spec)
+            callpath, fmt_str = depify("callpath", named_str, sigil)
+            assert spec.format(fmt_str) == getter(callpath)
 
         for named_str, expected in other_segments:
             actual = spec.format(named_str)
@@ -716,52 +730,6 @@ class TestSpecSemantics(object):
             with pytest.raises(SpecFormatStringError):
                 spec.format(fmt_str)
 
-    def test_spec_deprecated_formatting(self):
-        spec = Spec("libelf cflags==-O2")
-        spec.concretize()
-
-        # Since the default is the full spec see if the string rep of
-        # spec is the same as the output of spec.format()
-        # ignoring whitespace (though should we?)
-        assert str(spec) == spec.format("$_$@$%@+$+$=").strip()
-
-        # Testing named strings ie {string} and whether we get
-        # the correct component
-        # Mixed case intentional for testing both
-        package_segments = [
-            ("${PACKAGE}", "name"),
-            ("${VERSION}", "versions"),
-            ("${compiler}", "compiler"),
-            ("${compilerflags}", "compiler_flags"),
-            ("${options}", "variants"),
-            ("${architecture}", "architecture"),
-        ]
-
-        compiler_segments = [("${compilername}", "name"), ("${compilerver}", "versions")]
-
-        architecture_segments = [
-            ("${PLATFORM}", "platform"),
-            ("${OS}", "os"),
-            ("${TARGET}", "target"),
-        ]
-
-        for named_str, prop in package_segments:
-            expected = getattr(spec, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected) == actual
-
-        compiler = spec.compiler
-        for named_str, prop in compiler_segments:
-            expected = getattr(compiler, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected) == actual
-
-        arch = spec.architecture
-        for named_str, prop in architecture_segments:
-            expected = getattr(arch, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected) == actual
-
     @pytest.mark.regression("9908")
     def test_spec_flags_maintain_order(self):
         # Spack was assembling flags in a manner that could result in
@@ -786,7 +754,7 @@ class TestSpecSemantics(object):
     def test_errors_in_variant_directive(self):
         variant = spack.directives.variant.__wrapped__
 
-        class Pkg(object):
+        class Pkg:
             name = "PKG"
 
         # We can't use names that are reserved by Spack
@@ -1003,7 +971,7 @@ class TestSpecSemantics(object):
     def test_satisfies_dependencies_ordered(self):
         d = Spec("zmpi ^fake")
         s = Spec("mpileaks")
-        s._add_dependency(d, deptypes=())
+        s._add_dependency(d, deptypes=(), virtuals=())
         assert s.satisfies("mpileaks ^zmpi ^fake")
 
     @pytest.mark.parametrize("transitive", [True, False])
@@ -1050,6 +1018,7 @@ def test_is_extension_after_round_trip_to_dict(config, mock_packages, spec_str):
 
 
 def test_malformed_spec_dict():
+    # FIXME: This test was really testing the specific implementation with an ad-hoc test
     with pytest.raises(SpecError, match="malformed"):
         Spec.from_dict(
             {"spec": {"_meta": {"version": 2}, "nodes": [{"dependencies": {"name": "foo"}}]}}
@@ -1057,6 +1026,7 @@ def test_malformed_spec_dict():
 
 
 def test_spec_dict_hashless_dep():
+    # FIXME: This test was really testing the specific implementation with an ad-hoc test
     with pytest.raises(SpecError, match="Couldn't parse"):
         Spec.from_dict(
             {
@@ -1150,7 +1120,7 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
 
     # add it to an abstract spec as a dependency
     top = Spec("dt-diamond")
-    top.add_dependency_edge(bottom, deptypes=())
+    top.add_dependency_edge(bottom, deptypes=(), virtuals=())
 
     # concretize with the already-concrete dependency
     top.concretize()

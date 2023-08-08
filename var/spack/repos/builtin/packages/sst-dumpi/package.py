@@ -15,14 +15,18 @@ class SstDumpi(AutotoolsPackage):
     """
 
     homepage = "http://sst.sandia.gov/about_dumpi.html"
-    url = "https://github.com/sstsimulator/sst-dumpi/archive/6.1.0.tar.gz"
+    url = "https://github.com/sstsimulator/sst-dumpi/archive/refs/tags/v13.0.0_Final.tar.gz"
     git = "https://github.com/sstsimulator/sst-dumpi.git"
 
-    maintainers("sknigh", "jpkenny", "calewis")
+    maintainers("berquist", "jpkenny", "calewis")
+
+    version("13.0.0", sha256="0eaa5cf5826c9fbba6cfeed42f52af67c5a7d45bc8cbb485c2a3867b7438229b")
+    version("12.1.0", sha256="b718658cbb0be957d28883f7cc914617bff97b3629fad7017cd62e14ed667d9d")
+    version("12.0.1", sha256="6e74e5f16ee26c83b17ecd5c272a61ec37977f07f531066533dd610805f9117b")
+    version("12.0.0", sha256="04989c900adb253262808e59897d9f9b8df5dbd497a03820c3340640055dcf4f")
+    version("11.1.0", sha256="58144b4b7543705ef648ca86ea4ebf3c739554ea8a472123aadc2967a8201cdd")
 
     version("master", branch="master")
-    version("7.1.0", sha256="37cd9e8279e7a1c342a4357b75bb8a34b0fa76a4f372d4ecdef9168bdf50a465")
-    version("6.1.0", sha256="d4f6afcff5ba67fcc3a29f461afbb59855053840f5f320552a77b4e14c687bb6")
 
     depends_on("autoconf@1.68:", type="build")
     depends_on("automake@1.11.1:", type="build")

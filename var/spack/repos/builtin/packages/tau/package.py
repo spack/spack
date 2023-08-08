@@ -144,6 +144,9 @@ class Tau(Package):
     def set_compiler_options(self, spec):
         useropt = ["-O2 -g", self.rpath_args]
 
+        if self.spec.satisfies("%oneapi"):
+            useropt.append("-Wno-error=implicit-function-declaration")
+
         ##########
         # Selecting a compiler with TAU configure is quite tricky:
         # 1 - compilers are mapped to a given set of strings

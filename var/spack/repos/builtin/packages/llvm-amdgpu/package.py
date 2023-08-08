@@ -5,6 +5,7 @@
 
 
 import os
+import re
 
 from spack.package import *
 
@@ -17,6 +18,7 @@ class LlvmAmdgpu(CMakePackage):
     git = "https://github.com/RadeonOpenCompute/llvm-project.git"
     url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
+    executables = [r"amdclang", r"amdclang\+\+", r"amdflang", r"clang.*", r"flang.*", "llvm-.*"]
     generator("ninja")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
@@ -291,3 +293,16 @@ class LlvmAmdgpu(CMakePackage):
                 cmake_args.extend(self.cmake_args())
                 cmake(*cmake_args)
                 cmake("--build", ".")
+
+    @classmethod
+    def determine_version(cls, path):
+        match = re.search(r"amdclang", path)
+        detected_version = None
+        if match:
+            version_query = Executable(path)("--version", output=str)
+            match = re.search(r"roc-(\d)\.(\d).(\d)", version_query)
+            if match:
+                detected_version = "{0}.{1}.{2}".format(
+                    int(match.group(1)), int(match.group(2)), int(match.group(3))
+                )
+        return detected_version

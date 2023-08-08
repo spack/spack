@@ -1,0 +1,4 @@
+ci:
+  pipeline-gen:
+  - build-job:
+      tags: ["cce@15.0.1", "cray-zen4"]

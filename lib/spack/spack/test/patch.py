@@ -148,7 +148,7 @@ def test_patch_mixed_versions_subset_constraint(mock_packages, config):
     spec1.concretize()
     assert biz_sha256 in spec1.variants["patches"].value
 
-    spec2 = Spec("patch@1.0")
+    spec2 = Spec("patch@=1.0")
     spec2.concretize()
     assert biz_sha256 not in spec2.variants["patches"].value
 

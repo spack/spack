@@ -18,6 +18,7 @@ class XercesC(AutotoolsPackage):
     homepage = "https://xerces.apache.org/xerces-c"
     url = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.1.tar.bz2"
 
+    version("3.2.4", sha256="74aa626fc71e729ee227602870dd29a5a01cd8c9c1c7330837a51da2eb5722cc")
     version("3.2.3", sha256="45c2329e684405f2b8854ecbddfb8d5b055cdf0fe4d35736cc352c504989bbb6")
     version("3.2.2", sha256="1f2a4d1dbd0086ce0f52b718ac0fa4af3dc1ce7a7ff73a581a05fbe78a82bce0")
     version("3.2.1", sha256="a36b6e162913ec218cfb84772d2535d43c3365355a601d45d4b8ce11f0ece0da")

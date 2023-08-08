@@ -8,7 +8,7 @@ import re
 from spack.package import *
 
 
-class Hipblas(CMakePackage):
+class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     """hipBLAS is a BLAS marshalling library, with multiple
     supported backends"""
 
@@ -103,6 +103,22 @@ class Hipblas(CMakePackage):
         deprecated=True,
     )
 
+    # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
+    amdgpu_targets = ROCmPackage.amdgpu_targets
+    variant(
+        "amdgpu_target",
+        values=spack.variant.DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
+        .with_default("auto")
+        .with_error(
+            "the values 'auto' and 'none' are mutually exclusive with any of the other values"
+        )
+        .with_non_feature_values("auto", "none"),
+        sticky=True,
+    )
+    variant("rocm", default=True, description="Enable ROCm support")
+    conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
+    conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+
     variant(
         "build_type",
         default="Release",
@@ -124,14 +140,11 @@ class Hipblas(CMakePackage):
         exe = join_path(self.build_directory, "clients", "staging", "hipblas-test")
         self.run_test(exe, options=["--gtest_filter=-*known_bug*"])
 
-    depends_on("hip@4.1.0:", when="@4.1.0:")
-    depends_on("rocm-cmake@master", type="build", when="@master:")
+    depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:")
     depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
     depends_on("rocm-cmake@3.5.0:", type="build")
 
-    for ver in ["master", "develop"]:
-        depends_on("rocblas@" + ver, when="@" + ver)
-        depends_on("rocsolver@" + ver, when="@" + ver)
+    depends_on("hip +cuda", when="+cuda")
 
     for ver in [
         "3.5.0",
@@ -157,10 +170,19 @@ class Hipblas(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "master",
+        "develop",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocsolver@" + ver, when="@" + ver)
-        depends_on("rocblas@" + ver, when="@" + ver)
+        depends_on("rocsolver@" + ver, when="+rocm @" + ver)
+        depends_on("rocblas@" + ver, when="+rocm @" + ver)
+
+    for tgt in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "rocblas amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
+        )
+        depends_on(
+            "rocsolver amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
+        )
 
     @classmethod
     def determine_version(cls, lib):
@@ -175,28 +197,27 @@ class Hipblas(CMakePackage):
 
     def cmake_args(self):
         args = [
-            # Make sure find_package(HIP) finds the module.
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
         ]
 
-        # hipblas actually prefers CUDA over AMD GPUs when you have it
-        # installed...
         if self.spec.satisfies("@:3.9.0"):
-            args.append(self.define("TRY_CUDA", "OFF"))
+            args.append(self.define_from_variant("TRY_CUDA", "cuda"))
         else:
-            args.append(self.define("USE_CUDA", "OFF"))
+            args.append(self.define_from_variant("USE_CUDA", "cuda"))
 
-        if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
-            args.append(self.define("__skip_rocmclang", "ON"))
-        if self.spec.satisfies("@:5.1"):
-            args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
-        elif self.spec.satisfies("@5.2.0:"):
+        # FindHIP.cmake was used for +rocm until 4.1.0 and is still used for +cuda
+        if self.spec.satisfies("@:4.0") or self.spec.satisfies("+cuda"):
+            if self.spec["hip"].satisfies("@:5.1"):
+                args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
+            else:
+                args.append(
+                    self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
+                )
+
+        if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
         if self.spec.satisfies("@5.3.0:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
-
-    def setup_build_environment(self, env):
-        env.set("CXX", self.spec["hip"].hipcc)

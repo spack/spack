@@ -15,6 +15,7 @@ class Transdecoder(MakefilePackage):
     homepage = "https://transdecoder.github.io/"
     url = "https://github.com/TransDecoder/TransDecoder/archive/TransDecoder-v5.5.0.tar.gz"
 
+    version("5.7.0", sha256="421b50dd08b12a88f2f09922e20c50903e335f26947843d9f925f5c0e9ddd79f")
     version("5.5.0", sha256="c800d9226350817471e9f51267c91f7cab99dbc9b26c980527fc1019e7d90a76")
     version(
         "3.0.1",

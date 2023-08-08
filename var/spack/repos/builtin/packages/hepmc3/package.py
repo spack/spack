@@ -18,6 +18,7 @@ class Hepmc3(CMakePackage):
 
     maintainers("vvolkl")
 
+    version("3.2.6", sha256="248f3b5b36dd773844cbe73d51f60891458334b986b259754c59dbf4bbf1d525")
     version("3.2.5", sha256="cd0f75c80f75549c59cc2a829ece7601c77de97cb2a5ab75790cac8e1d585032")
     version("3.2.4", sha256="e088fccfd1a6c2f8e1089f457101bee1e5c7a9777e9d51c6419c8a288a49e1bb")
     version("3.2.3", sha256="8caadacc2c969883cd1f994b622795fc885fb4b15dad8c8ae64bcbdbf0cbd47d")

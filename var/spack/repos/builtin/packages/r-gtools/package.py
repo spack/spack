@@ -43,6 +43,7 @@ class RGtools(RPackage):
 
     cran = "gtools"
 
+    version("3.9.4", sha256="59cf8b194fe98b1cc05dbb4d686810a1068f59d8b402b731548a898ece85f111")
     version("3.9.3", sha256="7afb53277b382d5752f4597ae433f3c0addf5e8eb24d01a9562faf2a01e33133")
     version("3.9.2.1", sha256="ec5febad7bb33812684b39679b0bce8a668361b87714f7388546e0f4ac02af5f")
     version("3.9.2", sha256="03b1898bf581f6d12fa90e23ff700cfa7c834ac10c6654bdac42d7ec943fa953")

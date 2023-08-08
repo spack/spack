@@ -11,6 +11,8 @@
 
 from llnl.util.lang import union_dicts
 
+import spack.schema.gitlab_ci
+
 # Schema for script fields
 # List of lists and/or strings
 # This is similar to what is allowed in
@@ -20,24 +22,28 @@ script_schema = {
     "items": {"anyOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]},
 }
 
+# Schema for CI image
+image_schema = {
+    "oneOf": [
+        {"type": "string"},
+        {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "entrypoint": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+    ]
+}
+
 # Additional attributes are allow
 # and will be forwarded directly to the
 # CI target YAML for each job.
 attributes_schema = {
     "type": "object",
+    "additionalProperties": True,
     "properties": {
-        "image": {
-            "oneOf": [
-                {"type": "string"},
-                {
-                    "type": "object",
-                    "properties": {
-                        "name": {"type": "string"},
-                        "entrypoint": {"type": "array", "items": {"type": "string"}},
-                    },
-                },
-            ]
-        },
+        "image": image_schema,
         "tags": {"type": "array", "items": {"type": "string"}},
         "variables": {
             "type": "object",
@@ -51,7 +57,7 @@ attributes_schema = {
 
 submapping_schema = {
     "type": "object",
-    "additinoalProperties": False,
+    "additionalProperties": False,
     "required": ["submapping"],
     "properties": {
         "match_behavior": {"type": "string", "enum": ["first", "merge"], "default": "first"},
@@ -82,6 +88,11 @@ named_attributes_schema = {
             "type": "object",
             "additionalProperties": False,
             "properties": {"build-job": attributes_schema, "build-job-remove": attributes_schema},
+        },
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {"copy-job": attributes_schema, "copy-job-remove": attributes_schema},
         },
         {
             "type": "object",
@@ -123,23 +134,6 @@ pipeline_gen_schema = {
 core_shared_properties = union_dicts(
     {
         "pipeline-gen": pipeline_gen_schema,
-        "bootstrap": {
-            "type": "array",
-            "items": {
-                "anyOf": [
-                    {"type": "string"},
-                    {
-                        "type": "object",
-                        "additionalProperties": False,
-                        "required": ["name"],
-                        "properties": {
-                            "name": {"type": "string"},
-                            "compiler-agnostic": {"type": "boolean", "default": False},
-                        },
-                    },
-                ]
-            },
-        },
         "rebuild-index": {"type": "boolean"},
         "broken-specs-url": {"type": "string"},
         "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
@@ -169,7 +163,15 @@ ci_properties = {
 }
 
 #: Properties for inclusion in other schemas
-properties = {"ci": ci_properties}
+properties = {
+    "ci": {
+        "oneOf": [
+            ci_properties,
+            # Allow legacy format under `ci` for `config update ci`
+            spack.schema.gitlab_ci.gitlab_ci_properties,
+        ]
+    }
+}
 
 #: Full schema with metadata
 schema = {
@@ -179,3 +181,21 @@ schema = {
     "additionalProperties": False,
     "properties": properties,
 }
+
+
+def update(data):
+    import llnl.util.tty as tty
+
+    import spack.ci
+    import spack.environment as ev
+
+    # Warn if deprecated section is still in the environment
+    ci_env = ev.active_environment()
+    if ci_env:
+        env_config = ci_env.manifest[ev.TOP_LEVEL_KEY]
+        if "gitlab-ci" in env_config:
+            tty.die("Error: `gitlab-ci` section detected with `ci`, these are not compatible")
+
+    # Detect if the ci section is using the new pipeline-gen
+    # If it is, assume it has already been converted
+    return spack.ci.translate_deprecated_config(data)

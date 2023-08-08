@@ -11,7 +11,7 @@ import spack.tengine as tengine
 from spack.util.path import canonicalize_path
 
 
-class TestContext(object):
+class TestContext:
     class A(tengine.Context):
         @tengine.context_property
         def foo(self):
@@ -66,12 +66,12 @@ class TestContext(object):
 
 
 @pytest.mark.usefixtures("config")
-class TestTengineEnvironment(object):
+class TestTengineEnvironment:
     def test_template_retrieval(self):
         """Tests the template retrieval mechanism hooked into config files"""
         # Check the directories are correct
         template_dirs = spack.config.get("config:template_dirs")
-        template_dirs = [canonicalize_path(x) for x in template_dirs]
+        template_dirs = tuple([canonicalize_path(x) for x in template_dirs])
         assert len(template_dirs) == 3
 
         env = tengine.make_environment(template_dirs)

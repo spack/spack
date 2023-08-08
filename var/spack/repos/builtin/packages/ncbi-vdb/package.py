@@ -14,7 +14,8 @@ class NcbiVdb(CMakePackage):
     homepage = "https://github.com/ncbi/ncbi-vdb"
     git = "https://github.com/ncbi/ncbi-vdb.git"
 
-    version("3.0.0", tags="3.0.0")
+    version("3.0.2", tag="3.0.2")
+    version("3.0.0", tag="3.0.0")
 
     depends_on("openjdk")
     depends_on("flex@2.6:")

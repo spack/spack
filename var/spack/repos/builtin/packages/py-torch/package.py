@@ -24,6 +24,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     import_modules = ["torch", "torch.autograd", "torch.nn", "torch.utils"]
 
     version("master", branch="master", submodules=True)
+    version("2.0.1", tag="v2.0.1", submodules=True)
     version("2.0.0", tag="v2.0.0", submodules=True)
     version("1.13.1", tag="v1.13.1", submodules=True)
     version("1.13.0", tag="v1.13.0", submodules=True)
@@ -104,7 +105,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
 
     conflicts("+cuda+rocm")
-    conflicts("+tensorpipe", when="+rocm", msg="TensorPipe doesn't yet support ROCm")
+    conflicts("+tensorpipe", when="+rocm ^hip@:5.1", msg="TensorPipe not supported until ROCm 5.2")
     conflicts("+breakpad", when="target=ppc64:")
     conflicts("+breakpad", when="target=ppc64le:")
 
@@ -113,6 +114,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # https://github.com/pytorch/pytorch/issues/80805
     conflicts("+openmp", when="platform=darwin target=aarch64:")
+
+    # https://github.com/pytorch/pytorch/issues/97397
+    conflicts(
+        "~tensorpipe",
+        when="@1.8: +distributed",
+        msg="TensorPipe must be enabled with +distributed",
+    )
 
     conflicts(
         "cuda_arch=none",
@@ -350,7 +358,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@1.12 arch=ppc64le:",
     )
     patch(
-        "https://github.com/open-ce/pytorch-feedstock/raw/main/pytorch-1.13/recipe/0302-cpp-extension.patch",
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.8.0/pytorch-1.13/recipe/0302-cpp-extension.patch",
         sha256="a54db63640b90e5833cc1099c0935572f5297d2d8625f62f01ac1fda79ed4569",
         when="@1.13 arch=ppc64le:",
     )
@@ -370,6 +378,29 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         sha256="dc8b3a9bea4693f32d6850ea2ce6ce75e1778538bfba464b50efca92bac425e3",
         when="@:1 %gcc@12:",
         working_dir="third_party/gloo",
+    )
+
+    # PyTorch does not build on Linux >=6.0.3 (fixed in master)
+    # See: https://github.com/facebookincubator/gloo/issues/345
+    patch(
+        "https://github.com/facebookincubator/gloo/commit/10909297fedab0a680799211a299203e53515032.patch?full_index=1",
+        sha256="8e6e9a44e0533ba4303a95a651b1934e5d73632cab08cc7d5a9435e1e64aa424",
+        when="@:1",
+        working_dir="third_party/gloo",
+    )
+
+    # Some missing includes
+    # See: https://github.com/pytorch/pytorch/pull/100036
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/100036.patch?full_index=1",
+        sha256="65060b54c31196b26dcff29bbb178fd17d5677e8481a2a06002c0ca4dd37b3d0",
+        when="@2.0.0:2.0.1",
+    )
+    # See: https://github.com/pytorch/pytorch/pull/100049
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/100049.patch?full_index=1",
+        sha256="673056141c0ea6ff4411f65a26f1a9d7a7c49ad8fe034a01ef0d56ba8a7a9386",
+        when="@2.0.0:2.0.1",
     )
 
     @when("@1.5.0:")
@@ -590,3 +621,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     def install_test(self):
         with working_dir("test"):
             python("run_test.py")
+
+    @property
+    def cmake_prefix_paths(self):
+        cmake_prefix_paths = [
+            join_path(self.prefix, self.spec["python"].package.platlib, "torch", "share", "cmake")
+        ]
+        return cmake_prefix_paths

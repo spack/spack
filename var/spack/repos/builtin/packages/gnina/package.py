@@ -18,6 +18,9 @@ class Gnina(CMakePackage, CudaPackage):
 
     version("1.0.3", sha256="4274429f38293d79c7d22ab08aca91109e327e9ce3f682cd329a8f9c6ef429da")
 
+    variant("cudnn", default=True, description="Build with cuDNN")
+    variant("gninavis", default=False, description="Build gninavis")
+
     _boost = "boost" + "".join(
         [
             "+atomic",
@@ -54,18 +57,19 @@ class Gnina(CMakePackage, CudaPackage):
     depends_on("libmolgrid")
 
     depends_on("openbabel@3:~gui~cairo~maeparser~coordgen")
-    depends_on("rdkit")
+    depends_on("rdkit", when="+gninavis")
 
     depends_on("python", type="build")
     depends_on("py-numpy", type="build")
     depends_on("py-pytest", type="build")
 
     depends_on("cuda@11")
+    depends_on("cudnn", when="+cudnn")
 
     def cmake_args(self):
-        args = [
-            "-DBLAS=Open",  # Use OpenBLAS instead of Atlas' BLAS
-            f"-DRDKIT_INCLUDE_DIR={self.spec['rdkit'].prefix.include}/rdkit",
-        ]
+        args = ["-DBLAS=Open"]  # Use OpenBLAS instead of Atlas' BLAS
+
+        if "+gninavis" in self.spec:
+            args.append(f"-DRDKIT_INCLUDE_DIR={self.spec['rdkit'].prefix.include.rdkit}")
 
         return args

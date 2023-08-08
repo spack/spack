@@ -11,11 +11,11 @@ import spack.paths
 import spack.repo
 
 
-@pytest.fixture()
-def extra_repo(tmpdir_factory):
+@pytest.fixture(params=["packages", "", "foo"])
+def extra_repo(tmpdir_factory, request):
     repo_namespace = "extra_test_repo"
     repo_dir = tmpdir_factory.mktemp(repo_namespace)
-    repo_dir.ensure("packages", dir=True)
+    repo_dir.ensure(request.param, dir=True)
 
     with open(str(repo_dir.join("repo.yaml")), "w") as f:
         f.write(
@@ -24,7 +24,9 @@ repo:
   namespace: extra_test_repo
 """
         )
-    return spack.repo.Repo(str(repo_dir))
+        if request.param != "packages":
+            f.write(f"  subdirectory: '{request.param}'")
+    return (spack.repo.Repo(str(repo_dir)), request.param)
 
 
 def test_repo_getpkg(mutable_mock_repo):
@@ -33,13 +35,13 @@ def test_repo_getpkg(mutable_mock_repo):
 
 
 def test_repo_multi_getpkg(mutable_mock_repo, extra_repo):
-    mutable_mock_repo.put_first(extra_repo)
+    mutable_mock_repo.put_first(extra_repo[0])
     mutable_mock_repo.get_pkg_class("a")
     mutable_mock_repo.get_pkg_class("builtin.mock.a")
 
 
 def test_repo_multi_getpkgclass(mutable_mock_repo, extra_repo):
-    mutable_mock_repo.put_first(extra_repo)
+    mutable_mock_repo.put_first(extra_repo[0])
     mutable_mock_repo.get_pkg_class("a")
     mutable_mock_repo.get_pkg_class("builtin.mock.a")
 
@@ -63,9 +65,9 @@ def test_repo_last_mtime():
 
 
 def test_repo_invisibles(mutable_mock_repo, extra_repo):
-    with open(os.path.join(extra_repo.root, "packages", ".invisible"), "w"):
+    with open(os.path.join(extra_repo[0].root, extra_repo[1], ".invisible"), "w"):
         pass
-    extra_repo.all_package_names()
+    extra_repo[0].all_package_names()
 
 
 @pytest.mark.parametrize("attr_name,exists", [("cmake", True), ("__sphinx_mock__", False)])
@@ -150,3 +152,18 @@ def test_repo_path_handles_package_removal(tmpdir, mock_packages):
     with spack.repo.use_repositories(builder.root, override=False) as repos:
         r = repos.repo_for_pkg("c")
         assert r.namespace == "builtin.mock"
+
+
+def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_debug, capsys):
+    # Start with a package-less virtual
+    vspec = spack.spec.Spec("something")
+    mutable_mock_repo.dump_provenance(vspec, tmpdir)
+    captured = capsys.readouterr()[1]
+    assert "does not have a package" in captured
+
+    # Now with a virtual with a package
+    vspec = spack.spec.Spec("externalvirtual")
+    mutable_mock_repo.dump_provenance(vspec, tmpdir)
+    captured = capsys.readouterr()[1]
+    assert "Installing" in captured
+    assert "package.py" in os.listdir(tmpdir), "Expected the virtual's package to be copied"

@@ -349,11 +349,22 @@ def install_status():
         "-I",
         "--install-status",
         action="store_true",
-        default=False,
+        default=True,
         help="show install status of packages. packages can be: "
         "installed [+], missing and needed by an installed package [-], "
         "installed in and upstream instance [^], "
         "or not installed (no annotation)",
+    )
+
+
+@arg
+def no_install_status():
+    return Args(
+        "--no-install-status",
+        dest="install_status",
+        action="store_false",
+        default=True,
+        help="do not show install status annotations",
     )
 
 
@@ -468,7 +479,7 @@ class ConfigSetAction(argparse.Action):
         # substituting '_' for ':'.
         dest = dest.replace(":", "_")
 
-        super(ConfigSetAction, self).__init__(
+        super().__init__(
             option_strings=option_strings,
             dest=dest,
             nargs=0,
