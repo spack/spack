@@ -55,7 +55,8 @@ class AoclSparse(CMakePackage):
 
     depends_on("boost", when="+benchmarks")
     depends_on("boost", when="@2.2")
-    depends_on("cmake@3.5:", type="build")
+    depends_on("cmake@3.5:", type="build", when="@:4.0")
+    depends_on("cmake@3.11:", type="build", when="@4.1:")
 
     @property
     def build_directory(self):
