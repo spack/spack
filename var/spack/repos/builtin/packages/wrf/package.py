@@ -96,15 +96,22 @@ class Wrf(Package):
         url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
     )
 
-    variant("build_type", default="dmpar", values=("serial", "smpar", "dmpar", "dm+sm"))
+    variant(
+        "build_type",
+        default="dmpar",
+        description="Build type",
+        values=("serial", "smpar", "dmpar", "dm+sm"),
+    )
     variant(
         "nesting",
         default="basic",
+        description="Nesting",
         values=("no_nesting", "basic", "preset_moves", "vortex_following"),
     )
     variant(
         "compile_type",
         default="em_real",
+        description="Compile type",
         values=(
             "em_real",
             "em_quarter_ss",
