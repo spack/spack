@@ -38,24 +38,24 @@ class Unifyfs(AutotoolsPackage):
 
     variant(
         "auto-mount",
-        default="True",
+        default=True,
         description="Enable automatic mount/unmount in MPI_Init/Finalize",
     )
     variant(
         "boostsys",
-        default="False",
+        default=False,
         description="Have Mercury use preprocessor headers from boost dependency",
     )
-    variant("fortran", default="True", description="Build with gfortran support")
-    variant("pmi", default="False", description="Enable PMI2 build options")
-    variant("pmix", default="False", description="Enable PMIx build options")
+    variant("fortran", default=True, description="Build with gfortran support")
+    variant("pmi", default=False, description="Enable PMI2 build options")
+    variant("pmix", default=False, description="Enable PMIx build options")
     variant(
         "preload",
-        default="False",
+        default=False,
         when="@1.0.1:",
         description="Enable support for LD_PRELOAD library",
     )
-    variant("spath", default="True", description="Use spath library to normalize relative paths")
+    variant("spath", default=True, description="Use spath library to normalize relative paths")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

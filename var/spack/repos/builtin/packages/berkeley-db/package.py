@@ -32,7 +32,7 @@ class BerkeleyDb(AutotoolsPackage):
     )
     version("5.3.28", sha256="e0a992d740709892e81f9d93f06daf305cf73fb81b545afe72478043172c3628")
 
-    variant("docs", default=False)
+    variant("docs", default=False, description="Build documentation")
     variant("cxx", default=True, description="Build with C++ API")
     variant("stl", default=True, description="Build with C++ STL API")
 

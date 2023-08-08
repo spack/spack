@@ -105,7 +105,12 @@ class Rocthrust(CMakePackage):
 
     # the rocthrust library itself is header-only, but the build_type and amdgpu_target
     # are relevant to the test client
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
+    variant(
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=auto_or_any_combination_of(*amdgpu_targets),
+        sticky=True,
+    )
     depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
 

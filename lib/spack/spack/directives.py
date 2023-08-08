@@ -33,7 +33,7 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import List, Optional, Set, Union
+from typing import Any, Callable, List, Optional, Set, Tuple, Union
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -663,39 +663,35 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
 
 @directive("variants")
 def variant(
-    name,
-    default=None,
-    description="",
-    values=None,
-    multi=None,
-    validator=None,
-    when=None,
-    sticky=False,
+    name: str,
+    default: Optional[Any] = None,
+    description: str = "",
+    values: Optional[Union[collections.abc.Sequence, Callable[[Any], bool]]] = None,
+    multi: Optional[bool] = None,
+    validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]] = None,
+    when: Optional[Union[str, bool]] = None,
+    sticky: bool = False,
 ):
-    """Define a variant for the package. Packager can specify a default
-    value as well as a text description.
+    """Define a variant for the package.
+
+    Packager can specify a default value as well as a text description.
 
     Args:
-        name (str): name of the variant
-        default (str or bool): default value for the variant, if not
-            specified otherwise the default will be False for a boolean
-            variant and 'nothing' for a multi-valued variant
-        description (str): description of the purpose of the variant
-        values (tuple or typing.Callable): either a tuple of strings containing the
-            allowed values, or a callable accepting one value and returning
-            True if it is valid
-        multi (bool): if False only one value per spec is allowed for
-            this variant
-        validator (typing.Callable): optional group validator to enforce additional
-            logic. It receives the package name, the variant name and a tuple
-            of values and should raise an instance of SpackError if the group
-            doesn't meet the additional constraints
-        when (spack.spec.Spec, bool): optional condition on which the
-            variant applies
-        sticky (bool): the variant should not be changed by the concretizer to
-            find a valid concrete spec.
+        name: Name of the variant
+        default: Default value for the variant, if not specified otherwise the default will be
+            False for a boolean variant and 'nothing' for a multi-valued variant
+        description: Description of the purpose of the variant
+        values: Either a tuple of strings containing the allowed values, or a callable accepting
+            one value and returning True if it is valid
+        multi: If False only one value per spec is allowed for this variant
+        validator: Optional group validator to enforce additional logic. It receives the package
+            name, the variant name and a tuple of values and should raise an instance of SpackError
+            if the group doesn't meet the additional constraints
+        when: Optional condition on which the variant applies
+        sticky: The variant should not be changed by the concretizer to find a valid concrete spec
+
     Raises:
-        DirectiveError: if arguments passed to the directive are invalid
+        DirectiveError: If arguments passed to the directive are invalid
     """
 
     def format_error(msg, pkg):

@@ -22,10 +22,20 @@ class Tandem(CMakePackage):
     patch("fix_v1.0_compilation.diff", when="@1.0")
 
     maintainers("dmay23", "Thomas-Ulrich")
-    variant("polynomial_degree", default="2")
-    variant("domain_dimension", default="2", values=("2", "3"), multi=False)
-    variant("min_quadrature_order", default="0")
-    variant("libxsmm", default=False, description="installs libxsmm-generator")
+    variant("polynomial_degree", default="2", description="Polynomial degree")
+    variant(
+        "domain_dimension",
+        default="2",
+        description="Dimension of the domain",
+        values=("2", "3"),
+        multi=False,
+    )
+    variant(
+        "min_quadrature_order",
+        default="0",
+        description="Minimum order of quadrature rule, 0 = automatic",
+    )
+    variant("libxsmm", default=False, description="Install libxsmm-generator")
 
     depends_on("mpi")
     depends_on("parmetis +int64 +shared")

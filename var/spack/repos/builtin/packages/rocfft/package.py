@@ -102,9 +102,17 @@ class Rocfft(CMakePackage):
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
     variant(
-        "amdgpu_target_sram_ecc", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=auto_or_any_combination_of(*amdgpu_targets),
+        sticky=True,
+    )
+    variant(
+        "amdgpu_target_sram_ecc",
+        description="AMD GPU architecture",
+        values=auto_or_any_combination_of(*amdgpu_targets),
+        sticky=True,
     )
 
     depends_on("cmake@3.16:", type="build", when="@4.5.0:")

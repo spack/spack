@@ -72,7 +72,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("complex", default=False, description="Enable complex numbers in Trilinos")
     variant("cuda_rdc", default=False, description="Turn on RDC for CUDA build")
     variant("rocm_rdc", default=False, description="Turn on RDC for ROCm build")
-    variant("cxxstd", default="14", values=["11", "14", "17"], multi=False)
+    variant(
+        "cxxstd", default="14", description="C++ standard", values=["11", "14", "17"], multi=False
+    )
     variant("debug", default=False, description="Enable runtime safety and debug checks")
     variant(
         "explicit_template_instantiation",

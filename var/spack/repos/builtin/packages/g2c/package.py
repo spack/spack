@@ -16,9 +16,9 @@ class G2c(CMakePackage):
 
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
-    variant("png", default=True)
-    variant("jasper", default=True)
-    variant("openjpeg", default=False)
+    variant("png", default=True, description="Use PNG library")
+    variant("jasper", default=True, description="Use Jasper library")
+    variant("openjpeg", default=False, description="Use OpenJPEG library")
 
     version("1.7.0", sha256="73afba9da382fed73ed8692d77fa037bb313280879cd4012a5e5697dccf55175")
     version("1.6.4", sha256="5129a772572a358296b05fbe846bd390c6a501254588c6a223623649aefacb9d")

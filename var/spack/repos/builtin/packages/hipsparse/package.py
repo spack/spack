@@ -105,6 +105,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
         "amdgpu_target",
+        description="AMD GPU architecture",
         values=spack.variant.DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
         .with_default("auto")
         .with_error(

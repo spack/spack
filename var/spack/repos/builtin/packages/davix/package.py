@@ -35,7 +35,7 @@ class Davix(CMakePackage):
     depends_on("uuid")
     depends_on("openssl")
 
-    variant("thirdparty", default=False)
+    variant("thirdparty", default=False, description="Build vendored libraries")
     depends_on("gsoap", when="+thirdparty")
 
     def cmake_args(self):

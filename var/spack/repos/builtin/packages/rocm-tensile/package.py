@@ -115,7 +115,13 @@ class RocmTensile(CMakePackage):
         "gfx1030",
     )
 
-    variant("tensile_architecture", default="all", values=tensile_architecture, multi=True)
+    variant(
+        "tensile_architecture",
+        default="all",
+        description="AMD GPU architecture",
+        values=tensile_architecture,
+        multi=True,
+    )
     variant("openmp", default=True, description="Enable OpenMP")
     conflicts("tensile_architecture=gfx906", when="@4.0.1:")
     conflicts("tensile_architecture=gfx908", when="@4.0.1:")

@@ -23,10 +23,10 @@ class Upp(CMakePackage):
     version("10.0.9", tag="upp_v10.0.9", submodules=True)
     version("10.0.8", tag="upp_v10.0.8", submodules=True)
 
-    variant("openmp", default=True)
-    variant("postexec", default=True)
-    variant("wrf-io", default=False)
-    variant("docs", default=False)
+    variant("openmp", default=True, description="Use OpenMP threading")
+    variant("postexec", default=True, description="Build NCEPpost executable")
+    variant("wrf-io", default=False, description="Build NCEPpost with WRF-IO library")
+    variant("docs", default=False, description="Enable generation of doxygen-based documentation")
 
     depends_on("mpi")
     depends_on("netcdf-fortran")

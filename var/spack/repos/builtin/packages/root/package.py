@@ -157,7 +157,7 @@ class Root(CMakePackage):
         default=False,
         description="Enable support for TMultilayerPerceptron " "classes' federation",
     )
-    variant("mysql", default=False)
+    variant("mysql", default=False, description="Enable support for MySQL databases")
     variant("opengl", default=True, description="Enable OpenGL support")
     variant("oracle", default=False, description="Enable support for Oracle databases")
     variant("postgres", default=False, description="Enable postgres support")
