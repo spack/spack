@@ -202,7 +202,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     stds = ["11", "14", "17", "20"]
     # TODO: This should be named cxxstd for consistency with other packages
-    variant("std", default="17", values=stds, multi=False)
+    variant("std", default="17", values=stds, multi=False, description="C++ standard")
     variant("pic", default=False, description="Build position independent code")
 
     conflicts("std=11", when="@3.7:")

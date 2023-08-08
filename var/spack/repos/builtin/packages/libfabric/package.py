@@ -153,6 +153,18 @@ class Libfabric(AutotoolsPackage):
         if self.run_tests:
             env.prepend_path("PATH", self.prefix.bin)
 
+    # To enable this package add it to the LD_LIBRARY_PATH
+    def setup_run_environment(self, env):
+        libfabric_home = self.spec["libfabric"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib)
+        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib64)
+
+    # To enable this package add it to the LD_LIBRARY_PATH
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        libfabric_home = self.spec["libfabric"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib)
+        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib64)
+
     @when("@main")
     def autoreconf(self, spec, prefix):
         bash = which("bash")

@@ -18,7 +18,7 @@ class Coral(CMakePackage):
 
     version("3.3.10", tag="CORAL_3_3_10")
     version("3.3.3", tag="CORAL_3_3_3")
-    variant("binary_tag", default="auto")
+    variant("binary_tag", default="auto", description="Build type")
 
     depends_on("ninja")
     depends_on("ccache")
