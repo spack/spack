@@ -107,6 +107,9 @@ class Libzmq(AutotoolsPackage):
         config_args.extend(self.enable_or_disable("drafts"))
         config_args.extend(self.enable_or_disable("libbsd"))
         config_args.extend(self.enable_or_disable("libunwind"))
+        # the package won't compile with newer compilers because warnings
+        # are converted to errors. Hence, disable such conversion.
+        config_args.append("--disable-Werror")
 
         if "+libsodium" in self.spec:
             config_args.append("--with-libsodium=" + self.spec["libsodium"].prefix)
