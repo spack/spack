@@ -16,22 +16,27 @@ class ComposableKernel(CMakePackage):
 
     maintainers("srekolam", "afzpatel")
 
+    version("master", branch="develop")
     version("5.5.1", commit="ac9e01e2cc3721be24619807adc444e1f59a9d25")
     version("5.5.0", commit="8b76b832420a3d69708401de6607a033163edcce")
     version("5.4.3", commit="bb3d9546f186e39cefedc3e7f01d88924ba20168")
     version("5.4.0", commit="236bd148b98c7f1ec61ee850fcc0c5d433576305")
 
+    amdgpu_targets = ROCmPackage.amdgpu_targets
+    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets)
+, sticky=True)
+
     depends_on("python", type="build")
-    depends_on("z3", type="link")
-    depends_on("zlib", type="link")
-    depends_on("ncurses+termlib", type="link")
-    depends_on("bzip2")
-    depends_on("sqlite")
-    depends_on("half")
+    depends_on("z3", type="build")
+    depends_on("zlib", type="build")
+    depends_on("ncurses+termlib", type="build")
+    depends_on("bzip2", type="build")
+    depends_on("sqlite", type="build")
+    depends_on("half", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("cmake@3.16:", type="build")
 
-    for ver in ["5.5.1", "5.5.0", "5.4.3", "5.4.0"]:
+    for ver in ["master", "5.5.1", "5.5.0", "5.4.3", "5.4.0"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocm-cmake@" + ver, when="@" + ver, type="build")
@@ -51,6 +56,8 @@ class ComposableKernel(CMakePackage):
             self.define("CMAKE_CXX_FLAGS", "-O3"),
             self.define("CMAKE_BUILD_TYPE", "Release"),
         ]
+	if "auto" not in self.spec.variants["amdgpu_target"]:
+		args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
         return args
 
     def build(self, spec, prefix):
