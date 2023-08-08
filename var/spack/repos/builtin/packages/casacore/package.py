@@ -53,8 +53,8 @@ class Casacore(CMakePackage):
     depends_on("lapack")
     depends_on("cfitsio")
     depends_on("wcslib@4.20:+cfitsio")
-    depends_on("fftw@3.0.0: precision=float,double", when="@3.4.0:")
-    depends_on("fftw@3.0.0: precision=float,double", when="~fftpack")
+    depends_on("fftw-api@3 precision=float,double", when="@3.4.0:")
+    depends_on("fftw-api@3 precision=float,double", when="~fftpack")
     depends_on("sofa-c", type="test")
     depends_on("hdf5", when="+hdf5")
     depends_on("adios2+mpi", when="+adios2")
@@ -66,7 +66,7 @@ class Casacore(CMakePackage):
     depends_on("gsl", when="+dysco")
 
     conflicts("~mpi", when="+adios2")
-    conflicts("+tablelocking", when="+mpi")
+    conflicts("+tablelocking", when="+mpi +adios2")
     conflicts("~threads", when="+openmp")
 
     def cmake_args(self):
