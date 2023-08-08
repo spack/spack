@@ -15,6 +15,7 @@ class PyMorphoKit(PythonPackage):
     submodules = True
 
     version("develop", branch="main")
+    version("0.3.6", tag="v0.3.6")
     version("0.3.5", tag="v0.3.5")
     version("0.3.4", tag="v0.3.4")
     version("0.3.3", tag="0.3.3")
