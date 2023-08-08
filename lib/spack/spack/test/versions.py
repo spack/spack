@@ -691,6 +691,10 @@ def test_git_branch_with_slash():
     test_number_version = spack.version.from_string("1.2")
     v.satisfies(test_number_version)
 
+    serialized = VersionList([v]).to_dict()
+    v_deserialized = VersionList.from_dict(serialized)
+    assert v_deserialized[0].ref == "feature/bar"
+
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_git_ref_withslash(mock_git_branch_repo, install_mockery, mock_packages, monkeypatch):
