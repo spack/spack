@@ -525,6 +525,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if target >= "zen4":
             # AMD Family 17h (EPYC Genoa)
             options.append("-DGMX_SIMD=AVX_512")
+        elif target >= "zen3":
+            # AMD Family 17h (EPYC Milan)
+            options.append("-DGMX_SIMD=AVX_256")
         elif target >= "zen2":
             # AMD Family 17h (EPYC Rome)
             options.append("-DGMX_SIMD=AVX2_256")
