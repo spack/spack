@@ -196,14 +196,13 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                 for m in ["^intel-oneapi-mpi", "^intel-mpi", "^mpich", "^cray-mpich", "mpi=mpich"]
             ):
                 libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
-            elif any(
-                self.spec.satisfies(m)
-                for m in ["^openmpi", "mpi=openmpi"]
-            ):
+            elif any(self.spec.satisfies(m) for m in ["^openmpi", "mpi=openmpi"]):
                 libs.append(self._xlp64_lib("libmkl_blacs_openmpi"))
             else:
                 raise RuntimeError(
-                    ( "intel-oneapi-mpi +cluster requires one of ^intel-oneapi-mpi, ^intel-mpi, ^mpich, ^cray-mpich, mpi=mpich, ^openmpi, or mpi=openmpi" )
+                    (
+                        "intel-oneapi-mpi +cluster requires one of ^intel-oneapi-mpi, ^intel-mpi, ^mpich, ^cray-mpich, mpi=mpich, ^openmpi, or mpi=openmpi"
+                    )
                 )
 
         lib_path = self.component_prefix.lib.intel64
