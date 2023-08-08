@@ -14,6 +14,7 @@ from spack.package import *
 class SingularityBase(MakefilePackage):
     variant("suid", default=True, description="install SUID binary")
     variant("network", default=True, description="install network plugins")
+    variant("conmon", default=False, description="required to run OCI container monitor")
 
     depends_on("pkgconfig", type="build")
     depends_on("conmon", type=("build", "run"))
@@ -26,6 +27,7 @@ class SingularityBase(MakefilePackage):
     depends_on("git", when="@develop")  # mconfig uses it for version info
     depends_on("shadow", type="run", when="@3.3:")
     depends_on("cryptsetup", type=("build", "run"), when="@3.4:")
+    depends_on("conmon", when="+conmon")
 
     conflicts("platform=darwin", msg="singularity requires a Linux VM on Windows & Mac")
 
@@ -53,7 +55,7 @@ class SingularityBase(MakefilePackage):
     # Unpack the tarball as usual, then move the src dir into
     # its home within GOPATH.
     def do_stage(self, mirror_only=False):
-        super().do_stage(mirror_only)
+        super(SingularityBase, self).do_stage(mirror_only)
         if not os.path.exists(self.singularity_gopath_dir):
             # Move the expanded source to its destination
             tty.debug(
@@ -70,21 +72,16 @@ class SingularityBase(MakefilePackage):
     def build_directory(self):
         return self.singularity_gopath_dir
 
-    # Allow overriding config options
-    @property
-    def config_options(self):
-        # Using conmon from spack
-        return ["--without-conmon"]
-
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
             confstring = "./mconfig --prefix=%s" % prefix
-            confstring += " " + " ".join(self.config_options)
             if "~suid" in spec:
                 confstring += " --without-suid"
             if "~network" in spec:
                 confstring += " --without-network"
+            if "~conmon" in spec: 
+                confstring += " --without-conmon"
             configure = Executable(confstring)
             configure()
 
@@ -200,6 +197,7 @@ class Singularityce(SingularityBase):
     maintainers("alalazo")
     version("master", branch="master")
 
+    version("3.11.4", sha256="751dbea64ec16fd7e7af1e36953134c778c404909f9d27ba89006644160b2fde")
     version("3.11.3", sha256="a77ede063fd115f85f98f82d2e30459b5565db7d098665497bcd684bf8edaec9")
     version("3.10.3", sha256="f87d8e212ce209c5212d6faf253b97a24b5d0b6e6b17b5e58b316cdda27a332f")
     version("3.10.2", sha256="b4f279856ea4bf28a1f34f89320c02b545d6e57d4143679920e1ac4267f540e1")
