@@ -18,19 +18,11 @@ class Brahma(CMakePackage):
     version("0.0.1", tag="v0.0.1")
 
     variant("mpi", default=False, description="Enable MPI support")
-    
-    depends_on("cpp-logger@0.0.1:", when="@0.0.1")
-    depends_on("gotcha@develop", when="@0.0.1")
-    depends_on("catch2@3.0.1", when="@0.0.1")
-    depends_on("cpp-logger@0.0.1:")
+    depends_on("cpp-logger@0.0.1")
     depends_on("gotcha@develop")
     depends_on("catch2@3.0.1")
 
     depends_on("mpi", when="+mpi")
 
     def cmake_args(self):
-        spec = self.spec
-        args = []
-        if "+mpi" in spec:
-            args.extend("-DBUILD_WITH_MPI=ON") 
-        return args
+        return [self.define_from_variant("BUILD_WITH_MPI", "mpi")]
