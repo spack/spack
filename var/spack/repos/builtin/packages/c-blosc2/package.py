@@ -11,12 +11,16 @@ class CBlosc2(CMakePackage):
     other bells and whistles"""
 
     homepage = "https://www.blosc.org/"
-    url = "https://github.com/Blosc/c-blosc2/archive/refs/tags/v2.0.1.tar.gz"
+    url = "https://github.com/Blosc/c-blosc2/archive/refs/tags/v2.10.1.tar.gz"
     git = "https://github.com/Blosc/c-blosc2.git"
 
     maintainers("ax3l", "robert-mijakovic")
 
     version("develop", branch="master")
+    # 2.10.1+ adds Blosc2 CMake CONFIG files
+    version("2.10.1", sha256="1dd65be2d76eee205c06e8812cc1360448620eee5e368b25ade4ea310654cd01")
+    version("2.10.0", sha256="cb7f7c0c62af78982140ecff21a2f3ca9ce6a0a1c02e314fcdce1a98da0fe231")
+    version("2.9.3", sha256="1f36b7d79d973505582b9a804803b640dcc0425af3d5e676070847ac4eb38176")
     version("2.2.0", sha256="66f9977de26d6bc9ea1c0e623d873c3225e4fff709aa09b3335fd09d41d57c0e")
     version("2.1.1", sha256="a8cbedefb8ed3b83629534ec8b4a822ffcdb1576e13dfb93107361551d32e6e9")
     version("2.1.0", sha256="a9570f4101654c2fe2a706adcab0821cdbcf7523fcb6602407dda21b67fdacfd")
