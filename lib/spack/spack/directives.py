@@ -63,6 +63,7 @@ __all__ = [
     "depends_on",
     "extends",
     "maintainers",
+    "license",
     "provides",
     "patch",
     "variant",
@@ -859,6 +860,29 @@ def maintainers(*names: str):
         pkg.maintainers = list(sorted(set(maintainers_from_base + list(names))))
 
     return _execute_maintainer
+
+
+@directive("licenses")
+def license(license_identifier: str, when=None):
+    """Add a new license directive, to specify the SPDX identifier the software is
+    distributed under.
+
+    Args:
+        license_identifiers: A list of SPDX identifiers specifying the licenses
+            the software is distributed under.
+        when: A spec specifying when the license applies.
+    """
+
+    def _execute_license(pkg):
+        # If when is not specified the conflict always holds
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
+
+        when_spec_list = pkg.licenses.setdefault(license_identifier, [])
+        when_spec_list.append(when_spec)
+
+    return _execute_license
 
 
 @directive("requirements")

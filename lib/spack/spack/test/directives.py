@@ -89,6 +89,12 @@ def test_maintainer_directive(config, mock_packages, package_name, expected_main
     assert pkg_cls.maintainers == expected_maintainers
 
 
+@pytest.mark.parametrize("package_name,expected_licenses", [("licenses-1", ["MIT", "Apache-2.0"])])
+def test_license_directive(config, mock_packages, package_name, expected_licenses):
+    pkg_cls = spack.repo.path.get_pkg_class(package_name)
+    assert expected_licenses == list(pkg_cls.licenses.keys())
+
+
 def test_version_type_validation():
     # A version should be a string or an int, not a float, because it leads to subtle issues
     # such as 3.10 being interpreted as 3.1.
