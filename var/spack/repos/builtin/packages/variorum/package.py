@@ -42,12 +42,12 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
     #intel gpu not supported in spack
     #variant("intel_gpu", default=False, description="Build for Intel GPU architecture")
 
-    for cuda_val in CudaPackage.cuda_arch_values:
-        print("RRR", cuda_val)
-        if cuda_val != "70":
-            print(cuda_val)
-            conflicts(f"cuda_arch={cuda_val}", when="+cuda")
-
+#    for cuda_val in CudaPackage.cuda_arch_values:
+#        print("RRR", cuda_val)
+#        if cuda_val != "70":
+#            print(cuda_val)
+#            conflicts(f"cuda_arch={cuda_val}", when="+cuda")
+#
     #for rocm_val in ROCmPackage.amdgpu_targets:
     #    if rocm_val != "gfx906" or rocm_val != "gfx906:xnack-":
     #        conflicts(f"amdgpu_target={rocm_val}")
@@ -58,13 +58,14 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@2.8:", type="build")
     depends_on("hwloc")
     depends_on("jansson", type="link")
-    depends_on("cuda", when="+cuda_arch")
-    depends_on("rocm-smi-lib", when="+rocm")
+    #depends_on("cuda", when="+cuda_arch")
+    #depends_on("rocm-smi-lib", when="+rocm")
 
     root_cmakelists_dir = "src"
 
     def cmake_args(self):
         spec = self.spec
+
         cmake_args = []
 
         cmake_args.append("-DJANSSON_DIR={0}".format(spec["jansson"].prefix))
@@ -109,8 +110,7 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
         else:
             cmake_args.append("-DBUILD_TESTS=OFF")
 
-        cpu_uarch = spec.target.microarchitecture
-        cpu_vendor = archspec.cpu.host().to_dict()["vendor"]
+        cpu_uarch = self.spec.target.microarchitecture
 
         #taken from list of archspec.cpu.TARGETS
         supported_amd_targets = ["zen2"]
