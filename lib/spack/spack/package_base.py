@@ -2209,7 +2209,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pkg = None
 
         # Pre-uninstall hook runs first.
-        with spack.store.STORE.db.prefix_write_lock(spec):
+        with spack.store.STORE.prefix_locker.write_lock(spec):
             if pkg is not None:
                 try:
                     spack.hooks.pre_uninstall(spec)

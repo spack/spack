@@ -291,7 +291,7 @@ def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 
-    format_string = "{name}{@version}{%compiler}{arch=architecture}"
+    format_string = "{name}{@version}{%compiler.name}{@compiler.version}{arch=architecture}"
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
         colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
@@ -383,7 +383,7 @@ def display_specs(specs, args=None, **kwargs):
         deps (bool): Display dependencies with specs
         long (bool): Display short hashes with specs
         very_long (bool): Display full hashes with specs (supersedes ``long``)
-        namespace (bool): Print namespaces along with names
+        namespaces (bool): Print namespaces along with names
         show_flags (bool): Show compiler flags with specs
         variants (bool): Show variants with specs
         indent (int): indent each line this much
@@ -407,7 +407,7 @@ def display_specs(specs, args=None, **kwargs):
     paths = get_arg("paths", False)
     deps = get_arg("deps", False)
     hashes = get_arg("long", False)
-    namespace = get_arg("namespace", False)
+    namespaces = get_arg("namespaces", False)
     flags = get_arg("show_flags", False)
     full_compiler = get_arg("show_full_compiler", False)
     variants = get_arg("variants", False)
@@ -428,7 +428,7 @@ def display_specs(specs, args=None, **kwargs):
 
     format_string = get_arg("format", None)
     if format_string is None:
-        nfmt = "{fullname}" if namespace else "{name}"
+        nfmt = "{fullname}" if namespaces else "{name}"
         ffmt = ""
         if full_compiler or flags:
             ffmt += "{%compiler.name}"
@@ -584,14 +584,14 @@ def require_active_env(cmd_name):
 
     if env:
         return env
-    else:
-        tty.die(
-            "`spack %s` requires an environment" % cmd_name,
-            "activate an environment first:",
-            "    spack env activate ENV",
-            "or use:",
-            "    spack -e ENV %s ..." % cmd_name,
-        )
+
+    tty.die(
+        "`spack %s` requires an environment" % cmd_name,
+        "activate an environment first:",
+        "    spack env activate ENV",
+        "or use:",
+        "    spack -e ENV %s ..." % cmd_name,
+    )
 
 
 def find_environment(args):

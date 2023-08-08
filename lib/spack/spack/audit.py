@@ -710,6 +710,21 @@ def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
 
 
 @package_directives
+def _ensure_variants_have_descriptions(pkgs, error_cls):
+    """Ensures that all variants have a description."""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        for variant_name, entry in pkg_cls.variants.items():
+            variant, _ = entry
+            if not variant.description:
+                error_msg = "Variant '{}' in package '{}' is missing a description"
+                errors.append(error_cls(error_msg.format(variant_name, pkg_name), []))
+
+    return errors
+
+
+@package_directives
 def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls):
     """Report if version constraints used in directives are not satisfiable"""
     errors = []

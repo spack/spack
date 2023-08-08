@@ -16,7 +16,7 @@ import time
 import urllib.parse
 import urllib.request
 import warnings
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -1921,16 +1921,17 @@ class Environment:
                             "Could not install log links for {0}: {1}".format(spec.name, str(e))
                         )
 
-    def all_specs(self):
-        """Return all specs, even those a user spec would shadow."""
-        roots = [self.specs_by_hash[h] for h in self.concretized_order]
-        specs = [s for s in traverse.traverse_nodes(roots, key=traverse.by_dag_hash)]
-        specs.sort()
-        return specs
+    def all_specs_generator(self) -> Iterable[Spec]:
+        """Returns a generator for all concrete specs"""
+        return traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
+
+    def all_specs(self) -> List[Spec]:
+        """Returns a list of all concrete specs"""
+        return list(self.all_specs_generator())
 
     def all_hashes(self):
         """Return hashes of all specs."""
-        return [s.dag_hash() for s in self.all_specs()]
+        return [s.dag_hash() for s in self.all_specs_generator()]
 
     def roots(self):
         """Specs explicitly requested by the user *in this environment*.
