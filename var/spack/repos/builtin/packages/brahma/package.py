@@ -1,0 +1,36 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.package import *
+
+
+class Brahma(CMakePackage):
+    """Interceptor library for I/O calls using Gotcha"""
+
+    homepage = "https://github.com/hariharan-devarajan/brahma"
+    git = "https://github.com/hariharan-devarajan/brahma.git"
+    maintainers("hariharan-devarajan")
+
+    version("develop", branch="dev")
+    version("master", branch="master")
+    version("0.0.1", tag="v0.0.1")
+
+    variant("mpi", default=False, description="Enable MPI support")
+    
+    depends_on("cpp-logger@0.0.1:", when="@0.0.1")
+    depends_on("gotcha@develop", when="@0.0.1")
+    depends_on("catch2@3.0.1", when="@0.0.1")
+    depends_on("cpp-logger@0.0.1:")
+    depends_on("gotcha@develop")
+    depends_on("catch2@3.0.1")
+
+    depends_on("mpi", when="+mpi")
+
+    def cmake_args(self):
+        spec = self.spec
+        args = []
+        if "+mpi" in spec:
+            args.extend("-DBUILD_WITH_MPI=ON") 
+        return args
