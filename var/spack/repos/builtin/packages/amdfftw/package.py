@@ -37,6 +37,7 @@ class Amdfftw(FftwBase):
 
     maintainers("amd-toolchain-support")
 
+    version("4.1", sha256="f1cfecfcc0729f96a5bd61c6b26f3fa43bb0662d3fff370d4f73490c60cf4e59")
     version("4.0", sha256="5f02cb05f224bd86bd88ec6272b294c26dba3b1d22c7fb298745fd7b9d2271c0")
     version("3.2", sha256="31cab17a93e03b5b606e88dd6116a1055b8f49542d7d0890dbfcca057087b8d0")
     version("3.1", sha256="3e777f3acef13fa1910db097e818b1d0d03a6a36ef41186247c6ab1ab0afc132")
