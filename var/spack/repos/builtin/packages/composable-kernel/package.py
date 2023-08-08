@@ -23,8 +23,12 @@ class ComposableKernel(CMakePackage):
     version("5.4.0", commit="236bd148b98c7f1ec61ee850fcc0c5d433576305")
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets)
-, sticky=True)
+    variant(
+	"amdgpu_target",
+	values=auto_or_any_combination_of(*amdgpu_targets),
+	sticky=True,
+	description="set gpu targets"
+    )
 
     depends_on("python", type="build")
     depends_on("z3", type="build")
