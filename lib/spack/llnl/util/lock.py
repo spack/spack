@@ -139,7 +139,7 @@ class OpenFileTracker(object):
     def release_by_stat(self, stat):
         key = (stat.st_dev, stat.st_ino, os.getpid())
         open_file = self._descriptors.get(key)
-        assert open_file, "Attempted to close non-existing inode: %s" % stat.st_inode
+        assert open_file, "Attempted to close non-existing inode: %s" % stat.st_ino
 
         open_file.refs -= 1
         if not open_file.refs:
