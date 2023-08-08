@@ -138,7 +138,7 @@ class Amdfftw(FftwBase):
 
     conflicts(
         "+amd-dynamic-dispatcher",
-        when="%aocc",
+        when="@:4.0 %aocc",
         msg="dynamic-dispatcher is not supported by AOCC clang compiler",
     )
 
