@@ -14,6 +14,7 @@ class PyDarshan(PythonPackage):
 
     maintainers("jeanbez", "shanedsnyder")
 
+    version("3.4.4.0", sha256="2d218a1b2a450934698a78148c6603e453c246ec852679432bf217981668e56b")
     version("3.4.3.0", sha256="e0708fc5445f2d491ebd381a253cd67534cef13b963f1d749dd605a10f5c0f8f")
     version("3.4.2.0", sha256="eb00eb758c96899c0d523b71eb00caa3b967509c27fd504c579ac8c9b521845c")
     version("3.4.1.0", sha256="41a033ebac6fcd0ca05b8ccf07e11191286dee923ec334b876a7ec8e8a6add84")
