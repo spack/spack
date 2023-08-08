@@ -321,7 +321,7 @@ def refresh(module_type, specs, args):
         file2writer[item.layout.filename].append(item)
 
     if len(file2writer) != len(writers):
-        spec_fmt_str="{name}@={version}%{compiler}/{hash:7} {variants} arch={arch}"
+        spec_fmt_str = "{name}@={version}%{compiler}/{hash:7} {variants} arch={arch}"
         message = "Name clashes detected in module files:\n"
         for filename, writer_list in file2writer.items():
             if len(writer_list) > 1:
