@@ -148,7 +148,7 @@ class Vtk(CMakePackage):
     depends_on("eigen", when="@8.2.0:")
     depends_on("double-conversion", when="@8.2.0:")
     depends_on("sqlite", when="@8.2.0:")
-    depends_on("pugixml", when="@9:")
+    depends_on("pugixml", when="@8.2.0:")
     depends_on("libogg")
     depends_on("libtheora")
     depends_on("utf8cpp", when="@9:")
