@@ -2,11 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from typing import Optional
+from typing import Dict, Optional
 
 import llnl.util.lang
 
 import spack.error
+import spack.operating_systems
+import spack.target
 
 
 class NoPlatformError(spack.error.SpackError):
@@ -55,9 +57,9 @@ class Platform:
     reserved_targets = ["default_target", "frontend", "fe", "backend", "be"]
     reserved_oss = ["default_os", "frontend", "fe", "backend", "be"]
 
-    def __init__(self, name):
-        self.targets = {}
-        self.operating_sys = {}
+    def __init__(self, name: str):
+        self.targets: Dict[str, spack.target.Target] = {}
+        self.operating_sys: Dict[str, spack.operating_systems.OperatingSystem] = {}
         self.name = name
 
     def add_target(self, name, target):

@@ -2858,3 +2858,16 @@ class FindFirstFile:
                 if self.match(file):
                     return os.path.join(dirpath, file)
         return None
+
+
+@contextmanager
+def temporary_umask(mask: Optional[int]):
+    """Temporarily set the umask to the given value."""
+    if mask is None:
+        yield
+        return
+    old_mask = os.umask(mask)
+    try:
+        yield
+    finally:
+        os.umask(old_mask)

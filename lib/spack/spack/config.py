@@ -36,11 +36,11 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Type, Union
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, rename
+from llnl.util.filesystem import mkdirp, rename, temporary_umask
 
 import spack.compilers
 import spack.paths
@@ -118,9 +118,10 @@ class ConfigScope:
     Each file is a config "section" (e.g., mirrors, compilers, etc).
     """
 
-    def __init__(self, name, path):
+    def __init__(self, name: str, path: str, umask: Optional[int] = 0o077):
         self.name = name  # scope name.
         self.path = path  # path to directory containing configs.
+        self.umask = umask  # umask to use when creating files.
         self.sections = syaml.syaml_dict()  # sections read from config files.
 
     @property
@@ -148,10 +149,11 @@ class ConfigScope:
         validate(validate_data, section_schemas[section])
 
         try:
-            mkdirp(self.path)
-            with open(filename, "w") as f:
-                syaml.dump_config(data, stream=f, default_flow_style=False)
-        except (syaml.SpackYAMLError, IOError) as e:
+            with temporary_umask(self.umask):
+                mkdirp(self.path)
+                with open(filename, "w") as f:
+                    syaml.dump_config(data, stream=f, default_flow_style=False)
+        except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
 
     def clear(self):
@@ -427,11 +429,7 @@ class Configuration:
     @property
     def file_scopes(self) -> List[ConfigScope]:
         """List of writable scopes with an associated file."""
-        return [
-            s
-            for s in self.scopes.values()
-            if (type(s) == ConfigScope or type(s) == SingleFileScope)
-        ]
+        return [s for s in self.scopes.values() if type(s) in (ConfigScope, SingleFileScope)]
 
     def highest_precedence_scope(self) -> ConfigScope:
         """Non-internal scope with highest precedence."""
@@ -740,12 +738,18 @@ def override(path_or_scope, value=None):
 command_line_scopes: List[str] = []
 
 
-def _add_platform_scope(cfg, scope_type, name, path):
+def _add_platform_scope(
+    cfg: Configuration,
+    scope_type: Union[Type[ConfigScope], Type[ImmutableConfigScope]],
+    name: str,
+    path: str,
+    umask: Optional[int] = None,
+):
     """Add a platform-specific subdirectory for the current platform."""
     platform = spack.platforms.host().name
     plat_name = os.path.join(name, platform)
     plat_path = os.path.join(path, platform)
-    cfg.push_scope(scope_type(plat_name, plat_path))
+    cfg.push_scope(scope_type(plat_name, plat_path, umask))
 
 
 def _add_command_line_scopes(cfg, command_line_scopes):
@@ -788,7 +792,7 @@ def create():
     configuration_paths = [
         # Default configuration scope is the lowest-level scope. These are
         # versioned with Spack and can be overridden by systems, sites or users
-        configuration_defaults_path
+        (configuration_defaults_path[0], configuration_defaults_path[1], None)
     ]
 
     disable_local_config = "SPACK_DISABLE_LOCAL_CONFIG" in os.environ
@@ -796,23 +800,23 @@ def create():
     # System configuration is per machine.
     # This is disabled if user asks for no local configuration.
     if not disable_local_config:
-        configuration_paths.append(("system", spack.paths.system_config_path))
+        configuration_paths.append(("system", spack.paths.system_config_path, None))
 
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
-    configuration_paths.append(("site", os.path.join(spack.paths.etc_path)))
+    configuration_paths.append(("site", os.path.join(spack.paths.etc_path), None))
 
     # User configuration can override both spack defaults and site config
     # This is disabled if user asks for no local configuration.
     if not disable_local_config:
-        configuration_paths.append(("user", spack.paths.user_config_path))
+        configuration_paths.append(("user", spack.paths.user_config_path, 0o077))
 
     # add each scope and its platform-specific directory
-    for name, path in configuration_paths:
-        cfg.push_scope(ConfigScope(name, path))
+    for name, path, umask in configuration_paths:
+        cfg.push_scope(ConfigScope(name, path, umask))
 
         # Each scope can have per-platfom overrides in subdirectories
-        _add_platform_scope(cfg, ConfigScope, name, path)
+        _add_platform_scope(cfg, ConfigScope, name, path, umask)
 
     # add command-line scopes
     _add_command_line_scopes(cfg, command_line_scopes)
