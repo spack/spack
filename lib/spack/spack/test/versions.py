@@ -677,6 +677,22 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+def test_git_branch_with_slash():
+    class MockLookup(object):
+        def get(self, ref):
+            assert ref == "feature/bar"
+            return "1.2", 0
+
+    v = spack.version.from_string("git.feature/bar")
+    assert isinstance(v, GitVersion)
+    v.attach_lookup(MockLookup())
+
+    # Create a version range
+    test_number_version = spack.version.from_string("1.2")
+    v.satisfies(test_number_version)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_git_ref_withslash(mock_git_branch_repo, install_mockery, mock_packages, monkeypatch):
     repo_path, filename, commits = mock_git_branch_repo
     monkeypatch.setattr(
