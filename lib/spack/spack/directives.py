@@ -33,6 +33,7 @@ import collections.abc
 import functools
 import os.path
 import re
+import warnings
 from typing import Any, Callable, List, Optional, Set, Tuple, Union
 
 import llnl.util.lang
@@ -518,8 +519,20 @@ def conflicts(conflict_spec, when=None, msg=None):
         if not when_spec:
             return
 
+        # TODO: (remove after v0.21)
+        conflict_key = conflict_spec
+        s = spack.spec.Spec(conflict_spec)
+        if s.name and s.name != pkg.name:
+            warning_msg = (
+                f"the conflict in package '{pkg.name}' on '{conflict_spec}' should "
+                f"start with a '^' sigil. Not using it is deprecated as of v0.21 and"
+                f" will be disallowed in v0.22"
+            )
+            warnings.warn(warning_msg)
+            conflict_key = "^" + conflict_spec
+
         # Save in a list the conflicts and the associated custom messages
-        when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
+        when_spec_list = pkg.conflicts.setdefault(conflict_key, [])
         msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
         when_spec_list.append((when_spec, msg_with_name))
 
