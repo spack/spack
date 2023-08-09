@@ -739,7 +739,7 @@ complete -c spack -n '__fish_spack_using_command buildcache install' -s o -l oth
 complete -c spack -n '__fish_spack_using_command buildcache install' -s o -l otherarch -d 'install specs from other architectures instead of default platform and OS'
 
 # spack buildcache list
-set -g __fish_spack_optspecs_spack_buildcache_list h/help l/long L/very-long v/variants a/allarch
+set -g __fish_spack_optspecs_spack_buildcache_list h/help l/long L/very-long N/namespaces v/variants a/allarch
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 buildcache list' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache list' -s h -l help -d 'show this help message and exit'
@@ -747,6 +747,8 @@ complete -c spack -n '__fish_spack_using_command buildcache list' -s l -l long -
 complete -c spack -n '__fish_spack_using_command buildcache list' -s l -l long -d 'show dependency hashes as well as versions'
 complete -c spack -n '__fish_spack_using_command buildcache list' -s L -l very-long -f -a very_long
 complete -c spack -n '__fish_spack_using_command buildcache list' -s L -l very-long -d 'show full dependency hashes as well as versions'
+complete -c spack -n '__fish_spack_using_command buildcache list' -s N -l namespaces -f -a namespaces
+complete -c spack -n '__fish_spack_using_command buildcache list' -s N -l namespaces -d 'show fully qualified package names'
 complete -c spack -n '__fish_spack_using_command buildcache list' -s v -l variants -f -a variants
 complete -c spack -n '__fish_spack_using_command buildcache list' -s v -l variants -d 'show variants in output (can be long)'
 complete -c spack -n '__fish_spack_using_command buildcache list' -s a -l allarch -f -a allarch
@@ -947,12 +949,20 @@ complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -f -a 
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -d 'stop stand-alone tests after the first failure'
 
 # spack ci reproduce-build
-set -g __fish_spack_optspecs_spack_ci_reproduce_build h/help working-dir=
+set -g __fish_spack_optspecs_spack_ci_reproduce_build h/help runtime= working-dir= s/autostart gpg-file= gpg-url=
 complete -c spack -n '__fish_spack_using_command_pos 0 ci reproduce-build' -f
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l runtime -r -f -a 'docker podman'
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l runtime -r -d 'Container runtime to use.'
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l working-dir -r -f -a working_dir
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l working-dir -r -d 'where to unpack artifacts'
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -s s -l autostart -f -a autostart
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -s s -l autostart -d 'Run docker reproducer automatically'
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-file -r -f -a gpg_file
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-file -r -d 'Path to public GPG key for validating binary cache installs'
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-url -r -f -a gpg_url
+complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-url -r -d 'URL to public GPG key for validating binary cache installs'
 
 # spack clean
 set -g __fish_spack_optspecs_spack_clean h/help s/stage d/downloads f/failures m/misc-cache p/python-cache b/bootstrap a/all
@@ -1592,7 +1602,7 @@ complete -c spack -n '__fish_spack_using_command fetch' -s D -l dependencies -f 
 complete -c spack -n '__fish_spack_using_command fetch' -s D -l dependencies -d 'also fetch all dependencies'
 
 # spack find
-set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json d/deps p/paths groups no-groups l/long L/very-long t/tag= c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing deprecated only-deprecated N/namespace start-date= end-date=
+set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing deprecated only-deprecated start-date= end-date=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 find' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show this help message and exit'
@@ -1616,6 +1626,8 @@ complete -c spack -n '__fish_spack_using_command find' -s L -l very-long -f -a v
 complete -c spack -n '__fish_spack_using_command find' -s L -l very-long -d 'show full dependency hashes as well as versions'
 complete -c spack -n '__fish_spack_using_command find' -s t -l tag -r -f -a tags
 complete -c spack -n '__fish_spack_using_command find' -s t -l tag -r -d 'filter a package query by tag (multiple use allowed)'
+complete -c spack -n '__fish_spack_using_command find' -s N -l namespaces -f -a namespaces
+complete -c spack -n '__fish_spack_using_command find' -s N -l namespaces -d 'show fully qualified package names'
 complete -c spack -n '__fish_spack_using_command find' -s c -l show-concretized -f -a show_concretized
 complete -c spack -n '__fish_spack_using_command find' -s c -l show-concretized -d 'show concretized specs in an environment'
 complete -c spack -n '__fish_spack_using_command find' -s f -l show-flags -f -a show_flags
@@ -1640,8 +1652,6 @@ complete -c spack -n '__fish_spack_using_command find' -l deprecated -f -a depre
 complete -c spack -n '__fish_spack_using_command find' -l deprecated -d 'show deprecated packages as well as installed specs'
 complete -c spack -n '__fish_spack_using_command find' -l only-deprecated -f -a only_deprecated
 complete -c spack -n '__fish_spack_using_command find' -l only-deprecated -d 'show only deprecated packages'
-complete -c spack -n '__fish_spack_using_command find' -s N -l namespace -f -a namespace
-complete -c spack -n '__fish_spack_using_command find' -s N -l namespace -d 'show fully qualified package names'
 complete -c spack -n '__fish_spack_using_command find' -l start-date -r -f -a start_date
 complete -c spack -n '__fish_spack_using_command find' -l start-date -r -d 'earliest date of installation [YYYY-MM-DD]'
 complete -c spack -n '__fish_spack_using_command find' -l end-date -r -f -a end_date
@@ -2526,7 +2536,7 @@ complete -c spack -n '__fish_spack_using_command restage' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command restage' -s h -l help -d 'show this help message and exit'
 
 # spack solve
-set -g __fish_spack_optspecs_spack_solve h/help show= l/long L/very-long I/install-status no-install-status y/yaml j/json c/cover= N/namespaces t/types timers stats U/fresh reuse reuse-deps
+set -g __fish_spack_optspecs_spack_solve h/help show= l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json c/cover= t/types timers stats U/fresh reuse reuse-deps
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 solve' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -d 'show this help message and exit'
@@ -2536,6 +2546,8 @@ complete -c spack -n '__fish_spack_using_command solve' -s l -l long -f -a long
 complete -c spack -n '__fish_spack_using_command solve' -s l -l long -d 'show dependency hashes as well as versions'
 complete -c spack -n '__fish_spack_using_command solve' -s L -l very-long -f -a very_long
 complete -c spack -n '__fish_spack_using_command solve' -s L -l very-long -d 'show full dependency hashes as well as versions'
+complete -c spack -n '__fish_spack_using_command solve' -s N -l namespaces -f -a namespaces
+complete -c spack -n '__fish_spack_using_command solve' -s N -l namespaces -d 'show fully qualified package names'
 complete -c spack -n '__fish_spack_using_command solve' -s I -l install-status -f -a install_status
 complete -c spack -n '__fish_spack_using_command solve' -s I -l install-status -d 'show install status of packages'
 complete -c spack -n '__fish_spack_using_command solve' -l no-install-status -f -a install_status
@@ -2546,8 +2558,6 @@ complete -c spack -n '__fish_spack_using_command solve' -s j -l json -f -a forma
 complete -c spack -n '__fish_spack_using_command solve' -s j -l json -d 'print concrete spec as json'
 complete -c spack -n '__fish_spack_using_command solve' -s c -l cover -r -f -a 'nodes edges paths'
 complete -c spack -n '__fish_spack_using_command solve' -s c -l cover -r -d 'how extensively to traverse the DAG (default: nodes)'
-complete -c spack -n '__fish_spack_using_command solve' -s N -l namespaces -f -a namespaces
-complete -c spack -n '__fish_spack_using_command solve' -s N -l namespaces -d 'show fully qualified package names'
 complete -c spack -n '__fish_spack_using_command solve' -s t -l types -f -a types
 complete -c spack -n '__fish_spack_using_command solve' -s t -l types -d 'show dependency types'
 complete -c spack -n '__fish_spack_using_command solve' -l timers -f -a timers
@@ -2562,7 +2572,7 @@ complete -c spack -n '__fish_spack_using_command solve' -l reuse-deps -f -a conc
 complete -c spack -n '__fish_spack_using_command solve' -l reuse-deps -d 'reuse installed dependencies only'
 
 # spack spec
-set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long I/install-status no-install-status y/yaml j/json format= c/cover= N/namespaces t/types U/fresh reuse reuse-deps
+set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types U/fresh reuse reuse-deps
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 spec' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -d 'show this help message and exit'
@@ -2570,6 +2580,8 @@ complete -c spack -n '__fish_spack_using_command spec' -s l -l long -f -a long
 complete -c spack -n '__fish_spack_using_command spec' -s l -l long -d 'show dependency hashes as well as versions'
 complete -c spack -n '__fish_spack_using_command spec' -s L -l very-long -f -a very_long
 complete -c spack -n '__fish_spack_using_command spec' -s L -l very-long -d 'show full dependency hashes as well as versions'
+complete -c spack -n '__fish_spack_using_command spec' -s N -l namespaces -f -a namespaces
+complete -c spack -n '__fish_spack_using_command spec' -s N -l namespaces -d 'show fully qualified package names'
 complete -c spack -n '__fish_spack_using_command spec' -s I -l install-status -f -a install_status
 complete -c spack -n '__fish_spack_using_command spec' -s I -l install-status -d 'show install status of packages'
 complete -c spack -n '__fish_spack_using_command spec' -l no-install-status -f -a install_status
@@ -2582,8 +2594,6 @@ complete -c spack -n '__fish_spack_using_command spec' -l format -r -f -a format
 complete -c spack -n '__fish_spack_using_command spec' -l format -r -d 'print concrete spec with the specified format string'
 complete -c spack -n '__fish_spack_using_command spec' -s c -l cover -r -f -a 'nodes edges paths'
 complete -c spack -n '__fish_spack_using_command spec' -s c -l cover -r -d 'how extensively to traverse the DAG (default: nodes)'
-complete -c spack -n '__fish_spack_using_command spec' -s N -l namespaces -f -a namespaces
-complete -c spack -n '__fish_spack_using_command spec' -s N -l namespaces -d 'show fully qualified package names'
 complete -c spack -n '__fish_spack_using_command spec' -s t -l types -f -a types
 complete -c spack -n '__fish_spack_using_command spec' -s t -l types -d 'show dependency types'
 complete -c spack -n '__fish_spack_using_command spec' -s U -l fresh -f -a concretizer_reuse
