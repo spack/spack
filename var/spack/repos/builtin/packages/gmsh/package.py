@@ -88,7 +88,7 @@ class Gmsh(CMakePackage):
     depends_on("freetype", when="+oce")
     depends_on("freetype", when="+opencascade")
     depends_on("slepc", when="+slepc+petsc")
-    depends_on("zlib", when="+compression")
+    depends_on("zlib-api", when="+compression")
     depends_on("metis", when="+metis+external")
     depends_on("cgns", when="+cgns")
     depends_on("cgns~scoping", when="+cgns @:4.7.1")

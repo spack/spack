@@ -109,7 +109,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on("qscintilla", when="+qscintilla")
     depends_on("qt+opengl", when="+qt")
     depends_on("suite-sparse", when="+suitesparse")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     def patch(self):
         # Filter mkoctfile.in.cc to use underlying compilers and not
@@ -339,8 +339,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         if "+zlib" in spec:
             config_args.extend(
                 [
-                    "--with-z-includedir=%s" % spec["zlib"].prefix.include,
-                    "--with-z-libdir=%s" % spec["zlib"].prefix.lib,
+                    "--with-z-includedir=%s" % spec["zlib-api"].prefix.include,
+                    "--with-z-libdir=%s" % spec["zlib-api"].prefix.lib,
                 ]
             )
         else:

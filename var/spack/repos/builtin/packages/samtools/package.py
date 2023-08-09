@@ -37,7 +37,7 @@ class Samtools(Package):
         url="https://github.com/samtools/samtools/archive/0.1.8.tar.gz",
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("ncurses")
     depends_on("perl", type="run")
     depends_on("python", type="run")

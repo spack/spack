@@ -41,7 +41,7 @@ class Libssh2(AutotoolsPackage, CMakePackage):
         depends_on("openssl@:1", when="@:1.9")
 
     depends_on("mbedtls@:2 +pic", when="crypto=mbedtls")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("xz")
 
     # libssh2 adds its own deps in the pc file even when doing shared linking,

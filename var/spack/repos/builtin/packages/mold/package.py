@@ -18,9 +18,9 @@ class Mold(CMakePackage):
     version("1.7.1", sha256="fa2558664db79a1e20f09162578632fa856b3cde966fbcb23084c352b827dfa9")
 
     depends_on("mimalloc")
+    depends_on("zlib-api")
     depends_on("openssl")
     depends_on("tbb")
-    depends_on("zlib")
 
     def cmake_args(self):
         args = []

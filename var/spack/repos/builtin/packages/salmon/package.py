@@ -49,7 +49,7 @@ class Salmon(CMakePackage):
     depends_on("cereal")
     depends_on("jemalloc")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2")
     depends_on("libdivsufsort")
     depends_on("staden-io-lib~curl")

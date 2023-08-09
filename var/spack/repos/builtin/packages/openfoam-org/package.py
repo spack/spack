@@ -96,7 +96,7 @@ class OpenfoamOrg(Package):
     )
 
     depends_on("mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("flex")
     depends_on("cmake", type="build")
 

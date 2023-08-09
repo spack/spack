@@ -152,7 +152,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on(Boost.with_default_variants)
     depends_on("lapack")
     depends_on("suite-sparse")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Optional dependencies: Configuration
     depends_on("cuda@8:", when="+cuda")
@@ -412,7 +412,7 @@ class Dealii(CMakePackage, CudaPackage):
                 self.define("LAPACK_INCLUDE_DIRS", ";".join(lapack_blas_headers.directories)),
                 self.define("LAPACK_LIBRARIES", lapack_blas_libs.joined(";")),
                 self.define("UMFPACK_DIR", spec["suite-sparse"].prefix),
-                self.define("ZLIB_DIR", spec["zlib"].prefix),
+                self.define("ZLIB_DIR", spec["zlib-api"].prefix),
                 self.define("DEAL_II_ALLOW_BUNDLED", False),
             ]
         )

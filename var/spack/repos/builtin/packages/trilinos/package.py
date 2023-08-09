@@ -402,7 +402,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("superlu-dist", when="+superlu-dist")
     depends_on("superlu@4.3 +pic", when="+superlu")
     depends_on("swig", when="+python")
-    depends_on("zlib", when="+zoltan")
+    depends_on("zlib-api", when="+zoltan")
 
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
@@ -768,7 +768,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             ("METIS", "metis"),
             ("Netcdf", "netcdf-c"),
             ("SCALAPACK", "scalapack"),
-            ("Zlib", "zlib"),
+            ("Zlib", "zlib-api"),
         ]
         if spec.satisfies("@12.12.1:"):
             tpl_dep_map.append(("Pnetcdf", "parallel-netcdf"))

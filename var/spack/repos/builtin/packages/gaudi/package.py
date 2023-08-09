@@ -82,7 +82,7 @@ class Gaudi(CMakePackage):
     depends_on("py-xenv@1:", when="@:34.9", type=("build", "run"))
     depends_on("range-v3")
     depends_on("root +python +root7 +ssl +tbb +threads")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Testing dependencies
     # Note: gaudi only builds examples when testing enabled
