@@ -10,8 +10,8 @@ import posixpath
 import re
 import shutil
 import sys
-from pathlib import Path
 from contextlib import contextmanager
+from pathlib import Path
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty

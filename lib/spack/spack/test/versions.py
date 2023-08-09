@@ -8,8 +8,8 @@ We try to maintain compatibility with RPM's version semantics
 where it makes sense.
 """
 import os
-import sys
 import pathlib
+import sys
 
 import pytest
 
