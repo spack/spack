@@ -110,7 +110,6 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         description="MPI family",
         multi=False,
     )
-    conflicts("mpi=none", when="+cluster")
 
     variant(
         "threads",
