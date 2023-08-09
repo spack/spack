@@ -20,8 +20,7 @@ class Libsolv(CMakePackage):
     variant("conda", default=False, description="Include solv/conda.h")
 
     depends_on("expat", type="link")
-    depends_on("zlib+shared", type="link", when="+shared")
-    depends_on("zlib~shared", type="link", when="~shared")
+    depends_on("zlib-api", type="link")
 
     def cmake_args(self):
         return [

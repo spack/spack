@@ -32,6 +32,7 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     executables = ["^hwloc-bind$"]
 
     version("master", branch="master")
+    version("2.9.1", sha256="a440e2299f7451dc10a57ddbfa3f116c2a6c4be1bb97c663edd3b9c7b3b3b4cf")
     version("2.9.0", sha256="9d7d3450e0a5fea4cb80ca07dc8db939abb7ab62e2a7bb27f9376447658738ec")
     version("2.8.0", sha256="20b2bd4df436827d8e50f7afeafb6f967259f2fb374ce7330244f8d0ed2dde6f")
     version("2.7.1", sha256="4cb0a781ed980b03ad8c48beb57407aa67c4b908e45722954b9730379bc7f6d5")
@@ -175,9 +176,7 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
             args.append("--with-rocm={0}".format(self.spec["hip"].prefix))
             args.append("--with-rocm-version={0}".format(self.spec["hip"].version))
 
-        if "+netloc" in self.spec:
-            args.append("--enable-netloc")
-
+        args.extend(self.enable_or_disable("netloc"))
         args.extend(self.enable_or_disable("cairo"))
         args.extend(self.enable_or_disable("nvml"))
         args.extend(self.enable_or_disable("gl"))

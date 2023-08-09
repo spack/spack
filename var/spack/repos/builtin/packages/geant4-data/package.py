@@ -20,6 +20,7 @@ class Geant4Data(BundlePackage):
 
     version("11.1.0")
     version("11.0.0")
+    version("10.7.4")
     version("10.7.3")
     version("10.7.2")
     version("10.7.1")

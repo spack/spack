@@ -22,6 +22,7 @@ class RLfe(RPackage):
 
     cran = "lfe"
 
+    version("2.9-0", sha256="7c9a9cd74ad98c65b67477eb6924409d7e372d01d7ed50fa2edb6fa34e02223c")
     version("2.8-8", sha256="0fc22928fa16f22ee66c8e426a0e994346ad2f67b3c5aea597f3eeffbd85ab71")
     version("2.8-7.1", sha256="d6a1efd8c43f84fa291e4959938f16e85bf5feef113515aaca1fe90075a78c50")
     version("2.8-6", sha256="bf5fd362e9722e871a5236f30da562c489ae6506b667609b9465eefa8f101612")

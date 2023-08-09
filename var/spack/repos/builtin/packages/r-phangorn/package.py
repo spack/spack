@@ -17,6 +17,7 @@ class RPhangorn(RPackage):
 
     cran = "phangorn"
 
+    version("2.11.1", sha256="10096ecae03e118aa4dbc60d9866175fad4849c948e004cf10c3868e3feed420")
     version("2.10.0", sha256="d153f87053a1e6eebf46be98fad3f118349008c559a6797b55613629cab85dce")
     version("2.8.1", sha256="6d471410ae29775104a94746936e8c1c54c7273dd289333973ec06dad489dc75")
     version("2.5.5", sha256="c58dc1ace26cb4358619a15da3ea4765dbdde1557acccc5103c85589a7571346")

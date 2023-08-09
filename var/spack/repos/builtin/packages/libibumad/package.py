@@ -13,6 +13,8 @@ class Libibumad(CMakePackage):
     homepage = "https://github.com/linux-rdma/"
     url = "https://github.com/linux-rdma/rdma-core/archive/v25.0.tar.gz"
 
+    version("46.0", sha256="23fd2a5a656f7d147796660c3d3728b31287bc70a3e913e28ea5da7f39269229")
+    version("44.1", sha256="1dec7e25dd248f1ff4d262e5674297205ad9113a4ff25ab7ecbb75a824adac27")
     version("25.0", sha256="d735bd091d13e8a68ce650e432b5bdc934fc7f1d5fb42a6045278a5b3f7fe48b")
 
     depends_on("libnl")

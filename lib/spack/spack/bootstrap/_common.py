@@ -9,6 +9,7 @@ import re
 import sys
 import sysconfig
 import warnings
+from typing import Dict, Optional, Sequence, Union
 
 import archspec.cpu
 
@@ -21,8 +22,10 @@ import spack.util.executable
 
 from .config import spec_for_current_python
 
+QueryInfo = Dict[str, "spack.spec.Spec"]
 
-def _python_import(module):
+
+def _python_import(module: str) -> bool:
     try:
         __import__(module)
     except ImportError:
@@ -30,7 +33,9 @@ def _python_import(module):
     return True
 
 
-def _try_import_from_store(module, query_spec, query_info=None):
+def _try_import_from_store(
+    module: str, query_spec: Union[str, "spack.spec.Spec"], query_info: Optional[QueryInfo] = None
+) -> bool:
     """Return True if the module can be imported from an already
     installed spec, False otherwise.
 
@@ -45,14 +50,14 @@ def _try_import_from_store(module, query_spec, query_info=None):
         # We have to run as part of this python interpreter
         query_spec += " ^" + spec_for_current_python()
 
-    installed_specs = spack.store.db.query(query_spec, installed=True)
+    installed_specs = spack.store.STORE.db.query(query_spec, installed=True)
 
     for candidate_spec in installed_specs:
         pkg = candidate_spec["python"].package
         module_paths = [
             os.path.join(candidate_spec.prefix, pkg.purelib),
             os.path.join(candidate_spec.prefix, pkg.platlib),
-        ]  # type: list[str]
+        ]
         path_before = list(sys.path)
 
         # NOTE: try module_paths first and last, last allows an existing version in path
@@ -89,7 +94,7 @@ def _try_import_from_store(module, query_spec, query_info=None):
     return False
 
 
-def _fix_ext_suffix(candidate_spec):
+def _fix_ext_suffix(candidate_spec: "spack.spec.Spec"):
     """Fix the external suffixes of Python extensions on the fly for
     platforms that may need it
 
@@ -157,7 +162,11 @@ def _fix_ext_suffix(candidate_spec):
         os.symlink(abs_path, link_name)
 
 
-def _executables_in_store(executables, query_spec, query_info=None):
+def _executables_in_store(
+    executables: Sequence[str],
+    query_spec: Union["spack.spec.Spec", str],
+    query_info: Optional[QueryInfo] = None,
+) -> bool:
     """Return True if at least one of the executables can be retrieved from
     a spec in store, False otherwise.
 
@@ -174,7 +183,7 @@ def _executables_in_store(executables, query_spec, query_info=None):
     executables_str = ", ".join(executables)
     msg = "[BOOTSTRAP EXECUTABLES {0}] Try installed specs with query '{1}'"
     tty.debug(msg.format(executables_str, query_spec))
-    installed_specs = spack.store.db.query(query_spec, installed=True)
+    installed_specs = spack.store.STORE.db.query(query_spec, installed=True)
     if installed_specs:
         for concrete_spec in installed_specs:
             bin_dir = concrete_spec.prefix.bin
@@ -193,7 +202,7 @@ def _executables_in_store(executables, query_spec, query_info=None):
     return False
 
 
-def _root_spec(spec_str):
+def _root_spec(spec_str: str) -> str:
     """Add a proper compiler and target to a spec used during bootstrapping.
 
     Args:

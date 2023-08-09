@@ -56,7 +56,7 @@ class Cbench(MakefilePackage):
 
     @run_before("build")
     @on_package_attributes(run_tests=True)
-    def test_blas_linkage(self):
+    def check_blas_linkage(self):
         """Quick test to ensure that BLAS linkage is working correctly."""
 
         make("-C", "opensource/maketests", "clean")

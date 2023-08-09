@@ -31,8 +31,6 @@ from .common import (  # find_windows_compiler_bundled_packages,
     path_to_dict,
 )
 
-is_windows = sys.platform == "win32"
-
 
 def common_windows_package_paths():
     paths = WindowsCompilerExternalPaths.find_windows_compiler_bundled_packages()
@@ -57,7 +55,7 @@ def executables_in_path(path_hints):
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    if is_windows:
+    if sys.platform == "win32":
         path_hints.extend(common_windows_package_paths())
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
     return path_to_dict(search_paths)
@@ -149,7 +147,7 @@ def by_library(packages_to_check, path_hints=None):
 
     path_to_lib_name = (
         libraries_in_ld_and_system_library_path(path_hints=path_hints)
-        if not is_windows
+        if sys.platform != "win32"
         else libraries_in_windows_paths(path_hints)
     )
 

@@ -10,7 +10,7 @@ from spack.package import *
 class AppleGlu(Package):
     """Shim package for Apple implementation of OpenGL Utility Libray (GLU)"""
 
-    homepage = ""
+    homepage = "https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_intro/opengl_intro.html"
 
     maintainers("aphecetche")
 
@@ -28,11 +28,6 @@ class AppleGlu(Package):
 
     phases = []
 
-    sdk_base = (
-        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/"
-        "Developer/SDKs/MacOSX"
-    )
-
     def setup_dependent_build_environment(self, env, dependent_spec):
         # we try to setup a build environment with enough hints
         # for the build system to pick up on the Apple framework version
@@ -42,16 +37,14 @@ class AppleGlu(Package):
         # - for the rest of the build systems we'll assume that
         # setting the C_INCLUDE_PATH will be enough for the compilation phase
         # and *** for the link phase.
-        env.prepend_path("C_INCLUDE_PATH", self.sdk_base)
+        env.prepend_path("C_INCLUDE_PATH", self.prefix[:-4])
 
     @property
     def headers(self):
         return HeaderList(
-            "{}.sdk/System/Library/Frameworks/OpenGL.framework/Headers".format(self.sdk_base)
+            join_path(self.prefix, "System/Library/Frameworks/OpenGL.framework/Headers")
         )
 
     @property
     def libs(self):
-        return LibraryList(
-            "{}.sdk/System/Library/Frameworks/OpenGL.framework".format(self.sdk_base)
-        )
+        return LibraryList(join_path(self.prefix, "System/Library/Frameworks/OpenGL.framework"))

@@ -103,7 +103,7 @@ def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
 
 @pytest.fixture
 def mock_module_cmd(monkeypatch):
-    class Logger(object):
+    class Logger:
         def __init__(self, fn=None):
             self.fn = fn
             self.calls = []
@@ -127,13 +127,13 @@ def test_static_to_shared_library(build_environment):
         "linux": (
             "/bin/mycc -shared"
             " -Wl,--disable-new-dtags"
-            " -Wl,-soname,{2} -Wl,--whole-archive {0}"
+            " -Wl,-soname -Wl,{2} -Wl,--whole-archive {0}"
             " -Wl,--no-whole-archive -o {1}"
         ),
         "darwin": (
             "/bin/mycc -dynamiclib"
             " -Wl,--disable-new-dtags"
-            " -install_name {1} -Wl,-force_load,{0} -o {1}"
+            " -install_name {1} -Wl,-force_load -Wl,{0} -o {1}"
         ),
     }
 

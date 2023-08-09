@@ -52,14 +52,14 @@ class Silo(AutotoolsPackage):
     depends_on("automake", type="build", when="+shared")
     depends_on("libtool", type="build", when="+shared")
     depends_on("mpi", when="+mpi")
-    depends_on("hdf5@1.8", when="@:4.10+hdf5")
+    depends_on("hdf5@1.8:1.10", when="@:4.10+hdf5")
     depends_on("hdf5@1.12:", when="@4.11:+hdf5")
     depends_on("qt+gui~framework@4.8:4.9", when="+silex")
     depends_on("libx11", when="+silex")
     # Xmu dependency is required on Ubuntu 18-20
     depends_on("libxmu", when="+silex")
     depends_on("readline")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     patch("remove-mpiposix.patch", when="@4.8:4.10.2")
 
@@ -67,7 +67,8 @@ class Silo(AutotoolsPackage):
     patch("H5FD_class_t-terminate.patch", when="@:4.10.2-bsd")
 
     # H5EPR_SEMI_COLON.patch was fixed in current dev
-    patch("H5EPR_SEMI_COLON.patch", when="@:4.11-bsd")
+    # patch("H5EPR_SEMI_COLON.patch", when="@:4.11-bsd")
+    patch("H5EPR_SEMI_COLON.patch")
 
     # Fix missing F77 init, fixed in 4.9
     patch("48-configure-f77.patch", when="@:4.8")
@@ -186,7 +187,7 @@ class Silo(AutotoolsPackage):
 
         # Do not specify the prefix of zlib if it is in a system directory
         # (see https://github.com/spack/spack/pull/21900).
-        zlib_prefix = self.spec["zlib"].prefix
+        zlib_prefix = self.spec["zlib-api"].prefix
         if is_system_path(zlib_prefix):
             config_args.append("--with-zlib=yes")
         else:

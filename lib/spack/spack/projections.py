@@ -10,7 +10,7 @@ def get_projection(projections, spec):
     """
     all_projection = None
     for spec_like, projection in projections.items():
-        if spec.satisfies(spec_like, strict=True):
+        if spec.satisfies(spec_like):
             return projection
         elif spec_like == "all":
             all_projection = projection

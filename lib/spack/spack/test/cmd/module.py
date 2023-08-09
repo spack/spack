@@ -41,7 +41,7 @@ def _module_files(module_type, *specs):
         ["rm", "doesnotexist"],  # Try to remove a non existing module
         ["find", "mpileaks"],  # Try to find a module with multiple matches
         ["find", "doesnotexist"],  # Try to find a module with no matches
-        ["find", "--unkown_args"],  # Try to give an unknown argument
+        ["find", "--unknown_args"],  # Try to give an unknown argument
     ]
 )
 def failure_args(request):
@@ -140,20 +140,16 @@ def test_find_recursive():
 
 
 @pytest.mark.db
-# DEPRECATED: remove blacklist in v0.20
-@pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
-def test_find_recursive_excluded(database, module_configuration, config_name):
-    module_configuration(config_name)
+def test_find_recursive_excluded(database, module_configuration):
+    module_configuration("exclude")
 
     module("lmod", "refresh", "-y", "--delete-tree")
     module("lmod", "find", "-r", "mpileaks ^mpich")
 
 
 @pytest.mark.db
-# DEPRECATED: remove blacklist in v0.20
-@pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
-def test_loads_recursive_excluded(database, module_configuration, config_name):
-    module_configuration(config_name)
+def test_loads_recursive_excluded(database, module_configuration):
+    module_configuration("exclude")
 
     module("lmod", "refresh", "-y", "--delete-tree")
     output = module("lmod", "loads", "-r", "mpileaks ^mpich")

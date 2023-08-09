@@ -14,6 +14,7 @@ class Shtools(MakefilePackage):
 
     maintainers("eschnett")
 
+    version("4.10.2", sha256="0caece67d65ddde19a79ec79bc6244f447f6fa878e5b2dc3f635cae2a3d1ee8c")
     version("4.10.1", sha256="f4fb5c86841fe80136b520d2040149eafd4bc2d49da6b914d8a843b812f20b61")
     version("4.9.1", sha256="5c22064f9daf6e9aa08cace182146993aa6b25a6ea593d92572c59f4013d53c2")
     version("4.8", sha256="c36fc86810017e544abbfb12f8ddf6f101a1ac8b89856a76d7d9801ffc8dac44")

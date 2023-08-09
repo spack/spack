@@ -12,4 +12,5 @@ class PerlIoHtml(PerlPackage):
     homepage = "https://metacpan.org/pod/IO::HTML"
     url = "http://search.cpan.org/CPAN/authors/id/C/CJ/CJM/IO-HTML-1.001.tar.gz"
 
+    version("1.004", sha256="c87b2df59463bbf2c39596773dfb5c03bde0f7e1051af339f963f58c1cbd8bf5")
     version("1.001", sha256="ea78d2d743794adc028bc9589538eb867174b4e165d7d8b5f63486e6b828e7e0")

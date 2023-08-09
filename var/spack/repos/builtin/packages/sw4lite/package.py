@@ -79,6 +79,8 @@ class Sw4lite(MakefilePackage, CudaPackage):
         lapack_blas = spec["lapack"].libs + spec["blas"].libs
         if spec.satisfies("%gcc"):
             targets.append("EXTRA_LINK_FLAGS={0} -lgfortran".format(lapack_blas.ld_flags))
+        elif spec.satisfies("%arm"):
+            targets.append("EXTRA_LINK_FLAGS={0} -larmflang".format(lapack_blas.ld_flags))
         else:
             targets.append("EXTRA_LINK_FLAGS={0}".format(lapack_blas.ld_flags))
 

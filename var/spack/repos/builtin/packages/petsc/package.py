@@ -13,7 +13,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     differential equations.
     """
 
-    homepage = "https://www.mcs.anl.gov/petsc/index.html"
+    homepage = "https://petsc.org"
     url = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.15.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers("balay", "barrysmith", "jedbrown")
@@ -22,6 +22,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.19.4", sha256="7c941b71be52c3b764214e492df60109d12f97f7d854c97a44df0c4d958b3906")
+    version("3.19.3", sha256="008239c016b869693ec8e81368a0b7638462e667d07f7d50ed5f9b75ccc58d17")
+    version("3.19.2", sha256="114f363f779bb16839b25c0e70f8b0ae0d947d50e72f7c6cddcb11b001079b16")
+    version("3.19.1", sha256="74db60c53c80b48d5c39e07bc39a883ecced88b9f24a5de17cf6f485a903e120")
+    version("3.19.0", sha256="8ced753e4d2fb6565662b2b1fbba75a426cbf8438203f82717ce270f0591322c")
+    version("3.18.6", sha256="8b53c8b6652459ba0bbe6361b5baf8c4d17c1d04b6654a76e3b6a9ab4a576680")
+    version("3.18.5", sha256="df73ae13a4c5758325a9d69350cac423742657d8a8fc5782504b0e469ce46499")
+    version("3.18.4", sha256="6173d30637261c5b740c0bea14747759200ca2012c7343139f9216bc296a6394")
     version("3.18.3", sha256="8aaa005479c8ec2eed2b9cbb067cfc1ac0900b0de2176439f0d4f21e09c2020b")
     version("3.18.2", sha256="4e055f92f3d5123d415f6f3ccf5ede9989f16d9e1f71cc7998ad244a3d3562f4")
     version("3.18.1", sha256="02f5979a22f5961bb775d527f8450db77bc6a8d2541f3b05fb586829b82e9bc8")
@@ -139,6 +147,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("kokkos", default=False, description="Activates support for kokkos and kokkos-kernels")
     variant("fortran", default=True, description="Activates fortran support")
 
+    # https://github.com/spack/spack/issues/37416
+    conflicts("^rocprim@5.3.0:5.3.2", when="+rocm")
+
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts("^intel-mkl", when="@3.8.0")
 
@@ -227,9 +238,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hdf5+mpi", when="@3.13:+hdf5+mpi")
     depends_on("hdf5+mpi", when="+exodusii+mpi")
     depends_on("hdf5+mpi", when="+cgns+mpi")
-    depends_on("zlib", when="+hdf5")
-    depends_on("zlib", when="+libpng")
-    depends_on("zlib", when="+p4est")
+    depends_on("zlib-api", when="+hdf5")
+    depends_on("zlib-api", when="+libpng")
+    depends_on("zlib-api", when="+p4est")
     depends_on("parmetis+int64", when="+metis+mpi+int64")
     depends_on("parmetis~int64", when="+metis+mpi~int64")
     depends_on("valgrind", when="+valgrind")
@@ -237,31 +248,20 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("mmg", when="+parmmg")
     depends_on("parmmg", when="+parmmg")
     depends_on("tetgen+pic", when="+tetgen")
-    # hypre+/~fortran based on wheter fortran is enabled/disabled
+
     depends_on("hypre+fortran", when="+hypre+fortran")
     depends_on("hypre~fortran", when="+hypre~fortran")
-    # Hypre does not support complex numbers.
-    # Also PETSc prefer to build it without internal superlu, likely due to
-    # conflict in headers see
-    # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on("hypre@:2.13+mpi~internal-superlu~int64", when="@:3.8+hypre+mpi~complex~int64")
-    depends_on("hypre@:2.13+mpi~internal-superlu+int64", when="@:3.8+hypre+mpi~complex+int64")
-    depends_on(
-        "hypre@2.14:2.18.2+mpi~internal-superlu~int64", when="@3.9:3.13+hypre+mpi~complex~int64"
-    )
-    depends_on(
-        "hypre@2.14:2.18.2+mpi~internal-superlu+int64", when="@3.9:3.13+hypre+mpi~complex+int64"
-    )
-    depends_on(
-        "hypre@2.14:2.22.0+mpi~internal-superlu~int64", when="@3.14:3.15+hypre+mpi~complex~int64"
-    )
-    depends_on(
-        "hypre@2.14:2.22.0+mpi~internal-superlu+int64", when="@3.14:3.15+hypre+mpi~complex+int64"
-    )
-    depends_on("hypre@2.14:+mpi~internal-superlu~int64", when="@3.16:+hypre+mpi~complex~int64")
-    depends_on("hypre@2.14:+mpi~internal-superlu+int64", when="@3.16:+hypre+mpi~complex+int64")
-    depends_on("hypre@develop+mpi~internal-superlu+int64", when="@main+hypre+mpi~complex+int64")
-    depends_on("hypre@develop+mpi~internal-superlu~int64", when="@main+hypre+mpi~complex~int64")
+    depends_on("hypre+complex", when="+hypre+complex")
+    depends_on("hypre~complex", when="+hypre~complex")
+    depends_on("hypre+int64", when="+hypre+int64")
+    depends_on("hypre~int64", when="+hypre~int64")
+    depends_on("hypre+mpi~internal-superlu", when="+hypre")
+    depends_on("hypre@2.14:2.18.2", when="@3.11:3.13+hypre")
+    depends_on("hypre@2.14:2.22.0", when="@3.14:3.15+hypre")
+    depends_on("hypre@2.14:2.28.0", when="@3.16:3.19+hypre")
+    depends_on("hypre@2.14:", when="@3.20+hypre")
+    depends_on("hypre@develop", when="@main+hypre")
+
     depends_on("superlu-dist@:4.3~int64", when="@3.4.4:3.6.4+superlu-dist+mpi~int64")
     depends_on("superlu-dist@:4.3+int64", when="@3.4.4:3.6.4+superlu-dist+mpi+int64")
     depends_on("superlu-dist@5.0.0:5.1.3~int64", when="@3.7.0:3.7+superlu-dist+mpi~int64")
@@ -375,6 +375,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             "--download-c2html=0",
             "--download-sowing=0",
             "--download-hwloc=0",
+            "--with-make-exec=%s" % make,
         ]
         # If 'cflags', 'fflags', and/or 'cxxflags' are not set, let the PETSc
         # configuration script choose defaults.
@@ -578,7 +579,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     def build(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()
-        make("V=1")
+        if spec.satisfies("@:3.18.5"):
+            make("OMAKE_PRINTDIR=%s" % make, "V=1")
+        else:
+            make("V=1")
 
     def install(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()
@@ -621,24 +625,36 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.spec.satisfies("@3.13:"):
-            self.cache_extra_test_sources("src/ksp/ksp/tutorials")
-            self.cache_extra_test_sources("src/snes/tutorials")
+        if not self.spec.satisfies("@3.13:"):
+            tty.warn("Stand-alone tests only available for v3.13:")
+            return
 
-    def test(self):
-        # solve Poisson equation in 2D to make sure nothing is broken:
+        self.cache_extra_test_sources(
+            [join_path("src", "ksp", "ksp", "tutorials"), join_path("src", "snes", "tutorials")]
+        )
+
+    def get_runner(self):
+        """Set key environment variables and return runner and options."""
         spec = self.spec
         env["PETSC_DIR"] = self.prefix
         env["PETSC_ARCH"] = ""
         if "+mpi" in spec:
-            runexe = Executable(join_path(spec["mpi"].prefix.bin, "mpiexec")).command
+            runexe = which(spec["mpi"].prefix.bin.mpiexec)
             runopt = ["-n", "4"]
         else:
-            runexe = Executable(join_path(self.prefix, "lib/petsc/bin/petsc-mpiexec.uni")).command
+            runexe = which(join_path(self.prefix.lib.petsc.bin, "petsc-mpiexec.uni"))
             runopt = ["-n", "1"]
-        w_dir = join_path(self.install_test_root, "src/ksp/ksp/tutorials")
+        return runexe, runopt
+
+    def test_ex50(self):
+        """build and run ex50 to solve Poisson equation in 2D"""
+        # solve Poisson equation in 2D to make sure nothing is broken:
+        make = which("make")
+        runexe, runopts = self.get_runner()
+
+        w_dir = self.test_suite.current_test_cache_dir.src.ksp.ksp.tutorials
         with working_dir(w_dir):
-            testexe = ["ex50", "-da_grid_x", "4", "-da_grid_y", "4"]
+            baseopts = ["ex50", "-da_grid_x", "4", "-da_grid_y", "4"]
             testdict = {
                 None: [],
                 "+superlu-dist": ["-pc_type", "lu", "-pc_factor_mat_solver_type", "superlu_dist"],
@@ -647,40 +663,61 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 "+mkl-pardiso": ["-pc_type", "lu", "-pc_factor_mat_solver_type", "mkl_pardiso"],
             }
             make("ex50", parallel=False)
-            for feature, featureopt in testdict.items():
-                if not feature or feature in spec:
-                    self.run_test(runexe, runopt + testexe + featureopt)
-            if "+cuda" in spec:
-                make("ex7", parallel=False)
-                testexe = [
-                    "ex7",
-                    "-mat_type",
-                    "aijcusparse",
-                    "-sub_pc_factor_mat_solver_type",
-                    "cusparse",
-                    "-sub_ksp_type",
-                    "preonly",
-                    "-sub_pc_type",
-                    "ilu",
-                    "-use_gpu_aware_mpi",
-                    "0",
-                ]
-                self.run_test(runexe, runopt + testexe)
-            make("clean", parallel=False)
-        w_dir = join_path(self.install_test_root, "src/snes/tutorials")
+            for feature, featureopts in testdict.items():
+                if not feature or feature in self.spec:
+                    name = f"_{feature[1:]}" if feature else ""
+                    options = runopts + baseopts + featureopts
+                    with test_part(self, f"test_ex50{name}", purpose=f"run {options}"):
+                        runexe(*options)
+
+    def test_ex7(self):
+        """build and run ex7"""
+        if "+cuda" not in self.spec:
+            raise SkipTest("Package must be built with +cuda")
+
+        make = which("make")
+        runexe, runopts = self.get_runner()
+
+        w_dir = self.test_suite.current_test_cache_dir.src.ksp.ksp.tutorials
         with working_dir(w_dir):
-            if "+kokkos" in spec:
-                make("ex3k", parallel=False)
-                testexe = [
-                    "ex3k",
-                    "-view_initial",
-                    "-dm_vec_type",
-                    "kokkos",
-                    "-dm_mat_type",
-                    "aijkokkos",
-                    "-use_gpu_aware_mpi",
-                    "0",
-                    "-snes_monitor",
-                ]
-                self.run_test(runexe, runopt + testexe)
-            make("clean", parallel=False)
+            make("ex7", parallel=False)
+            exeopts = [
+                "ex7",
+                "-mat_type",
+                "aijcusparse",
+                "-sub_pc_factor_mat_solver_type",
+                "cusparse",
+                "-sub_ksp_type",
+                "preonly",
+                "-sub_pc_type",
+                "ilu",
+                "-use_gpu_aware_mpi",
+                "0",
+            ]
+            options = runopts + exeopts
+            runexe(*options)
+
+    def test_ex3k(self):
+        """build and run ex3k"""
+        if "+kokkos" not in self.spec:
+            raise SkipTest("Package must be built with +kokkos")
+
+        make = which("make")
+        runexe, runopts = self.get_runner()
+
+        w_dir = self.test_suite.current_test_cache_dir.src.snes.tutorials
+        with working_dir(w_dir):
+            make("ex3k", parallel=False)
+            exeopts = [
+                "ex3k",
+                "-view_initial",
+                "-dm_vec_type",
+                "kokkos",
+                "-dm_mat_type",
+                "aijkokkos",
+                "-use_gpu_aware_mpi",
+                "0",
+                "-snes_monitor",
+            ]
+            options = runopts + exeopts
+            runexe(*options)

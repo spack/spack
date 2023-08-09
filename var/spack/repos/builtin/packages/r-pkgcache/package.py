@@ -15,6 +15,7 @@ class RPkgcache(RPackage):
 
     cran = "pkgcache"
 
+    version("2.1.0", sha256="cfc03c2060028097972c32c3f2d922d7a598dfd963e5e5250d85a3dfa2f2e206")
     version("2.0.3", sha256="80deafd60f15dda029536d4ce13c37ef91c49cb6636323daadbf3d64a67da028")
     version("2.0.2", sha256="6860b5b7046ef349c2fdad4ba3aecb57c7516fba952a19e3ff7cccb7f859f881")
     version("2.0.1", sha256="1add648c6f30543cbd5e43369c4d1462248d4caaedfcb588ee7b946a75d42f4f")
@@ -38,5 +39,4 @@ class RPkgcache(RPackage):
     depends_on("r-rlang", type=("build", "run"), when="@:1.3.0")
     depends_on("r-tibble", type=("build", "run"), when="@:1.3.0")
     depends_on("r-uuid", type=("build", "run"), when="@:1.3.0")
-    depends_on("r-glue", type=("build", "run"))
-    depends_on("r-glue", when="@:2.0.2")
+    depends_on("r-glue", type=("build", "run"), when="@:2.0.2")

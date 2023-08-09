@@ -16,6 +16,7 @@ class RabbitmqC(CMakePackage):
 
     maintainers("lpottier")
 
+    version("0.13.0", sha256="8b224e41bba504fc52b02f918d8df7e4bf5359d493cbbff36c06078655c676e6")
     version("0.11.0", sha256="437d45e0e35c18cf3e59bcfe5dfe37566547eb121e69fca64b98f5d2c1c2d424")
 
     variant("ssl", default=True, description="Required to connect to RabbitMQ using SSL/TLS")

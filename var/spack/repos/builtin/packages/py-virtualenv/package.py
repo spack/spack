@@ -13,6 +13,7 @@ class PyVirtualenv(PythonPackage):
     pypi = "virtualenv/virtualenv-16.7.6.tar.gz"
     git = "https://github.com/pypa/virtualenv.git"
 
+    version("20.22.0", sha256="278753c47aaef1a0f14e6db8a4c5e1e040e90aea654d0fc1dc7e0d8a42616cc3")
     version("20.17.1", sha256="f8b927684efc6f1cc206c9db297a570ab9ad0e51c16fa9e45487d36d1905c058")
     version("20.16.4", sha256="014f766e4134d0008dcaa1f95bafa0fb0f575795d07cae50b1bee514185d6782")
     version("20.10.0", sha256="576d05b46eace16a9c348085f7d0dc8ef28713a2cabaa1cf0aea41e8f12c9218")
@@ -24,31 +25,49 @@ class PyVirtualenv(PythonPackage):
     version("13.0.1", sha256="36c2cfae0f9c6462264bb19c478fc6bab3478cf0575f1027452e975a1ed84dbd")
     version("1.11.6", sha256="3e7a4c151e2ee97f51db0215bfd2a073b04a91e9786df6cb67c916f16abe04f7")
 
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@20.10.0:", type=("build", "run"))
-    depends_on("python@3.6:", when="@20.16.4:", type=("build", "run"))
+    depends_on("py-hatch-vcs@0.3:", when="@20.18:", type="build")
+    depends_on("py-hatchling@1.14:", when="@20.22:", type="build")
+    depends_on("py-hatchling@1.12.2:", when="@20.18:", type="build")
 
-    # not just build-time, requires pkg_resources
-    depends_on("py-setuptools@40.6.3:", type=("build", "run"))
-    depends_on("py-setuptools@41.00.03:", when="@20.10.0:", type=("build", "run"))
-    depends_on("py-setuptools@59.6:", when="@20.16.4:", type=("build", "run"))
-    depends_on("py-setuptools-scm@2:", when="@20.10.0:", type="build")
-    depends_on("py-setuptools-scm@6.4.2:", when="@20.16.4:", type="build")
+    with when("@:20.17"):
+        # not just build-time, requires pkg_resources
+        depends_on("py-setuptools@59.6:", when="@20.16.3:", type=("build", "run"))
+        depends_on("py-setuptools@41.0.0:", when="@20.0.0:20.16.2", type=("build", "run"))
+        depends_on("py-setuptools@40.6.3:", when="@16.1.2:16", type=("build", "run"))
+        depends_on("py-setuptools@40.0.4:", when="@16.1.0", type=("build", "run"))
+        depends_on("py-setuptools", type=("build", "run"))
+        depends_on("py-setuptools-scm@6.4.2:", when="@20.16.3:", type="build")
+        depends_on("py-setuptools-scm@2:", when="@20.0.5:20.16.2", type="build")
+        depends_on("py-setuptools-scm+toml@3.4:", when="@20.0.0:20.0.4", type="build")
+        depends_on("py-wheel@0.30:", when="@20.0.0:20.16.2", type="build")
+        depends_on("py-wheel@0.29:", when="@16.1:16", type="build")
 
-    depends_on("py-distlib@0.3.1:0", when="@20.10.0:", type=("build", "run"))
-    depends_on("py-distlib@0.3.5:0", when="@20.16.4:", type=("build", "run"))
     depends_on("py-distlib@0.3.6:0", when="@20.16.6:", type=("build", "run"))
-    depends_on("py-filelock@3.2:3", when="@20.10.0:", type=("build", "run"))
-    depends_on("py-filelock@3.4.1:3", when="@20.16.4:", type=("build", "run"))
-    depends_on("py-platformdirs@2:2", when="@20.10.0:", type=("build", "run"))
-    depends_on("py-platformdirs@2.4:2", when="@20.16.4:", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.12:", when="@20.10.0: ^python@:3.7", type=("build", "run"))
+    depends_on("py-distlib@0.3.5:0", when="@20.16.3:20.16.5", type=("build", "run"))
+    depends_on("py-distlib@0.3.1:0", when="@20.0.26:20.16.2", type=("build", "run"))
+    depends_on("py-distlib@0.3.0:0", when="@20.0.0:20.0.25", type=("build", "run"))
+    depends_on("py-filelock@3.11:3", when="@20.22:", type=("build", "run"))
+    depends_on("py-filelock@3.4.1:3", when="@20.16.3:", type=("build", "run"))
+    depends_on("py-filelock@3.2:3", when="@20.9:20.16.2", type=("build", "run"))
+    depends_on("py-filelock@3.0.0:3", when="@20.0:20.8", type=("build", "run"))
+    depends_on("py-importlib-metadata@6.4.1:", when="@20.22: ^python@:3.7", type=("build", "run"))
     depends_on(
-        "py-importlib-metadata@4.8.3:", when="@20.16.4: ^python@:3.7", type=("build", "run")
+        "py-importlib-metadata@4.8.3:", when="@20.16.3: ^python@:3.7", type=("build", "run")
     )
+    depends_on("py-importlib-metadata@0.12:", when="@20.2.1: ^python@:3.7", type=("build", "run"))
+    depends_on(
+        "py-importlib-metadata@0.12:3", when="@20.0.0:20.2.0 ^python@:3.7", type=("build", "run")
+    )
+    depends_on("py-platformdirs@3.2:3", when="@20.22:", type=("build", "run"))
+    depends_on("py-platformdirs@2.4:2", when="@20.16.3:20.21", type=("build", "run"))
+    depends_on("py-platformdirs@2:2", when="@20.5:20.16.2", type=("build", "run"))
 
     # dependencies of old versions
     depends_on(
-        "py-backports-entry-points-selectable @1.0.4:", when="@20.10.0", type=("build", "run")
+        "py-backports-entry-points-selectable @1.0.4:", when="@20.5:20.10", type=("build", "run")
     )
-    depends_on("py-six@1.9.0:1", when="@20.10.0", type=("build", "run"))
+    depends_on("py-six@1.9.0:1", when="@20.0.4:20.15", type=("build", "run"))
+    depends_on("py-six@1.12.0:1", when="@20.0.0:20.0.3", type=("build", "run"))
+    depends_on("py-appdirs@1.4.3:1", when="@20.0.0:20.4", type=("build", "run"))
+
+    skip_modules = ["virtualenv.discovery.windows"]

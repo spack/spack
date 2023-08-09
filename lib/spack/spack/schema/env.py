@@ -10,12 +10,13 @@
 """
 from llnl.util.lang import union_dicts
 
+import spack.schema.gitlab_ci  # DEPRECATED
 import spack.schema.merged
 import spack.schema.packages
 import spack.schema.projections
 
-#: legal first keys in the schema
-keys = ("spack", "env")
+#: Top level key in a manifest file
+TOP_LEVEL_KEY = "spack"
 
 spec_list_schema = {
     "type": "array",
@@ -46,12 +47,14 @@ schema = {
     "title": "Spack environment file schema",
     "type": "object",
     "additionalProperties": False,
-    "patternProperties": {
-        "^env|spack$": {
+    "properties": {
+        "spack": {
             "type": "object",
             "default": {},
             "additionalProperties": False,
             "properties": union_dicts(
+                # Include deprecated "gitlab-ci" section
+                spack.schema.gitlab_ci.properties,
                 # merged configuration scope schemas
                 spack.schema.merged.properties,
                 # extra environment schema properties
@@ -130,6 +133,15 @@ def update(data):
     Returns:
         True if data was changed, False otherwise
     """
+
+    import spack.ci
+
+    if "gitlab-ci" in data:
+        data["ci"] = data.pop("gitlab-ci")
+
+    if "ci" in data:
+        return spack.ci.translate_deprecated_config(data["ci"])
+
     # There are not currently any deprecated attributes in this section
     # that have not been removed
     return False

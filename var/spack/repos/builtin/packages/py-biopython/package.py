@@ -15,6 +15,10 @@ class PyBiopython(PythonPackage):
     homepage = "https://biopython.org/wiki/Main_Page"
     pypi = "biopython/biopython-1.79.tar.gz"
 
+    maintainers("RMeli")
+
+    version("1.81", sha256="2cf38112b6d8415ad39d6a611988cd11fb5f33eb09346666a87263beba9614e0")
+    version("1.80", sha256="52805e9af88767e450e2df8113b5bc59e964e2e8a7bb803a83570bdbb51c0e43")
     version("1.79", sha256="edb07eac99d3b8abd7ba56ff4bedec9263f76dfc3c3f450e7d2e2bcdecf8559b")
     version("1.78", sha256="1ee0a0b6c2376680fea6642d5080baa419fd73df104a62d58a8baf7a8bbe4564")
     version("1.73", sha256="70c5cc27dc61c23d18bb33b6d38d70edc4b926033aea3b7434737c731c94a5e0")

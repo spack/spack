@@ -12,8 +12,9 @@ class PyPyroPpl(PythonPackage):
     homepage = "https://pyro.ai/"
     pypi = "pyro-ppl/pyro-ppl-1.8.1.tar.gz"
 
-    maintainers("adamjstewart")
+    maintainers("adamjstewart", "meyersbs")
 
+    version("1.8.4", sha256="766fad61e52df48885de96d41213da1f8e8c1b79ecf308ad53189fcd15c1cb41")
     version("1.8.1", sha256="d7c049eb2e7485a612b4dd99c24c309cc860c7cbc6b1973387034f5436d1c8d6")
     version("1.8.0", sha256="68e4ea30f219227dd88e55de2550d3f8c20a20adbdb67ad1e13b50868bb2ac0c")
 

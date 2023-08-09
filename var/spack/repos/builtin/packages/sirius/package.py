@@ -21,6 +21,8 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("7.4.3", sha256="015679a60a39fa750c5d1bd8fb1ce73945524bef561270d8a171ea2fd4687fec")
+    version("7.4.0", sha256="f9360a695a1e786d8cb9d6702c82dd95144a530c4fa7e8115791c7d1e92b020b")
     version("7.3.2", sha256="a256508de6b344345c295ad8642dbb260c4753cd87cc3dd192605c33542955d7")
     version("7.3.1", sha256="8bf9848b8ebf0b43797fd359adf8c84f00822de4eb677e3049f22baa72735e98")
     version("7.3.0", sha256="69b5cf356adbe181be6c919032859c4e0160901ff42a885d7e7ea0f38cc772e2")
@@ -148,7 +150,8 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     variant("vdwxc", default=False, description="Enable libvdwxc support")
     variant("scalapack", default=False, description="Enable scalapack support")
     variant("magma", default=False, description="Enable MAGMA support")
-    variant("nlcglib", default=False, description="enable robust wave function optimization")
+    variant("nlcglib", default=False, description="Enable robust wave function optimization")
+    variant("wannier90", default=False, description="Enable Wannier90 library")
     variant(
         "build_type",
         default="Release",
@@ -201,12 +204,15 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("spla+openmp", when="+openmp ^spla")
 
     depends_on("nlcglib", when="+nlcglib")
+    depends_on("nlcglib+rocm", when="+nlcglib+rocm")
+    depends_on("nlcglib+cuda", when="+nlcglib+cuda")
 
     depends_on("libvdwxc@0.3.0:+mpi", when="+vdwxc")
 
     depends_on("scalapack", when="+scalapack")
 
     depends_on("rocblas", when="+rocm")
+    depends_on("rocsolver", when="@7.5.0: +rocm")
 
     # FindHIP cmake script only works for < 4.1
     depends_on("hip@:4.0", when="@:7.2.0 +rocm")
@@ -223,12 +229,20 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("blis threads=openmp", when="+openmp ^blis")
     depends_on("intel-mkl threads=openmp", when="+openmp ^intel-mkl")
 
+    depends_on("wannier90", when="@7.5.0: +wannier90")
+    depends_on("wannier90+shared", when="@7.5.0: +wannier90+shared")
+
     depends_on("elpa+openmp", when="+elpa+openmp")
     depends_on("elpa~openmp", when="+elpa~openmp")
 
     depends_on("eigen@3.4.0:", when="@7.3.2: +tests")
 
     depends_on("costa+shared", when="@7.3.2:")
+
+    with when("@7.5: +memory_pool"):
+        depends_on("umpire")
+        depends_on("umpire+cuda~device_alloc", when="+cuda")
+        depends_on("umpire+rocm~device_alloc", when="+rocm")
 
     patch("strip-spglib-include-subfolder.patch", when="@6.1.5")
     patch("link-libraries-fortran.patch", when="@6.1.5")
@@ -259,23 +273,28 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
 
+        cm_label = ""
+        if "@7.5:" in spec:
+            cm_label = "SIRIUS_"
+
         args = [
-            self.define_from_variant("USE_OPENMP", "openmp"),
-            self.define_from_variant("USE_ELPA", "elpa"),
-            self.define_from_variant("USE_MAGMA", "magma"),
-            self.define_from_variant("USE_NLCGLIB", "nlcglib"),
-            self.define_from_variant("USE_VDWXC", "vdwxc"),
-            self.define_from_variant("USE_MEMORY_POOL", "memory_pool"),
-            self.define_from_variant("USE_SCALAPACK", "scalapack"),
-            self.define_from_variant("CREATE_FORTRAN_BINDINGS", "fortran"),
-            self.define_from_variant("CREATE_PYTHON_MODULE", "python"),
-            self.define_from_variant("USE_CUDA", "cuda"),
-            self.define_from_variant("USE_ROCM", "rocm"),
-            self.define_from_variant("BUILD_TESTING", "tests"),
-            self.define_from_variant("BUILD_APPS", "apps"),
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("USE_FP32", "single_precision"),
-            self.define_from_variant("USE_PROFILER", "profiler"),
+            self.define_from_variant(cm_label + "USE_OPENMP", "openmp"),
+            self.define_from_variant(cm_label + "USE_ELPA", "elpa"),
+            self.define_from_variant(cm_label + "USE_MAGMA", "magma"),
+            self.define_from_variant(cm_label + "USE_NLCGLIB", "nlcglib"),
+            self.define_from_variant(cm_label + "USE_VDWXC", "vdwxc"),
+            self.define_from_variant(cm_label + "USE_MEMORY_POOL", "memory_pool"),
+            self.define_from_variant(cm_label + "USE_SCALAPACK", "scalapack"),
+            self.define_from_variant(cm_label + "CREATE_FORTRAN_BINDINGS", "fortran"),
+            self.define_from_variant(cm_label + "CREATE_PYTHON_MODULE", "python"),
+            self.define_from_variant(cm_label + "USE_CUDA", "cuda"),
+            self.define_from_variant(cm_label + "USE_ROCM", "rocm"),
+            self.define_from_variant(cm_label + "BUILD_TESTING", "tests"),
+            self.define_from_variant(cm_label + "BUILD_APPS", "apps"),
+            self.define_from_variant(cm_label + "BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant(cm_label + "USE_FP32", "single_precision"),
+            self.define_from_variant(cm_label + "USE_PROFILER", "profiler"),
+            self.define_from_variant(cm_label + "USE_WANNIER90", "wannier90"),
         ]
 
         lapack = spec["lapack"]
@@ -293,21 +312,25 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         if "+scalapack" in spec and "^cray-libsci" not in spec:
             args.extend(
                 [
-                    self.define("SCALAPACK_FOUND", "true"),
-                    self.define("SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
-                    self.define("SCALAPACK_LIBRARIES", spec["scalapack"].libs.joined(";")),
+                    self.define(cm_label + "SCALAPACK_FOUND", "true"),
+                    self.define(
+                        cm_label + "SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include
+                    ),
+                    self.define(
+                        cm_label + "SCALAPACK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
                 ]
             )
 
         if "^cray-libsci" in spec:
-            args.append(self.define("USE_CRAY_LIBSCI", "ON"))
+            args.append(self.define(cm_label + "USE_CRAY_LIBSCI", "ON"))
 
-        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio"]:
-            args.append(self.define("USE_MKL", "ON"))
+        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            args.append(self.define(cm_label + "USE_MKL", "ON"))
 
         if "+elpa" in spec:
             elpa_incdir = os.path.join(spec["elpa"].headers.directories[0], "elpa")
-            args.append(self.define("ELPA_INCLUDE_DIR", elpa_incdir))
+            args.append(self.define(cm_label + "ELPA_INCLUDE_DIR", elpa_incdir))
 
         if "+cuda" in spec:
             cuda_arch = spec.variants["cuda_arch"].value

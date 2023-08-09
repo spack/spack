@@ -2,11 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from __future__ import print_function
-
 import collections
 import os
 import shutil
+from typing import List
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -43,7 +42,7 @@ def setup_parser(subparser):
     get_parser = sp.add_parser("get", help="print configuration values")
     get_parser.add_argument(
         "section",
-        help="configuration section to print. " "options: %(choices)s",
+        help="configuration section to print\n\noptions: %(choices)s",
         nargs="?",
         metavar="section",
         choices=spack.config.section_schemas,
@@ -54,7 +53,7 @@ def setup_parser(subparser):
     )
     blame_parser.add_argument(
         "section",
-        help="configuration section to print. " "options: %(choices)s",
+        help="configuration section to print\n\noptions: %(choices)s",
         metavar="section",
         choices=spack.config.section_schemas,
     )
@@ -62,7 +61,7 @@ def setup_parser(subparser):
     edit_parser = sp.add_parser("edit", help="edit configuration file")
     edit_parser.add_argument(
         "section",
-        help="configuration section to edit. " "options: %(choices)s",
+        help="configuration section to edit\n\noptions: %(choices)s",
         metavar="section",
         nargs="?",
         choices=spack.config.section_schemas,
@@ -77,7 +76,7 @@ def setup_parser(subparser):
     add_parser.add_argument(
         "path",
         nargs="?",
-        help="colon-separated path to config that should be added," " e.g. 'config:default:true'",
+        help="colon-separated path to config that should be added, e.g. 'config:default:true'",
     )
     add_parser.add_argument("-f", "--file", help="file from which to set all config values")
 
@@ -89,7 +88,7 @@ def setup_parser(subparser):
         "--local",
         action="store_true",
         default=False,
-        help="Set packages preferences based on local installs, rather " "than upstream.",
+        help="set packages preferences based on local installs, rather than upstream",
     )
 
     remove_parser = sp.add_parser("remove", aliases=["rm"], help="remove configuration parameters")
@@ -158,7 +157,7 @@ def config_get(args):
             tty.die("environment has no %s file" % ev.manifest_name)
 
     else:
-        tty.die("`spack config get` requires a section argument " "or an active environment.")
+        tty.die("`spack config get` requires a section argument or an active environment.")
 
 
 def config_blame(args):
@@ -181,7 +180,7 @@ def config_edit(args):
         # If we aren't editing a spack.yaml file, get config path from scope.
         scope, section = _get_scope_and_section(args)
         if not scope and not section:
-            tty.die("`spack config edit` requires a section argument " "or an active environment.")
+            tty.die("`spack config edit` requires a section argument or an active environment.")
         config_file = spack.config.config.get_config_filename(scope, section)
 
     if args.print_file:
@@ -244,30 +243,35 @@ def config_remove(args):
     spack.config.set(path, existing, scope)
 
 
-def _can_update_config_file(scope_dir, cfg_file):
-    dir_ok = fs.can_write_to_dir(scope_dir)
-    cfg_ok = fs.can_access(cfg_file)
-    return dir_ok and cfg_ok
+def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
+    if isinstance(scope, spack.config.SingleFileScope):
+        return fs.can_access(cfg_file)
+    return fs.can_write_to_dir(scope.path) and fs.can_access(cfg_file)
 
 
 def config_update(args):
     # Read the configuration files
     spack.config.config.get_config(args.section, scope=args.scope)
-    updates = spack.config.config.format_updates[args.section]
+    updates: List[spack.config.ConfigScope] = list(
+        filter(
+            lambda s: not isinstance(
+                s, (spack.config.InternalConfigScope, spack.config.ImmutableConfigScope)
+            ),
+            spack.config.config.format_updates[args.section],
+        )
+    )
 
     cannot_overwrite, skip_system_scope = [], False
     for scope in updates:
         cfg_file = spack.config.config.get_config_filename(scope.name, args.section)
-        scope_dir = scope.path
-        can_be_updated = _can_update_config_file(scope_dir, cfg_file)
+        can_be_updated = _can_update_config_file(scope, cfg_file)
         if not can_be_updated:
             if scope.name == "system":
                 skip_system_scope = True
-                msg = (
+                tty.warn(
                     'Not enough permissions to write to "system" scope. '
-                    "Skipping update at that location [cfg={0}]"
+                    f"Skipping update at that location [cfg={cfg_file}]"
                 )
-                tty.warn(msg.format(cfg_file))
                 continue
             cannot_overwrite.append((scope, cfg_file))
 
@@ -315,18 +319,14 @@ def config_update(args):
     # Get a function to update the format
     update_fn = spack.config.ensure_latest_format_fn(args.section)
     for scope in updates:
-        cfg_file = spack.config.config.get_config_filename(scope.name, args.section)
-        with open(cfg_file) as f:
-            data = syaml.load_config(f) or {}
-            data = data.pop(args.section, {})
+        data = scope.get_section(args.section).pop(args.section)
         update_fn(data)
 
         # Make a backup copy and rewrite the file
         bkp_file = cfg_file + ".bkp"
         shutil.copy(cfg_file, bkp_file)
         spack.config.config.update_config(args.section, data, scope=scope.name, force=True)
-        msg = 'File "{0}" updated [backup={1}]'
-        tty.msg(msg.format(cfg_file, bkp_file))
+        tty.msg(f'File "{cfg_file}" update [backup={bkp_file}]')
 
 
 def _can_revert_update(scope_dir, cfg_file, bkp_file):
@@ -374,7 +374,7 @@ def config_revert(args):
 
     proceed = True
     if not args.yes_to_all:
-        msg = "The following scopes will be restored from the corresponding" " backup files:\n"
+        msg = "The following scopes will be restored from the corresponding backup files:\n"
         for entry in to_be_restored:
             msg += "\t[scope={0.scope}, bkp={0.bkp}]\n".format(entry)
         msg += "This operation cannot be undone."
@@ -399,8 +399,8 @@ def config_prefer_upstream(args):
     if scope is None:
         scope = spack.config.default_modify_scope("packages")
 
-    all_specs = set(spack.store.db.query(installed=True))
-    local_specs = set(spack.store.db.query_local(installed=True))
+    all_specs = set(spack.store.STORE.db.query(installed=True))
+    local_specs = set(spack.store.STORE.db.query_local(installed=True))
     pref_specs = local_specs if args.local else all_specs - local_specs
 
     conflicting_variants = set()

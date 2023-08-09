@@ -13,6 +13,7 @@ class PyA2wsgi(PythonPackage):
     homepage = "https://github.com/abersheeran/a2wsgi"
     pypi = "a2wsgi/a2wsgi-1.6.0.tar.gz"
 
+    version("1.7.0", sha256="a906f62c0250eb0201120b93417dd0b12b105b5db35af431bfe86ef0dc5bbab2")
     version("1.6.0", sha256="67a9902db6da72c268a24d4e5d01348f736980a577279b7df801c8902aba8554")
 
     depends_on("python@3.6.2:", type=("build", "run"))

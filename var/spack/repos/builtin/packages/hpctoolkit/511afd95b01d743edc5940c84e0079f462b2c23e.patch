@@ -1,0 +1,130 @@
+From 511afd95b01d743edc5940c84e0079f462b2c23e Mon Sep 17 00:00:00 2001
+From: "Mark W. Krentel" <krentel@rice.edu>
+Date: Tue, 18 May 2021 14:54:41 -0500
+Subject: [PATCH] Cleanup some usage for gcc/g++ 11.x (#413)
+
+1. Change epsilon to hpc_epsilon in prof/Metric header files.  This
+ conflicted with using epsilon in some STL template libraries.
+
+ 2. Add const to some comparison operators that are used in some STL
+ maps.
+---
+ src/lib/banal/Struct-Inline.hpp   | 6 +++---
+ src/lib/prof/Metric-AExpr.cpp     | 4 ++--
+ src/lib/prof/Metric-AExpr.hpp     | 2 +-
+ src/lib/prof/Metric-AExprIncr.hpp | 6 +++---
+ src/lib/support/StringTable.hpp   | 2 +-
+ 5 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/src/lib/banal/Struct-Inline.hpp b/src/lib/banal/Struct-Inline.hpp
+index ffb93355fd..0099ad112d 100644
+--- a/src/lib/banal/Struct-Inline.hpp
++++ b/src/lib/banal/Struct-Inline.hpp
+@@ -150,14 +150,14 @@ public:
+     pretty_index = strTab.str2index(node.getPrettyName());
+   }
+ 
+-  bool operator == (const FLPIndex rhs)
++  bool operator == (const FLPIndex rhs) const
+   {
+     return file_index == rhs.file_index
+       && line_num == rhs.line_num
+       && pretty_index == rhs.pretty_index;
+   }
+ 
+-  bool operator != (const FLPIndex rhs)
++  bool operator != (const FLPIndex rhs) const
+   {
+     return ! (*this == rhs);
+   }
+@@ -167,7 +167,7 @@ public:
+ // Compare (file, line, proc) indices lexigraphically.
+ class FLPCompare {
+ public:
+-  bool operator() (const FLPIndex t1, const FLPIndex t2)
++  bool operator() (const FLPIndex t1, const FLPIndex t2) const
+   {
+     if (t1.file_index < t2.file_index) { return true; }
+     if (t1.file_index > t2.file_index) { return false; }
+diff --git a/src/lib/prof/Metric-AExpr.cpp b/src/lib/prof/Metric-AExpr.cpp
+index 2ce43e6d39..5b32ff67d1 100644
+--- a/src/lib/prof/Metric-AExpr.cpp
++++ b/src/lib/prof/Metric-AExpr.cpp
+@@ -483,7 +483,7 @@ CoefVar::eval(const Metric::IData& mdata) const
+   double sdev = sqrt(v_m.first); // always non-negative
+   double mean = v_m.second;
+   double z = 0.0;
+-  if (mean > epsilon) {
++  if (mean > hpc_epsilon) {
+     z = sdev / mean;
+   }
+ 
+@@ -522,7 +522,7 @@ RStdDev::eval(const Metric::IData& mdata) const
+   double sdev = sqrt(v_m.first); // always non-negative
+   double mean = v_m.second;
+   double z = 0.0;
+-  if (mean > epsilon) {
++  if (mean > hpc_epsilon) {
+     z = (sdev / mean) * 100;
+   }
+ 
+diff --git a/src/lib/prof/Metric-AExpr.hpp b/src/lib/prof/Metric-AExpr.hpp
+index 56359cc9df..d75189f763 100644
+--- a/src/lib/prof/Metric-AExpr.hpp
++++ b/src/lib/prof/Metric-AExpr.hpp
+@@ -97,7 +97,7 @@
+ 
+ //****************************************************************************
+ 
+-#define epsilon  (0.000001)
++#define hpc_epsilon  (0.000001)
+ 
+ namespace Prof {
+ 
+diff --git a/src/lib/prof/Metric-AExprIncr.hpp b/src/lib/prof/Metric-AExprIncr.hpp
+index f1b38d7f74..d0c0feb7e6 100644
+--- a/src/lib/prof/Metric-AExprIncr.hpp
++++ b/src/lib/prof/Metric-AExprIncr.hpp
+@@ -97,7 +97,7 @@
+ 
+ //****************************************************************************
+ 
+-#define epsilon  (0.000001)
++#define hpc_epsilon  (0.000001)
+ 
+ namespace Prof {
+ 
+@@ -841,7 +841,7 @@ public:
+     double sdev = finalizeStdDev(mdata);
+     double mean = accumVar(1, mdata);
+     double z = 0.0;
+-    if (mean > epsilon) {
++    if (mean > hpc_epsilon) {
+       z = sdev / mean;
+     }
+     accumVar(0, mdata) = z;
+@@ -927,7 +927,7 @@ public:
+     double sdev = finalizeStdDev(mdata);
+     double mean = accumVar(1, mdata);
+     double z = 0.0;
+-    if (mean > epsilon) {
++    if (mean > hpc_epsilon) {
+       z = (sdev / mean) * 100;
+     }
+     accumVar(0, mdata) = z;
+diff --git a/src/lib/support/StringTable.hpp b/src/lib/support/StringTable.hpp
+index 9930bc5649..36ce5b7fa9 100644
+--- a/src/lib/support/StringTable.hpp
++++ b/src/lib/support/StringTable.hpp
+@@ -75,7 +75,7 @@ namespace HPC {
+ // compare the strings, not the pointers
+ class StringCompare {
+ public:
+-  bool operator() (const std::string *s1, const std::string *s2)
++  bool operator() (const std::string *s1, const std::string *s2) const
+   {
+     return *s1 < *s2;
+   }
+-- 
+GitLab
+

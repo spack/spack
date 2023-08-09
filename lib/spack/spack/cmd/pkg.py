@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import argparse
 import itertools
 import os
@@ -60,7 +58,7 @@ def setup_parser(subparser):
         "--type",
         action="store",
         default="C",
-        help="Types of changes to show (A: added, R: removed, " "C: changed); default is 'C'",
+        help="types of changes to show (A: added, R: removed, C: changed); default is 'C'",
     )
 
     rm_parser = sp.add_parser("removed", help=pkg_removed.__doc__)
@@ -83,7 +81,7 @@ def setup_parser(subparser):
         "--canonical",
         action="store_true",
         default=False,
-        help="dump canonical source as used by package hash.",
+        help="dump canonical source as used by package hash",
     )
     arguments.add_common_arguments(source_parser, ["spec"])
 

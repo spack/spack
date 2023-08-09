@@ -32,11 +32,26 @@ properties = {
                             {
                                 "type": "array",
                                 "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "one_of": {"type": "array"},
-                                        "any_of": {"type": "array"},
-                                    },
+                                    "oneOf": [
+                                        {
+                                            "type": "object",
+                                            "additionalProperties": False,
+                                            "properties": {
+                                                "one_of": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                },
+                                                "any_of": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                },
+                                                "spec": {"type": "string"},
+                                                "message": {"type": "string"},
+                                                "when": {"type": "string"},
+                                            },
+                                        },
+                                        {"type": "string"},
+                                    ]
                                 },
                             },
                             # Shorthand for a single requirement group with
@@ -47,7 +62,8 @@ properties = {
                     "version": {
                         "type": "array",
                         "default": [],
-                        # version strings
+                        # version strings (type should be string, number is still possible
+                        # but deprecated. this is to avoid issues with e.g. 3.10 -> 3.1)
                         "items": {"anyOf": [{"type": "string"}, {"type": "number"}]},
                     },
                     "target": {
@@ -125,3 +141,16 @@ schema = {
     "additionalProperties": False,
     "properties": properties,
 }
+
+
+def update(data):
+    changed = False
+    for key in data:
+        version = data[key].get("version")
+        if not version or all(isinstance(v, str) for v in version):
+            continue
+
+        data[key]["version"] = [str(v) for v in version]
+        changed = True
+
+    return changed

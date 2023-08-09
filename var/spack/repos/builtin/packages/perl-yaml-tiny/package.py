@@ -12,4 +12,5 @@ class PerlYamlTiny(PerlPackage):
     homepage = "https://metacpan.org/pod/YAML::Tiny"
     url = "https://cpan.metacpan.org/authors/id/E/ET/ETHER/YAML-Tiny-1.73.tar.gz"
 
+    version("1.74", sha256="7b38ca9f5d3ce24230a6b8bdc1f47f5b2db348e7f7f9666c26f5955636e33d6c")
     version("1.73", sha256="bc315fa12e8f1e3ee5e2f430d90b708a5dc7e47c867dba8dce3a6b8fbe257744")

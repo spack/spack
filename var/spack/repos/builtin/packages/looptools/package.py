@@ -16,6 +16,7 @@ class Looptools(AutotoolsPackage):
     homepage = "http://www.feynarts.de/looptools/"
     url = "http://www.feynarts.de/looptools/LoopTools-2.15.tar.gz"
 
+    version("2.16", sha256="412731a5950f10e2ea3877ceec8655ae18ca856610364e4b6616a8a25d592f2c")
     version("2.15", sha256="a065ffdc4fe6882aa3bb926134ba8ec875d6c0a633c3d4aa5f70db26542713f2")
     version("2.8", sha256="2395518d0eac9b0883a2c249b9a5ba80df443929c520c45e60f5a4284166eb42")
 
