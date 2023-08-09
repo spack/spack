@@ -212,7 +212,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     # SYCL and OpenMPTarget require C++17 or higher
     for cxxstdver in cxxstds[: cxxstds.index("17")]:
-        conflicts("+sycl", when="cxxstd={0}".format(cxxstdver), msg="SYCL requires C++17 or higher")
+        conflicts(
+            "+sycl", when="cxxstd={0}".format(cxxstdver), msg="SYCL requires C++17 or higher"
+        )
         conflicts(
             "+openmptarget",
             when="cxxstd={0}".format(cxxstdver),
