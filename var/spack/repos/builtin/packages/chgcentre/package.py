@@ -18,3 +18,9 @@ class Chgcentre(CMakePackage):
 
     depends_on("casacore")
     depends_on("gsl")
+
+    # this patch is required to fix a programming error that is not acceptable by
+    # latest compilers. In particular, the `std::min` function was given `int` and
+    # `unsigned int` arguments. The `int` argument is explicitly casted to `unsigned int`.
+    # This patch was created by the staff at the Pawsey Supercomputing Research Centre.
+    patch("main.patch")
