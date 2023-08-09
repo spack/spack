@@ -25,7 +25,7 @@ class FileCache:
 
     """
 
-    def __init__(self, root, timeout=120):
+    def __init__(self, root, timeout = 120, lock_enable = True):
         """Create a file cache object.
 
         This will create the cache directory if it does not exist yet.
@@ -43,6 +43,7 @@ class FileCache:
 
         self._locks = {}
         self.lock_timeout = timeout
+        self.lock_enable = lock_enable
 
     def destroy(self):
         """Remove all files under the cache root."""
@@ -67,7 +68,7 @@ class FileCache:
     def _get_lock(self, key):
         """Create a lock for a key, if necessary, and return a lock object."""
         if key not in self._locks:
-            self._locks[key] = Lock(self._lock_path(key), default_timeout=self.lock_timeout)
+            self._locks[key] = Lock(self._lock_path(key), default_timeout=self.lock_timeout, enable=self.lock_enable)
         return self._locks[key]
 
     def init_entry(self, key):
