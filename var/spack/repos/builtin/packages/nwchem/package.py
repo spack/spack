@@ -59,7 +59,7 @@ class Nwchem(Package):
         scalapack = spec["scalapack"].libs
         lapack = spec["lapack"].libs
         blas = spec["blas"].libs
-        fftw = spec["fftw-api"].libs
+        fftw = spec["fftw-api:double,float"].libs
         # see https://nwchemgit.github.io/Compiling-NWChem.html
         args = []
         args.extend(
