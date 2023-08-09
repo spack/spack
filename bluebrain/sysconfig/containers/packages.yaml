@@ -4,4 +4,4 @@ packages:
     require: "+snappy"
   # Pulls in LLVM and increases container size by 5 Gb
   py-numpy-quaternion:
-    variants: ~numba
+    variants: ~numba~scipy
