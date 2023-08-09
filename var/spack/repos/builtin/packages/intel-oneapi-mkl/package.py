@@ -192,7 +192,13 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if self.spec.satisfies("+cluster"):
             if any(
                 self.spec.satisfies(m)
-                for m in ["^intel-oneapi-mpi", "^intel-mpi", "^mpich", "^cray-mpich", "mpi_family=mpich"]
+                for m in [
+                    "^intel-oneapi-mpi",
+                    "^intel-mpi",
+                    "^mpich",
+                    "^cray-mpich",
+                    "mpi_family=mpich",
+                ]
             ):
                 libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
             elif any(self.spec.satisfies(m) for m in ["^openmpi", "mpi_family=openmpi"]):
