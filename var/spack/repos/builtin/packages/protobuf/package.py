@@ -104,6 +104,13 @@ class Protobuf(CMakePackage):
         sha256="fa1abf042eddc1b3b43875dc018c651c90cd1c0c5299975a818a1610bee54ab8",
     )
 
+    # fix build on Centos 8, see also https://github.com/protocolbuffers/protobuf/issues/5144
+    patch(
+        "https://github.com/protocolbuffers/protobuf/pull/11032/commits/3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch?full_index=1",
+        when="@:3.21",
+        sha256="cefc4bf4aadf9ca33a336b2aa6d0d82006b6563e85122ae8cfb70345f85321dd",
+    )
+
     patch("msvc-abseil-target-namespace.patch", when="@3.22 %msvc")
 
     def fetch_remote_versions(self, *args, **kwargs):
