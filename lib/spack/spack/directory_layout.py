@@ -10,7 +10,7 @@ import posixpath
 import re
 import shutil
 import sys
-import pathlib
+from pathlib import Path
 from contextlib import contextmanager
 
 import llnl.util.filesystem as fs
@@ -105,7 +105,7 @@ class DirectoryLayout:
 
         projection = spack.projections.get_projection(self.projections, spec)
         path = spec.format(projection)
-        return path
+        return str(Path(path))
 
     def write_spec(self, spec, path):
         """Write a spec out to a file."""
@@ -335,7 +335,7 @@ class DirectoryLayout:
 
         path = self.relative_path_for_spec(spec)
         assert not path.startswith(self.root)
-        return str(pathlib.Path(self.root) / pathlib.Path(path))
+        return os.path.join(self.root, path)
 
     def remove_install_directory(self, spec, deprecated=False):
         """Removes a prefix and any empty parent directories from the root.
