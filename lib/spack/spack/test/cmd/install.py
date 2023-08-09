@@ -549,7 +549,7 @@ def test_cdash_report_concretization_error(
 
 @pytest.mark.skipif(
     sys.platform == "win32",
-    reason="log_ouput cannot currently be used outside of subprocess on Windows",
+    reason="log_output cannot currently be used outside of subprocess on Windows",
 )
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery, capfd):

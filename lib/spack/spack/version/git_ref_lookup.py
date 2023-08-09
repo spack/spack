@@ -5,6 +5,7 @@
 
 import os
 import re
+import sys
 import urllib
 from pathlib import Path
 from typing import Dict, Optional, Tuple
@@ -17,6 +18,7 @@ import spack.paths
 import spack.repo
 import spack.util.executable
 import spack.util.spack_json as sjson
+import spack.util.hash
 import spack.version
 
 from .common import VersionLookupError
@@ -95,7 +97,10 @@ class GitRefLookup(AbstractRefLookup):
         (scheme, netloc, path, params, query, fragment) = urllib.parse.urlparse(self.pkg.git)
         path = path.lstrip("/")
         if scheme == "file":
-            return Path("file") / Path(path).name
+            unique_dir = Path(path)
+            if sys.platform == "win32":
+                unique_dir = spack.util.hash.b32_hash(Path(path).as_posix())[-7:]
+            return Path("file") / unique_dir
 
         (hostname, port) = netloc.split(":")
         return Path(scheme, hostname, port, path)
