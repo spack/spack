@@ -68,7 +68,7 @@ class Essl(BundlePackage):
 
     @property
     def lapack_libs(self):
-        essl_libs = find_libraries( ["liblapackforessl", "liblapackforessl_"],
-                                    root=self.prefix.lib64,
-                                    shared=True)
+        essl_libs = find_libraries( 
+            ["liblapackforessl", "liblapackforessl_"], root=self.prefix.lib64, shared=True
+        )
         return essl_libs
