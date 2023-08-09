@@ -18,3 +18,7 @@ class Libfyaml(AutotoolsPackage):
     version("0.5.7", sha256="3221f31bb3feba97e544a82d0d5e4711ff0e4101cca63923dc5a1a001c187590")
 
     depends_on("m4", type="build")
+
+    @property
+    def libs(self):
+        return find_libraries(["libfyaml"], root=self.prefix, recursive=True)
