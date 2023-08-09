@@ -33,7 +33,7 @@ Action = setup
     setupEnv()
 {% for package in spec._dependencies.keys() %}
    {% if spec[package].prefix != "/usr" %}
-    setupRequired({{package|replace("-","_")}} {%for c in (spec|string|replace('\n',' ')).split('^')%}{%if c.split('@=')[0] == package%}{{c.split('@=')[1].split('%')[0]}}{%endif%}{%endfor%} -f ${UPS_PROD_FLAVOR} -q "${UPS_PROD_QUALIFIERS}")
+    setupOptional({{package|replace("-","_")}} {%for c in (spec|string|replace('\n',' ')).split('^')%}{%if c.split('@=')[0] == package%}{{c.split('@=')[1].split('%')[0]}}{%endif%}{%endfor%} -f ${UPS_PROD_FLAVOR} -q "${UPS_PROD_QUALIFIERS}")
    {% endif %}
 {% endfor %}
 
