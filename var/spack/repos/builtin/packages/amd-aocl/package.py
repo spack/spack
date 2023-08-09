@@ -24,6 +24,7 @@ class AmdAocl(BundlePackage):
 
     maintainers("amd-toolchain-support")
 
+    version("4.1")
     version("4.0")
     version("3.2")
     version("3.1")
@@ -32,7 +33,7 @@ class AmdAocl(BundlePackage):
 
     variant("openmp", default=False, description="Enable OpenMP support.")
 
-    for vers in ["2.2", "3.0", "3.1", "3.2", "4.0"]:
+    for vers in ["2.2", "3.0", "3.1", "3.2", "4.0", "4.1"]:
         depends_on("amdblis@{0} threads=openmp".format(vers), when="@{0} +openmp".format(vers))
         depends_on("amdblis@{0} threads=none".format(vers), when="@{0} ~openmp".format(vers))
         depends_on("amdfftw@{0} +openmp".format(vers), when="@{0} +openmp".format(vers))
