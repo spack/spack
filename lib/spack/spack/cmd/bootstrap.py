@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 import shutil
+import sys
 import tempfile
 
 import llnl.util.filesystem
@@ -326,6 +327,7 @@ def _status(args):
     if missing:
         print(llnl.util.tty.color.colorize(legend))
         print()
+        sys.exit(1)
 
 
 def _add(args):

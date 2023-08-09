@@ -39,7 +39,9 @@ WORKDIR /root
 SHELL ["docker-shell"]
 
 # Creates the package cache
-RUN spack bootstrap now && spack spec hdf5+mpi
+RUN spack bootstrap now \
+    && spack bootstrap status --optional \
+    && spack spec hdf5+mpi
 
 ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]
 CMD ["interactive-shell"]
