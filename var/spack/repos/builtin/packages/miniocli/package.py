@@ -11,8 +11,8 @@ class Miniocli(MakefilePackage):
     Amazon S3 compatible cloud storage service (AWS Signature v2 and v4)."""
 
     homepage = "https://docs.min.io/docs/minio-client-complete-guide.html"
-    url      = "https://github.com/minio/mc/archive/refs/tags/RELEASE.2022-02-02T02-03-24Z.tar.gz"
-  
+    url = "https://github.com/minio/mc/archive/refs/tags/RELEASE.2022-02-02T02-03-24Z.tar.gz"
+
     version(
         "2023-06-28",
         sha256="033a80439474595665bdbc3ec72b059dc9e69e99db85fe6820877ad8973a080b",
@@ -27,8 +27,9 @@ class Miniocli(MakefilePackage):
         "2022-03-31",
         sha256="3b983ea1cc50768b0826989dba931044ac3f8e841cc09aefed217301c92fa8a3",
         url="https://github.com/minio/mc/archive/RELEASE.2022-03-31T04-55-30Z.tar.gz",
-    ) 
-    # versions of 2022-03-* or later require  github.com/shirou/gopsutil/v3 and this is generating an error
+    )
+    # versions of 2022-03-* or later require  github.com/shirou/gopsutil/v3 and
+    # this is generating an error
     version(
         "2022-02-02",
         sha256="2d4a64c17935d40d0e325761cc214b2efceb19ce006101c192da9b31f8920a97",
