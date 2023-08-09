@@ -43,7 +43,7 @@ def test_dir(tmpdir):
     return _func
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="autotools not available on Windows")
+@pytest.mark.skipif(sys.platform == "win32", reason="make not available on Windows")
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
 class TestTargets:
     @pytest.mark.parametrize(
