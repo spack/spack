@@ -49,9 +49,10 @@ class Ior(AutotoolsPackage):
     # See https://github.com/hpc/ior/issues/353
     patch(
         "https://github.com/glennklockwood/ior/commit/e49476be64d4100c2da662ea415f327348b3d11d.patch?full_index=1",
-        sha256="ee3527023ef70ea9aee2e6208f8be7126d5a48f26c587deed3d6238b4f848a06", 
-        when="+lustre")
-    
+        sha256="ee3527023ef70ea9aee2e6208f8be7126d5a48f26c587deed3d6238b4f848a06",
+        when="+lustre",
+    )
+
     @run_before("autoreconf")
     def bootstrap(self):
         Executable("./bootstrap")()
@@ -72,10 +73,10 @@ class Ior(AutotoolsPackage):
             config_args.append("--with-ncmpi")
         else:
             config_args.append("--without-ncmpi")
-        
-        if '+lustre' in spec:
-            config_args.append('--with-lustre')
+
+        if "+lustre" in spec:
+            config_args.append("--with-lustre")
         else:
-            config_args.append('--without-lustre')
+            config_args.append("--without-lustre")
 
         return config_args
