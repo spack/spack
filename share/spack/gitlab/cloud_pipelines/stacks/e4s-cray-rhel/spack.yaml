@@ -42,7 +42,6 @@ spack:
 
   specs:
   - adios2
-  - amrex
   - butterflypack
   - conduit
   - flux-core
@@ -61,6 +60,8 @@ spack:
   - slepc
   - superlu-dist
   - tau
+
+  # - amrex # disabled temporarily pending resolution of unreproducible CI failure
 
   mirrors: { "mirror": "s3://spack-binaries-cray/develop/e4s-cray-rhel" }
 

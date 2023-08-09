@@ -224,7 +224,7 @@ spack:
 
   # GPU
   - aml +ze
-  - amrex +sycl
+  - amrex +sycl dimensions=3
   - arborx +sycl ^kokkos +sycl +openmp std=17 +tests +examples
   - cabana +sycl ^kokkos +sycl +openmp std=17 +tests +examples
   - kokkos +sycl +openmp std=17 +tests +examples
