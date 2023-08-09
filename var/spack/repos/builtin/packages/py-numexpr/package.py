@@ -12,6 +12,7 @@ class PyNumexpr(PythonPackage):
     homepage = "https://github.com/pydata/numexpr"
     url = "https://github.com/pydata/numexpr/archive/v2.7.0.tar.gz"
 
+    version("2.8.4", sha256="0e21addd25db5f62d60d97e4380339d9c1fb2de72c88b070c279776ee6455d10")
     version("2.8.3", sha256="389ceefca74eff30ec3fd03fc4c3b7ab3df8f22d1f235117a392ce702ed208c0")
     version("2.7.3", sha256="00d6b1518605afe0ed10417e0ff07123e5d531c02496c6eed7dd4b9923238e1e")
     version("2.7.2", sha256="7d1b3790103221feda07f4a93a4fa5c6654f46865197a677ca6f27eb5cb4e5ef")
@@ -23,10 +24,11 @@ class PyNumexpr(PythonPackage):
     version("2.4.6", sha256="2681faf55a3f19ba4424cc3d6f0a10610ebd49f029f8453f0ba64dd5c0fe4e0f")
 
     depends_on("python@3.7:", when="@2.8.3:", type=("build", "run"))
-    depends_on("python@2.7:", when="@2.7.3", type=("build", "run"))
-    depends_on("python@2.6:", when="@:2.7.2", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+
+    depends_on("py-numpy@1.13.3:", type=("build", "run"), when="@2.8.3:")
     # https://github.com/pydata/numexpr/issues/397
     depends_on("py-numpy@1.7:1.22", type=("build", "run"), when="@:2.7")
-    depends_on("py-numpy@1.13.3:", type=("build", "run"), when="@2.8.3:")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-packaging", type=("build", "run"), when="@2.8.3:")
+
+    # Historical dependencies
+    depends_on("py-packaging", type=("build", "run"), when="@2.8.3")

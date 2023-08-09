@@ -45,12 +45,9 @@ class Freetype(AutotoolsPackage, CMakePackage):
     )
 
     variant("shared", default=True, description="Build shared libraries")
-    variant(
-        "pic",
-        default=False,
-        description="Enable position-independent code (PIC)",
-        when="build_system=cmake",
-    )
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
+
+    requires("+pic", when="+shared build_system=autotools")
 
     patch("windows.patch", when="@2.9.1")
 
@@ -59,6 +56,7 @@ class Freetype(AutotoolsPackage, CMakePackage):
         headers = find_headers("*", self.prefix.include, recursive=True)
         headers.directories = [self.prefix.include.freetype2]
         return headers
+
 
 class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
@@ -72,11 +70,13 @@ class AutotoolsBuilder(AutotoolsBuilder):
         if self.spec.satisfies("@2.9.1:"):
             args.append("--enable-freetype-config")
         args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
         return args
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+pic"):
             env.set("CFLAGS", "-fPIC")
+
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):

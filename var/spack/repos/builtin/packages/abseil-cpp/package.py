@@ -16,6 +16,9 @@ class AbseilCpp(CMakePackage):
     tags = ["windows"]
 
     version(
+        "20230125.2", sha256="9a2b5752d7bfade0bdeee2701de17c9480620f8b237e1964c1b9967c75374906"
+    )
+    version(
         "20220623.0", sha256="4208129b49006089ba1d6710845a45e31c59b0ab6bff9e5788a87f55c5abd602"
     )
     version(
@@ -55,16 +58,18 @@ class AbseilCpp(CMakePackage):
 
     variant(
         "cxxstd",
-        values=("11", "14", "17", "20"),
-        default="11",
+        values=(conditional("11", when="@:2022"), "14", "17", "20"),
+        default="14",
         description="C++ standard used during compilation",
     )
 
+    depends_on("cmake@3.10:", when="@2023:", type="build")
+    depends_on("cmake@3.5:", when="@2019:", type="build")
+    depends_on("cmake@3.1:", type="build")
+
     def cmake_args(self):
-        shared = "ON" if "+shared" in self.spec else "OFF"
-        cxxstd = self.spec.variants["cxxstd"].value
         return [
-            self.define("BUILD_TESTING", "OFF"),
-            self.define("BUILD_SHARED_LIBS:Bool", shared),
-            self.define("CMAKE_CXX_STANDARD", cxxstd),
+            self.define("BUILD_TESTING", False),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
         ]

@@ -17,6 +17,7 @@ class RSparsematrixstats(RPackage):
 
     bioc = "sparseMatrixStats"
 
+    version("1.12.0", commit="054bf939cd7220deaf8e768ff7029d0d38483c91")
     version("1.10.0", commit="75d85ba2c9c4c36887fef1a007883167aa85bd94")
     version("1.8.0", commit="4f1e2213e5b0d6b3d817c2c9129b7566288916f6")
     version("1.6.0", commit="78627a842790af42b6634893087b2bb1f4ac0392")

@@ -11,6 +11,7 @@ spack:
           - openmpi
           - mpich
       variants: +mpi cuda_arch=70
+      require: target=x86_64_v3
 
   definitions:
   - radiuss:

@@ -35,13 +35,18 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version("master", branch="master")
 
+    version("13.1.0", sha256="61d684f0aa5e76ac6585ad8898a2427aade8979ed5e7f85492286c4dfc13ee86")
+
+    version("12.3.0", sha256="949a5d4f99e786421a93b532b22ffab5578de7321369975b91aec97adfda8c3b")
     version("12.2.0", sha256="e549cf9cf3594a00e27b6589d4322d70e0720cdd213f39beb4181e06926230ff")
     version("12.1.0", sha256="62fd634889f31c02b64af2c468f064b47ad1ca78411c45abe6ac4b5f8dd19c7b")
 
+    version("11.4.0", sha256="3f2db222b007e8a4a23cd5ba56726ef08e8b1f1eb2055ee72c1402cea73a8dd9")
     version("11.3.0", sha256="b47cf2818691f5b1e21df2bb38c795fac2cfbd640ede2d0a5e1c89e338a3ac39")
     version("11.2.0", sha256="d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b")
     version("11.1.0", sha256="4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf")
 
+    version("10.5.0", sha256="25109543fdf46f397c347b5d8b7a2c7e5694a5a51cce4b9c6e1ea8a71ca307c1")
     version("10.4.0", sha256="c9297d5bcd7cb43f3dfc2fed5389e948c9312fd962ef6a4ce455cff963ebe4f1")
     version("10.3.0", sha256="64f404c1a650f27fc33da242e1f2df54952e3963a49e06e73f6940f3223ac344")
     version("10.2.0", sha256="b8dd4368bb9c7f0b98188317ee0254dd8cc99d1e3a18d0ff146c855fe16c1d8c")
@@ -157,6 +162,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("automake@1.15.1:", when="@master", type="build")
     depends_on("autoconf@2.69:", when="@master", type="build")
 
+    depends_on("gmake@3.80:", type="build")
+    depends_on("perl@5", type="build")
+
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
     depends_on("mpfr@2.4.2:3.1.6", when="@:9.9")
@@ -268,9 +276,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # See https://gcc.gnu.org/install/prerequisites.html#GDC-prerequisite
         with when("@12:"):
             # All versions starting 12 have to be built GCC:
-            for c in spack.compilers.supported_compilers():
-                if c != "gcc":
-                    conflicts("%{0}".format(c))
+            requires("%gcc")
 
             # And it has to be GCC older than the version we build:
             vv = ["11", "12.1.0", "12.2.0"]
@@ -353,7 +359,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     conflicts("%gcc@:4.7", when="@11:")
 
     # https://github.com/iains/gcc-12-branch/issues/6
-    conflicts("%apple-clang@14:14.0")
+    conflicts("@:12", when="%apple-clang@14:14.0")
 
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
@@ -468,7 +474,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch(
         "https://github.com/gcc-mirror/gcc/commit/423cd47cfc9640ba3d6811b780e8a0b94b704dcb.patch?full_index=1",
         sha256="0d136226eb07bc43f1b15284f48bd252e3748a0426b5d7ac9084ebc406e15490",
-        when="@9.5.0:11.2",
+        when="@9.5.0:10.4.0,11.1.0:11.2.0",
     )
 
     build_directory = "spack-build"
@@ -623,7 +629,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "7.1.0"
         ):
             self.gnu_mirror_path = self.gnu_mirror_path.replace("xz", "bz2")
-        return super(Gcc, self).url_for_version(version)
+        return super().url_for_version(version)
 
     def patch(self):
         spec = self.spec
@@ -968,12 +974,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
             # Add easily-overridable rpath string at the end
             out.write("*link_libgcc_rpath:\n")
-            if "platform=darwin" in self.spec:
-                # macOS linker requires separate rpath commands
-                out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
-            else:
-                # linux linker uses colon-separated rpath
-                out.write("-rpath " + ":".join(rpath_libdirs))
+            out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
             out.write("\n")
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))

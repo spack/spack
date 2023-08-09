@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Gnupg(AutotoolsPackage):
@@ -14,6 +15,8 @@ class Gnupg(AutotoolsPackage):
 
     maintainers("alalazo")
 
+    version("2.4.2", sha256="97eb47df8ae5a3ff744f868005a090da5ab45cb48ee9836dbf5ee739a4e5cf49")
+    version("2.4.1", sha256="76b71e5aeb443bfd910ce9cbc8281b617c8341687afb67bae455877972b59de8")
     version("2.4.0", sha256="1d79158dd01d992431dd2e3facb89fdac97127f89784ea2cb610c600fb0c1483")
     version("2.3.8", sha256="540b7a40e57da261fb10ef521a282e0021532a80fd023e75fb71757e8a4969ed")
     version("2.3.7", sha256="ee163a5fb9ec99ffc1b18e65faef8d086800c5713d15a672ab57d3799da83669")
@@ -142,7 +145,6 @@ class Gnupg(AutotoolsPackage):
             "--disable-regex",
             "--with-zlib=" + self.spec["zlib"].prefix,
             "--without-tar",
-            "--without-libiconv-prefix",
             "--without-readline",
         ]
 
@@ -158,9 +160,12 @@ class Gnupg(AutotoolsPackage):
                     "--with-libassuan-prefix=" + self.spec["libassuan"].prefix,
                     "--with-ksba-prefix=" + self.spec["libksba"].prefix,
                     "--with-npth-prefix=" + self.spec["npth"].prefix,
-                    "--with-libiconv-prefix=" + self.spec["iconv"].prefix,
                 ]
             )
+            if self.spec["iconv"].name == "libc":
+                args.append("--without-libiconv-prefix")
+            elif not is_system_path(self.spec["iconv"].prefix):
+                args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         if self.spec.satisfies("@:1"):
             args.extend(

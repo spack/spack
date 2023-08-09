@@ -125,7 +125,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("petsc@3.13:3.14", when="@:1.2.99")
     depends_on("petsc@3.16.0:3.16", when="@1.3.0:1.4")
-    depends_on("petsc@3.18.0:3.18", when="@1.5.0:")
+    depends_on("petsc@3.18.0:3.19", when="@1.5.0:")
 
     depends_on("petsc~mpi", when="~mpi")
 
@@ -179,6 +179,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("EXAGO_ENABLE_IPOPT", "ipopt"),
                 self.define_from_variant("EXAGO_ENABLE_PYTHON", "python"),
                 self.define_from_variant("EXAGO_ENABLE_LOGGING", "logging"),
+                self.define("LAPACK_LIBRARIES", spec["lapack"].libs + spec["blas"].libs),
             ]
         )
 

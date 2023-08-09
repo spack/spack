@@ -21,3 +21,4 @@ class PyGssapi(PythonPackage):
     depends_on("py-setuptools@40.6.0:", type="build")
 
     depends_on("py-decorator", type=("build", "run"))
+    depends_on("krb5", type=("build", "link"))

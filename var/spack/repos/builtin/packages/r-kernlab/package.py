@@ -16,6 +16,7 @@ class RKernlab(RPackage):
 
     cran = "kernlab"
 
+    version("0.9-32", sha256="654ef34e343deb4d2c4c139a44e5397d6e38876088ce1c53c7deb087935d6fdc")
     version("0.9-31", sha256="7359c665c1c5e6780e1ce44b143347c8eec839301c3079d7f19e29159873278a")
     version("0.9-30", sha256="48fc3a839ae57e8ab6ec26a34093ca3306391e7b271bef6e69812e2b4859ee81")
     version("0.9-29", sha256="c3da693a0041dd34f869e7b63a8d8cf7d4bc588ac601bcdddcf7d44f68b3106f")

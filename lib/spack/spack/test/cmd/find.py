@@ -357,3 +357,18 @@ def test_find_loaded(database, working_env):
     output = find("--loaded")
     expected = find()
     assert output == expected
+
+
+@pytest.mark.regression("37712")
+def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
+    """Tests that having an active environment with a root spec containing a compiler constrained
+    by a version range (i.e. @X.Y rather the single version than @=X.Y) doesn't result in an error
+    when invoking "spack find".
+    """
+    test_environment = ev.create_in_dir(tmp_path)
+    test_environment.add("zlib %gcc@12.1.0")
+    test_environment.write()
+
+    with test_environment:
+        output = find()
+    assert "zlib%gcc@12.1.0" in output

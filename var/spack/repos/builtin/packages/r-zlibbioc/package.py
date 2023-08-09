@@ -16,6 +16,7 @@ class RZlibbioc(RPackage):
 
     bioc = "zlibbioc"
 
+    version("1.46.0", commit="f475457ece2c2b5fc9e6a91a3084dcba2345ab0a")
     version("1.44.0", commit="d39f0b02fa108ab907b4042c00a114569430a333")
     version("1.42.0", commit="aa074d72515df745ad65133ca21d3cad778ccc0e")
     version("1.40.0", commit="3f116b39d104c1ea8288f6b8f0ef94bb95f41f69")

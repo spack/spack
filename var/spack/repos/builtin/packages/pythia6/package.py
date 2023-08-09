@@ -2,12 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import numbers
 import os
-
-from six import iteritems
-from six.moves.urllib.parse import urlparse
+import urllib.parse
 
 from spack.package import *
 
@@ -97,7 +94,7 @@ class Pythia6(CMakePackage):
         "ttbar.lhe": "db772b69ab4e0300d973b57414523ac8e7fa8535eac49ee52a6b69b1c131983d",
     }
 
-    for example, checksum in iteritems(examples):
+    for example, checksum in examples.items():
         resource(
             name=example,
             url="http://pythiasix.hepforge.org/examples/{0}".format(example),
@@ -114,8 +111,8 @@ class Pythia6(CMakePackage):
         "https://pythiasix.hepforge.org/pythia6-announcement.txt": "2a52def41f0c93e32e0db58dbcf072b987ebfbd32e42ccfc1f9382fcf65f1271",
     }
 
-    for docurl, checksum in iteritems(docs):
-        doc = os.path.basename(urlparse(docurl).path)
+    for docurl, checksum in docs.items():
+        doc = os.path.basename(urllib.parse.urlparse(docurl).path)
         resource(
             name=doc,
             url=docurl,

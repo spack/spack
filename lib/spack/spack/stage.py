@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import errno
 import getpass
 import glob
@@ -35,6 +33,7 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.mirror
 import spack.paths
+import spack.spec
 import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
@@ -47,6 +46,13 @@ _source_path_subdir = "spack-src"
 
 # The temporary stage name prefix.
 stage_prefix = "spack-stage-"
+
+
+def compute_stage_name(spec):
+    """Determine stage name given a spec"""
+    default_stage_structure = "spack-stage-{name}-{version}-{hash}"
+    stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
+    return spec.format(format_string=stage_name_structure)
 
 
 def create_stage_root(path: str) -> None:
@@ -150,7 +156,10 @@ def _resolve_paths(candidates):
 
         # Ensure the path is unique per user.
         can_path = sup.canonicalize_path(path)
-        if user not in can_path:
+        # When multiple users share a stage root, we can avoid conflicts between
+        # them by adding a per-user subdirectory.
+        # Avoid doing this on Windows to keep stage absolute path as short as possible.
+        if user not in can_path and not sys.platform == "win32":
             can_path = os.path.join(can_path, user)
 
         paths.append(can_path)
@@ -190,7 +199,7 @@ def _mirror_roots():
     ]
 
 
-class Stage(object):
+class Stage:
     """Manages a temporary stage directory for building.
 
     A Stage object is a context manager that handles a directory where
@@ -665,16 +674,16 @@ class Stage(object):
 
 class ResourceStage(Stage):
     def __init__(self, url_or_fetch_strategy, root, resource, **kwargs):
-        super(ResourceStage, self).__init__(url_or_fetch_strategy, **kwargs)
+        super().__init__(url_or_fetch_strategy, **kwargs)
         self.root_stage = root
         self.resource = resource
 
     def restage(self):
-        super(ResourceStage, self).restage()
+        super().restage()
         self._add_to_root_stage()
 
     def expand_archive(self):
-        super(ResourceStage, self).expand_archive()
+        super().expand_archive()
         self._add_to_root_stage()
 
     def _add_to_root_stage(self):
@@ -735,7 +744,7 @@ class StageComposite(pattern.Composite):
     #
 
     def __init__(self):
-        super(StageComposite, self).__init__(
+        super().__init__(
             [
                 "fetch",
                 "create",
@@ -781,7 +790,7 @@ class StageComposite(pattern.Composite):
         return self[0].archive_file
 
 
-class DIYStage(object):
+class DIYStage:
     """
     Simple class that allows any directory to be a spack stage.  Consequently,
     it does not expect or require that the source path adhere to the standard

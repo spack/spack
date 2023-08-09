@@ -14,7 +14,7 @@ class Serenity(CMakePackage):
     git = "https://github.com/qcserenity/serenity.git"
 
     version("master", branch="master")
-    version("1.4.0", "c7a87fc8e6f8ca21685a27e08d09d49824d9a1e9947fc6abb40d20fbba0cc6e8")
+    version("1.4.0", sha256="c7a87fc8e6f8ca21685a27e08d09d49824d9a1e9947fc6abb40d20fbba0cc6e8")
 
     variant("blas", default=True, description="Use BLAS library with Eigen")
     variant("lapack", default=True, description="Use Lapack library with Eigen")

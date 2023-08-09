@@ -16,6 +16,7 @@ class Kraken(Package):
     homepage = "https://ccb.jhu.edu/software/kraken/"
     url = "https://github.com/DerrickWood/kraken/archive/v1.0.tar.gz"
 
+    version("1.1.1", sha256="73e48f40418f92b8cf036ca1da727ca3941da9b78d4c285b81ba3267326ac4ee")
     version("1.0", sha256="bade6d83233c26226d02bd427fe0a4d6cd6dc5c0300927e30d41e885a478c378")
 
     depends_on("perl", type=("build", "run"))

@@ -16,9 +16,12 @@ class PyH5py(PythonPackage):
     maintainers("bryanherman", "takluyver")
 
     version("master", branch="master")
+    # DH* 20230710 - IS THIS STILL TRUE? if not, simply activate the line and remove
+    # the commend below, and it's like in main spack
     # Version 3.8.0 seems to be broken or configured incorrectly, it's only building
     # and installing the cpython extension, but none of the actual Python modules.
-    #version("3.8.0", sha256="6fead82f0c4000cf38d53f9c030780d81bfa0220218aee13b90b7701c937d95f")
+    # version("3.8.0", sha256="6fead82f0c4000cf38d53f9c030780d81bfa0220218aee13b90b7701c937d95f")
+    # *DH 20230710
     version("3.7.0", sha256="3fcf37884383c5da64846ab510190720027dca0768def34dd8dcb659dbe5cbf3")
     version("3.6.0", sha256="8752d2814a92aba4e2b2a5922d2782d0029102d99caaf3c201a566bc0b40db29")
     version("3.5.0", sha256="77c7be4001ac7d3ed80477de5b6942501d782de1bbe4886597bdfec2a7ab821f")
@@ -45,20 +48,21 @@ class PyH5py(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"), when="@3.2:")
 
     # Build dependencies
-    depends_on("py-cython@0.23:", type="build", when="@:2")
-    depends_on("py-cython@0.29:", type=("build"), when="@3: ^python@:3.7")
-    depends_on("py-cython@0.29.14:", type=("build"), when="@3: ^python@3.8.0:3.8")
-    depends_on("py-cython@0.29.15:", type=("build"), when="@3: ^python@3.9.0:")
+    depends_on("py-cython@0.23:0", type="build", when="@:2")
+    depends_on("py-cython@0.29:0", type=("build"), when="@3:")
+    depends_on("py-cython@0.29.14:0", type=("build"), when="@3:3.7 ^python@3.8.0:3.8")
+    depends_on("py-cython@0.29.15:0", type=("build"), when="@3:3.7 ^python@3.9.0:")
     depends_on("py-pkgconfig", type="build")
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@61:", type="build", when="@3.8.0:")
     depends_on("py-wheel", type="build", when="@3:")
 
     # Build and runtime dependencies
-    depends_on("py-cached-property@1.5:", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-cached-property@1.5:", type=("build", "run"), when="@:3.6 ^python@:3.7")
     depends_on("py-numpy@1.7:", type=("build", "run"), when="@:2")
-    depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@3: ^python@3.7.0:3.7")
-    depends_on("py-numpy@1.17.5:", type=("build", "run"), when="@3: ^python@3.8.0:3.8")
-    depends_on("py-numpy@1.19.3:", type=("build", "run"), when="@3: ^python@3.9.0:")
+    depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@3:")
+    depends_on("py-numpy@1.17.5:", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")
+    depends_on("py-numpy@1.19.3:", type=("build", "run"), when="@3:3.5 ^python@3.9.0:")
     depends_on("py-six", type=("build", "run"), when="@:2")
 
     # Link dependencies (py-h5py v2 cannot build against HDF5 1.12 regardless
@@ -72,9 +76,7 @@ class PyH5py(PythonPackage):
     depends_on("hdf5+mpi", when="+mpi")
     depends_on("mpi", when="+mpi")
     depends_on("py-mpi4py", when="@:2 +mpi", type=("build", "run"))
-    depends_on("py-mpi4py@3:", when="@3:3.2+mpi^python@3:3.7", type=("build", "run"))
-    depends_on("py-mpi4py@3.0.2:", when="@3.3.0:+mpi^python@3:3.7", type=("build", "run"))
-    depends_on("py-mpi4py@3.0.3:", when="@3:+mpi^python@3.8.0:", type=("build", "run"))
+    depends_on("py-mpi4py@3.0.2:", when="@3: +mpi", type=("build", "run"))
 
     # Patch version 3.7.0 so that it works with hdf5@1.14.0 (3.8.0 doesn't build correctly)
     # https://github.com/h5py/h5py/pull/2194/commits

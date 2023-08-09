@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
 from spack.package import *
@@ -14,6 +15,8 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/emacs"
     git = "git://git.savannah.gnu.org/emacs.git"
     gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
+
+    maintainers("alecbcs")
 
     version("master", branch="master")
     version("28.2", sha256="a6912b14ef4abb1edab7f88191bfd61c3edd7085e084de960a4f86485cb7cad8")
@@ -35,7 +38,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         values=("gtk", "athena"),
         description="Select an X toolkit (gtk, athena)",
     )
-    variant("tls", default=False, description="Build Emacs with gnutls")
+    variant("tls", default=True, description="Build Emacs with gnutls")
     variant("native", default=False, when="@28:", description="enable native compilation of elisp")
     variant("treesitter", default=False, when="@29:", description="Build with tree-sitter support")
     variant("json", default=False, when="@27:", description="Build with json support")
@@ -95,18 +98,32 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
 
         return args
 
-    def _test_check_versions(self):
-        """Perform version checks on installed package binaries."""
-        checks = ["ctags", "ebrowse", "emacs", "emacsclient", "etags"]
+    def run_version_check(self, bin):
+        """Runs and checks output of the installed binary."""
+        exe_path = join_path(self.prefix.bin, bin)
+        if not os.path.exists(exe_path):
+            raise SkipTest(f"{exe_path} is not installed")
 
-        for exe in checks:
-            expected = str(self.spec.version)
-            reason = "test version of {0} is {1}".format(exe, expected)
-            self.run_test(
-                exe, ["--version"], expected, installed=True, purpose=reason, skip_missing=True
-            )
+        exe = which(exe_path)
+        out = exe("--version", output=str.split, error=str.split)
+        assert str(self.spec.version) in out
 
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        # Simple version check tests on known binaries
-        self._test_check_versions()
+    def test_ctags(self):
+        """check ctags version"""
+        self.run_version_check("ctags")
+
+    def test_ebrowse(self):
+        """check ebrowse version"""
+        self.run_version_check("ebrowse")
+
+    def test_emacs(self):
+        """check emacs version"""
+        self.run_version_check("emacs")
+
+    def test_emacsclient(self):
+        """check emacsclient version"""
+        self.run_version_check("emacsclient")
+
+    def test_etags(self):
+        """check etags version"""
+        self.run_version_check("etags")

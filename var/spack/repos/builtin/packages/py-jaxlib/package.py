@@ -51,6 +51,16 @@ class PyJaxlib(PythonPackage, CudaPackage):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
         self.buildtmp = tempfile.mkdtemp(prefix="spack")
         filter_file(
+            "build --spawn_strategy=standalone",
+            f"""
+# Limit CPU workers to spack jobs instead of using all HOST_CPUS.
+build --spawn_strategy=standalone
+build --local_cpu_resources={make_jobs}
+""".strip(),
+            ".bazelrc",
+            string=True,
+        )
+        filter_file(
             'f"--output_path={output_path}",',
             'f"--output_path={output_path}",'
             f' "--sources_path={self.tmp_path}",'

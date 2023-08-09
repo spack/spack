@@ -13,7 +13,7 @@ from spack.fetch_strategy import CvsFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
-from spack.version import ver
+from spack.version import Version
 
 pytestmark = pytest.mark.skipif(not which("cvs"), reason="requires CVS to be installed")
 
@@ -39,7 +39,7 @@ def test_fetch(type_of_test, mock_cvs_repository, config, mutable_mock_repo):
 
     # Construct the package under test
     spec = Spec("cvs-test").concretized()
-    spec.package.versions[ver("cvs")] = test.args
+    spec.package.versions[Version("cvs")] = test.args
 
     # Enter the stage directory and check some properties
     with spec.package.stage:

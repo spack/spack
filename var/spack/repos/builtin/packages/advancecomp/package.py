@@ -13,6 +13,7 @@ class Advancecomp(AutotoolsPackage):
     homepage = "https://www.advancemame.it"
     url = "https://github.com/amadvance/advancecomp/archive/v2.1.tar.gz"
 
+    version("2.5", sha256="b6b4333453f028565896dd3547bc930f062df82832d7992cc130ca951c2890a1")
     version("2.1", sha256="6113c2b6272334af710ba486e8312faa3cee5bd6dc8ca422d00437725e2b602a")
     version("2.0", sha256="caa63332cd141db17988eb89c662cf76bdde72f60d4de7cb0fe8c7e51eb40eb7")
     version("1.23", sha256="fe89d6ab382efc6b6be536b8d58113f36b83d82783d5215c261c14374cba800a")

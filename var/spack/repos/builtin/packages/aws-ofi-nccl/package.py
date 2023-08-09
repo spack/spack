@@ -17,7 +17,7 @@ class AwsOfiNccl(AutotoolsPackage):
 
     maintainers("bvanessen")
 
-    version("master", branch="master", default=True)
+    version("master", branch="master")
 
     variant("trace", default=False, description="Enable printing trace messages")
     variant("tests", default=False, description="Build tests")

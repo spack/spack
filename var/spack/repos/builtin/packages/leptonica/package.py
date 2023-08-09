@@ -13,6 +13,7 @@ class Leptonica(CMakePackage):
     homepage = "http://www.leptonica.org/"
     url = "https://github.com/DanBloomberg/leptonica/archive/1.80.0.tar.gz"
 
+    version("1.83.1", sha256="4289d0a4224b614010072253531c0455a33a4d7c7a0017fe7825ed382290c0da")
     version("1.81.0", sha256="70ebc04ff8b9684205bd1d01843c635a8521255b74813bf7cce9a33368f7952c")
     version("1.80.0", sha256="3952b974ec057d24267aae48c54bca68ead8275604bf084a73a4b953ff79196e")
     version("1.79.0", sha256="bf9716f91a4844c2682a07ef21eaf68b6f1077af1f63f27c438394fd66218e17")

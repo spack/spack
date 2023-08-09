@@ -107,7 +107,7 @@ def dev_build(self, args):
             "  Use `spack create` to create a new package",
         )
 
-    if not spec.versions.concrete:
+    if not spec.versions.concrete_range_as_version:
         tty.die(
             "spack dev-build spec must have a single, concrete version. "
             "Did you forget a package version number?"

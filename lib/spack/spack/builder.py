@@ -63,7 +63,7 @@ def create(pkg):
     return _BUILDERS[id(pkg)]
 
 
-class _PhaseAdapter(object):
+class _PhaseAdapter:
     def __init__(self, builder, phase_fn):
         self.builder = builder
         self.phase_fn = phase_fn
@@ -115,7 +115,7 @@ def _create(pkg):
     # package. The semantic should be the same as the method in the base builder were still
     # present in the base class of the package.
 
-    class _ForwardToBaseBuilder(object):
+    class _ForwardToBaseBuilder:
         def __init__(self, wrapped_pkg_object, root_builder):
             self.wrapped_package_object = wrapped_pkg_object
             self.root_builder = root_builder
@@ -130,9 +130,11 @@ def _create(pkg):
                 bases,
                 {
                     "run_tests": property(lambda x: x.wrapped_package_object.run_tests),
-                    "test_log_file": property(lambda x: x.wrapped_package_object.test_log_file),
-                    "test_failures": property(lambda x: x.wrapped_package_object.test_failures),
+                    "test_requires_compiler": property(
+                        lambda x: x.wrapped_package_object.test_requires_compiler
+                    ),
                     "test_suite": property(lambda x: x.wrapped_package_object.test_suite),
+                    "tester": property(lambda x: x.wrapped_package_object.tester),
                 },
             )
             new_cls.__module__ = package_cls.__module__
@@ -186,7 +188,7 @@ def _create(pkg):
             # Attribute containing the package wrapped in dispatcher with a `__getattr__`
             # method that will forward certain calls to the default builder.
             self.pkg_with_dispatcher = _ForwardToBaseBuilder(pkg, root_builder=self)
-            super(Adapter, self).__init__(pkg)
+            super().__init__(pkg)
 
         # These two methods don't follow the (self, spec, prefix) signature of phases nor
         # the (self) signature of methods, so they are added explicitly to avoid using a
@@ -244,7 +246,8 @@ class PhaseCallbacksMeta(type):
                 callbacks_from_base = getattr(base, temporary_stage.attribute_name, None)
                 if callbacks_from_base:
                     break
-            callbacks_from_base = callbacks_from_base or []
+            else:
+                callbacks_from_base = []
 
             # Set the callbacks in this class and flush the temporary stage
             attr_dict[temporary_stage.attribute_name] = staged_callbacks[:] + callbacks_from_base
@@ -385,7 +388,7 @@ class _PackageAdapterMeta(BuilderMeta):
         return super(_PackageAdapterMeta, mcs).__new__(mcs, name, bases, attr_dict)
 
 
-class InstallationPhase(object):
+class InstallationPhase:
     """Manages a single phase of the installation.
 
     This descriptor stores at creation time the name of the method it should
@@ -527,9 +530,9 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
                 modifications to be applied when the package is built. Package authors
                 can call methods on it to alter the build environment.
         """
-        if not hasattr(super(Builder, self), "setup_build_environment"):
+        if not hasattr(super(), "setup_build_environment"):
             return
-        super(Builder, self).setup_build_environment(env)
+        super().setup_build_environment(env)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Sets up the build environment of packages that depend on this one.
@@ -560,9 +563,9 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        if not hasattr(super(Builder, self), "setup_dependent_build_environment"):
+        if not hasattr(super(), "setup_dependent_build_environment"):
             return
-        super(Builder, self).setup_dependent_build_environment(env, dependent_spec)
+        super().setup_dependent_build_environment(env, dependent_spec)
 
     def __getitem__(self, idx):
         key = self.phases[idx]

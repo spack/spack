@@ -16,6 +16,10 @@ class PyPicmistandard(PythonPackage):
     maintainers("ax3l", "dpgrote", "RemiLehe")
 
     version("develop", branch="master")
+    version("0.25.0", sha256="0a78b3b17054d0861626287ace1fb9321469a9c95795b92981103b27d7797f67")
+    version("0.24.0", sha256="55a82adcc14b41eb612caf0d9e47b0e2a56ffc196a58b41fa0cc395c6924be9a")
+    version("0.23.2", sha256="e6b4c46b23520d0a97b904df90d53ff6a3209b2b6b2fa741f684c594429a591c")
+    version("0.23.1", sha256="90ad1d3d2759d910cfdb88484516b7d0434ec98e881af46961b7e2faa534434d")
     version("0.0.22", sha256="e234a431274254b22cd70be64d6555b383d98426b2763ea0c174cf77bf4d0890")
     version("0.0.21", sha256="930056a23ed92dac7930198f115b6248606b57403bffebce3d84579657c8d10b")
     version("0.0.20", sha256="9c1822eaa2e4dd543b5afcfa97940516267dda3890695a6cf9c29565a41e2905")

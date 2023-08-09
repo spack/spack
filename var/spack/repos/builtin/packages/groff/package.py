@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Groff(AutotoolsPackage, GNUMirrorPackage):
@@ -77,7 +78,10 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
         args.extend(self.with_or_without("x"))
         if "@1.22.4:" in self.spec:
             args.extend(self.with_or_without("uchardet"))
-        args.append("--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix))
+        if self.spec["iconv"].name == "libc":
+            args.append("--without-libiconv-prefix")
+        elif not is_system_path(self.spec["iconv"].prefix):
+            args.append("--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix))
         return args
 
     def setup_run_environment(self, env):

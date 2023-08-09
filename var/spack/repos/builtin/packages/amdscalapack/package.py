@@ -25,7 +25,7 @@ class Amdscalapack(ScalapackBase):
     """
 
     _name = "amdscalapack"
-    homepage = "https://developer.amd.com/amd-aocl/scalapack/"
+    homepage = "https://www.amd.com/en/developer/aocl/scalapack.html"
     git = "https://github.com/amd/scalapack.git"
 
     maintainers("amd-toolchain-support")
@@ -49,7 +49,7 @@ class Amdscalapack(ScalapackBase):
 
     def cmake_args(self):
         """cmake_args function"""
-        args = super(Amdscalapack, self).cmake_args()
+        args = super().cmake_args()
         spec = self.spec
 
         if spec.satisfies("%gcc@10:"):

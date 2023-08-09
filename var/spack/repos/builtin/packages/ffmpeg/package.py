@@ -75,7 +75,7 @@ class Ffmpeg(AutotoolsPackage):
     variant("libx264", default=False, description="H.264 encoding")
 
     depends_on("alsa-lib", when="platform=linux")
-    depends_on("libiconv")
+    depends_on("iconv")
     depends_on("yasm@1.2.0:")
     depends_on("zlib")
 
@@ -103,6 +103,13 @@ class Ffmpeg(AutotoolsPackage):
     depends_on("x264", when="+libx264")
 
     conflicts("%nvhpc")
+
+    # Patch solving a build failure when vulkan is enabled
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/eb0455d64690",
+        sha256="967d25a67297c53dde7151f7bc5eb37ae674525ee468880f973b9ebc3e12ed2c",
+        when="@5.1.2",
+    )
 
     @property
     def libs(self):

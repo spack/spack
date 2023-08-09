@@ -64,8 +64,11 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     def build(self, spec, prefix):
         make("SHLIB_LIBS=" + spec["ncurses:wide"].libs.ld_flags)
 
-    def patch(self):
-        # Remove flags not recognized by the NVIDIA compiler
-        if self.spec.satisfies("%nvhpc"):
-            filter_file("${GCC+-Wno-parentheses}", "", "configure", string=True)
-            filter_file("${GCC+-Wno-format-security}", "", "configure", string=True)
+    def flag_handler(self, name, flags):
+        # nvhpc is detected as a gnu compiler, which causes the build system
+        # to add unrecognized -W flags. Defining CFLAGS overrides those defaults.
+        if name == "cflags" and self.spec.satisfies("%nvhpc"):
+            flags.append("-O2")
+            flags.append("-g")
+            return (None, flags, None)
+        return (flags, None, None)

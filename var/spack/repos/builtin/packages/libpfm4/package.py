@@ -15,6 +15,7 @@ class Libpfm4(MakefilePackage):
     url = "https://downloads.sourceforge.net/project/perfmon2/libpfm4/libpfm-4.12.0.tar.gz"
     maintainers("mwkrentel")
 
+    version("4.13.0", sha256="d18b97764c755528c1051d376e33545d0eb60c6ebf85680436813fa5b04cc3d1")
     version("4.12.0", sha256="4b0c1f53f39a61525b69bebf532c68040c1b984d7544a8ae0844b13cd91e1ee4")
     version("4.11.0", sha256="5da5f8872bde14b3634c9688d980f68bda28b510268723cc12973eedbab9fecc")
     version("4.10.1", sha256="c61c575378b5c17ccfc5806761e4038828610de76e2e34fac9f7fa73ba844b49")

@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import argparse
 import os
 import re
@@ -12,9 +10,6 @@ import shlex
 import sys
 from textwrap import dedent
 from typing import List, Match, Tuple
-
-import ruamel.yaml as yaml
-from ruamel.yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
@@ -33,6 +28,7 @@ import spack.store
 import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 import spack.util.string
 
 # cmd has a submodule called "list" so preserve the python list module
@@ -151,7 +147,7 @@ def get_command(cmd_name):
     return getattr(get_module(cmd_name), pname)
 
 
-class _UnquotedFlags(object):
+class _UnquotedFlags:
     """Use a heuristic in `.extract()` to detect whether the user is trying to set
     multiple flags like the docker ENV attribute allows (e.g. 'cflags=-Os -pipe').
 
@@ -233,7 +229,7 @@ def parse_specs(args, **kwargs):
             msg += "\n\n"
             msg += unquoted_flags.report()
 
-        raise spack.error.SpackError(msg)
+        raise spack.error.SpackError(msg) from e
 
 
 def matching_spec_from_env(spec):
@@ -349,7 +345,7 @@ def iter_groups(specs, indent, all_headers):
             spack.spec.architecture_color,
             architecture if architecture else "no arch",
             spack.spec.compiler_color,
-            compiler if compiler else "no compiler",
+            f"{compiler.display_str}" if compiler else "no compiler",
         )
 
         # Sometimes we want to display specs that are not yet concretized.
@@ -537,9 +533,9 @@ def is_git_repo(path):
         # we might be in a git worktree
         try:
             with open(dotgit_path, "rb") as f:
-                dotgit_content = yaml.load(f)
+                dotgit_content = syaml.load(f)
             return os.path.isdir(dotgit_content.get("gitdir", dotgit_path))
-        except MarkedYAMLError:
+        except syaml.SpackYAMLError:
             pass
     return False
 
@@ -549,7 +545,7 @@ class PythonNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super(PythonNameError, self).__init__("{0} is not a permissible Python name.".format(name))
+        super().__init__("{0} is not a permissible Python name.".format(name))
 
 
 class CommandNameError(spack.error.SpackError):
@@ -557,9 +553,7 @@ class CommandNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super(CommandNameError, self).__init__(
-            "{0} is not a permissible Spack command name.".format(name)
-        )
+        super().__init__("{0} is not a permissible Spack command name.".format(name))
 
 
 ########################################

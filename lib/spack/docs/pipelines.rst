@@ -632,18 +632,18 @@ Here's an example of what bootstrapping some compilers might look like:
        exclude:
          - '%gcc@7.3.0 os=centos7'
          - '%gcc@5.5.0 os=ubuntu18.04'
-     gitlab-ci:
+     ci:
        bootstrap:
          - name: compiler-pkgs
            compiler-agnostic: true
-       mappings:
-         # mappings similar to the example higher up in this description
+       pipeline-gen:
+         # similar to the example higher up in this description
          ...
 
 The example above adds a list to the ``definitions`` called ``compiler-pkgs``
 (you can add any number of these), which lists compiler packages that should
 be staged ahead of the full matrix of release specs (in this example, only
-readline).  Then within the ``gitlab-ci`` section, note the addition of a
+readline).  Then within the ``ci`` section, note the addition of a
 ``bootstrap`` section, which can contain a list of items, each referring to
 a list in the ``definitions`` section.  These items can either
 be a dictionary or a string.  If you supply a dictionary, it must have a name
@@ -709,7 +709,7 @@ be reported.
 
 Take a look at the
 `schema <https://github.com/spack/spack/blob/develop/lib/spack/spack/schema/ci.py>`_
-for the gitlab-ci section of the spack environment file, to see precisely what
+for the ci section of the spack environment file, to see precisely what
 syntax is allowed there.
 
 .. _reserved_tags:

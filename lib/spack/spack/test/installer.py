@@ -17,12 +17,15 @@ import llnl.util.tty as tty
 
 import spack.binary_distribution
 import spack.compilers
+import spack.concretize
+import spack.config
 import spack.installer as inst
 import spack.package_prefs as prefs
 import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
+import spack.version
 
 
 def _mock_repo(root, namespace):
@@ -250,6 +253,54 @@ def test_installer_str(install_mockery):
     assert "#tasks=0" in istr
     assert "installed (0)" in istr
     assert "failed (0)" in istr
+
+
+def test_installer_prune_built_build_deps(install_mockery, monkeypatch, tmpdir):
+    r"""
+    Ensure that build dependencies of installed deps are pruned
+    from installer package queues.
+
+               (a)
+              /   \
+             /     \
+           (b)     (c) <--- is installed already so we should
+              \   / | \     prune (f) from this install since
+               \ /  |  \    it is *only* needed to build (b)
+               (d) (e) (f)
+
+    Thus since (c) is already installed our build_pq dag should
+    only include four packages. [(a), (b), (c), (d), (e)]
+    """
+
+    @property
+    def _mock_installed(self):
+        return self.name in ["c"]
+
+    # Mock the installed property to say that (b) is installed
+    monkeypatch.setattr(spack.spec.Spec, "installed", _mock_installed)
+
+    # Create mock repository with packages (a), (b), (c), (d), and (e)
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
+
+    builder.add_package("a", dependencies=[("b", "build", None), ("c", "build", None)])
+    builder.add_package("b", dependencies=[("d", "build", None)])
+    builder.add_package(
+        "c", dependencies=[("d", "build", None), ("e", "all", None), ("f", "build", None)]
+    )
+    builder.add_package("d")
+    builder.add_package("e")
+    builder.add_package("f")
+
+    with spack.repo.use_repositories(builder.root):
+        const_arg = installer_args(["a"], {})
+        installer = create_installer(const_arg)
+
+        installer._init_queue()
+
+        # Assert that (c) is not in the build_pq
+        result = set([task.pkg_id[0] for _, task in installer.build_pq])
+        expected = set(["a", "b", "c", "d", "e"])
+        assert result == expected
 
 
 def test_check_before_phase_error(install_mockery):
@@ -480,10 +531,12 @@ def test_bootstrapping_compilers_with_different_names_from_spec(
 ):
     with spack.config.override("config:install_missing_compilers", True):
         with spack.concretize.disable_compiler_existence_check():
-            spec = spack.spec.Spec("trivial-install-test-package%oneapi@22.2.0").concretized()
+            spec = spack.spec.Spec("trivial-install-test-package%oneapi@=22.2.0").concretized()
             spec.package.do_install()
 
-            assert spack.spec.CompilerSpec("oneapi@22.2.0") in spack.compilers.all_compiler_specs()
+            assert (
+                spack.spec.CompilerSpec("oneapi@=22.2.0") in spack.compilers.all_compiler_specs()
+            )
 
 
 def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
@@ -1331,3 +1384,39 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     s.external_path = "/usr"
     create_installer([(s, explicit_args)]).install()
     assert spack.store.db.get_record(pkg).explicit == is_explicit
+
+
+@pytest.mark.parametrize("run_tests", [True, False])
+def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, run_tests):
+    """Confirm printing of install log skipped if not run/no failures."""
+    name = "trivial-install-test-package"
+    s = spack.spec.Spec(name).concretized()
+    pkg = s.package
+
+    pkg.run_tests = run_tests
+    spack.installer.print_install_test_log(pkg)
+    out = capfd.readouterr()[0]
+    assert out == ""
+
+
+def test_print_install_test_log_failures(
+    tmpdir, install_mockery, mock_packages, ensure_debug, capfd
+):
+    """Confirm expected outputs when there are test failures."""
+    name = "trivial-install-test-package"
+    s = spack.spec.Spec(name).concretized()
+    pkg = s.package
+
+    # Missing test log is an error
+    pkg.run_tests = True
+    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    pkg.tester.add_failure(AssertionError("test"), "test-failure")
+    spack.installer.print_install_test_log(pkg)
+    err = capfd.readouterr()[1]
+    assert "no test log file" in err
+
+    # Having test log results in path being output
+    fs.touch(pkg.tester.test_log_file)
+    spack.installer.print_install_test_log(pkg)
+    out = capfd.readouterr()[0]
+    assert "See test results at" in out

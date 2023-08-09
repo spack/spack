@@ -15,6 +15,7 @@ class PyGtdbtk(PythonPackage):
     homepage = "https://github.com/Ecogenomics/GTDBTk"
     pypi = "gtdbtk/gtdbtk-2.1.0.tar.gz"
 
+    version("2.3.0", sha256="4f237a03657be4540ac653c276fe31c002b6923af0411316719a9541d6e97d4b")
     version("2.1.0", sha256="980885141f13502afdf05e720871427e3de4fe27f4f3f97e74af6fed87eb50a7")
 
     depends_on("python@3.6:", type=("build", "run"))
@@ -22,6 +23,7 @@ class PyGtdbtk(PythonPackage):
     depends_on("py-dendropy@4.1.0:", type=("build", "run"))
     depends_on("py-numpy@1.9.0:", type=("build", "run"))
     depends_on("py-tqdm@4.35.0:", type=("build", "run"))
+    depends_on("py-pydantic", type=("build", "run"), when="@2.3.0:")
     depends_on("prodigal@2.6.2:", type=("build", "run"))
     depends_on("hmmer@3.1b2:", type=("build", "run"))
     depends_on("pplacer@1.1:", type=("build", "run"))

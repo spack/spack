@@ -12,6 +12,7 @@ class Genrich(MakefilePackage):
     homepage = "https://github.com/jsh58/Genrich"
     url = "https://github.com/jsh58/Genrich/archive/v0.6.tar.gz"
 
+    version("0.6.1", sha256="2c70239e1caf33519b9e99142470bb4dd2f4c69e71f68cee33d6d6a1032d0e33")
     version("0.6", sha256="4c87aca8b7789f28b0c5c2c0ccea75668f19fa6a4cb38cd3c06d80ffd98d396f")
 
     depends_on("zlib")
