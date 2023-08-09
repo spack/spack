@@ -16,7 +16,7 @@ class Fq(Package):
 
     version("0.10.0", sha256="34007ab71a873e1b066d910e90c5bdac3dcc4299ae6c9891ac6d8233cffeabb8")
 
-    depends_on("rust@1.70.0")
+    depends_on("rust")
 
     def install(self, spec, prefix):
         cargo = which("cargo")
