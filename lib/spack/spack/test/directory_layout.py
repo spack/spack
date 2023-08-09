@@ -30,9 +30,13 @@ def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
     # Ensure default layout matches expected spec format
     layout_default = DirectoryLayout(str(tmpdir))
     path_default = layout_default.relative_path_for_spec(spec)
-    assert path_default == str(Path(spec.format(
-        "{architecture}/" "{compiler.name}-{compiler.version}/" "{name}-{version}-{hash}"
-    )))
+    assert path_default == str(
+        Path(
+            spec.format(
+                "{architecture}/" "{compiler.name}-{compiler.version}/" "{name}-{version}-{hash}"
+            )
+        )
+    )
 
     # Test hash_length parameter works correctly
     layout_10 = DirectoryLayout(str(tmpdir), hash_length=10)

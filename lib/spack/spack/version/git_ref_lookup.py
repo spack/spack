@@ -6,8 +6,8 @@
 import os
 import re
 import urllib
-from typing import Dict, Optional, Tuple
 from pathlib import Path
+from typing import Dict, Optional, Tuple
 
 from llnl.util.filesystem import mkdirp, working_dir
 

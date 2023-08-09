@@ -7,8 +7,8 @@ import numbers
 import re
 import urllib
 from bisect import bisect_left
-from typing import List, Optional, Tuple, Union
 from pathlib import Path
+from typing import List, Optional, Tuple, Union
 
 from spack.util.spack_yaml import syaml_dict
 
