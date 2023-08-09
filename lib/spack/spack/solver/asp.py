@@ -1040,6 +1040,15 @@ class SpackSolverSetup:
                 )
                 self.gen.newline()
 
+    def vendor_rules(self, pkg):
+        """Facts about vendored packages."""
+        for vendored_spec_str, constraints in pkg.vendors.items():
+            vendored_spec = spack.spec.Spec(vendored_spec_str)
+            for constraint in constraints:
+                constraint_id = self.condition(constraint, name=pkg.name)
+                self.gen.fact(fn.pkg_fact(pkg.name, fn.vendors(constraint_id, vendored_spec.name)))
+                self.gen.newline()
+
     def compiler_facts(self):
         """Facts about available compilers."""
 
@@ -1188,6 +1197,9 @@ class SpackSolverSetup:
 
         # conflicts
         self.conflict_rules(pkg)
+
+        # vendoring
+        self.vendor_rules(pkg)
 
         # default compilers for this package
         self.package_compiler_defaults(pkg)
