@@ -62,9 +62,6 @@ class Plasma(CMakePackage):
     conflicts("^netlib-lapack@:3.5")
 
     # clashes with OpenBLAS declarations and has a problem compiling on its own
-    conflicts("^cblas")
-
-    conflicts("^openblas-with-lapack")  # incomplete LAPACK implementation
     conflicts("^veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps

@@ -27,7 +27,7 @@ class AmqpCpp(CMakePackage):
     )
     variant("shared", default=True, description="Build as a shared library (static by default)")
 
-    conflicts("tcp", when="platform=darwin", msg="TCP module requires Linux")
+    conflicts("+tcp", when="platform=darwin", msg="TCP module requires Linux")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("openssl@1.1.1:", when="+tcp", type=("build", "link", "run"))

@@ -99,6 +99,7 @@ class Xyce(CMakePackage):
     # Issue #1712 forces explicitly enumerating blas packages to propagate variants
     with when("+pymi_static_tpls"):
         # BLAS
+        depends_on("blas")
         depends_on("openblas~shared", when="^openblas")
         depends_on("netlib-lapack~shared", when="^netlib-lapack~external-blas")
 

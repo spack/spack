@@ -361,9 +361,7 @@ class Dealii(CMakePackage, CudaPackage):
         )
 
     # Optional dependencies:
-    conflicts(
-        "+adol-c", when="^netcdf", msg="Symbol clash between the ADOL-C library and " "Netcdf."
-    )
+    conflicts("+adol-c", when="+netcdf", msg="Symbol clash between the ADOL-C library and Netcdf.")
     conflicts(
         "+adol-c",
         when="^trilinos+chaco",

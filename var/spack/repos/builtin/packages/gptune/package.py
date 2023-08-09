@@ -64,7 +64,7 @@ class Gptune(CMakePackage):
     conflicts("mpich", when="+mpispawn")
     conflicts("spectrum-mpi", when="+mpispawn")
     conflicts("cray-mpich", when="+mpispawn")
-    conflicts("gcc@:7")
+    conflicts("%gcc@:7")
 
     def cmake_args(self):
         spec = self.spec
