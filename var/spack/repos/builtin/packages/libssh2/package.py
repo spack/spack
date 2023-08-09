@@ -23,7 +23,12 @@ class Libssh2(AutotoolsPackage, CMakePackage):
 
     build_system("autotools", "cmake", default="autotools")
 
-    variant("crypto", default="openssl", values=("openssl", conditional("mbedtls", when="@1.8:")))
+    variant(
+        "crypto",
+        default="openssl",
+        description="The backend to use for cryptography",
+        values=("openssl", conditional("mbedtls", when="@1.8:")),
+    )
     variant("shared", default=True, description="Build shared libraries")
 
     with when("build_system=cmake"):
