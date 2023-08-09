@@ -22,8 +22,10 @@ class Essl(BundlePackage):
         multi=False,
     )
     variant("cuda", default=False, description="CUDA acceleration")
+    variant("lapackforessl", default=False, description="Provides lapackforessl lapack library")
 
     provides("blas")
+    provides("lapack", when="+lapackforessl")
 
     conflicts(
         "+cuda",
@@ -63,3 +65,9 @@ class Essl(BundlePackage):
         essl_libs = find_libraries(essl_lib, root=essl_root, shared=True)
 
         return essl_libs
+
+    @property
+    def lapack_libs(self):
+        return find_libraries( ["liblpackaforessl", "liblpackaforessl_"],
+                                root=self.prefix.lib64,
+                                shared=True)
