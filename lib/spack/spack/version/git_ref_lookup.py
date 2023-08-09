@@ -17,8 +17,8 @@ import spack.fetch_strategy
 import spack.paths
 import spack.repo
 import spack.util.executable
-import spack.util.spack_json as sjson
 import spack.util.hash
+import spack.util.spack_json as sjson
 import spack.version
 
 from .common import VersionLookupError
