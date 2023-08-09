@@ -12,15 +12,12 @@ class PyFairscale(PythonPackage):
     new SOTA scaling techniques."""
 
     homepage = "https://github.com/facebookresearch/fairscale"
+    pypi = "fairscale/fairscale-0.4.13.tar.gz"
 
-    url = "https://github.com/facebookresearch/fairscale/archive/refs/tags/v0.4.13.zip"
+    version("0.4.13", sha256="1b797825c427f5dba92253fd0d8daa574e8bd651a2423497775fab1b30cfb768")
+    version("0.4.4", sha256="7719898743dc58c04a2294c896ee6308c92ccb3af9e10632b2a62f77cb689357")
 
-    version("0.4.13", sha256="a6012a6f23eb0e80dc209dfea992336b4d0d8a191a9080cb746a2b78e5b76cd1")
-    version("0.4.4", sha256="b4f9a9ad82e562a1d19ad9249238d135395bc8f4068d292f639308951efff5a8")
-
-    variant(
-        "dev-tools", default=False, description="support for cuda.list.gpu, mypy, scaler, weight"
-    )
+    variant("extra", default=False, description="support for cuda.list.gpu, scaler, weight")
 
     # from setup.py
     depends_on("python@3.8:", type=("build", "run"))
@@ -31,8 +28,8 @@ class PyFairscale(PythonPackage):
     # from requirements.txt
     depends_on("py-torch@1.8.0:", type=("build", "run"))
     depends_on("py-numpy@1.22.0:", type=("build", "run"))
-    # from requirements-dev.txt
-    with when("+dev-tools"):
+    # added extra to support cuda.list.gpu, scaler, and weight (not in pip install)
+    with when("extra"):
         depends_on("py-pynvml@8.0.4", type=("build", "run"))
         depends_on("py-numpy@1.22.0:", type=("build", "run"))
         depends_on("py-scikit-learn@1.1.3", type=("build", "run"))
