@@ -1256,9 +1256,8 @@ def get_package_context(traceback, context=3):
             func = getattr(obj, tb.tb_frame.f_code.co_name, "")
             if func:
                 typename, *_ = func.__qualname__.partition(".")
-
-            if isinstance(obj, CONTEXT_BASES) and typename not in basenames:
-                break
+                if isinstance(obj, CONTEXT_BASES) and typename not in basenames:
+                    break
     else:
         return None
 
