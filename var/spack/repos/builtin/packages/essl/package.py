@@ -30,7 +30,7 @@ class Essl(BundlePackage):
     conflicts(
         "+cuda",
         when="+ilp64",
-        msg="ESSL+cuda+ilp64 cannot combine CUDA acceleration" " 64 bit integers",
+        msg="ESSL+cuda+ilp64 cannot combine CUDA acceleration 64 bit integers",
     )
 
     conflicts(
@@ -68,6 +68,7 @@ class Essl(BundlePackage):
 
     @property
     def lapack_libs(self):
-        return find_libraries( ["liblpackaforessl", "liblpackaforessl_"],
-                                root=self.prefix.lib64,
-                                shared=True)
+        essl_libs = find_libraries( ["liblapackaforessl", "liblapackaforessl_"],
+                                    root=self.prefix.lib64,
+                                    shared=True)
+        return essl_libs
