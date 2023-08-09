@@ -44,6 +44,7 @@ class Assimp(CMakePackage):
 
     depends_on("pkgconfig", type="build")
     depends_on("zlib-api")
+    depends_on("minizip")
 
     def patch(self):
         filter_file("-Werror", "", "code/CMakeLists.txt")
