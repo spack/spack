@@ -185,7 +185,8 @@ class Julia(MakefilePackage):
     depends_on("suite-sparse +pic")
     depends_on("unwind")
     depends_on("utf8proc")
-    depends_on("zlib +shared +pic +optimize")
+    depends_on("zlib-api")
+    depends_on("zlib +shared +pic +optimize", when="^zlib")
 
     # Patches for julia
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
@@ -252,7 +253,6 @@ class Julia(MakefilePackage):
             "pcre2",
             "suite-sparse",
             "utf8proc",
-            "zlib",
         ]
         if "+openlibm" in self.spec:
             pkgs.append("openlibm")
@@ -261,6 +261,8 @@ class Julia(MakefilePackage):
         for pkg in pkgs:
             for dir in self.spec[pkg].libs.directories:
                 env.prepend_path(linker_var, dir)
+        for dir in self.spec["zlib-api"].libs.directories:
+            env.prepend_path(linker_var, dir)
 
     def edit(self, spec, prefix):
         # TODO: use a search query for blas / lapack?

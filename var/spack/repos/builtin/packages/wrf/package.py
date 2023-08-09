@@ -224,7 +224,7 @@ class Wrf(Package):
     depends_on("netcdf-fortran")
     depends_on("jasper")
     depends_on("libpng")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("perl")
     depends_on("jemalloc", when="%aocc")
     # not sure if +fortran is required, but seems like a good idea

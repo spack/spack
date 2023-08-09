@@ -727,7 +727,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on("cmake@3.5.1:", type="build")
     depends_on("python@2.7:2.8,3.2:", type="build")
     depends_on("java", type="build")
-    depends_on("zlib@1.2.3:")
+    depends_on("zlib-api")
 
     # Optional 3rd party components (dependencies)
     depends_on("clp", when="+clp")
@@ -937,7 +937,7 @@ class Opencv(CMakePackage, CudaPackage):
             args.append(self.define("ENABLE_VSX", True))
 
         # Media I/O
-        zlib = spec["zlib"]
+        zlib = spec["zlib-api"]
         args.extend(
             [
                 self.define("BUILD_ZLIB", False),

@@ -84,7 +84,7 @@ class Protobuf(CMakePackage):
     depends_on("abseil-cpp@20230125.3:", when="@3.22.5:")
     # https://github.com/protocolbuffers/protobuf/issues/11828#issuecomment-1433557509
     depends_on("abseil-cpp@20230125:", when="@3.22:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     conflicts("%gcc@:4.6", when="@3.6.0:")  # Requires c++11
     conflicts("%gcc@:4.6", when="@3.2.0:3.3.0")  # Breaks

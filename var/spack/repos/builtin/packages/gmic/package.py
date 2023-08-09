@@ -30,7 +30,7 @@ class Gmic(MakefilePackage):
     depends_on("libpng")
     depends_on("openexr")
     depends_on("opencv")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd")
     depends_on("libx11")
 

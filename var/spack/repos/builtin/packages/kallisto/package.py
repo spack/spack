@@ -20,7 +20,7 @@ class Kallisto(CMakePackage):
     # HDF5 support is optional beginning with version 0.46.2.
     variant("hdf5", when="@0.46.2:", default=False, description="Build with HDF5 support")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("hdf5", when="@:0.43")
     depends_on("hdf5", when="+hdf5")
 

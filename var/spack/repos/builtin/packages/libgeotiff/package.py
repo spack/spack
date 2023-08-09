@@ -29,7 +29,7 @@ class Libgeotiff(AutotoolsPackage):
     variant("jpeg", default=True, description="Include jpeg support")
     variant("proj", default=True, description="Use PROJ.x library")
 
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("jpeg", when="+jpeg")
     depends_on("libtiff")
     depends_on("proj", when="+proj")
@@ -60,7 +60,7 @@ class Libgeotiff(AutotoolsPackage):
         args = ["--with-libtiff={0}".format(spec["libtiff"].prefix)]
 
         if "+zlib" in spec:
-            args.append("--with-zlib={0}".format(spec["zlib"].prefix))
+            args.append("--with-zlib={0}".format(spec["zlib-api"].prefix))
         else:
             args.append("--with-zlib=no")
 

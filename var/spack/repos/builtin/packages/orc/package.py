@@ -17,7 +17,8 @@ class Orc(CMakePackage):
 
     depends_on("maven")
     depends_on("openssl")
-    depends_on("zlib@1.2.11:")
+    depends_on("zlib-api")
+    depends_on("zlib@1.2.11:", when="^zlib")
     depends_on("pcre")
     depends_on("protobuf@3.5.1:")
     depends_on("zstd@1.4.5:")
@@ -36,7 +37,9 @@ class Orc(CMakePackage):
         args.append("-DBUILD_TOOLS:BOOL=OFF")
         args.append("-DBUILD_CPP_TESTS:BOOL=OFF")
 
-        for x in ("snappy", "zlib", "zstd", "lz4", "protobuf"):
+        for x in ("snappy", "zstd", "lz4", "protobuf"):
             args.append("-D{0}_HOME={1}".format(x.upper(), self.spec[x].prefix))
+
+        args.append(self.define("ZLIB_HOME", self.spec["zlib-api"].prefix))
 
         return args

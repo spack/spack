@@ -18,4 +18,4 @@ class Iqtree2(CMakePackage):
 
     depends_on("boost", type="link")
     depends_on("eigen", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")

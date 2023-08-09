@@ -59,7 +59,7 @@ class Silo(AutotoolsPackage):
     # Xmu dependency is required on Ubuntu 18-20
     depends_on("libxmu", when="+silex")
     depends_on("readline")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     patch("remove-mpiposix.patch", when="@4.8:4.10.2")
 
@@ -187,7 +187,7 @@ class Silo(AutotoolsPackage):
 
         # Do not specify the prefix of zlib if it is in a system directory
         # (see https://github.com/spack/spack/pull/21900).
-        zlib_prefix = self.spec["zlib"].prefix
+        zlib_prefix = self.spec["zlib-api"].prefix
         if is_system_path(zlib_prefix):
             config_args.append("--with-zlib=yes")
         else:

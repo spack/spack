@@ -27,7 +27,7 @@ class Lrzip(Package):
 
     # depends_on('coreutils')
     depends_on("lzo")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2")
 
     def install(self, spec, prefix):

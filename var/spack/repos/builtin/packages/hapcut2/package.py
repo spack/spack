@@ -28,7 +28,7 @@ class Hapcut2(MakefilePackage):
     depends_on("openssl")
     depends_on("xz")
     depends_on("bzip2")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     @when("@v1.3.1:")
     def edit(self, spec, prefix):

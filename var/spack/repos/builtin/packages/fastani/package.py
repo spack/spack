@@ -25,4 +25,4 @@ class Fastani(CMakePackage, AutotoolsPackage):
     depends_on("libtool", type="build", when="build_system=autotools")
     depends_on("m4", type="build", when="build_system=autotools")
     depends_on("gsl", type=("build", "link"))
-    depends_on("zlib", type=("build", "link"))
+    depends_on("zlib-api", type=("build", "link"))

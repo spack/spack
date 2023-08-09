@@ -286,7 +286,7 @@ class Curl(NMakePackage, AutotoolsPackage):
         depends_on("openssl@:1", when="@:7.76")
 
     depends_on("libidn2", when="+libidn2")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("nghttp2", when="+nghttp2")
     depends_on("libssh2", when="+libssh2")
     depends_on("libssh", when="+libssh")
@@ -336,7 +336,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         spec = self.spec
 
         args = [
-            "--with-zlib=" + spec["zlib"].prefix,
+            "--with-zlib=" + spec["zlib-api"].prefix,
             # Prevent unintentional linking against system libraries: we could
             # add variants for these in the future
             "--without-brotli",
@@ -425,7 +425,7 @@ class NMakeBuilder(NMakeBuilder):
         mode = "dll" if "libs=dll" in self.spec else "static"
         args.append("mode=%s" % mode)
         args.append("WITH_ZLIB=%s" % mode)
-        args.append("ZLIB_PATH=%s" % self.spec["zlib"].prefix)
+        args.append("ZLIB_PATH=%s" % self.spec["zlib-api"].prefix)
         if "+libssh" in self.spec:
             args.append("WITH_SSH=%s" % mode)
         if "+libssh2" in self.spec:

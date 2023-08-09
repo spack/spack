@@ -28,7 +28,7 @@ class Nss(MakefilePackage):
 
     depends_on("nspr@4.24:")
     depends_on("sqlite")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     parallel = False
 

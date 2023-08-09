@@ -42,7 +42,7 @@ class Htslib(AutotoolsPackage):
         description="use libdeflate for faster crc and deflate algorithms",
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2", when="@1.4:")
     depends_on("xz", when="@1.4:")
     depends_on("curl", when="@1.3:+libcurl")

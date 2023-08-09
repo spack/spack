@@ -26,7 +26,7 @@ class Fasta(MakefilePackage):
         url="https://github.com/wrpearson/fasta36/archive/refs/tags/v36.3.8h_04-May-2020.tar.gz",
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # The src tree includes a plethora of variant Makefiles and the
     # builder is expected to choose one that's appropriate.  This'll

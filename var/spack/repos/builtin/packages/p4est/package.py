@@ -37,7 +37,7 @@ class P4est(AutotoolsPackage):
 
     # other dependencies
     depends_on("mpi", when="+mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # from sc upstream, correct the default libraries
     patch(

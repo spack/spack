@@ -22,7 +22,7 @@ class StressNg(MakefilePackage):
     depends_on("libbsd")
     depends_on("judy")
     depends_on("libatomic-ops")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("keyutils")
     depends_on("libgcrypt")
     depends_on("libcap")

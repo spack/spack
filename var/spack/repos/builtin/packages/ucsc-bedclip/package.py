@@ -20,7 +20,7 @@ class UcscBedclip(Package):
     depends_on("gmake")
     depends_on("mysql-connector-c")
     depends_on("openssl")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def setup_build_environment(self, env):
         env.set("MYSQLLIBS", "-lmysqlclient")

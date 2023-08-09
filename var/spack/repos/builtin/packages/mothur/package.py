@@ -38,7 +38,7 @@ class Mothur(MakefilePackage):
     depends_on("readline")
     depends_on("vsearch@2.13.5:", type="run")
     depends_on("usearch", type="run")
-    depends_on("zlib", when="+boost")
+    depends_on("zlib-api", when="+boost")
 
     def edit(self, spec, prefix):
         filter_file(r"^.*DMOTHUR_TOOLS.*$", "", "Makefile")

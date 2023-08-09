@@ -22,7 +22,7 @@ class AwsSdkCpp(CMakePackage):
     version("1.9.247", tag="1.9.247", submodules=True)
 
     depends_on("cmake@3.1:", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("curl")
 
     # https://github.com/aws/aws-sdk-cpp/issues/1816

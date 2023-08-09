@@ -23,7 +23,7 @@ class Mosh(AutotoolsPackage):
 
     depends_on("protobuf")
     depends_on("ncurses")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("openssl")
 
     depends_on("pkgconfig", type="build")

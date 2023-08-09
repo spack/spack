@@ -23,7 +23,7 @@ class Form(AutotoolsPackage):
     )
 
     depends_on("gmp", type="link", when="+gmp")
-    depends_on("zlib", type="link", when="+zlib")
+    depends_on("zlib-api", type="link", when="+zlib")
     depends_on("mpi", type="link", when="+parform")
 
     variant("gmp", default=True, description="Use GMP for long integer arithmetic")
@@ -35,7 +35,10 @@ class Form(AutotoolsPackage):
     def configure_args(self):
         args = []
         args += self.with_or_without("gmp", "prefix")
-        args += self.with_or_without("zlib", "prefix")
+        if "+zlib" in self.spec:
+            args.append("--with-zlib=%s" % self.spec["zlib-api"].prefix)
+        else:
+            args.append("--without-zlib")
         args += self.enable_or_disable("scalar")
         args += self.enable_or_disable("threaded")
         args += self.enable_or_disable("parform")

@@ -213,7 +213,7 @@ class Hdf5(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
     depends_on("szip", when="+szip")
-    depends_on("zlib@1.1.2:")
+    depends_on("zlib-api")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     # Skip this on Windows since pkgconfig is autotools

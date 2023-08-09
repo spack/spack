@@ -38,7 +38,7 @@ class Met(AutotoolsPackage):
 
     depends_on("gsl")
     depends_on("bufr")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("netcdf-c")
     depends_on("netcdf-cxx4")
     depends_on("g2c", when="+grib2")

@@ -44,7 +44,7 @@ class Mlirmiopen(CMakePackage):
 
     depends_on("python", type="build")
     depends_on("z3", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("ncurses+termlib", type="link")
     depends_on("bzip2")
     depends_on("sqlite")

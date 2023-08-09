@@ -56,6 +56,8 @@ class Zlib(MakefilePackage, Package):
     patch("w_patch.patch", when="@1.2.11%cce")
     patch("configure-cc.patch", when="@1.2.12")
 
+    provides("zlib-api")
+
     @property
     def libs(self):
         shared = "+shared" in self.spec

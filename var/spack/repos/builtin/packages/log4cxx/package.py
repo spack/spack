@@ -24,7 +24,7 @@ class Log4cxx(CMakePackage):
     depends_on("apr-util")
     depends_on("apr")
     depends_on("boost+thread+system", when="cxxstd=11")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zip")
 
     def cmake_args(self):

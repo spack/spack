@@ -602,8 +602,8 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
         if spec.variants["hdf5"].value != "none":
             if spec.satisfies("@6.1.0:6.4.0") or (spec.satisfies("@6.4.1") and "+qmcpack" in spec):
                 make_inc = join_path(self.pkg.stage.source_path, "make.inc")
-                zlib_libs = spec["zlib"].prefix.lib + " -lz"
-                filter_file(zlib_libs, format(spec["zlib"].libs.ld_flags), make_inc)
+                zlib_libs = spec["zlib-api"].prefix.lib + " -lz"
+                filter_file(zlib_libs, format(spec["zlib-api"].libs.ld_flags), make_inc)
 
         # QE 6.8 and later has parallel builds fixed
         if spec.satisfies("@:6.7"):

@@ -100,7 +100,7 @@ class Libarchive(AutotoolsPackage):
     depends_on("lz4", when="compression=lz4")
     depends_on("lzo", when="compression=lzo2")
     depends_on("xz", when="compression=lzma")
-    depends_on("zlib", when="compression=zlib")
+    depends_on("zlib-api", when="compression=zlib")
     depends_on("zstd", when="compression=zstd")
 
     depends_on("nettle", when="crypto=nettle")

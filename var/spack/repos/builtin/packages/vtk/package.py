@@ -133,7 +133,7 @@ class Vtk(CMakePackage):
     depends_on("netcdf-cxx")
     depends_on("libpng")
     depends_on("libtiff")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("eigen", when="@8.2.0:")
     depends_on("double-conversion", when="@8.2.0:")
     depends_on("sqlite", when="@8.2.0:")

@@ -36,7 +36,7 @@ class Assimp(CMakePackage):
     variant("shared", default=True, description="Enables the build of shared libraries")
 
     depends_on("pkgconfig", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def patch(self):
         filter_file("-Werror", "", "code/CMakeLists.txt")

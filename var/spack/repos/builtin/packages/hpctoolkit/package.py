@@ -134,7 +134,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("xerces-c transcoder=iconv")
     depends_on("xz+pic libs=static", type="link")
     depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
-    depends_on("zlib+shared")
+    depends_on("zlib-api+shared")
 
     depends_on("cuda", when="+cuda")
     depends_on("oneapi-level-zero", when="+level_zero")
@@ -204,7 +204,7 @@ class Hpctoolkit(AutotoolsPackage):
             "--with-libunwind=%s" % spec["libunwind"].prefix,
             "--with-xerces=%s" % spec["xerces-c"].prefix,
             "--with-lzma=%s" % spec["xz"].prefix,
-            "--with-zlib=%s" % spec["zlib"].prefix,
+            "--with-zlib=%s" % spec["zlib-api"].prefix,
         ]
 
         if spec.satisfies("@2022.10:"):

@@ -31,4 +31,4 @@ class RSnpstats(RPackage):
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-biocgenerics", type=("build", "run"))
     depends_on("r-zlibbioc", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")

@@ -22,7 +22,7 @@ class Portcullis(AutotoolsPackage):
     depends_on("boost")
     depends_on("m4", type="build")
 
-    depends_on("zlib", type="build")
+    depends_on("zlib-api", type="build")
     depends_on("samtools", type="build")
 
     depends_on("python@3.4:", type=("build", "run"))

@@ -59,7 +59,7 @@ class Sqlite(AutotoolsPackage):
     variant("rtree", default=True, description="Build with Rtree module")
 
     depends_on("readline")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts("+fts", when="@:3.25")

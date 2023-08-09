@@ -17,7 +17,7 @@ class Bbcp(Package):
     # Stanford's git server does not support "smart https" shallow clones
     version("master", branch="master", get_full_repo=True)
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("openssl")
     depends_on("libnsl")
 

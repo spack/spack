@@ -23,7 +23,7 @@ class Seqan(CMakePackage):
     depends_on("py-nose", type="build")
     depends_on("py-sphinx", type="build")
     depends_on("boost+exception+math+serialization+container", type=("build", "link"))
-    depends_on("zlib", type=("build", "link"))
+    depends_on("zlib-api", type=("build", "link"))
     depends_on("bzip2", type=("build", "link"))
 
     conflicts("%intel@:16.0.4")

@@ -24,7 +24,7 @@ class Maeparser(CMakePackage):
     )
 
     depends_on("boost +iostreams +filesystem +test")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def cmake_args(self):
         args = [self.define_from_variant("MAEPARSER_BUILD_SHARED_LIBS", "shared")]

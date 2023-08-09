@@ -29,7 +29,7 @@ class Pngwriter(CMakePackage):
     version("0.5.6", sha256="0c5f3c1fd6f2470e88951f4b8add64cf5f5a7e7038115dba69604139359b08f1")
 
     depends_on("libpng")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("freetype")
 
     def cmake_args(self):

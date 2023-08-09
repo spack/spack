@@ -30,7 +30,7 @@ class Libxslt(AutotoolsPackage):
     depends_on("libxml2")
     depends_on("libxml2+python", when="+python")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libgcrypt", when="+crypto")
 
     depends_on("python+shared", when="+python")

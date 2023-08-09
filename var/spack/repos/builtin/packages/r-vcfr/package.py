@@ -37,4 +37,4 @@ class RVcfr(RPackage):
     depends_on("r-tibble", type=("build", "run"))
     depends_on("r-vegan", type=("build", "run"))
     depends_on("r-viridislite", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")

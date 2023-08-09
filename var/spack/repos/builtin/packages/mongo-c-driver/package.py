@@ -63,7 +63,7 @@ class MongoCDriver(Package):
 
     depends_on("openssl", when="+ssl")
     depends_on("snappy", when="+snappy")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("zstd", when="+zstd")
 
     def cmake_args(self):

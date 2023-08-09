@@ -18,7 +18,7 @@ class Kmergenie(MakefilePackage):
     depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("r", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def install(self, spec, prefix):
         install_tree(self.stage.source_path, prefix.bin)

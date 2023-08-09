@@ -53,4 +53,4 @@ class RHdf5array(RPackage):
     depends_on("r-iranges", type=("build", "run"))
     depends_on("r-rhdf5lib", type=("build", "run"), when="@1.12.3:")
     depends_on("gmake", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")

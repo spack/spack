@@ -25,7 +25,7 @@ class Nginx(AutotoolsPackage):
     depends_on("openssl")
     depends_on("openssl@:1", when="@:1.21.2")
     depends_on("pcre")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     conflicts("%gcc@8:", when="@:1.14")
 

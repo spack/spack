@@ -66,7 +66,7 @@ class Sz(CMakePackage, AutotoolsPackage):
     # with Fujitsu compiler.
     patch("fix_optimization.patch", when="@2.0.2.0:%fj")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd")
 
     extends("python", when="+python")

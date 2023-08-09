@@ -16,7 +16,7 @@ class Cnpy(CMakePackage):
 
     version("master", branch="master")
 
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
 
     def cmake_args(self):
         args = []

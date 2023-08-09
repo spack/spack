@@ -16,7 +16,7 @@ class Sjpeg(CMakePackage):
 
     depends_on("cmake@2.8.7:", type="build")
     # TODO: these dependencies seem to be optional?
-    # depends_on("zlib")
+    # depends_on("zlib-api")
     # depends_on("libpng")
     # depends_on("jpeg")
     # depends_on("gl")

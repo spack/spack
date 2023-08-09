@@ -29,7 +29,7 @@ class Bowtie2(MakefilePackage):
     depends_on("readline", when="@2.3.1:")
     depends_on("perl", type="run")
     depends_on("python", type="run")
-    depends_on("zlib", when="@2.3.1:")
+    depends_on("zlib-api", when="@2.3.1:")
     depends_on("simde", when="@2.4.0: target=aarch64:", type="link")
     depends_on("simde", when="@2.4.0: target=ppc64le:", type="link")
 

@@ -23,7 +23,7 @@ class GribUtil(CMakePackage):
 
     depends_on("jasper")
     depends_on("libpng")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("w3emc", when="@1.2.4:")
     depends_on("w3nco", when="@:1.2.3")
     depends_on("g2")

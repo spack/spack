@@ -26,7 +26,7 @@ class Citcoms(AutotoolsPackage):
 
     # Required dependencies
     depends_on("mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("automake", when="@master", type="build")
     depends_on("autoconf", when="@master", type="build")
     depends_on("libtool", when="@master", type="build")

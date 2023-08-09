@@ -53,4 +53,4 @@ class RShortread(RPackage):
     depends_on("r-latticeextra", type=("build", "run"))
     depends_on("r-xvector", type=("build", "run"))
     depends_on("r-rhtslib", type=("build", "run"), when="@1.48.0:")
-    depends_on("zlib")
+    depends_on("zlib-api")

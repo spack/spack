@@ -24,7 +24,7 @@ class Lfortran(CMakePackage):
     depends_on("python@3:", type="build", when="@main")
     depends_on("cmake", type="build")
     depends_on("llvm@11:15", type=("build", "run"), when="+llvm")
-    depends_on("zlib", type="build")
+    depends_on("zlib-api")
     depends_on("re2c", type="build", when="@main")
     depends_on("bison@:3.4", type="build", when="@main")
     depends_on("binutils@2.38:", type="build", when="platform=linux")

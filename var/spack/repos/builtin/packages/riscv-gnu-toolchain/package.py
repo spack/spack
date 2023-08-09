@@ -32,7 +32,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
     depends_on("mpc", type="build")
     depends_on("gmp", type="build")
     depends_on("mpfr", type="build")
-    depends_on("zlib", type=("build", "link"))
+    depends_on("zlib-api", type=("build", "link"))
     depends_on("expat", type=("build", "link"))
     depends_on("bzip2", type="build")
     depends_on("gmake@4.3:", type="build")

@@ -23,7 +23,7 @@ class FrontierClient(MakefilePackage):
     depends_on("pacparser")
     depends_on("expat")
     depends_on("openssl")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     patch("frontier-client.patch", level=0)
 
@@ -71,7 +71,7 @@ class FrontierClient(MakefilePackage):
                 "PACPARSER_DIR=" + self.spec["pacparser"].prefix,
                 "EXPAT_DIR=" + self.spec["expat"].prefix,
                 "OPENSSL_DIR=" + self.spec["openssl"].prefix,
-                "ZLIB_DIR=" + self.spec["zlib"].prefix,
+                "ZLIB_DIR=" + self.spec["zlib-api"].prefix,
             )
 
     def install(self, spec, prefix):

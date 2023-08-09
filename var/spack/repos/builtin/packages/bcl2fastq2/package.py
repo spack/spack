@@ -41,7 +41,7 @@ class Bcl2fastq2(Package):
     depends_on("libxml2@2.7.8")
     depends_on("libxslt@1.1.26~crypto")
     depends_on("libgcrypt")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Their cmake macros don't set the flag when they find a library
     # that makes them happy.

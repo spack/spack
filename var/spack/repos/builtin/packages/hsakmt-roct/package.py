@@ -152,7 +152,7 @@ class HsakmtRoct(CMakePackage):
                     self.spec["numactl"].prefix,
                     self.spec["pkgconfig"].prefix,
                     self.spec["llvm-amdgpu"].prefix,
-                    self.spec["zlib"].prefix,
+                    self.spec["zlib-api"].prefix,
                     self.spec["ncurses"].prefix,
                 ]
             )

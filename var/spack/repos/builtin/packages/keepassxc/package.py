@@ -35,7 +35,7 @@ class Keepassxc(CMakePackage):
     # The following libraries are required:
     depends_on("qt+dbus~framework@5.2:")
     depends_on("libgcrypt@1.6:", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("minizip", when="+autotype")
     depends_on("libmicrohttpd", type="link")
     depends_on("libsodium@1.0.12:", type="link")

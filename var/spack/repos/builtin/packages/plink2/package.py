@@ -15,7 +15,8 @@ class Plink2(MakefilePackage):
 
     version("2.00a4.3", tag="v2.00a4.3")
 
-    depends_on("zlib@1.2.12:")
+    depends_on("zlib-api")
+    depends_on("zlib@1.2.12:", when="^zlib")
     depends_on("zstd@1.5.2:")
     depends_on("libdeflate@1.10:")
     depends_on("blas")

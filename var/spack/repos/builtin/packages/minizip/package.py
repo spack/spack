@@ -20,7 +20,7 @@ class Minizip(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # error: implicit declaration of function 'mkdir' is invalid in C99
     patch("implicit.patch", when="%apple-clang@12:")

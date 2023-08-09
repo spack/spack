@@ -77,7 +77,7 @@ class Ffmpeg(AutotoolsPackage):
     depends_on("alsa-lib", when="platform=linux")
     depends_on("iconv")
     depends_on("yasm@1.2.0:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("aom", when="+libaom")
     depends_on("bzip2", when="+bzlib")

@@ -18,5 +18,5 @@ class Jose(AutotoolsPackage):
 
     depends_on("pkgconfig", type="build")
     depends_on("jansson@2.10:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("openssl@1.0.2:")

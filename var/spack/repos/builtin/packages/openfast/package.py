@@ -48,7 +48,7 @@ class Openfast(CMakePackage):
     depends_on("mpi", when="+cxx")
     depends_on("yaml-cpp", when="+cxx")
     depends_on("hdf5+mpi+cxx+hl", when="+cxx")
-    depends_on("zlib", when="+cxx")
+    depends_on("zlib-api", when="+cxx")
     depends_on("libxml2", when="+cxx")
     depends_on("netcdf-c", when="+cxx+netcdf")
 

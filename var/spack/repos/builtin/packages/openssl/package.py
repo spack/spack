@@ -363,7 +363,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     with when("platform=windows"):
         variant("dynamic", default=False, description="Link with MSVC's dynamic runtime library")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("perl@5.14.0:", type=("build", "test"))
     depends_on("ca-certificates-mozilla", type="build", when="certs=mozilla")
     depends_on("nasm", when="platform=windows")
@@ -438,8 +438,8 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         else:
             base_args.extend(
                 [
-                    "-I{0}".format(self.spec["zlib"].prefix.include),
-                    "-L{0}".format(self.spec["zlib"].prefix.lib),
+                    "-I{0}".format(self.spec["zlib-api"].prefix.include),
+                    "-L{0}".format(self.spec["zlib-api"].prefix.lib),
                 ]
             )
             base_args.extend(options)

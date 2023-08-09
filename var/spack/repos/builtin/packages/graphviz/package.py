@@ -103,7 +103,7 @@ class Graphviz(AutotoolsPackage):
         depends_on(lang, when=("+" + lang))
 
     # Feature dependencies
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("groff", type="build", when="+doc")
     depends_on("ghostscript", type="build", when="+doc")
     depends_on("expat", when="+expat")
@@ -193,10 +193,14 @@ class Graphviz(AutotoolsPackage):
             "x",
         ]:
             args += self.with_or_without(var)
-        for var in ["zlib", "expat", "java"]:
+        for var in ("expat", "java"):
             if "+" + var in spec:
                 args.append("--with-{0}includedir={1}".format(var, spec[var].prefix.include))
                 args.append("--with-{0}libdir={1}".format(var, spec[var].prefix.lib))
+
+        if "+zlib" in spec:
+            args.append("--with-zlibincludedir={}".format(spec["zlib-api"].prefix.include))
+            args.append("--with-zliblibdir={}".format(spec["zlib-api"].prefix.lib))
 
         args.append("--{0}-gtk".format("with" if "+gtkplus" in spec else "without"))
 

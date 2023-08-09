@@ -68,7 +68,7 @@ class Yoda(AutotoolsPackage):
 
     depends_on("python", type=("build", "link", "run"))
     depends_on("py-future", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("boost", when="@:1.6.0", type=("build", "run"))
 
     # TODO: replace this with an explicit list of components of Boost,

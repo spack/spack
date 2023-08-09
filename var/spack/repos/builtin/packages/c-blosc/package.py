@@ -34,7 +34,7 @@ class CBlosc(CMakePackage):
 
     depends_on("cmake@2.8.10:", type="build")
     depends_on("snappy")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd")
     depends_on("lz4")
 

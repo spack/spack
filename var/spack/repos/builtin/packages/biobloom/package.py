@@ -19,7 +19,7 @@ class Biobloom(AutotoolsPackage):
     depends_on("boost+exception+math+serialization+container")
     depends_on("sdsl-lite")
     depends_on("sparsehash")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def configure_args(self):
         # newer versions of sdsl-lite introduce tolerable warnings

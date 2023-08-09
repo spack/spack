@@ -15,6 +15,6 @@ class BioconductorRsubread(RPackage):
     bioc = "rsubread"
 
     depends_on("r-matrix")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     version("2.14.2", sha256="ac8be0fad0eb2743443e3a60a9a94eec78c746638aaccca70e7166d034dcebb5")

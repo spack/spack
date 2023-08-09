@@ -39,7 +39,7 @@ class PyGrpcio(PythonPackage):
     depends_on("py-six@1.5.2:", when="@:1.48", type=("build", "run"))
     depends_on("py-cython@0.23:", type="build")
     depends_on("openssl")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("c-ares")
     depends_on("re2+shared")
 
@@ -69,7 +69,7 @@ class PyGrpcio(PythonPackage):
         )
         filter_file(
             r"(\s+ZLIB_INCLUDE = ).*",
-            r"\1('{0}',)".format(self.spec["zlib"].prefix.include),
+            r"\1('{0}',)".format(self.spec["zlib-api"].prefix.include),
             "setup.py",
         )
         filter_file(

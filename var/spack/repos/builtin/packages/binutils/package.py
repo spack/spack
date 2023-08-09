@@ -130,7 +130,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # pkg-config is used to find zstd in gas/configure
     depends_on("pkgconfig", type="build")
     depends_on("zstd@1.4.0:", when="@2.40:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("diffutils", type="build")
     depends_on("gettext", when="+nls")

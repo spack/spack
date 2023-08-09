@@ -26,7 +26,7 @@ class PerlAlienSvn(PerlPackage):
     depends_on("apr@1.6.2", type="build")
     depends_on("apr-util", type=("build", "link"))
     depends_on("sqlite", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libbsd")
 
     def setup_build_environment(self, env):

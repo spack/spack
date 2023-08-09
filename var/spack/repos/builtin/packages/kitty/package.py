@@ -33,7 +33,7 @@ class Kitty(Package):
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("harfbuzz@1.5.0:")
     depends_on("libxkbcommon@0.5:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libpng")
     depends_on("gl", type=("build", "link", "run"))
     depends_on("pkgconfig", type="build")

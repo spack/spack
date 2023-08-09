@@ -25,7 +25,7 @@ class Cdhit(MakefilePackage):
 
     depends_on("perl", type=("build", "run"))
     depends_on("perl-text-nsp", type="run")
-    depends_on("zlib", when="+zlib", type="link")
+    depends_on("zlib-api", when="+zlib", type="link")
 
     def patch(self):
         for f in glob("*.pl"):

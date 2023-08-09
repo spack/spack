@@ -334,7 +334,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("mpfr", when="+mpfr")
     depends_on("netcdf-c@4.1.3:", when="+netcdf")
     depends_on("unwind", when="+libunwind")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("gnutls", when="+gnutls")
     depends_on("conduit@0.3.1:,master:", when="+conduit")
     depends_on("conduit+mpi", when="+conduit+mpi")
@@ -852,11 +852,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if "+zlib" in spec:
             if "@:3.3.2" in spec:
-                options += ["ZLIB_DIR=%s" % spec["zlib"].prefix]
+                options += ["ZLIB_DIR=%s" % spec["zlib-api"].prefix]
             else:
                 options += [
-                    "ZLIB_OPT=-I%s" % spec["zlib"].prefix.include,
-                    "ZLIB_LIB=%s" % ld_flags_from_library_list(spec["zlib"].libs),
+                    "ZLIB_OPT=-I%s" % spec["zlib-api"].prefix.include,
+                    "ZLIB_LIB=%s" % ld_flags_from_library_list(spec["zlib-api"].libs),
                 ]
 
         if "+mpfr" in spec:

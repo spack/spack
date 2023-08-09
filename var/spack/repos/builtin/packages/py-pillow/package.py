@@ -54,7 +54,7 @@ class PyPillowBase(PythonPackage):
 
     # Optional dependencies
     # https://pillow.readthedocs.io/en/latest/installation.html#external-libraries
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("jpeg", when="+jpeg")
     depends_on("libtiff", when="+tiff")
     depends_on("freetype", when="+freetype")

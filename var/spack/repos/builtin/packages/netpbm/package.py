@@ -46,7 +46,7 @@ class Netpbm(MakefilePackage):
 
     # These are general pre-requisites indicated at
     # http://netpbm.sourceforge.net/prereq.html
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("jpeg")
     depends_on("libtiff")
     depends_on("libpng")
@@ -147,7 +147,7 @@ class Netpbm(MakefilePackage):
             if not pkg_config("x11", "--exists"):
                 config.append("X11LIB={0}".format(spec["libx11"].libs.ld_flags))
                 config.append("X11HDR_DIR={0}".format(spec["libx11"].headers.directories[0]))
-                config.append("ZLIB={0}".format(spec["zlib"].libs.ld_flags))
+                config.append("ZLIB={0}".format(spec["zlib-api"].libs.ld_flags))
         config.append("NETPBM_DOCURL = http://netpbm.sourceforge.net/doc/")
         if spec.target.family == "x86_64":
             config.append("WANT_SSE = Y")

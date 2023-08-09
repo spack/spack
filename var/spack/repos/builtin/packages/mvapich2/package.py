@@ -121,7 +121,7 @@ class Mvapich2(AutotoolsPackage):
     depends_on("findutils", type="build")
     depends_on("bison", type="build")
     depends_on("pkgconfig", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libpciaccess", when=(sys.platform != "darwin"))
     depends_on("libxml2")
     depends_on("cuda", when="+cuda")

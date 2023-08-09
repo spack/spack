@@ -16,7 +16,7 @@ class Ldak(Package):
 
     variant("mkl", default=False, description="Use MKL")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("blas")
     depends_on("lapack")
     depends_on("mkl", when="+mkl")

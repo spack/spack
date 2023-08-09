@@ -65,7 +65,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     depends_on("bzip2", type="link")
     depends_on("xz", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("zstd", type="link", when="@0.182:")
 
     depends_on("gettext", when="+nls")
@@ -112,7 +112,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         args = [
             "--with-bzlib=%s" % spec["bzip2"].prefix,
             "--with-lzma=%s" % spec["xz"].prefix,
-            "--with-zlib=%s" % spec["zlib"].prefix,
+            "--with-zlib=%s" % spec["zlib-api"].prefix,
         ]
 
         if "@0.182:" in spec:

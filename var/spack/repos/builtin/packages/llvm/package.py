@@ -281,7 +281,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libffi", when="+libomptarget")  # libomptarget
 
     # llvm-config --system-libs libraries.
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # needs zstd cmake config file, which is not added when built with makefile.
     depends_on("zstd build_system=cmake", when="+zstd")

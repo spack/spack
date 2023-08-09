@@ -24,4 +24,4 @@ class RRcppcnpy(RPackage):
 
     depends_on("r@3.1.0:", type=("build", "run"))
     depends_on("r-rcpp", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")

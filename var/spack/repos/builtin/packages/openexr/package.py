@@ -68,7 +68,7 @@ class Openexr(CMakePackage):
     depends_on("pkgconfig", when="@:2", type="build")
     depends_on("imath", when="@3:")
     depends_on("ilmbase", when="@:2")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     @property
     def build_directory(self):

@@ -428,7 +428,7 @@ class Git(AutotoolsPackage):
     depends_on("pcre", when="@:2.13")
     depends_on("pcre2", when="@2.14:")
     depends_on("perl", when="+perl")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("openssh", type="run")
     depends_on("perl-alien-svn", type="run", when="+svn")
     depends_on("tk", type=("build", "link"), when="+tcltk")
@@ -488,7 +488,7 @@ class Git(AutotoolsPackage):
             "--with-curl={0}".format(spec["curl"].prefix),
             "--with-expat={0}".format(spec["expat"].prefix),
             "--with-openssl={0}".format(spec["openssl"].prefix),
-            "--with-zlib={0}".format(spec["zlib"].prefix),
+            "--with-zlib={0}".format(spec["zlib-api"].prefix),
         ]
 
         if not self.spec["iconv"].name == "libc":

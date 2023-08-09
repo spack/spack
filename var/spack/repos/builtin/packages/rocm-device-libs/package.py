@@ -103,7 +103,7 @@ class RocmDeviceLibs(CMakePackage):
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
     depends_on("cmake@3.4.3:", type="build")
 
-    depends_on("zlib", type="link", when="@3.9.0:")
+    depends_on("zlib-api", type="link", when="@3.9.0:")
     depends_on("texinfo", type="link", when="@3.9.0:")
 
     depends_on("rocm-cmake@3.5.0:", type="build")

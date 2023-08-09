@@ -92,7 +92,7 @@ class Apex(CMakePackage):
     variant("examples", default=False, description="Build Examples")
 
     # Dependencies
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("cmake@3.10.0:", type="build")
     depends_on("binutils@2.33:+libiberty+headers", when="+binutils")
     depends_on("gettext", when="+binutils ^binutils+nls")

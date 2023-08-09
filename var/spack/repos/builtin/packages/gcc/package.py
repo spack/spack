@@ -182,7 +182,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         depends_on("isl@0.15:0.20", when="@9:9.9")
         depends_on("isl@0.15:", when="@10:")
 
-    depends_on("zlib", when="@6:")
+    depends_on("zlib-api", when="@6:")
     depends_on("zstd", when="@10:")
     depends_on("diffutils", type="build")
     depends_on("iconv", when="platform=darwin")
@@ -652,9 +652,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Use installed libz
         if self.version >= Version("6"):
-            filter_file("@zlibdir@", "-L{0}".format(spec["zlib"].prefix.lib), "gcc/Makefile.in")
             filter_file(
-                "@zlibinc@", "-I{0}".format(spec["zlib"].prefix.include), "gcc/Makefile.in"
+                "@zlibdir@", "-L{0}".format(spec["zlib-api"].prefix.lib), "gcc/Makefile.in"
+            )
+            filter_file(
+                "@zlibinc@", "-I{0}".format(spec["zlib-api"].prefix.include), "gcc/Makefile.in"
             )
 
         if spec.satisfies("+nvptx"):

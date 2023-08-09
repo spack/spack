@@ -28,7 +28,7 @@ class Breakdancer(CMakePackage):
         preferred=True,
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("ncurses", type="link")
 

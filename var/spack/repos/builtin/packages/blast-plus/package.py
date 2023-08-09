@@ -69,7 +69,7 @@ class BlastPlus(AutotoolsPackage):
     # depends_on('hdf5', when='+hdf5')
     depends_on("gnutls", when="+gnutls")
     depends_on("openssl", when="+openssl")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("bzip2", when="+bzip2")
     depends_on("lzo", when="+lzo")
     depends_on("pcre", when="+pcre")
@@ -121,7 +121,7 @@ class BlastPlus(AutotoolsPackage):
         #     config_args.append('--without-hdf5')
 
         if "+zlib" in spec:
-            config_args.append("--with-z={0}".format(self.spec["zlib"].prefix))
+            config_args.append("--with-z={0}".format(self.spec["zlib-api"].prefix))
         else:
             config_args.append("--without-z")
 

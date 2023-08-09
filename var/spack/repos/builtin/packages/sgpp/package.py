@@ -65,7 +65,7 @@ class Sgpp(SConsPackage):
     # Mandatory dependencies
     depends_on("scons", type=("build"))
     depends_on("scons@3:", when="@3.2.0:", type=("build"))
-    depends_on("zlib", type=("link"))
+    depends_on("zlib-api", type=("link"))
     # Python dependencies
     extends("python", when="+python")
     depends_on("py-pip", when="+python", type="build")
