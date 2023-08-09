@@ -20,13 +20,11 @@ class Executable:
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        file_path = which_string(name)
-        if not file_path:
-            # the file does not currently exist but it will exist in the cwd by
-            # the time the executable is called
-            file_path = Path(name).resolve()
-
-        self.exe = [Path(file_path).as_posix()]
+        file_path = Path(name).as_posix()
+        if sys.platform == "linux":
+            # pathlib strips the ./ from relative paths so it must be added back
+            file_path = os.path.join('.', file_path)
+        self.exe = [file_path]
 
         self.default_env = {}
         from spack.util.environment import EnvironmentModifications  # no cycle
