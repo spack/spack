@@ -110,7 +110,7 @@ class Libzmq(AutotoolsPackage):
         # the package won't compile with newer compilers because warnings
         # are converted to errors. Hence, disable such conversion.
         # this option was only added in version 4.2.3.
-        if(self.spec.version >= Version("4.2.3")):
+        if self.spec.version >= Version("4.2.3"):
             config_args.append("--disable-Werror")
 
         if "+libsodium" in self.spec:
