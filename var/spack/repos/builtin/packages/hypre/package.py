@@ -269,7 +269,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.extend(["--without-hip", "--disable-rocrand", "--disable-rocsparse"])
 
         if "+sycl" in spec:
-            configure_args.append("--with-scyl")
+            configure_args.append("--with-sycl")
             sycl_compatible_compilers = ["dpcpp", "icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
                 raise InstallError(
