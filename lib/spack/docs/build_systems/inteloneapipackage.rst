@@ -104,11 +104,13 @@ Clone `spack-configs <https://github.com/spack/spack-configs>`_ repo and activat
 
 `Intel oneAPI CPU environment <https://github.com/spack/spack-configs/blob/main/INTEL/CPU/spack.yaml>`_  contains applications tested and validated by Intel, this list is constantly extended. And currently it supports:
 
+- `Devito <https://www.devitoproject.org/>`_
 - `GROMACS <https://www.gromacs.org/>`_
 - `HPCG <https://www.hpcg-benchmark.org/>`_
 - `HPL <https://netlib.org/benchmark/hpl/>`_
 - `LAMMPS <https://www.lammps.org/#gsc.tab=0>`_
 - `OpenFOAM <https://www.openfoam.com/>`_
+- `Quantum Espresso <https://www.quantum-espresso.org/>`_
 - `STREAM <https://www.cs.virginia.edu/stream/>`_
 - `WRF <https://github.com/wrf-model/WRF>`_
 
