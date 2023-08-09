@@ -1101,7 +1101,7 @@ def test_install_empty_env(
 
 @pytest.mark.skipif(
     sys.platform == "win32",
-    reason="log_ouput cannot currently be used outside of subprocess on Windows",
+    reason="log_output cannot currently be used outside of subprocess on Windows",
 )
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize(
@@ -1206,7 +1206,7 @@ def test_install_use_buildcache(
 
 @pytest.mark.skipif(
     sys.platform == "win32",
-    reason="log_ouput cannot currently be used outside of subprocess on Windows",
+    reason="log_output cannot currently be used outside of subprocess on Windows",
 )
 @pytest.mark.regression("34006")
 @pytest.mark.disable_clean_stage_check
