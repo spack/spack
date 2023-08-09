@@ -36,13 +36,13 @@ update_completion_args: Dict[str, Dict[str, Any]] = {
     "bash": {
         "aliases": True,
         "format": "bash",
-        "header": os.path.join(spack.paths.share_path, "bash", "spack-completion.in"),
+        "header": os.path.join(spack.paths.share_path, "bash", "spack-completion.bash"),
         "update": os.path.join(spack.paths.share_path, "spack-completion.bash"),
     },
     "fish": {
         "aliases": True,
         "format": "fish",
-        "header": os.path.join(spack.paths.share_path, "fish", "spack-completion.in"),
+        "header": os.path.join(spack.paths.share_path, "fish", "spack-completion.fish"),
         "update": os.path.join(spack.paths.share_path, "spack-completion.fish"),
     },
 }
