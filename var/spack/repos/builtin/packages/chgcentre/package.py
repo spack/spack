@@ -23,4 +23,4 @@ class Chgcentre(CMakePackage):
     # latest compilers. In particular, the `std::min` function was given `int` and
     # `unsigned int` arguments. The `int` argument is explicitly casted to `unsigned int`.
     # This patch was created by the staff at the Pawsey Supercomputing Research Centre.
-    patch('main.patch')
+    patch("main.patch")
