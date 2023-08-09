@@ -138,7 +138,7 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
     depends_on("python", type="build")
     depends_on("z3", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("ncurses+termlib", type="link")
     depends_on("pkgconfig", type="build")
 

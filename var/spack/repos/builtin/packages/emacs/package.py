@@ -48,7 +48,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("ncurses")
     depends_on("pcre")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libxml2")
     depends_on("libtiff", when="+X")
     depends_on("libpng", when="+X")

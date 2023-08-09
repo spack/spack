@@ -105,7 +105,7 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("py-cffi", when="+python")
     depends_on("py-numpy", when="+python")
     depends_on("papi", when="+papi")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     # A C++ standard variant to work-around some odd behaviors with apple-clang
     # but this might be helpful for other use cases down the road.  Legion's

@@ -76,7 +76,9 @@ IS_WINDOWS = sys.platform == "win32"
 IDENTIFIER = r"([a-zA-Z_0-9][a-zA-Z_0-9\-]*)"
 DOTTED_IDENTIFIER = rf"({IDENTIFIER}(\.{IDENTIFIER})+)"
 GIT_HASH = r"([A-Fa-f0-9]{40})"
-GIT_VERSION = rf"((git\.({DOTTED_IDENTIFIER}|{IDENTIFIER}))|({GIT_HASH}))"
+#: Git refs include branch names, and can contain "." and "/"
+GIT_REF = r"([a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
+GIT_VERSION = rf"((git\.({GIT_REF}))|({GIT_HASH}))"
 
 NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
@@ -128,6 +130,7 @@ class TokenType(TokenBase):
     DEPENDENCY = r"(\^)"
     # Version
     VERSION_HASH_PAIR = rf"(@({GIT_VERSION})=({VERSION}))"
+    GIT_VERSION = rf"@({GIT_VERSION})"
     VERSION = rf"(@\s*({VERSION_LIST}))"
     # Variants
     PROPAGATED_BOOL_VARIANT = rf"((\+\+|~~|--)\s*{NAME})"
@@ -364,8 +367,10 @@ class SpecNodeParser:
                     compiler_name.strip(), compiler_version
                 )
                 self.has_compiler = True
-            elif self.ctx.accept(TokenType.VERSION) or self.ctx.accept(
-                TokenType.VERSION_HASH_PAIR
+            elif (
+                self.ctx.accept(TokenType.VERSION_HASH_PAIR)
+                or self.ctx.accept(TokenType.GIT_VERSION)
+                or self.ctx.accept(TokenType.VERSION)
             ):
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 if self.has_version:

@@ -88,7 +88,7 @@ class Geant4(CMakePackage):
         depends_on("geant4-data@" + _vers, type="run", when="@" + _vers)
 
     depends_on("expat")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("tbb", when="+tbb")
     depends_on("vtk@8.2:", when="+vtk")

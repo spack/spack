@@ -52,6 +52,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("blt@0.4.1:", type="build", when="@2.4.0:")
     depends_on("blt@0.4.0:", type="build", when="@2.3.0")
     depends_on("blt@0.3.6:", type="build", when="@:2.2.2")
+    conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("umpire")
     depends_on("umpire@2022.03.0:", when="@2022.03.0:")
