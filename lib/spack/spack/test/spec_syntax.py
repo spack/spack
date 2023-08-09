@@ -517,6 +517,14 @@ def specfile_for(default_mock_concretization):
             [Token(TokenType.VERSION, value="@:0.4"), Token(TokenType.COMPILER, value="% nvhpc")],
             "@:0.4%nvhpc",
         ),
+        (
+            "zlib@git.foo/bar",
+            [
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(TokenType.GIT_VERSION, "@git.foo/bar"),
+            ],
+            "zlib@git.foo/bar",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip):
