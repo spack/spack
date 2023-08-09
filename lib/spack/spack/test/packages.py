@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 import pytest
 
@@ -334,6 +335,9 @@ class OldPackage(Package):
     with spack.repo.use_repositories(str(tmpdir)) as repo:
         with pytest.raises(
             spack.repo.RepoError,
-            match=r"This usually means it's missing `from spack.package import \*`.",
+            match=re.escape(
+                "This usually means `from spack.package import *` "
+                "is missing at the top of the package.py file."
+            ),
         ):
             repo.get_pkg_class("old-package")
