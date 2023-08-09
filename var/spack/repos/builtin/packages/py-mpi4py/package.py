@@ -35,7 +35,6 @@ class PyMpi4py(PythonPackage):
     # https://github.com/mpi4py/mpi4py/pull/311
     conflicts("^py-cython@3:")
 
-    @when("@3.1:")
     def setup_build_environment(self, env):
         env.set("MPICC", f"{self.spec['mpi'].mpicc} -shared")
 
