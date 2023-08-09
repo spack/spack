@@ -450,6 +450,16 @@ error(1, Msg)
      not attr("hash", node(ID, Package), _).  % ignore conflicts for installed packages
 
 %-----------------------------------------------------------------------------
+% Vendoring
+%-----------------------------------------------------------------------------
+error(1, "{0} vendors an internal copy of {1}, so it cannot be in the same unification set as {1}", Package, VendoredPackage)
+  :- pkg_fact(Package, vendors(ConditionID, VendoredPackage)),
+     attr("node", node(ID, Package)),
+     condition_holds(ConditionID, node(ID, Package)),
+     unification_set(X, node(ID, Package)),
+     unification_set(X, node(_, VendoredPackage)).
+
+%-----------------------------------------------------------------------------
 % Virtual dependencies
 %-----------------------------------------------------------------------------
 
