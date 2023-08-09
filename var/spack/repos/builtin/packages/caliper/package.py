@@ -60,6 +60,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     variant("sosflow", default=False, description="Enable SOSflow support")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("variorum", default=False, description="Enable Variorum support")
+    variant("kokkos", default=True, when="@2.3.0:", description="Enable Kokkos profiling support")
 
     depends_on("adiak@0.1:0", when="@2.2: +adiak")
 
@@ -110,6 +111,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("WITH_ROCTRACER", "rocm"),
             self.define_from_variant("WITH_ROCTX", "rocm"),
             self.define_from_variant("WITH_VARIORUM", "variorum"),
+            self.define_from_variant("WITH_KOKKOS", "kokkos"),
         ]
 
         if "+papi" in spec:
