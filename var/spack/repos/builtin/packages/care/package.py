@@ -34,6 +34,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("blt@0.4.0:", type="build", when="@0.3.1:")
     depends_on("blt@:0.3.6", type="build", when="@:0.3.0")
+    conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("camp")
     depends_on("umpire@develop")

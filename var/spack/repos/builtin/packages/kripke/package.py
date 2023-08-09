@@ -30,12 +30,12 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
     variant("caliper", default=False, description="Build with Caliper support enabled.")
 
     depends_on("mpi", when="+mpi")
-    depends_on("blt")
-    depends_on("cmake")
+    depends_on("blt", type="build")
     depends_on("caliper", when="+caliper")
     depends_on("chai~examples+raja")
     depends_on("raja~exercises~examples")
     depends_on("umpire~examples")
+    conflicts("^blt@:0.3.6", when="+rocm")
 
     def cmake_args(self):
         spec = self.spec

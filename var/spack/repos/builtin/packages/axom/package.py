@@ -163,6 +163,8 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+openmp", when="+rocm")
     conflicts("+cuda", when="+rocm")
 
+    conflicts("^blt@:0.3.6", when="+rocm")
+
     def flag_handler(self, name, flags):
         if self.spec.satisfies("%cce") and name == "fflags":
             flags.append("-ef")
