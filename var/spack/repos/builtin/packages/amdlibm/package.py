@@ -29,6 +29,7 @@ class Amdlibm(SConsPackage):
     url = "https://github.com/amd/aocl-libm-ose/archive/refs/tags/3.0.tar.gz"
     maintainers("amd-toolchain-support")
 
+    version("4.1", sha256="5bbbbc6bc721d9a775822eab60fbc11eb245e77d9f105b4fcb26a54d01456122")
     version("4.0", sha256="038c1eab544be77598eccda791b26553d3b9e2ee4ab3f5ad85fdd2a77d015a7d")
     version("3.2", sha256="c75b287c38a3ce997066af1f5c8d2b19fc460d5e56678ea81f3ac33eb79ec890")
     version("3.1", sha256="dee487cc2d89c2dc93508be2c67592670ffc1d02776c017e8907317003f48845")
