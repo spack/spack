@@ -823,10 +823,10 @@ def test_install_spliced(install_mockery, mock_fetch, default_mock_concretizatio
 
 @pytest.mark.parametrize("transitive", [True, False])
 def test_install_spliced_build_spec_installed(install_mockery, default_mock_concretization,
-                                              monkeypatch, capfd, transitive):
+                                              capfd, mock_fetch, transitive):
     """TODO: description"""
-    monkeypatch.setattr(inst.BuildTask, "execute", lambda x: "updated_installed")
-    monkeypatch.setattr(inst.RewireTask, "execute", lambda x: "updated_installed")
+    # monkeypatch.setattr(inst.BuildTask, "execute", _update_installed)
+    # monkeypatch.setattr(inst.RewireTask, "execute", _update_installed)
     spec = default_mock_concretization("splice-t")
     dep = default_mock_concretization("splice-h+foo")
 
@@ -1086,31 +1086,35 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     assert "Skipping build of a" in out
 
 
-def test_install_fail_on_interrupt(install_mockery, monkeypatch):
+def _interrupt(installer, task, install_status, **kwargs):
+    if task.pkg.name == 'a':
+        raise KeyboardInterrupt("mock keyboard interrupt for a")
+    else:
+        return installer._real_install_task(task)
+        # installer.installed.add(task.pkg.name)
+
+
+def test_install_fail_on_interrupt(install_mockery, mock_fetch, monkeypatch):
     """Test ctrl-c interrupted install."""
     spec_name = "a"
     err_msg = "mock keyboard interrupt for {0}".format(spec_name)
 
-    def _interrupt(installer, task, install_status, **kwargs):
-        if task.pkg.name == spec_name:
-            raise KeyboardInterrupt(err_msg)
-        else:
-            installer.installed.add(task.pkg.name)
-
     const_arg = installer_args([spec_name], {})
     installer = create_installer(const_arg)
-
+    # TODO: Clean this up in fixture with delattr.
+    setattr(inst.PackageInstaller, "_real_install_task", inst.PackageInstaller._install_task)
     # Raise a KeyboardInterrupt error to trigger early termination
     monkeypatch.setattr(inst.PackageInstaller, "_install_task", _interrupt)
 
     with pytest.raises(KeyboardInterrupt, match=err_msg):
         installer.install()
 
-    assert "b" in installer.installed  # ensure dependency of a is 'installed'
-    assert spec_name not in installer.installed
+    assert not any(i.startswith("a-") for i in installer.installed)
+    assert any(i.startswith("b-") for i in installer.installed)  # ensure dependency of a is 'installed'
+    # assert spec_name not in installer.installed
 
 
-def test_install_fail_single(install_mockery, monkeypatch):
+def test_install_fail_single(install_mockery, mock_fetch, monkeypatch):
     """Test expected results for failure of single package."""
     spec_name = "a"
     err_msg = "mock internal package build error for {0}".format(spec_name)

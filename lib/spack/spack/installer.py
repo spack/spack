@@ -1378,9 +1378,10 @@ class PackageInstaller:
             install_status: the installation status for the package"""
         # TODO: use install_status
         rc = task.execute()
+        print(task.pkg.spec, rc)
         if rc == ExecuteResult.MISSING_BUILD_SPEC:
             self._requeue_with_build_spec_tasks(task)
-        else: # if rc == ExecuteResult.SUCCESS or rc == ExecuteResult.FAILED
+        else:  # if rc == ExecuteResult.SUCCESS or rc == ExecuteResult.FAILED
             self._update_installed(task)
 
 
@@ -1875,7 +1876,8 @@ class PackageInstaller:
 
             # Perform basic task cleanup for the installed spec to
             # include downgrading the write to a read lock
-            if pkg.installed:
+            print(pkg, pkg.spec.installed)
+            if pkg.spec.installed:
                 self._cleanup_task(pkg)
 
         # Cleanup, which includes releasing all of the read locks

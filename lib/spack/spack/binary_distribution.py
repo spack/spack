@@ -765,6 +765,7 @@ def get_buildfile_manifest(spec):
 
 def hashes_to_prefixes(spec):
     """Return a dictionary of hashes to prefixes for a spec and its deps, excluding externals"""
+    # TODO: Get this to return a tuple value (name, prefix) and modify all callers.
     return {
         s.dag_hash(): (s.name, str(s.prefix))
         for s in itertools.chain(
@@ -1945,6 +1946,8 @@ def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
 
 def install_root_node(spec, unsigned=False, force=False, sha256=None):
     # TODO: Go through this and determine where it needs to be the deploy_spec vs. the spec.
+    # TODO: Modify dependency lookup s.t. if it's not there, figure out what virtual it provided
+    # and find out what is now providing that virtual. Else raise an error that it didn't exist.
     # Inverts the logic where you would call the build_spec as spec and the spec as deploy_spec
     """Install the root node of a concrete spec from a buildcache.
 
