@@ -21,7 +21,6 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
-import spack.schema.splice
 import spack.schema.upstreams
 
 #: Properties for inclusion in other schemas
@@ -37,7 +36,6 @@ properties = union_dicts(
     spack.schema.modules.properties,
     spack.schema.packages.properties,
     spack.schema.repos.properties,
-    spack.schema.splice.properties,
     spack.schema.upstreams.properties,
 )
 

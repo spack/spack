@@ -34,6 +34,18 @@ properties = {
                     "strategy": {"type": "string", "enum": ["none", "minimal", "full"]}
                 },
             },
+            "explicit_splices": {
+                "type": "array",
+                "default": [],
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "target": {"type": "string"},
+                        "replacement": {"type": "string"},
+                        "transitive": {"type": "boolean", "default": False},
+                    }
+                }
+            }
         },
     }
 }
