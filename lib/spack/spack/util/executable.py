@@ -21,7 +21,7 @@ class Executable:
 
     def __init__(self, name):
         file_path = Path(name).as_posix()
-        if sys.platform == "linux" and name.startswith("."):
+        if sys.platform != "win32" and name.startswith("."):
             # pathlib strips the ./ from relative paths so it must be added back
             file_path = os.path.join(".", file_path)
         self.exe = [file_path]
