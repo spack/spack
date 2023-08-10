@@ -138,7 +138,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # Restrict zlib-ng to older versions for older Perl
     # See https://github.com/pmqs/Compress-Raw-Zlib/issues/24
     patch("zlib-ng.patch", when="@5.38 ^zlib-ng@2.1.2:")
-    conflicts("zlib-ng@2.1.2:", when="@:5.37")
+    conflicts("^zlib-ng@2.1.2:", when="@:5.37")
 
     # Fix the Time-Local testase http://blogs.perl.org/users/tom_wyant/2020/01/my-y2020-bug.html
     patch(
