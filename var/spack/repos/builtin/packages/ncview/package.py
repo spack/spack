@@ -10,8 +10,8 @@ class Ncview(AutotoolsPackage):
     """Simple viewer for NetCDF files."""
 
     homepage = "https://cirrus.ucsd.edu/ncview/"
-    url = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
 
+    version("2.1.9", sha256="e2317ac094af62f0adcf68421d70658209436aae344640959ec8975a645891af")
     version("2.1.8", sha256="e8badc507b9b774801288d1c2d59eb79ab31b004df4858d0674ed0d87dfc91be")
     version("2.1.7", sha256="a14c2dddac0fc78dad9e4e7e35e2119562589738f4ded55ff6e0eca04d682c82")
 
@@ -30,3 +30,9 @@ class Ncview(AutotoolsPackage):
                 "if false; then",
                 patched_file,
             )
+
+    def url_for_version(self, version):
+        if version >= Version("2.1.9"):
+            return "https://cirrus.ucsd.edu/~pierce/ncview/ncview-2.1.9.tar.gz"
+        else:
+            return "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
