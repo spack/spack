@@ -3,30 +3,26 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack.package import *
 
 
 class PyTrata(PythonPackage):
-    """
-    A Bayesian sampling tool for generating samples and exploring design paramater spaces.
-    """
+    """A Bayesian sampling tool for generating samples 
+    and exploring design paramater spaces."""
 
     homepage = "https://github.com/LLNL/trata"
-    # url = "https://github.com/LLNL/trata/archive/refs/tags/v1.0.1.tar.gz"
     pypi = "trata/trata-1.0.1.tar.gz"
     git = "https://github.com/LLNL/trata"
-    tags = ["v1.0.1"]
 
     # notify when the package is updated
-    maintainers("sbeljurf")
+    maintainers("sbeljurf", "doutriaux1")
 
     # git branches
     version("main", branch="main")
 
     # pypi releases
-    version("1.0.1", sha256="98f5179604135c1922839ebaf781c98b60a55a2ad9b9d88e6e9f07fc2f7206f2", preferred=True)
-    
+    version("1.0.1", sha256="98f5179604135c1922839ebaf781c98b60a55a2ad9b9d88e6e9f07fc2f7206f2")
+
     depends_on("py-setuptools", type=("build"))
     depends_on("py-poetry", type=("build"))
 
