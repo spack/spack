@@ -535,7 +535,7 @@ class SpackCI:
         """Compute the name of a named job with appropriate suffix.
         Valid suffixes are either '-remove' or empty string or None
         """
-        assert type(name) == str
+        assert isinstance(name, str)
 
         jname = name
         if suffix:
@@ -885,7 +885,7 @@ def generate_gitlab_ci_yaml(
         cli_scopes = [
             os.path.relpath(s.path, concrete_env_dir)
             for s in cfg.scopes().values()
-            if type(s) == cfg.ImmutableConfigScope
+            if isinstance(s, cfg.ImmutableConfigScope)
             and s.path not in env_includes
             and os.path.exists(s.path)
         ]
