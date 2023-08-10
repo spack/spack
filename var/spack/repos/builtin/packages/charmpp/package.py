@@ -163,7 +163,7 @@ class Charmpp(Package):
         platplat = platform.platform()
         specplat = self.spec.platform
 
-        if "shasta" in platplat and self.spec.satisfies('@6.8.2:'):
+        if "shasta" in platplat and self.spec.satisfies("@6.8.2:"):
             plat = "shasta"
         elif specplat.startswith("cray"):
             plat = "cnl"
@@ -234,7 +234,7 @@ class Charmpp(Package):
 
     def setup_build_environment(self, env):
         if ("backend=ofi") in self.spec:
-            env.set('LIBFABRIC', self.spec['libfabric'].prefix)
+            env.set("LIBFABRIC", self.spec["libfabric"].prefix)
 
     # FIXME: backend=mpi also provides mpi, but spack does not support
     # depends_on("mpi") and provides("mpi") in the same package currently.
@@ -286,7 +286,7 @@ class Charmpp(Package):
         # We assume that Spack's compiler wrappers make this work. If
         # not, then we need to query the compiler vendor from Spack
         # here.
-        if spec.satisfies('@6.8.2:') and "shasta" in platform.platform():
+        if spec.satisfies("@6.8.2:") and "shasta" in platform.platform():
             options = []
         else:
             options = [os.path.basename(self.compiler.cc)]
