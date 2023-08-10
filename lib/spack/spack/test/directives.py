@@ -16,7 +16,7 @@ def test_false_directives_do_not_exist(mock_packages):
     """Ensure directives that evaluate to False at import time are added to
     dicts on packages.
     """
-    cls = spack.repo.path.get_pkg_class("when-directives-false")
+    cls = spack.repo.PATH.get_pkg_class("when-directives-false")
     assert not cls.dependencies
     assert not cls.resources
     assert not cls.patches
@@ -26,7 +26,7 @@ def test_true_directives_exist(mock_packages):
     """Ensure directives that evaluate to True at import time are added to
     dicts on packages.
     """
-    cls = spack.repo.path.get_pkg_class("when-directives-true")
+    cls = spack.repo.PATH.get_pkg_class("when-directives-true")
 
     assert cls.dependencies
     assert spack.spec.Spec() in cls.dependencies["extendee"]
@@ -40,7 +40,7 @@ def test_true_directives_exist(mock_packages):
 
 
 def test_constraints_from_context(mock_packages):
-    pkg_cls = spack.repo.path.get_pkg_class("with-constraint-met")
+    pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
 
     assert pkg_cls.dependencies
     assert spack.spec.Spec("@1.0") in pkg_cls.dependencies["b"]
@@ -51,7 +51,7 @@ def test_constraints_from_context(mock_packages):
 
 @pytest.mark.regression("26656")
 def test_constraints_from_context_are_merged(mock_packages):
-    pkg_cls = spack.repo.path.get_pkg_class("with-constraint-met")
+    pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
 
     assert pkg_cls.dependencies
     assert spack.spec.Spec("@0.14:15 ^b@3.8:4.0") in pkg_cls.dependencies["c"]
@@ -68,7 +68,7 @@ def test_extends_spec(config, mock_packages):
 
 @pytest.mark.regression("34368")
 def test_error_on_anonymous_dependency(config, mock_packages):
-    pkg = spack.repo.path.get_pkg_class("a")
+    pkg = spack.repo.PATH.get_pkg_class("a")
     with pytest.raises(spack.directives.DependencyError):
         spack.directives._depends_on(pkg, "@4.5")
 
@@ -85,7 +85,7 @@ def test_error_on_anonymous_dependency(config, mock_packages):
     ],
 )
 def test_maintainer_directive(config, mock_packages, package_name, expected_maintainers):
-    pkg_cls = spack.repo.path.get_pkg_class(package_name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
     assert pkg_cls.maintainers == expected_maintainers
 
 

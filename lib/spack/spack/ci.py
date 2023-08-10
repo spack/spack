@@ -1504,7 +1504,7 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
         return
 
     try:
-        pkg_cls = spack.repo.path.get_pkg_class(job_spec.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(job_spec.name)
         job_pkg = pkg_cls(job_spec)
         tty.debug("job package: {0}".format(job_pkg))
     except AssertionError:

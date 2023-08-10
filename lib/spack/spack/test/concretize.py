@@ -43,7 +43,7 @@ def check_spec(abstract, concrete):
             cflag = concrete.compiler_flags[flag]
             assert set(aflag) <= set(cflag)
 
-    for name in spack.repo.path.get_pkg_class(abstract.name).variants:
+    for name in spack.repo.PATH.get_pkg_class(abstract.name).variants:
         assert name in concrete.variants
 
     for flag in concrete.compiler_flags.valid_compiler_flags():
@@ -296,7 +296,7 @@ class TestConcretize:
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.
         """
-        repo = spack.repo.path
+        repo = spack.repo.PATH
         assert not any(s.intersects("mpich2@:1.0") for s in repo.providers_for("mpi@2.1"))
         assert not any(s.intersects("mpich2@:1.1") for s in repo.providers_for("mpi@2.2"))
         assert not any(s.intersects("mpich@:1") for s in repo.providers_for("mpi@2"))
@@ -305,7 +305,7 @@ class TestConcretize:
 
     def test_provides_handles_multiple_providers_of_same_version(self):
         """ """
-        providers = spack.repo.path.providers_for("mpi@3.0")
+        providers = spack.repo.PATH.providers_for("mpi@3.0")
 
         # Note that providers are repo-specific, so we don't misinterpret
         # providers, but vdeps are not namespace-specific, so we can
@@ -1450,7 +1450,7 @@ class TestConcretize:
         assert s["lapack"].name == "low-priority-provider"
 
         for virtual_pkg in ("mpi", "lapack"):
-            for pkg in spack.repo.path.providers_for(virtual_pkg):
+            for pkg in spack.repo.PATH.providers_for(virtual_pkg):
                 if pkg.name == "low-priority-provider":
                     continue
                 assert pkg not in s
@@ -1923,7 +1923,7 @@ class TestConcretize:
             pytest.xfail("Use case not supported by the original concretizer")
 
         # Add a conflict to "mpich" that match an already installed "mpich~debug"
-        pkg_cls = spack.repo.path.get_pkg_class("mpich")
+        pkg_cls = spack.repo.PATH.get_pkg_class("mpich")
         monkeypatch.setitem(pkg_cls.conflicts, "~debug", [(Spec(), None)])
 
         # If we concretize with --fresh the conflict is taken into account

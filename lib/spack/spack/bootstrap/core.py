@@ -476,13 +476,13 @@ def ensure_executables_in_path_or_raise(
 def _add_externals_if_missing() -> None:
     search_list = [
         # clingo
-        spack.repo.path.get_pkg_class("cmake"),
-        spack.repo.path.get_pkg_class("bison"),
+        spack.repo.PATH.get_pkg_class("cmake"),
+        spack.repo.PATH.get_pkg_class("bison"),
         # GnuPG
-        spack.repo.path.get_pkg_class("gawk"),
+        spack.repo.PATH.get_pkg_class("gawk"),
     ]
     if IS_WINDOWS:
-        search_list.append(spack.repo.path.get_pkg_class("winbison"))
+        search_list.append(spack.repo.PATH.get_pkg_class("winbison"))
     detected_packages = spack.detection.by_executable(search_list)
     spack.detection.update_configuration(detected_packages, scope="bootstrap")
 
