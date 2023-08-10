@@ -29,18 +29,30 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     version("2.10.0", sha256="14c4fb5edd5e67808d581523b4f8f05ace8549698c0e90d84b53171a77f58565")
     version("2.9.0", sha256="507ea74be64a2dfd111b292c24c4f55f459257528ba51a5242313fa50978371f")
     version("2.8.0", sha256="17807b364b5ac4b05997ead41bd173e773f9a26ff573ff2fe61e0e70eab496e4")
-    version("2.7.0", sha256="b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b")
-    version("2.6.0", sha256="6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f")
-    version("2.5.0", sha256="d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c")
-    version("2.4.0", tag="v2.4.0")
-    version("2.3.0", tag="v2.3.0")
-    version("2.2.0", tag="v2.2.0")
-    version("2.1.1", tag="v2.1.1")
-    version("2.0.1", tag="v2.0.1")
-    version("1.9.1", tag="v1.9.1")
-    version("1.9.0", tag="v1.9.0")
-    version("1.8.0", tag="v1.8.0")
-    version("1.7.0", tag="v1.7.0")
+    version(
+        "2.7.0",
+        sha256="b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b",
+        deprecated=True,
+    )
+    version(
+        "2.6.0",
+        sha256="6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f",
+        deprecated=True,
+    )
+    version(
+        "2.5.0",
+        sha256="d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c",
+        deprecated=True,
+    )
+    version("2.4.0", tag="v2.4.0", deprecated=True)
+    version("2.3.0", tag="v2.3.0", deprecated=True)
+    version("2.2.0", tag="v2.2.0", deprecated=True)
+    version("2.1.1", tag="v2.1.1", deprecated=True)
+    version("2.0.1", tag="v2.0.1", deprecated=True)
+    version("1.9.1", tag="v1.9.1", deprecated=True)
+    version("1.9.0", tag="v1.9.0", deprecated=True)
+    version("1.8.0", tag="v1.8.0", deprecated=True)
+    version("1.7.0", tag="v1.7.0", deprecated=True)
 
     is_linux = sys.platform.startswith("linux")
     variant("shared", default=True, description="Build shared libraries")

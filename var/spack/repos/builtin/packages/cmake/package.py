@@ -221,7 +221,7 @@ class Cmake(Package):
 
     # When using curl, cmake defaults to using system zlib too, probably because
     # curl already depends on zlib. Therefore, also unconditionaly depend on zlib.
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     with when("~ownlibs"):
         depends_on("expat")

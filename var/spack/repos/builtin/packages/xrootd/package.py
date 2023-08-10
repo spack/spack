@@ -119,7 +119,7 @@ class Xrootd(CMakePackage):
     depends_on("py-pip", type="build", when="@5.6: +python")
     depends_on("readline", when="+readline")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("curl")
     depends_on("krb5", when="+krb5")
     depends_on("json-c")

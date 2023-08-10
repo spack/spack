@@ -78,43 +78,6 @@ def namespace_from_fullname(fullname):
     return namespace
 
 
-class _PrependFileLoader(importlib.machinery.SourceFileLoader):
-    def __init__(self, fullname, path, prepend=None):
-        super(_PrependFileLoader, self).__init__(fullname, path)
-        self.prepend = prepend
-
-    def path_stats(self, path):
-        stats = super(_PrependFileLoader, self).path_stats(path)
-        if self.prepend:
-            stats["size"] += len(self.prepend) + 1
-        return stats
-
-    def get_data(self, path):
-        data = super(_PrependFileLoader, self).get_data(path)
-        if path != self.path or self.prepend is None:
-            return data
-        else:
-            return self.prepend.encode() + b"\n" + data
-
-
-class RepoLoader(_PrependFileLoader):
-    """Loads a Python module associated with a package in specific repository"""
-
-    #: Code in ``_package_prepend`` is prepended to imported packages.
-    #:
-    #: Spack packages are expected to call `from spack.package import *`
-    #: themselves, but we are allowing a deprecation period before breaking
-    #: external repos that don't do this yet.
-    _package_prepend = "from spack.package import *"
-
-    def __init__(self, fullname, repo, package_name):
-        self.repo = repo
-        self.package_name = package_name
-        self.package_py = repo.filename_for_package_name(package_name)
-        self.fullname = fullname
-        super().__init__(self.fullname, self.package_py, prepend=self._package_prepend)
-
-
 class SpackNamespaceLoader:
     def create_module(self, spec):
         return SpackNamespace(spec.name)
@@ -155,7 +118,9 @@ class ReposFinder:
                 # With 2 nested conditionals we can call "repo.real_name" only once
                 package_name = repo.real_name(module_name)
                 if package_name:
-                    return RepoLoader(fullname, repo, package_name)
+                    return importlib.machinery.SourceFileLoader(
+                        fullname, repo.filename_for_package_name(package_name)
+                    )
 
             # We are importing a full namespace like 'spack.pkg.builtin'
             if fullname == repo.full_namespace:
@@ -1236,6 +1201,11 @@ class Repo:
             raise UnknownPackageError(fullname)
         except Exception as e:
             msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
+            if isinstance(e, NameError):
+                msg += (
+                    ". This usually means `from spack.package import *` "
+                    "is missing at the top of the package.py file."
+                )
             raise RepoError(msg) from e
 
         cls = getattr(module, class_name)

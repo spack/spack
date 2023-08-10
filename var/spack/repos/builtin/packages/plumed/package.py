@@ -185,7 +185,7 @@ class Plumed(AutotoolsPackage):
     )
 
     # Dependencies. LAPACK and BLAS are recommended but not essential.
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("blas")
     depends_on("lapack")
     # For libmatheval support through the 'function' module
