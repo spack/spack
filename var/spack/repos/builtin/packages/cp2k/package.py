@@ -125,7 +125,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             "cusolvermp",
             default=True,
             when="@2023.2:",
-            description=("Use cuda eigensolver with GPU support"),
+            description="Use Nvidia cuSOLVERMp eigensolver",
         )
 
     HFX_LMAX_RANGE = range(4, 8)
