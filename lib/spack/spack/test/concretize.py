@@ -145,8 +145,6 @@ repo:
 
     packages_dir = repo_dir.ensure("packages", dir=True)
     root_pkg_str = """
-from spack.package import *
-
 class Root(Package):
     homepage = "http://www.example.com"
     url      = "http://www.example.com/root-1.0.tar.gz"
@@ -159,8 +157,6 @@ class Root(Package):
     packages_dir.join("root", "package.py").write(root_pkg_str, ensure=True)
 
     changing_template = """
-from spack.package import *
-
 class Changing(Package):
     homepage = "http://www.example.com"
     url      = "http://www.example.com/changing-1.0.tar.gz"
