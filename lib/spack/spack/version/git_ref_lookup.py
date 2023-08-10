@@ -5,8 +5,6 @@
 
 import os
 import re
-import sys
-import urllib
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
@@ -94,16 +92,7 @@ class GitRefLookup(AbstractRefLookup):
     @property
     def repository_uri(self):
         """Identifier for git repos used within the repo and metadata caches."""
-        (scheme, netloc, path, params, query, fragment) = urllib.parse.urlparse(self.pkg.git)
-        path = path.lstrip("/")
-        if scheme == "file":
-            unique_dir = Path(path)
-            if sys.platform == "win32":
-                unique_dir = spack.util.hash.b32_hash(Path(path).as_posix())[-7:]
-            return Path("file") / unique_dir
-
-        (hostname, port) = netloc.split(":")
-        return Path(scheme, hostname, port, path)
+        return Path(spack.util.hash.b32_hash(self.pkg.git)[-7:])
 
     def save(self):
         """Save the data to file"""
