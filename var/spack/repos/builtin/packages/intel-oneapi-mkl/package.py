@@ -207,7 +207,8 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                 raise RuntimeError(
                     (
                         "intel-oneapi-mpi +cluster requires one of ^intel-oneapi-mpi, "
-                        "^intel-mpi, ^mpich, ^cray-mpich, mpi_family=mpich, ^openmpi, or mpi_family=openmpi"
+                        "^intel-mpi, ^mpich, ^cray-mpich, mpi_family=mpich, ^openmpi, "
+                        "or mpi_family=openmpi"
                     )
                 )
 
