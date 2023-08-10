@@ -123,7 +123,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         )
         variant(
             "cusolvermp",
-            default=True,
+            default=False,
             when="@2023.2:",
             description="Use Nvidia cuSOLVERMp eigensolver",
         )
@@ -198,6 +198,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("cosma@2.5.1:", when="@9:")
         depends_on("cosma@2.6.3:", when="@master:")
         depends_on("cosma+cuda", when="+cuda")
+        depends_on("cosma+rocm", when="+rocm")
         conflicts("~mpi")
         # COSMA support was introduced in 8+
         conflicts("@:7")
@@ -878,10 +879,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 raise InstallError("CP2K supports only one cuda_arch at a time.")
             else:
                 gpu_ver = gpu_map[spec.variants["cuda_arch"].value[0]]
-                args += ["-DCP2K_USE_ACCEL=CUDA"]
                 args += [
+                    self_define("CP2K_USE_ACCEL", "CUDA"),
                     self.define("CP2K_WITH_GPU", gpu_ver),
-                    self.define_from_variant("CP2K_USE_CUSOLVERMP", "cusolvermp"),
+                    self.define_from_variant("CP2K_USE_CUSOLVER_MP", "cusolvermp"),
                 ]
 
         if "+rocm" in spec:
@@ -889,8 +890,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 raise InstallError("CP2K supports only one amdgpu_target at a time.")
             else:
                 gpu_ver = gpu_map[spec.variants["amdgpu_target"].value[0]]
-                args += ["-DCP2K_USE_ACCEL=HIP"]
-                args += [self.define("CP2K_WITH_GPU", gpu_ver)]
+                args += [
+                    self.define("CP2K_USE_ACCEL", "HIP"),
+                    self.define("CP2K_WITH_GPU", gpu_ver),
+                ]
 
         args += [
             self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
