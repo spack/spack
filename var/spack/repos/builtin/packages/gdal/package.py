@@ -289,7 +289,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("libheif@1.1:", when="+heif")
     depends_on("hdf", when="+hdf4")
     depends_on("hdf5+cxx", when="+hdf5")
-    depends_on("hdf5@:1.12", when="@:3.4.1 +hdf5")
+    depends_on("hdf5@:1.12", when="@:3.4 +hdf5")
     depends_on("hadoop", when="+hdfs")
     depends_on("iconv", when="+iconv")
     # depends_on('idb', when='+idb')
