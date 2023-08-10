@@ -1027,7 +1027,7 @@ def get_cmake_prefix_path(pkg):
 
 
 def _setup_pkg_and_run(
-    serialized_pkg, function, kwargs, child_pipe, input_multiprocess_fd, jsfd1, jsfd2
+    serialized_pkg, function, kwargs, write_pipe, input_multiprocess_fd, jsfd1, jsfd2
 ):
     context = kwargs.get("context", "build")
 
@@ -1048,12 +1048,12 @@ def _setup_pkg_and_run(
                 pkg, dirty=kwargs.get("dirty", False), context=context
             )
         return_value = function(pkg, kwargs)
-        child_pipe.send(return_value)
+        write_pipe.send(return_value)
 
     except StopPhase as e:
         # Do not create a full ChildError from this, it's not an error
         # it's a control statement.
-        child_pipe.send(e)
+        write_pipe.send(e)
     except BaseException:
         # catch ANYTHING that goes wrong in the child process
         exc_type, exc, tb = sys.exc_info()
@@ -1102,10 +1102,10 @@ def _setup_pkg_and_run(
             context,
             package_context,
         )
-        child_pipe.send(ce)
+        write_pipe.send(ce)
 
     finally:
-        child_pipe.close()
+        write_pipe.close()
         if input_multiprocess_fd is not None:
             input_multiprocess_fd.close()
 
@@ -1149,7 +1149,7 @@ def start_build_process(pkg, function, kwargs):
     For more information on `multiprocessing` child process creation
     mechanisms, see https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
     """
-    parent_pipe, child_pipe = multiprocessing.Pipe(duplex=False)
+    read_pipe, write_pipe = multiprocessing.Pipe(duplex=False)
     input_multiprocess_fd = None
     jobserver_fd1 = None
     jobserver_fd2 = None
@@ -1174,7 +1174,7 @@ def start_build_process(pkg, function, kwargs):
                 serialized_pkg,
                 function,
                 kwargs,
-                child_pipe,
+                write_pipe,
                 input_multiprocess_fd,
                 jobserver_fd1,
                 jobserver_fd2,
@@ -1185,9 +1185,9 @@ def start_build_process(pkg, function, kwargs):
 
         # We close the writable end of the pipe now to be sure that p is the
         # only process which owns a handle for it. This ensures that when p
-        # closes its handle for the writable end, parent_pipe.recv() will
+        # closes its handle for the writable end, read_pipe.recv() will
         # promptly report the readable end as being ready.
-        child_pipe.close()
+        write_pipe.close()
 
     except InstallError as e:
         e.pkg = pkg
@@ -1203,7 +1203,7 @@ def start_build_process(pkg, function, kwargs):
         return f"{typ} {abs(p.exitcode)}"
 
     try:
-        child_result = parent_pipe.recv()
+        child_result = read_pipe.recv()
     except EOFError:
         p.join()
         raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(p)})")
