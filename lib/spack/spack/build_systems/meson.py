@@ -209,5 +209,5 @@ class MesonBuilder(BaseBuilder):
     def check(self):
         """Search Meson-generated files for the target ``test`` and run it if found."""
         with fs.working_dir(self.build_directory):
-            self._if_ninja_target_execute("test")
-            self._if_ninja_target_execute("check")
+            self.pkg._if_ninja_target_execute("test")
+            self.pkg._if_ninja_target_execute("check")
