@@ -234,8 +234,8 @@ class Executable:
 
         except OSError as e:
             message = "Command: " + cmd_line_string
-            if sys.platform == "win32" and " " in self.exe[0]:
-                message = "\nDid you mean to add a space to the command?"
+            if " " in self.exe[0]:
+                message += "\nDid you mean to add a space to the command?"
 
             raise ProcessError("%s: %s" % (self.exe[0], e.strerror), message)
 
