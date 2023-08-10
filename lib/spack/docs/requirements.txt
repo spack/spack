@@ -1,4 +1,4 @@
-sphinx==6.2.1
+sphinx==7.1.2
 sphinxcontrib-programoutput==0.17
 sphinx_design==0.5.0
 sphinx-rtd-theme==1.2.2
