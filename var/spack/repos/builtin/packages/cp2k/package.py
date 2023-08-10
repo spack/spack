@@ -187,6 +187,11 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("libxc@5.1.3:5.1", when="@8.2:8")
         depends_on("libxc@5.1.7:5.1", when="@9:2022.2")
         depends_on("libxc@6.1:", when="@2023.1:")
+        depends_on("libxc@6.2:", when="@2023.2:")
+
+    with when("+spla"):
+        depends_on("spla+cuda+fortran", when="+cuda")
+        depends_on("spla+rocm+fortran", when="+rocm")
 
     with when("+mpi"):
         depends_on("mpi@2:")
@@ -209,6 +214,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("elpa~openmp", when="~openmp")
         depends_on("elpa@2021.05:", when="@8.3:")
         depends_on("elpa@2021.11.001:", when="@9.1:")
+        depends_on("elpa@2023.05.001:", when="@2023.2:")
 
     with when("+plumed"):
         depends_on("plumed+shared")
