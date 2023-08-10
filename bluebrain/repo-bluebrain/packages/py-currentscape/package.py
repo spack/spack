@@ -7,19 +7,16 @@ from spack.package import *
 
 
 class PyCurrentscape(PythonPackage):
-    """Module to easily plot currentscape."""
+    """Module to easily plot the currents in electrical neuron models."""
 
-    homepage = "https://bbpgitlab.epfl.ch/cells/currentscape"
-    git = "ssh://git@bbpgitlab.epfl.ch/cells/currentscape.git"
+    homepage = "https://github.com/BlueBrain/Currentscape"
+    git = "https://github.com/BlueBrain/Currentscape.git"
+    pypi = "currentscape/currentscape-1.0.12.tar.gz"
 
-    version("develop", branch="master")
-    version("0.0.10", tag="currentscape-v0.0.10")
-    version("0.0.9", tag="currentscape-v0.0.9")
-    version("0.0.6", tag="currentscape-v0.0.6")
+    version("1.0.12", sha256="d83c5a58074e4d612553472a487e5d1d2854dc4d5c161817c6bafdf4a5988011")
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type="run")
-    depends_on("py-matplotlib", type="run")
-    depends_on("py-scipy", type="run")
-    depends_on("py-bluepyopt", type="run")
-    depends_on("py-palettable", type="run")
+    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools-scm", type=("build",))
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-palettable", type=("build", "run"))

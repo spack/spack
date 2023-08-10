@@ -16,6 +16,8 @@ class PyMorphTool(PythonPackage):
     version("develop", branch="master")
     version("2.9.0", sha256="c60d4010e17ddcc3f53c864c374fffee05713c8f8fd2ba4eed7706041ce1fa47")
 
+    variant("neuron", default=False, description="Enable additional neuron support")
+
     depends_on("py-setuptools", type=("build", "run"))
 
     depends_on("py-click@6.7:", type=("build", "run"))
@@ -28,7 +30,7 @@ class PyMorphTool(PythonPackage):
     depends_on("py-plotly@4.1:", type=("build", "run"))
     depends_on("py-dask@2.19:", type=("build", "run"))
     depends_on("neuron+python@7.8:", type=("build", "run"))
-    depends_on("py-bluepyopt@1.9.37:", type=("build", "run"))
+    depends_on("py-bluepyopt@1.9.37:", type=("build", "run"), when="+neuron")
 
     depends_on("py-neurom@3.0:3.999,develop", type=("build", "run"))
     depends_on("py-morphio@3.0:3.999,develop", type=("build", "run"))
