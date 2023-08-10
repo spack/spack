@@ -48,6 +48,8 @@ class PySmartsim(PythonPackage):
     depends_on("redis-ai+rocm", type=("build", "run"), when="+rocm")
 
     # ML Deps
+    # The lower bound for these py-* deps can be found in the source code
+    # at `smartsim/_core/_install/buildenv.py`.
     with when("+torch"):
         depends_on("redis-ai+torch", type=("build", "run"))
         depends_on("py-torch@1.11:", type=("build", "run"))
