@@ -250,7 +250,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("proj@:6", when="@2.5:2")
     depends_on("proj@:5", when="@2.4")
     depends_on("proj@:4", when="@:2.3")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libtiff@4:", when="@3:")
     depends_on("libtiff@3.6.0:")  # 3.9.0+ needed to pass testsuite
     depends_on("libgeotiff@1.5:", when="@3:")
@@ -480,6 +480,10 @@ class CMakeBuilder(CMakeBuilder):
             self.define("GDAL_USE_JSONC", True),
             self.define("GDAL_USE_TIFF", True),
             self.define("GDAL_USE_ZLIB", True),
+            # zlib-ng + deflate64 doesn't compile (heavily relies on zlib)
+            # but since zlib-ng is faster than zlib, it deflate shouldn't
+            # be necessary.
+            self.define("ENABLE_DEFLATE64", "zlib-ng" not in self.spec),
             # Optional dependencies
             self.define_from_variant("GDAL_USE_ARMADILLO", "armadillo"),
             self.define_from_variant("GDAL_USE_ARROW", "arrow"),
@@ -603,7 +607,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
             "--with-geotiff={}".format(self.spec["libgeotiff"].prefix),
             "--with-libjson-c={}".format(self.spec["json-c"].prefix),
             "--with-libtiff={}".format(self.spec["libtiff"].prefix),
-            "--with-libz={}".format(self.spec["zlib"].prefix),
+            "--with-libz={}".format(self.spec["zlib-api"].prefix),
             # Optional dependencies
             self.with_or_without("armadillo", package="armadillo"),
             self.with_or_without("blosc", package="c-blosc"),

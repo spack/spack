@@ -83,7 +83,7 @@ class Squashfs(MakefilePackage):
         msg="Cannot set default compression to missing algorithm",
     )
 
-    depends_on("zlib", when="+gzip")
+    depends_on("zlib-api", when="+gzip")
     depends_on("lz4", when="+lz4")
     depends_on("lzo", when="+lzo")
     depends_on("xz", when="+xz")

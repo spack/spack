@@ -29,6 +29,8 @@ def update_packages_config(conf_str):
 _pkgx = (
     "x",
     """\
+from spack.package import *
+
 class X(Package):
     version("1.1")
     version("1.0")
@@ -45,6 +47,8 @@ class X(Package):
 _pkgy = (
     "y",
     """\
+from spack.package import *
+
 class Y(Package):
     version("2.5")
     version("2.4")
@@ -59,6 +63,8 @@ class Y(Package):
 _pkgv = (
     "v",
     """\
+from spack.package import *
+
 class V(Package):
     version("2.1")
     version("2.0")
@@ -69,6 +75,8 @@ class V(Package):
 _pkgt = (
     "t",
     """\
+from spack.package import *
+
 class T(Package):
     version('2.1')
     version('2.0')
@@ -81,6 +89,8 @@ class T(Package):
 _pkgu = (
     "u",
     """\
+from spack.package import *
+
 class U(Package):
     version('1.1')
     version('1.0')

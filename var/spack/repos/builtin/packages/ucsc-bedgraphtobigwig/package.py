@@ -19,7 +19,7 @@ class UcscBedgraphtobigwig(Package):
     depends_on("libuuid")
     depends_on("gmake")
     depends_on("openssl")
-    depends_on("zlib")
+    depends_on("zlib-api")
     # This package has known issues installing with the latest MySQL because
     # MySQL removed the type my_bool, while mariadb didn't.
     # https://groups.google.com/a/soe.ucsc.edu/g/genome/c/mIT6fe9l99g

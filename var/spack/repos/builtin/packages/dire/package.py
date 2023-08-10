@@ -23,7 +23,7 @@ class Dire(Package):
 
     version("2.004", sha256="8cc1213b58fec744fdaa50834560a14b141de99efb2c3e3d3d47f3d6d84b179f")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
