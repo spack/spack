@@ -33,8 +33,8 @@ class PySmartsim(PythonPackage):
     depends_on("py-coloredlogs@10:", type=("build", "run"))
     depends_on("py-tabulate@0.8.9:", type=("build", "run"))
     depends_on("py-redis@4.5:", type=("build", "run"))
-    depends_on("py-tqdm@4.56:", type=("build", "run"))
-    depends_on("py-filelock@3.4:", type=("build", "run"))
+    depends_on("py-tqdm@4.50.2:", type=("build", "run"))
+    depends_on("py-filelock@3.4.2:", type=("build", "run"))
     depends_on("py-protobuf@3.20:3", type=("build", "run"))
 
     # Companion libs
@@ -72,9 +72,7 @@ class PySmartsim(PythonPackage):
 
     @run_after("install")
     def symlink_bin_deps(self):
-        ss_core_path = join_path(
-            self.prefix, self.spec["python"].package.purelib, "smartsim", "_core"
-        )
+        ss_core_path = join_path(python_purelib, "smartsim", "_core")
         os.symlink(
             self.spec["redis"].prefix.bin.join("redis-server"),
             join_path(ss_core_path, "bin", "redis-server"),
