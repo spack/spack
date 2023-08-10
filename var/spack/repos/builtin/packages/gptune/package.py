@@ -61,9 +61,9 @@ class Gptune(CMakePackage):
     depends_on("hypre+gptune@2.19.0", when="+hypre", type=("build", "run"))
 
     depends_on("openmpi@4:", when="+mpispawn", type=("build", "run"))
-    conflicts("mpich", when="+mpispawn")
-    conflicts("spectrum-mpi", when="+mpispawn")
-    conflicts("cray-mpich", when="+mpispawn")
+    conflicts("^mpich", when="+mpispawn")
+    conflicts("^spectrum-mpi", when="+mpispawn")
+    conflicts("^cray-mpich", when="+mpispawn")
     conflicts("%gcc@:7")
 
     def cmake_args(self):

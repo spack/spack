@@ -116,7 +116,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("python@2.7.5:", type=("build", "run"))
 
-    conflicts("hip@:4.4.0", when="+rocm")
+    conflicts("^hip@:4.4.0", when="+rocm")
 
     depends_on("oneapi-level-zero@1.8.0:", when="+level_zero")
 

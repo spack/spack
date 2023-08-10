@@ -26,10 +26,10 @@ class Glew(CMakePackage):
         multi=False,
         description="The OpenGL provider to use",
     )
-    conflicts("osmesa", when="gl=glx")
-    conflicts("osmesa", when="gl=other")
-    conflicts("glx", when="gl=osmesa")
-    conflicts("glx", when="gl=other")
+    conflicts("^osmesa", when="gl=glx")
+    conflicts("^osmesa", when="gl=other")
+    conflicts("^glx", when="gl=osmesa")
+    conflicts("^glx", when="gl=other")
 
     depends_on("gl")
     depends_on("osmesa", when="gl=osmesa")

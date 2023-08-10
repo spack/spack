@@ -92,8 +92,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("boost@1.71:")
     depends_on("fmt@9:", when="@0.11:")
     # https://github.com/pika-org/pika/issues/686
-    conflicts("fmt@10:", when="@:0.15 +cuda")
-    conflicts("fmt@10:", when="@:0.15 +rocm")
+    conflicts("^fmt@10:", when="@:0.15 +cuda")
+    conflicts("^fmt@10:", when="@:0.15 +rocm")
     depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
@@ -110,7 +110,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
-    conflicts("tracy-client@0.9:", when="@:0.9")
+    conflicts("^tracy-client@0.9:", when="@:0.9")
     depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
     depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
 

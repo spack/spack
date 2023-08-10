@@ -161,7 +161,7 @@ class Gromacs(CMakePackage, CudaPackage):
     conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
     conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
     conflicts(
-        "intel-oneapi-mkl@:2021.2",
+        "^intel-oneapi-mkl@:2021.2",
         when="@2023:",
         msg="GROMACS requires oneMKL 2021.3 or later since version 2023",
     )

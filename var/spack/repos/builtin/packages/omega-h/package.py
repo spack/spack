@@ -63,14 +63,14 @@ class OmegaH(CMakePackage, CudaPackage):
     # Note: '+cuda' and 'cuda_arch' variants are added by the CudaPackage
     depends_on("cuda", when="+cuda")
     conflicts(
-        "cuda@11.2",
+        "^cuda@11.2",
         when="@scorec.10.1.0:",
         msg="Thrust is broken in CUDA = 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
     )
     # the sandia repo has a fix for cuda > 11.2 support
     #  see github.com/sandialabs/omega_h/pull/373
     conflicts(
-        "cuda@11.2",
+        "^cuda@11.2",
         when="@:9.34.4",
         msg="Thrust is broken in CUDA = 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
     )
