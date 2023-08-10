@@ -230,6 +230,7 @@ class LlvmAmdgpu(CMakePackage):
                 self.define("LIBCXXABI_ENABLE_STATIC", "ON"),
                 self.define("LIBCXXABI_INSTALL_STATIC_LIBRARY", "OFF"),
             ]
+        args.append(self.define("LLVM_ENABLE_RTTI", "ON"))
         if self.spec.satisfies("@4.3.0:4.5.2"):
             llvm_projects.append("libcxx")
             llvm_projects.append("libcxxabi")
