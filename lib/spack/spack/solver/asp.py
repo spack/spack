@@ -2847,7 +2847,32 @@ class SpecBuilder:
                         spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                     )
 
-        return self._specs
+        specs = self.execute_explicit_splices()
+
+        return specs
+
+    def execute_explicit_splices(self):
+        splice_config = spack.config.get("concretizer:explicit_splices", [])
+        splice_triples = []
+        for splice_set in splice_config:
+            target = splice_set["target"]
+            replacement = spack.spec.Spec(splice_set["replacement"])
+            assert replacement.abstract_hash
+            replacement.replace_hash()
+            transitive = splice_set.get("transitive", False)
+            splice_triples.append((target, replacement, transitive))
+
+        specs = {}
+        for key, spec in self._specs.items():
+            current_spec = spec
+            for target, replacement, transitive in splice_triples:
+                if target in current_spec:
+                    # matches root or non-root
+                    # e.g. mvapich2%gcc
+                    current_spec = current_spec.splice(replacement, transitive)
+            specs[key] = current_spec
+
+        return specs
 
 
 def _develop_specs_from_env(spec, env):
