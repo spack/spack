@@ -941,7 +941,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         # https://github.com/trilinos/Trilinos/issues/866
         # A workaround is to remove PyTrilinos from the COMPONENTS_LIST
         # and to remove -lpytrilonos from Makefile.export.Trilinos
-        if "+python" in self.spec:
+        if "+python" in self.spec and self.spec.satisfies("@:13.0.1"):
             filter_file(
                 r"(SET\(COMPONENTS_LIST.*)(PyTrilinos;)(.*)",
                 (r"\1\3"),
