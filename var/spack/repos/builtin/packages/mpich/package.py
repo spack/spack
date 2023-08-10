@@ -98,15 +98,6 @@ spack package at this time.""",
     variant("fortran", default=True, description="Enable Fortran support")
 
     variant(
-        "two_level_namespace",
-        default=False,
-        description="""Build shared libraries and programs
-built with the mpicc/mpifort/etc. compiler wrappers
-with '-Wl,-commons,use_dylibs' and without
-'-Wl,-flat_namespace'.""",
-    )
-
-    variant(
         "vci",
         default=False,
         when="@4: device=ch4",
@@ -496,6 +487,10 @@ with '-Wl,-commons,use_dylibs' and without
             "--with-yaksa={0}".format(spec["yaksa"].prefix if "^yaksa" in spec else "embedded"),
         ]
 
+        # see https://github.com/pmodels/mpich/issues/5530
+        if spec.platform == "darwin":
+            config_args.append("--enable-two-level-namespace")
+
         # hwloc configure option changed in 4.0
         if spec.satisfies("@4.0:"):
             config_args.append(
@@ -577,9 +572,6 @@ with '-Wl,-commons,use_dylibs' and without
         if "+argobots" in spec:
             config_args.append("--with-thread-package=argobots")
             config_args.append("--with-argobots=" + spec["argobots"].prefix)
-
-        if "+two_level_namespace" in spec:
-            config_args.append("--enable-two-level-namespace")
 
         if "+vci" in spec:
             config_args.append("--enable-thread-cs=per-vci")
