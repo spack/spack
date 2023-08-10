@@ -649,7 +649,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             if cuda_arch == "35" and spec.satisfies("+cuda_arch_35_k20x"):
                 gpuver = "K20X"
 
-            if spec.satisfies("@2023.2: +cusolvermp"):
+            if spec.satisfies("+cusolvermp"):
                 libs += ["-lcusolverMp"]
                 cppflags += ["-D__CUSOLVERMP"]
 
