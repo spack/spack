@@ -30,7 +30,7 @@ from ._checks import BaseBuilder, execute_install_time_tests
 
 
 class PythonExtension(spack.package_base.PackageBase):
-    maintainers("adamjstewart", "pradyunsg")
+    maintainers("adamjstewart")
 
     @property
     def import_modules(self):
