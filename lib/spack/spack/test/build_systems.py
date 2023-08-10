@@ -23,8 +23,6 @@ from spack.util.executable import which
 
 DATA_PATH = os.path.join(spack.paths.test_path, "data")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-
 
 @pytest.fixture()
 def concretize_and_setup(default_mock_concretization):
@@ -45,6 +43,7 @@ def test_dir(tmpdir):
     return _func
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="make not available on Windows")
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
 class TestTargets:
     @pytest.mark.parametrize(
@@ -93,6 +92,7 @@ class TestTargets:
             s.package._if_ninja_target_execute("check")
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="autotools not available on windows")
 @pytest.mark.usefixtures("config", "mock_packages")
 class TestAutotoolsPackage:
     def test_with_or_without(self, default_mock_concretization):
