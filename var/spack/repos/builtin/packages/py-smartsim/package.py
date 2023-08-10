@@ -25,9 +25,9 @@ class PySmartsim(PythonPackage):
     variant("cuda", default=False, description="Use CUDA")
     variant("rocm", default=False, description="Use ROCm")
 
-    depends_on("python@3.8:3.10", type=("build", "run"))
-    depends_on("py-wheel", type=("build",))
+    depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type=("build",))
+    depends_on("py-cmake@3.13:", type=("build",))
 
     depends_on("py-psutil@5.7.2:", type=("build", "run"))
     depends_on("py-coloredlogs@10:", type=("build", "run"))
