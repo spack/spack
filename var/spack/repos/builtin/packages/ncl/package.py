@@ -49,6 +49,8 @@ class Ncl(Package):
         when="%gcc@10:",
         sha256="64f3502c9deab48615a4cbc26073173081c0774faf75778b044d251e45d238f7",
     )
+    # g2clib does not have a ymakefile. This patch avoids a benign ymake error.
+    patch("ymake-grib.patch", when="+grib")
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
