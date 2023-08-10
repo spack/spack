@@ -15,12 +15,11 @@ class PySmartsim(PythonPackage):
 
     homepage = "https://www.craylabs.org/docs/overview.html"
     git = "https://github.com/CrayLabs/SmartSim"
-    pypi = "smartsim/smartsim-0.4.2.tar.gz"
+    pypi = "smartsim/smartsim-0.5.0.tar.gz"
 
     maintainers("MattToast")
 
     version("0.5.0", sha256="35b36243dc84af62261a7f772bae92f0b3502faf01401423899cb2a48339858c")
-    version("0.4.2", sha256="ab632ff7d036e73822ddc5081fe85ea69c48d8be53ad0e6e487e9193eb3410f6")
 
     variant("torch", default=True, description="Build with the pytorch backend")
     variant("cuda", default=False, description="Use CUDA")
@@ -40,7 +39,6 @@ class PySmartsim(PythonPackage):
 
     # Companion libs
     depends_on("py-smartredis@0.4.1", type=("build", "run"), when="@0.5.0")
-    depends_on("py-smartredis@0.4.0", type=("build", "run"), when="@0.4.2")
 
     # Backends
     depends_on("redis@7.0.5:", type=("build", "run"))
@@ -65,14 +63,7 @@ class PySmartsim(PythonPackage):
     # copy of Redis, RedisAI, and ML deps. This functionality should be
     # patched out so that users do not accidentally overwrite/break
     # dependencies fetched though Spack
-    patch("ss-0-5-0-remove-typed-cli-build-fns.patch", when="@0.5.0")
-    patch("ss-0-4-2-remove-cli-build-fns.patch", when="@0.4.2")
-
-    # SmartSim v0.4.2 uses a now deprecated package `redis-py-cluster` that is
-    # not currently offered through Spack. This functionality was since migrated
-    # to the `redis` package in v3.0 which is already a dependency for SS v0.4.2.
-    # This patch will simply make the needed namespace changes to remove this dep.
-    patch("ss-0-4-2-remove-redis-py-cluster.patch", when="@0.4.2")
+    patch("ss-0-5-0-remove-cli-build-fns.patch")
 
     @run_after("install")
     def symlink_bin_deps(self):
