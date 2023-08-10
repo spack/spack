@@ -249,7 +249,7 @@ class Python(Package):
         depends_on("sqlite@3.7.15:", when="@3.10:+sqlite3")
         depends_on("gdbm", when="+dbm")  # alternatively ndbm or berkeley-db
         depends_on("libnsl", when="+nis")
-        depends_on("zlib@1.1.3:", when="+zlib")
+        depends_on("zlib-api", when="+zlib")
         depends_on("bzip2", when="+bz2")
         depends_on("xz libs=shared", when="+lzma")
         depends_on("expat", when="+pyexpat")
@@ -1035,8 +1035,8 @@ print(json.dumps(config))
                 return lib
 
         raise spack.error.NoLibrariesError(
-            "Unable to find {} libraries with the following names:".format(self.name),
-            "\n".join(candidates),
+            "Unable to find {} libraries with the following names:\n\n* ".format(self.name)
+            + "\n* ".join(candidates)
         )
 
     @property
@@ -1061,8 +1061,8 @@ print(json.dumps(config))
                 break
         else:
             raise spack.error.NoHeadersError(
-                "Unable to locate {} headers in any of these locations:".format(self.name),
-                "\n".join(candidates),
+                "Unable to locate {} headers in any of these locations:\n\n* ".format(self.name)
+                + "\n* ".join(candidates)
             )
 
         headers.directories = [os.path.dirname(config_h)]

@@ -24,7 +24,7 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Dict, Union
+from typing import Any, Dict, List, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.lang
@@ -78,43 +78,6 @@ def namespace_from_fullname(fullname):
     return namespace
 
 
-class _PrependFileLoader(importlib.machinery.SourceFileLoader):
-    def __init__(self, fullname, path, prepend=None):
-        super(_PrependFileLoader, self).__init__(fullname, path)
-        self.prepend = prepend
-
-    def path_stats(self, path):
-        stats = super(_PrependFileLoader, self).path_stats(path)
-        if self.prepend:
-            stats["size"] += len(self.prepend) + 1
-        return stats
-
-    def get_data(self, path):
-        data = super(_PrependFileLoader, self).get_data(path)
-        if path != self.path or self.prepend is None:
-            return data
-        else:
-            return self.prepend.encode() + b"\n" + data
-
-
-class RepoLoader(_PrependFileLoader):
-    """Loads a Python module associated with a package in specific repository"""
-
-    #: Code in ``_package_prepend`` is prepended to imported packages.
-    #:
-    #: Spack packages are expected to call `from spack.package import *`
-    #: themselves, but we are allowing a deprecation period before breaking
-    #: external repos that don't do this yet.
-    _package_prepend = "from spack.package import *"
-
-    def __init__(self, fullname, repo, package_name):
-        self.repo = repo
-        self.package_name = package_name
-        self.package_py = repo.filename_for_package_name(package_name)
-        self.fullname = fullname
-        super().__init__(self.fullname, self.package_py, prepend=self._package_prepend)
-
-
 class SpackNamespaceLoader:
     def create_module(self, spec):
         return SpackNamespace(spec.name)
@@ -155,7 +118,9 @@ class ReposFinder:
                 # With 2 nested conditionals we can call "repo.real_name" only once
                 package_name = repo.real_name(module_name)
                 if package_name:
-                    return RepoLoader(fullname, repo, package_name)
+                    return importlib.machinery.SourceFileLoader(
+                        fullname, repo.filename_for_package_name(package_name)
+                    )
 
             # We are importing a full namespace like 'spack.pkg.builtin'
             if fullname == repo.full_namespace:
@@ -422,7 +387,7 @@ class FastPackageChecker(collections.abc.Mapping):
     def last_mtime(self):
         return max(sinfo.st_mtime for sinfo in self._packages_to_stats.values())
 
-    def modified_since(self, since):
+    def modified_since(self, since: float) -> List[str]:
         return [name for name, sinfo in self._packages_to_stats.items() if sinfo.st_mtime > since]
 
     def __getitem__(self, item):
@@ -548,35 +513,34 @@ class RepoIndex:
     when they're needed.
 
     ``Indexers`` should be added to the ``RepoIndex`` using
-    ``add_index(name, indexer)``, and they should support the interface
+    ``add_indexer(name, indexer)``, and they should support the interface
     defined by ``Indexer``, so that the ``RepoIndex`` can read, generate,
     and update stored indices.
 
-    Generated indexes are accessed by name via ``__getitem__()``.
+    Generated indexes are accessed by name via ``__getitem__()``."""
 
-    """
-
-    def __init__(self, package_checker, namespace, cache):
+    def __init__(
+        self,
+        package_checker: FastPackageChecker,
+        namespace: str,
+        cache: spack.util.file_cache.FileCache,
+    ):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
         if sys.platform == "win32":
             self.packages_path = spack.util.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
-        self.indexers = {}
-        self.indexes = {}
+        self.indexers: Dict[str, Indexer] = {}
+        self.indexes: Dict[str, Any] = {}
         self.cache = cache
 
-    def add_indexer(self, name, indexer):
+    def add_indexer(self, name: str, indexer: Indexer):
         """Add an indexer to the repo index.
 
         Arguments:
-            name (str): name of this indexer
-
-            indexer (object): an object that supports create(), read(),
-                write(), and get_index() operations
-
-        """
+            name: name of this indexer
+            indexer: object implementing the ``Indexer`` interface"""
         self.indexers[name] = indexer
 
     def __getitem__(self, name):
@@ -597,17 +561,15 @@ class RepoIndex:
         because the main bottleneck here is loading all the packages.  It
         can take tens of seconds to regenerate sequentially, and we'd
         rather only pay that cost once rather than on several
-        invocations.
-
-        """
+        invocations."""
         for name, indexer in self.indexers.items():
             self.indexes[name] = self._build_index(name, indexer)
 
-    def _build_index(self, name, indexer):
+    def _build_index(self, name: str, indexer: Indexer):
         """Determine which packages need an update, and update indexes."""
 
         # Filename of the provider index cache (we assume they're all json)
-        cache_filename = "{0}/{1}-index.json".format(name, self.namespace)
+        cache_filename = f"{name}/{self.namespace}-index.json"
 
         # Compute which packages needs to be updated in the cache
         index_mtime = self.cache.mtime(cache_filename)
@@ -631,8 +593,7 @@ class RepoIndex:
                     needs_update = self.checker.modified_since(new_index_mtime)
 
                 for pkg_name in needs_update:
-                    namespaced_name = "%s.%s" % (self.namespace, pkg_name)
-                    indexer.update(namespaced_name)
+                    indexer.update(f"{self.namespace}.{pkg_name}")
 
                 indexer.write(new)
 
@@ -1240,6 +1201,11 @@ class Repo:
             raise UnknownPackageError(fullname)
         except Exception as e:
             msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
+            if isinstance(e, NameError):
+                msg += (
+                    ". This usually means `from spack.package import *` "
+                    "is missing at the top of the package.py file."
+                )
             raise RepoError(msg) from e
 
         cls = getattr(module, class_name)

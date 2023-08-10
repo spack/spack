@@ -300,7 +300,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-protobuf+cpp@3.10.0:", type=("build", "run"), when="@:0.90,0.99: +pfe")
 
     depends_on("protobuf+shared@3.10.0:", when="@:0.90,0.99:")
-    depends_on("zlib", when="protobuf@3.11.0:")
+    depends_on("zlib-api", when="protobuf@3.11.0:")
 
     # using cereal@1.3.1 and above requires changing the
     # find_package call to lowercase, so stick with :1.3.0
@@ -366,6 +366,17 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+gold" in spec:
             entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-fuse-ld=gold"))
             entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", "-fuse-ld=gold"))
+
+        # Set the generator in the cached config
+        if self.spec.satisfies("generator=make"):
+            entries.append(cmake_cache_string("CMAKE_GENERATOR", "Unix Makefiles"))
+        if self.spec.satisfies("generator=ninja"):
+            entries.append(cmake_cache_string("CMAKE_GENERATOR", "Ninja"))
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin)
+                )
+            )
 
         return entries
 

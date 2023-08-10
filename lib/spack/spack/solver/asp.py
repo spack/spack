@@ -48,6 +48,7 @@ import spack.util.path
 import spack.util.timer
 import spack.variant
 import spack.version as vn
+import spack.version.git_ref_lookup
 
 # these are from clingo.ast and bootstrapped later
 ASTType = None
@@ -955,8 +956,8 @@ class SpackSolverSetup:
         return [fn.attr("node_target_satisfies", spec.name, target)]
 
     def conflict_rules(self, pkg):
-        default_msg = "{0} '{1}' conflicts with '{2}'"
-        no_constraint_msg = "{0} conflicts with '{1}'"
+        default_msg = "{0}: '{1}' conflicts with '{2}'"
+        no_constraint_msg = "{0}: conflicts with '{1}'"
         for trigger, constraints in pkg.conflicts.items():
             trigger_msg = "conflict trigger %s" % str(trigger)
             trigger_id = self.condition(spack.spec.Spec(trigger), name=pkg.name, msg=trigger_msg)
@@ -2672,7 +2673,9 @@ class SpecBuilder:
         for root in self._specs.values():
             for spec in root.traverse():
                 if isinstance(spec.version, vn.GitVersion):
-                    spec.version.attach_git_lookup_from_package(spec.fullname)
+                    spec.version.attach_lookup(
+                        spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
+                    )
 
         return self._specs
 

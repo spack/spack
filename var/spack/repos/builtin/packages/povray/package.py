@@ -66,7 +66,7 @@ class Povray(AutotoolsPackage):
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants, when="+boost")
-    depends_on("zlib@1.2.1:", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("libpng@1.2.5:", when="+libpng")
     depends_on("jpeg", when="+jpeg")
     depends_on("libtiff@3.6.1:", when="+libtiff")

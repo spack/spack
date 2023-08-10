@@ -157,7 +157,7 @@ class Root(CMakePackage):
         default=False,
         description="Enable support for TMultilayerPerceptron " "classes' federation",
     )
-    variant("mysql", default=False)
+    variant("mysql", default=False, description="Enable support for MySQL databases")
     variant("opengl", default=True, description="Enable OpenGL support")
     variant("oracle", default=False, description="Enable support for Oracle databases")
     variant("postgres", default=False, description="Enable postgres support")
@@ -223,7 +223,7 @@ class Root(CMakePackage):
     depends_on("pcre")
     depends_on("xxhash", when="@6.13.02:")  # See cmake_args, below.
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd", when="@6.20:")
 
     # X-Graphics
@@ -633,7 +633,7 @@ class Root(CMakePackage):
 
         # With that done, let's go fixing those deps
         if spec.satisfies("@:6.12"):
-            add_include_path("zlib")
+            add_include_path("zlib-api")
         if "+x" in spec:
             if spec.satisfies("@:6.08") or spec.satisfies("@6.22:"):
                 add_include_path("xextproto")

@@ -105,14 +105,14 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("py-cffi", when="+python")
     depends_on("py-numpy", when="+python")
     depends_on("papi", when="+papi")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     # A C++ standard variant to work-around some odd behaviors with apple-clang
     # but this might be helpful for other use cases down the road.  Legion's
     # current development policy is C++11 or greater so we capture that aspect
     # here.
     cpp_stds = ["11", "14", "17", "20"]
-    variant("cxxstd", default="11", values=cpp_stds, multi=False)
+    variant("cxxstd", default="11", description="C++ standard", values=cpp_stds, multi=False)
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most

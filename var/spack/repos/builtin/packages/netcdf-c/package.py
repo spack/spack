@@ -241,7 +241,8 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html), zlib 1.2.5 or
     # later is required for netCDF-4 compression. However, zlib became a direct dependency only
     # starting NetCDF 4.9.0 (for the deflate plugin):
-    depends_on("zlib@1.2.5:", when="@4.9.0:+shared")
+    depends_on("zlib-api", when="@4.9.0:+shared")
+    depends_on("zlib@1.2.5:", when="^zlib")
 
     # Use the vendored bzip2 on Windows:
     for __p in ["darwin", "cray", "linux"]:
@@ -433,7 +434,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
                     extra_libs.append(hdf["szip"].libs)
                 if "+external-xdr" in hdf:
                     extra_libs.append(hdf["rpc"].libs)
-                extra_libs.append(hdf["zlib"].libs)
+                extra_libs.append(hdf["zlib-api"].libs)
 
         hdf5 = self.spec["hdf5:hl"]
         lib_search_dirs.extend(hdf5.libs.directories)
@@ -443,7 +444,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
             extra_libs.append(hdf5["zlib"].libs)
 
         if self.spec.satisfies("@4.9.0:+shared"):
-            lib_search_dirs.extend(self.spec["zlib"].libs.directories)
+            lib_search_dirs.extend(self.spec["zlib-api"].libs.directories)
         else:
             # Prevent overlinking to zlib:
             config_args.append("ac_cv_search_deflate=")
