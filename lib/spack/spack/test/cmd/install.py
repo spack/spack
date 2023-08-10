@@ -549,7 +549,7 @@ def test_cdash_report_concretization_error(
 
 @pytest.mark.skipif(
     sys.platform == "win32",
-    reason="log_output cannot currently be used outside of subprocess on Windows",
+    reason="Windows log_output logs phase header out of order",
 )
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery, capfd):
@@ -1101,7 +1101,7 @@ def test_install_empty_env(
 
 @pytest.mark.skipif(
     sys.platform == "win32",
-    reason="log_output cannot currently be used outside of subprocess on Windows",
+    reason="Windows log_output logs phase header out of order",
 )
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize(
@@ -1206,7 +1206,7 @@ def test_install_use_buildcache(
 
 @pytest.mark.skipif(
     sys.platform == "win32",
-    reason="log_output cannot currently be used outside of subprocess on Windows",
+    reason="Windows log_output logs phase header out of order",
 )
 @pytest.mark.regression("34006")
 @pytest.mark.disable_clean_stage_check
