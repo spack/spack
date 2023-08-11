@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.filesystem as fs
+
 from spack.package import *
 
 
@@ -71,6 +73,20 @@ class HpxKokkos(CMakePackage, CudaPackage, ROCmPackage):
                 "HPX_KOKKOS_CUDA_FUTURE_TYPE",
                 self.future_types_map[spec.variants["future_type"].value],
             ),
+            self.define("HPX_KOKKOS_ENABLE_TESTS", self.run_tests),
+            self.define("HPX_KOKKOS_ENABLE_BENCHMARKS", self.run_tests),
         ]
 
+        if "+rocm" in self.spec:
+            args += [self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc)]
+
         return args
+
+    build_directory = "spack-build"
+
+    def check(self):
+        if self.run_tests:
+            with fs.working_dir(self.build_directory):
+                cmake("--build", ".", "--target", "tests")
+                cmake("--build", ".", "--target", "benchmarks")
+                ctest("--output-on-failure")
