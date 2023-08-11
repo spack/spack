@@ -218,7 +218,10 @@ class Openblas(CMakePackage, MakefilePackage):
 
     depends_on("perl", type="build")
 
-    build_system("cmake", "makefile", default="cmake")
+    build_system(
+        conditional("cmake", when="platform=windows"),
+        default="makefile",
+    )
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -258,7 +261,7 @@ class Openblas(CMakePackage, MakefilePackage):
 
     @property
     def headers(self):
-        # As in netlib-lapack, the only public headers for cblas and lapacke in
+        # The only public headers for cblas and lapacke in
         # openblas are cblas.h and lapacke.h. The remaining headers are private
         # headers either included in one of these two headers, or included in
         # one of the source files implementing functions declared in these
@@ -270,7 +273,7 @@ class Openblas(CMakePackage, MakefilePackage):
         spec = self.spec
 
         # Look for openblas{symbol_suffix}
-        name = "libopenblas, openblas"
+        name = ["libopenblas", "openblas.lib"]
         search_shared = bool(spec.variants["shared"].value)
         suffix = spec.variants["symbol_suffix"].value
         if suffix != "none":

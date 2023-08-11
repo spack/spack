@@ -42,12 +42,7 @@ class Superlu(CMakePackage, Package):
         url="https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_4.2.tar.gz",
     )
 
-    build_system(
-        conditional("cmake", when="@5:"),
-        conditional("generic", when="@:4"),
-        conditional("cmake", when="platform=windows"),
-        default="cmake",
-    )
+    conflicts(platform=windows, when=@:4)
 
     variant("pic", default=True, description="Build with position independent code")
 
