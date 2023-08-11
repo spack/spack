@@ -58,7 +58,7 @@ def extensions(parser, args):
 
         extendable_pkgs = []
         for name in spack.repo.all_package_names():
-            pkg_cls = spack.repo.path.get_pkg_class(name)
+            pkg_cls = spack.repo.PATH.get_pkg_class(name)
             if pkg_cls.extendable:
                 extendable_pkgs.append(name)
 
@@ -81,7 +81,7 @@ def extensions(parser, args):
 
     if args.show in ("packages", "all"):
         # List package names of extensions
-        extensions = spack.repo.path.extensions_for(spec)
+        extensions = spack.repo.PATH.extensions_for(spec)
         if not extensions:
             tty.msg("%s has no extensions." % spec.cshort_spec)
         else:

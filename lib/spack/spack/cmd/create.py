@@ -915,11 +915,11 @@ def get_repository(args, name):
             )
     else:
         if spec.namespace:
-            repo = spack.repo.path.get_repo(spec.namespace, None)
+            repo = spack.repo.PATH.get_repo(spec.namespace, None)
             if not repo:
                 tty.die("Unknown namespace: '{0}'".format(spec.namespace))
         else:
-            repo = spack.repo.path.first_repo()
+            repo = spack.repo.PATH.first_repo()
 
     # Set the namespace on the spec if it's not there already
     if not spec.namespace:

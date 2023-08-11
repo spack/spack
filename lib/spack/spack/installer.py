@@ -590,7 +590,7 @@ def dump_packages(spec: "spack.spec.Spec", path: str) -> None:
         # Get the location of the package in the dest repo.
         dest_pkg_dir = repo.dirname_for_package_name(node.name)
         if node is spec:
-            spack.repo.path.dump_provenance(node, dest_pkg_dir)
+            spack.repo.PATH.dump_provenance(node, dest_pkg_dir)
         elif source_pkg_dir:
             fs.install_tree(source_pkg_dir, dest_pkg_dir)
 

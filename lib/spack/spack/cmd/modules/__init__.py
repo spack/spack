@@ -309,7 +309,7 @@ def refresh(module_type, specs, args):
 
     # Skip unknown packages.
     writers = [
-        cls(spec, args.module_set_name) for spec in specs if spack.repo.path.exists(spec.name)
+        cls(spec, args.module_set_name) for spec in specs if spack.repo.PATH.exists(spec.name)
     ]
 
     # Filter excluded packages early
@@ -377,7 +377,7 @@ callbacks = {"refresh": refresh, "rm": rm, "find": find, "loads": loads}
 def modules_cmd(parser, args, module_type, callbacks=callbacks):
     # Qualifiers to be used when querying the db for specs
     constraint_qualifiers = {
-        "refresh": {"installed": True, "known": lambda x: not spack.repo.path.exists(x)}
+        "refresh": {"installed": True, "known": lambda x: not spack.repo.PATH.exists(x)}
     }
     query_args = constraint_qualifiers.get(args.subparser_name, {})
 

@@ -238,7 +238,7 @@ class UrlPatch(Patch):
 
 def from_dict(dictionary, repository=None):
     """Create a patch from json dictionary."""
-    repository = repository or spack.repo.path
+    repository = repository or spack.repo.PATH
     owner = dictionary.get("owner")
     if "owner" not in dictionary:
         raise ValueError("Invalid patch dictionary: %s" % dictionary)

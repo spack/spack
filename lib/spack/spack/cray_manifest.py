@@ -90,7 +90,7 @@ def spec_from_entry(entry):
         name=entry["name"], version=entry["version"], compiler=compiler_str, arch=arch_str
     )
 
-    pkg_cls = spack.repo.path.get_pkg_class(entry["name"])
+    pkg_cls = spack.repo.PATH.get_pkg_class(entry["name"])
 
     if "parameters" in entry:
         variant_strs = list()

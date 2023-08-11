@@ -41,7 +41,7 @@ def test_tags_no_tags(monkeypatch):
     class tag_path:
         tag_index = dict()
 
-    monkeypatch.setattr(spack.repo, "path", tag_path)
+    monkeypatch.setattr(spack.repo, "PATH", tag_path)
     out = tags()
     assert "No tagged" in out
 

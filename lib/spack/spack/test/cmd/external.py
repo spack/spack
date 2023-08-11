@@ -43,7 +43,7 @@ def define_plat_exe(exe):
 
 
 def test_find_external_single_package(mock_executable, executables_found, _platform_executables):
-    pkgs_to_check = [spack.repo.path.get_pkg_class("cmake")]
+    pkgs_to_check = [spack.repo.PATH.get_pkg_class("cmake")]
     cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
     executables_found({str(cmake_path): define_plat_exe("cmake")})
 
@@ -58,7 +58,7 @@ def test_find_external_single_package(mock_executable, executables_found, _platf
 def test_find_external_two_instances_same_package(
     mock_executable, executables_found, _platform_executables
 ):
-    pkgs_to_check = [spack.repo.path.get_pkg_class("cmake")]
+    pkgs_to_check = [spack.repo.PATH.get_pkg_class("cmake")]
 
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
@@ -347,7 +347,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     def _determine_variants(cls, exes, version_str):
         return "languages=c", {"prefix": "/opt/gcc/bin", "compilers": {"c": exes[0]}}
 
-    gcc_cls = spack.repo.path.get_pkg_class("gcc")
+    gcc_cls = spack.repo.PATH.get_pkg_class("gcc")
     monkeypatch.setattr(gcc_cls, "determine_variants", _determine_variants)
 
     # Find the external spec

@@ -45,7 +45,7 @@ def setup_parser(subparser):
 
 def versions(parser, args):
     spec = spack.spec.Spec(args.package)
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
 
     safe_versions = pkg.versions

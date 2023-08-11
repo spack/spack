@@ -277,7 +277,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
     def setup_error(pkg, env):
         raise RuntimeError("cmake-client had issues!")
 
-    pkg = spack.repo.path.get_pkg_class("cmake-client")
+    pkg = spack.repo.PATH.get_pkg_class("cmake-client")
     monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
 
     spack.environment.shell.activate(e)

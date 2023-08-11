@@ -773,7 +773,7 @@ def concretize_scope(mutable_config, tmpdir):
     yield str(tmpdir.join("concretize"))
 
     mutable_config.pop_scope()
-    spack.repo.path._provider_index = None
+    spack.repo.PATH._provider_index = None
 
 
 @pytest.fixture
@@ -1937,5 +1937,5 @@ def nullify_globals(request, monkeypatch):
     ensure_configuration_fixture_run_before(request)
     monkeypatch.setattr(spack.config, "config", None)
     monkeypatch.setattr(spack.caches, "misc_cache", None)
-    monkeypatch.setattr(spack.repo, "path", None)
+    monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)

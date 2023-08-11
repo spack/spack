@@ -133,9 +133,9 @@ def external_find(args):
 
     # Add the packages that have been required explicitly
     if args.packages:
-        pkg_cls_to_check = [spack.repo.path.get_pkg_class(pkg) for pkg in args.packages]
+        pkg_cls_to_check = [spack.repo.PATH.get_pkg_class(pkg) for pkg in args.packages]
         if args.tags:
-            allowed = set(spack.repo.path.packages_with_tags(*args.tags))
+            allowed = set(spack.repo.PATH.packages_with_tags(*args.tags))
             pkg_cls_to_check = [x for x in pkg_cls_to_check if x.name in allowed]
 
     if args.tags and not pkg_cls_to_check:
@@ -144,15 +144,15 @@ def external_find(args):
         # Since tags are cached it's much faster to construct what we need
         # to search directly, rather than filtering after the fact
         pkg_cls_to_check = [
-            spack.repo.path.get_pkg_class(pkg_name)
+            spack.repo.PATH.get_pkg_class(pkg_name)
             for tag in args.tags
-            for pkg_name in spack.repo.path.packages_with_tags(tag)
+            for pkg_name in spack.repo.PATH.packages_with_tags(tag)
         ]
         pkg_cls_to_check = list(set(pkg_cls_to_check))
 
     # If the list of packages is empty, search for every possible package
     if not args.tags and not pkg_cls_to_check:
-        pkg_cls_to_check = list(spack.repo.path.all_package_classes())
+        pkg_cls_to_check = list(spack.repo.PATH.all_package_classes())
 
     # If the user specified any packages to exclude from external find, add them here
     if args.exclude:
@@ -239,7 +239,7 @@ def _collect_and_consume_cray_manifest_files(
 
 def external_list(args):
     # Trigger a read of all packages, might take a long time.
-    list(spack.repo.path.all_package_classes())
+    list(spack.repo.PATH.all_package_classes())
     # Print all the detectable packages
     tty.msg("Detectable packages per repository")
     for namespace, pkgs in sorted(spack.package_base.detectable_packages.items()):

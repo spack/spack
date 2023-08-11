@@ -82,7 +82,7 @@ def mock_pkg_git_repo(git, tmpdir_factory):
 
 @pytest.fixture(scope="module")
 def mock_pkg_names():
-    repo = spack.repo.path.get_repo("builtin.mock")
+    repo = spack.repo.PATH.get_repo("builtin.mock")
 
     # Be sure to include virtual packages since packages with stand-alone
     # tests may inherit additional tests from the virtuals they provide,
@@ -105,11 +105,11 @@ pkg = spack.main.SpackCommand("pkg")
 
 
 def test_packages_path():
-    assert spack.repo.packages_path() == spack.repo.path.get_repo("builtin").packages_path
+    assert spack.repo.packages_path() == spack.repo.PATH.get_repo("builtin").packages_path
 
 
 def test_mock_packages_path(mock_packages):
-    assert spack.repo.packages_path() == spack.repo.path.get_repo("builtin.mock").packages_path
+    assert spack.repo.packages_path() == spack.repo.PATH.get_repo("builtin.mock").packages_path
 
 
 def test_pkg_add(git, mock_pkg_git_repo):
@@ -126,8 +126,8 @@ def test_pkg_add(git, mock_pkg_git_repo):
         finally:
             shutil.rmtree("pkg-e")
             # Removing a package mid-run disrupts Spack's caching
-            if spack.repo.path.repos[0]._fast_package_checker:
-                spack.repo.path.repos[0]._fast_package_checker.invalidate()
+            if spack.repo.PATH.repos[0]._fast_package_checker:
+                spack.repo.PATH.repos[0]._fast_package_checker.invalidate()
 
     with pytest.raises(spack.main.SpackCommandError):
         pkg("add", "does-not-exist")
@@ -248,7 +248,7 @@ def test_pkg_source_requires_one_arg(mock_packages):
 def test_pkg_source(mock_packages):
     fake_source = pkg("source", "fake")
 
-    fake_file = spack.repo.path.filename_for_package_name("fake")
+    fake_file = spack.repo.PATH.filename_for_package_name("fake")
     with open(fake_file) as f:
         contents = f.read()
         assert fake_source == contents
@@ -303,7 +303,7 @@ def test_pkg_grep(mock_packages, capfd):
     pkg("grep", "-l", "splice", output=str)
     output, _ = capfd.readouterr()
     assert output.strip() == "\n".join(
-        spack.repo.path.get_pkg_class(name).module.__file__
+        spack.repo.PATH.get_pkg_class(name).module.__file__
         for name in ["splice-a", "splice-h", "splice-t", "splice-vh", "splice-z"]
     )
 

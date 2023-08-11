@@ -155,7 +155,7 @@ def url_list(args):
     urls = set()
 
     # Gather set of URLs from all packages
-    for pkg_cls in spack.repo.path.all_package_classes():
+    for pkg_cls in spack.repo.PATH.all_package_classes():
         url = getattr(pkg_cls, "url", None)
         urls = url_list_parsing(args, urls, url, pkg_cls)
 
@@ -192,7 +192,7 @@ def url_summary(args):
     tty.msg("Generating a summary of URL parsing in Spack...")
 
     # Loop through all packages
-    for pkg_cls in spack.repo.path.all_package_classes():
+    for pkg_cls in spack.repo.PATH.all_package_classes():
         urls = set()
         pkg = pkg_cls(spack.spec.Spec(pkg_cls.name))
 
@@ -336,7 +336,7 @@ def url_stats(args):
     version_stats = UrlStats()
     resource_stats = UrlStats()
 
-    for pkg_cls in spack.repo.path.all_package_classes():
+    for pkg_cls in spack.repo.PATH.all_package_classes():
         npkgs += 1
 
         for v in pkg_cls.versions:

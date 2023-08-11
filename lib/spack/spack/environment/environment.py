@@ -203,7 +203,7 @@ def activate(env, use_env_repo=False):
         env.store_token = spack.store.reinitialize()
 
     if use_env_repo:
-        spack.repo.path.put_first(env.repo)
+        spack.repo.PATH.put_first(env.repo)
 
     tty.debug("Using environment '%s'" % env.name)
 
@@ -227,7 +227,7 @@ def deactivate():
 
     # use _repo so we only remove if a repo was actually constructed
     if _active_environment._repo:
-        spack.repo.path.remove(_active_environment._repo)
+        spack.repo.PATH.remove(_active_environment._repo)
 
     tty.debug("Deactivated environment '%s'" % _active_environment.name)
 
@@ -1084,8 +1084,8 @@ class Environment:
         if list_name == user_speclist_name:
             if spec.anonymous:
                 raise SpackEnvironmentError("cannot add anonymous specs to an environment")
-            elif not spack.repo.path.exists(spec.name) and not spec.abstract_hash:
-                virtuals = spack.repo.path.provider_index.providers.keys()
+            elif not spack.repo.PATH.exists(spec.name) and not spec.abstract_hash:
+                virtuals = spack.repo.PATH.provider_index.providers.keys()
                 if spec.name not in virtuals:
                     msg = "no such package: %s" % spec.name
                     raise SpackEnvironmentError(msg)
@@ -1262,7 +1262,7 @@ class Environment:
             # better if we can create the `source_path` directly into its final
             # destination.
             abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
-            pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+            pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
             # We construct a package class ourselves, rather than asking for
             # Spec.package, since Spec only allows this when it is concrete
             package = pkg_cls(spec)
@@ -1490,7 +1490,7 @@ class Environment:
         # for a write lock. We do this indirectly by retrieving the
         # provider index, which should in turn trigger the update of
         # all the indexes if there's any need for that.
-        _ = spack.repo.path.provider_index
+        _ = spack.repo.PATH.provider_index
 
         # Ensure we have compilers in compilers.yaml to avoid that
         # processes try to write the config file in parallel
@@ -2280,7 +2280,7 @@ class Environment:
         repository = spack.repo.create_or_construct(repository_dir, spec_node.namespace)
         pkg_dir = repository.dirname_for_package_name(spec_node.name)
         fs.mkdirp(pkg_dir)
-        spack.repo.path.dump_provenance(spec_node, pkg_dir)
+        spack.repo.PATH.dump_provenance(spec_node, pkg_dir)
 
     def manifest_uptodate_or_warn(self):
         """Emits a warning if the manifest file is not up-to-date."""

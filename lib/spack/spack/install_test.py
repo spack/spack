@@ -1147,12 +1147,12 @@ class TestSuite:
     def write_reproducibility_data(self):
         for spec in self.specs:
             repo_cache_path = self.stage.repo.join(spec.name)
-            spack.repo.path.dump_provenance(spec, repo_cache_path)
+            spack.repo.PATH.dump_provenance(spec, repo_cache_path)
             for vspec in spec.package.virtuals_provided:
                 repo_cache_path = self.stage.repo.join(vspec.name)
                 if not os.path.exists(repo_cache_path):
                     try:
-                        spack.repo.path.dump_provenance(vspec, repo_cache_path)
+                        spack.repo.PATH.dump_provenance(vspec, repo_cache_path)
                     except spack.repo.UnknownPackageError:
                         pass  # not all virtuals have package files
 

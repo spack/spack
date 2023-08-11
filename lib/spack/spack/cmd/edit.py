@@ -31,9 +31,9 @@ def edit_package(name, repo_path, namespace):
     if repo_path:
         repo = spack.repo.Repo(repo_path)
     elif namespace:
-        repo = spack.repo.path.get_repo(namespace)
+        repo = spack.repo.PATH.get_repo(namespace)
     else:
-        repo = spack.repo.path
+        repo = spack.repo.PATH
     path = repo.filename_for_package_name(name)
 
     spec = Spec(name)

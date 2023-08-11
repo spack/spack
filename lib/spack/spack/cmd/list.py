@@ -107,7 +107,7 @@ def filter_by_name(pkgs, args):
                 if f.match(p):
                     return True
 
-                pkg_cls = spack.repo.path.get_pkg_class(p)
+                pkg_cls = spack.repo.PATH.get_pkg_class(p)
                 if pkg_cls.__doc__:
                     return f.match(pkg_cls.__doc__)
                 return False
@@ -159,7 +159,7 @@ def get_dependencies(pkg):
 @formatter
 def version_json(pkg_names, out):
     """Print all packages with their latest versions."""
-    pkg_classes = [spack.repo.path.get_pkg_class(name) for name in pkg_names]
+    pkg_classes = [spack.repo.PATH.get_pkg_class(name) for name in pkg_names]
 
     out.write("[\n")
 
@@ -201,7 +201,7 @@ def html(pkg_names, out):
     """
 
     # Read in all packages
-    pkg_classes = [spack.repo.path.get_pkg_class(name) for name in pkg_names]
+    pkg_classes = [spack.repo.PATH.get_pkg_class(name) for name in pkg_names]
 
     # Start at 2 because the title of the page from Sphinx is id1.
     span_id = 2
@@ -313,13 +313,13 @@ def list(parser, args):
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:
-        packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
+        packages_with_tags = spack.repo.PATH.packages_with_tags(*args.tags)
         sorted_packages = [p for p in sorted_packages if p in packages_with_tags]
 
     if args.update:
         # change output stream if user asked for update
         if os.path.exists(args.update):
-            if os.path.getmtime(args.update) > spack.repo.path.last_mtime():
+            if os.path.getmtime(args.update) > spack.repo.PATH.last_mtime():
                 tty.msg("File is up to date: %s" % args.update)
                 return
 
