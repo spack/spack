@@ -55,6 +55,7 @@ class Geant4(CMakePackage):
     conflicts("cxxstd=14", when="@11:", msg="geant4@11: only supports cxxstd=17")
 
     variant("threads", default=True, description="Build with multithreading")
+    variant("data", default=True, description="Depend on all required datasets")
     variant("vecgeom", default=False, description="Enable vecgeom support")
     variant("opengl", default=False, description="Optional OpenGL support")
     variant("x11", default=False, description="Optional X11 support")
@@ -85,7 +86,7 @@ class Geant4(CMakePackage):
         "11.0.0:11.0",
         "11.1:",
     ]:
-        depends_on("geant4-data@" + _vers, type="run", when="@" + _vers)
+        depends_on("geant4-data@" + _vers, type="run", when="@" + _vers + " +data")
 
     depends_on("expat")
     depends_on("zlib-api")
