@@ -136,7 +136,9 @@ class Geant4Data(BundlePackage):
 
     for _vers, _dsets in _datasets.items():
         _vers = "@" + _vers
-        for _d in _dsets:
+        for _dv in _dsets:
+            _d, _v = _dv.split("@")
+            variant(_d, default=True, when=_vers)
             depends_on(_d, type=("build", "run"), when=_vers)
 
     @property
