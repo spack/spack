@@ -289,7 +289,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("libheif@1.1:", when="+heif")
     depends_on("hdf", when="+hdf4")
     depends_on("hdf5+cxx", when="+hdf5")
-    depends_on("hdf5@:1.12", when="@:3.4.1 +hdf5")
+    depends_on("hdf5@:1.13", when="@:3.5 +hdf5")
+    depends_on("hdf5@:1.12", when="@:3.4 +hdf5")
     depends_on("hadoop", when="+hdfs")
     depends_on("iconv", when="+iconv")
     # depends_on('idb', when='+idb')
@@ -367,6 +368,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("python@3.6:", type=("build", "link", "run"), when="@3.3:+python")
     depends_on("python@2.0:", type=("build", "link", "run"), when="@3.2:+python")
     depends_on("python", type=("build", "link", "run"), when="+python")
+    # Uses distutils
+    depends_on("python@:3.11", type=("build", "link", "run"), when="@:3.4+python")
     # swig/python/setup.py
     depends_on("py-setuptools@:57", type="build", when="@:3.2+python")  # needs 2to3
     depends_on("py-setuptools", type="build", when="+python")
