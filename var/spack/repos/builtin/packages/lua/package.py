@@ -238,8 +238,8 @@ class Lua(LuaImplPackage):
     depends_on("readline")
 
     patch(
-        "http://lua.2524044.n2.nabble.com/attachment/7666421/0/pkg-config.patch",
-        sha256="208316c2564bdd5343fa522f3b230d84bd164058957059838df7df56876cb4ae",
+        "https://github.com/guix-mirror/guix/raw/6edb5b7765923c05f1eb2b9e54b773490a574601/gnu/packages/patches/lua-pkgconfig.patch",
+        sha256="a481562e8332b9284bf26ccd13ca10ce2ac94123f88f4934761982e16479755a",
         when="+pcfile @:5.3.9999",
     )
 
