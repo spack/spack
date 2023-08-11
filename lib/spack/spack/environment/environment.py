@@ -2664,6 +2664,22 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.yaml_content = with_defaults_added
         self.changed = False
 
+    def _first_match(self, user_spec: str) -> str:
+        """Maps the input string to the first equivalent user spec in the manifest,
+        and returns it.
+
+        Args:
+            user_spec: user spec to be found
+
+        Raises:
+            ValueError: if no equivalent match is found
+        """
+        for yaml_spec_str in self.pristine_configuration["specs"]:
+            if Spec(yaml_spec_str) == Spec(user_spec):
+                return yaml_spec_str
+        else:
+            raise ValueError(f"cannot find a spec equivalent to {user_spec}")
+
     def add_user_spec(self, user_spec: str) -> None:
         """Appends the user spec passed as input to the list of root specs.
 
@@ -2684,6 +2700,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: when the user spec is not in the list
         """
         try:
+            user_spec = self._first_match(user_spec)
             self.pristine_configuration["specs"].remove(user_spec)
             self.configuration["specs"].remove(user_spec)
         except ValueError as e:

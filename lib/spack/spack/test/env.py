@@ -13,7 +13,11 @@ import llnl.util.filesystem as fs
 
 import spack.environment as ev
 import spack.spec
-from spack.environment.environment import SpackEnvironmentViewError, _error_on_nonempty_view_dir
+from spack.environment.environment import (
+    EnvironmentManifestFile,
+    SpackEnvironmentViewError,
+    _error_on_nonempty_view_dir,
+)
 
 pytestmark = pytest.mark.not_on_windows("Envs are not supported on windows")
 
@@ -623,3 +627,28 @@ def test_requires_on_virtual_and_potential_providers(
         assert mpileaks.satisfies("^mpich2")
         assert mpileaks["mpi"].satisfies("mpich2")
         assert not mpileaks.satisfies(f"^{possible_mpi_spec}")
+
+
+@pytest.mark.regression("39387")
+@pytest.mark.parametrize(
+    "spec_str", ["mpileaks +opt", "mpileaks  +opt   ~shared", "mpileaks  ~shared   +opt"]
+)
+def test_manifest_file_removal_works_if_spec_is_not_normalized(tmp_path, spec_str):
+    """Tests that we can remove a spec from a manifest file even if its string
+    representation is not normalized.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
+spack:
+  specs:
+  - {spec_str}
+"""
+    )
+    s = spack.spec.Spec(spec_str)
+    spack_yaml = EnvironmentManifestFile(tmp_path)
+    # Doing a round trip str -> Spec -> str normalizes the representation
+    spack_yaml.remove_user_spec(str(s))
+    spack_yaml.flush()
+
+    assert spec_str not in manifest.read_text()
