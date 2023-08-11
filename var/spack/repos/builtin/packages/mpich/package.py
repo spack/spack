@@ -202,6 +202,18 @@ spack package at this time.""",
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=yaksa")
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=auto device=ch4")
 
+    # Fix false positive result of the configure time check for CFI support
+    # https://github.com/pmodels/mpich/pull/6537
+    # https://github.com/pmodels/mpich/issues/6505
+    with when("@3.2.2:4.1.1"):
+        # Apply the patch from the upstream repo in case we have to run the autoreconf stage:
+        patch(
+            "https://github.com/pmodels/mpich/commit/d901a0b731035297dd6598888c49322e2a05a4e0.patch?full_index=1",
+            sha256="de0de41ec42ac5f259ea02f195eea56fba84d72b0b649a44c947eab6632995ab",
+        )
+        # Apply the changes to the configure script to skip the autoreconf stage if possible:
+        patch("mpich32_411_CFI_configure.patch")
+
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build")
 
@@ -478,6 +490,7 @@ spack package at this time.""",
     def configure_args(self):
         spec = self.spec
         config_args = [
+            "--disable-maintainer-mode",
             "--disable-silent-rules",
             "--enable-shared",
             "--with-pm={0}".format("hydra" if "+hydra" in spec else "no"),
