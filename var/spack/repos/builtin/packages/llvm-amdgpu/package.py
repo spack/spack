@@ -138,7 +138,7 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
     depends_on("python", type="build")
     depends_on("z3", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("ncurses+termlib", type="link")
     depends_on("pkgconfig", type="build")
 
@@ -230,6 +230,7 @@ class LlvmAmdgpu(CMakePackage):
                 self.define("LIBCXXABI_ENABLE_STATIC", "ON"),
                 self.define("LIBCXXABI_INSTALL_STATIC_LIBRARY", "OFF"),
             ]
+        args.append(self.define("LLVM_ENABLE_RTTI", "ON"))
         if self.spec.satisfies("@4.3.0:4.5.2"):
             llvm_projects.append("libcxx")
             llvm_projects.append("libcxxabi")

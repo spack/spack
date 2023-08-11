@@ -43,7 +43,7 @@ class Mgard(CMakePackage, CudaPackage):
 
     depends_on("python", type=("build",), when="@2022-11-18:")
     depends_on("sed", type=("build",), when="@2022-11-18:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("pkgconfig", type=("build",), when="@2022-11-18:")
     depends_on("zstd")
     depends_on("protobuf@:3.21.12", when="@2022-11-18:")

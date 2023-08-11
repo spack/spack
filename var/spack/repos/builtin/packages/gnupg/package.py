@@ -123,7 +123,7 @@ class Gnupg(AutotoolsPackage):
     depends_on("libassuan@2.5:", when="@2.2.15:")
     depends_on("pinentry", type="run", when="@2:")
     depends_on("iconv", when="@2:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("gawk", type="build", when="@:1")
     # note: perl and curl are gnupg1 dependencies when keyserver support is
@@ -143,7 +143,7 @@ class Gnupg(AutotoolsPackage):
             "--disable-bzip2",
             "--disable-ldap",
             "--disable-regex",
-            "--with-zlib=" + self.spec["zlib"].prefix,
+            "--with-zlib=" + self.spec["zlib-api"].prefix,
             "--without-tar",
             "--without-readline",
         ]

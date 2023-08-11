@@ -41,6 +41,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("14.4.0", sha256="8e7d881cf6677aa062f7bfea8baa1e52e8956aa575d6a4f90f2b6f032632d4c6")
     version("14.2.0", sha256="c96606e5cd7fc9d25b9dc20719cd388658520d7cbbd2b4de77a118440d1e0ccb")
     version("14.0.0", sha256="054d2fabdf70fce0dfaeb20eed265bd7894045d3e00c3d1ddb72d1c77c339ca1")
     version("13.4.1", sha256="5465cbff3de7ef4ac7d40eeff9d99342c00d9d20eee0a5f64f0a523093f5f1b3")
@@ -401,7 +402,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("superlu-dist", when="+superlu-dist")
     depends_on("superlu@4.3 +pic", when="+superlu")
     depends_on("swig", when="+python")
-    depends_on("zlib", when="+zoltan")
+    depends_on("zlib-api", when="+zoltan")
 
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
@@ -767,7 +768,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             ("METIS", "metis"),
             ("Netcdf", "netcdf-c"),
             ("SCALAPACK", "scalapack"),
-            ("Zlib", "zlib"),
+            ("Zlib", "zlib-api"),
         ]
         if spec.satisfies("@12.12.1:"):
             tpl_dep_map.append(("Pnetcdf", "parallel-netcdf"))
@@ -940,7 +941,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         # https://github.com/trilinos/Trilinos/issues/866
         # A workaround is to remove PyTrilinos from the COMPONENTS_LIST
         # and to remove -lpytrilonos from Makefile.export.Trilinos
-        if "+python" in self.spec:
+        if self.spec.satisfies("@:13.0.1 +python"):
             filter_file(
                 r"(SET\(COMPONENTS_LIST.*)(PyTrilinos;)(.*)",
                 (r"\1\3"),

@@ -26,7 +26,7 @@ class Libdeflate(MakefilePackage, CMakePackage):
         default="cmake",
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("gzip")
 
     with when("build_system=cmake"):

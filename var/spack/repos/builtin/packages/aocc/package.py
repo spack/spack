@@ -53,7 +53,7 @@ class Aocc(Package):
     license_url = "https://www.amd.com/en/developer/aocc/aocc-compiler/eula.html"
 
     depends_on("libxml2")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("ncurses")
     depends_on("libtool")
     depends_on("texinfo")

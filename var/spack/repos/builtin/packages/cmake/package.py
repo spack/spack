@@ -186,7 +186,6 @@ class Cmake(Package):
     # a build dependency, and its libs will not interfere with others in
     # the build.
     variant("ownlibs", default=True, description="Use CMake-provided third-party libraries")
-    variant("qt", default=False, description="Enables the build of cmake-gui")
     variant(
         "doc",
         default=False,
@@ -221,7 +220,7 @@ class Cmake(Package):
 
     # When using curl, cmake defaults to using system zlib too, probably because
     # curl already depends on zlib. Therefore, also unconditionaly depend on zlib.
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     with when("~ownlibs"):
         depends_on("expat")
@@ -233,7 +232,6 @@ class Cmake(Package):
         depends_on("libuv@1.10.0:", when="@3.12.0:")
         depends_on("rhash", when="@3.8.0:")
 
-    depends_on("qt", when="+qt")
     depends_on("ncurses", when="+ncurses")
 
     with when("+doc"):
@@ -276,8 +274,6 @@ class Cmake(Package):
         sha256="b48396c0e4f61756248156b6cebe9bc0d7a22228639b47b5aa77c9330588ce88",
         when="@3.19.0:3.19",
     )
-
-    conflicts("+qt", when="^qt@5.4.0")  # qt-5.4.0 has broken CMake modules
 
     # https://gitlab.kitware.com/cmake/cmake/issues/18166
     conflicts("%intel", when="@3.11.0:3.11.4")
@@ -358,11 +354,7 @@ class Cmake(Package):
 
             # Whatever +/~ownlibs, use system curl.
             args.append("--system-curl")
-
-            if "+qt" in spec:
-                args.append("--qt-gui")
-            else:
-                args.append("--no-qt-gui")
+            args.append("--no-qt-gui")
 
             if "+doc" in spec:
                 args.append("--sphinx-html")

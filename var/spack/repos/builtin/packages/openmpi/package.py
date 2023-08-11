@@ -523,7 +523,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on("hwloc +cuda", when="+cuda ~internal-hwloc")
     depends_on("java", when="+java")
     depends_on("sqlite", when="+sqlite3")
-    depends_on("zlib", when="@3:")
+    depends_on("zlib-api", when="@3:")
     depends_on("valgrind~mpi", when="+memchecker")
     # Singularity release 3 works better
     depends_on("singularity@3:", when="+singularity")
@@ -961,7 +961,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(["--enable-debug"])
 
         # Package dependencies
-        for dep in ["libevent", "lustre", "singularity", "valgrind", "zlib"]:
+        for dep in ["libevent", "lustre", "singularity", "valgrind"]:
             if "^" + dep in spec:
                 config_args.append("--with-{0}={1}".format(dep, spec[dep].prefix))
 
@@ -970,6 +970,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.append("--with-pmix=internal")
         elif "^pmix" in spec:
             config_args.append("--with-pmix={0}".format(spec["pmix"].prefix))
+
+        if "^zlib-api" in spec:
+            config_args.append("--with-zlib={0}".format(spec["zlib-api"].prefix))
 
         # Hwloc support
         if spec.satisfies("+internal-hwloc"):
