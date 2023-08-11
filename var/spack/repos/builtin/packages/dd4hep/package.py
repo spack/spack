@@ -168,7 +168,7 @@ class Dd4hep(CMakePackage):
     depends_on("hepmc3", when="+hepmc3")
     depends_on("hepmc3@3.2.6:", when="+hepmc3-gz")
     depends_on("bzip2", when="+hepmc3-gz")
-    depends_on("lzma", when="+hepmc3-gz")
+    depends_on("xz", when="+hepmc3-gz")
     depends_on("zlib-api", when="+hepmc3-gz")
     depends_on("tbb", when="+tbb")
     depends_on("intel-tbb@:2020.3", when="+tbb @:1.23")
