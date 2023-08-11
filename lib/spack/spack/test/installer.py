@@ -846,6 +846,21 @@ def test_install_spliced_build_spec_installed(install_mockery, default_mock_conc
 
 # TODO: write test for rewiring direct from binary case
 
+@pytest.mark.parametrize("transitive", [True, False])
+def test_install_splice_root_from_binary(install_mockery, default_mock_concretization, mock_fetch,
+                                         transitive):
+    """TODO: Docstring"""
+    # Test splicing and rewiring a spec with the same name, different hash.
+    original_spec = spack.spec.Spec("splice-h~foo").concretized()
+    spec_to_splice = spack.spec.Spec("splice-h+foo").concretized()
+    out = original_spec.splice(spec_to_splice)
+    out.package.do_install()
+
+    # install all buildspecs (regular splice and install)
+    # push to mirror
+    # uninstall all buildspecs locally
+    # splice and install
+
 
 def test_install_task_use_cache(install_mockery, monkeypatch):
     const_arg = installer_args(["trivial-install-test-package"], {})

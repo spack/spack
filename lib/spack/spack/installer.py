@@ -2567,14 +2567,19 @@ class RewireTask(Task):
         self.compiler = False
 
     def execute(self):
-        if not self.pkg.spec.build_spec.installed:
-            return ExecuteResult.MISSING_BUILD_SPEC
+        # TODO: Docstring
+        oldstatus = self.status
         self.status = STATUS_INSTALLING
-        tests = self.request.install_args.get("tests")
         tty.msg(install_msg(self.pkg_id, self.pid))
         self.start = self.start or time.time()
-        self.status = STATUS_INSTALLING
-        self.pkg.run_tests = tests is True or tests and self.pkg.name in tests
+        if not self.pkg.spec.build_spec.installed:
+            try:
+                binary_distribution.install_root_node(self.pkg.spec)
+                return ExecuteResult.SUCCESS
+            except Exception as e:
+                tty.debug(f"Failed to rewire {self.pkg.spec} from binary. {e}")
+                self.status = oldstatus
+                return ExecuteResult.MISSING_BUILD_SPEC
         spack.rewiring.rewire_node(self.pkg.spec, self.explicit)
         return ExecuteResult.SUCCESS
 
