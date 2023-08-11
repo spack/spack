@@ -103,7 +103,7 @@ class DirectoryLayout:
         _check_concrete(spec)
 
         projection = spack.projections.get_projection(self.projections, spec)
-        path = spec.format(projection)
+        path = spack.spec.format_path(spec, projection)
         return path
 
     def write_spec(self, spec, path):

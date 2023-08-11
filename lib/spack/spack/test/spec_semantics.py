@@ -1004,6 +1004,15 @@ class TestSpecSemantics:
         assert new_spec.compiler_flags["cxxflags"] == ["-O1"]
 
 
+def test_spec_format_path():
+    import os
+    zlib = Spec("zlib@git.foo/bar")
+    f1 = spack.spec.format_path(zlib, "{name}-{version}")
+    assert f1 == "zlib-git.foo-bar"
+    f2 = spack.spec.format_path(zlib, "{name}/{version}")
+    assert f2 == os.path.join("zlib", "git.foo-bar")
+
+
 @pytest.mark.regression("3887")
 @pytest.mark.parametrize("spec_str", ["py-extension2", "extension1", "perl-extension"])
 def test_is_extension_after_round_trip_to_dict(config, mock_packages, spec_str):

@@ -4868,6 +4868,14 @@ def reconstruct_virtuals_on_edges(spec):
         for edge in provider.edges_from_dependents():
             edge.update_virtuals([vspec])
 
+def format_path(spec, format_string):
+    format_subcomponents = format_string.split(os.sep)
+    formatted_components = []
+    for c in format_subcomponents:
+        dirty_result = spec.format(c)
+        cleaned_result = re.sub(os.sep, "-", dirty_result)
+        formatted_components.append(cleaned_result)
+    return str(os.sep).join(formatted_components)
 
 class SpecfileReaderBase:
     @classmethod
