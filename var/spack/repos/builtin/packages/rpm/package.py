@@ -93,7 +93,6 @@ class Rpm(AutotoolsPackage):
     depends_on("bzip2")
     depends_on("gzip")
     depends_on("xz")
-    depends_on("lzma")
     depends_on("zstd", when="+zstd")
 
     # java jar dependency analysis (already requirement for lua)
