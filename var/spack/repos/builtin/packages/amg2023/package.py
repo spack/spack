@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Amg2023(MakefilePackage):
+class Amg2023(CMakePackage):
     """AMG2023 is a parallel algebraic multigrid solver for linear systems
     arising from problems on unstructured grids. The driver provided here
     builds linear systems for various 3-dimensional problems. It requires
@@ -20,26 +20,34 @@ class Amg2023(MakefilePackage):
     version("develop", branch="main")
     version("tre", git="https://github.com/tjeter/AMG2023.git", branch="longitudinal-amg") 
 
+    
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("caliper", default=False, description="Enable Caliper monitoring")
     variant("adiak", default=False, description="Enable Adiak metadata gathering")
 
+    depends_on("mpi", when="+mpi")
+    depends_on("hypre+mpi", when="+mpi")
+    require("+mpi", when="^hypre+mpi")
     depends_on("caliper", when="+caliper")
     depends_on("adiak", when="+adiak")
     depends_on("hypre+caliper", when="+caliper")
     depends_on("hypre@2.27.0:")
-    depends_on("mpi", when="+mpi")
 
-    def flag_handler(self, name, flags):
-        if name == "ldlibs":
-            if self.spec.satisfies("+caliper"):
-                flags.append("-lcaliper")
-            if self.spec.satisfies("+adiak"):
-                flags.append("-ladiak")
-        return (flags, None, None)
+    def cmake_args(self):
+        cmake_options = []
+        cmake_options.append(self.define_from_variant("AMG_WITH_CALIPER", "caliper"))
+        cmake_options.append(self.define_from_variant("AMG_WITH_ADIAK", "adiak"))
+        cmake_options.append(self.define_from_variant("AMG_WITH_OMP", "openmp"))
+        cmake_options.append("-DHYPRE_PREFIX={0}".format(self.spec["hypre"].prefix) )
+        if spec["hypre"].satisfies("+cuda"):
+            cmake_options.append("-DAMG_WITH_CUDA=ON")
+        if spec["hypre"].satisfies("+mpi"):
+            cmake_options.append("-DAMG_WITH_MPI=ON")
 
-    def edit(self, spec, prefix):
+        return cmake_options
+
+    def temp(self, spec, prefix):
         makefile = FileFilter("Makefile")
         if "+mpi" in spec:
             makefile.filter(r"CC\s*=.*", f"CC = {spec['mpi'].mpicc}")
@@ -77,8 +85,3 @@ class Amg2023(MakefilePackage):
             makefile.filter("HYPRE_HIP_PATH    =", "#HYPRE_HIP_PATH    =")
             makefile.filter("HYPRE_HIP_INCLUDE =", "#HYPRE_HIP_INCLUDE =")
             makefile.filter("HYPRE_HIP_LIBS    =", "#HYPRE_HIP_LIBS    =")
-
-    def install(self, spec, prefix):
-        make()
-        mkdirp(prefix.bin)
-        install("amg", prefix.bin)
