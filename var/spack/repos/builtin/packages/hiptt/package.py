@@ -26,10 +26,10 @@ class Hiptt(MakefilePackage, ROCmPackage):
         env.prepend_path("cuTT_ROOT", hiptt_home)
         env.prepend_path("cuTT_LIBRARY", hiptt_home.lib)
         env.prepend_path("cuTT_INCLUDE_PATH", hiptt_home.include)
-    
+
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('bin/cutt_test', prefix.bin)
-        install('bin/cutt_bench', prefix.bin)
-        install_tree('lib', prefix.lib)
-        install_tree('include', prefix.include)
+        install("bin/cutt_test", prefix.bin)
+        install("bin/cutt_bench", prefix.bin)
+        install_tree("lib", prefix.lib)
+        install_tree("include", prefix.include)
