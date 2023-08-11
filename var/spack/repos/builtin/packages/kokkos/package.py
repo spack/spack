@@ -200,29 +200,30 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos-nvcc-wrapper@master", when="@master+wrapper")
     conflicts("+wrapper", when="~cuda")
 
-    stds = ["11", "14", "17", "20"]
-    # TODO: This should be named cxxstd for consistency with other packages
-    variant("std", default="17", values=stds, multi=False)
+    cxxstds = ["11", "14", "17", "20"]
+    variant("cxxstd", default="17", values=cxxstds, multi=False, description="C++ standard")
     variant("pic", default=False, description="Build position independent code")
 
-    conflicts("std=11", when="@3.7:")
-    conflicts("std=14", when="@4.0:")
+    conflicts("cxxstd=11", when="@3.7:")
+    conflicts("cxxstd=14", when="@4.0:")
 
-    conflicts("+cuda", when="std=17 ^cuda@:10")
-    conflicts("+cuda", when="std=20 ^cuda@:11")
+    conflicts("+cuda", when="cxxstd=17 ^cuda@:10")
+    conflicts("+cuda", when="cxxstd=20 ^cuda@:11")
 
     # SYCL and OpenMPTarget require C++17 or higher
-    for stdver in stds[: stds.index("17")]:
-        conflicts("+sycl", when="std={0}".format(stdver), msg="SYCL requires C++17 or higher")
+    for cxxstdver in cxxstds[: cxxstds.index("17")]:
+        conflicts(
+            "+sycl", when="cxxstd={0}".format(cxxstdver), msg="SYCL requires C++17 or higher"
+        )
         conflicts(
             "+openmptarget",
-            when="std={0}".format(stdver),
+            when="cxxstd={0}".format(cxxstdver),
             msg="OpenMPTarget requires C++17 or higher",
         )
 
     # HPX should use the same C++ standard
-    for std in stds:
-        depends_on("hpx cxxstd={0}".format(std), when="+hpx std={0}".format(std))
+    for cxxstd in cxxstds:
+        depends_on("hpx cxxstd={0}".format(cxxstd), when="+hpx cxxstd={0}".format(cxxstd))
 
     # HPX version constraints
     depends_on("hpx@:1.6", when="@:3.5 +hpx")
@@ -283,7 +284,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         options = [
             from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
-            from_variant("CMAKE_CXX_STANDARD", "std"),
+            from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
             from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
 

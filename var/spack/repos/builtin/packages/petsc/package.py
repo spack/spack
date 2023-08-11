@@ -22,6 +22,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.19.4", sha256="7c941b71be52c3b764214e492df60109d12f97f7d854c97a44df0c4d958b3906")
     version("3.19.3", sha256="008239c016b869693ec8e81368a0b7638462e667d07f7d50ed5f9b75ccc58d17")
     version("3.19.2", sha256="114f363f779bb16839b25c0e70f8b0ae0d947d50e72f7c6cddcb11b001079b16")
     version("3.19.1", sha256="74db60c53c80b48d5c39e07bc39a883ecced88b9f24a5de17cf6f485a903e120")
@@ -237,9 +238,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hdf5+mpi", when="@3.13:+hdf5+mpi")
     depends_on("hdf5+mpi", when="+exodusii+mpi")
     depends_on("hdf5+mpi", when="+cgns+mpi")
-    depends_on("zlib", when="+hdf5")
-    depends_on("zlib", when="+libpng")
-    depends_on("zlib", when="+p4est")
+    depends_on("zlib-api", when="+hdf5")
+    depends_on("zlib-api", when="+libpng")
+    depends_on("zlib-api", when="+p4est")
     depends_on("parmetis+int64", when="+metis+mpi+int64")
     depends_on("parmetis~int64", when="+metis+mpi~int64")
     depends_on("valgrind", when="+valgrind")
@@ -247,22 +248,19 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("mmg", when="+parmmg")
     depends_on("parmmg", when="+parmmg")
     depends_on("tetgen+pic", when="+tetgen")
-    # hypre+/~fortran based on wheter fortran is enabled/disabled
+
     depends_on("hypre+fortran", when="+hypre+fortran")
     depends_on("hypre~fortran", when="+hypre~fortran")
-    # Hypre does not support complex numbers.
-    # Also PETSc prefer to build it without internal superlu, likely due to
-    # conflict in headers see
-    # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on("hypre@2.14:2.18.2~internal-superlu", when="@3.11:3.13+hypre")
-    depends_on("hypre@2.14:2.22.0~internal-superlu", when="@3.14:3.15+hypre")
-    depends_on("hypre@2.14:~internal-superlu", when="@3.16:+hypre")
-    depends_on("hypre@develop~internal-superlu", when="@main+hypre")
     depends_on("hypre+complex", when="+hypre+complex")
     depends_on("hypre~complex", when="+hypre~complex")
     depends_on("hypre+int64", when="+hypre+int64")
     depends_on("hypre~int64", when="+hypre~int64")
-    depends_on("hypre+mpi", when="+hypre+mpi")
+    depends_on("hypre+mpi~internal-superlu", when="+hypre")
+    depends_on("hypre@2.14:2.18.2", when="@3.11:3.13+hypre")
+    depends_on("hypre@2.14:2.22.0", when="@3.14:3.15+hypre")
+    depends_on("hypre@2.14:2.28.0", when="@3.16:3.19+hypre")
+    depends_on("hypre@2.14:", when="@3.20+hypre")
+    depends_on("hypre@develop", when="@main+hypre")
 
     depends_on("superlu-dist@:4.3~int64", when="@3.4.4:3.6.4+superlu-dist+mpi~int64")
     depends_on("superlu-dist@:4.3+int64", when="@3.4.4:3.6.4+superlu-dist+mpi+int64")

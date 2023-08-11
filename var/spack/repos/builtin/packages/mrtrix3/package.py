@@ -28,7 +28,7 @@ class Mrtrix3(Package):
     depends_on("glu")
     depends_on("qt+opengl@4.7:")
     depends_on("eigen")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libtiff")
     depends_on("fftw")
 

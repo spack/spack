@@ -773,7 +773,7 @@ def concretize_scope(mutable_config, tmpdir):
     yield str(tmpdir.join("concretize"))
 
     mutable_config.pop_scope()
-    spack.repo.path._provider_index = None
+    spack.repo.PATH._provider_index = None
 
 
 @pytest.fixture
@@ -950,21 +950,14 @@ def disable_compiler_execution(monkeypatch, request):
 
 
 @pytest.fixture(scope="function")
-def install_mockery(temporary_store, mutable_config, mock_packages):
+def install_mockery(temporary_store: spack.store.Store, mutable_config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override("config:checksum", False):
         yield
 
-    # Also wipe out any cached prefix failure locks (associated with
-    # the session-scoped mock archive).
-    for pkg_id in list(temporary_store.db._prefix_failures.keys()):
-        lock = spack.store.STORE.db._prefix_failures.pop(pkg_id, None)
-        if lock:
-            try:
-                lock.release_write()
-            except Exception:
-                pass
+    # Wipe out any cached prefix failure locks (associated with the session-scoped mock archive)
+    temporary_store.failure_tracker.clear_all()
 
 
 @pytest.fixture(scope="function")
@@ -1944,5 +1937,5 @@ def nullify_globals(request, monkeypatch):
     ensure_configuration_fixture_run_before(request)
     monkeypatch.setattr(spack.config, "config", None)
     monkeypatch.setattr(spack.caches, "misc_cache", None)
-    monkeypatch.setattr(spack.repo, "path", None)
+    monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)

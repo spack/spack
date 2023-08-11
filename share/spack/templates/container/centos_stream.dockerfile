@@ -15,13 +15,16 @@ RUN dnf update -y \
         gcc-gfortran \
         git \
         gnupg2 \
+        hg \
         hostname \
         iproute \
         make \
+        svn \
         patch \
         python3.11 \
         python3.11-setuptools \
         unzip \
+        zstd \
  && python3.11 -m ensurepip \
  && pip3.11 install boto3 \
  && rm -rf /var/cache/dnf \
