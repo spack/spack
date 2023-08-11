@@ -4868,14 +4868,28 @@ def reconstruct_virtuals_on_edges(spec):
         for edge in provider.edges_from_dependents():
             edge.update_virtuals([vspec])
 
-def format_path(spec, format_string):
-    format_subcomponents = format_string.split(os.sep)
+
+def format_path(spec, format_string, _separator=None):
+    """Given a `format_string` that is intended as a path, generate a string
+    like from `Spec.format`, but eliminate extra path separators introduced by
+    formatting of Spec properties.
+
+    Path separators explicitly added to the string are preserved, so for example
+    "{name}/{version}" would generate a directory based on the Spec's name, and
+    a subdirectory based on its version; this function guarantees though that
+    the resulting string would only have two directories (i.e. that if under
+    normal circumstances that `str(Spec.version)` would contain a path
+    separator, it would not in this case).
+    """
+    separator = _separator = os.sep
+    format_subcomponents = format_string.split(separator)
     formatted_components = []
     for c in format_subcomponents:
         dirty_result = spec.format(c)
-        cleaned_result = re.sub(os.sep, "-", dirty_result)
+        cleaned_result = re.sub(separator, "-", dirty_result)
         formatted_components.append(cleaned_result)
-    return str(os.sep).join(formatted_components)
+    return str(separator).join(formatted_components)
+
 
 class SpecfileReaderBase:
     @classmethod

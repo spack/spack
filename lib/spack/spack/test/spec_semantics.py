@@ -1006,6 +1006,7 @@ class TestSpecSemantics:
 
 def test_spec_format_path():
     import os
+
     zlib = Spec("zlib@git.foo/bar")
     f1 = spack.spec.format_path(zlib, "{name}-{version}")
     assert f1 == "zlib-git.foo-bar"
