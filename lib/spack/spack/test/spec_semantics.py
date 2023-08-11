@@ -1009,9 +1009,9 @@ def test_spec_format_path():
 
     zlib = Spec("zlib@git.foo/bar")
     f1 = spack.spec.format_path(zlib, "{name}-{version}")
-    assert f1 == "zlib-git.foo-bar"
+    assert f1 == "zlib-git.foo_bar"
     f2 = spack.spec.format_path(zlib, "{name}/{version}")
-    assert f2 == os.path.join("zlib", "git.foo-bar")
+    assert f2 == os.path.join("zlib", "git.foo_bar")
 
 
 @pytest.mark.regression("3887")

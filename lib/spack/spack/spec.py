@@ -4886,7 +4886,7 @@ def format_path(spec, format_string, _separator=None):
     formatted_components = []
     for c in format_subcomponents:
         dirty_result = spec.format(c)
-        cleaned_result = re.sub(separator, "-", dirty_result)
+        cleaned_result = spack.util.path.sanitize_filename(dirty_result)
         formatted_components.append(cleaned_result)
     return str(separator).join(formatted_components)
 
