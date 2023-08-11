@@ -18,6 +18,7 @@ class Blktrace(MakefilePackage):
     homepage = "https://brick.kernel.dk"
     url = "https://brick.kernel.dk/snaps/blktrace-1.2.0.tar.gz"
 
+    version("1.3.0", sha256="88c25b3bb3254ab029d4c62df5a9ab863a5c70918a604040da8fe39873c6bacb")
     version("1.2.0", sha256="d14029bc096026dacb206bf115c912dcdb795320b5aba6dff3e46d7f94c5242d")
     version("1.1.0", sha256="dc1e5da64b8fef454ec24aa4fcc760112b4ea7c973e2485961aa5668b3a8ce1d")
     version("1.0.5", sha256="783b4c8743498de74b3492725815d31f3842828baf8710c53bc4e7e82cee387c")

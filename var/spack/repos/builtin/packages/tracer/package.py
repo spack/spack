@@ -12,7 +12,7 @@ class Tracer(MakefilePackage):
     homepage = "https://tracer-codes.readthedocs.io"
     git = "https://github.com/LLNL/tracer.git"
 
-    maintainers = ["bhatele"]
+    maintainers("bhatele")
 
     version("develop", branch="master")
     version("2.2", tag="v2.2")

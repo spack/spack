@@ -13,7 +13,7 @@ class IntelDaal(IntelPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/en-us/daal"
 

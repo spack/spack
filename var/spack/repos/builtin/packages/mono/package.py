@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Mono(AutotoolsPackage):
@@ -15,7 +16,7 @@ class Mono(AutotoolsPackage):
 
     homepage = "https://www.mono-project.com/"
     url = "https://download.mono-project.com/sources/mono/mono-5.0.1.1.tar.bz2"
-    maintainers = ["grospelliergilles"]
+    maintainers("grospelliergilles")
 
     # /usr/share/.mono/keypairs needs to exist or be able to be
     # created, e.g. https://github.com/gentoo/dotnet/issues/6
@@ -74,6 +75,8 @@ class Mono(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        li = self.spec["iconv"].prefix
-        args.append("--with-libiconv-prefix={p}".format(p=li))
+        if self.spec["iconv"].name == "libc":
+            args.append("--without-libiconv-prefix")
+        elif not is_system_path(self.spec["iconv"].prefix):
+            args.append("--with-libiconv-prefix={p}".format(p=self.spec["iconv"].prefix))
         return args

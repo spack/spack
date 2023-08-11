@@ -19,7 +19,7 @@ class Laghos(MakefilePackage):
     url = "https://github.com/CEED/Laghos/archive/v1.0.tar.gz"
     git = "https://github.com/CEED/Laghos.git"
 
-    maintainers = ["v-dobrev", "tzanio", "vladotomov"]
+    maintainers("v-dobrev", "tzanio", "vladotomov")
 
     version("develop", branch="master")
     version("3.1", sha256="49b65edcbf9732c7f6c228958620e18980c43ad8381315a8ba9957ecb7534cd5")

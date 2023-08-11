@@ -78,6 +78,14 @@ class PyRay(PythonPackage):
 
     build_directory = "python"
 
+    def patch(self):
+        filter_file(
+            'bazel_flags = ["--verbose_failures"]',
+            f'bazel_flags = ["--verbose_failures", "--jobs={make_jobs}"]',
+            join_path("python", "setup.py"),
+            string=True,
+        )
+
     def setup_build_environment(self, env):
         env.set("SKIP_THIRDPARTY_INSTALL", "1")
 

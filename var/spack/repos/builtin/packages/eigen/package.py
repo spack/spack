@@ -14,7 +14,7 @@ class Eigen(CMakePackage):
 
     homepage = "https://eigen.tuxfamily.org/"
     url = "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz"
-    maintainers = ["HaoZeke"]
+    maintainers("HaoZeke")
 
     version("3.4.0", sha256="8586084f71f9bde545ee7fa6d00288b264a2b7ac3607b974e54d13e7162c1c72")
     version("3.3.9", sha256="7985975b787340124786f092b3a07d594b2e9cd53bbfe5f3d9b1daee7d55f56f")

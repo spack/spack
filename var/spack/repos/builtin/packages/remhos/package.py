@@ -20,7 +20,7 @@ class Remhos(MakefilePackage):
     url = "https://github.com/CEED/Remhos/archive/v1.0.tar.gz"
     git = "https://github.com/CEED/Remhos.git"
 
-    maintainers = ["v-dobrev", "tzanio", "vladotomov"]
+    maintainers("v-dobrev", "tzanio", "vladotomov")
 
     version("develop", branch="master")
     version("1.0", sha256="e60464a867fe5b1fd694fbb37bb51773723427f071c0ae26852a2804c08bbb32")

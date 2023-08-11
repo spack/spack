@@ -22,7 +22,7 @@ class OpenkimModels(CMakePackage):
     homepage = "https://openkim.org/"
     url = "https://s3.openkim.org/archives/collection/openkim-models-2021-01-28.txz"
 
-    maintainers = ["ellio167"]
+    maintainers("ellio167")
 
     extends("kim-api")
     depends_on("kim-api@2.2.1:", when="@2021-01-28:")

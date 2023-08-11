@@ -27,6 +27,7 @@ class RRjsonio(RPackage):
 
     cran = "RJSONIO"
 
+    version("1.3-1.8", sha256="f6f0576d3c7852b16295dfc897feebca064fe5dd29cdce7592f94c56823553f5")
     version("1.3-1.6", sha256="82d1c9ea7758b2a64ad683f9c46223dcba9aa8146b43c1115bf9aa76a657a09f")
     version("1.3-1.4", sha256="54142c931e15eca278a02dad5734026bb49d960471eb085008af825352953190")
     version("1.3-1.2", sha256="550e18f7c04186376d67747b8258f529d205bfc929da9194fe45ec384e092d7e")

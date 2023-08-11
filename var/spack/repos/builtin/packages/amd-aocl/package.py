@@ -22,7 +22,7 @@ class AmdAocl(BundlePackage):
 
     homepage = "https://developer.amd.com/amd-aocl/"
 
-    maintainers = ["amd-toolchain-support"]
+    maintainers("amd-toolchain-support")
 
     version("4.0")
     version("3.2")

@@ -14,7 +14,7 @@ class Spfft(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/eth-cscs/SpFFT/archive/v0.9.8.zip"
     git = "https://github.com/eth-cscs/SpFFT.git"
 
-    maintainers = ["AdhocMan", "haampie"]
+    maintainers("AdhocMan", "haampie")
 
     version("develop", branch="develop")
     version("master", branch="master")

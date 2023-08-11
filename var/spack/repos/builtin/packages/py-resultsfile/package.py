@@ -13,7 +13,7 @@ class PyResultsfile(PythonPackage):
     url = "https://gitlab.com/scemama/resultsFile/-/archive/v1.0/resultsFile-v1.0.tar.gz"
     git = "https://gitlab.com/scemama/resultsFile.git"
 
-    maintainers = ["scemama"]
+    maintainers("scemama")
 
     version("2.0", sha256="2a34208254e4bea155695690437f6a59bf5f7b0ddb421d6c1a2d377510f018f7")
 

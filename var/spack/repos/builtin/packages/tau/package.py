@@ -18,7 +18,7 @@ class Tau(Package):
     Java, Python.
     """
 
-    maintainers = ["wspear", "eugeneswalker", "khuck", "sameershende"]
+    maintainers("wspear", "eugeneswalker", "khuck", "sameershende")
     homepage = "https://www.cs.uoregon.edu/research/tau"
     url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.30.tar.gz"
     git = "https://github.com/UO-OACISS/tau2"
@@ -100,7 +100,7 @@ class Tau(Package):
     )
 
     depends_on("cmake@3.14:", type="build", when="%clang")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("pdt", when="+pdt")  # Required for TAU instrumentation
     depends_on("scorep", when="+scorep")
     depends_on("otf2@2.1:2.3", when="+otf2")
@@ -111,7 +111,9 @@ class Tau(Package):
     # TAU requires the ELF header support, libiberty and demangle.
     depends_on("binutils+libiberty+headers+plugins", when="+binutils")
     # Build errors with Python 3.9
-    depends_on("python@2.7:3.8", when="+python")
+    depends_on("python@2.7:3.8", when="@:2.31.0+python")
+    # python 3.11 doesn't work as of 2.32
+    depends_on("python@2.7:3.10", when="@2.31.1:+python")
     depends_on("libunwind", when="+libunwind")
     depends_on("mpi", when="+mpi", type=("build", "run", "link"))
     depends_on("cuda", when="+cuda")
@@ -140,8 +142,10 @@ class Tau(Package):
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib64")
 
     def set_compiler_options(self, spec):
-
         useropt = ["-O2 -g", self.rpath_args]
+
+        if self.spec.satisfies("%oneapi"):
+            useropt.append("-Wno-error=implicit-function-declaration")
 
         ##########
         # Selecting a compiler with TAU configure is quite tricky:
@@ -182,7 +186,7 @@ class Tau(Package):
         return compiler_options
 
     def setup_build_environment(self, env):
-        env.prepend_path("LIBRARY_PATH", self.spec["zlib"].prefix.lib)
+        env.prepend_path("LIBRARY_PATH", self.spec["zlib-api"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["hwloc"].prefix.lib)
 
     def install(self, spec, prefix):

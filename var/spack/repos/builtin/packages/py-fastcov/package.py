@@ -15,7 +15,7 @@ class PyFastcov(PythonPackage):
     homepage = "https://github.com/RPGillespie6/fastcov"
     pypi = "fastcov/fastcov-1.13.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("1.13", sha256="ec8a5271f90a2f8b894cb999e262c33e225ed6072d9a6ca38f636f88cc0543e8")
 

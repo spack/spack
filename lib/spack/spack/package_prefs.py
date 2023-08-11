@@ -9,9 +9,9 @@ import spack.error
 import spack.repo
 from spack.config import ConfigError
 from spack.util.path import canonicalize_path
-from spack.version import VersionList
+from spack.version import Version
 
-_lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": VersionList}
+_lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": Version}
 
 
 def _spec_type(component):
@@ -19,7 +19,7 @@ def _spec_type(component):
     return _lesser_spec_types.get(component, spack.spec.Spec)
 
 
-class PackagePrefs(object):
+class PackagePrefs:
     """Defines the sort order for a set of specs.
 
     Spack's package preference implementation uses PackagePrefss to
@@ -73,7 +73,7 @@ class PackagePrefs(object):
         # integer is the index of the first spec in order that satisfies
         # spec, or it's a number larger than any position in the order.
         match_index = next(
-            (i for i, s in enumerate(spec_order) if spec.satisfies(s)), len(spec_order)
+            (i for i, s in enumerate(spec_order) if spec.intersects(s)), len(spec_order)
         )
         if match_index < len(spec_order) and spec_order[match_index] == spec:
             # If this is called with multiple specs that all satisfy the same
@@ -147,7 +147,7 @@ class PackagePrefs(object):
             variants = " ".join(variants)
 
         # Only return variants that are actually supported by the package
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         spec = spack.spec.Spec("%s %s" % (pkg_name, variants))
         return dict(
             (name, variant) for name, variant in spec.variants.items() if name in pkg_cls.variants
@@ -162,7 +162,7 @@ def spec_externals(spec):
     from spack.util.module_cmd import path_from_modules  # noqa: F401
 
     def _package(maybe_abstract_spec):
-        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
         return pkg_cls(maybe_abstract_spec)
 
     allpkgs = spack.config.get("packages")
@@ -185,7 +185,7 @@ def spec_externals(spec):
                 ),
                 extra_attributes=entry.get("extra_attributes", {}),
             )
-            if external_spec.satisfies(spec):
+            if external_spec.intersects(spec):
                 external_specs.append(external_spec)
 
     # Defensively copy returned specs
@@ -199,7 +199,7 @@ def is_spec_buildable(spec):
     so_far = all_buildable  # the default "so far"
 
     def _package(s):
-        pkg_cls = spack.repo.path.get_pkg_class(s.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(s.name)
         return pkg_cls(s)
 
     # check whether any providers for this package override the default

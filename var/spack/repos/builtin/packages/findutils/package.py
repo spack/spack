@@ -22,7 +22,7 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
         if version < Version("4.7.0"):
             self.gnu_mirror_path = "findutils/findutils-{0}.tar.gz".format(version)
 
-        return super(Findutils, self).url_for_version(version)
+        return super().url_for_version(version)
 
     executables = ["^find$"]
 

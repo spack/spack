@@ -20,7 +20,7 @@ class Modylas(AutotoolsPackage):
     url = "file://{0}/MODYLAS_1.0.4.tar.gz".format(os.getcwd())
     manual_download = True
 
-    version("1.0.4", "e0b5cccf8e363c1182eced37aa31b06b1c5b1526da7d449a6142424ac4ea6311")
+    version("1.0.4", sha256="e0b5cccf8e363c1182eced37aa31b06b1c5b1526da7d449a6142424ac4ea6311")
 
     variant("mpi", default=True, description="Enable MPI support")
 

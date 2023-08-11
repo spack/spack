@@ -24,7 +24,7 @@ class Ldc(CMakePackage):
     variant("shared", default=True, description="Build runtime and tooling as shared libs")
 
     depends_on("llvm@3.9:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libconfig")
     depends_on("curl")
     depends_on("libedit")
@@ -47,7 +47,6 @@ class Ldc(CMakePackage):
 
     @run_after("install")
     def add_rpath_to_conf(self):
-
         # Here we modify the configuration file for ldc2 to inject flags
         # that will rpath the standard library location
 

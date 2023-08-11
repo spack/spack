@@ -13,7 +13,7 @@ class XtensorPython(CMakePackage):
     url = "https://github.com/QuantStack/xtensor-python/archive/0.17.0.tar.gz"
     git = "https://github.com/QuantStack/xtensor-python.git"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("develop", branch="master")
     version("0.23.1", sha256="450b25f5c739df174b2a50774b89e68b23535fdc37cb55bd542ffdb7c78991ab")

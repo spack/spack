@@ -26,7 +26,7 @@ class FrontistrBase(CMakePackage):
     # depends_on('revocap-coupler')
     depends_on("metis")
     depends_on("mumps")
-    depends_on("trilinos@:12.18.1")
+    depends_on("trilinos@:13.0.1")
 
     def cmake_args(self):
         define = self.define
@@ -47,7 +47,8 @@ class Frontistr(FrontistrBase):
 
     homepage = "https://www.frontistr.com/"
     git = "https://gitlab.com/FrontISTR-Commons/FrontISTR.git"
-    maintainers = ["hiroshi.okuda", "kgoto", "morita", "inagaki", "michioga"]
+
+    maintainers("hiroshi.okuda", "kgoto", "morita", "inagaki", "michioga")
 
     version("5.3", tag="v5.3")
     version("5.2", tag="v5.2")

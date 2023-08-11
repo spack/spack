@@ -15,7 +15,7 @@ class PyRadicalPilot(PythonPackage):
     git = "https://github.com/radical-cybertools/radical.pilot.git"
     pypi = "radical.pilot/radical.pilot-1.20.0.tar.gz"
 
-    maintainers = ["andre-merzky"]
+    maintainers("andre-merzky")
 
     version("develop", branch="devel")
     version("1.20.0", sha256="a0747e573a01a856dc330797dbee158f7e1cf8652001dc26f06a1d6c5e553bc6")

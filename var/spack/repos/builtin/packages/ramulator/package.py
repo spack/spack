@@ -15,7 +15,7 @@ class Ramulator(MakefilePackage):
     homepage = "https://github.com/CMU-SAFARI/ramulator"
     git = "https://github.com/CMU-SAFARI/ramulator"
 
-    maintainers = ["jjwilke"]
+    maintainers("jjwilke")
 
     version("sst", commit="7d2e72306c6079768e11a1867eb67b60cee34a1c")
 

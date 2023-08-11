@@ -14,7 +14,7 @@ class CumulativeVrangeBottom(Package):
     homepage = "https://www.example.org"
     url = "https://example.org/files/v3.4/cmake-3.4.3.tar.gz"
 
-    version("3.0", "4cb3ff35b2472aae70f542116d616e63")
-    version("2.2", "4cb3ff35b2472aae70f542116d616e63")
-    version("2.1", "4cb3ff35b2472aae70f542116d616e63")
-    version("2.0", "4cb3ff35b2472aae70f542116d616e63")
+    version("3.0", md5="4cb3ff35b2472aae70f542116d616e63")
+    version("2.2", md5="4cb3ff35b2472aae70f542116d616e63")
+    version("2.1", md5="4cb3ff35b2472aae70f542116d616e63")
+    version("2.0", md5="4cb3ff35b2472aae70f542116d616e63")

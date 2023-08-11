@@ -13,7 +13,7 @@ class Libwmf(AutotoolsPackage):
     homepage = "https://github.com/caolanm/libwmf"
     url = "https://github.com/caolanm/libwmf/archive/refs/tags/v0.2.12.tar.gz"
 
-    maintainers = ["benkirk"]
+    maintainers("benkirk")
 
     parallel = False
 
@@ -28,7 +28,7 @@ class Libwmf(AutotoolsPackage):
     depends_on("libxml2")
     depends_on("libpng")
     depends_on("libjpeg")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def configure_args(self):
         args = ["--disable-static"]

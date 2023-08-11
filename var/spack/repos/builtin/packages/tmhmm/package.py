@@ -21,7 +21,7 @@ class Tmhmm(Package):
     url = "file://{0}/tmhmm-2.0c.Linux.tar.gz".format(os.getcwd())
     manual_download = True
 
-    version("2.0c", "359db0c4ecf84d1ade5786abe844d54e")
+    version("2.0c", md5="359db0c4ecf84d1ade5786abe844d54e")
 
     depends_on("perl", type="run")
 

@@ -13,7 +13,7 @@ class Pism(CMakePackage):
     url = "https://github.com/pism/pism/archive/v1.1.4.tar.gz"
     git = "https://github.com/pism/pism.git"
 
-    maintainers = ["citibeth"]
+    maintainers("citibeth")
 
     version("develop", branch="dev")
     version("1.1.4", sha256="8ccb867af3b37e8d103351dadc1d7e77512e64379519fe8a2592668deb27bc44")

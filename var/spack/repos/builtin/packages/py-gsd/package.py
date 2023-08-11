@@ -18,8 +18,13 @@ class PyGsd(PythonPackage):
     homepage = "https://gsd.readthedocs.io/en/stable/#"
     pypi = "gsd/gsd-1.9.3.tar.gz"
 
+    maintainers("RMeli")
+
+    version("2.8.0", sha256="f2b031a26a7a5bee5f3940dc2f36c5a5b6670307b297c526adf2e26c1f5b46ae")
     version("1.9.3", sha256="c6b37344e69020f69fda2b8d97f894cb41fd720840abeda682edd680d1cff838")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@42:", type="build", when="@2.8.0:")
     depends_on("py-cython", type="build")
-    depends_on("py-numpy@1.9.3:19", type=("build", "run"))
+    depends_on("py-numpy@1.9.3:", type=("build", "run"))
+    depends_on("py-numpy@1.9.3:1", when="@:1", type=("build", "run"))

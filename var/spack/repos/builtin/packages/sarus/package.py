@@ -14,7 +14,7 @@ class Sarus(CMakePackage):
     homepage = "https://github.com/eth-cscs/sarus"
     url = "https://github.com/eth-cscs/sarus/archive/1.3.3.tar.gz"
     git = "https://github.com/eth-cscs/sarus.git"
-    maintainers = ["Madeeks", "taliaga", "teonnik"]
+    maintainers("Madeeks", "taliaga", "teonnik")
 
     version("develop", branch="develop")
     version("master", branch="master")

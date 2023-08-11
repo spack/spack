@@ -30,7 +30,6 @@ class Unuran(AutotoolsPackage):
     depends_on("rngstreams", when="+rngstreams")
 
     def configure_args(self):
-
         spec = self.spec
 
         args = [

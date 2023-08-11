@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import os
 import re
 from collections import defaultdict
@@ -58,10 +56,7 @@ licensed_files = [
 
 #: licensed files that can have LGPL language in them
 #: so far, just this command -- so it can find LGPL things elsewhere
-lgpl_exceptions = [
-    r"lib/spack/spack/cmd/license.py",
-    r"lib/spack/spack/test/cmd/license.py",
-]
+lgpl_exceptions = [r"lib/spack/spack/cmd/license.py", r"lib/spack/spack/test/cmd/license.py"]
 
 
 def _all_spack_files(root=spack.paths.prefix):
@@ -105,7 +100,7 @@ license_line_regexes = [
 ]
 
 
-class LicenseError(object):
+class LicenseError:
     def __init__(self):
         self.error_counts = defaultdict(int)
 
@@ -129,7 +124,6 @@ class LicenseError(object):
 
 
 def _check_license(lines, path):
-
     found = []
 
     for line in lines:

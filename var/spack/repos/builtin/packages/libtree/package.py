@@ -13,7 +13,7 @@ class Libtree(MakefilePackage, CMakePackage):
     homepage = "https://github.com/haampie/libtree"
     git = "https://github.com/haampie/libtree.git"
     url = "https://github.com/haampie/libtree/archive/refs/tags/v2.0.0.tar.gz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("master", branch="master")
     version("3.1.1", sha256="6148436f54296945d22420254dd78e1829d60124bb2f5b9881320a6550f73f5c")

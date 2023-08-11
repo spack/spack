@@ -14,7 +14,7 @@ class AdolC(AutotoolsPackage):
     homepage = "https://github.com/coin-or/ADOL-C"
     url = "https://github.com/coin-or/ADOL-C/archive/releases/2.7.2.tar.gz"
     git = "https://github.com/coin-or/ADOL-C.git"
-    maintainers = ["jppelteret"]
+    maintainers("jppelteret")
 
     version("master", branch="master")
     version("2.7.2", sha256="701e0856baae91b98397960d5e0a87a549988de9d4002d0e9a56fa08f5455f6e")

@@ -16,7 +16,7 @@ import spack.repo
 from spack.fetch_strategy import GitFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.version import ver
+from spack.version import Version
 
 _mock_transport_error = "Mock HTTP transport error"
 
@@ -36,7 +36,7 @@ def git_version(git, request, monkeypatch):
         # Don't patch; run with the real git_version method.
         yield real_git_version
     else:
-        test_git_version = ver(request.param)
+        test_git_version = Version(request.param)
         if test_git_version > real_git_version:
             pytest.skip("Can't test clone logic for newer version of git.")
 
@@ -61,7 +61,7 @@ def mock_bad_git(monkeypatch):
     # Patch the fetch strategy to think it's using a git version that
     # will error out when git is called.
     monkeypatch.setattr(GitFetchStrategy, "git", bad_git)
-    monkeypatch.setattr(GitFetchStrategy, "git_version", ver("1.7.1"))
+    monkeypatch.setattr(GitFetchStrategy, "git_version", Version("1.7.1"))
     yield
 
 
@@ -100,14 +100,14 @@ def test_fetch(
     t = mock_git_repository.checks[type_of_test]
     h = mock_git_repository.hash
 
-    pkg_class = spack.repo.path.get_pkg_class("git-test")
+    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
     # This would fail using the default-no-per-version-git check but that
     # isn't included in this test
     monkeypatch.delattr(pkg_class, "git")
 
     # Construct the package under test
     s = default_mock_concretization("git-test")
-    monkeypatch.setitem(s.package.versions, ver("git"), t.args)
+    monkeypatch.setitem(s.package.versions, Version("git"), t.args)
 
     # Enter the stage directory and check some properties
     with s.package.stage:
@@ -147,14 +147,14 @@ def test_fetch_pkg_attr_submodule_init(
     """
 
     t = mock_git_repository.checks["default-no-per-version-git"]
-    pkg_class = spack.repo.path.get_pkg_class("git-test")
+    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
     # For this test, the version args don't specify 'git' (which is
     # the majority of version specifications)
     monkeypatch.setattr(pkg_class, "git", mock_git_repository.url)
 
     # Construct the package under test
     s = default_mock_concretization("git-test")
-    monkeypatch.setitem(s.package.versions, ver("git"), t.args)
+    monkeypatch.setitem(s.package.versions, Version("git"), t.args)
 
     s.package.do_stage()
     collected_fnames = set()
@@ -177,11 +177,10 @@ def test_fetch_pkg_attr_submodule_init(
 def test_adhoc_version_submodules(
     mock_git_repository, config, mutable_mock_repo, monkeypatch, mock_stage
 ):
-
     t = mock_git_repository.checks["tag"]
     # Construct the package under test
-    pkg_class = spack.repo.path.get_pkg_class("git-test")
-    monkeypatch.setitem(pkg_class.versions, ver("git"), t.args)
+    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    monkeypatch.setitem(pkg_class.versions, Version("git"), t.args)
     monkeypatch.setattr(pkg_class, "git", "file://%s" % mock_git_repository.path, raising=False)
 
     spec = Spec("git-test@{0}".format(mock_git_repository.unversioned_commit))
@@ -204,7 +203,7 @@ def test_debug_fetch(
 
     # Construct the package under test
     s = default_mock_concretization("git-test")
-    monkeypatch.setitem(s.package.versions, ver("git"), t.args)
+    monkeypatch.setitem(s.package.versions, Version("git"), t.args)
 
     # Fetch then ensure source path exists
     with s.package.stage:
@@ -244,7 +243,7 @@ def test_get_full_repo(
 ):
     """Ensure that we can clone a full repository."""
 
-    if git_version < ver("1.7.1"):
+    if git_version < Version("1.7.1"):
         pytest.skip("Not testing get_full_repo for older git {0}".format(git_version))
 
     secure = True
@@ -255,7 +254,7 @@ def test_get_full_repo(
     s = default_mock_concretization("git-test")
     args = copy.copy(t.args)
     args["get_full_repo"] = get_full_repo
-    monkeypatch.setitem(s.package.versions, ver("git"), args)
+    monkeypatch.setitem(s.package.versions, Version("git"), args)
 
     with s.package.stage:
         with spack.config.override("config:verify_ssl", secure):
@@ -300,7 +299,7 @@ def test_gitsubmodule(
     s = default_mock_concretization("git-test")
     args = copy.copy(t.args)
     args["submodules"] = submodules
-    monkeypatch.setitem(s.package.versions, ver("git"), args)
+    monkeypatch.setitem(s.package.versions, Version("git"), args)
     s.package.do_stage()
     with working_dir(s.package.stage.source_path):
         for submodule_count in range(2):
@@ -333,7 +332,7 @@ def test_gitsubmodules_callable(
     s = default_mock_concretization("git-test")
     args = copy.copy(t.args)
     args["submodules"] = submodules_callback
-    monkeypatch.setitem(s.package.versions, ver("git"), args)
+    monkeypatch.setitem(s.package.versions, Version("git"), args)
     s.package.do_stage()
     with working_dir(s.package.stage.source_path):
         file_path = os.path.join(s.package.stage.source_path, "third_party/submodule0/r0_file_0")
@@ -357,7 +356,7 @@ def test_gitsubmodules_delete(
     args = copy.copy(t.args)
     args["submodules"] = True
     args["submodules_delete"] = ["third_party/submodule0", "third_party/submodule1"]
-    monkeypatch.setitem(s.package.versions, ver("git"), args)
+    monkeypatch.setitem(s.package.versions, Version("git"), args)
     s.package.do_stage()
     with working_dir(s.package.stage.source_path):
         file_path = os.path.join(s.package.stage.source_path, "third_party/submodule0")

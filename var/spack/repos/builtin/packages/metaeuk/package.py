@@ -13,7 +13,7 @@ class Metaeuk(CMakePackage):
 
     homepage = "https://metaeuk.soedinglab.org/"
     url = "https://github.com/soedinglab/metaeuk/archive/refs/tags/6-a5d39d9.tar.gz"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("6-a5d39d9", sha256="be19c26f5bdb7dcdd7bc48172105afecf19e5a2e5555edb3ba0c4aa0e4aac126")
 

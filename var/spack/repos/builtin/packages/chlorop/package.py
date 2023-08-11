@@ -22,7 +22,7 @@ class Chlorop(Package):
     url = "file://{0}/chlorop-1.1.Linux.tar.gz".format(os.getcwd())
     manual_download = True
 
-    version("1.1", "eb0ba6b28dfa735163ad5fc70e30139e46e33f6ae27f87666a7167a4ac5f71d9")
+    version("1.1", sha256="eb0ba6b28dfa735163ad5fc70e30139e46e33f6ae27f87666a7167a4ac5f71d9")
 
     depends_on("awk", type="run")
     patch("chlorop.patch")

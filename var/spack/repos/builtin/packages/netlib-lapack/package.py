@@ -20,6 +20,11 @@ class NetlibLapack(CMakePackage):
     tags = ["windows"]
 
     version(
+        "3.11.0",
+        sha256="4b9ba79bfd4921ca820e83979db76ab3363155709444a787979e81c22285ffa9",
+        url="https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.11.0.tar.gz",
+    )
+    version(
         "3.10.1",
         sha256="cd005cd021f144d7d5f7f33c943942db9f03a28d110d6a3b80d718a295f7f714",
         url="https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.10.1.tar.gz",
@@ -142,16 +147,9 @@ class NetlibLapack(CMakePackage):
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
             tuple(): ["libblas"],
-            ("c", "fortran"): [
-                "libcblas",
-                "libblas",
-            ],
-            ("c",): [
-                "libcblas",
-            ],
-            ("fortran",): [
-                "libblas",
-            ],
+            ("c", "fortran"): ["libcblas", "libblas"],
+            ("c",): ["libcblas"],
+            ("fortran",): ["libblas"],
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
@@ -163,16 +161,9 @@ class NetlibLapack(CMakePackage):
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
             tuple(): ["liblapack"],
-            ("c", "fortran"): [
-                "liblapacke",
-                "liblapack",
-            ],
-            ("c",): [
-                "liblapacke",
-            ],
-            ("fortran",): [
-                "liblapack",
-            ],
+            ("c", "fortran"): ["liblapacke", "liblapack"],
+            ("c",): ["liblapacke"],
+            ("fortran",): ["liblapack"],
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]

@@ -15,7 +15,7 @@ class PyKeystoneauth1(PythonPackage):
     homepage = "https://docs.openstack.org/keystoneauth/"
     pypi = "keystoneauth1/keystoneauth1-4.3.1.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("4.3.1", sha256="93605430a6d1424f31659bc5685e9dc1be9a6254e88c99f00cffc0a60c648a64")
 

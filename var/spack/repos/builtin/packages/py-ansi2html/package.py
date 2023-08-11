@@ -12,7 +12,7 @@ class PyAnsi2html(PythonPackage):
     homepage = "https://github.com/pycontribs/ansi2html"
     pypi = "ansi2html/ansi2html-1.6.0.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("1.6.0", sha256="0f124ea7efcf3f24f1f9398e527e688c9ae6eab26b0b84e1299ef7f94d92c596")
 

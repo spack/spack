@@ -18,7 +18,7 @@ class PyFlexmock(PythonPackage):
     homepage = "https://flexmock.readthedocs.io/en/latest/"
     pypi = "flexmock/flexmock-0.10.4.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.10.4", sha256="5033ceb974d6452cf8716c2ff5059074b77e546df5c849fb44a53f98dfe0d82c")
 

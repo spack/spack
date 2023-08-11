@@ -47,18 +47,17 @@ def configs(parser, args):
 
 
 def packages(parser, args):
-    pkgs = args.name or spack.repo.path.all_package_names()
+    pkgs = args.name or spack.repo.PATH.all_package_names()
     reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
     _process_reports(reports)
 
 
 def packages_https(parser, args):
-
     # Since packages takes a long time, --all is required without name
     if not args.check_all and not args.name:
         tty.die("Please specify one or more packages to audit, or --all.")
 
-    pkgs = args.name or spack.repo.path.all_package_names()
+    pkgs = args.name or spack.repo.PATH.all_package_names()
     reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
     _process_reports(reports)
 

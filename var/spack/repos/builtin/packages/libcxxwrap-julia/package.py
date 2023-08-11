@@ -14,7 +14,7 @@ class LibcxxwrapJulia(CMakePackage):
     url = "https://github.com/JuliaInterop/libcxxwrap-julia/archive/refs/tags/v0.8.3.tar.gz"
     git = "https://github.com/JuliaInterop/libcxxwrap-julia.git"
 
-    maintainers = ["eloop"]
+    maintainers("eloop")
 
     # note: use the @main branch version if you're building for julia 1.7
     version("main", branch="main")

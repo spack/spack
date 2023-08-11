@@ -13,7 +13,7 @@ class MochiThallium(CMakePackage):
     url = "https://github.com/mochi-hpc/mochi-thallium/archive/refs/tags/v0.8.5.tar.gz"
     git = "https://github.com/mochi-hpc/mochi-thallium.git"
 
-    maintainers = ["mdorier"]
+    maintainers("mdorier")
 
     version("main", branch="main")
     version("0.10.1", sha256="5a8dc1f1622f4186b02fbabd47a8a33ca6be3d07757010f3d63d30e9f74fec8c")

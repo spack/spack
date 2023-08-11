@@ -11,13 +11,7 @@
 
 
 #: Properties for inclusion in other schemas
-properties = {
-    "repos": {
-        "type": "array",
-        "default": [],
-        "items": {"type": "string"},
-    },
-}
+properties = {"repos": {"type": "array", "default": [], "items": {"type": "string"}}}
 
 
 #: Full schema with metadata

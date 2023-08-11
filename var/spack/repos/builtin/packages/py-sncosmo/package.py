@@ -16,8 +16,6 @@ class PySncosmo(PythonPackage):
     version("1.2.0", sha256="f3969eec5b25f60c70418dbd64765a2b4735bb53c210c61d0aab68916daea588")
 
     # Required dependencies
-    # py-sncosmo binaries are duplicates of those from py-astropy
-    extends("python", ignore=r"bin/.*")
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))

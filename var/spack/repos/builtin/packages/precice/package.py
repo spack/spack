@@ -16,7 +16,7 @@ class Precice(CMakePackage):
     homepage = "https://precice.org/"
     git = "https://github.com/precice/precice.git"
     url = "https://github.com/precice/precice/archive/v1.2.0.tar.gz"
-    maintainers = ["fsimonis", "MakisH"]
+    maintainers("fsimonis", "MakisH")
 
     tags = ["e4s"]
 
@@ -107,9 +107,7 @@ class Precice(CMakePackage):
                 return on
             return off
 
-        cmake_args = [
-            "-DBUILD_SHARED_LIBS:BOOL=%s" % variant_bool("+shared"),
-        ]
+        cmake_args = ["-DBUILD_SHARED_LIBS:BOOL=%s" % variant_bool("+shared")]
 
         cmake_args.append("-D%s:BOOL=%s" % (mpi_option, variant_bool("+mpi")))
 

@@ -27,7 +27,7 @@ class Scr(CMakePackage):
     git = "https://github.com/llnl/scr.git"
     tags = ["e4s", "radiuss"]
 
-    maintainers = ["CamStan", "gonsie"]
+    maintainers("CamStan", "gonsie")
 
     version("develop", branch="develop")
     version("legacy", branch="legacy")
@@ -66,7 +66,7 @@ class Scr(CMakePackage):
     )
 
     depends_on("mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Use latest iteration of dtcmp and  components when installing scr@develop
     cmpnts = ["axl", "dtcmp", "er", "kvtree", "rankstr", "redset", "shuffile", "spath"]

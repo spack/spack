@@ -15,7 +15,7 @@ class Draco(CMakePackage):
     homepage = "https://github.com/lanl/draco"
     url = "https://github.com/lanl/Draco/archive/draco-7_1_0.zip"
     git = "https://github.com/lanl/Draco.git"
-    maintainers = ["KineticTheory"]
+    maintainers("KineticTheory")
 
     version("develop", branch="develop")
     version("7.14.1", sha256="b05c75f1b8ea1d4fac4900d897fb1c948b470826b174ed8b97b32c6da9f030bf")

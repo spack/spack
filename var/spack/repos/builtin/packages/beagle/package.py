@@ -13,7 +13,7 @@ class Beagle(Package):
     ungenotyped markers."""
 
     homepage = "https://faculty.washington.edu/browning/beagle/beagle.html"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version(
         "5.4",

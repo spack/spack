@@ -15,7 +15,7 @@ class Creduce(CMakePackage):
     homepage = "https://embed.cs.utah.edu/creduce/"
     url = "https://github.com/csmith-project/creduce"
     git = "https://github.com/csmith-project/creduce"
-    maintainers = ["olupton"]
+    maintainers("olupton")
 
     version("develop", branch="master")
     version("2.10.0", tag="creduce-2.10.0")
@@ -29,4 +29,4 @@ class Creduce(CMakePackage):
     depends_on("perl-getopt-tabular")
     depends_on("perl-regexp-common")
     depends_on("perl-termreadkey")
-    depends_on("zlib")
+    depends_on("zlib-api")

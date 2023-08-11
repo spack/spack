@@ -14,10 +14,10 @@ class Miopengemm(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM"
     git = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-5.3.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libmiopengemm"]
 
     def url_for_version(self, version):
@@ -26,6 +26,10 @@ class Miopengemm(CMakePackage):
         url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version("5.5.1", sha256="a997b560521641e7173613cf547ecde5d15ac6fac1786d392b0f133c91f99a40")
+    version("5.5.0", sha256="ffd9775129564662b338952588057a088f7e9723b4a9a766b2dd96fdc0992c26")
+    version("5.4.3", sha256="5051051cab60ca0f6347a981da6c9dbeddf8b0de698d4e5409a0db0c622acafc")
+    version("5.4.0", sha256="a39faa8f4ab73e0cd6505a667bf10c07f93b9612af0711405c65043c4755129d")
     version("5.3.3", sha256="4a9c92bebe59bf6e08bd48861b68b1801d9e8dc406250dc8637d36614a5884c8")
     version("5.3.0", sha256="7e299daaca8e514bdb5b5efd9d9d3fc5cbfda68ad0117fe7cdbbf946b3f842cd")
     version("5.2.3", sha256="de9eecf39e6620be1511923e990101e64c63c2f56d8491c8bf9ffd1033709c00")
@@ -104,13 +108,6 @@ class Miopengemm(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3:", type="build")
     depends_on("rocm-cmake@3.5.0", type="build", when="@1.1.6")
     depends_on("rocm-opencl@3.5.0", when="@1.1.6")
@@ -136,6 +133,10 @@ class Miopengemm(CMakePackage):
         "5.2.3",
         "5.3.0",
         "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("rocm-opencl@" + ver, when="@" + ver)

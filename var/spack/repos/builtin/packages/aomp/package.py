@@ -84,7 +84,7 @@ class Aomp(Package):
     homepage = tools_url + "/aomp"
     url = tools_url + "/aomp/archive/rocm-3.10.0.tar.gz"
 
-    maintainers = ["srekolam", "arjun-raj-kuppala", "estewart08"]
+    maintainers("srekolam", "arjun-raj-kuppala", "estewart08")
 
     tags = ["e4s"]
 

@@ -61,7 +61,7 @@ class Pandoc(Package):
         )
         version("2.7.3", sha256="fb93800c90f3fab05dbd418ee6180d086b619c9179b822ddfecb608874554ff0")
 
-    variant("texlive", default=True, description="Use TeX Live to enable PDF output")
+    variant("texlive", default=False, description="Use TeX Live to enable PDF output")
 
     conflicts("target=aarch64:", msg="aarch64 is not supported.", when="@:2.11")
 

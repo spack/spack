@@ -12,7 +12,7 @@ class PyPythonLspJsonrpc(PythonPackage):
     homepage = "https://github.com/python-lsp/python-lsp-jsonrpc"
     pypi = "python-lsp-jsonrpc/python-lsp-jsonrpc-1.0.0.tar.gz"
 
-    maintainers = ["alecbcs"]
+    maintainers("alecbcs")
 
     version("1.0.0", sha256="7bec170733db628d3506ea3a5288ff76aa33c70215ed223abdb0d95e957660bd")
 

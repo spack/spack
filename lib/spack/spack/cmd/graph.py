@@ -9,13 +9,7 @@ import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.store
-from spack.graph import (
-    DAGWithDependencyTypes,
-    SimpleDAG,
-    graph_ascii,
-    graph_dot,
-    static_graph_dot,
-)
+from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_dot, static_graph_dot
 
 description = "generate graphs of package dependency relationships"
 section = "basic"
@@ -69,7 +63,7 @@ def graph(parser, args):
         if env:
             specs = env.all_specs()
         else:
-            specs = spack.store.db.query()
+            specs = spack.store.STORE.db.query()
 
     else:
         specs = spack.cmd.parse_specs(args.specs, concretize=not args.static)

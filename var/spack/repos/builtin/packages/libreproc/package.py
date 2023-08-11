@@ -12,7 +12,7 @@ class Libreproc(CMakePackage):
     homepage = "https://github.com/DaanDeMeyer/reproc/"
     url = "https://github.com/DaanDeMeyer/reproc/archive/v14.2.4.tar.gz"
 
-    maintainers = ["charmoniumQ"]
+    maintainers("charmoniumQ")
 
     version("14.2.4", sha256="55c780f7faa5c8cabd83ebbb84b68e5e0e09732de70a129f6b3c801e905415dd")
 
@@ -20,8 +20,7 @@ class Libreproc(CMakePackage):
     variant("shared", default=True, description="Build shared libraries")
 
     depends_on("cmake@3.14:", type="build")
-    depends_on("zlib+shared", type="link", when="+shared")
-    depends_on("zlib~shared", type="link", when="~shared")
+    depends_on("zlib-api", type="link")
 
     def cmake_args(self):
         return [

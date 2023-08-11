@@ -17,7 +17,7 @@ class Portage(CMakePackage):
     git = "https://github.com/laristra/portage.git"
     url = "https://github.com/laristra/portage/releases/download/3.0.0/portage-3.0.0.tar.gz"
 
-    maintainers = ["raovgarimella"]
+    maintainers("raovgarimella")
 
     # tarballs don't have submodules, so use git tags
     version("3.0.0", sha256="7a5a21ffbc35fa54a5136d937cfda6f836c7496ff2b5adf54deb4107501333da")

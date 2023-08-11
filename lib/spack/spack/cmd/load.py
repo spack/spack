@@ -66,10 +66,9 @@ def setup_parser(subparser):
         default="package,dependencies",
         dest="things_to_load",
         choices=["package", "dependencies"],
-        help="""select whether to load the package and its dependencies
-the default is to load the package and all dependencies
-alternatively one can decide to load only the package or only
-the dependencies""",
+        help="select whether to load the package and its dependencies\n\n"
+        "the default is to load the package and all dependencies. alternatively, "
+        "one can decide to load only the package or only the dependencies",
     )
 
     subparser.add_argument(
@@ -98,12 +97,11 @@ def load(parser, args):
     if not args.shell:
         specs_str = " ".join(args.constraint) or "SPECS"
         spack.cmd.common.shell_init_instructions(
-            "spack load",
-            "    eval `spack load {sh_arg} %s`" % specs_str,
+            "spack load", "    eval `spack load {sh_arg} %s`" % specs_str
         )
         return 1
 
-    with spack.store.db.read_transaction():
+    with spack.store.STORE.db.read_transaction():
         if "dependencies" in args.things_to_load:
             include_roots = "package" in args.things_to_load
             specs = [

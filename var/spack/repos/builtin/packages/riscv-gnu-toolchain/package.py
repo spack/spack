@@ -15,7 +15,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
     homepage = "https://spack-tutorial.readthedocs.io/"
     git = "https://github.com/riscv-collab/riscv-gnu-toolchain.git"
 
-    maintainers = ["wanlinwang"]
+    maintainers("wanlinwang")
 
     version("develop", branch="master", submodules=True)
     version("2022.08.08", tag="2022.08.08", submodules=True)
@@ -32,7 +32,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
     depends_on("mpc", type="build")
     depends_on("gmp", type="build")
     depends_on("mpfr", type="build")
-    depends_on("zlib", type=("build", "link"))
+    depends_on("zlib-api", type=("build", "link"))
     depends_on("expat", type=("build", "link"))
     depends_on("bzip2", type="build")
     depends_on("gmake@4.3:", type="build")

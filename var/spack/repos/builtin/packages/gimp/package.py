@@ -18,7 +18,7 @@ class Gimp(AutotoolsPackage):
     homepage = "https://www.gimp.org"
     url = "https://download.gimp.org/gimp/v2.10/gimp-2.10.32.tar.bz2"
 
-    maintainers = ["benkirk"]
+    maintainers("benkirk")
 
     conflicts("platform=darwin", msg="spack/GIMP currently requires Linux")
     conflicts("platform=windows", msg="spack/GIMP currently requires Linux")
@@ -81,7 +81,7 @@ class Gimp(AutotoolsPackage):
     depends_on("pango@1.29.4:")
     depends_on("poppler+glib")
     depends_on("poppler-data@0.4.7:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def url_for_version(self, version):
         # ref: https://download.gimp.org/gimp/v2.10/gimp-2.10.32.tar.bz2"

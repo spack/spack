@@ -34,13 +34,6 @@ class LlvmOpenmpOmpt(CMakePackage):
         "libomptarget", default=True, description="Enable building libomptarget for offloading"
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-
     depends_on("cmake@2.8:", type="build")
     depends_on("llvm", when="~standalone")
     depends_on("ninja@1.5:", type="build")
@@ -48,7 +41,7 @@ class LlvmOpenmpOmpt(CMakePackage):
     depends_on("elf", when="+libomptarget")
     depends_on("libffi", when="+libomptarget")
 
-    generator = "Ninja"
+    generator("ninja")
 
     def cmake_args(self):
         cmake_args = [

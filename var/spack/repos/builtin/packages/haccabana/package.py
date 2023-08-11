@@ -15,7 +15,7 @@ class Haccabana(CMakePackage):
     homepage = "https://github.com/ECP-CoPA/HACCabana"
     git = "https://github.com/ECP-CoPA/HACCabana.git"
 
-    maintainers = ["steverangel", "adrianpope", "streeve", "junghans"]
+    maintainers("steverangel", "adrianpope", "streeve", "junghans")
 
     tags = ["proxy-app", "ecp-proxy-app"]
 

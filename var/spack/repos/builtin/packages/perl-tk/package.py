@@ -12,7 +12,7 @@ class PerlTk(PerlPackage):
     homepage = "https://metacpan.org/pod/distribution/Tk/Tk.pod"
     url = "https://cpan.metacpan.org/authors/id/S/SR/SREZIC/Tk-804.035.tar.gz"
 
-    maintainers = ["cessenat"]
+    maintainers("cessenat")
 
     version("804.036", sha256="32aa7271a6bdfedc3330119b3825daddd0aa4b5c936f84ad74eabb932a200a5e")
     version("804.035", sha256="4d2b80291ba6de34d8ec886a085a6dbd2b790b926035a087e99025614c5ffdd4")

@@ -14,7 +14,7 @@ class Hyperqueue(Package):
     url = "https://github.com/It4innovations/hyperqueue/archive/refs/tags/v0.11.0.tar.gz"
     git = "https://github.com/It4innovations/hyperqueue"
 
-    maintainers = ["Nortamo", "Kobzol"]
+    maintainers("Nortamo", "Kobzol")
 
     version("main", branch="main")
     version(

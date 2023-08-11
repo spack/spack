@@ -5,6 +5,7 @@
 
 
 import os
+import re
 
 from spack.package import *
 
@@ -15,13 +16,18 @@ class LlvmAmdgpu(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
     git = "https://github.com/RadeonOpenCompute/llvm-project.git"
-    url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.3.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
+    executables = [r"amdclang", r"amdclang\+\+", r"amdflang", r"clang.*", r"flang.*", "llvm-.*"]
+    generator("ninja")
 
-    maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="amd-stg-open")
-
+    version("5.5.1", sha256="7d7181f20f89cb0715191aa32914186c67a34258c13457055570d47e15296553")
+    version("5.5.0", sha256="5dc6c99f612b69ff73145bee17524e3712990100e16445b71634106acf7927cf")
+    version("5.4.3", sha256="a844d3cc01613f6284a75d44db67c495ac1e9b600eacbb1eb13d2649f5d5404d")
+    version("5.4.0", sha256="ff54f45a17723892cd775c1eaff9e5860527fcfd33d98759223c70e3362335bf")
     version("5.3.3", sha256="5296d5e474811c7d1e456cb6d5011db248b79b8d0512155e8a6c2aa5b5f12d38")
     version("5.3.0", sha256="4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e")
     version("5.2.3", sha256="1b852711aec3137b568fb65f93606d37fdcd62e06f5da3766f2ffcd4e0c646df")
@@ -101,12 +107,6 @@ class LlvmAmdgpu(CMakePackage):
     )
 
     variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-    variant(
         "rocm-device-libs",
         default=True,
         description=(
@@ -131,14 +131,16 @@ class LlvmAmdgpu(CMakePackage):
     provides("libllvm@12", when="@3.9:4.2")
     provides("libllvm@13", when="@4.3:4.9")
     provides("libllvm@14", when="@5:5.2")
-    provides("libllvm@15", when="@5.3:")
+    provides("libllvm@15", when="@5.3:5.4")
+    provides("libllvm@16", when="@5.5:")
 
     depends_on("cmake@3.4.3:", type="build", when="@:3.8")
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
     depends_on("python", type="build")
     depends_on("z3", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("ncurses+termlib", type="link")
+    depends_on("pkgconfig", type="build")
 
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"), when="+openmp")
@@ -158,6 +160,7 @@ class LlvmAmdgpu(CMakePackage):
     # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
     # Below patch is to look in the old path.
     patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:")
+    patch("patch-llvm-5.5.0.patch", when="@5.5")
 
     conflicts("^cmake@3.19.0")
 
@@ -166,6 +169,10 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ("5.5.1", "3b5f6dd85f0e3371f6078da7b59bf77d5b210e30f1cc66ef1e2de6bbcb775833"),
+        ("5.5.0", "5ab95aeb9c8bed0514f96f7847e21e165ed901ed826cdc9382c14d199cbadbd3"),
+        ("5.4.3", "f4f7281f2cea6d268fcc3662b37410957d4f0bc23e0df9f60b12eb0fcdf9e26e"),
+        ("5.4.0", "d68813ded47179c39914c8d1b76af3dad8c714b10229d1e2246af67609473951"),
         ("5.3.3", "963c9a0561111788b55a8c3b492e2a5737047914752376226c97a28122a4d768"),
         ("5.3.0", "f7e1665a1650d3d0481bec68252e8a5e68adc2c867c63c570f6190a1d2fe735c"),
         ("5.2.3", "16b7fc7db4759bd6fb54852e9855fa16ead76c97871d7e1e9392e846381d611a"),
@@ -208,24 +215,31 @@ class LlvmAmdgpu(CMakePackage):
 
     def cmake_args(self):
         llvm_projects = ["clang", "lld", "clang-tools-extra", "compiler-rt"]
+        llvm_runtimes = []
         args = []
         if self.spec.satisfies("@4.3.0:"):
             args = [
                 self.define("LLVM_ENABLE_Z3_SOLVER", "OFF"),
                 self.define("LLLVM_ENABLE_ZLIB", "ON"),
                 self.define("CLANG_DEFAULT_LINKER", "lld"),
+                self.define("LIBCXX_ENABLE_SHARED", "OFF"),
+                self.define("LIBCXX_ENABLE_STATIC", "ON"),
+                self.define("LIBCXX_INSTALL_LIBRARY", "OFF"),
+                self.define("LIBCXX_INSTALL_HEADERS", "OFF"),
+                self.define("LIBCXXABI_ENABLE_SHARED", "OFF"),
+                self.define("LIBCXXABI_ENABLE_STATIC", "ON"),
+                self.define("LIBCXXABI_INSTALL_STATIC_LIBRARY", "OFF"),
             ]
+        args.append(self.define("LLVM_ENABLE_RTTI", "ON"))
         if self.spec.satisfies("@4.3.0:4.5.2"):
             llvm_projects.append("libcxx")
             llvm_projects.append("libcxxabi")
-            args.append(self.define("LIBCXX_ENABLE_SHARED", "OFF"))
-            args.append(self.define("LIBCXX_ENABLE_STATIC", "ON"))
-            args.append(self.define("LIBCXX_INSTALL_LIBRARY", "OFF"))
-            args.append(self.define("LIBCXX_INSTALL_HEADERS", "OFF"))
-            args.append(self.define("LIBCXXABI_ENABLE_SHARED", "OFF"))
-            args.append(self.define("LIBCXXABI_ENABLE_STATIC", "ON"))
-            args.append(self.define("LIBCXXABI_INSTALL_STATIC_LIBRARY", "OFF"))
-
+        if self.spec.satisfies("@5.0.0:"):
+            llvm_runtimes.append("libcxx")
+            llvm_runtimes.append("libcxxabi")
+            args.append(self.define("LLVM_TARGETS_TO_BUILD", "AMDGPU;X86"))
+            args.append(self.define("LLVM_AMDGPU_ALLOW_NPI_TARGETS", "ON"))
+            args.extend([self.define("LLVM_ENABLE_RUNTIMES", ";".join(llvm_runtimes))])
         if "+openmp" in self.spec:
             llvm_projects.append("openmp")
 
@@ -254,19 +268,20 @@ class LlvmAmdgpu(CMakePackage):
 
         if "+link_llvm_dylib" in self.spec:
             args.append("-DLLVM_LINK_LLVM_DYLIB:Bool=ON")
-            args.append("-DDCLANG_LINK_CLANG_DYLIB:Bool=ON")
+            args.append("-DCLANG_LINK_CLANG_DYLIB:Bool=ON")
 
         # Get the GCC prefix for LLVM.
         if self.compiler.name == "gcc":
             args.append(self.define("GCC_INSTALL_PREFIX", self.compiler.prefix))
-
+        if self.spec.satisfies("@5.4.3:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
         return args
 
     @run_after("install")
     def post_install(self):
         # TODO:Enabling LLVM_ENABLE_RUNTIMES for libcxx,libcxxabi did not build.
         # bootstraping the libcxx with the just built clang
-        if self.spec.satisfies("@4.5.0:5.2"):
+        if self.spec.satisfies("@4.5.0:4.5.2"):
             spec = self.spec
             define = self.define
             libcxxdir = "build-bootstrapped-libcxx"
@@ -280,3 +295,26 @@ class LlvmAmdgpu(CMakePackage):
                 cmake_args.extend(self.cmake_args())
                 cmake(*cmake_args)
                 cmake("--build", ".")
+
+    @classmethod
+    def determine_version(cls, path):
+        match = re.search(r"amdclang", path)
+        detected_version = None
+        if match:
+            version_query = Executable(path)("--version", output=str)
+            match = re.search(r"roc-(\d)\.(\d).(\d)", version_query)
+            if match:
+                detected_version = "{0}.{1}.{2}".format(
+                    int(match.group(1)), int(match.group(2)), int(match.group(3))
+                )
+        return detected_version
+
+    # Make sure that the compiler paths are in the LD_LIBRARY_PATH
+    def setup_run_environment(self, env):
+        llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")
+
+    # Make sure that the compiler paths are in the LD_LIBRARY_PATH
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")
