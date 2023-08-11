@@ -370,8 +370,16 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # External Kokkos
     depends_on("kokkos@4.1.00", when="@14.4.0: +kokkos")
+    depends_on("kokkos +wrapper", when="trilinos@14.4.0: +kokkos +wrapper")
+    depends_on("kokkos ~wrapper", when="trilinos@14.4.0: +kokkos ~wrapper")
+
     for a in CudaPackage.cuda_arch_values:
         arch_str = "+cuda cuda_arch={0}".format(a)
+        kokkos_spec = "kokkos@4.1.00 {0}".format(arch_str)
+        depends_on(kokkos_spec, when="@14.4.0 +kokkos {0}".format(arch_str))
+
+    for a in ROCmPackage.amdgpu_targets:
+        arch_str = "+rocm amdgpu_target={0}".format(a)
         kokkos_spec = "kokkos@4.1.00 {0}".format(arch_str)
         depends_on(kokkos_spec, when="@14.4.0 +kokkos {0}".format(arch_str))
 
