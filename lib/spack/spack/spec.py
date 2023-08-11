@@ -4881,14 +4881,14 @@ def format_path(spec, format_string, _separator=None):
     normal circumstances that `str(Spec.version)` would contain a path
     separator, it would not in this case).
     """
-    separator = _separator = os.sep
+    separator = _separator or os.sep
     format_subcomponents = format_string.split(separator)
     formatted_components = []
     for c in format_subcomponents:
         dirty_result = spec.format(c)
         cleaned_result = spack.util.path.sanitize_filename(dirty_result)
         formatted_components.append(cleaned_result)
-    return str(separator).join(formatted_components)
+    return separator.join(formatted_components)
 
 
 class SpecfileReaderBase:
