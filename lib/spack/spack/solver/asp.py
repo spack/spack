@@ -2869,7 +2869,9 @@ class SpecBuilder:
                 if target in current_spec:
                     # matches root or non-root
                     # e.g. mvapich2%gcc
+                    print(current_spec, "CURRENT")
                     current_spec = current_spec.splice(replacement, transitive)
+                    print(current_spec, "CURRENT2", current_spec.build_spec)
             specs[key] = current_spec
 
         return specs

@@ -2088,6 +2088,24 @@ class TestConcretize:
         edges = spec.edges_to_dependencies(name="callpath")
         assert len(edges) == 1 and edges[0].virtuals == ()
 
+    @pytest.mark.parametrize("transitive", [True, False])
+    def test_explicit_splices(self, mutable_config, database, mock_packages, transitive):
+        mpich_spec = database.query("mpich")[0]
+        splice_info = {
+            "target": "mpi",
+            "replacement": f"/{mpich_spec.dag_hash()}",
+            "transitive": transitive
+        }
+        spack.config.set("concretizer:explicit_splices", [splice_info])
+
+        spec = spack.spec.Spec("hdf5 ^zmpi").concretized()
+        print(spec)
+        print(spec.build_spec)
+        assert spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
+        assert spec.build_spec.satisfies("^zmpi")
+        assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
+        assert not spec.satisfies("^zmpi")
+
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     @pytest.mark.db
     @pytest.mark.parametrize(

@@ -4639,9 +4639,11 @@ class Spec:
             deps_to_replace = {self[other.name]: other}
             # deps_to_replace = [self[other.name]]
 
+        print(other.package.virtuals_provided)
+        print([d.package.virtuals_provided for d in deps_to_replace])
         for d in deps_to_replace:
             if not all(
-                v in other.package.virtuals_provided or v not in self
+                any(v.intersects(ov) for ov in other.package.virtuals_provided) or v not in self
                 for v in d.package.virtuals_provided
             ):
                 # There was something provided by the original that we don't
@@ -4724,20 +4726,33 @@ class Spec:
         nodes.update(self_nodes)
 
         for name in nodes:
+            print(name in self_nodes, name)
             if name in self_nodes:
                 for edge in self[name].edges_to_dependencies():
                     dep_name = deps_to_replace.get(edge.spec, edge.spec).name
                     nodes[name].add_dependency_edge(
                         nodes[dep_name], deptypes=edge.deptypes, virtuals=edge.virtuals
                     )
-                if any(dep not in self_nodes for dep in self[name]._dependencies):
+                deps_to_check = []
+                for dep_name, dep_specs in self[name]._dependencies.items():
+                    deps_to_check.append(dep_name)
+                    for dep_spec in dep_specs:
+                        deps_to_check.extend(dep_spec.parameters.get("virtuals", []))
+
+                if any(dep not in self_nodes for dep in deps_to_check):
                     nodes[name].build_spec = self[name].build_spec
             else:
                 for edge in other[name].edges_to_dependencies():
                     nodes[name].add_dependency_edge(
                         nodes[edge.spec.name], deptypes=edge.deptypes, virtuals=edge.virtuals
                     )
-                if any(dep not in other_nodes for dep in other[name]._dependencies):
+                deps_to_check = []
+                for dep_name, dep_specs in other[name]._dependencies.items():
+                    deps_to_check.append(dep_name)
+                    for dep_spec in dep_specs:
+                        deps_to_check.extend(dep_spec.parameters.get("virtuals", []))
+
+                if any(dep not in other_nodes for dep in deps_to_check):
                     nodes[name].build_spec = other[name].build_spec
 
         ret = nodes[self.name]
