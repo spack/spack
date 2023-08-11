@@ -605,7 +605,7 @@ def setup_main_options(args):
         spack.config.config.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
             [(key, [spack.paths.mock_packages_path])]
         )
-        spack.repo.path = spack.repo.create(spack.config.config)
+        spack.repo.PATH = spack.repo.create(spack.config.config)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:

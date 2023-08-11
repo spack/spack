@@ -112,7 +112,7 @@ class ReposFinder:
 
         # If it's a module in some repo, or if it is the repo's
         # namespace, let the repo handle it.
-        for repo in path.repos:
+        for repo in PATH.repos:
             # We are using the namespace of the repo and the repo contains the package
             if namespace == repo.full_namespace:
                 # With 2 nested conditionals we can call "repo.real_name" only once
@@ -128,7 +128,7 @@ class ReposFinder:
 
         # No repo provides the namespace, but it is a valid prefix of
         # something in the RepoPath.
-        if path.by_namespace.is_prefix(fullname):
+        if PATH.by_namespace.is_prefix(fullname):
             return SpackNamespaceLoader()
 
         return None
@@ -149,9 +149,9 @@ NOT_PROVIDED = object()
 def packages_path():
     """Get the test repo if it is active, otherwise the builtin repo."""
     try:
-        return spack.repo.path.get_repo("builtin.mock").packages_path
+        return spack.repo.PATH.get_repo("builtin.mock").packages_path
     except spack.repo.UnknownNamespaceError:
-        return spack.repo.path.get_repo("builtin").packages_path
+        return spack.repo.PATH.get_repo("builtin").packages_path
 
 
 class GitExe:
@@ -247,7 +247,7 @@ def add_package_to_git_stage(packages):
     git = GitExe()
 
     for pkg_name in packages:
-        filename = spack.repo.path.filename_for_package_name(pkg_name)
+        filename = spack.repo.PATH.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
             tty.die("No such package: %s.  Path does not exist:" % pkg_name, filename)
 
@@ -1344,7 +1344,7 @@ def create(configuration):
 
 
 #: Singleton repo path instance
-path: Union[RepoPath, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_path)
+PATH: Union[RepoPath, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_path)
 
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
@@ -1353,7 +1353,7 @@ sys.meta_path.append(REPOS_FINDER)
 
 def all_package_names(include_virtuals=False):
     """Convenience wrapper around ``spack.repo.all_package_names()``."""
-    return path.all_package_names(include_virtuals)
+    return PATH.all_package_names(include_virtuals)
 
 
 @contextlib.contextmanager
@@ -1368,7 +1368,7 @@ def use_repositories(*paths_and_repos, **kwargs):
     Returns:
         Corresponding RepoPath object
     """
-    global path
+    global PATH
     # TODO (Python 2.7): remove this kwargs on deprecation of Python 2.7 support
     override = kwargs.get("override", True)
     paths = [getattr(x, "root", x) for x in paths_and_repos]
@@ -1377,12 +1377,12 @@ def use_repositories(*paths_and_repos, **kwargs):
     spack.config.config.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={repos_key: paths})
     )
-    path, saved = create(configuration=spack.config.config), path
+    PATH, saved = create(configuration=spack.config.config), PATH
     try:
-        yield path
+        yield PATH
     finally:
         spack.config.config.remove_scope(scope_name=scope_name)
-        path = saved
+        PATH = saved
 
 
 class MockRepositoryBuilder:

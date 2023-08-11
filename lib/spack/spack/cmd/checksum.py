@@ -83,7 +83,7 @@ def checksum(parser, args):
         tty.die("`spack checksum` accepts package names, not URLs.")
 
     # Get the package we're going to generate checksums for
-    pkg_cls = spack.repo.path.get_pkg_class(args.package)
+    pkg_cls = spack.repo.PATH.get_pkg_class(args.package)
     pkg = pkg_cls(spack.spec.Spec(args.package))
 
     # Build a list of versions to checksum
@@ -210,7 +210,7 @@ def add_versions_to_package(pkg: PackageBase, version_lines: str):
 
     """
     # Get filename and path for package
-    filename = spack.repo.path.filename_for_package_name(pkg.name)
+    filename = spack.repo.PATH.filename_for_package_name(pkg.name)
     num_versions_added = 0
 
     version_statement_re = re.compile(r"([\t ]+version\([^\)]*\))")

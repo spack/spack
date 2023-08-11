@@ -113,7 +113,7 @@ class Concretizer:
         pref_key = lambda spec: 0  # no-op pref key
 
         if spec.virtual:
-            candidates = spack.repo.path.providers_for(spec)
+            candidates = spack.repo.PATH.providers_for(spec)
             if not candidates:
                 raise spack.error.UnsatisfiableProviderSpecError(candidates[0], spec)
 
