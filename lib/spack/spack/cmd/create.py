@@ -62,6 +62,9 @@ class {class_name}({base_class_name}):
     # notify when the package is updated.
     # maintainers("github_user1", "github_user2")
 
+    # FIXME: Add the SPDX identifier of the project's license below.
+    license("UNLICENSED")
+
 {versions}
 
 {dependencies}
