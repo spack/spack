@@ -11,6 +11,7 @@ class HpxKokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/STEllAR-GROUP/hpx-kokkos"
     url = "https://github.com/STEllAR-GROUP/hpx-kokkos/archive/0.0.0.tar.gz"
+    git = "https://github.com/STEllAR-GROUP/hpx-kokkos.git"
     maintainers("G-071", "msimberg")
 
     version("master", branch="master")
