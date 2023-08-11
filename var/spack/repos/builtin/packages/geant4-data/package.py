@@ -139,7 +139,7 @@ class Geant4Data(BundlePackage):
         for _dv in _dsets:
             _d, _v = _dv.split("@")
             variant(_d, default=True, when=_vers, description="Install dataset " + _d)
-            depends_on(_dv, type=("build", "run"), when=_vers)
+            depends_on(_dv, type=("build", "run"), when=_vers + " +" + _d)
 
     @property
     def datadir(self):
