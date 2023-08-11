@@ -47,6 +47,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant("sycl", default=False, description="Enable SYCL backend")
     variant("develtools", default=False, description="Compile with develtools enabled")
     variant("hwloc", default=False, description="Enable HWLOC support")
+    variant("sde", default=False, description="Enable PAPI SDE support")
     variant("mpi", default=False, description="Enable MPI support")
 
     depends_on("cmake@3.9:", type="build", when="@:1.3.0")
@@ -68,6 +69,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     # setup for rocthrust, this needs to also be added here.
     depends_on("rocprim", when="+rocm")
     depends_on("hwloc@2.1:", when="+hwloc")
+    # TODO: replace with the next PAPI version when available
+    depends_on("papi@master+sde", when="+sde")
 
     depends_on("googletest", type="test")
     depends_on("numactl", type="test", when="+hwloc")
@@ -79,6 +82,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%gcc@:5.2.9")
     conflicts("+rocm", when="@:1.1.1")
     conflicts("+mpi", when="@:1.4.0")
+
+    conflicts("+sde", when="@:1.6.0")
+    conflicts("+sde", when="@master")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     conflicts("^hip@4.1.0:", when="@:1.3.0")
@@ -151,6 +157,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             from_variant("BUILD_SHARED_LIBS", "shared"),
             from_variant("GINKGO_JACOBI_FULL_OPTIMIZATIONS", "full_optimizations"),
             from_variant("GINKGO_BUILD_HWLOC", "hwloc"),
+            from_variant("GINKGO_WITH_PAPI_SDE", "sde"),
             from_variant("GINKGO_DEVEL_TOOLS", "develtools"),
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.
