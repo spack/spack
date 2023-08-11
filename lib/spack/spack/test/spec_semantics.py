@@ -1004,12 +1004,17 @@ class TestSpecSemantics:
         assert new_spec.compiler_flags["cxxflags"] == ["-O1"]
 
 
-def test_spec_format_path():
-    zlib = Spec("zlib@git.foo/bar")
-    f1 = spack.spec.format_path(zlib, "{name}-{version}", _separator="/")
-    assert f1 == "zlib-git.foo_bar"
-    f2 = spack.spec.format_path(zlib, "{name}/{version}", _separator="/")
-    assert f2 == "/".join(["zlib", "git.foo_bar"])
+@pytest.mark.parametrize(
+    "spec_str,format_str,expected",
+    [
+        ("zlib@git.foo/bar", "{name}-{version}", "zlib-git.foo_bar"),
+        ("zlib@git.foo/bar", "{name}/{version}", "zlib/git.foo_bar"),
+    ],
+)
+def test_spec_format_path(spec_str, format_str, expected):
+    spec = Spec(spec_str)
+    formatted = spack.spec.format_path(spec, format_str, _separator="/")
+    assert formatted == expected
 
 
 @pytest.mark.regression("3887")
