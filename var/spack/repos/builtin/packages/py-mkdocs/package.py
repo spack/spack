@@ -25,8 +25,7 @@ class PyMkdocs(PythonPackage):
     depends_on("py-click@7.0:", when="@1.4.2:", type=("build", "run"))
     depends_on("py-jinja2@2.10.2:", type=("build", "run"))
     depends_on("py-jinja2@2.11.1:", when="@1.4.2:", type=("build", "run"))
-    depends_on("py-markdown@3.2.1:3.3", when="@:1.3", type=("build", "run"))
-    depends_on("py-markdown@3.2.1:3.4", when="@1.4.2:", type=("build", "run"))
+    depends_on("py-markdown@3.2.1:3.3", type=("build", "run"))
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
     depends_on("py-pyyaml@5.1:", when="@1.4.2:", type=("build", "run"))
     depends_on("py-watchdog@2.0:", type=("build", "run"))
@@ -39,3 +38,5 @@ class PyMkdocs(PythonPackage):
     depends_on("py-mergedeep@1.3.4:", type=("build", "run"))
     depends_on("py-colorama@0.4:", when="platform=windows", type=("build", "run"))
     depends_on("py-babel@2.9.0:", when="@1.4.2:", type=("build", "run"))
+
+    # py-babel is actually optional for mkdocs, but when installing with spack without the optional dependency, the build fails...

@@ -6,12 +6,10 @@
 from spack.package import *
 
 
-class PyMkdocsMinify(PythonPackage):
+class PyMkdocsMinifyPlugin(PythonPackage):
     """An MkDocs plugin to minify HTML, JS or CSS files prior to being written to disk."""
 
     pypi = "mkdocs-minify-plugin/mkdocs-minify-plugin-0.6.1.tar.gz"
-
-    # maintainers = ["wscullin"]
 
     version("0.6.1", sha256="29e14e4ab2d436cb05f56333c9bfbff561fc89402e04d0f1ccfe23a3e7070ba2")
 
