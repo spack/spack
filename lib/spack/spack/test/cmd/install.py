@@ -1101,7 +1101,7 @@ def test_install_empty_env(
 
 @pytest.mark.skipif(
     sys.platform == "win32",
-    reason="Windows log_output logs phase header out of order",
+    reason="Windows logger I/O operation on closed file when install fails",
 )
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize(
@@ -1206,7 +1206,7 @@ def test_install_use_buildcache(
 
 @pytest.mark.skipif(
     sys.platform == "win32",
-    reason="Windows log_output logs phase header out of order",
+    reason="Windows logger I/O operation on closed file when install fails",
 )
 @pytest.mark.regression("34006")
 @pytest.mark.disable_clean_stage_check
