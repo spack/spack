@@ -13,7 +13,8 @@ class HpxKokkos(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/STEllAR-GROUP/hpx-kokkos/archive/0.0.0.tar.gz"
     maintainers("G-071", "msimberg")
 
-    version("master", git="https://github.com/STEllAR-GROUP/hpx-kokkos.git", branch="master")
+    version("master", branch="master")
+    version("0.4.0", sha256="dafef55521cf4bf7ab28ebad546ea1d3fb83fac3a9932e292db4ab3666cd833f")
     version("0.3.0", sha256="83c1d11dab95552ad0abdae767c71f757811d7b51d82bd231653dc942e89a45d")
     version("0.2.0", sha256="289b711cea26afe80be002fc521234c9194cd0e8f69863f3b08b654674dbe5d5")
     version("0.1.0", sha256="24edb817d0969f4aea1b68eab4984c2ea9a58f4760a9b8395e20f85b178f0850")
