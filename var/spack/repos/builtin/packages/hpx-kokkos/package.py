@@ -42,7 +42,7 @@ class HpxKokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     for cxxstd in cxxstds:
         depends_on("hpx cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
-        depends_on("kokkos std={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
+        depends_on("kokkos cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
 
     # HPXKokkos explicitly supports CUDA and ROCm. Other GPU backends can be
     # used but without support in HPXKokkos. Other CPU backends, except Serial,
