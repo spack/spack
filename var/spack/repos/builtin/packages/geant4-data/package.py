@@ -138,7 +138,7 @@ class Geant4Data(BundlePackage):
         _vers = "@" + _vers
         for _dv in _dsets:
             _d, _v = _dv.split("@")
-            variant(_d, default=True, when=_vers)
+            variant(_d, default=True, when=_vers, description="Install dataset " + _d)
             depends_on(_dv, type=("build", "run"), when=_vers)
 
     @property
