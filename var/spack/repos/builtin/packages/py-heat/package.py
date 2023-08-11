@@ -25,11 +25,17 @@ class PyHeat(PythonPackage):
     depends_on("py-pillow@6:", type=("build", "run"))
     depends_on("py-torchvision@0.8:", type=("build", "run"))
 
-    variant("docutils", default=False)
-    variant("hdf5", default=False)
-    variant("netcdf", default=False)
-    variant("dev", default=False)
-    variant("examples", default=False)
+    variant("docutils", default=False, description="Use the py-docutils package")
+    variant("hdf5", default=False, description="Use the py-h5py package needed for HDF5 support")
+    variant(
+        "netcdf", default=False, description="Use the py-netcdf4 package needed for NetCDF support"
+    )
+    variant("dev", default=False, description="Use the py-pre-commit package")
+    variant(
+        "examples",
+        default=False,
+        description="Use py-scikit-learn and py-matplotlib for the example tests",
+    )
 
     depends_on("py-docutils@0.16:", when="+docutils", type=("link"))
     depends_on("py-h5py@2.8.0:", when="+hdf5", type=("link"))
