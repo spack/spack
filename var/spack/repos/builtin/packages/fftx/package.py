@@ -19,12 +19,14 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("main", branch="main")
-    version("1.0.3", sha256="b5ff275facce4a2fbabd0aecc65dd55b744794f2e07cd8cfa91363001c664896")
+    version("1.1.1", sha256="5cbca66ef09eca02ee8f336f58eb45cfac69cfb29cd6eb945852ad74085d8a60")
+    version("1.1.0", sha256="a6f95605abc11460bbf51839727a456a31488e27e12a970fc29a1b8c42f4e3b5")
 
     depends_on("spiral-software")
     depends_on("spiral-package-fftx")
     depends_on("spiral-package-simt")
-    #  depends_on('spiral-package-mpi')
+    depends_on('spiral-package-mpi')
+    depends_on('spiral-package-jit')
 
     conflicts("+rocm", when="+cuda", msg="FFTX only supports one GPU backend at a time")
 
@@ -39,10 +41,11 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
             backend = "HIP"
         self.build_config = "-D_codegen=%s" % backend
 
-        #  From directory examples/library run the build-lib-code.sh script
-        with working_dir(join_path(self.stage.source_path, "src", "library")):
+        #  From the root directory run the config-fftx-libs.sh script
+        ##  with working_dir(join_path(self.stage.source_path, "src", "library")):
+        with working_dir(self.stage.source_path):
             bash = which("bash")
-            bash("./build-lib-code.sh", backend)
+            bash("./config-fftx-libs.sh", backend)
 
     def cmake_args(self):
         spec = self.spec
@@ -54,12 +57,13 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
 
     @property
     def build_targets(self):
-        return ["-j1", "install"]
+        ##  return ["-j1", "install"]
+        return ["install"]
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.CMakeIncludes)
-        mkdirp(prefix.examples)
+        ##  mkdirp(prefix.examples)
         mkdirp(prefix.include)
         mkdirp(prefix.lib)
 
@@ -71,7 +75,7 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
         with working_dir(self.stage.source_path):
             install_tree("bin", prefix.bin)
             install_tree("CMakeIncludes", prefix.CMakeIncludes)
-            install_tree("examples", prefix.examples)
+            ##  install_tree("examples", prefix.examples)
             install_tree("include", prefix.include)
             install_tree("lib", prefix.lib)
 

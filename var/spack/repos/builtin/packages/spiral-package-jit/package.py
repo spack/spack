@@ -6,25 +6,25 @@
 from spack.package import *
 
 
-class SpiralPackageMpi(Package):
-    """This is the SPIRAL package for MPI."""
+class SpiralPackageJit(Package):
+    """This is the SPIRAL package for Just-In-Time (JIT) or Real-Time 
+    Compilation (RTC)."""
 
     homepage = "https://spiralgen.com"
-    url = "https://github.com/spiral-software/spiral-package-mpi/archive/refs/tags/1.1.0.tar.gz"
-    git = "https://github.com/spiral-software/spiral-package-mpi.git"
+    url = "https://github.com/spiral-software/spiral-package-jit/archive/refs/tags/1.0.1.tar.gz"
+    git = "https://github.com/spiral-software/spiral-package-jit.git"
 
     maintainers("spiralgen")
     extends("spiral-software")
 
     version("develop", branch="develop")
     version("main", branch="main")
-    version("1.1.0", sha256="baf3c9dac7fee330e4bb4adbd24cc7e55f27fc27417644c0b216124f9052f1f5")
-    version("1.0.0", sha256="64896a82aacce9cc8abe88b921e09ba7a5fceb8262e490f60a7088583c2c2151")
+    version("1.0.1", sha256="acf22db04e705276f06642d7f2ebf161f6c347f93bb1bdd6e3ddcfc4b7be5707")
 
-    # MPI package is an extension for Spiral (spec: spiral-software).  Spiral finds
+    # JIT package is an extension for Spiral (spec: spiral-software).  Spiral finds
     # extensions in the "namespaces/packages" folder.  Install the tree in a similarly
     # named folder so that when activated it'll get symlinked to the correct place.
 
     def install(self, spec, prefix):
-        spiral_pkgs = join_path(prefix, "namespaces", "packages", "mpi")
+        spiral_pkgs = join_path(prefix, "namespaces", "packages", "jit")
         install_tree(".", spiral_pkgs)

@@ -10,7 +10,7 @@ class SpiralPackageHcol(Package):
     """This is the SPIRAL package for the Hybrid Control Operator Language
     (HCOL)."""
 
-    homepage = "https://spiral.net"
+    homepage = "https://spiralgen.com"
     url = "https://github.com/spiral-software/spiral-package-hcol/archive/refs/tags/1.0.0.tar.gz"
     git = "https://github.com/spiral-software/spiral-package-hcol.git"
 

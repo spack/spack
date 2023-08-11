@@ -10,8 +10,8 @@ class SpiralPackageSimt(Package):
     """This is the SPIRAL package for SIMT:  SIMT, single instruction multiple
     threads, is used to generate code for GPUs and multi-threading aplications."""
 
-    homepage = "https://spiral.net"
-    url = "https://github.com/spiral-software/spiral-package-simt/archive/refs/tags/1.0.0.tar.gz"
+    homepage = "https://spiralgen.com"
+    url = "https://github.com/spiral-software/spiral-package-simt/archive/refs/tags/1.1.0.tar.gz"
     git = "https://github.com/spiral-software/spiral-package-simt.git"
 
     maintainers("spiralgen")
