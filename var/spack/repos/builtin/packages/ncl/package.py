@@ -149,7 +149,8 @@ class Ncl(Package):
 
         # Build system may fail without errors, so check for main program.
         exes = os.listdir(self.spec.prefix.bin)
-        assert "ncl" in exes
+        if "ncl" not in exes:
+            raise RuntimeError("Installation failed (ncl executable was not created)")
 
     def setup_run_environment(self, env):
         env.set("NCARG_ROOT", self.spec.prefix)
