@@ -110,7 +110,7 @@ class CmakeClient(CMakePackage):
         print(cmake)
         print(cmake.exe)
         check(
-            str(PurePath(cmake.exe[0])).startswith(spec["cmake"].prefix.bin),
+            cmake.path.startswith(spec["cmake"].prefix.bin),
             "Wrong cmake was in environment: %s" % cmake,
         )
 
