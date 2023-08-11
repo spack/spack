@@ -90,8 +90,12 @@ class ClingoBootstrap(Clingo):
 
     @run_before("cmake", when="+optimized")
     def pgo_train(self):
-        if self.spec.compiler.name in ("clang", "apple-clang"):
+        if self.spec.compiler.name == "clang":
             llvm_profdata = which("llvm-profdata", required=True)
+        elif self.spec.compiler.name == "apple-clang":
+            llvm_profdata = Executable(
+                Executable("xcrun")("-find", "llvm-profdata", output=str).strip()
+            )
 
         # First configure with PGO flags, and do build apps.
         reports = os.path.abspath("reports")
@@ -116,6 +120,8 @@ class ClingoBootstrap(Clingo):
         python_runtime_env = EnvironmentModifications()
         for s in self.spec.traverse(deptype=("run", "link"), order="post"):
             python_runtime_env.extend(spack.user_environment.environment_modifications_for_spec(s))
+        python_runtime_env.unset("SPACK_ENV")
+        python_runtime_env.unset("SPACK_PYTHON")
         self.spec["python"].command(
             spack.paths.spack_script, "solve", "--fresh", "hdf5", extra_env=python_runtime_env
         )
