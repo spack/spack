@@ -282,25 +282,30 @@ def which_string(*args, **kwargs):
     if isinstance(path, str):
         paths = [Path(x) for x in path.split(os.pathsep)]
 
-    for search_item in args:
-        is_cwd = True if search_item.startswith(".") else False
-        search_item = Path(search_item)
-        candidate_items = [Path(search_item)]
-        if sys.platform == "win32":
-            if not search_item.suffix:
-                candidate_items = [
-                    search_item.parent / (search_item.name + ext) for ext in [".exe", ".bat"]
-                ]
+    def get_candidate_items(search_item):
+        if sys.platform != "win32" or search_item.suffix:
+            return [Path(search_item)]
 
-            paths_copy = paths
-            for p in paths_copy:
+        return [search_item.parent / (search_item.name + ext) for ext in [".exe", ".bat"]]
+
+    def add_extra_search_paths(paths):
+        if sys.platform == "win32":
+            for p in paths:
                 if p.name == "bin":
                     paths.append(p.parent)
+        return paths
+
+    for search_item in args:
+        if search_item.startswith("."):
+            # we do this because pathlib will strip any leading ./
+            paths.insert(0, Path.cwd())
+        paths = add_extra_search_paths(paths)
+
+        search_item = Path(search_item)
+        candidate_items = get_candidate_items(Path(search_item))
 
         for candidate_item in candidate_items:
-            search_paths = [Path.cwd()] + paths if is_cwd else paths
-
-            for directory in search_paths:
+            for directory in paths:
                 exe = directory / candidate_item
                 if exe.is_file() and os.access(str(exe), os.X_OK):
                     return str(exe)

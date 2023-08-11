@@ -15,51 +15,51 @@ from pathlib import PurePath
 import llnl.util.filesystem
 
 #: This file lives in $prefix/lib/spack/spack/__file__
-prefix = llnl.util.filesystem.ancestor(__file__, 4)
+prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
 
 #: synonym for prefix
 spack_root = prefix
 
 #: bin directory in the spack prefix
-bin_path = str(PurePath(prefix, "bin"))
+bin_path = os.path.join(prefix, "bin")
 
 #: The spack script itself
-spack_script = str(PurePath(bin_path, "spack"))
+spack_script = os.path.join(bin_path, "spack")
 
 #: The sbang script in the spack installation
-sbang_script = str(PurePath(bin_path, "sbang"))
+sbang_script = os.path.join(bin_path, "sbang")
 
 # spack directory hierarchy
-lib_path = str(PurePath(prefix, "lib", "spack"))
-external_path = str(PurePath(lib_path, "external"))
-build_env_path = str(PurePath(lib_path, "env"))
-module_path = str(PurePath(lib_path, "spack"))
-command_path = str(PurePath(module_path, "cmd"))
-analyzers_path = str(PurePath(module_path, "analyzers"))
-platform_path = str(PurePath(module_path, "platforms"))
-compilers_path = str(PurePath(module_path, "compilers"))
-build_systems_path = str(PurePath(module_path, "build_systems"))
-operating_system_path = str(PurePath(module_path, "operating_systems"))
-test_path = str(PurePath(module_path, "test"))
-hooks_path = str(PurePath(module_path, "hooks"))
-opt_path = str(PurePath(prefix, "opt"))
-share_path = str(PurePath(prefix, "share", "spack"))
-etc_path = str(PurePath(prefix, "etc", "spack"))
+lib_path = os.path.join(prefix, "lib", "spack")
+external_path = os.path.join(lib_path, "external")
+build_env_path = os.path.join(lib_path, "env")
+module_path = os.path.join(lib_path, "spack")
+command_path = os.path.join(module_path, "cmd")
+analyzers_path = os.path.join(module_path, "analyzers")
+platform_path = os.path.join(module_path, "platforms")
+compilers_path = os.path.join(module_path, "compilers")
+build_systems_path = os.path.join(module_path, "build_systems")
+operating_system_path = os.path.join(module_path, "operating_systems")
+test_path = os.path.join(module_path, "test")
+hooks_path = os.path.join(module_path, "hooks")
+opt_path = os.path.join(prefix, "opt")
+share_path = os.path.join(prefix, "share", "spack")
+etc_path = os.path.join(prefix, "etc", "spack")
 
 #
 # Things in $spack/etc/spack
 #
-default_license_dir = str(PurePath(etc_path, "licenses"))
+default_license_dir = os.path.join(etc_path, "licenses")
 
 #
 # Things in $spack/var/spack
 #
-var_path = str(PurePath(prefix, "var", "spack"))
+var_path = os.path.join(prefix, "var", "spack")
 
 # read-only things in $spack/var/spack
-repos_path = str(PurePath(var_path, "repos"))
-packages_path = str(PurePath(repos_path, "builtin"))
-mock_packages_path = str(PurePath(repos_path, "builtin.mock"))
+repos_path = os.path.join(var_path, "repos")
+packages_path = os.path.join(repos_path, "builtin")
+mock_packages_path = os.path.join(repos_path, "builtin.mock")
 
 #
 # Writable things in $spack/var/spack
@@ -67,13 +67,13 @@ mock_packages_path = str(PurePath(repos_path, "builtin.mock"))
 # TODO: These should probably move to user cache, or some other location.
 #
 # fetch cache for downloaded files
-default_fetch_cache_path = str(PurePath(var_path, "cache"))
+default_fetch_cache_path = os.path.join(var_path, "cache")
 
 # GPG paths.
-gpg_keys_path = str(PurePath(var_path, "gpg"))
-mock_gpg_data_path = str(PurePath(var_path, "gpg.mock", "data"))
-mock_gpg_keys_path = str(PurePath(var_path, "gpg.mock", "keys"))
-gpg_path = str(PurePath(opt_path, "spack", "gpg"))
+gpg_keys_path = os.path.join(var_path, "gpg")
+mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
+mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
+gpg_path = os.path.join(opt_path, "spack", "gpg")
 
 
 # Below paths are where Spack can write information for the user.
@@ -89,25 +89,25 @@ def _get_user_cache_path():
     return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep)
 
 
-user_cache_path = _get_user_cache_path()
+user_cache_path = str(PurePath(_get_user_cache_path()))
 
 #: junit, cdash, etc. reports about builds
-reports_path = str(PurePath(user_cache_path, "reports"))
+reports_path = os.path.join(user_cache_path, "reports")
 
 #: installation test (spack test) output
-default_test_path = str(PurePath(user_cache_path, "test"))
+default_test_path = os.path.join(user_cache_path, "test")
 
 #: spack monitor analysis directories
-default_monitor_path = str(PurePath(reports_path, "monitor"))
+default_monitor_path = os.path.join(reports_path, "monitor")
 
 #: git repositories fetched to compare commits to versions
-user_repos_cache_path = str(PurePath(user_cache_path, "git_repos"))
+user_repos_cache_path = os.path.join(user_cache_path, "git_repos")
 
 #: bootstrap store for bootstrapping clingo and other tools
-default_user_bootstrap_path = str(PurePath(user_cache_path, "bootstrap"))
+default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
 
 #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
-default_misc_cache_path = str(PurePath(user_cache_path, "cache"))
+default_misc_cache_path = os.path.join(user_cache_path, "cache")
 
 
 # Below paths pull configuration from the host environment.
