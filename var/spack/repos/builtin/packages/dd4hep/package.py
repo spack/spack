@@ -132,7 +132,12 @@ class Dd4hep(CMakePackage):
     # variants for other build options
     variant("xercesc", default=False, description="Enable 'Detector Builders' based on XercesC")
     variant("hepmc3", default=False, description="Enable build with hepmc3")
-    variant("hepmc3-gz", default=False, description="Enable build with compressed hepmc3", when="@1.26: +hepmc3")
+    variant(
+        "hepmc3-gz",
+        default=False,
+        description="Enable build with compressed hepmc3",
+        when="@1.26: +hepmc3",
+    )
     variant("lcio", default=False, description="Enable build with lcio")
     variant("edm4hep", default=True, description="Enable build with edm4hep")
     variant("geant4units", default=False, description="Use geant4 units throughout")
