@@ -652,3 +652,41 @@ spack:
     spack_yaml.flush()
 
     assert spec_str not in manifest.read_text()
+
+
+@pytest.mark.regression("39387")
+@pytest.mark.parametrize(
+    "duplicate_specs,expected_number",
+    [
+        # Swap variants, versions, etc. add spaces
+        (["foo +bar ~baz", "foo ~baz    +bar"], 3),
+        (["foo @1.0 ~baz %gcc", "foo ~baz @1.0%gcc"], 3),
+        # Item 1 and 3 are exactly the same
+        (["zlib +shared", "zlib      +shared", "zlib +shared"], 4),
+    ],
+)
+def test_removing_spec_from_manifest_with_exact_duplicates(
+    duplicate_specs, expected_number, tmp_path
+):
+    """Tests that we can remove exact duplicates from a manifest file.
+
+    Note that we can't get in a state with duplicates using only CLI, but this might happen
+    on user edited spack.yaml files.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
+    spack:
+      specs: [{", ".join(duplicate_specs)} , "zlib"]
+    """
+    )
+
+    with ev.Environment(tmp_path) as env:
+        assert len(env.user_specs) == expected_number
+        env.remove(duplicate_specs[0])
+        env.write()
+
+    assert "+shared" not in manifest.read_text()
+    assert "zlib" in manifest.read_text()
+    with ev.Environment(tmp_path) as env:
+        assert len(env.user_specs) == 1
