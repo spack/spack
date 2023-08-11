@@ -28,6 +28,14 @@ class HpxKokkos(CMakePackage, CudaPackage, ROCmPackage):
         description="Use the specified C++ standard when building.",
     )
 
+    future_types_map = {"polling": "event", "callback": "callback"}
+    variant(
+        "future_type",
+        default="polling",
+        values=future_types_map.keys(),
+        description="Integration type for GPU futures",
+    )
+
     depends_on("cmake@3.19:", type="build")
 
     depends_on("hpx")
@@ -54,3 +62,15 @@ class HpxKokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("hpx +rocm", when="+rocm")
     depends_on("kokkos +rocm", when="+rocm")
+
+    def cmake_args(self):
+        spec, args = self.spec, []
+
+        args += [
+            self.define(
+                "HPX_KOKKOS_CUDA_FUTURE_TYPE",
+                self.future_types_map[spec.variants["future_type"].value],
+            ),
+        ]
+
+        return args
