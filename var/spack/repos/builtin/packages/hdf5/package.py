@@ -41,6 +41,7 @@ class Hdf5(CMakePackage):
 
     # Odd versions are considered experimental releases
     # Even versions are maintenance versions
+    version("1.14.2", tag="hdf5-1_14_2", preferred=True,)
     version(
         "1.14.1-2",
         sha256="cbe93f275d5231df28ced9549253793e40cd2b555e3d288df09d7b89a9967b07",
