@@ -55,6 +55,8 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("blt")
 
+    conflicts("^blt@:0.3.6", when="+rocm")
+
     def cmake_args(self):
         spec = self.spec
 

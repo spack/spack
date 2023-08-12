@@ -25,10 +25,10 @@ class MesaGlu(AutotoolsPackage):
         multi=False,
         description="The OpenGL provider to use",
     )
-    conflicts("osmesa", when="gl=glx")
-    conflicts("osmesa", when="gl=other")
-    conflicts("glx", when="gl=osmesa")
-    conflicts("glx", when="gl=other")
+    conflicts("^osmesa", when="gl=glx")
+    conflicts("^osmesa", when="gl=other")
+    conflicts("^glx", when="gl=osmesa")
+    conflicts("^glx", when="gl=other")
 
     depends_on("gl@3:")
     depends_on("osmesa", when="gl=osmesa")

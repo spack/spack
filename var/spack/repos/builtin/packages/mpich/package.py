@@ -98,15 +98,6 @@ spack package at this time.""",
     variant("fortran", default=True, description="Enable Fortran support")
 
     variant(
-        "two_level_namespace",
-        default=False,
-        description="""Build shared libraries and programs
-built with the mpicc/mpifort/etc. compiler wrappers
-with '-Wl,-commons,use_dylibs' and without
-'-Wl,-flat_namespace'.""",
-    )
-
-    variant(
         "vci",
         default=False,
         when="@4: device=ch4",
@@ -210,6 +201,18 @@ with '-Wl,-commons,use_dylibs' and without
         # Apply the patch only when yaksa is used:
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=yaksa")
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=auto device=ch4")
+
+    # Fix false positive result of the configure time check for CFI support
+    # https://github.com/pmodels/mpich/pull/6537
+    # https://github.com/pmodels/mpich/issues/6505
+    with when("@3.2.2:4.1.1"):
+        # Apply the patch from the upstream repo in case we have to run the autoreconf stage:
+        patch(
+            "https://github.com/pmodels/mpich/commit/d901a0b731035297dd6598888c49322e2a05a4e0.patch?full_index=1",
+            sha256="de0de41ec42ac5f259ea02f195eea56fba84d72b0b649a44c947eab6632995ab",
+        )
+        # Apply the changes to the configure script to skip the autoreconf stage if possible:
+        patch("mpich32_411_CFI_configure.patch")
 
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build")
@@ -487,6 +490,7 @@ with '-Wl,-commons,use_dylibs' and without
     def configure_args(self):
         spec = self.spec
         config_args = [
+            "--disable-maintainer-mode",
             "--disable-silent-rules",
             "--enable-shared",
             "--with-pm={0}".format("hydra" if "+hydra" in spec else "no"),
@@ -495,6 +499,10 @@ with '-Wl,-commons,use_dylibs' and without
             "--enable-wrapper-rpath={0}".format("no" if "~wrapperrpath" in spec else "yes"),
             "--with-yaksa={0}".format(spec["yaksa"].prefix if "^yaksa" in spec else "embedded"),
         ]
+
+        # see https://github.com/pmodels/mpich/issues/5530
+        if spec.platform == "darwin":
+            config_args.append("--enable-two-level-namespace")
 
         # hwloc configure option changed in 4.0
         if spec.satisfies("@4.0:"):
@@ -577,9 +585,6 @@ with '-Wl,-commons,use_dylibs' and without
         if "+argobots" in spec:
             config_args.append("--with-thread-package=argobots")
             config_args.append("--with-argobots=" + spec["argobots"].prefix)
-
-        if "+two_level_namespace" in spec:
-            config_args.append("--enable-two-level-namespace")
 
         if "+vci" in spec:
             config_args.append("--enable-thread-cs=per-vci")

@@ -12,6 +12,7 @@ import tarfile
 import urllib.error
 import urllib.request
 import urllib.response
+from pathlib import PurePath
 
 import py
 import pytest
@@ -175,6 +176,33 @@ def install_dir_non_default_layout(tmpdir):
     finally:
         spack.store.STORE = real_store
         spack.store.STORE.layout = real_layout
+
+
+@pytest.fixture(scope="function")
+def dummy_prefix(tmpdir):
+    """Dummy prefix used for testing tarball creation, validation, extraction"""
+    p = tmpdir.mkdir("prefix")
+    assert os.path.isabs(p)
+
+    p.mkdir("bin")
+    p.mkdir("share")
+    p.mkdir(".spack")
+
+    app = p.join("bin", "app")
+    relative_app_link = p.join("bin", "relative_app_link")
+    absolute_app_link = p.join("bin", "absolute_app_link")
+    data = p.join("share", "file")
+
+    with open(app, "w") as f:
+        f.write("hello world")
+
+    with open(data, "w") as f:
+        f.write("hello world")
+
+    os.symlink("app", relative_app_link)
+    os.symlink(app, absolute_app_link)
+
+    return str(p)
 
 
 args = ["file"]
@@ -966,3 +994,71 @@ def test_tarball_normalized_permissions(tmpdir):
 
     # not-executable-by-user files should be 0o644
     assert path_to_member["pkg/share/file"].mode == 0o644
+
+
+def test_tarball_common_prefix(dummy_prefix, tmpdir):
+    """Tests whether Spack can figure out the package directory
+    from the tarball contents, and strip them when extracting."""
+
+    # When creating a tarball, Python (and tar) use relative paths,
+    # Absolute paths become relative to `/`, so drop the leading `/`.
+    assert os.path.isabs(dummy_prefix)
+    expected_prefix = PurePath(dummy_prefix).as_posix().lstrip("/")
+
+    with tmpdir.as_cwd():
+        # Create a tarball (using absolute path for prefix dir)
+        with tarfile.open("example.tar", mode="w") as tar:
+            tar.add(name=dummy_prefix)
+
+        # Open, verify common prefix, and extract it.
+        with tarfile.open("example.tar", mode="r") as tar:
+            common_prefix = bindist._ensure_common_prefix(tar)
+            assert common_prefix == expected_prefix
+
+            # Strip the prefix from the tar entries
+            bindist._tar_strip_component(tar, common_prefix)
+
+            # Extract into prefix2
+            tar.extractall(path="prefix2")
+
+        # Verify files are all there at the correct level.
+        assert set(os.listdir("prefix2")) == {"bin", "share", ".spack"}
+        assert set(os.listdir(os.path.join("prefix2", "bin"))) == {
+            "app",
+            "relative_app_link",
+            "absolute_app_link",
+        }
+        assert set(os.listdir(os.path.join("prefix2", "share"))) == {"file"}
+
+        # Relative symlink should still be correct
+        assert os.readlink(os.path.join("prefix2", "bin", "relative_app_link")) == "app"
+
+        # Absolute symlink should remain absolute -- this is for relocation to fix up.
+        assert os.readlink(os.path.join("prefix2", "bin", "absolute_app_link")) == os.path.join(
+            dummy_prefix, "bin", "app"
+        )
+
+
+def test_tarfile_without_common_directory_prefix_fails(tmpdir):
+    """A tarfile that only contains files without a common package directory
+    should fail to extract, as we won't know where to put the files."""
+    with tmpdir.as_cwd():
+        # Create a broken tarball with just a file, no directories.
+        with tarfile.open("empty.tar", mode="w") as tar:
+            tar.addfile(tarfile.TarInfo(name="example/file"), fileobj=io.BytesIO(b"hello"))
+
+        with pytest.raises(ValueError, match="Tarball does not contain a common prefix"):
+            bindist._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
+
+
+def test_tarfile_with_files_outside_common_prefix(tmpdir, dummy_prefix):
+    """If a file is outside of the common prefix, we should fail."""
+    with tmpdir.as_cwd():
+        with tarfile.open("broken.tar", mode="w") as tar:
+            tar.add(name=dummy_prefix)
+            tar.addfile(tarfile.TarInfo(name="/etc/config_file"), fileobj=io.BytesIO(b"hello"))
+
+        with pytest.raises(
+            ValueError, match="Tarball contains file /etc/config_file outside of prefix"
+        ):
+            bindist._ensure_common_prefix(tarfile.open("broken.tar", mode="r"))

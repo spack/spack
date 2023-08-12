@@ -142,7 +142,7 @@ class Slurm(AutotoolsPackage):
     depends_on("openssl")
     depends_on("pkgconfig", type="build")
     depends_on("readline", when="+readline")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("gtkplus", when="+gtk")
     depends_on("hdf5", when="+hdf5")
@@ -180,7 +180,7 @@ class Slurm(AutotoolsPackage):
             "--with-lz4={0}".format(spec["lz4"].prefix),
             "--with-munge={0}".format(spec["munge"].prefix),
             "--with-ssl={0}".format(spec["openssl"].prefix),
-            "--with-zlib={0}".format(spec["zlib"].prefix),
+            "--with-zlib={0}".format(spec["zlib-api"].prefix),
         ]
 
         if "~gtk" in spec:

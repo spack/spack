@@ -474,7 +474,7 @@ def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn):
         path, skip_unstable_versions=skip_unstable_versions
     )
     for candidate in mirror_specs:
-        pkg_cls = spack.repo.path.get_pkg_class(candidate.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
         pkg_obj = pkg_cls(spack.spec.Spec(candidate))
         mirror_stats.next_spec(pkg_obj.spec)
         spack.mirror.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
