@@ -28,17 +28,56 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
-    version("20230615", sha256="8470ed7b26ccd3728f4b44a7f1c520f1af23a648af685fd30b42b840fdfae2ff")
-    version("20230328", sha256="14f5a5c37e4b46466e90d8b35476800e66acee74999f7358f4c12dfe662bfd99")
-    version("20230208", sha256="60221242145da4479e5b207d9a0eed90af4168d7a297b4dc8c0e7f2b3215602e")
-    version("20221222", sha256="75372ee7ef982767fc4ed4dc95e20ddca8247419adeb0c1276c40e43d1eab955")
-    version("20221103", sha256="d28517b84b157d4e46a1a64ed787b4662d8f2f5ade3f5a04bb0caed068f32f7e")
-    version("20220915", sha256="392b8d35fc7919b0efaf8b389259a9b795a817e58e75e380467c63d03a0dab75")
-    version("20220803", sha256="f37cb0b35c1682ffceae5826aadce47278aa7003099a1655fcea43acd7d37926")
+    version(
+        "20230802",
+        sha256="48dc8b0b0583689e80ea2052275acbc3e3fce89707ac557e120db5564257f7df",
+        preferred=True,
+    )
+    version(
+        "20230615",
+        sha256="8470ed7b26ccd3728f4b44a7f1c520f1af23a648af685fd30b42b840fdfae2ff",
+        deprecated=True,
+    )
+    version(
+        "20230328",
+        sha256="14f5a5c37e4b46466e90d8b35476800e66acee74999f7358f4c12dfe662bfd99",
+        deprecated=True,
+    )
+    version(
+        "20230208",
+        sha256="60221242145da4479e5b207d9a0eed90af4168d7a297b4dc8c0e7f2b3215602e",
+        deprecated=True,
+    )
+    version(
+        "20221222",
+        sha256="75372ee7ef982767fc4ed4dc95e20ddca8247419adeb0c1276c40e43d1eab955",
+        deprecated=True,
+    )
+    version(
+        "20221103",
+        sha256="d28517b84b157d4e46a1a64ed787b4662d8f2f5ade3f5a04bb0caed068f32f7e",
+        deprecated=True,
+    )
+    version(
+        "20220915",
+        sha256="392b8d35fc7919b0efaf8b389259a9b795a817e58e75e380467c63d03a0dab75",
+        deprecated=True,
+    )
+    version(
+        "20220803",
+        sha256="f37cb0b35c1682ffceae5826aadce47278aa7003099a1655fcea43acd7d37926",
+        deprecated=True,
+    )
+    version(
+        "20220623.4",
+        sha256="42541b4dbd0d339d16ddb377e76d192bc3d1d5712fdf9e2cdc838fc980d0a0cf",
+        preferred=True,
+    )
     version(
         "20220623.3",
         sha256="8a276a01b50d37eecfe6eb36f420f354cde51936d20aca7944dea60d3c098c89",
         preferred=True,
+        deprecated=True,
     )
     version(
         "20220623.2",
@@ -654,9 +693,9 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
 
     # Older LAMMPS does not compile with Kokkos 4.x
     conflicts(
-        "^kokkos @4:",
-        when="@:20230615",
-        msg="LAMMPS is incompatible with Kokkos 4.x until @20230615",
+        "^kokkos@4:",
+        when="@:20230802",
+        msg="LAMMPS is incompatible with Kokkos 4.x until @20230802",
     )
 
     patch("lib.patch", when="@20170901")
