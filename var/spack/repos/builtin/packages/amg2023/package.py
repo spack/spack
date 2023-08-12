@@ -18,7 +18,7 @@ class Amg2023(CMakePackage):
     git = "https://github.com/LLNL/AMG2023.git"
 
     version("develop", branch="main")
-    version("tre", git="https://github.com/tjeter/AMG2023.git", branch="longitudinal-amg") 
+    version("tre", git="https://github.com/dyokelson/AMG2023.git", branch="cmake") 
 
     
     variant("mpi", default=True, description="Enable MPI support")
