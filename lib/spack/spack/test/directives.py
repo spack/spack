@@ -78,8 +78,8 @@ def test_error_on_anonymous_dependency(config, mock_packages):
     "package_name,expected_maintainers",
     [
         ("maintainers-1", ["user1", "user2"]),
-        # Reset from PythonPackage
-        ("py-extension1", ["adamjstewart", "pradyunsg", "user1", "user2"]),
+        # Extends PythonPackage
+        ("py-extension1", ["adamjstewart", "user1", "user2"]),
         # Extends maintainers-1
         ("maintainers-3", ["user0", "user1", "user2", "user3"]),
     ],

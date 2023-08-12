@@ -54,12 +54,10 @@ def test_all(mock_packages, capfd):
         "user3",
         "py-extension1:",
         "adamjstewart,",
-        "pradyunsg,",
         "user1,",
         "user2",
         "py-extension2:",
-        "adamjstewart,",
-        "pradyunsg",
+        "adamjstewart",
     ]
 
     with capfd.disabled():
@@ -72,9 +70,6 @@ def test_all_by_user(mock_packages, capfd):
         out = split(maintainers("--all", "--by-user"))
     assert out == [
         "adamjstewart:",
-        "py-extension1,",
-        "py-extension2",
-        "pradyunsg:",
         "py-extension1,",
         "py-extension2",
         "user0:",
