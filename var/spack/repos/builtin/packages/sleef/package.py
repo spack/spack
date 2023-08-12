@@ -44,17 +44,9 @@ class Sleef(CMakePackage):
     # See https://github.com/shibatch/sleef/issues/234
     # See https://github.com/pytorch/pytorch/issues/26892
     # See https://github.com/pytorch/pytorch/pull/26993
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
 
+    generator("ninja")
     depends_on("cmake@3.4.3:", type="build")
-    depends_on("ninja", type="build")
-
-    generator = "Ninja"
 
     def cmake_args(self):
         return [

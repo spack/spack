@@ -20,6 +20,7 @@ class Veccore(CMakePackage):
     maintainers("drbenmorgan", "sethrj")
 
     version("master", branch="master")
+    version("0.8.1", sha256="7d7983947c2c6faa55c908b3a968f19f96f4d5c909447c536de30c34b439e008")
     version("0.8.0", sha256="2f8e49f2b609bf15a776026fbec899b3d5d4ba30f033d4fdac4b07a5220a4fd3")
     version("0.7.0", sha256="61d9fc4be815c5c98088c2796763d3ed82ba4bad5a69b7892c1c2e7e1e53d311")
     version("0.6.0", sha256="db404d745906efec2a76175995e847af9174df5a8da1e5ccdb241c773d7c8df9")

@@ -27,6 +27,18 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
     )
 
     version(
+        "2023.2.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/fa218373-4b06-451f-8f4c-66b7d14b8e8b/l_daal_oneapi_p_2023.2.0.49574_offline.sh",
+        sha256="643c6b5a9d06bc82b610257645cde116dc0473935a3b969850fa72c6cb952eaf",
+        expand=False,
+    )
+    version(
+        "2023.1.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/c209d29f-3d06-45fb-8f04-7b2f47b93a7c/l_daal_oneapi_p_2023.1.0.46349_offline.sh",
+        sha256="5ed5c021a2d3c0e65702d0ae3e18010a85af18bdfbc534e783797d3b23c56801",
+        expand=False,
+    )
+    version(
         "2023.0.0",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19122/l_daal_oneapi_p_2023.0.0.25395_offline.sh",
         sha256="83d0ca7501c882bf7e1f250e7310dafa6b6fd404858298ce9cde7546654d43bc",
@@ -87,7 +99,7 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
         expand=False,
     )
 
-    depends_on("intel-oneapi-tbb")
+    depends_on("tbb")
 
     provides("daal")
     provides("onedal")

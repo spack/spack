@@ -22,3 +22,5 @@ class PrunersNinja(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
+
+    patch("pruners-mutli-def-a-pr3-fix.patch")

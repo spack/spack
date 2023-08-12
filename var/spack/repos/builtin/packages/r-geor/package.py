@@ -24,5 +24,4 @@ class RGeor(RPackage):
     depends_on("r-mass", type=("build", "run"))
     depends_on("r-sp", type=("build", "run"))
     depends_on("r-splancs", type=("build", "run"))
-    depends_on("r-randomfields", type=("build", "run"))
-    depends_on("r-randomfields", when="@:1.8-1")
+    depends_on("r-randomfields", type=("build", "run"), when="@:1.8-1")

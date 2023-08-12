@@ -20,6 +20,7 @@ class RBayesplot(RPackage):
 
     cran = "bayesplot"
 
+    version("1.10.0", sha256="bb4cb92b1ae4cf8ae5f4b5cb092aba34af3d820d137e1f2265cca8f3e85113ff")
     version("1.9.0", sha256="0a81a4b99cf781334e57cfc3c469fad8b932a68204016a3bbca33cab4e2a1e43")
     version("1.8.1", sha256="d8d74201ea91fa5438714686ca22a947ec9375b6c12b0cfef010c57104b1aa2a")
     version("1.8.0", sha256="a605f9929e681593a3ef3ca9c836e713314994aaea00f359f71cfc42d151c948")

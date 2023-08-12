@@ -19,7 +19,7 @@ class Weechat(CMakePackage):
     variant("perl", default=False, description="Include perl support")
     variant("lua", default=False, description="Include lua support")
     variant("ruby", default=False, description="Include ruby support")
-    variant("tcl", default=False, description="Include TCL support")
+    variant("tcl", default=False, description="Include Tcl support")
     variant("guile", default=False, description="Include guile support")
     variant("php", default=False, description="Include php support")
 
@@ -30,7 +30,7 @@ class Weechat(CMakePackage):
     depends_on("aspell")
     depends_on("libgcrypt")
     depends_on("curl")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("ruby@1.9.1:", when="+ruby")
     depends_on("tcl@8.5:", when="+tcl")
     depends_on("perl", when="+perl")

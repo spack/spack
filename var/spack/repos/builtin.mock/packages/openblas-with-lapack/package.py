@@ -12,7 +12,7 @@ class OpenblasWithLapack(Package):
     homepage = "http://www.openblas.net"
     url = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
-    version("0.2.15", "b1190f3d3471685f17cfd1ec1d252ac9")
+    version("0.2.15", md5="b1190f3d3471685f17cfd1ec1d252ac9")
 
     provides("lapack")
     provides("blas")

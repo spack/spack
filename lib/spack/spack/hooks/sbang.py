@@ -41,7 +41,7 @@ interpreter_regex = re.compile(b"#![ \t]*?([^ \t\0\n]+)")
 
 def sbang_install_path():
     """Location sbang should be installed within Spack's ``install_tree``."""
-    sbang_root = str(spack.store.unpadded_root)
+    sbang_root = str(spack.store.STORE.unpadded_root)
     install_path = os.path.join(sbang_root, "bin", "sbang")
     path_length = len(install_path)
     if path_length > system_shebang_limit:
@@ -224,7 +224,7 @@ def install_sbang():
     os.rename(sbang_tmp_path, sbang_path)
 
 
-def post_install(spec):
+def post_install(spec, explicit=None):
     """This hook edits scripts so that they call /bin/bash
     $spack_prefix/bin/sbang instead of something longer than the
     shebang limit.

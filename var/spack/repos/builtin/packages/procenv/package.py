@@ -15,6 +15,7 @@ class Procenv(AutotoolsPackage):
     homepage = "https://github.com/jamesodhunt/procenv/"
     url = "https://github.com/jamesodhunt/procenv/archive/0.51.tar.gz"
 
+    version("0.60", sha256="fac0438bf08ed73b10ace78d85acb83cf81ade5ecf866762c2c6e92e41dbde43")
     version("0.51", sha256="b831c14729e06a285cc13eba095817ce3b6d0ddf484b1264951b03ee4fe25bc9")
 
     # https://github.com/jamesodhunt/procenv/pull/16

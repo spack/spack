@@ -38,7 +38,7 @@ class Amdlibflame(LibflameBase):
     """
 
     _name = "amdlibflame"
-    homepage = "https://developer.amd.com/amd-cpu-libraries/blas-library/#libflame"
+    homepage = "https://www.amd.com/en/developer/aocl/blis.html#libflame"
     url = "https://github.com/amd/libflame/archive/3.0.tar.gz"
     git = "https://github.com/amd/libflame.git"
 
@@ -73,7 +73,7 @@ class Amdlibflame(LibflameBase):
 
     def configure_args(self):
         """configure_args function"""
-        args = super(Amdlibflame, self).configure_args()
+        args = super().configure_args()
 
         # From 3.2 version, amd optimized flags are encapsulated under:
         # enable-amd-flags for gcc compiler

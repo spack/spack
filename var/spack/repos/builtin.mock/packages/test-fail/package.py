@@ -12,10 +12,12 @@ class TestFail(Package):
     homepage = "http://www.example.com/test-failure"
     url = "http://www.test-failure.test/test-failure-1.0.tar.gz"
 
-    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
 
-    def test(self):
-        self.run_test("true", expected=["not in the output"])
+    def test_fails(self):
+        """trigger test failure"""
+        unknown = which("unknown-program")
+        unknown()

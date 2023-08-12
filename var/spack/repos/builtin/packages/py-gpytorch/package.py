@@ -15,8 +15,10 @@ class PyGpytorch(PythonPackage):
     homepage = "https://gpytorch.ai/"
     pypi = "gpytorch/gpytorch-1.2.1.tar.gz"
 
-    maintainers("adamjstewart")
+    maintainers("adamjstewart", "meyersbs")
 
+    version("1.10", sha256="6dc978ab9fbf220a845a4f1ea13104180fc50e6934081f421b37f6120afb7f18")
+    version("1.9.1", sha256="0bdbba6f6d5957a0f43ef6dc7fec39c47e8a55f632ca33760c6189f259b3ccc3")
     version("1.9.0", sha256="a0608184c18a1f518d6a102473427abf00f5351421e12a934530953f6887b34b")
     version("1.8.1", sha256="fe8e412a73a2b07027e30c65c61323de15ebcef439f5bd21200cf26551fd0e30")
     version("1.8.0", sha256="d6c0c77d9a61f47feac2d19456816ccea1ed48c32c72d7ea33aa13b259e2a455")
@@ -40,5 +42,7 @@ class PyGpytorch(PythonPackage):
     depends_on("py-torch@1.5:", type=("build", "run"))
     depends_on("py-scikit-learn", when="@1.2:", type=("build", "run"))
     depends_on("py-linear-operator@0.1.1:", when="@1.9:", type=("build", "run"))
+    depends_on("py-linear-operator@0.2.0:", when="@1.9.1:", type=("build", "run"))
+    depends_on("py-linear-operator@0.4.0:", when="@1.10:", type=("build", "run"))
     depends_on("py-numpy", when="@1.7:1.8", type=("build", "run"))
     depends_on("py-scipy", when="@1.2:1.8", type=("build", "run"))

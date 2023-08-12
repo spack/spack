@@ -163,6 +163,8 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+openmp", when="+rocm")
     conflicts("+cuda", when="+rocm")
 
+    conflicts("^blt@:0.3.6", when="+rocm")
+
     def flag_handler(self, name, flags):
         if self.spec.satisfies("%cce") and name == "fflags":
             flags.append("-ef")
@@ -206,7 +208,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
-        entries = super(Axom, self).initconfig_compiler_entries()
+        entries = super().initconfig_compiler_entries()
 
         if "+fortran" in spec:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", True))
@@ -229,7 +231,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        entries = super(Axom, self).initconfig_hardware_entries()
+        entries = super().initconfig_hardware_entries()
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
@@ -352,7 +354,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_mpi_entries(self):
         spec = self.spec
-        entries = super(Axom, self).initconfig_mpi_entries()
+        entries = super().initconfig_mpi_entries()
 
         if "+mpi" in spec:
             entries.append(cmake_cache_option("ENABLE_MPI", True))

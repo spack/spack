@@ -19,11 +19,11 @@ def modulefile_content(request):
 
     writer_cls = getattr(request.module, "writer_cls")
 
-    def _impl(spec_str, module_set_name="default"):
+    def _impl(spec_str, module_set_name="default", explicit=True):
         # Write the module file
         spec = spack.spec.Spec(spec_str)
         spec.concretize()
-        generator = writer_cls(spec, module_set_name)
+        generator = writer_cls(spec, module_set_name, explicit)
         generator.write(overwrite=True)
 
         # Get its filename
@@ -56,10 +56,10 @@ def factory(request):
     # Class of the module file writer
     writer_cls = getattr(request.module, "writer_cls")
 
-    def _mock(spec_string, module_set_name="default"):
+    def _mock(spec_string, module_set_name="default", explicit=True):
         spec = spack.spec.Spec(spec_string)
         spec.concretize()
-        return writer_cls(spec, module_set_name), spec
+        return writer_cls(spec, module_set_name, explicit), spec
 
     return _mock
 

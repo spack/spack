@@ -4,27 +4,26 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
 import spack.caches
+import spack.cmd.clean
 import spack.main
 import spack.package_base
 import spack.stage
+import spack.store
 
 clean = spack.main.SpackCommand("clean")
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 @pytest.fixture()
 def mock_calls_for_clean(monkeypatch):
     counts = {}
 
-    class Counter(object):
+    class Counter:
         def __init__(self, name):
             self.name = name
             counts[name] = 0
@@ -36,7 +35,7 @@ def mock_calls_for_clean(monkeypatch):
     monkeypatch.setattr(spack.stage, "purge", Counter("stages"))
     monkeypatch.setattr(spack.caches.fetch_cache, "destroy", Counter("downloads"), raising=False)
     monkeypatch.setattr(spack.caches.misc_cache, "destroy", Counter("caches"))
-    monkeypatch.setattr(spack.installer, "clear_failures", Counter("failures"))
+    monkeypatch.setattr(spack.store.STORE.failure_tracker, "clear_all", Counter("failures"))
     monkeypatch.setattr(spack.cmd.clean, "remove_python_cache", Counter("python_cache"))
 
     yield counts

@@ -12,6 +12,7 @@ class PerlTestMost(PerlPackage):
     homepage = "https://metacpan.org/pod/Test::Most"
     url = "http://search.cpan.org/CPAN/authors/id/O/OV/OVID/Test-Most-0.35.tar.gz"
 
+    version("0.38", sha256="089eb894f7bace4c37c6334e0e290eb20338ee10223af0c82cbe7281c78382df")
     version("0.35", sha256="9897a6f4d751598d2ed1047e01c1554b01d0f8c96c45e7e845229782bf6f657f")
 
     depends_on("perl-exception-class", type=("build", "run"))

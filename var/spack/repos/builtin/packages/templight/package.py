@@ -81,15 +81,6 @@ class Templight(CMakePackage):
     )
     patch("develop-20180720.patch", when="@2018.07.20")
 
-    # Clang debug builds can be _huge_ (20+ GB), make sure you know what you
-    # are doing before switching to them
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-
     # NOTE: LLVM has many configurable tweaks and optional tools/extensions.
     #       I did not think that  propagating all of these to a debugging and
     #       performance analysis tool was worth the maintenance burden. But

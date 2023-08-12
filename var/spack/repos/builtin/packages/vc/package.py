@@ -13,6 +13,7 @@ class Vc(CMakePackage):
     git = "https://github.com/VcDevel/Vc.git"
     url = "https://github.com/VcDevel/Vc/archive/refs/tags/1.3.3.tar.gz"
 
+    version("1.4.3", sha256="988ea0053f3fbf17544ca776a2749c097b3139089408b0286fa4e9e8513e037f")
     version("1.4.2", sha256="50d3f151e40b0718666935aa71d299d6370fafa67411f0a9e249fbce3e6e3952")
     version("1.4.1", sha256="7e8b57ed5ff9eb0835636203898c21302733973ff8eaede5134dd7cb87f915f6")
     version("1.3.3", sha256="32f1bdd4046a90907a2b63ee39d72ad0e6d0608937f8202d759d7fa0eddd1ec1")

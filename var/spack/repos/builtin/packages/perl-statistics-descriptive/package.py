@@ -14,4 +14,5 @@ class PerlStatisticsDescriptive(PerlPackage):
         "http://search.cpan.org/CPAN/authors/id/S/SH/SHLOMIF/Statistics-Descriptive-3.0612.tar.gz"
     )
 
+    version("3.0800", sha256="b04edeea26bfed435aa6029956798c281f7f52d4545f3f45b2ad44954e96f939")
     version("3.0612", sha256="772413148e5e00efb32f277c4254aa78b9112490a896208dcd0025813afdbf7a")

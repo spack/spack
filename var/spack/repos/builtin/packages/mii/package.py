@@ -18,6 +18,7 @@ class Mii(MakefilePackage):
     homepage = "https://github.com/codeandkey/mii"
     url = "https://github.com/codeandkey/mii/archive/v1.0.4.tar.gz"
 
+    version("1.1.2", sha256="bdf2cfe93b2b0989cd47f1447e8787d8339440295299c0a70d2646e2c02e29b8")
     version("1.0.4", sha256="3c4e7e6e8c21969da8dade05fecab35be61f2bb82d75eeaf19db8cc97f8058b5")
 
     def setup_build_environment(self, env):

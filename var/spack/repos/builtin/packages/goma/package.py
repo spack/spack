@@ -16,6 +16,10 @@ class Goma(CMakePackage):
 
     maintainers("wortiz")
 
+    version("7.4.3", commit="bb0cf8030f9e8d61066d052ea6fad67fe49651f8")
+    version("7.3.0", commit="415f442953e2171afae1f8ad55868052c6f511ce")
+    version("7.2.0", commit="814f433aa5674c07274fffd4a619d80cd31f71ab")
+    version("7.1.3", commit="8e8ffbe872f41ca4675e1588140c5b9dfe17e9e4")
     version("7.1.1", commit="4bebca85ab3840709b44f63502893af6453710e8")
     version("7.0.4", commit="27b2cb2477fa92f9457597f588c137de2572ef69")
     version("7.0.0", commit="5166896f273e5853e1f32885e20f68317b24979c")

@@ -16,6 +16,8 @@ class Libstdcompat(CMakePackage):
     maintainers("robertu94")
 
     version("master", branch="master")
+    version("0.0.17", sha256="8c8a3f2727dd28c51ab10e02a1114e39b683d6d9ea119d5c2a953f8c41d6bedd")
+    version("0.0.16", sha256="1287251b694adb80210536ab6eb75c1ff2c4ed8b77023208a757ae27c9dae0bb")
     version("0.0.15", sha256="af374a8883a32d874f6cd18cce4e4344e32f9d60754be403a5ac7114feca2a28")
     version("0.0.14", sha256="9a794d43a1d79aec3350b89d8c06689b8b32cf75e2742cdfa9dc0e3f2be6f04e")
     version("0.0.13", sha256="460656189e317e108a489af701fa8f33f13a93d96380788e692a1c68100e0388")

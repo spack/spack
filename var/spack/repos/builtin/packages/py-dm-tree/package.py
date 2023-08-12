@@ -19,12 +19,15 @@ class PyDmTree(PythonPackage):
 
     maintainers("aweits")
 
+    version("0.1.8", sha256="0fcaabbb14e7980377439e7140bd05552739ca5e515ecb3119f234acee4b9430")
+    version("0.1.7", sha256="30fec8aca5b92823c0e796a2f33b875b4dccd470b57e91e6c542405c5f77fd2a")
     version("0.1.6", sha256="6776404b23b4522c01012ffb314632aba092c9541577004ab153321e87da439a")
     version("0.1.5", sha256="a951d2239111dfcc468071bc8ff792c7b1e3192cab5a3c94d33a8b2bda3127fa")
 
     depends_on("py-setuptools", type="build")
-    depends_on("bazel", type="build")
-    depends_on("py-six@1.12.0:", type=("build", "run"))
+    depends_on("cmake", when="@0.1.7:", type="build")
+    depends_on("bazel@:5", when="@:0.1.6", type="build")
+    depends_on("py-six@1.12.0:", when="@:0.1.6", type=("build", "run"))
 
     # This is set later
     tmp_path = None

@@ -100,7 +100,7 @@ class Tau(Package):
     )
 
     depends_on("cmake@3.14:", type="build", when="%clang")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("pdt", when="+pdt")  # Required for TAU instrumentation
     depends_on("scorep", when="+scorep")
     depends_on("otf2@2.1:2.3", when="+otf2")
@@ -144,6 +144,9 @@ class Tau(Package):
     def set_compiler_options(self, spec):
         useropt = ["-O2 -g", self.rpath_args]
 
+        if self.spec.satisfies("%oneapi"):
+            useropt.append("-Wno-error=implicit-function-declaration")
+
         ##########
         # Selecting a compiler with TAU configure is quite tricky:
         # 1 - compilers are mapped to a given set of strings
@@ -183,7 +186,7 @@ class Tau(Package):
         return compiler_options
 
     def setup_build_environment(self, env):
-        env.prepend_path("LIBRARY_PATH", self.spec["zlib"].prefix.lib)
+        env.prepend_path("LIBRARY_PATH", self.spec["zlib-api"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["hwloc"].prefix.lib)
 
     def install(self, spec, prefix):

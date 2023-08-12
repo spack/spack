@@ -29,7 +29,7 @@ class Tulip(CMakePackage):
     depends_on("qt")
     depends_on("qhull")
     depends_on("freetype")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("glew")
     depends_on("jpeg")
     depends_on("libpng")
