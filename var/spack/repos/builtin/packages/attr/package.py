@@ -37,5 +37,3 @@ class Attr(AutotoolsPackage):
     @when("@:2.4.47")
     def install(self, spec, prefix):
         make("install", "install-dev", "install-lib")
-
-        make("install", "install-dev", "install-lib")
