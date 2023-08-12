@@ -19,7 +19,6 @@ class Amg2023(CMakePackage):
 
     version("develop", branch="main")
     version("tre", git="https://github.com/dyokelson/AMG2023.git", branch="cmake") 
-
     
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=False, description="Enable OpenMP support")
