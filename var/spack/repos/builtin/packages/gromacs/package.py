@@ -169,7 +169,7 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("mpi", when="+mpi")
 
     # Plumed 2.9.0 needs Gromacs 2023,  2022.5, 2021.7, 2020.7
-    # Plumed 2.8.3 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6                 
+    # Plumed 2.8.3 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
     # Plumed 2.8.2 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
     # Plumed 2.8.1 needs Gromacs        2022.3, 2021.6, 2020.7, 2019.6
     # Plumed 2.8.0 needs Gromacs                2021.4, 2020.6, 2019.6
@@ -200,7 +200,7 @@ class Gromacs(CMakePackage, CudaPackage):
     # https://github.com/plumed/plumed2/tree/v2.9.0/patches
     # and switching tags.
     plumed_patches = {
-        "2023":   "2.9.0",
+        "2023": "2.9.0",
         "2022.5": "2.8.2:2.9.0",
         "2022.3": "2.8.1",
         "2021.7": "2.8.2:2.9.0",
