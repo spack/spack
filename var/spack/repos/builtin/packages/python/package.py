@@ -437,7 +437,8 @@ class Python(Package):
 
         # https://github.com/python/cpython/issues/87275
         if spec.satisfies("@:3.9.5 +optimizations %apple-clang"):
-            env.set("LLVM_AR", which("ar"))
+            xcrun = Executable("/usr/bin/xcrun")
+            env.set("LLVM_AR", xcrun("-find", "ar", output=str).strip())
 
     def flag_handler(self, name, flags):
         # python 3.8 requires -fwrapv when compiled with intel
