@@ -1,0 +1,22 @@
+Dear CS,
+
+Somebody changed the apptainer and/or singularity(ce) packages in spack. Could you run the spack permissions fix scripts please?
+
+{{noformat}}
+/gpfs/bbp.cscs.ch/ssd/apps/bsd/2023-02-23/stage_externals/install_gcc-12.2.0-skylake/apptainer-1.0.2-64vw6l/bin/spack_perms_fix.sh
+/gpfs/bbp.cscs.ch/ssd/apps/bsd/2023-02-23/stage_externals/install_gcc-12.2.0-skylake/singularityce-3.10.3-x5o2eh/bin/spack_perms_fix.sh
+{{noformat}}
+
+GitHub histories:
+* https://github.com/BlueBrain/spack/commits/develop/var/spack/repos/builtin/packages/apptainer
+* https://github.com/BlueBrain/spack/commits/develop/var/spack/repos/builtin/packages/singularity
+* https://github.com/BlueBrain/spack/commits/develop/var/spack/repos/builtin/packages/singularityce
+
+These are the last three commits in the Spack repository:
+
+{{noformat}}
+
+{git_log}
+{{noformat}}
+
+Thank you!

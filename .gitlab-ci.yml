@@ -201,3 +201,33 @@ clean_merged_prs:
   variables:
     DEPLOYMENT_BASE: $DEPLOYMENT_BASE
     GITHUB_PULL_REQUEST_ID: "merged"
+
+
+# some changes require a human to be notified. We'll do this through JIRA tickets
+notifications:
+  needs: [atomic_build]
+  image: python:3.11-bullseye
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $DEPLOYMENT_DEFAULT_BRANCH'
+      changes:
+        - var/spack/repos/builtin/packages/apptainer/*
+        - var/spack/repos/builtin/packages/singularity/*
+        - var/spack/repos/builtin/packages/singularityce/*
+  script:
+    - apt-get update
+    - apt-get install -y jq wget
+    - echo "Finding ID of the atomic build"
+    - ATOMIC_BUILD_ID=$(wget --header "Content-Type:application/json" --header "PRIVATE-TOKEN:${GITLAB_API_KEY}" -O- "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/pipelines/${CI_PIPELINE_ID}/bridges" | jq '.[] | select(.name == "atomic_build") | .downstream_pipeline.id')
+    - echo "Atomic build pipeline ID is ${ATOMIC_BUILD_ID}"
+    - set +e
+    - wget --header "Content-Type:application/json" --header "PRIVATE-TOKEN:${GITLAB_API_KEY}" -O- "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/pipelines/${ATOMIC_BUILD_ID}/test_report"
+    - |
+      wget --header "Content-Type:application/json" --header "PRIVATE-TOKEN:${GITLAB_API_KEY}" -O- "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/pipelines/${ATOMIC_BUILD_ID}/test_report" | jq -e '.test_suites[] | select(.name == "externals") .test_cases[] | select(.status != "skipped" and (.classname == "singularity" or .classname == "singularityce" or .classname == "apptainer"))'
+      if [[ $? -ne 0 ]]
+      then
+        echo "No test found - no need to warn anyone."
+      else
+        echo "Relevant test found - time to create a HELP ticket"
+        pip install -r bluebrain/notifications/requirements.txt
+        python bluebrain/notifications/jira_ticket.py --project HELP --summary "Please run the spack permissions fix scripts" --description-file bluebrain/notifications/apptainer_singularity.txt
+      fi
