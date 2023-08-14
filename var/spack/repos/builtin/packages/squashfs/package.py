@@ -91,13 +91,13 @@ class Squashfs(MakefilePackage):
 
     depends_on("zlib-api", when="+gzip")
     depends_on("lz4", when="+lz4")
-    depends_on("lz4 libs=shared,static", when="+lz4 +static")
+    depends_on("lz4 libs=static", when="+lz4 +static")
     depends_on("lzo", when="+lzo")
-    depends_on("lzo libs=shared,static", when="+lzo +static")
+    depends_on("lzo libs=static", when="+lzo +static")
     depends_on("xz", when="+xz")
-    depends_on("xz libs=shared,static", when="+xz +static")
+    depends_on("xz libs=static", when="+xz +static")
     depends_on("zstd", when="+zstd")
-    depends_on("zstd libs=shared,static", when="+zstd +static")
+    depends_on("zstd libs=static", when="+zstd +static")
 
     # patch from
     # https://github.com/plougher/squashfs-tools/commit/fe2f5da4b0f8994169c53e84b7cb8a0feefc97b5.patch
