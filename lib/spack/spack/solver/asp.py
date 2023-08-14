@@ -591,20 +591,24 @@ class NodeArgument(NamedTuple):
     pkg: str
 
 
-def stringify(sym):
-    """Stringify symbols from clingo models.
+def intermediate_repr(sym):
+    """Returns an intermediate representation of clingo models for Spack's spec builder.
 
-    This will turn a ``clingo.Symbol`` into a string, or a sequence of ``clingo.Symbol``
-    objects into a tuple of strings.
+    Currently, transforms symbols from clingo models either to strings or to NodeArgument objects.
 
+    Returns:
+        This will turn a ``clingo.Symbol`` into a string or NodeArgument, or a sequence of
+        ``clingo.Symbol`` objects into a tuple of those objects.
     """
     # TODO: simplify this when we no longer have to support older clingo versions.
     if isinstance(sym, (list, tuple)):
-        return tuple(stringify(a) for a in sym)
+        return tuple(intermediate_repr(a) for a in sym)
 
     try:
         if sym.name == "node":
-            return NodeArgument(id=stringify(sym.arguments[0]), pkg=stringify(sym.arguments[1]))
+            return NodeArgument(
+                id=intermediate_repr(sym.arguments[0]), pkg=intermediate_repr(sym.arguments[1])
+            )
     except RuntimeError:
         # This happens when using clingo w/ CFFI and trying to access ".name" for symbols
         # that are not functions
@@ -623,10 +627,10 @@ def stringify(sym):
 def extract_args(model, predicate_name):
     """Extract the arguments to predicates with the provided name from a model.
 
-    Pull out all the predicates with name ``predicate_name`` from the model, and return
-    their stringified arguments as tuples.
+    Pull out all the predicates with name ``predicate_name`` from the model, and
+    return their intermediate representation.
     """
-    return [stringify(sym.arguments) for sym in model if sym.name == predicate_name]
+    return [intermediate_repr(sym.arguments) for sym in model if sym.name == predicate_name]
 
 
 class ErrorHandler:
@@ -874,7 +878,8 @@ class PyclingoDriver:
             for sym in best_model:
                 if sym.name not in ("attr", "error", "opt_criterion"):
                     tty.debug(
-                        "UNKNOWN SYMBOL: %s(%s)" % (sym.name, ", ".join(stringify(sym.arguments)))
+                        "UNKNOWN SYMBOL: %s(%s)"
+                        % (sym.name, ", ".join(intermediate_repr(sym.arguments)))
                     )
 
         elif cores:
