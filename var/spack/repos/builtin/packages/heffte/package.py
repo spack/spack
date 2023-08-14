@@ -128,12 +128,18 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
     @run_after("install")
     def setup_smoke_test(self):
+        if self.spec.satisfies("@:2.2.0"):
+            return
         install_tree(
             self.prefix.share.heffte.testing, join_path(self.install_test_root, "testing")
         )
 
     def test_make_test(self):
         """build and run make(test)"""
+
+        if self.spec.satisfies("@:2.2.0"):
+            return
+
         # using the tests copied from <prefix>/share/heffte/testing
         cmake_dir = self.test_suite.current_test_cache_dir.testing
 
