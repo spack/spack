@@ -308,7 +308,7 @@ class Python(Package):
     conflicts("%nvhpc")
 
     # https://bugs.python.org/issue45405
-    conflicts("@:3.7.2,3.8.0:3.8.12,3.9.0:3.9.10,3.10.0:3.10.2", when="%apple-clang@13:")
+    conflicts("@:3.7.12,3.8.0:3.8.12,3.9.0:3.9.7,3.10.0", when="%apple-clang@13:")
 
     # See https://github.com/python/cpython/issues/106424
     # datetime.now(timezone.utc) segfaults
@@ -434,6 +434,11 @@ class Python(Package):
         if spec.satisfies("@3.10.0 arch=linux-rhel8-a64fx"):
             if spec.satisfies("%gcc") or spec.satisfies("%fj"):
                 env.unset("LC_ALL")
+
+        # https://github.com/python/cpython/issues/87275
+        if spec.satisfies("@:3.9.5 +optimizations %apple-clang"):
+            xcrun = Executable("/usr/bin/xcrun")
+            env.set("LLVM_AR", xcrun("-find", "ar", output=str).strip())
 
     def flag_handler(self, name, flags):
         # python 3.8 requires -fwrapv when compiled with intel
