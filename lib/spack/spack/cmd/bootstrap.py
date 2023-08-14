@@ -69,11 +69,10 @@ SOURCE_METADATA = {
 
 def _add_scope_option(parser):
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.SCOPES_METAVAR
     parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         help="configuration scope to read/modify",
     )
 

@@ -16,6 +16,7 @@ import spack.cmd.common.arguments
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
+import spack.config
 import spack.util.environment
 
 description = "manage external packages in Spack configuration"
@@ -27,7 +28,6 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="external_command")
 
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
 
     find_parser = sp.add_parser("find", help="add external packages to packages.yaml")
     find_parser.add_argument(
@@ -47,7 +47,7 @@ def setup_parser(subparser):
     find_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope("packages"),
         help="configuration scope to modify",
     )
