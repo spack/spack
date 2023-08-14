@@ -79,7 +79,7 @@ class Fms(CMakePackage):
         "deprecated_io",
         default=False,
         description="Compiles with support for deprecated io modules fms_io and mpp_io",
-        when="@2023.02:",
+        when="@2023.02:"
     )
 
     depends_on("netcdf-c")
@@ -97,7 +97,7 @@ class Fms(CMakePackage):
             self.define("32BIT", "precision=32" in self.spec),
             self.define("64BIT", "precision=64" in self.spec),
             self.define_from_variant("FPIC", "pic"),
-            self.define_from_variant("USE_DEPRECATED_IO", "deprecated_io"),
+            self.define_from_variant("USE_DEPRECATED_IO", "deprecated_io")
         ]
 
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
