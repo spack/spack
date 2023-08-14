@@ -40,11 +40,16 @@ COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
 SEGMENT_REGEX = re.compile(r"(?:(?P<num>[0-9]+)|(?P<str>[a-zA-Z]+))(?P<sep>[_.-]*)")
 
 # regular expression for semantic versioning
-SEMVER_REGEX = re.compile(
-    ".+(?P<semver>([0-9]+)[.]([0-9]+)[.]([0-9]+)"
-    "(?:-([0-9A-Za-z-]+(?:[.][0-9A-Za-z-]+)*))?"
-    "(?:[+][0-9A-Za-z-]+)?)"
-)
+_VERSION_CORE = r"\d+\.\d+\.\d+"
+_IDENT = r"[0-9A-Za-z-]+"
+_SEPARATED_IDENT = rf"{_IDENT}(?:\.{_IDENT})*"
+_PRERELEASE = rf"\-{_SEPARATED_IDENT}"
+_BUILD = rf"\+{_SEPARATED_IDENT}"
+_SEMVER = rf"{_VERSION_CORE}(?:{_PRERELEASE})?(?:{_BUILD})?"
+
+# clamp on the end, so versions like v1.2.3-rc1 will match
+# without the leading 'v'.
+SEMVER_REGEX = re.compile(rf"{_SEMVER}$")
 
 # Infinity-like versions. The order in the list implies the comparison rules
 infinity_versions = ["stable", "trunk", "head", "master", "main", "develop"]
@@ -1319,11 +1324,10 @@ class CommitLookup(object):
                         commit_to_version[tag_commit] = v
                         break
                 else:
-                    # try to parse tag to copare versions spack does not know
-                    match = SEMVER_REGEX.match(tag)
+                    # try to parse tag to compare versions spack does not know
+                    match = SEMVER_REGEX.search(tag)
                     if match:
-                        semver = match.groupdict()["semver"]
-                        commit_to_version[tag_commit] = semver
+                        commit_to_version[tag_commit] = match.group()
 
             ancestor_commits = []
             for tag_commit in commit_to_version:
