@@ -561,10 +561,12 @@ spack:
         ("vendorsb@=1.1", True, None),
     ],
 )
-def test_vendors_directive(
+def test_conflicts_with_packages_that_are_not_dependencies(
     spec_str, expected_raise, expected_spec, tmp_path, mock_packages, config
 ):
-    """Tests that we cannot concretize two specs together, if one vendors the other."""
+    """Tests that we cannot concretize two specs together, if one conflicts with the other,
+    even though they don't have a dependency relation.
+    """
     if spack.config.get("config:concretizer") == "original":
         pytest.xfail("Known failure of the original concretizer")
 
