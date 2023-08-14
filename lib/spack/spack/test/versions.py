@@ -982,6 +982,7 @@ def test_unresolvable_git_versions_error(config, mock_packages):
 @pytest.mark.parametrize(
     "tag,expected",
     [
+        ("v100.2.3", "100.2.3"),
         ("v1.2.3", "1.2.3"),
         ("v1.2.3-pre.release+build.1", "1.2.3-pre.release+build.1"),
         ("v1.2.3+build.1", "1.2.3+build.1"),
