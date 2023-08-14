@@ -26,6 +26,7 @@ from spack.version import (
     is_git_version,
     ver,
 )
+from spack.version.git_ref_lookup import SEMVER_REGEX
 
 
 def assert_ver_lt(a, b):
@@ -976,3 +977,25 @@ def test_unresolvable_git_versions_error(config, mock_packages):
         # The package exists, but does not have a git property set. When dereferencing
         # the version, we should get VersionLookupError, not a generic AttributeError.
         spack.spec.Spec(f"git-test-commit@{'a' * 40}").version.ref_version
+
+
+@pytest.mark.parametrize(
+    "tag,expected",
+    [
+        ("v100.2.3", "100.2.3"),
+        ("v1.2.3", "1.2.3"),
+        ("v1.2.3-pre.release+build.1", "1.2.3-pre.release+build.1"),
+        ("v1.2.3+build.1", "1.2.3+build.1"),
+        ("v1.2.3+build_1", None),
+        ("v1.2.3-pre.release", "1.2.3-pre.release"),
+        ("v1.2.3-pre_release", None),
+        ("1.2.3", "1.2.3"),
+        ("1.2.3.", None),
+    ],
+)
+def test_semver_regex(tag, expected):
+    result = SEMVER_REGEX.search(tag)
+    if expected is None:
+        assert result is None
+    else:
+        assert result.group() == expected
