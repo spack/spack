@@ -65,7 +65,7 @@ class Squashfs(MakefilePackage):
     variant(
         "static",
         default=False,
-        description="Build static squashfs tools, requires glibc-static on OS",
+        description="Build fully static mksquashfs executable",
     )
 
     conflicts(
