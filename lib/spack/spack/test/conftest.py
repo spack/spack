@@ -1936,6 +1936,6 @@ def shell_as(shell):
 def nullify_globals(request, monkeypatch):
     ensure_configuration_fixture_run_before(request)
     monkeypatch.setattr(spack.config, "CONFIG", None)
-    monkeypatch.setattr(spack.caches, "misc_cache", None)
+    monkeypatch.setattr(spack.caches, "MISC_CACHE", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)

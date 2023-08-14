@@ -126,7 +126,7 @@ def clean(parser, args):
 
     if args.misc_cache:
         tty.msg("Removing cached information on repositories")
-        spack.caches.misc_cache.destroy()
+        spack.caches.MISC_CACHE.destroy()
 
     if args.python_cache:
         tty.msg("Removing python cache files")
