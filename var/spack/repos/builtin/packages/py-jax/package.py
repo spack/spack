@@ -34,11 +34,7 @@ class PyJax(PythonPackage):
     depends_on("py-scipy@1.2.1:", type=("build", "run"))
 
     # See _minimum_jaxlib_version in jax/version.py
-    jax_to_jaxlib = {
-        "0.4.3": "0.4.2",
-        "0.3.23": "0.3.15",
-        "0.2.25": "0.1.69",
-    }
+    jax_to_jaxlib = {"0.4.3": "0.4.2", "0.3.23": "0.3.15", "0.2.25": "0.1.69"}
 
     for jax, jaxlib in jax_to_jaxlib.items():
         depends_on(f"py-jaxlib@{jaxlib}:", when=f"@{jax}", type=("build", "run"))

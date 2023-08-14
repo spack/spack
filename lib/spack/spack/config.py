@@ -430,7 +430,7 @@ class Configuration:
         return [
             s
             for s in self.scopes.values()
-            if (type(s) == ConfigScope or type(s) == SingleFileScope)
+            if (type(s) is ConfigScope or type(s) is SingleFileScope)
         ]
 
     def highest_precedence_scope(self) -> ConfigScope:
