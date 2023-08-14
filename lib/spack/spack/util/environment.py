@@ -1090,10 +1090,11 @@ def environment_after_sourcing_files(
     shell = Executable(shell_cmd)
 
     def _source_single_file(file_and_args, environment):
-        source_file_arguments = [shell_options]
+        shell_options_list = shell_options.split()
 
-        in_bash_args = [source_command]
-        in_bash_args.extend(file_and_args)
+        source_file = [source_command]
+        source_file.extend(x for x in file_and_args)
+        source_file = " ".join(source_file)
 
         # If the environment contains 'python' use it, if not
         # go with sys.executable. Below we just need a working
@@ -1101,16 +1102,15 @@ def environment_after_sourcing_files(
         python_cmd = which("python3", "python", "python2")
         python_cmd = python_cmd.path if python_cmd else sys.executable
 
-        dump_cmd = '"import os, json; print(json.dumps(dict(os.environ)))"'
-        dump_environment = [python_cmd, "-E", "-c", dump_cmd]
+        dump_cmd = "import os, json; print(json.dumps(dict(os.environ)))"
+        dump_environment_cmd = python_cmd + f' -E -c "{dump_cmd}"'
 
         # Try to source the file
-        in_bash_args.extend(suppress_output.split())
-        in_bash_args.append(concatenate_on_success)
-        in_bash_args.extend(dump_environment)
-        source_file_arguments.append(" ".join(in_bash_args))
+        source_file_arguments = " ".join(
+            [source_file, suppress_output, concatenate_on_success, dump_environment_cmd]
+        )
+        output = shell(*shell_options_list, source_file_arguments, output=str, env=environment, ignore_quotes=True)
 
-        output = shell(*source_file_arguments, output=str, env=environment, ignore_quotes=True)
         return json.loads(output)
 
     current_environment = kwargs.get("env", dict(os.environ))
