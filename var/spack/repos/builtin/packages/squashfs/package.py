@@ -13,6 +13,7 @@ class Squashfs(MakefilePackage):
     url = "https://downloads.sourceforge.net/project/squashfs/squashfs/squashfs4.3/squashfs4.3.tar.gz"
 
     # version      sha1
+    version("4.6.1", sha256="94201754b36121a9f022a190c75f718441df15402df32c2b520ca331a107511c")
     version(
         "4.5.1",
         sha256="277b6e7f75a4a57f72191295ae62766a10d627a4f5e5f19eadfbc861378deea7",
