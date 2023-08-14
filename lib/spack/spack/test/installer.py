@@ -535,9 +535,7 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
 def test_bootstrapping_compilers_with_different_names_from_spec(
     install_mockery, mutable_config, mock_fetch, archspec_host_is_spack_test_host
 ):
-    with spack.config.override(
-        "config:install_missing_compilers", True
-    ), spack.concretize.require_compiler_in_config(False):
+    with spack.config.override("config:install_missing_compilers", True):
         spack.spec.Spec("trivial-install-test-package%oneapi@3").concretized().package.do_install()
         assert any(c.satisfies("oneapi@3") for c in spack.compilers.all_compiler_specs())
 

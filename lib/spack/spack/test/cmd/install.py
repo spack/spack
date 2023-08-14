@@ -966,9 +966,7 @@ def test_compiler_bootstrap(
     assert not any(c.satisfies(compiler) for c in compilers.all_compiler_specs())
 
     # Test succeeds if it does not raise an error
-    with spack.concretize.require_compiler_in_config(False), spack.config.override(
-        "config:install_missing_compilers", True
-    ):
+    with spack.config.override("config:install_missing_compilers", True):
         install(f"a%{compiler}")
 
 
@@ -989,9 +987,7 @@ def test_compiler_bootstrap_greedy_match(
     assert not any(c.satisfies(compiler) for c in compilers.all_compiler_specs())
 
     # Test succeeds if it does not raise an error
-    with spack.concretize.require_compiler_in_config(False), spack.config.override(
-        "config:install_missing_compilers", True
-    ):
+    with spack.config.override("config:install_missing_compilers", True):
         install(f"a%{compiler}")
 
     # Picks the preferred version greedily (at least in the clingo case)
@@ -1034,9 +1030,7 @@ def test_compiler_bootstrap_from_binary_mirror(
     # Now make sure that when the compiler is installed from binary mirror,
     # it also gets configured as a compiler.  Test succeeds if it does not
     # raise an error
-    with spack.concretize.require_compiler_in_config(False), spack.config.override(
-        "config:install_missing_compilers", True
-    ):
+    with spack.config.override("config:install_missing_compilers", True):
         install("--no-check-signature", "--cache-only", "--only", "dependencies", f"b%{compiler}")
         install("--no-cache", "--only", "package", f"b%{compiler}")
 
@@ -1057,9 +1051,7 @@ def test_compiler_bootstrap_already_installed(
     assert not any(c.satisfies(compiler) for c in compilers.all_compiler_specs())
 
     # Test succeeds if it does not raise an error
-    with spack.concretize.require_compiler_in_config(False), spack.config.override(
-        "config:install_missing_compilers", True
-    ):
+    with spack.config.override("config:install_missing_compilers", True):
         install(compiler)
         install(f"a%{compiler}")
 

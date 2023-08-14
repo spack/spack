@@ -2003,9 +2003,8 @@ class SpackSolverSetup:
 
         cspecs = set([c.spec for c in compilers])
 
+        s: spack.spec.Spec
         for s in spack.traverse.traverse_nodes(specs):
-            s: spack.spec.Spec
-
             # we don't need to validate compilers for already-built specs
             if s.concrete or not s.compiler:
                 continue
@@ -2014,7 +2013,7 @@ class SpackSolverSetup:
                 continue
 
             # Error when a compiler cannot be found in config but should be
-            if spack.concretize.Concretizer.require_compiler_in_config:
+            if not spack.config.get("config:install_missing_compilers", False):
                 raise spack.concretize.UnavailableCompilerVersionError(s.compiler)
 
             # Make up a compiler matching the input spec. This is for bootstrapping.

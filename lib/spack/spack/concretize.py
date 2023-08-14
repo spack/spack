@@ -17,7 +17,6 @@ TODO: make this customizable and allow users to configure
 import functools
 import platform
 import tempfile
-from contextlib import contextmanager
 from itertools import chain
 from typing import Union
 
@@ -70,15 +69,10 @@ class Concretizer:
     concretization strategies, or you can override all of them.
     """
 
-    #: Controls whether we check that compiler versions actually exist
-    #: during concretization. Used for testing and for mirror creation
-    require_compiler_in_config = None
-
     def __init__(self, abstract_spec=None):
-        if Concretizer.require_compiler_in_config is None:
-            Concretizer.require_compiler_in_config = not spack.config.get(
-                "config:install_missing_compilers", False
-            )
+        self.require_compiler_in_config = not spack.config.get(
+            "config:install_missing_compilers", False
+        )
         self.abstract_spec = abstract_spec
         self._adjust_target_answer_generator = None
 
@@ -662,14 +656,6 @@ class Concretizer:
                 raise
 
         return False
-
-
-@contextmanager
-def require_compiler_in_config(enabled=True):
-    saved = Concretizer.require_compiler_in_config
-    Concretizer.require_compiler_in_config = enabled
-    yield
-    Concretizer.require_compiler_in_config = saved
 
 
 def find_spec(spec, condition, default=None):

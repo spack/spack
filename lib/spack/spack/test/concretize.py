@@ -469,7 +469,7 @@ class TestConcretize:
     def test_no_matching_compiler_specs(self, enable_bootstrapping, mock_low_high_config):
         # There's not gcc@999 configured, and there's no bootstrappable version in gcc/package.py
         with pytest.raises(spack.concretize.UnavailableCompilerVersionError) as e:
-            with spack.concretize.require_compiler_in_config(not enable_bootstrapping):
+            with spack.config.override("config:install_missing_compilers", enable_bootstrapping):
                 Spec("a %gcc@999").concretize()
 
         assert ("no matching compiler can be bootstrapped" in str(e.value)) == enable_bootstrapping

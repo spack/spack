@@ -109,9 +109,10 @@ config:
   suppress_gpg_warnings: false
 
 
-  # If set to true, Spack will attempt to build any compiler on the spec
-  # that is not already available. If set to False, Spack will only use
-  # compilers already configured in compilers.yaml
+  # If set to true, Spack is allowed to bootstrap compilers that are
+  # not available on the system. This influences both concretization
+  # and installation. If set to False, Spack will only use compilers
+  # already configured in compilers.yaml
   install_missing_compilers: false
 
 
