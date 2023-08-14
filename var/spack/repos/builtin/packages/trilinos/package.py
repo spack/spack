@@ -368,6 +368,21 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # ###################### Dependencies ##########################
 
+    # External Kokkos
+    depends_on("kokkos@4.1.00", when="@14.4.0: +kokkos")
+    depends_on("kokkos +wrapper", when="trilinos@14.4.0: +kokkos +wrapper")
+    depends_on("kokkos ~wrapper", when="trilinos@14.4.0: +kokkos ~wrapper")
+
+    for a in CudaPackage.cuda_arch_values:
+        arch_str = "+cuda cuda_arch=" + a
+        kokkos_spec = "kokkos@4.1.00 " + arch_str
+        depends_on(kokkos_spec, when="@14.4.0 +kokkos " + arch_str)
+
+    for a in ROCmPackage.amdgpu_targets:
+        arch_str = "+rocm amdgpu_target={0}".format(a)
+        kokkos_spec = "kokkos@4.1.00 {0}".format(arch_str)
+        depends_on(kokkos_spec, when="@14.4.0 +kokkos {0}".format(arch_str))
+
     depends_on("adios2", when="+adios2")
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
@@ -777,6 +792,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
         for tpl_name, dep_name in tpl_dep_map:
             define_tpl(tpl_name, dep_name, dep_name in spec)
+
+        # External Kokkos
+        if spec.satisfies("@14.4.0 +kokkos"):
+            options.append(define_tpl_enable("Kokkos"))
 
         # MPI settings
         options.append(define_tpl_enable("MPI"))
