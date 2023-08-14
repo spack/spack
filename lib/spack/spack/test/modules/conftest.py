@@ -38,6 +38,7 @@ def modulefile_content(request):
 
     return _impl
 
+
 @pytest.fixture()
 def factory(request):
     """Function that, given a spec string, returns an instance of the writer
