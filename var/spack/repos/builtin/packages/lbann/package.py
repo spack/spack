@@ -258,6 +258,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("hwloc@1.11.0:1.11", when="@0.95:0.101 +hwloc")
     depends_on("hwloc +cuda +nvml", when="+cuda")
     depends_on("hwloc@2.3.0:", when="+rocm")
+    depends_on("hiptt", when="+rocm")
 
     depends_on("half", when="+half")
 
