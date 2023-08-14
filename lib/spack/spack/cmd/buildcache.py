@@ -149,7 +149,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
+    scopes_metavar = spack.config.SCOPES_METAVAR
 
     check.add_argument(
         "--scope",

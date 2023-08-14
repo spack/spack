@@ -20,7 +20,7 @@ level = "long"
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="repo_command")
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
+    scopes_metavar = spack.config.SCOPES_METAVAR
 
     # Create
     create_parser = sp.add_parser("create", help=repo_create.__doc__)

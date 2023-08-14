@@ -716,7 +716,7 @@ def configuration_dir(tmpdir_factory, linux_os):
 
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
-    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.config_defaults)]
+    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)]
     scopes += [
         spack.config.ConfigScope(name, str(configuration_dir.join(name)))
         for name in ["site", "system", "user"]

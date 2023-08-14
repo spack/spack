@@ -90,7 +90,7 @@ def setup_parser(subparser):
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
+    scopes_metavar = spack.config.SCOPES_METAVAR
 
     # Add
     add_parser = sp.add_parser("add", help=mirror_add.__doc__)
