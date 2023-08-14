@@ -5,8 +5,8 @@
 """Writers for different kind of recipes and related
 convenience functions.
 """
-import collections
 import copy
+from collections import namedtuple
 from typing import Optional
 
 import spack.environment as ev
@@ -159,13 +159,13 @@ class PathContext(tengine.Context):
     @tengine.context_property
     def run(self):
         """Information related to the run image."""
-        Run = collections.namedtuple("Run", ["image"])
+        Run = namedtuple("Run", ["image"])
         return Run(image=self.final_image)
 
     @tengine.context_property
     def build(self):
         """Information related to the build image."""
-        Build = collections.namedtuple("Build", ["image"])
+        Build = namedtuple("Build", ["image"])
         return Build(image=self.build_image)
 
     @tengine.context_property
@@ -176,12 +176,13 @@ class PathContext(tengine.Context):
     @tengine.context_property
     def paths(self):
         """Important paths in the image"""
-        Paths = collections.namedtuple("Paths", ["environment", "store", "hidden_view", "view"])
+        Paths = namedtuple("Paths", ["environment", "store", "view_parent", "view", "former_view"])
         return Paths(
             environment="/opt/spack-environment",
             store="/opt/software",
-            hidden_view="/opt/._view",
-            view="/opt/view",
+            view_parent="/opt/views",
+            view="/opt/views/view",
+            former_view="/opt/view",  # /opt/view -> /opt/views/view for backward compatibility
         )
 
     @tengine.context_property
@@ -257,7 +258,7 @@ class PathContext(tengine.Context):
 
         update, install, clean = commands_for(os_pkg_manager)
 
-        Packages = collections.namedtuple("Packages", ["update", "install", "list", "clean"])
+        Packages = namedtuple("Packages", ["update", "install", "list", "clean"])
         return Packages(update=update, install=install, list=package_list, clean=clean)
 
     def _os_pkg_manager(self):
@@ -273,7 +274,7 @@ class PathContext(tengine.Context):
 
     @tengine.context_property
     def extra_instructions(self):
-        Extras = collections.namedtuple("Extra", ["build", "final"])
+        Extras = namedtuple("Extra", ["build", "final"])
         extras = self.container_config.get("extra_instructions", {})
         build, final = extras.get("build", None), extras.get("final", None)
         return Extras(build=build, final=final)
@@ -295,7 +296,7 @@ class PathContext(tengine.Context):
             context = {"bootstrap": {"image": self.bootstrap_image, "spack_checkout": command}}
             bootstrap_recipe = env.get_template(template_path).render(**context)
 
-        Bootstrap = collections.namedtuple("Bootstrap", ["image", "recipe"])
+        Bootstrap = namedtuple("Bootstrap", ["image", "recipe"])
         return Bootstrap(image=self.bootstrap_image, recipe=bootstrap_recipe)
 
     @tengine.context_property
@@ -303,7 +304,7 @@ class PathContext(tengine.Context):
         render_bootstrap = bool(self.bootstrap_image)
         render_build = not (self.last_phase == "bootstrap")
         render_final = self.last_phase in (None, "final")
-        Render = collections.namedtuple("Render", ["bootstrap", "build", "final"])
+        Render = namedtuple("Render", ["bootstrap", "build", "final"])
         return Render(bootstrap=render_bootstrap, build=render_build, final=render_final)
 
     def __call__(self):
