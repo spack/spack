@@ -46,6 +46,7 @@ class Silo(AutotoolsPackage):
     variant("hzip", default=True, description="Enable hzip support")
     variant("fpzip", default=True, description="Enable fpzip support")
 
+    depends_on("perl", type="build")
     depends_on("m4", type="build", when="+shared")
     depends_on("autoconf", type="build", when="+shared")
     depends_on("autoconf-archive", type="build", when="+shared")
@@ -88,6 +89,9 @@ class Silo(AutotoolsPackage):
 
     # zfp include missing
     patch("zfp_error.patch", when="@4.11 +hdf5")
+
+    # use /usr/bin/env perl for portability
+    patch("mkinc-usr-bin-env-perl.patch")
 
     def flag_handler(self, name, flags):
         spec = self.spec
