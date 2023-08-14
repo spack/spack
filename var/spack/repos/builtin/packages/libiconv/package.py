@@ -51,7 +51,7 @@ class Libiconv(AutotoolsPackage, GNUMirrorPackage):
         version = None
         if match:
             version = match.group(1)
-        return version # Executable(exe)("--version", output=str, error=str)
+        return version
 
     def configure_args(self):
         args = ["--enable-extra-encodings"]
