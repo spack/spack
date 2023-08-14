@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
 
 import pytest
 
@@ -23,20 +22,48 @@ def active_mock_environment(mutable_config, mutable_mock_env_path):
 
 @pytest.mark.regression("22294")
 def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmpdir):
-    # Prepare a custom store path. This should be in a writeable location
-    # since Spack needs to initialize the DB.
+    """Tests that the store is correctly swapped during bootstrapping, and restored afterward."""
     user_path = str(tmpdir.join("store"))
-    # Reassign global variables in spack.store to the value
-    # they would have at Spack startup.
-    spack.store.reinitialize()
-    # Set the custom user path
-    spack.config.set("config:install_tree:root", user_path)
+    with spack.store.use_store(user_path):
+        assert spack.store.STORE.root == user_path
+        assert spack.config.config.get("config:install_tree:root") == user_path
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            assert spack.store.STORE.root == spack.bootstrap.config.store_path()
+        assert spack.store.STORE.root == user_path
+        assert spack.config.config.get("config:install_tree:root") == user_path
 
-    # Test that within the context manager we use the bootstrap store
-    # and that outside we restore the correct location
+
+@pytest.mark.regression("38963")
+def test_store_padding_length_is_zero_during_bootstrapping(mutable_config, tmpdir):
+    """Tests that, even though padded length is set in user config, the bootstrap store maintains
+    a padded length of zero.
+    """
+    user_path = str(tmpdir.join("store"))
+    with spack.store.use_store(user_path, extra_data={"padded_length": 512}):
+        assert spack.config.config.get("config:install_tree:padded_length") == 512
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            assert spack.store.STORE.root == spack.bootstrap.config.store_path()
+            assert spack.config.config.get("config:install_tree:padded_length") == 0
+        assert spack.config.config.get("config:install_tree:padded_length") == 512
+
+
+@pytest.mark.regression("38963")
+def test_install_tree_customization_is_respected(mutable_config, tmp_path):
+    """Tests that a custom user store is respected when we exit the bootstrapping
+    environment.
+    """
+    spack.store.reinitialize()
+    store_dir = tmp_path / "store"
+    spack.config.config.set("config:install_tree:root", str(store_dir))
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.store.root == spack.bootstrap.config.store_path()
-    assert spack.store.root == user_path
+        assert spack.store.STORE.root == spack.bootstrap.config.store_path()
+        assert (
+            spack.config.config.get("config:install_tree:root")
+            == spack.bootstrap.config.store_path()
+        )
+        assert spack.config.config.get("config:install_tree:padded_length") == 0
+    assert spack.config.config.get("config:install_tree:root") == str(store_dir)
+    assert spack.store.STORE.root == str(store_dir)
 
 
 @pytest.mark.parametrize(
@@ -153,7 +180,7 @@ spack:
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
-        assert str(spack.store.root) == install_root
+        assert str(spack.store.STORE.root) == install_root
 
 
 def test_nested_use_of_context_manager(mutable_config):
@@ -166,7 +193,6 @@ def test_nested_use_of_context_manager(mutable_config):
     assert spack.config.config == user_config
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("expected_missing", [False, True])
 def test_status_function_find_files(
     mutable_config, mock_executable, tmpdir, monkeypatch, expected_missing

@@ -103,7 +103,7 @@ def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
 
 @pytest.fixture
 def mock_module_cmd(monkeypatch):
-    class Logger(object):
+    class Logger:
         def __init__(self, fn=None):
             self.fn = fn
             self.calls = []

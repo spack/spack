@@ -12,9 +12,12 @@ class Bbcp(Package):
     homepage = "https://www.slac.stanford.edu/~abh/bbcp/"
     git = "https://www.slac.stanford.edu/~abh/bbcp/bbcp.git"
 
-    version("master", branch="master")
+    maintainers("vanderwb")
 
-    depends_on("zlib")
+    # Stanford's git server does not support "smart https" shallow clones
+    version("master", branch="master", get_full_repo=True)
+
+    depends_on("zlib-api")
     depends_on("openssl")
     depends_on("libnsl")
 

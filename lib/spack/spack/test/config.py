@@ -313,7 +313,7 @@ def test_write_list_in_memory(mock_low_high_config):
     assert config == repos_high["repos"] + repos_low["repos"]
 
 
-class MockEnv(object):
+class MockEnv:
     def __init__(self, path):
         self.path = path
 
@@ -467,7 +467,7 @@ full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDE
     ],
 )
 def test_parse_install_tree(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.default_install_tree_root
+    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -522,7 +522,7 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     ],
 )
 def test_parse_install_tree_padded(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.default_install_tree_root
+    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -1158,13 +1158,13 @@ def test_license_dir_config(mutable_config, mock_packages):
     expected_dir = spack.paths.default_license_dir
     assert spack.config.get("config:license_dir") == expected_dir
     assert spack.package_base.PackageBase.global_license_dir == expected_dir
-    assert spack.repo.path.get_pkg_class("a").global_license_dir == expected_dir
+    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == expected_dir
 
     rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
     spack.config.set("config:license_dir", rel_path)
     assert spack.config.get("config:license_dir") == rel_path
     assert spack.package_base.PackageBase.global_license_dir == rel_path
-    assert spack.repo.path.get_pkg_class("a").global_license_dir == rel_path
+    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == rel_path
 
 
 @pytest.mark.regression("22547")
@@ -1230,21 +1230,21 @@ def test_default_install_tree(monkeypatch):
 
 def test_local_config_can_be_disabled(working_env):
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = "true"
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
 
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = ""
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
 
     del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" in cfg.scopes
     assert "site" in cfg.scopes

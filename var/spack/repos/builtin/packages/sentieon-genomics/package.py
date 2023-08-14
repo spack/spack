@@ -16,7 +16,7 @@ class SentieonGenomics(Package):
 
     Please set the path to the sentieon license server with:
 
-    export SENTIEON_LICENSE=[FQDN]:[PORT]
+    export SENTIEON_LICENSE=<FQDN>:<PORT>
     """
 
     homepage = "https://www.sentieon.com/"

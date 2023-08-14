@@ -73,9 +73,9 @@ class Dyninst(CMakePackage):
 
     # findtbb.cmake in the dynist repo does not work with recent tbb
     # package layout. Need to use tbb provided config instead.
-    conflicts("intel-tbb@2021.1:")
-    conflicts("intel-oneapi-tbb@2021.1:")
-    conflicts("intel-parallel-studio", when="@12.0.0:")
+    conflicts("^intel-tbb@2021.1:")
+    conflicts("^intel-oneapi-tbb@2021.1:")
+    conflicts("^intel-parallel-studio", when="@12.0.0:")
     depends_on("tbb@2018.6.0:", when="@10.0.0:")
 
     depends_on("cmake@3.4.0:", type="build", when="@10.1.0:")
@@ -183,3 +183,12 @@ class Dyninst(CMakePackage):
                 args.append("-DENABLE_STATIC_LIBS=NO")
 
         return args
+
+    def test_ptls(self):
+        """Run parseThat on /bin/ls to rewrite with basic instrumentation"""
+        parseThat = which(self.prefix.bin.parseThat)
+        os.environ["DYNINSTAPI_RT_LIB"] = join_path(self.prefix.lib, "libdyninstAPI_RT.so")
+        parseThat(
+            "--binary-edit={0:s}".format(join_path(self.test_suite.stage, "ls.rewritten")),
+            "/bin/ls",
+        )

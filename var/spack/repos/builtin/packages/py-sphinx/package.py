@@ -10,10 +10,13 @@ class PySphinx(PythonPackage):
     """Sphinx Documentation Generator."""
 
     homepage = "https://www.sphinx-doc.org/en/master/"
-    pypi = "Sphinx/Sphinx-3.2.0.tar.gz"
+    pypi = "Sphinx/sphinx-7.1.0.tar.gz"
 
     maintainers("adamjstewart")
 
+    version("7.1.1", sha256="59b8e391f0768a96cd233e8300fe7f0a8dc2f64f83dc2a54336a9a84f428ff4e")
+    version("7.1.0", sha256="8f336d0221c3beb23006b3164ed1d46db9cebcce9cb41cdb9c5ecd4bcc509be0")
+    version("7.0.1", sha256="61e025f788c5977d9412587e733733a289e2b9fdc2fef8868ddfbfc4ccfe881d")
     version("7.0.0", sha256="283c44aa28922bb4223777b44ac0d59af50a279ac7690dfe945bb2b9575dc41b")
 
     version("6.2.1", sha256="6d56a34697bb749ffa0152feafc4b19836c755d90a7c59b72bc7dfd371b9cc6b")
@@ -69,8 +72,6 @@ class PySphinx(PythonPackage):
     version("1.3.1", sha256="1a6e5130c2b42d2de301693c299f78cc4bd3501e78b610c08e45efc70e2b5114")
 
     depends_on("py-flit-core@3.7:", when="@5.2:", type="build")
-    depends_on("py-setuptools", when="@4.4:5.1", type="build")
-    depends_on("py-setuptools", when="@:4.3", type=("build", "run"))
 
     depends_on("python@3.8:", when="@6:", type=("build", "run"))
 
@@ -88,7 +89,8 @@ class PySphinx(PythonPackage):
     depends_on("py-pygments@2.13:", when="@6.0.1:", type=("build", "run"))
     depends_on("py-pygments@2.12:", when="@5.2:", type=("build", "run"))
     depends_on("py-pygments@2:", type=("build", "run"))
-    depends_on("py-docutils@0.18.1:0.19", when="@6.2:", type=("build", "run"))
+    depends_on("py-docutils@0.18.1:0.20", when="@7.0.1:", type=("build", "run"))
+    depends_on("py-docutils@0.18.1:0.19", when="@6.2:7.0.0", type=("build", "run"))
     depends_on("py-docutils@0.18:0.19", when="@6.0:6.1", type=("build", "run"))
     depends_on("py-docutils@0.14:0.19", when="@5.1:5", type=("build", "run"))
     depends_on("py-docutils@0.14:0.18", when="@5.0", type=("build", "run"))
@@ -111,6 +113,17 @@ class PySphinx(PythonPackage):
     depends_on("py-colorama@0.4.5:", when="@5.2: platform=windows", type=("build", "run"))
     depends_on("py-colorama@0.3.5:", when="platform=windows", type=("build", "run"))
 
+    # Historical dependencies
+    depends_on("py-setuptools", when="@4.4:5.1", type="build")
+    depends_on("py-setuptools", when="@:4.3", type=("build", "run"))
     depends_on("py-sphinxcontrib-websupport", when="@1.6:1", type=("build", "run"))
     depends_on("py-six@1.5:", when="@:1", type=("build", "run"))
     depends_on("py-sphinx-rtd-theme@0.1:", when="@:1.3", type=("build", "run"))
+
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/source/S/Sphinx/{}-{}.tar.gz"
+        if version >= Version("7.1"):
+            name = "sphinx"
+        else:
+            name = "Sphinx"
+        return url.format(name, version)

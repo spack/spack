@@ -22,6 +22,7 @@ class Subversion(AutotoolsPackage):
 
     tags = ["build-tools"]
 
+    version("1.14.2", sha256="fd826afad03db7a580722839927dc664f3e93398fe88b66905732c8530971353")
     version("1.14.1", sha256="dee2796abaa1f5351e6cc2a60b1917beb8238af548b20d3e1ec22760ab2f0cad")
     version("1.14.0", sha256="ef3d1147535e41874c304fb5b9ea32745fbf5d7faecf2ce21d4115b567e937d0")
     version("1.13.0", sha256="daad440c03b8a86fcca804ea82217bb1902cfcae1b7d28c624143c58dcb96931")
@@ -40,7 +41,7 @@ class Subversion(AutotoolsPackage):
 
     depends_on("apr")
     depends_on("apr-util")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("sqlite@3.8.2:")
     depends_on("expat")
     depends_on("lz4", when="@1.10:")
@@ -66,7 +67,7 @@ class Subversion(AutotoolsPackage):
                 spec["expat"].libs.directories[0],
                 spec["expat"].libs.names[0],
             ),
-            "--with-zlib={0}".format(spec["zlib"].prefix),
+            "--with-zlib={0}".format(spec["zlib-api"].prefix),
             "--without-apxs",
             "--without-trang",
             "--without-doxygen",

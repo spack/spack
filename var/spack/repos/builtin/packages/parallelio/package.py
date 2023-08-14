@@ -17,6 +17,7 @@ class Parallelio(CMakePackage):
 
     maintainers("jedwards4b")
 
+    version("2.6.0", sha256="e56a980c71c7f57f396a88beae08f1670d4adf59be6411cd573fe85868ef98c0")
     version("2.5.10", sha256="fac694827c81434a7766976711ba7179940e361e8ed0c189c7b397fd44d401de")
     version("2.5.9", sha256="e5dbc153d8637111de3a51a9655660bf15367d55842de78240dcfc024380553d")
     version("2.5.8", sha256="f2584fb4310ff7da39d51efbe3f334efd0ac53ae2995e5fc157decccc0570a89")
@@ -27,7 +28,8 @@ class Parallelio(CMakePackage):
 
     variant("pnetcdf", default=False, description="enable pnetcdf")
     variant("timing", default=False, description="enable GPTL timing")
-    variant("shared", default=True, description="Build shared libraries")
+    variant("ncint", default=False, description="enable netcdf integration", when="@2.6.0:")
+    variant("shared", default=True, description="build shared libraries")
     variant("logging", default=False, description="enable verbose logging")
     variant(
         "fortran", default=True, description="enable fortran interface (requires netcdf fortran)"
@@ -63,6 +65,8 @@ class Parallelio(CMakePackage):
             define_from_variant("BUILD_SHARED_LIBS", "shared"),
             define("PIO_ENABLE_EXAMPLES", False),
         ]
+        if spec.satisfies("+ncint"):
+            args.extend([define("PIO_ENABLE_NETCDF_INTEGRATION", True)])
         if spec.satisfies("+pnetcdf"):
             args.extend([define("PnetCDF_C_PATH", spec["parallel-netcdf"].prefix)])
         if spec.satisfies("+fortran"):

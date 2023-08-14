@@ -115,9 +115,11 @@ third line
 """
                 )
         # apply the patch and compare files
-        patch.fetch()
-        patch.apply(stage)
-        patch.clean()
+        with patch.stage:
+            patch.stage.create()
+            patch.stage.fetch()
+            patch.stage.expand_archive()
+            patch.apply(stage)
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-expected.txt")
@@ -189,7 +191,7 @@ def test_nested_directives(mock_packages):
     """Ensure pkg data structures are set up properly by nested directives."""
     # this ensures that the patch() directive results were removed
     # properly from the DirectiveMeta._directives_to_be_executed list
-    patcher = spack.repo.path.get_pkg_class("patch-several-dependencies")
+    patcher = spack.repo.PATH.get_pkg_class("patch-several-dependencies")
     assert len(patcher.patches) == 0
 
     # this ensures that results of dependency patches were properly added

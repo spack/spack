@@ -16,6 +16,7 @@ class ROrganismdbi(RPackage):
 
     bioc = "OrganismDbi"
 
+    version("1.42.0", commit="29fcd5c47f8c479edac630a8e2a05ec5facb1328")
     version("1.40.0", commit="fac971dabef3b6d2473d2061bc1723e3de59c9d7")
     version("1.38.1", commit="fa8da4dd42ab15e1d21fd9f8286440596d50b1ec")
     version("1.38.0", commit="2ca01830a6ffcd0c0018d2bdbd3de8b4df716771")

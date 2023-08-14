@@ -49,7 +49,7 @@ def test_spec_concretizer_args(mutable_config, mutable_database):
     uninstall("-y", "mpileaks^mpich2")
 
     # get the hash of mpileaks^zmpi
-    mpileaks_zmpi = spack.store.db.query_one("mpileaks^zmpi")
+    mpileaks_zmpi = spack.store.STORE.db.query_one("mpileaks^zmpi")
     h = mpileaks_zmpi.dag_hash()[:7]
 
     output = spec("--fresh", "-l", "mpileaks")
@@ -157,7 +157,7 @@ def _parse_types(string):
 
 
 def test_spec_deptypes_nodes():
-    output = spec("--types", "--cover", "nodes", "dt-diamond")
+    output = spec("--types", "--cover", "nodes", "--no-install-status", "dt-diamond")
     types = _parse_types(output)
 
     assert types["dt-diamond"] == ["    "]
@@ -167,7 +167,7 @@ def test_spec_deptypes_nodes():
 
 
 def test_spec_deptypes_edges():
-    output = spec("--types", "--cover", "edges", "dt-diamond")
+    output = spec("--types", "--cover", "edges", "--no-install-status", "dt-diamond")
     types = _parse_types(output)
 
     assert types["dt-diamond"] == ["    "]

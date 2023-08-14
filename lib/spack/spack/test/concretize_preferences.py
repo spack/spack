@@ -61,7 +61,7 @@ def assert_variant_values(spec, **variants):
 
 
 @pytest.mark.usefixtures("concretize_scope", "mock_packages")
-class TestConcretizePreferences(object):
+class TestConcretizePreferences:
     @pytest.mark.parametrize(
         "package_name,variant_value,expected_results",
         [
@@ -152,7 +152,9 @@ class TestConcretizePreferences(object):
         assert spec.version == Version("2.2")
 
     def test_preferred_versions_mixed_version_types(self):
-        update_packages("mixedversions", "version", ["2.0"])
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("This behavior is not enforced for the old concretizer")
+        update_packages("mixedversions", "version", ["=2.0"])
         spec = concretize("mixedversions")
         assert spec.version == Version("2.0")
 
@@ -176,11 +178,11 @@ class TestConcretizePreferences(object):
             {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
         )
         spec = concretize("mpileaks")
-        assert spec.package.fetcher[0].url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
+        assert spec.package.fetcher.url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
 
         update_packages("mpileaks", "package_attributes", {})
         spec = concretize("mpileaks")
-        assert spec.package.fetcher[0].url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
+        assert spec.package.fetcher.url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
 
     def test_config_set_pkg_property_new(self, mutable_mock_repo):
         """Test that you can set arbitrary attributes on the Package class"""
@@ -227,6 +229,29 @@ mpileaks:
         spec = Spec("python")
         spec.concretize()
         assert spec.version == Version("3.5.0")
+
+    def test_preferred_undefined_raises(self):
+        """Preference should not specify an undefined version"""
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("This behavior is not enforced for the old concretizer")
+
+        update_packages("python", "version", ["3.5.0.1"])
+        spec = Spec("python")
+        with pytest.raises(spack.config.ConfigError):
+            spec.concretize()
+
+    def test_preferred_truncated(self):
+        """Versions without "=" are treated as version ranges: if there is
+        a satisfying version defined in the package.py, we should use that
+        (don't define a new version).
+        """
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("This behavior is not enforced for the old concretizer")
+
+        update_packages("python", "version", ["3.5"])
+        spec = Spec("python")
+        spec.concretize()
+        assert spec.satisfies("@3.5.1")
 
     def test_develop(self):
         """Test concretization with develop-like versions"""

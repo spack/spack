@@ -14,6 +14,7 @@ class PyMultiqc(PythonPackage):
     homepage = "https://multiqc.info"
     pypi = "multiqc/multiqc-1.0.tar.gz"
 
+    version("1.14", sha256="dcbba405f0c9521ed2bbd7e8f7a9200643047311c9619878b81d167300149362")
     version("1.13", sha256="0564fb0f894e6ca0822a0f860941b3ed2c33dce407395ac0c2103775d45cbfa0")
     version("1.7", sha256="02e6a7fac7cd9ed036dcc6c92b8f8bcacbd28983ba6be53afb35e08868bd2d68")
     version("1.5", sha256="fe0ffd2b0d1067365ba4e54ae8991f2f779c7c684b037549b617020ea883310a")
@@ -33,7 +34,8 @@ class PyMultiqc(PythonPackage):
     depends_on("py-click", type=("build", "run"))
     depends_on("py-coloredlogs", type=("build", "run"), when="@1.13:")
     depends_on("py-future@0.14.1:", type=("build", "run"))
-    depends_on("py-jinja2@2.9:", type=("build", "run"))
+    depends_on("py-jinja2@3.0.0:", type=("build", "run"), when="@1.14:")
+    depends_on("py-jinja2@2.9:", type=("build", "run"), when="@:1.13")
     depends_on("py-lzstring", type=("build", "run"))
     depends_on("py-markdown", type=("build", "run"), when="@1.3:")
     depends_on("py-pyyaml", type=("build", "run"))
