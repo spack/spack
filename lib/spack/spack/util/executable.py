@@ -20,7 +20,7 @@ class Executable:
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        file_path = Path(name).as_posix()
+        file_path = str(Path(name))
         if sys.platform != "win32" and name.startswith("."):
             # pathlib strips the ./ from relative paths so it must be added back
             file_path = os.path.join(".", file_path)
@@ -283,29 +283,33 @@ def which_string(*args, **kwargs):
         paths = [Path(x) for x in path.split(os.pathsep)]
 
     def get_candidate_items(search_item):
-        if sys.platform != "win32" or search_item.suffix:
-            return [Path(search_item)]
+        if sys.platform == "win32" and not search_item.suffix:
+            return [search_item.parent / (search_item.name + ext) for ext in [".exe", ".bat"]]
 
-        return [search_item.parent / (search_item.name + ext) for ext in [".exe", ".bat"]]
+        return [Path(search_item)]
 
     def add_extra_search_paths(paths):
+        with_parents = []
+        with_parents.extend(paths)
         if sys.platform == "win32":
             for p in paths:
                 if p.name == "bin":
-                    paths.append(p.parent)
-        return paths
+                    with_parents.append(p.parent)
+        return with_parents
 
     for search_item in args:
+        search_paths = []
+        search_paths.extend(paths)
         if search_item.startswith("."):
             # we do this because pathlib will strip any leading ./
-            paths.insert(0, Path.cwd())
-        paths = add_extra_search_paths(paths)
+            search_paths.insert(0, Path.cwd())
+        search_paths = add_extra_search_paths(search_paths)
 
         search_item = Path(search_item)
         candidate_items = get_candidate_items(Path(search_item))
 
         for candidate_item in candidate_items:
-            for directory in paths:
+            for directory in search_paths:
                 exe = directory / candidate_item
                 if exe.is_file() and os.access(str(exe), os.X_OK):
                     return str(exe)
