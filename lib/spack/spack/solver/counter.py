@@ -66,11 +66,11 @@ class NoDuplicatesCounter(Counter):
     def possible_packages_facts(self, gen, fn):
         gen.h2("Maximum number of nodes (packages)")
         for package_name in sorted(self.possible_dependencies()):
-            gen.fact(fn.max_nodes(package_name, 1))
+            gen.fact(fn.max_dupes(package_name, 1))
         gen.newline()
         gen.h2("Maximum number of nodes (virtual packages)")
         for package_name in sorted(self.possible_virtuals()):
-            gen.fact(fn.max_nodes(package_name, 1))
+            gen.fact(fn.max_dupes(package_name, 1))
         gen.newline()
         gen.h2("Possible package in link-run subDAG")
         for name in sorted(self.possible_dependencies()):
@@ -108,18 +108,18 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         build_tools = set(spack.repo.PATH.packages_with_tags("build-tools"))
         gen.h2("Packages with at most a single node")
         for package_name in sorted(self.possible_dependencies() - build_tools):
-            gen.fact(fn.max_nodes(package_name, 1))
+            gen.fact(fn.max_dupes(package_name, 1))
         gen.newline()
 
         gen.h2("Packages with at multiple possible nodes (build-tools)")
         for package_name in sorted(self.possible_dependencies() & build_tools):
-            gen.fact(fn.max_nodes(package_name, 2))
+            gen.fact(fn.max_dupes(package_name, 2))
             gen.fact(fn.multiple_unification_sets(package_name))
         gen.newline()
 
         gen.h2("Maximum number of nodes (virtual packages)")
         for package_name in sorted(self.possible_virtuals()):
-            gen.fact(fn.max_nodes(package_name, 1))
+            gen.fact(fn.max_dupes(package_name, 1))
         gen.newline()
 
         gen.h2("Possible package in link-run subDAG")
@@ -137,7 +137,7 @@ class FullDuplicatesCounter(MinimalDuplicatesCounter):
         gen.h2("Maximum number of nodes")
         for pkg, count in sorted(counter.items(), key=lambda x: (x[1], x[0])):
             count = min(count, 2)
-            gen.fact(fn.max_nodes(pkg, count))
+            gen.fact(fn.max_dupes(pkg, count))
         gen.newline()
 
         gen.h2("Build unification sets ")
@@ -155,5 +155,5 @@ class FullDuplicatesCounter(MinimalDuplicatesCounter):
         )
         gen.h2("Maximum number of virtual nodes")
         for pkg, count in sorted(counter.items(), key=lambda x: (x[1], x[0])):
-            gen.fact(fn.max_nodes(pkg, count))
+            gen.fact(fn.max_dupes(pkg, count))
         gen.newline()
