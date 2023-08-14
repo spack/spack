@@ -17,6 +17,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    version("0.17.0", sha256="717429fc1bc986d62cbec190a69939e91608122d09d54bda1b028871c9ca9ad4")
     version("0.16.0", sha256="59f2baec91cc9bf71ca96d21d0da1ec0092bf59da106efa51789089e0d7adcbb")
     version("0.15.1", sha256="b68b87cf956ad1448f5c2327a72ba4d9fb339ecabeabb0a87b8ea819457e293b")
     version("0.15.0", sha256="4ecd5b64bd8067283a161e1aeacfbab7658d89fe1504b788fd3236298fe66b00")
@@ -91,8 +92,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("boost@1.71:")
     depends_on("fmt@9:", when="@0.11:")
     # https://github.com/pika-org/pika/issues/686
-    conflicts("fmt@10:", when="@:0.15 +cuda")
-    conflicts("fmt@10:", when="@:0.15 +rocm")
+    conflicts("^fmt@10:", when="@:0.15 +cuda")
+    conflicts("^fmt@10:", when="@:0.15 +rocm")
     depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
@@ -109,7 +110,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
-    conflicts("tracy-client@0.9:", when="@:0.9")
+    conflicts("^tracy-client@0.9:", when="@:0.9")
     depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
     depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
 

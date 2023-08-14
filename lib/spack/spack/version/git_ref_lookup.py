@@ -5,6 +5,7 @@
 
 import os
 import re
+from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 from llnl.util.filesystem import mkdirp, working_dir
@@ -14,19 +15,24 @@ import spack.fetch_strategy
 import spack.paths
 import spack.repo
 import spack.util.executable
+import spack.util.hash
 import spack.util.spack_json as sjson
-import spack.util.url
 import spack.version
 
 from .common import VersionLookupError
 from .lookup import AbstractRefLookup
 
 # regular expression for semantic versioning
-SEMVER_REGEX = re.compile(
-    ".+(?P<semver>([0-9]+)[.]([0-9]+)[.]([0-9]+)"
-    "(?:-([0-9A-Za-z-]+(?:[.][0-9A-Za-z-]+)*))?"
-    "(?:[+][0-9A-Za-z-]+)?)"
-)
+_VERSION_CORE = r"\d+\.\d+\.\d+"
+_IDENT = r"[0-9A-Za-z-]+"
+_SEPARATED_IDENT = rf"{_IDENT}(?:\.{_IDENT})*"
+_PRERELEASE = rf"\-{_SEPARATED_IDENT}"
+_BUILD = rf"\+{_SEPARATED_IDENT}"
+_SEMVER = rf"{_VERSION_CORE}(?:{_PRERELEASE})?(?:{_BUILD})?"
+
+# clamp on the end, so versions like v1.2.3-rc1 will match
+# without the leading 'v'.
+SEMVER_REGEX = re.compile(rf"{_SEMVER}$")
 
 
 class GitRefLookup(AbstractRefLookup):
@@ -55,9 +61,7 @@ class GitRefLookup(AbstractRefLookup):
     def cache_key(self):
         if not self._cache_key:
             key_base = "git_metadata"
-            if not self.repository_uri.startswith("/"):
-                key_base += "/"
-            self._cache_key = key_base + self.repository_uri
+            self._cache_key = (Path(key_base) / self.repository_uri).as_posix()
 
             # Cache data in misc_cache
             # If this is the first lazy access, initialize the cache as well
@@ -74,7 +78,7 @@ class GitRefLookup(AbstractRefLookup):
     def pkg(self):
         if not self._pkg:
             try:
-                pkg = spack.repo.path.get_pkg_class(self.pkg_name)
+                pkg = spack.repo.PATH.get_pkg_class(self.pkg_name)
                 pkg.git
             except (spack.repo.RepoError, AttributeError) as e:
                 raise VersionLookupError(f"Couldn't get the git repo for {self.pkg_name}") from e
@@ -93,14 +97,7 @@ class GitRefLookup(AbstractRefLookup):
     @property
     def repository_uri(self):
         """Identifier for git repos used within the repo and metadata caches."""
-        try:
-            components = [
-                str(c).lstrip("/") for c in spack.util.url.parse_git_url(self.pkg.git) if c
-            ]
-            return os.path.join(*components)
-        except ValueError:
-            # If it's not a git url, it's a local path
-            return os.path.abspath(self.pkg.git)
+        return Path(spack.util.hash.b32_hash(self.pkg.git)[-7:])
 
     def save(self):
         """Save the data to file"""
@@ -131,9 +128,8 @@ class GitRefLookup(AbstractRefLookup):
         known version prior to the commit, as well as the distance from that version
         to the commit in the git repo. Those values are used to compare Version objects.
         """
-        dest = os.path.join(spack.paths.user_repos_cache_path, self.repository_uri)
-        if dest.endswith(".git"):
-            dest = dest[:-4]
+        pathlib_dest = Path(spack.paths.user_repos_cache_path) / self.repository_uri
+        dest = str(pathlib_dest)
 
         # prepare a cache for the repository
         dest_parent = os.path.dirname(dest)
@@ -186,11 +182,10 @@ class GitRefLookup(AbstractRefLookup):
                         commit_to_version[tag_commit] = v
                         break
                 else:
-                    # try to parse tag to copare versions spack does not know
-                    match = SEMVER_REGEX.match(tag)
+                    # try to parse tag to compare versions spack does not know
+                    match = SEMVER_REGEX.search(tag)
                     if match:
-                        semver = match.groupdict()["semver"]
-                        commit_to_version[tag_commit] = semver
+                        commit_to_version[tag_commit] = match.group()
 
             ancestor_commits = []
             for tag_commit in commit_to_version:

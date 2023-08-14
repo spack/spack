@@ -48,7 +48,7 @@ class Amp(CMakePackage):
     depends_on("silo", when="+silo")
     depends_on("sundials", when="+sundials")
     depends_on("trilinos", when="+trilinos")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     # MPI related dependencies
     depends_on("mpi", when="+mpi")
@@ -101,6 +101,10 @@ class Amp(CMakePackage):
             ]
         )
 
+        if "+zlib" in spec:
+            tpl_list.append("ZLIB")
+            options.append(self.define("TPL_ZLIB_INSTALL_DIR", spec["zlib-api"].prefix))
+
         for vname in (
             "boost",
             "hdf5",
@@ -110,7 +114,6 @@ class Amp(CMakePackage):
             "silo",
             "sundials",
             "trilinos",
-            "zlib",
         ):
             if "+" + vname in spec:
                 tpl_list.append(vname.upper())

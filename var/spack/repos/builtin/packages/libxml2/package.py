@@ -43,7 +43,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     # conditional on non Windows, but rather than specify for each platform
     # specify for non Windows builder, which has equivalent effect
     depends_on("iconv", when="build_system=autotools")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("xz")
 
     # avoid cycle dependency for concretizer
@@ -235,8 +235,9 @@ class NMakeBuilder(nmake.NMakeBuilder, RunAfter):
                 "iconv=no",
                 "zlib=yes",
                 "lzma=yes",
-                "lib=%s" % ";".join((spec["zlib"].prefix.lib, spec["xz"].prefix.lib)),
-                "include=%s" % ";".join((spec["zlib"].prefix.include, spec["xz"].prefix.include)),
+                "lib=%s" % ";".join((spec["zlib-api"].prefix.lib, spec["xz"].prefix.lib)),
+                "include=%s"
+                % ";".join((spec["zlib-api"].prefix.include, spec["xz"].prefix.include)),
             ]
             if "+python" in spec:
                 opts.append("python=yes")
