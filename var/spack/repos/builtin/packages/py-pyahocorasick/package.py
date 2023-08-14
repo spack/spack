@@ -22,5 +22,3 @@ class PyPyahocorasick(PythonPackage):
     # From setup.py
     depends_on("py-setuptools", type="build")
     depends_on("python@3.6:", type=("build", "run"))
-    # From README
-    depends_on("py-cython", type=("build", "run"))

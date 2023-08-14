@@ -24,8 +24,10 @@ class PyPyonmttok(CMakePackage, PythonExtension):
     depends_on("py-setuptools@:59.0.1", type="build")
     depends_on("py-pybind11", type="build")
     depends_on("py-pip@19.3:", type="build")
+    depends_on("py-wheel", type="build")
     depends_on("python@3.6:3.11", type=("build", "run"))
     depends_on("cmake@3.1.0:", type="build")
+    depends_on("py-pytest-runner", type="build")
 
     variant("cli", default=True, description="Build CLI")
 
