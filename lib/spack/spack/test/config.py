@@ -1416,3 +1416,18 @@ def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
 
     with pytest.raises(spack.config.ConfigFileError, match="parsing YAML"):
         spack.config.read_config_file(filename)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="chmod not supported on Windows")
+def test_config_permissions(tmpdir):
+    """Test that permissions are set correctly on the config file."""
+    umask = 0o077
+    scope = spack.config.ConfigScope("test", join_path(tmpdir.strpath, "test"), umask=umask)
+    scope.sections["mirrors"] = {
+        "mirrors": {
+            "mirror_with_secrets": {"url": "https://example.com", "access_pair": ["user", "pass"]}
+        }
+    }
+    scope._write_section("mirrors")
+
+    assert os.stat(scope.get_section_filename("mirrors")).st_mode & umask == 0
