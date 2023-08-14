@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 
 from spack.package import *
 
@@ -42,10 +43,9 @@ class Libiconv(AutotoolsPackage, GNUMirrorPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        import re
         # We only need to find libiconv on macOS to avoid problems with _iconv vs _libiconv - see
         # https://stackoverflow.com/questions/57734434/libiconv-or-iconv-undefined-symbol-on-mac-osx
-        macos_pattern = re.compile("\(GNU libiconv (\w+\.\w+)\)")
+        macos_pattern = re.compile("\(GNU libiconv (\w+\.\w+)\)")  # noqa: W605
         version_string = Executable(exe)("--version", output=str, error=str)
         match = macos_pattern.search(version_string)
         version = None
