@@ -118,7 +118,7 @@ def clean(parser, args):
 
     if args.downloads:
         tty.msg("Removing cached downloads")
-        spack.caches.fetch_cache.destroy()
+        spack.caches.FETCH_CACHE.destroy()
 
     if args.failures:
         tty.msg("Removing install failure marks")
