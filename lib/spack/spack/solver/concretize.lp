@@ -441,20 +441,13 @@ error(10, "'{0}' is not a valid dependency for any package in the DAG", Package)
 error(1, Msg)
   :- attr("node", node(ID, Package)),
      pkg_fact(Package, conflict(TriggerID, ConstraintID, Msg)),
-     condition_holds(TriggerID, node(ID, Package)),
-     condition_holds(ConstraintID, node(ID, Package)),
+     % node(ID1, TriggerPackage) is node(ID2, Package) in most, but not all, cases
+     condition_holds(TriggerID, node(ID1, TriggerPackage)),
+     condition_holds(ConstraintID, node(ID2, Package)),
+     unification_set(X, node(ID2, Package)),
+     unification_set(X, node(ID1, TriggerPackage)),
      not external(node(ID, Package)),  % ignore conflicts for externals
      not attr("hash", node(ID, Package), _).  % ignore conflicts for installed packages
-
-%-----------------------------------------------------------------------------
-% Vendoring
-%-----------------------------------------------------------------------------
-error(1, "{0} vendors an internal copy of {1}, so it cannot be in the same unification set as {1}", Package, VendoredPackage)
-  :- pkg_fact(Package, vendors(ConditionID, VendoredPackage)),
-     attr("node", node(ID, Package)),
-     condition_holds(ConditionID, node(ID, Package)),
-     unification_set(X, node(ID, Package)),
-     unification_set(X, node(_, VendoredPackage)).
 
 %-----------------------------------------------------------------------------
 % Virtual dependencies

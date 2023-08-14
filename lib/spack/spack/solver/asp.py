@@ -1030,7 +1030,10 @@ class SpackSolverSetup:
         no_constraint_msg = "{0}: conflicts with '{1}'"
         for trigger, constraints in pkg.conflicts.items():
             trigger_msg = "conflict trigger %s" % str(trigger)
-            trigger_id = self.condition(spack.spec.Spec(trigger), name=pkg.name, msg=trigger_msg)
+            trigger_spec = spack.spec.Spec(trigger)
+            trigger_id = self.condition(
+                trigger_spec, name=trigger_spec.name or pkg.name, msg=trigger_msg
+            )
 
             for constraint, conflict_msg in constraints:
                 if conflict_msg is None:
@@ -1043,15 +1046,6 @@ class SpackSolverSetup:
                 self.gen.fact(
                     fn.pkg_fact(pkg.name, fn.conflict(trigger_id, constraint_id, conflict_msg))
                 )
-                self.gen.newline()
-
-    def vendor_rules(self, pkg):
-        """Facts about vendored packages."""
-        for vendored_spec_str, constraints in pkg.vendors.items():
-            vendored_spec = spack.spec.Spec(vendored_spec_str)
-            for constraint in constraints:
-                constraint_id = self.condition(constraint, name=pkg.name)
-                self.gen.fact(fn.pkg_fact(pkg.name, fn.vendors(constraint_id, vendored_spec.name)))
                 self.gen.newline()
 
     def compiler_facts(self):
@@ -1203,9 +1197,6 @@ class SpackSolverSetup:
         # conflicts
         self.conflict_rules(pkg)
 
-        # vendoring
-        self.vendor_rules(pkg)
-
         # default compilers for this package
         self.package_compiler_defaults(pkg)
 
@@ -1224,19 +1215,20 @@ class SpackSolverSetup:
         self.package_requirement_rules(pkg)
 
         # trigger and effect tables
-        self.trigger_rules(pkg.name)
+        self.trigger_rules()
         self.effect_rules(pkg.name)
 
-    def trigger_rules(self, name):
+    def trigger_rules(self):
         self.gen.h2("Trigger conditions")
-        cache = self._trigger_cache[name]
-        for spec_str, (trigger_id, requirements) in cache.items():
-            self.gen.fact(fn.pkg_fact(name, fn.trigger_id(trigger_id)))
-            self.gen.fact(fn.pkg_fact(name, fn.trigger_msg(spec_str)))
-            for predicate in requirements:
-                self.gen.fact(fn.condition_requirement(trigger_id, *predicate.args))
-            self.gen.newline()
-        cache.clear()
+        for name in self._trigger_cache:
+            cache = self._trigger_cache[name]
+            for spec_str, (trigger_id, requirements) in cache.items():
+                self.gen.fact(fn.pkg_fact(name, fn.trigger_id(trigger_id)))
+                self.gen.fact(fn.pkg_fact(name, fn.trigger_msg(spec_str)))
+                for predicate in requirements:
+                    self.gen.fact(fn.condition_requirement(trigger_id, *predicate.args))
+                self.gen.newline()
+        self._trigger_cache.clear()
 
     def effect_rules(self, name):
         self.gen.h2("Imposed requirements")
@@ -1488,7 +1480,7 @@ class SpackSolverSetup:
                 virtual_str, requirements, kind=RequirementKind.VIRTUAL
             )
             self.emit_facts_from_requirement_rules(rules)
-            self.trigger_rules(virtual_str)
+            self.trigger_rules()
             self.effect_rules(virtual_str)
 
     def emit_facts_from_requirement_rules(self, rules: List[RequirementRule]):
@@ -1607,7 +1599,7 @@ class SpackSolverSetup:
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
-            self.trigger_rules(pkg_name)
+            self.trigger_rules()
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
@@ -2434,7 +2426,7 @@ class SpackSolverSetup:
         # Inject dev_path from environment
         for ds in dev_specs:
             self.condition(spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name)
-            self.trigger_rules(ds.name)
+            self.trigger_rules()
             self.effect_rules(ds.name)
 
         self.gen.h1("Spec Constraints")

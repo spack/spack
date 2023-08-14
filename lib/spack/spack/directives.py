@@ -33,7 +33,6 @@ import collections.abc
 import functools
 import os.path
 import re
-import warnings
 from typing import Any, Callable, List, Optional, Set, Tuple, Union
 
 import llnl.util.lang
@@ -69,7 +68,6 @@ __all__ = [
     "resource",
     "build_system",
     "requires",
-    "vendors",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
@@ -520,20 +518,8 @@ def conflicts(conflict_spec, when=None, msg=None):
         if not when_spec:
             return
 
-        # TODO: (remove after v0.21)
-        conflict_key = conflict_spec
-        s = spack.spec.Spec(conflict_spec)
-        if s.name and s.name != pkg.name:
-            warning_msg = (
-                f"the conflict in package '{pkg.name}' on '{conflict_spec}' should "
-                f"start with a '^' sigil. Not using it is deprecated as of v0.21 and"
-                f" will be disallowed in v0.22"
-            )
-            warnings.warn(warning_msg)
-            conflict_key = "^" + conflict_spec
-
         # Save in a list the conflicts and the associated custom messages
-        when_spec_list = pkg.conflicts.setdefault(conflict_key, [])
+        when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
         msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
         when_spec_list.append((when_spec, msg_with_name))
 
@@ -915,29 +901,6 @@ def requires(*requirement_specs, policy="one_of", when=None, msg=None):
         when_spec_list.append((when_spec, policy, msg_with_name))
 
     return _execute_requires
-
-
-@directive("vendors")
-def vendors(spec, when=None):
-    """Declares that a package has an internal copy of another package.
-
-    Currently, the effect is to forbid having the two packages in the same
-    "unification set".
-
-    Args:
-        spec: spec being vendored
-        when: optional constraint that triggers vendoring
-    """
-
-    def _execute_vendors(pkg):
-        when_spec = make_when_spec(when)
-        if not when_spec:
-            return
-
-        when_spec_list = pkg.vendors.setdefault(spec, [])
-        when_spec_list.append(when_spec)
-
-    return _execute_vendors
 
 
 class DirectiveError(spack.error.SpackError):

@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Vendorsb(Package):
-    """A package that vendors another"""
+    """A package that vendors another, and thus conflicts with it"""
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/b-1.0.tar.gz"
@@ -15,4 +15,5 @@ class Vendorsb(Package):
     version("1.1", md5="0123456789abcdef0123456789abcdef")
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
-    vendors("b", when="@=1.1")
+    # b is not a dependency
+    conflicts("b", when="@=1.1")

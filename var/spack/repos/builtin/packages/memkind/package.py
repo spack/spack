@@ -40,7 +40,7 @@ class Memkind(AutotoolsPackage):
 
     # memkind includes a copy of jemalloc; see
     # <https://github.com/memkind/memkind#jemalloc>.
-    vendors("jemalloc")
+    conflicts("jemalloc")
 
     # https://github.com/spack/spack/issues/37292
     parallel = False
