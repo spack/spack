@@ -61,6 +61,11 @@ class Squashfs(MakefilePackage):
         multi=False,
         description="Default compression algorithm",
     )
+    variant(
+        "static",
+        default=False,
+        description="Build static squashfs tools, requires glibc-static on OS",
+    )
 
     conflicts(
         "squashfs~gzip default_compression=gzip",
@@ -85,9 +90,13 @@ class Squashfs(MakefilePackage):
 
     depends_on("zlib-api", when="+gzip")
     depends_on("lz4", when="+lz4")
+    depends_on("lz4 libs=shared,static", when="+lz4 +static")
     depends_on("lzo", when="+lzo")
+    depends_on("lzo libs=shared,static", when="+lzo +static")
     depends_on("xz", when="+xz")
+    depends_on("xz libs=shared,static", when="+xz +static")
     depends_on("zstd", when="+zstd")
+    depends_on("zstd libs=shared,static", when="+zstd +static")
 
     # patch from
     # https://github.com/plougher/squashfs-tools/commit/fe2f5da4b0f8994169c53e84b7cb8a0feefc97b5.patch
@@ -103,6 +112,7 @@ class Squashfs(MakefilePackage):
             "XZ_SUPPORT={0}".format(1 if "+xz" in spec else 0),
             "ZSTD_SUPPORT={0}".format(1 if "+zstd" in spec else 0),
             "COMP_DEFAULT={0}".format(default),
+            "EXTRA_LDFLAGS={0}".format("-static" if "+static" in spec else ""),
         ]
 
     def build(self, spec, prefix):
