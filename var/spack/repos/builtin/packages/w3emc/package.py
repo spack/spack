@@ -17,6 +17,7 @@ class W3emc(CMakePackage):
 
     maintainers("t-brown", "AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
+    version("2.10.0", sha256="366b55a0425fc3e729ecb9f3b236250349399fe4c8e19f325500463043fd2f18")
     version("2.9.3", sha256="9ca1b08dd13dfbad4a955257ae0cf38d2e300ccd8d983606212bc982370a29bc")
     version("2.9.2", sha256="eace811a1365f69b85fdf2bcd93a9d963ba72de5a7111e6fa7c0e6578b69bfbc")
     version("2.9.1", sha256="d3e705615bdd0b76a40751337d943d5a1ea415636f4e5368aed058f074b85df4")
@@ -24,6 +25,9 @@ class W3emc(CMakePackage):
     version("2.7.3", sha256="eace811a1365f69b85fdf2bcd93a9d963ba72de5a7111e6fa7c0e6578b69bfbc")
 
     variant("pic", default=True, description="Build with position-independent-code")
+    variant("bufr", default=False, description="Build with BUFR routines", when="@2.10:")
+
+    depends_on("bufr", when="@2.10: +bufr")
 
     depends_on("bacio", when="@2.9.2:")
 
@@ -34,13 +38,17 @@ class W3emc(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+            self.define_from_variant("BUILD_WITH_BUFR", "bufr"),
         ]
 
         return args
 
     def setup_run_environment(self, env):
-        for suffix in ("4", "8", "d"):
+        suffixes = ["4", "d"]
+        if self.spec.satisfies("@:2.9"):
+            suffixes += ["8"]
+        for suffix in suffixes:
             lib = find_libraries(
                 "libw3emc_" + suffix, root=self.prefix, shared=False, recursive=True
             )
