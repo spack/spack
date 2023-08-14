@@ -21,8 +21,6 @@
 
 % Providers
 #heuristic attr("node", node(0, Package)) : default_provider_preference(Virtual, Package, 0), possible_in_link_run(Package). [30, true]
-%#heuristic provider(node(0, Package), node(0, Virtual)) : default_provider_preference(Virtual, Package, 0), possible_in_link_run(Package). [30, true]
-%#heuristic provider_weight(node(0, Package), node(0, Virtual), 0) : default_provider_preference(Virtual, Package, 0), possible_in_link_run(Package). [30, true]
 
 % node(ID, _)
 #heuristic attr("version", node(ID, Package), Version) : pkg_fact(Package, version_declared(Version, ID)), attr("node", node(ID, Package)). [25-5*ID, true]

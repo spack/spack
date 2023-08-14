@@ -273,17 +273,6 @@ condition_set(PackageNode, VirtualNode, direct_link_run) :- provider(PackageNode
 condition_set(PackageNode, DependencyNode, direct_build) :- condition_set(PackageNode, PackageNode, direct_link_run), attr("depends_on", PackageNode, DependencyNode, "build").
 condition_set(PackageNode, DependencyNode, direct_link_run) :- condition_set(PackageNode, PackageNode, direct_link_run), attr("depends_on", PackageNode, DependencyNode, Type), Type != "build".
 
-% TODO (multiple nodes): discuss if it is sensible to remove the following rule - it means that a request or imposition must be on a direct dependency
-% Add transitive link_run dependencies, but only if they are not clashing with some direct dependency
-% (otherwise we might create an unsolvable problem when the transitive dependency has requirements that
-% are in conflict with the direct dependency)
-%condition_set(ID, node(DependencyID, Dependency), link_run)
-%  :- condition_set(ID, PackageNode, link_run),
-%     PackageNode != ID, Type != "build",
-%     not condition_set(ID, node(_, Dependency), direct_build),
-%     not condition_set(ID, node(_, Dependency), direct_link_run),
-%     attr("depends_on", PackageNode, node(DependencyID, Dependency), Type).
-
 condition_set(ID, VirtualNode, Type) :- condition_set(ID, PackageNode, Type), provider(PackageNode, VirtualNode).
 
 condition_set(ID, PackageNode) :- condition_set(ID, PackageNode, _).
