@@ -326,7 +326,7 @@ fn = AspFunctionBuilder()
 
 
 def _create_counter(specs, tests):
-    strategy = spack.config.config.get("concretizer:duplicates:strategy", "none")
+    strategy = spack.config.CONFIG.get("concretizer:duplicates:strategy", "none")
     if strategy == "full":
         return FullDuplicatesCounter(specs, tests=tests)
     if strategy == "minimal":
@@ -1216,9 +1216,10 @@ class SpackSolverSetup:
 
         # trigger and effect tables
         self.trigger_rules()
-        self.effect_rules(pkg.name)
+        self.effect_rules()
 
     def trigger_rules(self):
+        """Flushes all the trigger rules collected so far, and clears the cache."""
         self.gen.h2("Trigger conditions")
         for name in self._trigger_cache:
             cache = self._trigger_cache[name]
@@ -1230,16 +1231,18 @@ class SpackSolverSetup:
                 self.gen.newline()
         self._trigger_cache.clear()
 
-    def effect_rules(self, name):
+    def effect_rules(self):
+        """Flushes all the effect rules collected so far, and clears the cache."""
         self.gen.h2("Imposed requirements")
-        cache = self._effect_cache[name]
-        for spec_str, (effect_id, requirements) in cache.items():
-            self.gen.fact(fn.pkg_fact(name, fn.effect_id(effect_id)))
-            self.gen.fact(fn.pkg_fact(name, fn.effect_msg(spec_str)))
-            for predicate in requirements:
-                self.gen.fact(fn.imposed_constraint(effect_id, *predicate.args))
-            self.gen.newline()
-        cache.clear()
+        for name in self._effect_cache:
+            cache = self._effect_cache[name]
+            for spec_str, (effect_id, requirements) in cache.items():
+                self.gen.fact(fn.pkg_fact(name, fn.effect_id(effect_id)))
+                self.gen.fact(fn.pkg_fact(name, fn.effect_msg(spec_str)))
+                for predicate in requirements:
+                    self.gen.fact(fn.imposed_constraint(effect_id, *predicate.args))
+                self.gen.newline()
+        self._effect_cache.clear()
 
     def variant_rules(self, pkg):
         for name, entry in sorted(pkg.variants.items()):
@@ -1481,7 +1484,7 @@ class SpackSolverSetup:
             )
             self.emit_facts_from_requirement_rules(rules)
             self.trigger_rules()
-            self.effect_rules(virtual_str)
+            self.effect_rules()
 
     def emit_facts_from_requirement_rules(self, rules: List[RequirementRule]):
         """Generate facts to enforce requirements.
@@ -2427,7 +2430,7 @@ class SpackSolverSetup:
         for ds in dev_specs:
             self.condition(spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name)
             self.trigger_rules()
-            self.effect_rules(ds.name)
+            self.effect_rules()
 
         self.gen.h1("Spec Constraints")
         self.literal_specs(specs)
