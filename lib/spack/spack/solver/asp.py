@@ -837,7 +837,7 @@ class PyclingoDriver:
         solve_result = self.control.solve(**solve_kwargs)
 
         if solve_result.satisfiable and self._model_has_cycles(models):
-            warnings.warn(f"cycles detected, falling back to slower algorithm [specs={specs}]")
+            tty.debug(f"cycles detected, falling back to slower algorithm [specs={specs}]")
             self.control.load(os.path.join(parent_dir, "cycle_detection.lp"))
             self.control.ground([("no_cycle", [])])
             models.clear()
