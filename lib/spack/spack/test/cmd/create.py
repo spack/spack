@@ -27,11 +27,7 @@ create = SpackCommand("create")
             [r"TestNamedPackage(Package)", r"def install(self"],
         ),
         (["file://example.tar.gz"], "example", [r"Example(Package)", r"def install(self"]),
-        (
-            ["-n", "test-license"],
-            "test-license",
-            [r'license("UNLICENSED")']
-        ),
+        (["-n", "test-license"], "test-license", [r'license("UNLICENSED")']),
         # Template-specific cases
         (
             ["-t", "autoreconf", "/test-autoreconf"],

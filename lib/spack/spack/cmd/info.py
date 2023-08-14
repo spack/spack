@@ -346,6 +346,7 @@ def print_virtuals(pkg):
     else:
         color.cprint("    None")
 
+
 def print_licenses(pkg):
     """Output the licenses of the project."""
 
@@ -388,7 +389,7 @@ def info(parser, args):
         (args.all or not args.no_dependencies, print_dependencies),
         (args.all or args.virtuals, print_virtuals),
         (args.all or args.tests, print_tests),
-        (args.all or True, print_licenses)
+        (args.all or True, print_licenses),
     ]
     for print_it, func in sections:
         if print_it:
