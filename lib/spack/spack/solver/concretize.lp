@@ -68,9 +68,17 @@ unification_set("generic_build", node(X, Child))
      not multiple_unification_sets(Child),
      unification_set(_, ParentNode).
 
-% Any dependency of type "build" in a unification set that is not "root", stays in that unification set
-unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type == "build", SetID == "generic_build", unification_set(SetID, ParentNode).
-unification_set(SetID, VirtualNode) :- provider(PackageNode, VirtualNode), unification_set(SetID, PackageNode).
+% Any dependency of type "build" in a unification set that is in the leaf unification set,
+% stays in that unification set
+unification_set(SetID, ChildNode)
+  :- attr("depends_on", ParentNode, ChildNode, Type),
+     Type == "build",
+     SetID == "generic_build",
+     unification_set(SetID, ParentNode).
+
+unification_set(SetID, VirtualNode)
+  :- provider(PackageNode, VirtualNode),
+     unification_set(SetID, PackageNode).
 
 #defined multiple_unification_sets/1.
 
