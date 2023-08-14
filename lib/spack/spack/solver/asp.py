@@ -525,12 +525,12 @@ class Result:
         best = min(self.answers)
         opt, _, answer = best
         for input_spec in self.abstract_specs:
-            node = SpecBuilder.main_node(pkg=input_spec.name)
+            node = SpecBuilder.make_node(pkg=input_spec.name)
             if input_spec.virtual:
                 providers = [
                     spec.name for spec in answer.values() if spec.package.provides(input_spec.name)
                 ]
-                node = SpecBuilder.main_node(pkg=providers[0])
+                node = SpecBuilder.make_node(pkg=providers[0])
             candidate = answer.get(node)
 
             if candidate and candidate.satisfies(input_spec):
@@ -2563,8 +2563,8 @@ class SpecBuilder:
     )
 
     @staticmethod
-    def main_node(*, pkg: str) -> NodeArgument:
-        """Given a package name, returns the string representation of the root node in
+    def make_node(*, pkg: str) -> NodeArgument:
+        """Given a package name, returns the string representation of the "min_dupe_id" node in
         the ASP encoding.
 
         Args:
@@ -2663,7 +2663,7 @@ class SpecBuilder:
         extendee_spec = package.extendee_spec
 
         if extendee_spec:
-            extendee_node = SpecBuilder.main_node(pkg=extendee_spec.name)
+            extendee_node = SpecBuilder.make_node(pkg=extendee_spec.name)
             package.update_external_dependencies(self._specs.get(extendee_node, None))
 
     def depends_on(self, parent_node, dependency_node, type):
@@ -2712,11 +2712,11 @@ class SpecBuilder:
 
                 # order is determined by the  DAG. A spec's flags come after any of its ancestors
                 # on the compile line
-                node = SpecBuilder.main_node(pkg=spec.name)
+                node = SpecBuilder.make_node(pkg=spec.name)
                 source_key = (node, flag_type)
                 if source_key in self._flag_sources:
                     order = [
-                        SpecBuilder.main_node(pkg=s.name)
+                        SpecBuilder.make_node(pkg=s.name)
                         for s in spec.traverse(order="post", direction="parents")
                     ]
                     sorted_sources = sorted(

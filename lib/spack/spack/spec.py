@@ -2983,7 +2983,7 @@ class Spec:
             providers = [spec.name for spec in answer.values() if spec.package.provides(name)]
             name = providers[0]
 
-        node = spack.solver.asp.SpecBuilder.main_node(pkg=name)
+        node = spack.solver.asp.SpecBuilder.make_node(pkg=name)
         assert (
             node in answer
         ), f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
