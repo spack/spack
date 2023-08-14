@@ -3,6 +3,13 @@
 %
 % SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+%=============================================================================
+% Minimize the number of literals that are not solved
+%
+% This minimization is used for the "when_possible" concretization mode,
+% otherwise we assume that all literals must be solved.
+%=============================================================================
+
 % Give clingo the choice to solve an input spec or not
 { solve_literal(ID) } :- literal(ID).
 literal_not_solved(ID) :- not solve_literal(ID), literal(ID).
