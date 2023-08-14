@@ -29,9 +29,9 @@ class Votca(CMakePackage):
     )
     variant("xtp", default=True, description="Build xtp parts of votca")
 
-    vendors("votca-tools")
-    vendors("votca-csg")
-    vendors("votca-xtp")
+    conflicts("votca-tools")
+    conflicts("votca-csg")
+    conflicts("votca-xtp")
 
     depends_on("cmake@3.13:", type="build")
     depends_on("expat")
