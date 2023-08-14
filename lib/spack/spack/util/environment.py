@@ -1066,8 +1066,8 @@ def environment_after_sourcing_files(
 
     Keyword Args:
         env (dict): the initial environment (default: current environment)
-        shell (str): the shell to use (default: ``/bin/bash`` or ``cmd.exe``(Windows))
-        shell_options (str): options passed to the shell (default: ``-c`` or ``/C``(Windows))
+        shell (str): the shell to use (default: ``/bin/bash`` or ``cmd.exe`` (Windows))
+        shell_options (str): options passed to the shell (default: ``-c`` or ``/C`` (Windows))
         source_command (str): the command to run (default: ``source``)
         suppress_output (str): redirect used to suppress output of command
             (default: ``&> /dev/null``)
