@@ -124,9 +124,7 @@ class GitRefLookup(AbstractRefLookup):
         to the commit in the git repo. Those values are used to compare Version objects.
         """
         pathlib_dest = Path(spack.paths.user_repos_cache_path) / self.repository_uri
-        dest = pathlib_dest.as_posix()
-        if dest.endswith(".git"):
-            dest = dest[:-4]
+        dest = str(pathlib_dest)
 
         # prepare a cache for the repository
         dest_parent = os.path.dirname(dest)

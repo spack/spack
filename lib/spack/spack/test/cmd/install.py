@@ -919,7 +919,7 @@ def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, capfd):
             assert "Using CDash auth token from environment" in out
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Logger race condition in windows")
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows log_output logs phase header out of order")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capturing of e.g., Build.xml output
