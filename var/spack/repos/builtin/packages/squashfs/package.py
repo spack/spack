@@ -62,11 +62,7 @@ class Squashfs(MakefilePackage):
         multi=False,
         description="Default compression algorithm",
     )
-    variant(
-        "static",
-        default=False,
-        description="Build fully static mksquashfs executable",
-    )
+    variant("static", default=False, description="Build fully static mksquashfs executable")
 
     conflicts(
         "squashfs~gzip default_compression=gzip",
