@@ -148,7 +148,7 @@ class Arrow(CMakePackage, CudaPackage):
         args.append(self.define_from_variant("ARROW_WITH_ZLIB", "zlib"))
         args.append(self.define_from_variant("ARROW_WITH_ZSTD", "zstd"))
 
-        with when("@:8"):
+        if self.spec.satisfies("@:8"):
             args.extend(
                 [
                     self.define("FLATBUFFERS_HOME", self.spec["flatbuffers"].prefix),
