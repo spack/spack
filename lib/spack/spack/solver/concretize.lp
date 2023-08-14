@@ -8,15 +8,15 @@
 %=============================================================================
 
 % ID of the nodes in the "root" link-run sub-DAG
-#const main_node_id = 0.
+#const min_dupe_id = 0.
 
 #const link_run = 0.
 #const direct_link_run =1.
 #const direct_build = 2.
 
 % Allow clingo to create nodes
-{ attr("node", node(0..X-1, Package))         } :- max_nodes(Package, X), not virtual(Package).
-{ attr("virtual_node", node(0..X-1, Package)) } :- max_nodes(Package, X), virtual(Package).
+{ attr("node", node(0..X-1, Package))         } :- max_dupes(Package, X), not virtual(Package).
+{ attr("virtual_node", node(0..X-1, Package)) } :- max_dupes(Package, X), virtual(Package).
 
 % Integrity constraints on DAG nodes
 :- attr("root", PackageNode), not attr("node", PackageNode).
@@ -42,11 +42,11 @@
 :- provider(_, VirtualNode), not attr("virtual_node", VirtualNode).
 :- provider(PackageNode, _), not attr("node", PackageNode).
 
-:- attr("root", node(ID, PackageNode)), ID > main_node_id.
+:- attr("root", node(ID, PackageNode)), ID > min_dupe_id.
 
 % Nodes in the "root" unification set cannot depend on non-root nodes if the dependency is "link" or "run"
-:- attr("depends_on", node(main_node_id, Package), node(ID, _), "link"), ID != main_node_id, unification_set("root", node(main_node_id, Package)).
-:- attr("depends_on", node(main_node_id, Package), node(ID, _), "run"),  ID != main_node_id, unification_set("root", node(main_node_id, Package)).
+:- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "link"), ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)).
+:- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "run"),  ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)).
 
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
@@ -90,11 +90,11 @@ unification_set(SetID, VirtualNode) :- provider(PackageNode, VirtualNode), unifi
 % Cannot have a node with an ID, if lower ID of the same package are not used
 :- attr("node", node(ID1, Package)),
    not attr("node", node(ID2, Package)),
-   max_nodes(Package, X), ID1=0..X-1, ID2=0..X-1, ID2 < ID1.
+   max_dupes(Package, X), ID1=0..X-1, ID2=0..X-1, ID2 < ID1.
 
 :- attr("virtual_node", node(ID1, Package)),
    not attr("virtual_node", node(ID2, Package)),
-   max_nodes(Package, X), ID1=0..X-1, ID2=0..X-1, ID2 < ID1.
+   max_dupes(Package, X), ID1=0..X-1, ID2=0..X-1, ID2 < ID1.
 
 %-----------------------------------------------------------------------------
 % Map literal input specs to facts that drive the solve
@@ -107,14 +107,14 @@ multiple_nodes_attribute("node_flag_source").
 multiple_nodes_attribute("depends_on").
 
 % Map constraint on the literal ID to facts on the node
-attr(Name, node(main_node_id, A1))             :- literal(LiteralID, Name, A1), solve_literal(LiteralID).
-attr(Name, node(main_node_id, A1), A2)         :- literal(LiteralID, Name, A1, A2), solve_literal(LiteralID).
-attr(Name, node(main_node_id, A1), A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), solve_literal(LiteralID), not multiple_nodes_attribute(Name).
-attr(Name, node(main_node_id, A1), A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), solve_literal(LiteralID).
+attr(Name, node(min_dupe_id, A1))             :- literal(LiteralID, Name, A1), solve_literal(LiteralID).
+attr(Name, node(min_dupe_id, A1), A2)         :- literal(LiteralID, Name, A1, A2), solve_literal(LiteralID).
+attr(Name, node(min_dupe_id, A1), A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), solve_literal(LiteralID), not multiple_nodes_attribute(Name).
+attr(Name, node(min_dupe_id, A1), A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), solve_literal(LiteralID).
 
 % Special cases where nodes occur in arguments other than A1
-attr("node_flag_source", node(main_node_id, A1), A2, node(main_node_id, A3)) :- literal(LiteralID, "node_flag_source", A1, A2, A3), solve_literal(LiteralID).
-attr("depends_on",       node(main_node_id, A1), node(main_node_id, A2), A3) :- literal(LiteralID, "depends_on",       A1, A2, A3), solve_literal(LiteralID).
+attr("node_flag_source", node(min_dupe_id, A1), A2, node(min_dupe_id, A3)) :- literal(LiteralID, "node_flag_source", A1, A2, A3), solve_literal(LiteralID).
+attr("depends_on",       node(min_dupe_id, A1), node(min_dupe_id, A2), A3) :- literal(LiteralID, "depends_on",       A1, A2, A3), solve_literal(LiteralID).
 
 #defined concretize_everything/0.
 #defined literal/1.
@@ -363,7 +363,7 @@ attr("node_flag_source", node(X, A1), A2, node(Y, A3))
 % Here we can't use the condition set because it's a recursive definition, that doesn't define the
 % node index, and leads to unsatisfiability. Hence we say that one and only one node index must
 % satisfy the dependency.
-1 { attr("depends_on", node(X, A1), node(0..Y-1, A2), A3) : max_nodes(A2, Y) } 1
+1 { attr("depends_on", node(X, A1), node(0..Y-1, A2), A3) : max_dupes(A2, Y) } 1
   :- impose(ID, node(X, A1)),
      imposed_constraint(ID, "depends_on", A1, A2, A3).
 
@@ -423,7 +423,7 @@ do_not_impose(EffectID, node(NodeID, Package)) :-
   pkg_fact(Package, condition_effect(ID, EffectID)).
 
 % If a dependency holds on a package node, there must be one and only one dependency node satisfying it
-1 { attr("depends_on", PackageNode, node(0..Y-1, Dependency), Type) : max_nodes(Dependency, Y) } 1
+1 { attr("depends_on", PackageNode, node(0..Y-1, Dependency), Type) : max_dupes(Dependency, Y) } 1
   :- dependency_holds(PackageNode, Dependency, Type),
      not virtual(Dependency).
 
@@ -477,7 +477,7 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
      not external(PackageNode).
 
 % dependencies on virtuals also imply that the virtual is a virtual node
-1 { attr("virtual_node", node(0..X-1, Virtual)) : max_nodes(Virtual, X) }
+1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }
   :- dependency_holds(PackageNode, Virtual, Type),
      virtual(Virtual),
      not external(PackageNode).
@@ -505,7 +505,7 @@ attr("root", PackageNode) :- attr("virtual_root", VirtualNode), provider(Package
 % for environments that are concretized together (e.g. where we
 % asks to install "mpich" and "hdf5+mpi" and we want "mpich" to
 % be the mpi provider)
-1 { provider(PackageNode, node(0..X-1, Virtual)) : max_nodes(Virtual, X) } 1 :- attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual).
+1 { provider(PackageNode, node(0..X-1, Virtual)) : max_dupes(Virtual, X) } 1 :- attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual).
 :- 2 { provider(PackageNode, VirtualNode) }, attr("virtual_node", VirtualNode).
 
 % The provider provides the virtual if some provider condition holds.
@@ -843,14 +843,14 @@ external_with_variant_set(node(NodeID, Package), Variant, Value)
 variant_default_value(Package, Variant, Value)
  :- pkg_fact(Package, variant_default_value_from_package_py(Variant, Value)),
     not variant_default_value_from_packages_yaml(Package, Variant, _),
-    not attr("variant_default_value_from_cli", node(main_node_id, Package), Variant, _).
+    not attr("variant_default_value_from_cli", node(min_dupe_id, Package), Variant, _).
 
 variant_default_value(Package, Variant, Value)
  :- variant_default_value_from_packages_yaml(Package, Variant, Value),
-    not attr("variant_default_value_from_cli", node(main_node_id, Package), Variant, _).
+    not attr("variant_default_value_from_cli", node(min_dupe_id, Package), Variant, _).
 
 variant_default_value(Package, Variant, Value) :-
-    attr("variant_default_value_from_cli", node(main_node_id, Package), Variant, Value).
+    attr("variant_default_value_from_cli", node(min_dupe_id, Package), Variant, Value).
 
 % Treat 'none' in a special way - it cannot be combined with other
 % values even if the variant is multi-valued
