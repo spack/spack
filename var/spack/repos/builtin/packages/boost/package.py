@@ -519,8 +519,6 @@ class Boost(Package):
             if "+python" in spec:
                 f.write(self.bjam_python_line(spec))
 
-        options.append("--prefix=%s" % prefix)
-
     def determine_b2_options(self, spec, options):
         if "+debug" in spec:
             options.append("variant=debug")
@@ -717,10 +715,6 @@ class Boost(Package):
         b2 = Executable(b2name)
         jobs = make_jobs
         path_to_config = ""
-        if not spec.satisfies("platform=windows"):
-            path_to_config = "--user-config=%s" % os.path.join(
-                self.stage.source_path, "user-config.jam"
-            )
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies("@:1.58"):
             jobs = 64
@@ -728,6 +722,9 @@ class Boost(Package):
         # Windows just wants a b2 call with no args
         b2_options = []
         if not self.spec.satisfies("platform=windows"):
+            path_to_config = "--user-config=%s" % os.path.join(
+                self.stage.source_path, "user-config.jam"
+            )
             b2_options = ["-j", "%s" % jobs]
             b2_options.append(path_to_config)
 
@@ -741,8 +738,11 @@ class Boost(Package):
 
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
-        for threading_opt in threading_opts:
-            b2("install", "threading=%s" % threading_opt, *b2_options)
+        if not self.spec.satisfies("platform=windows"):
+            for threading_opt in threading_opts:
+                b2("install", "threading=%s" % threading_opt, *b2_options)
+        else:
+            b2("install", *b2_options)
 
         if "+multithreaded" in spec and "~taggedlayout" in spec:
             self.add_buildopt_symlinks(prefix)
