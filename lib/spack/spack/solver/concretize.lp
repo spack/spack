@@ -455,10 +455,15 @@ error(1, Msg)
 
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
-1 { attr("depends_on", PackageNode, ProviderNode, Type) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
+node_depends_on_virtual(PackageNode, Virtual, Type)
   :- dependency_holds(PackageNode, Virtual, Type),
      virtual(Virtual),
      not external(PackageNode).
+
+node_depends_on_virtual(PackageNode, Virtual) :- node_depends_on_virtual(PackageNode, Virtual, Type).
+
+1 { attr("depends_on", PackageNode, ProviderNode, Type) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
+  :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
 attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
   :- dependency_holds(PackageNode, Virtual, Type),
@@ -468,9 +473,7 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
 
 % dependencies on virtuals also imply that the virtual is a virtual node
 1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }
-  :- dependency_holds(PackageNode, Virtual, Type),
-     virtual(Virtual),
-     not external(PackageNode).
+  :- node_depends_on_virtual(PackageNode, Virtual).
 
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
@@ -490,13 +493,24 @@ attr("virtual_node", VirtualNode) :- attr("virtual_root", VirtualNode).
 % then the provider is the root package.
 attr("root", PackageNode) :- attr("virtual_root", VirtualNode), provider(PackageNode, VirtualNode).
 
-% If we asked for a root package and that root provides a virtual,
-% the root is a provider for that virtual. This rule is mostly relevant
-% for environments that are concretized together (e.g. where we
-% asks to install "mpich" and "hdf5+mpi" and we want "mpich" to
-% be the mpi provider)
-1 { provider(PackageNode, node(0..X-1, Virtual)) : max_dupes(Virtual, X) } 1 :- attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual).
-:- 2 { provider(PackageNode, VirtualNode) }, attr("virtual_node", VirtualNode).
+% The provider is selected among the nodes for which the virtual condition holds
+1 { provider(PackageNode, node(X, Virtual)) :
+    attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual) } 1
+  :- attr("virtual_node", node(X, Virtual)).
+
+% If a spec is selected as a provider, it is for all the virtual it could provide
+:- provider(PackageNode, node(X, Virtual1)),
+   virtual_condition_holds(PackageNode, Virtual2),
+   Virtual2 != Virtual1,
+   unification_set(SetID, PackageNode),
+   unification_set(SetID, node(X, Virtual2)),
+   not provider(PackageNode, node(X, Virtual2)).
+
+% If a spec is a dependency, and could provide a needed virtual, it must be a provider
+:- node_depends_on_virtual(PackageNode, Virtual),
+   depends_on(PackageNode, PossibleProviderNode),
+   virtual_condition_holds(PossibleProviderNode, Virtual),
+   not attr("virtual_on_edge", PackageNode, PossibleProviderNode, Virtual).
 
 % The provider provides the virtual if some provider condition holds.
 virtual_condition_holds(node(ProviderID, Provider), Virtual) :- virtual_condition_holds(ID, node(ProviderID, Provider), Virtual).
