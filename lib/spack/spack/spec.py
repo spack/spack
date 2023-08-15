@@ -1838,7 +1838,7 @@ class Spec:
 
     @prefix.setter
     def prefix(self, value):
-        self._prefix = spack.util.prefix.Prefix(pth.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(pth.substitute_path_variables(pth.convert_to_platform_path(value)))
 
     def spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
