@@ -90,7 +90,6 @@ def setup_parser(subparser):
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
 
     # Add
     add_parser = sp.add_parser("add", help=mirror_add.__doc__)
@@ -99,7 +98,7 @@ def setup_parser(subparser):
     add_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
@@ -119,7 +118,7 @@ def setup_parser(subparser):
     remove_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
@@ -138,7 +137,7 @@ def setup_parser(subparser):
     set_url_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
@@ -167,7 +166,7 @@ def setup_parser(subparser):
     set_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
@@ -178,7 +177,7 @@ def setup_parser(subparser):
     list_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_list_scope(),
         help="configuration scope to read from",
     )

@@ -115,8 +115,8 @@ def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutabl
         ]
     )
 
-    spack.config.config, old_config = cfg, spack.config.config
-    spack.config.config.set("repos", [spack.paths.mock_packages_path])
+    spack.config.CONFIG, old_config = cfg, spack.config.CONFIG
+    spack.config.CONFIG.set("repos", [spack.paths.mock_packages_path])
     njobs = spack.config.get("config:build_jobs")
     if not njobs:
         spack.config.set("config:build_jobs", 4, scope="user")
@@ -138,9 +138,9 @@ def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutabl
     if not timeout:
         spack.config.set("config:connect_timeout", 10, scope="user")
 
-    yield spack.config.config
+    yield spack.config.CONFIG
 
-    spack.config.config = old_config
+    spack.config.CONFIG = old_config
     mutable_dir.remove()
 
 

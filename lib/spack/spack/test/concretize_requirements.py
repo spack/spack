@@ -937,7 +937,7 @@ compilers::
     modules: []
 """
     )
-    spack.config.config.clear_caches()
+    spack.config.CONFIG.clear_caches()
 
     # This package requires either clang or gcc
     s = Spec("requires_clang_or_gcc").concretized()

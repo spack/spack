@@ -26,11 +26,11 @@ def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmpdir):
     user_path = str(tmpdir.join("store"))
     with spack.store.use_store(user_path):
         assert spack.store.STORE.root == user_path
-        assert spack.config.config.get("config:install_tree:root") == user_path
+        assert spack.config.CONFIG.get("config:install_tree:root") == user_path
         with spack.bootstrap.ensure_bootstrap_configuration():
             assert spack.store.STORE.root == spack.bootstrap.config.store_path()
         assert spack.store.STORE.root == user_path
-        assert spack.config.config.get("config:install_tree:root") == user_path
+        assert spack.config.CONFIG.get("config:install_tree:root") == user_path
 
 
 @pytest.mark.regression("38963")
@@ -40,11 +40,11 @@ def test_store_padding_length_is_zero_during_bootstrapping(mutable_config, tmpdi
     """
     user_path = str(tmpdir.join("store"))
     with spack.store.use_store(user_path, extra_data={"padded_length": 512}):
-        assert spack.config.config.get("config:install_tree:padded_length") == 512
+        assert spack.config.CONFIG.get("config:install_tree:padded_length") == 512
         with spack.bootstrap.ensure_bootstrap_configuration():
             assert spack.store.STORE.root == spack.bootstrap.config.store_path()
-            assert spack.config.config.get("config:install_tree:padded_length") == 0
-        assert spack.config.config.get("config:install_tree:padded_length") == 512
+            assert spack.config.CONFIG.get("config:install_tree:padded_length") == 0
+        assert spack.config.CONFIG.get("config:install_tree:padded_length") == 512
 
 
 @pytest.mark.regression("38963")
@@ -54,15 +54,15 @@ def test_install_tree_customization_is_respected(mutable_config, tmp_path):
     """
     spack.store.reinitialize()
     store_dir = tmp_path / "store"
-    spack.config.config.set("config:install_tree:root", str(store_dir))
+    spack.config.CONFIG.set("config:install_tree:root", str(store_dir))
     with spack.bootstrap.ensure_bootstrap_configuration():
         assert spack.store.STORE.root == spack.bootstrap.config.store_path()
         assert (
-            spack.config.config.get("config:install_tree:root")
+            spack.config.CONFIG.get("config:install_tree:root")
             == spack.bootstrap.config.store_path()
         )
-        assert spack.config.config.get("config:install_tree:padded_length") == 0
-    assert spack.config.config.get("config:install_tree:root") == str(store_dir)
+        assert spack.config.CONFIG.get("config:install_tree:padded_length") == 0
+    assert spack.config.CONFIG.get("config:install_tree:root") == str(store_dir)
     assert spack.store.STORE.root == str(store_dir)
 
 
@@ -185,12 +185,12 @@ spack:
 
 def test_nested_use_of_context_manager(mutable_config):
     """Test nested use of the context manager"""
-    user_config = spack.config.config
+    user_config = spack.config.CONFIG
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.config.config != user_config
+        assert spack.config.CONFIG != user_config
         with spack.bootstrap.ensure_bootstrap_configuration():
-            assert spack.config.config != user_config
-    assert spack.config.config == user_config
+            assert spack.config.CONFIG != user_config
+    assert spack.config.CONFIG == user_config
 
 
 @pytest.mark.parametrize("expected_missing", [False, True])

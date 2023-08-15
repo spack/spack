@@ -24,7 +24,6 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="compiler_command")
 
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
 
     # Find
     find_parser = sp.add_parser(
@@ -36,7 +35,7 @@ def setup_parser(subparser):
     find_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope("compilers"),
         help="configuration scope to modify",
     )
@@ -50,7 +49,7 @@ def setup_parser(subparser):
     remove_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=None,
         help="configuration scope to modify",
     )
@@ -60,7 +59,7 @@ def setup_parser(subparser):
     list_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_list_scope(),
         help="configuration scope to read from",
     )
@@ -71,7 +70,7 @@ def setup_parser(subparser):
     info_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_list_scope(),
         help="configuration scope to read from",
     )
@@ -93,7 +92,7 @@ def compiler_find(args):
         n = len(new_compilers)
         s = "s" if n > 1 else ""
 
-        config = spack.config.config
+        config = spack.config.CONFIG
         filename = config.get_config_filename(args.scope, "compilers")
         tty.msg("Added %d new compiler%s to %s" % (n, s, filename))
         colify(reversed(sorted(c.spec.display_str for c in new_compilers)), indent=4)

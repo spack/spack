@@ -212,7 +212,7 @@ def create(configuration: ConfigurationType) -> Store:
     Args:
         configuration: configuration to create a store.
     """
-    configuration = configuration or spack.config.config
+    configuration = configuration or spack.config.CONFIG
     config_dict = configuration.get("config")
     root, unpadded_root, projections = parse_install_tree(config_dict)
     hash_length = configuration.get("config:install_hash_length")
@@ -234,7 +234,7 @@ def create(configuration: ConfigurationType) -> Store:
 
 
 def _create_global() -> Store:
-    result = create(configuration=spack.config.config)
+    result = create(configuration=spack.config.CONFIG)
     return result
 
 
@@ -372,10 +372,10 @@ def use_store(
 
     # Swap the store with the one just constructed and return it
     ensure_singleton_created()
-    spack.config.config.push_scope(
+    spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={"config": {"install_tree": data}})
     )
-    temporary_store = create(configuration=spack.config.config)
+    temporary_store = create(configuration=spack.config.CONFIG)
     original_store, STORE = STORE, temporary_store
 
     try:
@@ -383,7 +383,7 @@ def use_store(
     finally:
         # Restore the original store
         STORE = original_store
-        spack.config.config.remove_scope(scope_name=scope_name)
+        spack.config.CONFIG.remove_scope(scope_name=scope_name)
 
 
 class MatchError(spack.error.SpackError):

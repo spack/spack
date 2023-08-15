@@ -50,7 +50,7 @@ def test_reset_in_file_scopes(mutable_config, scopes):
     bootstrap_yaml_files = []
     for s in scopes:
         _bootstrap("disable", "--scope={0}".format(s))
-        scope_path = spack.config.config.scopes[s].path
+        scope_path = spack.config.CONFIG.scopes[s].path
         bootstrap_yaml = os.path.join(scope_path, "bootstrap.yaml")
         assert os.path.exists(bootstrap_yaml)
         bootstrap_yaml_files.append(bootstrap_yaml)
@@ -80,7 +80,7 @@ def test_reset_in_environment(mutable_mock_env_path, mutable_config):
 def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     # Create a bootstrap.yaml with some config
     _bootstrap("disable", "--scope=site")
-    scope_path = spack.config.config.scopes["site"].path
+    scope_path = spack.config.CONFIG.scopes["site"].path
     bootstrap_yaml = os.path.join(scope_path, "bootstrap.yaml")
     assert os.path.exists(bootstrap_yaml)
 

@@ -64,7 +64,7 @@ def use_platform(new_platform):
         host = _PickleableCallable(new_platform)
 
         # Clear configuration and compiler caches
-        spack.config.config.clear_caches()
+        spack.config.CONFIG.clear_caches()
         spack.compilers._cache_config_files = []
 
         yield new_platform
@@ -73,5 +73,5 @@ def use_platform(new_platform):
         host = original_host_fn
 
         # Clear configuration and compiler caches
-        spack.config.config.clear_caches()
+        spack.config.CONFIG.clear_caches()
         spack.compilers._cache_config_files = []

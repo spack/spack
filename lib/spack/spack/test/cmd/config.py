@@ -24,7 +24,7 @@ env = spack.main.SpackCommand("env")
 
 def _create_config(scope=None, data={}, section="packages"):
     scope = scope or spack.config.default_modify_scope()
-    cfg_file = spack.config.config.get_config_filename(scope, section)
+    cfg_file = spack.config.CONFIG.get_config_filename(scope, section)
     with open(cfg_file, "w") as f:
         syaml.dump(data, stream=f)
     return cfg_file
@@ -80,8 +80,8 @@ def test_config_edit(mutable_config, working_env):
     """Ensure `spack config edit` edits the right paths."""
 
     dms = spack.config.default_modify_scope("compilers")
-    dms_path = spack.config.config.scopes[dms].path
-    user_path = spack.config.config.scopes["user"].path
+    dms_path = spack.config.CONFIG.scopes[dms].path
+    user_path = spack.config.CONFIG.scopes["user"].path
 
     comp_path = os.path.join(dms_path, "compilers.yaml")
     repos_path = os.path.join(user_path, "repos.yaml")
@@ -544,7 +544,7 @@ def test_config_update_not_needed(mutable_config):
 def test_config_update_can_handle_comments(mutable_config):
     # Create an outdated config file with comments
     scope = spack.config.default_modify_scope()
-    cfg_file = spack.config.config.get_config_filename(scope, "config")
+    cfg_file = spack.config.CONFIG.get_config_filename(scope, "config")
     with open(cfg_file, mode="w") as f:
         f.write(
             """
@@ -574,7 +574,7 @@ config:
 @pytest.mark.regression("18050")
 def test_config_update_works_for_empty_paths(mutable_config):
     scope = spack.config.default_modify_scope()
-    cfg_file = spack.config.config.get_config_filename(scope, "config")
+    cfg_file = spack.config.CONFIG.get_config_filename(scope, "config")
     with open(cfg_file, mode="w") as f:
         f.write(
             """
@@ -627,7 +627,7 @@ def test_config_prefer_upstream(
 
     output = config("prefer-upstream")
     scope = spack.config.default_modify_scope("packages")
-    cfg_file = spack.config.config.get_config_filename(scope, "packages")
+    cfg_file = spack.config.CONFIG.get_config_filename(scope, "packages")
     packages = syaml.load(open(cfg_file))["packages"]
 
     # Make sure only the non-default variants are set.

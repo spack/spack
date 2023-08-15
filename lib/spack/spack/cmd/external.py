@@ -13,6 +13,7 @@ import llnl.util.tty.colify as colify
 import spack
 import spack.cmd
 import spack.cmd.common.arguments
+import spack.config
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
@@ -27,7 +28,6 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="external_command")
 
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
 
     find_parser = sp.add_parser("find", help="add external packages to packages.yaml")
     find_parser.add_argument(
@@ -47,7 +47,7 @@ def setup_parser(subparser):
     find_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope("packages"),
         help="configuration scope to modify",
     )
@@ -165,7 +165,7 @@ def external_find(args):
         detected_packages, scope=args.scope, buildable=not args.not_buildable
     )
     if new_entries:
-        path = spack.config.config.get_config_filename(args.scope, "packages")
+        path = spack.config.CONFIG.get_config_filename(args.scope, "packages")
         msg = "The following specs have been detected on this system and added to {0}"
         tty.msg(msg.format(path))
         spack.cmd.display_specs(new_entries)
