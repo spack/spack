@@ -23,7 +23,7 @@ class Podman(Package):
     # issue was fixed as of 4.4.0
     patch("markdown-utf8.diff", when="@4:4.3.1")
 
-    variant("fuse", default=True, description="Use recommended fuse-overlayfs storage driver")
+    variant("fuse", default=False, description="Use recommended fuse-overlayfs storage driver")
 
     depends_on("go", type="build")
     depends_on("go-md2man", type="build")
