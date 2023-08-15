@@ -647,7 +647,7 @@ class RepoPath:
     """
 
     def __init__(self, *repos, **kwargs):
-        cache = kwargs.get("cache", spack.caches.misc_cache)
+        cache = kwargs.get("cache", spack.caches.MISC_CACHE)
         self.repos = []
         self.by_namespace = nm.NamespaceTrie()
 
@@ -966,7 +966,7 @@ class Repo:
 
         # Indexes for this repository, computed lazily
         self._repo_index = None
-        self._cache = cache or spack.caches.misc_cache
+        self._cache = cache or spack.caches.MISC_CACHE
 
     def real_name(self, import_name):
         """Allow users to import Spack packages using Python identifiers.
