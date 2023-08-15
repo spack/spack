@@ -4881,6 +4881,11 @@ def format_path(spec, format_string):
     the resulting string would only have two directories (i.e. that if under
     normal circumstances that `str(Spec.version)` would contain a path
     separator, it would not in this case).
+
+    Note that POSIX or Windows-style paths can be supplied on either POSIX or
+    Windows, and both "/" and "\" are treated as path separators (as a side
+    effect, "invalid" paths which mix these will be converted to OS-appropriate
+    paths with consistent separators).
     """
     components = re.split(r"[/\\]", format_string)
     return str(
