@@ -289,6 +289,10 @@ def ci_rebuild(args):
     rebuild_everything = os.environ.get("SPACK_REBUILD_EVERYTHING")
     require_signing = os.environ.get("SPACK_REQUIRE_SIGNING")
 
+    # If signing key was provided via "SPACK_SIGNING_KEY", then try to import it.
+    if signing_key:
+        spack_ci.import_signing_key(signing_key)
+
     # Fail early if signing is required but we don't have a signing key
     sign_binaries = require_signing is not None and require_signing.lower() == "true"
     if sign_binaries and not spack_ci.can_sign_binaries():
@@ -417,11 +421,6 @@ def ci_rebuild(args):
             if os.path.isfile(src_file):
                 dst_file = os.path.join(repro_dir, file_name)
                 shutil.copyfile(src_file, dst_file)
-
-    # If signing key was provided via "SPACK_SIGNING_KEY", then try to
-    # import it.
-    if signing_key:
-        spack_ci.import_signing_key(signing_key)
 
     # Write this job's spec json into the reproduction directory, and it will
     # also be used in the generated "spack install" command to install the spec
@@ -679,7 +678,7 @@ def ci_rebuild(args):
                 input_spec=job_spec,
                 buildcache_mirror_url=buildcache_mirror_url,
                 pipeline_mirror_url=pipeline_mirror_url,
-                sign_binaries=sign_binaries,
+                sign_binaries=spack_ci.can_sign_binaries(),
             ):
                 msg = tty.msg if result.success else tty.warn
                 msg(

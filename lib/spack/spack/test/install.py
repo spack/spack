@@ -52,7 +52,7 @@ def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch
 
     # Mock deletion of the package
     spec._package = None
-    monkeypatch.setattr(spack.repo.path, "get", find_nothing)
+    monkeypatch.setattr(spack.repo.PATH, "get", find_nothing)
     with pytest.raises(spack.repo.UnknownPackageError):
         spec.package
 
@@ -288,7 +288,7 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
     prepared_db = spack.database.Database(mock_db_root)
     upstream_layout = gen_mock_layout("/a/")
-    spack.config.config.push_scope(
+    spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(
             name="install-upstream-fixture",
             data={"upstreams": {"mock1": {"install_tree": prepared_db.root}}},
@@ -616,7 +616,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
 def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     """Test attempts to perform install phases with unconcretized spec."""
     spec = Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
 
     with pytest.raises(ValueError, match="must have a concrete spec"):
         pkg_cls(spec).do_install()

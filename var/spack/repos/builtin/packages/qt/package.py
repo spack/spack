@@ -138,6 +138,15 @@ class Qt(Package):
         working_dir="qtwebsockets",
         when="@5.14: %gcc@11:",
     )
+    # patch that adds missing `#include <cstdint>` in several files
+    # required for gcc 13 (even though the original patch was developed for gcc 10)
+    # (see https://gcc.gnu.org/gcc-13/porting_to.html)
+    patch(
+        "https://src.fedoraproject.org/rpms/qt5-qtlocation/raw/b6d99579de9ce5802c592b512a9f644a5e4690b9/f/qtlocation-gcc10.patch",
+        sha256="78c70fbd0c74031c5f0f1f5990e0b4214fc04c5073c67ce1f23863373932ec86",
+        working_dir="qtlocation",
+        when="@5.15.10 %gcc@10:",
+    )
     # https://github.com/microsoft/vcpkg/issues/21055
     patch("qt5-macos12.patch", working_dir="qtbase", when="@5.14: %apple-clang@13:")
 
