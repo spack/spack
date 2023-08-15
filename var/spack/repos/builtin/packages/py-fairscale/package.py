@@ -29,9 +29,9 @@ class PyFairscale(PythonPackage):
     depends_on("py-torch@1.8.0:", type=("build", "run"))
     depends_on("py-numpy@1.22.0:", type=("build", "run"))
     # added extra to support cuda.list.gpu, scaler, and weight (not in pip install)
-    with when("extra"):
+    # see requirements-dev.txt in github, this does not include the tools for testing
+    with when("+extra"):
         depends_on("py-pynvml@8.0.4", type=("build", "run"))
-        depends_on("py-numpy@1.22.0:", type=("build", "run"))
         depends_on("py-scikit-learn@1.1.3", type=("build", "run"))
         depends_on("py-pygit2@1.11.1", type=("build", "run"))
         depends_on("py-pgzip@0.3.1", type=("build", "run"))
