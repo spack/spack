@@ -4903,9 +4903,7 @@ def format_path(spec, format_string):
             # (e.g. that all valid spec format strings can be supplied as
             # arguments to any path validation function).
             formatted_components.append(path_component)
-    return str(
-        pathlib.Path(*formatted_components)
-    )
+    return str(pathlib.Path(*formatted_components))
 
 
 class SpecfileReaderBase:
