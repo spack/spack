@@ -536,13 +536,8 @@ def test_bootstrapping_compilers_with_different_names_from_spec(
     install_mockery, mutable_config, mock_fetch, archspec_host_is_spack_test_host
 ):
     with spack.config.override("config:install_missing_compilers", True):
-        with spack.concretize.disable_compiler_existence_check():
-            spec = spack.spec.Spec("trivial-install-test-package%oneapi@=22.2.0").concretized()
-            spec.package.do_install()
-
-            assert (
-                spack.spec.CompilerSpec("oneapi@=22.2.0") in spack.compilers.all_compiler_specs()
-            )
+        spack.spec.Spec("trivial-install-test-package%oneapi@3").concretized().package.do_install()
+        assert any(c.satisfies("oneapi@3") for c in spack.compilers.all_compiler_specs())
 
 
 def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):

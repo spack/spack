@@ -278,16 +278,6 @@ class TestConcretize:
         concrete = check_concretize("mpileaks   ^mpich2@1.3.1:1.4")
         assert concrete["mpich2"].satisfies("mpich2@1.3.1:1.4")
 
-    def test_concretize_enable_disable_compiler_existence_check(self):
-        with spack.concretize.enable_compiler_existence_check():
-            with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-                check_concretize("dttop %gcc@=100.100")
-
-        with spack.concretize.disable_compiler_existence_check():
-            spec = check_concretize("dttop %gcc@=100.100")
-            assert spec.satisfies("%gcc@100.100")
-            assert spec["dtlink3"].satisfies("%gcc@100.100")
-
     def test_concretize_with_provides_when(self):
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.
@@ -475,12 +465,14 @@ class TestConcretize:
 
         assert spec.satisfies("^openblas+shared")
 
-    def test_no_matching_compiler_specs(self, mock_low_high_config):
-        # only relevant when not building compilers as needed
-        with spack.concretize.enable_compiler_existence_check():
-            s = Spec("a %gcc@=0.0.0")
-            with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-                s.concretize()
+    @pytest.mark.parametrize("enable_bootstrapping", [True, False])
+    def test_no_matching_compiler_specs(self, enable_bootstrapping, mock_low_high_config):
+        # There's not gcc@999 configured, and there's no bootstrappable version in gcc/package.py
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError) as e:
+            with spack.config.override("config:install_missing_compilers", enable_bootstrapping):
+                Spec("a %gcc@999").concretize()
+
+        assert ("no matching compiler can be bootstrapped" in str(e.value)) == enable_bootstrapping
 
     def test_no_compilers_for_arch(self):
         s = Spec("a arch=linux-rhel0-x86_64")
@@ -745,23 +737,41 @@ class TestConcretize:
     @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
     # Include targets to prevent regression on 20537
     @pytest.mark.parametrize(
-        "spec, best_achievable",
+        "spec_str, best_achievable",
         [
-            ("mpileaks%gcc@=4.4.7 ^dyninst@=10.2.1 target=x86_64:", "core2"),
-            ("mpileaks%gcc@=4.8 target=x86_64:", "haswell"),
-            ("mpileaks%gcc@=5.3.0 target=x86_64:", "broadwell"),
-            ("mpileaks%apple-clang@=5.1.0 target=x86_64:", "x86_64"),
+            ("mpileaks%gcc@4.4.7 ^dyninst@=10.2.1 target=x86_64:", "core2"),
+            ("mpileaks%gcc@4.8 target=x86_64:", "haswell"),
+            ("mpileaks%gcc@5.3.0 target=x86_64:", "broadwell"),
+            ("mpileaks%apple-clang@5.1.0 target=x86_64:", "x86_64"),
         ],
     )
     @pytest.mark.regression("13361", "20537")
     def test_adjusting_default_target_based_on_compiler(
-        self, spec, best_achievable, current_host, mock_targets
+        self, spec_str, best_achievable, current_host, mock_targets
     ):
-        best_achievable = archspec.cpu.TARGETS[best_achievable]
-        expected = best_achievable if best_achievable < current_host else current_host
-        with spack.concretize.disable_compiler_existence_check():
-            s = Spec(spec).concretized()
-            assert str(s.architecture.target) == str(expected)
+        spec = Spec(spec_str)
+        with spack.config.override(
+            "compilers",
+            [
+                {
+                    "compiler": {
+                        "spec": str(spec.compiler),
+                        "operating_system": "debian6",
+                        "paths": {
+                            "cc": "/path/to/cc",
+                            "cxx": "/path/to/c++",
+                            "f77": None,
+                            "fc": None,
+                        },
+                        "modules": None,
+                        "target": "x86_64",
+                    }
+                }
+            ],
+        ):
+            best_achievable = archspec.cpu.TARGETS[best_achievable]
+            expected = best_achievable if best_achievable < current_host else current_host
+            assert str(spec.concretized().architecture.target) == str(expected)
 
     def test_compiler_version_matches_any_entry_in_compilers_yaml(self):
         # The behavior here has changed since #8735 / #14730. Now %gcc@10.2 is an abstract

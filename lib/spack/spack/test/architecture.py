@@ -10,6 +10,7 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.concretize
+import spack.config
 import spack.operating_systems
 import spack.platforms
 import spack.spec
@@ -213,7 +214,7 @@ def test_concretize_target_ranges(root_target_range, dep_target_range, result, m
         dep_target_range,
     )
     spec = spack.spec.Spec(spec_str)
-    with spack.concretize.disable_compiler_existence_check():
+    with spack.config.override("config:install_missing_compilers", True):
         spec.concretize()
 
     assert str(spec).count("arch=test-debian6-%s" % result) == 2

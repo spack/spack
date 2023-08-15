@@ -702,10 +702,9 @@ def generate_gitlab_ci_yaml(
             criteria.  Spack protected pipelines populate different mirrors based
             on branch name, facilitated by this option.
     """
-    with spack.concretize.disable_compiler_existence_check():
-        with env.write_transaction():
-            env.concretize()
-            env.write()
+    with cfg.override("config:install_missing_compilers", True), env.write_transaction():
+        env.concretize()
+        env.write()
 
     yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
 

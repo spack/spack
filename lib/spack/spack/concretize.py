@@ -17,7 +17,6 @@ TODO: make this customizable and allow users to configure
 import functools
 import platform
 import tempfile
-from contextlib import contextmanager
 from itertools import chain
 from typing import Union
 
@@ -70,15 +69,10 @@ class Concretizer:
     concretization strategies, or you can override all of them.
     """
 
-    #: Controls whether we check that compiler versions actually exist
-    #: during concretization. Used for testing and for mirror creation
-    check_for_compiler_existence = None
-
     def __init__(self, abstract_spec=None):
-        if Concretizer.check_for_compiler_existence is None:
-            Concretizer.check_for_compiler_existence = not spack.config.get(
-                "config:install_missing_compilers", False
-            )
+        self.require_compiler_in_config = not spack.config.get(
+            "config:install_missing_compilers", False
+        )
         self.abstract_spec = abstract_spec
         self._adjust_target_answer_generator = None
 
@@ -462,7 +456,7 @@ class Concretizer:
             return compilers
 
         if spec.compiler and spec.compiler.concrete:
-            if self.check_for_compiler_existence and not _proper_compiler_style(
+            if self.require_compiler_in_config and not _proper_compiler_style(
                 spec.compiler, spec.architecture
             ):
                 _compiler_concretization_failure(spec.compiler, spec.architecture)
@@ -475,7 +469,7 @@ class Concretizer:
 
         # Check if the compiler is already fully specified
         if other_compiler and other_compiler.concrete:
-            if self.check_for_compiler_existence and not _proper_compiler_style(
+            if self.require_compiler_in_config and not _proper_compiler_style(
                 other_compiler, spec.architecture
             ):
                 _compiler_concretization_failure(other_compiler, spec.architecture)
@@ -486,7 +480,7 @@ class Concretizer:
             compiler_list = spack.compilers.find_specs_by_arch(other_compiler, spec.architecture)
             if not compiler_list:
                 # We don't have a matching compiler installed
-                if not self.check_for_compiler_existence:
+                if not self.require_compiler_in_config:
                     # Concretize compiler spec versions as a package to build
                     cpkg_spec = spack.compilers.pkg_spec_for_compiler(other_compiler)
                     self.concretize_version(cpkg_spec)
@@ -563,7 +557,7 @@ class Concretizer:
         try:
             compiler = spack.compilers.compiler_for_spec(spec.compiler, spec.architecture)
         except spack.compilers.NoCompilerForSpecError:
-            if self.check_for_compiler_existence:
+            if self.require_compiler_in_config:
                 raise
             return ret
         for flag in compiler.flags:
@@ -662,22 +656,6 @@ class Concretizer:
                 raise
 
         return False
-
-
-@contextmanager
-def disable_compiler_existence_check():
-    saved = Concretizer.check_for_compiler_existence
-    Concretizer.check_for_compiler_existence = False
-    yield
-    Concretizer.check_for_compiler_existence = saved
-
-
-@contextmanager
-def enable_compiler_existence_check():
-    saved = Concretizer.check_for_compiler_existence
-    Concretizer.check_for_compiler_existence = True
-    yield
-    Concretizer.check_for_compiler_existence = saved
 
 
 def find_spec(spec, condition, default=None):
@@ -799,10 +777,12 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
     """Raised when there is no available compiler that satisfies a
     compiler spec."""
 
-    def __init__(self, compiler_spec, arch=None):
-        err_msg = "No compilers with spec {0} found".format(compiler_spec)
+    def __init__(self, compiler_spec, arch=None, bootstrap=False):
+        err_msg = f"No compilers satisfying {compiler_spec} found in config"
+        if bootstrap:
+            err_msg += " and no matching compiler can be bootstrapped"
         if arch:
-            err_msg += " for operating system {0} and target {1}.".format(arch.os, arch.target)
+            err_msg += f" for operating system {arch.os} and target {arch.target}."
 
         super().__init__(
             err_msg,
