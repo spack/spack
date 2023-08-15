@@ -243,9 +243,9 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     with when("build_system=autotools"):
         depends_on("gmake", type="build")
+        depends_on("pkgconfig@0.25:", type="build")
 
     # Required dependencies
-    depends_on("pkgconfig@0.25:", type="build")
     depends_on("proj@6:", when="@3:")
     depends_on("proj@:6", when="@2.5:2")
     depends_on("proj@:5", when="@2.4")
