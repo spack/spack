@@ -21,6 +21,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("1.4.1", sha256="2ca828ef6615859654b233a7df17017e7cfd904982b80026ec7409eb46b77a95")
     version("1.4", sha256="803a1018a6305cf3fea161172b3ada49537f59261279d91c2abbcce9492ee7af")
     version("1.3", sha256="3f1e17f029a460ab99f8396e2772cec908eefc4bf3868c8828907624a2d0ce5d")
     version("1.2", sha256="ed1939110b2330b7994dcbba649b100c241a2353ed2624e627a200a398096c20")
@@ -90,6 +91,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("trilinos@13.2.0:", when="@1.2+trilinos")
     depends_on("trilinos@13.4.0:", when="@1.3+trilinos")
     depends_on("trilinos@14.0.0:", when="@1.4:+trilinos")
+    patch("trilinos14.0-kokkos-major-version.patch", when="@1.4+trilinos ^trilinos@14.0.0")
     conflicts("~serial", when="+trilinos")
     conflicts("+cuda", when="+trilinos")
 
