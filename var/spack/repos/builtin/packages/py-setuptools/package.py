@@ -199,7 +199,7 @@ class PySetuptools(Package, PythonExtension):
     depends_on("python@2.7:2.8,3.4:", when="@:43", type=("build", "run"))
 
     # https://github.com/pypa/setuptools/issues/3661
-    depends_on("python@:3.11", when="@:67", type=("build", "run"))
+    conflicts("python@3.12:", when="@:67", type=("build", "run"))
 
     depends_on("py-pip", type="build")
 
