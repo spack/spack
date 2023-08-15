@@ -51,7 +51,7 @@ legacy_mirror_dir = os.path.join(test_path, "data", "mirrors", "legacy_yaml")
 def cache_directory(tmpdir):
     fetch_cache_dir = tmpdir.ensure("fetch_cache", dir=True)
     fsc = spack.fetch_strategy.FsCache(str(fetch_cache_dir))
-    spack.config.caches, old_cache_path = fsc, spack.caches.fetch_cache
+    spack.config.caches, old_cache_path = fsc, spack.caches.FETCH_CACHE
 
     yield spack.config.caches
 
