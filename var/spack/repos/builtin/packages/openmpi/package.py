@@ -1075,6 +1075,21 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if wrapper_ldflags:
             config_args.append("--with-wrapper-ldflags={0}".format(" ".join(wrapper_ldflags)))
 
+        if self.spec.satisfies("@:4.1.5%nvhpc@23.3:"):
+            # Override the wrong result of the configure-time check. The value of the cache
+            # variable is a colon-separated tuple of three elements: the first one is the flag
+            # indicating whether it is possible to make the compiler ignore the type/kind/rank
+            # mismatches, the second element is the type of the mismatched argument to be used in
+            # the generated source code and the last one is the directive that makes the compiler
+            # ignore the mismatches. The value is the same as for the older version of NVHPC, which
+            # do not support the TYPE(*) syntax and, therefore, are not affected by the
+            # inconsistency (already eliminated in the main branch of the upstream repo) between
+            # the configure-time check and the actual generated source code
+            # (see https://github.com/open-mpi/ompi/pull/11857 for more details):
+            config_args.append(
+                "ompi_cv_fortran_ignore_tkr_data=1:real, dimension(*):!DIR$ IGNORE_TKR"
+            )
+
         return config_args
 
     @run_after("install", when="+wrapper-rpath")
