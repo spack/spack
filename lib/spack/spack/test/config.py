@@ -236,7 +236,7 @@ def test_write_key_to_disk(mock_low_high_config, compiler_specs):
     spack.config.set("compilers", b_comps["compilers"], scope="high")
 
     # Clear caches so we're forced to read from disk.
-    spack.config.config.clear_caches()
+    spack.config.CONFIG.clear_caches()
 
     # Same check again, to ensure consistency.
     check_compiler_config(a_comps["compilers"], *compiler_specs.a)
@@ -249,7 +249,7 @@ def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
     spack.config.set("compilers", b_comps["compilers"], scope="low")
 
     # Clear caches so we're forced to read from disk.
-    spack.config.config.clear_caches()
+    spack.config.CONFIG.clear_caches()
 
     # Same check again, to ensure consistency.
     check_compiler_config(a_comps["compilers"], *compiler_specs.a)
@@ -369,7 +369,7 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     spack.config.set(
         "modules:default", {"roots": {"lmod": os.path.join("foo", "bar", "baz")}}, scope="low"
     )
-    spack.config.config.clear_caches()
+    spack.config.CONFIG.clear_caches()
     path = spack.config.get("modules:default:roots:lmod")
     assert spack_path.canonicalize_path(path) == os.path.normpath(
         os.path.join(mock_low_high_config.scopes["low"].path, os.path.join("foo", "bar", "baz"))
@@ -854,18 +854,18 @@ config:
 
 def test_nested_override():
     """Ensure proper scope naming of nested overrides."""
-    base_name = spack.config.overrides_base_name
+    base_name = spack.config._OVERRIDES_BASE_NAME
 
     def _check_scopes(num_expected, debug_values):
         scope_names = [
-            s.name for s in spack.config.config.scopes.values() if s.name.startswith(base_name)
+            s.name for s in spack.config.CONFIG.scopes.values() if s.name.startswith(base_name)
         ]
 
         for i in range(num_expected):
             name = "{0}{1}".format(base_name, i)
             assert name in scope_names
 
-            data = spack.config.config.get_config("config", name)
+            data = spack.config.CONFIG.get_config("config", name)
             assert data["debug"] == debug_values[i]
 
     # Check results from single and nested override
@@ -878,23 +878,23 @@ def test_nested_override():
 
 def test_alternate_override(monkeypatch):
     """Ensure proper scope naming of override when conflict present."""
-    base_name = spack.config.overrides_base_name
+    base_name = spack.config._OVERRIDES_BASE_NAME
 
     def _matching_scopes(regexpr):
         return [spack.config.InternalConfigScope("{0}1".format(base_name))]
 
     # Check that the alternate naming works
-    monkeypatch.setattr(spack.config.config, "matching_scopes", _matching_scopes)
+    monkeypatch.setattr(spack.config.CONFIG, "matching_scopes", _matching_scopes)
 
     with spack.config.override("config:debug", False):
         name = "{0}2".format(base_name)
 
         scope_names = [
-            s.name for s in spack.config.config.scopes.values() if s.name.startswith(base_name)
+            s.name for s in spack.config.CONFIG.scopes.values() if s.name.startswith(base_name)
         ]
         assert name in scope_names
 
-        data = spack.config.config.get_config("config", name)
+        data = spack.config.CONFIG.get_config("config", name)
         assert data["debug"] is False
 
 

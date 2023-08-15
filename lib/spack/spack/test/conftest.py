@@ -480,10 +480,10 @@ class MockCacheFetcher:
 
 @pytest.fixture(autouse=True)
 def mock_fetch_cache(monkeypatch):
-    """Substitutes spack.paths.fetch_cache with a mock object that does nothing
+    """Substitutes spack.paths.FETCH_CACHE with a mock object that does nothing
     and raises on fetch.
     """
-    monkeypatch.setattr(spack.caches, "fetch_cache", MockCache())
+    monkeypatch.setattr(spack.caches, "FETCH_CACHE", MockCache())
 
 
 @pytest.fixture()
@@ -716,7 +716,7 @@ def configuration_dir(tmpdir_factory, linux_os):
 
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
-    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.config_defaults)]
+    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)]
     scopes += [
         spack.config.ConfigScope(name, str(configuration_dir.join(name)))
         for name in ["site", "system", "user"]
@@ -1935,7 +1935,8 @@ def shell_as(shell):
 @pytest.fixture()
 def nullify_globals(request, monkeypatch):
     ensure_configuration_fixture_run_before(request)
-    monkeypatch.setattr(spack.config, "config", None)
-    monkeypatch.setattr(spack.caches, "misc_cache", None)
+    monkeypatch.setattr(spack.config, "CONFIG", None)
+    monkeypatch.setattr(spack.caches, "MISC_CACHE", None)
+    monkeypatch.setattr(spack.caches, "FETCH_CACHE", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)

@@ -38,7 +38,7 @@ SEMVER_REGEX = re.compile(rf"{_SEMVER}$")
 class GitRefLookup(AbstractRefLookup):
     """An object for cached lookups of git refs
 
-    GitRefLookup objects delegate to the misc_cache for locking. GitRefLookup objects may
+    GitRefLookup objects delegate to the MISC_CACHE for locking. GitRefLookup objects may
     be attached to a GitVersion to allow for comparisons between git refs and versions as
     represented by tags in the git repository.
     """
@@ -63,15 +63,15 @@ class GitRefLookup(AbstractRefLookup):
             key_base = "git_metadata"
             self._cache_key = (Path(key_base) / self.repository_uri).as_posix()
 
-            # Cache data in misc_cache
+            # Cache data in MISC_CACHE
             # If this is the first lazy access, initialize the cache as well
-            spack.caches.misc_cache.init_entry(self.cache_key)
+            spack.caches.MISC_CACHE.init_entry(self.cache_key)
         return self._cache_key
 
     @property
     def cache_path(self):
         if not self._cache_path:
-            self._cache_path = spack.caches.misc_cache.cache_path(self.cache_key)
+            self._cache_path = spack.caches.MISC_CACHE.cache_path(self.cache_key)
         return self._cache_path
 
     @property
@@ -101,13 +101,13 @@ class GitRefLookup(AbstractRefLookup):
 
     def save(self):
         """Save the data to file"""
-        with spack.caches.misc_cache.write_transaction(self.cache_key) as (old, new):
+        with spack.caches.MISC_CACHE.write_transaction(self.cache_key) as (old, new):
             sjson.dump(self.data, new)
 
     def load_data(self):
         """Load data if the path already exists."""
         if os.path.isfile(self.cache_path):
-            with spack.caches.misc_cache.read_transaction(self.cache_key) as cache_file:
+            with spack.caches.MISC_CACHE.read_transaction(self.cache_key) as cache_file:
                 self.data = sjson.load(cache_file)
 
     def get(self, ref) -> Tuple[Optional[str], int]:
