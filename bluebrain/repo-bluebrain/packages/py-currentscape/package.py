@@ -13,7 +13,12 @@ class PyCurrentscape(PythonPackage):
     git = "https://github.com/BlueBrain/Currentscape.git"
     pypi = "currentscape/currentscape-1.0.12.tar.gz"
 
-    version("1.0.12", sha256="d83c5a58074e4d612553472a487e5d1d2854dc4d5c161817c6bafdf4a5988011")
+    # TODO: remove the package prior to the next redeployment
+    version(
+        "1.0.12",
+        sha256="d83c5a58074e4d612553472a487e5d1d2854dc4d5c161817c6bafdf4a5988011",
+        deprecated=True,
+    )
 
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-setuptools-scm", type=("build",))

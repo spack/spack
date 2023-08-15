@@ -19,7 +19,6 @@ spack:
           - py-bluepy
           - py-bluepysnap
           - py-connectome-manipulator
-          - py-currentscape
           - py-entity-management
           - py-minis-validation
           - py-morphio
@@ -54,7 +53,6 @@ spack:
     - py-bbp-workflow-cli
     - py-bluepy
     - py-bluepysnap
-    - py-currentscape
     - py-entity-management
     - py-minis-validation
     - py-morphio
