@@ -148,7 +148,7 @@ spack:
   - nco
   - netlib-scalapack
   - omega-h
-  # - openmpi
+  - openmpi
   - openpmd-api
   - papi
   - papyrus
