@@ -793,40 +793,22 @@ def test_installer_init_requests(install_mockery):
 def test_install_spliced(install_mockery, mock_fetch, default_mock_concretization, monkeypatch, capsys,
                          transitive):
     """TODO: description"""
-    # monkeypatch.setattr(inst.BuildTask, "execute", lambda x: "updated_installed")
-    # monkeypatch.setattr(inst.RewireTask, "execute", lambda x: "updated_installed")
-    # def _print(*args, **kwargs):
-    #     print(*args)
-    # monkeypatch.setattr(inst.tty, "debug", _print)
-    # monkeypatch.setattr(inst.tty, "msg", print)
     spec = default_mock_concretization("splice-t")
     dep = default_mock_concretization("splice-h+foo")
 
     # Do the splice.
     out = spec.splice(dep, transitive)
     installer = create_installer([(out, {"vebose": True, "fail_fast": True})])
-    # installer._init_queue()
-    # for _, task in installer.build_pq:
-    #     assert isinstance(task, inst.RewireTask if task.pkg.spec.spliced else inst.BuildTask)
-    # assert installer.build_pq[-1][0][0] == 2
     installer.install()
     for node in out.traverse():
         assert node.installed
         assert node.build_spec.installed
-    # captured = capsys.readouterr().out
-    # assert captured
-    # for node in out.traverse():
-    #     print(node)
-    #     assert node.dag_hash() in captured
-    #     assert node.build_spec.dag_hash() in captured
 
 
 @pytest.mark.parametrize("transitive", [True, False])
 def test_install_spliced_build_spec_installed(install_mockery, default_mock_concretization,
                                               capfd, mock_fetch, transitive):
     """TODO: description"""
-    # monkeypatch.setattr(inst.BuildTask, "execute", _update_installed)
-    # monkeypatch.setattr(inst.RewireTask, "execute", _update_installed)
     spec = default_mock_concretization("splice-t")
     dep = default_mock_concretization("splice-h+foo")
 
@@ -856,10 +838,12 @@ def test_install_splice_root_from_binary(install_mockery, default_mock_concretiz
     out = original_spec.splice(spec_to_splice)
     out.package.do_install()
 
-    # install all buildspecs (regular splice and install)
-    # push to mirror
-    # uninstall all buildspecs locally
-    # splice and install
+    # spack install original_spec spec_to_splice
+    # spack buildcache push (unsigned)
+    # spack uninstall -ay
+    # configure mirror
+    # spack install out
+    # assert len(spack find) == len(out)
 
 
 def test_install_task_use_cache(install_mockery, monkeypatch):

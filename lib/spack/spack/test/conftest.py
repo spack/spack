@@ -962,6 +962,22 @@ def install_mockery(temporary_store: spack.store.Store, mutable_config, mock_pac
     temporary_store.failure_tracker.clear_all()
 
 
+@pytest.fixture(scope="module")
+def temporary_mirror_dir(tmpdir_factory):
+    dir = tmpdir_factory.mktemp("mirror")
+    dir.ensure("build_cache", dir=True)
+    yield str(dir)
+    dir.join("build_cache").remove()
+
+
+@pytest.fixture(scope="function")
+def temporary_mirror(mirror_dir):
+    mirror_url = url_util.path_to_file_url(mirror_dir)
+    mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
+    yield mirror_dir
+    mirror_cmd("rm", "--scope=site", "test-mirror-func")
+
+
 @pytest.fixture(scope="function")
 def temporary_store(tmpdir, request):
     """Hooks a temporary empty store for the test function."""
