@@ -742,7 +742,7 @@ class TestConcretize:
         with pytest.raises(spack.error.SpackError):
             Spec(spec).concretized()
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+    @pytest.mark.not_on_windows("Not supported on Windows (yet)")
     # Include targets to prevent regression on 20537
     @pytest.mark.parametrize(
         "spec, best_achievable",
@@ -2125,7 +2125,7 @@ class TestConcretize:
         assert s.compiler.version == ver("=11.1.0"), s
 
     @pytest.mark.regression("36339")
-    @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows")
+    @pytest.mark.not_on_windows("Not supported on Windows")
     def test_compiler_with_custom_non_numeric_version(self, mock_executable):
         """Test that, when a compiler has a completely made up version, we can use its
         'real version' to detect targets and don't raise during concretization.

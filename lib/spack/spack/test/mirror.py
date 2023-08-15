@@ -5,7 +5,6 @@
 
 import filecmp
 import os
-import sys
 
 import pytest
 
@@ -22,7 +21,7 @@ from spack.util.executable import which
 from spack.util.spack_yaml import SpackYAMLError
 
 pytestmark = [
-    pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
+    pytest.mark.not_on_windows("does not run on windows"),
     pytest.mark.usefixtures("mutable_config", "mutable_mock_repo"),
 ]
 

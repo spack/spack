@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pathlib
-import sys
 
 import pytest
 
@@ -18,7 +17,7 @@ from spack.solver.asp import UnsatisfiableSpecError
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows uses old concretizer")
+pytestmark = pytest.mark.not_on_windows("Windows uses old concretizer")
 
 
 def update_packages_config(conf_str):

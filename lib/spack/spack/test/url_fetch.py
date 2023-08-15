@@ -173,7 +173,7 @@ def test_fetch(
 
 
 # TODO-27021
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "spec,url,digest",
     [
@@ -204,7 +204,7 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         assert fetch_strategy.extra_options == {"timeout": 60}
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 @pytest.mark.parametrize(
     "requested_version,tarball,digest",
