@@ -2847,12 +2847,12 @@ class SpecBuilder:
                         spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                     )
 
-        specs = self.execute_explicit_splices()
+        specs = self.execute_splices()
 
         return specs
 
-    def execute_explicit_splices(self):
-        splice_config = spack.config.get("concretizer:explicit_splices", [])
+    def execute_splices(self):
+        splice_config = spack.config.get("splice", [])
         splice_triples = []
         for splice_set in splice_config:
             target = splice_set["target"]

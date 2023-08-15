@@ -2096,7 +2096,7 @@ class TestConcretize:
             "replacement": f"/{mpich_spec.dag_hash()}",
             "transitive": transitive
         }
-        spack.config.set("concretizer:explicit_splices", [splice_info])
+        spack.config.set("splice", [splice_info])
 
         spec = spack.spec.Spec("hdf5 ^zmpi").concretized()
         print(spec)
