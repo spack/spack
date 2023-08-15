@@ -54,6 +54,7 @@ import enum
 import io
 import itertools
 import os
+import pathlib
 import re
 import warnings
 from typing import List, Tuple, Union
@@ -4869,7 +4870,7 @@ def reconstruct_virtuals_on_edges(spec):
             edge.update_virtuals([vspec])
 
 
-def format_path(spec, format_string, _separator=None):
+def format_path(spec, format_string):
     """Given a `format_string` that is intended as a path, generate a string
     like from `Spec.format`, but eliminate extra path separators introduced by
     formatting of Spec properties.
@@ -4881,14 +4882,11 @@ def format_path(spec, format_string, _separator=None):
     normal circumstances that `str(Spec.version)` would contain a path
     separator, it would not in this case).
     """
-    separator = _separator or os.sep
-    format_subcomponents = format_string.split(separator)
-    formatted_components = []
-    for c in format_subcomponents:
-        dirty_result = spec.format(c)
-        cleaned_result = spack.util.path.sanitize_filename(dirty_result)
-        formatted_components.append(cleaned_result)
-    return separator.join(formatted_components)
+    components = re.split(r"[/\\]", format_string)
+    return str(pathlib.Path(*[
+        spack.util.path.sanitize_filename(spec.format(x))
+        for x in components
+    ]))
 
 
 class SpecfileReaderBase:
