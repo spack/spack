@@ -29,6 +29,8 @@ import spack.store
 import spack.util.lock as lk
 import spack.version
 
+from spack.main import SpackCommand
+
 
 def _mock_repo(root, namespace):
     """Create an empty repository at the specified root
@@ -826,24 +828,42 @@ def test_install_spliced_build_spec_installed(install_mockery, default_mock_conc
         assert node.build_spec.installed
 
 
-# TODO: write test for rewiring direct from binary case
-
 @pytest.mark.parametrize("transitive", [True, False])
-def test_install_splice_root_from_binary(install_mockery, default_mock_concretization, mock_fetch,
-                                         transitive):
+@pytest.mark.parametrize("root_str", ["splice-t^splice-h~foo", "splice-h~foo"])
+def test_install_splice_root_from_binary(
+        install_mockery,
+        default_mock_concretization,
+        mock_fetch,
+        mutable_temporary_mirror,
+        transitive,
+        root_str):
     """TODO: Docstring"""
     # Test splicing and rewiring a spec with the same name, different hash.
-    original_spec = spack.spec.Spec("splice-h~foo").concretized()
+    original_spec = spack.spec.Spec(root_str).concretized()
     spec_to_splice = spack.spec.Spec("splice-h+foo").concretized()
-    out = original_spec.splice(spec_to_splice)
-    out.package.do_install()
 
-    # spack install original_spec spec_to_splice
-    # spack buildcache push (unsigned)
-    # spack uninstall -ay
-    # configure mirror
-    # spack install out
-    # assert len(spack find) == len(out)
+    original_spec.package.do_install()
+    spec_to_splice.package.do_install()
+
+    out = original_spec.splice(spec_to_splice, transitive)
+
+    buildcache = SpackCommand("buildcache")
+    buildcache(
+        "push",
+        "--allow-root",
+        "--unsigned",
+        "--update-index",
+        mutable_temporary_mirror,
+        str(original_spec),
+        str(spec_to_splice)
+    )
+
+    uninstall = SpackCommand("uninstall")
+    uninstall("-ay")
+
+    out.package.do_install(unsigned=True)
+
+    assert len(spack.store.db.query()) == len(list(out.traverse()))
 
 
 def test_install_task_use_cache(install_mockery, monkeypatch):

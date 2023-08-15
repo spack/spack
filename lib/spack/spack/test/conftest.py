@@ -51,8 +51,11 @@ import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy
+from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 from spack.util.web import FetchError
+
+mirror_cmd = SpackCommand("mirror")
 
 
 def ensure_configuration_fixture_run_before(request):
@@ -971,10 +974,26 @@ def temporary_mirror_dir(tmpdir_factory):
 
 
 @pytest.fixture(scope="function")
-def temporary_mirror(mirror_dir):
-    mirror_url = url_util.path_to_file_url(mirror_dir)
+def temporary_mirror(temporary_mirror_dir):
+    mirror_url = url_util.path_to_file_url(temporary_mirror_dir)
     mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
-    yield mirror_dir
+    yield temporary_mirror_dir
+    mirror_cmd("rm", "--scope=site", "test-mirror-func")
+
+
+@pytest.fixture(scope="function")
+def mutable_temporary_mirror_dir(tmpdir_factory):
+    dir = tmpdir_factory.mktemp("mirror")
+    dir.ensure("build_cache", dir=True)
+    yield str(dir)
+    dir.join("build_cache").remove()
+
+
+@pytest.fixture(scope="function")
+def mutable_temporary_mirror(mutable_temporary_mirror_dir):
+    mirror_url = url_util.path_to_file_url(mutable_temporary_mirror_dir)
+    mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
+    yield mutable_temporary_mirror_dir
     mirror_cmd("rm", "--scope=site", "test-mirror-func")
 
 

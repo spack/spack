@@ -788,7 +788,7 @@ def get_buildinfo_dict(spec):
         "relocate_binaries": manifest["binary_to_relocate"],
         "relocate_links": manifest["link_to_relocate"],
         "hardlinks_deduped": manifest["hardlinks_deduped"],
-        "hash_to_prefix": {h: info[1] for h, info in hashes_to_prefixes(spec)},
+        "hash_to_prefix": {h: info[1] for h, info in hashes_to_prefixes(spec).items()},
     }
 
 
@@ -1638,13 +1638,13 @@ def relocate_package(spec):
     # spack store root can be mapped uniformly to the new spack store root.
     for dag_hash, prefix_info in hashes_to_prefixes(spec).items():
         name, new_dep_prefix = prefix_info
-        if dag_hash in hash_to_old_prefix:
-            lookup_dag_hash = dag_hash
-        else:
+        try:
+            lookup_dag_hash = spec.build_spec[name].dag_hash()
+        except:
             dependent_edges = spec[name].edges_from_dependents()
             virtuals = set()
             for edge in dependent_edges:
-                virtuals.update(edge.parameters.virtuals)
+                virtuals.update(edge.parameters["virtuals"])
             for virtual in virtuals:
                 try:
                     lookup_dag_hash = spec.build_spec[virtual].dag_hash()
@@ -1655,7 +1655,7 @@ def relocate_package(spec):
                 raise KeyError(f"{spec} does not depend on {name}")
 
         if lookup_dag_hash in hash_to_old_prefix:
-            old_dep_prefix = hash_to_old_prefix[dag_hash]
+            old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
             prefix_to_prefix_bin[old_dep_prefix] = new_dep_prefix
             prefix_to_prefix_text[old_dep_prefix] = new_dep_prefix
 
@@ -1971,10 +1971,10 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 
-    download_result = download_tarball(spec, unsigned)
+    download_result = download_tarball(spec.build_spec, unsigned)
     if not download_result:
         msg = 'download of binary cache file for spec "{0}" failed'
-        raise RuntimeError(msg.format(spec.format()))
+        raise RuntimeError(msg.format(spec.build_spec.format()))
 
     if sha256:
         checker = spack.util.crypto.Checker(sha256)
@@ -1993,6 +1993,8 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, unsigned, force)
+        if spec.spliced:  # overwrite old metadata with new
+            spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, spack.store.STORE.layout)
 
