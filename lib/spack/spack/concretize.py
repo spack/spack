@@ -28,6 +28,7 @@ import llnl.util.tty as tty
 
 import spack.abi
 import spack.compilers
+import spack.config
 import spack.environment
 import spack.error
 import spack.platforms
@@ -37,7 +38,6 @@ import spack.target
 import spack.tengine
 import spack.util.path
 import spack.variant as vt
-from spack.config import config
 from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
 from spack.version import ClosedOpenRange, VersionList, ver
 
@@ -76,7 +76,7 @@ class Concretizer:
 
     def __init__(self, abstract_spec=None):
         if Concretizer.check_for_compiler_existence is None:
-            Concretizer.check_for_compiler_existence = not config.get(
+            Concretizer.check_for_compiler_existence = not spack.config.get(
                 "config:install_missing_compilers", False
             )
         self.abstract_spec = abstract_spec

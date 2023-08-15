@@ -833,7 +833,7 @@ def ensure_modules_are_enabled_or_warn():
         return
 
     # Check if we have custom TCL module sections
-    for scope in spack.config.config.file_scopes:
+    for scope in spack.config.CONFIG.file_scopes:
         # Skip default configuration
         if scope.name.startswith("default"):
             continue

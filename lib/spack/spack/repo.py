@@ -647,7 +647,7 @@ class RepoPath:
     """
 
     def __init__(self, *repos, **kwargs):
-        cache = kwargs.get("cache", spack.caches.misc_cache)
+        cache = kwargs.get("cache", spack.caches.MISC_CACHE)
         self.repos = []
         self.by_namespace = nm.NamespaceTrie()
 
@@ -966,7 +966,7 @@ class Repo:
 
         # Indexes for this repository, computed lazily
         self._repo_index = None
-        self._cache = cache or spack.caches.misc_cache
+        self._cache = cache or spack.caches.MISC_CACHE
 
     def real_name(self, import_name):
         """Allow users to import Spack packages using Python identifiers.
@@ -1357,7 +1357,7 @@ def create_or_construct(path, namespace=None):
 
 def _path(configuration=None):
     """Get the singleton RepoPath instance for Spack."""
-    configuration = configuration or spack.config.config
+    configuration = configuration or spack.config.CONFIG
     return create(configuration=configuration)
 
 
@@ -1404,14 +1404,14 @@ def use_repositories(*paths_and_repos, **kwargs):
     paths = [getattr(x, "root", x) for x in paths_and_repos]
     scope_name = "use-repo-{}".format(uuid.uuid4())
     repos_key = "repos:" if override else "repos"
-    spack.config.config.push_scope(
+    spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={repos_key: paths})
     )
-    PATH, saved = create(configuration=spack.config.config), PATH
+    PATH, saved = create(configuration=spack.config.CONFIG), PATH
     try:
         yield PATH
     finally:
-        spack.config.config.remove_scope(scope_name=scope_name)
+        spack.config.CONFIG.remove_scope(scope_name=scope_name)
         PATH = saved
 
 
