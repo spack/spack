@@ -31,7 +31,7 @@ class Snappy(CMakePackage):
     patch(
         "https://github.com/google/snappy/commit/8dd58a519f79f0742d4c68fbccb2aed2ddb651e8.patch?full_index=1",
         sha256="debcdf182c046a30e9afea99ebbff280dd1fbb203e89abce6a05d3d17c587768",
-        when="@1.1.9%nvhpc",
+        when="@1.1.9",
     )
 
     # nvhpc@:22.3 does not know flag '-fno-rtti'
