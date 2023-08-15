@@ -25,8 +25,8 @@ jobs:
         cache: 'pip'
     - name: Install Python Packages
       run: |
-        pip install --upgrade pip
-        pip install --upgrade vermin
+        pip install --upgrade pip setuptools
+        pip install -r .github/workflows/style/requirements.txt
     - name: vermin (Spack's Core)
       run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
@@ -44,7 +44,8 @@ jobs:
         cache: 'pip'
     - name: Install Python packages
       run: |
-        python3 -m pip install --upgrade pip setuptools types-six black==23.1.0 mypy isort clingo flake8
+        pip install --upgrade pip setuptools
+        pip install -r .github/workflows/style/requirements.txt
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
@@ -65,7 +66,8 @@ jobs:
         cache: 'pip'
     - name: Install Python packages
       run: |
-        python3 -m pip install --upgrade pip setuptools pylint
+        pip install --upgrade pip setuptools
+        pip install -r .github/workflows/style/requirements.txt
     - name: Run linting
       # Currently, check only some parts of Spack and extend linting incrementally
       run: | 
