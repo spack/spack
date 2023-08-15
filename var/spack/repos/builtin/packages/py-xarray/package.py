@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class PyXarray(PythonPackage):
         "xarray.coding",
     ]
 
+    version("2023.7.0", sha256="dace2fdbf1b7ff185d9c1226a24bf83c2ae52f3253dbfe80e17d1162600d055c")
     version("2022.3.0", sha256="398344bf7d170477aaceff70210e11ebd69af6b156fe13978054d25c48729440")
     version("0.18.2", sha256="5d2e72a228286fcf60f66e16876bd27629a1a70bf64822c565f16515c4d10284")
     version("0.17.0", sha256="9c2edad2a4e588f9117c666a4249920b9717fb75703b96998cf65fcd4f60551f")
@@ -51,6 +52,7 @@ class PyXarray(PythonPackage):
     depends_on("python@3.6:", when="@0.14:", type=("build", "run"))
     depends_on("python@3.7:", when="@0.17:", type=("build", "run"))
     depends_on("python@3.8:", when="@0.21:", type=("build", "run"))
+    depends_on("python@3.9:", when="@2023.7.0:", type=("build", "run"))
 
     depends_on("py-numpy@1.7:", when="@0.9.1", type=("build", "run"))
     depends_on("py-numpy@1.12:", when="@0.11:0.13", type=("build", "run"))
@@ -58,6 +60,7 @@ class PyXarray(PythonPackage):
     depends_on("py-numpy@1.15:", when="@0.15:", type=("build", "run"))
     depends_on("py-numpy@1.17:", when="@0.18:", type=("build", "run"))
     depends_on("py-numpy@1.18:", when="@0.20:", type=("build", "run"))
+    depends_on("py-numpy@1.21:", when="@2023.7.0:", type=("build", "run"))
 
     depends_on("py-pandas@0.15.0:", when="@0.9.1", type=("build", "run"))
     depends_on("py-pandas@0.19.2:", when="@0.11:0.13", type=("build", "run"))
@@ -65,8 +68,10 @@ class PyXarray(PythonPackage):
     depends_on("py-pandas@0.25:", when="@0.15:", type=("build", "run"))
     depends_on("py-pandas@1:", when="@0.18:", type=("build", "run"))
     depends_on("py-pandas@1.1:", when="@0.20:", type=("build", "run"))
+    depends_on("py-pandas@1.4:", when="@2023.7.0:", type=("build", "run"))
 
     depends_on("py-packaging@20:", when="@0.21:", type=("build", "run"))
+    depends_on("py-packaging@21.3:", when="@2023.7.0:", type=("build", "run"))
 
     depends_on("py-netcdf4", when="+io", type=("build", "run"))
     depends_on("py-h5netcdf", when="+io", type=("build", "run"))
@@ -75,8 +80,8 @@ class PyXarray(PythonPackage):
     depends_on("py-zarr", when="+io", type=("build", "run"))
     depends_on("py-fsspec", when="+io", type=("build", "run"))
     depends_on("py-cftime", when="+io", type=("build", "run"))
-    depends_on("py-rasterio", when="+io", type=("build", "run"))
-    depends_on("py-cfgrib", when="+io", type=("build", "run"))
+    depends_on("py-rasterio", when="@:2022.3.0 +io", type=("build", "run"))
+    depends_on("py-cfgrib", when="@:2022.3.0 +io", type=("build", "run"))
     depends_on("py-pooch", when="+io", type=("build", "run"))
     depends_on(
         "py-dask+array+dataframe+distributed+diagnostics+delayed",
