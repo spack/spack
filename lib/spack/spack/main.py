@@ -602,10 +602,10 @@ def setup_main_options(args):
 
         key = syaml.syaml_str("repos")
         key.override = True
-        spack.config.config.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
+        spack.config.CONFIG.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
             [(key, [spack.paths.mock_packages_path])]
         )
-        spack.repo.PATH = spack.repo.create(spack.config.config)
+        spack.repo.PATH = spack.repo.create(spack.config.CONFIG)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
@@ -930,7 +930,7 @@ def _main(argv=None):
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:
-        spack.config.command_line_scopes = args.config_scopes
+        spack.config.COMMAND_LINE_SCOPES = args.config_scopes
 
     # ensure options on spack command come before everything
     setup_main_options(args)

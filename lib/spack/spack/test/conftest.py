@@ -716,7 +716,7 @@ def configuration_dir(tmpdir_factory, linux_os):
 
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
-    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.config_defaults)]
+    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)]
     scopes += [
         spack.config.ConfigScope(name, str(configuration_dir.join(name)))
         for name in ["site", "system", "user"]
@@ -1935,7 +1935,7 @@ def shell_as(shell):
 @pytest.fixture()
 def nullify_globals(request, monkeypatch):
     ensure_configuration_fixture_run_before(request)
-    monkeypatch.setattr(spack.config, "config", None)
+    monkeypatch.setattr(spack.config, "CONFIG", None)
     monkeypatch.setattr(spack.caches, "misc_cache", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)
