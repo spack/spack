@@ -138,7 +138,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
         """build and run make(test)"""
 
         if self.spec.satisfies("@:2.2.0"):
-            return
+            raise SkipTest("Test is not supported for versions @:2.2.0")
 
         # using the tests copied from <prefix>/share/heffte/testing
         cmake_dir = self.test_suite.current_test_cache_dir.testing
