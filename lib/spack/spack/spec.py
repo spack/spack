@@ -4883,10 +4883,9 @@ def format_path(spec, format_string):
     separator, it would not in this case).
     """
     components = re.split(r"[/\\]", format_string)
-    return str(pathlib.Path(*[
-        spack.util.path.sanitize_filename(spec.format(x))
-        for x in components
-    ]))
+    return str(
+        pathlib.Path(*[spack.util.path.sanitize_filename(spec.format(x)) for x in components])
+    )
 
 
 class SpecfileReaderBase:
