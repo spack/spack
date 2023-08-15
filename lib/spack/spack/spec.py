@@ -4888,8 +4888,23 @@ def format_path(spec, format_string):
     paths with consistent separators).
     """
     components = re.split(r"[/\\]", format_string)
+    formatted_components = []
+    for path_component in components:
+        formatted_component = spec.format(path_component)
+        if formatted_component != path_component:
+            # Some substitution took place, sanitize the result
+            formatted_components.append(spack.util.path.sanitize_filename(formatted_component))
+        else:
+            # This was a static section, do not sanitize
+            # Note that if we don't skip such sections, then absolute paths
+            # on Windows like "C:" would be formatted improperly. We could also
+            # reject absolute paths, but this requires some care in interpreting
+            # format strings as paths before property substitution has occurred
+            # (e.g. that all valid spec format strings can be supplied as
+            # arguments to any path validation function).
+            formatted_components.append(path_component)
     return str(
-        pathlib.Path(*[spack.util.path.sanitize_filename(spec.format(x)) for x in components])
+        pathlib.Path(*formatted_components)
     )
 
 
