@@ -91,12 +91,12 @@ STATUS_REMOVED = "removed"
 
 
 def _write_timer_json(pkg, timer, cache):
-    extra_attributes = {"name": pkg.name, "cache": cache}
+    extra_attributes = {"name": pkg.name, "cache": cache, "hash": pkg.spec.dag_hash()}
     try:
         with open(pkg.times_log_path, "w") as timelog:
             timer.write_json(timelog, extra_attributes=extra_attributes)
     except Exception as e:
-        tty.debug(e)
+        tty.debug(str(e))
         return
 
 
