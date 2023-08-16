@@ -4899,7 +4899,7 @@ def format_path(spec, format_string):
         # "\\root\{name}\{version}", "C:\\root\{name}\{version}".
         # Also, if we allow abspaths, we probably want to prevent Windows
         # abspaths on Linux (and vice versa).
-        raise ValueError(f"Input format string appears to be an absolute path")
+        raise ValueError(f"Input format string appears to be an absolute path: {format_string}")
 
     # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
     # on Windows, we cannot use pathlib (since "/" is not a path separator
