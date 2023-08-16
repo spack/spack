@@ -109,6 +109,9 @@ class Silo(AutotoolsPackage):
             elif name == "fcflags":
                 flags.append(self.compiler.fc_pic_flag)
         if name == "cflags" or name == "cxxflags":
+            if spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=int")
+                flags.append("-Wno-error=int-conversion")
             if "+hdf5" in spec:
                 # @:4.10 can use up to the 1.10 API
                 if "@:4.10" in spec:
