@@ -1011,11 +1011,7 @@ class TestSpecSemantics:
     [
         ("zlib@git.foo/bar", "{name}-{version}", str(pathlib.Path("zlib-git.foo_bar"))),
         ("zlib@git.foo/bar", "{name}/{version}", str(pathlib.Path("zlib", "git.foo_bar"))),
-        (
-            "zlib@git.foo/bar",
-            r"C:\\installroot\{name}\{version}",
-            None,
-        ),
+        ("zlib@git.foo/bar", r"C:\\installroot\{name}\{version}", None),
     ],
 )
 def test_spec_format_path(spec_str, format_str, expected):
