@@ -203,7 +203,7 @@ class StackEnv(object):
                 upstream_path = upstream_path[0]
                 # spack doesn't handle "~/" correctly, this fixes it:
                 upstream_path = os.path.expanduser(upstream_path)
-                if not os.path.basename(os.path.normpath(upstream_path)) == 'install':
+                if not os.path.basename(os.path.normpath(upstream_path)) == "install":
                     logging.warning(
                         "WARNING: Upstream path '%s' is not an 'install' directory!"
                         % upstream_path
