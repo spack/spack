@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -22,7 +21,7 @@ from spack.version import Version
 # and expected to be fixed
 pytestmark = [
     pytest.mark.skipif(not which("hg"), reason="requires mercurial to be installed"),
-    pytest.mark.skipif(sys.platform == "win32", reason="Failing on Win"),
+    pytest.mark.not_on_windows("Failing on Win"),
 ]
 
 
