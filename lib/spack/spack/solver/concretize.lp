@@ -532,7 +532,7 @@ do_not_impose(EffectID, node(X, Package))
 :- provider(ProviderNode, node(min_dupe_id, Virtual)),
    virtual_condition_holds(_, PossibleProvider, Virtual),
    PossibleProvider != ProviderNode,
-   attr("root", PossibleProvider),
+   explicitly_requested_root(PossibleProvider),
    not explicitly_requested_root(ProviderNode).
 
 % A package cannot be the actual provider for a virtual if it does not
