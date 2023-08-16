@@ -40,7 +40,7 @@ class Opencarp(CMakePackage):
     depends_on("gengetopt")
     depends_on("pkgconfig")
     depends_on("python")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("perl")
 
     depends_on("py-carputils", when="+carputils", type=("build", "run"))

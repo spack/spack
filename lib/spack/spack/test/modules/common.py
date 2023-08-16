@@ -181,7 +181,7 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
 
     # Mock deletion of the package
     spec._package = None
-    monkeypatch.setattr(spack.repo.path, "get", find_nothing)
+    monkeypatch.setattr(spack.repo.PATH, "get", find_nothing)
     with pytest.raises(spack.repo.UnknownPackageError):
         spec.package
 

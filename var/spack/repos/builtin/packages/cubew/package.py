@@ -43,7 +43,7 @@ class Cubew(AutotoolsPackage):
     )
 
     depends_on("pkgconfig", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def url_for_version(self, version):
         url = "http://apps.fz-juelich.de/scalasca/releases/cube/{0}/dist/cubew-{1}.tar.gz"
@@ -52,8 +52,8 @@ class Cubew(AutotoolsPackage):
 
     def configure_args(self):
         configure_args = ["--enable-shared"]
-        configure_args.append("--with-frontend-zlib=%s" % self.spec["zlib"].prefix.lib)
-        configure_args.append("--with-backend-zlib=%s" % self.spec["zlib"].prefix.lib)
+        configure_args.append("--with-frontend-zlib=%s" % self.spec["zlib-api"].prefix.lib)
+        configure_args.append("--with-backend-zlib=%s" % self.spec["zlib-api"].prefix.lib)
 
         return configure_args
 

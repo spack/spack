@@ -2243,7 +2243,7 @@ looks like this:
        url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
 
        version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
-       depends_on("zlib")
+       depends_on("zlib-api")
 
        parallel = False
 

@@ -21,7 +21,7 @@ class GpuBurn(MakefilePackage, CudaPackage):
     # This package uses CudaPackage to pick up the cuda_arch variant. A side
     # effect is that it also picks up the cuda variant, but cuda is required
     # for gpu-burn so is not really a variant.
-    variant("cuda", "True", description="Use CUDA; must be true")
+    variant("cuda", default=True, description="Use CUDA; must be true")
 
     conflicts("~cuda", msg="gpu-burn requires cuda")
     conflicts("cuda_arch=none", msg="must select a CUDA architecture")

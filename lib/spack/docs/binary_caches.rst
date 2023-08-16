@@ -51,7 +51,7 @@ Here is an example where a build cache is created in a local directory named
     $ spack buildcache push ./spack-cache ninja
     ==> Pushing binary packages to file:///home/spackuser/spack/spack-cache/build_cache
 
-Not that ``ninja`` must be installed locally for this to work.
+Note that ``ninja`` must be installed locally for this to work.
 
 Once you have a build cache, you can add it as a mirror, discussed next.
 
@@ -143,7 +143,7 @@ and then install from it exclusively, you would do:
 
     $ spack mirror add E4S https://cache.e4s.io
     $ spack buildcache keys --install --trust
-    $ spack install --use-buildache only <package>
+    $ spack install --use-buildcache only <package>
 
 We use ``--install`` and ``--trust`` to say that we are installing keys to our
 keyring, and trusting all downloaded keys.

@@ -22,6 +22,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("stable", tag="stable")
+    version("1.9.1", sha256="1adae9d408388a723277290ddb33c699aa9ea72defadf3f12d4acc913a0ff22d")
     version("1.9.0", sha256="2a8dca78172fbb15eae5a5e9facf26ab021c845f9c09e61b1912e6cf9e72915a")
     version("1.8.1", sha256="2fc4c10f55e2e6bcdc6f6ff950e26c6d8e218e138fdbd885ee71ccf5c5549054")
     version("1.8.0", sha256="93f147ab7cf0ab4161f37680ea720d3baeb86540a95382f2fb591645b2a9b135")
@@ -167,15 +168,15 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Certain Asio headers don't compile with nvcc from 1.17.0 onwards with
     # C++17. Starting with CUDA 11.3 they compile again.
-    conflicts("asio@1.17.0:", when="+cuda cxxstd=17 ^cuda@:11.2")
+    conflicts("^asio@1.17.0:", when="+cuda cxxstd=17 ^cuda@:11.2")
 
     # Starting from ROCm 5.0.0 hipcc miscompiles asio 1.17.0 and newer
-    conflicts("asio@1.17.0:", when="+rocm ^hip@5:")
+    conflicts("^asio@1.17.0:", when="+rocm ^hip@5:")
 
     # Boost and HIP don't work together in certain versions:
     # https://github.com/boostorg/config/issues/392. Boost 1.78.0 and HPX 1.8.0
     # both include a fix.
-    conflicts("boost@:1.77.0", when="@:1.7 +rocm")
+    conflicts("^boost@:1.77.0", when="@:1.7 +rocm")
 
     # libstdc++ has a broken valarray in some versions that clang/hipcc refuses
     # to compile:

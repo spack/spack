@@ -48,7 +48,7 @@ class Vizglow(Package):
     )
 
     # depends_on('mesa')  # TODO: mesa build doesn't work for me
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("freetype")
     depends_on("fontconfig")
     depends_on("libxrender")
@@ -100,7 +100,7 @@ class Vizglow(Package):
 
         ld_library_path = ":".join(
             [
-                spec["zlib"].prefix.lib,
+                spec["zlib-api"].prefix.lib,
                 spec["freetype"].prefix.lib,
                 spec["fontconfig"].prefix.lib,
                 spec["libxrender"].prefix.lib,

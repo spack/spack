@@ -161,56 +161,59 @@ class Gromacs(CMakePackage, CudaPackage):
     conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
     conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
     conflicts(
-        "intel-oneapi-mkl@:2021.2",
+        "^intel-oneapi-mkl@:2021.2",
         when="@2023:",
         msg="GROMACS requires oneMKL 2021.3 or later since version 2023",
     )
 
     depends_on("mpi", when="+mpi")
 
-    # Plumed 2.8.2 needs Gromacs 2022.5 2021.7, 2020.7, 2019.6
-    # Plumed 2.8.1 needs Gromacs 2022.3 2021.6, 2020.7, 2019.6
-    # Plumed 2.8.0 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.6 needs Gromacs        2021.5, 2020.6, 2019.6
-    # Plumed 2.7.5 needs Gromacs        2021.5, 2020.6, 2019.6
-    # Plumed 2.7.4 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.3 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.2 needs Gromacs        2021,   2020.6, 2019.6
-    # Plumed 2.7.1 needs Gromacs        2021,   2020.5, 2019.6
-    # Plumed 2.7.0 needs Gromacs                2020.4, 2019.6
-    # Plumed 2.6.6 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.5 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.4 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.3 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.2 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.1 needs Gromacs                2020.2, 2019.6, 2018.8
-    # Plumed 2.6.0 needs Gromacs                        2019.4, 2018.8
-    # Plumed 2.5.7 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.6 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.5 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.4 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.3 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.2 needs Gromacs                        2019.2, 2018.6, 2016.6
-    # Plumed 2.5.1 needs Gromacs                                2018.6, 2016.6
-    # Plumed 2.5.0 needs Gromacs                                2018.4, 2016.5
+    # Plumed 2.9.0 needs Gromacs 2023,  2022.5, 2021.7, 2020.7
+    # Plumed 2.8.3 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
+    # Plumed 2.8.2 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
+    # Plumed 2.8.1 needs Gromacs        2022.3, 2021.6, 2020.7, 2019.6
+    # Plumed 2.8.0 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.6 needs Gromacs                2021.5, 2020.6, 2019.6
+    # Plumed 2.7.5 needs Gromacs                2021.5, 2020.6, 2019.6
+    # Plumed 2.7.4 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.3 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.2 needs Gromacs                2021,   2020.6, 2019.6
+    # Plumed 2.7.1 needs Gromacs                2021,   2020.5, 2019.6
+    # Plumed 2.7.0 needs Gromacs                        2020.4, 2019.6
+    # Plumed 2.6.6 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.5 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.4 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.3 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.2 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.1 needs Gromacs                        2020.2, 2019.6, 2018.8
+    # Plumed 2.6.0 needs Gromacs                                2019.4, 2018.8
+    # Plumed 2.5.7 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.6 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.5 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.4 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.3 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.2 needs Gromacs                                2019.2, 2018.6, 2016.6
+    # Plumed 2.5.1 needs Gromacs                                        2018.6, 2016.6
+    # Plumed 2.5.0 needs Gromacs                                        2018.4, 2016.5
 
     # Above dependencies can be verified, and new versions added, by going to
-    # https://github.com/plumed/plumed2/tree/v2.7.1/patches
+    # https://github.com/plumed/plumed2/tree/v2.9.0/patches
     # and switching tags.
     plumed_patches = {
-        "2022.5": "2.8.2",
+        "2023": "2.9.0",
+        "2022.5": "2.8.2:2.9.0",
         "2022.3": "2.8.1",
-        "2021.7": "2.8.2",
+        "2021.7": "2.8.2:2.9.0",
         "2021.6": "2.8.1",
         "2021.5": "2.7.5:2.7.6",
         "2021.4": "2.7.3:2.8.0",
         "2021": "2.7.1:2.7.2",
-        "2020.7": "2.8.1:2.8.2",
+        "2020.7": "2.8.1:2.9.0",
         "2020.6": "2.7.2:2.8.0",
         "2020.5": "2.7.1",
         "2020.4": "2.6.2:2.7.0",
         "2020.2": "2.6.1",
-        "2019.6": "2.6.1:2.8.2",
+        "2019.6": "2.6.1:2.8.3",
         "2019.4": "2.5.3:2.6.0",
         "2019.2": "2.5.2",
         "2018.8": "2.5.3:2.6",

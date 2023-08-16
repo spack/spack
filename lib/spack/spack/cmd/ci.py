@@ -18,6 +18,7 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
+import spack.util.gpg as gpg_util
 import spack.util.url as url_util
 import spack.util.web as web_util
 
@@ -156,9 +157,25 @@ def setup_parser(subparser):
     )
     reproduce.add_argument("job_url", help="URL of job artifacts bundle")
     reproduce.add_argument(
+        "--runtime",
+        help="Container runtime to use.",
+        default="docker",
+        choices=["docker", "podman"],
+    )
+    reproduce.add_argument(
         "--working-dir",
         help="where to unpack artifacts",
         default=os.path.join(os.getcwd(), "ci_reproduction"),
+    )
+    reproduce.add_argument(
+        "-s", "--autostart", help="Run docker reproducer automatically", action="store_true"
+    )
+    gpg_group = reproduce.add_mutually_exclusive_group(required=False)
+    gpg_group.add_argument(
+        "--gpg-file", help="Path to public GPG key for validating binary cache installs"
+    )
+    gpg_group.add_argument(
+        "--gpg-url", help="URL to public GPG key for validating binary cache installs"
     )
 
     reproduce.set_defaults(func=ci_reproduce)
@@ -270,6 +287,17 @@ def ci_rebuild(args):
     spack_ci_stack_name = os.environ.get("SPACK_CI_STACK_NAME")
     shared_pr_mirror_url = os.environ.get("SPACK_CI_SHARED_PR_MIRROR_URL")
     rebuild_everything = os.environ.get("SPACK_REBUILD_EVERYTHING")
+    require_signing = os.environ.get("SPACK_REQUIRE_SIGNING")
+
+    # If signing key was provided via "SPACK_SIGNING_KEY", then try to import it.
+    if signing_key:
+        spack_ci.import_signing_key(signing_key)
+
+    # Fail early if signing is required but we don't have a signing key
+    sign_binaries = require_signing is not None and require_signing.lower() == "true"
+    if sign_binaries and not spack_ci.can_sign_binaries():
+        gpg_util.list(False, True)
+        tty.die("SPACK_REQUIRE_SIGNING=True => spack must have exactly one signing key")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
     ci_project_dir = os.environ.get("CI_PROJECT_DIR")
@@ -393,11 +421,6 @@ def ci_rebuild(args):
             if os.path.isfile(src_file):
                 dst_file = os.path.join(repro_dir, file_name)
                 shutil.copyfile(src_file, dst_file)
-
-    # If signing key was provided via "SPACK_SIGNING_KEY", then try to
-    # import it.
-    if signing_key:
-        spack_ci.import_signing_key(signing_key)
 
     # Write this job's spec json into the reproduction directory, and it will
     # also be used in the generated "spack install" command to install the spec
@@ -655,7 +678,7 @@ def ci_rebuild(args):
                 input_spec=job_spec,
                 buildcache_mirror_url=buildcache_mirror_url,
                 pipeline_mirror_url=pipeline_mirror_url,
-                pr_pipeline=spack_is_pr_pipeline,
+                sign_binaries=spack_ci.can_sign_binaries(),
             ):
                 msg = tty.msg if result.success else tty.warn
                 msg(
@@ -699,7 +722,7 @@ def ci_rebuild(args):
 
 \033[34mTo reproduce this build locally, run:
 
-    spack ci reproduce-build {0} [--working-dir <dir>]
+    spack ci reproduce-build {0} [--working-dir <dir>] [--autostart]
 
 If this project does not have public pipelines, you will need to first:
 
@@ -725,8 +748,18 @@ def ci_reproduce(args):
     """
     job_url = args.job_url
     work_dir = args.working_dir
+    autostart = args.autostart
+    runtime = args.runtime
 
-    return spack_ci.reproduce_ci_job(job_url, work_dir)
+    # Allow passing GPG key for reprocuding protected CI jobs
+    if args.gpg_file:
+        gpg_key_url = url_util.path_to_file_url(args.gpg_file)
+    elif args.gpg_url:
+        gpg_key_url = args.gpg_url
+    else:
+        gpg_key_url = None
+
+    return spack_ci.reproduce_ci_job(job_url, work_dir, autostart, gpg_key_url, runtime)
 
 
 def ci(parser, args):

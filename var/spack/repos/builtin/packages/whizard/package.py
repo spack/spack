@@ -64,7 +64,7 @@ class Whizard(AutotoolsPackage):
         when="+openloops",
     )
     depends_on("texlive", when="+latex")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Fix for https://github.com/key4hep/key4hep-spack/issues/71
     # NOTE: This will become obsolete in a future release of whizard, so once
@@ -77,7 +77,7 @@ class Whizard(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
-    depends_on("pkgconf", type="build")
+    depends_on("pkgconfig", type="build")
 
     conflicts(
         "%gcc@:5.0",

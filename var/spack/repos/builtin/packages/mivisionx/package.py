@@ -13,7 +13,7 @@ class Mivisionx(CMakePackage):
 
     homepage = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX"
     git = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git"
-    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-5.4.0.tar.gz"
+    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-5.5.0.tar.gz"
 
     maintainers("srekolam", "renjithravindrankannath")
     tags = ["rocm"]
@@ -25,6 +25,8 @@ class Mivisionx(CMakePackage):
         url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version("5.5.1", sha256="e8209f87a57c4222003a936240e7152bbfa496862113358f29d4c3e80d4cdf56")
+    version("5.5.0", sha256="af266550ecccad80f08954f23e47e8264eb338b0928a5314bd6efca349fc5a14")
     version("5.4.3", sha256="4da82974962a70c326ce2427c664517b1efdff436efe222e6bc28817c222a082")
     version("5.4.0", sha256="caa28a30972704ddbf1a87cefdc0b0a35381d369961c43973d473a1573bd35cc")
     version("5.3.3", sha256="378fafcb327e17e0e11fe1d1029d1740d84aaef0fd59614ed7376499b3d716f6")
@@ -105,12 +107,6 @@ class Mivisionx(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
     # Adding 2 variants OPENCL ,HIP which HIP as default. earlier to 5.0.0,OPENCL
     # was the default but has change dto HIP from 5.0.0 onwards.
     # when tested with HIP as true for versions before 5.1.0, build errors were encountered
@@ -236,6 +232,8 @@ class Mivisionx(CMakePackage):
             "5.3.3",
             "5.4.0",
             "5.4.3",
+            "5.5.0",
+            "5.5.1",
         ]:
             depends_on("rocm-opencl@" + ver, when="@" + ver)
             depends_on("miopengemm@" + ver, when="@" + ver)
@@ -255,10 +253,15 @@ class Mivisionx(CMakePackage):
             "5.3.3",
             "5.4.0",
             "5.4.3",
+            "5.5.0",
+            "5.5.1",
         ]:
             depends_on("miopen-hip@" + ver, when="@" + ver)
-        for ver in ["5.3.3", "5.4.0", "5.4.3"]:
+        for ver in ["5.3.3", "5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
             depends_on("migraphx@" + ver, when="@" + ver)
+
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
 
     def flag_handler(self, name, flags):
         spec = self.spec

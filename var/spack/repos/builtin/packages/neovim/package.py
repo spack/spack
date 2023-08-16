@@ -86,7 +86,7 @@ class Neovim(CMakePackage):
 
     # dependencies to allow regular lua to work
     depends_on("lua-ffi", when="^lua", type=("link", "run"))
-    depends_on("lua-bitlib", type="link", when="^lua")
+    depends_on("lua-bitlib", type=("link", "run"), when="^lua")
 
     # base dependencies
     depends_on("cmake@3.0:", type="build")
@@ -119,7 +119,7 @@ class Neovim(CMakePackage):
     with when("@0.6:"):
         depends_on("cmake@3.10:", type="build")
         depends_on("gperf@3.1:", type="link")
-        conflicts("libiconv@:1.14")
+        conflicts("^libiconv@:1.14")
         depends_on("libtermkey@0.22:", type="link")
         depends_on("libvterm@0.1.4:", type="link")
         depends_on("msgpack-c@3.0.0:", type="link")
@@ -136,7 +136,7 @@ class Neovim(CMakePackage):
     # Support for `libvterm@0.2:` has been added in neovim@0.8.0
     # term: Add support for libvterm >= 0.2 (https://github.com/neovim/neovim/releases/tag/v0.8.0)
     # https://github.com/neovim/neovim/issues/16217#issuecomment-958590493
-    conflicts("libvterm@0.2:", when="@:0.7")
+    conflicts("^libvterm@0.2:", when="@:0.7")
 
     @when("^lua")
     def cmake_args(self):
