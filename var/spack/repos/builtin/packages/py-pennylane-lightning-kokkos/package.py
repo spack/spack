@@ -13,12 +13,13 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     homepage = "https://docs.pennylane.ai/projects/lightning-kokkos"
     git = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos.git"
-    url = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.30.0.tar.gz"
+    url = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.31.0.tar.gz"
 
     maintainers("AmintorDusko", "vincentmr")
 
     version("main", branch="main")
 
+    version("0.31.0", sha256="fe10322fee0fa7df45cd3a81d6c229a79c7dfa7f20ff7d67c65c9a28f494dc89")
     version("0.30.0", sha256="7c8f0e0431f8052993cd8033a316f53590c7bf5419445d0725e214b93cbc661b")
     version("0.29.1", sha256="f51ba7718defc7bb5064f690f381e04b2ec58cb09f22a171ae5f410860716e30")
 
@@ -42,14 +43,14 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     # CUDA
     for val in CudaPackage.cuda_arch_values:
-        depends_on("kokkos@:3.7.01 cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
+        depends_on("kokkos@:4.0.01 cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
     # Use +wrapper when not %clang %cce
-    depends_on("kokkos@:3.7.01+wrapper", when="%gcc+cuda")
+    depends_on("kokkos@:4.0.01+wrapper", when="%gcc+cuda")
 
     # ROCm
     for val in ROCmPackage.amdgpu_targets:
         depends_on(
-            "kokkos@:3.7.01 amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
+            "kokkos@:4.0.01 amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
         )
 
     conflicts(
@@ -72,7 +73,9 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("py-pybind11", type="link")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
-    depends_on("py-pennylane@0.28:", type=("build", "run"))
+    depends_on("py-pennylane@0.30:", type=("build", "run"), when="@:0.31.0")
+    depends_on("py-pennylane@0.28:", type=("build", "run"), when="@:0.30.0")
+    depends_on("py-pennylane-lightning@0.31:~kokkos", type=("build", "run"), when="@0.31.0:")
     depends_on("py-pennylane-lightning@0.30:~kokkos", type=("build", "run"), when="@0.30.0:")
     depends_on("py-pennylane-lightning@0.28:0.29~kokkos", type=("build", "run"), when="@0.29.1")
 
