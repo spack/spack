@@ -15,8 +15,7 @@ class UfsUtilsEnv(BundlePackage):
     git = "https://github.com/ufs-community/UFS_UTILS.git"
     # There is no URL since there is no code to download.
 
-    maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA",
-                "HenryWinterbottom-NOAA")
+    maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "HenryWinterbottom-NOAA")
 
     version("1.0.0")
 
