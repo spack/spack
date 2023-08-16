@@ -201,9 +201,11 @@ class StackEnv(object):
         if self.upstreams:
             for upstream_path in self.upstreams:
                 upstream_path = upstream_path[0]
-                if not re.match(".+/install/*$", upstream_path):
+                # spack doesn't handle "~/" correctly, this fixes it:
+                upstream_path = os.path.expanduser(upstream_path)
+                if not os.path.basename(os.path.normpath(upstream_path)) == 'install':
                     logging.warning(
-                        "WARNING: Upstream path '%s' is not an 'install/' directory!"
+                        "WARNING: Upstream path '%s' is not an 'install' directory!"
                         % upstream_path
                     )
                 if not os.path.isdir(upstream_path):
