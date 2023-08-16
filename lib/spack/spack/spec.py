@@ -4887,10 +4887,10 @@ def format_path(spec, format_string):
     effect, "invalid" paths which mix these will be converted to OS-appropriate
     paths with consistent separators).
     """
-    abstract_windows = pathlib.PureWindowsPath(format_string)
-    abstract_posix = pathlib.PurePosixPath(format_string)
-    if abstract_windows.is_absolute() or abstract_posix.is_absolute():
-        raise ValueError()
+    any_sep = r"[/\\]"
+    drive = r"[^/\\]+:[/\\]"
+    if re.match(rf"^({any_sep}|{drive})", format_string):
+        raise ValueError(f"Input format string appears to be an absolute path")
     # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
     # on Windows, we cannot use pathlib (since "/" is not a path separator
     # on Windows).
