@@ -4887,22 +4887,17 @@ def format_path(spec, format_string):
     effect, "invalid" paths which mix these will be converted to OS-appropriate
     paths with consistent separators).
     """
+    abstract_windows = pathlib.PureWindowsPath(format_string)
+    abstract_posix = pathlib.PurePosixPath(format_string)
+    if abstract_windows.is_absolute() or abstract_posix.is_absolute():
+        raise ValueError()
+    # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
+    # on Windows, we cannot use pathlib (since "/" is not a path separator
+    # on Windows).
     components = re.split(r"[/\\]", format_string)
     formatted_components = []
     for path_component in components:
-        formatted_component = spec.format(path_component)
-        if formatted_component != path_component:
-            # Some substitution took place, sanitize the result
-            formatted_components.append(spack.util.path.sanitize_filename(formatted_component))
-        else:
-            # This was a static section, do not sanitize
-            # Note that if we don't skip such sections, then absolute paths
-            # on Windows like "C:" would be formatted improperly. We could also
-            # reject absolute paths, but this requires some care in interpreting
-            # format strings as paths before property substitution has occurred
-            # (e.g. that all valid spec format strings can be supplied as
-            # arguments to any path validation function).
-            formatted_components.append(path_component)
+        formatted_components.append(spack.util.path.sanitize_filename(spec.format(path_component)))
     return str(pathlib.Path(*formatted_components))
 
 
