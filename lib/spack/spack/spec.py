@@ -4888,7 +4888,7 @@ def format_path(spec, format_string):
     paths with consistent separators).
     """
     any_sep = r"[/\\]"
-    drive = r"[^/\\]+:[/\\]"
+    drive = r"[a-zA-Z]:[/\\]"
     if re.match(rf"^({any_sep}|{drive})", format_string):
         raise ValueError(f"Input format string appears to be an absolute path")
     # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
