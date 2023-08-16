@@ -12,7 +12,8 @@ spack:
 
   specs:
     # Horovod
-    - py-horovod
+    # See py-torch failures
+    #- py-horovod
 
     # Hugging Face
     - py-transformers
@@ -31,30 +32,32 @@ spack:
     - mxnet
 
     # PyTorch
-    - py-botorch
-    - py-efficientnet-pytorch
-    - py-gpytorch
-    - py-kornia
-    - py-lightning
-    - py-pytorch-gradual-warmup-lr
-    - py-pytorch-lightning
-    - py-segmentation-models-pytorch
-    - py-timm
-    - py-torch
-    - py-torch-cluster
-    - py-torch-geometric
-    - py-torch-nvidia-apex
-    - py-torch-scatter
-    - py-torch-sparse
-    - py-torch-spline-conv
-    - py-torchaudio
-    - py-torchdata
-    - py-torchfile
-    - py-torchgeo
-    - py-torchmetrics
-    - py-torchtext
-    - py-torchvision
-    - py-vector-quantize-pytorch
+    # Fails in CI when running `cmake --build . --target install --config Release -- -j 12`
+    # with output: `Preparing metadata (pyproject.toml): finished with status 'error'`
+    #- py-botorch
+    #- py-efficientnet-pytorch
+    #- py-gpytorch
+    #- py-kornia
+    #- py-lightning
+    #- py-pytorch-gradual-warmup-lr
+    #- py-pytorch-lightning
+    #- py-segmentation-models-pytorch
+    #- py-timm
+    #- py-torch
+    #- py-torch-cluster
+    #- py-torch-geometric
+    #- py-torch-nvidia-apex
+    #- py-torch-scatter
+    #- py-torch-sparse
+    #- py-torch-spline-conv
+    #- py-torchaudio
+    #- py-torchdata
+    #- py-torchfile
+    #- py-torchgeo
+    #- py-torchmetrics
+    #- py-torchtext
+    #- py-torchvision
+    #- py-vector-quantize-pytorch
 
     # scikit-learn
     - py-scikit-learn
@@ -62,17 +65,20 @@ spack:
 
     # TensorBoard
     - py-tensorboard
-    - py-tensorboard-data-server
-    - py-tensorboard-plugin-wit
-    - py-tensorboardx
+      # py-tensorboard-data-server fails in CI when compiling `ring v0.16.20` as part
+      # of the rust-cargo dependency builds.
+      #- py-tensorboard-data-server
+      #- py-tensorboard-plugin-wit
+      #- py-tensorboardx
 
     # TensorFlow
-    - py-tensorflow
-    - py-tensorflow-datasets
-    - py-tensorflow-estimator
-    - py-tensorflow-hub
-    - py-tensorflow-metadata
-    - py-tensorflow-probability
+    # See py-tensorboard-data-server failures
+    #- py-tensorflow
+    #- py-tensorflow-datasets
+    #- py-tensorflow-estimator
+    #- py-tensorflow-hub
+    #- py-tensorflow-metadata
+    #- py-tensorflow-probability
 
     # XGBoost
     - py-xgboost
