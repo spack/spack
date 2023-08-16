@@ -90,7 +90,7 @@ def spec_from_entry(entry):
         name=entry["name"], version=entry["version"], compiler=compiler_str, arch=arch_str
     )
 
-    pkg_cls = spack.repo.path.get_pkg_class(entry["name"])
+    pkg_cls = spack.repo.PATH.get_pkg_class(entry["name"])
 
     if "parameters" in entry:
         variant_strs = list()
@@ -194,7 +194,7 @@ def read(path, apply_updates):
         spack.compilers.add_compilers_to_config(compilers, init_config=False)
     if apply_updates:
         for spec in specs.values():
-            spack.store.db.add(spec, directory_layout=None)
+            spack.store.STORE.db.add(spec, directory_layout=None)
 
 
 class ManifestValidationError(spack.error.SpackError):

@@ -27,7 +27,7 @@ class Angsd(MakefilePackage):
     depends_on("htslib")
     conflicts("^htslib@1.6:", when="@0.919")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("lzma")
     depends_on("curl")
 

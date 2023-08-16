@@ -37,7 +37,7 @@ class Metabat(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants, type=("build", "run"))
     depends_on("perl", type="run")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("ncurses", type="link")
 
     def setup_build_environment(self, env):

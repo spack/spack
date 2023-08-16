@@ -63,7 +63,7 @@ class MariadbCClient(CMakePackage):
     depends_on("curl")
     depends_on("pcre")
     depends_on("openssl")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("krb5")
 
     # patch needed for cmake-3.20

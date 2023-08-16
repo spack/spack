@@ -19,7 +19,7 @@ class Wiredtiger(AutotoolsPackage):
     depends_on("swig", type=("build", "run"), when="+python")
     depends_on("lz4", when="+lz4")
     depends_on("snappy", when="+snappy")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("zstd", when="+zstd")
     depends_on("rsync", type="build")
 

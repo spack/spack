@@ -70,7 +70,7 @@ def disambiguate_in_view(specs, view):
         return matching_in_view[0] if matching_in_view else matching_specs[0]
 
     # make function always return a list to keep consistency between py2/3
-    return list(map(squash, map(spack.store.db.query, specs)))
+    return list(map(squash, map(spack.store.STORE.db.query, specs)))
 
 
 def setup_parser(sp):
@@ -200,7 +200,7 @@ def view(parser, args):
 
     view = YamlFilesystemView(
         path,
-        spack.store.layout,
+        spack.store.STORE.layout,
         projections=ordered_projections,
         ignore_conflicts=getattr(args, "ignore_conflicts", False),
         link=link_fn,

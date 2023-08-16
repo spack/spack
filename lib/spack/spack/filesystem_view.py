@@ -88,7 +88,7 @@ def view_copy(src: str, dst: str, view, spec: Optional[spack.spec.Spec] = None):
     elif spack.relocate.is_binary(dst):
         spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
     else:
-        prefix_to_projection[spack.store.layout.root] = view._root
+        prefix_to_projection[spack.store.STORE.layout.root] = view._root
 
         # This is vestigial code for the *old* location of sbang.
         prefix_to_projection[
@@ -379,7 +379,7 @@ class YamlFilesystemView(FilesystemView):
             # check if this spec owns a file of that name (through the
             # manifest in the metadata dir, which we have in the view).
             manifest_file = os.path.join(
-                self.get_path_meta_folder(spec), spack.store.layout.manifest_file_name
+                self.get_path_meta_folder(spec), spack.store.STORE.layout.manifest_file_name
             )
             try:
                 with open(manifest_file, "r") as f:
@@ -506,14 +506,16 @@ class YamlFilesystemView(FilesystemView):
     def get_all_specs(self):
         md_dirs = []
         for root, dirs, files in os.walk(self._root):
-            if spack.store.layout.metadata_dir in dirs:
-                md_dirs.append(os.path.join(root, spack.store.layout.metadata_dir))
+            if spack.store.STORE.layout.metadata_dir in dirs:
+                md_dirs.append(os.path.join(root, spack.store.STORE.layout.metadata_dir))
 
         specs = []
         for md_dir in md_dirs:
             if os.path.exists(md_dir):
                 for name_dir in os.listdir(md_dir):
-                    filename = os.path.join(md_dir, name_dir, spack.store.layout.spec_file_name)
+                    filename = os.path.join(
+                        md_dir, name_dir, spack.store.STORE.layout.spec_file_name
+                    )
                     spec = get_spec_from_file(filename)
                     if spec:
                         specs.append(spec)
@@ -531,18 +533,18 @@ class YamlFilesystemView(FilesystemView):
         "Get path to meta folder for either spec or spec name."
         return os.path.join(
             self.get_projection_for_spec(spec),
-            spack.store.layout.metadata_dir,
+            spack.store.STORE.layout.metadata_dir,
             getattr(spec, "name", spec),
         )
 
     def get_spec(self, spec):
         dotspack = self.get_path_meta_folder(spec)
-        filename = os.path.join(dotspack, spack.store.layout.spec_file_name)
+        filename = os.path.join(dotspack, spack.store.STORE.layout.spec_file_name)
 
         return get_spec_from_file(filename)
 
     def link_meta_folder(self, spec):
-        src = spack.store.layout.metadata_path(spec)
+        src = spack.store.STORE.layout.metadata_path(spec)
         tgt = self.get_path_meta_folder(spec)
 
         tree = LinkTree(src)
@@ -673,7 +675,7 @@ class SimpleFilesystemView(FilesystemView):
 
         # Ignore spack meta data folder.
         def skip_list(file):
-            return os.path.basename(file) == spack.store.layout.metadata_dir
+            return os.path.basename(file) == spack.store.STORE.layout.metadata_dir
 
         visitor = SourceMergeVisitor(ignore=skip_list)
 
@@ -735,14 +737,18 @@ class SimpleFilesystemView(FilesystemView):
 
     def relative_metadata_dir_for_spec(self, spec):
         return os.path.join(
-            self.get_relative_projection_for_spec(spec), spack.store.layout.metadata_dir, spec.name
+            self.get_relative_projection_for_spec(spec),
+            spack.store.STORE.layout.metadata_dir,
+            spec.name,
         )
 
     def link_metadata(self, specs):
         metadata_visitor = SourceMergeVisitor()
 
         for spec in specs:
-            src_prefix = os.path.join(spec.package.view_source(), spack.store.layout.metadata_dir)
+            src_prefix = os.path.join(
+                spec.package.view_source(), spack.store.STORE.layout.metadata_dir
+            )
             proj = self.relative_metadata_dir_for_spec(spec)
             metadata_visitor.set_projection(proj)
             visit_directory_tree(src_prefix, metadata_visitor)

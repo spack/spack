@@ -23,4 +23,4 @@ class Vsearch(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("bzip2")
     depends_on("libtool", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")

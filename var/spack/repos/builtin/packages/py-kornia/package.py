@@ -12,6 +12,7 @@ class PyKornia(PythonPackage):
     homepage = "https://www.kornia.org/"
     pypi = "kornia/kornia-0.5.10.tar.gz"
 
+    version("0.7.0", sha256="72cba6a0965a15caf10a664647654412effb7c0b9afcf40e458bc005f976ffac")
     version("0.6.12", sha256="e30bd3d830226f7a159dff1f7757c6200e8f27d1333f06e9d2f98bdb33ce18d3")
     version("0.6.11", sha256="ba77198f2c2e4044c87e4503ff277aadbfc0db20495da5a5289663f380b4be32")
     version("0.6.10", sha256="00b4e8990b5ccdc589e3ecc2613446623b0ffb2fe1db5598aac55513b4016903")
@@ -27,6 +28,7 @@ class PyKornia(PythonPackage):
     version("0.5.10", sha256="428b4b934a2ba7360cc6cba051ed8fd96c2d0f66611fdca0834e82845f14f65d")
 
     # pyproject.toml
+    depends_on("python@3.8:", when="@0.7:", type=("build", "run"))
     depends_on("py-setuptools@61.2:", when="@0.6.11:", type="build")
     depends_on("py-setuptools", type="build")
 

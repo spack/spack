@@ -49,7 +49,7 @@ def test_spec_concretizer_args(mutable_config, mutable_database):
     uninstall("-y", "mpileaks^mpich2")
 
     # get the hash of mpileaks^zmpi
-    mpileaks_zmpi = spack.store.db.query_one("mpileaks^zmpi")
+    mpileaks_zmpi = spack.store.STORE.db.query_one("mpileaks^zmpi")
     h = mpileaks_zmpi.dag_hash()[:7]
 
     output = spec("--fresh", "-l", "mpileaks")

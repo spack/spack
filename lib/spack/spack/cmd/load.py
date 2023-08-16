@@ -101,7 +101,7 @@ def load(parser, args):
         )
         return 1
 
-    with spack.store.db.read_transaction():
+    with spack.store.STORE.db.read_transaction():
         if "dependencies" in args.things_to_load:
             include_roots = "package" in args.things_to_load
             specs = [
