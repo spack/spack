@@ -587,33 +587,39 @@ spack:
             assert any(s.satisfies(expected_spec) for s in e.concrete_roots())
 
 
-def test_requires_on_virtual_and_potential_providers(tmp_path, mock_packages, config):
+@pytest.mark.regression("39455")
+@pytest.mark.only_clingo("Known failure of the original concretizer")
+@pytest.mark.parametrize(
+    "possible_mpi_spec,unify", [("mpich", False), ("mpich", True), ("zmpi", False), ("zmpi", True)]
+)
+def test_requires_on_virtual_and_potential_providers(
+    possible_mpi_spec, unify, tmp_path, mock_packages, config
+):
     """Tests that in an environment we can add packages explicitly, even though they provide
     a virtual package, and we require the provider of the same virtual to be another package,
     if they are added explicitly by their name.
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.xfail("Known failure of the original concretizer")
-
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(
-        """\
+        f"""\
     spack:
       specs:
-      - mpich
+      - {possible_mpi_spec}
       - mpich2
       - mpileaks
       packages:
         mpi:
           require: mpich2
+      concretizer:
+        unify: {unify}
     """
     )
     with ev.Environment(manifest.parent) as e:
         e.concretize()
-        assert e.matching_spec("mpich")
+        assert e.matching_spec(possible_mpi_spec)
         assert e.matching_spec("mpich2")
 
         mpileaks = e.matching_spec("mpileaks")
         assert mpileaks.satisfies("^mpich2")
         assert mpileaks["mpi"].satisfies("mpich2")
-        assert not mpileaks.satisfies("^mpich")
+        assert not mpileaks.satisfies(f"^{possible_mpi_spec}")

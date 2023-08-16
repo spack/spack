@@ -124,6 +124,9 @@ attr(Name, node(min_dupe_id, A1), A2, A3, A4) :- literal(LiteralID, Name, A1, A2
 attr("node_flag_source", node(min_dupe_id, A1), A2, node(min_dupe_id, A3)) :- literal(LiteralID, "node_flag_source", A1, A2, A3), solve_literal(LiteralID).
 attr("depends_on",       node(min_dupe_id, A1), node(min_dupe_id, A2), A3) :- literal(LiteralID, "depends_on",       A1, A2, A3), solve_literal(LiteralID).
 
+% Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
+explicitly_requested_root(node(min_dupe_id, A1)) :- literal(LiteralID, "root", A1), solve_literal(LiteralID).
+
 #defined concretize_everything/0.
 #defined literal/1.
 #defined literal/3.
@@ -518,6 +521,19 @@ virtual_condition_holds(ID, node(ProviderID, Provider), Virtual) :-
    pkg_fact(Provider, provider_condition(ID, Virtual)),
    condition_holds(ID, node(ProviderID, Provider)),
    virtual(Virtual).
+
+% If a "provider" condition holds, but this package is not a provider, do not impose the "provider" condition
+do_not_impose(EffectID, node(X, Package))
+  :- virtual_condition_holds(ID, node(X, Package), Virtual),
+     pkg_fact(Package, condition_effect(ID, EffectID)),
+     not provider(node(X, Package), node(_, Virtual)).
+
+% Choose the provider among root specs, if possible
+:- provider(ProviderNode, node(min_dupe_id, Virtual)),
+   virtual_condition_holds(_, PossibleProvider, Virtual),
+   PossibleProvider != ProviderNode,
+   explicitly_requested_root(PossibleProvider),
+   not explicitly_requested_root(ProviderNode).
 
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
