@@ -103,7 +103,7 @@ def setup_common_parser_args(subparser):
         "--upstream",
         nargs="*",
         action="append",
-        help="Include upstream environment (/path/to/spack-stack-x.y.z/envs/unified-env)",
+        help="Include upstream environment (/path/to/spack-stack-x.y.z/envs/unified-env/install)",
     )
 
 

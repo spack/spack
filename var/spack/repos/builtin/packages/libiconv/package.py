@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 
 from spack.package import *
 
@@ -32,6 +33,25 @@ class Libiconv(AutotoolsPackage, GNUMirrorPackage):
     provides("iconv")
 
     conflicts("@1.14", when="%gcc@5:")
+
+    # Don't build on Darwin to avoid problems with _iconv vs _libiconv; use native package - see
+    # https://stackoverflow.com/questions/57734434/libiconv-or-iconv-undefined-symbol-on-mac-osx
+    conflicts("platform=darwin")
+
+    # For spack external find
+    executables = ["^iconv$"]
+
+    @classmethod
+    def determine_version(cls, exe):
+        # We only need to find libiconv on macOS to avoid problems with _iconv vs _libiconv - see
+        # https://stackoverflow.com/questions/57734434/libiconv-or-iconv-undefined-symbol-on-mac-osx
+        macos_pattern = re.compile("\(GNU libiconv (\w+\.\w+)\)")  # noqa: W605
+        version_string = Executable(exe)("--version", output=str, error=str)
+        match = macos_pattern.search(version_string)
+        version = None
+        if match:
+            version = match.group(1)
+        return version
 
     def configure_args(self):
         args = ["--enable-extra-encodings"]
