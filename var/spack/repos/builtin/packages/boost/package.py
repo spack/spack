@@ -714,7 +714,6 @@ class Boost(Package):
 
         b2 = Executable(b2name)
         jobs = make_jobs
-        path_to_config = ""
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies("@:1.58"):
             jobs = 64
@@ -728,7 +727,7 @@ class Boost(Package):
             b2_options = ["-j", "%s" % jobs]
             b2_options.append(path_to_config)
 
-            threading_opts = self.determine_b2_options(spec, b2_options)
+        threading_opts = self.determine_b2_options(spec, b2_options)
 
         # Create headers if building from a git checkout
         if "@develop" in spec:
