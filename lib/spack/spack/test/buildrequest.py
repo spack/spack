@@ -5,6 +5,7 @@
 
 import pytest
 
+import spack.deptypes as dt
 import spack.installer as inst
 import spack.repo
 import spack.spec
@@ -82,8 +83,8 @@ def test_build_request_deptypes(
         },
     )
 
-    actual_package_deptypes = build_request.get_deptypes(s.package)
-    actual_dependency_deptypes = build_request.get_deptypes(s["dependency-install"].package)
+    actual_package_deptypes = build_request.get_depflags(s.package)
+    actual_dependency_deptypes = build_request.get_depflags(s["dependency-install"].package)
 
-    assert sorted(actual_package_deptypes) == package_deptypes
-    assert sorted(actual_dependency_deptypes) == dependencies_deptypes
+    assert actual_package_deptypes == dt.type_to_flag(package_deptypes)
+    assert actual_dependency_deptypes == dt.type_to_flag(dependencies_deptypes)

@@ -16,7 +16,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd.common.arguments as arguments
-import spack.dependency
+import spack.deptypes as dt
 import spack.repo
 from spack.version import VersionList
 
@@ -149,7 +149,7 @@ def rows_for_ncols(elts, ncols):
 
 def get_dependencies(pkg):
     all_deps = {}
-    for deptype in spack.dependency.all_deptypes:
+    for deptype in dt.all_types:
         deps = pkg.dependencies_of_type(deptype)
         all_deps[deptype] = [d for d in deps]
 
@@ -275,7 +275,7 @@ def html(pkg_names, out):
             out.write("\n")
             out.write("</dd>\n")
 
-        for deptype in spack.dependency.all_deptypes:
+        for deptype in dt.all_types:
             deps = pkg_cls.dependencies_of_type(deptype)
             if deps:
                 out.write("<dt>%s Dependencies:</dt>\n" % deptype.capitalize())

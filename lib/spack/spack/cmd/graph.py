@@ -7,6 +7,7 @@ from llnl.util import tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
+import spack.deptypes as dt
 import spack.environment as ev
 import spack.store
 from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_dot, static_graph_dot
@@ -74,7 +75,7 @@ def graph(parser, args):
 
     if args.static:
         args.dot = True
-        static_graph_dot(specs, deptype=args.deptype)
+        static_graph_dot(specs, depflag=dt.type_to_flag(args.deptype))
         return
 
     if args.dot:
