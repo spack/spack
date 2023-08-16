@@ -14,7 +14,7 @@ class PyHeat(PythonPackage):
     homepage = "https://github.com/helmholtz-analytics/heat/"
     url = "https://github.com/helmholtz-analytics/heat/archive/refs/tags/v1.3.0.tar.gz"
 
-    maintainers("mrfh92", "ClaudiaComito")
+    maintainers("mrfh92", "ClaudiaComito", "JuanPedroGHM")
 
     version("1.3.0", sha256="2e66e82df87431075be633bc921a4953dd258dfa91ed31283c964bcb3dea1ffc")
 
