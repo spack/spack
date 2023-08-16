@@ -51,7 +51,7 @@ class PyWarpx(PythonPackage):
     variant("mpi", default=True, description="Enable MPI support")
 
     for v in [
-        "23.08"
+        "23.08",
         "23.07",
         "23.06",
         "23.05",
