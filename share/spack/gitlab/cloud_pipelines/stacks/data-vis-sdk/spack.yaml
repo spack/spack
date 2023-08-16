@@ -1,9 +1,4 @@
 spack:
-  include:
-  - $spack/share/spack/gitlab/cloud_pipelines/configs
-  - $spack/share/spack/gitlab/cloud_pipelines/configs/linux
-  - $spack/share/spack/gitlab/cloud_pipelines/configs/linux/x86_64_v3
-
   view: false
   packages:
     cmake:
