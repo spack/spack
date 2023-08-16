@@ -237,6 +237,9 @@ spack:
   # - sundials +sycl cxxstd=17          # sundials: include/sunmemory/sunmemory_sycl.h:20:10: fatal error: 'CL/sycl.hpp' file not found
   # - tau +mpi +opencl +level_zero ~pdt # builds ok in container, but needs libdrm, will update container
 
+  # Not necessarily E4S, but useful for E4S packages
+  - py-scipy
+
   # SKIPPED
   # - nvhpc
   # - dyninst  # only %gcc
