@@ -732,7 +732,7 @@ ml-linux-ppc64le-cuda-ubuntu-build:
 
 ml-linux-ppc64le-cuda-rhel8-generate:
   extends: [ ".generate", ".ml-linux-ppc64le-cuda", ".tags-ml-power" ]
-  image: { "name": "ecpe4s/rhel8-runner-ppc64le:latest", "entrypoint": [""] }
+  image: { "name": "ecpe4s/rhel8-runner-ppc64le:2023-01-01", "entrypoint": [""] }
 
 ml-linux-ppc64le-cuda-rhel8-build:
   extends: [ ".build", ".ml-linux-ppc64le-cuda"  ]
