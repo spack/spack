@@ -1000,7 +1000,7 @@ class _EdgeMap(collections.abc.Mapping):
         return "{deps: %s}" % ", ".join(str(d) for d in sorted(self.values()))
 
     def _cmp_iter(self):
-        for item in sorted(itertools.chain.from_iterable(self.edges.values())):
+        for item in sorted(self.all_edges()):
             yield item
 
     def copy(self):
@@ -1009,10 +1009,13 @@ class _EdgeMap(collections.abc.Mapping):
         clone.store_by_child = self.store_by_child
 
         # Copy everything from this dict into it.
-        for dspec in itertools.chain.from_iterable(self.values()):
+        for dspec in self.all_edges():
             clone.add(dspec.copy())
 
         return clone
+
+    def all_edges(self):
+        return (d for values in self.values() for d in values)
 
     def select(self, parent=None, child=None, deptypes=dp.all_deptypes):
         """Select a list of edges and return them.
@@ -1037,7 +1040,7 @@ class _EdgeMap(collections.abc.Mapping):
             return []
 
         # Start from all the edges we store
-        selected = (d for d in itertools.chain.from_iterable(self.values()))
+        selected = self.all_edges()
 
         # Filter by parent name
         if parent:
@@ -2610,7 +2613,7 @@ class Spec:
         """Replace this virtual spec with a concrete spec."""
         assert self.virtual
         virtuals = (self.name,)
-        for dep_spec in itertools.chain.from_iterable(self._dependents.values()):
+        for dep_spec in self._dependents.all_edges():
             dependent = dep_spec.parent
             deptypes = dep_spec.deptypes
 
@@ -4247,7 +4250,7 @@ class Spec:
         yield cmp_spec.process_hash() if cmp_spec.concrete else None
 
         def deps():
-            for dep in sorted(itertools.chain.from_iterable(cmp_spec._dependencies.values())):
+            for dep in sorted(cmp_spec._dependencies.all_edges()):
                 yield dep.spec.name
                 yield tuple(sorted(dep.deptypes))
                 yield hash(dep.spec)
