@@ -19,9 +19,9 @@ import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
 import spack.util.gpg as gpg_util
+import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
-import spack.util.timer as timer
 
 description = "manage continuous integration pipelines"
 section = "build"
