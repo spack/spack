@@ -11,18 +11,14 @@ class Veloc(CMakePackage):
     checkpoint-restart runtime for HPC supercomputing infrastructures"""
 
     homepage = "https://github.com/ECP-VeloC/VELOC"
-    url = "https://github.com/ECP-VeloC/VELOC/archive/1.6.tar.gz"
+    url = "https://github.com/ECP-VeloC/VELOC/archive/veloc-1.7.tar.gz"
     git = "https://github.com/ecp-veloc/veloc.git"
 
     maintainers = ["bnicolae"]
     tags = ["e4s"]
 
     version("main", branch="main")
-    version(
-        "1.7",
-        sha256="dc829b0a3127de98ab0779dea00d0dcebf1075e8c657c55513d8e07bf91ae21d",
-        url="https://github.com/ECP-VeloC/VELOC/archive/refs/tags/veloc-1.7.zip",
-    )
+    version("1.7", sha256="ca50cb300830ea7f7e5679d32e3671ce4ea250eac384e7231def8dbb90e0cf31")
     version("1.6", sha256="451b46ad13e360270044c0dba09d8e4fbd64149f8e8d71310fdb520424c5eeaa")
     version("1.5", sha256="892f3623c73254d40fbbb8cbc3056219a31510e37aae2ede4100c04743701a5c")
     version("1.4", sha256="d5d12aedb9e97f079c4428aaa486bfa4e31fe1db547e103c52e76c8ec906d0a8")
