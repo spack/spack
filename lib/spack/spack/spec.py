@@ -985,16 +985,14 @@ class _EdgeMap(collections.abc.Mapping):
     def __len__(self):
         return len(self.edges)
 
-    def add(self, edge):
-        """Adds a new edge to this object.
-
-        Args:
-            edge (DependencySpec): edge to be added
-        """
+    def add(self, edge: DependencySpec):
         key = edge.spec.name if self.store_by_child else edge.parent.name
-        current_list = self.edges.setdefault(key, [])
-        current_list.append(edge)
-        current_list.sort(key=_sort_by_dep_types)
+        if key in self.edges:
+            lst = self.edges[key]
+            lst.append(edge)
+            lst.sort(key=_sort_by_dep_types)
+        else:
+            self.edges[key] = [edge]
 
     def __str__(self):
         return "{deps: %s}" % ", ".join(str(d) for d in sorted(self.values()))
@@ -2983,9 +2981,12 @@ class Spec:
             providers = [spec.name for spec in answer.values() if spec.package.provides(name)]
             name = providers[0]
 
-        assert name in answer
+        node = spack.solver.asp.SpecBuilder.make_node(pkg=name)
+        assert (
+            node in answer
+        ), f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
 
-        concretized = answer[name]
+        concretized = answer[node]
         self._dup(concretized)
 
     def concretize(self, tests=False):
@@ -3519,7 +3520,8 @@ class Spec:
         for value in values:
             if self.variants.get(variant_name):
                 msg = (
-                    "Cannot append a value to a single-valued " "variant with an already set value"
+                    f"cannot append the new value '{value}' to the single-valued "
+                    f"variant '{self.variants[variant_name]}'"
                 )
                 assert pkg_variant.multi, msg
                 self.variants[variant_name].append(value)
