@@ -728,16 +728,17 @@ class VersionList:
 
     def __init__(self, vlist=None):
         self.versions: List[StandardVersion, GitVersion, ClosedOpenRange] = []
-        if vlist is not None:
-            if isinstance(vlist, str):
-                vlist = from_string(vlist)
-                if isinstance(vlist, VersionList):
-                    self.versions = vlist.versions
-                else:
-                    self.versions = [vlist]
+        if vlist is None:
+            return
+        elif isinstance(vlist, str):
+            vlist = from_string(vlist)
+            if isinstance(vlist, VersionList):
+                self.versions = vlist.versions
             else:
-                for v in vlist:
-                    self.add(ver(v))
+                self.versions.append(vlist)
+        else:
+            for v in vlist:
+                self.add(from_string(v) if isinstance(v, str) else v)
 
     def add(self, item):
         if isinstance(item, ConcreteVersion):
