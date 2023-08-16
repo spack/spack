@@ -4887,17 +4887,27 @@ def format_path(spec, format_string):
     effect, "invalid" paths which mix these will be converted to OS-appropriate
     paths with consistent separators).
     """
+    # A root on Linux ("/"), or part of a Windows device namespace ("\")
     any_sep = r"[/\\]"
+    # A drive on Windows (e.g. "C:\\")
     drive = r"[a-zA-Z]:[/\\]"
-    if re.match(rf"^({any_sep}|{drive})", format_string):
+    root_pattern = rf"^({any_sep}|{drive})"
+    if re.match(root_pattern, format_string):
+        # Note: we could attempt to construct the absolute formatted path (i.e.
+        # produce a valid path instead of failing here), but we would want to
+        # account for the following cases:
+        # "\\root\{name}\{version}", "C:\\root\{name}\{version}".
+        # Also, if we allow abspaths, we probably want to prevent Windows
+        # abspaths on Linux (and vice versa).
         raise ValueError(f"Input format string appears to be an absolute path")
+
     # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
     # on Windows, we cannot use pathlib (since "/" is not a path separator
-    # on Windows).
-    components = re.split(r"[/\\]", format_string)
-    formatted_components = []
-    for path_component in components:
-        formatted_components.append(spack.util.path.sanitize_filename(spec.format(path_component)))
+    # on Windows). Therefore, the path components are derived by splitting on
+    # both separators, on all operating systems.
+    components = re.split(any_sep, format_string)
+    formatted_components = [spack.util.path.sanitize_filename(spec.format(x))
+        for x in components]
     return str(pathlib.Path(*formatted_components))
 
 
