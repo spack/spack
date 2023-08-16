@@ -22,7 +22,7 @@ def setup_parser(subparser):
     # config.default_modify_scope may not refer to the environment at
     # the time this parser is instantiated
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
+    scopes_metavar = spack.config.SCOPES_METAVAR
     subparser.add_argument(
         "--scope", choices=scopes, metavar=scopes_metavar, help="configuration scope to modify"
     )

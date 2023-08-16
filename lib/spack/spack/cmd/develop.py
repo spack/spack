@@ -39,7 +39,7 @@ def setup_parser(subparser):
     )
 
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
+    scopes_metavar = spack.config.SCOPES_METAVAR
     subparser.add_argument(
         "--scope", choices=scopes, metavar=scopes_metavar, help="configuration scope to modify"
     )
@@ -75,7 +75,7 @@ def _retrieve_develop_source(spec, abspath):
     # to be created, then copy it afterwards somewhere else. It would be
     # better if we can create the `source_path` directly into its final
     # destination.
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     # We construct a package class ourselves, rather than asking for
     # Spec.package, since Spec only allows this when it is concrete
     package = pkg_cls(spec)
