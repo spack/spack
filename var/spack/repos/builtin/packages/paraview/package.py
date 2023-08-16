@@ -252,6 +252,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("nlohmann-json", when="@5.11:")
 
     # ParaView depends on proj@8.1.0 due to changes in MR
+    # v4 is sufficient for ParaView
+    # v8.1.0 is required for Cesium 3D which is not part of ParaView
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8474
     depends_on("proj@4:8.1.0", when="@5.11:")
 
