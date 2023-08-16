@@ -431,6 +431,12 @@ class Boost(Package):
 
         return url.format(version.dotted, version.underscored)
 
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("@1.79.0 %oneapi"):
+                flags.append("-Wno-error=enum-constexpr-conversion")
+        return (flags, None, None)
+
     def determine_toolset(self, spec):
         toolsets = {
             "g++": "gcc",
