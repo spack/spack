@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 
-from llnl.util import tty
+from llnl.util import lang, tty
 
 from spack.package import *
 
@@ -256,7 +256,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             optname = "Kokkos_%s_%s" % (cmake_prefix, opt.upper())
             # Explicitly enable or disable
             option = self.define_from_variant(optname, variant_name)
-            if option not in spack_options:
+            if option:
                 spack_options.append(option)
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -326,7 +326,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
             options.append(self.define("CMAKE_CXX_FLAGS", "-fp-model=precise"))
 
-        return options
+        # Remove duplicate options
+        return lang.dedupe(options)
 
     test_script_relative_path = join_path("scripts", "spack_test")
 
