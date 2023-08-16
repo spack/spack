@@ -174,7 +174,7 @@ def test_remove_and_add_a_source(mutable_config):
 
 
 @pytest.mark.maybeslow
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmpdir):
     """Test that `spack bootstrap mirror` creates a folder that can be ingested by
     `spack bootstrap add`. Here we don't download data, since that would be an
