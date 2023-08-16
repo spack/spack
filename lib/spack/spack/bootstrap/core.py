@@ -476,15 +476,22 @@ def ensure_executables_in_path_or_raise(
 def _add_externals_if_missing() -> None:
     search_list = [
         # clingo
-        spack.repo.path.get_pkg_class("cmake"),
-        spack.repo.path.get_pkg_class("bison"),
+        spack.repo.PATH.get_pkg_class("cmake"),
+        spack.repo.PATH.get_pkg_class("bison"),
         # GnuPG
-        spack.repo.path.get_pkg_class("gawk"),
+        spack.repo.PATH.get_pkg_class("gawk"),
+        # develop deps
+        spack.repo.PATH.get_pkg_class("git"),
     ]
     if IS_WINDOWS:
-        search_list.append(spack.repo.path.get_pkg_class("winbison"))
-    detected_packages = spack.detection.by_executable(search_list)
-    spack.detection.update_configuration(detected_packages, scope="bootstrap")
+        search_list.append(spack.repo.PATH.get_pkg_class("winbison"))
+    externals = spack.detection.by_executable(search_list)
+    # System git is typically deprecated, so mark as non-buildable to force it as external
+    non_buildable_externals = {k: externals.pop(k) for k in ("git",) if k in externals}
+    spack.detection.update_configuration(externals, scope="bootstrap", buildable=True)
+    spack.detection.update_configuration(
+        non_buildable_externals, scope="bootstrap", buildable=False
+    )
 
 
 def clingo_root_spec() -> str:

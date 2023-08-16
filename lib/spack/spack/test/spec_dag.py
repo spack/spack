@@ -44,7 +44,7 @@ def set_dependency(saved_deps, monkeypatch):
         """
         spec = Spec(spec)
         # Save original dependencies before making any changes.
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         if pkg_name not in saved_deps:
             saved_deps[pkg_name] = (pkg_cls, pkg_cls.dependencies.copy())
 

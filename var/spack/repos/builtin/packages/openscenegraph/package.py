@@ -39,7 +39,7 @@ class Openscenegraph(CMakePackage):
     depends_on("jasper")
     depends_on("libtiff")
     depends_on("glib")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("fontconfig")
 
     depends_on("ffmpeg+avresample", when="+ffmpeg")

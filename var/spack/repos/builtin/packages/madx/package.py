@@ -34,7 +34,7 @@ class Madx(CMakePackage):
     depends_on("cmake@2.8:", type="build")
 
     depends_on("libx11")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def cmake_args(self):
         args = [

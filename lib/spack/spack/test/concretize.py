@@ -43,7 +43,7 @@ def check_spec(abstract, concrete):
             cflag = concrete.compiler_flags[flag]
             assert set(aflag) <= set(cflag)
 
-    for name in spack.repo.path.get_pkg_class(abstract.name).variants:
+    for name in spack.repo.PATH.get_pkg_class(abstract.name).variants:
         assert name in concrete.variants
 
     for flag in concrete.compiler_flags.valid_compiler_flags():
@@ -152,7 +152,7 @@ class Root(Package):
     version("1.0", sha256="abcde")
     depends_on("changing")
 
-    conflicts("changing~foo")
+    conflicts("^changing~foo")
 """
     packages_dir.join("root", "package.py").write(root_pkg_str, ensure=True)
 
@@ -292,7 +292,7 @@ class TestConcretize:
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.
         """
-        repo = spack.repo.path
+        repo = spack.repo.PATH
         assert not any(s.intersects("mpich2@:1.0") for s in repo.providers_for("mpi@2.1"))
         assert not any(s.intersects("mpich2@:1.1") for s in repo.providers_for("mpi@2.2"))
         assert not any(s.intersects("mpich@:1") for s in repo.providers_for("mpi@2"))
@@ -301,7 +301,7 @@ class TestConcretize:
 
     def test_provides_handles_multiple_providers_of_same_version(self):
         """ """
-        providers = spack.repo.path.providers_for("mpi@3.0")
+        providers = spack.repo.PATH.providers_for("mpi@3.0")
 
         # Note that providers are repo-specific, so we don't misinterpret
         # providers, but vdeps are not namespace-specific, so we can
@@ -1222,7 +1222,7 @@ class TestConcretize:
             return [first_spec]
 
         if mock_db:
-            monkeypatch.setattr(spack.store.db, "query", mock_fn)
+            monkeypatch.setattr(spack.store.STORE.db, "query", mock_fn)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
@@ -1275,7 +1275,7 @@ class TestConcretize:
 
         spack.config.set("concretizer:reuse", True)
         spec = Spec("a cflags=-g cxxflags=-g").concretized()
-        spack.store.db.add(spec, None)
+        spack.store.STORE.db.add(spec, None)
 
         testspec = Spec("a cflags=-g")
         testspec.concretize()
@@ -1446,7 +1446,7 @@ class TestConcretize:
         assert s["lapack"].name == "low-priority-provider"
 
         for virtual_pkg in ("mpi", "lapack"):
-            for pkg in spack.repo.path.providers_for(virtual_pkg):
+            for pkg in spack.repo.PATH.providers_for(virtual_pkg):
                 if pkg.name == "low-priority-provider":
                     continue
                 assert pkg not in s
@@ -1599,7 +1599,7 @@ class TestConcretize:
             pytest.xfail("Known failure of the original concretizer")
 
         # Install a dependency that cannot be reused with "root"
-        # because of a conflict a variant, then delete its version
+        # because of a conflict in a variant, then delete its version
         dependency = Spec("changing@1.0~foo").concretized()
         dependency.package.do_install(fake=True, explicit=True)
         repo_with_changing_recipe.change({"delete_version": True})
@@ -1919,7 +1919,7 @@ class TestConcretize:
             pytest.xfail("Use case not supported by the original concretizer")
 
         # Add a conflict to "mpich" that match an already installed "mpich~debug"
-        pkg_cls = spack.repo.path.get_pkg_class("mpich")
+        pkg_cls = spack.repo.PATH.get_pkg_class("mpich")
         monkeypatch.setitem(pkg_cls.conflicts, "~debug", [(Spec(), None)])
 
         # If we concretize with --fresh the conflict is taken into account
@@ -2013,7 +2013,7 @@ class TestConcretize:
 
         # install python external
         python = Spec("python").concretized()
-        monkeypatch.setattr(spack.store.db, "query", lambda x: [python])
+        monkeypatch.setattr(spack.store.STORE.db, "query", lambda x: [python])
 
         # ensure that we can't be faking this by getting it from config
         external_conf.pop("python")
@@ -2181,3 +2181,98 @@ class TestConcretize:
         assert len(edges) == 1 and edges[0].virtuals == ("mpi",)
         edges = spec.edges_to_dependencies(name="callpath")
         assert len(edges) == 1 and edges[0].virtuals == ()
+
+
+@pytest.fixture()
+def duplicates_test_repository():
+    builder_test_path = os.path.join(spack.paths.repos_path, "duplicates.test")
+    with spack.repo.use_repositories(builder_test_path) as mock_repo:
+        yield mock_repo
+
+
+@pytest.mark.usefixtures("mutable_config", "duplicates_test_repository")
+class TestConcretizeSeparately:
+    @pytest.mark.parametrize("strategy", ["minimal", "full"])
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
+        reason="Not supported by the original concretizer",
+    )
+    def test_two_gmake(self, strategy):
+        """Tests that we can concretize a spec with nodes using the same build
+        dependency pinned at different versions.
+
+        o hdf5@1.0
+        |\
+        o | pinned-gmake@1.0
+        o | gmake@3.0
+         /
+        o gmake@4.1
+
+        """
+        spack.config.CONFIG.set("concretizer:duplicates:strategy", strategy)
+        s = Spec("hdf5").concretized()
+
+        # Check that hdf5 depends on gmake@=4.1
+        hdf5_gmake = s["hdf5"].dependencies(name="gmake", deptype="build")
+        assert len(hdf5_gmake) == 1 and hdf5_gmake[0].satisfies("@=4.1")
+
+        # Check that pinned-gmake depends on gmake@=3.0
+        pinned_gmake = s["pinned-gmake"].dependencies(name="gmake", deptype="build")
+        assert len(pinned_gmake) == 1 and pinned_gmake[0].satisfies("@=3.0")
+
+    @pytest.mark.parametrize("strategy", ["minimal", "full"])
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
+        reason="Not supported by the original concretizer",
+    )
+    def test_two_setuptools(self, strategy):
+        """Tests that we can concretize separate build dependencies, when we are dealing
+        with extensions.
+
+        o py-shapely@1.25.0
+        |\
+        | |\
+        | o | py-setuptools@60
+        |/ /
+        | o py-numpy@1.25.0
+        |/|
+        | |\
+        | o | py-setuptools@59
+        |/ /
+        o | python@3.11.2
+        o | gmake@3.0
+         /
+        o gmake@4.1
+
+        """
+        spack.config.CONFIG.set("concretizer:duplicates:strategy", strategy)
+        s = Spec("py-shapely").concretized()
+        # Requirements on py-shapely
+        setuptools = s["py-shapely"].dependencies(name="py-setuptools", deptype="build")
+        assert len(setuptools) == 1 and setuptools[0].satisfies("@=60")
+
+        # Requirements on py-numpy
+        setuptools = s["py-numpy"].dependencies(name="py-setuptools", deptype="build")
+        assert len(setuptools) == 1 and setuptools[0].satisfies("@=59")
+        gmake = s["py-numpy"].dependencies(name="gmake", deptype="build")
+        assert len(gmake) == 1 and gmake[0].satisfies("@=4.1")
+
+        # Requirements on python
+        gmake = s["python"].dependencies(name="gmake", deptype="build")
+        assert len(gmake) == 1 and gmake[0].satisfies("@=3.0")
+
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
+        reason="Not supported by the original concretizer",
+    )
+    def test_solution_without_cycles(self):
+        """Tests that when we concretize a spec with cycles, a fallback kicks in to recompute
+        a solution without cycles.
+        """
+        s = Spec("cycle-a").concretized()
+        assert s["cycle-a"].satisfies("+cycle")
+        assert s["cycle-b"].satisfies("~cycle")
+
+        s = Spec("cycle-b").concretized()
+        assert s["cycle-a"].satisfies("~cycle")
+        assert s["cycle-b"].satisfies("+cycle")

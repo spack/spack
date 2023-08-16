@@ -20,6 +20,9 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version(
+        "2023.06.00", sha256="e261ad6cde2aa4f97e985aa9067f4c40d2aaa856904bb78007a3dcadf1378ae9"
+    )
+    version(
         "2022.07.00", sha256="566bd644f0364caffde6669e0f86514658eb06ca3d252a4fe67203921a875481"
     )
     version(
@@ -85,8 +88,8 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
 
     def check(self):
         # If the tester fails to build, ensure that the check() fails.
-        if os.path.isfile(join_path(self.build_directory, "test", "tester")):
-            with working_dir(self.build_directory):
+        if os.path.isfile(join_path(self.builder.build_directory, "test", "tester")):
+            with working_dir(self.builder.build_directory):
                 make("check")
         else:
             raise Exception("The tester was not built!")
