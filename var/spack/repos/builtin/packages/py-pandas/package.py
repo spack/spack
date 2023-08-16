@@ -128,3 +128,9 @@ class PyPandas(PythonPackage):
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#optional-dependencies
 
     skip_modules = ["pandas.tests", "pandas.plotting._matplotlib", "pandas.core._numba.kernels"]
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("@0.24.2 %oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
