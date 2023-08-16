@@ -2414,8 +2414,7 @@ class BuildProcessInstaller:
 
             # Stop the timer and save results
             self.timer.stop()
-            with open(self.pkg.times_log_path, "w") as timelog:
-                self.timer.write_json(timelog)
+            _write_timer_json(self.pkg, self.timer, False)
 
         print_install_test_log(self.pkg)
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
