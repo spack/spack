@@ -22,8 +22,6 @@ class PySmartsim(PythonPackage):
     version("0.5.0", sha256="35b36243dc84af62261a7f772bae92f0b3502faf01401423899cb2a48339858c")
 
     variant("torch", default=True, description="Build with the pytorch backend")
-    variant("cuda", default=False, description="Use CUDA")
-    variant("rocm", default=False, description="Use ROCm")
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type=("build",))
@@ -42,19 +40,15 @@ class PySmartsim(PythonPackage):
 
     # Backends
     depends_on("redis@7.0.5:", type=("build", "run"))
-
     depends_on("redis-ai@1.2.7:", type=("build", "run"))
-    depends_on("redis-ai+cuda", type=("build", "run"), when="+cuda")
-    depends_on("redis-ai+rocm", type=("build", "run"), when="+rocm")
 
     # ML Deps
     # The lower bound for these py-* deps can be found in the source code
     # at `smartsim/_core/_install/buildenv.py`.
     with when("+torch"):
         depends_on("redis-ai+torch", type=("build", "run"))
-        depends_on("py-torch@1.11:", type=("build", "run"))
-        depends_on("py-torch+cuda+cudnn", type=("build", "run"), when="+cuda")
-        depends_on("py-torch+rocm", type=("build", "run"), when="+rocm")
+        depends_on("py-torch@1.11.0:", type=("build", "run"))
+        depends_on("py-torchvision@0.12.0:", type=("build", "run"))
 
     # By default, the SmartSim `setup.py` will attempt to fetch and build
     # its own copy of Redis. This should be patched out and the version of
