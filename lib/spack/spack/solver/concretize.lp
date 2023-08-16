@@ -147,10 +147,10 @@ error(100, no_value_error, Attribute, Package)
      not attr(Attribute, node(ID, Package), _).
 
 % Error when multiple attr need to be selected
-error(100, multiple_values_error, Attribute, PackageNode)
-  :- attr("node", PackageNode),
+error(100, multiple_values_error, Attribute, Package)
+  :- attr("node", node(ID, Package)),
      attr_single_value(Attribute),
-     2 { attr(Attribute, PackageNode, Value) }.
+     2 { attr(Attribute, node(ID, Package), Value) }.
 
 %-----------------------------------------------------------------------------
 % Version semantics
@@ -481,13 +481,13 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
 
-error(100, "Cannot find valid provider for virtual {0}", VirtualNode)
-  :- attr("virtual_node", VirtualNode),
-     not provider(_, VirtualNode).
+error(100, "Cannot find valid provider for virtual {0}", Virtual)
+  :- attr("virtual_node", node(X, Virtual)),
+     not provider(_, node(X, Virtual)).
 
-error(100, "Cannot select a single provider for virtual '{0}'", VirtualNode)
-  :- attr("virtual_node", VirtualNode),
-     2 { provider(P, VirtualNode) }.
+error(100, "Cannot select a single provider for virtual '{0}'", Virtual)
+  :- attr("virtual_node", node(X, Virtual)),
+     2 { provider(P, node(X, Virtual)) }.
 
 % virtual roots imply virtual nodes, and that one provider is a root
 attr("virtual_node", VirtualNode) :- attr("virtual_root", VirtualNode).
@@ -743,23 +743,23 @@ attr("variant_value", node(ID, Package), Variant, Value) :-
   attr("variant_propagate", node(ID, Package), Variant, Value, _),
   pkg_fact(Package, variant_possible_value(Variant, Value)).
 
-error(100, "{0} and {1} cannot both propagate variant '{2}' to package {3} with values '{4}' and '{5}'", Source1, Source2, Variant, PackageNode, Value1, Value2) :-
-  attr("variant_propagate", PackageNode, Variant, Value1, Source1),
-  attr("variant_propagate", PackageNode, Variant, Value2, Source2),
-  node_has_variant(PackageNode, Variant),
+error(100, "{0} and {1} cannot both propagate variant '{2}' to package {3} with values '{4}' and '{5}'", Source1, Source2, Variant, Package, Value1, Value2) :-
+  attr("variant_propagate", node(X, Package), Variant, Value1, Source1),
+  attr("variant_propagate", node(X, Package), Variant, Value2, Source2),
+  node_has_variant(node(X, Package), Variant),
   Value1 < Value2.
 
 % a variant cannot be set if it is not a variant on the package
-error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, PackageNode)
-  :- attr("variant_set", PackageNode, Variant),
-     not node_has_variant(PackageNode, Variant),
-     build(PackageNode).
+error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
+  :- attr("variant_set", node(X, Package), Variant),
+     not node_has_variant(node(X, Package), Variant),
+     build(node(X, Package)).
 
 % a variant cannot take on a value if it is not a variant of the package
-error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, PackageNode)
-  :- attr("variant_value", PackageNode, Variant, _),
-     not node_has_variant(PackageNode, Variant),
-     build(PackageNode).
+error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
+  :- attr("variant_value", node(X, Package), Variant, _),
+     not node_has_variant(node(X, Package), Variant),
+     build(node(X, Package)).
 
 % if a variant is sticky and not set its value is the default value
 attr("variant_value", node(ID, Package), Variant, Value) :-
@@ -786,11 +786,11 @@ error(100, "'{0}' required multiple values for single-valued variant '{1}'", Pac
      build(node(ID, Package)),
      2 { attr("variant_value", node(ID, Package), Variant, Value) }.
 
-error(100, "No valid value for variant '{1}' of package '{0}'", PackageNode, Variant)
-  :- attr("node", PackageNode),
-     node_has_variant(PackageNode, Variant),
-     build(PackageNode),
-     not attr("variant_value", PackageNode, Variant, _).
+error(100, "No valid value for variant '{1}' of package '{0}'", Package, Variant)
+  :- attr("node", node(X, Package)),
+     node_has_variant(node(X, Package), Variant),
+     build(node(X, Package)),
+     not attr("variant_value", node(X, Package), Variant, _).
 
 % if a variant is set to anything, it is considered 'set'.
 attr("variant_set", PackageNode, Variant) :- attr("variant_set", PackageNode, Variant, _).
@@ -874,11 +874,11 @@ variant_default_value(Package, Variant, Value) :-
 
 % Treat 'none' in a special way - it cannot be combined with other
 % values even if the variant is multi-valued
-error(100, "{0} variant '{1}' cannot have values '{2}' and 'none'", PackageNode, Variant, Value)
- :- attr("variant_value", PackageNode, Variant, Value),
-    attr("variant_value", PackageNode, Variant, "none"),
+error(100, "{0} variant '{1}' cannot have values '{2}' and 'none'", Package, Variant, Value)
+ :- attr("variant_value", node(X, Package), Variant, Value),
+    attr("variant_value", node(X, Package), Variant, "none"),
     Value != "none",
-    build(PackageNode).
+    build(node(X, Package)).
 
 % patches and dev_path are special variants -- they don't have to be
 % declared in the package, so we just allow them to spring into existence
@@ -927,18 +927,18 @@ os(OS) :- os(OS, _).
 { attr("node_os", PackageNode, OS) : os(OS) } :- attr("node", PackageNode).
 
 % can't have a non-buildable OS on a node we need to build
-error(100, "Cannot select '{0} os={1}' (operating system '{1}' is not buildable)", PackageNode, OS)
- :- build(PackageNode),
-    attr("node_os", PackageNode, OS),
+error(100, "Cannot select '{0} os={1}' (operating system '{1}' is not buildable)", Package, OS)
+ :- build(node(X, Package)),
+    attr("node_os", node(X, Package), OS),
     not buildable_os(OS).
 
 % can't have dependencies on incompatible OS's
-error(100, "{0} and dependency {1} have incompatible operating systems 'os={2}' and 'os={3}'", PackageNode, DependencyNode, PackageNodeOS, DependencyOS)
-  :- depends_on(PackageNode, DependencyNode),
-     attr("node_os", PackageNode, PackageNodeOS),
-     attr("node_os", DependencyNode, DependencyOS),
+error(100, "{0} and dependency {1} have incompatible operating systems 'os={2}' and 'os={3}'", Package, Dependency, PackageNodeOS, DependencyOS)
+  :- depends_on(node(X, Package), node(Y, Dependency)),
+     attr("node_os", node(X, Package), PackageNodeOS),
+     attr("node_os", node(Y, Dependency), DependencyOS),
      not os_compatible(PackageNodeOS, DependencyOS),
-     build(PackageNode).
+     build(node(X, Package)).
 
 % give OS choice weights according to os declarations
 node_os_weight(PackageNode, Weight)
@@ -982,9 +982,9 @@ attr("node_os", PackageNode, OS) :- attr("node_os_set", PackageNode, OS), attr("
 { attr("node_target", PackageNode, Target) : target(Target) } :- attr("node", PackageNode).
 
 % If a node must satisfy a target constraint, enforce it
-error(10, "'{0} target={1}' cannot satisfy constraint 'target={2}'", PackageNode, Target, Constraint)
-  :- attr("node_target", PackageNode, Target),
-     attr("node_target_satisfies", PackageNode, Constraint),
+error(10, "'{0} target={1}' cannot satisfy constraint 'target={2}'", Package, Target, Constraint)
+  :- attr("node_target", node(X, Package), Target),
+     attr("node_target_satisfies", node(X, Package), Constraint),
      not target_satisfies(Constraint, Target).
 
 % If a node has a target and the target satisfies a constraint, then the target
@@ -993,10 +993,10 @@ attr("node_target_satisfies", PackageNode, Constraint)
   :- attr("node_target", PackageNode, Target), target_satisfies(Constraint, Target).
 
 % If a node has a target, all of its dependencies must be compatible with that target
-error(100, "Cannot find compatible targets for {0} and {1}", PackageNode, DependencyNode)
-  :- depends_on(PackageNode, DependencyNode),
-     attr("node_target", PackageNode, Target),
-     not node_target_compatible(DependencyNode, Target).
+error(100, "Cannot find compatible targets for {0} and {1}", Package, Dependency)
+  :- depends_on(node(X, Package), node(Y, Dependency)),
+     attr("node_target", node(X, Package), Target),
+     not node_target_compatible(node(Y, Dependency), Target).
 
 % Intermediate step for performance reasons
 % When the integrity constraint above was formulated including this logic
@@ -1008,13 +1008,13 @@ node_target_compatible(PackageNode, Target)
 #defined target_satisfies/2.
 
 % can't use targets on node if the compiler for the node doesn't support them
-error(100, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", PackageNode, Target, Compiler, Version)
-  :- attr("node_target", PackageNode, Target),
-     node_compiler(PackageNode, CompilerID),
+error(100, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Target, Compiler, Version)
+  :- attr("node_target", node(X, Package), Target),
+     node_compiler(node(X, Package), CompilerID),
      not compiler_supports_target(CompilerID, Target),
      compiler_name(CompilerID, Compiler),
      compiler_version(CompilerID, Version),
-     build(PackageNode).
+     build(node(X, Package)).
 
 % if a target is set explicitly, respect it
 attr("node_target", PackageNode, Target)
@@ -1037,9 +1037,9 @@ node_target_mismatch(ParentNode, DependencyNode)
      not node_target_match(ParentNode, DependencyNode).
 
 % disallow reusing concrete specs that don't have a compatible target
-error(100, "'{0} target={1}' is not compatible with this machine", PackageNode, Target)
-  :- attr("node", PackageNode),
-     attr("node_target", PackageNode, Target),
+error(100, "'{0} target={1}' is not compatible with this machine", Package, Target)
+  :- attr("node", node(X, Package)),
+     attr("node_target", node(X, Package), Target),
      not target(Target).
 
 %-----------------------------------------------------------------------------
@@ -1068,33 +1068,33 @@ attr("node_compiler_version", PackageNode, CompilerName, CompilerVersion)
 attr("node_compiler", PackageNode, CompilerName)
   :- attr("node_compiler_version", PackageNode, CompilerName, CompilerVersion).
 
-error(100, "No valid compiler version found for '{0}'", PackageNode)
-  :- attr("node", PackageNode),
-     not node_compiler(PackageNode, _).
+error(100, "No valid compiler version found for '{0}'", Package)
+  :- attr("node", node(X, Package)),
+     not node_compiler(node(X, Package), _).
 
 % We can't have a compiler be enforced and select the version from another compiler
-error(100, "Cannot select a single compiler for package {0}", PackageNode)
- :- attr("node", PackageNode),
-    2 { attr("node_compiler_version", PackageNode, C, V) }.
+error(100, "Cannot select a single compiler for package {0}", Package)
+ :- attr("node", node(X, Package)),
+    2 { attr("node_compiler_version", node(X, Package), C, V) }.
 
 % If the compiler of a node cannot be satisfied, raise
-error(10, "No valid compiler for {0} satisfies '%{1}'", PackageNode, Compiler)
-  :- attr("node", PackageNode),
-     attr("node_compiler_version_satisfies", PackageNode, Compiler, ":"),
+error(10, "No valid compiler for {0} satisfies '%{1}'", Package, Compiler)
+  :- attr("node", node(X, Package)),
+     attr("node_compiler_version_satisfies", node(X, Package), Compiler, ":"),
      not compiler_version_satisfies(Compiler, ":", _).
 
 % If the compiler of a node must satisfy a constraint, then its version
 % must be chosen among the ones that satisfy said constraint
-error(100, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", PackageNode, Compiler, Constraint)
-  :- attr("node", PackageNode),
-     attr("node_compiler_version_satisfies", PackageNode, Compiler, Constraint),
+error(100, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
+  :- attr("node", node(X, Package)),
+     attr("node_compiler_version_satisfies", node(X, Package), Compiler, Constraint),
 		 not compiler_version_satisfies(Compiler, Constraint, _).
 
-error(100, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", PackageNode, Compiler, Constraint)
-  :- attr("node", PackageNode),
-     attr("node_compiler_version_satisfies", PackageNode, Compiler, Constraint),
+error(100, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
+  :- attr("node", node(X, Package)),
+     attr("node_compiler_version_satisfies", node(X, Package), Compiler, Constraint),
      not compiler_version_satisfies(Compiler, Constraint, ID),
-     node_compiler(PackageNode, ID).
+     node_compiler(node(X, Package), ID).
 
 % If the node is associated with a compiler and the compiler satisfy a constraint, then
 % the compiler associated with the node satisfy the same constraint
@@ -1116,14 +1116,14 @@ attr("node_compiler_version_satisfies", PackageNode, Compiler, Constraint)
 % Cannot select a compiler if it is not supported on the OS
 % Compilers that are explicitly marked as allowed
 % are excluded from this check
-error(100, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", PackageNode, Compiler, Version, OS)
-  :- attr("node_os", PackageNode, OS),
-     node_compiler(PackageNode, CompilerID),
+error(100, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", Package, Compiler, Version, OS)
+  :- attr("node_os", node(X, Package), OS),
+     node_compiler(node(X, Package), CompilerID),
      compiler_name(CompilerID, Compiler),
      compiler_version(CompilerID, Version),
      not compiler_os(CompilerID, OS),
      not allow_compiler(Compiler, Version),
-     build(PackageNode).
+     build(node(X, Package)).
 
 % If a package and one of its dependencies don't have the
 % same compiler there's a mismatch.
