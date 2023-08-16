@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test basic behavior of compilers in Spack"""
 import os
-import sys
 from copy import copy
 
 import pytest
@@ -192,7 +191,7 @@ def call_compiler(exe, *args, **kwargs):
     return no_flag_output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "exe,flagname",
     [
@@ -248,7 +247,7 @@ def test_get_compiler_link_paths_no_verbose_flag():
     assert dirs == []
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.enable_compiler_link_paths
 def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join("gcc"))
@@ -693,7 +692,7 @@ def test_raising_if_compiler_target_is_over_specific(config):
             spack.compilers.get_compilers(cfg, spack.spec.CompilerSpec("gcc@9.0.1"), arch_spec)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_compiler_get_real_version(working_env, monkeypatch, tmpdir):
     # Test variables
     test_version = "2.2.2"
@@ -796,9 +795,7 @@ fi
         assert "SPACK_TEST_CMP_ON" not in os.environ
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Bash scripting unsupported on Windows (for now)"
-)
+@pytest.mark.not_on_windows("Bash scripting unsupported on Windows (for now)")
 def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
     # Create compiler
     gcc = str(tmpdir.join("gcc"))

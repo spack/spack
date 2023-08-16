@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test detection of compiler version"""
 import os
-import sys
 
 import pytest
 
@@ -414,7 +413,7 @@ def test_xl_version_detection(version_str, expected_version):
     assert version == expected_version
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "compiler,version",
     [

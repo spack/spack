@@ -5,7 +5,6 @@
 
 import os
 import os.path
-import sys
 
 import pytest
 
@@ -16,7 +15,7 @@ import spack.util.url
 
 install = spack.main.SpackCommand("install")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_build_tarball_overwrite(install_mockery, mock_fetch, monkeypatch, tmpdir):

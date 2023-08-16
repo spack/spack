@@ -7,7 +7,6 @@
 import os
 import shutil
 import stat
-import sys
 
 import pytest
 
@@ -19,7 +18,7 @@ import spack.store
 import spack.util.spack_json as sjson
 import spack.verify
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Win")
+pytestmark = pytest.mark.not_on_windows("Tests fail on Win")
 
 
 def test_link_manifest_entry(tmpdir):

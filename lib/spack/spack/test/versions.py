@@ -9,7 +9,6 @@ where it makes sense.
 """
 import os
 import pathlib
-import sys
 
 import pytest
 
@@ -931,7 +930,7 @@ def test_inclusion_upperbound():
     assert is_specific.intersects(upperbound) and is_range.intersects(upperbound)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_git_version_repo_attached_after_serialization(
     mock_git_version_info, mock_packages, config, monkeypatch
 ):
@@ -951,7 +950,7 @@ def test_git_version_repo_attached_after_serialization(
     assert spack.spec.Spec.from_dict(spec.to_dict()).satisfies("@1.0")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_resolved_git_version_is_shown_in_str(
     mock_git_version_info, mock_packages, config, monkeypatch
 ):

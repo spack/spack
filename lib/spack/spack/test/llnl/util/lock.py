@@ -65,7 +65,7 @@ from llnl.util.filesystem import getuid, touch
 if sys.platform != "win32":
     import fcntl
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 #

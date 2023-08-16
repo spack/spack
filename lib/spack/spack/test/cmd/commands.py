@@ -7,7 +7,6 @@ import filecmp
 import os
 import shutil
 import subprocess
-import sys
 
 import pytest
 
@@ -254,9 +253,7 @@ def test_update_completion_arg(shell, tmpdir, monkeypatch):
 
 
 # Note: this test is never expected to be supported on Windows
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="shell completion script generator fails on windows"
-)
+@pytest.mark.not_on_windows("Shell completion script generator fails on windows")
 @pytest.mark.parametrize("shell", ["bash", "fish"])
 def test_updated_completion_scripts(shell, tmpdir):
     """Make sure our shell tab completion scripts remain up-to-date."""

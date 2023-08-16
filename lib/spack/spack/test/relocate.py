@@ -6,7 +6,6 @@ import os
 import os.path
 import re
 import shutil
-import sys
 
 import pytest
 
@@ -20,7 +19,7 @@ import spack.store
 import spack.tengine
 import spack.util.executable
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
+pytestmark = pytest.mark.not_on_windows("Tests fail on Windows")
 
 
 def skip_unless_linux(f):

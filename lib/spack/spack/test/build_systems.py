@@ -5,7 +5,6 @@
 
 import glob
 import os
-import sys
 
 import py.path
 import pytest
@@ -43,7 +42,7 @@ def test_dir(tmpdir):
     return _func
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="make not available on Windows")
+@pytest.mark.not_on_windows("make not available on Windows")
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
 class TestTargets:
     @pytest.mark.parametrize(
@@ -92,7 +91,7 @@ class TestTargets:
             s.package._if_ninja_target_execute("check")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="autotools not available on windows")
+@pytest.mark.not_on_windows("autotools not available on windows")
 @pytest.mark.usefixtures("config", "mock_packages")
 class TestAutotoolsPackage:
     def test_with_or_without(self, default_mock_concretization):

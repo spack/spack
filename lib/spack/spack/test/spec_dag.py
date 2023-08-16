@@ -81,6 +81,7 @@ def test_test_deptype(tmpdir):
 
 
 @pytest.mark.usefixtures("config")
+@pytest.mark.only_clingo("fails with the original concretizer and full hashes")
 def test_installed_deps(monkeypatch, mock_packages):
     """Ensure that concrete specs and their build deps don't constrain solves.
 
@@ -93,9 +94,6 @@ def test_installed_deps(monkeypatch, mock_packages):
     constrain ``a``'s dependency on ``d``.
 
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.xfail("fails with the original concretizer and full hashes")
-
     # see installed-deps-[abcde] test packages.
     #     a
     #    / \

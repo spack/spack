@@ -14,7 +14,7 @@ import spack.util.editor as ed
 
 pytestmark = [
     pytest.mark.usefixtures("working_env"),
-    pytest.mark.skipif(sys.platform == "win32", reason="editor not implemented on windows"),
+    pytest.mark.not_on_windows("editor not implemented on windows"),
 ]
 
 
@@ -33,7 +33,6 @@ def clean_env_vars():
 @pytest.fixture(autouse=True)
 def working_editor_test_env(working_env):
     """Don't leak environent variables between functions here."""
-    pass
 
 
 # parameterized fixture for editor var names

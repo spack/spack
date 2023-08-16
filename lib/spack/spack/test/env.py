@@ -6,7 +6,6 @@
 import filecmp
 import os
 import pickle
-import sys
 
 import pytest
 
@@ -16,9 +15,7 @@ import spack.environment as ev
 import spack.spec
 from spack.environment.environment import SpackEnvironmentViewError, _error_on_nonempty_view_dir
 
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32", reason="Envs are not supported on windows"
-)
+pytestmark = pytest.mark.not_on_windows("Envs are not supported on windows")
 
 
 class TestDirectoryInitialization:
