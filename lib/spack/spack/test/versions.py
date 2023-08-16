@@ -674,7 +674,6 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
     assert str(spec_branch.version) == "git.1.x=1.2"
 
 
-@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_git_branch_with_slash():
     class MockLookup(object):
         def get(self, ref):
