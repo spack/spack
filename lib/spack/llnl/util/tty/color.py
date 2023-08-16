@@ -62,6 +62,9 @@ To output an @, use '@@'.  To output a } inside braces, use '}}'.
 import re
 import sys
 from contextlib import contextmanager
+from typing import Optional
+
+from ..lang import memoized
 
 
 class ColorParseError(Exception):
@@ -247,23 +250,24 @@ class match_to_ansi:
         return self.escape(string) + colored_text
 
 
-def colorize(string, **kwargs):
+def colorize(string: str, color: Optional[bool] = None, enclose: Optional[bool] = None) -> str:
     """Replace all color expressions in a string with ANSI control codes.
 
     Args:
-        string (str): The string to replace
-
-    Returns:
-        str: The filtered string
-
-    Keyword Arguments:
-        color (bool): If False, output will be plain text without control
+        string: The string to replace
+        color: If False, output will be plain text without control
             codes, for output to non-console devices.
-        enclose (bool): If True, enclose ansi color sequences with
+        enclose: If True, enclose ansi color sequences with
             square brackets to prevent misestimation of terminal width.
     """
-    color = _color_when_value(kwargs.get("color", get_color_when()))
-    string = re.sub(color_re, match_to_ansi(color, kwargs.get("enclose")), string)
+    color_arg = color if color is not None else get_color_when()
+    return _colorize(string, color=color_arg, enclose=enclose)
+
+
+@memoized
+def _colorize(string: str, color: Optional[bool] = None, enclose: Optional[bool] = None) -> str:
+    color = _color_when_value(color)
+    string = re.sub(color_re, match_to_ansi(color, enclose), string)
     string = string.replace("}}", "}")
     return string
 
