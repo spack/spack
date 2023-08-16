@@ -91,7 +91,7 @@ def test_maintainer_directive(config, mock_packages, package_name, expected_main
 
 @pytest.mark.parametrize("package_name,expected_licenses", [("licenses-1", ["MIT", "Apache-2.0"])])
 def test_license_directive(config, mock_packages, package_name, expected_licenses):
-    pkg_cls = spack.repo.path.get_pkg_class(package_name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
     assert expected_licenses == list(pkg_cls.licenses.keys())
 
 
