@@ -985,16 +985,14 @@ class _EdgeMap(collections.abc.Mapping):
     def __len__(self):
         return len(self.edges)
 
-    def add(self, edge):
-        """Adds a new edge to this object.
-
-        Args:
-            edge (DependencySpec): edge to be added
-        """
+    def add(self, edge: DependencySpec):
         key = edge.spec.name if self.store_by_child else edge.parent.name
-        current_list = self.edges.setdefault(key, [])
-        current_list.append(edge)
-        current_list.sort(key=_sort_by_dep_types)
+        if key in self.edges:
+            lst = self.edges[key]
+            lst.append(edge)
+            lst.sort(key=_sort_by_dep_types)
+        else:
+            self.edges[key] = [edge]
 
     def __str__(self):
         return "{deps: %s}" % ", ".join(str(d) for d in sorted(self.values()))
