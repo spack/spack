@@ -53,14 +53,27 @@ class FoamExtend(Package):
     and owner of the OPENFOAM trademark.
     """
 
+    maintainers("hoehnp")
     homepage = "http://www.extend-project.de/"
 
+    # @todo:
+    # fix WM_PROJECT_DIR during building
+    # create symlink while staging
+
+    version("5.0", git="file:///home/hoehn7/foam/foam-extend-5.0")
+    #version("5.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-5.0.git")
     version("4.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.1.git")
     version("4.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git")
     version("3.2", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.2.git")
     version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git")
     version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git")
 
+    conflicts("%gcc@12:", when="@5.0")
+    conflicts("%gcc@8:", when="@4.1")
+    conflicts("%gcc@5.0:", when="@4.0")
+    conflicts("%gcc@5.0:", when="@3.2")
+    conflicts("%gcc@4.9:", when="@3.1")
+    conflicts("%gcc@4.5:", when="@3.0")
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
     variant("float32", default=False, description="Compile with 32-bit scalar (single-precision)")
@@ -79,6 +92,9 @@ class FoamExtend(Package):
     depends_on("zlib-api")
     depends_on("flex", type="build")
     depends_on("cmake", type="build")
+    depends_on("rpm lua=False") # temporarily disabled because of build failure of lua
+    depends_on("bison")
+    depends_on("mercurial", type="build")
 
     depends_on("scotch~metis", when="~ptscotch+scotch")
     depends_on("scotch~metis+mpi", when="+ptscotch")
@@ -201,9 +217,28 @@ class FoamExtend(Package):
         """Relative location of architecture-specific libraries"""
         return join_path("lib", self.foam_arch)
 
+    def rename_source(self):
+        """This is fairly horrible.
+        The github tarfiles have weird names that do not correspond to the
+        canonical name. We need to rename these, but leave a symlink for
+        spack to work with.
+        """
+        # Note that this particular OpenFOAM requires absolute directories
+        # to build correctly!
+        parent = os.path.dirname(self.stage.source_path)
+        original = os.path.basename(self.stage.source_path)
+        target = "foam-extend-{0}".format(self.version)
+        # Could also grep through etc/bashrc for WM_PROJECT_VERSION
+        with working_dir(parent):
+            if original != target and not os.path.lexists(target):
+                os.rename(original, target)
+                os.symlink(target, original)
+                tty.info("renamed {0} -> {1}".format(original, target))
+
     def patch(self):
         """Adjust OpenFOAM build for spack.
         Where needed, apply filter as an alternative to normal patching."""
+        self.rename_source()
         add_extra_files(self, self.common, self.assets)
 
         # Adjust ParMGridGen - this is still a mess
