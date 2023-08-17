@@ -2383,22 +2383,12 @@ class BinaryCacheQuery:
 
         self.possible_specs = specs
 
-    def __call__(self, spec, **kwargs):
+    def __call__(self, spec: Spec, **kwargs):
         """
         Args:
-            spec (str): The spec being searched for in its string representation or hash.
+            spec: The spec being searched for
         """
-        matches = []
-        if spec.startswith("/"):
-            # Matching a DAG hash
-            query_hash = spec.replace("/", "")
-            for candidate_spec in self.possible_specs:
-                if candidate_spec.dag_hash().startswith(query_hash):
-                    matches.append(candidate_spec)
-        else:
-            # Matching a spec constraint
-            matches = [s for s in self.possible_specs if s.satisfies(spec)]
-        return matches
+        return [s for s in self.possible_specs if s.satisfies(spec)]
 
 
 class FetchIndexError(Exception):
