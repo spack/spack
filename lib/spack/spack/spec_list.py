@@ -197,7 +197,9 @@ def _expand_matrix_constraints(matrix_config):
     for combo in itertools.product(*expanded_rows):
         # Construct a combined spec to test against excludes
         flat_combo = [constraint for constraint_list in combo for constraint in constraint_list]
-        flat_combo = [Spec(x) for x in flat_combo]
+
+        # Resolve abstract hashes so we can exclude by their concrete properties
+        flat_combo = [Spec(x).lookup_hash() for x in flat_combo]
 
         test_spec = flat_combo[0].copy()
         for constraint in flat_combo[1:]:

@@ -1291,3 +1291,38 @@ def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
     rhs = factory(rhs_str)
     rhs.constrain(lhs)
     assert rhs == factory(constrained_str)
+
+
+def test_abstract_hash_intersects_and_satisfies(default_mock_concretization):
+    concrete: Spec = default_mock_concretization("a")
+    hash = concrete.dag_hash()
+    hash_5 = hash[:5]
+    hash_6 = hash[:6]
+    # abstract hash that doesn't have a common prefix with the others.
+    hash_other = f"{'a' if hash_5[0] == 'b' else 'b'}{hash_5[1:]}"
+
+    abstract_5 = Spec(f"a/{hash_5}")
+    abstract_6 = Spec(f"a/{hash_6}")
+    abstract_none = Spec(f"a/{hash_other}")
+    abstract = Spec("a")
+
+    def assert_subset(a: Spec, b: Spec):
+        assert a.intersects(b) and b.intersects(a) and a.satisfies(b) and not b.satisfies(a)
+
+    def assert_disjoint(a: Spec, b: Spec):
+        assert (
+            not a.intersects(b)
+            and not b.intersects(a)
+            and not a.satisfies(b)
+            and not b.satisfies(a)
+        )
+
+    # left-hand side is more constrained, so its
+    # concretization space is a subset of the right-hand side's
+    assert_subset(concrete, abstract_5)
+    assert_subset(abstract_6, abstract_5)
+    assert_subset(abstract_5, abstract)
+
+    # disjoint concretization space
+    assert_disjoint(abstract_none, concrete)
+    assert_disjoint(abstract_none, abstract_5)
