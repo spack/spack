@@ -29,7 +29,8 @@ class JediToolsEnv(BundlePackage):
     depends_on("py-pygithub", type="run")
     depends_on("py-scipy", type="run")
     depends_on("py-sphinx", type="run")
-    depends_on("py-sphinxcontrib-bibtex", when="+latex", type="run")
+    depends_on("py-myst-parser", type="run")
+    depends_on("py-sphinxcontrib-bibtex", type="run")
     depends_on("texlive", when="+latex", type="run")
 
     conflicts("%intel", msg="jedi-tools-env does not build with Intel")
