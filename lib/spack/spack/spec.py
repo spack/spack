@@ -772,9 +772,6 @@ class DependencySpec:
         child = self.spec.name if self.spec else None
         return f"{parent} {self.depflag}[virtuals={','.join(self.virtuals)}] --> {child}"
 
-    def canonical(self) -> Tuple[str, str, int, Tuple[str, ...]]:
-        return self.parent.dag_hash(), self.spec.dag_hash(), self.depflag, self.virtuals
-
     def flip(self) -> "DependencySpec":
         """Flip the dependency, and drop virtual information"""
         return DependencySpec(
