@@ -121,12 +121,6 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             when="@:7",  # req in CP2K v8+
             description=("Use CUBLAS for general matrix operations in DBCSR"),
         )
-        variant(
-            "cusolvermp",
-            default=False,
-            when="@2023.2:",
-            description="Use Nvidia cuSOLVERMp eigensolver",
-        )
 
     HFX_LMAX_RANGE = range(4, 8)
 
@@ -656,10 +650,6 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             if cuda_arch == "35" and spec.satisfies("+cuda_arch_35_k20x"):
                 gpuver = "K20X"
 
-            if spec.satisfies("+cusolvermp"):
-                libs += ["-lcusolverMp"]
-                cppflags += ["-D__CUSOLVERMP"]
-
         if "@2022: +rocm" in spec:
             libs += [
                 "-L{}".format(spec["rocm"].libs.directories[0]),
@@ -888,7 +878,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 args += [
                     self_define("CP2K_USE_ACCEL", "CUDA"),
                     self.define("CP2K_WITH_GPU", gpu_ver),
-                    self.define_from_variant("CP2K_USE_CUSOLVER_MP", "cusolvermp"),
                 ]
 
         if "+rocm" in spec:
