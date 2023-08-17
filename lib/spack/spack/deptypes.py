@@ -18,10 +18,13 @@ DepType = str  # Python 3.8: Literal["build", "link", "run", "test"]
 #: Canonical dependency types
 CanonicalDepTypes = Tuple[DepType, ...]
 
-# Our "enum"
-BUILD = 0b0001
-LINK = 0b0010
-RUN = 0b0100
+# Flag values. NOTE: these values are not arbitrary, since hash computation imposes
+# the order (link, run, build, test) when depending on the same package multiple times,
+# and we rely on default integer comparison to sort dependency types.
+# New dependency types should be appended.
+LINK = 0b0001
+RUN = 0b0010
+BUILD = 0b0100
 TEST = 0b1000
 
 #: The types of dependency relationships that Spack understands.
