@@ -11,7 +11,7 @@ class Beatnik(CMakePackage):
     homepage = "https://github.com/CUP-ECS/beatnik"
     git = "https://github.com/CUP-ECS/beatnik.git"
 
-    maintainers("patrickb314", "JAStewart28")
+    maintainers("patrickb314", "JStewart28")
 
     # Add proper versions and checksums here. W
     # version("1.0", sha256="XXX")
