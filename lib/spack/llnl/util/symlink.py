@@ -159,7 +159,7 @@ def _windows_is_junction(path: str) -> bool:
 
     invalid_file_attributes = 0xFFFFFFFF
     reparse_point = 0x400
-    file_attr = get_file_attributes(path)
+    file_attr = get_file_attributes(str(path))
 
     if file_attr == invalid_file_attributes:
         return False
