@@ -35,7 +35,6 @@ class UfsUtilsEnv(BundlePackage):
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
     depends_on("netcdf-cxx")
-    depends_on("netcdf-fortran")
     depends_on("esmf")
     depends_on("nco")
     depends_on("nccmp")
