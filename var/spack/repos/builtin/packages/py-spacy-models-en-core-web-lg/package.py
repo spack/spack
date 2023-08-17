@@ -16,4 +16,4 @@ class PySpacyModelsEnCoreWebLg(PythonPackage):
     version("3.5.0", sha256="29732c8167e444686e0d8716d6b09123f3fa2d32baf7dbd2d8bc6c1b2c1b6945")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-spacy@3.5", when="@3.5" type=("build", "run"))
+    depends_on("py-spacy@3.5", when="@3.5", type=("build", "run"))
