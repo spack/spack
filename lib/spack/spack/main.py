@@ -28,7 +28,6 @@ import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output
 
 import spack
 import spack.cmd
@@ -722,7 +721,7 @@ class SpackCommand:
 
             out = io.StringIO()
             try:
-                with log_output(out):
+                with spack.debug.log_output(out):
                     self.returncode = _invoke_command(self.command, self.parser, args, unknown)
 
             except SystemExit as e:

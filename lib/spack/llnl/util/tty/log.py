@@ -24,8 +24,6 @@ from typing import Optional
 
 import llnl.util.tty as tty
 
-import spack.debug
-
 termios: Optional[ModuleType] = None
 try:
     import termios as term_mod
@@ -425,28 +423,10 @@ def log_output(*args, **kwargs):
     This method is actually a factory serving a per platform
     (unix vs windows) log_output class
     """
-    if spack.debug._pdb:
-        return nooplog()
-    elif sys.platform == "win32":
+    if sys.platform == "win32":
         return winlog(*args, **kwargs)
     else:
         return nixlog(*args, **kwargs)
-
-
-class nooplog:
-    def __init__(self):
-        # This passes all output, so the effect is the same as to echo
-        self.echo = True
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return False
-
-    @contextmanager
-    def force_echo(self):
-        yield
 
 
 class nixlog:

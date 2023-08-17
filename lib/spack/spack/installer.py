@@ -44,7 +44,6 @@ import llnl.util.lock as lk
 import llnl.util.tty as tty
 from llnl.util.lang import pretty_seconds
 from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output
 
 import spack.binary_distribution as binary_distribution
 import spack.build_environment
@@ -2449,7 +2448,7 @@ class BuildProcessInstaller:
                 try:
                     # DEBUGGING TIP - to debug this section, insert an IPython
                     # embed here, and run the sections below without log capture
-                    log_contextmanager = log_output(
+                    log_contextmanager = spack.debug.log_output(
                         log_file,
                         self.echo,
                         True,
