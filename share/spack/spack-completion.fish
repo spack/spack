@@ -365,8 +365,10 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a commands -d 'list
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a compiler -d 'manage compilers'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a compilers -d 'list available compilers'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a concretize -d 'concretize an environment and write a lockfile'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a concretise -d 'concretize an environment and write a lockfile'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a config -d 'get and set configuration options'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerize -d 'creates recipes to build images for different container runtimes'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerise -d 'creates recipes to build images for different container runtimes'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a create -d 'create a new package file'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a debug -d 'debugging commands for troubleshooting Spack'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependencies -d 'show dependencies of a package'
@@ -1100,6 +1102,25 @@ complete -c spack -n '__fish_spack_using_command concretize' -l reuse-deps -d 'r
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
+# spack concretise
+set -g __fish_spack_optspecs_spack_concretise h/help f/force test= q/quiet U/fresh reuse reuse-deps j/jobs=
+complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command concretise' -s f -l force -f -a force
+complete -c spack -n '__fish_spack_using_command concretise' -s f -l force -d 're-concretize even if already concretized'
+complete -c spack -n '__fish_spack_using_command concretise' -l test -r -f -a 'root all'
+complete -c spack -n '__fish_spack_using_command concretise' -l test -r -d 'concretize with test dependencies of only root packages or all packages'
+complete -c spack -n '__fish_spack_using_command concretise' -s q -l quiet -f -a quiet
+complete -c spack -n '__fish_spack_using_command concretise' -s q -l quiet -d 'don\'t print concretized specs'
+complete -c spack -n '__fish_spack_using_command concretise' -s U -l fresh -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command concretise' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
+complete -c spack -n '__fish_spack_using_command concretise' -l reuse -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command concretise' -l reuse -d 'reuse installed packages/buildcaches when possible'
+complete -c spack -n '__fish_spack_using_command concretise' -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command concretise' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command concretise' -s j -l jobs -r -f -a jobs
+complete -c spack -n '__fish_spack_using_command concretise' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
+
 # spack config
 set -g __fish_spack_optspecs_spack_config h/help scope=
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a get -d 'print configuration values'
@@ -1193,6 +1214,15 @@ complete -c spack -n '__fish_spack_using_command containerize' -l list-os -f -a 
 complete -c spack -n '__fish_spack_using_command containerize' -l list-os -d 'list all the OS that can be used in the bootstrap phase and exit'
 complete -c spack -n '__fish_spack_using_command containerize' -l last-stage -r -f -a 'bootstrap build final'
 complete -c spack -n '__fish_spack_using_command containerize' -l last-stage -r -d 'last stage in the container recipe'
+
+# spack containerise
+set -g __fish_spack_optspecs_spack_containerise h/help list-os last-stage=
+complete -c spack -n '__fish_spack_using_command containerise' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command containerise' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command containerise' -l list-os -f -a list_os
+complete -c spack -n '__fish_spack_using_command containerise' -l list-os -d 'list all the OS that can be used in the bootstrap phase and exit'
+complete -c spack -n '__fish_spack_using_command containerise' -l last-stage -r -f -a 'bootstrap build final'
+complete -c spack -n '__fish_spack_using_command containerise' -l last-stage -r -d 'last stage in the container recipe'
 
 # spack create
 set -g __fish_spack_optspecs_spack_create h/help keep-stage n/name= t/template= r/repo= N/namespace= f/force skip-editor b/batch
