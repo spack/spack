@@ -932,13 +932,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             "--config=opt",
             # Enable verbose output for failures
             "--verbose_failures",
-            # Show (formatted) subcommands being executed
-            "--subcommands=pretty_print",
-            # Ask bazel to explain what it's up to
-            # Needs a filename as argument
-            "--explain=explainlogfile.txt",
-            # Increase verbosity of explanation,
-            "--verbose_explanations",
         ]
 
         if spec.satisfies("^bazel@:3.5"):

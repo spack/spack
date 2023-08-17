@@ -985,16 +985,14 @@ class _EdgeMap(collections.abc.Mapping):
     def __len__(self):
         return len(self.edges)
 
-    def add(self, edge):
-        """Adds a new edge to this object.
-
-        Args:
-            edge (DependencySpec): edge to be added
-        """
+    def add(self, edge: DependencySpec):
         key = edge.spec.name if self.store_by_child else edge.parent.name
-        current_list = self.edges.setdefault(key, [])
-        current_list.append(edge)
-        current_list.sort(key=_sort_by_dep_types)
+        if key in self.edges:
+            lst = self.edges[key]
+            lst.append(edge)
+            lst.sort(key=_sort_by_dep_types)
+        else:
+            self.edges[key] = [edge]
 
     def __str__(self):
         return "{deps: %s}" % ", ".join(str(d) for d in sorted(self.values()))
@@ -1299,7 +1297,7 @@ class SpecBuildInterface(lang.ObjectWrapper):
         original_spec = getattr(spec, "wrapped_obj", spec)
         self.wrapped_obj = original_spec
         self.token = original_spec, name, query_parameters
-        is_virtual = spack.repo.path.is_virtual(name)
+        is_virtual = spack.repo.PATH.is_virtual(name)
         self.last_query = QueryState(
             name=name, extra_parameters=query_parameters, isvirtual=is_virtual
         )
@@ -1733,7 +1731,7 @@ class Spec:
             self.name
         )
         if not self._package:
-            self._package = spack.repo.path.get(self)
+            self._package = spack.repo.PATH.get(self)
         return self._package
 
     @property
@@ -1741,11 +1739,11 @@ class Spec:
         """Internal package call gets only the class object for a package.
         Use this to just get package metadata.
         """
-        return spack.repo.path.get_pkg_class(self.fullname)
+        return spack.repo.PATH.get_pkg_class(self.fullname)
 
     @property
     def virtual(self):
-        return spack.repo.path.is_virtual(self.name)
+        return spack.repo.PATH.is_virtual(self.name)
 
     @property
     def concrete(self):
@@ -1927,19 +1925,15 @@ class Spec:
         store, or finally, binary caches."""
         import spack.environment
 
-        matches = []
         active_env = spack.environment.active_environment()
 
-        if active_env:
-            env_matches = active_env.get_by_hash(self.abstract_hash) or []
-            matches = [m for m in env_matches if m._satisfies(self)]
-        if not matches:
-            db_matches = spack.store.STORE.db.get_by_hash(self.abstract_hash) or []
-            matches = [m for m in db_matches if m._satisfies(self)]
-        if not matches:
-            query = spack.binary_distribution.BinaryCacheQuery(True)
-            remote_matches = query("/" + self.abstract_hash) or []
-            matches = [m for m in remote_matches if m._satisfies(self)]
+        # First env, then store, then binary cache
+        matches = (
+            (active_env.all_matching_specs(self) if active_env else [])
+            or spack.store.STORE.db.query(self, installed=any)
+            or spack.binary_distribution.BinaryCacheQuery(True)(self)
+        )
+
         if not matches:
             raise InvalidHashError(self, self.abstract_hash)
 
@@ -1960,19 +1954,17 @@ class Spec:
         spec = self.copy(deps=False)
         # root spec is replaced
         if spec.abstract_hash:
-            new = self._lookup_hash()
-            spec._dup(new)
+            spec._dup(self._lookup_hash())
             return spec
 
         # Get dependencies that need to be replaced
         for node in self.traverse(root=False):
             if node.abstract_hash:
-                new = node._lookup_hash()
-                spec._add_dependency(new, deptypes=(), virtuals=())
+                spec._add_dependency(node._lookup_hash(), deptypes=(), virtuals=())
 
         # reattach nodes that were not otherwise satisfied by new dependencies
         for node in self.traverse(root=False):
-            if not any(n._satisfies(node) for n in spec.traverse()):
+            if not any(n.satisfies(node) for n in spec.traverse()):
                 spec._add_dependency(node.copy(), deptypes=(), virtuals=())
 
         return spec
@@ -1985,9 +1977,7 @@ class Spec:
         if not any(node for node in self.traverse(order="post") if node.abstract_hash):
             return
 
-        spec_by_hash = self.lookup_hash()
-
-        self._dup(spec_by_hash)
+        self._dup(self.lookup_hash())
 
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
@@ -2272,7 +2262,7 @@ class Spec:
         # TODO: this doesn't account for the case where the changed spec
         # (and the user spec) have dependencies
         new_spec = init_spec.copy()
-        package_cls = spack.repo.path.get_pkg_class(new_spec.name)
+        package_cls = spack.repo.PATH.get_pkg_class(new_spec.name)
         if change_spec.versions and not change_spec.versions == vn.any_version:
             new_spec.versions = change_spec.versions
         for variant, value in change_spec.variants.items():
@@ -2546,7 +2536,7 @@ class Spec:
         assert isinstance(self.extra_attributes, collections.abc.Mapping), msg
 
         # Validate the spec calling a package specific method
-        pkg_cls = spack.repo.path.get_pkg_class(self.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
         validate_fn = getattr(pkg_cls, "validate_detected_spec", lambda x, y: None)
         validate_fn(self, self.extra_attributes)
 
@@ -2645,7 +2635,7 @@ class Spec:
         """
         # Make an index of stuff this spec already provides
         self_index = spack.provider_index.ProviderIndex(
-            repository=spack.repo.path, specs=self.traverse(), restrict=True
+            repository=spack.repo.PATH, specs=self.traverse(), restrict=True
         )
         changed = False
         done = False
@@ -2785,7 +2775,7 @@ class Spec:
         visited_user_specs = set()
         for dep in self.traverse():
             visited_user_specs.add(dep.name)
-            pkg_cls = spack.repo.path.get_pkg_class(dep.name)
+            pkg_cls = spack.repo.PATH.get_pkg_class(dep.name)
             visited_user_specs.update(x.name for x in pkg_cls(dep).provided)
 
         extra = set(user_spec_deps.keys()).difference(visited_user_specs)
@@ -2868,7 +2858,7 @@ class Spec:
             # we can do it as late as possible to allow as much
             # compatibility across repositories as possible.
             if s.namespace is None:
-                s.namespace = spack.repo.path.repo_for_pkg(s.name).namespace
+                s.namespace = spack.repo.PATH.repo_for_pkg(s.name).namespace
 
             if s.concrete:
                 continue
@@ -2926,7 +2916,7 @@ class Spec:
 
             # Get the path from the module the package can override the default
             # (this is mostly needed for Cray)
-            pkg_cls = spack.repo.path.get_pkg_class(external_spec.name)
+            pkg_cls = spack.repo.PATH.get_pkg_class(external_spec.name)
             package = pkg_cls(external_spec)
             external_spec.external_path = getattr(
                 package, "external_prefix", md.path_from_modules(external_spec.external_modules)
@@ -2983,9 +2973,12 @@ class Spec:
             providers = [spec.name for spec in answer.values() if spec.package.provides(name)]
             name = providers[0]
 
-        assert name in answer
+        node = spack.solver.asp.SpecBuilder.make_node(pkg=name)
+        assert (
+            node in answer
+        ), f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
 
-        concretized = answer[name]
+        concretized = answer[node]
         self._dup(concretized)
 
     def concretize(self, tests=False):
@@ -3200,7 +3193,7 @@ class Spec:
         Raise an exception if there is a conflicting virtual
         dependency already in this spec.
         """
-        assert spack.repo.path.is_virtual_safe(vdep.name), vdep
+        assert spack.repo.PATH.is_virtual_safe(vdep.name), vdep
 
         # note that this defensively copies.
         providers = provider_index.providers_for(vdep)
@@ -3266,7 +3259,7 @@ class Spec:
         # If it's a virtual dependency, try to find an existing
         # provider in the spec, and merge that.
         virtuals = ()
-        if spack.repo.path.is_virtual_safe(dep.name):
+        if spack.repo.PATH.is_virtual_safe(dep.name):
             virtuals = (dep.name,)
             visited.add(dep.name)
             provider = self._find_provider(dep, provider_index)
@@ -3274,11 +3267,11 @@ class Spec:
                 dep = provider
         else:
             index = spack.provider_index.ProviderIndex(
-                repository=spack.repo.path, specs=[dep], restrict=True
+                repository=spack.repo.PATH, specs=[dep], restrict=True
             )
             items = list(spec_deps.items())
             for name, vspec in items:
-                if not spack.repo.path.is_virtual_safe(vspec.name):
+                if not spack.repo.PATH.is_virtual_safe(vspec.name):
                     continue
 
                 if index.providers_for(vspec):
@@ -3428,7 +3421,7 @@ class Spec:
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
         provider_index = spack.provider_index.ProviderIndex(
-            repository=spack.repo.path, specs=[s for s in all_spec_deps.values()], restrict=True
+            repository=spack.repo.PATH, specs=[s for s in all_spec_deps.values()], restrict=True
         )
 
         # traverse the package DAG and fill out dependencies according
@@ -3459,7 +3452,7 @@ class Spec:
         for spec in self.traverse():
             # raise an UnknownPackageError if the spec's package isn't real.
             if (not spec.virtual) and spec.name:
-                spack.repo.path.get_pkg_class(spec.fullname)
+                spack.repo.PATH.get_pkg_class(spec.fullname)
 
             # validate compiler in addition to the package name.
             if spec.compiler:
@@ -3519,7 +3512,8 @@ class Spec:
         for value in values:
             if self.variants.get(variant_name):
                 msg = (
-                    "Cannot append a value to a single-valued " "variant with an already set value"
+                    f"cannot append the new value '{value}' to the single-valued "
+                    f"variant '{self.variants[variant_name]}'"
                 )
                 assert pkg_variant.multi, msg
                 self.variants[variant_name].append(value)
@@ -3527,7 +3521,7 @@ class Spec:
                 variant = pkg_variant.make_variant(value)
                 self.variants[variant_name] = variant
 
-        pkg_cls = spack.repo.path.get_pkg_class(self.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
         pkg_variant.validate_or_raise(self.variants[variant_name], pkg_cls)
 
     def constrain(self, other, deps=True):
@@ -3719,21 +3713,25 @@ class Spec:
         """
         other = self._autospec(other)
 
-        lhs = self.lookup_hash() or self
-        rhs = other.lookup_hash() or other
-
-        return lhs._intersects(rhs, deps)
-
-    def _intersects(self, other: "Spec", deps: bool = True) -> bool:
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
+
+        self_hash = self.dag_hash() if self.concrete else self.abstract_hash
+        other_hash = other.dag_hash() if other.concrete else other.abstract_hash
+
+        if (
+            self_hash
+            and other_hash
+            and not (self_hash.startswith(other_hash) or other_hash.startswith(self_hash))
+        ):
+            return False
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
             if self.virtual and other.virtual:
                 # Two virtual specs intersect only if there are providers for both
-                lhs = spack.repo.path.providers_for(str(self))
-                rhs = spack.repo.path.providers_for(str(other))
+                lhs = spack.repo.PATH.providers_for(str(self))
+                rhs = spack.repo.PATH.providers_for(str(other))
                 intersection = [s for s in lhs if any(s.intersects(z) for z in rhs)]
                 return bool(intersection)
 
@@ -3742,7 +3740,7 @@ class Spec:
                 virtual_spec, non_virtual_spec = (self, other) if self.virtual else (other, self)
                 try:
                     # Here we might get an abstract spec
-                    pkg_cls = spack.repo.path.get_pkg_class(non_virtual_spec.fullname)
+                    pkg_cls = spack.repo.PATH.get_pkg_class(non_virtual_spec.fullname)
                     pkg = pkg_cls(non_virtual_spec)
                 except spack.repo.UnknownEntityError:
                     # If we can't get package info on this spec, don't treat
@@ -3787,19 +3785,8 @@ class Spec:
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
             return self._intersects_dependencies(other)
-        else:
-            return True
 
-    def satisfies(self, other, deps=True):
-        """
-        This checks constraints on common dependencies against each other.
-        """
-        other = self._autospec(other)
-
-        lhs = self.lookup_hash() or self
-        rhs = other.lookup_hash() or other
-
-        return lhs._satisfies(rhs, deps=deps)
+        return True
 
     def _intersects_dependencies(self, other):
         if not other._dependencies or not self._dependencies:
@@ -3813,10 +3800,10 @@ class Spec:
 
         # For virtual dependencies, we need to dig a little deeper.
         self_index = spack.provider_index.ProviderIndex(
-            repository=spack.repo.path, specs=self.traverse(), restrict=True
+            repository=spack.repo.PATH, specs=self.traverse(), restrict=True
         )
         other_index = spack.provider_index.ProviderIndex(
-            repository=spack.repo.path, specs=other.traverse(), restrict=True
+            repository=spack.repo.PATH, specs=other.traverse(), restrict=True
         )
 
         # This handles cases where there are already providers for both vpkgs
@@ -3836,7 +3823,7 @@ class Spec:
 
         return True
 
-    def _satisfies(self, other: "Spec", deps: bool = True) -> bool:
+    def satisfies(self, other: "Spec", deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
@@ -3851,13 +3838,20 @@ class Spec:
             # objects.
             return self.concrete and self.dag_hash() == other.dag_hash()
 
+        # If the right-hand side has an abstract hash, make sure it's a prefix of the
+        # left-hand side's (abstract) hash.
+        if other.abstract_hash:
+            compare_hash = self.dag_hash() if self.concrete else self.abstract_hash
+            if not compare_hash or not compare_hash.startswith(other.abstract_hash):
+                return False
+
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
             # A concrete provider can satisfy a virtual dependency.
             if not self.virtual and other.virtual:
                 try:
                     # Here we might get an abstract spec
-                    pkg_cls = spack.repo.path.get_pkg_class(self.fullname)
+                    pkg_cls = spack.repo.PATH.get_pkg_class(self.fullname)
                     pkg = pkg_cls(self)
                 except spack.repo.UnknownEntityError:
                     # If we can't get package info on this spec, don't treat
@@ -3939,8 +3933,8 @@ class Spec:
             # translate patch sha256sums to patch objects by consulting the index
             if self._patches_assigned():
                 for sha256 in self.variants["patches"]._patches_in_order_of_appearance:
-                    index = spack.repo.path.patch_index
-                    pkg_cls = spack.repo.path.get_pkg_class(self.name)
+                    index = spack.repo.PATH.patch_index
+                    pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
                     patch = index.patch_for_package(sha256, pkg_cls)
                     self._patches.append(patch)
 
@@ -4227,9 +4221,7 @@ class Spec:
     def _cmp_iter(self):
         """Lazily yield components of self for comparison."""
 
-        cmp_spec = self.lookup_hash() or self
-
-        for item in cmp_spec._cmp_node():
+        for item in self._cmp_node():
             yield item
 
         # This needs to be in _cmp_iter so that no specs with different process hashes
@@ -4240,10 +4232,10 @@ class Spec:
         # TODO: they exist for speed.  We should benchmark whether it's really worth
         # TODO: having two types of hashing now that we use `json` instead of `yaml` for
         # TODO: spec hashing.
-        yield cmp_spec.process_hash() if cmp_spec.concrete else None
+        yield self.process_hash() if self.concrete else None
 
         def deps():
-            for dep in sorted(itertools.chain.from_iterable(cmp_spec._dependencies.values())):
+            for dep in sorted(itertools.chain.from_iterable(self._dependencies.values())):
                 yield dep.spec.name
                 yield tuple(sorted(dep.deptypes))
                 yield hash(dep.spec)

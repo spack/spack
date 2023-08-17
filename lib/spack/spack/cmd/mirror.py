@@ -90,7 +90,6 @@ def setup_parser(subparser):
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
 
     # Add
     add_parser = sp.add_parser("add", help=mirror_add.__doc__)
@@ -99,7 +98,7 @@ def setup_parser(subparser):
     add_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
@@ -119,7 +118,7 @@ def setup_parser(subparser):
     remove_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
@@ -138,7 +137,7 @@ def setup_parser(subparser):
     set_url_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
@@ -167,7 +166,7 @@ def setup_parser(subparser):
     set_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
@@ -178,7 +177,7 @@ def setup_parser(subparser):
     list_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_list_scope(),
         help="configuration scope to read from",
     )
@@ -444,7 +443,7 @@ def mirror_create(args):
         )
 
     # When no directory is provided, the source dir is used
-    path = args.directory or spack.caches.fetch_cache_location()
+    path = args.directory or spack.caches.FETCH_CACHE_location()
 
     if args.all and not ev.active_environment():
         create_mirror_for_all_specs(
@@ -474,7 +473,7 @@ def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn):
         path, skip_unstable_versions=skip_unstable_versions
     )
     for candidate in mirror_specs:
-        pkg_cls = spack.repo.path.get_pkg_class(candidate.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
         pkg_obj = pkg_cls(spack.spec.Spec(candidate))
         mirror_stats.next_spec(pkg_obj.spec)
         spack.mirror.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
