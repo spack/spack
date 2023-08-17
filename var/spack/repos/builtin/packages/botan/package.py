@@ -43,6 +43,8 @@ class Botan(MakefilePackage):
     depends_on("python", type="build")
     depends_on("py-sphinx@1.2:", type="build", when="+doc")
 
+    conflicts("%gcc@:10", when="@3:")
+
     def edit(self, spec, prefix):
         configure = Executable("./configure.py")
         configure(*self.configure_args())
