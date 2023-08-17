@@ -66,7 +66,6 @@ import llnl.util.tty.color as clr
 import spack.compiler
 import spack.compilers
 import spack.config
-import spack.debug
 import spack.dependency as dp
 import spack.error
 import spack.hash_types as ht
