@@ -347,7 +347,7 @@ complete -c spack --erase
 # Everything below here is auto-generated.
 
 # spack
-set -g __fish_spack_optspecs_spack h/help H/all-help color= c/config= C/config-scope= d/debug timestamp pdb e/env= D/env-dir= E/no-env use-env-repo k/insecure l/enable-locks L/disable-locks m/mock b/bootstrap p/profile sorted-profile= lines= v/verbose stacktrace backtrace V/version print-shell-vars=
+set -g __fish_spack_optspecs_spack h/help H/all-help color= c/config= C/config-scope= d/debug timestamp pdb interactive-pdb e/env= D/env-dir= E/no-env use-env-repo k/insecure l/enable-locks L/disable-locks m/mock b/bootstrap p/profile sorted-profile= lines= v/verbose stacktrace backtrace V/version print-shell-vars=
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a add -d 'add a spec to an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a arch -d 'print architecture information about this machine'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a audit -d 'audit configuration files, packages, etc.'
@@ -441,6 +441,8 @@ complete -c spack -n '__fish_spack_using_command ' -l timestamp -f -a timestamp
 complete -c spack -n '__fish_spack_using_command ' -l timestamp -d 'add a timestamp to tty output'
 complete -c spack -n '__fish_spack_using_command ' -l pdb -f -a pdb
 complete -c spack -n '__fish_spack_using_command ' -l pdb -d 'run spack under the pdb debugger'
+complete -c spack -n '__fish_spack_using_command ' -l interactive-pdb -f -a interactive_pdb
+complete -c spack -n '__fish_spack_using_command ' -l interactive-pdb -d 'required if you set_trace() inside of a phase'
 complete -c spack -n '__fish_spack_using_command ' -s e -l env -r -f -a env
 complete -c spack -n '__fish_spack_using_command ' -s e -l env -r -d 'run with a specific environment (see spack env)'
 complete -c spack -n '__fish_spack_using_command ' -s D -l env-dir -r -f -a env_dir
@@ -1804,7 +1806,7 @@ complete -c spack -n '__fish_spack_using_command info' -l virtuals -f -a virtual
 complete -c spack -n '__fish_spack_using_command info' -l virtuals -d 'output virtual packages'
 
 # spack install
-set -g __fish_spack_optspecs_spack_install h/help only= u/until= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum deprecated v/verbose interactive-pdb fake only-concrete add no-add f/file= clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all U/fresh reuse reuse-deps
+set -g __fish_spack_optspecs_spack_install h/help only= u/until= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum deprecated v/verbose fake only-concrete add no-add f/file= clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all U/fresh reuse reuse-deps
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 install' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command install' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command install' -s h -l help -d 'show this help message and exit'
@@ -1846,8 +1848,6 @@ complete -c spack -n '__fish_spack_using_command install' -l deprecated -f -a de
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -d 'fetch deprecated versions without warning'
 complete -c spack -n '__fish_spack_using_command install' -s v -l verbose -f -a install_verbose
 complete -c spack -n '__fish_spack_using_command install' -s v -l verbose -d 'display verbose build output while installing'
-complete -c spack -n '__fish_spack_using_command install' -l interactive-pdb -f -a interactive_pdb
-complete -c spack -n '__fish_spack_using_command install' -l interactive-pdb -d 'required if you set_trace() inside of a phase'
 complete -c spack -n '__fish_spack_using_command install' -l fake -f -a fake
 complete -c spack -n '__fish_spack_using_command install' -l fake -d 'fake install for debug purposes'
 complete -c spack -n '__fish_spack_using_command install' -l only-concrete -f -a only_concrete
