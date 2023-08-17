@@ -56,11 +56,7 @@ class FoamExtend(Package):
     maintainers("hoehnp")
     homepage = "http://www.extend-project.de/"
 
-    # @todo:
-    # fix WM_PROJECT_DIR during building
-    # create symlink while staging
-
-    version("5.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-5.0.git") # issues with py-pip
+    version("5.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-5.0.git")
     version("4.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.1.git")
     version("4.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git")
 
