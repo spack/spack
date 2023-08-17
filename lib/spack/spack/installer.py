@@ -36,7 +36,6 @@ import shutil
 import sys
 import time
 from collections import defaultdict
-from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Set, Tuple
 
 import llnl.util.filesystem as fs
