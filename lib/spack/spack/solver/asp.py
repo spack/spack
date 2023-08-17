@@ -1797,7 +1797,7 @@ class SpackSolverSetup:
             node_flag = fn.attr("node_flag_set")
             node_flag_source = fn.attr("node_flag_source")
             node_flag_propagate = fn.attr("node_flag_propagate")
-            variant_propagate = fn.attr("variant_propagate")
+            variant_possible_prop = fn.attr("variant_possible_prop")
 
         class Body:
             node = fn.attr("node")
@@ -1811,7 +1811,7 @@ class SpackSolverSetup:
             node_flag = fn.attr("node_flag")
             node_flag_source = fn.attr("node_flag_source")
             node_flag_propagate = fn.attr("node_flag_propagate")
-            variant_propagate = fn.attr("variant_propagate")
+            variant_possible_prop = fn.attr("variant_possible_prop")
 
         f = Body if body else Head
 
@@ -1860,7 +1860,7 @@ class SpackSolverSetup:
                 clauses.append(f.variant_value(spec.name, vname, value))
 
                 if variant.propagate:
-                    clauses.append(f.variant_propagate(spec.name, vname, value, spec.name))
+                    clauses.append(f.variant_possible_prop(spec.name, vname, value, spec.name))
 
                 # Tell the concretizer that this is a possible value for the
                 # variant, to account for things like int/str values where we
