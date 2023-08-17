@@ -2287,22 +2287,6 @@ class PackageInstaller:
             )
 
 
-class NoopLogger:
-    def __init__(self):
-        # This passes all output, so the effect is the same as to echo
-        self.echo = True
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        return False
-
-    @contextmanager
-    def force_echo(self):
-        yield
-
-
 class BuildProcessInstaller:
     """This class implements the part installation that happens in the child process."""
 
@@ -2472,9 +2456,6 @@ class BuildProcessInstaller:
                         env=self.unmodified_env,
                         filter_fn=self.filter_fn,
                     )
-
-                    if getattr(pkg, "pdb", False):
-                        log_contextmanager = NoopLogger()
 
                     with log_contextmanager as logger:
                         # Redirect stdout and stderr to daemon pipe

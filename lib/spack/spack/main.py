@@ -455,6 +455,12 @@ def make_argument_parser(**kwargs):
     )
     parser.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
     parser.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
+    parser.add_argument(
+        "--interactive-pdb",
+        action="store_true",
+        dest="interactive_pdb",
+        help="required if you set_trace() inside of a phase",
+    )
 
     env_group = parser.add_mutually_exclusive_group()
     env_group.add_argument(
@@ -993,6 +999,9 @@ def finish_parse_and_run(parser, cmd_name, env_format_error):
 
     # many operations will fail without a working directory.
     set_working_dir()
+
+    if args.interactive_pdb:
+        spack.debug._pdb = True
 
     # now we can actually execute the command.
     if args.spack_profile or args.sorted_profile:

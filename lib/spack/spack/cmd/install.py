@@ -185,12 +185,6 @@ def setup_parser(subparser):
         dest="install_verbose",
         help="display verbose build output while installing",
     )
-    subparser.add_argument(
-        "--interactive-pdb",
-        action="store_true",
-        dest="interactive_pdb",
-        help="required if you set_trace() inside of a phase",
-    )
     subparser.add_argument("--fake", action="store_true", help="fake install for debug purposes")
     subparser.add_argument(
         "--only-concrete",
@@ -330,9 +324,6 @@ def install(parser, args):
     if args.help_cdash:
         arguments.print_cdash_help()
         return
-
-    if args.interactive_pdb:
-        spack.debug._pdb = True
 
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
