@@ -38,6 +38,8 @@ class Parallelio(CMakePackage):
     variant("mpi", default=True, description="Use mpi to build, otherwise use mpi-serial")
 
     patch("remove_redefinition_of_mpi_offset.patch", when="@:2.5.6")
+
+    # This patch addresses an issue when compiling pio2.6.0 with a serial netcdf library.  
     patch("pio_260.patch", when="@2.6.0")
 
     depends_on("cmake@3.7:", type="build")
