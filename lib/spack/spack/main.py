@@ -32,6 +32,7 @@ import llnl.util.tty.color as color
 import spack
 import spack.cmd
 import spack.config
+import spack.debug
 import spack.environment as ev
 import spack.modules
 import spack.paths
