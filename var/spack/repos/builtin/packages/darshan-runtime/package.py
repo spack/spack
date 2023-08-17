@@ -50,7 +50,7 @@ class DarshanRuntime(AutotoolsPackage):
     version("3.0.0", sha256="95232710f5631bbf665964c0650df729c48104494e887442596128d189da43e0")
 
     depends_on("mpi", when="+mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("hdf5", when="+hdf5")
     depends_on("parallel-netcdf", when="+parallel-netcdf")
     depends_on("papi", when="+apxc")
@@ -122,7 +122,7 @@ class DarshanRuntime(AutotoolsPackage):
         extra_args.append("--with-mem-align=8")
         extra_args.append("--with-log-path-by-env=DARSHAN_LOG_DIR_PATH")
         extra_args.append("--with-jobid-env=%s" % job_id)
-        extra_args.append("--with-zlib=%s" % spec["zlib"].prefix)
+        extra_args.append("--with-zlib=%s" % spec["zlib-api"].prefix)
 
         if "+mpi" in spec:
             extra_args.append("CC=%s" % self.spec["mpi"].mpicc)

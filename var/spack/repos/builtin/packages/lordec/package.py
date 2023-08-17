@@ -30,7 +30,7 @@ class Lordec(MakefilePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
     depends_on("gatb-core@1.4.1:", type=["build", "link", "run"])
-    depends_on("zlib", type=["build", "link"])
+    depends_on("zlib-api", type=["build", "link"])
 
     build_targets = ["clean", "all"]
 

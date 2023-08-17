@@ -56,7 +56,7 @@ class DarshanUtil(AutotoolsPackage):
         "apxc", default=False, description="Compile with AutoPerf XC module support", when="@3.3:"
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2", when="+bzip2", type=("build", "link", "run"))
     depends_on("autoconf", type="build", when="@main")
     depends_on("automake", type="build", when="@main")
@@ -78,7 +78,7 @@ class DarshanUtil(AutotoolsPackage):
         extra_args = []
 
         extra_args.append("CC=%s" % self.compiler.cc)
-        extra_args.append("--with-zlib=%s" % spec["zlib"].prefix)
+        extra_args.append("--with-zlib=%s" % spec["zlib-api"].prefix)
         if "+apmpi" in spec:
             if self.version < Version("3.3.2"):
                 extra_args.append("--enable-autoperf-apmpi")

@@ -56,8 +56,9 @@ class Arrow(CMakePackage, CudaPackage):
     depends_on("utf8proc@2.7.0: +shared", when="+gandiva")
     depends_on("utf8proc@2.7.0: +shared", when="+python")
     depends_on("xsimd@8.1.0:", when="@9.0.0:")
-    depends_on("zlib+pic", when="+zlib @9:")
-    depends_on("zlib+pic", when="@:8")
+    depends_on("zlib-api", when="+zlib @9:")
+    depends_on("zlib-api", when="@:8")
+    conflicts("^zlib~pic")
     depends_on("zstd", when="+zstd @9:")
     depends_on("zstd", when="@:8")
 
@@ -147,14 +148,18 @@ class Arrow(CMakePackage, CudaPackage):
         args.append(self.define_from_variant("ARROW_WITH_ZLIB", "zlib"))
         args.append(self.define_from_variant("ARROW_WITH_ZSTD", "zstd"))
 
-        with when("@:8"):
-            dep_list = ["flatbuffers", "rapidjson", "zlib", "zstd"]
+        if self.spec.satisfies("@:8"):
+            args.extend(
+                [
+                    self.define("FLATBUFFERS_HOME", self.spec["flatbuffers"].prefix),
+                    self.define("RAPIDJSON_HOME", self.spec["rapidjson"].prefix),
+                    self.define("ZSTD_HOME", self.spec["zstd"].prefix),
+                    self.define("ZLIB_HOME", self.spec["zlib-api"].prefix),
+                    self.define("ZLIB_LIBRARIES", self.spec["zlib-api"].libs),
+                ]
+            )
 
             if self.spec.satisfies("+snappy"):
-                dep_list.append("snappy")
-
-            for dep in dep_list:
-                args.append("-D{0}_HOME={1}".format(dep.upper(), self.spec[dep].prefix))
-            args.append("-DZLIB_LIBRARIES={0}".format(self.spec["zlib"].libs))
+                args.append(self.define("SNAPPY_HOME", self.spec["snappy"].prefix))
 
         return args

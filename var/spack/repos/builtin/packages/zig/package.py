@@ -15,6 +15,7 @@ class Zig(CMakePackage):
 
     maintainers("alalazo")
 
+    version("0.11.0", tag="0.11.0")
     version("0.10.1", tag="0.10.1")
     version("0.9.1", tag="0.9.1", deprecated=True)
 
@@ -28,6 +29,7 @@ class Zig(CMakePackage):
     depends_on("llvm targets=all")
     depends_on("llvm@13", when="@0.9.1")
     depends_on("llvm@15", when="@0.10.1")
+    depends_on("llvm@16", when="@0.11.0")
 
     depends_on("git", type="build")
     depends_on("ccache")

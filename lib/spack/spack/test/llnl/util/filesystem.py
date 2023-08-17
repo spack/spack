@@ -510,7 +510,7 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
         assert replacement in f.read()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="chgrp isn't used on Windows")
+@pytest.mark.not_on_windows("chgrp isn't used on Windows")
 def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
     with fs.working_dir(tmpdir):
         os.mkdir("test-dir_chgrp_dont_set_group_if_already_set")
@@ -730,7 +730,7 @@ def test_temporary_dir_context_manager():
         assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="No shebang on Windows")
+@pytest.mark.not_on_windows("No shebang on Windows")
 def test_is_nonsymlink_exe_with_shebang(tmpdir):
     with tmpdir.as_cwd():
         # Create an executable with shebang.
@@ -885,7 +885,7 @@ class RegisterVisitor(fs.BaseDirectoryVisitor):
         self.symlinked_dirs_after.append(rel_path)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Requires symlinks")
+@pytest.mark.not_on_windows("Requires symlinks")
 def test_visit_directory_tree_follow_all(noncyclical_dir_structure):
     root = str(noncyclical_dir_structure)
     visitor = RegisterVisitor(root, follow_dirs=True, follow_symlink_dirs=True)
@@ -910,7 +910,7 @@ def test_visit_directory_tree_follow_all(noncyclical_dir_structure):
     assert visitor.symlinked_dirs_after == [j("a", "to_c"), j("b", "to_c"), j("b")]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Requires symlinks")
+@pytest.mark.not_on_windows("Requires symlinks")
 def test_visit_directory_tree_follow_dirs(noncyclical_dir_structure):
     root = str(noncyclical_dir_structure)
     visitor = RegisterVisitor(root, follow_dirs=True, follow_symlink_dirs=False)
@@ -929,7 +929,7 @@ def test_visit_directory_tree_follow_dirs(noncyclical_dir_structure):
     assert not visitor.symlinked_dirs_after
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Requires symlinks")
+@pytest.mark.not_on_windows("Requires symlinks")
 def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
     root = str(noncyclical_dir_structure)
     visitor = RegisterVisitor(root, follow_dirs=False, follow_symlink_dirs=False)
@@ -944,7 +944,7 @@ def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
 
 @pytest.mark.regression("29687")
 @pytest.mark.parametrize("initial_mode", [stat.S_IRUSR | stat.S_IXUSR, stat.S_IWGRP])
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows might change permissions")
+@pytest.mark.not_on_windows("Windows might change permissions")
 def test_remove_linked_tree_doesnt_change_file_permission(tmpdir, initial_mode):
     # Here we test that a failed call to remove_linked_tree, due to passing a file
     # as an argument instead of a directory, doesn't leave the file with different

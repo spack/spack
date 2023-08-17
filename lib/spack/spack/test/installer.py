@@ -52,7 +52,6 @@ repo:
 
 def _noop(*args, **kwargs):
     """Generic monkeypatch no-op routine."""
-    pass
 
 
 def _none(*args, **kwargs):
@@ -458,7 +457,7 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
 
 def test_package_id_err(install_mockery):
     s = spack.spec.Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.path.get_pkg_class(s.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(s.name)
     with pytest.raises(ValueError, match="spec is not concretized"):
         inst.package_id(pkg_cls(s))
 

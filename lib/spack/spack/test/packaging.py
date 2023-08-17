@@ -11,7 +11,6 @@ import os
 import pathlib
 import platform
 import shutil
-import sys
 from collections import OrderedDict
 
 import pytest
@@ -39,7 +38,7 @@ from spack.relocate import (
 )
 from spack.spec import Spec
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_gnupghome")
