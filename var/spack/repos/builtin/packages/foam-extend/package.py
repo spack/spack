@@ -78,7 +78,6 @@ class FoamExtend(Package):
     )
 
     depends_on("openmpi", when="@5.0")
-    #depends_on("openmpi@4.0", when="@4.1")
     depends_on("openmpi%gcc@11", when="@4.1")
     depends_on("openmpi%gcc@11", when="@4.0")
     depends_on("openmpi%gcc@11", when="@3.2")
@@ -87,10 +86,10 @@ class FoamExtend(Package):
     depends_on("zlib-api")
     depends_on("flex", type="build")
     depends_on("cmake", type="build")
-    depends_on("rpm lua=False", when="@4.1:") # temporarily disabled because of build failure of lua and doxygen
-    depends_on("rpm%gcc@11 lua=False", when="@4.0") # temporarily disabled because of build failure of lua and doxygen
+    # temporarily disabled because of build failure of lua
+    depends_on("rpm lua=False", when="@4.1:")
+    depends_on("rpm%gcc@11 lua=False", when="@4.0")
     depends_on("bison")
-    #depends_on("mercurial", type="build")
 
     depends_on("scotch~metis", when="~ptscotch+scotch")
     depends_on("scotch~metis+mpi", when="+ptscotch")
