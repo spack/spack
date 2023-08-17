@@ -60,25 +60,19 @@ class FoamExtend(Package):
     # fix WM_PROJECT_DIR during building
     # create symlink while staging
 
-    version("5.0", git="file:///home/hoehn7/foam/foam-extend-5.0")
-    #version("5.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-5.0.git")
+    version("5.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-5.0.git") # issues with py-pip
     version("4.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.1.git")
     version("4.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git")
-    version("3.2", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.2.git")
-    version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git")
-    version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git")
 
     conflicts("%gcc@12:", when="@5.0")
     conflicts("%gcc@8:", when="@4.1")
     conflicts("%gcc@5.0:", when="@4.0")
-    conflicts("%gcc@5.0:", when="@3.2")
-    conflicts("%gcc@4.9:", when="@3.1")
-    conflicts("%gcc@4.5:", when="@3.0")
+
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
     variant("float32", default=False, description="Compile with 32-bit scalar (single-precision)")
     variant("paraview", default=False, description="Build paraview plugins (eg, paraFoam)")
-    variant("scotch", default=True, description="With scotch for decomposition")
+    variant("scotch", default=False, description="With scotch for decomposition")
     variant("ptscotch", default=True, description="With ptscotch for decomposition")
     variant("metis", default=True, description="With metis for decomposition")
     variant("parmetis", default=True, description="With parmetis for decomposition")
@@ -87,14 +81,20 @@ class FoamExtend(Package):
         "source", default=True, description="Install library/application sources and tutorials"
     )
 
-    depends_on("mpi")
+    depends_on("openmpi", when="@5.0")
+    #depends_on("openmpi@4.0", when="@4.1")
+    depends_on("openmpi%gcc@11", when="@4.1")
+    depends_on("openmpi%gcc@11", when="@4.0")
+    depends_on("openmpi%gcc@11", when="@3.2")
+
     depends_on("python")
     depends_on("zlib-api")
     depends_on("flex", type="build")
     depends_on("cmake", type="build")
-    depends_on("rpm lua=False") # temporarily disabled because of build failure of lua
+    depends_on("rpm lua=False", when="@4.1:") # temporarily disabled because of build failure of lua and doxygen
+    depends_on("rpm%gcc@11 lua=False", when="@4.0") # temporarily disabled because of build failure of lua and doxygen
     depends_on("bison")
-    depends_on("mercurial", type="build")
+    #depends_on("mercurial", type="build")
 
     depends_on("scotch~metis", when="~ptscotch+scotch")
     depends_on("scotch~metis+mpi", when="+ptscotch")
