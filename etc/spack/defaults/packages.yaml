@@ -60,7 +60,7 @@ packages:
       xxd: [xxd-standalone, vim]
       yacc: [bison, byacc]
       ziglang: [zig]
-      zlib-api: [zlib, zlib-ng+compat]
+      zlib-api: [zlib-ng+compat, zlib]
     permissions:
       read: world
       write: user
