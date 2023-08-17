@@ -1994,14 +1994,10 @@ class Environment:
 
     def all_matching_specs(self, *specs: spack.spec.Spec) -> List[Spec]:
         """Returns all concretized specs in the environment satisfying any of the input specs"""
-        # Look up abstract hashes ahead of time, to avoid O(n^2) traversal.
-        specs = [s.lookup_hash() for s in specs]
-
-        # Avoid double lookup by directly calling _satisfies.
         return [
             s
             for s in traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
-            if any(s._satisfies(t) for t in specs)
+            if any(s.satisfies(t) for t in specs)
         ]
 
     @spack.repo.autospec

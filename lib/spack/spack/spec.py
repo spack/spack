@@ -1925,19 +1925,15 @@ class Spec:
         store, or finally, binary caches."""
         import spack.environment
 
-        matches = []
         active_env = spack.environment.active_environment()
 
-        if active_env:
-            env_matches = active_env.get_by_hash(self.abstract_hash) or []
-            matches = [m for m in env_matches if m._satisfies(self)]
-        if not matches:
-            db_matches = spack.store.STORE.db.get_by_hash(self.abstract_hash) or []
-            matches = [m for m in db_matches if m._satisfies(self)]
-        if not matches:
-            query = spack.binary_distribution.BinaryCacheQuery(True)
-            remote_matches = query("/" + self.abstract_hash) or []
-            matches = [m for m in remote_matches if m._satisfies(self)]
+        # First env, then store, then binary cache
+        matches = (
+            (active_env.all_matching_specs(self) if active_env else [])
+            or spack.store.STORE.db.query(self, installed=any)
+            or spack.binary_distribution.BinaryCacheQuery(True)(self)
+        )
+
         if not matches:
             raise InvalidHashError(self, self.abstract_hash)
 
@@ -1958,19 +1954,17 @@ class Spec:
         spec = self.copy(deps=False)
         # root spec is replaced
         if spec.abstract_hash:
-            new = self._lookup_hash()
-            spec._dup(new)
+            spec._dup(self._lookup_hash())
             return spec
 
         # Get dependencies that need to be replaced
         for node in self.traverse(root=False):
             if node.abstract_hash:
-                new = node._lookup_hash()
-                spec._add_dependency(new, deptypes=(), virtuals=())
+                spec._add_dependency(node._lookup_hash(), deptypes=(), virtuals=())
 
         # reattach nodes that were not otherwise satisfied by new dependencies
         for node in self.traverse(root=False):
-            if not any(n._satisfies(node) for n in spec.traverse()):
+            if not any(n.satisfies(node) for n in spec.traverse()):
                 spec._add_dependency(node.copy(), deptypes=(), virtuals=())
 
         return spec
@@ -1983,9 +1977,7 @@ class Spec:
         if not any(node for node in self.traverse(order="post") if node.abstract_hash):
             return
 
-        spec_by_hash = self.lookup_hash()
-
-        self._dup(spec_by_hash)
+        self._dup(self.lookup_hash())
 
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
@@ -3721,14 +3713,18 @@ class Spec:
         """
         other = self._autospec(other)
 
-        lhs = self.lookup_hash() or self
-        rhs = other.lookup_hash() or other
-
-        return lhs._intersects(rhs, deps)
-
-    def _intersects(self, other: "Spec", deps: bool = True) -> bool:
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
+
+        self_hash = self.dag_hash() if self.concrete else self.abstract_hash
+        other_hash = other.dag_hash() if other.concrete else other.abstract_hash
+
+        if (
+            self_hash
+            and other_hash
+            and not (self_hash.startswith(other_hash) or other_hash.startswith(self_hash))
+        ):
+            return False
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
@@ -3789,19 +3785,8 @@ class Spec:
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
             return self._intersects_dependencies(other)
-        else:
-            return True
 
-    def satisfies(self, other, deps=True):
-        """
-        This checks constraints on common dependencies against each other.
-        """
-        other = self._autospec(other)
-
-        lhs = self.lookup_hash() or self
-        rhs = other.lookup_hash() or other
-
-        return lhs._satisfies(rhs, deps=deps)
+        return True
 
     def _intersects_dependencies(self, other):
         if not other._dependencies or not self._dependencies:
@@ -3838,7 +3823,7 @@ class Spec:
 
         return True
 
-    def _satisfies(self, other: "Spec", deps: bool = True) -> bool:
+    def satisfies(self, other: "Spec", deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
@@ -3852,6 +3837,13 @@ class Spec:
             # package hashes can be different for otherwise indistinguishable concrete Spec
             # objects.
             return self.concrete and self.dag_hash() == other.dag_hash()
+
+        # If the right-hand side has an abstract hash, make sure it's a prefix of the
+        # left-hand side's (abstract) hash.
+        if other.abstract_hash:
+            compare_hash = self.dag_hash() if self.concrete else self.abstract_hash
+            if not compare_hash or not compare_hash.startswith(other.abstract_hash):
+                return False
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
@@ -4229,9 +4221,7 @@ class Spec:
     def _cmp_iter(self):
         """Lazily yield components of self for comparison."""
 
-        cmp_spec = self.lookup_hash() or self
-
-        for item in cmp_spec._cmp_node():
+        for item in self._cmp_node():
             yield item
 
         # This needs to be in _cmp_iter so that no specs with different process hashes
@@ -4242,10 +4232,10 @@ class Spec:
         # TODO: they exist for speed.  We should benchmark whether it's really worth
         # TODO: having two types of hashing now that we use `json` instead of `yaml` for
         # TODO: spec hashing.
-        yield cmp_spec.process_hash() if cmp_spec.concrete else None
+        yield self.process_hash() if self.concrete else None
 
         def deps():
-            for dep in sorted(itertools.chain.from_iterable(cmp_spec._dependencies.values())):
+            for dep in sorted(itertools.chain.from_iterable(self._dependencies.values())):
                 yield dep.spec.name
                 yield tuple(sorted(dep.deptypes))
                 yield hash(dep.spec)

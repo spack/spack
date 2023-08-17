@@ -1754,9 +1754,14 @@ def find(root, files, recursive=True):
         files = [files]
 
     if recursive:
-        return _find_recursive(root, files)
+        tty.debug(f"Find (recursive): {root} {str(files)}")
+        result = _find_recursive(root, files)
     else:
-        return _find_non_recursive(root, files)
+        tty.debug(f"Find (not recursive): {root} {str(files)}")
+        result = _find_non_recursive(root, files)
+
+    tty.debug(f"Find complete: {root} {str(files)}")
+    return result
 
 
 @system_path_filter
