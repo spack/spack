@@ -29,7 +29,7 @@ class IqTree(CMakePackage):
 
     depends_on("boost+container+math+exception")
     depends_on("eigen")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("mpi", when="+mpi")
 
     def cmake_args(self):

@@ -57,7 +57,7 @@ class Grass(AutotoolsPackage):
     # General requirements
     depends_on("gmake@3.81:", type="build")
     depends_on("iconv")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("flex", type="build")
     depends_on("bison", type="build")
     depends_on("proj")

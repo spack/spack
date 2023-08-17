@@ -3,53 +3,27 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""
-This module implements Version and version-ish objects.  These are:
-
-StandardVersion: A single version of a package.
-ClosedOpenRange: A range of versions of a package.
-VersionList: A ordered list of Version and VersionRange elements.
-
-The set of Version and ClosedOpenRange is totally ordered wiht <
-defined as Version(x) < VersionRange(Version(y), Version(x))
-if Version(x) <= Version(y).
-"""
 import numbers
-import os
 import re
 from bisect import bisect_left
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
-from llnl.util.filesystem import mkdirp, working_dir
-
-import spack.caches
-import spack.error
-import spack.paths
-import spack.util.executable
-import spack.util.spack_json as sjson
-import spack.util.url
 from spack.util.spack_yaml import syaml_dict
+
+from .common import (
+    COMMIT_VERSION,
+    VersionLookupError,
+    infinity_versions,
+    is_git_version,
+    iv_min_len,
+)
+from .lookup import AbstractRefLookup
 
 # Valid version characters
 VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$")
 
-# regex for a commit version
-COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
-
 # regex for version segments
 SEGMENT_REGEX = re.compile(r"(?:(?P<num>[0-9]+)|(?P<str>[a-zA-Z]+))(?P<sep>[_.-]*)")
-
-# regular expression for semantic versioning
-SEMVER_REGEX = re.compile(
-    ".+(?P<semver>([0-9]+)[.]([0-9]+)[.]([0-9]+)"
-    "(?:-([0-9A-Za-z-]+(?:[.][0-9A-Za-z-]+)*))?"
-    "(?:[+][0-9A-Za-z-]+)?)"
-)
-
-# Infinity-like versions. The order in the list implies the comparison rules
-infinity_versions = ["stable", "trunk", "head", "master", "main", "develop"]
-
-iv_min_len = min(len(s) for s in infinity_versions)
 
 
 class VersionStrComponent:
@@ -407,7 +381,7 @@ class GitVersion(ConcreteVersion):
 
     def __init__(self, string: str):
         # An object that can lookup git refs to compare them to versions
-        self._ref_lookup: Optional[CommitLookup] = None
+        self._ref_lookup: Optional[AbstractRefLookup] = None
 
         # This is the effective version.
         self._ref_version: Optional[StandardVersion]
@@ -440,8 +414,7 @@ class GitVersion(ConcreteVersion):
 
         if self.ref_lookup is None:
             raise VersionLookupError(
-                f"git ref '{self.ref}' cannot be looked up: "
-                "call attach_git_lookup_from_package first"
+                f"git ref '{self.ref}' cannot be looked up: " "call attach_lookup first"
             )
 
         version_string, distance = self.ref_lookup.get(self.ref)
@@ -573,7 +546,7 @@ class GitVersion(ConcreteVersion):
             self._ref_lookup.get(self.ref)
             return self._ref_lookup
 
-    def attach_git_lookup_from_package(self, pkg_name):
+    def attach_lookup(self, lookup: AbstractRefLookup):
         """
         Use the git fetcher to look up a version for a commit.
 
@@ -585,7 +558,7 @@ class GitVersion(ConcreteVersion):
         alongside the GitFetcher because eventually the git repos cache will
         be one and the same with the source cache.
         """
-        self._ref_lookup = self._ref_lookup or CommitLookup(pkg_name)
+        self._ref_lookup = lookup
 
     def __iter__(self):
         return self.ref_version.__iter__()
@@ -758,7 +731,7 @@ class VersionList:
         if vlist is not None:
             if isinstance(vlist, str):
                 vlist = from_string(vlist)
-                if type(vlist) == VersionList:
+                if isinstance(vlist, VersionList):
                     self.versions = vlist.versions
                 else:
                     self.versions = [vlist]
@@ -792,7 +765,7 @@ class VersionList:
 
             self.versions.insert(i, item)
 
-        elif type(item) == VersionList:
+        elif isinstance(item, VersionList):
             for v in item:
                 self.add(v)
 
@@ -1073,15 +1046,6 @@ def prev_version(v: StandardVersion) -> StandardVersion:
     return StandardVersion("".join(string_components), v.version[:-1] + (prev,), v.separators)
 
 
-def is_git_version(string: str) -> bool:
-    return (
-        string.startswith("git.")
-        or len(string) == 40
-        and bool(COMMIT_VERSION.match(string))
-        or "=" in string[1:]
-    )
-
-
 def Version(string: Union[str, int]) -> Union[GitVersion, StandardVersion]:
     if not isinstance(string, (str, int)):
         raise ValueError(f"Cannot construct a version from {type(string)}")
@@ -1140,216 +1104,3 @@ def ver(obj) -> Union[VersionList, ClosedOpenRange, StandardVersion, GitVersion]
         return obj
     else:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
-
-
-#: This version contains all possible versions.
-any_version: VersionList = VersionList([":"])
-
-
-class VersionError(spack.error.SpackError):
-    """This is raised when something is wrong with a version."""
-
-
-class VersionChecksumError(VersionError):
-    """Raised for version checksum errors."""
-
-
-class VersionLookupError(VersionError):
-    """Raised for errors looking up git commits as versions."""
-
-
-class CommitLookup:
-    """An object for cached lookups of git commits
-
-    CommitLookup objects delegate to the misc_cache for locking. CommitLookup objects may
-    be attached to a GitVersion to allow for comparisons between git refs and versions as
-    represented by tags in the git repository.
-    """
-
-    def __init__(self, pkg_name):
-        self.pkg_name = pkg_name
-
-        self.data: Dict[str, Tuple[Optional[str], int]] = {}
-
-        self._pkg = None
-        self._fetcher = None
-        self._cache_key = None
-        self._cache_path = None
-
-    # The following properties are used as part of a lazy reference scheme
-    # to avoid querying the package repository until it is necessary (and
-    # in particular to wait until after the configuration has been
-    # assembled)
-    @property
-    def cache_key(self):
-        if not self._cache_key:
-            key_base = "git_metadata"
-            if not self.repository_uri.startswith("/"):
-                key_base += "/"
-            self._cache_key = key_base + self.repository_uri
-
-            # Cache data in misc_cache
-            # If this is the first lazy access, initialize the cache as well
-            spack.caches.misc_cache.init_entry(self.cache_key)
-        return self._cache_key
-
-    @property
-    def cache_path(self):
-        if not self._cache_path:
-            self._cache_path = spack.caches.misc_cache.cache_path(self.cache_key)
-        return self._cache_path
-
-    @property
-    def pkg(self):
-        if not self._pkg:
-            import spack.repo  # break cycle
-
-            try:
-                pkg = spack.repo.path.get_pkg_class(self.pkg_name)
-                pkg.git
-            except (spack.repo.RepoError, AttributeError) as e:
-                raise VersionLookupError(f"Couldn't get the git repo for {self.pkg_name}") from e
-            self._pkg = pkg
-        return self._pkg
-
-    @property
-    def fetcher(self):
-        if not self._fetcher:
-            # We require the full git repository history
-            import spack.fetch_strategy  # break cycle
-
-            fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git)
-            fetcher.get_full_repo = True
-            self._fetcher = fetcher
-        return self._fetcher
-
-    @property
-    def repository_uri(self):
-        """Identifier for git repos used within the repo and metadata caches."""
-        try:
-            components = [
-                str(c).lstrip("/") for c in spack.util.url.parse_git_url(self.pkg.git) if c
-            ]
-            return os.path.join(*components)
-        except ValueError:
-            # If it's not a git url, it's a local path
-            return os.path.abspath(self.pkg.git)
-
-    def save(self):
-        """Save the data to file"""
-        with spack.caches.misc_cache.write_transaction(self.cache_key) as (old, new):
-            sjson.dump(self.data, new)
-
-    def load_data(self):
-        """Load data if the path already exists."""
-        if os.path.isfile(self.cache_path):
-            with spack.caches.misc_cache.read_transaction(self.cache_key) as cache_file:
-                self.data = sjson.load(cache_file)
-
-    def get(self, ref) -> Tuple[Optional[str], int]:
-        if not self.data:
-            self.load_data()
-
-        if ref not in self.data:
-            self.data[ref] = self.lookup_ref(ref)
-            self.save()
-
-        return self.data[ref]
-
-    def lookup_ref(self, ref) -> Tuple[Optional[str], int]:
-        """Lookup the previous version and distance for a given commit.
-
-        We use git to compare the known versions from package to the git tags,
-        as well as any git tags that are SEMVER versions, and find the latest
-        known version prior to the commit, as well as the distance from that version
-        to the commit in the git repo. Those values are used to compare Version objects.
-        """
-        dest = os.path.join(spack.paths.user_repos_cache_path, self.repository_uri)
-        if dest.endswith(".git"):
-            dest = dest[:-4]
-
-        # prepare a cache for the repository
-        dest_parent = os.path.dirname(dest)
-        if not os.path.exists(dest_parent):
-            mkdirp(dest_parent)
-
-        # Only clone if we don't have it!
-        if not os.path.exists(dest):
-            self.fetcher.clone(dest, bare=True)
-
-        # Lookup commit info
-        with working_dir(dest):
-            # TODO: we need to update the local tags if they changed on the
-            # remote instance, simply adding '-f' may not be sufficient
-            # (if commits are deleted on the remote, this command alone
-            # won't properly update the local rev-list)
-            self.fetcher.git("fetch", "--tags", output=os.devnull, error=os.devnull)
-
-            # Ensure ref is a commit object known to git
-            # Note the brackets are literals, the ref replaces the format string
-            try:
-                self.fetcher.git(
-                    "cat-file", "-e", "%s^{commit}" % ref, output=os.devnull, error=os.devnull
-                )
-            except spack.util.executable.ProcessError:
-                raise VersionLookupError("%s is not a valid git ref for %s" % (ref, self.pkg_name))
-
-            # List tags (refs) by date, so last reference of a tag is newest
-            tag_info = self.fetcher.git(
-                "for-each-ref",
-                "--sort=creatordate",
-                "--format",
-                "%(objectname) %(refname)",
-                "refs/tags",
-                output=str,
-            ).split("\n")
-
-            # Lookup of commits to spack versions
-            commit_to_version = {}
-
-            for entry in tag_info:
-                if not entry:
-                    continue
-                tag_commit, tag = entry.split()
-                tag = tag.replace("refs/tags/", "", 1)
-
-                # For each tag, try to match to a version
-                for v in [v.string for v in self.pkg.versions]:
-                    if v == tag or "v" + v == tag:
-                        commit_to_version[tag_commit] = v
-                        break
-                else:
-                    # try to parse tag to copare versions spack does not know
-                    match = SEMVER_REGEX.match(tag)
-                    if match:
-                        semver = match.groupdict()["semver"]
-                        commit_to_version[tag_commit] = semver
-
-            ancestor_commits = []
-            for tag_commit in commit_to_version:
-                self.fetcher.git("merge-base", "--is-ancestor", tag_commit, ref, ignore_errors=[1])
-                if self.fetcher.git.returncode == 0:
-                    distance = self.fetcher.git(
-                        "rev-list", "%s..%s" % (tag_commit, ref), "--count", output=str, error=str
-                    ).strip()
-                    ancestor_commits.append((tag_commit, int(distance)))
-
-            if ancestor_commits:
-                # Get nearest ancestor that is a known version
-                prev_version_commit, distance = min(ancestor_commits, key=lambda x: x[1])
-                prev_version = commit_to_version[prev_version_commit]
-            else:
-                # Get list of all commits, this is in reverse order
-                # We use this to get the first commit below
-                ref_info = self.fetcher.git("log", "--all", "--pretty=format:%H", output=str)
-                commits = [c for c in ref_info.split("\n") if c]
-
-                # No previous version and distance from first commit
-                prev_version = None
-                distance = int(
-                    self.fetcher.git(
-                        "rev-list", "%s..%s" % (commits[-1], ref), "--count", output=str, error=str
-                    ).strip()
-                )
-
-        return prev_version, distance

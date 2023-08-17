@@ -123,6 +123,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         msg="TensorPipe must be enabled with +distributed",
     )
 
+    # https://github.com/pytorch/pytorch/issues/100991
+    conflicts("%apple-clang@14:", when="@:1")
+
     conflicts(
         "cuda_arch=none",
         when="+cuda",

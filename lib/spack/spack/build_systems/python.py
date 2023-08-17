@@ -30,7 +30,7 @@ from ._checks import BaseBuilder, execute_install_time_tests
 
 
 class PythonExtension(spack.package_base.PackageBase):
-    maintainers("adamjstewart", "pradyunsg")
+    maintainers("adamjstewart")
 
     @property
     def import_modules(self):
@@ -201,7 +201,7 @@ class PythonExtension(spack.package_base.PackageBase):
             else:
                 python = self.get_external_python_for_prefix()
                 if not python.concrete:
-                    repo = spack.repo.path.repo_for_pkg(python)
+                    repo = spack.repo.PATH.repo_for_pkg(python)
                     python.namespace = repo.namespace
 
                     # Ensure architecture information is present
@@ -301,7 +301,7 @@ class PythonPackage(PythonExtension):
             return python_externals_configured[0]
 
         python_externals_detection = spack.detection.by_executable(
-            [spack.repo.path.get_pkg_class("python")], path_hints=[self.spec.external_path]
+            [spack.repo.PATH.get_pkg_class("python")], path_hints=[self.spec.external_path]
         )
 
         python_externals_detected = [
