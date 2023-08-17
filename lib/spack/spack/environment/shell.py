@@ -54,8 +54,8 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
         if view:
             cmds += "$Env:SPACK_ENV_VIEW='%s'\n" % view
     else:
-        if "color" in os.getenv("TERM", "") and prompt:
-            prompt = colorize("@G{%s}" % prompt, color=True, enclose=True)
+        bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
+        zsh_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=False, zsh=True)
 
         cmds += "export SPACK_ENV=%s;\n" % env.path
         if view:
@@ -68,7 +68,17 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
             cmds += "    fi;\n"
             cmds += '    export SPACK_OLD_PS1="${PS1}";\n'
             cmds += "fi;\n"
-            cmds += 'export PS1="%s ${PS1}";\n' % prompt
+            cmds += 'if [ -n "${TERM:-}" ] && [ "${TERM#*color}" != "${TERM}" ] && \\'
+            cmds += '   [ -n "${BASH:-}" ];\n'
+            cmds += "then\n"
+            cmds += f'    export PS1="{bash_color_prompt} ${{PS1}}";\n'
+            cmds += 'elif [ -n "${TERM:-}" ] && [ "${TERM#*color}" != "${TERM}" ] && \\'
+            cmds += '     [ -n "${ZSH_NAME:-}" ];\n'
+            cmds += "then\n"
+            cmds += f'    export PS1="{zsh_color_prompt} ${{PS1}}";\n'
+            cmds += "else\n"
+            cmds += f'    export PS1="{prompt} ${{PS1}}";\n'
+            cmds += "fi\n"
 
     return cmds
 
