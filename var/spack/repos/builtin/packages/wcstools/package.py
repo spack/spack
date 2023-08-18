@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class Wcstools(MakefilePackage):
     """
     Astronomers often need to relate positions on an image of the sky to positions
