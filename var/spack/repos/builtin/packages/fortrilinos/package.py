@@ -51,7 +51,7 @@ class Fortrilinos(CMakePackage):
     variant("shared", default=True, description="Build shared libraries")
 
     # Trilinos version dependencies
-    depends_on("trilinos@14", when="@2.3")
+    depends_on("trilinos@14.0", when="@2.3")
     depends_on("trilinos@13.4", when="@2.2")
     depends_on("trilinos@13.2", when="@2.1.0:2.1")
     depends_on("trilinos@13:13.2", when="@2.0")
