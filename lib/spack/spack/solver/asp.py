@@ -3144,10 +3144,11 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
         msg = (
             "Spack concretizer internal error. Please submit a bug report and include the "
             "command, environment if applicable and the following error message."
-            f"\n    {provided} is unsatisfiable, errors are:"
+            f"\n    {provided} is unsatisfiable"
         )
 
-        msg += "".join([f"\n    {conflict}" for conflict in conflicts])
+        if conflicts:
+            msg += ", errors are:" + "".join([f"\n    {conflict}" for conflict in conflicts])
 
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
 
