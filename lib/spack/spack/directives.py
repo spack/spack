@@ -874,13 +874,13 @@ def license(license_identifier: str, when=None):
     """
 
     def _execute_license(pkg):
-        # If when is not specified the conflict always holds
+        # If when is not specified the license always holds
         when_spec = make_when_spec(when)
         if not when_spec:
             return
 
-        when_spec_list = pkg.licenses.setdefault(license_identifier, [])
-        when_spec_list.append(when_spec)
+        license_list = pkg.licenses.setdefault(when_spec, [])
+        license_list.append(license_identifier)
 
     return _execute_license
 

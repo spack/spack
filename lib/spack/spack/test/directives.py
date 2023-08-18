@@ -89,10 +89,14 @@ def test_maintainer_directive(config, mock_packages, package_name, expected_main
     assert pkg_cls.maintainers == expected_maintainers
 
 
-@pytest.mark.parametrize("package_name,expected_licenses", [("licenses-1", ["MIT", "Apache-2.0"])])
+@pytest.mark.parametrize(
+    "package_name,expected_licenses", [("licenses-1", [("MIT", "+foo"), ("Apache-2.0", "+bar")])]
+)
 def test_license_directive(config, mock_packages, package_name, expected_licenses):
     pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
-    assert expected_licenses == list(pkg_cls.licenses.keys())
+    for license in expected_licenses:
+        assert spack.spec.Spec(license[1]) in pkg_cls.licenses
+        assert license[0] in pkg_cls.licenses[spack.spec.Spec(license[1])]
 
 
 def test_version_type_validation():
