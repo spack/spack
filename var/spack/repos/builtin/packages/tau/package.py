@@ -26,7 +26,7 @@ class Tau(Package):
     tags = ["e4s"]
 
     version("master", branch="master")
-    version("2.32.1", sha256="1d3b6b861ce5752e9c80fb28cbb55b9922458c4dd73f9fb1a96f0ce9e3e880f5")
+    version("2.32.1", sha256="5cc4c6765407373237a69c565dce2933f09be6c34cd3ec25608ba98818668a97")
     version("2.32", sha256="ee774a06e30ce0ef0f053635a52229152c39aba4f4933bed92da55e5e13466f3")
     version("2.31.1", sha256="bf445b9d4fe40a5672a7b175044d2133791c4dfb36a214c1a55a931aebc06b9d")
     version("2.31", sha256="27e73c395dd2a42b91591ce4a76b88b1f67663ef13aa19ef4297c68f45d946c2")
