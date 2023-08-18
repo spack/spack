@@ -9,15 +9,16 @@ from spack.package import *
 class Wsclean(CMakePackage):
     """
     WSClean (w-stacking clean) is a fast generic widefield imager. It uses the w-stacking algorithm
-    and can make use of the w-snapshot algorithm. As of Feb 2014, it is 2-12 times faster than CASA's
-    w-projection, depending on the array configuration. It supports full-sky imaging and proper beam
-    correction for homogeneous dipole arrays such as the MWA.
+    and can make use of the w-snapshot algorithm. As of Feb 2014, it is 2-12 times faster than 
+    CASA's w-projection, depending on the array configuration. It supports full-sky imaging and 
+    proper beam correction for homogeneous dipole arrays such as the MWA.
     WSClean allows Hogbom and Cotton-Schwab cleaning and has wideband, multiscale, compressed
     sensing and joined-polarization deconvolution modes. All operations are performed on the CPU.
     """
 
     homepage = "https://wsclean.readthedocs.io/en/latest/"
     git = "https://gitlab.com/aroffringa/wsclean.git"
+    maintainers("pelahi")
 
     version("master", branch="master")
     version("3.1", commit="ea18d0139e35050d58b2758cf5015539f3e2d870")
@@ -56,7 +57,7 @@ class Wsclean(CMakePackage):
 
     def cmake_args(self):
         args = []
-        spec = self.spec
+        # spec = self.spec
         args.append(self.define_from_variant("USE_MPI", "mpi"))
 
         return args
