@@ -12,6 +12,9 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
     homepage = "https://github.com/zlib-ng/zlib-ng"
     url = "https://github.com/zlib-ng/zlib-ng/archive/2.0.0.tar.gz"
+    git = "https://github.com/zlib-ng/zlib-ng.git"
+
+    maintainers("haampie")
 
     version("2.1.3", sha256="d20e55f89d71991c59f1c5ad1ef944815e5850526c0d9cd8e504eaed5b24491a")
     version("2.1.2", sha256="383560d6b00697c04e8878e26c0187b480971a8bce90ffd26a5a7b0f7ecf1a33")
