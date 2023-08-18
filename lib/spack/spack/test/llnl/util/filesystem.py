@@ -504,7 +504,6 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
 
 @pytest.mark.not_on_windows("chgrp isn't used on Windows")
 def test_chgrp_dont_set_group_if_already_set():
-
     class Fail:
         def __init__(self, name):
             self.name = name
@@ -519,14 +518,10 @@ def test_chgrp_dont_set_group_if_already_set():
 
         def __call__(self, *args, **kwargs):
             self.called_with.append(args[0])
-            tty.debug(f"{self.name} noop")
 
     class FakeStat:
         def __init__(self, gid):
             self.st_gid = gid
-
-    original_stat = os.stat
-    original_lstat = os.lstat
 
     class Stat:
         def __init__(self, gid):

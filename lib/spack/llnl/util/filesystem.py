@@ -601,7 +601,16 @@ def group_ids(uid=None):
 
 
 @system_path_filter(arg_slice=slice(1))
-def chgrp(path, group, follow_symlinks=True, _stat=None, _lstat=None, _chown=None, _lchown=None, _getgrnam=None):
+def chgrp(
+    path,
+    group,
+    follow_symlinks=True,
+    _stat=None,
+    _lstat=None,
+    _chown=None,
+    _lchown=None,
+    _getgrnam=None,
+):
     """Implement the bash chgrp function on a single path"""
     if sys.platform == "win32":
         raise OSError("Function 'chgrp' is not supported on Windows")
