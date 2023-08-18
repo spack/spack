@@ -47,7 +47,7 @@ class EcmwfAtlas(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
-    variant('openmp', default=True, description='Use OpenMP?')
+    variant("openmp", default=True, description="Use OpenMP?")
     depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
     variant("shared", default=True)
 
@@ -65,7 +65,7 @@ class EcmwfAtlas(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define_from_variant('ENABLE_OMP', 'openmp'),
+            self.define_from_variant("ENABLE_OMP", "openmp"),
             self.define_from_variant("ENABLE_FCKIT", "fckit"),
             self.define_from_variant("ENABLE_TRANS", "trans"),
             self.define_from_variant("ENABLE_EIGEN", "eigen"),
@@ -78,8 +78,8 @@ class EcmwfAtlas(CMakePackage):
 
     @when("+fismahigh")
     def patch(self):
-        filter_file("http://www\.ecmwf\.int", "", "cmake/atlas-import.cmake.in")
-        filter_file("int\.ecmwf", "", "cmake/atlas-import.cmake.in")
+        filter_file("http://www\.ecmwf\.int", "", "cmake/atlas-import.cmake.in")  # noqa: W605
+        filter_file("int\.ecmwf", "", "cmake/atlas-import.cmake.in")  # noqa: W605
         filter_file('http[^"]+', "", "cmake/atlas_export.cmake")
         patterns = [".travis.yml", "tools/install*.sh", "tools/github-sha.sh"]
         for pattern in patterns:
