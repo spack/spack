@@ -16,8 +16,9 @@ class Met(AutotoolsPackage):
     homepage = "https://dtcenter.org/community-code/model-evaluation-tools-met"
     url      = "https://github.com/dtcenter/MET/archive/refs/tags/v11.0.1.tar.gz"
 
-    maintainers('AlexanderRichert-NOAA')
+    maintainers("AlexanderRichert-NOAA", "climbfuji")
 
+    version("11.1.0", sha256="e2e371ae1f49185ff8bf08201b1a3e90864a467aa3369b04132d231213c3c9e5")
     version("11.0.2", sha256="f720d15e1d6c235c9a41fd97dbeb0eb1082fb8ae99e1bcdcb5e51be9b50bdfbf")
     version('11.0.1', sha256='48d471ad4634f1b969d9358c51925ce36bf0a1cec5312a6755203a4794b81646')
     version('11.0.0', sha256='648ebb54d07ca099680f4fc23b7ef5095c1a8ac5537c0a5d0e8587bf15991cff')
@@ -61,10 +62,8 @@ class Met(AutotoolsPackage):
     patch('openmp_shape_patch.patch', when='@10.1.0')
 
     # https://github.com/JCSDA/spack-stack/issues/615
-    # TODO(srherbener) Apple clang 14.x is getting pickier! When these updates are
-    # merged into the MET code base, the following two patches can be removed.
-    patch("apple-clang-string-cast-operator.patch", when="@10.1.1: %apple-clang@14:")
-    patch("apple-clang-no-register.patch", when="@10.1.1: %apple-clang@14:") 
+    patch("apple-clang-string-cast-operator.patch", when="@10.1.1:11.0.99 %apple-clang@14:")
+    patch("apple-clang-no-register.patch", when="@10.1.1:11.0.99 %apple-clang@14:")
 
     def url_for_version(self, version):
 
