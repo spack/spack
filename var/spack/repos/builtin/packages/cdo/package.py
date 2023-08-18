@@ -172,12 +172,13 @@ class Cdo(AutotoolsPackage):
     # We also need the backend of netcdf to be thread safe.
     depends_on("hdf5+threadsafe", when="+netcdf")
 
+    # Same in case hdf5 is used in the frontend
+    depends_on("hdf5+threadsafe", when="+hdf5")
+
     depends_on("grib-api", when="grib2=grib-api")
     depends_on("eccodes", when="grib2=eccodes")
 
     depends_on("szip", when="+szip")
-
-    depends_on("hdf5+threadsafe", when="+hdf5")
 
     depends_on("udunits", when="+udunits2")
     depends_on("libxml2", when="+libxml2")
