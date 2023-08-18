@@ -537,10 +537,14 @@ def test_chgrp_dont_set_group_if_already_set():
         "_lstat": Fail("lstat"),
     }
 
-    with pytest.raises(Exception):
-        fs.chgrp("d1", 1002, follow_symlinks=True, **kwargs)
-    fs.chgrp("d1", 1001, follow_symlinks=True, **kwargs)
+    # First make sure we change the group when the gid's don't match
+    fs.chgrp("d1", 1002, follow_symlinks=True, **kwargs)
     assert kwargs["_chown"].called_with == ["d1"]
+
+    # Then make sure we don't call chown if they do
+    kwargs["_chown"] = Fail("chown")
+    # If this succeeds without an exception, then chown/lchown were not called
+    fs.chgrp("d1", 1001, follow_symlinks=True, **kwargs)
 
     kwargs = {
         "_chown": Fail("chown"),
@@ -549,10 +553,11 @@ def test_chgrp_dont_set_group_if_already_set():
         "_lstat": Stat(1001),
     }
 
-    with pytest.raises(Exception):
-        fs.chgrp("l1", 1002, follow_symlinks=False, **kwargs)
-    fs.chgrp("l1", 1001, follow_symlinks=False, **kwargs)
+    fs.chgrp("l1", 1002, follow_symlinks=False, **kwargs)
     assert kwargs["_lchown"].called_with == ["l1"]
+
+    kwargs["_lchown"] = Fail("lchown")
+    fs.chgrp("l1", 1001, follow_symlinks=False, **kwargs)
 
 
 def test_filter_files_multiple(tmpdir):
