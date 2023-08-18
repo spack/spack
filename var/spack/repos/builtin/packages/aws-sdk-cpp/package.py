@@ -34,3 +34,6 @@ class AwsSdkCpp(CMakePackage):
         sha256="ba86e0556322604fb4b70e2dd4f4fb874701868b07353fc1d5c329d90777bf45",
         when="@1.9.247",
     )
+
+    def cmake_args(self):
+        return [self.define("BUILD_ONLY", ("s3", "transfer"))]
