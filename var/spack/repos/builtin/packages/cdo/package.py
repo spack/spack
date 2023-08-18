@@ -21,6 +21,11 @@ class Cdo(AutotoolsPackage):
     maintainers("skosukhin", "Try2Code")
 
     version(
+        "2.2.2",
+        sha256="419c77315244019af41a296c05066f474cccbf94debfaae9e2106da51bc7c937",
+        url="https://code.mpimet.mpg.de/attachments/download/28882/cdo-2.2.2.tar.gz",
+    )
+    version(
         "2.2.0",
         sha256="679c8d105706caffcba0960ec5ddc4a1332c1b40c52f82c3937356999d8fadf2",
         url="https://code.mpimet.mpg.de/attachments/download/28013/cdo-2.2.0.tar.gz",
