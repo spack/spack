@@ -651,7 +651,7 @@ ml-darwin-aarch64-mps-build:
       job: ml-darwin-aarch64-mps-generate
 
 ##########################################
-# Machine Learning - Linux power64le (CPU)
+# Machine Learning - Linux ppc64le (CPU)
 ##########################################
 .ml-linux-ppc64le-cpu:
   extends: [ ".linux_power" ]
@@ -689,7 +689,7 @@ ml-linux-ppc64le-cpu-rhel8-build:
       job: ml-linux-ppc64le-cpu-rhel8-generate
 
 ###########################################
-# Machine Learning - Linux power64le (CUDA)
+# Machine Learning - Linux ppc64le (CUDA)
 ###########################################
 .ml-linux-ppc64le-cuda:
   extends: [ ".linux_power" ]

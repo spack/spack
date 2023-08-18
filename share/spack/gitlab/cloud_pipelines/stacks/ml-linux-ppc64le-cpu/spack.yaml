@@ -60,9 +60,9 @@ spack:
     - py-scikit-learn-extra
 
     # TensorBoard
-    - py-tensorboard
       # py-tensorboard-data-server fails in CI when compiling `ring v0.16.20` as part
       # of the rust-cargo dependency builds.
+      #- py-tensorboard
       #- py-tensorboard-data-server
       #- py-tensorboard-plugin-wit
       #- py-tensorboardx
