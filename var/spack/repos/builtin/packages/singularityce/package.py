@@ -80,7 +80,7 @@ class SingularityBase(MakefilePackage):
                 confstring += " --without-suid"
             if "~network" in spec:
                 confstring += " --without-network"
-            if "~conmon" in spec: 
+            if "~conmon" in spec:
                 confstring += " --without-conmon"
             configure = Executable(confstring)
             configure()
