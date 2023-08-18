@@ -324,15 +324,13 @@ def create_manifest_content():
     }
 
 
+@pytest.mark.only_original(
+    "The ASP-based concretizer is currently picky about OS matching and will fail."
+)
 def test_read_cray_manifest(tmpdir, mutable_config, mock_packages, mutable_database):
     """Check that (a) we can read the cray manifest and add it to the Spack
     Database and (b) we can concretize specs based on that.
     """
-    if spack.config.get("config:concretizer") == "clingo":
-        pytest.skip(
-            "The ASP-based concretizer is currently picky about " " OS matching and will fail."
-        )
-
     with tmpdir.as_cwd():
         test_db_fname = "external-db.json"
         with open(test_db_fname, "w") as db_file:
@@ -348,14 +346,12 @@ def test_read_cray_manifest(tmpdir, mutable_config, mock_packages, mutable_datab
         assert concretized_specs[0]["hwloc"].dag_hash() == "hwlocfakehashaaa"
 
 
+@pytest.mark.only_original(
+    "The ASP-based concretizer is currently picky about OS matching and will fail."
+)
 def test_read_cray_manifest_twice_no_compiler_duplicates(
     tmpdir, mutable_config, mock_packages, mutable_database
 ):
-    if spack.config.get("config:concretizer") == "clingo":
-        pytest.skip(
-            "The ASP-based concretizer is currently picky about OS matching and will fail."
-        )
-
     with tmpdir.as_cwd():
         test_db_fname = "external-db.json"
         with open(test_db_fname, "w") as db_file:

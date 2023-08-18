@@ -726,22 +726,31 @@ def test_multiple_specs_with_hash(database, config):
 
 @pytest.mark.db
 def test_ambiguous_hash(mutable_database, default_mock_concretization, config):
+    """Test that abstract hash ambiguity is delayed until concretization.
+    In the past this ambiguity error would happen during parse time."""
+
+    # This is a very sketchy as manually setting hashes easily breaks invariants
     x1 = default_mock_concretization("a")
     x2 = x1.copy()
     x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    x1._process_hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     x2._hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    mutable_database.add(x1, spack.store.STORE.layout)
-    mutable_database.add(x2, spack.store.STORE.layout)
+    x2._process_hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+    assert x1 != x2  # doesn't hold when only the dag hash is modified.
+
+    mutable_database.add(x1, directory_layout=None)
+    mutable_database.add(x2, directory_layout=None)
 
     # ambiguity in first hash character
+    s1 = SpecParser("/x").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        parsed_spec = SpecParser("/x").next_spec()
-        parsed_spec.replace_hash()
+        s1.lookup_hash()
 
     # ambiguity in first hash character AND spec name
+    s2 = SpecParser("a/x").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        parsed_spec = SpecParser("a/x").next_spec()
-        parsed_spec.replace_hash()
+        s2.lookup_hash()
 
 
 @pytest.mark.db
