@@ -505,13 +505,20 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
 @pytest.mark.not_on_windows("chgrp isn't used on Windows")
 def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
 
-    dir1 = "test-dir_chgrp_dont_set_group_if_already_set"
+    class Fail:
+        def __init__(self, name):
+            self.name = name
 
-    with fs.working_dir(tmpdir):
-        os.mkdir(dir1)
+        def __call__(self, *args, **kwargs):
+            raise Exception(f"{self.name} should not be called")
 
-    def _fail(*args, **kwargs):
-        raise Exception("chrgrp should not be called")
+    class Noop:
+        def __init__(self, name):
+            self.name = name
+
+        def __call__(self, *args, **kwargs):
+            tty.debug(f"{self.name} noop")
+            pass
 
     class FakeStat:
         def __init__(self, gid):
@@ -525,36 +532,30 @@ def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
             self.gid = gid
 
         def __call__(self, *args, **kwargs):
-            path = args[0]
-            if path == dir1:
-                return FakeStat(gid=self.gid)
-            else:
-                # Monkeypatching stat can interfere with post-test cleanup, so for
-                # paths that aren't part of the test, we want the original behavior
-                # of stat
-                return original_stat(*args, **kwargs)
+            return FakeStat(gid=self.gid)
 
-    class Lstat:
-        def __init__(self, gid):
-            self.gid = gid
+    kwargs = {
+        "_chown": Noop("chown"),
+        "_lchown": Fail("lchown"),
+        "_stat": Stat(1001),
+        "_lstat": Fail("lstat"),
+    }
 
-        def __call__(self, *args, **kwargs):
-            path = args[0]
-            if path == dir1:
-                return FakeStat(gid=self.gid)
-            else:
-                return original_lstat(*args, **kwargs)
+    with pytest.raises(Exception):
+        fs.chgrp("d1", 1002, follow_symlinks=True, **kwargs)
+    fs.chgrp("d1", 1001, follow_symlinks=True, **kwargs)
 
-    monkeypatch.setattr(os, "chown", _fail)
-    monkeypatch.setattr(os, "lchown", _fail)
+    kwargs = {
+        "_chown": Fail("chown"),
+        "_lchown": Noop("lchown"),
+        "_stat": Fail("stat"),
+        "_lstat": Stat(1001),
+    }
 
-    monkeypatch.setattr(os, "stat", Stat(1001))
-    monkeypatch.setattr(os, "lstat", Lstat(1001))
+    with pytest.raises(Exception):
+        fs.chgrp("l1", 1002, follow_symlinks=False, **kwargs)
+    fs.chgrp("l1", 1001, follow_symlinks=False, **kwargs)
 
-    with fs.working_dir(tmpdir):
-        with pytest.raises(Exception):
-            fs.chgrp(dir1, 1002)
-        fs.chgrp(dir1, 1001)
 
 
 def test_filter_files_multiple(tmpdir):
