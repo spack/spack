@@ -24,7 +24,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     version("0.29.1", sha256="f51ba7718defc7bb5064f690f381e04b2ec58cb09f22a171ae5f410860716e30")
 
     depends_on("kokkos@:3.7.2", when="@:0.30", type=("run", "build"))
-    depends_on("kokkos@4:", when="@:0.31", type=("run", "build"))
+    depends_on("kokkos@4:", when="@0.31:", type=("run", "build"))
 
     # kokkos backends
     backends = {
