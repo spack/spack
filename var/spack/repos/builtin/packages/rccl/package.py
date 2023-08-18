@@ -190,6 +190,7 @@ class Rccl(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
         "5.5.1",
     ]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
