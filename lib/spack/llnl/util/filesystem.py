@@ -617,8 +617,8 @@ def chgrp(
 
     stat = _stat or os.stat
     lstat = _lstat or os.lstat
-    chown = _chown or os._chown
-    lchown = _lchown or os._lchown
+    chown = _chown or os.chown
+    lchown = _lchown or os.lchown
     getgrnam = _getgrnam or grp.getgrnam
 
     if isinstance(group, str):
