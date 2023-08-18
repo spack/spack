@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.filesystem as fs
+
 from spack.package import *
 
 
@@ -187,6 +189,13 @@ class Dd4hep(CMakePackage):
         msg="cmake version with buggy FindPython breaks dd4hep cmake config",
     )
     conflicts("~ddrec+dddetectors", msg="Need to enable +ddrec to build +dddetectors.")
+
+    @property
+    def libs(self):
+        # We need to override libs here, because we don't build a libdd4hep so
+        # the default discovery fails. All libraries that are built by DD4hep
+        # start with libDD
+        return fs.find_libraries("libDD*", root=self.prefix, shared=True, recursive=True)
 
     def cmake_args(self):
         spec = self.spec
