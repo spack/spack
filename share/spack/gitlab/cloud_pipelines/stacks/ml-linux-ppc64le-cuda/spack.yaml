@@ -23,7 +23,8 @@ spack:
     - py-jaxlib
 
     # Keras
-    - py-keras
+    # Fails to install bazel and py-tensorboard-data-server
+    #- py-keras
     - py-keras-applications
     - py-keras-preprocessing
     - py-keras2onnx
