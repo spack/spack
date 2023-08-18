@@ -29,4 +29,3 @@ class PyScikitOptimize(PythonPackage):
     depends_on("py-scipy@0.14.0:", type=("build", "run"))
     depends_on("py-scikit-learn@0.19.1:", type=("build", "run"))
     depends_on("py-matplotlib", when="+plots")
-    
