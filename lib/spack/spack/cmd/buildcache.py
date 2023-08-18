@@ -20,6 +20,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
+import spack.error
 import spack.mirror
 import spack.relocate
 import spack.repo
@@ -81,7 +82,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     push.add_argument(
         "--fail-fast",
         action="store_true",
-        help="stop creating build caches if any build fails (default is best effort)",
+        help="stop pushing on first failure (default is best effort)",
     )
     arguments.add_common_arguments(push, ["specs"])
     push.set_defaults(func=push_fn)
@@ -334,9 +335,9 @@ def push_fn(args):
 
         # Catch any other exception unless the fail fast option is set
         except Exception as e:
-            if args.fail_fast:
-                raise (e)
-            failed.append(format_spec(spec))
+            if args.fail_fast or isinstance(e, (bindist.PickKeyException, bindist.NoKeyException)):
+                raise
+            failed.append((format_spec(spec), e))
 
     if skipped:
         if len(specs) == 1:
@@ -354,15 +355,14 @@ def push_fn(args):
 
     if failed:
         if len(failed) == 1:
-            tty.info(
-                "The following spec was skipped due to errors in the buildcache creation:\n"
-                "    {}".format(", ".join(elide_list(failed, 5)))
-            )
-        else:
-            tty.info(
-                "The following {} specs were skipped due to errors in the buildcache creation:\n"
-                "    {}".format(len(failed), ", ".join(elide_list(failed, 5)))
-            )
+            raise failed[0][1]
+
+        raise spack.error.SpackError(
+            f"The following {len(failed)} errors occurred while pushing specs to the buildcache",
+            "\n".join(
+                elide_list([f"    {spec}: {e.__class__.__name__}: {e}" for spec, e in failed], 5)
+            ),
+        )
 
 
 def install_fn(args):
