@@ -20,16 +20,20 @@ class EcmwfAtlas(CMakePackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("0.34.0", sha256="48536742cec0bc268695240843ac0e232e2b5142d06b19365688d9ea44dbd9ba")
     version("0.33.0", sha256="a91fffe9cecb51c6ee8549cbc20f8279e7b1f67dd90448e6c04c1889281b0600")
     version("0.32.1", sha256="3d1a46cb7f50e1a6ae9e7627c158760e132cc9f568152358e5f78460f1aaf01b")
     version("0.31.1", sha256="fa9274c74c40c2115b9c6120a7040e357b0c7f37b20b601b684d2a83a479cdfb")
     version("0.31.0", sha256="fa4ff8665544b8e19f79d171c540a9ca8bfc4127f52a3c4d4d618a2fe23354d7")
 
     depends_on("ecbuild", type=("build"))
-    depends_on("eckit")
-    depends_on("boost cxxstd=14 visibility=hidden", when="@0.26.0:", type=("build", "run"))
+    depends_on("eckit@:1.23", when="@:0.33")
+    depends_on("eckit@1.24:", when="@0.34:")
+    depends_on("boost cxxstd=14 visibility=hidden", when="@0.26.0:0.33.99", type=("build", "run"))
+    depends_on("boost cxxstd=17 visibility=hidden", when="@0.34.0:", type=("build", "run"))
     variant("fckit", default=True)
-    depends_on("fckit", when="+fckit")
+    depends_on("fckit@:0.10", when="@:0.33 +fckit")
+    depends_on("fckit@0.11:", when="@0.34: +fckit")
     depends_on("python")
 
     patch("clang_include_array.patch", when="%apple-clang")
