@@ -503,7 +503,7 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
 
 
 @pytest.mark.not_on_windows("chgrp isn't used on Windows")
-def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
+def test_chgrp_dont_set_group_if_already_set():
 
     class Fail:
         def __init__(self, name):
@@ -512,13 +512,14 @@ def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
         def __call__(self, *args, **kwargs):
             raise Exception(f"{self.name} should not be called")
 
-    class Noop:
+    class Record:
         def __init__(self, name):
             self.name = name
+            self.called_with = list()
 
         def __call__(self, *args, **kwargs):
+            self.called_with.append(args[0])
             tty.debug(f"{self.name} noop")
-            pass
 
     class FakeStat:
         def __init__(self, gid):
@@ -535,7 +536,7 @@ def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
             return FakeStat(gid=self.gid)
 
     kwargs = {
-        "_chown": Noop("chown"),
+        "_chown": Record("chown"),
         "_lchown": Fail("lchown"),
         "_stat": Stat(1001),
         "_lstat": Fail("lstat"),
@@ -544,10 +545,11 @@ def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
     with pytest.raises(Exception):
         fs.chgrp("d1", 1002, follow_symlinks=True, **kwargs)
     fs.chgrp("d1", 1001, follow_symlinks=True, **kwargs)
+    assert kwargs["_chown"].called_with == ["d1"]
 
     kwargs = {
         "_chown": Fail("chown"),
-        "_lchown": Noop("lchown"),
+        "_lchown": Record("lchown"),
         "_stat": Fail("stat"),
         "_lstat": Stat(1001),
     }
@@ -555,7 +557,7 @@ def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
     with pytest.raises(Exception):
         fs.chgrp("l1", 1002, follow_symlinks=False, **kwargs)
     fs.chgrp("l1", 1001, follow_symlinks=False, **kwargs)
-
+    assert kwargs["_lchown"].called_with == ["l1"]
 
 
 def test_filter_files_multiple(tmpdir):
