@@ -40,7 +40,7 @@ class PySmartsim(PythonPackage):
 
     # Backends
     # SmartSim defines sensible and well tested lower bounds for these
-    # dependencies for the CLI to fetch in the 
+    # dependencies for the CLI to fetch in the
     # `smartsim._core._install.buildenv.Versioner` class, but allows users to
     # upgrade explicitly by setting environment variables.
     depends_on("redis@7.0.5:", type=("build", "run"))
