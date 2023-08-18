@@ -1,0 +1,87 @@
+diff -ruN spack-src/configure spack-src-patched/configure
+--- spack-src/configure	2023-08-17 17:01:17.000000000 -0700
++++ spack-src-patched/configure	2023-08-18 11:08:49.959762310 -0700
+@@ -768,6 +768,7 @@
+     echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
+     echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+     echo "-rocprofv2 .......................................... Enable rocprofv2."
++    echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
+ #   echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
+ #   echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
+     echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
+@@ -936,6 +937,7 @@
+         echo "-rocm[=<dir>] ..... Specify alternate path to ROCm (/opt/rocm default)."
+         echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+ 	echo "-rocprofv2 .......................................... Enable rocprofv2."
++	echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
+         #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
+         #echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
+         echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
+@@ -1364,6 +1366,7 @@
+ rocprofiler=no
+ rocprofv2=no
+ roctracer=no
++rocmsmi=no
+ hip=no
+ use_opencl=no
+ use_openacc=no
+@@ -3057,6 +3060,17 @@
+             shift
+             ;;
+ 
++        -rocmsmi=*)
++            rocmsmidir=`echo $arg | sed -e 's/-rocmsmi=//' -e 's/ /#/g'`
++            if [ ! -d $rocmsmidir ]; then
++              echo  "Error: Cannot access ROCm smi directory $rocmsmidir"
++              exit 1
++            else
++              fixmakeargs="$fixmakeargs rocmsmidir=$rocmsmidir"
++              rocmsmi=yes
++            fi
++            shift
++            ;;
+ 
+         -hip=*)
+             hipdir=`echo $arg | sed -e 's/-hip=//' -e 's/ /#/g'`
+@@ -3324,6 +3338,11 @@
+   pthread=yes
+ fi
+ 
++if [ "x$rocmsmi" = "xno" ]; then
++  echo "No rocmsmi specified, using $rocmdir"
++  fixmakeargs="$fixmakeargs rocmsmidir=$rocmdir"
++fi
++
+ if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
+   ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
+   for d in $ld_lib_path
+diff -ruN spack-src/include/Makefile.skel spack-src-patched/include/Makefile.skel
+--- spack-src/include/Makefile.skel	2023-08-17 17:01:17.000000000 -0700
++++ spack-src-patched/include/Makefile.skel	2023-08-18 11:09:02.763832652 -0700
+@@ -182,8 +182,9 @@
+ TAU_ROCPROFILER_LIBRARY=
+ TAU_ROCTRACER=
+ TAU_ROCTRACER_LIB_DIR=$(TAU_ROCTRACER)/lib
+-TAU_ROCM_SMI_INC=$(TAU_ROCM_DIR)/include/rocm_smi
+-TAU_ROCM_SMI_LIB_DIR=$(TAU_ROCM_DIR)/rocm_smi/lib
++TAU_ROCM_SMI_DIR=
++TAU_ROCM_SMI_INC=$(TAU_ROCM_SMI_DIR)/include/rocm_smi
++TAU_ROCM_SMI_LIB_DIR=$(TAU_ROCM_SMI_DIR)/lib
+ TAU_CMAKE=
+ TAU_HIP=
+ PIN_ROOT=
+diff -ruN spack-src/utils/FixMakefile spack-src-patched/utils/FixMakefile
+--- spack-src/utils/FixMakefile	2023-08-15 08:11:00.000000000 -0700
++++ spack-src-patched/utils/FixMakefile	2023-08-18 11:08:50.803766947 -0700
+@@ -1082,6 +1082,10 @@
+         roctracerlibdir=`echo $1 | sed -e 's/^roctracerlibdir=//' -e 's/#/ /g'`
+ 	echo "s@^TAU_ROCTRACER_LIB_DIR=\(.*\)@TAU_ROCTRACER_LIB_DIR=$roctracerlibdir@g" >> $sedout
+         ;;
++     rocmsmidir=*)
++        rocmsmidir=`echo $1 | sed -e 's/^rocmsmidir=//' -e 's/#/ /g'`
++        echo "s@^TAU_ROCM_SMI_DIR=\(.*\)@TAU_ROCM_SMI_DIR=$rocmsmidir@g" >> $sedout
++        ;;
+      hipdir=*)
+         hipdir=`echo $1 | sed -e 's/^hipdir=//' -e 's/#/ /g'`
+ 	echo "s@^TAU_HIP=\(.*\)@TAU_HIP=$hipdir@g" >> $sedout
+

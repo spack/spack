@@ -125,6 +125,7 @@ class Tau(Package):
     depends_on("rocprofiler-dev", when="+rocprofiler")
     depends_on("roctracer-dev", when="+roctracer")
     depends_on("hsa-rocr-dev", when="+rocm")
+    depends_on("rocm-smi-lib", when="+rocm")
     depends_on("java", type="run")  # for paraprof
     depends_on("oneapi-level-zero", when="+level_zero")
 
@@ -137,6 +138,7 @@ class Tau(Package):
     conflicts("+sqlite", when="@:2.29.1")
 
     patch("unwind.patch", when="@2.29.0")
+    patch("tau-2.32.1-rocm-smi-dir.patch", when="@2.32.1 +rocm")
 
     filter_compiler_wrappers("Makefile", relative_root="include")
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib")
@@ -144,6 +146,9 @@ class Tau(Package):
 
     def set_compiler_options(self, spec):
         useropt = ["-O2 -g", self.rpath_args]
+
+        if self.spec.satisfies("@2.32.1 +rocm"):
+            useropt.append("-I{0}/include".format(spec["rocm-smi-lib"].prefix))
 
         if self.spec.satisfies("%oneapi"):
             useropt.append("-Wno-error=implicit-function-declaration")
@@ -289,6 +294,8 @@ class Tau(Package):
 
         if "+rocm" in spec:
             options.append("-rocm=%s" % spec["hsa-rocr-dev"].prefix)
+            if spec.satisfies("@2.32.1"):
+                options.append("-rocmsmi=%s" % spec["rocm-smi-lib"].prefix)
 
         if "+rocprofiler" in spec:
             options.append("-rocprofiler=%s" % spec["rocprofiler-dev"].prefix)
