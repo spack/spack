@@ -139,6 +139,9 @@ _bash_completion_spack() {
         $subfunction
         COMPREPLY=($(compgen -W "$SPACK_COMPREPLY" -- "$cur"))
     fi
+
+    # if every completion is an alias for the same thing, just return that thing.
+    _spack_compress_aliases
 }
 
 # Helper functions for subcommands
@@ -328,9 +331,54 @@ _spacktivate() {
   _spack_env_activate
 }
 
+# Simple function to get the spack alias for a command
+_spack_get_alias() {
+    local possible_alias="${1-}"
+    local IFS=";"
+
+    # spack aliases are a ;-separated list of :-separated pairs
+    for item in $SPACK_ALIASES; do
+        # maps a possible alias to its command
+        eval "local real_command=\"\${item#*${possible_alias}:}\""
+        if [ "$real_command" != "$item" ]; then
+            SPACK_ALIAS="$real_command"
+            return
+        fi
+    done
+
+    # no alias found -- just return $1
+    SPACK_ALIAS="$possible_alias"
+}
+
+# If all commands in COMPREPLY alias to the same thing, set COMPREPLY to
+# just the real command, not the aliases.
+_spack_compress_aliases() {
+    # if there's only one thing, don't bother compressing aliases; complete the alias
+    if [ "${#COMPREPLY[@]}" == "1" ]; then
+        return
+    fi
+
+    # get the alias of the first thing in the list of completions
+    _spack_get_alias "${COMPREPLY[0]}"
+    local first_alias="$SPACK_ALIAS"
+
+    # if anything in the list would alias to something different, stop
+    for comp in "${COMPREPLY[@]:1}"; do
+        _spack_get_alias "$comp"
+        if [ "$SPACK_ALIAS" != "$first_alias" ]; then
+            return
+        fi
+    done
+
+    # all commands alias to first alias; just return that
+    COMPREPLY=("$first_alias")
+}
+
 # Spack commands
 #
 # Everything below here is auto-generated.
+SPACK_ALIASES="concretise:concretize;containerise:containerize;rm:remove"
+
 
 _spack() {
     if $list_options
