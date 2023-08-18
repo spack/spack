@@ -281,7 +281,8 @@ def uninstall_specs(args, specs):
         confirm_removal(uninstall_list)
 
     # Uninstall everything on the list
-    do_uninstall(uninstall_list, args.force)
+    with spack.store.STORE.db.write_transaction():
+        do_uninstall(uninstall_list, args.force)
 
     if env:
         with env.write_transaction():
