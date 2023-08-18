@@ -23,7 +23,7 @@ class PySmartsim(PythonPackage):
 
     variant("torch", default=True, description="Build with the pytorch backend")
 
-    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("python@3.8:3.10", type=("build", "run"))
     depends_on("py-setuptools", type=("build",))
     depends_on("py-cmake@3.13:", type=("build",))
 
@@ -36,7 +36,7 @@ class PySmartsim(PythonPackage):
     depends_on("py-protobuf@3.20:3", type=("build", "run"))
 
     # Companion libs
-    depends_on("py-smartredis@0.4.1", type=("build", "run"), when="@0.5.0")
+    depends_on("py-smartredis@0.4.1:", type=("build", "run"), when="@0.5.0")
 
     # Backends
     # SmartSim defines sensible and well tested lower bounds for these
