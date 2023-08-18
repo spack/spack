@@ -610,7 +610,9 @@ def chgrp(path, group, follow_symlinks=True):
         gid = grp.getgrnam(group).gr_gid
     else:
         gid = group
-    if os.stat(path).st_gid == gid:
+    if follow_symlinks and os.stat(path).st_gid == gid:
+        return
+    elif (not follow_symlinks) and os.lstat(path).st_gid == gid:
         return
     if follow_symlinks:
         os.chown(path, -1, gid)

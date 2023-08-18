@@ -504,36 +504,57 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
 
 @pytest.mark.not_on_windows("chgrp isn't used on Windows")
 def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
+
+    dir1 = "test-dir_chgrp_dont_set_group_if_already_set"
+
     with fs.working_dir(tmpdir):
-        os.mkdir("test-dir_chgrp_dont_set_group_if_already_set")
+        os.mkdir(dir1)
 
     def _fail(*args, **kwargs):
         raise Exception("chrgrp should not be called")
 
-    class FakeStat(object):
+    class FakeStat:
         def __init__(self, gid):
             self.st_gid = gid
 
     original_stat = os.stat
+    original_lstat = os.lstat
 
-    def _stat(*args, **kwargs):
-        path = args[0]
-        if path == "test-dir_chgrp_dont_set_group_if_already_set":
-            return FakeStat(gid=1001)
-        else:
-            # Monkeypatching stat can interfere with post-test cleanup, so for
-            # paths that aren't part of the test, we want the original behavior
-            # of stat
-            return original_stat(*args, **kwargs)
+    class Stat:
+        def __init__(self, gid):
+            self.gid = gid
+
+        def __call__(self, *args, **kwargs):
+            path = args[0]
+            if path == dir1:
+                return FakeStat(gid=self.gid)
+            else:
+                # Monkeypatching stat can interfere with post-test cleanup, so for
+                # paths that aren't part of the test, we want the original behavior
+                # of stat
+                return original_stat(*args, **kwargs)
+
+    class Lstat:
+        def __init__(self, gid):
+            self.gid = gid
+
+        def __call__(self, *args, **kwargs):
+            path = args[0]
+            if path == dir1:
+                return FakeStat(gid=self.gid)
+            else:
+                return original_lstat(*args, **kwargs)
 
     monkeypatch.setattr(os, "chown", _fail)
     monkeypatch.setattr(os, "lchown", _fail)
-    monkeypatch.setattr(os, "stat", _stat)
+
+    monkeypatch.setattr(os, "stat", Stat(1001))
+    monkeypatch.setattr(os, "lstat", Lstat(1001))
 
     with fs.working_dir(tmpdir):
         with pytest.raises(Exception):
-            fs.chgrp("test-dir_chgrp_dont_set_group_if_already_set", 1002)
-        fs.chgrp("test-dir_chgrp_dont_set_group_if_already_set", 1001)
+            fs.chgrp(dir1, 1002)
+        fs.chgrp(dir1, 1001)
 
 
 def test_filter_files_multiple(tmpdir):
