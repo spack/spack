@@ -23,6 +23,9 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     version("0.30.0", sha256="7c8f0e0431f8052993cd8033a316f53590c7bf5419445d0725e214b93cbc661b")
     version("0.29.1", sha256="f51ba7718defc7bb5064f690f381e04b2ec58cb09f22a171ae5f410860716e30")
 
+    depends_on("kokkos@:3.7.2", when="@:0.30", type=("run", "build"))
+    depends_on("kokkos@4:", when="@:0.31", type=("run", "build"))
+
     # kokkos backends
     backends = {
         "cuda": [False, "Whether to build CUDA backend"],
@@ -37,16 +40,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     for backend in backends:
         deflt_bool, descr = backends[backend]
         variant(backend.lower(), default=deflt_bool, description=descr)
-        depends_on(
-            f"kokkos+{backend.lower()}", when=f"+{backend.lower()}", type=("run", "build")
-        )
-        depends_on(
-            "kokkos@:3.7.2", when="@:0.30", type=("run", "build")
-        )
-        depends_on(
-            "kokkos@4:", when="@:0.31", type=("run", "build")
-        )
-
+        depends_on(f"kokkos+{backend.lower()}", when=f"+{backend.lower()}", type=("run", "build"))
     # CUDA
     for val in CudaPackage.cuda_arch_values:
         depends_on("kokkos cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
@@ -55,9 +49,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     # ROCm
     for val in ROCmPackage.amdgpu_targets:
-        depends_on(
-            "kokkos amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
-        )
+        depends_on("kokkos amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val))
 
     conflicts(
         "+cuda",
