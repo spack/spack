@@ -96,7 +96,21 @@ def test_license_directive(config, mock_packages, package_name, expected_license
     pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
     for license in expected_licenses:
         assert spack.spec.Spec(license[1]) in pkg_cls.licenses
-        assert license[0] in pkg_cls.licenses[spack.spec.Spec(license[1])]
+        assert license[0] == pkg_cls.licenses[spack.spec.Spec(license[1])]
+
+
+def test_duplicate_license():
+    package = namedtuple("package", ["licenses"])
+    package.licenses = {spack.directives.make_when_spec("+foo"): "Apache-2.0"}
+
+    license_directive = spack.directives.license("MIT", "+foo")
+
+    msg = (
+        r"License MIT applies at \+foo which conflicts with Apache-2.0 which also applies at \+foo"
+    )
+
+    with pytest.raises(spack.directives.DuplicateLicenseError, match=msg):
+        license_directive(package)
 
 
 def test_version_type_validation():

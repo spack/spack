@@ -357,13 +357,12 @@ def print_licenses(pkg):
     color.cprint("")
     color.cprint(section_title("Licenses: "))
 
-    pad = padder(pkg.licenses, 4)
-
     if len(pkg.licenses) == 0:
         color.cprint("    None")
     else:
+        pad = padder(pkg.licenses, 4)
         for when_spec in pkg.licenses:
-            license_identifier = pkg.licenses[when_spec][0]
+            license_identifier = pkg.licenses[when_spec]
             line = license("    {0}".format(pad(license_identifier))) + color.cescape(when_spec)
             color.cprint(line)
 

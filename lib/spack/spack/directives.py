@@ -879,8 +879,14 @@ def license(license_identifier: str, when=None):
         if not when_spec:
             return
 
-        license_list = pkg.licenses.setdefault(when_spec, [])
-        license_list.append(license_identifier)
+        if when_spec in pkg.licenses:
+            err_msg = (
+                f"License {license_identifier} applies at {when} which "
+                f"conflicts with {pkg.licenses[when_spec]} which also applies at {when}"
+            )
+            raise DuplicateLicenseError(err_msg)
+
+        pkg.licenses[when_spec] = license_identifier
 
     return _execute_license
 
@@ -943,3 +949,7 @@ class DependencyPatchError(DirectiveError):
 
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
+
+
+class DuplicateLicenseError(DirectiveError):
+    """Raised when two licenses are declared that apply on the same specifications."""
