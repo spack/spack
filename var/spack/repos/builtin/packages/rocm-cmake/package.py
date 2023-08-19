@@ -13,12 +13,14 @@ class RocmCmake(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
     git = "https://github.com/RadeonOpenCompute/rocm-cmake.git"
-    url = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
+    version("5.5.1", sha256="60113412b35d94e20e8100ed3db688c35801991b4b8fa282fdc6fd6fd413fb6e")
+    version("5.5.0", sha256="b7884c346737eba70ae11044e41598b2482a92e21f3e0719b1ca11619f02a20b")
     version("5.4.3", sha256="c185b3a10d191d73b76770ca0f9d6bdc355ee91fe0c9016a3779c9cfe042ba0f")
     version("5.4.0", sha256="617faa9a1e51db3c7a59bd0393e054ab67e57be357d59cb0cd9b677f47824946")
     version("5.3.3", sha256="3e527f99db52e301ab4f1b994029585951e2ae685f0cdfb7b8529c72f4b77af4")
@@ -99,15 +101,11 @@ class RocmCmake(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3:", type="build")
     depends_on("cmake@3.6:", type="build", when="@4.1.0:")
+
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
 
     test_src_dir = "test"
 

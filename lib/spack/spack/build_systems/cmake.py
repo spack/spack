@@ -248,7 +248,8 @@ class CMakeBuilder(BaseBuilder):
     @staticmethod
     def std_args(pkg, generator=None):
         """Computes the standard cmake arguments for a generic package"""
-        generator = generator or "Unix Makefiles"
+        default_generator = "Ninja" if sys.platform == "win32" else "Unix Makefiles"
+        generator = generator or default_generator
         valid_primary_generators = ["Unix Makefiles", "Ninja"]
         primary_generator = _extract_primary_generator(generator)
         if primary_generator not in valid_primary_generators:
@@ -296,7 +297,45 @@ class CMakeBuilder(BaseBuilder):
                 define("CMAKE_PREFIX_PATH", spack.build_environment.get_cmake_prefix_path(pkg)),
             ]
         )
+
         return args
+
+    @staticmethod
+    def define_cuda_architectures(pkg):
+        """Returns the str ``-DCMAKE_CUDA_ARCHITECTURES:STRING=(expanded cuda_arch)``.
+
+        ``cuda_arch`` is variant composed of a list of target CUDA architectures and
+        it is declared in the cuda package.
+
+        This method is no-op for cmake<3.18 and when ``cuda_arch`` variant is not set.
+
+        """
+        cmake_flag = str()
+        if "cuda_arch" in pkg.spec.variants and pkg.spec.satisfies("^cmake@3.18:"):
+            cmake_flag = CMakeBuilder.define(
+                "CMAKE_CUDA_ARCHITECTURES", pkg.spec.variants["cuda_arch"].value
+            )
+
+        return cmake_flag
+
+    @staticmethod
+    def define_hip_architectures(pkg):
+        """Returns the str ``-DCMAKE_HIP_ARCHITECTURES:STRING=(expanded amdgpu_target)``.
+
+        ``amdgpu_target`` is variant composed of a list of the target HIP
+        architectures and it is declared in the rocm package.
+
+        This method is no-op for cmake<3.18 and when ``amdgpu_target`` variant is
+        not set.
+
+        """
+        cmake_flag = str()
+        if "amdgpu_target" in pkg.spec.variants and pkg.spec.satisfies("^cmake@3.21:"):
+            cmake_flag = CMakeBuilder.define(
+                "CMAKE_HIP_ARCHITECTURES", pkg.spec.variants["amdgpu_target"].value
+            )
+
+        return cmake_flag
 
     @staticmethod
     def define(cmake_var, value):

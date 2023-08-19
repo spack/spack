@@ -68,12 +68,12 @@ class Openexr(CMakePackage):
     depends_on("pkgconfig", when="@:2", type="build")
     depends_on("imath", when="@3:")
     depends_on("ilmbase", when="@:2")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     @property
     def build_directory(self):
         if self.spec.satisfies("@3:"):
-            return super(Openexr, self).build_directory
+            return super().build_directory
         else:
             return "."
 

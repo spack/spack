@@ -24,4 +24,4 @@ class RPopgenome(RPackage):
 
     depends_on("r@2.14.2:", type=("build", "run"))
     depends_on("r-ff", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")

@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import sys
 from typing import Dict, List, Optional
 
@@ -56,7 +54,7 @@ def setup_parser(subparser):
         "--force",
         action="store_true",
         dest="force",
-        help="remove regardless of whether other packages or environments " "depend on this one",
+        help="remove regardless of whether other packages or environments depend on this one",
     )
     subparser.add_argument(
         "--remove",
@@ -105,7 +103,7 @@ def find_matching_specs(
     has_errors = False
     for spec in specs:
         install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
-        matching = spack.store.db.query_local(
+        matching = spack.store.STORE.db.query_local(
             spec, hashes=hashes, installed=install_query, origin=origin
         )
         # For each spec provided, make sure it refers to only one package.
@@ -141,7 +139,7 @@ def installed_dependents(specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
     # input; in that case we return an empty list.
 
     def is_installed(spec):
-        record = spack.store.db.query_local_by_spec_hash(spec.dag_hash())
+        record = spack.store.STORE.db.query_local_by_spec_hash(spec.dag_hash())
         return record and record.installed
 
     specs = traverse.traverse_nodes(

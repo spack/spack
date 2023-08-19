@@ -17,6 +17,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     maintainers("adamjstewart", "aweits", "tgaddair", "thomas-bouvier")
 
     version("master", branch="master", submodules=True)
+    version("0.28.1", tag="v0.28.1", submodules=True)
     version("0.28.0", tag="v0.28.0", submodules=True)
     version("0.27.0", tag="v0.27.0", submodules=True)
     version("0.26.1", tag="v0.26.1", submodules=True)
@@ -274,6 +275,7 @@ class PyHorovod(PythonPackage, CudaPackage):
         else:
             env.set("HOROVOD_CPU_OPERATIONS", self.spec.variants["tensor_ops"].value.upper())
 
-    def test(self):
-        super(PyHorovod, self).test()
-        self.run_test(self.prefix.bin.horovodrun, "--check-build")
+    def test_check_build(self):
+        """run horovodrun --check-build"""
+        horovodrun = which(self.prefix.bin.horovodrun)
+        horovodrun("--check-build")

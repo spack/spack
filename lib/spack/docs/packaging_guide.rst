@@ -121,7 +121,7 @@ Since v0.19, Spack supports  two ways of writing a package recipe. The most comm
 
        def url_for_version(self, version):
            if version >= Version("2.1.1"):
-               return super(Openjpeg, self).url_for_version(version)
+               return super().url_for_version(version)
            url_fmt = "https://github.com/uclouvain/openjpeg/archive/version.{0}.tar.gz"
            return url_fmt.format(version)
 
@@ -155,7 +155,7 @@ builder class explicitly. Using the same example as above, this reads:
 
        def url_for_version(self, version):
            if version >= Version("2.1.1"):
-               return super(Openjpeg, self).url_for_version(version)
+               return super().url_for_version(version)
            url_fmt = "https://github.com/uclouvain/openjpeg/archive/version.{0}.tar.gz"
            return url_fmt.format(version)
 
@@ -2243,7 +2243,7 @@ looks like this:
        url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
 
        version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
-       depends_on("zlib")
+       depends_on("zlib-api")
 
        parallel = False
 
@@ -3071,7 +3071,7 @@ follows:
        # The library provided by the bar virtual package
        @property
        def bar_libs(self):
-           return find_libraries("libFooBar", root=sef.home, recursive=True)
+           return find_libraries("libFooBar", root=self.home, recursive=True)
 
        # The baz virtual package home
        @property

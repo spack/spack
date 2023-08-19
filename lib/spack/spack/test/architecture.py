@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import platform
-import sys
 
 import pytest
 
@@ -59,7 +58,6 @@ def test_platform(current_host_platform):
     assert str(detected_platform) == str(current_host_platform)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_user_input_combination(config, target_str, os_str):
     """Test for all the valid user input combinations that both the target and
     the operating system match.
@@ -201,14 +199,10 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
     ],
 )
 @pytest.mark.usefixtures("mock_packages", "config")
+@pytest.mark.only_clingo("Fixing the parser broke this test for the original concretizer.")
 def test_concretize_target_ranges(root_target_range, dep_target_range, result, monkeypatch):
     # Monkeypatch so that all concretization is done as if the machine is core2
     monkeypatch.setattr(spack.platforms.test.Test, "default", "core2")
-
-    # use foobar=bar to make the problem simpler for the old concretizer
-    # the new concretizer should not need that help
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Fixing the parser broke this test for the original concretizer.")
 
     spec_str = "a %%gcc@10 foobar=bar target=%s ^b target=%s" % (
         root_target_range,

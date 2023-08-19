@@ -10,12 +10,11 @@ Utility functions for parsing, formatting, and manipulating URLs.
 import itertools
 import os
 import posixpath
-import re
 import sys
 import urllib.parse
 import urllib.request
 
-from spack.util.path import convert_to_posix_path
+from spack.util.path import convert_to_posix_path, sanitize_filename
 
 
 def validate_scheme(scheme):
@@ -243,54 +242,20 @@ def _join(base_url, path, *extra, **kwargs):
     )
 
 
-git_re = (
-    r"^(?:([a-z]+)://)?"  # 1. optional scheme
-    r"(?:([^@]+)@)?"  # 2. optional user
-    r"([^:/~]+)?"  # 3. optional hostname
-    r"(?(1)(?::([^:/]+))?|:)"  # 4. :<optional port> if scheme else :
-    r"(.*[^/])/?$"  # 5. path
-)
+def default_download_filename(url: str) -> str:
+    """This method computes a default file name for a given URL.
+    Note that it makes no request, so this is not the same as the
+    option curl -O, which uses the remote file name from the response
+    header."""
+    parsed_url = urllib.parse.urlparse(url)
+    # Only use the last path component + params + query + fragment
+    name = urllib.parse.urlunparse(
+        parsed_url._replace(scheme="", netloc="", path=posixpath.basename(parsed_url.path))
+    )
+    valid_name = sanitize_filename(name)
 
+    # Don't download to hidden files please
+    if valid_name[0] == ".":
+        valid_name = "_" + valid_name[1:]
 
-def parse_git_url(url):
-    """Parse git URL into components.
-
-    This parses URLs that look like:
-
-    * ``https://host.com:443/path/to/repo.git``, or
-    * ``git@host.com:path/to/repo.git``
-
-    Anything not matching those patterns is likely a local
-    file or invalid.
-
-    Returned components are as follows (optional values can be ``None``):
-
-    1. ``scheme`` (optional): git, ssh, http, https
-    2. ``user`` (optional): ``git@`` for github, username for http or ssh
-    3. ``hostname``: domain of server
-    4. ``port`` (optional): port on server
-    5. ``path``: path on the server, e.g. spack/spack
-
-    Returns:
-        (tuple): tuple containing URL components as above
-
-    Raises ``ValueError`` for invalid URLs.
-    """
-    match = re.match(git_re, url)
-    if not match:
-        raise ValueError("bad git URL: %s" % url)
-
-    # initial parse
-    scheme, user, hostname, port, path = match.groups()
-
-    # special handling for ~ paths (they're never absolute)
-    if path.startswith("/~"):
-        path = path[1:]
-
-    if port is not None:
-        try:
-            port = int(port)
-        except ValueError:
-            raise ValueError("bad port in git url: %s" % url)
-
-    return (scheme, user, hostname, port, path)
+    return valid_name
