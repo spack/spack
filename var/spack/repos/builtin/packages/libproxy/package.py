@@ -22,7 +22,7 @@ class Libproxy(CMakePackage):
     variant("perl", default=False, description="Enable Perl bindings")
     variant("python", default=False, description="Enable Python bindings", when="@0.4.16:")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("perl", type=("build", "run"), when="+perl")
 
     extends("python@:3.8", when="+python")

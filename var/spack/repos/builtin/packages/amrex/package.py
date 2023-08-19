@@ -75,7 +75,22 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     version("18.09.1", sha256="a065ee4d1d98324b6c492ae20ea63ba12a4a4e23432bf5b3fe9788d44aa4398e")
 
     # Config options
-    variant("dimensions", default="3", description="Dimensionality", values=("1", "2", "3"))
+    variant(
+        "dimensions",
+        default="3",
+        values=("1", "2", "3"),
+        multi=False,
+        description="Dimensionality",
+        when="@:23.05",
+    )
+    variant(
+        "dimensions",
+        default="1,2,3",
+        values=("1", "2", "3"),
+        multi=True,
+        description="Dimensionality",
+        when="@23.06:",
+    )
     variant("shared", default=False, description="Build shared library")
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=False, description="Build with OpenMP support")
@@ -144,7 +159,6 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hypre@2.19.0:", type="link", when="@21.03: ~cuda +hypre")
     depends_on("hypre@2.20.0:", type="link", when="@21.03: +cuda +hypre")
     depends_on("petsc", type="link", when="+petsc")
-    depends_on("intel-oneapi-compilers@2023.0.0:", type="build", when="@23.01: +sycl")
     depends_on("intel-oneapi-mkl", type=("build", "link"), when="+sycl")
 
     # these versions of gcc have lambda function issues
@@ -234,6 +248,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     #
     @when("@20.12:,develop")
     def cmake_args(self):
+        if self.spec.satisfies("@23.01: +sycl") and not self.spec.satisfies("%oneapi@2023.0.0:"):
+            raise InstallError("amrex +sycl requires %oneapi@2023.0.0:")
         args = [
             "-DUSE_XSDK_DEFAULTS=ON",
             self.define_from_variant("AMReX_SPACEDIM", "dimensions"),

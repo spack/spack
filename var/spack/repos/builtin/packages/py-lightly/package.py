@@ -15,6 +15,7 @@ class PyLightly(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("1.4.15", sha256="9b02f523b35621a98c3e87efdda735897b726b39cf4a8bf106769f54b3df154e")
     version("1.4.14", sha256="edbad4c95866fea6951a4fc5e851518f3afb2ff19381648accb4e1a005366720")
     version("1.4.13", sha256="d3819d75b85534f98603743486b263eb1dc62cd5b20de30d5bad07227f1e0d98")
     version("1.4.12", sha256="66aea90f096c474b26515bafbef728632516d6f8f13ab5caba38b09903d1b86e")
@@ -46,6 +47,7 @@ class PyLightly(PythonPackage):
 
     # requirements/openapi.txt
     depends_on("py-python-dateutil@2.5.3:", when="@1.4.8:", type=("build", "run"))
+    depends_on("py-setuptools@21:", when="@1.4.15:", type=("build", "run"))
     depends_on("py-urllib3@1.25.3:", when="@1.4.8:", type=("build", "run"))
     depends_on("py-pydantic@1.10.5:1", when="@1.4.8:", type=("build", "run"))
     depends_on("py-aenum@3.1.11:", when="@1.4.8:", type=("build", "run"))

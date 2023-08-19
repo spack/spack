@@ -21,7 +21,7 @@ class Tmscore(Package):
         expand=False,
     )
 
-    variant("fast-math", default=False)
+    variant("fast-math", default=False, description="Enable fast math")
 
     phases = ["build", "install"]
 

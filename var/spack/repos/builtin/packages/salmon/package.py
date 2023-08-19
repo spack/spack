@@ -31,8 +31,8 @@ class Salmon(CMakePackage):
     # 1.8.0 relies on tbb provided config, earlier versions make
     # assumptions about the layout of tbb files that are not true in
     # 2021.1 and later
-    conflicts("intel-tbb@2021.1:", when="@:1.7.0")
-    conflicts("intel-oneapi-tbb@2021.1:", when="@:1.7.0")
+    conflicts("^intel-tbb@2021.1:", when="@:1.7.0")
+    conflicts("^intel-oneapi-tbb@2021.1:", when="@:1.7.0")
     depends_on("tbb")
     depends_on(
         "boost@1.66.0:"
@@ -49,7 +49,7 @@ class Salmon(CMakePackage):
     depends_on("cereal")
     depends_on("jemalloc")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2")
     depends_on("libdivsufsort")
     depends_on("staden-io-lib~curl")
