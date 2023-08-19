@@ -13,6 +13,6 @@ class Licenses1(Package):
     url = "https://www.example.com/license"
 
     license("MIT", when="+foo")
-    license("Apache-2.0", when="+bar")
+    license("Apache-2.0", when="~foo")
 
     version("1.0", md5="0123456789abcdef0123456789abcdef")

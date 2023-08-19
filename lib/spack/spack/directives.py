@@ -879,12 +879,20 @@ def license(license_identifier: str, when=None):
         if not when_spec:
             return
 
-        if when_spec in pkg.licenses:
-            err_msg = (
-                f"License {license_identifier} applies at {when} which "
-                f"conflicts with {pkg.licenses[when_spec]} which also applies at {when}"
-            )
-            raise DuplicateLicenseError(err_msg)
+        for other_when_spec in pkg.licenses:
+            if when_spec.intersects(other_when_spec):
+                when_message = ""
+                if when_spec != make_when_spec(None):
+                    when_message = f"when {when_spec}"
+                other_when_message = ""
+                if other_when_spec != make_when_spec(None):
+                    other_when_message = f"when {other_when_spec}"
+                err_msg = (
+                    f"{pkg.name} is specified as being licensed as {license_identifier} "
+                    f"{when_message}, but it is also specified as being licensed under "
+                    f"{pkg.licenses[other_when_spec]} {other_when_message}, which conflict."
+                )
+                raise OverlappingLicenseError(err_msg)
 
         pkg.licenses[when_spec] = license_identifier
 
@@ -951,5 +959,5 @@ class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
 
 
-class DuplicateLicenseError(DirectiveError):
-    """Raised when two licenses are declared that apply on the same specifications."""
+class OverlappingLicenseError(DirectiveError):
+    """Raised when two licenses are declared that apply on overlapping specs."""

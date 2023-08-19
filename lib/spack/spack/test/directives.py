@@ -90,7 +90,7 @@ def test_maintainer_directive(config, mock_packages, package_name, expected_main
 
 
 @pytest.mark.parametrize(
-    "package_name,expected_licenses", [("licenses-1", [("MIT", "+foo"), ("Apache-2.0", "+bar")])]
+    "package_name,expected_licenses", [("licenses-1", [("MIT", "+foo"), ("Apache-2.0", "~foo")])]
 )
 def test_license_directive(config, mock_packages, package_name, expected_licenses):
     pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
@@ -99,17 +99,35 @@ def test_license_directive(config, mock_packages, package_name, expected_license
         assert license[0] == pkg_cls.licenses[spack.spec.Spec(license[1])]
 
 
-def test_duplicate_license():
-    package = namedtuple("package", ["licenses"])
+def test_duplicate_exact_range_license():
+    package = namedtuple("package", ["licenses", "name"])
     package.licenses = {spack.directives.make_when_spec("+foo"): "Apache-2.0"}
+    package.name = "test_package"
 
     license_directive = spack.directives.license("MIT", "+foo")
 
     msg = (
-        r"License MIT applies at \+foo which conflicts with Apache-2.0 which also applies at \+foo"
+        r"test_package is specified as being licensed as MIT when \+foo, but it is also "
+        r"specified as being licensed under Apache-2.0 when \+foo, which conflict."
     )
 
-    with pytest.raises(spack.directives.DuplicateLicenseError, match=msg):
+    with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
+        license_directive(package)
+
+
+def test_overlapping_duplicate_licenses():
+    package = namedtuple("package", ["licenses", "name"])
+    package.licenses = {spack.directives.make_when_spec("+foo"): "Apache-2.0"}
+    package.name = "test_package"
+
+    license_directive = spack.directives.license("MIT", "+bar")
+
+    msg = (
+        r"test_package is specified as being licensed as MIT when \+bar, but it is also "
+        r"specified as being licensed under Apache-2.0 when \+foo, which conflict."
+    )
+
+    with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
         license_directive(package)
 
 
