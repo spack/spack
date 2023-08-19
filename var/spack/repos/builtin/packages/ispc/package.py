@@ -25,6 +25,8 @@ class Ispc(CMakePackage):
     executables = ["^ispc$"]
 
     version("main", branch="main")
+    version("1.21.1", sha256="99bbb1d1f15bc4433d6a63b5bb35b321af3e3af753c3b28a61850d1748e8a89f")
+    version("1.21.0", sha256="023782f721bfb5893bac24bc2153a8214c916be82c290bf63a3ec6678949b5ef")
     version("1.20.0", sha256="8bd30ded7f96859451ead1cecf6f58ac8e937288fe0e5b98c56f6eba4be370b4")
     version("1.19.0", sha256="c1aeae4bdfb28004a6949394ea1b3daa3fdf12f646e17fcc0614861077dc8b6a")
     version("1.18.1", sha256="fee76d42fc0129f81489b7c2b9143e22a44c281940693c1c13cf1e3dd2ab207f")
@@ -45,7 +47,8 @@ class Ispc(CMakePackage):
     depends_on("tbb", type="link", when="platform=linux @1.20:")
     depends_on("llvm+clang")
     depends_on("llvm libcxx=none", when="platform=darwin")
-    depends_on("llvm@13:15", when="@1.19:")
+    depends_on("llvm@13:17", when="@1.21:")
+    depends_on("llvm@13:15", when="@1.19:1.20")
     depends_on("llvm@11.0:14.0", when="@1.18")
     depends_on("llvm@11:14", when="@1.17")
     depends_on("llvm@:12", when="@:1.16")
