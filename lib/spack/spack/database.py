@@ -662,6 +662,7 @@ class Database:
 
         self._write_transaction_impl = lk.WriteTransaction
         self._read_transaction_impl = lk.ReadTransaction
+        self.modified = False
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
@@ -932,9 +933,11 @@ class Database:
             old_data = self._data
             old_installed_prefixes = self._installed_prefixes
             try:
+                self.modified = True
                 self._construct_from_directory_layout(directory_layout, old_data)
             except BaseException:
                 # If anything explodes, restore old data, skip write.
+                self.modified = False
                 self._data = old_data
                 self._installed_prefixes = old_installed_prefixes
                 raise
@@ -1064,6 +1067,9 @@ class Database:
             self._state_is_inconsistent = True
             return
 
+        if not self.modified:
+            return
+
         temp_file = self._index_path + (".%s.%s.temp" % (socket.getfqdn(), os.getpid()))
 
         # Write a temporary database file them move it into place
@@ -1189,6 +1195,8 @@ class Database:
             path = None
             installed = True
 
+        self.modified = True
+
         if key not in self._data:
             # Create a new install record with no deps initially.
             new_spec = spec.copy(deps=False)
@@ -1259,6 +1267,7 @@ class Database:
 
         rec = self._data[key]
         rec.ref_count -= 1
+        self.modified = True
 
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
@@ -1274,11 +1283,13 @@ class Database:
 
         rec = self._data[key]
         rec.ref_count += 1
+        self.modified = True
 
     def _remove(self, spec):
         """Non-locking version of remove(); does real work."""
         key = self._get_matching_spec_key(spec)
         rec = self._data[key]
+        self.modified = True
 
         # This install prefix is now free for other specs to use, even if the
         # spec is only marked uninstalled.
@@ -1355,6 +1366,7 @@ class Database:
         spec_rec.deprecated_for = deprecator_key
         spec_rec.installed = False
         self._data[spec_key] = spec_rec
+        self.modified = True
 
     @_autospec
     def mark(self, spec, key, value):
@@ -1365,6 +1377,7 @@ class Database:
     def _mark(self, spec, key, value):
         record = self._data[self._get_matching_spec_key(spec)]
         setattr(record, key, value)
+        self.modified = True
 
     @_autospec
     def deprecate(self, spec, deprecator):
@@ -1666,6 +1679,7 @@ class Database:
                 status = "explicit" if explicit else "implicit"
                 tty.debug(message.format(status, s=spec))
                 rec.explicit = explicit
+                self.modified = True
 
 
 class UpstreamDatabaseLockingError(SpackError):
