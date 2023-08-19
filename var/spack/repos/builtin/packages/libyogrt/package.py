@@ -53,6 +53,9 @@ class Libyogrt(AutotoolsPackage):
 
     variant("static", default=False, description="build static library")
 
+    # include slurm.h during config test to avoid implicit function declaration
+    patch("config_slurm.patch")
+
     def url_for_version(self, version):
         if version < Version("1.21"):
             return "https://github.com/LLNL/libyogrt/archive/%s.tar.gz" % version

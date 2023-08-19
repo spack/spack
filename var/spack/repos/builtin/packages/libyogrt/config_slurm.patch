@@ -1,0 +1,13 @@
+diff --git a/config/x_ac_slurm.m4 b/config/x_ac_slurm.m4
+index c204ffa..5f43177 100644
+--- a/config/x_ac_slurm.m4
++++ b/config/x_ac_slurm.m4
+@@ -50,7 +50,7 @@ AC_DEFUN([X_AC_SLURM], [
+             _x_ac_slurm_libs_save="$LIBS"
+             LIBS="-L$d/$bit -lslurm -lpthread -lcrypto $LIBS"
+             AC_LINK_IFELSE(
+-              [AC_LANG_PROGRAM([],[slurm_get_rem_time(0);])],
++              [AC_LANG_PROGRAM([#include <slurm/slurm.h>],[slurm_get_rem_time(0);])],
+               [AS_VAR_SET([x_ac_cv_slurm_dir], [$d])
+                AS_VAR_SET([x_ac_cv_slurm_libdir], [$d/$bit])]
+             )
