@@ -1,0 +1,372 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: false
+
+  packages:
+    all:
+      require: '%intel@2021.10.0 target=x86_64_v3'
+
+      providers:
+        blas: [openblas]
+        fftw-api: [fftw]
+        gl: [opengl]
+        glu: [openglu]
+        jpeg: [libjpeg-turbo]
+        lapack: [openblas]
+        yacc: [bison]
+
+    mpi:
+      require: intel-oneapi-mpi
+    intel-oneapi-mpi:
+      buildable: false
+      externals:
+      - spec: intel-oneapi-mpi@2021.10.0
+        path: /opt/intel/oneapi/mpi/2021.10.0
+    openblas:
+      version: [0.3.23]
+      variants: +noavx512
+    diffutils:
+      require: '%gcc'
+    libbsd:
+      require: '%gcc'
+    bacio:
+      version: [2.4.1]
+    bison:
+      version: [3.8.2]
+    boost:
+      version: [1.78.0]
+      variants: ~atomic +chrono +date_time +exception +filesystem ~graph ~iostreams
+        ~locale ~log ~math ~mpi ~numpy +pic +program_options +python ~random +regex
+        +serialization ~signals +system +test +thread +timer ~wave cxxstd=14 visibility=hidden
+    bufr:
+      variants: +python
+    cdo:
+      version: [2.0.5]
+      variants: ~openmp
+    cmake:
+      version: [3.23.1]
+      variants: +ownlibs
+    crtm:
+      version: [2.4.0]
+      variants: +fix
+    ecflow:
+      variants: +ui
+    eckit:
+      variants: linalg=eigen,lapack compression=lz4,bzip2
+    ecmwf-atlas:
+      version: [0.33.0]
+      variants: +fckit +trans
+    ectrans:
+      version: [1.2.0]
+      variants: ~enable_mkl
+    eigen:
+      version: [3.4.0]
+    esmf:
+      version: [8.4.2]
+      variants: ~xerces ~pnetcdf snapshot=none ~shared +external-parallelio
+    fckit:
+      version: [0.10.1]
+      variants: +eckit
+    fftw:
+      version: [3.3.10]
+    fiat:
+      version: [1.1.0]
+    fms:
+      version: [2023.01]
+      variants: precision=32,64 +quad_precision +gfs_phys +openmp +pic constants=GFS
+        build_type=Release
+    g2:
+      version: [3.4.5]
+    g2c:
+      version: [1.6.4]
+    g2tmpl:
+      version: [1.10.2]
+    gfsio:
+      version: [1.4.1]
+    gftl-shared:
+      version: [1.5.0]
+    grib-util:
+      version: [1.2.3]
+    gsibec:
+      version: [1.1.2]
+    gsi-ncdiag:
+      version: [1.1.1]
+    gsl-lite:
+      version: [0.37.0]
+    hdf:
+      version: [4.2.15]
+      variants: ~fortran ~netcdf
+    hdf5:
+      version: [1.14.0]
+      variants: +hl +fortran +mpi ~threadsafe +szip
+    ip:
+      version: [3.3.3]
+    ip2:
+      version: [1.1.2]
+    jasper:
+      version: [2.0.32]
+    jedi-cmake:
+      version: [1.4.0]
+    jpeg:
+      version: [9.1.0]
+    landsfcutil:
+      version: [2.4.1]
+    libjpeg-turbo:
+      version: [2.1.0]
+    libpng:
+      version: [1.6.37]
+    libyaml:
+      version: [0.2.5]
+    mapl:
+      version: [2.35.2]
+      variants: ~shared
+    met:
+      version: [11.0.2]
+      variants: +python +grib2
+    metplus:
+      version: [5.0.1]
+    mpich:
+      variants: ~hwloc +two_level_namespace
+    nco:
+      version: [5.0.6]
+      variants: ~doc
+    nemsio:
+      version: [2.5.4]
+    nemsiogfs:
+      version: [2.5.3]
+    nccmp:
+      version: [1.9.0.1]
+    ncio:
+      version: [1.1.2]
+    netcdf-c:
+      version: [4.9.2]
+      variants: +dap +mpi ~parallel-netcdf
+    netcdf-cxx4:
+      version: [4.3.1]
+    netcdf-fortran:
+      version: [4.6.0]
+    nlohmann-json:
+      version: [3.10.5]
+    nlohmann-json-schema-validator:
+      version: [2.1.0]
+    odc:
+            # version: [1.4.6] # not present
+      variants: ~fortran
+    openmpi:
+      variants: +internal-hwloc +two_level_namespace
+    openssl:
+      variants: +shared
+    p4est:
+      version: [2.8]
+    parallelio:
+      version: [2.5.9]
+      variants: +pnetcdf
+    parallel-netcdf:
+      version: [1.12.2]
+    pkgconf:
+      buildable: false
+    prod-util:
+      version: [1.2.2]
+    proj:
+      version: [8.1.0]
+      variants: ~tiff
+    python:
+      version: [3.10.8]
+    py-cartopy:
+      variants: +plotting
+    py-click:
+      version: [8.0.3]
+    py-eccodes:
+      version: [1.4.2]
+    py-h5py:
+      version: [3.7.0]
+      variants: ~mpi
+    py-netcdf4:
+      version: [1.5.3]
+      variants: ~mpi
+    py-numpy:
+      version: [1.22.3]
+      variants: +blas +lapack
+    py-openpyxl:
+      version: [3.0.3]
+    py-pandas:
+      version: [1.4.0]
+    py-poetry-core:
+      version: [1.0.8]
+    py-pybind11:
+      version: [2.8.1]
+    py-pycodestyle:
+      version: [2.8.0]
+    py-pygithub:
+      version: [1.55]
+    py-pygrib:
+      version: [2.1.4]
+    py-pyhdf:
+      version: [0.10.4]
+    py-pyproj:
+      version: [3.1.0]
+    py-python-dateutil:
+      version: [2.8.2]
+    py-pythran:
+      version: [0.12.2]
+    py-pyyaml:
+      version: [6.0]
+    py-scipy:
+      version: [1.9.3]
+    py-setuptools:
+      version: [59.4.0]
+    py-setuptools-scm:
+      version: [7.0.5]
+    py-shapely:
+      version: [1.8.0]
+    qt:
+      version: [5.15.3]
+    scotch:
+      version: [7.0.3]
+      variants: +mpi+metis~shared~threads~mpi_thread+noarch
+    sfcio:
+      version: [1.4.1]
+    shumlib:
+      version: [macos_clang_linux_intel_port]
+    sigio:
+      version: [2.3.2]
+    sp:
+      version: [2.3.3]
+    udunits:
+      version: [2.2.28]
+    upp:
+      version: [10.0.10]
+    w3emc:
+      version: [2.9.2]
+    w3nco:
+      version: [2.4.1]
+    wget:
+      version: [1.21.2]
+    wgrib2:
+      version: [2.0.8]
+    wrf-io:
+      version: [1.2.0]
+    yafyaml:
+      version: [0.5.1]
+    zlib:
+      version: [1.2.13]
+    zstd:
+      version: [1.5.2]
+      variants: +programs
+
+  specs:
+  - bacio@2.4.1
+  - bison@3.8.2
+  - bufr@11.7.0
+  - ecbuild@3.6.5
+  - eccodes@2.25.0
+  - ecflow@5
+  - eckit@1.20.2
+  - eigen@3.4.0
+  - esmf@8.3.0b09 # +pio variant not present
+  - flex@2.6.4
+  - fms@2022.01
+  - fms@2022.02
+  - fms@2022.03
+  - fms@2022.04
+  - g2@3.4.5
+  - g2tmpl@1.10.0
+  - gftl-shared@1.5.0
+  - hdf5@1.12.1
+  - hdf@4.2.15
+  - ip@3.3.3
+  - jasper@2.0.32
+  - libpng@1.6.37
+  - libyaml@0.2.5
+  - mapl@2.22.0
+  - nccmp@1.9.0.1
+  - nco@5.0.6
+  - netcdf-c@4.8.1
+  - netcdf-cxx4@4.3.1
+  - netcdf-fortran@4.5.4
+  - nlohmann-json-schema-validator@2.1.0
+  - nlohmann-json@3.10.5
+  - odc@1.4.5
+  - parallel-netcdf@1.12.2
+  - parallelio@2.5.4
+  - parallelio@2.5.7
+  - py-numpy@1.22.3
+  - py-pandas@1.4.0
+  - py-scipy@1.8.0
+  - py-shapely@1.8.0
+  - sp@2.3.3
+  - udunits@2.2.28
+  - w3nco@2.4.1
+  - yafyaml@0.5.1
+  - zlib@1.2.13
+
+  # TO ADD: ExaWorks SDK and all associated software
+
+  # - fckit@0.9.5
+  # - fms@release-jcsda                     # not present
+  # - jedi-cmake@1.4.0                      # not present
+  # - shumlib@macos_clang_linux_intel_port  # not present
+
+  # FAILURES
+  # - ecmwf-atlas@0.31.1  # fiat: automatic patch failed
+  # - ectrans@1.1.0       # fiat: automatic patch failed
+  # - ewok@0.0.2          # py-scipy@1.9.3: ninja: fatal: posix_spawn: No such file or directory
+  # - fiat@1.0.0          # fiat automatic patch failed
+  # - fms@2019.01.03      # allow install with --no-checksum?
+  # - r2d2@0.0.2          # allow install with --no-checksum?
+  # - solo@1.0.0          # github prompts for login
+  # - crtm@2.3.0          # go: error obtaining buildID for go tool link: open /dev/null: no such file or directory
+  # - crtm@2.4.0          # go: error obtaining buildID for go tool link: open /dev/null: no such file or directory
+  # - crtm@v2.3-jedi.4    # go: error obtaining buildID for go tool link: open /dev/null: no such file or directory
+  # - crtm@v2.4-jedi      # go: error obtaining buildID for go tool link: open /dev/null: no such file or directory
+
+  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-noaa-intel-classic" }
+
+  ci:
+    pipeline-gen:
+    - build-job:
+        image: "ecpe4s/ubuntu20.04-runner-amd64-oneapi-2023.2.1:2023.08.01"
+
+  cdash:
+    build-group: E4S-NOAA-Intel-Classic
+
+  compilers:
+  - compiler:
+      spec: gcc@11.4.0
+      paths:
+        cc: /usr/bin/gcc
+        cxx: /usr/bin/g++
+        f77: /usr/bin/gfortran
+        fc: /usr/bin/gfortran
+      flags: {}
+      operating_system: ubuntu20.04
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: intel@2021.10.0
+      paths:
+        cc: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/intel64/icc
+        cxx: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/intel64/icpc
+        f77: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/intel64/ifort
+        fc: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/intel64/ifort
+      flags: {}
+      operating_system: ubuntu20.04
+      target: x86_64
+      modules: []
+      environment:
+        append_path:
+          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2023.2.1/linux/compiler/lib/intel64_lin
+        set:
+          I_MPI_CC: icc
+          I_MPI_CXX: icpc
+          I_MPI_FC: ifort
+          I_MPI_F77: ifort
+          I_MPI_F90: ifort
+          CPATH: /usr/include/x86_64-linux-gnu:/opt/intel/oneapi/tbb/2021.10.0/env/../include:/opt/intel/oneapi/mpi/2021.10.0//include:/opt/intel/oneapi/mkl/2023.2.1/include:/opt/intel/oneapi/ippcp/2021.8.0/include:/opt/intel/oneapi/ipp/2021.9.0/include:/opt/intel/oneapi/dpl/2022.2.0/linux/include:/opt/intel/oneapi/dnnl/2023.2.1/cpu_dpcpp_gpu_dpcpp/include:/opt/intel/oneapi/dev-utilities/2021.10.0/include:/opt/intel/oneapi/dal/2023.2.1/include:/opt/intel/oneapi/compiler/2023.2.1/linux/lib/oclfpga/include:/opt/intel/oneapi/ccl/2021.10.0/include/cpu_gpu_dpcpp
+      extra_rpaths:
+      - /opt/intel/oneapi/compiler/2023.2.1/linux/compiler/lib/intel64_lin

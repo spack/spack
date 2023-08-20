@@ -288,6 +288,29 @@ e4s-build:
       job: e4s-generate
 
 ########################################
+# E4S NOAA Intel Classic
+########################################
+.e4s-noaa-intel-classic:
+  extends: [ ".linux_x86_64_v3" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-noaa-intel-classic
+
+e4s-noaa-intel-classic-generate:
+  extends: [ ".e4s-noaa-intel-classic", ".generate-x86_64"]
+  image: ecpe4s/ubuntu20.04-runner-amd64-oneapi-2023.2.1:2023.08.01
+
+e4s-noaa-intel-classic-build:
+  extends: [ ".e4s-noaa-intel-classic", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-noaa-intel-classic-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-noaa-intel-classic-generate
+
+########################################
 # GPU Testing Pipeline
 ########################################
 .gpu-tests:
