@@ -16,7 +16,7 @@ class PyUproot(PythonPackage):
     on C++ ROOT. Instead, it uses Numpy to cast blocks of data from the ROOT
     file as Numpy arrays."""
 
-    homepage = "https://github.com/scikit-hep/uproot4"
+    homepage = "https://github.com/scikit-hep/uproot5"
     pypi = "uproot/uproot-4.0.6.tar.gz"
 
     maintainers("vvolkl")
