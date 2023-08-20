@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class Igraph(CMakePackage, AutotoolsPackage):
     """igraph is a library for creating and manipulating graphs."""
 
