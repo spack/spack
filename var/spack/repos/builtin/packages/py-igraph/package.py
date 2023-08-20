@@ -15,6 +15,8 @@ class PyIgraph(PythonPackage):
 
     version("0.10.6", sha256="76f7aad294514412f835366a7d9a9c1e7a34c3e6ef0a6c3a1a835234323228e8")
 
+    variant("matplotlib", default=False, description="Enable plotting with Matplotlib")
+
     depends_on("arpack-ng")
     depends_on("cmake")
     depends_on("gmp")
@@ -22,6 +24,7 @@ class PyIgraph(PythonPackage):
     depends_on("libxml2")
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-texttable@1.6.2:", type=("build", "run"))
+    depends_on("py-matplotlib@3.5.0:3.6.0", type=("run"), when="+matplotlib")
 
     def setup_build_environment(self, env):
         args = """
