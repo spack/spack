@@ -32,6 +32,17 @@ _definitions = {
                 "sha256": "c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338",
             },
         ],
+    },
+    # Swiss Federal Office of Meteorology and Climatology (MeteoSwiss, MCH):
+    "lssw": {
+        "conflicts": {"when": "@:2.24.2"},
+        "resources": [
+            {
+                "when": "@2.25.0",
+                "url": "https://github.com/COSMO-ORG/eccodes-cosmo-resources/archive/v2.25.0.1.tar.gz",
+                "sha256": "8e0b6b7bd01a435b2a80da40981425276cae5851923183175935861e2f1f36ec"
+            },
+        ]
     }
 }
 
