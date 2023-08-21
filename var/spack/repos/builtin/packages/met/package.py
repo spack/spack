@@ -127,7 +127,11 @@ class Met(AutotoolsPackage):
 
         if "+python" in spec:
             python = spec["python"]
-            env.set("MET_PYTHON", python.command.path)
+            # Syntax changed from 11.0.x to 11.1.y
+            with when("@:11.0"):
+                env.set("MET_PYTHON", python.command.path)
+            with when("@11.1:"):
+                env.set("MET_PYTHON_BIN_EXE", python.command.path)
             env.set("MET_PYTHON_CC", "-I" + python.headers.directories[0])
             py_ld = [python.libs.ld_flags]
             if spec["python"].satisfies("~shared"):
