@@ -538,7 +538,7 @@ class Result:
                 node = SpecBuilder.make_node(pkg=providers[0])
             candidate = answer.get(node)
 
-            if candidate and candidate.satisfies(input_spec):
+            if candidate and candidate.build_spec.satisfies(input_spec):
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             else:
@@ -2847,6 +2847,7 @@ class SpecBuilder:
                         spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                     )
 
+
         specs = self.execute_splices()
 
         return specs
@@ -2869,10 +2870,10 @@ class SpecBuilder:
                 if target in current_spec:
                     # matches root or non-root
                     # e.g. mvapich2%gcc
-                    print(current_spec, "CURRENT")
+#                    print(current_spec, "CURRENT")
                     current_spec = current_spec.splice(replacement, transitive)
-                    print(current_spec, "CURRENT2", current_spec.build_spec)
-            specs[key] = current_spec
+#                    print(current_spec, "CURRENT2", current_spec.build_spec)
+            specs[current_spec.name] = current_spec
 
         return specs
 

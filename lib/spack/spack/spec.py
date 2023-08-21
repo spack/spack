@@ -4630,7 +4630,12 @@ class Spec:
         assert self.concrete
         assert other.concrete
 
-        virtuals_to_replace = [v.name for v in other.package.virtuals_provided if v in self]
+        virtuals_to_replace = [
+            v.name
+            for v in other.package.virtuals_provided
+            if v in self or v in self.package.virtuals_provided
+        ]
+
         if virtuals_to_replace:
             deps_to_replace = dict((self[v], other) for v in virtuals_to_replace)
             # deps_to_replace = [self[v] for v in virtuals_to_replace]
@@ -4639,8 +4644,6 @@ class Spec:
             deps_to_replace = {self[other.name]: other}
             # deps_to_replace = [self[other.name]]
 
-        print(other.package.virtuals_provided)
-        print([d.package.virtuals_provided for d in deps_to_replace])
         for d in deps_to_replace:
             if not all(
                 any(v.intersects(ov) for ov in other.package.virtuals_provided) or v not in self
@@ -4653,31 +4656,34 @@ class Spec:
                         self.name, other.name
                     )
                 )
-            for n in d.traverse(root=False):
-                if not all(
-                    any(
-                        v in other_n.package.virtuals_provided
-                        for other_n in other.traverse(root=False)
-                    )
-                    or v not in self
-                    for v in n.package.virtuals_provided
-                ):
-                    raise SpliceError(
-                        (
-                            "Splice between {0} and {1} will not provide " "the same virtuals."
-                        ).format(self.name, other.name)
-                    )
+
+            # for n in d.traverse(root=False):
+            #     print(n)
+            #     print(n.package.virtuals_provided)
+            #     if not all(
+            #         any(
+            #             v in other_n.package.virtuals_provided
+            #             for other_n in other.traverse(root=False)
+            #         )
+            #         or v not in self
+            #         for v in n.package.virtuals_provided
+            #     ):
+            #         raise SpliceError(
+            #             (
+            #                 "Splice between {0} and {1} will not provide " "the same virtuals."
+            #             ).format(self.name, other.name)
+            #         )
 
         # For now, check that we don't have DAG with multiple specs from the
         # same package
         def multiple_specs(root):
-            counter = collections.Counter([node.name for node in root.traverse()])
+            counter = collections.Counter([node.name for node in root.traverse(deptype=("link", "run"))])
             _, max_number = counter.most_common()[0]
             return max_number > 1
 
         if multiple_specs(self) or multiple_specs(other):
             msg = (
-                'Either "{0}" or "{1}" contain multiple specs from the same '
+                'Either "{0}"\n or "{1}"\n contain multiple specs from the same '
                 "package, which cannot be handled by splicing at the moment"
             )
             raise ValueError(msg.format(self, other))
@@ -4726,7 +4732,6 @@ class Spec:
         nodes.update(self_nodes)
 
         for name in nodes:
-            print(name in self_nodes, name)
             if name in self_nodes:
                 for edge in self[name].edges_to_dependencies():
                     dep_name = deps_to_replace.get(edge.spec, edge.spec).name
@@ -4755,7 +4760,8 @@ class Spec:
                 if any(dep not in other_nodes for dep in deps_to_check):
                     nodes[name].build_spec = other[name].build_spec
 
-        ret = nodes[self.name]
+        # If self.name not in nodes then we spliced the root with a different virtual provider
+        ret = nodes[self.name] if self.name in nodes else nodes[other.name]
 
         # Clear cached hashes for all affected nodes
         # Do not touch unaffected nodes
@@ -4767,7 +4773,7 @@ class Spec:
 
                 dep.dag_hash()
 
-        return nodes[self.name]
+        return ret
 
     def clear_cached_hashes(self, ignore=()):
         """
