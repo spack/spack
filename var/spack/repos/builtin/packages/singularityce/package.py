@@ -79,14 +79,14 @@ class SingularityBase(MakefilePackage):
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
-            confstring = "./mconfig --prefix=%s" % prefix
-            confstring += " " + " ".join(self.config_options)
+            _config_options = ["--prefix=%s" % prefix]
+            _config_options += self.config_options
             if "~suid" in spec:
-                confstring += " --without-suid"
+                _config_options += " --without-suid"
             if "~network" in spec:
-                confstring += " --without-network"
-            configure = Executable(confstring)
-            configure()
+                _config_options += " --without-network"
+            configure = Executable("./mconfig")
+            configure(*_config_options)
 
     # Set these for use by MakefilePackage's default build/install methods.
     build_targets = ["-C", "builddir", "parallel=False"]
