@@ -96,7 +96,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hdf5+hl+mpi", when="+hdf5")
     depends_on("metis@5.1.0:")
     depends_on("parmetis@4.0.3:")
-    depends_on("boost@1.70.0: cxxstd=17 +program_options")
+    depends_on("boost@1.70.0: cxxstd=17 +program_options +stacktrace")
     depends_on("legion network=gasnet", when="backend=legion")
 
     # FleCSI@1.x
@@ -123,10 +123,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     # FleCSI@2.x
     depends_on("cmake@3.15:", when="@2.0:")
     depends_on("cmake@3.19:", when="@2.2:")
-    depends_on("boost +atomic +filesystem +regex +system", when="@2.0:")
-    depends_on(
-        "boost@1.79.0: cxxstd=17 +program_options +atomic +filesystem +regex +system", when="@2.2:"
-    )
+    depends_on("boost +atomic +filesystem +regex +system", when="@2.0:2.2.1")
+    depends_on("boost@1.79.0:", when="@2.2:")
     depends_on("kokkos@3.2.00:", when="+kokkos @2.0:")
     depends_on("kokkos +cuda +cuda_constexpr +cuda_lambda", when="+kokkos +cuda @2.0:")
     depends_on("kokkos +rocm", when="+kokkos +rocm @2.0:")
