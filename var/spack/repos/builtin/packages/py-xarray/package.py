@@ -42,8 +42,9 @@ class PyXarray(PythonPackage):
     depends_on("py-setuptools@38.4:", when="@0.16:", type=("build", "run"))
     depends_on("py-setuptools@42:", when="@0.17:", type=("build", "run"))
     depends_on("py-setuptools-scm", when="@0.15:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", when="@0.17:", type="build")
-    depends_on("py-setuptools-scm-git-archive", when="@0.17:", type="build")
+    depends_on("py-setuptools-scm@7:", when="@2023.7.0:", type="build")
+    depends_on("py-setuptools-scm@3.4:+toml", when="@0.17:2022.3.0", type="build")
+    depends_on("py-setuptools-scm-git-archive", when="@0.17:2022.3.0", type="build")
 
     # setup.cfg
     depends_on("python@2.7,3.5:", when="@0.11:", type=("build", "run"))
@@ -76,7 +77,7 @@ class PyXarray(PythonPackage):
     depends_on("py-netcdf4", when="+io", type=("build", "run"))
     depends_on("py-h5netcdf", when="+io", type=("build", "run"))
     depends_on("py-scipy", when="+io", type=("build", "run"))
-    depends_on("py-pydap", when="+io", type=("build", "run"))
+    depends_on("py-pydap", when="+io ^python@:3.9", type=("build", "run"))
     depends_on("py-zarr", when="+io", type=("build", "run"))
     depends_on("py-fsspec", when="+io", type=("build", "run"))
     depends_on("py-cftime", when="+io", type=("build", "run"))
