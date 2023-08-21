@@ -148,8 +148,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("doxygen", when="@2.2: +doc")
 
     # Propagate cuda_arch requirement to dependencies
-    cuda_arch_list = ("60", "70", "75", "80")
-    for _flag in cuda_arch_list:
+    for _flag in CudaPackage.cuda_arch_values:
         depends_on("kokkos cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag + " @2.0:")
         depends_on(
             "legion cuda_arch=" + _flag, when="backend=legion +cuda cuda_arch=" + _flag + " @2.0:"
