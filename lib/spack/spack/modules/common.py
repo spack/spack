@@ -52,6 +52,7 @@ import spack.paths
 import spack.projections as proj
 import spack.repo
 import spack.schema.environment
+import spack.spec
 import spack.store
 import spack.tengine as tengine
 import spack.util.environment
@@ -588,7 +589,7 @@ class BaseFileLayout:
         if not projection:
             projection = self.conf.default_projections["all"]
 
-        name = self.spec.format(projection)
+        name = spack.spec.format_path(self.spec, projection)
         # Not everybody is working on linux...
         parts = name.split("/")
         name = os.path.join(*parts)

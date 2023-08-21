@@ -4908,7 +4908,7 @@ def format_path(spec, format_string):
     # on Windows). Therefore, the path components are derived by splitting on
     # both separators, on all operating systems.
     components = re.split(any_sep, format_string)
-    formatted_components = [spack.util.path.polite_filename(spec.format(x)) for x in components]
+    formatted_components = [fs.polite_filename(spec.format(x)) for x in components]
     return str(pathlib.Path(*formatted_components))
 
 

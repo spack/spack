@@ -983,13 +983,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return None
 
     def _make_resource_stage(self, root_stage, resource):
+        pretty_resource_name = fsys.polite_filename(f"{resource.name}-{self.version}")
         return ResourceStage(
             resource.fetcher,
             root=root_stage,
             resource=resource,
             name=self._resource_stage(resource),
             mirror_paths=spack.mirror.mirror_archive_paths(
-                resource.fetcher, os.path.join(self.name, f"{resource.name}-{self.version}")
+                resource.fetcher, os.path.join(self.name, pretty_resource_name)
             ),
             path=self.path,
         )

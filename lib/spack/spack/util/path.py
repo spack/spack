@@ -154,19 +154,6 @@ def sanitize_filename(filename: str) -> str:
     return re.sub(r'[\x00-\x1F\x7F"*/:<>?\\|]', "_", filename)
 
 
-def polite_filename(filename: str) -> str:
-    """
-    Replace generally problematic filename characters with underscores.
-
-    This differs from sanitize_filename in that it is more aggressive in
-    changing characters in the name. For example it removes "=" which can
-    confuse path parsing in external tools.
-    """
-    # This character set applies for both Windows and Linux. It does not
-    # account for reserved filenames in Windows.
-    return re.sub(r"[^A-Za-z0-9_.-]", "_", filename)
-
-
 def system_path_filter(_func=None, arg_slice=None):
     """
     Filters function arguments to account for platform path separators.
