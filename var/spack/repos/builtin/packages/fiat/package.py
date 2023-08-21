@@ -40,7 +40,8 @@ class Fiat(CMakePackage):
     depends_on("eckit", when="+fckit")
     depends_on("fckit", when="+fckit")
 
-    patch("intel_warnings.patch")
+    patch("intel_warnings_v110.patch", when="@:1.1.0")
+    patch("intel_warnings_v120.patch", when="@1.2.0:")
 
     def cmake_args(self):
         args = [
