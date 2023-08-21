@@ -7,8 +7,8 @@ from spack.package import *
 
 
 class PyPyonmttok(CMakePackage, PythonExtension):
-    """Tokenizer is a fast, generic, and customizable text tokenization library for
-    C++ and Python with minimal dependencies."""
+    """Python wrapper for OpenNMT/Tokenizer, a fast and customizable text
+    tokenization library with BPE and SentencePiece support."""
 
     homepage = "https://github.com/OpenNMT/Tokenizer/"
     git = "https://github.com/OpenNMT/Tokenizer.git"
