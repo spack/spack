@@ -43,6 +43,7 @@ class Amdblis(BlisBase):
     variant(
         "suphandling", default=True,
         description="Small Unpacked Kernel handling",
+        )
 
     def configure_args(self):
         spec = self.spec
