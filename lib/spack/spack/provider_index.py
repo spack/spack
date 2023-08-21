@@ -3,39 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
-import itertools
 from typing import Dict, List, Optional, Set
 
 import spack.error
 import spack.spec
 import spack.util.spack_json as sjson
-
-
-def _cross_provider_maps(lmap, rmap):
-    """Return a dictionary that combines constraint requests from both input.
-
-    Args:
-        lmap: main provider map
-        rmap: provider map with additional constraints
-    """
-    # TODO: this is pretty darned nasty, and inefficient, but there
-    # TODO: are not that many vdeps in most specs.
-    result = {}
-    for lspec, rspec in itertools.product(lmap, rmap):
-        try:
-            constrained = lspec.constrained(rspec)
-        except spack.error.UnsatisfiableSpecError:
-            continue
-
-        # lp and rp are left and right provider specs.
-        for lp_spec, rp_spec in itertools.product(lmap[lspec], rmap[rspec]):
-            if lp_spec.name == rp_spec.name:
-                try:
-                    const = lp_spec.constrained(rp_spec, deps=False)
-                    result.setdefault(constrained, set()).add(const)
-                except spack.error.UnsatisfiableSpecError:
-                    continue
-    return result
 
 
 class _IndexBase:
@@ -300,30 +272,6 @@ def _transform(providers, transform_fun, out_mapping_type=dict):
         (name, out_mapping_type([transform_fun(vpkg, pset) for vpkg, pset in mapiter(mappings)]))
         for name, mappings in providers.items()
     )
-
-
-def compatible(lhs, rhs):
-    """Determine if the providers of virtual specs are compatible.
-
-    Args:
-        rhs: another provider index
-
-    Returns:
-        True if the providers are compatible, False otherwise.
-    """
-    common = set(lhs.providers) & set(rhs.providers)
-    if not common:
-        return True
-
-    # This ensures that some provider in other COULD satisfy the
-    # vpkg constraints on self.
-    result = {}
-    for name in common:
-        crossed = _cross_provider_maps(lhs.providers[name], rhs.providers[name])
-        if crossed:
-            result[name] = crossed
-
-    return all(c in result for c in common)
 
 
 class ProviderIndexError(spack.error.SpackError):
