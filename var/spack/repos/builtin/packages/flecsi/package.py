@@ -145,6 +145,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-sphinx-rtd-theme", when="@2.2: +doc")
     depends_on("py-recommonmark", when="@2.2: +doc")
     depends_on("doxygen", when="@2.2: +doc")
+    depends_on("graphviz", when="@2.2: +doc")
 
     # Propagate cuda_arch requirement to dependencies
     for _flag in CudaPackage.cuda_arch_values:
