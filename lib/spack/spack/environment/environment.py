@@ -1994,14 +1994,10 @@ class Environment:
 
     def all_matching_specs(self, *specs: spack.spec.Spec) -> List[Spec]:
         """Returns all concretized specs in the environment satisfying any of the input specs"""
-        # Look up abstract hashes ahead of time, to avoid O(n^2) traversal.
-        specs = [s.lookup_hash() for s in specs]
-
-        # Avoid double lookup by directly calling _satisfies.
         return [
             s
             for s in traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
-            if any(s._satisfies(t) for t in specs)
+            if any(s.satisfies(t) for t in specs)
         ]
 
     @spack.repo.autospec
@@ -2448,13 +2444,13 @@ def make_repo_path(root):
 def prepare_config_scope(env):
     """Add env's scope to the global configuration search path."""
     for scope in env.config_scopes():
-        spack.config.config.push_scope(scope)
+        spack.config.CONFIG.push_scope(scope)
 
 
 def deactivate_config_scope(env):
     """Remove any scopes from env from the global config path."""
     for scope in env.config_scopes():
-        spack.config.config.remove_scope(scope.name)
+        spack.config.CONFIG.remove_scope(scope.name)
 
 
 def manifest_file(env_name_or_dir):

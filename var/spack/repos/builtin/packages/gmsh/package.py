@@ -107,6 +107,12 @@ class Gmsh(CMakePackage):
     conflicts("+oce", when="^gmsh@4.10:4.10.3")
     conflicts("+metis", when="+external", msg="External Metis cannot build with GMSH")
 
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
+
     def cmake_args(self):
         spec = self.spec
 

@@ -47,7 +47,7 @@ EOF
 {% for application, help_text in apps.items() %}
 
 %apprun {{ application }}
-    exec /opt/view/bin/{{ application }} "$@"
+    exec {{ paths.view }}/bin/{{ application }} "$@"
 
 %apphelp {{ application }}
     {{help_text }}
@@ -61,11 +61,14 @@ Stage: final
 %files from build
   {{ paths.environment }} /opt
   {{ paths.store }} /opt
-  {{ paths.hidden_view }} /opt
-  {{ paths.view }} /opt
+  {{ paths.view_parent }} /opt
   {{ paths.environment }}/environment_modifications.sh {{ paths.environment }}/environment_modifications.sh
 
 %post
+
+  # Symlink the old view location
+  ln -s {{ paths.view }} {{ paths.former_view }}
+
 {% block final_stage %}
 {% if os_packages_final.list %}
   # Update, install and cleanup of system packages needed at run-time

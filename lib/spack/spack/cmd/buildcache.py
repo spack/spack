@@ -149,12 +149,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
 
     check.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
