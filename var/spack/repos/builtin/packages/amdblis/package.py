@@ -41,7 +41,6 @@ class Amdblis(BlisBase):
 
     variant("ilp64", default=False, when="@3.0.1:", description="ILP64 support")
     variant("suphandling", default=True,description="Small Unpacked Kernel handling")
-        )
 
     def configure_args(self):
         spec = self.spec
