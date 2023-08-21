@@ -22,6 +22,7 @@ class Zlib(MakefilePackage, Package):
     homepage = "https://zlib.net"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://zlib.net/fossils/zlib-1.2.11.tar.gz"
+    git = "https://github.com/madler/zlib.git"
 
     version("1.2.13", sha256="b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30")
     version(
