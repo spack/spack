@@ -876,7 +876,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             else:
                 gpu_ver = gpu_map[spec.variants["cuda_arch"].value[0]]
                 args += [
-                    self_define("CP2K_USE_ACCEL", "CUDA"),
+                    self.define("CP2K_USE_ACCEL", "CUDA"),
                     self.define("CP2K_WITH_GPU", gpu_ver),
                 ]
 
