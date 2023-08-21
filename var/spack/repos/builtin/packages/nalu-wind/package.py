@@ -53,7 +53,7 @@ class NaluWind(CMakePackage, CudaPackage):
     depends_on("yaml-cpp@0.5.3:")
     depends_on(
         "trilinos@13:"
-        "+exodus+tpetra+zoltan+stk+boost"
+        "+exodus+tpetra+zoltan+stk"
         "~superlu-dist~superlu+hdf5+shards~hypre+gtest"
     )
     depends_on("trilinos~cuda~wrapper", when="~cuda")
