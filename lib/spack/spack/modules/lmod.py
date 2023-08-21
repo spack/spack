@@ -9,6 +9,7 @@ import os.path
 import posixpath
 from typing import Any, Dict, List
 
+import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 
 import spack.compilers
@@ -286,7 +287,7 @@ class LmodFileLayout(BaseFileLayout):
 
         # General format for the path part
         def path_part_fmt(token):
-            return llnl.util.filesystem.polite_path([f"{token.name}", f"{token.version}"])
+            return fs.polite_path([f"{token.name}", f"{token.version}"])
 
         # If we are dealing with a core compiler, return 'Core'
         core_compilers = self.conf.core_compilers
