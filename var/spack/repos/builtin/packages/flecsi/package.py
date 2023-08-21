@@ -162,7 +162,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
             when="backend=legion +rocm amdgpu_target=" + _flag + " @2.0:",
         )
 
-    conflicts("%gcc@:8", when="@2.1:")
+    requires("%gcc@9:", when="@2: %gcc", msg="Version 9 or newer of GNU compilers required!")
 
     conflicts("+tutorial", when="backend=hpx")
     # FleCSI@2: no longer supports serial or charmpp backends
