@@ -59,7 +59,7 @@ import platform
 import re
 import socket
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 import llnl.path
 import llnl.string
@@ -3897,7 +3897,46 @@ class Spec:
             return False
 
         # If we arrived here, then rhs is abstract. At the moment we don't care about the edge
-        # structure of an abstract DAG - hence the deps=False parameter.
+        # structure of an abstract DAG, so we check if any edge could satisfy the properties
+        # we ask for.
+        lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
+        for rhs_edge in other.traverse_edges(root=False, cover="edges"):
+            # If we are checking for ^mpi we need to verify if there is any edge
+            if rhs_edge.spec.virtual:
+                rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
+
+            if not rhs_edge.virtuals:
+                continue
+
+            if not lhs_edges:
+                # Construct a map of the link/run subDAG + direct "build" edges,
+                # keyed by dependency name
+                for lhs_edge in self.traverse_edges(
+                    root=False, cover="edges", deptype=("link", "run")
+                ):
+                    lhs_edges[lhs_edge.spec.name].add(lhs_edge)
+                    for virtual_name in lhs_edge.virtuals:
+                        lhs_edges[virtual_name].add(lhs_edge)
+
+                build_edges = self.edges_to_dependencies(deptype="build")
+                for lhs_edge in build_edges:
+                    lhs_edges[lhs_edge.spec.name].add(lhs_edge)
+                    for virtual_name in lhs_edge.virtuals:
+                        lhs_edges[virtual_name].add(lhs_edge)
+
+            # We don't have edges to this dependency
+            current_dependency_name = rhs_edge.spec.name
+            if current_dependency_name not in lhs_edges:
+                return False
+
+            for virtual in rhs_edge.virtuals:
+                has_virtual = any(
+                    virtual in edge.virtuals for edge in lhs_edges[current_dependency_name]
+                )
+                if not has_virtual:
+                    return False
+
+        # Edges have been checked above already, hence deps=False
         return all(
             any(lhs.satisfies(rhs, deps=False) for lhs in self.traverse(root=False))
             for rhs in other.traverse(root=False)
