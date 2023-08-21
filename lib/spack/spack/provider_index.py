@@ -81,29 +81,6 @@ class _IndexBase:
     def __contains__(self, name):
         return name in self.providers
 
-    def satisfies(self, other):
-        """Determine if the providers of virtual specs are compatible.
-
-        Args:
-            other: another provider index
-
-        Returns:
-            True if the providers are compatible, False otherwise.
-        """
-        common = set(self.providers) & set(other.providers)
-        if not common:
-            return True
-
-        # This ensures that some provider in other COULD satisfy the
-        # vpkg constraints on self.
-        result = {}
-        for name in common:
-            crossed = _cross_provider_maps(self.providers[name], other.providers[name])
-            if crossed:
-                result[name] = crossed
-
-        return all(c in result for c in common)
-
     def __eq__(self, other):
         return self.providers == other.providers
 
@@ -323,6 +300,30 @@ def _transform(providers, transform_fun, out_mapping_type=dict):
         (name, out_mapping_type([transform_fun(vpkg, pset) for vpkg, pset in mapiter(mappings)]))
         for name, mappings in providers.items()
     )
+
+
+def compatible(lhs, rhs):
+    """Determine if the providers of virtual specs are compatible.
+
+    Args:
+        rhs: another provider index
+
+    Returns:
+        True if the providers are compatible, False otherwise.
+    """
+    common = set(lhs.providers) & set(rhs.providers)
+    if not common:
+        return True
+
+    # This ensures that some provider in other COULD satisfy the
+    # vpkg constraints on self.
+    result = {}
+    for name in common:
+        crossed = _cross_provider_maps(lhs.providers[name], rhs.providers[name])
+        if crossed:
+            result[name] = crossed
+
+    return all(c in result for c in common)
 
 
 class ProviderIndexError(spack.error.SpackError):

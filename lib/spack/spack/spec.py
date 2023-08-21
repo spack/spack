@@ -3706,8 +3706,15 @@ class Spec:
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
 
-        self_hash = self.dag_hash() if self.concrete else self.abstract_hash
-        other_hash = other.dag_hash() if other.concrete else other.abstract_hash
+        elif self.concrete:
+            return self.satisfies(other)
+
+        elif other.concrete:
+            return other.satisfies(self)
+
+        # From here we know both self and other are not concrete
+        self_hash = self.abstract_hash
+        other_hash = other.abstract_hash
 
         if (
             self_hash
@@ -3795,10 +3802,6 @@ class Spec:
         other_index = spack.provider_index.ProviderIndex(
             repository=spack.repo.PATH, specs=other.traverse(), restrict=True
         )
-
-        # This handles cases where there are already providers for both vpkgs
-        if not self_index.satisfies(other_index):
-            return False
 
         # These two loops handle cases where there is an overly restrictive
         # vpkg in one spec for a provider in the other (e.g., mpi@3: is not

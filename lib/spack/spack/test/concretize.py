@@ -2333,6 +2333,7 @@ def edges_test_repository():
 
 
 @pytest.mark.usefixtures("mutable_config", "edges_test_repository")
+@pytest.mark.only_clingo("Edge properties not supported by the original concretizer")
 class TestConcretizeEdges:
     """Collects tests on edge properties"""
 

@@ -294,13 +294,10 @@ class TestSpecSemantics:
             ("foo@4.0%pgi@4.5", "@1:3%pgi@4.4:4.6"),
             ("builtin.mock.mpich", "builtin.mpich"),
             ("mpileaks ^builtin.mock.mpich", "^builtin.mpich"),
-            ("mpileaks^mpich", "^zmpi"),
-            ("mpileaks^zmpi", "^mpich"),
             ("mpileaks^mpich@1.2", "^mpich@2.0"),
             ("mpileaks^mpich@4.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6"),
             ("mpileaks^mpich@2.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6"),
             ("mpileaks^mpich@4.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6"),
-            ("mpileaks^mpich", "^zmpi"),
             ("mpileaks^mpi@3", "^mpi@1.2:1.6"),
             ("mpileaks^mpi@3:", "^mpich2@1.4"),
             ("mpileaks^mpi@3:", "^mpich2"),
@@ -338,30 +335,30 @@ class TestSpecSemantics:
             rhs.constrain(lhs)
 
     @pytest.mark.parametrize(
-        "lhs,rhs,intersection_expected",
+        "lhs,rhs",
         [
-            ("mpich", "mpich +foo", True),
-            ("mpich", "mpich~foo", True),
-            ("mpich", "mpich foo=1", True),
-            ("mpich", "mpich++foo", True),
-            ("mpich", "mpich~~foo", True),
-            ("mpich", "mpich foo==1", True),
+            ("mpich", "mpich +foo"),
+            ("mpich", "mpich~foo"),
+            ("mpich", "mpich foo=1"),
+            ("mpich", "mpich++foo"),
+            ("mpich", "mpich~~foo"),
+            ("mpich", "mpich foo==1"),
             # Flags semantics is currently different from other variant
-            ("mpich", 'mpich cflags="-O3"', True),
-            ("mpich cflags=-O3", 'mpich cflags="-O3 -Ofast"', False),
-            ("mpich cflags=-O2", 'mpich cflags="-O3"', False),
-            ("multivalue-variant foo=bar", "multivalue-variant +foo", False),
-            ("multivalue-variant foo=bar", "multivalue-variant ~foo", False),
-            ("multivalue-variant fee=bar", "multivalue-variant fee=baz", False),
+            ("mpich", 'mpich cflags="-O3"'),
+            ("mpich cflags=-O3", 'mpich cflags="-O3 -Ofast"'),
+            ("mpich cflags=-O2", 'mpich cflags="-O3"'),
+            ("multivalue-variant foo=bar", "multivalue-variant +foo"),
+            ("multivalue-variant foo=bar", "multivalue-variant ~foo"),
+            ("multivalue-variant fee=bar", "multivalue-variant fee=baz"),
         ],
     )
     def test_concrete_specs_which_do_not_satisfy_abstract(
-        self, lhs, rhs, intersection_expected, default_mock_concretization
+        self, lhs, rhs, default_mock_concretization
     ):
         lhs, rhs = default_mock_concretization(lhs), Spec(rhs)
 
-        assert lhs.intersects(rhs) is intersection_expected
-        assert rhs.intersects(lhs) is intersection_expected
+        assert lhs.intersects(rhs) is False
+        assert rhs.intersects(lhs) is False
         assert not lhs.satisfies(rhs)
         assert not rhs.satisfies(lhs)
 
@@ -483,10 +480,14 @@ class TestSpecSemantics:
         assert Spec("mpich2").intersects(Spec("mpi"))
         assert Spec("zmpi").intersects(Spec("mpi"))
 
-    def test_intersects_virtual_dep_with_virtual_constraint(self):
+    def test_intersects_virtual_providers(self):
+        """Tests that we can always intersect virtual providers from abstract specs.
+        Concretization will give meaning to virtuals, and eventually forbid certain
+        configurations.
+        """
         assert Spec("netlib-lapack ^openblas").intersects("netlib-lapack ^openblas")
-        assert not Spec("netlib-lapack ^netlib-blas").intersects("netlib-lapack ^openblas")
-        assert not Spec("netlib-lapack ^openblas").intersects("netlib-lapack ^netlib-blas")
+        assert Spec("netlib-lapack ^netlib-blas").intersects("netlib-lapack ^openblas")
+        assert Spec("netlib-lapack ^openblas").intersects("netlib-lapack ^netlib-blas")
         assert Spec("netlib-lapack ^netlib-blas").intersects("netlib-lapack ^netlib-blas")
 
     def test_intersectable_concrete_specs_must_have_the_same_hash(self):
