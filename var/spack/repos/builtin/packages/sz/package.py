@@ -82,6 +82,12 @@ class Sz(CMakePackage, AutotoolsPackage):
 
     patch("ctags-only-if-requested.patch", when="@2.1.8.1:2.1.8.3")
 
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
+
     def setup_run_environment(self, env):
         if "+hdf5" in self.spec:
             env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)

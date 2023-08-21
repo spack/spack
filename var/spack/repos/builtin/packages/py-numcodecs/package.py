@@ -35,3 +35,9 @@ class PyNumcodecs(PythonPackage):
     depends_on("py-msgpack", type=("build", "run"), when="+msgpack")
 
     patch("apple-clang-12.patch", when="%apple-clang@12:")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
