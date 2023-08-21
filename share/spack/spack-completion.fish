@@ -1816,7 +1816,7 @@ complete -c spack -n '__fish_spack_using_command info' -l virtuals -f -a virtual
 complete -c spack -n '__fish_spack_using_command info' -l virtuals -d 'output virtual packages'
 
 # spack install
-set -g __fish_spack_optspecs_spack_install h/help only= u/until= timer-summary-file= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum deprecated v/verbose fake only-concrete add no-add f/file= clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all U/fresh reuse reuse-deps
+set -g __fish_spack_optspecs_spack_install h/help only= u/until= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum deprecated v/verbose fake only-concrete add no-add f/file= clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all U/fresh reuse reuse-deps
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 install' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command install' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command install' -s h -l help -d 'show this help message and exit'
@@ -1824,7 +1824,6 @@ complete -c spack -n '__fish_spack_using_command install' -l only -r -f -a 'pack
 complete -c spack -n '__fish_spack_using_command install' -l only -r -d 'select the mode of installation'
 complete -c spack -n '__fish_spack_using_command install' -s u -l until -r -f -a until
 complete -c spack -n '__fish_spack_using_command install' -s u -l until -r -d 'phase to stop after when installing (default None)'
-complete -c spack -n '__fish_spack_using_command install' -l timer-summary-file -r -f -a timer_summary_file
 complete -c spack -n '__fish_spack_using_command install' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command install' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 complete -c spack -n '__fish_spack_using_command install' -l overwrite -f -a overwrite
