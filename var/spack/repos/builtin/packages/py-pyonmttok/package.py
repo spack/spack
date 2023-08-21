@@ -32,9 +32,9 @@ class PyPyonmttok(CMakePackage, PythonExtension):
     variant("cli", default=True, description="Build CLI")
 
     def setup_build_environment(self, env):
-        env.append_path("SPACK_INCLUDE_DIRS", prefix.include)
-        env.append_path("SPACK_LINK_DIRS", prefix.lib)
-        env.append_path("SPACK_LINK_DIRS", prefix.lib64)
+        env.append_path("SPACK_INCLUDE_DIRS", self.prefix.include)
+        env.append_path("SPACK_LINK_DIRS", self.prefix.lib)
+        env.append_path("SPACK_LINK_DIRS", self.prefix.lib64)
 
     @run_after("install")
     def install_python(self):
