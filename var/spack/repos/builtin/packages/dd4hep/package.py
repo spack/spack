@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.filesystem as fs
-
 from spack.package import *
 
 
@@ -195,7 +193,7 @@ class Dd4hep(CMakePackage):
         # We need to override libs here, because we don't build a libdd4hep so
         # the default discovery fails. All libraries that are built by DD4hep
         # start with libDD
-        return fs.find_libraries("libDD*", root=self.prefix, shared=True, recursive=True)
+        return find_libraries("libDD*", root=self.prefix, shared=True, recursive=True)
 
     def cmake_args(self):
         spec = self.spec
@@ -255,7 +253,7 @@ class Dd4hep(CMakePackage):
         env.set("DD4HEP", self.prefix.examples)
         env.set("DD4hep_DIR", self.prefix)
         env.set("DD4hep_ROOT", self.prefix)
-        env.prepend_path("LD_LIBRARY_PATH", self.spec["dd4hep"].libs.directories[0])
+        env.prepend_path("LD_LIBRARY_PATH", self.libs.directories[0])
 
     def url_for_version(self, version):
         # dd4hep releases are dashes and padded with a leading zero
