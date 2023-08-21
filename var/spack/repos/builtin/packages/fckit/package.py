@@ -51,6 +51,11 @@ class Fckit(CMakePackage):
         values=("auto", "no", "yes"),
     )
 
+    # fckit fails to auto-detect/switch off finalization
+    # of derived types for latest Intel compilers. If set
+    # to auto, turn off in cmake_args. If set to yes, abort.
+    conflicts("%intel@2021.8:", when="finalize_ddts=yes")
+
     def cmake_args(self):
         args = [
             self.define_from_variant("ENABLE_ECKIT", "eckit"),
@@ -64,6 +69,9 @@ class Fckit(CMakePackage):
 
         if "finalize_ddts=auto" not in self.spec:
             args.append(self.define_from_variant("ENABLE_FINAL", "finalize_ddts"))
+        elif "finalize_ddts=auto" in self.spec and self.spec.satisfies("%intel@2021.8:"):
+            # See comment above (conflicts for finalize_ddts)
+            args.append("-DENABLE_FINAL=OFF")
 
         if self.spec.satisfies("%intel") or self.spec.satisfies("%gcc"):
             cxxlib = "stdc++"
