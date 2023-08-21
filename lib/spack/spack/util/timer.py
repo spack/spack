@@ -13,7 +13,7 @@ import collections
 import sys
 import time
 from contextlib import contextmanager
-from typing import Dict
+from typing import Callable, Dict, List
 
 from llnl.util.lang import pretty_seconds_formatter
 
@@ -61,16 +61,16 @@ class NullTimer(BaseTimer):
 class Timer(BaseTimer):
     """Simple interval timer"""
 
-    def __init__(self, now=time.time):
+    def __init__(self, now: Callable[[], float] = time.time):
         """
         Arguments:
             now: function that gives the seconds since e.g. epoch
         """
         self._now = now
-        self._timers: Dict[str, TimeTracker] = collections.OrderedDict()
-        self._timer_stack: list(str) = []
+        self._timers: Dict[str, TimeTracker] = {}
+        self._timer_stack: List[str] = []
 
-        self._events: list(TimerEvent) = []
+        self._events: List[TimerEvent] = []
         # Push start event
         self._events.append(TimerEvent(self._now(), True, global_timer_name))
 
