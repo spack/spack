@@ -41,9 +41,9 @@ class PyCtranslate2(CMakePackage, PythonExtension, CudaPackage):
 
     def setup_build_environment(self, env):
         # https://opennmt.net/CTranslate2/installation.html#compile-the-python-wrapper
-        env.append_path("SPACK_INCLUDE_DIRS", prefix.include)
-        env.append_path("SPACK_LINK_DIRS", prefix.lib)
-        env.append_path("SPACK_LINK_DIRS", prefix.lib64)
+        env.append_path("SPACK_INCLUDE_DIRS", self.prefix.include)
+        env.append_path("SPACK_LINK_DIRS", self.prefix.lib)
+        env.append_path("SPACK_LINK_DIRS", self.prefix.lib64)
         env.set("CTRANSLATE2_ROOT", self.spec.prefix)
         env.prepend_path("LD_LIBRARY_PATH", self.spec.prefix)
 
