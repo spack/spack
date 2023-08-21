@@ -38,7 +38,7 @@ class BaseTimer:
 
     @contextmanager
     def measure(self, name):
-        yield NullTimer()
+        yield self
 
     @property
     def phases(self):
