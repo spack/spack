@@ -38,7 +38,8 @@ class EcmwfAtlas(CMakePackage):
 
     patch("clang_include_array.patch", when="%apple-clang")
     patch("clang_include_array.patch", when="%clang")
-    patch("intel_vectorization.patch", when="%intel")
+    patch("intel_vectorization_v0p33.patch", when="@:0.33 %intel")
+    patch("intel_vectorization_v0p34.patch", when="@0.34: %intel")
 
     variant(
         "build_type",
