@@ -22,6 +22,7 @@ from llnl.util.tty.color import colorize
 
 import spack.error
 import spack.paths
+import spack.spec
 import spack.util.spack_json as sjson
 from spack.installer import InstallError
 from spack.spec import Spec
@@ -1039,7 +1040,7 @@ class TestSuite:
         Returns:
             str: the install test package identifier
         """
-        return spec.format("{name}-{version}-{hash:7}")
+        return spack.spec.format_path(spec, "{name}-{version}-{hash:7}")
 
     @classmethod
     def test_log_name(cls, spec):
