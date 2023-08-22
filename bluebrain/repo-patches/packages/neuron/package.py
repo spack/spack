@@ -32,6 +32,7 @@ class Neuron(CMakePackage):
     patch("patch-v800-cmake-nvhpc.patch", when="@8.0.0%nvhpc^cmake@3.20:")
 
     version("develop", branch="master")
+    version("9.0.a10", commit="af51e51e")
     version("9.0.a9", commit="baf3b14")
     version("9.0.a8", commit="67a672a")
     version("9.0.a5", commit="522c866")
@@ -241,7 +242,9 @@ class Neuron(CMakePackage):
             args.append("-DNRN_SANITIZERS=" + ",".join(self.spec.variants["sanitizers"].value))
         if "+mpi" in self.spec:
             args.append("-DNRN_ENABLE_MPI=ON")
-            if "~coreneuron" in self.spec:
+            if "+gpu" in self.spec:
+                args.append("-DNRN_ENABLE_MPI_DYNAMIC=OFF")
+            else:
                 args.append("-DNRN_ENABLE_MPI_DYNAMIC=ON")
         else:
             args.append("-DNRN_ENABLE_MPI=OFF")
