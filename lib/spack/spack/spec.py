@@ -112,7 +112,6 @@ __all__ = [
     "UnsatisfiableDependencySpecError",
     "AmbiguousHashError",
     "InvalidHashError",
-    "RedundantSpecError",
     "SpecDeprecatedError",
 ]
 
@@ -5329,14 +5328,6 @@ class SpecFilenameError(spack.error.SpecError):
 
 class NoSuchSpecFileError(SpecFilenameError):
     """Raised when a spec file doesn't exist."""
-
-
-class RedundantSpecError(spack.error.SpecError):
-    def __init__(self, spec, addition):
-        super().__init__(
-            "Attempting to add %s to spec %s which is already concrete."
-            " This is likely the result of adding to a spec specified by hash." % (addition, spec)
-        )
 
 
 class SpecFormatStringError(spack.error.SpecError):
