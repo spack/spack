@@ -443,10 +443,7 @@ class RemovePath(NameValueModifier):
         # being unset here, clear out the variable to
         # indicate it should be unset entirely
         env_path = self.separator.join(directories)
-        if env_path:
-            env[self.name] = env_path
-        else:
-            env.pop(self.name)
+        env[self.name] = env_path
 
 
 class DeprioritizeSystemPaths(NameModifier):
