@@ -7,7 +7,6 @@ import collections
 import getpass
 import io
 import os
-import sys
 import tempfile
 from datetime import date
 
@@ -484,7 +483,7 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     assert projections == expected_proj
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Padding unsupported on Windows")
+@pytest.mark.not_on_windows("Padding unsupported on Windows")
 @pytest.mark.parametrize(
     "config_settings,expected",
     [
@@ -816,7 +815,7 @@ def test_bad_config_section(mock_low_high_config):
         spack.config.get("foobar")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="chmod not supported on Windows")
+@pytest.mark.not_on_windows("chmod not supported on Windows")
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_bad_command_line_scopes(tmpdir, config):
     cfg = spack.config.Configuration()
@@ -1395,7 +1394,7 @@ def test_config_file_dir_failure(tmpdir, mutable_empty_config):
         spack.config.read_config_file(tmpdir.strpath)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="chmod not supported on Windows")
+@pytest.mark.not_on_windows("chmod not supported on Windows")
 def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
     """Test reading a configuration file without permissions to ensure
     ConfigFileError is raised."""

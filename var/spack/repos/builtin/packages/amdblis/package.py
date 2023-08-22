@@ -44,6 +44,8 @@ class Amdblis(BlisBase):
 
     variant("ilp64", default=False, when="@3.0.1:", description="ILP64 support")
     variant("aocl_gemm", default=False, when="@4.1:", description="aocl_gemm support")
+    variant("suphandling", default=True, description="Small Unpacked Kernel handling")
+
 
     def configure_args(self):
         spec = self.spec
@@ -68,6 +70,11 @@ class Amdblis(BlisBase):
             args.append("-a aocl_gemm")
             args.append("CC={0}".format(os.path.basename(spack_cc)))
             args.append("CXX={0}".format(os.path.basename(spack_cxx)))
+
+        if spec.satisfies("+suphandling"):
+            args.append("--enable-sup-handling")
+        else:
+            args.append("--disable-sup-handling")
 
         # To enable Fortran to C calling convention for
         # complex types when compiling with aocc flang
