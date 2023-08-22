@@ -26,6 +26,7 @@ class Tau(Package):
     tags = ["e4s"]
 
     version("master", branch="master")
+    version("2.32.1", sha256="0eec3de46b0873846dfc639270c5e30a226b463dd6cb41aa12e975b7563f0eeb")
     version("2.32", sha256="ee774a06e30ce0ef0f053635a52229152c39aba4f4933bed92da55e5e13466f3")
     version("2.31.1", sha256="bf445b9d4fe40a5672a7b175044d2133791c4dfb36a214c1a55a931aebc06b9d")
     version("2.31", sha256="27e73c395dd2a42b91591ce4a76b88b1f67663ef13aa19ef4297c68f45d946c2")
@@ -124,6 +125,7 @@ class Tau(Package):
     depends_on("rocprofiler-dev", when="+rocprofiler")
     depends_on("roctracer-dev", when="+roctracer")
     depends_on("hsa-rocr-dev", when="+rocm")
+    depends_on("rocm-smi-lib", when="@2.32.1: +rocm")
     depends_on("java", type="run")  # for paraprof
     depends_on("oneapi-level-zero", when="+level_zero")
 
@@ -288,6 +290,8 @@ class Tau(Package):
 
         if "+rocm" in spec:
             options.append("-rocm=%s" % spec["hsa-rocr-dev"].prefix)
+            if spec.satisfies("@2.32.1"):
+                options.append("-rocmsmi=%s" % spec["rocm-smi-lib"].prefix)
 
         if "+rocprofiler" in spec:
             options.append("-rocprofiler=%s" % spec["rocprofiler-dev"].prefix)
