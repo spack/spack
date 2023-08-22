@@ -277,8 +277,9 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("perl-data-dumper", type=("build"))
     depends_on("hwloc")
     depends_on("hwloc@2.0.1:", when="@13")
-    depends_on("elf", when="+cuda")  # libomptarget
-    depends_on("libffi", when="+libomptarget")  # libomptarget
+    depends_on("elf", when="+cuda")
+    depends_on("elf", when="+libomptarget")
+    depends_on("libffi", when="+libomptarget")
 
     # llvm-config --system-libs libraries.
     depends_on("zlib-api")
