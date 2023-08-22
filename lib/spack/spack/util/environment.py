@@ -732,11 +732,10 @@ class EnvironmentModifications:
                     cmds += _SHELL_UNSET_STRINGS[shell].format(name)
                 else:
                     if sys.platform != "win32":
-                        cmd = _SHELL_SET_STRINGS[shell].format(
-                            name, double_quote_escape(new_env[name])
-                        )
+                        new_env_name = double_quote_escape(new_env[name])
                     else:
-                        cmd = _SHELL_SET_STRINGS[shell].format(name, new_env[name])
+                        new_env_name = new_env[name]
+                    cmd = _SHELL_SET_STRINGS[shell].format(name, new_env_name)
                     cmds += cmd
         return cmds
 
