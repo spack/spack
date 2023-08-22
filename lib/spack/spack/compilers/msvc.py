@@ -41,6 +41,7 @@ class CmdCall:
         self._cmds = cmds
 
     def __call__(self):
+        import pdb; pdb.set_trace()
         out = subprocess.check_output(self.cmd_line, stderr=subprocess.STDOUT)  # novermin
         return out.decode("utf-16le", errors="replace")  # novermin
 
@@ -96,7 +97,7 @@ class VCVarsInvocation(VarsInvocation):
         return f"-vcvars_ver={self._msvc_version}"
 
     def command_str(self):
-        script = super(VCVarsInvocation, self).__str__()
+        script = super(VCVarsInvocation, self).command_str()
         return f"{script} {self.arch} {self.sdk_ver} {self.vcvars_ver}"
 
 
