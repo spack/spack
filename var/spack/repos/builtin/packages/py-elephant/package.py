@@ -54,7 +54,6 @@ class PyElephant(PythonPackage):
     depends_on("py-six@1.10.0:", type=("build", "run"), when="@0.6.4:")
     depends_on("py-tqdm", type=("build", "run"), when="@0.6.4:")
 
-    depends_on("py-pandas@0.14.1:", type=("build", "run"), when="+extras")
     depends_on("py-pandas@0.18.0:", type=("build", "run"), when="+extras")
     depends_on("py-scikit-learn@0.23.2:", type=("build", "run"), when="+extras")
     depends_on("py-statsmodels@0.12.1:", type=("build", "run"), when="+extras")
