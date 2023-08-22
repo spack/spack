@@ -1012,6 +1012,7 @@ class TestSpecSemantics:
         ("zlib@git.foo/bar", "{name}-{version}", str(pathlib.Path("zlib-git.foo_bar"))),
         ("zlib@git.foo/bar", "{name}/{version}", str(pathlib.Path("zlib", "git.foo_bar"))),
         ("zlib@git.foo/bar", r"C:\\installroot\{name}\{version}", None),
+        ("zlib@git.foo/bar", r"{name}\{version}", None),
         (
             "zlib@{0}=1.0%gcc".format("a" * 40),
             "{name}/{version}/{compiler}",

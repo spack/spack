@@ -4902,6 +4902,12 @@ def format_path(spec, format_string):
         # Also, if we allow abspaths, we probably want to prevent Windows
         # abspaths on Linux (and vice versa).
         raise ValueError(f"Input format string appears to be an absolute path: {format_string}")
+    # Note: exluding this precludes Windows device namespaces, but this error
+    # message would be misleading if that's what the user is trying to do, so
+    # the preference in that case is to raise an error about abspaths
+    if "\\" in format_string:
+        raise ValueError(rf"Input format string must be in posix format, but appears to "
+                         "contain \ path separators: {format_string}")
 
     # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
     # on Windows, we cannot use pathlib (since "/" is not a path separator
