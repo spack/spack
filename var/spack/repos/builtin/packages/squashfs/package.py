@@ -13,6 +13,7 @@ class Squashfs(MakefilePackage):
     url = "https://downloads.sourceforge.net/project/squashfs/squashfs/squashfs4.3/squashfs4.3.tar.gz"
 
     # version      sha1
+    version("4.6.1", sha256="94201754b36121a9f022a190c75f718441df15402df32c2b520ca331a107511c")
     version(
         "4.5.1",
         sha256="277b6e7f75a4a57f72191295ae62766a10d627a4f5e5f19eadfbc861378deea7",
@@ -61,6 +62,7 @@ class Squashfs(MakefilePackage):
         multi=False,
         description="Default compression algorithm",
     )
+    variant("static", default=False, description="Build fully static mksquashfs executable")
 
     conflicts(
         "squashfs~gzip default_compression=gzip",
@@ -85,9 +87,13 @@ class Squashfs(MakefilePackage):
 
     depends_on("zlib-api", when="+gzip")
     depends_on("lz4", when="+lz4")
+    depends_on("lz4 libs=static", when="+lz4 +static")
     depends_on("lzo", when="+lzo")
+    depends_on("lzo libs=static", when="+lzo +static")
     depends_on("xz", when="+xz")
+    depends_on("xz libs=static", when="+xz +static")
     depends_on("zstd", when="+zstd")
+    depends_on("zstd libs=static", when="+zstd +static")
 
     # patch from
     # https://github.com/plougher/squashfs-tools/commit/fe2f5da4b0f8994169c53e84b7cb8a0feefc97b5.patch
@@ -103,6 +109,7 @@ class Squashfs(MakefilePackage):
             "XZ_SUPPORT={0}".format(1 if "+xz" in spec else 0),
             "ZSTD_SUPPORT={0}".format(1 if "+zstd" in spec else 0),
             "COMP_DEFAULT={0}".format(default),
+            "EXTRA_LDFLAGS={0}".format("-static" if "+static" in spec else ""),
         ]
 
     def build(self, spec, prefix):

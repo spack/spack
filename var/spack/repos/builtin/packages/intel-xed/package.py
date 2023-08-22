@@ -21,6 +21,7 @@ class IntelXed(Package):
 
     # Current versions now have actual releases and tags.
     version("main", branch="main")
+    version("2023.07.09", tag="v2023.07.09")
     version("2023.06.07", tag="v2023.06.07")
     version("2023.04.16", tag="v2023.04.16")
     version("2022.10.11", tag="v2022.10.11")

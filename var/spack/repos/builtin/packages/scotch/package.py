@@ -70,8 +70,8 @@ class Scotch(CMakePackage, MakefilePackage):
 
     # Vendored dependency of METIS/ParMETIS conflicts with standard
     # installations
-    conflicts("^metis", when="+metis")
-    conflicts("^parmetis", when="+metis")
+    conflicts("metis", when="+metis")
+    conflicts("parmetis", when="+metis")
 
     parallel = False
 
