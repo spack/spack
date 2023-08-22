@@ -61,7 +61,16 @@ def rewire_node(spec, explicit):
     # spec
     prefix_to_prefix = OrderedDict({spec.build_spec.prefix: spec.prefix})
     for build_dep in spec.build_spec.traverse(root=False):
-        prefix_to_prefix[build_dep.prefix] = spec[build_dep.name].prefix
+        if build_dep.name in spec:
+            prefix_to_prefix[build_dep.prefix] = spec[build_dep.name].prefix
+        else:
+            virtuals = build_dep.package.virtuals_provided
+            for virtual in virtuals:
+                try:
+                    prefix_to_prefix[build_dep.prefix] = spec[virtual.name].prefix
+                    break
+                except KeyError:
+                    continue
 
     manifest = bindist.get_buildfile_manifest(spec.build_spec)
     platform = spack.platforms.by_name(spec.platform)
