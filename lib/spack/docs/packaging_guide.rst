@@ -4773,17 +4773,17 @@ For example, running:
 
 results in spack checking that the installation created the following **file**:
 
-* ``self.prefix/bin/reframe``
+* ``self.prefix.bin.reframe``
 
 and the following **directories**:
 
-* ``self.prefix/bin``
-* ``self.prefix/config``
-* ``self.prefix/docs``
-* ``self.prefix/reframe``
-* ``self.prefix/tutorials``
-* ``self.prefix/unittests``
-* ``self.prefix/cscs-checks``
+* ``self.prefix.bin``
+* ``self.prefix.config``
+* ``self.prefix.docs``
+* ``self.prefix.reframe``
+* ``self.prefix.tutorials``
+* ``self.prefix.unittests``
+* ``self.prefix.cscs-checks``
 
 If **any** of these paths are missing, then Spack considers the installation
 to have failed.
@@ -4927,7 +4927,7 @@ installed executable. The check is implemented as follows:
        @on_package_attributes(run_tests=True)
        def check_list(self):
             with working_dir(self.stage.source_path):
-                reframe = Executable(join_path(self.prefix, "bin", "reframe"))
+                reframe = Executable(self.prefix.bin.reframe)
                 reframe("-l")
 
 .. warning::
@@ -5294,9 +5294,7 @@ and using ``foo.c`` in a test method is illustrated below.
 
        def test_foo(self):
            exe = "foo"
-           src_dir = join_path(
-               self.test_suite.current_test_cache_dir, "examples"
-           )
+           src_dir = self.test_suite.current_test_cache_dir.examples
            with working_dir(src_dir):
                cc = which(os.environ["CC"])
                cc(
@@ -5329,9 +5327,9 @@ the files using the ``self.test_suite.current_test_cache_dir`` property.
 In our example above, test methods can use the following paths to reference
 the copy of each entry listed in ``srcs``, respectively:
 
-* ``join_path(self.test_suite.current_test_cache_dir, "tests")``
-* ``join_path(self.test_suite.current_test_cache_dir, "examples", "foo.c")``
-* ``join_path(self.test_suite.current_test_cache_dir, "examples", "bar.c")``
+* ``self.test_suite.current_test_cache_dir.tests``
+* ``join_path(self.test_suite.current_test_cache_dir.examples, "foo.c")``
+* ``join_path(self.test_suite.current_test_cache_dir.examples, "bar.c")``
 
 .. admonition:: Library packages should build stand-alone tests
 
@@ -5542,7 +5540,7 @@ repository, and installation.
      - ``self.test_suite.test_dir_for_spec(self.spec)``
    * - Current Spec's Build-time Files
      - ``self.test_suite.current_test_cache_dir``
-     - ``join_path(self.test_suite.current_test_cache_dir, "examples", "foo.c")``
+     - ``join_path(self.test_suite.current_test_cache_dir.examples, "foo.c")``
    * - Current Spec's Custom Test Files
      - ``self.test_suite.current_test_data_dir``
      - ``join_path(self.test_suite.current_test_data_dir, "hello.f90")``
