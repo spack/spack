@@ -68,7 +68,7 @@ class PyElephant(PythonPackage):
     depends_on("py-sphinx@1.2.2:", type=("build", "run"), when="@0.3.0:0.6.0+docs")
     depends_on("py-nbsphinx@0.8.0:", type=("build", "run"), when="@0.9.0:+docs")
     depends_on("py-nbsphinx@0.5.0:", type=("build", "run"), when="@0.7.0:0.8.0+docs")
-    depends_on("py-sphinxcontrib-bibtex@1.0.0", type=("build", "run"), when="@0.7.0:+docs")
+    depends_on("py-sphinxcontrib-bibtex@1.0.1:", type=("build", "run"), when="@0.7.0:+docs")
     depends_on("py-sphinx-tabs@1.3.0:", type=("build", "run"), when="@0.9.0:+docs")
     depends_on("py-sphinx-tabs@1.1.13:", type=("build", "run"), when="@0.7.0:0.8.0+docs")
     depends_on("py-matplotlib@3.3.2:", type=("build", "run"), when="@0.9.0:+docs")
