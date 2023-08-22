@@ -1241,7 +1241,7 @@ def interp_escapes(path):
     i = 0
     path_len = len(path)
     while i < path_len:
-        if path[i] == "%":
+        if path[i] == "\a":
             # processing a potential replacement character
             hex_chars = path[i + 1 : i + 3]
             try:
@@ -1280,7 +1280,7 @@ def escape_colons(path):
             token = ""
         elif current_char == "'" and not (token and token[-1] == "\\"):
             if inside_escape:
-                token = "%3a".join(path_tokens[escaped_colon_idx:] + [token])
+                token = "\a3a".join(path_tokens[escaped_colon_idx:] + [token])
                 path_tokens[escaped_colon_idx:] = ""
                 inside_escape = False
             else:
