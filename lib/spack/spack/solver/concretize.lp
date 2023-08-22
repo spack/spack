@@ -113,6 +113,7 @@ unification_set(SetID, VirtualNode)
 % Node attributes that have multiple node arguments (usually, only the first argument is a node)
 multiple_nodes_attribute("node_flag_source").
 multiple_nodes_attribute("depends_on").
+multiple_nodes_attribute("virtual_on_edge").
 
 % Map constraint on the literal ID to facts on the node
 attr(Name, node(min_dupe_id, A1))             :- literal(LiteralID, Name, A1), solve_literal(LiteralID).
@@ -366,6 +367,18 @@ attr("node_flag_source", node(X, A1), A2, node(Y, A3))
 1 { attr("depends_on", node(X, A1), node(0..Y-1, A2), A3) : max_dupes(A2, Y) } 1
   :- impose(ID, node(X, A1)),
      imposed_constraint(ID, "depends_on", A1, A2, A3).
+
+% Reconstruct virtual dependencies for reused specs
+attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual)
+  :- impose(ID, node(X, A1)),
+     depends_on(node(X, A1), node(Y, A2)),
+     imposed_constraint(ID, "virtual_on_edge", A1, A2, Virtual),
+     not build(node(X, A1)).
+
+virtual_condition_holds(node(Y, A2), Virtual)
+  :- impose(ID, node(X, A1)),
+     attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual),
+     not build(node(X, A1)).
 
 % we cannot have additional variant values when we are working with concrete specs
 :- attr("node", node(ID, Package)),
