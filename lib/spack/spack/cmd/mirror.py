@@ -443,7 +443,7 @@ def mirror_create(args):
         )
 
     # When no directory is provided, the source dir is used
-    path = args.directory or spack.caches.FETCH_CACHE_location()
+    path = args.directory or spack.caches.fetch_cache_location()
 
     if args.all and not ev.active_environment():
         create_mirror_for_all_specs(
