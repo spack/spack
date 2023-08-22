@@ -35,7 +35,7 @@ class PyCtranslate2(CMakePackage, PythonExtension, CudaPackage):
     variant("mkl", default=True, description="Build with mkl")
     variant("cuda", default=False, description="Build with cuda")
     variant("cudnn", default=False, description="Build with cudnn")
-    depends_on("intel-mkl@2019.5:", when="+mkl", type=("build", "run"))
+    depends_on("mkl@2019.5:", when="+mkl", type=("build", "run"))
     depends_on("cuda@11.0:", when="+cuda", type=("build", "run"))
     depends_on("cudnn@8:", when="+cudnn", type=("build", "run"))
 
@@ -45,7 +45,6 @@ class PyCtranslate2(CMakePackage, PythonExtension, CudaPackage):
         env.append_path("SPACK_LINK_DIRS", self.prefix.lib)
         env.append_path("SPACK_LINK_DIRS", self.prefix.lib64)
         env.set("CTRANSLATE2_ROOT", self.spec.prefix)
-        env.prepend_path("LD_LIBRARY_PATH", self.spec.prefix)
 
     def setup_run_environment(self, env):
         # https://opennmt.net/CTranslate2/installation.html#compile-the-python-wrapper
