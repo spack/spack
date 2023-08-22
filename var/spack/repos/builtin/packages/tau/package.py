@@ -125,7 +125,7 @@ class Tau(Package):
     depends_on("rocprofiler-dev", when="+rocprofiler")
     depends_on("roctracer-dev", when="+roctracer")
     depends_on("hsa-rocr-dev", when="+rocm")
-    depends_on("rocm-smi-lib", when="@2.32.1 +rocm")
+    depends_on("rocm-smi-lib", when="@2.32.1: +rocm")
     depends_on("java", type="run")  # for paraprof
     depends_on("oneapi-level-zero", when="+level_zero")
 
