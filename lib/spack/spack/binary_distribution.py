@@ -41,6 +41,7 @@ import spack.mirror
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
+import spack.spec
 import spack.stage
 import spack.store
 import spack.traverse as traverse
@@ -797,7 +798,7 @@ def tarball_directory_name(spec):
     <os>-<architecture>/<compiler>/<package>-<version>/
     """
     return spack.spec.format_path(
-        spec, "{architecture}-{compiler.name}-{compiler.version}-{name}-{version}"
+        spec, "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}"
     )
 
 
