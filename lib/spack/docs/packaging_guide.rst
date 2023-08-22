@@ -5254,7 +5254,7 @@ Saving build-time files
     will be important to maintain them so they work across listed or supported
     versions of the package.
 
-You can use the ``cache_extra_test_sources`` method to copy directories
+You can use the ``cache_extra_test_sources`` helper to copy directories
 and or files from the source build stage directory to the package's
 installation directory.
 
@@ -5262,10 +5262,15 @@ The signature for ``cache_extra_test_sources`` is:
 
 .. code-block:: python
 
-   def cache_extra_test_sources(self, srcs):
+   def cache_extra_test_sources(pkg, srcs):
 
-where ``srcs`` is a string *or* a list of strings corresponding to the
+where each argument has the following meaning:
+
+* ``pkg`` is an instance of the package for the spec under test.
+
+* ``srcs`` is a string *or* a list of strings corresponding to the
 paths of subdirectories and or files needed for stand-alone testing. 
+
 The paths must be relative to the staged source directory. Contents of
 subdirectories and files are copied to a special test cache subdirectory
 of the installation prefix. They are automatically copied to the appropriate
@@ -5286,7 +5291,7 @@ and using ``foo.c`` in a test method is illustrated below.
            srcs = ["tests",
                    join_path("examples", "foo.c"),
                    join_path("examples", "bar.c")]
-           self.cache_extra_test_sources(srcs)
+           cache_extra_test_sources(self, srcs)
 
        def test_foo(self):
            exe = "foo"
@@ -5347,7 +5352,7 @@ the copy of each entry listed in ``srcs``, respectively:
     If one or more of the copied files needs to be modified to reference
     the installed software, it is recommended that those changes be made
     to the cached files **once** in the ``copy_test_sources`` method and
-    ***after** the call to ``self.cache_extra_test_sources()``. This will
+    ***after** the call to ``cache_extra_test_sources()``. This will
     reduce the amount of unnecessary work in the test method **and** avoid
     problems testing in shared instances and facility deployments.
 
