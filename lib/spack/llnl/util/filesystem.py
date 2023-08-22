@@ -161,7 +161,7 @@ def polite_path(components):
     For example all "/", "\", and ":" characters will be replaced with
     "_". Other characters like "=" will also be replaced.
     """
-    return os.path.join(polite_filename(x) for x in components)
+    return os.path.join(*[polite_filename(x) for x in components])
 
 
 def polite_filename(filename: str) -> str:
