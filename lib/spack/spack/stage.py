@@ -326,7 +326,7 @@ class Stage:
         self.keep = keep
 
         # File lock for the stage directory.  We use one file for all
-        # stage locks. See spack.database.Database.prefix_lock for
+        # stage locks. See spack.database.Database.prefix_locker.lock for
         # details on this approach.
         self._lock = None
         if lock:
@@ -484,7 +484,7 @@ class Stage:
 
             if self.default_fetcher.cachable:
                 for rel_path in reversed(list(self.mirror_paths)):
-                    cache_fetcher = spack.caches.fetch_cache.fetcher(
+                    cache_fetcher = spack.caches.FETCH_CACHE.fetcher(
                         rel_path, digest, expand=expand, extension=extension
                     )
                     fetchers.insert(0, cache_fetcher)
@@ -577,7 +577,7 @@ class Stage:
             self.fetcher.check()
 
     def cache_local(self):
-        spack.caches.fetch_cache.store(self.fetcher, self.mirror_paths.storage_path)
+        spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_paths.storage_path)
 
     def cache_mirror(self, mirror, stats):
         """Perform a fetch if the resource is not already cached

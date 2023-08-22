@@ -108,6 +108,9 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("magma@2.4.0:", when="+magma @6.0:", type=("build", "run"))
     depends_on("magma@2.5.0:", when="+magma @7.0:", type=("build", "run"))
 
+    # https://github.com/spack/spack/issues/39536#issuecomment-1685161942
+    conflicts("^cuda@12", when="@:7.9 +cuda")
+
     conflicts("+magma", when="~cuda~rocm")  # currently MAGMA only works with CUDA
     conflicts("+cuda", when="+rocm")  # can pick CUDA or ROCm, not both
 

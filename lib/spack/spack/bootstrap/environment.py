@@ -23,6 +23,7 @@ from spack.environment import depfile
 
 from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path
+from .core import _add_externals_if_missing
 
 
 class BootstrapEnvironment(spack.environment.Environment):
@@ -185,6 +186,7 @@ def pytest_root_spec() -> str:
 
 def ensure_environment_dependencies() -> None:
     """Ensure Spack dependencies from the bootstrap environment are installed and ready to use"""
+    _add_externals_if_missing()
     with BootstrapEnvironment() as env:
         env.update_installations()
         env.update_syspath_and_environ()

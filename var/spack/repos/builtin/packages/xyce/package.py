@@ -52,7 +52,7 @@ class Xyce(CMakePackage):
     # this defaults to 11, consistent with what will be used,
     # and produces an error if any other value is attempted
     cxxstd_choices = ["11"]
-    variant("cxxstd", default="11", values=cxxstd_choices, multi=False)
+    variant("cxxstd", default="11", description="C++ standard", values=cxxstd_choices, multi=False)
 
     variant("pymi", default=False, description="Enable Python Model Interpreter for Xyce")
     # Downstream dynamic library symbols from pip installed numpy and other
@@ -99,6 +99,7 @@ class Xyce(CMakePackage):
     # Issue #1712 forces explicitly enumerating blas packages to propagate variants
     with when("+pymi_static_tpls"):
         # BLAS
+        depends_on("blas")
         depends_on("openblas~shared", when="^openblas")
         depends_on("netlib-lapack~shared", when="^netlib-lapack~external-blas")
 
@@ -139,6 +140,14 @@ class Xyce(CMakePackage):
         "https://github.com/xyce/xyce/commit/fdf457fce1b1511b8a29d134d38e515fb7149246.patch?full_index=1",
         sha256="077f91d2ff0649b3f7e83c224f71a030521c6fb5a84b29acd772d5657cdb6c23",
         when="@7.4:7.6 +pymi",
+    )
+
+    # fix oneapi issue 7.6 and prior
+    # can switch to github PR once in master
+    patch(
+        "454-oneapi-xyce.patch",
+        sha256="76a3ff987e43d1657f24d55cfd864b487876a72a9a7c8a37c3151a9b586a21c1",
+        when="@:7.6",
     )
 
     def cmake_args(self):

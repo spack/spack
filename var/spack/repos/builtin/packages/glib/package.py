@@ -136,7 +136,7 @@ class Glib(MesonPackage, AutotoolsPackage):
 
     depends_on("pkgconfig", type="build")
     depends_on("libffi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("gettext")
     depends_on("perl", type=("build", "run"))
     depends_on("python", type=("build", "run"), when="@2.53.4:")

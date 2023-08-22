@@ -42,12 +42,12 @@ class Armcomputelibrary(SConsPackage):
 
     phases = ["build"]
 
-    variant("build_type", default="release", values=("release", "debug"))
+    variant("build_type", default="release", values=("release", "debug"), description="Build type")
     variant(
         "threads",
         default="cppthreads",
         values=("cppthreads", "openmp"),
-        description="Enable C++11 threads/OpenMP backend. OpenMP backend only"
+        description="Enable C++11 threads/OpenMP backend. OpenMP backend only "
         "works when building with g++ and not clang++.",
     )
     variant(

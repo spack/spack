@@ -33,6 +33,8 @@ class QtPackage(CMakePackage):
 
     maintainers("wdconinc", "sethrj")
 
+    provides("qmake")
+
     # Default dependencies for all qt-* components
     generator("ninja")
     depends_on("cmake@3.16:", type="build")
@@ -127,7 +129,7 @@ class QtBase(QtPackage):
     depends_on("icu4c")
     depends_on("libxml2")
     depends_on("pcre2+multibyte")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd")
     with when("platform=linux"):
         depends_on("libdrm")

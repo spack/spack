@@ -65,7 +65,7 @@ class SstCore(AutotoolsPackage):
     depends_on("mpi", when="+pdes_mpi")
     depends_on("zoltan", when="+zoltan")
     depends_on("hdf5", when="+hdf5")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     depends_on("autoconf@1.68:", type="build")
     depends_on("automake@1.11.1:", type="build")
@@ -87,7 +87,7 @@ class SstCore(AutotoolsPackage):
         if "+hdf5" in self.spec:
             args.append("--with-hdf5=%s" % self.spec["hdf5"].prefix)
         if "+zlib" in self.spec:
-            args.append("--with-zlib=%s" % self.spec["zlib"].prefix)
+            args.append("--with-zlib=%s" % self.spec["zlib-api"].prefix)
 
         if "+pdes_mpi" in self.spec:
             args.append("--enable-mpi")

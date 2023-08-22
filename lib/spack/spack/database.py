@@ -21,10 +21,11 @@ filesystem.
 import contextlib
 import datetime
 import os
+import pathlib
 import socket
 import sys
 import time
-from typing import Dict, List, NamedTuple, Set, Type, Union
+from typing import Any, Callable, Dict, Generator, List, NamedTuple, Set, Type, Union
 
 try:
     import uuid
@@ -141,22 +142,23 @@ class InstallStatuses:
     def canonicalize(cls, query_arg):
         if query_arg is True:
             return [cls.INSTALLED]
-        elif query_arg is False:
+        if query_arg is False:
             return [cls.MISSING]
-        elif query_arg is any:
+        if query_arg is any:
             return [cls.INSTALLED, cls.DEPRECATED, cls.MISSING]
-        elif isinstance(query_arg, InstallStatus):
+        if isinstance(query_arg, InstallStatus):
             return [query_arg]
-        else:
-            try:  # Try block catches if it is not an iterable at all
-                if any(type(x) != InstallStatus for x in query_arg):
-                    raise TypeError
-            except TypeError:
-                raise TypeError(
-                    "installation query must be `any`, boolean, "
-                    "InstallStatus, or iterable of InstallStatus"
-                )
-            return query_arg
+        try:
+            statuses = list(query_arg)
+            if all(isinstance(x, InstallStatus) for x in statuses):
+                return statuses
+        except TypeError:
+            pass
+
+        raise TypeError(
+            "installation query must be `any`, boolean, "
+            "InstallStatus, or iterable of InstallStatus"
+        )
 
 
 class InstallRecord:
@@ -306,15 +308,16 @@ _QUERY_DOCSTRING = """
 
         """
 
-#: Data class to configure locks in Database objects
-#:
-#: Args:
-#:    enable (bool): whether to enable locks or not.
-#:    database_timeout (int or None): timeout for the database lock
-#:    package_timeout (int or None): timeout for the package lock
-
 
 class LockConfiguration(NamedTuple):
+    """Data class to configure locks in Database objects
+
+    Args:
+        enable: whether to enable locks or not.
+        database_timeout: timeout for the database lock
+        package_timeout: timeout for the package lock
+    """
+
     enable: bool
     database_timeout: Optional[int]
     package_timeout: Optional[int]
@@ -348,13 +351,230 @@ def lock_configuration(configuration):
     )
 
 
+def prefix_lock_path(root_dir: Union[str, pathlib.Path]) -> pathlib.Path:
+    """Returns the path of the prefix lock file, given the root directory.
+
+    Args:
+        root_dir: root directory containing the database directory
+    """
+    return pathlib.Path(root_dir) / _DB_DIRNAME / "prefix_lock"
+
+
+def failures_lock_path(root_dir: Union[str, pathlib.Path]) -> pathlib.Path:
+    """Returns the path of the failures lock file, given the root directory.
+
+    Args:
+        root_dir: root directory containing the database directory
+    """
+    return pathlib.Path(root_dir) / _DB_DIRNAME / "prefix_failures"
+
+
+class SpecLocker:
+    """Manages acquiring and releasing read or write locks on concrete specs."""
+
+    def __init__(self, lock_path: Union[str, pathlib.Path], default_timeout: Optional[float]):
+        self.lock_path = pathlib.Path(lock_path)
+        self.default_timeout = default_timeout
+
+        # Maps (spec.dag_hash(), spec.name) to the corresponding lock object
+        self.locks: Dict[Tuple[str, str], lk.Lock] = {}
+
+    def lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
+        """Returns a lock on a concrete spec.
+
+        The lock is a byte range lock on the nth byte of a file.
+
+        The lock file is ``self.lock_path``.
+
+        n is the sys.maxsize-bit prefix of the DAG hash.  This makes likelihood of collision is
+        very low AND it gives us readers-writer lock semantics with just a single lockfile, so
+        no cleanup required.
+        """
+        assert spec.concrete, "cannot lock a non-concrete spec"
+        timeout = timeout or self.default_timeout
+        key = self._lock_key(spec)
+
+        if key not in self.locks:
+            self.locks[key] = self.raw_lock(spec, timeout=timeout)
+        else:
+            self.locks[key].default_timeout = timeout
+
+        return self.locks[key]
+
+    def raw_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
+        """Returns a raw lock for a Spec, but doesn't keep track of it."""
+        return lk.Lock(
+            str(self.lock_path),
+            start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+            length=1,
+            default_timeout=timeout,
+            desc=spec.name,
+        )
+
+    def has_lock(self, spec: "spack.spec.Spec") -> bool:
+        """Returns True if the spec is already managed by this spec locker"""
+        return self._lock_key(spec) in self.locks
+
+    def _lock_key(self, spec: "spack.spec.Spec") -> Tuple[str, str]:
+        return (spec.dag_hash(), spec.name)
+
+    @contextlib.contextmanager
+    def write_lock(self, spec: "spack.spec.Spec") -> Generator["SpecLocker", None, None]:
+        lock = self.lock(spec)
+        lock.acquire_write()
+
+        try:
+            yield self
+        except lk.LockError:
+            # This addresses the case where a nested lock attempt fails inside
+            # of this context manager
+            raise
+        except (Exception, KeyboardInterrupt):
+            lock.release_write()
+            raise
+        else:
+            lock.release_write()
+
+    def clear(self, spec: "spack.spec.Spec") -> Tuple[bool, Optional[lk.Lock]]:
+        key = self._lock_key(spec)
+        lock = self.locks.pop(key, None)
+        return bool(lock), lock
+
+    def clear_all(self, clear_fn: Optional[Callable[[lk.Lock], Any]] = None) -> None:
+        if clear_fn is not None:
+            for lock in self.locks.values():
+                clear_fn(lock)
+        self.locks.clear()
+
+
+class FailureTracker:
+    """Tracks installation failures.
+
+    Prefix failure marking takes the form of a byte range lock on the nth
+    byte of a file for coordinating between concurrent parallel build
+    processes and a persistent file, named with the full hash and
+    containing the spec, in a subdirectory of the database to enable
+    persistence across overlapping but separate related build processes.
+
+    The failure lock file lives alongside the install DB.
+
+    ``n`` is the sys.maxsize-bit prefix of the associated DAG hash to make
+    the likelihood of collision very low with no cleanup required.
+    """
+
+    def __init__(self, root_dir: Union[str, pathlib.Path], default_timeout: Optional[float]):
+        #: Ensure a persistent location for dealing with parallel installation
+        #: failures (e.g., across near-concurrent processes).
+        self.dir = pathlib.Path(root_dir) / _DB_DIRNAME / "failures"
+        self.dir.mkdir(parents=True, exist_ok=True)
+
+        self.locker = SpecLocker(failures_lock_path(root_dir), default_timeout=default_timeout)
+
+    def clear(self, spec: "spack.spec.Spec", force: bool = False) -> None:
+        """Removes any persistent and cached failure tracking for the spec.
+
+        see `mark()`.
+
+        Args:
+            spec: the spec whose failure indicators are being removed
+            force: True if the failure information should be cleared when a failure lock
+                exists for the file, or False if the failure should not be cleared (e.g.,
+                it may be associated with a concurrent build)
+        """
+        locked = self.lock_taken(spec)
+        if locked and not force:
+            tty.msg(f"Retaining failure marking for {spec.name} due to lock")
+            return
+
+        if locked:
+            tty.warn(f"Removing failure marking despite lock for {spec.name}")
+
+        succeeded, lock = self.locker.clear(spec)
+        if succeeded and lock is not None:
+            lock.release_write()
+
+        if self.persistent_mark(spec):
+            path = self._path(spec)
+            tty.debug(f"Removing failure marking for {spec.name}")
+            try:
+                path.unlink()
+            except OSError as err:
+                tty.warn(
+                    f"Unable to remove failure marking for {spec.name} ({str(path)}): {str(err)}"
+                )
+
+    def clear_all(self) -> None:
+        """Force remove install failure tracking files."""
+        tty.debug("Releasing prefix failure locks")
+        self.locker.clear_all(
+            clear_fn=lambda x: x.release_write() if x.is_write_locked() else True
+        )
+
+        tty.debug("Removing prefix failure tracking files")
+        try:
+            for fail_mark in os.listdir(str(self.dir)):
+                try:
+                    (self.dir / fail_mark).unlink()
+                except OSError as exc:
+                    tty.warn(f"Unable to remove failure marking file {fail_mark}: {str(exc)}")
+        except OSError as exc:
+            tty.warn(f"Unable to remove failure marking files: {str(exc)}")
+
+    def mark(self, spec: "spack.spec.Spec") -> lk.Lock:
+        """Marks a spec as failing to install.
+
+        Args:
+            spec: spec that failed to install
+        """
+        # Dump the spec to the failure file for (manual) debugging purposes
+        path = self._path(spec)
+        path.write_text(spec.to_json())
+
+        # Also ensure a failure lock is taken to prevent cleanup removal
+        # of failure status information during a concurrent parallel build.
+        if not self.locker.has_lock(spec):
+            try:
+                mark = self.locker.lock(spec)
+                mark.acquire_write()
+            except lk.LockTimeoutError:
+                # Unlikely that another process failed to install at the same
+                # time but log it anyway.
+                tty.debug(f"PID {os.getpid()} failed to mark install failure for {spec.name}")
+                tty.warn(f"Unable to mark {spec.name} as failed.")
+
+        return self.locker.lock(spec)
+
+    def has_failed(self, spec: "spack.spec.Spec") -> bool:
+        """Return True if the spec is marked as failed."""
+        # The failure was detected in this process.
+        if self.locker.has_lock(spec):
+            return True
+
+        # The failure was detected by a concurrent process (e.g., an srun),
+        # which is expected to be holding a write lock if that is the case.
+        if self.lock_taken(spec):
+            return True
+
+        # Determine if the spec may have been marked as failed by a separate
+        # spack build process running concurrently.
+        return self.persistent_mark(spec)
+
+    def lock_taken(self, spec: "spack.spec.Spec") -> bool:
+        """Return True if another process has a failure lock on the spec."""
+        check = self.locker.raw_lock(spec)
+        return check.is_write_locked()
+
+    def persistent_mark(self, spec: "spack.spec.Spec") -> bool:
+        """Determine if the spec has a persistent failure marking."""
+        return self._path(spec).exists()
+
+    def _path(self, spec: "spack.spec.Spec") -> pathlib.Path:
+        """Return the path to the spec's failure file, which may not exist."""
+        assert spec.concrete, "concrete spec required for failure path"
+        return self.dir / f"{spec.name}-{spec.dag_hash()}"
+
+
 class Database:
-    #: Per-process lock objects for each install prefix
-    _prefix_locks: Dict[str, lk.Lock] = {}
-
-    #: Per-process failure (lock) objects for each install prefix
-    _prefix_failures: Dict[str, lk.Lock] = {}
-
     #: Fields written for each install record
     record_fields: Tuple[str, ...] = DEFAULT_INSTALL_RECORD_FIELDS
 
@@ -392,23 +612,9 @@ class Database:
         self._verifier_path = os.path.join(self.database_directory, "index_verifier")
         self._lock_path = os.path.join(self.database_directory, "lock")
 
-        # This is for other classes to use to lock prefix directories.
-        self.prefix_lock_path = os.path.join(self.database_directory, "prefix_lock")
-
-        # Ensure a persistent location for dealing with parallel installation
-        # failures (e.g., across near-concurrent processes).
-        self._failure_dir = os.path.join(self.database_directory, "failures")
-
-        # Support special locks for handling parallel installation failures
-        # of a spec.
-        self.prefix_fail_path = os.path.join(self.database_directory, "prefix_failures")
-
         # Create needed directories and files
         if not is_upstream and not os.path.exists(self.database_directory):
             fs.mkdirp(self.database_directory)
-
-        if not is_upstream and not os.path.exists(self._failure_dir):
-            fs.mkdirp(self._failure_dir)
 
         self.is_upstream = is_upstream
         self.last_seen_verifier = ""
@@ -423,15 +629,7 @@ class Database:
 
         # initialize rest of state.
         self.db_lock_timeout = lock_cfg.database_timeout
-        self.package_lock_timeout = lock_cfg.package_timeout
-
         tty.debug("DATABASE LOCK TIMEOUT: {0}s".format(str(self.db_lock_timeout)))
-        timeout_format_str = (
-            "{0}s".format(str(self.package_lock_timeout))
-            if self.package_lock_timeout
-            else "No timeout"
-        )
-        tty.debug("PACKAGE LOCK TIMEOUT: {0}".format(str(timeout_format_str)))
 
         self.lock: Union[ForbiddenLock, lk.Lock]
         if self.is_upstream:
@@ -470,212 +668,6 @@ class Database:
     def read_transaction(self):
         """Get a read lock context manager for use in a `with` block."""
         return self._read_transaction_impl(self.lock, acquire=self._read)
-
-    def _failed_spec_path(self, spec):
-        """Return the path to the spec's failure file, which may not exist."""
-        if not spec.concrete:
-            raise ValueError("Concrete spec required for failure path for {0}".format(spec.name))
-
-        return os.path.join(self._failure_dir, "{0}-{1}".format(spec.name, spec.dag_hash()))
-
-    def clear_all_failures(self) -> None:
-        """Force remove install failure tracking files."""
-        tty.debug("Releasing prefix failure locks")
-        for pkg_id in list(self._prefix_failures.keys()):
-            lock = self._prefix_failures.pop(pkg_id, None)
-            if lock:
-                lock.release_write()
-
-        # Remove all failure markings (aka files)
-        tty.debug("Removing prefix failure tracking files")
-        for fail_mark in os.listdir(self._failure_dir):
-            try:
-                os.remove(os.path.join(self._failure_dir, fail_mark))
-            except OSError as exc:
-                tty.warn(
-                    "Unable to remove failure marking file {0}: {1}".format(fail_mark, str(exc))
-                )
-
-    def clear_failure(self, spec: "spack.spec.Spec", force: bool = False) -> None:
-        """
-        Remove any persistent and cached failure tracking for the spec.
-
-        see `mark_failed()`.
-
-        Args:
-            spec: the spec whose failure indicators are being removed
-            force: True if the failure information should be cleared when a prefix failure
-                lock exists for the file, or False if the failure should not be cleared (e.g.,
-                it may be associated with a concurrent build)
-        """
-        failure_locked = self.prefix_failure_locked(spec)
-        if failure_locked and not force:
-            tty.msg("Retaining failure marking for {0} due to lock".format(spec.name))
-            return
-
-        if failure_locked:
-            tty.warn("Removing failure marking despite lock for {0}".format(spec.name))
-
-        lock = self._prefix_failures.pop(spec.prefix, None)
-        if lock:
-            lock.release_write()
-
-        if self.prefix_failure_marked(spec):
-            try:
-                path = self._failed_spec_path(spec)
-                tty.debug("Removing failure marking for {0}".format(spec.name))
-                os.remove(path)
-            except OSError as err:
-                tty.warn(
-                    "Unable to remove failure marking for {0} ({1}): {2}".format(
-                        spec.name, path, str(err)
-                    )
-                )
-
-    def mark_failed(self, spec: "spack.spec.Spec") -> lk.Lock:
-        """
-        Mark a spec as failing to install.
-
-        Prefix failure marking takes the form of a byte range lock on the nth
-        byte of a file for coordinating between concurrent parallel build
-        processes and a persistent file, named with the full hash and
-        containing the spec, in a subdirectory of the database to enable
-        persistence across overlapping but separate related build processes.
-
-        The failure lock file, ``spack.store.STORE.db.prefix_failures``, lives
-        alongside the install DB. ``n`` is the sys.maxsize-bit prefix of the
-        associated DAG hash to make the likelihood of collision very low with
-        no cleanup required.
-        """
-        # Dump the spec to the failure file for (manual) debugging purposes
-        path = self._failed_spec_path(spec)
-        with open(path, "w") as f:
-            spec.to_json(f)
-
-        # Also ensure a failure lock is taken to prevent cleanup removal
-        # of failure status information during a concurrent parallel build.
-        err = "Unable to mark {0.name} as failed."
-
-        prefix = spec.prefix
-        if prefix not in self._prefix_failures:
-            mark = lk.Lock(
-                self.prefix_fail_path,
-                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
-                length=1,
-                default_timeout=self.package_lock_timeout,
-                desc=spec.name,
-            )
-
-            try:
-                mark.acquire_write()
-            except lk.LockTimeoutError:
-                # Unlikely that another process failed to install at the same
-                # time but log it anyway.
-                tty.debug(
-                    "PID {0} failed to mark install failure for {1}".format(os.getpid(), spec.name)
-                )
-                tty.warn(err.format(spec))
-
-            # Whether we or another process marked it as a failure, track it
-            # as such locally.
-            self._prefix_failures[prefix] = mark
-
-        return self._prefix_failures[prefix]
-
-    def prefix_failed(self, spec: "spack.spec.Spec") -> bool:
-        """Return True if the prefix (installation) is marked as failed."""
-        # The failure was detected in this process.
-        if spec.prefix in self._prefix_failures:
-            return True
-
-        # The failure was detected by a concurrent process (e.g., an srun),
-        # which is expected to be holding a write lock if that is the case.
-        if self.prefix_failure_locked(spec):
-            return True
-
-        # Determine if the spec may have been marked as failed by a separate
-        # spack build process running concurrently.
-        return self.prefix_failure_marked(spec)
-
-    def prefix_failure_locked(self, spec: "spack.spec.Spec") -> bool:
-        """Return True if a process has a failure lock on the spec."""
-        check = lk.Lock(
-            self.prefix_fail_path,
-            start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
-            length=1,
-            default_timeout=self.package_lock_timeout,
-            desc=spec.name,
-        )
-
-        return check.is_write_locked()
-
-    def prefix_failure_marked(self, spec: "spack.spec.Spec") -> bool:
-        """Determine if the spec has a persistent failure marking."""
-        return os.path.exists(self._failed_spec_path(spec))
-
-    def prefix_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
-        """Get a lock on a particular spec's installation directory.
-
-        NOTE: The installation directory **does not** need to exist.
-
-        Prefix lock is a byte range lock on the nth byte of a file.
-
-        The lock file is ``spack.store.STORE.db.prefix_lock`` -- the DB
-        tells us what to call it and it lives alongside the install DB.
-
-        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
-        likelihood of collision is very low AND it gives us
-        readers-writer lock semantics with just a single lockfile, so no
-        cleanup required.
-        """
-        timeout = timeout or self.package_lock_timeout
-        prefix = spec.prefix
-        if prefix not in self._prefix_locks:
-            self._prefix_locks[prefix] = lk.Lock(
-                self.prefix_lock_path,
-                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
-                length=1,
-                default_timeout=timeout,
-                desc=spec.name,
-            )
-        elif timeout != self._prefix_locks[prefix].default_timeout:
-            self._prefix_locks[prefix].default_timeout = timeout
-
-        return self._prefix_locks[prefix]
-
-    @contextlib.contextmanager
-    def prefix_read_lock(self, spec):
-        prefix_lock = self.prefix_lock(spec)
-        prefix_lock.acquire_read()
-
-        try:
-            yield self
-        except lk.LockError:
-            # This addresses the case where a nested lock attempt fails inside
-            # of this context manager
-            raise
-        except (Exception, KeyboardInterrupt):
-            prefix_lock.release_read()
-            raise
-        else:
-            prefix_lock.release_read()
-
-    @contextlib.contextmanager
-    def prefix_write_lock(self, spec):
-        prefix_lock = self.prefix_lock(spec)
-        prefix_lock.acquire_write()
-
-        try:
-            yield self
-        except lk.LockError:
-            # This addresses the case where a nested lock attempt fails inside
-            # of this context manager
-            raise
-        except (Exception, KeyboardInterrupt):
-            prefix_lock.release_write()
-            raise
-        else:
-            prefix_lock.release_write()
 
     def _write_to_file(self, stream):
         """Write out the database in JSON format to the stream passed

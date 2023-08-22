@@ -39,7 +39,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("py-wheel", type="build")
     depends_on("py-onnx", type=("build", "run"))
     depends_on("py-flatbuffers", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libpng")
     depends_on("py-pybind11", type="build")
     depends_on("cuda", when="+cuda")
