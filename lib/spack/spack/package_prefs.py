@@ -147,7 +147,7 @@ class PackagePrefs:
             variants = " ".join(variants)
 
         # Only return variants that are actually supported by the package
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         spec = spack.spec.Spec("%s %s" % (pkg_name, variants))
         return dict(
             (name, variant) for name, variant in spec.variants.items() if name in pkg_cls.variants
@@ -162,7 +162,7 @@ def spec_externals(spec):
     from spack.util.module_cmd import path_from_modules  # noqa: F401
 
     def _package(maybe_abstract_spec):
-        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
         return pkg_cls(maybe_abstract_spec)
 
     allpkgs = spack.config.get("packages")
@@ -199,7 +199,7 @@ def is_spec_buildable(spec):
     so_far = all_buildable  # the default "so far"
 
     def _package(s):
-        pkg_cls = spack.repo.path.get_pkg_class(s.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(s.name)
         return pkg_cls(s)
 
     # check whether any providers for this package override the default

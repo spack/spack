@@ -175,7 +175,7 @@ class Visit(CMakePackage):
     # vtk-m operations are performed.
     depends_on("vtk-m", patches=[patch("vtk-m_transport_tag_topology_field_in.patch")])
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     @when("@3:,develop")
     def patch(self):
@@ -212,7 +212,7 @@ class Visit(CMakePackage):
             self.define("VTK_MAJOR_VERSION", spec["vtk"].version[0]),
             self.define("VTK_MINOR_VERSION", spec["vtk"].version[1]),
             self.define("VISIT_VTK_DIR", spec["vtk"].prefix),
-            self.define("VISIT_ZLIB_DIR", spec["zlib"].prefix),
+            self.define("VISIT_ZLIB_DIR", spec["zlib-api"].prefix),
             self.define("VISIT_JPEG_DIR", spec["jpeg"].prefix),
             self.define("VISIT_USE_GLEW", False),
             self.define("VISIT_CONFIG_SITE", "NONE"),

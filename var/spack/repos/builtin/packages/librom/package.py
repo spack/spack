@@ -17,7 +17,7 @@ class Librom(AutotoolsPackage):
 
     depends_on("lapack")
     depends_on("mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libszip")
     depends_on("hdf5")
     depends_on("perl")
@@ -34,7 +34,7 @@ class Librom(AutotoolsPackage):
         args = [
             "--with-lapack={0}".format(spec["lapack"].prefix),
             "--with-lapack-libs={0}".format(spec["lapack"].libs.ld_flags),
-            "--with-zlib={0}".format(spec["zlib"].prefix),
+            "--with-zlib={0}".format(spec["zlib-api"].prefix),
             "--with-szlib={0}".format(spec["libszip"].prefix),
             "--with-hdf5={0}".format(spec["hdf5"].prefix),
             "--with-MPICC={0}".format(spec["mpi"].mpicc),

@@ -19,7 +19,7 @@ class Bitgroomingz(CMakePackage):
 
     variant("shared", default=True, description="build shared libs")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def cmake_args(self):
         args = []

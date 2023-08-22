@@ -665,7 +665,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self.win_rpath = fsys.WindowsSimulatedRPath(self)
 
         if self.is_extension:
-            pkg_cls = spack.repo.path.get_pkg_class(self.extendee_spec.name)
+            pkg_cls = spack.repo.PATH.get_pkg_class(self.extendee_spec.name)
             pkg_cls(self.extendee_spec)._check_extendable()
 
         super().__init__()
@@ -728,11 +728,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 continue
 
             # expand virtuals if enabled, otherwise just stop at virtuals
-            if spack.repo.path.is_virtual(name):
+            if spack.repo.PATH.is_virtual(name):
                 if virtuals is not None:
                     virtuals.add(name)
                 if expand_virtuals:
-                    providers = spack.repo.path.providers_for(name)
+                    providers = spack.repo.PATH.providers_for(name)
                     dep_names = [spec.name for spec in providers]
                 else:
                     visited.setdefault(cls.name, set()).add(name)
@@ -756,7 +756,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     continue
 
                 try:
-                    dep_cls = spack.repo.path.get_pkg_class(dep_name)
+                    dep_cls = spack.repo.PATH.get_pkg_class(dep_name)
                 except spack.repo.UnknownPackageError:
                     # log unknown packages
                     missing.setdefault(cls.name, set()).add(dep_name)
@@ -2209,7 +2209,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pkg = None
 
         # Pre-uninstall hook runs first.
-        with spack.store.STORE.db.prefix_write_lock(spec):
+        with spack.store.STORE.prefix_locker.write_lock(spec):
             if pkg is not None:
                 try:
                     spack.hooks.pre_uninstall(spec)
@@ -2459,8 +2459,8 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
         if not isinstance(pos, spack.spec.Spec):
             pos = spack.spec.Spec(pos)
 
-        if spack.repo.path.is_virtual(pos.name):
-            packages.extend(p.package_class for p in spack.repo.path.providers_for(pos.name))
+        if spack.repo.PATH.is_virtual(pos.name):
+            packages.extend(p.package_class for p in spack.repo.PATH.providers_for(pos.name))
             continue
         else:
             packages.append(pos.package_class)

@@ -60,7 +60,7 @@ class Ccache(CMakePackage):
 
     depends_on("gperf", when="@:3")
     depends_on("libxslt", when="@:3")
-    depends_on("zlib", when="@:3")
+    depends_on("zlib-api", when="@:3")
 
     depends_on("zstd", when="@4.0:")
 

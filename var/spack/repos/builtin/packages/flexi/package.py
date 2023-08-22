@@ -97,7 +97,7 @@ class Flexi(CMakePackage):
     depends_on("hdf5+fortran+mpi", when="+mpi")
     depends_on("hdf5+fortran~mpi", when="~mpi")
     depends_on("lapack")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("fftw", when="+channel_fft")
 
     def flag_handler(self, name, flags):

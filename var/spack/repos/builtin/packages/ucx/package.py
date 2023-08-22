@@ -87,6 +87,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant("rocm", default=False, description="Enable ROCm support")
     variant(
         "simd",
+        description="SIMD features",
         values=disjoint_sets(("auto",), simd_values)
         .with_default("auto")
         .with_non_feature_values("auto"),
