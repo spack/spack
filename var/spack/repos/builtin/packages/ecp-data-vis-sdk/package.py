@@ -141,7 +141,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on("parallel-netcdf+shared", when="+pnetcdf", propagate=["fortran"])
 
     dav_sdk_depends_on("unifyfs", when="+unifyfs ")
-    conflicts("unifyfs@develop")
+    conflicts("^unifyfs@develop")
 
     dav_sdk_depends_on("veloc", when="+veloc")
 
@@ -161,10 +161,10 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     # Need to explicitly turn off conduit hdf5_compat in order to build
     # hdf5@1.12 which is required for SDK
-    depends_on("ascent ^conduit ~hdf5_compat", when="+ascent +hdf5")
+    depends_on("conduit ~hdf5_compat", when="+ascent +hdf5")
     # Disable configuring with @develop. This should be removed after ascent
     # releases 0.8 and ascent can build with conduit@0.8: and vtk-m@1.7:
-    conflicts("ascent@develop", when="+ascent")
+    conflicts("^ascent@develop", when="+ascent")
 
     depends_on("py-cinemasci", when="+cinema")
 
@@ -177,7 +177,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         propagate=["adios2", "cuda", "hdf5", "rocm"] + amdgpu_target_variants + cuda_arch_variants,
     )
     dav_sdk_depends_on("libcatalyst@2:+mpi", when="+paraview")
-    conflicts("paraview@master", when="+paraview")
+    conflicts("^paraview@master", when="+paraview")
 
     dav_sdk_depends_on("visit+mpi+python+silo", when="+visit", propagate=["hdf5", "adios2"])
 

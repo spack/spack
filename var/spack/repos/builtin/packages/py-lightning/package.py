@@ -16,6 +16,7 @@ class PyLightning(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("2.0.7", sha256="f05acd4ba846505d40125b4f9f0bda0804b2b0356e2ad2fd4e4bf7d1c61c8cc6")
     version("2.0.6", sha256="bff959f65eed2f626dd65e7b2cfd0d3ddcd0c4ca19ffc8f5f49a4ba4494ca528")
     version("2.0.5", sha256="77df233129b29c11df7b5e071e24e29420d5efbdbbac9cb6fb4602b7b5afce8a")
     version("2.0.4", sha256="f5f5ed75a657caa8931051590ed000d46bf1b8311ae89bb17a961c3f299dbf33")
@@ -55,7 +56,8 @@ class PyLightning(PythonPackage):
     depends_on("py-numpy@1.17.2:2", type=("build", "run"))
     depends_on("py-packaging@17.1:24", type=("build", "run"))
     depends_on("py-psutil@:6", type=("build", "run"))
-    depends_on("py-pydantic@1.7.4:2.0", when="@2.0.6:", type=("build", "run"))
+    depends_on("py-pydantic@1.7.4:2.1", when="@2.0.7:", type=("build", "run"))
+    depends_on("py-pydantic@1.7.4:2.0", when="@2.0.6", type=("build", "run"))
     depends_on("py-pydantic@1.7.4:1", when="@2.0.5", type=("build", "run"))
     depends_on("py-pydantic@1.7.4:3", when="@2.0.3:2.0.4", type=("build", "run"))
     depends_on("py-pydantic@:2", when="@:2.0.2", type=("build", "run"))

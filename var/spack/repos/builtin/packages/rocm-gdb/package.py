@@ -105,7 +105,7 @@ class RocmGdb(AutotoolsPackage):
     depends_on("libunwind", type="build")
     depends_on("expat", type=("build", "link"))
     depends_on("python", type=("build", "link"))
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("babeltrace@1.2.4", type="link")
     depends_on("gmp", type=("build", "link"), when="@4.5.0:")
 

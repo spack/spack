@@ -349,7 +349,7 @@ def print_virtuals(pkg):
 
 def info(parser, args):
     spec = spack.spec.Spec(args.package)
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
 
     # Output core package information

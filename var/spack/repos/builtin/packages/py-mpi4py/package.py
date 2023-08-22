@@ -28,20 +28,15 @@ class PyMpi4py(PythonPackage):
     version("2.0.0", sha256="6543a05851a7aa1e6d165e673d422ba24e45c41e4221f0993fe1e5924a00cb81")
     version("1.3.1", sha256="e7bd2044aaac5a6ea87a87b2ecc73b310bb6efe5026031e33067ea3c2efc3507")
 
-    depends_on("python@2.6:2.7,3.2:")
-    depends_on("python@2.7:2.8,3.5:", when="@3.1:")
     depends_on("py-setuptools@40.9:", type="build")
-    # in newer pip versions --install-option does not exist
-    depends_on("py-pip@:23.0", type="build")
     depends_on("mpi")
     depends_on("py-cython@0.27.0:", type="build")
 
     # https://github.com/mpi4py/mpi4py/pull/311
     conflicts("^py-cython@3:")
 
-    @when("@3.1:")
-    def install_options(self, spec, prefix):
-        return ["--mpicc=%s -shared" % spec["mpi"].mpicc]
+    def setup_build_environment(self, env):
+        env.set("MPICC", f"{self.spec['mpi'].mpicc} -shared")
 
     @run_before("install")
     def cythonize(self):

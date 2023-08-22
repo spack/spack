@@ -70,6 +70,11 @@ class Wrf(Package):
     tags = ["windows"]
 
     version(
+        "4.5.1",
+        sha256="9d557c34c105db4d41e727843ecb19199233c7cf82c5369b34a2ce8efe65e2d1",
+        url="https://github.com/wrf-model/WRF/releases/download/v4.5.1/v4.5.1.tar.gz",
+    )
+    version(
         "4.5.0",
         sha256="14fd78abd4e32c1d99e2e97df0370030a5c58ec84c343591bdc5e74f163c5525",
         url="https://github.com/wrf-model/WRF/releases/download/v4.5/v4.5.tar.gz",
@@ -96,15 +101,22 @@ class Wrf(Package):
         url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
     )
 
-    variant("build_type", default="dmpar", values=("serial", "smpar", "dmpar", "dm+sm"))
+    variant(
+        "build_type",
+        default="dmpar",
+        description="Build type",
+        values=("serial", "smpar", "dmpar", "dm+sm"),
+    )
     variant(
         "nesting",
         default="basic",
+        description="Nesting",
         values=("no_nesting", "basic", "preset_moves", "vortex_following"),
     )
     variant(
         "compile_type",
         default="em_real",
+        description="Compile type",
         values=(
             "em_real",
             "em_quarter_ss",
@@ -217,7 +229,7 @@ class Wrf(Package):
     depends_on("netcdf-fortran")
     depends_on("jasper")
     depends_on("libpng")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("perl")
     depends_on("jemalloc", when="%aocc")
     # not sure if +fortran is required, but seems like a good idea

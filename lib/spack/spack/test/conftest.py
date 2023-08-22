@@ -480,10 +480,10 @@ class MockCacheFetcher:
 
 @pytest.fixture(autouse=True)
 def mock_fetch_cache(monkeypatch):
-    """Substitutes spack.paths.fetch_cache with a mock object that does nothing
+    """Substitutes spack.paths.FETCH_CACHE with a mock object that does nothing
     and raises on fetch.
     """
-    monkeypatch.setattr(spack.caches, "fetch_cache", MockCache())
+    monkeypatch.setattr(spack.caches, "FETCH_CACHE", MockCache())
 
 
 @pytest.fixture()
@@ -716,7 +716,7 @@ def configuration_dir(tmpdir_factory, linux_os):
 
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
-    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.config_defaults)]
+    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)]
     scopes += [
         spack.config.ConfigScope(name, str(configuration_dir.join(name)))
         for name in ["site", "system", "user"]
@@ -773,7 +773,7 @@ def concretize_scope(mutable_config, tmpdir):
     yield str(tmpdir.join("concretize"))
 
     mutable_config.pop_scope()
-    spack.repo.path._provider_index = None
+    spack.repo.PATH._provider_index = None
 
 
 @pytest.fixture
@@ -950,21 +950,14 @@ def disable_compiler_execution(monkeypatch, request):
 
 
 @pytest.fixture(scope="function")
-def install_mockery(temporary_store, mutable_config, mock_packages):
+def install_mockery(temporary_store: spack.store.Store, mutable_config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override("config:checksum", False):
         yield
 
-    # Also wipe out any cached prefix failure locks (associated with
-    # the session-scoped mock archive).
-    for pkg_id in list(temporary_store.db._prefix_failures.keys()):
-        lock = spack.store.STORE.db._prefix_failures.pop(pkg_id, None)
-        if lock:
-            try:
-                lock.release_write()
-            except Exception:
-                pass
+    # Wipe out any cached prefix failure locks (associated with the session-scoped mock archive)
+    temporary_store.failure_tracker.clear_all()
 
 
 @pytest.fixture(scope="function")
@@ -1942,7 +1935,25 @@ def shell_as(shell):
 @pytest.fixture()
 def nullify_globals(request, monkeypatch):
     ensure_configuration_fixture_run_before(request)
-    monkeypatch.setattr(spack.config, "config", None)
-    monkeypatch.setattr(spack.caches, "misc_cache", None)
-    monkeypatch.setattr(spack.repo, "path", None)
+    monkeypatch.setattr(spack.config, "CONFIG", None)
+    monkeypatch.setattr(spack.caches, "MISC_CACHE", None)
+    monkeypatch.setattr(spack.caches, "FETCH_CACHE", None)
+    monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)
+
+
+def pytest_runtest_setup(item):
+    # Skip tests if they are marked only clingo and are run with the original concretizer
+    only_clingo_marker = item.get_closest_marker(name="only_clingo")
+    if only_clingo_marker and os.environ.get("SPACK_TEST_SOLVER") == "original":
+        pytest.skip(*only_clingo_marker.args)
+
+    # Skip tests if they are marked only original and are run with clingo
+    only_original_marker = item.get_closest_marker(name="only_original")
+    if only_original_marker and os.environ.get("SPACK_TEST_SOLVER", "clingo") == "clingo":
+        pytest.skip(*only_original_marker.args)
+
+    # Skip test marked "not_on_windows" if they're run on Windows
+    not_on_windows_marker = item.get_closest_marker(name="not_on_windows")
+    if not_on_windows_marker and sys.platform == "win32":
+        pytest.skip(*not_on_windows_marker.args)
