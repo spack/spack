@@ -261,6 +261,12 @@ class PyMatplotlib(PythonPackage):
     def archive_files(self):
         return [os.path.join(self.build_directory, self.config_file)]
 
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=register")
+        return (flags, None, None)
+
     def setup_build_environment(self, env):
         include = []
         library = []
