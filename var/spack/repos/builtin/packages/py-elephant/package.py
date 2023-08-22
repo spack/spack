@@ -39,12 +39,10 @@ class PyElephant(PythonPackage):
 
     depends_on("python@3.8:", type=("build", "run"), when="@0.12.0:")
 
-    depends_on("py-neo@0.10.0:", type=("build", "run"), when="@master")
     depends_on("py-neo@0.10.0:", type=("build", "run"), when="@0.11.0:")
     depends_on("py-neo@0.9.0", type=("build", "run"), when="@0.9.0:0.10.0")
     depends_on("py-neo@0.8.0", type=("build", "run"), when="@0.6.4:0.8.0")
     depends_on("py-neo@0.3.4:", type=("build", "run"), when="@0.3.0:0.4.1")
-    depends_on("py-numpy@1.18.1:", type=("build", "run"), when="@master")
     depends_on("py-numpy@1.18.1:", type=("build", "run"), when="@0.12.0:")
     depends_on("py-numpy@1.18.1:1.23.5", type=("build", "run"), when="@0.6.4:0.11.2")
     depends_on("py-numpy@1.8.2:", type=("build", "run"), when="@0.3.0:0.4.1")
@@ -52,12 +50,9 @@ class PyElephant(PythonPackage):
     depends_on("py-quantities@0.14.1:", type=("build", "run"), when="@0.12.0:")
     depends_on("py-quantities@0.12.1:0.13.0", type=("build", "run"), when="@0.6.4:0.11.2")
     depends_on("py-quantities@0.10.1:0.13.0", type=("build", "run"), when="@0.3.0:0.4.1")
-    depends_on("py-scipy@1.5.4:", type=("build", "run"), when="@master")
     depends_on("py-scipy@1.5.4:", type=("build", "run"), when="@0.6.4:")
     depends_on("py-scipy@0.14.0:", type=("build", "run"), when="@0.3.0:0.4.1")
-    depends_on("py-six@1.10.0:", type=("build", "run"), when="@master")
     depends_on("py-six@1.10.0:", type=("build", "run"), when="@0.6.4:")
-    depends_on("py-tqdm", type=("build", "run"), when="@master")
     depends_on("py-tqdm", type=("build", "run"), when="@0.6.4:")
 
     depends_on("py-pandas@0.14.1:", type=("build", "run"), when="+extras")
