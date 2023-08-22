@@ -5147,8 +5147,8 @@ embedded test parts.
            for example in ["ex1", "ex2"]:
                with test_part(
                    self,
-                   "test_example_{0}".format(example),
-                   purpose="run installed {0}".format(example),
+                   f"test_example_{example}",
+                   purpose=f"run installed {example}",
                 ):
                     exe = which(join_path(self.prefix.bin, example))
                     exe()
@@ -5226,11 +5226,10 @@ Below illustrates using this feature to compile an example.
            ...
            cxx = which(os.environ["CXX"])
            cxx(
-               "-L{0}".format(self.prefix.lib),
-               "-I{0}".format(self.prefix.include),
-               "{0}.cpp".format(exe),
-               "-o",
-               exe
+               f"-L{self.prefix.lib}",
+               f"-I{self.prefix.include}",
+               f"{exe}.cpp",
+               "-o", exe
            )
            cxx_example = which(exe)
            cxx_example()
@@ -5301,11 +5300,10 @@ and using ``foo.c`` in a test method is illustrated below.
            with working_dir(src_dir):
                cc = which(os.environ["CC"])
                cc(
-                   "-L{0}".format(self.prefix.lib),
-                   "-I{0}".format(self.prefix.include),
-                   "{0}.c".format(exe),
-                   "-o",
-                   exe
+                   f"-L{self.prefix.lib}",
+                   f"-I{self.prefix.include}",
+                   f"{exe}.c",
+                   "-o", exe
                )
                foo = which(exe)
                foo()
@@ -5399,7 +5397,7 @@ property as shown below.
            """build and run custom-example"""
            data_dir = self.test_suite.current_test_data_dir
            exe = "custom-example"
-           src = datadir.join("{0}.cpp".format(exe))
+           src = datadir.join(f"{exe}.cpp")
            ...
            # TODO: Build custom-example using src and exe
            ...
@@ -5449,7 +5447,7 @@ added to the package's ``test`` subdirectory.
                db_filename, ".dump", output=str.split, error=str.split
            )
            for exp in expected:
-               assert re.search(exp, out), "Expected '{0}' in output".format(exp)
+               assert re.search(exp, out), f"Expected '{exp}' in output"
 
 If the file was instead copied from the ``tests`` subdirectory of the staged
 source code, the path would be obtained as shown below.
@@ -5499,9 +5497,12 @@ Invoking the method is the equivalent of:
 
 .. code-block:: python
 
+   errors = []
    for check in expected:
        if not re.search(check, actual):
-           raise RuntimeError("Expected '{0}' in output '{1}'".format(check, actual))
+           errors.append(f"Expected '{check}' in output '{actual}'")
+   if errors:
+       raise RuntimeError("\n ".join(errors))
 
 
 .. _accessing-files:
@@ -6076,7 +6077,7 @@ in the extra attributes can implement this method like this:
    @classmethod
    def validate_detected_spec(cls, spec, extra_attributes):
        """Check that "compilers" is in the extra attributes."""
-       msg = ("the extra attribute "compilers" must be set for "
+       msg = ("the extra attribute 'compilers' must be set for "
               "the detected spec '{0}'".format(spec))
        assert "compilers" in extra_attributes, msg
 
