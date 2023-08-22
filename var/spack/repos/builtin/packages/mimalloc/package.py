@@ -115,4 +115,9 @@ class Mimalloc(CMakePackage):
             for lib in self.libs_values
         ]
         args += [self.define_from_variant("MI_%s" % k.upper(), k) for k in self.mimalloc_options]
+
+        # Use LTO also for non-Intel compilers please. This can be removed when they
+        # bump cmake_minimum_required to VERSION 3.9.
+        if "+ipo" in self.spec:
+            args.append("-DCMAKE_POLICY_DEFAULT_CMP0069=NEW")
         return args
