@@ -277,8 +277,9 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("perl-data-dumper", type=("build"))
     depends_on("hwloc")
     depends_on("hwloc@2.0.1:", when="@13")
-    depends_on("elf", when="+cuda")
-    depends_on("elf", when="+libomptarget")
+    with when("@:15"):
+        depends_on("elf", when="+cuda")
+        depends_on("elf", when="+libomptarget")
     depends_on("libffi", when="+libomptarget")
 
     # llvm-config --system-libs libraries.
@@ -778,13 +779,7 @@ class Llvm(CMakePackage, CudaPackage):
                 ]
             )
             if "openmp=runtime" in spec:
-                cmake_args.extend(
-                    [
-                        define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
-                        # work around bad libelf detection in libomptarget
-                        define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR", spec["elf"].prefix.include),
-                    ]
-                )
+                cmake_args.append(define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True))
         else:
             # still build libomptarget but disable cuda
             cmake_args.extend(
@@ -925,7 +920,6 @@ class Llvm(CMakePackage, CudaPackage):
                 cmake_args.extend(
                     [
                         define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
-                        define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR", spec["elf"].prefix.include),
                         self.stage.source_path + "/openmp",
                     ]
                 )
