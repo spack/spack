@@ -4307,6 +4307,19 @@ class Spec:
         ``\{`` and ``\}`` for literal braces, and ``\\`` for the
         literal ``\`` character.
 
+        The ``?`` sigil may be used to conditionally add a
+        value. Conditional format values are used if constructing the
+        value would not throw any error, and are ignored if it would
+        throw an error. For example, ``{?^mpi.name}`` will print
+        ``Spec["mpi"].name`` if such a node exists, and otherwise
+        prints nothing.
+
+        The ``?`` sigil may also be combined with a conditional
+        separator. This separator is prepended if anything is printed
+        for the conditional attribute. The syntax for this is
+        ``?sep?attribute``,
+        e.g. ``{name}-{version}{?/?^mpi.name}{?-?^mpi.version}``.
+
         Args:
             format_string (str): string containing the format to be expanded
 
@@ -4329,6 +4342,15 @@ class Spec:
 
         def write_attribute(spec, attribute, color):
             attribute = attribute.lower()
+
+            conditional = False
+            conditional_sep = ""
+            matches_conditional_sep = re.match(r"^\?(.*)\?", attribute)
+            if matches_conditional_sep:
+                conditional = True
+                conditional_sep = matches_conditional_sep.group(1)
+            if attribute.startswith("?"):
+                conditional = True
 
             sig = ""
             if attribute.startswith(("@", "%", "/")):
@@ -4361,6 +4383,9 @@ class Spec:
             elif sig == " arch=" and attribute not in ("architecture", "arch"):
                 raise SpecFormatSigilError(sig, "the architecture", attribute)
 
+            # Now that we're done testing sig, combine it with conditional sep
+            sig = conditional_sep + sig
+
             # find the morph function for our attribute
             morph = transform.get(attribute, lambda s, x: x)
 
@@ -4390,7 +4415,12 @@ class Spec:
                 else:
                     if isinstance(current, vt.VariantMap):
                         # subscript instead of getattr for variant names
-                        current = current[part]
+                        try:
+                            current = current[part]
+                        except KeyError:
+                            if conditional:
+                                return
+                            raise
                     else:
                         # aliases
                         if part == "arch":
@@ -4406,6 +4436,8 @@ class Spec:
                         try:
                             current = getattr(current, part)
                         except AttributeError:
+                            if conditional:
+                                return
                             parent = ".".join(parts[:idx])
                             m = "Attempted to format attribute %s." % attribute
                             m += "Spec %s has no attribute %s" % (parent, part)
