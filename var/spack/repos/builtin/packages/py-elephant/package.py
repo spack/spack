@@ -38,7 +38,6 @@ class PyElephant(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("python@3.8:", type=("build", "run"), when="@0.12.0:")
-    depends_on("python@3.7:", type=("build", "run"), when="@0.11.0:0.11.2")
 
     depends_on("py-neo@0.10.0:", type=("build", "run"), when="@master")
     depends_on("py-neo@0.10.0:", type=("build", "run"), when="@0.11.0:")
