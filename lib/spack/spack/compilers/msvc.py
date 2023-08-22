@@ -41,7 +41,6 @@ class CmdCall:
         self._cmds = cmds
 
     def __call__(self):
-        import pdb; pdb.set_trace()
         out = subprocess.check_output(self.cmd_line, stderr=subprocess.STDOUT)  # novermin
         return out.decode("utf-16le", errors="replace")  # novermin
 
