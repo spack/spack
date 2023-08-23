@@ -3631,7 +3631,7 @@ will likely contain some overriding of default builder methods:
    class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
        def cmake_args(self):
            return [
-             self.define_from_variant("MY_FEATURE", "my_feature")
+               self.define_from_variant("MY_FEATURE", "my_feature")
            ]
 
    class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
