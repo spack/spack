@@ -46,7 +46,6 @@ class Amdblis(BlisBase):
     variant("aocl_gemm", default=False, when="@4.1:", description="aocl_gemm support")
     variant("suphandling", default=True, description="Small Unpacked Kernel handling")
 
-
     def configure_args(self):
         spec = self.spec
         args = super().configure_args()
