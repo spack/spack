@@ -14,4 +14,5 @@ class PyFfmpegPython(PythonPackage):
 
     version("0.2.0", sha256="65225db34627c578ef0e11c8b1eb528bb35e024752f6f10b78c011f6f64c4127")
 
+    depends_on("py-setuptools", type="run")
     depends_on("ffmpeg", type="run")
