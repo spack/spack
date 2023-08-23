@@ -278,6 +278,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("hwloc")
     depends_on("hwloc@2.0.1:", when="@13")
     depends_on("elf", when="+cuda")  # libomptarget
+    depends_on("elf", when="openmp=runtime")
     depends_on("libffi", when="+libomptarget")  # libomptarget
 
     # llvm-config --system-libs libraries.
