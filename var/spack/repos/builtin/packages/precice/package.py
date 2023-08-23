@@ -47,17 +47,36 @@ class Precice(CMakePackage):
     variant("python", default=False, description="Enable Python support", when="@2:")
     variant("shared", default=True, description="Build shared libraries")
     variant(
-        "release_with_debug_log",
+        "debug_log",
         default=False,
-        description="Release build with debug log",
+        description="Enable debug log in non-debug builds",
         when="@2.4:",
     )
     variant(
-        "release_with_assertions",
-        default=False,
-        description="Release build with assertions",
-        when="@2.4:",
+        "debug_log",
+        default=True,
+        description="Enable debug log in non-debug builds",
+        when="@2.4: build_type=Debug",
     )
+    conflicts(
+        "~debug_log",
+        when="@2.4: build_type=Debug",
+        msg="Disabling debug log isn't possible in debug builds.",
+    ),
+    variant(
+        "checked", default=False, description="Enable assertions in non-debug builds", when="@2.4:"
+    )
+    variant(
+        "checked",
+        default=True,
+        description="Enable assertions in non-debug builds",
+        when="@2.4: build_type=Debug",
+    )
+    conflicts(
+        "~checked",
+        when="@2.4: build_type=Debug",
+        msg="Disabling assertions isn't possible in debug builds.",
+    ),
 
     depends_on("cmake@3.5:", type="build")
     depends_on("cmake@3.10.2:", type="build", when="@1.4:")
@@ -137,12 +156,8 @@ class Precice(CMakePackage):
         if spec.satisfies("@2.4:"):
             cmake_args.extend(
                 [
-                    self.define_from_variant(
-                        "PRECICE_RELEASE_WITH_DEBUG_LOG", "release_with_debug_log"
-                    ),
-                    self.define_from_variant(
-                        "PRECICE_RELEASE_WITH_ASSERTIONS", "release_with_assertions"
-                    ),
+                    self.define_from_variant("PRECICE_RELEASE_WITH_DEBUG_LOG", "debug_log"),
+                    self.define_from_variant("PRECICE_RELEASE_WITH_ASSERTIONS", "checked"),
                 ]
             )
 
