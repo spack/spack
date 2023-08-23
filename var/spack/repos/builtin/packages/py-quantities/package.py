@@ -27,7 +27,7 @@ class PyQuantities(PythonPackage):
     # py-setuptools@:61 doesn't support PEP 621
     depends_on("py-setuptools@61:", type="build", when="@0.14:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm+toml", type="build")
+    depends_on("py-setuptools-scm+toml", type="build", when="@0.14:")
 
     depends_on("py-numpy@1.19:", type=("build", "run"), when="@0.14:")
     depends_on("py-numpy@1.16:", type=("build", "run"), when="@0.13")
