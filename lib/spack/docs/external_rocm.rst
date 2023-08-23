@@ -8,8 +8,8 @@ Using an External ROCm Installation
 ===================================
 
 Spack breaks down ROCm into many separate component packages. The following
-is an example packages.yaml that organizes a consistent set of ROCm
-components:
+is an example ``packages.yaml`` that organizes a consistent set of ROCm
+components for use by dependent packages:
 
 .. code-block:: yaml
 
@@ -70,9 +70,15 @@ This is in combination with the following compiler definition:
          cxx: /opt/rocm-5.3.0/bin/amdclang++
          f77: null
          fc: /opt/rocm-5.3.0/bin/amdflang
-       flags: {}
        operating_system: rhel8
        target: x86_64
-       modules: []
-       environment: {}
-       extra_rpaths: []
+
+This includes the following considerations:
+
+- Each of the listed externals specifies ``buildable: false`` to force Spack
+  to use only the externals we defined.
+- ``spack external find`` can automatically locate some of the ``hip``/``rocm``
+  packages, but not all of them, and furthermore not in a manner that
+  guarantees a complementary set if multiple ROCm installations are available.
+- The ``prefix`` is the same for several components, but note that others
+  require listing one of the subdirectories as a prefix.
