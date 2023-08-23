@@ -88,6 +88,7 @@ class Libunwind(AutotoolsPackage):
     depends_on("zlib", type="link", when="+zlib")
 
     conflicts("platform=darwin", msg="Non-GNU libunwind needs ELF libraries Darwin does not have")
+    conflicts("%gcc@:4.9", when="@1.6:", msg="libunwind >=1.6 requires stdatomic.h")
 
     provides("unwind")
 
