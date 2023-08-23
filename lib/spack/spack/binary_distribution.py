@@ -892,7 +892,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
             if spec_url.endswith(".json"):
                 return Spec.from_json(spec_file_contents)
 
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+    tp = multiprocessing.pool.Pool(processes=concurrency)
     try:
         fetched_specs = tp.map(
             llnl.util.lang.star(_fetch_spec_from_mirror), [(f,) for f in file_list]
