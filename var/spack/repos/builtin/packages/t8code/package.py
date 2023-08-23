@@ -42,35 +42,34 @@ class T8code(AutotoolsPackage):
 
     def configure_args(self):
         args = ["CFLAGS=-O3", "CXXFLAGS=-O3"]
+        spec = self.spec
 
-        if "+mpi" in self.spec:
+        if "+mpi" in spec:
             args.append("--enable-mpi")
             args.append("CC=mpicc")
             args.append("CXX=mpicxx")
         else:
             args.append("--disable-mpi")
 
-        if "+vtk" in self.spec:
+        if "+vtk" in spec:
             args.append("--with-vtk")
-            vtk_ver = self.spec["vtk"].version.up_to(2)
-            include_dir = os.path.join(
-                self.spec["vtk"].headers.directories[0], "vtk-{0}".format(vtk_ver)
-            )
-            lib_dir = self.spec["vtk"].prefix.lib
+            vtk_ver = spec["vtk"].version.up_to(2)
+            include_dir = os.path.join(spec["vtk"].headers.directories[0], f"vtk-{vtk_ver}")
+            lib_dir = spec["vtk"].prefix.lib
 
             # vtk paths need to be passed to configure command
-            args.append("CPPFLAGS=-I{0}".format(include_dir))
-            args.append("LDFLAGS=-L{0}".format(lib_dir))
+            args.append(f"CPPFLAGS=-I{include_dir}")
+            args.append(f"LDFLAGS=-L{lib_dir}")
             # Chosen vtk version number is needed for t8code to find the right version
-            args.append("--with-vtk_version_number={0}".format(vtk_ver))
+            args.append(f"--with-vtk_version_number={vtk_ver}")
 
-        if "+petsc" in self.spec:
-            args.append("--with-petsc={0}".format(self.spec["petsc"].prefix))
+        if "+petsc" in spec:
+            args.append(f"--with-petsc={spec['petsc'].prefix}")
 
-        if "+netcdf" in self.spec:
+        if "+netcdf" in spec:
             args.append("--with-netcdf")
 
-        if "+metis" in self.spec:
-            args.append("--with-metis={0}".format(self.spec["metis"].prefix))
+        if "+metis" in spec:
+            args.append(f"--with-metis={spec['metis'].prefix}")
 
         return args
