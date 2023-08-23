@@ -96,7 +96,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hdf5+hl+mpi", when="+hdf5")
     depends_on("metis@5.1.0:")
     depends_on("parmetis@4.0.3:")
-    depends_on("boost@1.70.0: cxxstd=17 +program_options")
+    depends_on("boost@1.70.0: cxxstd=17 +program_options +stacktrace")
     depends_on("legion network=gasnet", when="backend=legion")
 
     # FleCSI@1.x
@@ -123,18 +123,17 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     # FleCSI@2.x
     depends_on("cmake@3.15:", when="@2.0:")
     depends_on("cmake@3.19:", when="@2.2:")
-    depends_on("boost +atomic +filesystem +regex +system", when="@2.0:")
-    depends_on(
-        "boost@1.79.0: cxxstd=17 +program_options +atomic +filesystem +regex +system", when="@2.2:"
-    )
+    depends_on("boost +atomic +filesystem +regex +system", when="@2.0:2.2.1")
+    depends_on("boost@1.79.0:", when="@2.2:")
     depends_on("kokkos@3.2.00:", when="+kokkos @2.0:")
     depends_on("kokkos +cuda +cuda_constexpr +cuda_lambda", when="+kokkos +cuda @2.0:")
     depends_on("kokkos +rocm", when="+kokkos +rocm @2.0:")
     depends_on("legion@cr", when="backend=legion @2.0:")
     depends_on("legion+shared", when="backend=legion +shared @2.0:")
     depends_on("legion+hdf5", when="backend=legion +hdf5 @2.0:")
-    depends_on("legion +kokkos +cuda", when="backend=legion +kokkos +cuda @2.0:")
-    depends_on("legion +kokkos +rocm", when="backend=legion +kokkos +rocm @2.0:")
+    depends_on("legion+kokkos", when="backend=legion +kokkos @2.0:")
+    depends_on("legion+cuda", when="backend=legion +cuda @2.0:")
+    depends_on("legion+rocm", when="backend=legion +rocm @2.0:")
     depends_on("hdf5@1.10.7:", when="backend=legion +hdf5 @2.0:")
     depends_on("hpx@1.8.1: cxxstd=17 malloc=system", when="backend=hpx @2.0:")
     depends_on("mpi", when="@2.0:")
@@ -146,10 +145,10 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-sphinx-rtd-theme", when="@2.2: +doc")
     depends_on("py-recommonmark", when="@2.2: +doc")
     depends_on("doxygen", when="@2.2: +doc")
+    depends_on("graphviz", when="@2.2: +doc")
 
     # Propagate cuda_arch requirement to dependencies
-    cuda_arch_list = ("60", "70", "75", "80")
-    for _flag in cuda_arch_list:
+    for _flag in CudaPackage.cuda_arch_values:
         depends_on("kokkos cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag + " @2.0:")
         depends_on(
             "legion cuda_arch=" + _flag, when="backend=legion +cuda cuda_arch=" + _flag + " @2.0:"
@@ -163,7 +162,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
             when="backend=legion +rocm amdgpu_target=" + _flag + " @2.0:",
         )
 
-    conflicts("%gcc@:8", when="@2.1:")
+    requires("%gcc@9:", when="@2: %gcc", msg="Version 9 or newer of GNU compilers required!")
 
     conflicts("+tutorial", when="backend=hpx")
     # FleCSI@2: no longer supports serial or charmpp backends
