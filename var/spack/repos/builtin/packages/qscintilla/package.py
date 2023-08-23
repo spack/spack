@@ -92,10 +92,6 @@ class Qscintilla(QMakePackage):
     # Fix install prefix
     @run_after("qmake")
     def fix_install_path(self):
-        # qt <= 5
-        #makefile = FileFilter(join_path("Qt4Qt5", "Makefile"))
-        #makefile.filter(r"\$\(INSTALL_ROOT\)" + self.spec["qt"].prefix, "$(INSTALL_ROOT)")
-        # qt-base@6
         makefile = FileFilter(join_path(self.build_directory, "Makefile"))
         makefile.filter("$(INSTALL_ROOT)" + self.spec["qt-base"].prefix, "$(INSTALL_ROOT)", string=True, backup=True)
 
@@ -164,24 +160,21 @@ class Qscintilla(QMakePackage):
                 with working_dir(join_path(self.stage.source_path, "Python")):
                     cp = which('cp')
                     cp('pyproject-qt6.toml', 'pyproject.toml')
-                    # TODO below sip_inc_dir is incorrect:
-                    # its prefix of qscintilla itself as opposed to prefix for py-pyqt6
-                    # qscintilla+python builds fine when sip_inc_dir is hardcoded!
-                    str(self.spec)
                     sip_inc_dir = join_path(self.spec['py-pyqt6'].prefix, self.spec['python'].package.platlib, 'PyQt6', 'bindings' )
                     with open('pyproject.toml', 'a') as tomlfile:
-                        tomlfile.write('\n[tool.sip.project]\nsip-include-dirs = ["/home/sbulut/Downloads/spack/opt/spack/linux-linuxmint21-skylake/gcc-11.4.0/py-pyqt6-6.5.1-6vq3475u5e3s74qbpv3gnwashddf6pni/lib/python3.10/site-packages/PyQt6/bindings"]\n')
-                        #tomlfile.write('\n[tool.sip.project]\nsip-include-dirs = ["'+str(sip_inc_dir)+'"]\n')
+                        tomlfile.write('\n[tool.sip.project]\nsip-include-dirs = ["'+str(sip_inc_dir)+'"]\n')
                     mkdirp(os.path.join(self.prefix.share.sip, pyqtx))
 
                     sip_build = Executable(self.spec["py-sip"].prefix.bin.join("sip-build"))
                     sip_build(
-                        "--target-dir=" + self.spec.prefix,
+                        "--target-dir=" + python_platlib,
                         "--qsci-include-dir=" + self.spec.prefix.include,
                         "--qsci-library-dir=" + self.spec.prefix.lib,
                         "--api-dir=" + self.prefix.share.qsci,
                         "--verbose",
                     )
+                    makefile = FileFilter(join_path("build","Makefile"))
+                    makefile.filter("$(INSTALL_ROOT)", "", string=True)
                     make("install","-C","build/")
 
             else: #pyqt4 or 5
