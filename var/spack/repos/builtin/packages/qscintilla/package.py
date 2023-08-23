@@ -168,7 +168,7 @@ class Qscintilla(QMakePackage):
                     # its prefix of qscintilla itself as opposed to prefix for py-pyqt6
                     # qscintilla+python builds fine when sip_inc_dir is hardcoded!
                     str(self.spec)
-                    sip_inc_dir = join_path(self.spec['py-pyqt6'].prefix, python_platlib, 'PyQt6', 'bindings' )
+                    sip_inc_dir = join_path(self.spec['py-pyqt6'].prefix, self.spec['python'].package.platlib, 'PyQt6', 'bindings' )
                     with open('pyproject.toml', 'a') as tomlfile:
                         tomlfile.write('\n[tool.sip.project]\nsip-include-dirs = ["/home/sbulut/Downloads/spack/opt/spack/linux-linuxmint21-skylake/gcc-11.4.0/py-pyqt6-6.5.1-6vq3475u5e3s74qbpv3gnwashddf6pni/lib/python3.10/site-packages/PyQt6/bindings"]\n')
                         #tomlfile.write('\n[tool.sip.project]\nsip-include-dirs = ["'+str(sip_inc_dir)+'"]\n')
