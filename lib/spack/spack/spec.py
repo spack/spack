@@ -143,7 +143,7 @@ COLOR_FORMATS = {
 
 #: Regex used for splitting by spec field separators.
 #: These need to be escaped to avoid metacharacters in
-#: ``color_formats.keys()``.
+#: ``COLOR_FORMATS.keys()``.
 _SEPARATORS = "[\\%s]" % "\\".join(COLOR_FORMATS.keys())
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
@@ -187,7 +187,7 @@ class InstallStatus(enum.Enum):
 
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
-    color_formats."""
+    COLOR_FORMATS."""
 
     class insert_color:
         def __init__(self):
