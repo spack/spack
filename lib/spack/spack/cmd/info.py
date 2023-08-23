@@ -64,11 +64,11 @@ def section_title(s):
 
 
 def version(s):
-    return spack.spec.version_color + s + plain_format
+    return spack.spec.VERSION_COLOR + s + plain_format
 
 
 def variant(s):
-    return spack.spec.enabled_variant_color + s + plain_format
+    return spack.spec.ENABLED_VARIANT_COLOR + s + plain_format
 
 
 class VariantFormatter:

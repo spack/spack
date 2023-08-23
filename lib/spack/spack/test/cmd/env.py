@@ -8,7 +8,6 @@ import io
 import os
 import pathlib
 import shutil
-import sys
 from argparse import Namespace
 
 import pytest
@@ -41,7 +40,7 @@ from spack.version import Version
 pytestmark = [
     pytest.mark.usefixtures("mutable_mock_env_path", "config", "mutable_mock_repo"),
     pytest.mark.maybeslow,
-    pytest.mark.skipif(sys.platform == "win32", reason="Envs unsupported on Window"),
+    pytest.mark.not_on_windows("Envs unsupported on Window"),
 ]
 
 env = SpackCommand("env")

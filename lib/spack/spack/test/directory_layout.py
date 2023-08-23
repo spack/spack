@@ -8,6 +8,7 @@ This test verifies that the Spack directory layout works properly.
 """
 import os
 import os.path
+from pathlib import Path
 
 import pytest
 
@@ -29,8 +30,12 @@ def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
     # Ensure default layout matches expected spec format
     layout_default = DirectoryLayout(str(tmpdir))
     path_default = layout_default.relative_path_for_spec(spec)
-    assert path_default == spec.format(
-        "{architecture}/" "{compiler.name}-{compiler.version}/" "{name}-{version}-{hash}"
+    assert path_default == str(
+        Path(
+            spec.format(
+                "{architecture}/" "{compiler.name}-{compiler.version}/" "{name}-{version}-{hash}"
+            )
+        )
     )
 
     # Test hash_length parameter works correctly
@@ -43,7 +48,7 @@ def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
     assert len(path_default) - len(path_7) == 25
 
     # Test path_scheme
-    arch, compiler, package7 = path_7.split("/")
+    arch, compiler, package7 = path_7.split(os.sep)
     projections_package7 = {"all": "{name}-{version}-{hash:7}"}
     layout_package7 = DirectoryLayout(str(tmpdir), projections=projections_package7)
     path_package7 = layout_package7.relative_path_for_spec(spec)
@@ -61,10 +66,10 @@ def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
     layout_arch_ns = DirectoryLayout(str(tmpdir), projections=arch_ns_scheme_projections)
 
     arch_path_spec2 = layout_arch_ns.relative_path_for_spec(spec2)
-    assert arch_path_spec2 == spec2.format(arch_scheme)
+    assert arch_path_spec2 == str(Path(spec2.format(arch_scheme)))
 
     ns_path_spec = layout_arch_ns.relative_path_for_spec(spec)
-    assert ns_path_spec == spec.format(ns_scheme)
+    assert ns_path_spec == str(Path(spec.format(ns_scheme)))
 
     # Ensure conflicting parameters caught
     with pytest.raises(InvalidDirectoryLayoutParametersError):

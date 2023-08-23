@@ -212,7 +212,7 @@ def test_find_external_empty_default_manifest_dir(
     external("find")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Can't chmod on Windows")
+@pytest.mark.not_on_windows("Can't chmod on Windows")
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_find_external_manifest_with_bad_permissions(
     mutable_config,
@@ -399,7 +399,7 @@ def test_use_tags_for_detection(command_args, mock_executable, mutable_config, m
 
 
 @pytest.mark.regression("38733")
-@pytest.mark.skipif(sys.platform == "win32", reason="the test uses bash scripts")
+@pytest.mark.not_on_windows("the test uses bash scripts")
 def test_failures_in_scanning_do_not_result_in_an_error(
     mock_executable, monkeypatch, mutable_config
 ):
