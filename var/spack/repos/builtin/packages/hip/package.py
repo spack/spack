@@ -339,7 +339,7 @@ class Hip(CMakePackage):
     patch(
         "https://github.com/ROCm-Developer-Tools/HIP/commit/50ee82f6bc4aad10908ce09198c9f7ebfb2a3561.patch?full_index=1",
         sha256="c2ee21cdc55262c7c6ba65546b5ca5f65ea89730",
-        when="@5.2:5.4",
+        when="@5.2:",
     )
 
     @property
