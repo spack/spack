@@ -590,9 +590,9 @@ class YamlFilesystemView(FilesystemView):
                     print()
 
                 header = "%s{%s} / %s{%s}" % (
-                    spack.spec.architecture_color,
+                    spack.spec.ARCHITECTURE_COLOR,
                     architecture,
-                    spack.spec.compiler_color,
+                    spack.spec.COMPILER_COLOR,
                     compiler,
                 )
                 tty.hline(colorize(header), char="-")

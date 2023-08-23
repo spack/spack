@@ -2058,7 +2058,7 @@ class Environment:
         # If multiple root specs match, it is assumed that the abstract
         # spec will most-succinctly summarize the difference between them
         # (and the user can enter one of these to disambiguate)
-        fmt_str = "{hash:7}  " + spack.spec.default_format
+        fmt_str = "{hash:7}  " + spack.spec.DEFAULT_FORMAT
         color = clr.get_color_when()
         match_strings = [
             f"Root spec {abstract.format(color=color)}\n  {concrete.format(fmt_str, color=color)}"
@@ -2366,7 +2366,7 @@ def display_specs(concretized_specs):
     def _tree_to_display(spec):
         return spec.tree(
             recurse_dependencies=True,
-            format=spack.spec.display_format,
+            format=spack.spec.DISPLAY_FORMAT,
             status_fn=spack.spec.Spec.install_status,
             hashlen=7,
             hashes=True,

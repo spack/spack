@@ -342,9 +342,9 @@ def iter_groups(specs, indent, all_headers):
             print()
 
         header = "%s{%s} / %s{%s}" % (
-            spack.spec.architecture_color,
+            spack.spec.ARCHITECTURE_COLOR,
             architecture if architecture else "no arch",
-            spack.spec.compiler_color,
+            spack.spec.COMPILER_COLOR,
             f"{compiler.display_str}" if compiler else "no compiler",
         )
 

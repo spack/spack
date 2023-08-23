@@ -137,7 +137,7 @@ def solve(parser, args):
     # these are the same options as `spack spec`
     install_status_fn = spack.spec.Spec.install_status
 
-    fmt = spack.spec.display_format
+    fmt = spack.spec.DISPLAY_FORMAT
     if args.namespaces:
         fmt = "{namespace}." + fmt
 
