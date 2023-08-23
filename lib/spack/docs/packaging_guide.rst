@@ -3602,13 +3602,13 @@ In this case the package is passed as the second argument, and ``self`` is the b
 
 .. _multiple_build_systems:
 
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 Multiple build systems
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
-There are cases where a software actively supports two build systems, or changes build systems
+There are cases where a package actively supports two build systems, or changes build systems
 as it evolves, or needs different build systems on different platforms. Spack allows dealing with
-these cases natively, if a recipe is written using builders explicitly.
+these cases by splitting the build instructions into separate builder classes.
 
 For instance, software that supports two build systems unconditionally should derive from
 both ``*Package`` base classes, and declare the possible use of multiple build systems using
@@ -3616,7 +3616,9 @@ a directive:
 
 .. code-block:: python
 
-   class ArpackNg(CMakePackage, AutotoolsPackage):
+   class Example(CMakePackage, AutotoolsPackage):
+
+       variant("my_feature", default=True)
 
        build_system("cmake", "autotools", default="cmake")
 
@@ -3628,18 +3630,51 @@ will likely contain some overriding of default builder methods:
 
    class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
        def cmake_args(self):
-           pass
+           return [
+             self.define_from_variant("MY_FEATURE", "my_feature")
+           ]
 
    class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
        def configure_args(self):
-           pass
+           return self.with_or_without("my-feature", variant="my_feature")
 
-In more complex cases it might happen that the build system changes according to certain conditions,
-for instance across versions. That can be expressed with conditional variant values:
+This way, ``spack install example +feature build_sytem=cmake`` will build using
+``cmake`` and run it with the ``-DMY_FEATURE:BOOL=ON`` define. Alternatively,
+when you run ``spack install example +feature build_system=autotools``, Spack will
+run the configure script with ``./configure --without-my-feature``.
+
+Dependencies are always specified in the package class, because they are usually common to
+all build systems. Build dependencies however can depend on the choice of build system, which
+can be dealt with by using when conditions:
 
 .. code-block:: python
 
-   class ArpackNg(CMakePackage, AutotoolsPackage):
+   class Example(CMakePackage, AutotoolsPackage):
+
+       build_system("cmake", "autotools", default="cmake")
+
+       # Runtime dependencies
+       depends_on("ncurses")
+       depends_on("libxml2")
+
+       # Lowerbounds for cmake only apply when using cmake as the build system
+       with when("build_system=cmake"):
+           depends_on("cmake@3.18:", when="@2.0:", type="build")
+           depends_on("cmake@3:", type="build")
+
+       # Specify extra build dependencies used only in the configure script 
+       with when("build_system=autotools"):
+           depends_on("perl", type="build")
+           depends_on("pkgconfig", type="build")
+
+Very often projects switch from one build system to another, or add support
+for a new build system from a certain version, which means that the choice
+of the build system typically depends on a version range. Those situations can
+be handled by using conditional values in the ``build_system`` directive:
+
+.. code-block:: python
+
+   class Example(CMakePackage, AutotoolsPackage):
 
        build_system(
            conditional("cmake", when="@0.64:"),
@@ -3649,6 +3684,18 @@ for instance across versions. That can be expressed with conditional variant val
 
 In the example the directive impose a change from ``Autotools`` to ``CMake`` going
 from ``v0.63`` to ``v0.64``.
+
+The ``build_system`` can be used as an ordinary variant, which also means that it can
+be used in ``depends_on`` statements. This can be useful when a package *requires* that
+its dependency has a CMake config file, meaning that the dependent can only build when the
+dependency is built with CMake, and not Autotools. In that case, you can force the choice
+of the build system in the dependent:
+
+.. code-block:: python
+
+   class Dependent(CMakePackage):
+
+       depends_on("example build_system=cmake")
 
 ^^^^^^^^^^^^^^^^^^
 Mixin base classes
