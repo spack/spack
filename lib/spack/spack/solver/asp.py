@@ -13,7 +13,7 @@ import pprint
 import re
 import types
 import warnings
-from typing import List, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
 
 import archspec.cpu
 
@@ -971,6 +971,66 @@ class PyclingoDriver:
         return cycle_result.unsatisfiable
 
 
+class ReusableSpecsByHash(collections.abc.Mapping):
+    """Mapping to contain reusable specs keyed by DAG hash.
+
+    The mapping is ensured to be consistent, i.e. if a spec in the mapping has a dependency with
+    hash X, it is ensured to be the same object in memory as the spec keyed by X.
+    """
+
+    def __init__(self) -> None:
+        self.data: Dict[str, spack.spec.Spec] = {}
+
+    def __getitem__(self, dag_hash: str) -> spack.spec.Spec:
+        return self.data[dag_hash]
+
+    def add(self, spec: spack.spec.Spec) -> bool:
+        """Adds a new concrete spec to the mapping. Returns True if the spec was just added,
+        False if the spec was already in the mapping.
+
+        Args:
+            spec: spec to be added
+
+        Raises:
+            ValueError: if the spec is not concrete
+        """
+        if not spec.concrete:
+            msg = (
+                f"trying to store the non-concrete spec '{spec}' in a container "
+                f"that only accepts concrete"
+            )
+            raise ValueError(msg)
+
+        dag_hash = spec.dag_hash()
+        if dag_hash in self.data:
+            return False
+
+        # Unify objects in the container
+        for edge in reversed(spack.traverse.traverse_edges_topo([spec], direction="children")):
+            current_node = edge.spec
+            current_hash = current_node.dag_hash()
+
+            if current_hash in self.data:
+                continue
+
+            self.data[current_hash] = current_node.copy(deps=False)
+            container_node = self.data[current_hash]
+            for edge_under_reconstruction in current_node.edges_to_dependencies():
+                child_hash = edge_under_reconstruction.spec.dag_hash()
+                depflag = edge_under_reconstruction.depflag
+                virtuals = edge_under_reconstruction.virtuals
+                container_node.add_dependency_edge(
+                    self.data[child_hash], depflag=depflag, virtuals=virtuals
+                )
+        return True
+
+    def __len__(self) -> int:
+        return len(self.data)
+
+    def __iter__(self):
+        return iter(self.data)
+
+
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
@@ -994,9 +1054,7 @@ class SpackSolverSetup:
         # (ID, CompilerSpec) -> dictionary of attributes
         self.compiler_info = collections.defaultdict(dict)
 
-        # hashes we've already added facts for
-        self.seen_hashes = set()
-        self.reusable_and_possible = {}
+        self.reusable_and_possible = ReusableSpecsByHash()
 
         # id for dummy variables
         self._condition_id_counter = itertools.count()
@@ -2318,25 +2376,29 @@ class SpackSolverSetup:
         for pkg, variant, value in self.variant_values_from_specs:
             self.gen.fact(fn.pkg_fact(pkg, fn.variant_possible_value(variant, value)))
 
-    def _facts_from_concrete_spec(self, spec, possible):
+    def register_concrete_spec(self, spec, possible):
         # tell the solver about any installed packages that could
         # be dependencies (don't tell it about the others)
-        h = spec.dag_hash()
-        if spec.name in possible and h not in self.seen_hashes:
-            self.reusable_and_possible[h] = spec
-            try:
-                # Only consider installed packages for repo we know
-                spack.repo.PATH.get(spec)
-            except (spack.repo.UnknownNamespaceError, spack.repo.UnknownPackageError):
-                return
+        if spec.name not in possible:
+            return
 
+        try:
+            # Only consider installed packages for repo we know
+            spack.repo.PATH.get(spec)
+        except (spack.repo.UnknownNamespaceError, spack.repo.UnknownPackageError) as e:
+            tty.debug(f"[REUSE] Issues when trying to reuse {spec.short_spec}: {str(e)}")
+            return
+
+        self.reusable_and_possible.add(spec)
+
+    def concrete_specs(self):
+        """Emit facts for reusable specs"""
+        for h, spec in self.reusable_and_possible.items():
             # this indicates that there is a spec like this installed
             self.gen.fact(fn.installed_hash(spec.name, h))
-
             # this describes what constraints it imposes on the solve
             self.impose(h, spec, body=True)
             self.gen.newline()
-
             # Declare as possible parts of specs that are not in package.py
             # - Add versions to possible versions
             # - Add OS to possible OS's
@@ -2347,15 +2409,12 @@ class SpackSolverSetup:
                 )
                 self.possible_oses.add(dep.os)
 
-            # add the hash to the one seen so far
-            self.seen_hashes.add(h)
-
     def define_concrete_input_specs(self, specs, possible):
         # any concrete specs in the input spec list
         for input_spec in specs:
             for spec in input_spec.traverse():
                 if spec.concrete:
-                    self._facts_from_concrete_spec(spec, possible)
+                    self.register_concrete_spec(spec, possible)
 
     def setup(
         self,
@@ -2422,14 +2481,13 @@ class SpackSolverSetup:
         # get possible compilers
         self.possible_compilers = self.generate_possible_compilers(specs)
 
-        self.gen.h1("Concrete input spec definitions")
+        self.gen.h1("Reusable concrete specs")
         self.define_concrete_input_specs(specs, self.pkgs)
-
         if reuse:
-            self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
-                self._facts_from_concrete_spec(reusable_spec, self.pkgs)
+                self.register_concrete_spec(reusable_spec, self.pkgs)
+        self.concrete_specs()
 
         self.gen.h1("Generic statements on possible packages")
         node_counter.possible_packages_facts(self.gen, fn)
