@@ -1515,14 +1515,15 @@ class Environment:
                 msg = msg + " pool with {0} processes".format(pool_size)
         tty.msg(msg)
 
-        concretized_root_specs = spack.util.parallel.parallel_map(
+        concretized_specs_with_time = spack.util.parallel.parallel_map(
             _concretize_task, arguments, max_processes=max_processes, debug=tty.is_debug()
         )
 
         finish = time.time()
         tty.msg("Environment concretized in %.2f seconds." % (finish - start))
         by_hash = {}
-        for abstract, concrete in zip(root_specs, concretized_root_specs):
+        for abstract, (concrete, _time) in zip(root_specs, concretized_specs_with_time):
+            tty.info(f"{abstract}: {_time:.3f}s")
             self._add_concrete_spec(abstract, concrete)
             by_hash[concrete.dag_hash()] = concrete
 
@@ -2421,7 +2422,9 @@ def _concretize_from_constraints(spec_constraints, tests=False):
 def _concretize_task(packed_arguments):
     spec_constraints, tests = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
-        return _concretize_from_constraints(spec_constraints, tests)
+        start = time.time()
+        result = _concretize_from_constraints(spec_constraints, tests)
+        return result, time.time() - start
 
 
 def make_repo_path(root):
