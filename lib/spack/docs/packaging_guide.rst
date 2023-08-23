@@ -5268,7 +5268,7 @@ where each argument has the following meaning:
 * ``pkg`` is an instance of the package for the spec under test.
 
 * ``srcs`` is a string *or* a list of strings corresponding to the
-paths of subdirectories and or files needed for stand-alone testing. 
+  paths of subdirectories and or files needed for stand-alone testing. 
 
 The paths must be relative to the staged source directory. Contents of
 subdirectories and files are copied to a special test cache subdirectory
