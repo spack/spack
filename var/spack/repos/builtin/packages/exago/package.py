@@ -11,8 +11,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     problems on parallel and distributed architectures, particularly targeted
     for exascale machines."""
 
-    homepage = "https://gitlab.pnnl.gov/exasgd/frameworks/exago"
-    git = "https://gitlab.pnnl.gov/exasgd/frameworks/exago.git"
+    homepage = "https://github.com/pnnl/ExaGO"
+    git = "https://github.com/pnnl/ExaGO.git"
     maintainers("ryandanehy", "CameronRutherford", "pelesh")
 
     version("1.5.1", commit="7abe482c8da0e247f9de4896f5982c4cacbecd78", submodules=True)
@@ -30,6 +30,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     version("main", branch="main", submodules=True)
     version("develop", branch="develop", submodules=True)
     version("5-18-2022-snapshot", tag="5-18-2022-snapshot", submodules=True)
+    version("kpp2", tag="kpp2", submodules=True)
 
     # Progrmming model options
     variant("mpi", default=True, description="Enable/Disable MPI")
