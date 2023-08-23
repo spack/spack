@@ -45,7 +45,7 @@ class Procps(AutotoolsPackage):
     # libintl (if appropriate).
     patch("libintl-3.3.14.patch", when="@3.3.14:3.3")
     patch("libintl-4.0.0.patch", when="@=4.0.0")
-    patch("libintl-4.0.1.patch", when="@4.0.1:")
+    patch("libintl-4.0.1.patch", when="@4.0.1:4.0.3")
 
     def autoreconf(self, spec, prefix):
         sh = which("sh")
