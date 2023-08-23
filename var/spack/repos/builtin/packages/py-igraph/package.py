@@ -17,22 +17,12 @@ class PyIgraph(PythonPackage):
 
     variant("matplotlib", default=False, description="Enable plotting with Matplotlib")
 
-    depends_on("arpack-ng")
-    depends_on("cmake")
-    depends_on("gmp")
-    depends_on("glpk+gmp@4.57:")
-    depends_on("libxml2")
+    depends_on("cmake", type="build")
+    depends_on("igraph+shared@0.10.6", when="@0.10.6")
+    depends_on("pkgconfig", type="build")
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-texttable@1.6.2:", type=("build", "run"))
     depends_on("py-matplotlib@3.5", type="run", when="+matplotlib")
 
     def setup_build_environment(self, env):
-        args = """
--DUSE_CCACHE=OFF -DBUILD_SHARED_LIBS=OFF
--DIGRAPH_ENABLE_LTO=AUTO -DIGRAPH_GLPK_SUPPORT=ON
--DIGRAPH_GRAPHML_SUPPORT=ON -DIGRAPH_USE_INTERNAL_ARPACK=OFF
--DIGRAPH_USE_INTERNAL_BLAS=ON -DIGRAPH_USE_INTERNAL_LAPACK=ON
--DIGRAPH_USE_INTERNAL_GLPK=OFF -DIGRAPH_USE_INTERNAL_GMP=OFF
--DIGRAPH_USE_INTERNAL_PLFIT=ON
-"""
-        env.set("IGRAPH_CMAKE_EXTRA_ARGS", args)
+        env.set("IGRAPH_USE_PKG_CONFIG", "1")
