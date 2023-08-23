@@ -542,6 +542,9 @@ class Llvm(CMakePackage, CudaPackage):
         when="@13:14 compiler-rt=runtime",
     )
 
+    patch("add-include-for-libelf-llvm-12-14.patch", when="@12:14")
+    patch("add-include-for-libelf-llvm-15.patch", when="@15")
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
