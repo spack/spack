@@ -2620,7 +2620,6 @@ class SpecBuilder:
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
-        self._hash_specs = []
         self._flag_sources = collections.defaultdict(lambda: set())
         self._flag_compiler_defaults = set()
 
@@ -2631,7 +2630,6 @@ class SpecBuilder:
     def hash(self, node, h):
         if node not in self._specs:
             self._specs[node] = self._hash_lookup[h]
-        self._hash_specs.append(node)
 
     def node(self, node):
         if node not in self._specs:
