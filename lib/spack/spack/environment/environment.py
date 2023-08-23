@@ -1524,6 +1524,7 @@ class Environment:
             ):
                 abstract = root_specs[idx]
                 tty.info(f"{abstract}: {_time:.3f}s")
+                sys.stdout.flush()
                 self._add_concrete_spec(abstract, concrete)
                 by_hash[concrete.dag_hash()] = concrete
 
