@@ -24,7 +24,7 @@ class PyIgraph(PythonPackage):
     depends_on("libxml2")
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-texttable@1.6.2:", type=("build", "run"))
-    depends_on("py-matplotlib@3.5.0:3.6.0", type=("run"), when="+matplotlib")
+    depends_on("py-matplotlib@3.5", type="run", when="+matplotlib")
 
     def setup_build_environment(self, env):
         args = """
