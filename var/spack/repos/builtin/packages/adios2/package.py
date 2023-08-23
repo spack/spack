@@ -132,7 +132,8 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("hdf5+mpi", when="+hdf5+mpi")
 
     depends_on("libpressio", when="+libpressio")
-    depends_on("c-blosc", when="+blosc")
+    depends_on("c-blosc", when="@:2.8 +blosc")
+    depends_on("c-blosc2", when="@2.9: +blosc")
     depends_on("bzip2", when="+bzip2")
     depends_on("libpng@1.6:", when="+png")
     depends_on("zfp@0.5.1:0.5", when="+zfp")

@@ -45,6 +45,8 @@ class CBlosc2(CMakePackage):
     depends_on("zlib-api", when="+zlib")
     depends_on("zstd", when="+zstd")
 
+    conflicts("%oneapi")
+
     def cmake_args(self):
         spec = self.spec
 
