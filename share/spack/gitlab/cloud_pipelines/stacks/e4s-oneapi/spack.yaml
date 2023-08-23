@@ -114,6 +114,8 @@ spack:
   - charliecloud
   - conduit
   - datatransferkit
+  - drishti
+  - dxt-explorer
   - exaworks
   - flecsi
   - flit
