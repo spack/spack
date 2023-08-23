@@ -4773,17 +4773,17 @@ For example, running:
 
 results in spack checking that the installation created the following **file**:
 
-* ``self.prefix/bin/reframe``
+* ``self.prefix.bin.reframe``
 
 and the following **directories**:
 
-* ``self.prefix/bin``
-* ``self.prefix/config``
-* ``self.prefix/docs``
-* ``self.prefix/reframe``
-* ``self.prefix/tutorials``
-* ``self.prefix/unittests``
-* ``self.prefix/cscs-checks``
+* ``self.prefix.bin``
+* ``self.prefix.config``
+* ``self.prefix.docs``
+* ``self.prefix.reframe``
+* ``self.prefix.tutorials``
+* ``self.prefix.unittests``
+* ``self.prefix.cscs-checks``
 
 If **any** of these paths are missing, then Spack considers the installation
 to have failed.
@@ -4927,7 +4927,7 @@ installed executable. The check is implemented as follows:
        @on_package_attributes(run_tests=True)
        def check_list(self):
             with working_dir(self.stage.source_path):
-                reframe = Executable(join_path(self.prefix, "bin", "reframe"))
+                reframe = Executable(self.prefix.bin.reframe)
                 reframe("-l")
 
 .. warning::
@@ -5147,8 +5147,8 @@ embedded test parts.
            for example in ["ex1", "ex2"]:
                with test_part(
                    self,
-                   "test_example_{0}".format(example),
-                   purpose="run installed {0}".format(example),
+                   f"test_example_{example}",
+                   purpose=f"run installed {example}",
                 ):
                     exe = which(join_path(self.prefix.bin, example))
                     exe()
@@ -5226,11 +5226,10 @@ Below illustrates using this feature to compile an example.
            ...
            cxx = which(os.environ["CXX"])
            cxx(
-               "-L{0}".format(self.prefix.lib),
-               "-I{0}".format(self.prefix.include),
-               "{0}.cpp".format(exe),
-               "-o",
-               exe
+               f"-L{self.prefix.lib}",
+               f"-I{self.prefix.include}",
+               f"{exe}.cpp",
+               "-o", exe
            )
            cxx_example = which(exe)
            cxx_example()
@@ -5254,7 +5253,7 @@ Saving build-time files
     will be important to maintain them so they work across listed or supported
     versions of the package.
 
-You can use the ``cache_extra_test_sources`` method to copy directories
+You can use the ``cache_extra_test_sources`` helper to copy directories
 and or files from the source build stage directory to the package's
 installation directory.
 
@@ -5262,10 +5261,15 @@ The signature for ``cache_extra_test_sources`` is:
 
 .. code-block:: python
 
-   def cache_extra_test_sources(self, srcs):
+   def cache_extra_test_sources(pkg, srcs):
 
-where ``srcs`` is a string *or* a list of strings corresponding to the
-paths of subdirectories and or files needed for stand-alone testing. 
+where each argument has the following meaning:
+
+* ``pkg`` is an instance of the package for the spec under test.
+
+* ``srcs`` is a string *or* a list of strings corresponding to the
+  paths of subdirectories and or files needed for stand-alone testing. 
+
 The paths must be relative to the staged source directory. Contents of
 subdirectories and files are copied to a special test cache subdirectory
 of the installation prefix. They are automatically copied to the appropriate
@@ -5286,21 +5290,18 @@ and using ``foo.c`` in a test method is illustrated below.
            srcs = ["tests",
                    join_path("examples", "foo.c"),
                    join_path("examples", "bar.c")]
-           self.cache_extra_test_sources(srcs)
+           cache_extra_test_sources(self, srcs)
 
        def test_foo(self):
            exe = "foo"
-           src_dir = join_path(
-               self.test_suite.current_test_cache_dir, "examples"
-           )
+           src_dir = self.test_suite.current_test_cache_dir.examples
            with working_dir(src_dir):
                cc = which(os.environ["CC"])
                cc(
-                   "-L{0}".format(self.prefix.lib),
-                   "-I{0}".format(self.prefix.include),
-                   "{0}.c".format(exe),
-                   "-o",
-                   exe
+                   f"-L{self.prefix.lib}",
+                   f"-I{self.prefix.include}",
+                   f"{exe}.c",
+                   "-o", exe
                )
                foo = which(exe)
                foo()
@@ -5326,9 +5327,9 @@ the files using the ``self.test_suite.current_test_cache_dir`` property.
 In our example above, test methods can use the following paths to reference
 the copy of each entry listed in ``srcs``, respectively:
 
-* ``join_path(self.test_suite.current_test_cache_dir, "tests")``
-* ``join_path(self.test_suite.current_test_cache_dir, "examples", "foo.c")``
-* ``join_path(self.test_suite.current_test_cache_dir, "examples", "bar.c")``
+* ``self.test_suite.current_test_cache_dir.tests``
+* ``join_path(self.test_suite.current_test_cache_dir.examples, "foo.c")``
+* ``join_path(self.test_suite.current_test_cache_dir.examples, "bar.c")``
 
 .. admonition:: Library packages should build stand-alone tests
 
@@ -5347,7 +5348,7 @@ the copy of each entry listed in ``srcs``, respectively:
     If one or more of the copied files needs to be modified to reference
     the installed software, it is recommended that those changes be made
     to the cached files **once** in the ``copy_test_sources`` method and
-    ***after** the call to ``self.cache_extra_test_sources()``. This will
+    ***after** the call to ``cache_extra_test_sources()``. This will
     reduce the amount of unnecessary work in the test method **and** avoid
     problems testing in shared instances and facility deployments.
 
@@ -5394,7 +5395,7 @@ property as shown below.
            """build and run custom-example"""
            data_dir = self.test_suite.current_test_data_dir
            exe = "custom-example"
-           src = datadir.join("{0}.cpp".format(exe))
+           src = datadir.join(f"{exe}.cpp")
            ...
            # TODO: Build custom-example using src and exe
            ...
@@ -5444,7 +5445,7 @@ added to the package's ``test`` subdirectory.
                db_filename, ".dump", output=str.split, error=str.split
            )
            for exp in expected:
-               assert re.search(exp, out), "Expected '{0}' in output".format(exp)
+               assert re.search(exp, out), f"Expected '{exp}' in output"
 
 If the file was instead copied from the ``tests`` subdirectory of the staged
 source code, the path would be obtained as shown below.
@@ -5494,9 +5495,12 @@ Invoking the method is the equivalent of:
 
 .. code-block:: python
 
+   errors = []
    for check in expected:
        if not re.search(check, actual):
-           raise RuntimeError("Expected '{0}' in output '{1}'".format(check, actual))
+           errors.append(f"Expected '{check}' in output '{actual}'")
+   if errors:
+       raise RuntimeError("\n ".join(errors))
 
 
 .. _accessing-files:
@@ -5536,7 +5540,7 @@ repository, and installation.
      - ``self.test_suite.test_dir_for_spec(self.spec)``
    * - Current Spec's Build-time Files
      - ``self.test_suite.current_test_cache_dir``
-     - ``join_path(self.test_suite.current_test_cache_dir, "examples", "foo.c")``
+     - ``join_path(self.test_suite.current_test_cache_dir.examples, "foo.c")``
    * - Current Spec's Custom Test Files
      - ``self.test_suite.current_test_data_dir``
      - ``join_path(self.test_suite.current_test_data_dir, "hello.f90")``
@@ -6071,7 +6075,7 @@ in the extra attributes can implement this method like this:
    @classmethod
    def validate_detected_spec(cls, spec, extra_attributes):
        """Check that "compilers" is in the extra attributes."""
-       msg = ("the extra attribute "compilers" must be set for "
+       msg = ("the extra attribute 'compilers' must be set for "
               "the detected spec '{0}'".format(spec))
        assert "compilers" in extra_attributes, msg
 
