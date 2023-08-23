@@ -36,4 +36,8 @@ class AwsSdkCpp(CMakePackage):
     )
 
     def cmake_args(self):
-        return [self.define("BUILD_ONLY", ("s3", "transfer"))]
+        return [
+            self.define("BUILD_ONLY", ("s3", "transfer")),
+            self.define("ENABLE_TESTING", False),
+            self.define("AUTORUN_UNIT_TESTS", False),
+        ]
