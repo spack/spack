@@ -26,11 +26,9 @@ class Gdrcopy(MakefilePackage, CudaPackage):
 
     depends_on("check")
     depends_on("cuda")
-    
     def build(self, spec, prefix):
         make("lib")
         make("exes")
-
     def install(self, spec, prefix):
         mkdir(prefix.include)
         mkdir(prefix.lib64)
