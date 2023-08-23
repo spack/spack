@@ -79,6 +79,19 @@ class VCVarsInvocation(VarsInvocation):
 
     @property
     def sdk_ver(self):
+        """Accessor for Windows SDK version property
+
+        Note: This property may not be set by
+        the calling context and as such this property will
+        return an empty string
+
+        This property will ONLY be set if the SDK package
+        is a dependency somewhere in the Spack DAG of the package
+        for which we are constructing an MSVC compiler env.
+        Otherwise this property should be unset to allow the VCVARS
+        script to use its internal heuristics to determine appropriate
+        SDK version
+        """
         if getattr(self, "_sdk_ver", None):
             return self._sdk_ver + ".0"
         return ""
