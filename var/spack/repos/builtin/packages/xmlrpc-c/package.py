@@ -24,3 +24,13 @@ class XmlrpcC(AutotoolsPackage):
             args.append("--build=arm-linux")
 
         return args
+
+    def build(self, spec, prefix):
+        make()
+        with working_dir("tools"):
+            make()
+
+    def install(self, spec, prefix):
+        make("install")
+        with working_dir("tools"):
+            make("install")
