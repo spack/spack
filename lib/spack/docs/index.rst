@@ -77,6 +77,7 @@ or refer to the full manual below.
    extensions
    pipelines
    signing
+   external_rocm
 
 .. toctree::
    :maxdepth: 2
