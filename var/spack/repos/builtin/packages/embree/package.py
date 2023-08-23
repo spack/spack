@@ -13,6 +13,14 @@ class Embree(CMakePackage):
     url = "https://github.com/embree/embree/archive/v3.7.0.tar.gz"
     maintainers("aumuell")
 
+    version("4.2.0", sha256="b0479ce688045d17aa63ce6223c84b1cdb5edbf00d7eda71c06b7e64e21f53a0")
+    version("4.1.0", sha256="117efd87d6dddbf7b164edd94b0bc057da69d6422a25366283cded57ed94738b")
+    version("4.0.1", sha256="1fa3982fa3531f1b6e81f19e6028ae8a62b466597f150b853440fe35ef7c6c06")
+    version("4.0.0", sha256="bb967241f9516712a9f8e399ed7f756d7baeec3c85c223c0005ede8b95c9fa61")
+    version("3.13.5", sha256="b8c22d275d9128741265537c559d0ea73074adbf2f2b66b0a766ca52c52d665b")
+    version("3.13.4", sha256="e6a8d1d4742f60ae4d936702dd377bc4577a3b034e2909adb2197d0648b1cb35")
+    version("3.13.3", sha256="74ec785afb8f14d28ea5e0773544572c8df2e899caccdfc88509f1bfff58716f")
+    version("3.13.2", sha256="dcda827e5b7a606c29d00c1339f1ef00f7fa6867346bc46a2318e8f0a601c6f9")
     version("3.13.1", sha256="00dbd852f19ae2b95f5106dd055ca4b304486436ced0ccf842aec4e38a4df425")
     version("3.13.0", sha256="4d86a69508a7e2eb8710d571096ad024b5174834b84454a8020d3a910af46f4f")
     version("3.12.2", sha256="22a527622497e07970e733f753cc9c10b2bd82c3b17964e4f71a5fd2cdfca210")
@@ -37,23 +45,33 @@ class Embree(CMakePackage):
             "-DEMBREE_TUTORIALS=OFF",
             "-DEMBREE_IGNORE_CMAKE_CXX_FLAGS=ON",
             self.define_from_variant("EMBREE_ISPC_SUPPORT", "ispc"),
+            self.define("EMBREE_TBB_ROOT", spec["tbb"].prefix),
+        ]
+
+        if spec.satisfies("target=x86_64:") or spec.satisfies("target=x86:"):
             # code selection and defines controlling namespace names are based on
             # defines controlled by compiler flags, so disable ISAs below compiler
             # flags chosen by spack
-            self.define("EMBREE_ISA_SSE2", "sse4_2" not in spec.target),
-            self.define("EMBREE_ISA_SSE42", "avx" not in spec.target),
-            self.define("EMBREE_ISA_AVX", "avx2" not in spec.target),
-            self.define("EMBREE_ISA_AVX2", "avx512" not in spec.target),
-            self.define("EMBREE_ISA_AVX512SKX", True),
-        ]
+            args.append(self.define("EMBREE_ISA_SSE2", "sse4_2" not in spec.target))
+            args.append(self.define("EMBREE_ISA_SSE42", "avx" not in spec.target))
+            args.append(self.define("EMBREE_ISA_AVX", "avx2" not in spec.target))
+            args.append(self.define("EMBREE_ISA_AVX2", "avx512" not in spec.target))
 
-        if spec.satisfies("%gcc@:7"):
-            # remove unsupported -mprefer-vector-width=256, otherwise copied
-            # from common/cmake/gnu.cmake
-            args.append(
-                "-DFLAGS_AVX512SKX=-mavx512f -mavx512dq -mavx512cd"
-                " -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt"
-                " -mbmi -mbmi2"
-            )
+            # during the 3.12 cycle AVX512SKX was renamed to AVX512,
+            # but for compatibility, the old name is still supported
+            avx512_suffix = ""
+            if spec.satisfies("@:3.12"):
+                avx512_suffix = "SKX"
+            args.append(self.define("EMBREE_ISA_AVX512" + avx512_suffix, True)),
+            if spec.satisfies("%gcc@:7"):
+                # remove unsupported -mprefer-vector-width=256, otherwise copied
+                # from common/cmake/gnu.cmake
+                args.append(
+                    self.define(
+                        "FLAGS_AVX512" + avx512_suffix,
+                        "-mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl"
+                        " -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2",
+                    )
+                )
 
         return args
