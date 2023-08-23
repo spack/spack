@@ -685,7 +685,7 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
@@ -703,9 +703,11 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l spec-file -
 complete -c spack -n '__fish_spack_using_command buildcache push' -l spec-file -r -d 'create buildcache entry for spec from json or yaml file'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -f -a 'package dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -f -a fail_fast
+complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
@@ -723,6 +725,8 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l spec-file
 complete -c spack -n '__fish_spack_using_command buildcache create' -l spec-file -r -d 'create buildcache entry for spec from json or yaml file'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -f -a 'package dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast -f -a fail_fast
+complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
 
 # spack buildcache install
 set -g __fish_spack_optspecs_spack_buildcache_install h/help f/force m/multiple u/unsigned o/otherarch
