@@ -136,6 +136,7 @@ class Amdlibflame(LibflameBase):
 
         return args
 
+    @when("@4.1:")
     def build(self, spec, prefix):
         aocl_utils_lib_path = os.path.join(self.spec["aocl-utils"].prefix.lib, "libaoclutils.a")
         make("all", "LIBAOCLUTILS_LIBRARY_PATH={0}".format(aocl_utils_lib_path))
