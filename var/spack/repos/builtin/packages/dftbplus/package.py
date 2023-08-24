@@ -78,7 +78,7 @@ class Dftbplus(MakefilePackage, CMakePackage):
     )
     variant(
         "api",
-        default=False,
+        default=True,
         description="Build the API library " "(if you need to link to DFTB+ from other codes)",
         when="build_system=cmake",
     )
