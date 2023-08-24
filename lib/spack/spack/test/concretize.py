@@ -2112,6 +2112,24 @@ class TestConcretize:
             # when checksums are required
             Spec("a@=3.0").concretized()
 
+    @pytest.mark.regression("39570")
+    @pytest.mark.db
+    def test_reuse_python_from_cli_and_extension_from_db(self, mutable_database):
+        """Tests that reusing python with and explicit request on the command line, when the spec
+        also reuses a python extension from the DB, doesn't fail.
+        """
+        s = Spec("py-extension1").concretized()
+        python_hash = s["python"].dag_hash()
+        s.package.do_install(fake=True, explicit=True)
+
+        with spack.config.override("concretizer:reuse", True):
+            with_reuse = Spec(f"py-extension2 ^/{python_hash}").concretized()
+
+        with spack.config.override("concretizer:reuse", False):
+            without_reuse = Spec("py-extension2").concretized()
+
+        assert with_reuse.dag_hash() == without_reuse.dag_hash()
+
 
 @pytest.fixture()
 def duplicates_test_repository():
