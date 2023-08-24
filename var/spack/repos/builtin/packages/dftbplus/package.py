@@ -231,7 +231,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+mpi" in spec:
             args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))
             args.append(self.define("MPI_Fortran_COMPILER", spec["mpi"].mpifc))
-            args.append(self.define("SCALAPACK_LIBRARY",  spec["scalapack"].libs.join(";")))
-            args.append(self.define("SCALAPACK_LIBRARIES", spec["scalapack"].libs.join(";")))
+            args.append(self.define("SCALAPACK_LIBRARY",  spec["scalapack"].libs.joined(";")))
+            args.append(self.define("SCALAPACK_LIBRARIES", spec["scalapack"].libs.joined(";")))
             args.append(self.define("SCALAPACK_INCLUDE_DIR", spec["scalapack"].prefix.include))
         return args
