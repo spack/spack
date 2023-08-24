@@ -20,6 +20,9 @@ class PyParticle(PythonPackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("0.23.0", sha256="d810f8fc27deb8e7fd64174017d9607d50522249c0973a0008e580f93db11750")
+    version("0.22.1", sha256="dcb45025cf7cff901e2c94922d150e1103245c46f2671eae4193c5fa767cc56c")
+    version("0.22.0", sha256="567bb3017cb7526f9c9ef4399e9ba5acbdb5b9ce93eb18e4da6479d3181c93a5")
     version("0.21.2", sha256="0434d39aab4fc72bce452a11f822736f95937c5f4116b0e831254ebcef6cfcdb")
     version("0.21.1", sha256="330f48550a17654f01c94e8e2365ad9a8dcf26e573e8acf31fb23ea4f624b2c4")
     version("0.21.0", sha256="483748834e7e81f2cd690fa0962b537f767fe8af4705c8bada68c8bbdac8a17d")
@@ -42,6 +45,7 @@ class PyParticle(PythonPackage):
     depends_on("py-hatch-vcs", when="@0.21:", type="build")
     depends_on("py-importlib-resources@2:", when="@0.16: ^python@:3.8", type=("build", "run"))
     depends_on("py-typing-extensions", when="@0.16: ^python@:3.7", type=("build", "run"))
+    depends_on("py-deprecated", when="@0.22.0:", type=("build", "run"))
 
     depends_on("py-attrs@19.2.0:", type=("build", "run"))
     depends_on("py-hepunits@1.2.0:", when="@:0.12", type=("build", "run"))
