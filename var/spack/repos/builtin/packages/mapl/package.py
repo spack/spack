@@ -160,8 +160,8 @@ class Mapl(CMakePackage):
     patch("mapl-2.12.3-mpi-fortran.patch", when="@:2.12.3")
 
     variant("flap", default=False, description="Build with FLAP support", when="@:2.39")
-    variant("pflogger", default=False, description="Build with pFlogger support")
-    variant("fargparse", default=False, description="Build with fArgParse support")
+    variant("pflogger", default=True, description="Build with pFlogger support")
+    variant("fargparse", default=True, description="Build with fArgParse support")
     variant("shared", default=True, description="Build as shared library")
     variant("debug", default=False, description="Make a debuggable version of the library")
     variant("extdata2g", default=True, description="Use ExtData2G")
