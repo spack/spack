@@ -14,9 +14,17 @@ class Dftbplus(MakefilePackage):
     containing many extensions to the original method."""
 
     homepage = "https://www.dftbplus.org"
-    url = "https://github.com/dftbplus/dftbplus/archive/19.1.tar.gz"
-
-    version("19.1", sha256="4d07f5c6102f06999d8cfdb1d17f5b59f9f2b804697f14b3bc562e3ea094b8a8")
+    # url = "https://github.com/dftbplus/dftbplus/archive/19.1.tar.gz"
+    git = "https://github.com/dftbplus/dftbplus.git"
+    version("23.1", tag="23.1", submodules=True)
+    version("22.2", tag="22.2", submodules=True)
+    version("22.1", tag="22.1", submodules=True)
+    version("21.2", tag="21.2", submodules=True)
+    version("21.1", tag="21.1", submodules=True)
+    version("20.2", tag="20.2", submodules=True)
+    version("20.1", tag="20.1", submodules=True)  # This and higher version uses Cmake
+    version('19.1', tag='19.1', submodules=True)
+    # version("19.1", sha256="4d07f5c6102f06999d8cfdb1d17f5b59f9f2b804697f14b3bc562e3ea094b8a8")
 
     resource(
         name="slakos",
