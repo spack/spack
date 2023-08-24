@@ -889,7 +889,7 @@ def add(fullpath, scope=None):
             break
 
     if has_existing_value:
-        path, value , _ = fullpath.rpartition(components[-1])
+        path, value, _ = fullpath.rpartition(components[-1])
         # Breaking down path in this way leaves a dangling
         # separator, remove it
         path, *_ = path.rpartition(":")
