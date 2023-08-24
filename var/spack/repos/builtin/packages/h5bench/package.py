@@ -14,6 +14,8 @@ class H5bench(CMakePackage):
 
     maintainers("jeanbez", "sbyna")
 
+    tags = ["e4s"]
+
     version("latest", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)
 
