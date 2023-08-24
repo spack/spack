@@ -793,13 +793,6 @@ class Llvm(CMakePackage, CudaPackage):
                     define("LIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES", "IGNORE"),
                 ]
             )
-            if "openmp=runtime" in spec:
-                cmake_args.extend(
-                    [
-                        # work around bad libelf detection in libomptarget
-                        define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR", spec["elf"].prefix.include)
-                    ]
-                )
 
         cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "libomptarget_debug"))
 
