@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class Dftbplus(MakefilePackage):
+class Dftbplus(MakefilePackage, CMakePackage):
     """DFTB+ is an implementation of the
     Density Functional based Tight Binding (DFTB) method,
     containing many extensions to the original method."""
@@ -25,6 +25,12 @@ class Dftbplus(MakefilePackage):
     version("20.1", tag="20.1", submodules=True)  # This and higher version uses Cmake
     version('19.1', tag='19.1', submodules=True)
     # version("19.1", sha256="4d07f5c6102f06999d8cfdb1d17f5b59f9f2b804697f14b3bc562e3ea094b8a8")
+
+    build_system(
+        conditional("cmake", when="@20.1:"),
+        conditional("make", when="@:19.1"),
+        default="cmake",
+    )
 
     resource(
         name="slakos",
@@ -79,12 +85,16 @@ class Dftbplus(MakefilePackage):
     depends_on("magma", when="+gpu")
     depends_on("arpack-ng", when="+arpack")
     depends_on("dftd3-lib@0.9.2", when="+dftd3")
-    depends_on("m4", type="build")
+    depends_on("m4", type="build", when="@:19.1")
     depends_on("python@3.2:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))  # for tests
+    depends_on("cmake", type="build", when="@20.1:")
 
 
 
+
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     def edit(self, spec, prefix):
         """
         First, change the ROOT variable, because, for some reason,
@@ -173,3 +183,8 @@ class Dftbplus(MakefilePackage):
             )
 
             mconfig.filter("WITH_DFTD3 := .*", "WITH_DFTD3 := 1")
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        args = [ ]
+        return args
