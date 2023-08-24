@@ -1,11 +1,17 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import socket
+import re
 
 from spack.package import *
+from .camp import hip_for_radiuss_projects
+from .camp import cuda_for_radiuss_projects
+from .camp import blt_link_helpers
+
 
 
 class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -21,6 +27,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
+    version("2023.06.0", tag="v2023.06.0", submodules=False)
+    version("2022.10.0", tag="v2022.10.0", submodules=False)
     version("2022.03.0", tag="v2022.03.0", submodules=False)
     version("2.4.0", tag="v2.4.0", submodules=True)
     version("2.3.0", tag="v2.3.0", submodules=True)
@@ -37,17 +45,24 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("enable_pick", default=False, description="Enable pick method")
     variant("shared", default=True, description="Build Shared Libs")
     variant("raja", default=False, description="Build plugin for RAJA")
-    variant("benchmarks", default=False, description="Build benchmarks.")
     variant("examples", default=True, description="Build examples.")
     variant("openmp", default=False, description="Build using OpenMP")
     # TODO: figure out gtest dependency and then set this default True
     # and remove the +tests conflict below.
-    variant("tests", default=False, description="Build tests")
+    variant(
+        "tests",
+        default="none",
+        values=("none", "basic", "benchmarks"),
+        multi=False,
+        description="Tests to run",
+    )
 
     depends_on("cmake@3.8:", type="build")
     depends_on("cmake@3.9:", type="build", when="+cuda")
-    depends_on("cmake@3.14:", when="@2022.03.0:")
+    depends_on("cmake@3.14:", type="build", when="@2022.03.0:")
 
+    depends_on("blt@0.5.3:", type="build", when="@2023.06.0:")
+    depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
     depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
     depends_on("blt@0.4.1:", type="build", when="@2.4.0:")
     depends_on("blt@0.4.0:", type="build", when="@2.3.0")
@@ -55,6 +70,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("umpire")
+    depends_on("umpire@2023.06.0:", when="@2023.06.0:")
+    depends_on("umpire@2022.10.0:", when="@2022.10.0:")
     depends_on("umpire@2022.03.0:", when="@2022.03.0:")
     depends_on("umpire@6.0.0", when="@2.4.0")
     depends_on("umpire@4.1.2", when="@2.2.0:2.3.0")
@@ -79,6 +96,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("raja@0.13.0", when="@2.3.0")
         depends_on("raja@0.12.0", when="@2.2.0:2.2.2")
         depends_on("raja@2022.03.0:", when="@2022.03.0:")
+        depends_on("raja@2022.10.0:", when="@2022.10.0:")
+        depends_on("raja@2023.06.0:", when="@2023.06.0:")
         depends_on("raja@main", when="@main")
 
         with when("+cuda"):
@@ -93,8 +112,6 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
                     when="amdgpu_target={0}".format(arch),
                 )
 
-    conflicts("+benchmarks", when="~tests")
-
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
         if "SYS_TYPE" in env:
@@ -106,51 +123,73 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         hostname = socket.gethostname()
         if "SYS_TYPE" in env:
             hostname = hostname.rstrip("1234567890")
-        return "{0}-{1}-{2}@{3}.cmake".format(
+        return "{0}-{1}-{2}@{3}-{4}.cmake".format(
             hostname,
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
+            self.spec.dag_hash(8)
         )
 
     def initconfig_compiler_entries(self):
         spec = self.spec
+        compiler = self.compiler
         entries = super().initconfig_compiler_entries()
-        if "+rocm" in spec:
-            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+
+        # adrienbernede-22-11:
+        #   This was in upstream Spack raja package, but it’s causing the follwing failure Umpire:
+        #     CMake Error in src/umpire/CMakeLists.txt:
+        #     No known features for CXX compiler
+        #
+        #   In CHAI, we see another error:
+        #       [ 15%] Linking C executable ../../../tests/blt_hip_runtime_c_smoke
+        #       clang (LLVM option parsing): for the --amdgpu-early-inline-all option: may only occur zero or one times!
+        #       clang (LLVM option parsing): for the --amdgpu-function-calls option: may only occur zero or one times!
+        #   We suspect this error comes from the use of hip compiler here, so we comment it:
+        #
+        #if "+rocm" in spec:
+        #    entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+
+        #### BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+        flags = spec.compiler_flags
+
+        # use global spack compiler flags
+        cppflags = " ".join(flags["cppflags"])
+        if cppflags:
+            # avoid always ending up with " " with no flags defined
+            cppflags += " "
+
+        cflags = cppflags + " ".join(flags["cflags"])
+        if cflags:
+            entries.append(cmake_cache_string("CMAKE_C_FLAGS", cflags))
+
+        cxxflags = cppflags + " ".join(flags["cxxflags"])
+        if cxxflags:
+            entries.append(cmake_cache_string("CMAKE_CXX_FLAGS", cxxflags))
+
+        fflags = " ".join(flags["fflags"])
+        if fflags:
+            entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
+        #### END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+
+        blt_link_helpers(entries, spec, compiler)
+
         return entries
 
     def initconfig_hardware_entries(self):
         spec = self.spec
+        compiler = self.compiler
         entries = super().initconfig_hardware_entries()
-
-        entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-            entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
-            entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
-
-            if not spec.satisfies("cuda_arch=none"):
-                cuda_arch = spec.variants["cuda_arch"].value
-                entries.append(cmake_cache_string("CUDA_ARCH", "sm_{0}".format(cuda_arch[0])))
-                entries.append(
-                    cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(cuda_arch[0]))
-                )
-                flag = "-arch sm_{0}".format(cuda_arch[0])
-                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", "{0}".format(flag)))
+            cuda_for_radiuss_projects(entries, spec)
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            archs = self.spec.variants["amdgpu_target"].value
-            if archs != "none":
-                arch_str = ",".join(archs)
-                entries.append(
-                    cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
-                )
+            hip_for_radiuss_projects(entries, spec, compiler)
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 
@@ -162,20 +201,52 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         option_prefix = "CHAI_" if spec.satisfies("@2022.03.0:") else ""
 
-        entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
+        # TPL locations
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# TPLs")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        entries.append(cmake_cache_path(
+            "BLT_SOURCE_DIR", spec["blt"].prefix))
         if "+raja" in spec:
-            entries.append(cmake_cache_option("{}ENABLE_RAJA_PLUGIN".format(option_prefix), True))
-            entries.append(cmake_cache_path("RAJA_DIR", spec["raja"].prefix))
-        entries.append(
-            cmake_cache_option("{}ENABLE_PICK".format(option_prefix), "+enable_pick" in spec)
-        )
-        entries.append(cmake_cache_path("umpire_DIR", spec["umpire"].prefix.share.umpire.cmake))
-        entries.append(cmake_cache_option("ENABLE_TESTS", "+tests" in spec))
-        entries.append(cmake_cache_option("ENABLE_BENCHMARKS", "+benchmarks" in spec))
-        entries.append(
-            cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)
-        )
-        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
+            entries.append(cmake_cache_option(
+                "{}ENABLE_RAJA_PLUGIN".format(option_prefix), True))
+            entries.append(cmake_cache_path(
+                "RAJA_DIR", spec["raja"].prefix))
+        entries.append(cmake_cache_path(
+            "umpire_DIR", spec["umpire"].prefix))
+
+        # Build options
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# Build Options")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        # Build options
+        entries.append(cmake_cache_string(
+            "CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+        entries.append(cmake_cache_option(
+            "BUILD_SHARED_LIBS", "+shared" in spec))
+
+        # Generic options that have a prefixed equivalent in CHAI CMake
+        entries.append(cmake_cache_option(
+            "ENABLE_OPENMP", "+openmp" in spec))
+        entries.append(cmake_cache_option(
+            "ENABLE_EXAMPLES", "+examples" in spec))
+        entries.append(cmake_cache_option(
+            "ENABLE_DOCS", False))
+        if "tests=benchmarks" in spec:
+            # BLT requires ENABLE_TESTS=True to enable benchmarks
+            entries.append(cmake_cache_option(
+                "ENABLE_BENCHMARKS", True))
+            entries.append(cmake_cache_option(
+                "ENABLE_TESTS", True))
+        else:
+            entries.append(cmake_cache_option(
+                "ENABLE_TESTS", "tests=none" not in spec))
+
+        # Prefixed options that used to be name without one
+        entries.append(cmake_cache_option(
+            "{}ENABLE_PICK".format(option_prefix), "+enable_pick" in spec))
 
         return entries
 
