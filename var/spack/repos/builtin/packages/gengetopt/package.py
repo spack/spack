@@ -36,3 +36,6 @@ class Gengetopt(AutotoolsPackage):
         else:
             suffix = "gz"
         return url.format(version, suffix)
+
+    def setup_dependent_package(self, module, dependent_spec):
+        setattr(module, "gengetopt", Executable(join_path(self.prefix.bin, "gengetopt")))
