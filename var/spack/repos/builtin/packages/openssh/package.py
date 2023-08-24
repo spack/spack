@@ -23,6 +23,7 @@ class Openssh(AutotoolsPackage):
 
     tags = ["core-packages"]
 
+    version("9.4p1", sha256="3608fd9088db2163ceb3e600c85ab79d0de3d221e59192ea1923e23263866a85")
     version("9.3p1", sha256="e9baba7701a76a51f3d85a62c383a3c9dcd97fa900b859bc7db114c1868af8a8")
     version("9.2p1", sha256="3f66dbf1655fb45f50e1c56da62ab01218c228807b21338d634ebcdf9d71cf46")
     version("9.1p1", sha256="19f85009c7e3e23787f0236fbb1578392ab4d4bf9f8ec5fe6bc1cd7e8bfdd288")
@@ -54,6 +55,8 @@ class Openssh(AutotoolsPackage):
 
     depends_on("krb5+shared", when="+gssapi")
     depends_on("openssl@:1.0", when="@:7.7p1")
+    depends_on("openssl@:1.1", when="@:7.9p1")
+    depends_on("openssl@:3.0", when="@:8.7p1")
     depends_on("openssl")
     depends_on("libedit")
     depends_on("ncurses")
@@ -81,6 +84,8 @@ class Openssh(AutotoolsPackage):
     def patch(self):
         # #29938: skip set-suid (also see man ssh-key-sign: it's not enabled by default)
         filter_file(r"\$\(INSTALL\) -m 4711", "$(INSTALL) -m711", "Makefile.in")
+        # #39599: fix configure to parse zlib 1.3's version number to prevent build fail
+        filter_file(r"if \(n != 3 && n != 4\)", "if (n < 2)", "configure")
 
     def configure_args(self):
         # OpenSSH's privilege separation path defaults to /var/empty. At
@@ -93,6 +98,13 @@ class Openssh(AutotoolsPackage):
         # Somehow creating pie executables fails with nvhpc, not with gcc.
         if "%nvhpc" in self.spec:
             args.append("--without-pie")
+
+        # For "@:7": Newer compilers use -fno-common by default and fail on tun_fwd_ifnames:
+        if "@:7" in self.spec:
+            if self.compiler.name == "gcc" and self.compiler.version >= ver(10):
+                args.append("CFLAGS=-fcommon")
+            if self.compiler.name.endswith("clang") and self.compiler.version >= ver(11):
+                args.append("CFLAGS=-fcommon")
         return args
 
     def install(self, spec, prefix):
