@@ -742,7 +742,7 @@ If this project does not have public pipelines, you will need to first:
     rebuild_timer.stop()
     try:
         with open("install_timers.json", "w") as timelog:
-            extra_attributes = {"name": "ci-rebuild"}
+            extra_attributes = {"name": ".ci-rebuild"}
             rebuild_timer.write_json(timelog, extra_attributes=extra_attributes)
     except Exception as e:
         tty.debug(str(e))
