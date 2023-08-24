@@ -142,4 +142,3 @@ class Quantlib(CMakePackage):
         cp = which("cp")
         cp("-r", os.path.join(self.build_directory, "quantlib-config"), prefix.bin)
         filter_file(r"^prefix=.*", "prefix=" + prefix, prefix.bin + "/quantlib-config")
-
