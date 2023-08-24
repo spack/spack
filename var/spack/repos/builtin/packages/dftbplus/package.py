@@ -28,7 +28,7 @@ class Dftbplus(MakefilePackage, CMakePackage):
 
     build_system(
         conditional("cmake", when="@20.1:"),
-        conditional("make", when="@:19.1"),
+        conditional("makefile", when="@:19.1"),
         default="cmake",
     )
 
