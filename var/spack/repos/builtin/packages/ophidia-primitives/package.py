@@ -23,7 +23,7 @@ class OphidiaPrimitives(AutotoolsPackage):
     depends_on("boost@1.79.0")
     depends_on("mysql")
     depends_on("libmatheval")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("gsl")
 
     def autoreconf(self, spec, prefix):

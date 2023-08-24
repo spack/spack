@@ -21,6 +21,7 @@ class DarshanUtil(AutotoolsPackage):
     tags = ["e4s"]
 
     version("main", branch="main", submodules="True")
+    version("3.4.4", sha256="d9c9df5aca94dc5ca3d56fd763bec2f74771d35126d61cb897373d2166ccd867")
     version("3.4.3", sha256="dca5f9f9b0ead55a8724b218071ecbb5c4f2ef6027eaade3a6477256930ccc2c")
     version("3.4.2", sha256="b095c3b7c059a8eba4beb03ec092b60708780a3cae3fc830424f6f9ada811c6b")
     version("3.4.1", sha256="77c0a4675d94a0f9df5710e5b8658cc9ef0f0981a6dafb114d0389b1af64774c")
@@ -55,7 +56,7 @@ class DarshanUtil(AutotoolsPackage):
         "apxc", default=False, description="Compile with AutoPerf XC module support", when="@3.3:"
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2", when="+bzip2", type=("build", "link", "run"))
     depends_on("autoconf", type="build", when="@main")
     depends_on("automake", type="build", when="@main")
@@ -77,7 +78,7 @@ class DarshanUtil(AutotoolsPackage):
         extra_args = []
 
         extra_args.append("CC=%s" % self.compiler.cc)
-        extra_args.append("--with-zlib=%s" % spec["zlib"].prefix)
+        extra_args.append("--with-zlib=%s" % spec["zlib-api"].prefix)
         if "+apmpi" in spec:
             if self.version < Version("3.3.2"):
                 extra_args.append("--enable-autoperf-apmpi")

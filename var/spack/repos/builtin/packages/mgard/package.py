@@ -26,14 +26,24 @@ class Mgard(CMakePackage, CudaPackage):
     version("2021-11-12", commit="3c05c80a45a51bb6cc5fb5fffe7b1b16787d3366")
     version("2020-10-01", commit="b67a0ac963587f190e106cc3c0b30773a9455f7a")
 
-    variant("serial", when="@2022-11-18:", default=True)
-    variant("openmp", when="@2022-11-18:", default=True)
-    variant("timing", when="@2022-11-18:", default=False)
-    variant("unstructured", when="@2022-11-18:", default=False)
+    variant(
+        "serial",
+        when="@2022-11-18:",
+        default=True,
+        description="Enable the classic non-parallel implmementation",
+    )
+    variant("openmp", when="@2022-11-18:", default=True, description="Enable OpenMP support")
+    variant("timing", when="@2022-11-18:", default=False, description="Enable profile timings")
+    variant(
+        "unstructured",
+        when="@2022-11-18:",
+        default=False,
+        description="Enable experimental unstructured mesh support",
+    )
 
     depends_on("python", type=("build",), when="@2022-11-18:")
     depends_on("sed", type=("build",), when="@2022-11-18:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("pkgconfig", type=("build",), when="@2022-11-18:")
     depends_on("zstd")
     depends_on("protobuf@:3.21.12", when="@2022-11-18:")

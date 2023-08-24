@@ -43,7 +43,7 @@ def define_plat_exe(exe):
 
 
 def test_find_external_single_package(mock_executable, executables_found, _platform_executables):
-    pkgs_to_check = [spack.repo.path.get_pkg_class("cmake")]
+    pkgs_to_check = [spack.repo.PATH.get_pkg_class("cmake")]
     cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
     executables_found({str(cmake_path): define_plat_exe("cmake")})
 
@@ -58,7 +58,7 @@ def test_find_external_single_package(mock_executable, executables_found, _platf
 def test_find_external_two_instances_same_package(
     mock_executable, executables_found, _platform_executables
 ):
-    pkgs_to_check = [spack.repo.path.get_pkg_class("cmake")]
+    pkgs_to_check = [spack.repo.PATH.get_pkg_class("cmake")]
 
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
@@ -212,7 +212,7 @@ def test_find_external_empty_default_manifest_dir(
     external("find")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Can't chmod on Windows")
+@pytest.mark.not_on_windows("Can't chmod on Windows")
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_find_external_manifest_with_bad_permissions(
     mutable_config,
@@ -347,7 +347,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     def _determine_variants(cls, exes, version_str):
         return "languages=c", {"prefix": "/opt/gcc/bin", "compilers": {"c": exes[0]}}
 
-    gcc_cls = spack.repo.path.get_pkg_class("gcc")
+    gcc_cls = spack.repo.PATH.get_pkg_class("gcc")
     monkeypatch.setattr(gcc_cls, "determine_variants", _determine_variants)
 
     # Find the external spec
@@ -399,7 +399,7 @@ def test_use_tags_for_detection(command_args, mock_executable, mutable_config, m
 
 
 @pytest.mark.regression("38733")
-@pytest.mark.skipif(sys.platform == "win32", reason="the test uses bash scripts")
+@pytest.mark.not_on_windows("the test uses bash scripts")
 def test_failures_in_scanning_do_not_result_in_an_error(
     mock_executable, monkeypatch, mutable_config
 ):

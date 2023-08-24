@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import codecs
+import email.message
 import errno
 import multiprocessing.pool
 import os
@@ -16,7 +17,8 @@ import traceback
 import urllib.parse
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
-from urllib.error import URLError
+from typing import IO, Optional
+from urllib.error import HTTPError, URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
 import llnl.util.lang
@@ -38,15 +40,45 @@ from spack.util.executable import CommandNotFoundError, which
 from spack.util.path import convert_to_posix_path
 
 
+class DetailedHTTPError(HTTPError):
+    def __init__(
+        self, req: Request, code: int, msg: str, hdrs: email.message.Message, fp: Optional[IO]
+    ) -> None:
+        self.req = req
+        super().__init__(req.get_full_url(), code, msg, hdrs, fp)
+
+    def __str__(self):
+        # Note: HTTPError, is actually a kind of non-seekable response object, so
+        # best not to read the response body here (even if it may include a human-readable
+        # error message).
+        # Note: use self.filename, not self.url, because the latter requires fp to be an
+        # IO object, which is not the case after unpickling.
+        return f"{self.req.get_method()} {self.filename} returned {self.code}: {self.msg}"
+
+    def __reduce__(self):
+        # fp is an IO object and not picklable, the rest should be.
+        return DetailedHTTPError, (self.req, self.code, self.msg, self.hdrs, None)
+
+
+class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
+    def http_error_default(self, req, fp, code, msg, hdrs):
+        raise DetailedHTTPError(req, code, msg, hdrs, fp)
+
+
 def _urlopen():
     s3 = spack.s3_handler.UrllibS3Handler()
     gcs = spack.gcs_handler.GCSHandler()
+    error_handler = SpackHTTPDefaultErrorHandler()
 
     # One opener with HTTPS ssl enabled
-    with_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl.create_default_context()))
+    with_ssl = build_opener(
+        s3, gcs, HTTPSHandler(context=ssl.create_default_context()), error_handler
+    )
 
     # One opener with HTTPS ssl disabled
-    without_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()))
+    without_ssl = build_opener(
+        s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()), error_handler
+    )
 
     # And dynamically dispatch based on the config:verify_ssl.
     def dispatch_open(fullurl, data=None, timeout=None):
