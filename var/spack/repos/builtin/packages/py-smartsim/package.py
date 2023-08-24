@@ -24,7 +24,7 @@ class PySmartsim(PythonPackage):
     variant("torch", default=True, description="Build with the pytorch backend")
 
     depends_on("python@3.8:3.10", type=("build", "run"))
-    depends_on("py-setuptools", type=("build",))
+    depends_on("py-setuptools@39.2:", type=("build",))
     depends_on("py-cmake@3.13:", type=("build",))
 
     depends_on("py-psutil@5.7.2:", type=("build", "run"))
