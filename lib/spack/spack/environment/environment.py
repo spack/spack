@@ -1860,7 +1860,7 @@ class Environment:
                 and install_time_of_installed_spec < transitive_dev_install_times[spec]
             ):
                 overwrite_specs.add(spec)
-                # At this point we can stop updating transitive_dev_install_times
+                # At this point we can skip transitive_dev_install_times (below)
                 # because parents of overwrite specs are automatically overwritten
                 continue
 
