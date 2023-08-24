@@ -58,7 +58,7 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@2.8:", type="build")
     depends_on("hwloc")
     depends_on("jansson", type="link")
-    #depends_on("cuda", when="+cuda_arch")
+    depends_on("cuda", when="+cuda")
     #depends_on("rocm-smi-lib", when="+rocm")
 
     root_cmakelists_dir = "src"
@@ -91,6 +91,8 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=ON")
+	    cmake_args.append("-DNVML_DIR={0}".format(spec["cuda"].prefix))
+	    cmake_args.append("-DCMAKE_SHARED_LINKER_FLAGS=-L{0}/nvidia/targets/ppc64le-linux/lib/stubs/ -lnvidia-ml".format(spec["cuda"].prefix))
         elif "+rocm" in spec:
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=ON")
@@ -110,7 +112,8 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
         else:
             cmake_args.append("-DBUILD_TESTS=OFF")
 
-        cpu_uarch = self.spec.target.microarchitecture
+        cpu_vendor = self.spec.platform
+        cpu_uarch = self.spec.target
 
         #taken from list of archspec.cpu.TARGETS
         supported_amd_targets = ["zen2"]
