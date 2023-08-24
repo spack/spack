@@ -82,6 +82,11 @@ class Dftbplus(MakefilePackage, CMakePackage):
         description="Build the API library " "(if you need to link to DFTB+ from other codes)",
         when="build_system=cmake",
     )
+    variant(
+        "openmp",
+        default=True,
+        description="Build with OpenMP support " "(if you need to use OpenMP parallelization)",
+    )
 
     depends_on("lapack")
     depends_on("blas")
