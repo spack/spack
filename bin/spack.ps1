@@ -41,9 +41,7 @@ function Read-SpackArgs {
 
 function Set-SpackEnv {
     foreach($envop in $args[0]){
-        $envop = $envop.Trim("`$")
-        $path, $value = $envop -split "="
-        Set-Item -Path $path -Value $value
+        Invoke-Expression $envop
     }
 }
 
@@ -116,6 +114,7 @@ function Invoke-SpackLoad {
         python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
     }
     else {
+        # python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand "--pwsh" $SpackSubCommandArgs
         $SpackEnv = $(python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand "--pwsh" $SpackSubCommandArgs)
         Set-SpackEnv $SpackEnv
     }
