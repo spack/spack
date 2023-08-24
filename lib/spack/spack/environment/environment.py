@@ -1812,7 +1812,16 @@ class Environment:
         db = _database or spack.store.STORE.db
 
         overwrite_specs = set()
-        transitive_dev_install_times = collections.defaultdict(int)
+        transitive_dev_install_times = {}
+
+        # Like +=, but for max()
+        def max_equals(dict, key, value):
+            orig_value = dict.get(key, 0)
+            if value > orig_value:
+                dict[key] = value
+                return value
+            else:
+                return orig_value
 
         def update_transitive_dev_install_times(spec):
             dev_path_var = spec.variants.get("dev_path", None)
@@ -1820,18 +1829,16 @@ class Environment:
                 _, record = db.query_by_spec_hash(spec.dag_hash())
                 when_this_spec_was_installed = record.installation_time
 
-                transitive_dev_install_times[spec] = max(
-                    transitive_dev_install_times[spec], when_this_spec_was_installed
-                )
-            # else: this is not a develop spec, and we don't want to record the
-            # installation time (we could have done an overwrite install of a
-            # non-develop spec, in which case it should not be necessary to
-            # reinstall the parent)
-            transitive_dev_install_time_child = transitive_dev_install_times[spec]
+                latest_transitive_install_time = max_equals(transitive_dev_install_times, spec, when_this_spec_was_installed)
+            else:
+                # else this is not a develop spec, and we don't want to record the
+                # installation time (we could have done an overwrite install of a
+                # non-develop spec, in which case it should not be necessary to
+                # reinstall the parent)
+                latest_transitive_install_time = transitive_dev_install_times[spec]
+
             for parent in spec.dependents():
-                transitive_dev_install_times[parent] = max(
-                    transitive_dev_install_times[parent], transitive_dev_install_time_child
-                )
+                max_equals(transitive_dev_install_times, parent, latest_transitive_install_time)
 
         for spec in traverse.traverse_nodes(
             self.concrete_roots(), direction="children", order="post"
