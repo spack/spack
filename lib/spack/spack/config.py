@@ -1241,7 +1241,8 @@ def process_config_path(path):
     Note: quoted value path components will be processed as a single value (escaping colons)
         quoted path components outside of the value will be considered ill formed and will
         raise.
-        e.g.: `this:is:a:path:'value:with:colon'` will yield:
+        e.g. `this:is:a:path:'value:with:colon'` will yield:
+
             [this, is, a, path, value:with:colon]
     """
     result = []
