@@ -21,3 +21,4 @@ class PerlHttpMessage(PerlPackage):
     depends_on("perl-try-tiny", type=("build", "run"))
     depends_on("perl-uri", type=("build", "run"))
     depends_on("perl-http-date", type=("build", "run"))
+    depends_on("perl-clone", type=("build", "run"))
