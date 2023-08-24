@@ -1803,8 +1803,8 @@ class Environment:
         * The spec is a "develop" spec, and a user has (outside of spack)
           modified one of the source files.
         * Any parent of such a spec.
-        * A dependency that is a "develop" spec was installed more-recently
-          this can occur if, for example, x->y, you change and reinstall
+        * A dependency that is a "develop" spec was installed more-recently.
+          This can occur if, for example, x->y, you change and reinstall
           the in-development spec y, and then later reinstall the whole
           environment.
         """
@@ -1870,9 +1870,6 @@ class Environment:
             # of z (which is develop). x should be reinstalled, but not because
             # of y.
             update_transitive_dev_install_times(spec, install_time_of_installed_spec)
-
-            if install_time_of_installed_spec is None:
-                continue
 
             # If it is a dev spec and its sources are newer than the install
             # time, then overwrite
