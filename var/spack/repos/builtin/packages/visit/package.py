@@ -98,6 +98,9 @@ class Visit(CMakePackage):
     # Fix pthread and librt link errors
     patch("visit32-missing-link-libs.patch", when="@3.2")
 
+    # Fix const-correctness in VTK interface
+    patch("vtk-8.2-constcorrect.patch", when="@3.3.3 ^vtk@8.2.1a")
+
     # Exactly one of 'gui' or 'osmesa' has to be enabled
     conflicts("+gui", when="+osmesa")
 

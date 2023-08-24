@@ -27,6 +27,10 @@ class Vtk(CMakePackage):
     version("9.0.3", sha256="bc3eb9625b2b8dbfecb6052a2ab091fc91405de4333b0ec68f3323815154ed8a")
     version("9.0.1", sha256="1b39a5e191c282861e7af4101eaa8585969a2de05f5646c9199a161213a622c7")
     version("9.0.0", sha256="15def4e6f84d72f82386617fe595ec124dda3cbd13ea19a0dcd91583197d8715")
+    # v8.2.1a is a compatability version of VTK to allow VisIt to build in CI and contains
+    # patches that were not tested by VTK CI or for a VTK release
+    # - Python 3.8 compatability
+    # - VisIt 3.3.3 compatability
     version(
         "8.2.1a",
         url="https://www.vtk.org/files/release/8.2/VTK-8.2.0.tar.gz",
@@ -99,6 +103,9 @@ class Vtk(CMakePackage):
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/6275
     patch("vtk82_python38.patch", when="@8.2.1a")
 
+    # Fix link error in exodusII
+    patch("vtk-8.2-exodusII-gcc11.patch", when="@8.2.1a")
+
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
     depends_on("gl@3.2:", when="+opengl2")
@@ -154,7 +161,8 @@ class Vtk(CMakePackage):
     depends_on("utf8cpp", when="@9:")
     depends_on("gl2ps", when="@8.1:")
     depends_on("gl2ps@1.4.1:", when="@9:")
-    depends_on("proj@4:8.1.0", when="@8.2:")
+    depends_on("proj@4", when="@8.2.0")
+    depends_on("proj@4:7", when="@9:")
     depends_on("cgns@4.1.1:+mpi", when="@9.1: +mpi")
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
     depends_on("seacas@2021-05-12:+mpi", when="@9.1: +mpi")
@@ -210,6 +218,11 @@ class Vtk(CMakePackage):
             # Allow downstream codes (e.g. VisIt) to override VTK's classes
             "-DVTK_ALL_NEW_OBJECT_FACTORY:BOOL=ON",
         ]
+
+        # Version 8.2.1a using internal libproj/pugixml for compatability
+        if spec.satisfies("@8.2.1a"):
+            cmake_args.append("-DVTK_USE_SYSTEM_LIBPROJ:BOOL=OFF")
+            cmake_args.append("-DVTK_USE_SYSTEM_PUGIXML:BOOL=OFF")
 
         # Disable wrappers for other languages.
         cmake_args.append("-DVTK_WRAP_JAVA=OFF")

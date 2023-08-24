@@ -32,7 +32,7 @@ spack:
   definitions:
   - paraview_specs:
     - matrix:
-      - - paraview
+      - - paraview +raytracing
       - - +qt~osmesa # GUI Support w/ GLX Rendering
         - ~qt~osmesa # GLX Rendering
         - ~qt+osmesa # OSMesa Rendering
