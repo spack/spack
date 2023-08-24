@@ -9,6 +9,7 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
 import spack.spec
 import spack.util.path
 import spack.version
@@ -21,6 +22,7 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument("-p", "--path", help="source location of package")
+    subparser.add_argument("-b", "--build-directory", help="build directory for the package")
 
     clone_group = subparser.add_mutually_exclusive_group()
     clone_group.add_argument(
@@ -108,3 +110,12 @@ def develop(parser, args):
         changed = env.develop(spec, path, clone)
         if changed:
             env.write()
+
+    if args.build_directory is not None:
+        scope = env.env_file_config_scope_name()
+        spack.config.add(
+            "packages:{}:package_attributes:build_directory:{}".format(
+                spec.name, args.build_directory
+            ),
+            scope,
+        )
