@@ -20,5 +20,12 @@ class Lcov(MakefilePackage):
     version("1.15", sha256="c1cda2fa33bec9aa2c2c73c87226cfe97de0831887176b45ee523c5e30f8053a")
     version("1.14", sha256="14995699187440e0ae4da57fe3a64adc0a3c5cf14feab971f8db38fb7d8f071a")
 
+    depends_on("perl")
+
     def install(self, spec, prefix):
-        make("DESTDIR=", "PREFIX=%s" % prefix, "install")
+        make(
+            "LCOV_PERL_PATH=%s" % self.spec["perl"].command.path,
+            "DESTDIR=",
+            "PREFIX=%s" % prefix,
+            "install",
+        )
