@@ -4,11 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import re  # To get the variant name after (+)
 import platform
-from spack.package import *
+import re  # To get the variant name after (+)
+
 import spack.build_systems.cmake
 import spack.build_systems.makefile
+from spack.package import *
+
 
 def find_model_flag(str):
     res = re.findall(r"\+(\w+)", str)
@@ -16,10 +18,11 @@ def find_model_flag(str):
         return ""
     return res
 
+
 def find_package_version(s):
     try:
-        start = s.index( "-", s.index( "-", s.index( "-" ) + len( "-" ) ) )
-        end = s.index( "-", start )
+        start = s.index("-", s.index("-", s.index("-") + len("-")))
+        end = s.index("-", start)
         return s[start:end]
     except ValueError:
         return ""
@@ -155,7 +158,12 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
 
     # comp_impl_vals=["ONEAPI-DPCPP","DPCPP","HIPSYCL","COMPUTECPP"]
     with when("build_system=cmake"):
-        variant("implementation", values=str, default="none", description="Compile using the specified SYCL compiler option")
+        variant(
+            "implementation",
+            values=str,
+            default="none",
+            description="Compile using the specified SYCL compiler option",
+        )
         conflicts(
             "implementation=none",
             when="+sycl",
@@ -172,29 +180,40 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     # This applies to all
     depends_on("cmake@3.14.0:", type="build")
     depends_on("opencl-c-headers", when="+ocl")
-    implementation_vals_cmake = ["cuda","rocm","oneapi-dpcpp","dpcpp","hipsycl","computecpp"]
+    implementation_vals_cmake = ["cuda", "rocm", "oneapi-dpcpp", "dpcpp", "hipsycl", "computecpp"]
 
     with when("build_system=makefile"):
-        implementation_vals=["DoConcurrent","Array","OpenMP","OpenMPWorkshare","OpenMPTarget","OpenMPTargetLoop","OpenMPTaskloop","OpenACC","OpenACCArray","CUDA","CUDAKernel","Sequential"]
-        variant("impl", values=implementation_vals, default = "Sequential", description="Implementation")
-        # The fortran Makefile is inside the src/fortran so we need to address this 
-        build_directory = 'src/fortran'
+        implementation_vals = [
+            "DoConcurrent",
+            "Array",
+            "OpenMP",
+            "OpenMPWorkshare",
+            "OpenMPTarget",
+            "OpenMPTargetLoop",
+            "OpenMPTaskloop",
+            "OpenACC",
+            "OpenACCArray",
+            "CUDA",
+            "CUDAKernel",
+            "Sequential",
+        ]
+        variant(
+            "impl", values=implementation_vals, default="Sequential", description="Implementation"
+        )
+        # The fortran Makefile is inside the src/fortran so we need to address this
+        build_directory = "src/fortran"
         # build_directory = '.'
-        build_name = ''
-
+        build_name = ""
 
         variant(
-            "test",
-            values=str,
-            default="none",
-            description="Test Variant for debugging purposes",
+            "test", values=str, default="none", description="Test Variant for debugging purposes"
         )
-        
+
+
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         # convert spec to string to work on it
         spec_string = str(self.spec)
-        
 
         # take only the first portion of the spec until space
         spec_string_truncate = spec_string.split(" ", 1)[0]
@@ -418,7 +437,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 cuda_arch = "sm_" + cuda_arch_list[0]
                 args.append("-DCUDA_ARCH=" + cuda_arch)
                 cuda_dir = self.spec["cuda"].prefix
-                cuda_comp = cuda_dir + "/bin/nvcc"  
+                cuda_comp = cuda_dir + "/bin/nvcc"
                 args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
                 args.append("-DBACKEND=" + self.spec.variants["backend"].value.upper())
                 if self.spec.variants["flags"].value != "none":
@@ -465,116 +484,122 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             args.append("-DCMAKE_CXX_COMPILER_FORCED=True")
 
         return args
+
+
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
-    build_directory = 'src/fortran'
+    build_directory = "src/fortran"
+
     #### Generate Compiler Specific includes
     def edit(self, pkg, spec, prefix):
         config = {
-            'FC': pkg.compiler.fc_names[0],
-            'FCFLAGS' : '',
-            'ARCH' : platform.machine(),
-            'DOCONCURRENT_FLAG': '',
-            'ARRAY_FLAG': '',
-            'OPENMP_FLAG': '',
-            'OPENACC_FLAG': '',
-            'CUDA_FLAG': '',
-            'SEQUENTIAL_FLAG': ''
+            "FC": pkg.compiler.fc_names[0],
+            "FCFLAGS": "",
+            "ARCH": platform.machine(),
+            "DOCONCURRENT_FLAG": "",
+            "ARRAY_FLAG": "",
+            "OPENMP_FLAG": "",
+            "OPENACC_FLAG": "",
+            "CUDA_FLAG": "",
+            "SEQUENTIAL_FLAG": "",
         }
 
         # ===================================
         #               ARM
         # ===================================
-        if (spec.compiler.name == "arm"):
-            flags = "-std=f2018 " + pkg.compiler.opt_flags[4] + " -Wall -Wno-unused-variable" 
+        if spec.compiler.name == "arm":
+            flags = "-std=f2018 " + pkg.compiler.opt_flags[4] + " -Wall -Wno-unused-variable"
 
-            if(platform.machine() == 'aarch64'):
-                #TODO: Add MCPU option here as in -mcpu=$(MCPU)
-                flags+= '-mcpu=native'
+            if platform.machine() == "aarch64":
+                # TODO: Add MCPU option here as in -mcpu=$(MCPU)
+                flags += "-mcpu=native"
             else:
-                #TODO: Add MARCH option here as in -march=$(MARCH)
-                flags+= '-march=native'
+                # TODO: Add MARCH option here as in -march=$(MARCH)
+                flags += "-march=native"
 
-            config['DOCONCURRENT_FLAG'] = pkg.compiler.openmp_flag # libomp.so required
-            config['ARRAY_FLAG'] = pkg.compiler.openmp_flag # libomp.so required
-            config['OPENMP_FLAG'] = pkg.compiler.openmp_flag # libomp.so required
-            config['OPENACC_FLAG'] = "-fopenacc"
+            config["DOCONCURRENT_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
+            config["ARRAY_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
+            config["OPENMP_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
+            config["OPENACC_FLAG"] = "-fopenacc"
 
-            #Error Messages            
-            if self.spec.variants["impl"].value in ["CUDA","CUDAKernels","OpenACC","OpenACCArray"]:
+            # Error Messages
+            if self.spec.variants["impl"].value in [
+                "CUDA",
+                "CUDAKernels",
+                "OpenACC",
+                "OpenACCArray",
+            ]:
                 sys.exit(self.spec.variants["impl"].value + "is not supported by this compiler")
-
 
         # ===================================
         #               AMD
         # ===================================
-        if (spec.compiler.name == "aocc"):
-            flags = "-std=f2018 " + pkg.compiler.opt_flags[3] + " -Wall -Wno-unused-variable -march=native" 
+        if spec.compiler.name == "aocc":
+            flags = (
+                "-std=f2018 "
+                + pkg.compiler.opt_flags[3]
+                + " -Wall -Wno-unused-variable -march=native"
+            )
 
+            config["DOCONCURRENT_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
+            config["ARRAY_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
+            config["OPENMP_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
+            config["OPENACC_FLAG"] = "-fopenacc"
 
-            config['DOCONCURRENT_FLAG'] = pkg.compiler.openmp_flag # libomp.so required
-            config['ARRAY_FLAG'] = pkg.compiler.openmp_flag # libomp.so required
-            config['OPENMP_FLAG'] = pkg.compiler.openmp_flag # libomp.so required
-            config['OPENACC_FLAG'] = "-fopenacc"
-
-            #Error Messages            
-            if self.spec.variants["impl"].value in ["CUDA","CUDAKernels"]:
+            # Error Messages
+            if self.spec.variants["impl"].value in ["CUDA", "CUDAKernels"]:
                 sys.exit(self.spec.variants["impl"].value + "is not supported by this compiler")
-
-
 
         # ===================================
         #               CRAY
         # ===================================
-        if (spec.compiler.name == "cce"):
-            flags = "-e F -O3" 
+        if spec.compiler.name == "cce":
+            flags = "-e F -O3"
 
-            config['DOCONCURRENT_FLAG'] = "-h thread_do_concurrent -DCRAY_THREAD_DOCONCURRENT"
-            config['ARRAY_FLAG'] = "-h autothread" 
-            config['OPENMP_FLAG'] = pkg.compiler.openmp_flag # if clang based it will be -fopenmp else -h omp 
-            config['OPENACC_FLAG'] = "-h acc" # for cpu only -h omp
+            config["DOCONCURRENT_FLAG"] = "-h thread_do_concurrent -DCRAY_THREAD_DOCONCURRENT"
+            config["ARRAY_FLAG"] = "-h autothread"
+            config[
+                "OPENMP_FLAG"
+            ] = pkg.compiler.openmp_flag  # if clang based it will be -fopenmp else -h omp
+            config["OPENACC_FLAG"] = "-h acc"  # for cpu only -h omp
 
-            #Error Messages            
-            if self.spec.variants["impl"].value in ["CUDA","CUDAKernels"]:
+            # Error Messages
+            if self.spec.variants["impl"].value in ["CUDA", "CUDAKernels"]:
                 sys.exit(self.spec.variants["impl"].value + "is not supported by this compiler")
-
-
 
         # ===================================
         #               GCC
         # ===================================
-        if (spec.compiler.name == "gcc"):
+        if spec.compiler.name == "gcc":
             flags = "-std=f2018 -O3 "
             flags += "-Wall -Wno-unused-dummy-argument -Wno-unused-variable "
 
             # config['MARCH'] = "neoverse-v1,neoverse-n1,icelake-server,znver3,cortex-a78ae"
-        
-            if(platform.machine() == 'aarch64'):
-                #TODO: Add MCPU option here as in -mcpu=$(MCPU)
-                flags+= '-mcpu=native'
+
+            if platform.machine() == "aarch64":
+                # TODO: Add MCPU option here as in -mcpu=$(MCPU)
+                flags += "-mcpu=native"
             else:
-                #TODO: Add MARCH option here as in -march=$(MARCH)
-                flags+= '-march=native'
+                # TODO: Add MARCH option here as in -march=$(MARCH)
+                flags += "-march=native"
 
-            config['FCFLAGS'] = flags
-            config['DOCONCURRENT_FLAG'] = "-ftree-parallelize-loops=4"
-            config['OPENMP_FLAG'] = pkg.compiler.openmp_flag
-            config['OPENACC_FLAG'] = '-fopenacc'
+            config["FCFLAGS"] = flags
+            config["DOCONCURRENT_FLAG"] = "-ftree-parallelize-loops=4"
+            config["OPENMP_FLAG"] = pkg.compiler.openmp_flag
+            config["OPENACC_FLAG"] = "-fopenacc"
 
-            #Error Messages            
+            # Error Messages
             if "CUDA" in self.spec.variants["impl"].value:
                 sys.exit(self.spec.variants["impl"].value + "is not supported by this compiler")
 
-                
         # ===================================
         #               NVHPC
         # ===================================
-        if (spec.compiler.name == "nvhpc"):
-            
-            flags = pkg.compiler.opt_flags[4] # for -O3
-            #FCFLAGS	:= -O3 -Minform=inform -Minfo=all
+        if spec.compiler.name == "nvhpc":
+            flags = pkg.compiler.opt_flags[4]  # for -O3
+            # FCFLAGS	:= -O3 -Minform=inform -Minfo=all
             flags += " -Minform=warn "
             TARGET = "gpu"  # target = "multicore"
-            config['TARGET']=TARGET
+            config["TARGET"] = TARGET
             if "cuda_arch" in self.spec.variants:
                 cuda_arch_list = self.spec.variants["cuda_arch"].value
                 # the architecture value is only number so append sm_ to the name
@@ -582,78 +607,80 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             # config['MARCH'] = "neoverse-v1,neoverse-n1,icelake-server,znver3,cortex-a78ae"
             GPUFLAG = " -gpu=" + cuda_arch
             # march=neoverse-v1,neoverse-n1,zen3
-            march = 'none'
-            if(march != 'none'):
-                if(platform.machine() == 'aarch64'):
-                    if(march in ['neoverse-n1','neoverse-v1']):
-                        flags+= '-tp=' + march
+            march = "none"
+            if march != "none":
+                if platform.machine() == "aarch64":
+                    if march in ["neoverse-n1", "neoverse-v1"]:
+                        flags += "-tp=" + march
                     else:
-                        flags+= '-tp=native'
-                    #TODO: Add MCPU option here as in -mcpu=$(MCPU)
+                        flags += "-tp=native"
+                    # TODO: Add MCPU option here as in -mcpu=$(MCPU)
                 else:
-                    #TODO: Add MARCH option here as in -march=$(MARCH)
-                    flags+= '-tp=' + march
+                    # TODO: Add MARCH option here as in -march=$(MARCH)
+                    flags += "-tp=" + march
             else:
-                flags+= '-tp=native'
+                flags += "-tp=native"
             # this is to allow apples-to-apples comparison with DC in non-DC GPU impls
             # set exactly one of these pairs!
             # MANAGED = "-DUSE_MANAGED -gpu=managed"
             # DEVICE=""
-            #------------
-            DEVICE  = "-DUSE_DEVICE -cuda -gpu=nomanaged",
+            # ------------
+            DEVICE = ("-DUSE_DEVICE -cuda -gpu=nomanaged",)
             MANAGED = ""
-            config['FCFLAGS'] = flags
-            config['DOCONCURRENT_FLAG'] = GPUFLAG + " -stdpar=" + TARGET + " " + DEVICE
-            config['ARRAY_FLAG'] = GPUFLAG + " -stdpar=" + TARGET + " " + MANAGED
-            config['OPENMP_FLAG'] =  GPUFLAG + " -mp=" + TARGET + " " + MANAGED
-            config['OPENACC_FLAG'] = GPUFLAG + " -acc=" + TARGET + " " + MANAGED
-            config['CUDA_FLAG'] = GPUFLAG + " -cuda -acc=gpu" + " " + MANAGED
+            config["FCFLAGS"] = flags
+            config["DOCONCURRENT_FLAG"] = GPUFLAG + " -stdpar=" + TARGET + " " + DEVICE
+            config["ARRAY_FLAG"] = GPUFLAG + " -stdpar=" + TARGET + " " + MANAGED
+            config["OPENMP_FLAG"] = GPUFLAG + " -mp=" + TARGET + " " + MANAGED
+            config["OPENACC_FLAG"] = GPUFLAG + " -acc=" + TARGET + " " + MANAGED
+            config["CUDA_FLAG"] = GPUFLAG + " -cuda -acc=gpu" + " " + MANAGED
 
-            #Error Messages            
+            # Error Messages
             if self.spec.variants["impl"].value in ["OpenMPTaskloop"]:
                 sys.exit(self.spec.variants["impl"].value + "is not supported by this compiler")
         # ===================================
         #               ONEAPI
         # ===================================
-        if (spec.compiler.name == "oneapi"):
+        if spec.compiler.name == "oneapi":
             flags = "-std18 -Ofast -xHOST -qopt-zmm-usage=low"
-            if config['FC'] == "ifort":
+            if config["FC"] == "ifort":
                 flags += "-qopt-streaming-stores=always"
 
-            config['DOCONCURRENT_FLAG'] = "-qopenmp" + ("-parallel" if config['FC'] == "ifort" else "")
-            config['ARRAY_FLAG'] = "-qopenmp" + ("-parallel" if config['FC'] == "ifort" else "")
-            config['OPENMP_FLAG'] = "-qopenmp" + ("-fopenmp-targets=spir64 -DUSE_FLOAT=1" if config['FC'] == "ifx" else "")
+            config["DOCONCURRENT_FLAG"] = "-qopenmp" + (
+                "-parallel" if config["FC"] == "ifort" else ""
+            )
+            config["ARRAY_FLAG"] = "-qopenmp" + ("-parallel" if config["FC"] == "ifort" else "")
+            config["OPENMP_FLAG"] = "-qopenmp" + (
+                "-fopenmp-targets=spir64 -DUSE_FLOAT=1" if config["FC"] == "ifx" else ""
+            )
 
-
-            #Error Messages            
-            if self.spec.variants["impl"].value in ["CUDA","CUDAKernels","OpenACC","OpenACCArray"]:
+            # Error Messages
+            if self.spec.variants["impl"].value in [
+                "CUDA",
+                "CUDAKernels",
+                "OpenACC",
+                "OpenACCArray",
+            ]:
                 sys.exit(self.spec.variants["impl"].value + "is not supported by this compiler")
-
-
 
         # ===================================
         #               FJ
         # ===================================
-        if (spec.compiler.name == "fj"):
-            flags = "-X08 -Kfast -KA64FX -KSVE -KARMV8_3_A -Kzfill=100 -Kprefetch_sequential=soft -Kprefetch_line=8 -Kprefetch_line_L2=16 -Koptmsg=2 -Keval -DUSE_OMP_GET_WTIME=1" # FJ Fortran system_clock is low resolution
+        if spec.compiler.name == "fj":
+            flags = "-X08 -Kfast -KA64FX -KSVE -KARMV8_3_A -Kzfill=100 -Kprefetch_sequential=soft -Kprefetch_line=8 -Kprefetch_line_L2=16 -Koptmsg=2 -Keval -DUSE_OMP_GET_WTIME=1"  # FJ Fortran system_clock is low resolution
 
+            config["DOCONCURRENT_FLAG"] = "-Kparallel,reduction -DNOTSHARED"
+            config["ARRAY_FLAG"] = "-Kparallel,reduction"
+            config["OPENMP_FLAG"] = pkg.compiler.openmp_flag
 
-            config['DOCONCURRENT_FLAG'] = "-Kparallel,reduction -DNOTSHARED"
-            config['ARRAY_FLAG'] = "-Kparallel,reduction"
-            config['OPENMP_FLAG'] = pkg.compiler.openmp_flag
-
-
-            #Error Messages            
-            if self.spec.variants["impl"].value in ["CUDA","CUDAKernels","OpenACC"]:
+            # Error Messages
+            if self.spec.variants["impl"].value in ["CUDA", "CUDAKernels", "OpenACC"]:
                 sys.exit(self.spec.variants["impl"].value + "is not supported by this compiler")
 
-        
-        with open(self.build_directory + '/make.inc.'+ spec.compiler.name, 'w+') as inc:
+        with open(self.build_directory + "/make.inc." + spec.compiler.name, "w+") as inc:
             for key in config:
-                inc.write('{0} = {1}\n'.format(key, config[key]))
+                inc.write("{0} = {1}\n".format(key, config[key]))
 
     def setup_build_environment(self, env):
-
         ######################################
         # Build and Installation Directories #
         ######################################
@@ -661,24 +688,25 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # The environment variable ESMF_DIR must be set to the full pathname
         # of the top level ESMF directory before building the framework.
         env.set("COMPILER", self.spec.compiler.name)
-        env.set("IMPLEMENTATION",self.spec.variants["impl"].value)
+        env.set("IMPLEMENTATION", self.spec.variants["impl"].value)
         # env.set("IMPLEMENTATION_OBJECT",self.spec.variants["impl"].value + "Stream.o")
-        print (self.spec.variants["impl"].value)
-        print (self.spec.compiler.version)
+        print(self.spec.variants["impl"].value)
+        print(self.spec.compiler.version)
         print(platform.machine())
         # This creates a testing tree (if one doesn't already exist) and
         # copies the binaries from `src/fortran` to `SpackPackage/bin`.
         # This allows you to use the testing tree independently of the
         # source tree in the future.
         # print(pkg.compiler.cc_pic_flag)
+
     @property
     def build_name(self):
-        compiler_prefix =  self.spec.compiler.name
+        compiler_prefix = self.spec.compiler.name
         implementation_prefix = self.spec.variants["impl"].value
         return "{}.{}.{}".format("BabelStream", compiler_prefix, implementation_prefix)
-    
+
     def install(self, pkg, spec, prefix):
         mkdir(prefix.bin)
-        install(self.build_directory + '/' + self.build_name, prefix.bin)
-        #To check the make.inc file generated
+        install(self.build_directory + "/" + self.build_name, prefix.bin)
+        # To check the make.inc file generated
         install_tree(self.build_directory, prefix.lib)
