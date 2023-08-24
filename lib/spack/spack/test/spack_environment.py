@@ -8,11 +8,11 @@ import sys
 
 import pytest
 
+import llnl.util.filesystem as fs
+
 import spack.environment as ev
 import spack.spec
 from spack.main import SpackCommand
-
-import llnl.util.filesystem as fs
 
 env = SpackCommand("env")
 
@@ -50,7 +50,9 @@ def test_dev_rebuild_dependent_delayed(
         db._add(child, installation_time=2)
         db._add(dependent, installation_time=1)
 
-        monkeypatch.setattr(fs, "last_modification_time_recursive", _mock_last_modification_time_recursive)
+        monkeypatch.setattr(
+            fs, "last_modification_time_recursive", _mock_last_modification_time_recursive
+        )
 
         needs_reinstall = e._get_overwrite_specs(_database=db)
         assert needs_reinstall == [dependent.dag_hash()]
