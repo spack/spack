@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,6 @@ class Amg2023(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/AMG2023.git"
 
     version("develop", branch="main")
-    #TODO delete this line once cmake is merged into AMG2023
     version("cmake-build", git="https://github.com/dyokelson/AMG2023.git", branch="cmake") 
     
     variant("mpi", default=True, description="Enable MPI support")
@@ -51,4 +50,3 @@ class Amg2023(CMakePackage, CudaPackage, ROCmPackage):
             cmake_options.append("-DAMG_WITH_MPI=ON")
 
         return cmake_options
-
