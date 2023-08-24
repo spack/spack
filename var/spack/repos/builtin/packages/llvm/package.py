@@ -221,7 +221,7 @@ class Llvm(CMakePackage, CudaPackage):
         description="Enable code-signing on macOS",
     )
     variant("python", default=False, description="Install python bindings")
-    variant("lua", default=True, when="@11: +lldb", description="Enable lua scripting inside lldb")
+    variant("lua", default=True, description="Enable lua scripting inside lldb")
     variant("version_suffix", default="none", description="Add a symbol suffix")
     variant(
         "shlib_symbol_version",
@@ -232,6 +232,8 @@ class Llvm(CMakePackage, CudaPackage):
     variant("z3", default=False, description="Use Z3 for the clang static analyzer")
     conflicts("+z3", when="@:7")
     conflicts("+z3", when="~clang")
+    conflicts("+lua", when="@:10")
+    conflicts("+lua", when="~lldb")
 
     variant(
         "zstd",
