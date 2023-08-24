@@ -421,7 +421,7 @@ def _is_dev_spec_and_has_changed(spec, _database=None):
         return False
 
     # Now we can check whether the code changed since the last installation
-    if not spec.installed:
+    if not db.installed(spec):
         # Not installed -> nothing to compare against
         return False
 
