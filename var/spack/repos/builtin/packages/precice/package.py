@@ -46,37 +46,20 @@ class Precice(CMakePackage):
     variant("petsc", default=True, description="Enable PETSc support")
     variant("python", default=False, description="Enable Python support", when="@2:")
     variant("shared", default=True, description="Build shared libraries")
-    variant(
-        "debug_log",
-        default=False,
-        description="Enable debug log in non-debug builds",
-        when="@2.4:",
-    )
-    variant(
-        "debug_log",
-        default=True,
-        description="Enable debug log in non-debug builds",
-        when="@2.4: build_type=Debug",
-    )
-    conflicts(
-        "~debug_log",
-        when="@2.4: build_type=Debug",
-        msg="Disabling debug log isn't possible in debug builds.",
-    ),
-    variant(
-        "checked", default=False, description="Enable assertions in non-debug builds", when="@2.4:"
-    )
-    variant(
-        "checked",
-        default=True,
-        description="Enable assertions in non-debug builds",
-        when="@2.4: build_type=Debug",
-    )
-    conflicts(
-        "~checked",
-        when="@2.4: build_type=Debug",
-        msg="Disabling assertions isn't possible in debug builds.",
-    ),
+
+    for build_type in ("Release", "RelWithDebInfo", "MinSizeRel"):
+        variant(
+            "debug_log",
+            default=False,
+            description="Enable debug log in non-debug builds",
+            when=f"@2.4: build_type={build_type}",
+        )
+        variant(
+            "checked",
+            default=False,
+            description="Enable assertions in non-debug builds",
+            when=f"@2.4: build_type={build_type}",
+        )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("cmake@3.10.2:", type="build", when="@1.4:")
