@@ -489,7 +489,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     build_directory = "src/fortran"
 
-    #### Generate Compiler Specific includes
+    # Generate Compiler Specific includes
     def edit(self, pkg, spec, prefix):
         config = {
             "FC": pkg.compiler.fc_names[0],
@@ -666,7 +666,10 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         #               FJ
         # ===================================
         if spec.compiler.name == "fj":
-            flags = "-X08 -Kfast -KA64FX -KSVE -KARMV8_3_A -Kzfill=100 -Kprefetch_sequential=soft -Kprefetch_line=8 -Kprefetch_line_L2=16 -Koptmsg=2 -Keval -DUSE_OMP_GET_WTIME=1"  # FJ Fortran system_clock is low resolution
+            flags = "-X08 -Kfast -KA64FX -KSVE -KARMV8_3_A -Kzfill=100 "
+            flags += "-Kprefetch_sequential=soft " 
+            flags += "-Kprefetch_line=8 -Kprefetch_line_L2=16 -Koptmsg=2 "
+            flags += "-Keval -DUSE_OMP_GET_WTIME=1 "  # FJ Fortran system_clock is low resolution
 
             config["DOCONCURRENT_FLAG"] = "-Kparallel,reduction -DNOTSHARED"
             config["ARRAY_FLAG"] = "-Kparallel,reduction"
