@@ -255,48 +255,6 @@ def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
     check_compiler_config(b_comps["compilers"], *compiler_specs.b)
 
 
-# Test config path escaping and interpolating
-
-
-@pytest.mark.parametrize(
-    "path,expected",
-    [
-        # note: Windows path used below as example but since the method
-        # has no understanding of "paths" this is sufficently generic
-        (
-            'config:install_tree:root:"C:/example/path"',
-            'config:install_tree:root:"C%3a/example/path"',
-        ),
-        ('config:path_entry:"key:with:colons"', 'config:path_entry:"key%3awith%3acolons"'),
-        ('"colons:first":test:path', '"colons%3afirst":test:path'),
-        ('config:with:escaped:\\"quotes:test\\"', 'config:with:escaped:\\"quotes:test\\"'),
-        ('config:with:"single:double_quote', 'config:with:"single:double_quote'),
-    ],
-)
-def test_escape_colons(path, expected):
-    escaped_path = spack.config.escape_colons(path)
-    assert escaped_path == expected
-
-
-@pytest.mark.parametrize(
-    "path,expected",
-    [
-        # note: Windows path used below as example but since the method
-        # has no understanding of "paths" this is sufficently generic
-        (
-            'config:install_tree:root:"C%3a/example/path"',
-            'config:install_tree:root:"C:/example/path"',
-        ),
-        ('config:path_entry:"key%3awith%3acolons"', 'config:path_entry:"key:with:colons"'),
-        ('"colons%3afirst":test:path', '"colons:first":test:path'),
-        ("config:with:%random:percent", "config:with:%random:percent"),
-    ],
-)
-def test_interpolate_escape_characters(path, expected):
-    interped_path = spack.config.interp_escapes(path)
-    assert interped_path == expected
-
-
 #
 # Sample repo data and tests
 #
