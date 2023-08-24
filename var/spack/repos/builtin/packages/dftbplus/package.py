@@ -71,6 +71,11 @@ class Dftbplus(MakefilePackage):
     depends_on("magma", when="+gpu")
     depends_on("arpack-ng", when="+arpack")
     depends_on("dftd3-lib@0.9.2", when="+dftd3")
+    depends_on("m4", type="build")
+    depends_on("python@3.2:", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))  # for tests
+
+
 
     def edit(self, spec, prefix):
         """
