@@ -754,15 +754,16 @@ node_has_variant(node(ID, Package), Variant) :-
   pkg_fact(Package, variant(Variant)),
   attr("node", node(ID, Package)).
 
-attr("variant_propagate", Package, Variant, Value, Source) :-
-  attr("variant_possible_prop", Package, Variant, Value, Source),
-  not attr("variant_set", Package, Variant).
+attr("variant_possible_prop", PackageNode, Variant, Value, Source) :-
+  attr("node", PackageNode),
+  depends_on(ParentNode, PackageNode),
+  attr("variant_value", node(ID, Source), Variant, Value),
+  attr("variant_possible_prop", ParentNode, Variant, _, Source).
 
-attr("variant_possible_prop", Package, Variant, Value, Source) :-
-  attr("node", Package),
-  depends_on(Parent, Package),
-  attr("variant_possible_prop", Parent, Variant, _, Source),
-  attr("variant_value", Source, Variant, Value).
+attr("variant_propagate", PackageNode, Variant, Value, Source) :-
+  attr("variant_possible_prop", PackageNode, Variant, Value, Source),
+  not attr("variant_set", PackageNode, Variant).
+
 
 attr("variant_value", node(ID, Package), Variant, Value) :-
   attr("node", node(ID, Package)),
