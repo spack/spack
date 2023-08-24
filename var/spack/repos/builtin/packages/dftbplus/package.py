@@ -91,9 +91,6 @@ class Dftbplus(MakefilePackage, CMakePackage):
     depends_on("cmake", type="build", when="@20.1:")
 
 
-
-
-
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     def edit(self, spec, prefix):
         """
@@ -186,5 +183,17 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
-        args = [ ]
+        spec = self.spec
+        lapack_libs = spec["lapack"].libs.joined(";")
+        blas_libs = spec["blas"].libs.joined(";")
+        args = [
+            self.define_from_variant("MPI", "mpi"),
+            self.define_from_variant("ICB", "icb"),
+            self.define("LAPACK_FOUND", True),
+            self.define("LAPACK_INCLUDE_DIRS", spec["lapack"].prefix.include),
+            self.define("LAPACK_LIBRARIES", lapack_libs),
+            self.define("BLAS_FOUND", True),
+            self.define("BLAS_INCLUDE_DIRS", spec["blas"].prefix.include),
+            self.define("BLAS_LIBRARIES", blas_libs),
+        ]
         return args
