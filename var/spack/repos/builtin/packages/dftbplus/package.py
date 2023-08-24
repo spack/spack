@@ -199,6 +199,13 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
+        # Note: dftbplus@20.1 uses plural form of the option names
+        #       (e.g. -DSCALAPACK_LIBRARIES)
+        # but dftbplus@20.2 onwards uses singular
+        #       (e.g. -DSCALAPACK_LIBRARY)
+        # and plural form is ignored.
+        # We set both inorder to be compatible with all versions.
+
         spec = self.spec
         lapack_libs = spec["lapack"].libs.joined(";")
         blas_libs = spec["blas"].libs.joined(";")
@@ -211,6 +218,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define("BLAS_FOUND", True),
             self.define("BLAS_INCLUDE_DIRS", spec["blas"].prefix.include),
             self.define("BLAS_LIBRARIES", blas_libs),
+            self.define("BLAS_LIBRARY", blas_libs),
             self.define_from_variant("WITH_ELSI", "elsi"),
             self.define_from_variant("WITH_GPU", "gpu"),
             self.define_from_variant("WITH_TRANSPORT", "transport"),
@@ -220,4 +228,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("WITH_API", "api"),
             self.define_from_variant("BUILD_SHARED_LIBS", "sharedlibs"),
         ]
+        if "+mpi" in spec:
+            args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))
+            args.append(self.define("MPI_Fortran_COMPILER", spec["mpi"].mpifc))
+            args.append(self.define("SCALAPACK_LIBRARY",  spec["scalapack"].libs.join(";")))
+            args.append(self.define("SCALAPACK_LIBRARIES", spec["scalapack"].libs.join(";")))
+            args.append(self.define("SCALAPACK_INCLUDE_DIR", spec["scalapack"].prefix.include))
         return args
