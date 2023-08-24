@@ -1855,7 +1855,10 @@ class Environment:
 
             # If a transitive child develop spec has a greater install
             # time, then overwrite
-            if install_time_of_installed_spec and install_time_of_installed_spec < transitive_dev_install_times[spec]:
+            if (
+                install_time_of_installed_spec
+                and install_time_of_installed_spec < transitive_dev_install_times[spec]
+            ):
                 overwrite_specs.add(spec)
                 # At this point we can stop updating transitive_dev_install_times
                 # because parents of overwrite specs are automatically overwritten
