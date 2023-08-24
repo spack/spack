@@ -14,6 +14,10 @@ class PySphinx(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("7.2.2", sha256="1c0abe6d4de7a6b2c2b109a2e18387bf27b240742e1b34ea42ac3ed2ac99978c")
+    version("7.2.1", sha256="dad5e865dcdeb1486f70d8963cc9140561836bb243c311868cf11eb0f741497a")
+    version("7.2.0", sha256="da9a84f7456885622bb30ebac42467168396ac2e494182c60dd864aa27405ba3")
+    version("7.1.2", sha256="780f4d32f1d7d1126576e0e5ecc19dc32ab76cd24e950228dcf7b1f6d3d9e22f")
     version("7.1.1", sha256="59b8e391f0768a96cd233e8300fe7f0a8dc2f64f83dc2a54336a9a84f428ff4e")
     version("7.1.0", sha256="8f336d0221c3beb23006b3164ed1d46db9cebcce9cb41cdb9c5ecd4bcc509be0")
     version("7.0.1", sha256="61e025f788c5977d9412587e733733a289e2b9fdc2fef8868ddfbfc4ccfe881d")
@@ -73,6 +77,7 @@ class PySphinx(PythonPackage):
 
     depends_on("py-flit-core@3.7:", when="@5.2:", type="build")
 
+    depends_on("python@3.9:", when="@7.2:", type=("build", "run"))
     depends_on("python@3.8:", when="@6:", type=("build", "run"))
 
     depends_on("py-sphinxcontrib-applehelp", when="@2:", type=("build", "run"))
@@ -86,6 +91,7 @@ class PySphinx(PythonPackage):
     depends_on("py-jinja2@3:", when="@5.2:", type=("build", "run"))
     depends_on("py-jinja2@2.3:2", when="@:4.0.1", type=("build", "run"))
     depends_on("py-jinja2@2.3:", type=("build", "run"))
+    depends_on("py-pygments@2.14:", when="@7.2:", type=("build", "run"))
     depends_on("py-pygments@2.13:", when="@6.0.1:", type=("build", "run"))
     depends_on("py-pygments@2.12:", when="@5.2:", type=("build", "run"))
     depends_on("py-pygments@2:", type=("build", "run"))
