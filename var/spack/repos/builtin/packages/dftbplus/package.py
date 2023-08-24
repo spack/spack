@@ -87,6 +87,11 @@ class Dftbplus(MakefilePackage, CMakePackage):
         default=True,
         description="Build with OpenMP support " "(if you need to use OpenMP parallelization)",
     )
+    variant(
+        "sharedlibs",
+        default=False,
+        description="Build as shared library",
+    )
 
     depends_on("lapack")
     depends_on("blas")
@@ -198,6 +203,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         lapack_libs = spec["lapack"].libs.joined(";")
         blas_libs = spec["blas"].libs.joined(";")
         args = [
+            self.define_from_variant("WITH_OPENMP", "openmp"),
             self.define_from_variant("WITH_MPI", "mpi"),
             self.define("LAPACK_FOUND", True),
             self.define("LAPACK_INCLUDE_DIRS", spec["lapack"].prefix.include),
@@ -205,6 +211,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define("BLAS_FOUND", True),
             self.define("BLAS_INCLUDE_DIRS", spec["blas"].prefix.include),
             self.define("BLAS_LIBRARIES", blas_libs),
-            self.define_from_variant("WITH_API","api")
+            self.define_from_variant("WITH_ELSI", "elsi"),
+            self.define_from_variant("WITH_GPU", "gpu"),
+            self.define_from_variant("WITH_TRANSPORT", "transport"),
+            self.define_from_variant("WITH_SOCKETS", "sockets"),
+            self.define_from_variant("WITH_ARPACK", "arpack"),
+            self.define_from_variant("WITH_DFTD3", "dftd3"),
+            self.define_from_variant("WITH_API", "api"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "sharedlibs"),
         ]
         return args
