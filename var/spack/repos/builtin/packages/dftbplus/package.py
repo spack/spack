@@ -188,7 +188,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         blas_libs = spec["blas"].libs.joined(";")
         args = [
             self.define_from_variant("MPI", "mpi"),
-            self.define_from_variant("ICB", "icb"),
+            # self.define_from_variant("ICB", "icb"),
             self.define("LAPACK_FOUND", True),
             self.define("LAPACK_INCLUDE_DIRS", spec["lapack"].prefix.include),
             self.define("LAPACK_LIBRARIES", lapack_libs),
