@@ -23,6 +23,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version("develop")
+    version("3.17.0", tag="v3.17.0")
     version("3.16.0", tag="v3.16.0")
     version("3.15.0", tag="v3.15.0")
     version("3.14.0", tag="v3.14.0")

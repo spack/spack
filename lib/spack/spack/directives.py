@@ -760,7 +760,7 @@ def variant(
         when_spec = make_when_spec(when)
         when_specs = [when_spec]
 
-        if not re.match(spack.spec.identifier_re, name):
+        if not re.match(spack.spec.IDENTIFIER_RE, name):
             directive = "variant"
             msg = "Invalid variant name in {0}: '{1}'"
             raise DirectiveError(directive, msg.format(pkg.name, name))

@@ -23,7 +23,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("rbberger")
 
     # rules for new versions and deprecation
-    # * new stable versions should be marked as preferred=True
+    # * new stable versions should be added to stable_versions set
     # * a stable version that has updates and any of its outdated update releases should be
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
@@ -69,32 +69,26 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
     version(
-        "20220623.4",
-        sha256="42541b4dbd0d339d16ddb377e76d192bc3d1d5712fdf9e2cdc838fc980d0a0cf",
-        preferred=True,
+        "20220623.4", sha256="42541b4dbd0d339d16ddb377e76d192bc3d1d5712fdf9e2cdc838fc980d0a0cf"
     )
     version(
         "20220623.3",
         sha256="8a276a01b50d37eecfe6eb36f420f354cde51936d20aca7944dea60d3c098c89",
-        preferred=True,
         deprecated=True,
     )
     version(
         "20220623.2",
         sha256="8a560213e83919623525c4a7c4b5f0eda35cdf3b0c0e6548fd891379e04ca9e6",
-        preferred=True,
         deprecated=True,
     )
     version(
         "20220623.1",
         sha256="58e3b2b984f8935bb0db5631e143be2826c45ffd48844f7c394f36624a3e17a2",
-        preferred=True,
         deprecated=True,
     )
     version(
         "20220623",
         sha256="d27ede095c9f00cd13a26f967a723d07cf8f4df65c700ed73573577bc173d5ce",
-        preferred=True,
         deprecated=True,
     )
     version(
@@ -133,26 +127,21 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
     version(
-        "20210929.3",
-        sha256="e4c274f0dc5fdedc43f2b365156653d1105197a116ff2bafe893523cdb22532e",
-        preferred=True,
+        "20210929.3", sha256="e4c274f0dc5fdedc43f2b365156653d1105197a116ff2bafe893523cdb22532e"
     )
     version(
         "20210929.2",
         sha256="9318ca816cde16a9a4174bf22a1966f5f2155cb32c0ad5a6757633276411fb36",
-        preferred=True,
         deprecated=True,
     )
     version(
         "20210929.1",
         sha256="5000b422c9c245b92df63507de5aa2ea4af345ea1f00180167aaa084b711c27c",
-        preferred=True,
         deprecated=True,
     )
     version(
         "20210929",
         sha256="2dff656cb21fd9a6d46c818741c99d400cfb1b12102604844663b655fb2f893d",
-        preferred=True,
         deprecated=True,
     )
     version(
@@ -205,11 +194,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         sha256="2c5ba2c7935ad559ca94ee826e8727e65b49ef4582eb856534fffba70e44101a",
         deprecated=True,
     )
-    version(
-        "20201029",
-        sha256="759705e16c1fedd6aa6e07d028cc0c78d73c76b76736668420946a74050c3726",
-        preferred=True,
-    )
+    version("20201029", sha256="759705e16c1fedd6aa6e07d028cc0c78d73c76b76736668420946a74050c3726")
     version(
         "20200721",
         sha256="845bfeddb7b667799a1a5dbc166b397d714c3d2720316604a979d3465b4190a9",
@@ -225,11 +210,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         sha256="c49d77fd602d28ebd8cf10f7359b9fc4d14668c72039028ed7792453d416de73",
         deprecated=True,
     )
-    version(
-        "20200303",
-        sha256="a1a2e3e763ef5baecea258732518d75775639db26e60af1634ab385ed89224d1",
-        preferred=True,
-    )
+    version("20200303", sha256="a1a2e3e763ef5baecea258732518d75775639db26e60af1634ab385ed89224d1")
     version(
         "20200227",
         sha256="1aabcf38bc72285797c710b648e906151a912c36b634a9c88ac383aacf85516e",
@@ -361,6 +342,21 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
+    stable_versions = {
+        "20230802",
+        "20220623.4",
+        "20220623.3",
+        "20220623.2",
+        "20220623.1",
+        "20220623",
+        "20210929.3",
+        "20210929.2",
+        "20210929.1",
+        "20210929",
+        "20201029",
+        "20200303",
+    }
+
     def url_for_version(self, version):
         split_ver = str(version).split(".")
         vdate = dt.datetime.strptime(split_ver[0], "%Y%m%d")
@@ -369,14 +365,10 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         else:
             update = "_update{0}".format(split_ver[1])
 
-        is_stable = (
-            version in self.versions
-            and "preferred" in self.versions[version]
-            and self.versions[version]["preferred"]
-        )
-
         return "https://github.com/lammps/lammps/archive/{0}_{1}{2}.tar.gz".format(
-            "stable" if is_stable else "patch", vdate.strftime("%d%b%Y").lstrip("0"), update
+            "stable" if str(version) in Lammps.stable_versions else "patch",
+            vdate.strftime("%d%b%Y").lstrip("0"),
+            update,
         )
 
     # List of supported optional packages

@@ -77,7 +77,7 @@ for further documentation regarding the spec syntax, see:
 def spec(parser, args):
     install_status_fn = spack.spec.Spec.install_status
 
-    fmt = spack.spec.display_format
+    fmt = spack.spec.DISPLAY_FORMAT
     if args.namespaces:
         fmt = "{namespace}." + fmt
 
