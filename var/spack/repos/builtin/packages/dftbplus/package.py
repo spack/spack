@@ -23,7 +23,7 @@ class Dftbplus(MakefilePackage, CMakePackage):
     version("21.1", tag="21.1", submodules=True)
     version("20.2", tag="20.2", submodules=True)
     version("20.1", tag="20.1", submodules=True)  # This and higher version uses Cmake
-    version('19.1', tag='19.1', submodules=True)
+    version("19.1", tag="19.1", submodules=True)
     # version("19.1", sha256="4d07f5c6102f06999d8cfdb1d17f5b59f9f2b804697f14b3bc562e3ea094b8a8")
 
     build_system(
@@ -87,11 +87,7 @@ class Dftbplus(MakefilePackage, CMakePackage):
         default=True,
         description="Build with OpenMP support " "(if you need to use OpenMP parallelization)",
     )
-    variant(
-        "sharedlibs",
-        default=False,
-        description="Build as shared library",
-    )
+    variant("sharedlibs", default=False, description="Build as shared library")
 
     depends_on("lapack")
     depends_on("blas")
@@ -197,6 +193,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
             mconfig.filter("WITH_DFTD3 := .*", "WITH_DFTD3 := 1")
 
+
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         # Note: dftbplus@20.1 uses plural form of the option names
@@ -231,7 +228,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+mpi" in spec:
             args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))
             args.append(self.define("MPI_Fortran_COMPILER", spec["mpi"].mpifc))
-            args.append(self.define("SCALAPACK_LIBRARY",  spec["scalapack"].libs.joined(";")))
+            args.append(self.define("SCALAPACK_LIBRARY", spec["scalapack"].libs.joined(";")))
             args.append(self.define("SCALAPACK_LIBRARIES", spec["scalapack"].libs.joined(";")))
             args.append(self.define("SCALAPACK_INCLUDE_DIR", spec["scalapack"].prefix.include))
         return args
