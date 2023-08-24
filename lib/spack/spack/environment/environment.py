@@ -411,7 +411,6 @@ def _eval_conditional(string):
 def _is_dev_spec_and_has_changed(spec, _database=None):
     """Check if the passed spec is a dev build and whether it has changed since the
     last installation"""
-
     db = _database or spack.store.STORE.db
 
     # First check if this is a dev build and in the process already try to get
@@ -1812,7 +1811,7 @@ class Environment:
         db = _database or spack.store.STORE.db
 
         overwrite_specs = set()
-        transitive_dev_install_times = {}
+        transitive_dev_install_times = collections.defaultdict(float)
 
         # Like +=, but for max()
         def max_equals(dict, key, value):
@@ -1823,14 +1822,11 @@ class Environment:
             else:
                 return orig_value
 
-        def update_transitive_dev_install_times(spec):
+        def update_transitive_dev_install_times(spec, install_time_of_installed_spec):
             dev_path_var = spec.variants.get("dev_path", None)
-            if dev_path_var and db.installed(spec):
-                _, record = db.query_by_spec_hash(spec.dag_hash())
-                when_this_spec_was_installed = record.installation_time
-
+            if dev_path_var and install_time_of_installed_spec:
                 latest_transitive_install_time = max_equals(
-                    transitive_dev_install_times, spec, when_this_spec_was_installed
+                    transitive_dev_install_times, spec, install_time_of_installed_spec
                 )
             else:
                 # else this is not a develop spec, and we don't want to record the
@@ -1851,19 +1847,22 @@ class Environment:
                 overwrite_specs.add(spec)
                 continue
 
-            update_transitive_dev_install_times(spec)
+            _, record = db.query_by_spec_hash(spec.dag_hash())
+            if record and record.installed:
+                install_time_of_installed_spec = record.installation_time
+            else:
+                install_time_of_installed_spec = None
+            update_transitive_dev_install_times(spec, install_time_of_installed_spec)
 
             # Say x->y->z, you force uninstall y, then you change the source
             # of z (which is develop). x should be reinstalled, but not because
             # of y. Therefore, we wait until now to bail on uninstalled specs.
-            if not db.installed(spec):
+            if install_time_of_installed_spec is None:
                 continue
 
             # If a transitive child develop spec has a greater install
             # time, then overwrite
-            _, record = db.query_by_spec_hash(spec.dag_hash())
-            when_this_spec_was_installed = record.installation_time
-            if when_this_spec_was_installed < transitive_dev_install_times[spec]:
+            if install_time_of_installed_spec < transitive_dev_install_times[spec]:
                 overwrite_specs.add(spec)
                 continue
 

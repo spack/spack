@@ -12,6 +12,8 @@ import spack.environment as ev
 import spack.spec
 from spack.main import SpackCommand
 
+import llnl.util.filesystem as fs
+
 env = SpackCommand("env")
 
 pytestmark = pytest.mark.skipif(
@@ -20,7 +22,7 @@ pytestmark = pytest.mark.skipif(
 
 
 def test_dev_rebuild_dependent_delayed(
-    tmpdir, mock_packages, mutable_database, mutable_mock_env_path
+    tmpdir, mock_packages, mutable_database, mutable_mock_env_path, monkeypatch
 ):
     """Install X->Y; change Y; perform "spack install Y" (not rebuilding X);
     and then do "spack install". In this case, The final command should
@@ -29,6 +31,9 @@ def test_dev_rebuild_dependent_delayed(
     """
 
     existing_dev_path = tmpdir.ensure("dev-path", dir=True)
+
+    def _mock_last_modification_time_recursive(path):
+        return 2
 
     env("create", "test")
     with ev.read("test") as e:
@@ -44,6 +49,8 @@ def test_dev_rebuild_dependent_delayed(
         db = spack.database.Database(tmpdir.join("db"), lock_cfg=spack.database.NO_LOCK)
         db._add(child, installation_time=2)
         db._add(dependent, installation_time=1)
+
+        monkeypatch.setattr(fs, "last_modification_time_recursive", _mock_last_modification_time_recursive)
 
         needs_reinstall = e._get_overwrite_specs(_database=db)
         assert needs_reinstall == [dependent.dag_hash()]
