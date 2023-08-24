@@ -112,50 +112,49 @@ __all__ = [
     "UnsatisfiableDependencySpecError",
     "AmbiguousHashError",
     "InvalidHashError",
-    "RedundantSpecError",
     "SpecDeprecatedError",
 ]
 
 #: Valid pattern for an identifier in Spack
 
-identifier_re = r"\w[\w-]*"
+IDENTIFIER_RE = r"\w[\w-]*"
 
-compiler_color = "@g"  #: color for highlighting compilers
-version_color = "@c"  #: color for highlighting versions
-architecture_color = "@m"  #: color for highlighting architectures
-enabled_variant_color = "@B"  #: color for highlighting enabled variants
-disabled_variant_color = "r"  #: color for highlighting disabled varaints
-dependency_color = "@."  #: color for highlighting dependencies
-hash_color = "@K"  #: color for highlighting package hashes
+COMPILER_COLOR = "@g"  #: color for highlighting compilers
+VERSION_COLOR = "@c"  #: color for highlighting versions
+ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
+ENABLED_VARIANT_COLOR = "@B"  #: color for highlighting enabled variants
+DISABLED_VARIANT_COLOR = "r"  #: color for highlighting disabled varaints
+DEPENDENCY_COLOR = "@."  #: color for highlighting dependencies
+HASH_COLOR = "@K"  #: color for highlighting package hashes
 
 #: This map determines the coloring of specs when using color output.
 #: We make the fields different colors to enhance readability.
 #: See llnl.util.tty.color for descriptions of the color codes.
-color_formats = {
-    "%": compiler_color,
-    "@": version_color,
-    "=": architecture_color,
-    "+": enabled_variant_color,
-    "~": disabled_variant_color,
-    "^": dependency_color,
-    "#": hash_color,
+COLOR_FORMATS = {
+    "%": COMPILER_COLOR,
+    "@": VERSION_COLOR,
+    "=": ARCHITECTURE_COLOR,
+    "+": ENABLED_VARIANT_COLOR,
+    "~": DISABLED_VARIANT_COLOR,
+    "^": DEPENDENCY_COLOR,
+    "#": HASH_COLOR,
 }
 
 #: Regex used for splitting by spec field separators.
 #: These need to be escaped to avoid metacharacters in
-#: ``color_formats.keys()``.
-_separators = "[\\%s]" % "\\".join(color_formats.keys())
+#: ``COLOR_FORMATS.keys()``.
+_SEPARATORS = "[\\%s]" % "\\".join(COLOR_FORMATS.keys())
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
-default_format = (
+DEFAULT_FORMAT = (
     "{name}{@versions}"
     "{%compiler.name}{@compiler.versions}{compiler_flags}"
     "{variants}{arch=architecture}{/abstract_hash}"
 )
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
-display_format = (
+DISPLAY_FORMAT = (
     "{name}{@version}"
     "{%compiler.name}{@compiler.version}{compiler_flags}"
     "{variants}{arch=architecture}{/abstract_hash}"
@@ -187,7 +186,7 @@ class InstallStatus(enum.Enum):
 
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
-    color_formats."""
+    COLOR_FORMATS."""
 
     class insert_color:
         def __init__(self):
@@ -200,9 +199,9 @@ def colorize_spec(spec):
                 return clr.cescape(sep)
             self.last = sep
 
-            return "%s%s" % (color_formats[sep], clr.cescape(sep))
+            return "%s%s" % (COLOR_FORMATS[sep], clr.cescape(sep))
 
-    return clr.colorize(re.sub(_separators, insert_color(), str(spec)) + "@.")
+    return clr.colorize(re.sub(_SEPARATORS, insert_color(), str(spec)) + "@.")
 
 
 @lang.lazy_lexicographic_ordering
@@ -4245,7 +4244,7 @@ class Spec:
     def colorized(self):
         return colorize_spec(self)
 
-    def format(self, format_string=default_format, **kwargs):
+    def format(self, format_string=DEFAULT_FORMAT, **kwargs):
         r"""Prints out particular pieces of a spec, depending on what is
         in the format string.
 
@@ -4324,7 +4323,7 @@ class Spec:
         def write(s, c=None):
             f = clr.cescape(s)
             if c is not None:
-                f = color_formats[c] + f + "@."
+                f = COLOR_FORMATS[c] + f + "@."
             clr.cwrite(f, stream=out, color=color)
 
         def write_attribute(spec, attribute, color):
@@ -4523,7 +4522,7 @@ class Spec:
         status_fn = kwargs.pop("status_fn", False)
         cover = kwargs.pop("cover", "nodes")
         indent = kwargs.pop("indent", 0)
-        fmt = kwargs.pop("format", default_format)
+        fmt = kwargs.pop("format", DEFAULT_FORMAT)
         prefix = kwargs.pop("prefix", None)
         show_types = kwargs.pop("show_types", False)
         deptypes = kwargs.pop("deptypes", "all")
@@ -5329,14 +5328,6 @@ class SpecFilenameError(spack.error.SpecError):
 
 class NoSuchSpecFileError(SpecFilenameError):
     """Raised when a spec file doesn't exist."""
-
-
-class RedundantSpecError(spack.error.SpecError):
-    def __init__(self, spec, addition):
-        super().__init__(
-            "Attempting to add %s to spec %s which is already concrete."
-            " This is likely the result of adding to a spec specified by hash." % (addition, spec)
-        )
 
 
 class SpecFormatStringError(spack.error.SpecError):
