@@ -1829,7 +1829,9 @@ class Environment:
                 _, record = db.query_by_spec_hash(spec.dag_hash())
                 when_this_spec_was_installed = record.installation_time
 
-                latest_transitive_install_time = max_equals(transitive_dev_install_times, spec, when_this_spec_was_installed)
+                latest_transitive_install_time = max_equals(
+                    transitive_dev_install_times, spec, when_this_spec_was_installed
+                )
             else:
                 # else this is not a develop spec, and we don't want to record the
                 # installation time (we could have done an overwrite install of a
