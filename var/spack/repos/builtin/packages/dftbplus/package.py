@@ -76,6 +76,12 @@ class Dftbplus(MakefilePackage, CMakePackage):
         default=False,
         description="Use DftD3 dispersion library " "(if you need this dispersion model)",
     )
+    variant(
+        "api",
+        default=False,
+        description="Build the API library " "(if you need to link to DFTB+ from other codes)",
+        when="build_system=cmake",
+    )
 
     depends_on("lapack")
     depends_on("blas")
@@ -195,5 +201,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define("BLAS_FOUND", True),
             self.define("BLAS_INCLUDE_DIRS", spec["blas"].prefix.include),
             self.define("BLAS_LIBRARIES", blas_libs),
+            self.define_from_variant("WITH_API","api")
         ]
         return args
