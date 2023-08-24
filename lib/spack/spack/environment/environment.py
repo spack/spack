@@ -1852,18 +1852,23 @@ class Environment:
                 install_time_of_installed_spec = record.installation_time
             else:
                 install_time_of_installed_spec = None
-            update_transitive_dev_install_times(spec, install_time_of_installed_spec)
-
-            # Say x->y->z, you force uninstall y, then you change the source
-            # of z (which is develop). x should be reinstalled, but not because
-            # of y. Therefore, we wait until now to bail on uninstalled specs.
-            if install_time_of_installed_spec is None:
-                continue
 
             # If a transitive child develop spec has a greater install
             # time, then overwrite
-            if install_time_of_installed_spec < transitive_dev_install_times[spec]:
+            if install_time_of_installed_spec and install_time_of_installed_spec < transitive_dev_install_times[spec]:
                 overwrite_specs.add(spec)
+                # At this point we can stop updating transitive_dev_install_times
+                # because parents of overwrite specs are automatically overwritten
+                continue
+
+            # We might be here just because the current spec is uninstalled, but
+            # that doesn't mean this (or its dependents) need to be overwritten:
+            # Say x->y->z, you force uninstall y, then you change the source
+            # of z (which is develop). x should be reinstalled, but not because
+            # of y.
+            update_transitive_dev_install_times(spec, install_time_of_installed_spec)
+
+            if install_time_of_installed_spec is None:
                 continue
 
             # If it is a dev spec and its sources are newer than the install
