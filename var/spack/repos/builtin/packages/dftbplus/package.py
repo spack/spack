@@ -89,7 +89,7 @@ class Dftbplus(MakefilePackage, CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("elsi", when="+elsi")
     depends_on("magma", when="+gpu")
-    depends_on("arpack-ng", when="+arpack")
+    depends_on("arpack-ng", when="+arpack~mpi")
     depends_on("dftd3-lib@0.9.2", when="+dftd3")
     depends_on("m4", type="build", when="@:19.1")
     depends_on("python@3.2:", type=("build", "run"))
