@@ -14,6 +14,7 @@ class PySphinx(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("7.2.3", sha256="ece68bb4d77b7dc090573825db45a6f9183e74098d1c21573485de250b1d1e3f")
     version("7.2.2", sha256="1c0abe6d4de7a6b2c2b109a2e18387bf27b240742e1b34ea42ac3ed2ac99978c")
     version("7.2.1", sha256="dad5e865dcdeb1486f70d8963cc9140561836bb243c311868cf11eb0f741497a")
     version("7.2.0", sha256="da9a84f7456885622bb30ebac42467168396ac2e494182c60dd864aa27405ba3")
@@ -85,6 +86,7 @@ class PySphinx(PythonPackage):
     depends_on("py-sphinxcontrib-jsmath", when="@2:", type=("build", "run"))
     depends_on("py-sphinxcontrib-htmlhelp@2:", when="@4.1.1:", type=("build", "run"))
     depends_on("py-sphinxcontrib-htmlhelp", when="@2:", type=("build", "run"))
+    depends_on("py-sphinxcontrib-serializinghtml@1.1.9:", when="@7.2.3:", type=("build", "run"))
     depends_on("py-sphinxcontrib-serializinghtml@1.1.5:", when="@4.1.1:", type=("build", "run"))
     depends_on("py-sphinxcontrib-serializinghtml", when="@2:", type=("build", "run"))
     depends_on("py-sphinxcontrib-qthelp", when="@2:", type=("build", "run"))
