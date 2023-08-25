@@ -18,6 +18,10 @@ class RocprofilerDev(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocprofiler64"]
+    version("5.6.0", sha256="ff811bd91580f60b6b4d397b6fce38d96f07debc6fd8a631b81d1b266cc9542d")
+    version("5.5.1", sha256="f5dbece5c205e37383fed4a2bd6042ff1c11f11f64dfbf65d7e23c0af6889a5a")
+    version("5.5.0", sha256="d9dd38c42b4b12d4149f1cc3fca1af5bec69c72f455653a8f4fd8195b3b95703")
+    version("5.4.4", sha256="e91c18f90fa19df8789143c012be45970cb97b416546d17696756510ec0d509f")
     version("5.4.3", sha256="86c3f43ee6cb9808796a21409c853cc8fd496578b9eef4de67ca77830229cac1")
     version("5.4.0", sha256="0322cbe5d1d3182e616f472da31f0707ad6040833c38c28f2b39381a85210f43")
     version("5.3.3", sha256="07ee28f3420a07fc9d45910e78ad7961b388109cfc0e74cfdf2666789e6af171")
@@ -123,6 +127,10 @@ class RocprofilerDev(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.4.4",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)

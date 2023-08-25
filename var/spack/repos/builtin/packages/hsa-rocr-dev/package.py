@@ -24,8 +24,10 @@ class HsaRocrDev(CMakePackage):
     libraries = ["libhsa-runtime64"]
 
     version("master", branch="master")
+    version("5.6.0", sha256="30875d440df9d8481ffb24d87755eae20a0efc1114849a72619ea954f1e9206c")
     version("5.5.1", sha256="53d84ad5ba5086ed4ad67ad892c52c0e4eba8ddfa85c2dd341bf825f4d5fe4ee")
     version("5.5.0", sha256="8dbc776b56f93ddaa2ca38bf3b88299b8091de7c1b3f2e481064896cf6808e6c")
+    version("5.4.4", sha256="6a0c6300ccf812b6341097e999394389a6343d8fcc92740a8636f61631e2d276")
     version("5.4.3", sha256="a600eed848d47a7578c60da7e64eb92f29bbce2ec67932b251eafd4c2974cb67")
     version("5.4.0", sha256="476cd18500cc227d01f6b44c00c7adc8574eb8234b6b4daefc219650183fa090")
     version("5.3.3", sha256="aca88d90f169f35bd65ce3366b8670c7cdbe3abc0a2056eab805d0192cfd7130")
@@ -143,8 +145,10 @@ class HsaRocrDev(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.4.4",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
@@ -153,7 +157,7 @@ class HsaRocrDev(CMakePackage):
         depends_on(
             "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
-    for ver in ["5.5.0", "5.5.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways

@@ -18,8 +18,10 @@ class Rocminfo(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="master")
+    version("5.6.0", sha256="87d98a736e4f7510d1475d35717842068d826096a0af7c15a395bcf9d36d7fa0")
     version("5.5.1", sha256="bcab27bb3595d5a4c981e2416458d169e85c27e603c22e743d9240473bfbe98a")
     version("5.5.0", sha256="b6107d362b70e20a10911741eb44247139b4eb43489f7fa648daff880b6de37f")
+    version("5.4.4", sha256="39147364cbf3a10e8a3e0b988c84d9e61f22fef43fb679ea96682dd232493298")
     version("5.4.3", sha256="72159eed31f8deee0df9228b9e306a18fe9efdd4d6c0eead871cad4617874170")
     version("5.4.0", sha256="79123b92992cce75ae679caf9a6bf57b16d24e96e54b36eb002511f3800e29c6")
     version("5.3.3", sha256="77e6adc81da6c1d153517e1d28db774205531a2ec188e6518f998328ef7897c6")
@@ -126,14 +128,16 @@ class Rocminfo(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.4.4",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     def cmake_args(self):

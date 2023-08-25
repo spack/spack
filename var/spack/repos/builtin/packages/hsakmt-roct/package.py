@@ -22,8 +22,10 @@ class HsakmtRoct(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
+    version("5.6.0", sha256="cd009c5c09f664f046c428ba9843582ab468f7b88d560747eb949d8d7f8c5567")
     version("5.5.1", sha256="4ffde3fc1f91f24cdbf09263fd8e012a3995ad10854f4c1d866beab7b9f36bf4")
     version("5.5.0", sha256="2b11fd8937c2b06cd4ddea2c3699fbf3d1651892c4c5957d38553b993dd9af18")
+    version("5.4.4", sha256="54f28f4c6f86e20fe2502f5e6559766ae419fbb34a8b78d48a9580ddfd9f979f")
     version("5.4.3", sha256="3799abbe7177fbff3b304e2a363e2b39e8864f8650ae569b2b88b9291f9a710c")
     version("5.4.0", sha256="690a78a6e67ae2b3f518dbc4a1e267237d6a342e1063b31eef297f4a04d780f8")
     version("5.3.3", sha256="b5350de915997ed48072b37a21c2c44438028255f6cc147c25a196ad383c52e7")
@@ -111,10 +113,10 @@ class HsakmtRoct(CMakePackage):
     depends_on("numactl")
     depends_on("libdrm", when="@4.5.0:")
 
-    for ver in ["5.3.0", "5.4.0", "5.4.3"]:
+    for ver in ["5.3.0", "5.4.0", "5.4.3", "5.4.4"]:
         depends_on("llvm-amdgpu@" + ver, type="test", when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="test", when="@" + ver)
 
