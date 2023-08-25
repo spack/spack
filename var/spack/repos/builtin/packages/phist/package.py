@@ -34,6 +34,9 @@ class Phist(CMakePackage):
     version("develop", branch="devel")
     version("master", branch="master")
 
+    # compatible with trilinos@14:
+    version("1.12.0", sha256="0f02e39b16d14cf7c47a3c468e788c7c0e71857eb1c0a4edb601e1e5b67e8668")
+
     # compatible with python@3.11: and cray-libsci as BLAS/LAPACK provider
     version("1.11.2", sha256="e23f76307c26b930f7331a734b0a864ea6d7fb4a13c12f3c5d70c2c41481747b")
 
@@ -131,6 +134,8 @@ class Phist(CMakePackage):
         description="generate Fortran 2003 bindings (requires Python3 and " "a Fortran compiler)",
     )
 
+    # Trilinos 14 had some tpetra/kokkos API changes that are reflected in the phist 1.12 tag
+    conflicts("^trilinos@14:", when="@:1.11.2")
     # Build error with cray-libsci because they define macro 'I', workaround in phist-1.11.2
     conflicts("^cray-libsci", when="@:1.11.1")
     # phist@1.11.2 got rid of some deprecated python code
@@ -248,6 +253,7 @@ class Phist(CMakePackage):
         lapacke_include_dir = spec["lapack:c"].headers.directories[0]
 
         args = [
+            "-DCMAKE_FIND_DEBUG_MODE=On",
             "-DPHIST_USE_CCACHE=OFF",
             "-DPHIST_KERNEL_LIB=%s" % kernel_lib,
             "-DPHIST_OUTLEV=%s" % outlev,
