@@ -65,7 +65,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     depends_on("bzip2", type="link")
     depends_on("xz", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("zstd", type="link", when="@0.182:")
 
     depends_on("gettext", when="+nls")
@@ -89,12 +89,9 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     # and https://github.com/libarchive/libarchive/issues/1819
     conflicts("^libarchive@3.6.2 +iconv", when="+debuginfod")
 
-    # Elfutils uses nested functions in C code, which is implemented
-    # in gcc, but not in clang. C code compiled with gcc is
-    # binary-compatible with clang, so it should be possible to build
-    # elfutils with gcc, and then link it to clang-built libraries.
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=24964
     conflicts("%apple-clang")
-    conflicts("%clang")
+    conflicts("%clang", when="@:0.185")
     conflicts("%cce")
 
     # Elfutils uses -Wall and we don't want to fail the build over a
@@ -115,7 +112,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         args = [
             "--with-bzlib=%s" % spec["bzip2"].prefix,
             "--with-lzma=%s" % spec["xz"].prefix,
-            "--with-zlib=%s" % spec["zlib"].prefix,
+            "--with-zlib=%s" % spec["zlib-api"].prefix,
         ]
 
         if "@0.182:" in spec:

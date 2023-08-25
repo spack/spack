@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -23,7 +22,7 @@ install = SpackCommand("install")
 buildcache = SpackCommand("buildcache")
 uninstall = SpackCommand("uninstall")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.disable_clean_stage_check
@@ -36,8 +35,8 @@ def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
 
 
 @pytest.mark.regression("12345")
-def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config, mutable_mock_env_path):
-    mirror_dir = str(tmpdir)
+def test_mirror_from_env(tmp_path, mock_packages, mock_fetch, config, mutable_mock_env_path):
+    mirror_dir = str(tmp_path / "mirror")
     env_name = "test"
 
     env("create", env_name)
@@ -235,7 +234,7 @@ def test_mirror_destroy(
 
     # Put a binary package in a buildcache
     install("--no-cache", spec_name)
-    buildcache("push", "-u", "-a", "-f", mirror_dir.strpath, spec_name)
+    buildcache("push", "-u", "-f", mirror_dir.strpath, spec_name)
 
     contents = os.listdir(mirror_dir.strpath)
     assert "build_cache" in contents
@@ -245,7 +244,7 @@ def test_mirror_destroy(
 
     assert not os.path.exists(mirror_dir.strpath)
 
-    buildcache("push", "-u", "-a", "-f", mirror_dir.strpath, spec_name)
+    buildcache("push", "-u", "-f", mirror_dir.strpath, spec_name)
 
     contents = os.listdir(mirror_dir.strpath)
     assert "build_cache" in contents

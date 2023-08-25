@@ -42,7 +42,7 @@ def setup_parser(subparser):
     )
 
     # Below are arguments w.r.t. spec display (like spack spec)
-    arguments.add_common_arguments(subparser, ["long", "very_long"])
+    arguments.add_common_arguments(subparser, ["long", "very_long", "namespaces"])
 
     install_status_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
@@ -72,13 +72,6 @@ def setup_parser(subparser):
         default="nodes",
         choices=["nodes", "edges", "paths"],
         help="how extensively to traverse the DAG (default: nodes)",
-    )
-    subparser.add_argument(
-        "-N",
-        "--namespaces",
-        action="store_true",
-        default=False,
-        help="show fully qualified package names",
     )
     subparser.add_argument(
         "-t", "--types", action="store_true", default=False, help="show dependency types"
@@ -144,7 +137,7 @@ def solve(parser, args):
     # these are the same options as `spack spec`
     install_status_fn = spack.spec.Spec.install_status
 
-    fmt = spack.spec.display_format
+    fmt = spack.spec.DISPLAY_FORMAT
     if args.namespaces:
         fmt = "{namespace}." + fmt
 

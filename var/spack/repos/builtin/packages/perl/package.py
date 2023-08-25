@@ -124,15 +124,21 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         depends_on("gdbm@:1.14.1", when="@:5.28.0")
         depends_on("berkeley-db")
         depends_on("bzip2")
-        depends_on("zlib")
+        depends_on("zlib-api")
         # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
-        depends_on("zlib@:1.2.8", when="@5.20.3:5.24.1")
+        conflicts("^zlib@1.2.9:", when="@5.20.3:5.24.1")
 
     conflicts("@5.34.1:", when="%msvc@:19.29.30136")
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch("protect-quotes-in-ccflags.patch", when="@5.22.0")
+
+    # Support zlib-ng 2.1.2 and above for recent Perl
+    # Restrict zlib-ng to older versions for older Perl
+    # See https://github.com/pmqs/Compress-Raw-Zlib/issues/24
+    patch("zlib-ng.patch", when="@5.38 ^zlib-ng@2.1.2:")
+    conflicts("^zlib-ng@2.1.2:", when="@:5.37")
 
     # Fix the Time-Local testase http://blogs.perl.org/users/tom_wyant/2020/01/my-y2020-bug.html
     patch(
@@ -453,8 +459,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         env.set("BZIP2_INCLUDE", spec["bzip2"].prefix.include)
         env.set("BZIP2_LIB", spec["bzip2"].libs.directories[0])
         env.set("BUILD_ZLIB", 0)
-        env.set("ZLIB_INCLUDE", spec["zlib"].prefix.include)
-        env.set("ZLIB_LIB", spec["zlib"].libs.directories[0])
+        env.set("ZLIB_INCLUDE", spec["zlib-api"].prefix.include)
+        env.set("ZLIB_LIB", spec["zlib-api"].libs.directories[0])
 
     @run_after("install")
     def filter_config_dot_pm(self):

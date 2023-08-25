@@ -39,7 +39,7 @@ class UfsUtils(CMakePackage):
     depends_on("sigio")
     depends_on("sp")
     depends_on("w3emc")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def cmake_args(self):
         return [
