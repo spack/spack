@@ -147,7 +147,14 @@ def test_relocate_links(tmpdir):
 
     own_prefix_path = str(tmpdir.join("prefix_a", "file"))
     dep_prefix_path = str(tmpdir.join("prefix_b", "file"))
+    new_own_prefix_path = str(tmpdir.join("new_prefix_a", "file"))
+    new_dep_prefix_path = str(tmpdir.join("new_prefix_b", "file"))
     system_path = os.path.join(os.path.sep, "system", "path")
+
+    fs.touchp(own_prefix_path)
+    fs.touchp(new_own_prefix_path)
+    fs.touchp(dep_prefix_path)
+    fs.touchp(new_dep_prefix_path)
 
     # Old prefixes to new prefixes
     prefix_to_prefix = OrderedDict(

@@ -592,7 +592,9 @@ def dump_packages(spec: "spack.spec.Spec", path: str) -> None:
         if node is spec:
             spack.repo.PATH.dump_provenance(node, dest_pkg_dir)
         elif source_pkg_dir:
-            fs.install_tree(source_pkg_dir, dest_pkg_dir)
+            fs.install_tree(
+                source_pkg_dir, dest_pkg_dir, allow_broken_symlinks=(sys.platform != "win32")
+            )
 
 
 def get_dependent_ids(spec: "spack.spec.Spec") -> List[str]:
@@ -1316,7 +1318,6 @@ class PackageInstaller:
         """
         Check the database and leftover installation directories/files and
         prepare for a new install attempt for an uninstalled package.
-
         Preparation includes cleaning up installation and stage directories
         and ensuring the database is up-to-date.
 
@@ -2394,7 +2395,9 @@ class BuildProcessInstaller:
         src_target = os.path.join(pkg.spec.prefix, "share", pkg.name, "src")
         tty.debug("{0} Copying source to {1}".format(self.pre, src_target))
 
-        fs.install_tree(pkg.stage.source_path, src_target)
+        fs.install_tree(
+            pkg.stage.source_path, src_target, allow_broken_symlinks=(sys.platform != "win32")
+        )
 
     def _real_install(self) -> None:
         import spack.builder
