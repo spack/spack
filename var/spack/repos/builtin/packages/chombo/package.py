@@ -21,7 +21,7 @@ class Chombo(MakefilePackage):
 
     # Use whatever path Brian V. and Terry L. agreed upon, but preserve version
     version("3.2", commit="71d856c")
-    version("develop", tag="master")
+    version("develop", branch="master")
 
     variant("mpi", default=True, description="Enable MPI parallel support")
     variant("hdf5", default=True, description="Enable HDF5 support")
