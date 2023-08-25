@@ -4893,6 +4893,10 @@ def format_path(spec, format_string):
         # abspaths on Linux (and vice versa).
         raise ValueError(f"Input format string appears to be an absolute path: {format_string}")
 
+    format_component_with_sep = r"\{[^}]*[/\\][^}]*}"
+    if re.search(format_component_with_sep, format_string):
+        raise ValueError(f"Format component requests a '/', but format_path must convert: {format_string}")
+
     # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
     # on Windows, we cannot use pathlib (since "/" is not a path separator
     # on Windows). Therefore, the path components are derived by splitting on
