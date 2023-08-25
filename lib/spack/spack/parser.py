@@ -78,7 +78,7 @@ DOTTED_IDENTIFIER = rf"({IDENTIFIER}(\.{IDENTIFIER})+)"
 GIT_HASH = r"([A-Fa-f0-9]{40})"
 #: Git refs include branch names, and can contain "." and "/"
 GIT_REF = r"([a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
-GIT_VERSION = rf"((git\.({GIT_REF}))|({GIT_HASH}))"
+GIT_VERSION_PATTERN = rf"((git\.({GIT_REF}))|({GIT_HASH}))"
 
 NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
@@ -129,8 +129,8 @@ class TokenType(TokenBase):
     # Dependency
     DEPENDENCY = r"(\^)"
     # Version
-    VERSION_HASH_PAIR = rf"(@({GIT_VERSION})=({VERSION}))"
-    GIT_VERSION = rf"@({GIT_VERSION})"
+    VERSION_HASH_PAIR = rf"(@({GIT_VERSION_PATTERN})=({VERSION}))"
+    GIT_VERSION = rf"@({GIT_VERSION_PATTERN})"
     VERSION = rf"(@\s*({VERSION_LIST}))"
     # Variants
     PROPAGATED_BOOL_VARIANT = rf"((\+\+|~~|--)\s*{NAME})"
