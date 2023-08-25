@@ -593,16 +593,7 @@ class Compiler:
         # defined for the compiler
         compiler_names = getattr(cls, "{0}_names".format(language))
         prefixes = [""] + cls.prefixes
-        suffixes = [""]
-        # Windows compilers generally have an extension of some sort
-        # as do most files on Windows, handle that case here
-        if sys.platform == "win32":
-            ext = r"\.(?:exe|bat)"
-            cls_suf = [suf + ext for suf in cls.suffixes]
-            ext_suf = [ext]
-            suffixes = suffixes + cls.suffixes + cls_suf + ext_suf
-        else:
-            suffixes = suffixes + cls.suffixes
+        suffixes = [""] + cls.suffixes
         regexp_fmt = r"^({0}){1}({2})$"
         return [
             re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))
