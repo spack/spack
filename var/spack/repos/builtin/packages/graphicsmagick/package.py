@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,7 @@ class Graphicsmagick(AutotoolsPackage):
     depends_on("libtool")
     depends_on("libxml2")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def configure_args(self):
         args = ["--enable-shared"]

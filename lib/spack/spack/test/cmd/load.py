@@ -1,23 +1,22 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import re
-import sys
 
 import pytest
 
 import spack.spec
 import spack.user_environment as uenv
-from spack.main import SpackCommand, SpackCommandError
+from spack.main import SpackCommand
 
 load = SpackCommand("load")
 unload = SpackCommand("unload")
 install = SpackCommand("install")
 location = SpackCommand("location")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_manpath_trailing_colon(
@@ -115,10 +114,12 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
     install("libelf@0.8.12")
     install("libelf@0.8.13")
-    # Now there are two versions of libelf
-    with pytest.raises(SpackCommandError):
-        # This should cause an error due to multiple versions
-        load("--sh", "libelf")
+
+    # Now there are two versions of libelf, which should cause an error
+    out = load("--sh", "libelf", fail_on_error=False)
+    assert "matches multiple packages" in out
+    assert "Use a more specific spec" in out
+
     # Using --first should avoid the error condition
     load("--sh", "--first", "libelf")
 

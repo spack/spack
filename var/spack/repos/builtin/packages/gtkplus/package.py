@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ class Gtkplus(MesonPackage):
         deprecated=True,
     )
 
-    variant("cups", default="False", description="enable cups support")
+    variant("cups", default=False, description="enable cups support")
 
     # See meson.build for version requirements
     depends_on("meson@0.48.0:", when="@3.24:", type="build")
@@ -96,20 +96,10 @@ class Gtkplus(MesonPackage):
         args = std_meson_args
 
         if self.spec.satisfies("platform=darwin"):
-            args.extend(
-                [
-                    "-Dx11_backend=false",
-                    "-Dquartz_backend=true",
-                ]
-            )
+            args.extend(["-Dx11_backend=false", "-Dquartz_backend=true"])
 
         args.extend(
-            [
-                "-Dgtk_doc=false",
-                "-Dman=false",
-                "-Dintrospection=true",
-                "-Dwayland_backend=false",
-            ]
+            ["-Dgtk_doc=false", "-Dman=false", "-Dintrospection=true", "-Dwayland_backend=false"]
         )
 
         return args

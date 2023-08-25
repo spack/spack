@@ -1,0 +1,48 @@
+diff -ru a/pyart/testing/data/make_small_mdv_ppi.py b/pyart/testing/data/make_small_mdv_ppi.py
+--- a/pyart/testing/data/make_small_mdv_ppi.py	2022-07-19 13:06:08.000000000 -0500
++++ b/pyart/testing/data/make_small_mdv_ppi.py	2022-09-10 16:06:38.712279369 -0500
+@@ -6,7 +6,10 @@
+ """
+ 
+ import struct
+-import StringIO
++try:
++    from StringIO import StringIO
++except ImportError:
++    from io import StringIO
+ import gzip
+ 
+ import pyart
+@@ -40,7 +43,7 @@
+ 
+ fdata_str = fdata.astype('uint16').byteswap().tostring()
+ uncompressed_data_size = len(fdata_str)
+-fileobj = StringIO.StringIO()
++fileobj = StringIO()
+ gzipfile = gzip.GzipFile(fileobj=fileobj, mode='w')
+ gzipfile.write(fdata_str)
+ gzipfile.close()
+diff -ru a/pyart/testing/data/make_small_mdv_rhi.py b/pyart/testing/data/make_small_mdv_rhi.py
+--- a/pyart/testing/data/make_small_mdv_rhi.py	2022-07-19 13:06:08.000000000 -0500
++++ b/pyart/testing/data/make_small_mdv_rhi.py	2022-09-10 16:07:12.775303046 -0500
+@@ -6,7 +6,10 @@
+ """
+ 
+ import struct
+-import StringIO
++try:
++    from StringIO import StringIO
++except ImportError:
++    from io import StringIO
+ import gzip
+ 
+ import pyart
+@@ -39,7 +42,7 @@
+ 
+ fdata_str = fdata.astype('uint16').byteswap().tostring()
+ uncompressed_data_size = len(fdata_str)
+-fileobj = StringIO.StringIO()
++fileobj = StringIO()
+ gzipfile = gzip.GzipFile(fileobj=fileobj, mode='w')
+ gzipfile.write(fdata_str)
+ gzipfile.close()

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Espanso(Package):
     homepage = "https://github.com/federico-terzi/espanso"
     url = "https://github.com/federico-terzi/espanso/releases/download/v0.6.3/espanso-linux.tar.gz"
 
-    maintainers = ["zicklag"]
+    maintainers("zicklag")
 
     version("0.6.3", sha256="eb9f9563ed0924d1494f0b406b6d3df9d7df00e81affaf15023d1c82dd8ac561")
     version("0.6.2", sha256="db2e53c8e0a17575f69739e53dd6a486dd0e912abbc7ac7c33d98567bd1f0e18")

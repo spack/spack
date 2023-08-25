@@ -11,8 +11,6 @@ import re
 import subprocess
 import warnings
 
-import six
-
 from .microarchitecture import generic_microarchitecture, TARGETS
 from .schema import TARGETS_JSON
 
@@ -80,10 +78,9 @@ def proc_cpuinfo():
 
 
 def _check_output(args, env):
-    output = subprocess.Popen(  # pylint: disable=consider-using-with
-        args, stdout=subprocess.PIPE, env=env
-    ).communicate()[0]
-    return six.text_type(output.decode("utf-8"))
+    with subprocess.Popen(args, stdout=subprocess.PIPE, env=env) as proc:
+        output = proc.communicate()[0]
+    return str(output.decode("utf-8"))
 
 
 def _machine():
@@ -132,9 +129,15 @@ def sysctl_info_dict():
             "model name": sysctl("-n", "machdep.cpu.brand_string"),
         }
     else:
-        model = (
-            "m1" if "Apple" in sysctl("-n", "machdep.cpu.brand_string") else "unknown"
-        )
+        model = "unknown"
+        model_str = sysctl("-n", "machdep.cpu.brand_string").lower()
+        if "m2" in model_str:
+            model = "m2"
+        elif "m1" in model_str:
+            model = "m1"
+        elif "apple" in model_str:
+            model = "m1"
+
         info = {
             "vendor_id": "Apple",
             "flags": [],
@@ -267,7 +270,7 @@ def compatibility_check(architecture_family):
             this test can be used, e.g. x86_64 or ppc64le etc.
     """
     # Turn the argument into something iterable
-    if isinstance(architecture_family, six.string_types):
+    if isinstance(architecture_family, str):
         architecture_family = (architecture_family,)
 
     def decorator(func):
@@ -322,13 +325,25 @@ def compatibility_check_for_aarch64(info, target):
     features = set(info.get("Features", "").split())
     vendor = info.get("CPU implementer", "generic")
 
+    # At the moment it's not clear how to detect compatibility with
+    # a specific version of the architecture
+    if target.vendor == "generic" and target.name != "aarch64":
+        return False
+
     arch_root = TARGETS[basename]
-    return (
-        (target == arch_root or arch_root in target.ancestors)
-        and target.vendor in (vendor, "generic")
-        # On macOS it seems impossible to get all the CPU features with syctl info
-        and (target.features.issubset(features) or platform.system() == "Darwin")
+    arch_root_and_vendor = arch_root == target.family and target.vendor in (
+        vendor,
+        "generic",
     )
+
+    # On macOS it seems impossible to get all the CPU features
+    # with syctl info, but for ARM we can get the exact model
+    if platform.system() == "Darwin":
+        model_key = info.get("model", basename)
+        model = TARGETS[model_key]
+        return arch_root_and_vendor and (target == model or target in model.ancestors)
+
+    return arch_root_and_vendor and target.features.issubset(features)
 
 
 @compatibility_check(architecture_family="riscv64")

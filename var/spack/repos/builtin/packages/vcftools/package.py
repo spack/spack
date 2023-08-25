@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Vcftools(AutotoolsPackage):
     version("0.1.14", sha256="76d799dd9afcb12f1ed42a07bc2886cd1a989858a4d047f24d91dcf40f608582")
 
     depends_on("perl", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # this needs to be in sync with what setup_run_environment adds to
     # PERL5LIB below

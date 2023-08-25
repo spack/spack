@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class CrayPmi(Package):
     homepage = "https://docs.nersc.gov/development/compilers/wrappers/"
     has_code = False  # Skip attempts to fetch source that is not available
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("5.0.17")
     version("5.0.16")

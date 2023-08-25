@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,11 +9,11 @@ from spack.package import *
 class Faodel(CMakePackage):
     """Flexible, Asynchronous, Object Data-Exchange Libraries"""
 
-    homepage = "https://github.com/faodel/faodel"
-    url = "https://github.com/faodel/faodel/archive/v1.2108.1.tar.gz"
-    git = "https://github.com/faodel/faodel.git"
+    homepage = "https://github.com/sandialabs/faodel"
+    url = "https://github.com/sandialabs/faodel/archive/v1.2108.1.tar.gz"
+    git = "https://github.com/sandialabs/faodel.git"
 
-    maintainers = ["tkordenbrock", "craigulmer"]
+    maintainers("tkordenbrock", "craigulmer")
 
     tags = ["e4s"]
 

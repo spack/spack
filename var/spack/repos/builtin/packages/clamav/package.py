@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Clamav(AutotoolsPackage):
     depends_on("openssl")
     depends_on("pcre")
     depends_on("yara")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2")
     depends_on("curl", type="link")
 
@@ -31,7 +31,7 @@ class Clamav(AutotoolsPackage):
             "--with-libjson=%s" % spec["json-c"].prefix,
             "--with-openssl=%s" % spec["openssl"].prefix,
             "--with-pcre=%s" % spec["pcre"].prefix,
-            "--with-zlib=%s" % spec["zlib"].prefix,
+            "--with-zlib=%s" % spec["zlib-api"].prefix,
             "--with-bzip2=%s" % spec["bzip2"].prefix,
         ]
         return args

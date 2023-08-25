@@ -1,0 +1,158 @@
+diff --git a/docs/markdown/Reference-tables.md b/docs/markdown/Reference-tables.md
+index 60303dad6..421b33c07 100644
+--- a/docs/markdown/Reference-tables.md
++++ b/docs/markdown/Reference-tables.md
+@@ -20,6 +20,7 @@ These are return values of the `get_id` (Compiler family) and
+ | gcc       | The GNU Compiler Collection      | gcc             |
+ | intel     | Intel compiler (Linux and Mac)   | gcc             |
+ | intel-cl  | Intel compiler (Windows)         | msvc            |
++| intel-llvm| Intel oneAPI LLVM-based compiler |                 |
+ | lcc       | Elbrus C/C++/Fortran Compiler    |                 |
+ | llvm      | LLVM-based compiler (Swift, D)   |                 |
+ | mono      | Xamarin C# compiler              |                 |
+diff --git a/docs/markdown/snippets/oneapi_compilers.md b/docs/markdown/snippets/oneapi_compilers.md
+new file mode 100644
+index 000000000..a982da22a
+--- /dev/null
++++ b/docs/markdown/snippets/oneapi_compilers.md
+@@ -0,0 +1,8 @@
++## Basic support for oneAPI compilers on Linux
++
++To use:
++
++```
++source /opt/intel/oneapi/setvars.sh
++CC=icx CXX=icpx FC=ifx meson setup builddir
++```
+diff --git a/mesonbuild/compilers/c.py b/mesonbuild/compilers/c.py
+index b1b4a7c92..9490ee688 100644
+--- a/mesonbuild/compilers/c.py
++++ b/mesonbuild/compilers/c.py
+@@ -406,6 +406,13 @@ class IntelCCompiler(IntelGnuLikeCompiler, CCompiler):
+         return args
+ 
+ 
++class IntelLLVMCCompiler(ClangCCompiler):
++
++
++    id = 'intel-llvm'
++
++
++
+ class VisualStudioLikeCCompilerMixin(CompilerMixinBase):
+ 
+     """Shared methods that apply to MSVC-like C compilers."""
+diff --git a/mesonbuild/compilers/cpp.py b/mesonbuild/compilers/cpp.py
+index ac65df9a1..3d728f169 100644
+--- a/mesonbuild/compilers/cpp.py
++++ b/mesonbuild/compilers/cpp.py
+@@ -153,7 +153,7 @@ class CPPCompiler(CLikeCompiler, Compiler):
+         }
+ 
+         # Currently, remapping is only supported for Clang, Elbrus and GCC
+-        assert self.id in frozenset(['clang', 'lcc', 'gcc', 'emscripten', 'armltdclang'])
++        assert self.id in frozenset(['clang', 'lcc', 'gcc', 'emscripten', 'armltdclang', 'intel-llvm'])
+ 
+         if cpp_std not in CPP_FALLBACKS:
+             # 'c++03' and 'c++98' don't have fallback types
+@@ -593,6 +593,13 @@ class IntelCPPCompiler(IntelGnuLikeCompiler, CPPCompiler):
+         return []
+ 
+ 
++class IntelLLVMCPPCompiler(ClangCPPCompiler):
++
++
++    id = 'intel-llvm'
++
++
++
+ class VisualStudioLikeCPPCompilerMixin(CompilerMixinBase):
+ 
+     """Mixin for C++ specific method overrides in MSVC-like compilers."""
+diff --git a/mesonbuild/compilers/detect.py b/mesonbuild/compilers/detect.py
+index f4afa777d..42a4b18a5 100644
+--- a/mesonbuild/compilers/detect.py
++++ b/mesonbuild/compilers/detect.py
+@@ -62,6 +62,7 @@ from .c import (
+     EmscriptenCCompiler,
+     IntelCCompiler,
+     IntelClCCompiler,
++    IntelLLVMCCompiler,
+     NvidiaHPC_CCompiler,
+     PGICCompiler,
+     CcrxCCompiler,
+@@ -83,6 +84,7 @@ from .cpp import (
+     EmscriptenCPPCompiler,
+     IntelCPPCompiler,
+     IntelClCPPCompiler,
++    IntelLLVMCPPCompiler,
+     NvidiaHPC_CPPCompiler,
+     PGICPPCompiler,
+     CcrxCPPCompiler,
+@@ -106,6 +108,7 @@ from .fortran import (
+     FlangFortranCompiler,
+     IntelFortranCompiler,
+     IntelClFortranCompiler,
++    IntelLLVMFortranCompiler,
+     NAGFortranCompiler,
+     Open64FortranCompiler,
+     PathScaleFortranCompiler,
+@@ -180,11 +183,11 @@ else:
+         defaults['objc'] = ['clang']
+         defaults['objcpp'] = ['clang++']
+     else:
+-        defaults['c'] = ['cc', 'gcc', 'clang', 'nvc', 'pgcc', 'icc']
+-        defaults['cpp'] = ['c++', 'g++', 'clang++', 'nvc++', 'pgc++', 'icpc']
++        defaults['c'] = ['cc', 'gcc', 'clang', 'nvc', 'pgcc', 'icc', 'icx']
++        defaults['cpp'] = ['c++', 'g++', 'clang++', 'nvc++', 'pgc++', 'icpc', 'icpx']
+         defaults['objc'] = ['cc', 'gcc', 'clang']
+         defaults['objcpp'] = ['c++', 'g++', 'clang++']
+-    defaults['fortran'] = ['gfortran', 'flang', 'nvfortran', 'pgfortran', 'ifort', 'g95']
++    defaults['fortran'] = ['gfortran', 'flang', 'nvfortran', 'pgfortran', 'ifort', 'ifx', 'g95']
+     defaults['cs'] = ['mcs', 'csc']
+ defaults['d'] = ['ldc2', 'ldc', 'gdc', 'dmd']
+ defaults['java'] = ['javac']
+@@ -617,6 +620,12 @@ def _detect_c_or_cpp_compiler(env: 'Environment', lang: str, for_machine: Machin
+             return cls(
+                 ccache + compiler, version, for_machine, is_cross, info,
+                 exe_wrap, full_version=full_version, linker=l)
++        if 'Intel(R) oneAPI' in out:
++            cls = IntelLLVMCCompiler if lang == 'c' else IntelLLVMCPPCompiler
++            l = guess_nix_linker(env, compiler, cls, version, for_machine)
++            return cls(
++                ccache + compiler, version, for_machine, is_cross, info,
++                exe_wrap, full_version=full_version, linker=l)
+         if 'TMS320C2000 C/C++' in out or 'MSP430 C/C++' in out or 'TI ARM C/C++ Compiler' in out:
+             lnk: T.Union[T.Type[C2000DynamicLinker], T.Type[TIDynamicLinker]]
+             if 'TMS320C2000 C/C++' in out:
+@@ -789,6 +798,13 @@ def detect_fortran_compiler(env: 'Environment', for_machine: MachineChoice) -> C
+                     compiler, version, for_machine, is_cross, info,
+                     exe_wrap, full_version=full_version, linker=linker)
+ 
++            if 'ifx (IFORT)' in out:
++                cls = IntelLLVMFortranCompiler
++                linker = guess_nix_linker(env, compiler, cls, version, for_machine)
++                return cls(
++                    compiler, version, for_machine, is_cross, info,
++                    exe_wrap, full_version=full_version, linker=linker)
++
+             if 'PathScale EKOPath(tm)' in err:
+                 return PathScaleFortranCompiler(
+                     compiler, version, for_machine, is_cross, info,
+diff --git a/mesonbuild/compilers/fortran.py b/mesonbuild/compilers/fortran.py
+index 0a0c3ec86..e7154fe87 100644
+--- a/mesonbuild/compilers/fortran.py
++++ b/mesonbuild/compilers/fortran.py
+@@ -352,6 +352,12 @@ class IntelFortranCompiler(IntelGnuLikeCompiler, FortranCompiler):
+         return ['-gen-dep=' + outtarget, '-gen-depformat=make']
+ 
+ 
++class IntelLLVMFortranCompiler(IntelFortranCompiler):
++
++
++    id = 'intel-llvm'
++
++
+ class IntelClFortranCompiler(IntelVisualStudioLikeCompiler, FortranCompiler):
+ 
+     file_suffixes = ('f90', 'f', 'for', 'ftn', 'fpp', )

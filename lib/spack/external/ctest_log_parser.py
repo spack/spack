@@ -65,17 +65,15 @@ algorithms that duplicate the way CTest scrapes log files.  To keep this
 up to date with CTest, just make sure the ``*_matches`` and
 ``*_exceptions`` lists are kept up to date with CTest's build handler.
 """
-from __future__ import print_function
-from __future__ import division
-
 import re
 import math
 import multiprocessing
+import io
+import sys
+import threading
 import time
 from contextlib import contextmanager
 
-from six import StringIO
-from six import string_types
 
 _error_matches = [
     "^FAIL: ",
@@ -210,7 +208,7 @@ _file_line_matches = [
 ]
 
 
-class LogEvent(object):
+class LogEvent:
     """Class representing interesting events (e.g., errors) in a build log."""
     def __init__(self, text, line_no,
                  source_file=None, source_line_no=None,
@@ -244,7 +242,7 @@ class LogEvent(object):
 
     def __str__(self):
         """Returns event lines and context."""
-        out = StringIO()
+        out = io.StringIO()
         for i in range(self.start, self.end):
             if i == self.line_no:
                 out.write('  >> %-6d%s' % (i, self[i]))
@@ -347,7 +345,7 @@ def _parse_unpack(args):
     return _parse(*args)
 
 
-class CTestLogParser(object):
+class CTestLogParser:
     """Log file parser that extracts errors and warnings."""
     def __init__(self, profile=False):
         # whether to record timing information
@@ -384,7 +382,7 @@ class CTestLogParser(object):
             (tuple): two lists containing ``BuildError`` and
                 ``BuildWarning`` objects.
         """
-        if isinstance(stream, string_types):
+        if isinstance(stream, str):
             with open(stream) as f:
                 return self.parse(f, context, jobs)
 
@@ -409,7 +407,12 @@ class CTestLogParser(object):
             pool = multiprocessing.Pool(jobs)
             try:
                 # this is a workaround for a Python bug in Pool with ctrl-C
-                results = pool.map_async(_parse_unpack, args, 1).get(9999999)
+                if sys.version_info >= (3, 2):
+                    max_timeout = threading.TIMEOUT_MAX
+                else:
+                    max_timeout = 9999999
+                results = pool.map_async(_parse_unpack, args, 1).get(max_timeout)
+
                 errors, warnings, timings = zip(*results)
             finally:
                 pool.terminate()

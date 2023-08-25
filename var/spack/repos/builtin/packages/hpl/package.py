@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -114,6 +114,14 @@ class Hpl(AutotoolsPackage):
             or self.spec.satisfies("^intel-parallel-studio+mkl")
         ):
             config.append("LDFLAGS={0}".format(self.spec["blas"].libs.ld_flags))
+
+        if "%aocc" in self.spec:
+            amd_ldflags = " "
+            if "%aocc@3:" in self.spec:
+                amd_ldflags += "-lamdlibm -lm "
+            if "%aocc@4:" in self.spec:
+                amd_ldflags += "-lamdalloc "
+            config.append("LDFLAGS=" + amd_ldflags)
 
         return config
 

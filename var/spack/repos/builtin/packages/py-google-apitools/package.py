@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyGoogleApitools(PythonPackage):
     homepage = "https://github.com/google/apitools"
     pypi = "google-apitools/google-apitools-0.5.32.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.5.32", sha256="c3763e52289f61e21c41d5531e20fbda9cc8484a088b8686fd460770db8bad13")
 

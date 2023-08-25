@@ -1,10 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -159,7 +158,7 @@ def test_unset(env):
         os.environ["UNSET_ME"]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_filter_system_paths(miscellaneous_paths):
     """Tests that the filtering of system paths works as expected."""
     filtered = filter_system_paths(miscellaneous_paths)
@@ -174,7 +173,7 @@ def test_filter_system_paths(miscellaneous_paths):
 
 
 # TODO 27021
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_set_path(env):
     """Tests setting paths in an environment variable."""
 
@@ -190,7 +189,7 @@ def test_set_path(env):
     assert "foo;bar;baz" == os.environ["B"]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_path_manipulation(env):
     """Tests manipulating list of paths in the environment."""
 
@@ -230,16 +229,6 @@ def test_path_manipulation(env):
     assert os.environ["PATH_LIST_WITH_DUPLICATES"].count("/duplicate") == 1
 
 
-def test_extra_arguments(env):
-    """Tests that we can attach extra arguments to any command."""
-    env.set("A", "dummy value", who="Pkg1")
-    for x in env:
-        assert "who" in x.args
-
-    env.apply_modifications()
-    assert "dummy value" == os.environ["A"]
-
-
 def test_extend(env):
     """Tests that we can construct a list of environment modifications
     starting from another list.
@@ -254,7 +243,7 @@ def test_extend(env):
         assert x is y
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.usefixtures("prepare_environment_for_tests")
 def test_source_files(files_to_be_sourced):
     """Tests the construction of a list of environment modifications that are
@@ -321,7 +310,7 @@ def test_preserve_environment(prepare_environment_for_tests):
     assert os.environ["PATH_LIST"] == "/path/second:/path/third"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "files,expected,deleted",
     [
@@ -362,7 +351,6 @@ def test_preserve_environment(prepare_environment_for_tests):
 )
 @pytest.mark.usefixtures("prepare_environment_for_tests")
 def test_environment_from_sourcing_files(files, expected, deleted):
-
     env = environment.environment_after_sourcing_files(*files)
 
     # Test that variables that have been modified are still there and contain
@@ -393,7 +381,6 @@ def test_clear(env):
     ],
 )
 def test_sanitize_literals(env, exclude, include):
-
     after = environment.sanitize(env, exclude, include)
 
     # Check that all the included variables are there
@@ -412,7 +399,7 @@ def test_sanitize_literals(env, exclude, include):
         ({"SHLVL": "1"}, ["SH.*"], [], [], ["SHLVL"]),
         # Check we can include using a regex
         ({"SHLVL": "1"}, ["SH.*"], ["SH.*"], ["SHLVL"], []),
-        # Check regex to exclude Modules v4 related vars
+        # Check regex to exclude Environment Modules related vars
         (
             {"MODULES_LMALTNAME": "1", "MODULES_LMCONFLICT": "2"},
             ["MODULES_(.*)"],
@@ -427,10 +414,16 @@ def test_sanitize_literals(env, exclude, include):
             [],
             ["A_modquar", "b_modquar", "C_modshare"],
         ),
+        (
+            {"__MODULES_LMTAG": "1", "__MODULES_LMPREREQ": "2"},
+            ["__MODULES_(.*)"],
+            [],
+            [],
+            ["__MODULES_LMTAG", "__MODULES_LMPREREQ"],
+        ),
     ],
 )
 def test_sanitize_regex(env, exclude, include, expected, deleted):
-
     after = environment.sanitize(env, exclude, include)
 
     assert all(x in after for x in expected)
@@ -481,22 +474,18 @@ def test_sanitize_regex(env, exclude, include, expected, deleted):
         (
             {"FOO": "foo", "BAR": "bar"},
             {"FOO": "baz", "BAR": "baz"},
-            [
-                environment.SetEnv("FOO", "baz"),
-                environment.SetEnv("BAR", "baz"),
-            ],
+            [environment.SetEnv("FOO", "baz"), environment.SetEnv("BAR", "baz")],
         ),
     ],
 )
 def test_from_environment_diff(before, after, search_list):
-
     mod = environment.EnvironmentModifications.from_environment_diff(before, after)
 
     for item in search_list:
         assert item in mod
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="LMod not supported on Windows")
+@pytest.mark.not_on_windows("Lmod not supported on Windows")
 @pytest.mark.regression("15775")
 def test_exclude_lmod_variables():
     # Construct the list of environment modifications
@@ -506,3 +495,19 @@ def test_exclude_lmod_variables():
     # Check that variables related to lmod are not in there
     modifications = env.group_by_name()
     assert not any(x.startswith("LMOD_") for x in modifications)
+
+
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
+@pytest.mark.regression("13504")
+def test_exclude_modules_variables():
+    # Construct the list of environment modifications
+    file = os.path.join(datadir, "sourceme_modules.sh")
+    env = EnvironmentModifications.from_sourcing_file(file)
+
+    # Check that variables related to modules are not in there
+    modifications = env.group_by_name()
+    assert not any(x.startswith("MODULES_") for x in modifications)
+    assert not any(x.startswith("__MODULES_") for x in modifications)
+    assert not any(x.startswith("BASH_FUNC_ml") for x in modifications)
+    assert not any(x.startswith("BASH_FUNC_module") for x in modifications)
+    assert not any(x.startswith("BASH_FUNC__module_raw") for x in modifications)

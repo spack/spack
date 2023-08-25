@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Recola(CMakePackage):
     homepage = "https://recola.hepforge.org"
     url = "https://recola.hepforge.org/downloads/?f=recola2-2.2.3.tar.gz"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     variant("python", default=True, description="Build py-recola python bindings.")
 

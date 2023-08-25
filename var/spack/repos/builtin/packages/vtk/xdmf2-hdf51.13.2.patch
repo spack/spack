@@ -1,0 +1,36 @@
+--- a/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx   2022-11-15 15:37:37.242113202 -0600
++++ b/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx	  2022-11-15 14:51:30.849230122 -0600
+@@ -156,6 +156,10 @@
+ }
+ 
+ static const H5FD_class_t H5FD_dsm_g = {
++#if (H5_VERS_MAJOR>1)||((H5_VERS_MAJOR==1)&&(H5_VERS_MINOR>=13))
++    0,                          /*version       */
++    H5_VFD_RESERVED + 0xd3f2,   /*value         */
++#endif
+     "dsm",                      /*name          */
+     MAXADDR,                    /*maxaddr       */
+     H5F_CLOSE_WEAK,             /*fc_degree     */
+@@ -187,12 +191,22 @@
+     NULL,                       /*get_handle    */
+     H5FD_dsm_read,              /*read          */
+     H5FD_dsm_write,             /*write         */
++#if (H5_VERS_MAJOR>1)||((H5_VERS_MAJOR==1)&&(H5_VERS_MINOR>=13))
++    NULL,                       /*read_vector     */
++    NULL,                       /*write_vector    */
++    NULL,                       /*read_selection  */
++    NULL,                       /*write_selection */
++#endif
+     NULL,                       /*flush         */
+ #if (H5_VERS_MAJOR>1)||((H5_VERS_MAJOR==1)&&(H5_VERS_MINOR>=8))
+     NULL,                       /* truncate     */
+ #endif
+     NULL,                       /*lock          */
+     NULL,                       /*unlock        */
++#if (H5_VERS_MAJOR>1)||((H5_VERS_MAJOR==1)&&(H5_VERS_MINOR>=13))
++    NULL,                       /*del           */
++    NULL,                       /*ctl           */
++#endif
+     H5FD_FLMAP_SINGLE           /*fl_map        */
+ };
+ 

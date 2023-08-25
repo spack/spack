@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class PyShroud(PythonPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("0.12.2", tag="v0.12.2")
     version("0.12.1", tag="v0.12.1")
     version("0.11.0", tag="v0.11.0")
     version("0.10.1", tag="v0.10.1")
@@ -22,4 +23,4 @@ class PyShroud(PythonPackage):
     version("0.8.0", tag="v0.8.0")
 
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-pyyaml@4.2b1:", type=("build", "run"))
+    depends_on("py-pyyaml@4.2:", type=("build", "run"))

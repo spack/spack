@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,9 @@ class EtsfIo(Package):
     depends_on("netcdf-fortran")
     depends_on("hdf5+mpi~cxx", when="+mpi")  # required for NetCDF-4 support
 
+    patch("tests_module.patch")
+    patch("tests_init.patch")
+
     def install(self, spec, prefix):
         options = ["--prefix=%s" % prefix]
         oapp = options.append
@@ -48,3 +51,11 @@ class EtsfIo(Package):
         make()
         make("check")
         make("install")
+
+    def test_etsf_io_help(self):
+        """check etsf_io can execute (--help)"""
+
+        path = self.spec["etsf-io"].prefix.bin.etsf_io
+        etsfio = which(path)
+        out = etsfio("--help", output=str.split, error=str.split)
+        assert "Usage: etsf_io" in out

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,9 +20,10 @@ class Zoltan(AutotoolsPackage):
 
     """
 
-    homepage = "http://www.cs.sandia.gov/zoltan"
+    homepage = "https://sandialabs.github.io/Zoltan/"
     url = "https://github.com/sandialabs/Zoltan/archive/v3.83.tar.gz"
 
+    version("3.901", sha256="030c22d9f7532d3076e40cba1f03a63b2ee961d8cc9a35149af4a3684922a910")
     version("3.83", sha256="17320a9f08e47f30f6f3846a74d15bfea6f3c1b937ca93c0ab759ca02c40e56c")
 
     patch("notparallel.patch", when="@3.8")
@@ -88,10 +89,7 @@ class Zoltan(AutotoolsPackage):
             self.get_config_flag("f90interface", "fortran"),
             self.get_config_flag("mpi", "mpi"),
         ]
-        config_cflags = [
-            "-O0" if "+debug" in spec else "-O3",
-            "-g" if "+debug" in spec else "",
-        ]
+        config_cflags = ["-O0" if "+debug" in spec else "-O3", "-g" if "+debug" in spec else ""]
 
         config_ldflags = []
         # PGI runtime libraries
@@ -132,7 +130,6 @@ class Zoltan(AutotoolsPackage):
                 [
                     "CC={0}".format(spec["mpi"].mpicc),
                     "CXX={0}".format(spec["mpi"].mpicxx),
-                    "FC={0}".format(spec["mpi"].mpifc),
                     "--with-mpi={0}".format(spec["mpi"].prefix),
                     # NOTE: Zoltan assumes that it's linking against an MPI library
                     # that can be found with '-lmpi' which isn't the case for many
@@ -142,6 +139,8 @@ class Zoltan(AutotoolsPackage):
                     "--with-mpi-libs= ",
                 ]
             )
+            if "+fortran" in spec:
+                config_args.extend(["FC={0}".format(spec["mpi"].mpifc)])
 
         config_fcflags = config_cflags[:]
         if spec.satisfies("%gcc@10:+fortran"):

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Flamemaster(CMakePackage):
     url = "file://{0}/flamemaster-4.3.1.tar.gz".format(os.getcwd())
     manual_download = True
 
-    maintainers = ["amd-toolchain-support"]
+    maintainers("amd-toolchain-support")
 
     version("4.3.1", sha256="8ff382f098e44a7978fe1bcc688272d65f0b374487af4523d94cca983dc57378")
 
@@ -151,10 +151,7 @@ class Flamemaster(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        args = [
-            "-DCMAKE_C_COMPILER=%s" % spack_cc,
-            "-DCMAKE_CXX_COMPILER=%s" % spack_cxx,
-        ]
+        args = ["-DCMAKE_C_COMPILER=%s" % spack_cc, "-DCMAKE_CXX_COMPILER=%s" % spack_cxx]
 
         if spec.variants["build_type"].value == "Release":
             cxx_flags_release = []

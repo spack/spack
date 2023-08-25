@@ -1,11 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import shutil
-import sys
 
 import pytest
 
@@ -19,7 +18,7 @@ from spack.main import SpackCommand, SpackCommandError
 # Everything here uses (or can use) the mock config and database.
 pytestmark = [
     pytest.mark.usefixtures("config", "database"),
-    pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
+    pytest.mark.not_on_windows("does not run on windows"),
 ]
 # location prints out "locations of packages and spack directories"
 location = SpackCommand("location")
@@ -35,6 +34,15 @@ def mock_spec():
     yield s, s.package
     # Remove the spec from the mock stage area.
     shutil.rmtree(s.package.stage.path)
+
+
+def test_location_first(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Test with and without the --first option"""
+    install = SpackCommand("install")
+    install("libelf@0.8.12")
+    install("libelf@0.8.13")
+    # This would normally return an error without --first
+    assert location("--first", "--install-dir", "libelf")
 
 
 def test_location_build_dir(mock_spec):
@@ -88,7 +96,7 @@ def test_location_with_active_env(mutable_mock_env_path):
         assert location("--env").strip() == e.path
 
 
-def test_location_env_flag_interference(mutable_mock_env_path, tmpdir):
+def test_location_env_flag_interference(mutable_mock_env_path):
     """
     Tests that specifying an active environment using `spack -e x location ...`
     does not interfere with the location command flags.

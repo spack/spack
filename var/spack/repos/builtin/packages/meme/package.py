@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,13 +24,14 @@ class Meme(AutotoolsPackage):
     variant("mpi", default=True, description="Enable MPI support")
     variant("image-magick", default=False, description="Enable image-magick for png output")
 
-    depends_on("zlib", type=("link"))
+    depends_on("zlib-api", type=("link"))
     depends_on("libgcrypt", type=("link"))
     depends_on("perl", type=("build", "run"))
     depends_on("python@2.7:", type=("build", "run"))
     depends_on("mpi", when="+mpi")
     depends_on("imagemagick", type=("build", "run"), when="+image-magick")
     depends_on("perl-xml-parser", type=("build", "run"))
+    depends_on("perl-xml-simple", when="@4.5.0:")
     depends_on("libxml2", type=("build", "run"))
     depends_on("libxslt", type=("build", "run"))
 

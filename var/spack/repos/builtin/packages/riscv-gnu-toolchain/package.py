@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,13 +15,13 @@ class RiscvGnuToolchain(AutotoolsPackage):
     homepage = "https://spack-tutorial.readthedocs.io/"
     git = "https://github.com/riscv-collab/riscv-gnu-toolchain.git"
 
-    maintainers = ["wanlinwang"]
+    maintainers("wanlinwang")
 
     version("develop", branch="master", submodules=True)
     version("2022.08.08", tag="2022.08.08", submodules=True)
 
     # Dependencies:
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("autoconf", when="@main:", type="build")
     depends_on("python", type="build")
     depends_on("gawk", type="build")
@@ -32,7 +32,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
     depends_on("mpc", type="build")
     depends_on("gmp", type="build")
     depends_on("mpfr", type="build")
-    depends_on("zlib", type=("build", "link"))
+    depends_on("zlib-api", type=("build", "link"))
     depends_on("expat", type=("build", "link"))
     depends_on("bzip2", type="build")
     depends_on("gmake@4.3:", type="build")

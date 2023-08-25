@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class PerlAlienSvn(PerlPackage):
     depends_on("apr@1.6.2", type="build")
     depends_on("apr-util", type=("build", "link"))
     depends_on("sqlite", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libbsd")
 
     def setup_build_environment(self, env):

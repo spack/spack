@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,12 +19,17 @@ class Parsec(CMakePackage, CudaPackage):
     git = "https://github.com/icldisco/parsec.git"
     url = "https://github.com/ICLDisco/parsec/archive/refs/tags/parsec-3.0.2012.tar.gz"
     list_url = "https://github.com/ICLDisco/parsec/tags"
-    maintainers = ["abouteiller", "bosilca", "herault"]
+    maintainers("abouteiller", "bosilca", "herault")
     tags = ["e4s"]
 
     test_requires_compiler = True
 
     version("master", branch="master")
+    version(
+        "3.0.2209",
+        sha256="67d383d076991484cb2a265f56420abdea7cc1f329c63ac65a3e96fbfb6cc295",
+        url="https://bitbucket.org/icldistcomp/parsec/get/parsec-3.0.2209.tar.bz2",
+    )
     version(
         "3.0.2012",
         sha256="f565bcfffe106be8237b6aea3e83a5770607b7236606414b6f270244fa6ec3bc",

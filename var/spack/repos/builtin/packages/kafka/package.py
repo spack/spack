@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,15 @@ class Kafka(Package):
     list_url = "https://www-eu.apache.org/dist/kafka/"
     list_depth = 1
 
+    version(
+        "2.13-3.5.1", sha256="f7b74d544023f2c0ec52a179de59975cb64e34ea03650d829328b407b560e4da"
+    )
+    version(
+        "2.13-3.5.0", sha256="2a3a468e069be570f16d612a8196c2f7a9207b7eac865be934d20ce1252eb2f8"
+    )
+    version(
+        "2.13-3.4.1", sha256="a76f17a52b8f2cd31de11571ff366a714820b6e4e02893b0159d09db0edaf998"
+    )
     version(
         "2.13-2.4.0", sha256="c1c5246c7075459687b3160b713a001f5cd1cc563b9a3db189868d2f22aa9110"
     )

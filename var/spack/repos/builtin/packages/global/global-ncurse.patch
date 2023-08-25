@@ -1,0 +1,11 @@
+--- a/configure	2021-07-01 12:06:50.000000000 +0800
++++ b/configure	2022-10-10 14:30:01.348062669 +0800
+@@ -15771,7 +15771,7 @@
+   withval=$with_ncurses; if test x$withval = xno ; then
+ 		search_ncurses=false
+ 	  elif test x$withval != xyes ; then
+-		CURSES_LIBS="$LIBS -L$withval/lib -lncurses"
++		CURSES_LIBS="$LIBS -L$withval/lib -lncurses -ltinfo"
+ 		CURSES_INCLUDEDIR="-I$withval/include"
+ 		search_ncurses=false
+ 		screen_manager="ncurses"

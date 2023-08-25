@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Rr(CMakePackage):
 
     depends_on("gdb")
     depends_on("git")
-    depends_on("zlib")
+    depends_on("zlib-api")
     # depends_on('capnproto', when='@4.6:')  # not yet in spack
     # depends_on('libcapnp')    # needed for future releases
     depends_on("pkgconfig", type="build")

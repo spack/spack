@@ -1,12 +1,14 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.builder
+from spack.build_systems import autotools, cmake
 from spack.package import *
 
 
-class Proj(AutotoolsPackage):
+class Proj(CMakePackage, AutotoolsPackage):
     """PROJ is a generic coordinate transformation software, that transforms
     geospatial coordinates from one coordinate reference system (CRS) to
     another. This includes cartographic projections as well as geodetic
@@ -15,11 +17,18 @@ class Proj(AutotoolsPackage):
     homepage = "https://proj.org/"
     url = "https://download.osgeo.org/proj/proj-7.2.1.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     # Version 6 removes projects.h, while version 7 removes proj_api.h.
     # Many packages that depend on proj do not yet support the newer API.
     # See https://github.com/OSGeo/PROJ/wiki/proj.h-adoption-status
+
+    version("9.2.1", sha256="15ebf4afa8744b9e6fccb5d571fc9f338dc3adcf99907d9e62d1af815d4971a1")
+    version("9.2.0", sha256="dea816f5aa732ae6b2ee3977b9bdb28b1d848cf56a1aad8faf6708b89f0ed50e")
+    version("9.1.1", sha256="003cd4010e52bb5eb8f7de1c143753aa830c8902b6ed01209f294846e40e6d39")
+    version("9.1.0", sha256="81b2239b94cad0886222cde4f53cb49d34905aad2a1317244a0c30a553db2315")
+    version("9.0.1", sha256="737eaacbe7906d0d6ff43f0d9ebedc5c734cccc9e6b8d7beefdec3ab22d9a6a3")
+    version("9.0.0", sha256="0620aa01b812de00b54d6c23e7c5cc843ae2cd129b24fabe411800302172b989")
     version("8.2.1", sha256="76ed3d0c3a348a6693dfae535e5658bbfd47f71cb7ff7eb96d9f12f7e068b1cf")
     version("8.2.0", sha256="de93df9a4aa88d09459ead791f2dbc874b897bf67a5bbb3e4b68de7b1bdef13c")
     version("8.1.1", sha256="82f1345e5fa530c407cb1fc0752e83f8d08d2b98772941bbdc7820241f7fada2")
@@ -52,24 +61,10 @@ class Proj(AutotoolsPackage):
     # https://github.com/OSGeo/PROJ-data
     resource(
         name="proj-data",
-        url="https://download.osgeo.org/proj/proj-data-1.4.tar.gz",
-        sha256="76960d34d635aa127058ce654d89ea0eff91e2e4f2036482e677af5a88669b08",
-        placement="nad",
-        when="@7.2.1:",
-    )
-    resource(
-        name="proj-data",
-        url="https://download.osgeo.org/proj/proj-data-1.3.tar.gz",
-        sha256="0faa3e5ca6d816c907868c1ab2523668ccad27c6c4af9c7b00df9e4c3eb84398",
-        placement="nad",
-        when="@7.2.0",
-    )
-    resource(
-        name="proj-data",
-        url="https://download.osgeo.org/proj/proj-data-1.1.tar.gz",
-        sha256="df7c57e60f9e1d5bcc724f1def71d2a7cd33bd83c28f4b4bb71dbb2d8849c84a",
-        placement="nad",
-        when="@7:7.1",
+        url="https://download.osgeo.org/proj/proj-data-1.13.tar.gz",
+        sha256="f1e5e42ba15426d01d1970be727af77ac9b88c472215497a5a433d0a16dd105b",
+        placement=join_path("share", "proj"),
+        when="@7:",
     )
 
     # https://github.com/OSGeo/PROJ#distribution-files-and-format
@@ -78,21 +73,74 @@ class Proj(AutotoolsPackage):
         name="proj-datumgrid",
         url="https://download.osgeo.org/proj/proj-datumgrid-1.8.tar.gz",
         sha256="3ff6618a0acc9f0b9b4f6a62e7ff0f7bf538fb4f74de47ad04da1317408fcc15",
-        placement="nad",
+        placement=join_path("share", "proj"),
         when="@:6",
     )
 
+    patch(
+        "https://github.com/OSGeo/PROJ/commit/3f38a67a354a3a1e5cca97793b9a43860c380d95.patch?full_index=1",
+        sha256="dc620ff1bbcc0ef4130d53a40a8693a1e2e72ebf83bd6289f1139d0f1aad2a40",
+        when="@7:7.2.1",
+    )
+
     # https://proj.org/install.html#build-requirements
-    depends_on("pkgconfig@0.9.0:", type="build", when="@6:")
-    depends_on("googletest", when="@6:")
+    with when("build_system=cmake"):
+        depends_on("cmake@3.9:", when="@6:", type="build")
+        depends_on("cmake@3.5:", when="@5", type="build")
+        depends_on("cmake@2.6:", when="@:4", type="build")
+
+    with when("build_system=autotools"):
+        depends_on("pkgconfig@0.9:", when="@6:", type="build")
+
     depends_on("sqlite@3.11:", when="@6:")
-    depends_on("libtiff@4.0:", when="@7:+tiff")
-    depends_on("curl@7.29.0:", when="@7:+curl")
+    depends_on("libtiff@4:", when="@7:+tiff")
+    depends_on("curl@7.29:", when="@7:+curl")
+    depends_on("googletest@1.8:", when="@6:", type="test")
 
+    build_system(
+        conditional("autotools", when="@:8"), conditional("cmake", when="@5:"), default="cmake"
+    )
+
+    def setup_run_environment(self, env):
+        # PROJ_LIB doesn't need to be set. However, it may be set by conda.
+        # If an incompatible version of PROJ is found in PROJ_LIB, it can
+        # cause the package to fail at run-time. See the following for details:
+        # * https://proj.org/usage/environmentvars.html
+        # * https://rasterio.readthedocs.io/en/latest/faq.html
+        env.set("PROJ_LIB", self.prefix.share.proj)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+
+class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.pkg.setup_run_environment(env)
+
+    def setup_build_environment(self, env):
+        env.set("PROJ_LIB", join_path(self.pkg.stage.source_path, "nad"))
+
+    @run_after("install")
+    def install_datum_grids(self):
+        install_tree(join_path("share", "proj"), self.prefix.share.proj)
+
+
+class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
+    def cmake_args(self):
+        args = [
+            self.define_from_variant("ENABLE_TIFF", "tiff"),
+            self.define_from_variant("ENABLE_CURL", "curl"),
+        ]
+        if self.spec.satisfies("@6:") and self.pkg.run_tests:
+            args.append(self.define("USE_EXTERNAL_GTEST", True))
+        return args
+
+
+class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
     def configure_args(self):
-        args = ["PROJ_LIB={0}".format(join_path(self.stage.source_path, "nad"))]
+        args = []
 
-        if self.spec.satisfies("@6:"):
+        if self.spec.satisfies("@6:") and self.pkg.run_tests:
             args.append("--with-external-gtest")
 
         if self.spec.satisfies("@7:"):
@@ -107,17 +155,3 @@ class Proj(AutotoolsPackage):
                 args.append("--without-curl")
 
         return args
-
-    def setup_run_environment(self, env):
-        # PROJ_LIB doesn't need to be set. However, it may be set by conda.
-        # If an incompatible version of PROJ is found in PROJ_LIB, it can
-        # cause the package to fail at run-time. See the following for details:
-        # * https://proj.org/usage/environmentvars.html
-        # * https://rasterio.readthedocs.io/en/latest/faq.html
-        env.set("PROJ_LIB", self.prefix.share.proj)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,10 +18,14 @@ class Qperf(AutotoolsPackage):
     version("0.4.11", sha256="b0ef2ffe050607566d06102b4ef6268aad08fdc52898620d429096e7b0767e75")
     version("0.4.10", sha256="94e26725b4f962eacca36d8ef48cd1fb5043721ac82c3f44018319e47a96cf6b")
 
+    variant("verbs", default=True, description="Build with verbs support")
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
+
+    depends_on("rdma-core", when="+verbs")
 
     def autoreconf(self, spec, prefix):
         sh = which("sh")

@@ -1,11 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 def comma_list(sequence, article=""):
-    if type(sequence) != list:
+    if type(sequence) is not list:
         sequence = list(sequence)
 
     if not sequence:

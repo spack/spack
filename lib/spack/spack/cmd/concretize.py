@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,21 +14,20 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        "-f", "--force", action="store_true", help="Re-concretize even if already concretized."
+        "-f", "--force", action="store_true", help="re-concretize even if already concretized"
     )
     subparser.add_argument(
         "--test",
         default=None,
         choices=["root", "all"],
-        help="""Concretize with test dependencies. When 'root' is chosen, test
-dependencies are only added for the environment's root specs. When 'all' is
-chosen, test dependencies are enabled for all packages in the environment.""",
+        help="concretize with test dependencies of only root packages or all packages",
     )
     subparser.add_argument(
-        "-q", "--quiet", action="store_true", help="Don't print concretized specs"
+        "-q", "--quiet", action="store_true", help="don't print concretized specs"
     )
 
     spack.cmd.common.arguments.add_concretizer_args(subparser)
+    spack.cmd.common.arguments.add_common_arguments(subparser, ["jobs"])
 
 
 def concretize(parser, args):

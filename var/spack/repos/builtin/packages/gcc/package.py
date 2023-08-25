@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,18 +29,25 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     git = "git://gcc.gnu.org/git/gcc.git"
     list_url = "https://ftp.gnu.org/gnu/gcc/"
     list_depth = 1
+    keep_werror = "all"
 
-    maintainers = ["michaelkuhn", "alalazo"]
+    maintainers("michaelkuhn", "alalazo")
 
     version("master", branch="master")
 
+    version("13.2.0", sha256="e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da")
+    version("13.1.0", sha256="61d684f0aa5e76ac6585ad8898a2427aade8979ed5e7f85492286c4dfc13ee86")
+
+    version("12.3.0", sha256="949a5d4f99e786421a93b532b22ffab5578de7321369975b91aec97adfda8c3b")
     version("12.2.0", sha256="e549cf9cf3594a00e27b6589d4322d70e0720cdd213f39beb4181e06926230ff")
     version("12.1.0", sha256="62fd634889f31c02b64af2c468f064b47ad1ca78411c45abe6ac4b5f8dd19c7b")
 
+    version("11.4.0", sha256="3f2db222b007e8a4a23cd5ba56726ef08e8b1f1eb2055ee72c1402cea73a8dd9")
     version("11.3.0", sha256="b47cf2818691f5b1e21df2bb38c795fac2cfbd640ede2d0a5e1c89e338a3ac39")
     version("11.2.0", sha256="d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b")
     version("11.1.0", sha256="4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf")
 
+    version("10.5.0", sha256="25109543fdf46f397c347b5d8b7a2c7e5694a5a51cce4b9c6e1ea8a71ca307c1")
     version("10.4.0", sha256="c9297d5bcd7cb43f3dfc2fed5389e948c9312fd962ef6a4ce455cff963ebe4f1")
     version("10.3.0", sha256="64f404c1a650f27fc33da242e1f2df54952e3963a49e06e73f6940f3223ac344")
     version("10.2.0", sha256="b8dd4368bb9c7f0b98188317ee0254dd8cc99d1e3a18d0ff146c855fe16c1d8c")
@@ -87,13 +94,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     version("4.5.4", sha256="eef3f0456db8c3d992cbb51d5d32558190bc14f3bc19383dd93acc27acc6befc")
 
     # We specifically do not add 'all' variant here because:
-    # (i) Ada, Go, Jit, and Objective-C++ are not default languages.
+    # (i) Ada, D, Go, Jit, and Objective-C++ are not default languages.
     # In that respect, the name 'all' is rather misleading.
     # (ii) Languages other than c,c++,fortran are prone to configure bug in GCC
     # For example, 'java' appears to ignore custom location of zlib
     # (iii) meaning of 'all' changes with GCC version, i.e. 'java' is not part
     # of gcc7. Correctly specifying conflicts() and depends_on() in such a
     # case is a PITA.
+    #
+    # Also note that some languages get enabled by the configure scripts even if not listed in the
+    # arguments. For example, c++ is enabled when the bootstrapping is enabled and lto is enabled
+    # when the link time optimization support is enabled.
     variant(
         "languages",
         default="c,c++,fortran",
@@ -102,6 +113,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "brig",
             "c",
             "c++",
+            "d",
             "fortran",
             "go",
             "java",
@@ -151,6 +163,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("automake@1.15.1:", when="@master", type="build")
     depends_on("autoconf@2.69:", when="@master", type="build")
 
+    depends_on("gmake@3.80:", type="build")
+    depends_on("perl@5", type="build")
+
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
     depends_on("mpfr@2.4.2:3.1.6", when="@:9.9")
@@ -167,7 +182,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         depends_on("isl@0.15:0.20", when="@9:9.9")
         depends_on("isl@0.15:", when="@10:")
 
-    depends_on("zlib", when="@6:")
+    depends_on("zlib-api", when="@6:")
     depends_on("zstd", when="@10:")
     depends_on("diffutils", type="build")
     depends_on("iconv", when="platform=darwin")
@@ -191,21 +206,33 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("autogen@5.5.4:", type="test")
     depends_on("guile@1.4.1:", type="test")
 
-    # See https://golang.org/doc/install/gccgo#Releases
+    # See https://go.dev/doc/install/gccgo#Releases
     with when("languages=go"):
-        provides("golang", when="@4.6:")
-        provides("golang@:1", when="@4.7.1:")
-        provides("golang@:1.1", when="@4.8:")
-        provides("golang@:1.1.2", when="@4.8.2:")
+        provides("go-or-gccgo-bootstrap@:1.0", when="@4.7.1:")
+        provides("go-or-gccgo-bootstrap@:1.2", when="@4.9:")
+        provides("go-or-gccgo-bootstrap@:1.4", when="@5:")
+        provides("go-or-gccgo-bootstrap@:1.6.1", when="@6:")
+        provides("go-or-gccgo-bootstrap@:1.8.1", when="@7:")
+        provides("go-or-gccgo-bootstrap@:1.10.1", when="@8:")
+        provides("go-or-gccgo-bootstrap@:1.12.2", when="@9:")
+        provides("go-or-gccgo-bootstrap@:1.14.6", when="@10:")
+        provides("go-or-gccgo-bootstrap@1.16.3:1.16.5", when="@11:")
+
+        provides("golang@:1.0", when="@4.7.1:")
         provides("golang@:1.2", when="@4.9:")
         provides("golang@:1.4", when="@5:")
         provides("golang@:1.6.1", when="@6:")
-        provides("golang@:1.8", when="@7:")
-        # GCC 4.6 added support for the Go programming language.
-        # See https://gcc.gnu.org/gcc-4.6/changes.html
-        conflicts("@:4.5", msg="support for Go has been added in GCC 4.6")
+        provides("golang@:1.8.1", when="@7:")
+        provides("golang@:1.10.1", when="@8:")
+        provides("golang@:1.12.2", when="@9:")
+        provides("golang@:1.14.6", when="@10:")
+        provides("golang@1.16.3:1.16.5", when="@11:")
+
+        # GCC 4.7.1 added full support for the Go 1.x programming language.
+        conflicts("@:4.7.0")
+
         # Go is not supported on macOS
-        conflicts("platform=darwin", msg="Go not supported on MacOS")
+        conflicts("platform=darwin", msg="GCC cannot build Go support on MacOS")
 
     # For a list of valid languages for a specific release,
     # run the following command in the GCC source directory:
@@ -234,6 +261,43 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # See https://gcc.gnu.org/gcc-5/changes.html
     conflicts("languages=jit", when="@:4")
 
+    with when("languages=d"):
+        # The very first version of GDC that became part of GCC already supported version 2.076 of
+        # the language and runtime.
+        # See https://wiki.dlang.org/GDC#Status
+        provides("D@2")
+
+        # Support for the D programming language has been added to GCC 9.
+        # See https://gcc.gnu.org/gcc-9/changes.html#d
+        conflicts("@:8", msg="support for D has been added in GCC 9.1")
+
+        # Versions of GDC prior to 12 can be built with an ISO C++11 compiler. Starting version 12,
+        # the D frontend requires a working GDC. Moreover, it is strongly recommended to use an
+        # older version of GDC to build GDC.
+        # See https://gcc.gnu.org/install/prerequisites.html#GDC-prerequisite
+        with when("@12:"):
+            # All versions starting 12 have to be built GCC:
+            requires("%gcc")
+
+            # And it has to be GCC older than the version we build:
+            vv = ["11", "12.1.0", "12.2.0"]
+            for prev_v, curr_v in zip(vv, vv[1:]):
+                conflicts(
+                    "%gcc@{0}:".format(curr_v),
+                    when="@{0}".format(curr_v),
+                    msg="'gcc@{0} languages=d' requires '%gcc@:{1}' "
+                    "with the D language support".format(curr_v, prev_v),
+                )
+
+            # In principle, it is possible to have GDC even with GCC 5.
+            # See https://github.com/D-Programming-GDC/gdc
+            # We, however, require at least the oldest version that officially supports GDC. It is
+            # also a good opportunity to tell the users that they need a working GDC:
+            conflicts(
+                "%gcc@:8",
+                msg="'gcc@12: languages=d' requires '%gcc@9:' with the D language support",
+            )
+
     with when("+nvptx"):
         depends_on("cuda")
         resource(
@@ -260,6 +324,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         conflicts("languages=jit")
         conflicts("languages=objc")
         conflicts("languages=obj-c++")
+        conflicts("languages=d")
         # NVPTX build disables bootstrap
         conflicts("+bootstrap")
 
@@ -272,19 +337,30 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   on XCode 12.5
     conflicts("+bootstrap", when="@:11.1 %apple-clang@12.0.5")
 
-    # aarch64/M1 is supported in GCC 12+
+    # aarch64/M1 is supported in GCC 11.3-12.2
     conflicts(
-        "@:11.2,11.3.1:",
+        "@:11.2,12.3:",
         when="target=aarch64: platform=darwin",
-        msg="Only GCC 11.3.0 supports macOS M1 (aarch64)",
+        msg="Only GCC 11.3-12.2 support macOS M1 (aarch64)",
     )
 
     # Newer binutils than RHEL's is required to run `as` on some instructions
     # generated by new GCC (see https://github.com/spack/spack/issues/12235)
     conflicts("~binutils", when="@7: os=rhel6", msg="New GCC cannot use system assembler on RHEL6")
+    # Ditto for RHEL7/8: OpenBLAS uses flags which the RHEL system-binutils don't have:
+    # https://github.com/xianyi/OpenBLAS/issues/3805#issuecomment-1319878852
+    conflicts(
+        "~binutils", when="@10: os=rhel7", msg="gcc: Add +binutils - preinstalled as might be old"
+    )
+    conflicts(
+        "~binutils", when="@10: os=rhel8", msg="gcc: Add +binutils - preinstalled as might be old"
+    )
 
     # GCC 11 requires GCC 4.8 or later (https://gcc.gnu.org/gcc-11/changes.html)
     conflicts("%gcc@:4.7", when="@11:")
+
+    # https://github.com/iains/gcc-12-branch/issues/6
+    conflicts("@:12", when="%apple-clang@14:14.0")
 
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
@@ -326,6 +402,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             sha256="e02006b7ec917cc1390645d95735a6a866caed0dfe506d5bef742f7862cab218",
             when="@11.3.0 target=aarch64:",
         )
+        # https://github.com/iains/gcc-12-branch
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/76677f2b/gcc/gcc-12.1.0-arm.diff",
+            sha256="a000f1d9cb1dd98c7c4ef00df31435cd5d712d2f9d037ddc044f8bf82a16cf35",
+            when="@12.1.0 target=aarch64:",
+        )
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/1d184289/gcc/gcc-12.2.0-arm.diff",
+            sha256="a7843b5c6bf1401e40c20c72af69c8f6fc9754ae980bb4a5f0540220b3dcb62d",
+            when="@12.2.0 target=aarch64:",
+        )
         conflicts("+bootstrap", when="@11.3.0 target=aarch64:")
 
         # Use -headerpad_max_install_names in the build,
@@ -355,6 +442,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     )
     patch("patch-745dae5923aba02982563481d75a21595df22ff8.patch", when="@10.1.0:10.3.0,11.1.0")
 
+    # Backport libsanitizer patch for glibc >= 2.36
+    # https://reviews.llvm.org/D129471
+    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5.1:5.5,6.1:6.5,7.1:7.5,8.1:8.5,9.1:9.5")
+    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10.1:10.4,11.1:11.3,12.1.0")
+
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch("ucontext_t.patch", when="@4.9,5.1:5.4,6.1:6.4,7.1")
@@ -379,11 +471,18 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch("patch-fc930b3010bd0de899a3da3209eab20664ddb703.patch", when="@10.1:10.3")
     patch("patch-f1feb74046e0feb0596b93bbb822fae02940a90e.patch", when="@11.1")
 
+    # libstdc++: Fix inconsistent noexcept-specific for valarray begin/end
+    patch(
+        "https://github.com/gcc-mirror/gcc/commit/423cd47cfc9640ba3d6811b780e8a0b94b704dcb.patch?full_index=1",
+        sha256="0d136226eb07bc43f1b15284f48bd252e3748a0426b5d7ac9084ebc406e15490",
+        when="@9.5.0:10.4.0,11.1.0:11.2.0",
+    )
+
     build_directory = "spack-build"
 
     @classproperty
     def executables(cls):
-        names = [r"gcc", r"[^\w]?g\+\+", r"gfortran"]
+        names = [r"gcc", r"[^\w]?g\+\+", r"gfortran", r"gdc", r"gccgo"]
         suffixes = [r"", r"-mp-\d+\.\d", r"-\d+\.\d", r"-\d+", r"\d\d"]
         return [r"".join(x) for x in itertools.product(names, suffixes)]
 
@@ -443,7 +542,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     @classmethod
     def determine_variants(cls, exes, version_str):
         languages, compilers = set(), {}
-        for exe in exes:
+        # There are often at least two copies (not symlinks) of each compiler executable in the
+        # same directory: one with a canonical name, e.g. "gfortran", and another one with the
+        # target prefix, e.g. "x86_64-pc-linux-gnu-gfortran". There also might be a copy of "gcc"
+        # with the version suffix, e.g. "x86_64-pc-linux-gnu-gcc-6.3.0". To ensure the consistency
+        # of values in the "compilers" dictionary (i.e. we prefer all of them to reference copies
+        # with canonical names if possible), we iterate over the executables in the reversed sorted
+        # order:
+        for exe in sorted(exes, reverse=True):
             basename = os.path.basename(exe)
             if "g++" in basename:
                 languages.add("c++")
@@ -454,6 +560,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             elif "gcc" in basename:
                 languages.add("c")
                 compilers["c"] = exe
+            elif "gccgo" in basename:
+                languages.add("go")
+                compilers["go"] = exe
+            elif "gdc" in basename:
+                languages.add("d")
+                compilers["d"] = exe
         variant_str = "languages={0}".format(",".join(languages))
         return variant_str, {"compilers": compilers}
 
@@ -469,9 +581,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         for constraint, key in {
             "languages=c": "c",
             "languages=c++": "cxx",
+            "languages=d": "d",
             "languages=fortran": "fortran",
         }.items():
-            if spec.satisfies(constraint, strict=True):
+            if spec.satisfies(constraint):
                 msg = "{0} not in {1}"
                 assert key in compilers, msg.format(key, spec)
 
@@ -517,7 +630,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "7.1.0"
         ):
             self.gnu_mirror_path = self.gnu_mirror_path.replace("xz", "bz2")
-        return super(Gcc, self).url_for_version(version)
+        return super().url_for_version(version)
 
     def patch(self):
         spec = self.spec
@@ -539,9 +652,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Use installed libz
         if self.version >= Version("6"):
-            filter_file("@zlibdir@", "-L{0}".format(spec["zlib"].prefix.lib), "gcc/Makefile.in")
             filter_file(
-                "@zlibinc@", "-I{0}".format(spec["zlib"].prefix.include), "gcc/Makefile.in"
+                "@zlibdir@", "-L{0}".format(spec["zlib-api"].prefix.lib), "gcc/Makefile.in"
+            )
+            filter_file(
+                "@zlibinc@", "-I{0}".format(spec["zlib-api"].prefix.include), "gcc/Makefile.in"
             )
 
         if spec.satisfies("+nvptx"):
@@ -593,7 +708,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # concretization, so we'll stick to that. The other way around however can
         # result in compilation errors, when gcc@7 is built with gcc@11, and znver3
         # is taken as a the target, which gcc@7 doesn't support.
-        if "+bootstrap %gcc" in self.spec:
+        # Note we're not adding this for aarch64 because of
+        # https://github.com/spack/spack/issues/31184
+        if "+bootstrap %gcc" in self.spec and self.spec.target.family != "aarch64":
             flags += " " + self.get_common_target_flags(self.spec)
 
         if "+bootstrap" in self.spec:
@@ -659,17 +776,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # enable_bootstrap
         if spec.satisfies("+bootstrap"):
-            options.extend(
-                [
-                    "--enable-bootstrap",
-                ]
-            )
+            options.extend(["--enable-bootstrap"])
         else:
-            options.extend(
-                [
-                    "--disable-bootstrap",
-                ]
-            )
+            options.extend(["--disable-bootstrap"])
 
         # Configure include and lib directories explicitly for these
         # dependencies since the short GCC option assumes that libraries
@@ -720,6 +829,18 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         options.append("--with-boot-ldflags=" + boot_ldflags)
         options.append("--with-build-config=spack")
 
+        if "languages=d" in spec:
+            # Phobos is the standard library for the D Programming Language. The documentation says
+            # that on some targets, 'libphobos' is not enabled by default, but compiles and works
+            # if '--enable-libphobos' is used. Specifics are documented for affected targets.
+            # See https://gcc.gnu.org/install/prerequisites.html#GDC-prerequisite
+            # Unfortunately, it is unclear where exactly the aforementioned specifics are
+            # documented but GDC seems to be unusable without the library, therefore we enable it
+            # explicitly:
+            options.append("--enable-libphobos")
+            if spec.satisfies("@12:"):
+                options.append("GDC={0}".format(self.detect_gdc()))
+
         return options
 
     # run configure/make/make(install) for the nvptx-none target
@@ -758,7 +879,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # self.build_directory = 'spack-build-nvptx'
         with working_dir("spack-build-nvptx", create=True):
-
             options = [
                 "--prefix={0}".format(prefix),
                 "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),
@@ -857,12 +977,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
             # Add easily-overridable rpath string at the end
             out.write("*link_libgcc_rpath:\n")
-            if "platform=darwin" in self.spec:
-                # macOS linker requires separate rpath commands
-                out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
-            else:
-                # linux linker uses colon-separated rpath
-                out.write("-rpath " + ":".join(rpath_libdirs))
+            out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
             out.write("\n")
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))
@@ -893,3 +1008,89 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 env.set(lang.upper(), abspath)
                 # Stop searching filename/regex combos for this language
                 break
+
+    def detect_gdc(self):
+        """Detect and return the path to GDC that belongs to the same instance of GCC that is used
+        by self.compiler.
+
+        If the path cannot be detected, raise InstallError with recommendations for the users on
+        how to circumvent the problem.
+
+        Should be use only if self.spec.satisfies("@12: languages=d")
+        """
+        # Detect GCC package in the directory of the GCC compiler
+        # or in the $PATH if self.compiler.cc is not an absolute path:
+        from spack.detection import by_executable
+
+        compiler_dir = os.path.dirname(self.compiler.cc)
+        detected_packages = by_executable(
+            [self.__class__], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
+        )
+
+        # We consider only packages that satisfy the following constraint:
+        required_spec = Spec("languages=c,c++,d")
+        candidate_specs = [
+            p.spec
+            for p in filter(
+                lambda p: p.spec.satisfies(required_spec), detected_packages.get(self.name, ())
+            )
+        ]
+
+        if candidate_specs:
+            # We now need to filter specs that match the compiler version:
+            compiler_spec = Spec(repr(self.compiler.spec))
+
+            # First, try to filter specs that satisfy the compiler spec:
+            new_candidate_specs = list(
+                filter(lambda s: s.satisfies(compiler_spec), candidate_specs)
+            )
+
+            # The compiler version might be more specific than what we can detect. For example, the
+            # user might have "gcc@10.2.1-sys" as the compiler spec in compilers.yaml. In that
+            # case, we end up with an empty list of candidates. To circumvent the problem, we try
+            # to filter specs that are satisfied by the compiler spec:
+            if not new_candidate_specs:
+                new_candidate_specs = list(
+                    filter(lambda s: compiler_spec.satisfies(s), candidate_specs)
+                )
+
+            candidate_specs = new_candidate_specs
+
+        error_nl = "\n    "  # see SpackError.__str__()
+
+        if not candidate_specs:
+            raise InstallError(
+                "Cannot detect GDC",
+                long_msg="Starting version 12, the D frontend requires a working GDC."
+                "{0}You can install it with Spack by running:"
+                "{0}{0}spack install gcc@9:11 languages=c,c++,d"
+                "{0}{0}Once that has finished, you will need to add it to your compilers.yaml file"
+                "{0}and use it to install this spec (i.e. {1} ...).".format(
+                    error_nl, self.spec.format("{name}{@version} {variants.languages}")
+                ),
+            )
+        elif len(candidate_specs) == 0:
+            return candidate_specs[0].extra_attributes["compilers"]["d"]
+        else:
+            # It is rather unlikely to end up here but let us try to resolve the ambiguity:
+            candidate_gdc = candidate_specs[0].extra_attributes["compilers"]["d"]
+            if all(
+                candidate_gdc == s.extra_attributes["compilers"]["d"] for s in candidate_specs[1:]
+            ):
+                # It does not matter which one we take if they are all the same:
+                return candidate_gdc
+            else:
+                raise InstallError(
+                    "Cannot resolve ambiguity when detecting GDC that belongs to "
+                    "%{0}".format(self.compiler.spec),
+                    long_msg="The candidates are:{0}{0}{1}{0}".format(
+                        error_nl,
+                        error_nl.join(
+                            "{0} (cc: {1})".format(
+                                s.extra_attributes["compilers"]["d"],
+                                s.extra_attributes["compilers"]["c"],
+                            )
+                            for s in candidate_specs
+                        ),
+                    ),
+                )

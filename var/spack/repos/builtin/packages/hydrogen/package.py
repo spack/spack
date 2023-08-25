@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/Elemental.git"
     tags = ["ecp", "radiuss"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("develop", branch="hydrogen")
     version("1.5.1", sha256="447da564278f98366906d561d9c8bc4d31678c56d761679c2ff3e59ee7a2895c")
@@ -139,8 +139,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
         msg="Hydrogen did not exist before v0.99. " + "Did you mean to use Elemental instead?",
     )
 
-    generator = "Ninja"
-    depends_on("ninja", type="build")
+    generator("ninja")
 
     @property
     def libs(self):

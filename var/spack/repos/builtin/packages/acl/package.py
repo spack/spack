@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,8 +26,10 @@ class Acl(AutotoolsPackage):
     depends_on("attr")
     depends_on("gettext")
 
-    def setup_build_environment(self, env):
-        env.append_flags("LDFLAGS", "-lintl")
+    def flag_handler(self, name, flags):
+        if name == "ldlibs" and "intl" in self.spec["gettext"].libs.names:
+            flags.append("-lintl")
+        return self.build_system_flags(name, flags)
 
     def autoreconf(self, spec, prefix):
         bash = which("bash")

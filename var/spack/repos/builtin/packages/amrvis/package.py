@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Amrvis(MakefilePackage):
     homepage = "https://github.com/AMReX-Codes/Amrvis"
     git = "https://github.com/AMReX-Codes/Amrvis.git"
 
-    maintainers = ["etpalmer63"]
+    maintainers("etpalmer63")
 
     version("main", tag="main")
 
@@ -71,10 +71,7 @@ class Amrvis(MakefilePackage):
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85440
         if self.spec.target.family not in ["x86_64", "ppc64le"]:
             comps = join_path("amrex", "Tools", "GNUMake", "comps")
-            maks = [
-                join_path(comps, "gnu.mak"),
-                join_path(comps, "llvm.mak"),
-            ]
+            maks = [join_path(comps, "gnu.mak"), join_path(comps, "llvm.mak")]
             for mak in maks:
                 filter_file("-lquadmath", "", mak)
 

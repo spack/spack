@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,22 +6,23 @@
 import json
 
 import jsonschema
-import six
+import jsonschema.exceptions
 
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.error
 import spack.hash_types as hash_types
+import spack.platforms
+import spack.repo
+import spack.spec
 from spack.schema.cray_manifest import schema as manifest_schema
 
 #: Cray systems can store a Spack-compatible description of system
 #: packages here.
 default_path = "/opt/cray/pe/cpe-descriptive-manifest/"
 
-compiler_name_translation = {
-    "nvidia": "nvhpc",
-    "rocm": "rocmcc",
-}
+compiler_name_translation = {"nvidia": "nvhpc", "rocm": "rocmcc"}
 
 
 def translated_compiler_name(manifest_compiler_name):
@@ -47,7 +48,8 @@ def translated_compiler_name(manifest_compiler_name):
 def compiler_from_entry(entry):
     compiler_name = translated_compiler_name(entry["name"])
     paths = entry["executables"]
-    version = entry["version"]
+    # to instantiate a compiler class we may need a concrete version:
+    version = "={}".format(entry["version"])
     arch = entry["arch"]
     operating_system = arch["os"]
     target = arch["target"]
@@ -61,27 +63,34 @@ def compiler_from_entry(entry):
 def spec_from_entry(entry):
     arch_str = ""
     if "arch" in entry:
+        local_platform = spack.platforms.host()
+        spec_platform = entry["arch"]["platform"]
+        # Note that Cray systems are now treated as Linux. Specs
+        # in the manifest which specify "cray" as the platform
+        # should be registered in the DB as "linux"
+        if local_platform.name == "linux" and spec_platform.lower() == "cray":
+            spec_platform = "linux"
         arch_format = "arch={platform}-{os}-{target}"
         arch_str = arch_format.format(
-            platform=entry["arch"]["platform"],
+            platform=spec_platform,
             os=entry["arch"]["platform_os"],
             target=entry["arch"]["target"]["name"],
         )
 
     compiler_str = ""
     if "compiler" in entry:
-        compiler_format = "%{name}@{version}"
+        compiler_format = "%{name}@={version}"
         compiler_str = compiler_format.format(
             name=translated_compiler_name(entry["compiler"]["name"]),
             version=entry["compiler"]["version"],
         )
 
-    spec_format = "{name}@{version} {compiler} {arch}"
+    spec_format = "{name}@={version} {compiler} {arch}"
     spec_str = spec_format.format(
         name=entry["name"], version=entry["version"], compiler=compiler_str, arch=arch_str
     )
 
-    pkg_cls = spack.repo.path.get_pkg_class(entry["name"])
+    pkg_cls = spack.repo.PATH.get_pkg_class(entry["name"])
 
     if "parameters" in entry:
         variant_strs = list()
@@ -96,7 +105,7 @@ def spec_from_entry(entry):
                 continue
 
             # Value could be a list (of strings), boolean, or string
-            if isinstance(value, six.string_types):
+            if isinstance(value, str):
                 variant_strs.append("{0}={1}".format(name, value))
             else:
                 try:
@@ -155,16 +164,23 @@ def entries_to_specs(entries):
                     continue
                 parent_spec = spec_dict[entry["hash"]]
                 dep_spec = spec_dict[dep_hash]
-                parent_spec._add_dependency(dep_spec, deptypes)
+                parent_spec._add_dependency(dep_spec, deptypes=deptypes, virtuals=())
+
+    for spec in spec_dict.values():
+        spack.spec.reconstruct_virtuals_on_edges(spec)
 
     return spec_dict
 
 
 def read(path, apply_updates):
-    with open(path, "r") as json_file:
-        json_data = json.load(json_file)
+    decode_exception_type = json.decoder.JSONDecodeError
+    try:
+        with open(path, "r") as json_file:
+            json_data = json.load(json_file)
 
-    jsonschema.validate(json_data, manifest_schema)
+        jsonschema.validate(json_data, manifest_schema)
+    except (jsonschema.exceptions.ValidationError, decode_exception_type) as e:
+        raise ManifestValidationError("error parsing manifest JSON:", str(e)) from e
 
     specs = entries_to_specs(json_data["specs"])
     tty.debug("{0}: {1} specs read from manifest".format(path, str(len(specs))))
@@ -178,4 +194,9 @@ def read(path, apply_updates):
         spack.compilers.add_compilers_to_config(compilers, init_config=False)
     if apply_updates:
         for spec in specs.values():
-            spack.store.db.add(spec, directory_layout=None)
+            spack.store.STORE.db.add(spec, directory_layout=None)
+
+
+class ManifestValidationError(spack.error.SpackError):
+    def __init__(self, msg, long_msg=None):
+        super().__init__(msg, long_msg)

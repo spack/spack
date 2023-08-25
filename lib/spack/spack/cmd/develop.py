@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,9 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.spec
+import spack.util.path
+import spack.version
 from spack.error import SpackError
 
 description = "add a spec to an environment's dev-build information"
@@ -17,7 +20,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument("-p", "--path", help="Source location of package")
+    subparser.add_argument("-p", "--path", help="source location of package")
 
     clone_group = subparser.add_mutually_exclusive_group()
     clone_group.add_argument(
@@ -25,18 +28,18 @@ def setup_parser(subparser):
         action="store_false",
         dest="clone",
         default=None,
-        help="Do not clone. The package already exists at the source path",
+        help="do not clone, the package already exists at the source path",
     )
     clone_group.add_argument(
         "--clone",
         action="store_true",
         dest="clone",
         default=None,
-        help="Clone the package even if the path already exists",
+        help="clone the package even if the path already exists",
     )
 
     subparser.add_argument(
-        "-f", "--force", help="Remove any files or directories that block cloning source code"
+        "-f", "--force", help="remove any files or directories that block cloning source code"
     )
 
     arguments.add_common_arguments(subparser, ["spec"])
@@ -52,7 +55,7 @@ def develop(parser, args):
         # download all dev specs
         for name, entry in env.dev_specs.items():
             path = entry.get("path", name)
-            abspath = path if os.path.isabs(path) else os.path.join(env.path, path)
+            abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
 
             if os.path.exists(abspath):
                 msg = "Skipping developer download of %s" % entry["spec"]
@@ -60,9 +63,10 @@ def develop(parser, args):
                 tty.msg(msg)
                 continue
 
-            spec = spack.spec.Spec(entry["spec"])
-            pkg_cls = spack.repo.path.get_pkg_class(spec.name)
-            pkg_cls(spec).stage.steal_source(abspath)
+            # Both old syntax `spack develop pkg@x` and new syntax `spack develop pkg@=x`
+            # are currently supported.
+            spec = spack.spec.parse_with_version_concrete(entry["spec"])
+            env.develop(spec=spec, path=path, clone=True)
 
         if not env.dev_specs:
             tty.warn("No develop specs to download")
@@ -74,16 +78,15 @@ def develop(parser, args):
         raise SpackError("spack develop requires at most one named spec")
 
     spec = specs[0]
-    if not spec.versions.concrete:
+    version = spec.versions.concrete_range_as_version
+    if not version:
         raise SpackError("Packages to develop must have a concrete version")
+
+    spec.versions = spack.version.VersionList([version])
 
     # default path is relative path to spec.name
     path = args.path or spec.name
-
-    # get absolute path to check
-    abspath = path
-    if not os.path.isabs(abspath):
-        abspath = os.path.join(env.path, path)
+    abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
 
     # clone default: only if the path doesn't exist
     clone = args.clone

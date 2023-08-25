@@ -1,20 +1,23 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from typing import List  # novm
+import re
+from typing import List
+
+import llnl.util.lang
 
 import spack.compiler
 
 
 class Nag(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = []  # type: List[str]
+    cc_names: List[str] = []
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = []  # type: List[str]
+    cxx_names: List[str] = []
 
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["nagfor"]
@@ -32,7 +35,13 @@ class Nag(spack.compiler.Compiler):
     }
 
     version_argument = "-V"
-    version_regex = r"NAG Fortran Compiler Release ([0-9.]+)"
+
+    @classmethod
+    @llnl.util.lang.memoized
+    def extract_version_from_output(cls, output):
+        match = re.search(r"NAG Fortran Compiler Release (\d+).(\d+)\(.*\) Build (\d+)", output)
+        if match:
+            return ".".join(match.groups())
 
     @property
     def verbose_flag(self):

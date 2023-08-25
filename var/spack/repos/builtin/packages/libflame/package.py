@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,7 +70,7 @@ class LibflameBase(AutotoolsPackage):
         # Libflame has a secondary dependency on BLAS,
         # but doesn't know which library name to expect:
         # https://github.com/flame/libflame/issues/24
-        config_args = ["LIBS=" + self.spec["blas"].libs.link_flags]
+        config_args = ["LIBS=" + self.spec["blas"].libs.ld_flags]
 
         if "+lapack2flame" in self.spec:
             config_args.append("--enable-lapack2flame")

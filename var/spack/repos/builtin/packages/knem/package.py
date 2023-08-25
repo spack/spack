@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Knem(AutotoolsPackage):
     list_url = "https://knem.gitlabpages.inria.fr/download"
     git = "https://gitlab.inria.fr/knem/knem.git"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     version("master", branch="master")
     version(

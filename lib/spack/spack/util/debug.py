@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ a stack trace and drops the user into an interpreter.
 
 """
 import code
+import io
 import os
 import pdb
 import signal
@@ -53,7 +54,10 @@ class ForkablePdb(pdb.Pdb):
     the run of Spack.install, or any where else Spack spawns a child process.
     """
 
-    _original_stdin_fd = sys.stdin.fileno()
+    try:
+        _original_stdin_fd = sys.stdin.fileno()
+    except io.UnsupportedOperation:
+        _original_stdin_fd = None
     _original_stdin = None
 
     def __init__(self, stdout_fd=None, stderr_fd=None):

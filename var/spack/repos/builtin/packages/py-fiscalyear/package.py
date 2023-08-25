@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class PyFiscalyear(PythonPackage):
     pypi = "fiscalyear/fiscalyear-0.2.0.tar.gz"
     git = "https://github.com/adamjstewart/fiscalyear.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master")
     version("0.4.0", sha256="12857a48bd7b97bda78d833b29e81f30ec5aa018241f690e714b472b25fa1b47")

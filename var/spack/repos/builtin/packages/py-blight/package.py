@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyBlight(PythonPackage):
     homepage = "https://github.com/trailofbits/blight"
     pypi = "blight/blight-0.0.47.tar.gz"
 
-    maintainers = ["woodruffw"]
+    maintainers("woodruffw")
 
     version("0.0.47", sha256="eb4a881adb98e03a0a855b95bfcddb0f4b3ca568b00cb45b571f047ae75c5667")
 

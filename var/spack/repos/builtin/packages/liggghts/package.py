@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Liggghts(MakefilePackage):
     depends_on("vtk@6.1.0:8.2.0")
     depends_on("mpi", when="+mpi")
     depends_on("jpeg", when="+jpeg")
-    depends_on("zlib", when="+gzip")
+    depends_on("zlib-api", when="+gzip")
 
     build_directory = "src"
     build_targets = ["auto"]

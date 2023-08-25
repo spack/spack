@@ -1,0 +1,9 @@
+diff --git a/requirements/core.txt b/requirements/core.txt
+index 0c0d3de..17c10f4 100644
+--- a/requirements/core.txt
++++ b/requirements/core.txt
+@@ -6,4 +6,3 @@ pyelftools==0.27
+ requests>=2.26.0
+ tinydb==4.5.2
+ python-sotools==0.1.0
+-docker==5.0.3

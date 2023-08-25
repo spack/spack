@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,7 +46,7 @@ class Qscintilla(QMakePackage):
 
     depends_on("qt+opengl", when="+python")
     depends_on("qt")
-    depends_on("py-pyqt5 +qsci_api", type=("build", "run"), when="+python ^qt@5")
+    depends_on("py-pyqt5", type=("build", "run"), when="+python ^qt@5")
     depends_on("py-pyqt4 +qsci_api", type=("build", "run"), when="+python ^qt@4")
     depends_on("python", type=("build", "run"), when="+python")
     # adter install inquires py-sip variant : so we need to have it

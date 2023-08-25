@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,10 +16,10 @@ import spack.patch
 import spack.paths
 import spack.repo
 import spack.util.compression
+import spack.util.url as url_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import Executable
-from spack.util.path import is_windows
 
 # various sha256 sums (using variables for legibility)
 # many file based shas will differ between Windows and other platforms
@@ -28,22 +28,22 @@ from spack.util.path import is_windows
 # files with contents 'foo', 'bar', and 'baz'
 foo_sha256 = (
     "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c"
-    if not is_windows
+    if sys.platform != "win32"
     else "bf874c7dd3a83cf370fdc17e496e341de06cd596b5c66dbf3c9bb7f6c139e3ee"
 )
 bar_sha256 = (
     "7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730"
-    if not is_windows
+    if sys.platform != "win32"
     else "556ddc69a75d0be0ecafc82cd4657666c8063f13d762282059c39ff5dbf18116"
 )
 baz_sha256 = (
     "bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c"
-    if not is_windows
+    if sys.platform != "win32"
     else "d30392e66c636a063769cbb1db08cd3455a424650d4494db6379d73ea799582b"
 )
 biz_sha256 = (
     "a69b288d7393261e613c276c6d38a01461028291f6e381623acc58139d01f54d"
-    if not is_windows
+    if sys.platform != "win32"
     else "2f2b087a8f84834fd03d4d1d5b43584011e869e4657504ef3f8b0a672a5c222e"
 )
 
@@ -55,7 +55,7 @@ url2_archive_sha256 = "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcda
 
 platform_url_sha = (
     "252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866"
-    if not is_windows
+    if sys.platform != "win32"
     else "ecf44a8244a486e9ef5f72c6cb622f99718dcd790707ac91af0b8c9a4ab7a2bb"
 )
 
@@ -71,7 +71,7 @@ def mock_patch_stage(tmpdir_factory, monkeypatch):
 data_path = os.path.join(spack.paths.test_path, "data", "patch")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Line ending conflict on Windows")
+@pytest.mark.not_on_windows("Line ending conflict on Windows")
 @pytest.mark.parametrize(
     "filename, sha256, archive_sha256",
     [
@@ -87,7 +87,7 @@ data_path = os.path.join(spack.paths.test_path, "data", "patch")
 )
 def test_url_patch(mock_patch_stage, filename, sha256, archive_sha256, config):
     # Make a patch object
-    url = "file://" + filename
+    url = url_util.path_to_file_url(filename)
     s = Spec("patch").concretized()
     patch = spack.patch.UrlPatch(s.package, url, sha256=sha256, archive_sha256=archive_sha256)
 
@@ -115,9 +115,11 @@ third line
 """
                 )
         # apply the patch and compare files
-        patch.fetch()
-        patch.apply(stage)
-        patch.clean()
+        with patch.stage:
+            patch.stage.create()
+            patch.stage.fetch()
+            patch.stage.expand_archive()
+            patch.apply(stage)
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-expected.txt")
@@ -148,7 +150,7 @@ def test_patch_mixed_versions_subset_constraint(mock_packages, config):
     spec1.concretize()
     assert biz_sha256 in spec1.variants["patches"].value
 
-    spec2 = Spec("patch@1.0")
+    spec2 = Spec("patch@=1.0")
     spec2.concretize()
     assert biz_sha256 not in spec2.variants["patches"].value
 
@@ -159,17 +161,17 @@ def test_patch_order(mock_packages, config):
 
     mid2_sha256 = (
         "mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234"
-        if not is_windows
+        if sys.platform != "win32"
         else "mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234"
     )
     mid1_sha256 = (
         "0b62284961dab49887e31319843431ee5b037382ac02c4fe436955abef11f094"
-        if not is_windows
+        if sys.platform != "win32"
         else "aeb16c4dec1087e39f2330542d59d9b456dd26d791338ae6d80b6ffd10c89dfa"
     )
     top_sha256 = (
         "f7de2947c64cb6435e15fb2bef359d1ed5f6356b2aebb7b20535e3772904e6db"
-        if not is_windows
+        if sys.platform != "win32"
         else "ff34cb21271d16dbf928374f610bb5dd593d293d311036ddae86c4846ff79070"
     )
 
@@ -189,7 +191,7 @@ def test_nested_directives(mock_packages):
     """Ensure pkg data structures are set up properly by nested directives."""
     # this ensures that the patch() directive results were removed
     # properly from the DirectiveMeta._directives_to_be_executed list
-    patcher = spack.repo.path.get_pkg_class("patch-several-dependencies")
+    patcher = spack.repo.PATH.get_pkg_class("patch-several-dependencies")
     assert len(patcher.patches) == 0
 
     # this ensures that results of dependency patches were properly added
@@ -208,7 +210,7 @@ def test_nested_directives(mock_packages):
     assert len(fake_dep.patches[Spec()]) == 2
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test requires Autotools")
+@pytest.mark.not_on_windows("Test requires Autotools")
 def test_patched_dependency(mock_packages, config, install_mockery, mock_fetch):
     """Test whether patched dependencies work."""
     spec = Spec("patch-a-dependency")
@@ -218,7 +220,7 @@ def test_patched_dependency(mock_packages, config, install_mockery, mock_fetch):
     # make sure the patch makes it into the dependency spec
     t_sha = (
         "c45c1564f70def3fc1a6e22139f62cb21cd190cc3a7dbe6f4120fa59ce33dcb8"
-        if not is_windows
+        if sys.platform != "win32"
         else "3c5b65abcd6a3b2c714dbf7c31ff65fe3748a1adc371f030c283007ca5534f11"
     )
     assert (t_sha,) == spec["libelf"].variants["patches"].value

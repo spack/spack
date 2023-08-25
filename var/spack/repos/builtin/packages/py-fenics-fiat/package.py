@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class PyFenicsFiat(PythonPackage):
     homepage = "https://fenicsproject.org/"
     url = "https://github.com/FEniCS/fiat/archive/2019.1.0.tar.gz"
     git = "https://github.com/FEniCS/fiat.git"
-    maintainers = ["js947", "chrisrichardson"]
+    maintainers("js947", "chrisrichardson")
 
     version("master", branch="master")
     version("2019.1.0", sha256="2a6d175a825ed725843918ef28846edbcf710a879c2fe8caaeda77b1ce9b9a1c")

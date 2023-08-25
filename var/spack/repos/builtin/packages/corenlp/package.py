@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,9 +23,7 @@ class Corenlp(Package):
 
     version("4.0.0", sha256="07195eed46dd39bdc364d3988da8ec6a5fc9fed8c17613cfe5a8b84d649c8f0f")
 
-    resources = [
-        ("4.0.0", "f45bde062fb368d72f7d3c7ac1ddc6cfb61d3badc1152572bde17f1a5ed9ec94"),
-    ]
+    resources = [("4.0.0", "f45bde062fb368d72f7d3c7ac1ddc6cfb61d3badc1152572bde17f1a5ed9ec94")]
     for ver, checksum in resources:
         jarfile = "stanford-corenlp-{0}-models.jar".format(ver)
         resource(

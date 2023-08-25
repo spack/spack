@@ -1,0 +1,36 @@
+From 2cc0d020359f714587d14b2f25a2c5f235f829c9 Mon Sep 17 00:00:00 2001
+From: Ryan Krattiger <ryan.krattiger@kitware.com>
+Date: Tue, 15 Nov 2022 15:00:36 -0600
+Subject: [PATCH] Xdmf2: Update HDF5 driver for 1.13.2
+
+---
+ VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx b/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx
+index 1a412b56d02..ff4427d0265 100644
+--- a/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx
++++ b/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx
+@@ -157,6 +157,7 @@ static herr_t H5FD_dsm_write(H5FD_t *_file, H5FD_mem_t type, hid_t fapl_id, hadd
+ 
+ static const H5FD_class_t H5FD_dsm_g = {
+ #if (H5_VERS_MAJOR>1)||((H5_VERS_MAJOR==1)&&(H5_VERS_MINOR>=13))
++    0,                          /*version       */
+     H5_VFD_RESERVED + 0xd3f2,   /*value         */
+ #endif
+     "dsm",                      /*name          */
+@@ -190,6 +191,12 @@ static const H5FD_class_t H5FD_dsm_g = {
+     NULL,                       /*get_handle    */
+     H5FD_dsm_read,              /*read          */
+     H5FD_dsm_write,             /*write         */
++#if (H5_VERS_MAJOR>1)||((H5_VERS_MAJOR==1)&&(H5_VERS_MINOR>=13))
++    NULL,                       /*read_vector     */
++    NULL,                       /*write_vector    */
++    NULL,                       /*read_selection  */
++    NULL,                       /*write_selection */
++#endif
+     NULL,                       /*flush         */
+ #if (H5_VERS_MAJOR>1)||((H5_VERS_MAJOR==1)&&(H5_VERS_MINOR>=8))
+     NULL,                       /* truncate     */
+-- 
+GitLab

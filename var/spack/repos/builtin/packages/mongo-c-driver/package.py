@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,9 @@ class MongoCDriver(Package):
     homepage = "https://github.com/mongodb/mongo-c-driver"
     url = "https://github.com/mongodb/mongo-c-driver/releases/download/1.7.0/mongo-c-driver-1.7.0.tar.gz"
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
+    version("1.23.3", sha256="c8f951d4f965d455f37ae2e10b72914736fc0f25c4ffc14afc3cbadd1a574ef6")
     version("1.21.0", sha256="840ff79480070f98870743fbb332e2c10dd021b6b9c952d08010efdda4d70ee4")
     version("1.17.6", sha256="8644deec7ae585e8d12566978f2017181e883f303a028b5b3ccb83c91248b150")
     version("1.17.5", sha256="4b15b7e73a8b0621493e4368dc2de8a74af381823ae8f391da3d75d227ba16be")
@@ -51,6 +52,7 @@ class MongoCDriver(Package):
     depends_on("pkgconfig", type="build")
 
     # When updating mongo-c-driver, libbson has to be kept in sync.
+    depends_on("libbson@1.23.0:1.23", when="@1.23")
     depends_on("libbson@1.21.0:1.21", when="@1.21")
     depends_on("libbson@1.17.0:1.17", when="@1.17")
     depends_on("libbson@1.16.0:1.16", when="@1.16")
@@ -61,7 +63,7 @@ class MongoCDriver(Package):
 
     depends_on("openssl", when="+ssl")
     depends_on("snappy", when="+snappy")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("zstd", when="+zstd")
 
     def cmake_args(self):

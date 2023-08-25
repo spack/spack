@@ -1,10 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Caches used by Spack to store data"""
 import os
+from typing import Union
 
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
@@ -19,9 +20,9 @@ import spack.util.path
 
 
 def misc_cache_location():
-    """The ``misc_cache`` is Spack's cache for small data.
+    """The ``MISC_CACHE`` is Spack's cache for small data.
 
-    Currently the ``misc_cache`` stores indexes for virtual dependency
+    Currently the ``MISC_CACHE`` stores indexes for virtual dependency
     providers and for which packages provide which tags.
     """
     path = spack.config.get("config:misc_cache", spack.paths.default_misc_cache_path)
@@ -34,7 +35,9 @@ def _misc_cache():
 
 
 #: Spack's cache for small data
-misc_cache = llnl.util.lang.Singleton(_misc_cache)
+MISC_CACHE: Union[
+    spack.util.file_cache.FileCache, llnl.util.lang.Singleton
+] = llnl.util.lang.Singleton(_misc_cache)
 
 
 def fetch_cache_location():
@@ -55,7 +58,7 @@ def _fetch_cache():
     return spack.fetch_strategy.FsCache(path)
 
 
-class MirrorCache(object):
+class MirrorCache:
     def __init__(self, root, skip_unstable_versions):
         self.root = os.path.abspath(root)
         self.skip_unstable_versions = skip_unstable_versions
@@ -88,4 +91,6 @@ class MirrorCache(object):
 
 
 #: Spack's local cache for downloaded source archives
-fetch_cache = llnl.util.lang.Singleton(_fetch_cache)
+FETCH_CACHE: Union[
+    spack.fetch_strategy.FsCache, llnl.util.lang.Singleton
+] = llnl.util.lang.Singleton(_fetch_cache)

@@ -5,3 +5,4 @@ llnl*.rst
 _build
 .spack-env
 spack.lock
+_spack_root

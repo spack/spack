@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,7 @@ class Ctffind(AutotoolsPackage):
 
     patch("configure.patch", when="@4.1.8")
     patch("power9.patch", when="@4.1.14 target=power9le")
+    patch("fix_return_types.patch", when="@4.1.13:4.1.14")
 
     def configure_args(self):
         config_args = []

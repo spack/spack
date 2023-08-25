@@ -1,0 +1,22 @@
+diff --git a/libpyclingo/pyclingo.cc b/libpyclingo/pyclingo.cc
+index ec4a33c..88b6669 100644
+--- a/libpyclingo/pyclingo.cc
++++ b/libpyclingo/pyclingo.cc
+@@ -116,7 +116,7 @@ struct ObjectProtocoll {
+     Object call(char const *name, Args &&... args);
+     template <class... Args>
+     Object operator()(Args &&... args);
+-    ssize_t size();
++    Py_ssize_t size();
+     bool empty() { return size() == 0; }
+     Object getItem(Reference o);
+     Object getItem(char const *key);
+@@ -232,7 +232,7 @@ Object ObjectProtocoll<T>::operator()(Args &&... args) {
+     return PyObject_CallFunctionObjArgs(toPy_(), Reference(args).toPy()..., nullptr);
+ }
+ template <class T>
+-ssize_t ObjectProtocoll<T>::size() {
++Py_ssize_t ObjectProtocoll<T>::size() {
+     auto ret = PyObject_Size(toPy_());
+     if (PyErr_Occurred()) { throw PyException(); }
+     return ret;

@@ -10,8 +10,8 @@ For more on Spack's release structure, see
 | Version | Supported          |
 | ------- | ------------------ |
 | develop | :white_check_mark: |
-| 0.17.x  | :white_check_mark: |
-| 0.16.x  | :white_check_mark: |
+| 0.19.x  | :white_check_mark: |
+| 0.18.x  | :white_check_mark: |
 
 ## Reporting a Vulnerability
 

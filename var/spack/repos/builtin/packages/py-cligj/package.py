@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,16 @@ from spack.package import *
 
 
 class PyCligj(PythonPackage):
-    """Click-based argument and option decorators for Python GIS command
-    line programs"""
+    """Common arguments and options for GeoJSON processing commands, using Click."""
 
     homepage = "https://github.com/mapbox/cligj"
-    url = "https://github.com/mapbox/cligj/archive/0.5.0.zip"
+    pypi = "cligj/cligj-0.7.2.tar.gz"
 
-    version("0.5.0", sha256="ad158722a3f512f7eb33526479acf5cb53d9e59ca15cd494556440839783f106")
-    version("0.4.0", sha256="5a5eb903ea66a8ccd41765dd276d9d08a6285f21dd99d41425ef80030d740351")
+    version("0.7.2", sha256="a4bc13d623356b373c2c27c53dbd9c68cae5d526270bfa71f6c6fa69669c6b27")
+    version("0.5.0", sha256="6c7d52d529a78712491974f975c33473f430c0f7beb18c0d7a402a743dcb460a")
+    version("0.4.0", sha256="12ad07994f5c1173b06087ffbaacec52f9ebe4687926e5aacfc22b6b0c8b3f54")
 
+    depends_on("python@2.7:2,3.3:3", when="@0.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-click", type=("build", "run"))
+    depends_on("py-click@4:", type=("build", "run"))
+    depends_on("py-click@4:7", when="@0.5.0", type=("build", "run"))

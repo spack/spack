@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyFenicsDijitso(PythonPackage):
     homepage = "https://bitbucket.org/fenics-project/dijitso"
     url = "https://bitbucket.org/fenics-project/dijitso/downloads/dijitso-2019.1.0.tar.gz"
     git = "https://bitbucket.org/fenics-project/dijitso.git"
-    maintainers = ["js947", "chrisrichardson"]
+    maintainers("js947", "chrisrichardson")
 
     version("master", branch="master")
     version("2019.1.0", sha256="eaa45eec4457f3f865d72a926b7cba86df089410e78de04cd89b15bb405e8fd9")

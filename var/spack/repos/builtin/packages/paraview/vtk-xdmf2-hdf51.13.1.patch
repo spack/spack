@@ -1,0 +1,61 @@
+From 3a536a3c6b949cb1c9dd147c3a395c3ff31856e8 Mon Sep 17 00:00:00 2001
+From: Ben Boeckel <ben.boeckel@kitware.com>
+Date: Thu, 14 Apr 2022 12:53:36 -0400
+Subject: [PATCH 1/6] xdmf2: install `XdmfExport.h`
+
+---
+ VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/CMakeLists.txt b/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/CMakeLists.txt
+index 274dbc4423c..a47bf4ee4d9 100644
+--- a/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/CMakeLists.txt
++++ b/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/CMakeLists.txt
+@@ -276,6 +276,7 @@ vtk_module_add_module(VTK::xdmf2
+           ${XdmfModelSource}
+   SOURCES ${XdmfExtraSource}
+   HEADERS Xdmf.h
++          XdmfExport.h
+           "${CMAKE_CURRENT_BINARY_DIR}/XdmfConfig.h"
+   HEADERS_SUBDIR "vtkxdmf2/libsrc")
+ set_target_properties(xdmf2
+-- 
+GitLab
+
+
+From 1456c9e6ab2b244d225dcfc0a7f985933c09d5f3 Mon Sep 17 00:00:00 2001
+From: Ben Boeckel <ben.boeckel@kitware.com>
+Date: Thu, 14 Apr 2022 15:20:13 -0400
+Subject: [PATCH 6/6] xdmf2: support HDF5 1.13.1
+
+---
+ VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx b/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx
+index 6a4966bb231..1a412b56d02 100644
+--- a/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx
++++ b/VTK/ThirdParty/xdmf2/vtkxdmf2/libsrc/XdmfH5Driver.cxx
+@@ -156,6 +156,9 @@ static herr_t H5FD_dsm_write(H5FD_t *_file, H5FD_mem_t type, hid_t fapl_id, hadd
+ }
+ 
+ static const H5FD_class_t H5FD_dsm_g = {
++#if (H5_VERS_MAJOR>1)||((H5_VERS_MAJOR==1)&&(H5_VERS_MINOR>=13))
++    H5_VFD_RESERVED + 0xd3f2,   /*value         */
++#endif
+     "dsm",                      /*name          */
+     MAXADDR,                    /*maxaddr       */
+     H5F_CLOSE_WEAK,             /*fc_degree     */
+@@ -193,6 +196,10 @@ static const H5FD_class_t H5FD_dsm_g = {
+ #endif
+     NULL,                       /*lock          */
+     NULL,                       /*unlock        */
++#if (H5_VERS_MAJOR>1)||((H5_VERS_MAJOR==1)&&(H5_VERS_MINOR>=13))
++    NULL,                       /*del           */
++    NULL,                       /*ctl           */
++#endif
+     H5FD_FLMAP_SINGLE           /*fl_map        */
+ };
+ 
+-- 
+GitLab

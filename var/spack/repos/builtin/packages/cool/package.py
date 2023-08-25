@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Cool(CMakePackage):
     git = "https://gitlab.cern.ch/lcgcool/cool.git"
 
     tags = ["hep"]
-    maintainers = ["iarspider"]
+    maintainers("iarspider")
 
     version("3.3.10", tag="COOL_3_3_10")
     version("3.3.7", tag="COOL_3_3_7")

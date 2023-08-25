@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,13 +29,9 @@ class Mujoco(Package):
             version(ver, sha256=pkg_sha256)
 
     def url_for_version(self, version):
-
         url = "https://mujoco.org/download/mujoco{0}-{1}-x86_64.tar.gz"
 
-        system_map = {
-            "Linux": "linux",
-            "Darwin": "macos",
-        }
+        system_map = {"Linux": "linux", "Darwin": "macos"}
 
         return url.format(version.joined, system_map[platform.system()])
 

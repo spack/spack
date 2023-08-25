@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Parallelmergetree(CMakePackage):
     homepage = "https://bitbucket.org/cedmav/parallelmergetree"
     git = "https://bitbucket.org/cedmav/parallelmergetree.git"
 
-    maintainers = ["spetruzza"]
+    maintainers("spetruzza")
 
     version(
         "1.1.2",

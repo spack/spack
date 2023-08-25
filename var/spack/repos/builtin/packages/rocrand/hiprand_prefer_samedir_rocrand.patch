@@ -1,0 +1,13 @@
+diff --git a/library/CMakeLists.txt b/library/CMakeLists.txt
+index afbb6e2..478c63b 100644
+--- a/library/CMakeLists.txt
++++ b/library/CMakeLists.txt
+@@ -62,7 +62,7 @@ set_target_properties(hiprand
+     PROPERTIES
+         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/library"
+         DEBUG_POSTFIX "-d"
+-        INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/hiprand/lib"
++        INSTALL_RPATH "$ORIGIN;${CMAKE_INSTALL_PREFIX}/hiprand/lib"
+ )
+ 
+ rocm_install(
