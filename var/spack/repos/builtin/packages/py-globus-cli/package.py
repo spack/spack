@@ -8,7 +8,9 @@ from spack.package import *
 
 
 class PyGlobusCli(PythonPackage):
-    """Globus CLI is a standalone application that can be installed on the user’s machine and is used to access the Globus service. The CLI provides an interface to Globus services from the shell, and is suited to both interactive and simple scripting use cases."""
+    """Globus CLI is a standalone application that can be installed on the user’s machine
+    and is used to access the Globus service. The CLI provides an interface to Globus
+    services from the shell, and is suited to both interactive and simple scripting use cases."""
 
     homepage = "https://docs.globus.org/cli"
     git = "https://github.com/globus/globus-cli.git"
