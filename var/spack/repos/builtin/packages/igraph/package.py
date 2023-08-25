@@ -19,7 +19,7 @@ class Igraph(CMakePackage, AutotoolsPackage):
 
     build_system(
         conditional("cmake", when="@0.9:"),
-        conditional("autotools", when="@:0.9"),
+        conditional("autotools", when="@:0.8"),
         default="cmake",
     )
 
