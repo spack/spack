@@ -40,6 +40,8 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
     version("develop", branch="develop")
+    version("0.8.1", tag="v0.8.1")
+    version("0.8.0", tag="v0.8.0")
     version("0.7.0", tag="v0.7.0")
     version("0.6.1", tag="v0.6.1")
     version("0.6.0", tag="v0.6.0")
