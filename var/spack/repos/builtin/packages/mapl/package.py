@@ -165,7 +165,6 @@ class Mapl(CMakePackage):
     variant("shared", default=True, description="Build as shared library")
     variant("debug", default=False, description="Make a debuggable version of the library")
     variant("extdata2g", default=True, description="Use ExtData2G")
-    variant("pnetcdf", default=False, description="Use parallel netCDF")
     variant("pfunit", default=False, description="Build with pFUnit support")
     variant("f2py", default=False, description="Build with f2py support")
 
@@ -181,7 +180,6 @@ class Mapl(CMakePackage):
     depends_on("hdf5")
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
-    depends_on("parallel-netcdf", when="+pnetcdf")
     depends_on("esmf@8.5:", when="@2.40:")
     depends_on("esmf@8.4.1:8.4", when="@2.34:2.39")
     depends_on("esmf@8.3.0:8.3", when="@2.22:2.33")
