@@ -20,7 +20,7 @@
 
 % Integrity constraints on DAG nodes
 :- attr("root", PackageNode), not attr("node", PackageNode).
-:- attr("version", PackageNode), not attr("node", PackageNode).
+:- attr("version", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
 :- attr("node_version_satisfies", PackageNode), not attr("node", PackageNode).
 :- attr("hash", PackageNode, _), not attr("node", PackageNode).
 :- attr("node_platform", PackageNode, _), not attr("node", PackageNode).
@@ -58,7 +58,6 @@ unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, T
 unification_set(("build", node(X, Child)), node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), Type),
      Type == "build",
-     SetID != "generic_build",
      multiple_unification_sets(Child),
      unification_set(SetID, ParentNode).
 
@@ -68,17 +67,17 @@ unification_set("generic_build", node(X, Child))
      not multiple_unification_sets(Child),
      unification_set(_, ParentNode).
 
-% Any dependency of type "build" in a unification set that is in the leaf unification set,
-% stays in that unification set
-unification_set(SetID, ChildNode)
-  :- attr("depends_on", ParentNode, ChildNode, Type),
-     Type == "build",
-     SetID == "generic_build",
-     unification_set(SetID, ParentNode).
-
 unification_set(SetID, VirtualNode)
   :- provider(PackageNode, VirtualNode),
      unification_set(SetID, PackageNode).
+
+% Do not allow split dependencies, for now. This ensures that we don't construct graphs where e.g.
+% a python extension depends on setuptools@63.4 as a run dependency, but uses e.g. setuptools@68
+% as a build dependency.
+%
+% We'll need to relax the rule before we get to actual cross-compilation
+:- depends_on(ParentNode, node(X, Dependency)), depends_on(ParentNode, node(Y, Dependency)), X < Y.
+
 
 #defined multiple_unification_sets/1.
 
