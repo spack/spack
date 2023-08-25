@@ -105,3 +105,9 @@ class Parallelio(CMakePackage):
             if self.spec.satisfies("+pnetcdf"):
                 valid_values += ",pnetcdf"
         env.set("PIO_TYPENAME_VALID_VALUES", valid_values)
+
+    @run_after("install")
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies("platform=darwin"):
+            fix_darwin_install_name(self.prefix.lib)
