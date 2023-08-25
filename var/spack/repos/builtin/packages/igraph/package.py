@@ -29,7 +29,7 @@ class Igraph(CMakePackage, AutotoolsPackage):
         depends_on("glpk+gmp@4.57:")
         depends_on("gmp")
         depends_on("lapack")
-    
+
     depends_on("libxml2")
 
     def cmake_args(self):
