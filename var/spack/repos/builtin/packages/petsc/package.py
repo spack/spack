@@ -139,6 +139,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     )
     variant("cgns", default=False, description="Activates support for CGNS (only parallel)")
     variant("memkind", default=False, description="Activates support for Memkind")
+    variant(
+        "memalign",
+        default="none",
+        description="Specify alignment of allocated arrays",
+        values=("4", "8", "16", "32", "64", "none"),
+        multi=False,
+    )
     variant("p4est", default=False, description="Activates support for P4Est (only parallel)")
     variant("saws", default=False, description="Activates support for Saws")
     variant("libyaml", default=False, description="Activates support for YAML")
@@ -413,6 +420,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if "+knl" in spec:
             options.append("--with-avx-512-kernels")
             options.append("--with-memalign=64")
+        elif self.spec.variants["memalign"].value != "none":
+            alignement = self.spec.variants["memalign"].value
+            options.append(f"--with-memalign={alignement}")
+
         if "+X" in spec:
             options.append("--with-x=1")
         else:
