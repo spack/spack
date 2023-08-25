@@ -17,7 +17,7 @@ class CbtfArgonavisGui(QMakePackage):
     homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git = "https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git"
 
-    maintainers = ["jgalarowicz"]
+    maintainers("jgalarowicz")
 
     version("develop", branch="master")
     version("1.3.0.0", branch="1.3.0.0")

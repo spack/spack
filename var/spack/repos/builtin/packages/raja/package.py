@@ -55,11 +55,12 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     # and remove the +tests conflict below.
     variant("tests", default=False, description="Build tests")
 
-    depends_on("blt")
+    depends_on("blt", type="build")
     depends_on("blt@0.5.0:", type="build", when="@0.14.1:")
     depends_on("blt@0.4.1", type="build", when="@0.14.0")
     depends_on("blt@0.4.0:", type="build", when="@0.13.0")
     depends_on("blt@0.3.6:", type="build", when="@:0.12.0")
+    conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("camp@0.2.2:0.2.3", when="@0.14.0")
     depends_on("camp@0.1.0", when="@0.10.0:0.13.0")
@@ -109,14 +110,14 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
-        entries = super(Raja, self).initconfig_compiler_entries()
+        entries = super().initconfig_compiler_entries()
         if "+rocm" in spec:
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
         return entries
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        entries = super(Raja, self).initconfig_hardware_entries()
+        entries = super().initconfig_hardware_entries()
 
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
 

@@ -47,10 +47,10 @@ export _sp_initializing=true
 
 
 _spack_shell_wrapper() {
-    # Store LD_LIBRARY_PATH variables from spack shell function
+    # Store DYLD_* variables from spack shell function
     # This is necessary because MacOS System Integrity Protection clears
     # variables that affect dyld on process start.
-    for var in LD_LIBRARY_PATH DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH; do
+    for var in DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH; do
         eval "if [ -n \"\${${var}-}\" ]; then export SPACK_$var=\${${var}}; fi"
     done
 

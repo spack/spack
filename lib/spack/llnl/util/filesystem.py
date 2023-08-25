@@ -402,7 +402,7 @@ def filter_file(
                 os.remove(backup_filename)
 
 
-class FileFilter(object):
+class FileFilter:
     """Convenience class for calling ``filter_file`` a lot."""
 
     def __init__(self, *filenames):
@@ -610,6 +610,8 @@ def chgrp(path, group, follow_symlinks=True):
         gid = grp.getgrnam(group).gr_gid
     else:
         gid = group
+    if os.stat(path).st_gid == gid:
+        return
     if follow_symlinks:
         os.chown(path, -1, gid)
     else:
@@ -1336,7 +1338,7 @@ def lexists_islink_isdir(path):
     return True, is_link, is_dir
 
 
-class BaseDirectoryVisitor(object):
+class BaseDirectoryVisitor:
     """Base class and interface for :py:func:`visit_directory_tree`."""
 
     def visit_file(self, root, rel_path, depth):
@@ -1752,9 +1754,14 @@ def find(root, files, recursive=True):
         files = [files]
 
     if recursive:
-        return _find_recursive(root, files)
+        tty.debug(f"Find (recursive): {root} {str(files)}")
+        result = _find_recursive(root, files)
     else:
-        return _find_non_recursive(root, files)
+        tty.debug(f"Find (not recursive): {root} {str(files)}")
+        result = _find_non_recursive(root, files)
+
+    tty.debug(f"Find complete: {root} {str(files)}")
+    return result
 
 
 @system_path_filter
@@ -1890,7 +1897,7 @@ class HeaderList(FileList):
     include_regex = re.compile(r"(.*?)(\binclude\b)(.*)")
 
     def __init__(self, files):
-        super(HeaderList, self).__init__(files)
+        super().__init__(files)
 
         self._macro_definitions = []
         self._directories = None
@@ -1916,7 +1923,7 @@ class HeaderList(FileList):
         """Default computation of directories based on the list of
         header files.
         """
-        dir_list = super(HeaderList, self).directories
+        dir_list = super().directories
         values = []
         for d in dir_list:
             # If the path contains a subdirectory named 'include' then stop
@@ -2352,7 +2359,7 @@ def find_all_libraries(root, recursive=False):
     )
 
 
-class WindowsSimulatedRPath(object):
+class WindowsSimulatedRPath:
     """Class representing Windows filesystem rpath analog
 
     One instance of this class is associated with a package (only on Windows)

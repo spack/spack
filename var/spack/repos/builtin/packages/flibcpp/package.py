@@ -13,6 +13,9 @@ class Flibcpp(CMakePackage):
     git = "https://github.com/swig-fortran/flibcpp.git"
     url = "https://github.com/swig-fortran/flibcpp/archive/v1.0.1.tar.gz"
 
+    test_requires_compiler = True
+
+    version("1.0.2", sha256="e2c11c1f58ca830eb7ac7f25d66fc3502c4a8d994192ee30c63a1c3b51aac241")
     version("1.0.1", sha256="8569c71eab0257097a6aa666a6d86bdcb6cd6e31244d32cc5b2478d0e936ca7a")
     version("0.5.2", sha256="b9b4eb6431d5b56a54c37f658df7455eafd3d204a5534903b127e0c8a1c9b827")
     version("0.5.1", sha256="76db24ce7893f19ab97ea7260c39490ae1bd1e08a4cc5111ad7e70525a916993")
@@ -72,25 +75,18 @@ class Flibcpp(CMakePackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
-    def test(self):
-        """Perform stand-alone/smoke tests."""
+    def test_examples(self):
+        """build and run examples"""
         cmake_args = [
             self.define("CMAKE_PREFIX_PATH", self.prefix),
             self.define("CMAKE_Fortran_COMPILER", self.compiler.fc),
         ]
         cmake_args.append(self.cached_tests_work_dir)
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        make = which("make")
+        sh = which("sh")
 
-        self.run_test(
-            "cmake", cmake_args, purpose="test: calling cmake", work_dir=self.cached_tests_work_dir
-        )
-
-        self.run_test(
-            "make", [], purpose="test: building the tests", work_dir=self.cached_tests_work_dir
-        )
-
-        self.run_test(
-            "run-examples.sh",
-            [],
-            purpose="test: running the examples",
-            work_dir=self.cached_tests_work_dir,
-        )
+        with working_dir(self.cached_tests_work_dir):
+            cmake(*cmake_args)
+            make()
+            sh("run-examples.sh")

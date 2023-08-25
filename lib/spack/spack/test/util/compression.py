@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 import os
 import shutil
+from itertools import product
 
 import pytest
 
@@ -39,18 +41,24 @@ def compr_support_check(monkeypatch):
 
 
 @pytest.fixture
-def archive_file(tmpdir_factory, request):
-    """Copy example archive to temp directory for test"""
+def archive_file_and_extension(tmpdir_factory, request):
+    """Copy example archive to temp directory into an extension-less file for test"""
     archive_file_stub = os.path.join(datadir, "Foo")
-    extension = request.param
+    extension, add_extension = request.param
     tmpdir = tmpdir_factory.mktemp("compression")
-    shutil.copy(archive_file_stub + "." + extension, str(tmpdir))
-    return os.path.join(str(tmpdir), "Foo.%s" % extension)
+    tmp_archive_file = os.path.join(
+        str(tmpdir), "Foo" + (("." + extension) if add_extension else "")
+    )
+    shutil.copy(archive_file_stub + "." + extension, tmp_archive_file)
+    return (tmp_archive_file, extension)
 
 
-@pytest.mark.parametrize("archive_file", native_archive_list, indirect=True)
-def test_native_unpacking(tmpdir_factory, archive_file):
-    util = scomp.decompressor_for(archive_file)
+@pytest.mark.parametrize(
+    "archive_file_and_extension", product(native_archive_list, [True, False]), indirect=True
+)
+def test_native_unpacking(tmpdir_factory, archive_file_and_extension):
+    archive_file, extension = archive_file_and_extension
+    util = scomp.decompressor_for(archive_file, extension)
     tmpdir = tmpdir_factory.mktemp("comp_test")
     with working_dir(str(tmpdir)):
         assert not os.listdir(os.getcwd())
@@ -62,9 +70,13 @@ def test_native_unpacking(tmpdir_factory, archive_file):
         assert "TEST" in contents
 
 
-@pytest.mark.parametrize("archive_file", ext_archive.keys(), indirect=True)
-def test_system_unpacking(tmpdir_factory, archive_file, compr_support_check):
+@pytest.mark.not_on_windows("Only Python unpacking available on Windows")
+@pytest.mark.parametrize(
+    "archive_file_and_extension", [(ext, True) for ext in ext_archive.keys()], indirect=True
+)
+def test_system_unpacking(tmpdir_factory, archive_file_and_extension, compr_support_check):
     # actually run test
+    archive_file, _ = archive_file_and_extension
     util = scomp.decompressor_for(archive_file)
     tmpdir = tmpdir_factory.mktemp("system_comp_test")
     with working_dir(str(tmpdir)):
@@ -100,3 +112,21 @@ def test_get_bad_extension():
 @pytest.mark.parametrize("path", ext_archive.values())
 def test_allowed_archive(path):
     assert scomp.allowed_archive(path)
+
+
+@pytest.mark.parametrize("ext_path", ext_archive.items())
+def test_strip_compression_extension(ext_path):
+    ext, path = ext_path
+    stripped = scomp.strip_compression_extension(path)
+    if ext == "zip":
+        assert stripped == "Foo.zip"
+        stripped = scomp.strip_compression_extension(path, "zip")
+        assert stripped == "Foo"
+    elif (
+        ext == "tar"
+        or ext in scomp.CONTRACTION_MAP.keys()
+        or ext in [".".join(ext) for ext in product(scomp.PRE_EXTS, scomp.EXTS)]
+    ):
+        assert stripped == "Foo.tar" or stripped == "Foo.TAR"
+    else:
+        assert stripped == "Foo"

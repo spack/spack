@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test detection of compiler version"""
 import os
-import sys
 
 import pytest
 
@@ -36,7 +35,7 @@ from spack.operating_systems.cray_frontend import CrayFrontend
             "Thread model: posix\n"
             "InstalledDir:\n"
             "/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n",
-            "19.0.0.73",
+            "19.0",
         ),
         (
             "Arm C/C++/Fortran Compiler version 19.3.1 (build number 75) (based on LLVM 7.0.2)\n"
@@ -44,7 +43,7 @@ from spack.operating_systems.cray_frontend import CrayFrontend
             "Thread model: posix\n"
             "InstalledDir:\n"
             "/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n",
-            "19.3.1.75",
+            "19.3.1",
         ),
     ],
 )
@@ -263,6 +262,11 @@ def test_intel_version_detection(version_str, expected_version):
             "Copyright (C) 1985-2021 Intel Corporation. All rights reserved.",
             "2022.0.0",
         ),
+        (  # IFX
+            "ifx (IFX) 2023.1.0 20230320\n"
+            "Copyright (C) 1985-2023 Intel Corporation. All rights reserved.",
+            "2023.1.0",
+        ),
     ],
 )
 def test_oneapi_version_detection(version_str, expected_version):
@@ -276,7 +280,7 @@ def test_oneapi_version_detection(version_str, expected_version):
         (
             "NAG Fortran Compiler Release 6.0(Hibiya) Build 1037\n"
             "Product NPL6A60NA for x86-64 Linux\n",
-            "6.0",
+            "6.0.1037",
         )
     ],
 )
@@ -409,7 +413,7 @@ def test_xl_version_detection(version_str, expected_version):
     assert version == expected_version
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "compiler,version",
     [

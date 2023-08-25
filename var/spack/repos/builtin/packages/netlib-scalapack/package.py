@@ -13,13 +13,6 @@ class ScalapackBase(CMakePackage):
     of the library in the 'amdscalapack' package.
     """
 
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-
     variant("shared", default=True, description="Build the shared library version")
     variant("pic", default=False, description="Build position independent code")
 

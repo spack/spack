@@ -17,5 +17,7 @@ class TestError(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
 
-    def test(self):
-        self.run_test("false")
+    def test_false(self):
+        """TestError test"""
+        false = which("false")
+        false()

@@ -6,15 +6,15 @@ spack:
     mesa:
       require: "+glx +osmesa +opengl ~opengles +llvm"
     libosmesa:
-      require: ^mesa +osmesa
+      require: "mesa +osmesa"
     libglx:
-      require: ^mesa +glx
+      require: "mesa +glx"
     ospray:
       require: "@2.8.0 +denoiser +mpi"
     llvm:
       require: "@14:"
       # Minimize LLVM
-      variants: ~lldb~lld~internal_unwind~polly~compiler-rt~gold
+      variants: "~lldb~lld~polly~gold libunwind=none compiler-rt=none"
     all:
       require: target=x86_64_v3
 
@@ -22,9 +22,9 @@ spack:
   - paraview_specs:
     - matrix:
       - - paraview
-      - - +qt~osmesa # GUI Support w/ GLX Rendering
-        - ~qt~osmesa # GLX Rendering
-        - ~qt+osmesa # OSMesa Rendering
+      - - +qt~osmesa ^glew gl=glx # GUI Support w/ GLX Rendering
+        - ~qt~osmesa ^glew gl=glx # GLX Rendering
+        - ~qt+osmesa ^glew gl=osmesa # OSMesa Rendering
   - visit_specs:
     - matrix:
       - - visit
@@ -40,6 +40,7 @@ spack:
             +darshan
             +faodel
             +hdf5
+            +paraview
             +pnetcdf
             +sensei
             +sz
@@ -60,9 +61,9 @@ spack:
       - [$^paraview_specs]
       - - ^hdf5@1.14 # Non-VisIt can build HDF5 1.14
     # Test ParaView builds with differnt GL backends
-    - matrix:
-      - [$sdk_base_spec]
-      - [$^visit_specs]
+    # - matrix:
+    #   - [$sdk_base_spec]
+    #   - [$^visit_specs]
 
   mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
 

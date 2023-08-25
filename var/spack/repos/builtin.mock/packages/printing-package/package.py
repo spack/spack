@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -20,13 +22,13 @@ class PrintingPackage(Package):
     def install(self, spec, prefix):
         print("BEFORE INSTALL")
 
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        mkdirp(prefix)
+        touch(os.path.join(prefix, "dummyfile"))
 
         print("AFTER INSTALL")
 
-    def test(self):
-        print("BEFORE TEST")
-        self.run_test("true")  # run /bin/true
-        print("AFTER TEST")
+    def test_print(self):
+        """Test print example."""
+
+        print("Running test_print")
+        print("And a second command")

@@ -32,6 +32,7 @@ def test_spec():
     assert "mpich@3.0.4" in output
 
 
+@pytest.mark.only_clingo("Known failure of the original concretizer")
 def test_spec_concretizer_args(mutable_config, mutable_database):
     """End-to-end test of CLI concretizer prefs.
 
@@ -39,9 +40,6 @@ def test_spec_concretizer_args(mutable_config, mutable_database):
     options to `solver.py`, and that config options are not
     lost along the way.
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.xfail("Known failure of the original concretizer")
-
     # remove two non-preferred mpileaks installations
     # so that reuse will pick up the zmpi one
     uninstall = SpackCommand("uninstall")
@@ -49,7 +47,7 @@ def test_spec_concretizer_args(mutable_config, mutable_database):
     uninstall("-y", "mpileaks^mpich2")
 
     # get the hash of mpileaks^zmpi
-    mpileaks_zmpi = spack.store.db.query_one("mpileaks^zmpi")
+    mpileaks_zmpi = spack.store.STORE.db.query_one("mpileaks^zmpi")
     h = mpileaks_zmpi.dag_hash()[:7]
 
     output = spec("--fresh", "-l", "mpileaks")
@@ -86,10 +84,9 @@ def test_spec_parse_unquoted_flags_report():
         # cflags, we just explain how to fix it for the immediate next arg.
         spec("gcc cflags=-Os -pipe -other-arg-that-gets-ignored cflags=-I /usr/include")
     # Verify that the generated error message is nicely formatted.
-    assert str(cm.value) == dedent(
-        '''\
-    No installed spec matches the hash: 'usr'
 
+    expected_message = dedent(
+        '''\
     Some compiler or linker flags were provided without quoting their arguments,
     which now causes spack to try to parse the *next* argument as a spec component
     such as a variant instead of an additional compiler or linker flag. If the
@@ -99,6 +96,8 @@ def test_spec_parse_unquoted_flags_report():
     (1) cflags=-Os -pipe => cflags="-Os -pipe"
     (2) cflags=-I /usr/include => cflags="-I /usr/include"'''
     )
+
+    assert expected_message in str(cm.value)
 
     # Verify that the same unquoted cflags report is generated in the error message even
     # if it fails during concretization, not just during parsing.
@@ -156,7 +155,7 @@ def _parse_types(string):
 
 
 def test_spec_deptypes_nodes():
-    output = spec("--types", "--cover", "nodes", "dt-diamond")
+    output = spec("--types", "--cover", "nodes", "--no-install-status", "dt-diamond")
     types = _parse_types(output)
 
     assert types["dt-diamond"] == ["    "]
@@ -166,7 +165,7 @@ def test_spec_deptypes_nodes():
 
 
 def test_spec_deptypes_edges():
-    output = spec("--types", "--cover", "edges", "dt-diamond")
+    output = spec("--types", "--cover", "edges", "--no-install-status", "dt-diamond")
     types = _parse_types(output)
 
     assert types["dt-diamond"] == ["    "]

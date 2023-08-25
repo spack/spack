@@ -92,7 +92,7 @@ class Apex(CMakePackage):
     variant("examples", default=False, description="Build Examples")
 
     # Dependencies
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("cmake@3.10.0:", type="build")
     depends_on("binutils@2.33:+libiberty+headers", when="+binutils")
     depends_on("gettext", when="+binutils ^binutils+nls")
@@ -154,7 +154,8 @@ class Apex(CMakePackage):
             args.append("-DBFD_ROOT={0}".format(spec["binutils"].prefix))
 
         if "+binutils ^binutils+nls" in spec:
-            args.append("-DCMAKE_SHARED_LINKER_FLAGS=-lintl")
+            if "intl" in self.spec["gettext"].libs.names:
+                args.append("-DCMAKE_SHARED_LINKER_FLAGS=-lintl")
 
         if "+otf2" in spec:
             args.append("-DOTF2_ROOT={0}".format(spec["otf2"].prefix))

@@ -70,8 +70,9 @@ spack:
   - charliecloud
   - conduit
   - datatransferkit
+  - dealii
   - dyninst
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp ^hdf5@1.14
   - exaworks
   - flecsi
   - flit
@@ -85,6 +86,8 @@ spack:
   - gptune
   - h5bench
   - hdf5-vol-async
+  - hdf5-vol-cache
+  - hdf5-vol-log
   - heffte +fftw
   - hpctoolkit
   - hpx max_cpu_count=512 networking=mpi
@@ -94,6 +97,8 @@ spack:
   - lammps
   - legion
   - libnrm
+  - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed 
+    +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +mgard
   - libquo
   - libunwind
   - mercury
@@ -125,9 +130,7 @@ spack:
   - py-jupyterhub
   - py-libensemble +mpi +nlopt
   - py-petsc4py
-  - py-warpx ^warpx dims=2
-  - py-warpx ^warpx dims=3
-  - py-warpx ^warpx dims=rz
+  - py-warpx
   - qthreads scheduler=distrib
   - quantum-espresso
   - raja
@@ -163,7 +166,7 @@ spack:
   - chai ~benchmarks ~tests +cuda ^umpire ~shared
   - cusz +cuda
   - dealii +cuda
-  - ecp-data-vis-sdk +cuda +adios2 +hdf5 +paraview +vtkm +zfp # Removing ascent because Dray is hung in CI. +ascent
+  - ecp-data-vis-sdk +cuda ~ascent +adios2 +hdf5 +paraview +sz +vtkm +zfp  ^hdf5@1.14 # Removing ascent because RAJA build failure
   - flecsi +cuda
   - flux-core +cuda
   - ginkgo +cuda
@@ -172,7 +175,10 @@ spack:
   - hpx max_cpu_count=512 +cuda
   - hypre +cuda
   - kokkos +wrapper +cuda
-  - kokkos-kernels +cuda ^kokkos +wrapper +cuda
+  - kokkos-kernels +cuda ^kokkos +wrapper +cuda +cuda_lambda
+  - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua 
+    +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +cusz 
+    +mgard +cuda ^cusz +cuda
   - magma +cuda
   - mfem +cuda
   - mgard +serial +openmp +timing +unstructured +cuda
@@ -188,7 +194,7 @@ spack:
   - superlu-dist +cuda
   - tasmanian +cuda
   - tau +mpi +cuda
-  - trilinos@13.4.0 +belos +ifpack2 +stokhos +cuda
+  - "trilinos@13.4.0: +belos +ifpack2 +stokhos +cuda"
   - umpire ~shared +cuda
 
   # ROCm
@@ -197,7 +203,7 @@ spack:
   - cabana +rocm
   - caliper +rocm
   - chai ~benchmarks +rocm
-  - ecp-data-vis-sdk +paraview +vtkm +rocm
+  - ecp-data-vis-sdk +adios2 +hdf5 +paraview +pnetcdf +sz +vtkm +zfp +rocm ^hdf5@1.14 # Excludes ascent for now due to C++ standard issues
   - gasnet +rocm
   - ginkgo +rocm
   - heffte +rocm
@@ -217,18 +223,19 @@ spack:
   - superlu-dist +rocm
   - tasmanian ~openmp +rocm
   - tau +mpi +rocm
-  - trilinos@13.4.0 ~belos ~ifpack2 ~stokhos +rocm
+  - "trilinos@13.4.0: +belos ~ifpack2 ~stokhos +rocm"
   - umpire +rocm
   - upcxx +rocm
 
   # CPU failures
-  #- geopm                        # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
-  #- loki                         # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
-  #- pruners-ninja                # test/ninja_test_util.c:34: multiple definition of `a';
-  #- rempi                        # rempi_message_manager.h:53:3: error: 'string' does not name a type
+  # - geopm                 # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
+  # - hdf5-vol-daos         # hdf5-vol-daos: vhost/vhost_user.c:65:32: error: array size missing in 'vhost_message_handlers'
+  # - loki                  # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
+  # - pruners-ninja         # test/ninja_test_util.c:34: multiple definition of `a';
+  # - rempi                 # rempi_message_manager.h:53:3: error: 'string' does not name a type
 
   # CUDA failures
-  #- parsec +cuda                 # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
+  # - parsec +cuda          # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
 

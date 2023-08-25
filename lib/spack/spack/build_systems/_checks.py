@@ -39,7 +39,7 @@ def sanity_check_prefix(builder: spack.builder.Builder):
     check_paths(pkg.sanity_check_is_file, "file", os.path.isfile)
     check_paths(pkg.sanity_check_is_dir, "directory", os.path.isdir)
 
-    ignore_file = llnl.util.lang.match_predicate(spack.store.layout.hidden_file_regexes)
+    ignore_file = llnl.util.lang.match_predicate(spack.store.STORE.layout.hidden_file_regexes)
     if all(map(ignore_file, os.listdir(pkg.prefix))):
         msg = "Install failed for {0}.  Nothing was installed!"
         raise spack.installer.InstallError(msg.format(pkg.name))
@@ -108,7 +108,10 @@ def execute_build_time_tests(builder: spack.builder.Builder):
         builder: builder prescribing the test callbacks. The name of the callbacks is
             stored as a list of strings in the ``build_time_test_callbacks`` attribute.
     """
-    builder.pkg.run_test_callbacks(builder, builder.build_time_test_callbacks, "build")
+    if not builder.pkg.run_tests or not builder.build_time_test_callbacks:
+        return
+
+    builder.pkg.tester.phase_tests(builder, "build", builder.build_time_test_callbacks)
 
 
 def execute_install_time_tests(builder: spack.builder.Builder):
@@ -118,7 +121,10 @@ def execute_install_time_tests(builder: spack.builder.Builder):
         builder: builder prescribing the test callbacks. The name of the callbacks is
             stored as a list of strings in the ``install_time_test_callbacks`` attribute.
     """
-    builder.pkg.run_test_callbacks(builder, builder.install_time_test_callbacks, "install")
+    if not builder.pkg.run_tests or not builder.install_time_test_callbacks:
+        return
+
+    builder.pkg.tester.phase_tests(builder, "install", builder.install_time_test_callbacks)
 
 
 class BaseBuilder(spack.builder.Builder):

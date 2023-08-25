@@ -7,6 +7,7 @@ import glob
 import os.path
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Elfutils(AutotoolsPackage, SourcewarePackage):
@@ -45,11 +46,6 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     version("0.168", sha256="b88d07893ba1373c7dd69a7855974706d05377766568a7d9002706d5de72c276")
     version("0.163", sha256="7c774f1eef329309f3b05e730bdac50013155d437518a2ec0e24871d312f2e23")
 
-    # Libraries for reading compressed DWARF sections.
-    variant("bzip2", default=False, description="Support bzip2 compressed sections.")
-    variant("xz", default=False, description="Support xz (lzma) compressed sections.")
-    variant("zstd", default=False, description="Support zstd compressed sections.", when="@0.182:")
-
     # Native language support from libintl.
     variant("nls", default=True, description="Enable Native Language Support.")
 
@@ -67,11 +63,13 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         sha256="d786d49c28d7f0c8fc27bab39ca8714e5f4d128c7f09bb18533a8ec99b38dbf8",
     )
 
-    depends_on("bzip2", type="link", when="+bzip2")
-    depends_on("xz", type="link", when="+xz")
-    depends_on("zstd", type="link", when="+zstd")
-    depends_on("zlib", type="link")
+    depends_on("bzip2", type="link")
+    depends_on("xz", type="link")
+    depends_on("zlib-api", type="link")
+    depends_on("zstd", type="link", when="@0.182:")
+
     depends_on("gettext", when="+nls")
+    depends_on("iconv")
     depends_on("m4", type="build")
     depends_on("pkgconfig@0.9.0:", type=("build", "link"))
 
@@ -91,12 +89,9 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     # and https://github.com/libarchive/libarchive/issues/1819
     conflicts("^libarchive@3.6.2 +iconv", when="+debuginfod")
 
-    # Elfutils uses nested functions in C code, which is implemented
-    # in gcc, but not in clang. C code compiled with gcc is
-    # binary-compatible with clang, so it should be possible to build
-    # elfutils with gcc, and then link it to clang-built libraries.
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=24964
     conflicts("%apple-clang")
-    conflicts("%clang")
+    conflicts("%clang", when="@:0.185")
     conflicts("%cce")
 
     # Elfutils uses -Wall and we don't want to fail the build over a
@@ -105,30 +100,37 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         files = glob.glob(os.path.join("*", "Makefile.in"))
         filter_file("-Werror", "", *files)
 
-    flag_handler = AutotoolsPackage.build_system_flags
+    def flag_handler(self, name, flags):
+        if name == "ldlibs":
+            spec = self.spec
+            if "+nls" in spec and "intl" in spec["gettext"].libs.names:
+                flags.append("-lintl")
+        return self.inject_flags(name, flags)
 
     def configure_args(self):
         spec = self.spec
-        args = []
+        args = [
+            "--with-bzlib=%s" % spec["bzip2"].prefix,
+            "--with-lzma=%s" % spec["xz"].prefix,
+            "--with-zlib=%s" % spec["zlib-api"].prefix,
+        ]
 
-        if "+bzip2" in spec:
-            args.append("--with-bzlib=%s" % spec["bzip2"].prefix)
-        else:
-            args.append("--without-bzlib")
+        if "@0.182:" in spec:
+            args.append("--with-zstd=%s" % spec["zstd"].prefix)
 
-        if "+xz" in spec:
-            args.append("--with-lzma=%s" % spec["xz"].prefix)
-        else:
-            args.append("--without-lzma")
-
-        args.extend(self.with_or_without("zstd", activation_value="prefix"))
-
-        # zlib is required
-        args.append("--with-zlib=%s" % spec["zlib"].prefix)
+        if spec.satisfies("@0.183:"):
+            if spec["iconv"].name == "libc":
+                args.append("--without-libiconv-prefix")
+            elif not is_system_path(spec["iconv"].prefix):
+                args.append("--with-libiconv-prefix=" + format(spec["iconv"].prefix))
 
         if "+nls" in spec:
-            # configure doesn't use LIBS correctly
-            args.append("LDFLAGS=-Wl,--no-as-needed -L%s -lintl" % spec["gettext"].prefix.lib)
+            # Prior to 0.183, only msgfmt is used from gettext.
+            if spec.satisfies("@0.183:"):
+                if "intl" not in spec["gettext"].libs.names:
+                    args.append("--without-libintl-prefix")
+                elif not is_system_path(spec["gettext"].prefix):
+                    args.append("--with-libintl-prefix=" + spec["gettext"].prefix)
         else:
             args.append("--disable-nls")
 

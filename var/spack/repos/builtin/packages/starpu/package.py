@@ -30,7 +30,9 @@ class Starpu(AutotoolsPackage):
 
     maintainers("nfurmento", "sthibaul")
 
+    version("1.4.1", sha256="f023aa53da245a0f43944c3a13f63b4bfdf1324f3e66bf5cd367ce51e2044925")
     version("1.4.0", sha256="5058127761a0604606a852fd6d20b07040d5fbd9f798c5383e49f336b4eeaca1")
+    version("1.3.11", sha256="580c6d98d49bacd2c666504c88890335d2689b6547d97f6a088d4ab4812df36e")
     version("1.3.10", sha256="757cd9a54f53751d37364965ac36102461a85df3a50b776447ac0acc0e1e2612")
     version("1.3.9", sha256="73adf2a5d25b04023132cfb1a8d9293b356354af7d1134e876122a205128d241")
     version("1.3.8", sha256="d35a27b219af8e7973888ebbff728ec0112ae9cda88d6b79c4cc7a1399b4d052")

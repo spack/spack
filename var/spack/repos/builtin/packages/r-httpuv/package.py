@@ -35,6 +35,6 @@ class RHttpuv(RPackage):
     depends_on("r-later@0.8.0:", type=("build", "run"), when="@1.5.0:")
     depends_on("gmake", type="build")
     depends_on("zip")
-    depends_on("zlib", when="@1.6.4:")
+    depends_on("zlib-api", when="@1.6.4:")
 
     depends_on("r-bh", type=("build", "run"), when="@1.5.5")

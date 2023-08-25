@@ -28,7 +28,7 @@ class Libpng(CMakePackage):
     version("1.5.30", sha256="7d76275fad2ede4b7d87c5fd46e6f488d2a16b5a69dc968ffa840ab39ba756ed")
     version("1.2.57", sha256="0f4620e11fa283fedafb474427c8e96bf149511a1804bdc47350963ae5cf54d8")
 
-    depends_on("zlib@1.0.4:")  # 1.2.5 or later recommended
+    depends_on("zlib-api")
 
     variant(
         "libs",
@@ -41,9 +41,12 @@ class Libpng(CMakePackage):
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
-        return [
-            self.define("CMAKE_CXX_FLAGS", self.spec["zlib"].headers.include_flags),
-            self.define("ZLIB_ROOT", self.spec["zlib"].prefix),
+        args = [
+            self.define("CMAKE_CXX_FLAGS", self.spec["zlib-api"].headers.include_flags),
+            self.define("ZLIB_ROOT", self.spec["zlib-api"].prefix),
             self.define("PNG_SHARED", "shared" in self.spec.variants["libs"].value),
             self.define("PNG_STATIC", "static" in self.spec.variants["libs"].value),
         ]
+        if self.spec.satisfies("platform=darwin target=aarch64:"):
+            args.append("-DPNG_ARM_NEON=off")
+        return args

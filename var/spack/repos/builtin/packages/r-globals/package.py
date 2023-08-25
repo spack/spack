@@ -17,6 +17,7 @@ class RGlobals(RPackage):
 
     cran = "globals"
 
+    version("0.16.2", sha256="682c26a95fa6c4e76a3a875be1a3192fc5b88e036c80dfa3b256add0336d770a")
     version("0.16.1", sha256="f7f63a575a3dd518c6afeabb4116bd26692a2a250df113059bc1a5b4711a1e95")
     version("0.15.0", sha256="f83689a420590b0d62b049c40a944c1c8c7202b3f1cc12102712c63104e99496")
     version("0.14.0", sha256="203dbccb829ca9cc6aedb6f5e79cb126ea31f8dd379dff9111ec66e3628c32f3")

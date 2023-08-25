@@ -44,7 +44,7 @@ class Openbabel(CMakePackage):
     depends_on("pango", when="+cairo")  # custom cairo requires custom pango
     depends_on("eigen@3.0:")  # required if using the language bindings
     depends_on("libxml2")  # required to read/write CML files, XML formats
-    depends_on("zlib")  # required to support reading gzipped files
+    depends_on("zlib-api")  # required to support reading gzipped files
     depends_on("rapidjson")  # required to support JSON
     depends_on("libsm")
     depends_on("uuid")

@@ -7,7 +7,7 @@ import os
 import sys
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
-from spack.version import ver
+from spack.version import Version
 
 
 class Intel(Compiler):
@@ -60,17 +60,17 @@ class Intel(Compiler):
 
     @property
     def openmp_flag(self):
-        if self.real_version < ver("16.0"):
+        if self.real_version < Version("16.0"):
             return "-openmp"
         else:
             return "-qopenmp"
 
     @property
     def cxx11_flag(self):
-        if self.real_version < ver("11.1"):
+        if self.real_version < Version("11.1"):
             raise UnsupportedCompilerFlag(self, "the C++11 standard", "cxx11_flag", "< 11.1")
 
-        elif self.real_version < ver("13"):
+        elif self.real_version < Version("13"):
             return "-std=c++0x"
         else:
             return "-std=c++11"
@@ -78,23 +78,23 @@ class Intel(Compiler):
     @property
     def cxx14_flag(self):
         # Adapted from CMake's Intel-CXX rules.
-        if self.real_version < ver("15"):
+        if self.real_version < Version("15"):
             raise UnsupportedCompilerFlag(self, "the C++14 standard", "cxx14_flag", "< 15")
-        elif self.real_version < ver("15.0.2"):
+        elif self.real_version < Version("15.0.2"):
             return "-std=c++1y"
         else:
             return "-std=c++14"
 
     @property
     def c99_flag(self):
-        if self.real_version < ver("12"):
+        if self.real_version < Version("12"):
             raise UnsupportedCompilerFlag(self, "the C99 standard", "c99_flag", "< 12")
         else:
             return "-std=c99"
 
     @property
     def c11_flag(self):
-        if self.real_version < ver("16"):
+        if self.real_version < Version("16"):
             raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 16")
         else:
             return "-std=c1x"

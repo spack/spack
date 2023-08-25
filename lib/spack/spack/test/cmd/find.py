@@ -117,13 +117,13 @@ def test_tag2_tag3(parser, specs):
     assert len(specs) == 0
 
 
+@pytest.mark.parametrize(
+    "args,with_namespace", [([], False), (["--namespace"], True), (["--namespaces"], True)]
+)
 @pytest.mark.db
-def test_namespaces_shown_correctly(database):
-    out = find()
-    assert "builtin.mock.zmpi" not in out
-
-    out = find("--namespace")
-    assert "builtin.mock.zmpi" in out
+def test_namespaces_shown_correctly(args, with_namespace, database):
+    """Test that --namespace(s) works. Old syntax is --namespace"""
+    assert ("builtin.mock.zmpi" in find(*args)) == with_namespace
 
 
 @pytest.mark.db
@@ -332,7 +332,7 @@ def test_find_command_basic_usage(database):
     assert "mpileaks" in output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="envirnment is not yet supported on windows")
+@pytest.mark.not_on_windows("envirnment is not yet supported on windows")
 @pytest.mark.regression("9875")
 def test_find_prefix_in_env(
     mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config
@@ -352,8 +352,23 @@ def test_find_loaded(database, working_env):
     assert output == ""
 
     os.environ[uenv.spack_loaded_hashes_var] = ":".join(
-        [x.dag_hash() for x in spack.store.db.query()]
+        [x.dag_hash() for x in spack.store.STORE.db.query()]
     )
     output = find("--loaded")
     expected = find()
     assert output == expected
+
+
+@pytest.mark.regression("37712")
+def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
+    """Tests that having an active environment with a root spec containing a compiler constrained
+    by a version range (i.e. @X.Y rather the single version than @=X.Y) doesn't result in an error
+    when invoking "spack find".
+    """
+    test_environment = ev.create_in_dir(tmp_path)
+    test_environment.add("zlib %gcc@12.1.0")
+    test_environment.write()
+
+    with test_environment:
+        output = find()
+    assert "zlib%gcc@12.1.0" in output

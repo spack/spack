@@ -29,4 +29,4 @@ class Creduce(CMakePackage):
     depends_on("perl-getopt-tabular")
     depends_on("perl-regexp-common")
     depends_on("perl-termreadkey")
-    depends_on("zlib")
+    depends_on("zlib-api")

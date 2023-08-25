@@ -19,7 +19,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     iterative solvers."""
 
     homepage = "http://portal.nersc.gov/project/sparse/strumpack"
-    url = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.3.1.tar.gz"
+    url = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v7.1.3.tar.gz"
     git = "https://github.com/pghysels/STRUMPACK.git"
 
     tags = ["e4s"]
@@ -29,6 +29,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("7.1.3", sha256="c951f38ee7af20da3ff46429e38fcebd57fb6f12619b2c56040d6da5096abcb0")
+    version("7.1.2", sha256="262a0193fa1682d0eaa90363f739e0be7a778d5deeb80e4d4ae12446082a39cc")
     version("7.1.1", sha256="56481a22955c2eeb40932777233fc227347743c75683d996cb598617dd2a8635")
     version("7.1.0", sha256="a3e80e0530ea1cc6b62c22699cfe5f02f81794321f225440f0e08bceed69c241")
     version("7.0.1", sha256="ddbf9c0509eaf0f8a4c70f59508787336a05eeacc8322f156117d8ce59a70a60")
@@ -59,6 +61,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     variant("count_flops", default=False, description="Build with flop counters")
     variant("task_timers", default=False, description="Build with timers for internal routines")
     variant("slate", default=True, description="Build with SLATE support")
+    variant("magma", default=False, description="Build with MAGMA support")
 
     depends_on("cmake@3.11:", when="@:6.2.9", type="build")
     depends_on("cmake@3.17:", when="@6.3.0:", type="build")
@@ -82,6 +85,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsolver", when="+rocm")
     depends_on("rocthrust", when="+rocm")
     depends_on("slate", when="+slate")
+    depends_on("magma+cuda", when="+magma+cuda")
+    depends_on("magma+rocm", when="+magma+rocm")
     depends_on("slate+cuda", when="+cuda+slate")
     depends_on("slate+rocm", when="+rocm+slate")
     for val in ROCmPackage.amdgpu_targets:
@@ -98,6 +103,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+cuda")
     conflicts("+slate", when="@:5.1.1")
     conflicts("+slate", when="~mpi")
+    conflicts("+magma", when="~rocm~cuda")
 
     patch("intel-19-compile.patch", when="@3.1.1")
     patch("shared-rocm.patch", when="@5.1.1")
@@ -116,6 +122,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("TPL_ENABLE_PARMETIS", "parmetis"),
             self.define_from_variant("TPL_ENABLE_SCOTCH", "scotch"),
             self.define_from_variant("TPL_ENABLE_BPACK", "butterflypack"),
+            self.define_from_variant("TPL_ENABLE_MAGMA", "magma"),
             self.define_from_variant("STRUMPACK_COUNT_FLOPS", "count_flops"),
             self.define_from_variant("STRUMPACK_TASK_TIMERS", "task_timers"),
             "-DTPL_BLAS_LIBRARIES=%s" % spec["blas"].libs.joined(";"),
@@ -136,6 +143,10 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                     ]
                 )
             args.extend([self.define_from_variant("STRUMPACK_C_INTERFACE", "c_interface")])
+
+        # Workaround for linking issue on Mac:
+        if spec.satisfies("%apple-clang +mpi"):
+            args.append("-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc)
 
         if "+cuda" in spec:
             args.extend(

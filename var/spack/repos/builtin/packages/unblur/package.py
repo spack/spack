@@ -18,7 +18,7 @@ class Unblur(AutotoolsPackage):
     variant("openmp", default=True, description="Enable OpenMP support")
     variant("shared", default=True, description="Dynamic linking")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("jpeg")
     depends_on("libtiff")
     depends_on("gsl")

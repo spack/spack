@@ -30,6 +30,7 @@ class Gromacs(CMakePackage, CudaPackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2023.1", sha256="eef2bb4a6cb6314cf9da47f26df2a0d27af4bf7b3099723d43601073ab0a42f4")
     version("2023", sha256="ac92c6da72fbbcca414fd8a8d979e56ecf17c4c1cdabed2da5cfb4e7277b7ba8")
     version("2022.5", sha256="083cc3c424bb93ffe86c12f952e3e5b4e6c9f6520de5338761f24b75e018c223")
     version("2022.4", sha256="c511be602ff29402065b50906841def98752639b92a95f1b0a1060d9b5e27297")
@@ -114,6 +115,10 @@ class Gromacs(CMakePackage, CudaPackage):
         "+mdrun_only", when="@2021:", msg="mdrun-only build option was removed for GROMACS 2021."
     )
     variant("openmp", default=True, description="Enables OpenMP at configure time")
+    variant("openmp_max_threads", default="none", description="Max number of OpenMP threads")
+    conflicts(
+        "+openmp_max_threads", when="~openmp", msg="OpenMP is off but OpenMP Max threads is set"
+    )
     variant(
         "sve",
         default=True,
@@ -156,56 +161,59 @@ class Gromacs(CMakePackage, CudaPackage):
     conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
     conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
     conflicts(
-        "intel-oneapi-mkl@:2021.2",
+        "^intel-oneapi-mkl@:2021.2",
         when="@2023:",
         msg="GROMACS requires oneMKL 2021.3 or later since version 2023",
     )
 
     depends_on("mpi", when="+mpi")
 
-    # Plumed 2.8.2 needs Gromacs 2022.5 2021.7, 2020.7, 2019.6
-    # Plumed 2.8.1 needs Gromacs 2022.3 2021.6, 2020.7, 2019.6
-    # Plumed 2.8.0 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.6 needs Gromacs        2021.5, 2020.6, 2019.6
-    # Plumed 2.7.5 needs Gromacs        2021.5, 2020.6, 2019.6
-    # Plumed 2.7.4 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.3 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.2 needs Gromacs        2021,   2020.6, 2019.6
-    # Plumed 2.7.1 needs Gromacs        2021,   2020.5, 2019.6
-    # Plumed 2.7.0 needs Gromacs                2020.4, 2019.6
-    # Plumed 2.6.6 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.5 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.4 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.3 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.2 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.1 needs Gromacs                2020.2, 2019.6, 2018.8
-    # Plumed 2.6.0 needs Gromacs                        2019.4, 2018.8
-    # Plumed 2.5.7 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.6 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.5 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.4 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.3 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.2 needs Gromacs                        2019.2, 2018.6, 2016.6
-    # Plumed 2.5.1 needs Gromacs                                2018.6, 2016.6
-    # Plumed 2.5.0 needs Gromacs                                2018.4, 2016.5
+    # Plumed 2.9.0 needs Gromacs 2023,  2022.5, 2021.7, 2020.7
+    # Plumed 2.8.3 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
+    # Plumed 2.8.2 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
+    # Plumed 2.8.1 needs Gromacs        2022.3, 2021.6, 2020.7, 2019.6
+    # Plumed 2.8.0 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.6 needs Gromacs                2021.5, 2020.6, 2019.6
+    # Plumed 2.7.5 needs Gromacs                2021.5, 2020.6, 2019.6
+    # Plumed 2.7.4 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.3 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.2 needs Gromacs                2021,   2020.6, 2019.6
+    # Plumed 2.7.1 needs Gromacs                2021,   2020.5, 2019.6
+    # Plumed 2.7.0 needs Gromacs                        2020.4, 2019.6
+    # Plumed 2.6.6 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.5 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.4 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.3 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.2 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.1 needs Gromacs                        2020.2, 2019.6, 2018.8
+    # Plumed 2.6.0 needs Gromacs                                2019.4, 2018.8
+    # Plumed 2.5.7 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.6 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.5 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.4 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.3 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.2 needs Gromacs                                2019.2, 2018.6, 2016.6
+    # Plumed 2.5.1 needs Gromacs                                        2018.6, 2016.6
+    # Plumed 2.5.0 needs Gromacs                                        2018.4, 2016.5
 
     # Above dependencies can be verified, and new versions added, by going to
-    # https://github.com/plumed/plumed2/tree/v2.7.1/patches
+    # https://github.com/plumed/plumed2/tree/v2.9.0/patches
     # and switching tags.
     plumed_patches = {
-        "2022.5": "2.8.2",
+        "2023": "2.9.0",
+        "2022.5": "2.8.2:2.9.0",
         "2022.3": "2.8.1",
-        "2021.7": "2.8.2",
+        "2021.7": "2.8.2:2.9.0",
         "2021.6": "2.8.1",
         "2021.5": "2.7.5:2.7.6",
         "2021.4": "2.7.3:2.8.0",
         "2021": "2.7.1:2.7.2",
-        "2020.7": "2.8.1:2.8.2",
+        "2020.7": "2.8.1:2.9.0",
         "2020.6": "2.7.2:2.8.0",
         "2020.5": "2.7.1",
         "2020.4": "2.6.2:2.7.0",
         "2020.2": "2.6.1",
-        "2019.6": "2.6.1:2.8.2",
+        "2019.6": "2.6.1:2.8.3",
         "2019.4": "2.5.3:2.6.0",
         "2019.2": "2.5.2",
         "2018.8": "2.5.3:2.6",
@@ -227,6 +235,13 @@ class Gromacs(CMakePackage, CudaPackage):
         for gmx_ver, plumed_vers in plumed_patches.items():
             depends_on("plumed@{0}".format(plumed_vers), when="@{0}+plumed".format(gmx_ver))
 
+    variant(
+        "intel_provided_gcc",
+        default=False,
+        description="Use this if Intel compiler is installed through spack."
+        + "The g++ location is written to icp{c,x}.cfg",
+    )
+
     depends_on("fftw-api@3")
     depends_on("cmake@2.8.8:3", type="build")
     depends_on("cmake@3.4.3:3", type="build", when="@2018:")
@@ -239,7 +254,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("sycl", when="+sycl")
     depends_on("lapack", when="+lapack")
     depends_on("blas", when="+blas")
-    depends_on("gcc", when="%oneapi")
+    depends_on("gcc", when="%oneapi ~intel_provided_gcc")
+    depends_on("gcc", when="%intel ~intel_provided_gcc")
 
     depends_on("hwloc@1.0:1", when="+hwloc@2016:2018")
     depends_on("hwloc", when="+hwloc@2019:")
@@ -248,6 +264,14 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("dbcsr", when="+cp2k")
 
     depends_on("nvhpc", when="+cufftmp")
+
+    requires(
+        "%intel",
+        "%oneapi",
+        policy="one_of",
+        when="+intel_provided_gcc",
+        msg="Only attempt to find gcc libs for Intel compiler if Intel compiler is used.",
+    )
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
@@ -426,8 +450,16 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if self.spec.satisfies("@2020:"):
             options.append("-DGMX_INSTALL_LEGACY_API=ON")
 
-        if self.spec.satisfies("%oneapi"):
-            options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
+        if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
+            # If intel-oneapi-compilers was installed through spack the gcc is added to the
+            # configuration file.
+            if self.spec.satisfies("+intel_provided_gcc") and os.path.exists(
+                ".".join([os.environ["SPACK_CXX"], "cfg"])
+            ):
+                with open(".".join([os.environ["SPACK_CXX"], "cfg"]), "r") as f:
+                    options.append("-DCMAKE_CXX_FLAGS={}".format(f.read()))
+            else:
+                options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
 
         if "+double" in self.spec:
             options.append("-DGMX_DOUBLE:BOOL=ON")
@@ -568,6 +600,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append("-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON")
         else:
             options.append("-DGMX_CYCLE_SUBCOUNTERS:BOOL=OFF")
+
+        if "+openmp" in self.spec and self.spec.variants["openmp_max_threads"].value != "none":
+            options.append(
+                "-DGMX_OPENMP_MAX_THREADS=%s" % self.spec.variants["openmp_max_threads"].value
+            )
 
         if "^mkl" in self.spec:
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio

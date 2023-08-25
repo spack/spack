@@ -11,8 +11,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     problems on parallel and distributed architectures, particularly targeted
     for exascale machines."""
 
-    homepage = "https://gitlab.pnnl.gov/exasgd/frameworks/exago"
-    git = "https://gitlab.pnnl.gov/exasgd/frameworks/exago.git"
+    homepage = "https://github.com/pnnl/ExaGO"
+    git = "https://github.com/pnnl/ExaGO.git"
     maintainers("ryandanehy", "CameronRutherford", "pelesh")
 
     version("1.5.1", commit="7abe482c8da0e247f9de4896f5982c4cacbecd78", submodules=True)
@@ -30,6 +30,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     version("main", branch="main", submodules=True)
     version("develop", branch="develop", submodules=True)
     version("5-18-2022-snapshot", tag="5-18-2022-snapshot", submodules=True)
+    version("kpp2", tag="kpp2", submodules=True)
 
     # Progrmming model options
     variant("mpi", default=True, description="Enable/Disable MPI")
@@ -125,7 +126,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("petsc@3.13:3.14", when="@:1.2.99")
     depends_on("petsc@3.16.0:3.16", when="@1.3.0:1.4")
-    depends_on("petsc@3.18.0:3.18", when="@1.5.0:")
+    depends_on("petsc@3.18.0:3.19", when="@1.5.0:")
 
     depends_on("petsc~mpi", when="~mpi")
 
@@ -179,6 +180,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("EXAGO_ENABLE_IPOPT", "ipopt"),
                 self.define_from_variant("EXAGO_ENABLE_PYTHON", "python"),
                 self.define_from_variant("EXAGO_ENABLE_LOGGING", "logging"),
+                self.define("LAPACK_LIBRARIES", spec["lapack"].libs + spec["blas"].libs),
             ]
         )
 

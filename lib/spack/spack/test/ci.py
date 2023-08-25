@@ -5,7 +5,6 @@
 import itertools
 import os
 import subprocess
-import sys
 
 import pytest
 
@@ -35,7 +34,7 @@ def test_urlencode_string():
     assert ci._url_encode_string("Spack Test Project") == "Spack+Test+Project"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
     signing_key_path = os.path.join(signing_key_dir, "package-signing-key")
@@ -46,32 +45,7 @@ def test_import_signing_key(mock_gnupghome):
     ci.import_signing_key(signing_key)
 
 
-def test_configure_compilers(mutable_config):
-    def assert_missing(config):
-        assert (
-            "install_missing_compilers" not in config
-            or config["install_missing_compilers"] is False
-        )
-
-    def assert_present(config):
-        assert (
-            "install_missing_compilers" in config and config["install_missing_compilers"] is True
-        )
-
-    original_config = spack.config.get("config")
-    assert_missing(original_config)
-
-    ci.configure_compilers("FIND_ANY", scope="site")
-
-    second_config = spack.config.get("config")
-    assert_missing(second_config)
-
-    ci.configure_compilers("INSTALL_MISSING")
-    last_config = spack.config.get("config")
-    assert_present(last_config)
-
-
-class FakeWebResponder(object):
+class FakeWebResponder:
     def __init__(self, response_code=200, content_to_read=[]):
         self._resp_code = response_code
         self._content = content_to_read
@@ -178,7 +152,7 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
     assert not ret
     assert "requires git" in err
 
-    class mock_git_cmd(object):
+    class mock_git_cmd:
         def __init__(self, *args, **kwargs):
             self.returncode = 0
             self.check = None
@@ -248,7 +222,7 @@ def test_ci_workarounds():
     fake_root_spec = "x" * 544
     fake_spack_ref = "x" * 40
 
-    common_variables = {"SPACK_COMPILER_ACTION": "NONE", "SPACK_IS_PR_PIPELINE": "False"}
+    common_variables = {"SPACK_IS_PR_PIPELINE": "False"}
 
     common_before_script = [
         'git clone "https://github.com/spack/spack"',
@@ -291,7 +265,7 @@ def test_ci_workarounds():
     def make_rebuild_index_job(use_artifact_buildcache, optimize, use_dependencies):
         result = {
             "stage": "stage-rebuild-index",
-            "script": "spack buildcache update-index --mirror-url s3://mirror",
+            "script": "spack buildcache update-index s3://mirror",
             "tags": ["tag-0", "tag-1"],
             "image": {"name": "spack/centos7", "entrypoint": [""]},
             "after_script": ['rm -rf "./spack"'],
@@ -452,18 +426,14 @@ def test_affected_specs_on_first_concretization(mutable_mock_env_path, mock_pack
     assert len(mpileaks_specs) == 2, e.all_specs()
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
-)
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_process_command(repro_dir):
     result = ci.process_command("help", commands=[], repro_dir=str(repro_dir))
     help_sh = repro_dir / "help.sh"
     assert help_sh.exists() and not result
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
-)
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_process_command_fail(repro_dir, monkeypatch):
     msg = "subprocess wait exception"
 
@@ -476,16 +446,28 @@ def test_ci_process_command_fail(repro_dir, monkeypatch):
 
 
 def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
-    # Monkeypatching ci method tested elsewhere to reduce number of methods
-    # that would need to be patched here.
-    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c, d: None)
+    """Test that create_buildcache returns a list of objects with the correct
+    keys and types."""
+    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c: True)
 
-    args = {
-        "env": None,
-        "buildcache_mirror_url": "file://fake-url",
-        "pipeline_mirror_url": "file://fake-url",
-    }
-    ci.create_buildcache(**args)
+    results = ci.create_buildcache(
+        None,
+        buildcache_mirror_url="file:///fake-url-one",
+        pipeline_mirror_url="file:///fake-url-two",
+    )
+
+    assert len(results) == 2
+    result1, result2 = results
+    assert result1.success
+    assert result1.url == "file:///fake-url-one"
+    assert result2.success
+    assert result2.url == "file:///fake-url-two"
+
+    results = ci.create_buildcache(None, buildcache_mirror_url="file:///fake-url-one")
+
+    assert len(results) == 1
+    assert results[0].success
+    assert results[0].url == "file:///fake-url-one"
 
 
 def test_ci_run_standalone_tests_missing_requirements(
@@ -502,9 +484,7 @@ def test_ci_run_standalone_tests_missing_requirements(
     assert "Reproduction directory is required" in err
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
-)
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_junit(
     tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):
@@ -522,9 +502,7 @@ def test_ci_run_standalone_tests_not_installed_junit(
     assert os.path.getsize(log_file) > 0
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
-)
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_cdash(
     tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):
@@ -551,8 +529,7 @@ def test_ci_run_standalone_tests_not_installed_cdash(
     ci.run_standalone_tests(**args)
     out = capfd.readouterr()[0]
     # CDash *and* log file output means log file ignored
-    assert "xml option is ignored" in out
-    assert "0 passed of 0" in out
+    assert "xml option is ignored with CDash" in out
 
     # copy test results (though none)
     artifacts_dir = tmp_path / "artifacts"
@@ -580,9 +557,10 @@ def test_ci_skipped_report(tmpdir, mock_packages, config):
     reason = "Testing skip"
     handler.report_skipped(spec, tmpdir.strpath, reason=reason)
 
-    report = fs.join_path(tmpdir, "{0}_Testing.xml".format(pkg))
-    expected = "Skipped {0} package".format(pkg)
-    with open(report, "r") as f:
+    reports = [name for name in tmpdir.listdir() if str(name).endswith("Testing.xml")]
+    assert len(reports) == 1
+    expected = f"Skipped {pkg} package"
+    with open(reports[0], "r") as f:
         have = [0, 0]
         for line in f:
             if expected in line:

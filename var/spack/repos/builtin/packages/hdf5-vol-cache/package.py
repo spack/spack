@@ -17,8 +17,14 @@ class Hdf5VolCache(CMakePackage):
     version("v1.1", tag="v1.1")
     version("v1.0", tag="v1.0")
 
-    depends_on("hdf5@1.13: +mpi +threadsafe")
+    depends_on("hdf5@1.14: +mpi +threadsafe")
     depends_on("hdf5-vol-async")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=incompatible-function-pointer-types")
+        return (flags, None, None)
 
     def setup_run_environment(self, env):
         env.prepend_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)

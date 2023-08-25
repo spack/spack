@@ -29,21 +29,19 @@ fixed_lines = [
 ]
 
 
-def test_sanitze_file_path(tmpdir):
-    """Test filtering illegal characters out of potential file paths"""
-    # *nix illegal files characters are '/' and none others
-    illegal_file_path = str(tmpdir) + "//" + "abcdefghi.txt"
+def test_sanitize_filename():
+    """Test filtering illegal characters out of potential filenames"""
+    sanitized = sup.sanitize_filename("""a<b>cd/?e:f"g|h*i.\0txt""")
     if sys.platform == "win32":
-        # Windows has a larger set of illegal characters
-        illegal_file_path = os.path.join(tmpdir, 'a<b>cd?e:f"g|h*i.txt')
-    real_path = sup.sanitize_file_path(illegal_file_path)
-    assert real_path == os.path.join(str(tmpdir), "abcdefghi.txt")
+        assert sanitized == "a_b_cd__e_f_g_h_i._txt"
+    else:
+        assert sanitized == """a<b>cd_?e:f"g|h*i._txt"""
 
 
 # This class pertains to path string padding manipulation specifically
 # which is used for binary caching. This functionality is not supported
 # on Windows as of yet.
-@pytest.mark.skipif(sys.platform == "win32", reason="Padding funtionality unsupported on Windows")
+@pytest.mark.not_on_windows("Padding funtionality unsupported on Windows")
 class TestPathPadding:
     @pytest.mark.parametrize("padded,fixed", zip(padded_lines, fixed_lines))
     def test_padding_substitution(self, padded, fixed):

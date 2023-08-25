@@ -24,15 +24,15 @@ class Bcache(MakefilePackage):
     depends_on("gettext")
     depends_on("pkgconfig", type="build")
 
-    def setup_build_environment(self, env):
-        # Add -lintl if provided by gettext, otherwise libintl is provided by the system's glibc:
-        if "gettext" in self.spec and "intl" in self.spec["gettext"].libs.names:
-            env.append_flags("LDFLAGS", "-lintl")
-
     patch(
         "func_crc64.patch",
         sha256="558b35cadab4f410ce8f87f0766424a429ca0611aa2fd247326ad10da115737d",
     )
+
+    def flag_handler(self, name, flags):
+        if name == "ldflags" and "intl" in self.spec["gettext"].libs.names:
+            flags.append("-lintl")
+        return self.env_flags(name, flags)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

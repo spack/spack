@@ -27,7 +27,7 @@ class Netdata(AutotoolsPackage):
     depends_on("openssl")
     depends_on("python@3:", type=("build", "run"))
     depends_on("uuid")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", self.prefix.sbin)

@@ -11,7 +11,11 @@ import jsonschema.exceptions
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.error
 import spack.hash_types as hash_types
+import spack.platforms
+import spack.repo
+import spack.spec
 from spack.schema.cray_manifest import schema as manifest_schema
 
 #: Cray systems can store a Spack-compatible description of system
@@ -44,7 +48,8 @@ def translated_compiler_name(manifest_compiler_name):
 def compiler_from_entry(entry):
     compiler_name = translated_compiler_name(entry["name"])
     paths = entry["executables"]
-    version = entry["version"]
+    # to instantiate a compiler class we may need a concrete version:
+    version = "={}".format(entry["version"])
     arch = entry["arch"]
     operating_system = arch["os"]
     target = arch["target"]
@@ -74,18 +79,18 @@ def spec_from_entry(entry):
 
     compiler_str = ""
     if "compiler" in entry:
-        compiler_format = "%{name}@{version}"
+        compiler_format = "%{name}@={version}"
         compiler_str = compiler_format.format(
             name=translated_compiler_name(entry["compiler"]["name"]),
             version=entry["compiler"]["version"],
         )
 
-    spec_format = "{name}@{version} {compiler} {arch}"
+    spec_format = "{name}@={version} {compiler} {arch}"
     spec_str = spec_format.format(
         name=entry["name"], version=entry["version"], compiler=compiler_str, arch=arch_str
     )
 
-    pkg_cls = spack.repo.path.get_pkg_class(entry["name"])
+    pkg_cls = spack.repo.PATH.get_pkg_class(entry["name"])
 
     if "parameters" in entry:
         variant_strs = list()
@@ -159,7 +164,10 @@ def entries_to_specs(entries):
                     continue
                 parent_spec = spec_dict[entry["hash"]]
                 dep_spec = spec_dict[dep_hash]
-                parent_spec._add_dependency(dep_spec, deptypes=deptypes)
+                parent_spec._add_dependency(dep_spec, deptypes=deptypes, virtuals=())
+
+    for spec in spec_dict.values():
+        spack.spec.reconstruct_virtuals_on_edges(spec)
 
     return spec_dict
 
@@ -186,9 +194,9 @@ def read(path, apply_updates):
         spack.compilers.add_compilers_to_config(compilers, init_config=False)
     if apply_updates:
         for spec in specs.values():
-            spack.store.db.add(spec, directory_layout=None)
+            spack.store.STORE.db.add(spec, directory_layout=None)
 
 
 class ManifestValidationError(spack.error.SpackError):
     def __init__(self, msg, long_msg=None):
-        super(ManifestValidationError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)
