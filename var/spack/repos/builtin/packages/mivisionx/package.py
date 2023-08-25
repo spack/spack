@@ -114,6 +114,8 @@ class Mivisionx(CMakePackage):
 
     variant("opencl", default=False, description="Use OPENCL as the backend")
     variant("hip", default=True, description="Use HIP as backend")
+    variant("add_tests", default=False, description="add tests and samples folder")
+    patch("0001-add-half-include-path.patch", when="+add_tests")
 
     def patch(self):
         if self.spec.satisfies("@4.2.0"):
@@ -175,6 +177,86 @@ class Mivisionx(CMakePackage):
                 "amd_openvx_extensions/amd_nn/nn_hip/CMakeLists.txt",
                 string=True,
             )
+        if self.spec.satisfies("@5.5.0: + hip"):
+            filter_file(
+                "${ROCM_PATH}/llvm/bin/clang++",
+                "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
+                "rocAL/rocAL/rocAL_hip/CMakeLists.txt",
+                string=True,
+            )
+        if self.spec.satisfies("+add_tests"):
+            filter_file(
+                "${ROCM_PATH}/include/mivisionx",
+                "{0}/include/mivisionx".format(self.spec.prefix),
+                "tests/amd_migraphx_tests/mnist/CMakeLists.txt",
+                string=True
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "tests/amd_migraphx_tests/mnist/CMakeLists.txt",
+                string=True
+            )
+            filter_file(
+                "${ROCM_PATH}/include/mivisionx",
+                "{0}/include/mivisionx".format(self.spec.prefix),
+                "tests/amd_migraphx_tests/resnet50/CMakeLists.txt",
+                string=True
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "tests/amd_migraphx_tests/resnet50/CMakeLists.txt",
+                string=True
+            )
+            filter_file(
+                "${ROCM_PATH}/include/mivisionx",
+                "{0}/include/mivisionx".format(self.spec.prefix),
+                "samples/inference/mv_objdetect/CMakeLists.txt",
+                string=True
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "samples/inference/mv_objdetect/CMakeLists.txt",
+                string=True
+            )
+            filter_file(
+                "${ROCM_PATH}/include/mivisionx",
+                "{0}/include/mivisionx".format(self.spec.prefix),
+                "model_compiler/python/nnir_to_clib.py",
+                string=True
+            )
+            filter_file(
+                "/opt/rocm",
+                "{0}".format(self.spec.prefix),
+                "model_compiler/python/nnir_to_clib.py",
+                string=True
+            )
+            filter_file(
+                "${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/mivisionx/rocal",
+                "{0}/include/mivisionx/rocal".format(self.spec.prefix),
+                "utilities/rocAL/rocAL_unittests/CMakeLists.txt",
+                string=True
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "utilities/rocAL/rocAL_unittests/CMakeLists.txt",
+                string=True
+            )
+            filter_file(
+                "${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/mivisionx/rocal",
+                "{0}/include/mivisionx/rocal".format(self.spec.prefix),
+                "utilities/rocAL/rocAL_video_unittests/CMakeLists.txt",
+                string=True
+            )
+            filter_file(
+                "${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "utilities/rocAL/rocAL_video_unittests/CMakeLists.txt",
+                string=True
+            )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("ffmpeg@:4", type="build", when="@:5.3")
@@ -199,7 +281,13 @@ class Mivisionx(CMakePackage):
     depends_on("miopen-opencl@3.5.0", when="@1.7+opencl")
     depends_on("miopengemm@1.1.6", when="@1.7+opencl")
     depends_on("openssl", when="@4.0.0:")
-    depends_on("libjpeg-turbo", type="build")
+    depends_on("libjpeg-turbo@2.0.6+partial_decoder", type="build")
+    depends_on("rpp",)
+    depends_on("lmdb")
+    depends_on("py-protobuf@3.20.3+cpp", type=("build", "run"), when="+add_tests")
+    depends_on("py-future", when="+add_tests")
+    depends_on("py-numpy", when="+add_tests")
+    depends_on("py-pytz", when="+add_tests")
 
     conflicts("^cmake@3.22:", when="@:5.0.0")
     # need to choose atleast one backend and both cannot be set
@@ -259,9 +347,13 @@ class Mivisionx(CMakePackage):
             depends_on("miopen-hip@" + ver, when="@" + ver)
         for ver in ["5.3.3", "5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
             depends_on("migraphx@" + ver, when="@" + ver)
+            depends_on("hip@" + ver, when="@" + ver)
 
     for ver in ["5.5.0", "5.5.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
+
+    def setup_run_environment(self, env):
+        env.set("MIVISIONX_MODEL_COMPILER_PATH", self.spec.prefix.libexec.mivisionx.model_compiler)
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -273,7 +365,14 @@ class Mivisionx(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         protobuf = spec["protobuf"].prefix.include
-        args = [self.define("CMAKE_CXX_FLAGS", "-I{0}".format(protobuf))]
+        args = [
+            self.define("CMAKE_CXX_FLAGS", "-I{0}".format(protobuf)),
+            self.define("AMDRPP_LIBRARIES", "{0}/lib/librpp.so".format(spec["rpp"].prefix)),
+            self.define("AMDRPP_INCLUDE_DIRS", "{0}/include/rpp".format(spec["rpp"].prefix)),
+            self.define(
+                "TurboJpeg_LIBRARIES_DIRS", "{0}/lib64".format(spec["libjpeg-turbo"].prefix)
+            ),
+        ]
         if self.spec.satisfies("+opencl"):
             args.append(self.define("BACKEND", "OPENCL"))
             args.append(self.define("HSA_PATH", spec["hsa-rocr-dev"].prefix))
@@ -284,3 +383,10 @@ class Mivisionx(CMakePackage):
         if self.spec.satisfies("~hip~opencl"):
             args.append(self.define("BACKEND", "CPU"))
         return args
+
+    @run_after("install")
+    def add_tests(self):
+        if self.spec.satisfies("+add_tests"):
+            install_tree("tests", self.spec.prefix.tests)
+            install_tree("samples", self.spec.prefix.samples)
+            install_tree("utilities", self.spec.prefix.utilities)

@@ -59,6 +59,22 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
     variant("shared", default=True, description="Build shared libs")
     variant("static", default=True, description="Build static libs")
     variant("jpeg8", default=False, description="Emulate libjpeg v8 API/ABI")
+    variant(
+        "partial_decoder",
+        default=False,
+        description="add partial_decode_scale functionality required for rocAL"
+    )
+
+    patch(
+        "https://github.com/libjpeg-turbo/libjpeg-turbo/commit/09c71da06a6346dca132db66f26f959f7e4dd5ad.patch",
+        sha256="8fb7cba4e278938dfbca99d8a3e4945a9dc6fb2bb77b3b1f0bf60b7f981c0f8d",
+        when="@2.0.6 +partial_decoder"
+    )
+    patch(
+        "https://github.com/libjpeg-turbo/libjpeg-turbo/commit/640d7ee1917fcd3b6a5271aa6cf4576bccc7c5fb.patch",
+        sha256="f737d8959f5cf45ebaab60ac3e13fed3c3c6e05b5b8b9d2290d988509c1c9c7d",
+        when="@2.0.6 +partial_decoder"
+    )
 
     # Can use either of these. But in the current version of the package
     # only nasm is used. In order to use yasm an environmental variable
