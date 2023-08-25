@@ -77,7 +77,7 @@ or refer to the full manual below.
    extensions
    pipelines
    signing
-   external_rocm
+   gpu_configuration
 
 .. toctree::
    :maxdepth: 2

@@ -3,9 +3,18 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-===================================
+==========================
+Using External GPU Support
+==========================
+
+Many packages come with a ``+cuda`` or ``+rocm`` variant. With no added
+configuration Spack will download and install the needed components.
+It may be preferable to use existing system support: the following sections
+help with using a system installation of GPU libraries.
+
+-----------------------------------
 Using an External ROCm Installation
-===================================
+-----------------------------------
 
 Spack breaks down ROCm into many separate component packages. The following
 is an example ``packages.yaml`` that organizes a consistent set of ROCm
@@ -82,3 +91,23 @@ This includes the following considerations:
   guarantees a complementary set if multiple ROCm installations are available.
 - The ``prefix`` is the same for several components, but note that others
   require listing one of the subdirectories as a prefix.
+
+-----------------------------------
+Using an External CUDA Installation
+-----------------------------------
+
+CUDA is split into fewer components and is simpler to specify:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       variants:
+       - cuda_arch=70
+     cuda:
+       buildable: false
+       externals:
+       - spec: cuda@11.0.2
+         prefix: /opt/cuda/cuda-11.0.2/
+
+where ``/opt/cuda/cuda-11.0.2/lib/`` contains ``libcudart.so``.
