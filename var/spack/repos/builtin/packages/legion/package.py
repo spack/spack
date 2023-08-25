@@ -50,7 +50,6 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("ucx", when="network=ucx")
     depends_on("ucx", when="conduit=ucx")
     depends_on("mpi", when="conduit=mpi")
-    depends_on("cray-pmi", when="network=gasnet ^cray-mpich")
     depends_on("cuda@10.0:11.9", when="+cuda_unsupported_compiler @:23.03.0")
     depends_on("cuda@10.0:11.9", when="+cuda @:23.03.0")
     depends_on("cuda@10.0:12.2", when="+cuda_unsupported_compiler @23.06.0:")
