@@ -5,6 +5,8 @@
 
 import os
 
+from llnl.util import tty
+
 from spack.package import *
 
 
@@ -17,29 +19,24 @@ class AoclSparse(CMakePackage):
     LICENSING INFORMATION: By downloading, installing and using this software,
     you agree to the terms and conditions of the AMD AOCL-Sparse license agreement.
     You may obtain a copy of this license agreement from
-    https://www.amd.com/en/developer/aocl/sparse/sparse-libraries-4-0-eula.html
-    https://www.amd.com/en/developer/aocl/sparse/sparse-libraries-eula.html
+    https://www.amd.com/en/developer/aocl/sparse/eula/sparse-libraries-4-1-eula.html
+    https://www.amd.com/en/developer/aocl/sparse/eula/sparse-libraries-eula.html
     """
 
     _name = "aocl-sparse"
     homepage = "https://www.amd.com/en/developer/aocl/sparse.html"
     url = "https://github.com/amd/aocl-sparse/archive/3.0.tar.gz"
-    git = "https://github.com/amd/aocl-sparse.git"
+    git = "https://github.com/amd/aocl-sparse"
 
     maintainers("amd-toolchain-support")
 
+    version("4.1", sha256="35ef437210bc25fdd802b462eaca830bfd928f962569b91b592f2866033ef2bb")
     version("4.0", sha256="68524e441fdc7bb923333b98151005bed39154d9f4b5e8310b5c37de1d69c2c3")
     version("3.2", sha256="db7d681a8697d6ef49acf3e97e8bec35b048ce0ad74549c3b738bbdff496618f")
     version("3.1", sha256="8536f06095c95074d4297a3d2910654085dd91bce82e116c10368a9f87e9c7b9")
     version("3.0", sha256="1d04ba16e04c065051af916b1ed9afce50296edfa9b1513211a7378e1d6b952e")
     version("2.2", sha256="33c2ed6622cda61d2613ee63ff12c116a6cd209c62e54307b8fde986cd65f664")
 
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release"),
-    )
     variant("shared", default=True, description="Build shared library")
     variant("ilp64", default=False, description="Build with ILP64 support")
     variant("examples", default=False, description="Build sparse examples")
@@ -52,9 +49,11 @@ class AoclSparse(CMakePackage):
         description="Enable experimental AVX512 support",
     )
 
+    depends_on("amdblis", when="@4.1:")
+    depends_on("amdlibflame", when="@4.1:")
     depends_on("boost", when="+benchmarks")
     depends_on("boost", when="@2.2")
-    depends_on("cmake@3.5:", type="build")
+    depends_on("cmake@3.11:", type="build")
 
     @property
     def build_directory(self):
@@ -76,17 +75,19 @@ class AoclSparse(CMakePackage):
         """Runs ``cmake`` in the build directory"""
         spec = self.spec
 
-        args = [
-            "../..",
-            "-DCMAKE_INSTALL_PREFIX:PATH={0}".format(spec.prefix),
-            "-DCMAKE_CXX_COMPILER={0}".format(os.path.basename(spack_cxx)),
-        ]
+        if not (
+            spec.satisfies(r"%aocc@3.2:4.1")
+            or spec.satisfies(r"%gcc@12.2:13.1")
+            or spec.satisfies(r"%clang@15:16")
+        ):
+            tty.warn(
+                "AOCL has been tested to work with the following compilers\
+                    versions - gcc@12.2:13.1, aocc@3.2:4.1, and clang@15:16\
+                    see the following aocl userguide for details: \
+                    https://www.amd.com/content/dam/amd/en/documents/developer/version-4-1-documents/aocl/aocl-4-1-user-guide.pdf"
+            )
 
-        if spec.variants["build_type"].value == "Debug":
-            args.append("-DCMAKE_BUILD_TYPE=Debug")
-        else:
-            args.append("-DCMAKE_BUILD_TYPE=Release")
-
+        args = []
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
         args.append(self.define_from_variant("BUILD_CLIENTS_SAMPLES", "examples"))
         args.append(self.define_from_variant("BUILD_CLIENTS_TESTS", "unit_tests"))
@@ -95,6 +96,18 @@ class AoclSparse(CMakePackage):
 
         if spec.satisfies("@3.0:"):
             args.append(self.define_from_variant("BUILD_ILP64", "ilp64"))
+
+        if self.spec.satisfies("@4.0:"):
+            args.append("-DAOCL_BLIS_LIB={0}/libblis.so".format(self.spec["amdblis"].prefix.lib))
+            args.append(
+                "-DAOCL_BLIS_INCLUDE_DIR={0}/blis".format(self.spec["amdblis"].prefix.include)
+            )
+            args.append(
+                "-DAOCL_LIBFLAME={0}/libflame.so".format(self.spec["amdlibflame"].prefix.lib)
+            )
+            args.append(
+                "-DAOCL_LIBFLAME_INCLUDE_DIR={0}".format(self.spec["amdlibflame"].prefix.include)
+            )
 
         return args
 
