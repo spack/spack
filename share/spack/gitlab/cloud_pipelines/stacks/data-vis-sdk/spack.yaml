@@ -39,9 +39,10 @@ spack:
   - visit_specs:
     - matrix:
       - - visit
-      - - +gui~osmesa # GUI Support w/ GLX Rendering
-        - ~gui~osmesa # GLX Rendering
+      - - ~gui~osmesa # GLX Rendering
         - ~gui+osmesa # OSMesa Rendering
+        # VisIt GUI does not work with Qt 5.14.2
+        # - +gui~osmesa # GUI Support w/ GLX Rendering
   - sdk_base_spec:
     - matrix:
       - - ecp-data-vis-sdk +ascent +adios2 +cinema +darshan +faodel +hdf5 +pnetcdf
