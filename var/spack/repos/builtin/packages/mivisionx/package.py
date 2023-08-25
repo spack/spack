@@ -189,73 +189,73 @@ class Mivisionx(CMakePackage):
                 "${ROCM_PATH}/include/mivisionx",
                 "{0}/include/mivisionx".format(self.spec.prefix),
                 "tests/amd_migraphx_tests/mnist/CMakeLists.txt",
-                string=True
+                string=True,
             )
             filter_file(
                 "${ROCM_PATH}/lib",
                 "{0}/lib".format(self.spec.prefix),
                 "tests/amd_migraphx_tests/mnist/CMakeLists.txt",
-                string=True
+                string=True,
             )
             filter_file(
                 "${ROCM_PATH}/include/mivisionx",
                 "{0}/include/mivisionx".format(self.spec.prefix),
                 "tests/amd_migraphx_tests/resnet50/CMakeLists.txt",
-                string=True
+                string=True,
             )
             filter_file(
                 "${ROCM_PATH}/lib",
                 "{0}/lib".format(self.spec.prefix),
                 "tests/amd_migraphx_tests/resnet50/CMakeLists.txt",
-                string=True
+                string=True,
             )
             filter_file(
                 "${ROCM_PATH}/include/mivisionx",
                 "{0}/include/mivisionx".format(self.spec.prefix),
                 "samples/inference/mv_objdetect/CMakeLists.txt",
-                string=True
+                string=True,
             )
             filter_file(
                 "${ROCM_PATH}/lib",
                 "{0}/lib".format(self.spec.prefix),
                 "samples/inference/mv_objdetect/CMakeLists.txt",
-                string=True
+                string=True,
             )
             filter_file(
                 "${ROCM_PATH}/include/mivisionx",
                 "{0}/include/mivisionx".format(self.spec.prefix),
                 "model_compiler/python/nnir_to_clib.py",
-                string=True
+                string=True,
             )
             filter_file(
                 "/opt/rocm",
                 "{0}".format(self.spec.prefix),
                 "model_compiler/python/nnir_to_clib.py",
-                string=True
+                string=True,
             )
             filter_file(
                 "${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/mivisionx/rocal",
                 "{0}/include/mivisionx/rocal".format(self.spec.prefix),
                 "utilities/rocAL/rocAL_unittests/CMakeLists.txt",
-                string=True
+                string=True,
             )
             filter_file(
                 "${ROCM_PATH}/lib",
                 "{0}/lib".format(self.spec.prefix),
                 "utilities/rocAL/rocAL_unittests/CMakeLists.txt",
-                string=True
+                string=True,
             )
             filter_file(
                 "${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/mivisionx/rocal",
                 "{0}/include/mivisionx/rocal".format(self.spec.prefix),
                 "utilities/rocAL/rocAL_video_unittests/CMakeLists.txt",
-                string=True
+                string=True,
             )
             filter_file(
                 "${ROCM_PATH}/lib",
                 "{0}/lib".format(self.spec.prefix),
                 "utilities/rocAL/rocAL_video_unittests/CMakeLists.txt",
-                string=True
+                string=True,
             )
 
     depends_on("cmake@3.5:", type="build")
@@ -282,7 +282,7 @@ class Mivisionx(CMakePackage):
     depends_on("miopengemm@1.1.6", when="@1.7+opencl")
     depends_on("openssl", when="@4.0.0:")
     depends_on("libjpeg-turbo@2.0.6+partial_decoder", type="build")
-    depends_on("rpp",)
+    depends_on("rpp")
     depends_on("lmdb")
     depends_on("py-protobuf@3.20.3+cpp", type=("build", "run"), when="+add_tests")
     depends_on("py-future", when="+add_tests")
