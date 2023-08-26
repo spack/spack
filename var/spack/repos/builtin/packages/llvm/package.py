@@ -738,6 +738,7 @@ class Llvm(CMakePackage, CudaPackage):
             env.prepend_path("PATH", self.stage.path)
 
     def setup_run_environment(self, env):
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["hwloc"].prefix.lib)
         if "+clang" in self.spec:
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
             env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
