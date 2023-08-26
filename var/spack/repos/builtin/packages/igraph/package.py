@@ -18,9 +18,7 @@ class Igraph(CMakePackage, AutotoolsPackage):
     variant("shared", default=False, description="Enable shared build")
 
     build_system(
-        conditional("cmake", when="@0.9:"),
-        conditional("autotools", when="@:0.8"),
-        default="cmake",
+        conditional("cmake", when="@0.9:"), conditional("autotools", when="@:0.8"), default="cmake"
     )
 
     with when("build_system=cmake"):
