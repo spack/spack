@@ -358,6 +358,9 @@ class Cmake(Package):
                     # jsoncpp requires CMake to build
                     # use CMake-provided library to avoid circular dependency
                     args.append("--no-system-jsoncpp")
+                if spec.satisfies("@3.27:"):
+                    # cppdap depends on jsoncpp in CMake.
+                    args.append("--no-system-cppdap")
 
             # Whatever +/~ownlibs, use system curl.
             args.append("--system-curl")
