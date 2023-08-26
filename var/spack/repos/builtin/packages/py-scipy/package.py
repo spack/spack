@@ -193,9 +193,8 @@ class PyScipy(PythonPackage):
                 env.set("NPY_DISTUTILS_APPEND_FLAGS", "1")
 
         # https://github.com/scipy/scipy/issues/14935
-        if self.spec.satisfies("%intel ^py-pythran") or self.spec.satisfies("%oneapi ^py-pythran"):
-            if self.spec["py-pythran"].version < Version("0.12"):
-                env.set("SCIPY_USE_PYTHRAN", "0")
+        if self.spec.satisfies("%intel ^py-pythran"):
+            env.set("SCIPY_USE_PYTHRAN", "0")
 
         # Pick up BLAS/LAPACK from numpy
         if self.spec.satisfies("@:1.8"):
