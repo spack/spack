@@ -30,15 +30,7 @@ class PyScikitOptimize(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy@0.14.0:", type=("build", "run"))
     depends_on("py-scikit-learn@0.19.1:", type=("build", "run"))
-
-    # Was this a typo? py-pyyaml vs py-pyaml? setup.py says pyaml in 0.9.0
-    depends_on("py-pyyaml", when="@0.5.2 +gptune", type=("build", "run"))
-
-    with when("@0.9.0:"):
-        depends_on("py-numpy@1.13.3:", type=("build", "run"))
-        depends_on("py-pyaml@16.9:", type=("build", "run"))
-        depends_on("py-joblib@0.11:", type=("build", "run"))
-        depends_on("py-scikit-learn@0.20.0:", type=("build", "run"))
+    depends_on("py-pyyaml", when="+gptune", type=("build", "run"))
 
     depends_on("py-matplotlib", when="+plots")
 
