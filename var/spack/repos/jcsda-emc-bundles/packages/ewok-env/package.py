@@ -34,6 +34,7 @@ class EwokEnv(BundlePackage):
     depends_on("py-boto3", type="run")
     depends_on("py-cartopy", type="run")
     depends_on("py-gitpython", type="run")
+    depends_in("py-globus-cli", type="run")
     depends_on("py-jinja2", type="run")
     depends_on("py-ruamel-yaml", type="run")
     depends_on("py-ruamel-yaml-clib", type="run")
