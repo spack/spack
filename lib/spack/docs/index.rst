@@ -77,6 +77,7 @@ or refer to the full manual below.
    extensions
    pipelines
    signing
+   gpu_configuration
 
 .. toctree::
    :maxdepth: 2
