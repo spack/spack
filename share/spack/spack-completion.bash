@@ -52,6 +52,20 @@ if test -n "${ZSH_VERSION:-}" ; then
   fi
 fi
 
+# compgen -W doesn't work in some versions of zsh, so use this instead.
+# see https://www.zsh.org/mla/workers/2011/msg00582.html
+_compgen_w() {
+    if test -n "${ZSH_VERSION:-}" ; then
+        typeset -a words
+        words=( ${~=1} )
+        local find="$2"
+        results=(${(M)words[@]:#$find*})
+        echo "${results[@]}"
+    else
+        compgen -W "$1" -- "$2"
+    fi
+}
+
 # Bash programmable completion for Spack
 _bash_completion_spack() {
     # In all following examples, let the cursor be denoted by brackets, i.e. []
@@ -137,7 +151,7 @@ _bash_completion_spack() {
     if [[ "$(LC_ALL=C type $subfunction 2>&1)" =~ $rgx ]]
     then
         $subfunction
-        COMPREPLY=($(compgen -W "$SPACK_COMPREPLY" -- "$cur"))
+        COMPREPLY=($(_compgen_w "$SPACK_COMPREPLY" "$cur"))
     fi
 
     # if every completion is an alias for the same thing, just return that thing.
@@ -359,7 +373,7 @@ _spack_compress_aliases() {
     fi
 
     # get the alias of the first thing in the list of completions
-    _spack_get_alias "${COMPREPLY[0]}"
+    _spack_get_alias "${COMPREPLY[@]:0:1}"
     local first_alias="$SPACK_ALIAS"
 
     # if anything in the list would alias to something different, stop
