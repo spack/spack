@@ -914,7 +914,14 @@ class Llvm(CMakePackage, CudaPackage):
 
         # Semicolon seperated list of runtimes to enable
         if runtimes:
-            cmake_args.append(define("LLVM_ENABLE_RUNTIMES", runtimes))
+            cmake_args.extend(
+                [
+                    define("LLVM_ENABLE_RUNTIMES", runtimes),
+                    define(
+                        "RUNTIMES_CMAKE_ARGS", [define("CMAKE_INSTALL_RPATH_USE_LINK_PATH", True)]
+                    ),
+                ]
+            )
 
         return cmake_args
 
