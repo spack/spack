@@ -41,17 +41,14 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     version(
         "8.2",
         sha256="2e24768720efed1a5a4a58e83e2aca502cd8b95544c21695eb0de71ed652f20a",
-        deprecated=True,
     )
     version(
         "8.1",
         sha256="7f37aead120730234a60b2989d0547ae5e5498d93b1e9b5eb548c041ee8e7772",
-        deprecated=True,
     )
     version(
         "7.1",
         sha256="ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb",
-        deprecated=True,
     )
     version(
         "6.1",
