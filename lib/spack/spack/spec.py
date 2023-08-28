@@ -4476,6 +4476,53 @@ class Spec:
         kwargs.setdefault("color", None)
         return self.format(*args, **kwargs)
 
+    def format_path(self, format_string):
+        """Given a `format_string` that is intended as a path, generate a string
+        like from `Spec.format`, but eliminate extra path separators introduced by
+        formatting of Spec properties.
+
+        Path separators explicitly added to the string are preserved, so for example
+        "{name}/{version}" would generate a directory based on the Spec's name, and
+        a subdirectory based on its version; this function guarantees though that
+        the resulting string would only have two directories (i.e. that if under
+        normal circumstances that `str(Spec.version)` would contain a path
+        separator, it would not in this case).
+
+        Note that POSIX or Windows-style paths can be supplied on either POSIX or
+        Windows, and both "/" and "\" are treated as path separators (as a side
+        effect, "invalid" paths which mix these will be converted to OS-appropriate
+        paths with consistent separators).
+        """
+        # A root on Linux ("/"), or part of a Windows device namespace ("\")
+        any_sep = r"[/\\]"
+        # A drive on Windows (e.g. "C:\\")
+        drive = r"[a-zA-Z]:[/\\]"
+        root_pattern = rf"^({any_sep}|{drive})"
+        if re.match(root_pattern, format_string):
+            # Note: we could attempt to construct the absolute formatted path (i.e.
+            # produce a valid path instead of failing here), but we would want to
+            # account for the following cases:
+            # "\\root\{name}\{version}", "C:\\root\{name}\{version}".
+            # Also, if we allow abspaths, we probably want to prevent Windows
+            # abspaths on Linux (and vice versa).
+            raise SpecFormatPathError(
+                f"Input format string appears to be an absolute path: {format_string}"
+            )
+
+        format_component_with_sep = r"\{[^}]*[/\\][^}]*}"
+        if re.search(format_component_with_sep, format_string):
+            raise SpecFormatPathError(
+                f"Format component requests a '/', but format_path must convert: {format_string}"
+            )
+
+        # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
+        # on Windows, we cannot use pathlib (since "/" is not a path separator
+        # on Windows). Therefore, the path components are derived by splitting on
+        # both separators, on all operating systems.
+        components = re.split(any_sep, format_string)
+        formatted_components = [fs.polite_filename(self.format(x)) for x in components]
+        return str(pathlib.Path(*formatted_components))
+
     def __str__(self):
         sorted_nodes = [self] + sorted(
             self.traverse(root=False), key=lambda x: x.name or x.abstract_hash
@@ -4860,54 +4907,6 @@ def reconstruct_virtuals_on_edges(spec):
 
         for edge in provider.edges_from_dependents():
             edge.update_virtuals([vspec])
-
-
-def format_path(spec, format_string):
-    """Given a `format_string` that is intended as a path, generate a string
-    like from `Spec.format`, but eliminate extra path separators introduced by
-    formatting of Spec properties.
-
-    Path separators explicitly added to the string are preserved, so for example
-    "{name}/{version}" would generate a directory based on the Spec's name, and
-    a subdirectory based on its version; this function guarantees though that
-    the resulting string would only have two directories (i.e. that if under
-    normal circumstances that `str(Spec.version)` would contain a path
-    separator, it would not in this case).
-
-    Note that POSIX or Windows-style paths can be supplied on either POSIX or
-    Windows, and both "/" and "\" are treated as path separators (as a side
-    effect, "invalid" paths which mix these will be converted to OS-appropriate
-    paths with consistent separators).
-    """
-    # A root on Linux ("/"), or part of a Windows device namespace ("\")
-    any_sep = r"[/\\]"
-    # A drive on Windows (e.g. "C:\\")
-    drive = r"[a-zA-Z]:[/\\]"
-    root_pattern = rf"^({any_sep}|{drive})"
-    if re.match(root_pattern, format_string):
-        # Note: we could attempt to construct the absolute formatted path (i.e.
-        # produce a valid path instead of failing here), but we would want to
-        # account for the following cases:
-        # "\\root\{name}\{version}", "C:\\root\{name}\{version}".
-        # Also, if we allow abspaths, we probably want to prevent Windows
-        # abspaths on Linux (and vice versa).
-        raise SpecFormatPathError(
-            f"Input format string appears to be an absolute path: {format_string}"
-        )
-
-    format_component_with_sep = r"\{[^}]*[/\\][^}]*}"
-    if re.search(format_component_with_sep, format_string):
-        raise SpecFormatPathError(
-            f"Format component requests a '/', but format_path must convert: {format_string}"
-        )
-
-    # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
-    # on Windows, we cannot use pathlib (since "/" is not a path separator
-    # on Windows). Therefore, the path components are derived by splitting on
-    # both separators, on all operating systems.
-    components = re.split(any_sep, format_string)
-    formatted_components = [fs.polite_filename(spec.format(x)) for x in components]
-    return str(pathlib.Path(*formatted_components))
 
 
 class SpecfileReaderBase:

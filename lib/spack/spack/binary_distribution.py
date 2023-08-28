@@ -41,7 +41,6 @@ import spack.mirror
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
-import spack.spec
 import spack.stage
 import spack.store
 import spack.traverse as traverse
@@ -797,8 +796,8 @@ def tarball_directory_name(spec):
     Return name of the tarball directory according to the convention
     <os>-<architecture>/<compiler>/<package>-<version>/
     """
-    return spack.spec.format_path(
-        spec, "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}"
+    return spec.format_path(
+        "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}"
     )
 
 
@@ -807,8 +806,8 @@ def tarball_name(spec, ext):
     Return the name of the tarfile according to the convention
     <os>-<architecture>-<package>-<dag_hash><ext>
     """
-    spec_formatted = spack.spec.format_path(
-        spec, "{architecture}-{compiler.name}-{compiler.version}-{name}-{version}-{hash}"
+    spec_formatted = spec.format_path(
+        "{architecture}-{compiler.name}-{compiler.version}-{name}-{version}-{hash}"
     )
     return f"{spec_formatted}{ext}"
 

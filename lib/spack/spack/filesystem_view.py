@@ -500,7 +500,7 @@ class YamlFilesystemView(FilesystemView):
 
         proj = spack.projections.get_projection(self.projections, locator_spec)
         if proj:
-            return os.path.join(self._root, spack.spec.format_path(locator_spec, proj))
+            return os.path.join(self._root, locator_spec.format_path(proj))
         return self._root
 
     def get_all_specs(self):
@@ -776,7 +776,7 @@ class SimpleFilesystemView(FilesystemView):
             spec = spec.package.extendee_spec
 
         p = spack.projections.get_projection(self.projections, spec)
-        return spack.spec.format_path(spec, p) if p else ""
+        return spec.format_path(p) if p else ""
 
     def get_projection_for_spec(self, spec):
         """
@@ -791,7 +791,7 @@ class SimpleFilesystemView(FilesystemView):
 
         proj = spack.projections.get_projection(self.projections, spec)
         if proj:
-            return os.path.join(self._root, spack.spec.format_path(spec, proj))
+            return os.path.join(self._root, spec.format_path(proj))
         return self._root
 
 

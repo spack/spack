@@ -240,7 +240,7 @@ def default_log_file(spec):
     """Computes the default filename for the log file and creates
     the corresponding directory if not present
     """
-    basename = spack.spec.format_path(spec, "test-{name}-{version}-{hash}.xml")
+    basename = spec.format_path("test-{name}-{version}-{hash}.xml")
     dirname = fs.os.path.join(spack.paths.reports_path, "junit")
     fs.mkdirp(dirname)
     return fs.os.path.join(dirname, basename)

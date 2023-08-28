@@ -1002,7 +1002,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
         format_string = "{name}-{version}"
-        pretty_name = spack.spec.format_path(self.spec, format_string)
+        pretty_name = self.spec.format_path(format_string)
         mirror_paths = spack.mirror.mirror_archive_paths(
             fetcher, os.path.join(self.name, pretty_name), self.spec
         )
