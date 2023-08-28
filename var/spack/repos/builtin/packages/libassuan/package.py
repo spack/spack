@@ -17,6 +17,7 @@ class Libassuan(AutotoolsPackage):
 
     maintainers("alalazo")
 
+    version("2.5.6", sha256="e9fd27218d5394904e4e39788f9b1742711c3e6b41689a31aa3380bd5aa4f426")
     version("2.5.5", sha256="8e8c2fcc982f9ca67dcbb1d95e2dc746b1739a4668bc20b3a3c5be632edb34e4")
     version("2.5.4", sha256="c080ee96b3bd519edd696cfcebdecf19a3952189178db9887be713ccbcb5fbf0")
     version("2.5.3", sha256="91bcb0403866b4e7c4bc1cc52ed4c364a9b5414b3994f718c70303f7f765e702")
