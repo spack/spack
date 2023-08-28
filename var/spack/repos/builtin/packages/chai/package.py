@@ -135,7 +135,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries = super().initconfig_compiler_entries()
 
         # adrienbernede-22-11:
-        #   This was in upstream Spack raja package, but it’s causing the follwing failure Umpire:
+        #   This was in upstream Spack raja package, but it’s causing the following failure for Umpire:
         #     CMake Error in src/umpire/CMakeLists.txt:
         #     No known features for CXX compiler
         #
