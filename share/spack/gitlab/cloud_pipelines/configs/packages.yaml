@@ -1,11 +1,14 @@
-packages: {}
-
-# CI should never build develop/main/master versions of packages. Current issues:
-# - e4s/dav
-#   - hdf5-vol-async => argobot@main
-# - aws-isc-aarch64
-#   - sse2neon
-
-# packages:
-#   all:
-#     require: "@:999999999"
+packages:
+  #all:
+    # CI should never build develop/main/master versions of
+    # packages.
+    # Current issues:
+    # - e4s/dav
+    #   - hdf5-vol-async => argobot@main
+    # - aws-isc-aarch64
+    #   - sse2neon
+    #require: "@:999999999"
+  python:
+    # This is required after https://github.com/spack/spack/pull/38619
+    # to avoid concretizing deprecated python.
+    require: "@3.8:"

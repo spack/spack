@@ -252,6 +252,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("nlohmann-json", when="@5.11:")
 
     # ParaView depends on proj@8.1.0 due to changes in MR
+    # v8.1.0 is required for VTK::GeoVis
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8474
     depends_on("proj@8.1.0", when="@5.11:")
 
