@@ -16,6 +16,8 @@ class Libarchive(AutotoolsPackage):
 
     maintainers("haampie")
 
+    version("3.7.1", sha256="5d24e40819768f74daf846b99837fc53a3a9dcdf3ce1c2003fe0596db850f0f0")
+    version("3.7.0", sha256="d937886a14b48c4287c4d343644feb294a14b31b7926ba9a4f1777123ce7c2cc")
     version("3.6.2", sha256="ba6d02f15ba04aba9c23fd5f236bb234eab9d5209e95d1c4df85c44d5f19b9b3")
 
     # Deprecated versions
