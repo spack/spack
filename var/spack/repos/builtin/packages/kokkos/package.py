@@ -306,7 +306,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                     msg = "Kokkos supports only one cuda_arch at a time."
                     raise InstallError(msg)
                 cuda_arch = spec.variants["cuda_arch"].value[0]
-            if not cuda_arch == "none":
+            if cuda_arch != "none":
                 kokkos_arch_name = self.spack_cuda_arch_map[cuda_arch]
                 spack_microarches.append(kokkos_arch_name)
 
