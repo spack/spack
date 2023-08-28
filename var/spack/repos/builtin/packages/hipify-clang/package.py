@@ -18,8 +18,10 @@ class HipifyClang(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
+    version("5.6.0", sha256="a2572037a7d3bd0813bd6819a5e6c0e911678db5fd3ab15a65370601df91891b")
     version("5.5.1", sha256="35b9c07a7afaf9cf6f3bbe9dd147fa81b1b297af3e5e26e60c55629e83feaa48")
     version("5.5.0", sha256="1b75c702799ac93027337f8fb61d7c27ba960e8ece60d907fc8c5ab3f15c3fe9")
+    version("5.4.4", sha256="062efaa96278204b0aafade2e1cca18e1b98af15c973bac7b75a3ba98e3068c1")
     version("5.4.3", sha256="79e27bd6c0a28e6a62b02dccc0b5d88a81f69fe58487e83f3b7ab47d6b64341b")
     version("5.4.0", sha256="9f51eb280671ae7f7e14eb593ee3ef099899221c4bdccfbdb7a78681ad17f37f")
     version("5.3.3", sha256="9d08e2896e52c10a0a189a5407567043f2510adc7bf618591c97a22a23699691")
@@ -130,8 +132,10 @@ class HipifyClang(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.4.4",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
         "master",
     ]:
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
