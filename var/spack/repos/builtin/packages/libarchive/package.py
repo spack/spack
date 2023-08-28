@@ -87,7 +87,7 @@ class Libarchive(AutotoolsPackage):
     )
     variant(
         "crypto",
-        default="mbedtls",
+        default="openssl",
         values=("mbedtls", "nettle", "openssl"),
         description="What crypto library to use for mtree and xar hashes",
     )
