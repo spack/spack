@@ -189,7 +189,7 @@ class Likwid(Package):
                 "config.mk",
             )
             libs = find_libraries(
-                    "libhwloc", root=spec["hwloc"].prefix, shared=True, recursive=True
+                "libhwloc", root=spec["hwloc"].prefix, shared=True, recursive=True
             )
             ll = LibraryList(libs)
             if len(ll.directories) > 0:
