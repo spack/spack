@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import glob
+import os
 import re
 
 from spack.package import *
@@ -15,10 +15,12 @@ def spec_uses_toolchain(spec):
     using_toolchain = list(filter(gcc_toolchain_regex.match, spec.compiler_flags["cxxflags"]))
     return using_toolchain
 
+
 def spec_uses_gccname(spec):
     gcc_name_regex = re.compile(".*gcc-name.*")
     using_gcc_name = list(filter(gcc_name_regex.match, spec.compiler_flags["cxxflags"]))
     return using_gcc_name
+
 
 def hip_repair_options(options, spec):
     # there is only one dir like this, but the version component is unknown
@@ -26,6 +28,7 @@ def hip_repair_options(options, spec):
         "-DHIP_CLANG_INCLUDE_PATH="
         + glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0]
     )
+
 
 def hip_repair_cache(options, spec):
     # there is only one dir like this, but the version component is unknown
@@ -35,6 +38,7 @@ def hip_repair_cache(options, spec):
             glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
         )
     )
+
 
 def hip_for_radiuss_projects(options, spec, compiler):
     # Here is what is typically needed for radiuss projects when building with rocm
@@ -68,6 +72,7 @@ def hip_for_radiuss_projects(options, spec, compiler):
         options.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", hip_link_flags + " -Wl,-rpath {}/lib64".format(gcc_prefix)))
     else:
         options.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-Wl,-rpath={0}/llvm/lib/".format(rocm_root)))
+
 
 def cuda_for_radiuss_projects(options, spec):
     # Here is what is typically needed for radiuss projects when building with cuda
@@ -115,9 +120,7 @@ def blt_link_helpers(options, spec, compiler):
             "/usr/tce/packages/gcc/gcc-4.9.3/lib64;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64;/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3"))
 
     if "cce" in compiler.cxx:
-        description = (
-            "Adds a missing rpath for libraries " "associated with the fortran compiler"
-        )
+        description = "Adds a missing rpath for libraries " "associated with the fortran compiler"
         # Here is where to find libs that work for fortran
         libdir = "/opt/cray/pe/cce/{0}/cce-clang/x86_64/lib".format(compiler.version)
         linker_flags = "${{BLT_EXE_LINKER_FLAGS}} -Wl,-rpath,{0}".format(libdir)
@@ -126,7 +129,7 @@ def blt_link_helpers(options, spec, compiler):
 
         if version == "16.0.0":
             # Here is another directory added by cce@16.0.0
-            libdir = os.path.join(libdir,"x86_64-unknown-linux-gnu")
+            libdir = os.path.join(libdir, "x86_64-unknown-linux-gnu")
             linker_flags += " -Wl,-rpath,{0}".format(libdir)
 
         options.append(cmake_cache_string("BLT_EXE_LINKER_FLAGS", linker_flags, description))

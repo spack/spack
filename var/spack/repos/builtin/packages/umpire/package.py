@@ -4,16 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import socket
 import re
+import socket
 
 import llnl.util.tty as tty
 
 from spack.package import *
-from .camp import hip_for_radiuss_projects
-from .camp import cuda_for_radiuss_projects
-from .camp import blt_link_helpers
 
+from .camp import blt_link_helpers, cuda_for_radiuss_projects, hip_for_radiuss_projects
 
 
 class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -189,7 +187,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
-            self.spec.dag_hash(8)
+            self.spec.dag_hash(8),
         )
 
     def initconfig_compiler_entries(self):
@@ -198,14 +196,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
 
-
-
         # adrienbernede-22-11:
         #   This was in upstream Spack raja package, but it’s causing the follwing failure:
         #     CMake Error in src/umpire/CMakeLists.txt:
         #     No known features for CXX compiler
         #
-        #if "+rocm" in spec:
+        # if "+rocm" in spec:
         #    entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
@@ -219,7 +215,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         blt_link_helpers(entries, spec, compiler)
 
-        #adrienbernede-22-11:
+        # adrienbernede-22-11:
         #  Specific to Umpire local package, worth sharing?
         entries = [x for x in entries if not "COMPILER_ID" in x]
 
@@ -250,7 +246,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option(
             "{}ENABLE_OPENMP_TARGET".format(option_prefix), "+openmp_target" in spec))
         if "+openmp_target" in spec and "%xl" in spec:
-                entries.append(cmake_cache_string("OpenMP_CXX_FLAGS", "-qsmp;-qoffload"))
+            entries.append(cmake_cache_string("OpenMP_CXX_FLAGS", "-qsmp;-qoffload"))
 
         return entries
 

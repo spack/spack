@@ -3,15 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import socket
 import glob
+import os
 import re
+import socket
 
 from spack.package import *
-from .camp import hip_for_radiuss_projects
-from .camp import cuda_for_radiuss_projects
-from .camp import blt_link_helpers
+
+from .camp import blt_link_helpers, cuda_for_radiuss_projects, hip_for_radiuss_projects
 
 
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -98,7 +97,6 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp@main", when="@develop")
     depends_on("camp+openmp", when="+openmp")
 
-
     depends_on("cmake@3.20:", when="@2022.10.0:", type="build")
     depends_on("cmake@3.23:", when="@2022.10.0: +rocm", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
@@ -136,7 +134,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
-            self.spec.dag_hash(8)
+            self.spec.dag_hash(8),
         )
 
     def initconfig_compiler_entries(self):

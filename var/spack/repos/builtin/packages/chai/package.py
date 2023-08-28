@@ -4,14 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import socket
 import re
+import socket
 
 from spack.package import *
-from .camp import hip_for_radiuss_projects
-from .camp import cuda_for_radiuss_projects
-from .camp import blt_link_helpers
 
+from .camp import blt_link_helpers, cuda_for_radiuss_projects, hip_for_radiuss_projects
 
 
 class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -128,7 +126,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
-            self.spec.dag_hash(8)
+            self.spec.dag_hash(8),
         )
 
     def initconfig_compiler_entries(self):
@@ -147,7 +145,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         #       clang (LLVM option parsing): for the --amdgpu-function-calls option: may only occur zero or one times!
         #   We suspect this error comes from the use of hip compiler here, so we comment it:
         #
-        #if "+rocm" in spec:
+        # if "+rocm" in spec:
         #    entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         #### BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS

@@ -7,6 +7,7 @@ import os
 import sys
 
 from spack.package import *
+
 from .camp import hip_for_radiuss_projects
 
 
@@ -118,7 +119,7 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("WITH_FORTRAN", True))
 
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", True))
-        entries.append(cmake_cache_option("BUILD_TESTING", "+tests" in spec ))
+        entries.append(cmake_cache_option("BUILD_TESTING", "+tests" in spec))
         entries.append(cmake_cache_option("BUILD_DOCS", False))
         entries.append(cmake_cache_path("PYTHON_EXECUTABLE", spec["python"].command.path))
 
@@ -138,7 +139,7 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("WITH_ROCTRACER", True))
             entries.append(cmake_cache_option("WITH_ROCTX", True))
             hip_for_radiuss_projects(entries, spec, compiler)
-            #entries.append(cmake_cache_option("ROCM_ROOT_DIR", "/usr/"))
+            # entries.append(cmake_cache_option("ROCM_ROOT_DIR", "/usr/"))
 
         return entries
 

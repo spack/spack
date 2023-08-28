@@ -8,19 +8,18 @@ import socket
 import re
 
 from spack.package import *
-from .camp import hip_for_radiuss_projects
-from .camp import cuda_for_radiuss_projects
-from .camp import blt_link_helpers
+
+from .camp import blt_link_helpers, cuda_for_radiuss_projects, hip_for_radiuss_projects
 
 
 class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
     """RAJA Performance Suite."""
 
     homepage = "https://github.com/LLNL/RAJAPerf"
-    git      = "https://github.com/LLNL/RAJAPerf.git"
+    git = "https://github.com/LLNL/RAJAPerf.git"
 
     version("develop", branch="develop", submodules="True")
-    version("main",  branch="main",  submodules="True")
+    version("main", branch="main", submodules="True")
     version("2023.06.0", tag="v2023.06.0", submodules="True")
     version("2022.10.0", tag="v2022.10.0", submodules="True")
     version("0.12.0", tag="v0.12.0", submodules="True")
@@ -39,9 +38,14 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("openmp_target", default=False, description="Build with OpenMP target support")
     variant("shared", default=False, description="Build Shared Libs")
     variant("omptask", default=False, description="Build OpenMP task variants of algorithms")
-    variant("tests", default="basic", values=("none", "basic", "benchmarks"),
-            multi=False, description="Tests to run")
-    variant("caliper",default=False, description="Build with support for Caliper based profiling")
+    variant(
+        "tests",
+        default="basic",
+        values=("none", "basic", "benchmarks"),
+        multi=False,
+        description="Tests to run",
+    )
+    variant("caliper", default=False, description="Build with support for Caliper based profiling")
 
     depends_on("blt")
     depends_on("blt@0.5.3:", type="build", when="@2023.06.0:")
@@ -59,9 +63,9 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("rocprim", when="+rocm")
 
-    depends_on("caliper@2.9.0:",when="+caliper")
-    depends_on("caliper@2.9.0: +cuda",when="+caliper +cuda")
-    depends_on("caliper@2.9.0: +rocm",when="+caliper +rocm")
+    depends_on("caliper@2.9.0:", when="+caliper")
+    depends_on("caliper@2.9.0: +cuda", when="+caliper +cuda")
+    depends_on("caliper@2.9.0: +rocm", when="+caliper +rocm")
 
     with when("@0.12.0: +rocm +caliper"):
         depends_on("caliper +rocm")
@@ -95,7 +99,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
-            self.spec.dag_hash(8)
+            self.spec.dag_hash(8),
         )
 
     def initconfig_compiler_entries(self):
@@ -149,16 +153,18 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
             # Custom options. We place everything in CMAKE_CUDA_FLAGS_(RELEASE|RELWITHDEBINFO|DEBUG) which are not set by cuda_for_radiuss_projects
             if ("xl" in self.compiler.cxx):
-                all_targets_flags = "-Xcompiler -qstrict -Xcompiler -qxlcompatmacros -Xcompiler -qalias=noansi" \
-                                  + "-Xcompiler -qsmp=omp -Xcompiler -qhot -Xcompiler -qnoeh" \
-                                  + "-Xcompiler -qsuppress=1500-029 -Xcompiler -qsuppress=1500-036" \
-                                  + "-Xcompiler -qsuppress=1500-030" \
+                all_targets_flags = (
+                    "-Xcompiler -qstrict -Xcompiler -qxlcompatmacros -Xcompiler -qalias=noansi" \
+                    + "-Xcompiler -qsmp=omp -Xcompiler -qhot -Xcompiler -qnoeh" \
+                    + "-Xcompiler -qsuppress=1500-029 -Xcompiler -qsuppress=1500-036" \
+                    + "-Xcompiler -qsuppress=1500-030" \
+                )
 
                 cuda_release_flags = "-O3 -Xcompiler -O2 " + all_targets_flags
                 cuda_reldebinf_flags = "-O3 -g -Xcompiler -O2 " + all_targets_flags
                 cuda_debug_flags = "-O0 -g -Xcompiler -O2 " + all_targets_flags
 
-            elif ("gcc" in self.compiler.cxx):
+            elif "gcc" in self.compiler.cxx:
                 all_targets_flags = "-Xcompiler -finline-functions -Xcompiler -finline-limit=20000"
 
                 cuda_release_flags = "-O3 -Xcompiler -Ofast " + all_targets_flags
