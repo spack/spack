@@ -43,6 +43,7 @@ import glob
 import inspect
 import itertools
 import os.path
+import pathlib
 import pickle
 import re
 import tempfile
@@ -845,15 +846,21 @@ def _test_detection_by_executable(pkgs, error_cls):
 
     errors, tmpdir = [], tempfile.mkdtemp()
 
-    def mock_executable(name, output, subdir=("bin",)):
-        file_parts = list(subdir) + [name]
-        f = os.path.join(tmpdir, *file_parts)
-        llnl.util.filesystem.mkdirp(os.path.dirname(f))
-        t = jinja2.Template("#!/bin/bash\n{{ output }}\n")
-        with open(f, "w") as fs:
-            fs.write(t.render(output=output))
-        llnl.util.filesystem.set_executable(f)
-        return f
+    def create_executable_scripts(layout_entry):
+        relative_paths = layout_entry["executables"]
+        script = layout_entry["script"]
+        script_template = jinja2.Template("#!/bin/bash\n{{ script }}\n")
+        tmp_path = pathlib.Path(tmpdir)
+
+        result = []
+        for mock_exe_path in relative_paths:
+            rel_path = pathlib.Path(mock_exe_path)
+            abs_path = tmp_path / rel_path
+            abs_path.parent.mkdir(parents=True, exist_ok=True)
+            abs_path.write_text(script_template.render(script=script))
+            llnl.util.filesystem.set_executable(abs_path)
+            result.append(abs_path)
+        return result
 
     def detection_tests_for(pkg):
         pkg_dir = os.path.dirname(spack.repo.PATH.filename_for_package_name(pkg))
@@ -864,15 +871,17 @@ def _test_detection_by_executable(pkgs, error_cls):
     @contextlib.contextmanager
     def setup_test_layout(layout):
         hints, to_be_removed = set(), []
-        for binary in layout:
-            exe = mock_executable(binary["name"], binary["output"], subdir=binary["subdir"])
-            to_be_removed.append(exe)
-            hints.add(os.path.dirname(str(exe)))
+        for entry in layout:
+            exes = create_executable_scripts(entry)
+            to_be_removed.extend(exes)
+
+            for mock_executable in exes:
+                hints.add(str(mock_executable.parent))
 
         yield list(hints)
 
         for exe in to_be_removed:
-            os.unlink(exe)
+            exe.unlink()
 
     # Filter the packages and retain only the ones with detection tests
     pkgs_with_tests = packages_with_detection_tests()

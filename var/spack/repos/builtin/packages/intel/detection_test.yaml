@@ -1,18 +1,18 @@
 paths:
   - layout:
-      - subdir: [bin, intel64]
-        name: icc
-        output: |
+      - executables:
+        - "bin/intel64/icc"
+        script: |
           echo "icc (ICC) 18.0.5 20180823"
           echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
-      - subdir: [bin, intel64]
-        name: icpc
-        output: |
+      - executables:
+        - "bin/intel64/icpc"
+        script: |
           echo "icpc (ICC) 18.0.5 20180823"
           echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
-      - subdir: [bin, intel64]
-        name: ifort
-        output: |
+      - executables:
+        - "bin/intel64/ifort"
+        script: |
           echo "ifort (IFORT) 18.0.5 20180823"
           echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
     results:

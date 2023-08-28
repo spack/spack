@@ -6231,16 +6231,10 @@ the ``paths`` attribute:
 
    paths:
    - layout:
-     - subdir: [bin]
-       name: clang-3.9
-       output: |
-         echo "clang version 3.9.1-19ubuntu1 (tags/RELEASE_391/rc2)"
-         echo "Target: x86_64-pc-linux-gnu"
-         echo "Thread model: posix"
-         echo "InstalledDir: /usr/bin"
-     - subdir: [bin]
-       name: clang++-3.9
-       output: |
+     - executables:
+       - "bin/clang-3.9"
+       - "bin/clang++-3.9"
+       script: |
          echo "clang version 3.9.1-19ubuntu1 (tags/RELEASE_391/rc2)"
          echo "Target: x86_64-pc-linux-gnu"
          echo "Thread model: posix"
@@ -6265,15 +6259,11 @@ package detection and checking that the outcome matches the expected
      - Specifies the filesystem tree used for the test
      - List of objects
      - Yes
-   * - ``layout:[0]:subdir``
-     - Subdirectory for this executable
+   * - ``layout:[0]:executables``
+     - Relative paths for the mock executables to be created
      - List of strings
      - Yes
-   * - ``layout:[0]:name``
-     - Name of the executable
-     - A valid filename
-     - Yes
-   * - ``layout:[0]:output``
+   * - ``layout:[0]:script``
      - Mock logic for the executable
      - Any valid shell script
      - Yes
