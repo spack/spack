@@ -188,7 +188,9 @@ class Likwid(Package):
                 "HWLOC_INCLUDE_DIR = {0}".format(spec["hwloc"].prefix.include),
                 "config.mk",
             )
-            libs = find_libraries("libhwloc", root=spec["hwloc"].prefix, shared=True, recursive=True)
+            libs = find_libraries(
+                    "libhwloc", root=spec["hwloc"].prefix, shared=True, recursive=True
+            )
             ll = LibraryList(libs)
             if len(ll.directories) > 0:
                 filter_file(
@@ -197,6 +199,8 @@ class Likwid(Package):
                     "config.mk",
                 )
                 filter_file("^#HWLOC_LIB_NAME.*", "HWLOC_LIB_NAME = hwloc", "config.mk")
+            else:
+                raise InstallError("Failed to find library path of hwloc dependency")
 
         # https://github.com/RRZE-HPC/likwid/issues/287
         if self.spec.satisfies("@:5.0.2 %gcc@10:"):
