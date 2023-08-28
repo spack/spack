@@ -17,7 +17,7 @@ from .camp import blt_link_helpers
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     """RAJA Parallel Framework."""
 
-    homepage = "https://software.llnl.gov/RAJA/"
+    homepage = "https://github.com/LLNL/RAJA"
     git = "https://github.com/LLNL/RAJA.git"
     tags = ["radiuss", "e4s"]
 
@@ -241,8 +241,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         return entries
 
     def cmake_args(self):
-        options = []
-        return options
+        return []
 
     @property
     def build_relpath(self):

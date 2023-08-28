@@ -16,7 +16,7 @@ from .camp import blt_link_helpers
 class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
     """RAJA Performance Suite."""
 
-    homepage = "http://software.llnl.gov/RAJAPerf/"
+    homepage = "https://github.com/LLNL/RAJAPerf"
     git      = "https://github.com/LLNL/RAJAPerf.git"
 
     version("develop", branch="develop", submodules="True")
@@ -238,6 +238,5 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         return entries
 
     def cmake_args(self):
-        options = []
-        return options
+        return []
 

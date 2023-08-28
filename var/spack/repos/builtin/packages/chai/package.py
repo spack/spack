@@ -251,5 +251,4 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         return entries
 
     def cmake_args(self):
-        options = []
-        return options
+        return []
