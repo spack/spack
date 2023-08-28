@@ -1,0 +1,142 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+"""Create and run mock e2e tests for package detection."""
+import contextlib
+import pathlib
+import tempfile
+from typing import Generator, List, NamedTuple
+
+import jinja2
+
+from llnl.util import filesystem
+
+import spack.repo
+import spack.spec
+from spack.util import spack_yaml
+
+from .path import by_executable
+
+
+class MockExecutables(NamedTuple):
+    """Mock executables to be used in detection tests"""
+
+    #: Relative paths for mock executables to be created
+    executables: List[str]
+    #: Shell script for the mock executable
+    script: str
+
+
+class ExpectedTestResult(NamedTuple):
+    """Data structure to model assertions on detection tests"""
+
+    #: Spec to be detected
+    spec: str
+
+
+class DetectionTest(NamedTuple):
+    """Data structure to construct detection tests by PATH inspection.
+
+    Packages may have a YAML file containing the description of one or more detection tests
+    to be performed. Each test creates a few mock executable scripts in a temporary folder,
+    and checks that detection by PATH gives the expected results.
+    """
+
+    pkg_name: str
+    layout: List[MockExecutables]
+    results: List[ExpectedTestResult]
+
+
+class Runner:
+    """Runs an external detection test"""
+
+    def __init__(self, *, test: DetectionTest, repository: spack.repo.RepoPath):
+        self.test = test
+        self.repository = repository
+        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+
+    def execute(self) -> List[spack.spec.Spec]:
+        """Executes a test and returns the specs that have been detected.
+
+        This function sets-up a test in a temporary directory, according to the prescriptions
+        in the test layout, then performs a detection by executables and returns the specs that
+        have been detected.
+        """
+        with self._mock_layout() as path_hints:
+            entries = by_executable(
+                [self.repository.get_pkg_class(self.test.pkg_name)], path_hints=path_hints
+            )
+            specs = set(x.spec for x in entries[self.test.pkg_name])
+        return list(specs)
+
+    @contextlib.contextmanager
+    def _mock_layout(self) -> Generator[List[str], None, None]:
+        hints, to_be_removed = set(), []
+        try:
+            for entry in self.test.layout:
+                exes = self._create_executable_scripts(entry)
+                to_be_removed.extend(exes)
+
+                for mock_executable in exes:
+                    hints.add(str(mock_executable.parent))
+
+            yield list(hints)
+        finally:
+            for exe in to_be_removed:
+                exe.unlink()
+
+    def _create_executable_scripts(self, mock_executables: MockExecutables) -> List[pathlib.Path]:
+        relative_paths = mock_executables.executables
+        script = mock_executables.script
+        script_template = jinja2.Template("#!/bin/bash\n{{ script }}\n")
+        result = []
+        for mock_exe_path in relative_paths:
+            rel_path = pathlib.Path(mock_exe_path)
+            abs_path = self.tmpdir / rel_path
+            abs_path.parent.mkdir(parents=True, exist_ok=True)
+            abs_path.write_text(script_template.render(script=script))
+            filesystem.set_executable(abs_path)
+            result.append(abs_path)
+        return result
+
+    @property
+    def expected_specs(self) -> List[spack.spec.Spec]:
+        return [spack.spec.Spec(r.spec) for r in self.test.results]
+
+
+def detection_tests(pkg_name: str, repository: spack.repo.RepoPath) -> List[Runner]:
+    """Returns a list of test runners for a given package.
+
+    Currently, detection tests are specified in a YAML file, called ``detection_test.yaml``,
+    alongside the ``package.py`` file.
+
+    This function reads that file to create a bunch of ``Runner`` objects.
+
+    Args:
+        pkg_name: name of the package to test
+        repository: repository where the package lives
+    """
+    result = []
+    pkg_dir = pathlib.Path(repository.filename_for_package_name(pkg_name)).parent
+    detection_tests_yaml = pkg_dir / "detection_test.yaml"
+    with open(str(detection_tests_yaml)) as f:
+        detection_tests_content = spack_yaml.load(f)
+
+    tests_by_path = detection_tests_content.get("paths", [])
+    for single_test_data in tests_by_path:
+        mock_executables = []
+        for layout in single_test_data["layout"]:
+            mock_executables.append(
+                MockExecutables(executables=layout["executables"], script=layout["script"])
+            )
+        expected_results = []
+        for assertion in single_test_data["results"]:
+            expected_results.append(ExpectedTestResult(spec=assertion["spec"]))
+
+        current_test = DetectionTest(
+            pkg_name=pkg_name, layout=mock_executables, results=expected_results
+        )
+        result.append(Runner(test=current_test, repository=repository))
+
+    return result

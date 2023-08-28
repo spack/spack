@@ -38,15 +38,13 @@ as input.
 import ast
 import collections
 import collections.abc
-import contextlib
 import glob
 import inspect
 import itertools
 import os.path
-import pathlib
 import pickle
 import re
-import tempfile
+import warnings
 from urllib.request import urlopen
 
 import llnl.util.lang
@@ -835,108 +833,43 @@ def packages_with_detection_tests():
 @external_detection
 def _test_detection_by_executable(pkgs, error_cls):
     """Test drive external detection for packages"""
-    import jinja2
-
-    import llnl.util.filesystem
-
     import spack.detection
-    import spack.repo
-    import spack.spec
-    import spack.util.spack_yaml
 
-    errors, tmpdir = [], tempfile.mkdtemp()
-
-    def create_executable_scripts(layout_entry):
-        relative_paths = layout_entry["executables"]
-        script = layout_entry["script"]
-        script_template = jinja2.Template("#!/bin/bash\n{{ script }}\n")
-        tmp_path = pathlib.Path(tmpdir)
-
-        result = []
-        for mock_exe_path in relative_paths:
-            rel_path = pathlib.Path(mock_exe_path)
-            abs_path = tmp_path / rel_path
-            abs_path.parent.mkdir(parents=True, exist_ok=True)
-            abs_path.write_text(script_template.render(script=script))
-            llnl.util.filesystem.set_executable(abs_path)
-            result.append(abs_path)
-        return result
-
-    def detection_tests_for(pkg):
-        pkg_dir = os.path.dirname(spack.repo.PATH.filename_for_package_name(pkg))
-        detection_data = os.path.join(pkg_dir, "detection_test.yaml")
-        with open(detection_data) as f:
-            return spack.util.spack_yaml.load(f)
-
-    @contextlib.contextmanager
-    def setup_test_layout(layout):
-        hints, to_be_removed = set(), []
-        for entry in layout:
-            exes = create_executable_scripts(entry)
-            to_be_removed.extend(exes)
-
-            for mock_executable in exes:
-                hints.add(str(mock_executable.parent))
-
-        yield list(hints)
-
-        for exe in to_be_removed:
-            exe.unlink()
+    errors = []
 
     # Filter the packages and retain only the ones with detection tests
     pkgs_with_tests = packages_with_detection_tests()
     selected_pkgs = list(sorted(set(pkgs).intersection(pkgs_with_tests)))
 
     if not selected_pkgs:
-        summary = "no detection test to run"
-        details = ['"{0}" has no detection test'.format(p) for p in pkgs]
-        errors.append(error_cls(summary=summary, details=details))
+        summary = "No detection test to run"
+        details = [f'  "{p}" has no detection test' for p in pkgs]
+        warnings.warn("\n".join([summary] + details))
         return errors
 
-    for package_name in selected_pkgs:
-        # Retrieve detection test data for this package and cycle over each
-        # of the scenarios that are encoded
-        detection_tests = detection_tests_for(package_name)
+    for pkg_name in selected_pkgs:
+        for idx, test_runner in enumerate(
+            spack.detection.detection_tests(pkg_name, spack.repo.PATH)
+        ):
+            specs = test_runner.execute()
+            expected_specs = test_runner.expected_specs
 
-        # Detection by executable is under the "paths" keyword
-        if "paths" not in detection_tests:
-            continue
+            if not expected_specs and specs:
+                summary = pkg_name + ": detected a spec when expecting none"
+                details = [f'"{s}" was detected [test_id={idx}]' for s in specs]
+                errors.append(error_cls(summary=summary, details=details))
 
-        # Run all the tests in the YAML file for each package
-        for idx, test in enumerate(detection_tests["paths"]):
-            # The context sets up a mock layout for the detection test
-            # and cleans it on exit
-            with setup_test_layout(test["layout"]) as path_hints:
-                entries = spack.detection.by_executable(
-                    [spack.repo.PATH.get_pkg_class(package_name)], path_hints=path_hints
-                )
-                specs = set(x.spec for x in entries[package_name])
-                results = test["results"]
+            not_detected = set(expected_specs) - set(specs)
+            if not_detected:
+                summary = pkg_name + ": cannot detect some specs"
+                details = [f'"{s}" was not detected [test_id={idx}]' for s in sorted(not_detected)]
+                errors.append(error_cls(summary=summary, details=details))
 
-                # If no result was expected, check that nothing was detected
-                if not results and specs:
-                    summary = package_name + ": detected a spec when expecting none"
-                    details = ['"{0}" was detected [test_id={1}]'.format(s, idx) for s in specs]
-                    errors.append(error_cls(summary=summary, details=details))
-
-                expected_specs = [spack.spec.Spec(r["spec"]) for r in results]
-
-                # Check wwe detect all the expected specs
-                not_detected = set(expected_specs) - set(specs)
-                if not_detected:
-                    summary = package_name + ": cannot detect some specs"
-                    details = [
-                        '"{0}" was not detected [test_id={1}]'.format(s, idx)
-                        for s in sorted(not_detected)
-                    ]
-                    errors.append(error_cls(summary=summary, details=details))
-
-                # Check that wwe didn't detect specs that were not expected
-                not_expected = set(specs) - set(expected_specs)
-                if not_expected:
-                    summary = package_name + ": detected unexpected specs"
-                    msg = '"{0}" was detected, but was not expected [test_id={1}]'
-                    details = [msg.format(s, idx) for s in sorted(not_expected)]
-                    errors.append(error_cls(summary=summary, details=details))
+            not_expected = set(specs) - set(expected_specs)
+            if not_expected:
+                summary = pkg_name + ": detected unexpected specs"
+                msg = '"{0}" was detected, but was not expected [test_id={1}]'
+                details = [msg.format(s, idx) for s in sorted(not_expected)]
+                errors.append(error_cls(summary=summary, details=details))
 
     return errors

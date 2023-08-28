@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Detection of software installed in the system based on paths inspections
+"""Detection of software installed in the system, based on paths inspections
 and running executables.
 """
 import collections
