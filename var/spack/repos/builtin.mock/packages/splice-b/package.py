@@ -14,7 +14,7 @@ class SpliceB(Package):
 
     version("1.0", md5="0123456789abcdef0123456789efghij")
 
-    variant("foo", default=False, description="nope")
+    variant("foo", default=True, description="nope")
     variant("bar", default=False, description="nope")
     variant("baz", default=False, description="nope")
 

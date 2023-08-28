@@ -515,6 +515,18 @@ spack:
         assert spec.satisfies("^openblas+shared")
         assert spec.satisfies("^zlib~shared")
 
+
+    def test_concretize_propagate_specified_variant(self):
+        """Test that only the specified variant is propagated to the dependencies"""
+        spec = Spec("splice-b++bar")
+        spec.concretize()
+
+        assert spec.satisfies("^splice-a+bar")
+        assert spec.satisfies("^splice-z+bar")
+        assert not spec.satisfies("^splice-a+foo")
+        assert not spec.satisfies("^splice-z+foo")
+
+
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
