@@ -14,6 +14,7 @@ class PyTorchmetrics(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("1.1.0", sha256="94b51aeb3d5ff55503fa47086bbc2af9e26efabb840e2d3c2381db9623dda5fd")
     version("1.0.3", sha256="1c20ea2f0db434334e88da6c015ddf936d43379bfb403e9dc2a7272b0eab453c")
     version("1.0.2", sha256="537989d02337814e621a45232eeb1eacfd4700a66c2b5161d19ca2158246e075")
     version("0.11.4", sha256="1fe45a14b44dd65d90199017dd5a4b5a128d56a8a311da7916c402c18c671494")
@@ -48,6 +49,7 @@ class PyTorchmetrics(PythonPackage):
     depends_on("py-torch@1.3.1:", type=("build", "run"))
     depends_on("py-typing-extensions", when="@0.9: ^python@:3.8", type=("build", "run"))
     depends_on("py-packaging", when="@0.3:", type=("build", "run"))
+    depends_on("py-lightning-utilities@0.8:", when="@1.1:", type=("build", "run"))
     depends_on("py-lightning-utilities@0.7:", when="@1:", type=("build", "run"))
 
     # Historical dependencies

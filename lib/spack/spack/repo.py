@@ -387,7 +387,7 @@ class FastPackageChecker(collections.abc.Mapping):
 
             # Warn about invalid names that look like packages.
             if not nm.valid_module_name(pkg_name):
-                if not pkg_name.startswith("."):
+                if not pkg_name.startswith(".") and pkg_name != "repo.yaml":
                     tty.warn(
                         'Skipping package at {0}. "{1}" is not '
                         "a valid Spack module name.".format(pkg_dir, pkg_name)

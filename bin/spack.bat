@@ -51,65 +51,43 @@ setlocal enabledelayedexpansion
 :: subcommands will never start with '-'
 :: everything after the subcommand is an arg
 
-:: we cannot allow batch "for" loop to directly process CL args
-:: a number of batch reserved characters are commonly passed to
-:: spack and allowing batch's "for" method to process the raw inputs
-:: results in a large number of formatting issues
-:: instead, treat the entire CLI as one string
-:: and split by space manually
-:: capture cl args in variable named cl_args
-set cl_args=%*
+
 :process_cl_args
-rem  tokens=1* returns the first processed token produced
-rem  by tokenizing the input string cl_args on spaces into
-rem  the named variable %%g
-rem  While this make look like a for loop, it only
-rem  executes a single time for each of the cl args
-rem  the actual iterative loop is performed by the
-rem  goto process_cl_args stanza
-rem  we are simply leveraging the "for" method's string
-rem  tokenization
-for /f "tokens=1*" %%g in ("%cl_args%") do (
-    set t=%%~g
-    rem  remainder of string is composed into %%h
-    rem  these are the cl args yet to be processed
-    rem  assign cl_args var to only the args to be processed
-    rem  effectively discarding the current arg %%g
-    rem  this will be nul when we have no further tokens to process
-    set cl_args=%%h
-    rem  process the first space delineated cl arg
-    rem  of this iteration
-    if "!t:~0,1!" == "-" (
-        if defined _sp_subcommand (
-            rem  We already have a subcommand, processing args now
-            if not defined _sp_args (
-                set "_sp_args=!t!"
-            ) else (
-                set "_sp_args=!_sp_args! !t!"
-            )
-        ) else (
-            if not defined _sp_flags (
-                set "_sp_flags=!t!"
-                shift
-            ) else (
-                set "_sp_flags=!_sp_flags! !t!"
-                shift
-            )
-        )
-    ) else if not defined _sp_subcommand (
-        set "_sp_subcommand=!t!"
-        shift
-    ) else (
+rem Set first cl argument (denoted by %1) to be processed
+set t=%1
+rem shift moves all cl positional arguments left by one
+rem meaning %2 is now %1, this allows us to iterate over each
+rem argument
+shift
+rem assign next "first" cl argument to cl_args, will be null when
+rem there are now further arguments to process
+set cl_args=%1
+if "!t:~0,1!" == "-" (
+    if defined _sp_subcommand (
+        rem  We already have a subcommand, processing args now
         if not defined _sp_args (
             set "_sp_args=!t!"
-            shift
         ) else (
             set "_sp_args=!_sp_args! !t!"
-            shift
+        )
+    ) else (
+        if not defined _sp_flags (
+            set "_sp_flags=!t!"
+        ) else (
+            set "_sp_flags=!_sp_flags! !t!"
         )
     )
+) else if not defined _sp_subcommand (
+    set "_sp_subcommand=!t!"
+) else (
+    if not defined _sp_args (
+        set "_sp_args=!t!"
+    ) else (
+        set "_sp_args=!_sp_args! !t!"
+    )
 )
-rem  if this is not nil, we have more tokens to process
+
+rem  if this is not nu;ll, we have more tokens to process
 rem  start above process again with remaining unprocessed cl args
 if defined cl_args goto :process_cl_args
 
