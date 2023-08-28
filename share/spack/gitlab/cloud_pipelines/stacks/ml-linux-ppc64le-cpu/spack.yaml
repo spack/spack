@@ -30,30 +30,30 @@ spack:
     # PyTorch
     # Fails in CI when running `cmake --build . --target install --config Release -- -j 12`
     # with output: `Preparing metadata (pyproject.toml): finished with status 'error'`
-    #- py-botorch
-    #- py-efficientnet-pytorch
-    #- py-gpytorch
-    #- py-kornia
-    #- py-lightning
-    #- py-pytorch-gradual-warmup-lr
-    #- py-pytorch-lightning
-    #- py-segmentation-models-pytorch
-    #- py-timm
-    #- py-torch
-    #- py-torch-cluster
-    #- py-torch-geometric
-    #- py-torch-nvidia-apex
-    #- py-torch-scatter
-    #- py-torch-sparse
-    #- py-torch-spline-conv
-    #- py-torchaudio
-    #- py-torchdata
-    #- py-torchfile
-    #- py-torchgeo
-    #- py-torchmetrics
-    #- py-torchtext
-    #- py-torchvision
-    #- py-vector-quantize-pytorch
+    - py-botorch
+    - py-efficientnet-pytorch
+    - py-gpytorch
+    - py-kornia
+    - py-lightning
+    - py-pytorch-gradual-warmup-lr
+    - py-pytorch-lightning
+    - py-segmentation-models-pytorch
+    - py-timm
+    - py-torch
+    - py-torch-cluster
+    - py-torch-geometric
+    - py-torch-nvidia-apex
+    - py-torch-scatter
+    - py-torch-sparse
+    - py-torch-spline-conv
+    - py-torchaudio
+    - py-torchdata
+    - py-torchfile
+    - py-torchgeo
+    - py-torchmetrics
+    - py-torchtext
+    - py-torchvision
+    - py-vector-quantize-pytorch
 
     # scikit-learn
     - py-scikit-learn
