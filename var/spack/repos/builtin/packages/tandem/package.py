@@ -43,9 +43,9 @@ class Tandem(CMakePackage):
     depends_on("libxsmm@1.17 +generator", when="+libxsmm target=x86_64:")
     depends_on("lua@5.3.2:5.4.4")
     depends_on("eigen@3.4.0")
+
     depends_on("zlib-api")
-    depends_on("zlib@1.2.8:1.2.13", when="^zlib")
-    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack")
+    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack memalign=32")
     depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack +knl", when="target=skylake:")
     # see https://github.com/TEAR-ERC/tandem/issues/45
     conflicts("%intel")
