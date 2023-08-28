@@ -726,6 +726,52 @@ ml-linux-x86_64-cuda-build:
     - artifacts: True
       job: ml-linux-x86_64-cuda-generate
 
+########################################
+# Machine Learning - Linux aarch64 (CPU)
+########################################
+.ml-linux-aarch64-cpu:
+  extends: [ ".linux_aarch64" ]
+  variables:
+    SPACK_CI_STACK_NAME: ml-linux-aarch64-cpu
+
+ml-linux-aarch64-cpu-generate:
+  extends: [ ".generate-aarch64", .ml-linux-aarch64-cpu, ".tags-aarch64" ]
+  image: ghcr.io/spack/linux-ubuntu22.04-aarch64:nightly
+
+ml-linux-aarch64-cpu-build:
+  extends: [ ".build", ".ml-linux-aarch64-cpu" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-aarch64-cpu-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-aarch64-cpu-generate
+
+#########################################
+# Machine Learning - Linux aarch64 (CUDA)
+#########################################
+.ml-linux-aarch64-cuda:
+  extends: [ ".linux_aarch64" ]
+  variables:
+    SPACK_CI_STACK_NAME: ml-linux-aarch64-cuda
+
+ml-linux-aarch64-cuda-generate:
+  extends: [ ".generate-aarch64", .ml-linux-aarch64-cuda, ".tags-aarch64" ]
+  image: ghcr.io/spack/linux-ubuntu22.04-aarch64:nightly
+
+ml-linux-aarch64-cuda-build:
+  extends: [ ".build", ".ml-linux-aarch64-cuda" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-aarch64-cuda-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-aarch64-cuda-generate
+
 #########################################
 # Machine Learning - Darwin aarch64 (MPS)
 #########################################
