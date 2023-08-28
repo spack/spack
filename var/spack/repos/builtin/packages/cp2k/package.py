@@ -247,14 +247,13 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("sirius+rocm", when="+rocm")
         depends_on("sirius+openmp", when="+openmp")
         depends_on("sirius~openmp", when="~openmp")
-        depends_on("sirius@:6", when="@:7")
         depends_on("sirius@7.0.0:7.0", when="@8:8.2")
         depends_on("sirius@7.2", when="@8.3:8.9")
         depends_on("sirius@7.3:", when="@9.1")
         depends_on("sirius@7.4:", when="@master")
         conflicts("~mpi", msg="SIRIUS requires MPI")
-        # sirius support was introduced in 7+
-        conflicts("@:6")
+        # sirius support was introduced in 7, but effectively usable starting from CP2K 9
+        conflicts("@:7")
 
     with when("+libvori"):
         depends_on("libvori@201219:", when="@8.1")
