@@ -6202,15 +6202,15 @@ follows:
 Add detection tests to packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To ensure that a software is detected correctly for multiple configurations
+To ensure that software is detected correctly for multiple configurations
 and on different systems users can write a ``detection_test.yaml`` file and
-put it in the same directory as the corresponding ``package.py`` file.
+put it in the package directory alongside the ``package.py`` file.
 This YAML file contains enough information for Spack to mock an environment
 and try to check if the detection logic yields the results that are expected.
 
 As a general rule, attributes at the top-level of ``detection_test.yaml``
-represent search mechanisms and they all map to a list of tests that should confirm
-the validity of each package detection logic.
+represent search mechanisms and they each map to a list of tests that should confirm
+the validity of the package's detection logic.
 
 The detection tests can be run with the following command:
 
