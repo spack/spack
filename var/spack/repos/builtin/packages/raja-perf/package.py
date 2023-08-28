@@ -30,9 +30,9 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("0.7.0", tag="v0.7.0", submodules="True")
     version("0.6.0", tag="v0.6.0", submodules="True")
     version("0.5.2", tag="v0.5.2", submodules="True")
-    version("0.5.1", tag="v0.5.1", submodules="True")
+    version("0.5.1", tag="0.5.1", submodules="True")
     version("0.5.0", tag="v0.5.0", submodules="True")
-    version("0.4.0", tag="v0.4.0", submodules="True")
+    version("0.4.0", tag="0.4.0", submodules="True")
 
     variant("openmp", default=True, description="Build OpenMP backend")
     variant("openmp_target", default=False, description="Build with OpenMP target support")
