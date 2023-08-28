@@ -59,10 +59,12 @@ class FoamExtend(Package):
     version("5.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-5.0.git")
     version("4.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.1.git")
     version("4.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git")
+    version("3.2", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.2.git")
 
     conflicts("%gcc@12:", when="@5.0")
     conflicts("%gcc@8:", when="@4.1")
     conflicts("%gcc@5.0:", when="@4.0")
+    conflicts("%gcc@4.9:", when="@3.2")
 
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
@@ -77,22 +79,18 @@ class FoamExtend(Package):
         "source", default=True, description="Install library/application sources and tutorials"
     )
 
-    depends_on("openmpi", when="@5.0")
-    depends_on("openmpi%gcc@11", when="@4.1")
-    depends_on("openmpi%gcc@11", when="@4.0")
-    depends_on("openmpi%gcc@11", when="@3.2")
-
+    depends_on("mpi")
     depends_on("python")
-    depends_on("zlib-api")
+    depends_on("zlib")
     depends_on("flex", type="build")
     depends_on("cmake", type="build")
-    # temporarily disabled because of build failure of lua
-    depends_on("rpm lua=False", when="@4.1:")
-    depends_on("rpm%gcc@11 lua=False", when="@4.0")
-    depends_on("bison")
 
-    depends_on("scotch~metis", when="~ptscotch+scotch")
-    depends_on("scotch~metis+mpi", when="+ptscotch")
+    depends_on("scotch@6.0.0~metis", when="@3.0:3.2~ptscotch+scotch")
+    depends_on("scotch@6.0.0~metis+mpi", when="@3.0:3.2+ptscotch")
+    depends_on("scotch@6.0.4~metis", when="@4.0:4.1~ptscotch+scotch")
+    depends_on("scotch@6.0.4~metis+mpi", when="@4.0:4.1+ptscotch")
+    depends_on("scotch~metis", when="@5.0~ptscotch+scotch")
+    depends_on("scotch~metis+mpi", when="@5.0+ptscotch")
     depends_on("metis@5:", when="+metis")
     depends_on("parmetis", when="+parmetis")
     # mgridgen is statically linked
@@ -291,7 +289,7 @@ class FoamExtend(Package):
             },
             "flex": {"FLEX_SYSTEM": 1, "FLEX_DIR": spec["flex"].prefix},
             "bison": {"BISON_SYSTEM": 1, "BISON_DIR": spec["flex"].prefix},
-            "zlib": {"ZLIB_SYSTEM": 1, "ZLIB_DIR": spec["zlib-api"].prefix},
+            "zlib": {"ZLIB_SYSTEM": 1, "ZLIB_DIR": spec["zlib"].prefix},
         }
         # Adjust configuration via prefs - sort second
         self.etc_prefs["001"].update(self.foam_arch.foam_dict())
