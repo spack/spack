@@ -114,6 +114,7 @@ unification_set(SetID, VirtualNode)
 
 % Node attributes that have multiple node arguments (usually, only the first argument is a node)
 multiple_nodes_attribute("node_flag_source").
+multiple_nodes_attribute("node_flag_possible_prop").
 multiple_nodes_attribute("depends_on").
 multiple_nodes_attribute("virtual_on_edge").
 multiple_nodes_attribute("provider_set").
@@ -1253,17 +1254,14 @@ attr("node_flag_propagate", Package, FlagType, Flag, Source) :-
   not attr("node_flag_set", Package, FlagType, _).
 
 attr("node_flag_possible_prop", Package, FlagType, Flag, Source) :-
-  node_compiler(Source, CompilerID),
-  node_compiler(Package, CompilerID),
-  depends_on(Parent, Package),
+  same_compiler(Parent, Package),
   attr("node_flag_possible_prop", Parent, _, _, Source),
   attr("node_flag", Source, FlagType, Flag),
-  compiler_id(CompilerID),
   flag_type(FlagType).
 
 error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
-  depends_on(Source1, Package),
-  depends_on(Source2, Package),
+  same_compiler(Source1, Package),
+  same_compiler(Source2, Package),
   attr("node_flag_propagate", _, FlagType, _, Source1),
   attr("node_flag_propagate", _, FlagType, _, Source2),
   Source1 < Source2.
@@ -1272,10 +1270,8 @@ error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Sour
 attr("node_flag_source", PackageNode, FlagType, PackageNode)
   :- attr("node_flag_set", PackageNode, FlagType, _).
 
-attr("node_flag_source", DependencyNode, FlagType, Q)
-  :- attr("node_flag_source", PackageNode, FlagType, Q),
-     node_flag_inherited(DependencyNode, FlagType, _),
-     attr("node_flag_propagate", PackageNode, FlagType).
+attr("node_flag_source", PackageNode, FlagType, Q)
+  :- attr("node_flag_propagate", PackageNode, FlagType, _, Q).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 attr("node_flag", PackageNode, FlagType, Flag)
@@ -1297,7 +1293,7 @@ attr("node_flag_compiler_default", PackageNode)
 
 % if a flag is set to something or inherited, it's included
 attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_set", PackageNode, FlagType, Flag).
-attr("node_flag", PackageNode, FlagType, Flag) :- node_flag_inherited(PackageNode, FlagType, Flag).
+attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_propagate", PackageNode, FlagType, Flag, _).
 
 % if no node flags are set for a type, there are no flags.
 attr("no_flags", PackageNode, FlagType)
