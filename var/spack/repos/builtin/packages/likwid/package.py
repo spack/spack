@@ -188,12 +188,15 @@ class Likwid(Package):
                 "HWLOC_INCLUDE_DIR = {0}".format(spec["hwloc"].prefix.include),
                 "config.mk",
             )
-            filter_file(
-                "^#HWLOC_LIB_DIR.*",
-                "HWLOC_LIB_DIR = {0}".format(spec["hwloc"].prefix.lib),
-                "config.mk",
-            )
-            filter_file("^#HWLOC_LIB_NAME.*", "HWLOC_LIB_NAME = hwloc", "config.mk")
+            libs = find_libraries("libhwloc", root=spec["hwloc"].prefix, shared=True, recursive=True)
+            ll = LibraryList(libs)
+            if len(ll.directories) > 0:
+                filter_file(
+                    "^#HWLOC_LIB_DIR.*",
+                    "HWLOC_LIB_DIR = {0}".format(ll.directories[0]),
+                    "config.mk",
+                )
+                filter_file("^#HWLOC_LIB_NAME.*", "HWLOC_LIB_NAME = hwloc", "config.mk")
 
         # https://github.com/RRZE-HPC/likwid/issues/287
         if self.spec.satisfies("@:5.0.2 %gcc@10:"):
