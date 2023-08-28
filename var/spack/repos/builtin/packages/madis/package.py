@@ -32,8 +32,16 @@ class Madis(MakefilePackage):
 
     def setup_build_environment(self, env):
         fflags = []
-        if self.spec.satisfies("%gcc@10:"):
-            fflags.append("-fallow-argument-mismatch")
+
+        if self.compiler.name in ["gcc", "clang", "apple-clang"]:
+            with self.compiler.compiler_environment():
+                gfortran_major_version = int(
+                    spack.compiler.get_compiler_version_output(
+                        self.compiler.fc, "-dumpversion"
+                    ).split(".")[0]
+                )
+            if gfortran_major_version >= 10:
+                fflags.append("-fallow-argument-mismatch")
 
         if self.spec.satisfies("+pic"):
             fflags.append("-fPIC")
