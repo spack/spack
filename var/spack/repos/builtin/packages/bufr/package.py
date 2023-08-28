@@ -90,7 +90,7 @@ class Bufr(CMakePackage):
         lib = find_libraries(libname + append, root=self.prefix, shared=shared, recursive=True)
         lib_envname = "BUFR_LIB{0}".format(suffix) + append
         inc_envname = "BUFR_INC{0}".format(suffix) + append
-        include_dir = "include_{0}".format(suffix)
+        include_dir = "{0}_{1}".format(self.prefix.include.bufr, suffix)
 
         env.set(lib_envname, lib[0])
         env.set(inc_envname, include_dir)
