@@ -1029,9 +1029,9 @@ def test_spec_format_path(spec_str, format_str, expected):
     spec = Spec(spec_str)
     if not expected:
         with pytest.raises(spack.spec.SpecFormatPathError):
-            spack.spec.format_path(spec, format_str)
+            spec.format_path(format_str)
     else:
-        formatted = spack.spec.format_path(spec, format_str)
+        formatted = spec.format_path(format_str)
         assert formatted == expected
 
 
