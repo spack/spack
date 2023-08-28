@@ -178,7 +178,7 @@ def merge_config_rules(configuration, spec):
         if spec.satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
                 spec_configuration = {}
-            update_dictionary_extending_lists(spec_configuration, action)
+            update_dictionary_extending_lists(spec_configuration, copy.deepcopy(action))
 
     # Transform keywords for dependencies or prerequisites into a list of spec
 
