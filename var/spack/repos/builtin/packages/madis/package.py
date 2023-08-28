@@ -32,7 +32,7 @@ class Madis(MakefilePackage):
 
     def setup_build_environment(self, env):
         fflags = []
-        if self.spec.satisfies("%gcc@10:"):
+        if self.spec.satisfies("%gcc@10:") or self.spec.satisfies("%apple-clang"):
             fflags.append("-fallow-argument-mismatch")
 
         if self.spec.satisfies("+pic"):
