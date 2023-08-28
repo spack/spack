@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import re
+import sys
 
 import pytest
 
@@ -15,8 +16,6 @@ load = SpackCommand("load")
 unload = SpackCommand("unload")
 install = SpackCommand("install")
 location = SpackCommand("location")
-
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 @pytest.mark.parametrize(
     "shell,set_command,command_end",
