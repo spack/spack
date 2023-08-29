@@ -1205,7 +1205,7 @@ attr("node_flag_propagate", Package, FlagType, Flag, Source) :-
 
 attr("node_flag_possible_prop", Package, FlagType, Flag, Source) :-
   same_compiler(Parent, Package),
-  attr("node_flag_possible_prop", Parent, _, _, Source),
+  attr("node_flag_possible_prop", Parent, FlagType, _, Source),
   attr("node_flag", Source, FlagType, Flag),
   flag_type(FlagType).
 

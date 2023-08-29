@@ -374,6 +374,16 @@ class TestConcretize:
         assert spec.satisfies("^dyninst cflags='-O3'")
         assert spec.satisfies("^libelf cflags='-g'")
 
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
+    def test_concretize_propagate_specified_compiler_flag(self):
+        spec = Spec("callpath cflags=='-g' cxxflags='-O3'")
+        spec.concretize()
+
+        assert spec.satisfies("^dyninst cflags='-g'")
+        assert not spec.satisfies("^dyninst cxxflags='-O3'")
+
     def test_mixing_compilers_only_affects_subdag(self):
         spack.config.set("packages:all:compiler", ["clang", "gcc"])
         spec = Spec("dt-diamond%gcc ^dt-diamond-bottom%clang").concretized()
