@@ -38,6 +38,13 @@ class Libpng(CMakePackage):
         description="Build shared libs, static libs or both",
     )
 
+    @property
+    def libs(self):
+        # v1.2 does not have a version-less symlink
+        libraries = f"libpng{self.version.up_to(2).joined}"
+        shared = "libs=shared" in self.spec
+        return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
+
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
