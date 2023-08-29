@@ -6196,8 +6196,6 @@ follows:
                "foo-package@{0}".format(version_str)
            )
 
-.. _package-lifecycle:
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Add detection tests to packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
