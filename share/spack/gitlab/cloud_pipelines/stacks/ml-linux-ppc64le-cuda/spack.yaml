@@ -12,7 +12,8 @@ spack:
 
   specs:
     # Horovod
-    - py-horovod
+    # Still depends on py-tensorboard-data-server even when not using the tensorflow framework.
+    #- py-horovod
 
     # Hugging Face
     - py-transformers
