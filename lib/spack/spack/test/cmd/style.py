@@ -56,7 +56,7 @@ def flake8_package_with_errors(scope="function"):
     """A flake8 package with errors."""
     repo = spack.repo.Repo(spack.paths.mock_packages_path)
     filename = repo.filename_for_package_name("flake8")
-    tmp = filename + ".tmp"
+    tmp = filename.replace("package.py", "package2.py")
 
     shutil.copy(filename, tmp)
     package = FileFilter(tmp)
@@ -64,11 +64,12 @@ def flake8_package_with_errors(scope="function"):
     # this is a black error (quote style and spacing before/after operator)
     package.filter('state = "unmodified"', "state    =    'modified'", string=True)
 
-    # this is an isort error (orderign) and a flake8 error (unused import)
+    # this is an isort error (ordering) and a flake8 error (unused import)
     package.filter(
         "from spack.package import *", "from spack.package import *\nimport os", string=True
     )
     yield tmp
+    os.remove(tmp)
 
 
 def test_changed_files_from_git_rev_base(git, tmpdir, capfd):
@@ -213,6 +214,7 @@ def test_fix_style(external_style_root):
 @pytest.mark.skipif(not which("isort"), reason="isort is not installed.")
 @pytest.mark.skipif(not which("mypy"), reason="mypy is not installed.")
 @pytest.mark.skipif(not which("black"), reason="black is not installed.")
+@pytest.mark.skipif(not which("fish_indent"), reason="fish is not installed.")
 def test_external_root(external_style_root, capfd):
     """Ensure we can run in a separate root directory w/o configuration files."""
     tmpdir, py_file = external_style_root
@@ -285,5 +287,5 @@ def test_style_with_black(flake8_package_with_errors):
 
 
 def test_skip_tools():
-    output = style("--skip", "isort,mypy,black,flake8")
+    output = style("--skip", "isort,mypy,black,flake8,fish_indent")
     assert "Nothing to run" in output
