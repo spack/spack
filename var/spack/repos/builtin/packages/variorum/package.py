@@ -91,7 +91,7 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=ON")
             cmake_args.append("-DNVML_DIR={0}".format(spec["cuda"].prefix))
             cmake_args.append("-DCMAKE_SHARED_LINKER_FLAGS=-L{0}/nvidia/targets/ppc64le-linux/lib/stubs/ -lnvidia-ml".format(spec["cuda"].prefix))
-        elif "+hip" in spec:
+        elif "+rocm" in spec:
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=ON")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
@@ -112,8 +112,9 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
         else:
             cmake_args.append("-DBUILD_TESTS=OFF")
 
-        cpu_vendor = self.spec.platform
-        cpu_uarch = self.spec.target
+        target = self.spec.target
+        cpu_vendor = target.microarchitecture.vendor
+        cpu_uarch = target.microarchitecture.name
 
         #taken from list of archspec.cpu.TARGETS
         supported_amd_targets = ["zen2"]
@@ -138,9 +139,9 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
         elif cpu_vendor == "ARM" and cpu_uarch in supported_arm_targets:
-            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=ON")
+            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=ON")
             cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
