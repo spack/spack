@@ -31,13 +31,16 @@ class PyParsl(PythonPackage):
     depends_on("py-pyzmq@17.1.2:", type=("build", "run"))
     depends_on("py-typeguard@2.10:2", type=("build", "run"), when="@2023.08.21:")
     depends_on("py-typeguard@2.10:", type=("build", "run"), when="@:1.2")
-    depends_on("py-typing-extensions", type=("build", "run"))
+    depends_on("py-typing-extensions@4.6:4", type=("build", "run"), when="@2023.08.21:")
+    depends_on("py-typing-extensions", type=("build", "run"), when="@:1.2")
+    depends_on("py-six", type=("build", "run"), when="@2023.08.21:")
     depends_on("py-globus-sdk", type=("build", "run"))
     depends_on("py-dill", type=("build", "run"))
     depends_on("py-tblib", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-paramiko", type=("build", "run"))
     depends_on("py-psutil@5.5.1:", type=("build", "run"))
+    depends_on("py-setproctitle", type=("build", "run"), when="@2023.08.21:")
 
     with when("+monitoring"):
         depends_on("py-sqlalchemy@1.4:1", type=("build", "run"), when="@2023.08.21:")
