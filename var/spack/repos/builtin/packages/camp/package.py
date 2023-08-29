@@ -22,58 +22,6 @@ def spec_uses_gccname(spec):
     return using_gcc_name
 
 
-def hip_repair_options(options, spec):
-    # there is only one dir like this, but the version component is unknown
-    options.append(
-        "-DHIP_CLANG_INCLUDE_PATH="
-        + glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0]
-    )
-
-
-def hip_repair_cache(options, spec):
-    # there is only one dir like this, but the version component is unknown
-    options.append(
-        cmake_cache_path(
-            "HIP_CLANG_INCLUDE_PATH",
-            glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
-        )
-    )
-
-
-def hip_for_radiuss_projects(options, spec, compiler):
-    # Here is what is typically needed for radiuss projects when building with rocm
-    hip_root = spec["hip"].prefix
-    rocm_root = hip_root + "/.."
-    options.append(cmake_cache_path("HIP_ROOT_DIR", hip_root))
-    options.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
-
-    hip_repair_cache(options, spec)
-
-    archs = spec.variants["amdgpu_target"].value
-    if archs != "none":
-        arch_str = ",".join(archs)
-        options.append(
-            cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
-        )
-        options.append(
-            cmake_cache_string("CMAKE_HIP_ARCHITECTURES", arch_str)
-        )
-
-    # adrienbernede-22-11:
-    #   Specific to Umpire, attempt port to RAJA and CHAI
-    hip_link_flags = ""
-    if "%gcc" in spec or spec_uses_toolchain(spec):
-        if "%gcc" in spec:
-            gcc_bin = os.path.dirname(compiler.cxx)
-            gcc_prefix = os.path.join(gcc_bin, "..")
-        else:
-            gcc_prefix = spec_uses_toolchain(spec)[0]
-        options.append(cmake_cache_string("HIP_CLANG_FLAGS", "--gcc-toolchain={0}".format(gcc_prefix)))
-        options.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", hip_link_flags + " -Wl,-rpath {}/lib64".format(gcc_prefix)))
-    else:
-        options.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-Wl,-rpath={0}/llvm/lib/".format(rocm_root)))
-
-
 def cuda_for_radiuss_projects(options, spec):
     # Here is what is typically needed for radiuss projects when building with cuda
 
@@ -196,13 +144,10 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
                 "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix)
             ])
 
-            hip_repair_options(options, spec)
-
             archs = self.spec.variants["amdgpu_target"].value
-            options.append("-DCMAKE_HIP_ARCHITECTURES={0}".format(archs))
-            if archs != "none":
-                arch_str = ",".join(archs)
-                options.append("-DHIP_HIPCC_FLAGS=--amdgpu-target={0}".format(arch_str))
+            if archs[0] != "none":
+                arch_str = ";".join(archs)
+                options.append("-DCMAKE_HIP_ARCHITECTURES={0}".format(arch_str))
         else:
             options.append("-DENABLE_HIP=OFF")
 

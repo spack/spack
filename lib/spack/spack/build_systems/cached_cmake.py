@@ -253,18 +253,37 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append("#------------------{0}\n".format("-" * 30))
 
             # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            entries.append(
-                cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
-            )
+            hip_root = spec["hip"].prefix
+            rocm_root = hip_root + "/.."
+            entries.append(cmake_cache_path("HIP_ROOT_DIR", hip_root))
+            entries.append(cmake_cache_path("ROCM_ROOT_DIR", rocm_root))
+
+            # Setting the amdgpu_target through CMAKE_HIP_ARCHITECTURE should be enough.
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
                 entries.append(
                     cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
                 )
-                entries.append(cmake_cache_string("AMDGPU_TARGETS", "{0}".format(arch_str)))
-                entries.append(cmake_cache_string("GPU_TARGETS", "{0}".format(arch_str)))
+
+            # Arbitrate between gnu and llvm toolchains.
+            hip_link_flags = ""
+            if "%gcc" in spec or spec_uses_toolchain(spec):
+                if "%gcc" in spec:
+                    gcc_bin = os.path.dirname(compiler.cxx)
+                    gcc_prefix = os.path.join(gcc_bin, "..")
+                else:
+                    gcc_prefix = spec_uses_toolchain(spec)[0]
+                entries.append(cmake_cache_string("HIP_CLANG_FLAGS", "--gcc-toolchain={0}".format(gcc_prefix)))
+                entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", hip_link_flags + " -Wl,-rpath {}/lib64".format(gcc_prefix)))
+            else:
+                entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-Wl,-rpath={0}/llvm/lib/".format(rocm_root)))
+
+
+
+
+
+
 
         return entries
 
