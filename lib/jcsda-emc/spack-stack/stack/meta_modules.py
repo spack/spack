@@ -297,8 +297,13 @@ def setup_meta_modules():
     # Then, check for mpi providers - recursively for compilers
     mpi_dict = get_matched_dict(module_dir, mpi_candidate_list, compiler_candidate_list)
     if not mpi_dict:
-        raise Exception("No matching MPI providers found")
-    logging.info(" ... stack mpi providers: '{}'".format(mpi_dict))
+        user_input = input(
+            "No matching MPI providers found, proceed without creating MPI module hierarchy? (yes/no): "
+        )
+        if not user_input.lower() in ["yes", "y"]:
+            raise Exception("No matching MPI providers found")
+    else:
+        logging.info(" ... stack mpi providers: '{}'".format(mpi_dict))
 
     # For some environments, there are only compiler+mpi-dependent modules,
     # and therefore the compiler itself is not recorded in compiler_dict.
@@ -698,7 +703,10 @@ def setup_meta_modules():
                         f.write(module_content)
                     logging.info("  ... writing {}".format(mpi_module_file))
 
-    del package_name
+    try:
+        del package_name
+    except:
+        pass
     # Create python modules. Need to accommodate both external
     # Python distributions and spack-built Python distributions.
     # If there is no package config info for Python, then we are

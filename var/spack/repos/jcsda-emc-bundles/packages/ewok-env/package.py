@@ -34,6 +34,7 @@ class EwokEnv(BundlePackage):
     depends_on("py-boto3", type="run")
     depends_on("py-cartopy", type="run")
     depends_on("py-gitpython", type="run")
+    depends_on("py-globus-cli", type="run")
     depends_on("py-jinja2", type="run")
     depends_on("py-ruamel-yaml", type="run")
     depends_on("py-ruamel-yaml-clib", type="run")
@@ -45,7 +46,7 @@ class EwokEnv(BundlePackage):
     depends_on("mysql", type="run")
     # Comment out for now until build problems are solved
     # https://github.com/jcsda/spack-stack/issues/522
-    #depends_on("py-mysql-connector-python", type="run")
+    # depends_on("py-mysql-connector-python", type="run")
 
     depends_on("solo", when="+solo", type="run")
     depends_on("r2d2", when="+r2d2", type="run")
