@@ -44,6 +44,9 @@ class Lz4(CMakePackage, MakefilePackage):
     )
     variant("pic", default=True, description="Enable position-independent code (PIC)")
 
+    with when("build_system=cmake"):
+        depends_on("cmake@3:", type="build")
+
     def url_for_version(self, version):
         url = "https://github.com/lz4/lz4/archive"
 
@@ -77,6 +80,7 @@ class CMakeBuilder(CMakeBuilder):
             self.define("BUILD_STATIC_LIBS", True if "libs=static" in self.spec else False)
         )
         args.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
+        args.append(self.define("CMAKE_POLICY_DEFAULT_CMP0042","NEW"))
         return args
 
 

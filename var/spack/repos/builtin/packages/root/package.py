@@ -30,6 +30,7 @@ class Root(CMakePackage):
 
     # Master branch
     version("master", branch="master")
+#    version("6-28-00-patches-may-03", url="https://github.com/root-project/root/tarball/f7adbd2b04e62a0660245d43f3d411367a8ebebc",sha256="488897e122782b75f24e92874b2868c6170578d94c7db68966c8ba7f1ec3bd81")
 
     # Development version (when more recent than production).
 
@@ -114,6 +115,8 @@ class Root(CMakePackage):
         patch("root6-60606-mathmore.patch", when="@6.06.06")
         # rpath correction
         patch("loader.patch",when="@6.28.02 +python")
+        patch("loader.patch",when="@6.28.04 +python")
+        patch("loader.patch",when="@6-28-00-patches-may-03 +python")
 
     # ###################### Variants ##########################
     # See README.md for specific notes about what ROOT configuration
