@@ -39,16 +39,8 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
         description="CMake build type",
         values=("Debug", "Release", "RelWithDebInfo"),
     )
-    #intel gpu not supported in spack
-    #variant("intel_gpu", default=False, description="Build for Intel GPU architecture")
-
-    for value in CudaPackage.cuda_arch_values:
-        if value != "70":
-            conflicts(f"cuda_arch={value}")
-
-    for value in ROCmPackage.amdgpu_targets:
-        if value != "gfx906" and value != "gfx906:xnack-":
-            conflicts(f"amdgpu_target={value}")
+    # intel gpu not supported in spack
+    # variant("intel_gpu", default=False, description="Build for Intel GPU architecture")
 
     ########################
     # Package dependencies #
@@ -92,9 +84,8 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
 
         target = self.spec.target
         cpu_vendor = target.microarchitecture.vendor
-        cpu_uarch = target.microarchitecture.name
 
-        #taken from list of archspec.cpu.TARGETS
+        # taken from list of archspec.cpu.TARGETS
         supported_amd_cpu_targets = ["zen2"]
         supported_arm_cpu_targets = ["neoverse_n1"]
         supported_ibm_cpu_targets = ["power9le"]
@@ -107,8 +98,24 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             "cascadelake",
             "icelake",
         ]
+        supported_nvidia_gpu_targets = [70]
+        supported_amd_gpu_targets = ["gfx906", "gfx906:xnack-"]
 
-        if cpu_vendor == "AuthenticAMD" and cpu_uarch in supported_amd_cpu_targets:
+        for arch in archspec.cpu.TARGETS:
+            if (
+                arch
+                not in supported_amd_cpu_targets
+                + supported_arm_cpu_targets
+                + supported_ibm_cpu_targets
+                + supported_intel_cpu_targets
+            ):
+                conflicts(f"target={target}", when="~cuda~rocm")
+            elif arch not in supported_amd_gpu_targets:
+                conflicts(f"amdgpu_target={target}", when="+rocm")
+            elif arch not in supported_nvidia_gpu_targets:
+                conflicts(f"cuda_arch={target}", when="+cuda")
+
+        if cpu_vendor == "AuthenticAMD":
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=ON")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
@@ -116,7 +123,7 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-        elif cpu_vendor == "ARM" and cpu_uarch in supported_arm_cpu_targets:
+        elif cpu_vendor == "ARM":
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=ON")
@@ -124,7 +131,7 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-        elif cpu_vendor == "IBM" and cpu_uarch in supported_ibm_cpu_targets:
+        elif cpu_vendor == "IBM":
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
@@ -132,7 +139,7 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-        elif cpu_vendor == "GenuineIntel" and cpu_uarch in supported_intel_cpu_targets:
+        elif cpu_vendor == "GenuineIntel":
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
@@ -149,7 +156,11 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=ON")
             cmake_args.append("-DNVML_DIR={0}".format(spec["cuda"].prefix))
-            cmake_args.append("-DCMAKE_SHARED_LINKER_FLAGS=-L{0}/nvidia/targets/ppc64le-linux/lib/stubs/ -lnvidia-ml".format(spec["cuda"].prefix))
+            cmake_args.append(
+                "-DCMAKE_SHARED_LINKER_FLAGS=-L{0}/nvidia/targets/ppc64le-linux/lib/stubs/ -lnvidia-ml".format(
+                    spec["cuda"].prefix
+                )
+            )
         elif "+rocm" in spec:
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=ON")
@@ -159,8 +170,10 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
             cmake_args.append("-DROCM_DIR={0}".format(spec["hip"].prefix))
-            cmake_args.append("-DCMAKE_SHARED_LINKER_FLAGS=-L{0}/lib -lrocm_smi64".format(spec["hip"].prefix))
-	else:
+            cmake_args.append(
+                "-DCMAKE_SHARED_LINKER_FLAGS=-L{0}/lib -lrocm_smi64".format(spec["hip"].prefix)
+            )
+        else:
             raise TypeError("Building on unsupported architecture")
 
         return cmake_args
