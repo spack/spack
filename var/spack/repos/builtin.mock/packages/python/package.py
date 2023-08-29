@@ -14,6 +14,7 @@ class Python(Package):
 
     extendable = True
 
+    version("3.8.0", md5="d41d8cd98f00b204e9800998ecf8427e")
     version("3.7.1", md5="aaabbbcccdddeeefffaaabbbcccddd12")
     version("3.5.1", md5="be78e48cdfc1a7ad90efff146dce6cfe")
     version("3.5.0", md5="a56c0c0b45d75a0ec9c6dee933c41c36")

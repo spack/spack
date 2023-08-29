@@ -2099,6 +2099,21 @@ class TestConcretize:
         edges = spec.edges_to_dependencies(name="callpath")
         assert len(edges) == 1 and edges[0].virtuals == ()
 
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    @pytest.mark.db
+    @pytest.mark.parametrize(
+        "spec_str,mpi_name",
+        [("mpileaks", "mpich"), ("mpileaks ^mpich2", "mpich2"), ("mpileaks ^zmpi", "zmpi")],
+    )
+    def test_virtuals_are_reconstructed_on_reuse(self, spec_str, mpi_name, database):
+        """Tests that when we reuse a spec, virtual on edges are reconstructed correctly"""
+        with spack.config.override("concretizer:reuse", True):
+            spec = Spec(spec_str).concretized()
+            assert spec.installed
+            mpi_edges = spec.edges_to_dependencies(mpi_name)
+            assert len(mpi_edges) == 1
+            assert "mpi" in mpi_edges[0].virtuals
+
 
 @pytest.fixture()
 def duplicates_test_repository():

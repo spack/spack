@@ -17,7 +17,7 @@ class Palace(CMakePackage):
     maintainers("sebastiangrimberg")
 
     version("develop", branch="main")
-    version("0.11.2", tag="v0.11.2")
+    version("0.11.2", tag="v0.11.2", commit="6c3aa5f84a934a6ddd58022b2945a1bdb5fa329d")
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("int64", default=False, description="Use 64 bit integers")
