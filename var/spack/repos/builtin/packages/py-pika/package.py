@@ -27,6 +27,7 @@ class PyPika(PythonPackage):
     variant("tornado", default=False, description="Build with tornado support")
     variant("twisted", default=False, description="Build with twisted support")
 
+    depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@61.2:", when="@1.3.0:", type="build")
     depends_on("py-gevent", when="+gevent", type=("build", "run"))
     depends_on("py-tornado", when="+tornado", type=("build", "run"))
