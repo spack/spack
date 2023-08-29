@@ -775,7 +775,7 @@ ml-linux-x86_64-rocm-build:
     SPACK_CI_STACK_NAME: ml-linux-aarch64-cpu
 
 ml-linux-aarch64-cpu-generate:
-  extends: [ ".generate-aarch64", .ml-linux-aarch64-cpu, ".tags-aarch64" ]
+  extends: [ ".generate-aarch64", .ml-linux-aarch64-cpu ]
   image: ghcr.io/spack/linux-ubuntu22.04-aarch64:nightly
 
 ml-linux-aarch64-cpu-build:
@@ -798,7 +798,7 @@ ml-linux-aarch64-cpu-build:
     SPACK_CI_STACK_NAME: ml-linux-aarch64-cuda
 
 ml-linux-aarch64-cuda-generate:
-  extends: [ ".generate-aarch64", .ml-linux-aarch64-cuda, ".tags-aarch64" ]
+  extends: [ ".generate-aarch64", .ml-linux-aarch64-cuda ]
   image: ghcr.io/spack/linux-ubuntu22.04-aarch64:nightly
 
 ml-linux-aarch64-cuda-build:
@@ -821,7 +821,7 @@ ml-linux-aarch64-cuda-build:
     SPACK_CI_STACK_NAME: ml-linux-aarch64-rocm
 
 ml-linux-aarch64-rocm-generate:
-  extends: [ ".generate-aarch64", .ml-linux-aarch64-rocm, ".tags-aarch64" ]
+  extends: [ ".generate-aarch64", .ml-linux-aarch64-rocm ]
   image: ghcr.io/spack/linux-ubuntu22.04-aarch64:nightly
 
 ml-linux-aarch64-rocm-build:
