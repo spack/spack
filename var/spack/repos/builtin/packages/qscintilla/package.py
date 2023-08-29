@@ -148,8 +148,6 @@ class Qscintilla(QMakePackage):
                 # Fix installation prefixes
                 makefile = FileFilter("Makefile")
                 makefile.filter("$(INSTALL_ROOT)", "", string=True)
-                #makefile = FileFilter("Qsci/Makefile")
-                #makefile.filter("$(INSTALL_ROOT)", "", string=True)
 
                 if "@2.11:" in self.spec:
                     make("install", parallel=False)
@@ -173,9 +171,13 @@ class Qscintilla(QMakePackage):
                         "--api-dir=" + self.prefix.share.qsci,
                         "--verbose",
                     )
+                    makefile = FileFilter(join_path("build","Qsci", "Makefile"))
+                    makefile.filter("$(INSTALL_ROOT)", "", string=True)
+                    make("install","-C",join_path("build","Qsci"), parallel=False)
+
                     makefile = FileFilter(join_path("build","Makefile"))
                     makefile.filter("$(INSTALL_ROOT)", "", string=True)
-                    make("install","-C","build/")
+                    make("install","-C","build/", parallel=False)
 
             else: #pyqt4 or 5
                 with working_dir(join_path(self.stage.source_path, "Python")):
