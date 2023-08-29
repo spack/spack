@@ -12,8 +12,7 @@ spack:
 
   specs:
     # Horovod
-    # See py-torch failures
-    #- py-horovod
+    - py-horovod
 
     # Hugging Face
     - py-transformers
@@ -33,8 +32,6 @@ spack:
     - mxnet
 
     # PyTorch
-    # Fails in CI when running `cmake --build . --target install --config Release -- -j 12`
-    # with output: `Preparing metadata (pyproject.toml): finished with status 'error'`
     - py-botorch
     - py-efficientnet-pytorch
     - py-gpytorch
