@@ -25,7 +25,7 @@ class Rocwmma(CMakePackage):
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
-
+    version("5.6.0", sha256="78b6ab10fce71d10a9d762b2eaab3390eb13b05c764f47a3b0a303ec3d37acf8")
     version("5.5.1", sha256="ada30d5e52df5da0d3f4e212a25efb492dbedc129628f4db4ef4ed77667da228")
     version("5.5.0", sha256="b9e1938cba111eeea295414c42de34d54a878f0d41a26e433809d60c12d31dbf")
     version("5.4.3", sha256="0968366c83b78a9d058d483be536aba03e79b300ccb6890d3da43298be54c288")
@@ -59,12 +59,26 @@ class Rocwmma(CMakePackage):
 
     depends_on("googletest@1.10.0:", type="test")
 
-    for ver in ["5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3", "5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
+    for ver in [
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+    ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, type="build", when="@" + ver)
         depends_on("rocm-openmp-extras@" + ver, type="build", when="@" + ver)
+
+    for ver in ["5.6.0"]:
+        depends_on("rocm-smi-lib@" + ver, when="@" + ver)
 
     for tgt in itertools.chain(["auto"], amdgpu_targets):
         depends_on("rocblas amdgpu_target={0}".format(tgt), when="amdgpu_target={0}".format(tgt))

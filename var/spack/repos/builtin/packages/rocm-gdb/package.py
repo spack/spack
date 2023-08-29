@@ -16,6 +16,7 @@ class RocmGdb(AutotoolsPackage):
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
+    version("5.6.0", sha256="997ef1883aac2769552bc7082c70b837f4e98b57d24c133cea52b9c92fb0dee1")
     version("5.5.1", sha256="359258548bc7e6abff16bb13c301339fb96560b2b961433c9e0712e4aaf2d9e1")
     version("5.5.0", sha256="d3b100e332facd9635e328f5efd9f0565250edbe05be986baa2e0470a19bcd79")
     version("5.4.3", sha256="28c1ce39fb1fabe61f86f6e3c6940c10f9a8b8de77f7bb4fdd73b04e172f85f6")
@@ -135,11 +136,12 @@ class RocmGdb(AutotoolsPackage):
         "5.4.3",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
     ]:
         depends_on("rocm-dbgapi@" + ver, type="link", when="@" + ver)
         depends_on("comgr@" + ver, type="link", when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     build_directory = "spack-build"

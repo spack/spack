@@ -16,6 +16,7 @@ class Hipfort(CMakePackage):
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
 
+    version("5.6.0", sha256="03176a099bc81e212ad1bf9d86f35561f8f2d21a2f126732d7620e1ea59888d5")
     version("5.5.1", sha256="abc59f7b81cbefbe3555cbf1bf0d80e8aa65901c70799748c40870fe6f3fea60")
     version("5.5.0", sha256="cae75ffeac129639cabebfe2f95f254c83d6c0a6cffd98142ea3537a132e42bb")
     version("5.4.3", sha256="1954a1cba351d566872ced5549b2ced7ab6332221e2b98dba3c07180dce8f173")
@@ -118,6 +119,7 @@ class Hipfort(CMakePackage):
         "5.4.3",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
     ]:
         depends_on("hip@" + ver, type="build", when="@" + ver)
 

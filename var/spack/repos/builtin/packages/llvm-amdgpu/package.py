@@ -24,6 +24,7 @@ class LlvmAmdgpu(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="amd-stg-open")
+    version("5.6.0", sha256="e922bd492b54d99e56ed88c81e2009ed6472059a180b10cc56ce1f9bd2d7b6ed")
     version("5.5.1", sha256="7d7181f20f89cb0715191aa32914186c67a34258c13457055570d47e15296553")
     version("5.5.0", sha256="5dc6c99f612b69ff73145bee17524e3712990100e16445b71634106acf7927cf")
     version("5.4.3", sha256="a844d3cc01613f6284a75d44db67c495ac1e9b600eacbb1eb13d2649f5d5404d")
@@ -160,7 +161,7 @@ class LlvmAmdgpu(CMakePackage):
     # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
     # Below patch is to look in the old path.
     patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:")
-    patch("patch-llvm-5.5.0.patch", when="@5.5")
+    patch("patch-llvm-5.5.0.patch", when="@5.5:")
 
     conflicts("^cmake@3.19.0")
 
@@ -169,6 +170,7 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ("5.6.0", "efb5dcdca9b3a9fbe408d494fb4a23e0b78417eb5fa8eebd4a5d226088f28921"),
         ("5.5.1", "3b5f6dd85f0e3371f6078da7b59bf77d5b210e30f1cc66ef1e2de6bbcb775833"),
         ("5.5.0", "5ab95aeb9c8bed0514f96f7847e21e165ed901ed826cdc9382c14d199cbadbd3"),
         ("5.4.3", "f4f7281f2cea6d268fcc3662b37410957d4f0bc23e0df9f60b12eb0fcdf9e26e"),
