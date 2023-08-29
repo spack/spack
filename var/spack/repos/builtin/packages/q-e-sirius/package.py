@@ -38,6 +38,7 @@ class QESirius(CMakePackage):
     depends_on("sirius ~apps", when="~sirius_apps")
     depends_on("sirius +openmp", when="+openmp")
     depends_on("sirius@develop", when="@develop")
+    depends_on("fftw@3 +openmp", when="+openmp")
 
     depends_on("mpi", when="+mpi")
     depends_on("scalapack", when="+scalapack")
