@@ -23,5 +23,11 @@ class PyPika(PythonPackage):
     version("0.13.1", sha256="b0640085f1d6398fd47bb16a17713053e26578192821ea5d928772b8e6a28789")
     version("0.13.0", sha256="5338d829d1edb3e5bcf1523b4a9e32c56dea5a8bda7018825849e35325580484")
 
-    depends_on("python", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    variant("gevent", default=False, description="Build with gevent support")
+    variant("tornado", default=False, description="Build with tornado support")
+    variant("twisted", default=False, description="Build with twisted support")
+
+    depends_on("py-setuptools@61.2:", when="@1.3.0:", type="build")
+    depends_on("py-gevent", when="+gevent", type=("build", "run"))
+    depends_on("py-tornado", when="+tornado", type=("build", "run"))
+    depends_on("py-twisted", when="+twisted", type=("build", "run"))
