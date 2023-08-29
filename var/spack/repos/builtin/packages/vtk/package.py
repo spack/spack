@@ -72,6 +72,8 @@ class Vtk(CMakePackage):
     # We cannot build with both osmesa and qt in spack
     conflicts("+osmesa", when="+qt")
 
+    conflicts("%gcc@13", when="@9.2")
+
     with when("+python"):
         # Depend on any Python, add bounds below.
         extends("python@2.7:", type=("build", "run"))
