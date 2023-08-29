@@ -77,9 +77,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("py-pennylane-lightning~kokkos", type=("build", "run"), when="@:0.31")
     depends_on("py-pennylane-lightning@0.28:0.29", type=("build", "run"), when="@0.29.1")
     for v in range(30, 33):
-        depends_on(
-            f"py-pennylane-lightning@0.{v}:", type=("build", "run"), when=f"@0.{v}.0:"
-        )
+        depends_on(f"py-pennylane-lightning@0.{v}:", type=("build", "run"), when=f"@0.{v}.0:")
 
     # variant defined dependencies
     depends_on("llvm-openmp", when="+openmp %apple-clang")
