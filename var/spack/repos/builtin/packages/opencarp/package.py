@@ -18,14 +18,34 @@ class Opencarp(CMakePackage):
 
     maintainers("MarieHouillon")
 
-    version("13.0", commit="e1e0deca", submodules=False, no_cache=True, preferred=True)
-    version("12.0", commit="a34c11af", submodules=False, no_cache=True)
-    version("11.0", commit="fd8419d5", submodules=False, no_cache=True)
-    version("10.0", commit="7aec7900", submodules=False, no_cache=True)
-    version("9.0", commit="c0167599", submodules=False, no_cache=True)
-    version("8.2", commit="dbfd16fd", submodules=False, no_cache=True)
-    version("8.1", commit="28eb2e97", submodules=False, no_cache=True)
-    version("7.0", commit="78da9195", submodules=False, no_cache=True)
+    version(
+        "13.0",
+        commit="e1e0deca7eddcfd210835f54430361c85a97a5a4",
+        submodules=False,
+        no_cache=True,
+        preferred=True,
+    )
+    version(
+        "12.0", commit="a34c11af3e8c2afd6e123e586a446c6993e0b039", submodules=False, no_cache=True
+    )
+    version(
+        "11.0", commit="fd8419d5c7649060c9447adf2dbee1723a8af9db", submodules=False, no_cache=True
+    )
+    version(
+        "10.0", commit="7aec7900b3efa6cfe8b27a13fafcb99fd6ff5c8e", submodules=False, no_cache=True
+    )
+    version(
+        "9.0", commit="c01675994df46b8b39c80e001590f9cfaf43cd87", submodules=False, no_cache=True
+    )
+    version(
+        "8.2", commit="dbfd16fdd472375694190b4c7802c0bfba114146", submodules=False, no_cache=True
+    )
+    version(
+        "8.1", commit="28eb2e978f276e7e998719a3f6d436fcb87e482a", submodules=False, no_cache=True
+    )
+    version(
+        "7.0", commit="78da91952738b45760bcbc34610814a83c8c6299", submodules=False, no_cache=True
+    )
     version("master", branch="master", submodules=False, no_cache=True)
 
     variant("carputils", default=False, description="Installs the carputils framework")

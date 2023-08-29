@@ -18,8 +18,12 @@ class Dalton(CMakePackage):
     maintainers("foeroyingur")
 
     version("master", branch="master", submodules=True)
-    version("2020.0", tag="2020.0", submodules=True)
-    version("2018.2", tag="2018.2", submodules=True)
+    version(
+        "2020.0", tag="2020.0", commit="66052b3af5ea7225e31178bf9a8b031913c72190", submodules=True
+    )
+    version(
+        "2018.2", tag="2018.2", commit="4aa945ecd235fbf67ed0c1609617c553ef40be89", submodules=True
+    )
 
     variant(
         "build_type",
