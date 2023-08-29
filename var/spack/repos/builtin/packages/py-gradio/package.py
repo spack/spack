@@ -35,7 +35,7 @@ class PyGradio(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-orjson", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-pillow", type=("build", "run"))
+    depends_on("pil", type=("build", "run"))
     depends_on("py-pydantic", type=("build", "run"))
     depends_on("py-python-multipart", type=("build", "run"))
     depends_on("py-pydub", type=("build", "run"))
