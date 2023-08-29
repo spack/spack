@@ -15,10 +15,10 @@ class Fleur(Package):
     git = "https://iffgit.fz-juelich.de/fleur/fleur.git"
 
     version("develop", branch="develop")
-    version("5.1", tag="MaX-R5.1")
-    version("5.0", tag="MaX-R5")
-    version("4.0", tag="MaX-R4")
-    version("3.1", tag="MaX-R3.1")
+    version("5.1", tag="MaX-R5.1", commit="a482abd9511b16412c2222e2ac1b1a303acd454b")
+    version("5.0", tag="MaX-R5", commit="f2df362c3dad6ef39938807ea14e4ec4cb677723")
+    version("4.0", tag="MaX-R4", commit="ea0db7877451e6240124e960c5546318c9ab3953")
+    version("3.1", tag="MaX-R3.1", commit="f6288a0699604ad9e11efbfcde824b96db429404")
 
     variant("mpi", default=True, description="Enable MPI support")
     variant("hdf5", default=False, description="Enable HDF5 support")

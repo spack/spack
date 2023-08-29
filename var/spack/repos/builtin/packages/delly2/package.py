@@ -18,7 +18,7 @@ class Delly2(MakefilePackage):
     maintainers("snehring")
 
     version("1.1.6", sha256="08961e9c81431eb486476fa71eea94941ad24ec1970b71e5a7720623a39bfd2a")
-    version("0.9.1", tag="v0.9.1")
+    version("0.9.1", tag="v0.9.1", commit="ef1cd626a85cfd1c1b7acfca2b5fd5957f2a05f1")
     version("2017-08-03", commit="e32a9cd55c7e3df5a6ae4a91f31a0deb354529fc", deprecated=True)
 
     variant("openmp", default=False, description="Build with openmp support")

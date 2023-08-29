@@ -20,8 +20,18 @@ class Upp(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA")
 
     version("10.0.10", sha256="0c96a88d0e79b554d5fcee9401efcf4d6273da01d15e3413845274f73d70b66e")
-    version("10.0.9", tag="upp_v10.0.9", submodules=True)
-    version("10.0.8", tag="upp_v10.0.8", submodules=True)
+    version(
+        "10.0.9",
+        tag="upp_v10.0.9",
+        commit="a49af0549958def4744cb3903c7315476fe44530",
+        submodules=True,
+    )
+    version(
+        "10.0.8",
+        tag="upp_v10.0.8",
+        commit="ce989911a7a09a2e2a0e61b3acc87588b5b9fc26",
+        submodules=True,
+    )
 
     variant("openmp", default=True, description="Use OpenMP threading")
     variant("postexec", default=True, description="Build NCEPpost executable")

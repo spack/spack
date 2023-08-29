@@ -16,7 +16,9 @@ class PyTfdlpack(CMakePackage, PythonExtension):
     maintainers("adamjstewart")
 
     version("master", branch="master", submodules=True)
-    version("0.1.1", tag="v0.1.1", submodules=True)
+    version(
+        "0.1.1", tag="v0.1.1", commit="a1fdb53096158c2ec9189bb1ff46c92c6f571bbe", submodules=True
+    )
 
     variant("cuda", default=True, description="Build with CUDA support")
 

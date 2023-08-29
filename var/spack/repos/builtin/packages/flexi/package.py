@@ -14,7 +14,7 @@ class Flexi(CMakePackage):
     git = "https://github.com/flexi-framework/flexi.git"
 
     version("master", preferred=True)
-    version("21.03.0", tag="v21.03.0")
+    version("21.03.0", tag="v21.03.0", commit="d061978e5d96cfc96c06edc1bae9d92cbe540c18")
 
     patch("for_aarch64.patch", when="target=aarch64:")
 

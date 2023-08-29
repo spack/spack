@@ -18,8 +18,8 @@ class Opendatadetector(CMakePackage):
     tags = ["hep"]
 
     version("main", branch="main")
-    version("v2", tag="v2")
-    version("v1", tag="v1")
+    version("v2", tag="v2", commit="7041ae086dff4ee4a8d5b65f5d9559acc6dbec47")
+    version("v1", tag="v1", commit="81c43c6511723c13c15327479082d3dcfa1947c7")
 
     depends_on("dd4hep")
     depends_on("root")

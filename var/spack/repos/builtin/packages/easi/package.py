@@ -17,8 +17,8 @@ class Easi(CMakePackage):
     maintainers("ravil-mobile", "Thomas-Ulrich", "krenzland", "ThrudPrimrose")
 
     version("develop", branch="master")
-    version("1.2.0", tag="v1.2.0")
-    version("1.1.2", tag="v1.1.2")
+    version("1.2.0", tag="v1.2.0", commit="305a119338116a0ceac6b68b36841a50250d05b1")
+    version("1.1.2", tag="v1.1.2", commit="4c87ef3b3dca9415d116ef102cb8de750ef7e1a0")
 
     variant("asagi", default=True, description="build with ASAGI support")
     variant(

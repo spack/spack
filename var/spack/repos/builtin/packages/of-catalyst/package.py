@@ -26,7 +26,7 @@ class OfCatalyst(CMakePackage):
     git = "https://develop.openfoam.com/Community/catalyst.git"
 
     version("develop", branch="develop")
-    version("1806", tag="v1806")
+    version("1806", tag="v1806", commit="d97babec3581bad413fd602e17fcd4bc1e312d26")
 
     variant("full", default=False, description="Build against paraview (full) or catalyst (light)")
 
