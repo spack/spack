@@ -12,13 +12,13 @@ class PyBbpWorkflow(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/bbp-workflow"
     git = "ssh://git@bbpgitlab.epfl.ch/nse/bbp-workflow.git"
 
-    version("3.1.32.dev2", tag="bbp-workflow-v3.1.32.dev2")
+    version("3.1.32.dev3", tag="bbp-workflow-v3.1.32.dev3")
 
     depends_on("py-setuptools", type=("build"))
 
     depends_on("py-requests-unixsocket", type="run")
-    depends_on("py-dask+diagnostics@2021.6.2", type="run")
-    depends_on("py-distributed@2021.6.2", type="run")
+    depends_on("py-dask+diagnostics", type="run")
+    depends_on("py-distributed", type="run")
     depends_on("py-luigi", type="run")
     depends_on("py-jsonschema", type="run")
     depends_on("py-luigi-tools", type="run")
@@ -29,7 +29,7 @@ class PyBbpWorkflow(PythonPackage):
     depends_on("py-bluepysnap", type="run")
     depends_on("py-voxcell", type="run")
     depends_on("py-entity-management", type="run")
-    depends_on("py-xarray@0.18.2", type="run")
+    depends_on("py-xarray", type="run")
     depends_on("py-pint-xarray", type="run")
     depends_on("py-cheetah3", type="run")
     depends_on("py-elephant", type="run")
