@@ -45,6 +45,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     variant("openmp", default=False, description="Enable CPU acceleration with OpenMP threads.")
     variant("rocm", default=False, description="Enable ROCm/HIP language features.")
     variant("shared", default=True, description="Enables the build of shared libraries")
+    variant("dace", default=True, description="Enables the DaCe backend")
 
     # Variants related to BLAS
     variant(
@@ -150,6 +151,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             "-DH2_ENABLE_OPENMP=%s" % ("+openmp" in spec),
             "-DH2_ENABLE_FP16=%s" % ("+half" in spec),
             "-DH2_DEVELOPER_BUILD=%s" % ("+developer" in spec),
+            "-DH2_ENABLE_DACE=%s" % ("+dace" in spec),
         ]
 
         if spec.version < Version("0.3"):
