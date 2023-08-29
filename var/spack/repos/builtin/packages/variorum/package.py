@@ -80,8 +80,67 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
         else:
             cmake_args.append("-DBUILD_SHARED_LIBS=OFF")
 
-        # should only be building for AMD or NVIDIA GPU architecture
-        if "+cuda" in spec:
+        if "build_type=Debug" in spec:
+            cmake_args.append("-DVARIORUM_DEBUG=ON")
+        else:
+            cmake_args.append("-DVARIORUM_DEBUG=OFF")
+
+        if self.run_tests:
+            cmake_args.append("-DBUILD_TESTS=ON")
+        else:
+            cmake_args.append("-DBUILD_TESTS=OFF")
+
+        target = self.spec.target
+        cpu_vendor = target.microarchitecture.vendor
+        cpu_uarch = target.microarchitecture.name
+
+        #taken from list of archspec.cpu.TARGETS
+        supported_amd_cpu_targets = ["zen2"]
+        supported_arm_cpu_targets = ["neoverse_n1"]
+        supported_ibm_cpu_targets = ["power9le"]
+        supported_intel_cpu_targets = [
+            "sandybridge",
+            "ivybridge",
+            "haswell",
+            "broadwell",
+            "skylake",
+            "cascadelake",
+            "icelake",
+        ]
+
+        if cpu_vendor == "AuthenticAMD" and cpu_uarch in supported_amd_cpu_targets:
+            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=ON")
+            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
+        elif cpu_vendor == "ARM" and cpu_uarch in supported_arm_cpu_targets:
+            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=ON")
+            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
+        elif cpu_vendor == "IBM" and cpu_uarch in supported_ibm_cpu_targets:
+            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=ON")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
+        elif cpu_vendor == "GenuineIntel" and cpu_uarch in supported_intel_cpu_targets:
+            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=ON")
+            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
+            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
+        elif "+cuda" in spec:
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
@@ -101,66 +160,7 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
             cmake_args.append("-DROCM_DIR={0}".format(spec["hip"].prefix))
             cmake_args.append("-DCMAKE_SHARED_LINKER_FLAGS=-L{0}/lib -lrocm_smi64".format(spec["hip"].prefix))
-
-        if "build_type=Debug" in spec:
-            cmake_args.append("-DVARIORUM_DEBUG=ON")
-        else:
-            cmake_args.append("-DVARIORUM_DEBUG=OFF")
-
-        if self.run_tests:
-            cmake_args.append("-DBUILD_TESTS=ON")
-        else:
-            cmake_args.append("-DBUILD_TESTS=OFF")
-
-        target = self.spec.target
-        cpu_vendor = target.microarchitecture.vendor
-        cpu_uarch = target.microarchitecture.name
-
-        #taken from list of archspec.cpu.TARGETS
-        supported_amd_targets = ["zen2"]
-        supported_arm_targets = ["neoverse_n1"]
-        supported_ibm_targets = ["power9le"]
-        supported_intel_targets = [
-            "sandybridge",
-            "ivybridge",
-            "haswell",
-            "broadwell",
-            "skylake",
-            "cascadelake",
-            "icelake",
-        ]
-
-        if cpu_vendor == "AuthenticAMD" and cpu_uarch in supported_amd_targets:
-            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=ON")
-            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-        elif cpu_vendor == "ARM" and cpu_uarch in supported_arm_targets:
-            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=ON")
-            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-        elif cpu_vendor == "IBM" and cpu_uarch in supported_ibm_targets:
-            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=ON")
-            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-        elif cpu_vendor == "GenuineIntel" and cpu_uarch in supported_intel_targets:
-            cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=ON")
-            cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
-            cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
+	else:
+            raise TypeError("Building on unsupported architecture")
 
         return cmake_args
