@@ -38,8 +38,12 @@ class Parallelio(CMakePackage):
     )
     variant("mpi", default=True, description="Use mpi to build, otherwise use mpi-serial")
 
+    # This patch addresses building pio2.6.1 with serial netcdf, the issue is netcdf filters
     patch("serial261.patch", when="@2.6.1")
     patch("remove_redefinition_of_mpi_offset.patch", when="@:2.5.6")
+
+    # This patch addresses an issue when compiling pio2.6.0 with a serial netcdf library.
+    # netcdf4 filters are only available with the parallel build of netcdf.
     patch("pio_260.patch", when="@2.6.0")
 
     depends_on("cmake@3.7:", type="build")
