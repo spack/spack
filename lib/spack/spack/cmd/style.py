@@ -36,7 +36,7 @@ exclude_directories = [os.path.relpath(spack.paths.external_path, spack.paths.pr
 #: double-check the results of other tools (if, e.g., --fix was provided)
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
-tool_names = ["isort", "black", "flake8", "mypy"]
+tool_names = ["isort", "black", "flake8", "mypy", "fish_indent"]
 
 #: tools we run in spack style
 tools = {}
@@ -61,12 +61,13 @@ def is_package(f):
 
 #: decorator for adding tools to the list
 class tool:
-    def __init__(self, name, required=False):
+    def __init__(self, name, required=False, suffix=".py"):
         self.name = name
         self.required = required
+        self.suffix = suffix
 
     def __call__(self, fun):
-        tools[self.name] = (fun, self.required)
+        tools[self.name] = (fun, self.required, self.suffix)
         return fun
 
 
@@ -121,12 +122,8 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
         files = git(*arg_list, output=str).split("\n")
 
         for f in files:
-            # Ignore non-Python files
-            if not (f.endswith(".py") or f == "bin/spack"):
-                continue
-
             # Ignore files in the exclude locations
-            if any(os.path.realpath(f).startswith(e) for e in excludes):
+            if not f or any(os.path.realpath(f).startswith(e) for e in excludes):
                 continue
 
             changed.add(f)
@@ -352,6 +349,22 @@ def run_black(black_cmd, file_list, args):
     return returncode
 
 
+@tool("fish_indent", suffix=".fish")
+def run_fish_indent(fish_indent_cmd, file_list, args):
+    if args.fix:
+        fish_indent_args = ["--write"]
+    else:
+        fish_indent_args = ["--check"]
+
+    output = fish_indent_cmd(*fish_indent_args, *file_list, fail_on_error=False, output=str)
+    returncode = fish_indent_cmd.returncode
+
+    rewrite_and_print_output(output, args)
+    print_tool_result("fish_indent", returncode)
+
+    return returncode
+
+
 def validate_toolset(arg_value):
     """Validate --tool and --skip arguments (sets of optionally comma-separated tools)."""
     tools = set(",".join(arg_value).split(","))  # allow args like 'isort,flake8'
@@ -417,9 +430,11 @@ def style(parser, args):
 
         print_style_header(file_list, args, tools_to_run)
         for tool_name in tools_to_run:
-            run_function, required = tools[tool_name]
+            run_function, required, suffix = tools[tool_name]
             print_tool_header(tool_name)
-            return_code |= run_function(which(tool_name), file_list, args)
+            file_subset = [f for f in file_list if f.endswith(suffix)]
+            if file_subset:
+                return_code |= run_function(which(tool_name), file_subset, args)
 
     if return_code == 0:
         tty.msg(color.colorize("@*{spack style checks were clean}"))
