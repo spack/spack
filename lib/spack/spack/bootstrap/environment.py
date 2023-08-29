@@ -37,6 +37,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             mypy_root_spec(),
             black_root_spec(),
             flake8_root_spec(),
+            fish_root_spec(),
             pytest_root_spec(),
         ]
 
@@ -177,6 +178,12 @@ def black_root_spec() -> str:
 def flake8_root_spec() -> str:
     """Return the root spec used to bootstrap flake8"""
     return _root_spec("py-flake8@3.8.2:")
+
+
+def fish_root_spec() -> str:
+    """Return the root spec used to bootstrap fish"""
+    # fish 3.2.0 introduces the `--check` flag to `fish_indent`
+    return _root_spec("fish@3.2:")
 
 
 def pytest_root_spec() -> str:
