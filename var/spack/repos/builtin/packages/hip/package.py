@@ -115,7 +115,7 @@ class Hip(CMakePackage):
 
     depends_on("cuda", when="+cuda")
 
-    depends_on("cmake@3.16.8:", type="build", when="@4.5.0:")
+    depends_on("cmake@3.16.8:", type=("build"), when="@4.5.0:")
     depends_on("cmake@3.4.3:", type="build")
     depends_on("perl@5.10:", type=("build", "run"))
 
@@ -175,7 +175,7 @@ class Hip(CMakePackage):
         for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1", "5.6.0"]:
             depends_on("hipify-clang", when="@" + ver)
 
-        for ver in ["5.5.0", "5.5.1","5.6.0"]:
+        for ver in ["5.5.0", "5.5.1", "5.6.0"]:
             depends_on("rocm-core@" + ver, when="@" + ver)
         # hipcc likes to add `-lnuma` by default :(
         # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
@@ -273,7 +273,7 @@ class Hip(CMakePackage):
         )
     # Add hip-clr sources thru the below
     for d_version, d_shasum in [
-        ("5.6.0", "8dcd99110737a294f67a805639cf372890c8ca16c7603caaa793e71e84478fe4"),
+        ("5.6.0", "8dcd99110737a294f67a805639cf372890c8ca16c7603caaa793e71e84478fe4")
     ]:
         resource(
             name="clr",
@@ -289,7 +289,7 @@ class Hip(CMakePackage):
 
     # Add hipcc sources thru the below
     for d_version, d_shasum in [
-        ("5.6.0", "fdb7fdc9e4648376120330f034ee8353038d34c8a015f9eb0c208c56eeddd097"),
+        ("5.6.0", "fdb7fdc9e4648376120330f034ee8353038d34c8a015f9eb0c208c56eeddd097")
     ]:
         resource(
             name="hipcc",
@@ -304,7 +304,7 @@ class Hip(CMakePackage):
         )
     # Add hiptests sources thru the below
     for d_version, d_shasum in [
-        ("5.6.0", "8cf4509bf9c0747dab8ed8fec1365a9156792034b517207a0b2d63270429fd2e"),
+        ("5.6.0", "8cf4509bf9c0747dab8ed8fec1365a9156792034b517207a0b2d63270429fd2e")
     ]:
         resource(
             name="hip-tests",
@@ -615,8 +615,8 @@ class Hip(CMakePackage):
             elif self.spec.satisfies("@4.5.0:5.5"):
                 files = []
                 filter_file(match, substitute, *files, **kwargs)
-            # This guy is used during the cmake phase, so we have to fix the
-            # shebang already here in case it is too long.
+                # This guy is used during the cmake phase, so we have to fix the
+                # shebang already here in case it is too long.
                 filter_shebang("hipconfig")
         if self.spec.satisfies("@4.5.0:5.5"):
             perl = self.spec["perl"].command
@@ -698,7 +698,7 @@ class Hip(CMakePackage):
         if "@5.6.0:" in self.spec:
             args.append(self.define("ROCCLR_PATH", self.stage.source_path + "/clr/rocclr"))
             args.append(self.define("AMD_OPENCL_PATH", self.stage.source_path + "/clr/opencl"))
-            args.append(self.define("HIPCC_BIN_DIR",  self.stage.source_path + "/hipcc/bin")),
+            args.append(self.define("HIPCC_BIN_DIR", self.stage.source_path + "/hipcc/bin")),
             args.append(self.define("CLR_BUILD_HIP", True)),
             args.append(self.define("CLR_BUILD_OCL", False)),
         return args
