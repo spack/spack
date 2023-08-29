@@ -764,7 +764,6 @@ attr("variant_propagate", PackageNode, Variant, Value, Source) :-
   attr("variant_possible_prop", PackageNode, Variant, Value, Source),
   not attr("variant_set", PackageNode, Variant).
 
-
 attr("variant_value", node(ID, Package), Variant, Value) :-
   attr("node", node(ID, Package)),
   node_has_variant(node(ID, Package), Variant),

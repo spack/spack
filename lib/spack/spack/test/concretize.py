@@ -515,7 +515,10 @@ spack:
         assert spec.satisfies("^openblas+shared")
         assert spec.satisfies("^zlib~shared")
 
-
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
+        reason="Optional compiler propagation isn't deprecated for original concretizer",
+    )
     def test_concretize_propagate_specified_variant(self):
         """Test that only the specified variant is propagated to the dependencies"""
         spec = Spec("splice-b++bar")
@@ -525,7 +528,6 @@ spack:
         assert spec.satisfies("^splice-z+bar")
         assert not spec.satisfies("^splice-a+foo")
         assert not spec.satisfies("^splice-z+foo")
-
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
