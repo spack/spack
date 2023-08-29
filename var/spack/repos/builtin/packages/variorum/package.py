@@ -39,18 +39,16 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
         description="CMake build type",
         values=("Debug", "Release", "RelWithDebInfo"),
     )
-    #variant("cuda", default=False, description="Build for Nvidia GPU architecture")
-    #variant("rocm", default=False, description="Build for AMD GPU architecture")
     #intel gpu not supported in spack
     #variant("intel_gpu", default=False, description="Build for Intel GPU architecture")
 
-    #for value in CudaPackage.cuda_arch_values:
-    #    if value != "70":
-    #        conflicts(f"cuda_arch={value}")
+    for value in CudaPackage.cuda_arch_values:
+        if value != "70":
+            conflicts(f"cuda_arch={value}")
 
-    #for value in ROCmPackage.amdgpu_targets:
-    #    if value != "gfx906" and value != "gfx906:xnack-":
-    #        conflicts(f"amdgpu_target={value}")
+    for value in ROCmPackage.amdgpu_targets:
+        if value != "gfx906" and value != "gfx906:xnack-":
+            conflicts(f"amdgpu_target={value}")
 
     ########################
     # Package dependencies #
@@ -93,7 +91,7 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=ON")
             cmake_args.append("-DNVML_DIR={0}".format(spec["cuda"].prefix))
             cmake_args.append("-DCMAKE_SHARED_LINKER_FLAGS=-L{0}/nvidia/targets/ppc64le-linux/lib/stubs/ -lnvidia-ml".format(spec["cuda"].prefix))
-        elif "+rocm" in spec:
+        elif "+hip" in spec:
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=ON")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
@@ -101,8 +99,8 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-            cmake_args.append("-DROCM_DIR={0}".format(spec["rocm"].prefix))
-            cmake_args.append("-DCMAKE_SHARED_LINKER_FLAGS=-L{0}/lib -lrocm_smi64".format(spec["rocm"].prefix))
+            cmake_args.append("-DROCM_DIR={0}".format(spec["hip"].prefix))
+            cmake_args.append("-DCMAKE_SHARED_LINKER_FLAGS=-L{0}/lib -lrocm_smi64".format(spec["hip"].prefix))
 
         if "build_type=Debug" in spec:
             cmake_args.append("-DVARIORUM_DEBUG=ON")
@@ -163,7 +161,5 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=ON")
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-        else:
-            raise TypeError("unsupported architecture")
 
         return cmake_args
