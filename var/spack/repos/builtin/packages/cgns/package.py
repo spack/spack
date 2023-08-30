@@ -83,6 +83,8 @@ class Cgns(CMakePackage):
                 self.define_from_variant("CGNS_ENABLE_BASE_SCOPE", "base_scope"),
                 self.define_from_variant("CGNS_ENABLE_LEGACY", "legacy"),
                 self.define_from_variant("CGNS_ENABLE_MEM_DEBUG", "mem_debug"),
+                "-DCMAKE_Fortran_FLAGS=-fPIC",
+                "-DCMAKE_C_FLAGS=-fPIC",
             ]
         )
 
