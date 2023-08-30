@@ -13,7 +13,7 @@ import pprint
 import re
 import types
 import warnings
-from typing import List, NamedTuple
+from typing import Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import archspec.cpu
 
@@ -44,6 +44,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+import spack.target
 import spack.traverse
 import spack.util.path
 import spack.util.timer
@@ -658,7 +659,7 @@ RequirementRule = collections.namedtuple(
 
 
 class PyclingoDriver:
-    def __init__(self, configuration: spack.config.Configuration, cores: bool = True) -> None:
+    def __init__(self, configuration: spack.config.ConfigurationType, cores: bool = True) -> None:
         """Driver for the Python clingo interface.
 
         Arguments:
@@ -731,6 +732,7 @@ class PyclingoDriver:
             A tuple of the solve result, the timer for the different phases of the
             solve, and the internal statistics from clingo.
         """
+        assert setup.gen is self, "setup must be initialized with the same solver object"
         output = output or DEFAULT_OUTPUT_CONFIGURATION
         # allow solve method to override the output stream
         if output.out is not None:
@@ -745,7 +747,7 @@ class PyclingoDriver:
         timer.start("setup")
         with self.control.backend() as backend:
             self.backend = backend
-            setup.setup(self, specs, reuse=reuse)
+            setup.setup(specs, reuse=reuse)
         timer.stop("setup")
 
         timer.start("load")
@@ -896,42 +898,45 @@ class PyclingoDriver:
         return cycle_result.unsatisfiable
 
 
+#: Set of concrete versions
+VersionSet = Set[Union[vn.StandardVersion, vn.GitVersion]]
+
+
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
-    def __init__(self, *, configuration: spack.config.Configuration, tests: bool = False) -> None:
-        self.configuration = configuration
+    def __init__(self, *, driver: PyclingoDriver, tests: bool = False) -> None:
+        self.gen = driver
+        self.configuration = driver.configuration
         self.repository = spack.repo.create(self.configuration)
 
-        self.gen = None  # set by setup()
+        self.declared_versions: Dict[str, List[DeclaredVersion]] = collections.defaultdict(list)
+        self.possible_versions: Dict[str, VersionSet] = collections.defaultdict(set)
+        self.deprecated_versions: Dict[str, VersionSet] = collections.defaultdict(set)
 
-        self.declared_versions = collections.defaultdict(list)
-        self.possible_versions = collections.defaultdict(set)
-        self.deprecated_versions = collections.defaultdict(set)
-
-        self.possible_virtuals = None
-        self.possible_compilers = []
-        self.possible_oses = set()
-        self.variant_values_from_specs = set()
-        self.version_constraints = set()
-        self.target_constraints = set()
-        self.default_targets = []
-        self.compiler_version_constraints = set()
-        self.post_facts = []
-
-        # (ID, CompilerSpec) -> dictionary of attributes
-        self.compiler_info = collections.defaultdict(dict)
+        self.possible_virtuals: Set[str] = set()
+        self.possible_compilers: List[spack.compiler.Compiler] = []
+        self.possible_oses: Set[str] = set()
+        self.variant_values_from_specs: Set[Tuple[str, str, str]] = set()
+        self.version_constraints: Set[Tuple[str, vn.VersionList]] = set()
+        self.target_constraints: Set[spack.target.Target] = set()
+        self.default_targets: List[Tuple[int, str]] = []
+        self.compiler_version_constraints: Set[spack.spec.CompilerSpec] = set()
 
         # hashes we've already added facts for
-        self.seen_hashes = set()
-        self.reusable_and_possible = {}
+        self.seen_hashes: Set[str] = set()
+        self.reusable_and_possible: Dict[str, spack.spec.Spec] = {}
 
         # id for dummy variables
         self._condition_id_counter = itertools.count()
         self._trigger_id_counter = itertools.count()
-        self._trigger_cache = collections.defaultdict(dict)
+        self._trigger_cache: Dict[
+            str, Dict[str, Tuple[int, AspFunction]]
+        ] = collections.defaultdict(dict)
         self._effect_id_counter = itertools.count()
-        self._effect_cache = collections.defaultdict(dict)
+        self._effect_cache: Dict[
+            str, Dict[str, Tuple[int, AspFunction]]
+        ] = collections.defaultdict(dict)
 
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
@@ -943,7 +948,7 @@ class SpackSolverSetup:
         self.concretize_everything = True
 
         # Set during the call to setup
-        self.pkgs = None
+        self.pkgs: Set[str] = set()
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -1451,23 +1456,13 @@ class SpackSolverSetup:
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")
-        msg = (
-            "Internal Error: possible_virtuals is not populated. Please report to the spack"
-            " maintainers"
-        )
-        assert self.possible_virtuals is not None, msg
         self.virtual_preferences(
             "all", lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i))
         )
 
     def provider_requirements(self):
         self.gen.h2("Requirements on virtual providers")
-        msg = (
-            "Internal Error: possible_virtuals is not populated. Please report to the spack"
-            " maintainers"
-        )
         packages_yaml = self.configuration.get("packages")
-        assert self.possible_virtuals is not None, msg
         for virtual_str in sorted(self.possible_virtuals):
             requirements = packages_yaml.get(virtual_str, {}).get("require", [])
             rules = self._rules_from_requirements(
@@ -2090,13 +2085,6 @@ class SpackSolverSetup:
 
     def virtual_providers(self):
         self.gen.h2("Virtual providers")
-        msg = (
-            "Internal Error: possible_virtuals is not populated. Please report to the spack"
-            " maintainers"
-        )
-        assert self.possible_virtuals is not None, msg
-
-        # what provides what
         for vspec in sorted(self.possible_virtuals):
             self.gen.fact(fn.virtual(vspec))
         self.gen.newline()
@@ -2291,7 +2279,7 @@ class SpackSolverSetup:
                     self._facts_from_concrete_spec(spec, possible)
 
     def setup(
-        self, driver: PyclingoDriver, specs: List[spack.spec.Spec], reuse: bool = None
+        self, specs: List[spack.spec.Spec], reuse: Optional[List[spack.spec.Spec]] = None
     ) -> None:
         """Generate an ASP program with relevant constraints for specs.
 
@@ -2324,14 +2312,10 @@ class SpackSolverSetup:
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
 
-        # driver is used by all the functions below to add facts and
-        # rules to generate an ASP program.
-        self.gen = driver
-
         # Calculate develop specs
         # they will be used in addition to command line specs
         # in determining known versions/targets/os
-        dev_specs = ()
+        dev_specs: Tuple[spack.spec.Spec, ...] = ()
         env = ev.active_environment()
         if env:
             dev_specs = tuple(
@@ -2349,7 +2333,7 @@ class SpackSolverSetup:
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, self.pkgs)
 
-        if reuse:
+        if reuse is not None:
             self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
@@ -2883,7 +2867,7 @@ class Solver:
 
     """
 
-    def __init__(self, configuration: spack.config.Configuration) -> None:
+    def __init__(self, configuration: spack.config.ConfigurationType) -> None:
         self.configuration = configuration
         self.driver = PyclingoDriver(configuration=self.configuration)
 
@@ -2951,7 +2935,7 @@ class Solver:
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self._reusable_specs(specs))
-        setup = SpackSolverSetup(configuration=self.configuration, tests=tests)
+        setup = SpackSolverSetup(driver=self.driver, tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
         return result
@@ -2975,7 +2959,7 @@ class Solver:
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self._reusable_specs(specs))
-        setup = SpackSolverSetup(configuration=self.configuration, tests=tests)
+        setup = SpackSolverSetup(driver=self.driver, tests=tests)
 
         # Tell clingo that we don't have to solve all the inputs at once
         setup.concretize_everything = False

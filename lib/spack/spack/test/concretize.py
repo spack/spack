@@ -1670,7 +1670,7 @@ class TestConcretize:
 
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
-            setup = spack.solver.asp.SpackSolverSetup(configuration=spack.config.CONFIG)
+            setup = spack.solver.asp.SpackSolverSetup(driver=solver.driver)
             result, _, _ = solver.driver.solve(setup, root_specs, reuse=reusable_specs)
 
         for spec in result.specs:
@@ -1689,7 +1689,7 @@ class TestConcretize:
 
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
-            setup = spack.solver.asp.SpackSolverSetup(configuration=spack.config.CONFIG)
+            setup = spack.solver.asp.SpackSolverSetup(driver=solver.driver)
             with pytest.raises(
                 spack.solver.asp.UnsatisfiableSpecError, match="'dep-with-variants@999'"
             ):
@@ -1706,7 +1706,7 @@ class TestConcretize:
 
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
-            setup = spack.solver.asp.SpackSolverSetup(configuration=spack.config.CONFIG)
+            setup = spack.solver.asp.SpackSolverSetup(driver=solver.driver)
             result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
             # The result here should have a single spec to build ('a')
             # and it should be using b@1.0 with a version badness of 2
@@ -1742,7 +1742,7 @@ class TestConcretize:
         reusable_specs = [wrong_compiler, wrong_os]
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
-            setup = spack.solver.asp.SpackSolverSetup(configuration=spack.config.CONFIG)
+            setup = spack.solver.asp.SpackSolverSetup(driver=solver.driver)
             result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
         concrete_spec = result.specs[0]
         assert concrete_spec.satisfies("%{}".format(s.compiler))
@@ -1998,7 +1998,7 @@ class TestConcretize:
         """
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
-        setup = spack.solver.asp.SpackSolverSetup(configuration=spack.config.CONFIG)
+        setup = spack.solver.asp.SpackSolverSetup(driver=solver.driver)
         result, _, _ = solver.driver.solve(setup, specs, reuse=[])
 
         assert result.specs

@@ -75,7 +75,8 @@ def compare_specs(a, b, to_string=False, color=None):
         color = get_color_when()
 
     # Prepare a solver setup to parse differences
-    setup = asp.SpackSolverSetup(configuration=spack.config.CONFIG)
+    driver = asp.PyclingoDriver(configuration=spack.config.CONFIG)
+    setup = asp.SpackSolverSetup(driver=driver)
 
     # get facts for specs, making sure to include build dependencies of concrete
     # specs and to descend into dependency hashes so we include all facts.
