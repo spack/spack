@@ -52,7 +52,6 @@ repo:
 
 def _noop(*args, **kwargs):
     """Generic monkeypatch no-op routine."""
-    pass
 
 
 def _none(*args, **kwargs):

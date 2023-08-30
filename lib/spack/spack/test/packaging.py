@@ -11,7 +11,6 @@ import os
 import pathlib
 import platform
 import shutil
-import sys
 from collections import OrderedDict
 
 import pytest
@@ -39,7 +38,7 @@ from spack.relocate import (
 )
 from spack.spec import Spec
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_gnupghome")
@@ -148,7 +147,14 @@ def test_relocate_links(tmpdir):
 
     own_prefix_path = str(tmpdir.join("prefix_a", "file"))
     dep_prefix_path = str(tmpdir.join("prefix_b", "file"))
+    new_own_prefix_path = str(tmpdir.join("new_prefix_a", "file"))
+    new_dep_prefix_path = str(tmpdir.join("new_prefix_b", "file"))
     system_path = os.path.join(os.path.sep, "system", "path")
+
+    fs.touchp(own_prefix_path)
+    fs.touchp(new_own_prefix_path)
+    fs.touchp(dep_prefix_path)
+    fs.touchp(new_dep_prefix_path)
 
     # Old prefixes to new prefixes
     prefix_to_prefix = OrderedDict(

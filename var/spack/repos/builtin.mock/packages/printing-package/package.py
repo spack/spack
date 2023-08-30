@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -20,9 +22,8 @@ class PrintingPackage(Package):
     def install(self, spec, prefix):
         print("BEFORE INSTALL")
 
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        mkdirp(prefix)
+        touch(os.path.join(prefix, "dummyfile"))
 
         print("AFTER INSTALL")
 

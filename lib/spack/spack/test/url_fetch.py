@@ -173,7 +173,7 @@ def test_fetch(
 
 
 # TODO-27021
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "spec,url,digest",
     [
@@ -204,7 +204,7 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         assert fetch_strategy.extra_options == {"timeout": 60}
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 @pytest.mark.parametrize(
     "requested_version,tarball,digest",
@@ -221,12 +221,10 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         ("2.0.0", "foo-2.0.0b2.tar.gz", "000000000000000000000000000200b2"),
     ],
 )
+@pytest.mark.only_clingo("Original concretizer doesn't resolve concrete versions to known ones")
 def test_new_version_from_list_url(
     mock_packages, config, _fetch_method, requested_version, tarball, digest
 ):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer doesn't resolve concrete versions to known ones")
-
     """Test non-specific URLs from the url-list-test package."""
     with spack.config.override("config:url_fetch_method", _fetch_method):
         s = Spec("url-list-test @%s" % requested_version).concretized()
