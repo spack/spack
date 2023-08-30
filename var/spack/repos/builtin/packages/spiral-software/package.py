@@ -28,13 +28,16 @@ class SpiralSoftware(CMakePackage):
     # No dependencies.  Spiral pacakges are listed here as variants.  If a
     # variant (i.e., spiral-package) is enabled then spiral-software depends
     # on the package, so dependencies may be added during the install process.
-    
+
     variant("fftx", default=False, description="Install Spiral package FFTX.")
-    variant("simt", default=False,
-            description="Install Spiral package for Single Instruction, Multiple Threads (SIMT) to generate code for GPUs.")
-    variant("mpi", default=False, description="Install Spiral package for Message Passing Interface (MPI).")
-    variant("jit", default=False, description="Install Spiral supporting Just-In-Time (aka RTC) Compilation.")
-    variant("hcol", default=False, description="Install Spiral package for the Hybrid Control Operator Language (HCOL).")
+    variant("simt", default=False, description="Install Spiral package for Single Instruction,"
+            " Multiple Threads (SIMT) to generate code for GPUs.")
+    variant("mpi", default=False, description="Install Spiral package for Message Passing "
+            "Interface (MPI).")
+    variant("jit", default=False, description="Install Spiral supporting Just-In-Time "
+            "(aka RTC) Compilation.")
+    variant("hcol", default=False, description="Install Spiral package for the Hybrid "
+            "Control Operator Language (HCOL).")
 
     # Dependencies
     for pkg in ["fftx", "simt", "mpi", "jit", "hcol"]:
@@ -46,12 +49,12 @@ class SpiralSoftware(CMakePackage):
             make("install")
 
     def spiral_package_install(self, spec, prefix, pkg):
-        pkg_name = 'spiral-package-' + pkg
+        pkg_name = "spiral-package-" + pkg
         pkg_prefix = spec[pkg_name].prefix
         dest = join_path(prefix, "namespaces", "packages", pkg)
-        src  = join_path(pkg_prefix, "namespaces", "packages", pkg)
+        src = join_path(pkg_prefix, "namespaces", "packages", pkg)
         install_tree(src, dest)
-        
+
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):
             files = ("LICENSE", "README.md", "ReleaseNotes.md", "Contributing.md")

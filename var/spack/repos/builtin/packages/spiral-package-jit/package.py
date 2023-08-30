@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class SpiralPackageJit(Package):
-    """This is the SPIRAL package for Just-In-Time (JIT) or Real-Time 
+    """This is the SPIRAL package for Just-In-Time (JIT) or Real-Time
     Compilation (RTC)."""
 
     homepage = "https://spiralgen.com"
