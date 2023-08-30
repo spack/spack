@@ -35,6 +35,7 @@ from spack.build_systems.cached_cmake import (
     cmake_cache_option,
     cmake_cache_path,
     cmake_cache_string,
+    cmake_cache_filepath,
 )
 from spack.build_systems.cmake import CMakePackage, generator
 from spack.build_systems.cuda import CudaPackage
