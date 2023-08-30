@@ -826,8 +826,11 @@ def create():
     return cfg
 
 
+#: Used for type hints that might be called with the singleton
+ConfigurationType = Union[Configuration, llnl.util.lang.Singleton]
+
 #: This is the singleton configuration instance for Spack.
-CONFIG: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(create)
+CONFIG: ConfigurationType = llnl.util.lang.Singleton(create)
 
 
 def add_from_file(filename, scope=None):

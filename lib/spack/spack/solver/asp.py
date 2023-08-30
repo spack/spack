@@ -13,7 +13,7 @@ import pprint
 import re
 import types
 import warnings
-from typing import List, NamedTuple
+from typing import Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import archspec.cpu
 
@@ -44,6 +44,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+import spack.target
 import spack.traverse
 import spack.util.path
 import spack.util.timer
@@ -236,13 +237,6 @@ def listify(args):
     return list(args)
 
 
-def packagize(pkg):
-    if isinstance(pkg, str):
-        return spack.repo.PATH.get_pkg_class(pkg)
-    else:
-        return pkg
-
-
 def specify(spec):
     if isinstance(spec, spack.spec.Spec):
         return spec
@@ -327,15 +321,6 @@ class AspFunctionBuilder:
 fn = AspFunctionBuilder()
 
 
-def _create_counter(specs, tests):
-    strategy = spack.config.CONFIG.get("concretizer:duplicates:strategy", "none")
-    if strategy == "full":
-        return FullDuplicatesCounter(specs, tests=tests)
-    if strategy == "minimal":
-        return MinimalDuplicatesCounter(specs, tests=tests)
-    return NoDuplicatesCounter(specs, tests=tests)
-
-
 def all_compilers_in_config():
     return spack.compilers.all_compilers()
 
@@ -352,22 +337,6 @@ def extend_flag_list(flag_list, new_flags):
         if flag in flag_list:
             flag_list.remove(flag)
         flag_list.append(flag)
-
-
-def check_packages_exist(specs):
-    """Ensure all packages mentioned in specs exist."""
-    repo = spack.repo.PATH
-    for spec in specs:
-        for s in spec.traverse():
-            try:
-                check_passed = repo.exists(s.name) or repo.is_virtual(s.name)
-            except Exception as e:
-                msg = "Cannot find package: {0}".format(str(e))
-                check_passed = False
-                tty.debug(msg)
-
-            if not check_passed:
-                raise spack.repo.UnknownPackageError(str(s.fullname))
 
 
 class Result:
@@ -542,10 +511,10 @@ class Result:
                 self._unsolved_specs.append(input_spec)
 
 
-def _normalize_packages_yaml(packages_yaml):
+def _normalize_packages_yaml(packages_yaml, *, repository):
     normalized_yaml = copy.copy(packages_yaml)
     for pkg_name in packages_yaml:
-        is_virtual = spack.repo.PATH.is_virtual(pkg_name)
+        is_virtual = repository.is_virtual(pkg_name)
         if pkg_name == "all" or not is_virtual:
             continue
 
@@ -553,7 +522,7 @@ def _normalize_packages_yaml(packages_yaml):
         data = normalized_yaml.pop(pkg_name)
         is_buildable = data.get("buildable", True)
         if not is_buildable:
-            for provider in spack.repo.PATH.providers_for(pkg_name):
+            for provider in repository.providers_for(pkg_name):
                 entry = normalized_yaml.setdefault(provider.name, {})
                 entry["buildable"] = False
 
@@ -690,7 +659,7 @@ RequirementRule = collections.namedtuple(
 
 
 class PyclingoDriver:
-    def __init__(self, cores=True):
+    def __init__(self, configuration: spack.config.ConfigurationType, cores: bool = True) -> None:
         """Driver for the Python clingo interface.
 
         Arguments:
@@ -699,6 +668,7 @@ class PyclingoDriver:
         """
         bootstrap_clingo()
 
+        self.configuration = configuration
         self.out = llnl.util.lang.Devnull()
         self.cores = cores
 
@@ -762,6 +732,7 @@ class PyclingoDriver:
             A tuple of the solve result, the timer for the different phases of the
             solve, and the internal statistics from clingo.
         """
+        assert setup.gen is self, "setup must be initialized with the same solver object"
         output = output or DEFAULT_OUTPUT_CONFIGURATION
         # allow solve method to override the output stream
         if output.out is not None:
@@ -776,7 +747,7 @@ class PyclingoDriver:
         timer.start("setup")
         with self.control.backend() as backend:
             self.backend = backend
-            setup.setup(self, specs, reuse=reuse)
+            setup.setup(specs, reuse=reuse)
         timer.stop("setup")
 
         timer.start("load")
@@ -808,7 +779,7 @@ class PyclingoDriver:
         # Load the file itself
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "heuristic.lp"))
-        if spack.config.CONFIG.get("concretizer:duplicates:strategy", "none") != "none":
+        if self.configuration.get("concretizer:duplicates:strategy", "none") != "none":
             self.control.load(os.path.join(parent_dir, "heuristic_separate.lp"))
         self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
@@ -856,7 +827,11 @@ class PyclingoDriver:
 
         if result.satisfiable:
             # get the best model
-            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
+            builder = SpecBuilder(
+                specs=specs,
+                configuration=self.configuration,
+                hash_lookup=setup.reusable_and_possible,
+            )
             min_cost, best_model = min(models)
 
             # first check for errors
@@ -923,39 +898,45 @@ class PyclingoDriver:
         return cycle_result.unsatisfiable
 
 
+#: Set of concrete versions
+VersionSet = Set[Union[vn.StandardVersion, vn.GitVersion]]
+
+
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
-    def __init__(self, tests=False):
-        self.gen = None  # set by setup()
+    def __init__(self, *, driver: PyclingoDriver, tests: bool = False) -> None:
+        self.gen = driver
+        self.configuration = driver.configuration
+        self.repository = spack.repo.create(self.configuration)
 
-        self.declared_versions = collections.defaultdict(list)
-        self.possible_versions = collections.defaultdict(set)
-        self.deprecated_versions = collections.defaultdict(set)
+        self.declared_versions: Dict[str, List[DeclaredVersion]] = collections.defaultdict(list)
+        self.possible_versions: Dict[str, VersionSet] = collections.defaultdict(set)
+        self.deprecated_versions: Dict[str, VersionSet] = collections.defaultdict(set)
 
-        self.possible_virtuals = None
-        self.possible_compilers = []
-        self.possible_oses = set()
-        self.variant_values_from_specs = set()
-        self.version_constraints = set()
-        self.target_constraints = set()
-        self.default_targets = []
-        self.compiler_version_constraints = set()
-        self.post_facts = []
-
-        # (ID, CompilerSpec) -> dictionary of attributes
-        self.compiler_info = collections.defaultdict(dict)
+        self.possible_virtuals: Set[str] = set()
+        self.possible_compilers: List[spack.compiler.Compiler] = []
+        self.possible_oses: Set[str] = set()
+        self.variant_values_from_specs: Set[Tuple[str, str, str]] = set()
+        self.version_constraints: Set[Tuple[str, vn.VersionList]] = set()
+        self.target_constraints: Set[spack.target.Target] = set()
+        self.default_targets: List[Tuple[int, str]] = []
+        self.compiler_version_constraints: Set[spack.spec.CompilerSpec] = set()
 
         # hashes we've already added facts for
-        self.seen_hashes = set()
-        self.reusable_and_possible = {}
+        self.seen_hashes: Set[str] = set()
+        self.reusable_and_possible: Dict[str, spack.spec.Spec] = {}
 
         # id for dummy variables
         self._condition_id_counter = itertools.count()
         self._trigger_id_counter = itertools.count()
-        self._trigger_cache = collections.defaultdict(dict)
+        self._trigger_cache: Dict[
+            str, Dict[str, Tuple[int, AspFunction]]
+        ] = collections.defaultdict(dict)
         self._effect_id_counter = itertools.count()
-        self._effect_cache = collections.defaultdict(dict)
+        self._effect_cache: Dict[
+            str, Dict[str, Tuple[int, AspFunction]]
+        ] = collections.defaultdict(dict)
 
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
@@ -967,7 +948,7 @@ class SpackSolverSetup:
         self.concretize_everything = True
 
         # Set during the call to setup
-        self.pkgs = None
+        self.pkgs: Set[str] = set()
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -980,7 +961,7 @@ class SpackSolverSetup:
             # Origins are sorted by "provenance" first, see the Provenance enumeration above
             return version.origin, version.idx
 
-        pkg = packagize(pkg)
+        pkg = self._packagize(pkg)
         declared_versions = self.declared_versions[pkg.name]
         partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
 
@@ -1004,6 +985,12 @@ class SpackSolverSetup:
         deprecated = self.deprecated_versions[pkg.name]
         for v in sorted(deprecated):
             self.gen.fact(fn.pkg_fact(pkg.name, fn.deprecated_version(v)))
+
+    def _packagize(self, pkg):
+        if isinstance(pkg, str):
+            return self.repository.get_pkg_class(pkg)
+        else:
+            return pkg
 
     def spec_versions(self, spec):
         """Return list of clauses expressing spec's version constraints."""
@@ -1092,7 +1079,7 @@ class SpackSolverSetup:
     def package_compiler_defaults(self, pkg):
         """Facts about packages' compiler prefs."""
 
-        packages = spack.config.get("packages")
+        packages = self.configuration.get("packages")
         pkg_prefs = packages.get(pkg.name)
         if not pkg_prefs or "compiler" not in pkg_prefs:
             return
@@ -1135,11 +1122,11 @@ class SpackSolverSetup:
 
     def requirement_rules_from_packages_yaml(self, pkg):
         pkg_name = pkg.name
-        config = spack.config.get("packages")
-        requirements = config.get(pkg_name, {}).get("require", [])
+        packages_yaml = self.configuration.get("packages")
+        requirements = packages_yaml.get(pkg_name, {}).get("require", [])
         kind = RequirementKind.PACKAGE
         if not requirements:
-            requirements = config.get("all", {}).get("require", [])
+            requirements = packages_yaml.get("all", {}).get("require", [])
             kind = RequirementKind.DEFAULT
         return self._rules_from_requirements(pkg_name, requirements, kind=kind)
 
@@ -1191,7 +1178,7 @@ class SpackSolverSetup:
         )
 
     def pkg_rules(self, pkg, tests):
-        pkg = packagize(pkg)
+        pkg = self._packagize(pkg)
 
         # versions
         self.pkg_version_rules(pkg)
@@ -1457,8 +1444,8 @@ class SpackSolverSetup:
 
     def virtual_preferences(self, pkg_name, func):
         """Call func(vspec, provider, i) for each of pkg's provider prefs."""
-        config = spack.config.get("packages")
-        pkg_prefs = config.get(pkg_name, {}).get("providers", {})
+        packages_yaml = self.configuration.get("packages")
+        pkg_prefs = packages_yaml.get(pkg_name, {}).get("providers", {})
         for vspec, providers in pkg_prefs.items():
             if vspec not in self.possible_virtuals:
                 continue
@@ -1469,23 +1456,13 @@ class SpackSolverSetup:
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")
-        msg = (
-            "Internal Error: possible_virtuals is not populated. Please report to the spack"
-            " maintainers"
-        )
-        assert self.possible_virtuals is not None, msg
         self.virtual_preferences(
             "all", lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i))
         )
 
     def provider_requirements(self):
         self.gen.h2("Requirements on virtual providers")
-        msg = (
-            "Internal Error: possible_virtuals is not populated. Please report to the spack"
-            " maintainers"
-        )
-        packages_yaml = spack.config.CONFIG.get("packages")
-        assert self.possible_virtuals is not None, msg
+        packages_yaml = self.configuration.get("packages")
         for virtual_str in sorted(self.possible_virtuals):
             requirements = packages_yaml.get(virtual_str, {}).get("require", [])
             rules = self._rules_from_requirements(
@@ -1565,8 +1542,8 @@ class SpackSolverSetup:
         # Read packages.yaml and normalize it, so that it
         # will not contain entries referring to virtual
         # packages.
-        packages_yaml = spack.config.get("packages")
-        packages_yaml = _normalize_packages_yaml(packages_yaml)
+        packages_yaml = self.configuration.get("packages")
+        packages_yaml = _normalize_packages_yaml(packages_yaml, repository=self.repository)
 
         self.gen.h1("External packages")
         for pkg_name, data in packages_yaml.items():
@@ -1574,7 +1551,7 @@ class SpackSolverSetup:
                 continue
 
             # This package does not appear in any repository
-            if pkg_name not in spack.repo.PATH:
+            if pkg_name not in self.repository:
                 continue
 
             self.gen.h2("External package: {0}".format(pkg_name))
@@ -1760,7 +1737,7 @@ class SpackSolverSetup:
                 if not spec.concrete:
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
-                        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+                        pkg_cls = self.repository.get_pkg_class(spec.name)
                         try:
                             variant_def, _ = pkg_cls.variants[vname]
                         except KeyError:
@@ -1768,7 +1745,7 @@ class SpackSolverSetup:
                             raise RuntimeError(msg.format(vname, spec.name))
                         else:
                             variant_def.validate_or_raise(
-                                variant, spack.repo.PATH.get_pkg_class(spec.name)
+                                variant, self.repository.get_pkg_class(spec.name)
                             )
 
                 clauses.append(f.variant_value(spec.name, vname, value))
@@ -1857,10 +1834,10 @@ class SpackSolverSetup:
 
     def build_version_dict(self, possible_pkgs):
         """Declare any versions in specs not declared in packages."""
-        packages_yaml = spack.config.get("packages")
-        packages_yaml = _normalize_packages_yaml(packages_yaml)
+        packages_yaml = self.configuration.get("packages")
+        packages_yaml = _normalize_packages_yaml(packages_yaml, repository=self.repository)
         for pkg_name in possible_pkgs:
-            pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+            pkg_cls = self.repository.get_pkg_class(pkg_name)
 
             # All the versions from the corresponding package.py file. Since concepts
             # like being a "develop" version or being preferred exist only at a
@@ -1891,7 +1868,7 @@ class SpackSolverSetup:
             # specs will be computed later
             version_preferences = packages_yaml.get(pkg_name, {}).get("version", [])
             version_defs = []
-            pkg_class = spack.repo.PATH.get_pkg_class(pkg_name)
+            pkg_class = self.repository.get_pkg_class(pkg_name)
             for vstr in version_preferences:
                 v = vn.ver(vstr)
                 if isinstance(v, vn.GitVersion):
@@ -2019,8 +1996,8 @@ class SpackSolverSetup:
         candidate_targets = [uarch] + uarch.ancestors
 
         # Get configuration options
-        granularity = spack.config.get("concretizer:targets:granularity")
-        host_compatible = spack.config.get("concretizer:targets:host_compatible")
+        granularity = self.configuration.get("concretizer:targets:granularity")
+        host_compatible = self.configuration.get("concretizer:targets:host_compatible")
 
         # Add targets which are not compatible with the current host
         if not host_compatible:
@@ -2108,13 +2085,6 @@ class SpackSolverSetup:
 
     def virtual_providers(self):
         self.gen.h2("Virtual providers")
-        msg = (
-            "Internal Error: possible_virtuals is not populated. Please report to the spack"
-            " maintainers"
-        )
-        assert self.possible_virtuals is not None, msg
-
-        # what provides what
         for vspec in sorted(self.possible_virtuals):
             self.gen.fact(fn.virtual(vspec))
         self.gen.newline()
@@ -2189,7 +2159,7 @@ class SpackSolverSetup:
         # aggregate constraints into per-virtual sets
         constraint_map = collections.defaultdict(lambda: set())
         for pkg_name, versions in self.version_constraints:
-            if not spack.repo.PATH.is_virtual(pkg_name):
+            if not self.repository.is_virtual(pkg_name):
                 continue
             constraint_map[pkg_name].add(versions)
 
@@ -2277,7 +2247,7 @@ class SpackSolverSetup:
             self.reusable_and_possible[h] = spec
             try:
                 # Only consider installed packages for repo we know
-                spack.repo.PATH.get(spec)
+                self.repository.get(spec)
             except (spack.repo.UnknownNamespaceError, spack.repo.UnknownPackageError):
                 return
 
@@ -2308,7 +2278,9 @@ class SpackSolverSetup:
                 if spec.concrete:
                     self._facts_from_concrete_spec(spec, possible)
 
-    def setup(self, driver, specs, reuse=None):
+    def setup(
+        self, specs: List[spack.spec.Spec], reuse: Optional[List[spack.spec.Spec]] = None
+    ) -> None:
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -2316,19 +2288,19 @@ class SpackSolverSetup:
         specs, as well as constraints from the specs themselves.
 
         Arguments:
-            driver (PyclingoDriver): driver instance of this solve
-            specs (list): list of Specs to solve
-            reuse (None or list): list of concrete specs that can be reused
+            driver: driver instance of this solve
+            specs: list of Specs to solve
+            reuse: list of concrete specs that can be reused
         """
         self._condition_id_counter = itertools.count()
 
         # preliminary checks
-        check_packages_exist(specs)
+        self.check_packages_exist(specs)
 
         # get list of all possible dependencies
         self.possible_virtuals = set(x.name for x in specs if x.virtual)
 
-        node_counter = _create_counter(specs, tests=self.tests)
+        node_counter = self._create_counter(specs, tests=self.tests)
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
 
@@ -2340,14 +2312,10 @@ class SpackSolverSetup:
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
 
-        # driver is used by all the functions below to add facts and
-        # rules to generate an ASP program.
-        self.gen = driver
-
         # Calculate develop specs
         # they will be used in addition to command line specs
         # in determining known versions/targets/os
-        dev_specs = ()
+        dev_specs: Tuple[spack.spec.Spec, ...] = ()
         env = ev.active_environment()
         if env:
             dev_specs = tuple(
@@ -2365,7 +2333,7 @@ class SpackSolverSetup:
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, self.pkgs)
 
-        if reuse:
+        if reuse is not None:
             self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
@@ -2431,6 +2399,22 @@ class SpackSolverSetup:
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
 
+    def check_packages_exist(self, specs):
+        """Ensure all packages mentioned in specs exist."""
+        for spec in specs:
+            for s in spec.traverse():
+                try:
+                    check_passed = self.repository.exists(s.name) or self.repository.is_virtual(
+                        s.name
+                    )
+                except Exception as e:
+                    msg = "Cannot find package: {0}".format(str(e))
+                    check_passed = False
+                    tty.debug(msg)
+
+                if not check_passed:
+                    raise spack.repo.UnknownPackageError(str(s.fullname))
+
     def literal_specs(self, specs):
         for idx, spec in enumerate(specs):
             self.gen.h2("Spec: %s" % str(spec))
@@ -2453,7 +2437,7 @@ class SpackSolverSetup:
         versions.
         """
         req_version_specs = list()
-        config = spack.config.get("packages")
+        config = self.configuration.get("packages")
         for pkg_name, d in config.items():
             if pkg_name == "all":
                 continue
@@ -2505,7 +2489,7 @@ class SpackSolverSetup:
             # Prefer spec's name if it exists, in case the spec is
             # requiring a specific implementation inside of a virtual section
             # e.g. packages:mpi:require:openmpi@4.0.1
-            pkg_class = spack.repo.PATH.get_pkg_class(spec.name or pkg_name)
+            pkg_class = self.repository.get_pkg_class(spec.name or pkg_name)
             satisfying_versions = self._check_for_defined_matching_versions(
                 pkg_class, spec.versions
             )
@@ -2519,6 +2503,14 @@ class SpackSolverSetup:
         for spec in version_specs:
             spec.attach_git_version_lookup()
         return version_specs
+
+    def _create_counter(self, specs, tests):
+        strategy = self.configuration.get("concretizer:duplicates:strategy", "none")
+        if strategy == "full":
+            return FullDuplicatesCounter(specs, repository=self.repository, tests=tests)
+        if strategy == "minimal":
+            return MinimalDuplicatesCounter(specs, repository=self.repository, tests=tests)
+        return NoDuplicatesCounter(specs, repository=self.repository, tests=tests)
 
 
 class SpecBuilder:
@@ -2550,7 +2542,7 @@ class SpecBuilder:
         """
         return NodeArgument(id="0", pkg=pkg)
 
-    def __init__(self, specs, hash_lookup=None):
+    def __init__(self, *, specs, configuration, hash_lookup=None):
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
@@ -2561,6 +2553,8 @@ class SpecBuilder:
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
         self._hash_lookup = hash_lookup or {}
+        self.configuration = configuration
+        self.repository = spack.repo.create(self.configuration)
 
     def hash(self, node, h):
         if node not in self._specs:
@@ -2627,8 +2621,8 @@ class SpecBuilder:
         has been selected for this package.
         """
 
-        packages_yaml = spack.config.get("packages")
-        packages_yaml = _normalize_packages_yaml(packages_yaml)
+        packages_yaml = self.configuration.get("packages")
+        packages_yaml = _normalize_packages_yaml(packages_yaml, repository=self.repository)
         spec_info = packages_yaml[node.pkg]["externals"][int(idx)]
         self._specs[node].external_path = spec_info.get("prefix", None)
         self._specs[node].external_modules = spack.spec.Spec._format_module_list(
@@ -2779,7 +2773,7 @@ class SpecBuilder:
             if name != "error":
                 node = args[0]
                 pkg = node.pkg
-                if spack.repo.PATH.is_virtual(pkg):
+                if self.repository.is_virtual(pkg):
                     continue
 
                 # if we've already gotten a concrete spec for this pkg,
@@ -2797,7 +2791,7 @@ class SpecBuilder:
         for spec in self._specs.values():
             if spec.namespace:
                 continue
-            repo = spack.repo.PATH.repo_for_pkg(spec)
+            repo = self.repository.repo_for_pkg(spec)
             spec.namespace = repo.namespace
 
         # fix flags after all specs are constructed
@@ -2873,12 +2867,13 @@ class Solver:
 
     """
 
-    def __init__(self):
-        self.driver = PyclingoDriver()
+    def __init__(self, configuration: spack.config.ConfigurationType) -> None:
+        self.configuration = configuration
+        self.driver = PyclingoDriver(configuration=self.configuration)
 
         # These properties are settable via spack configuration, and overridable
         # by setting them directly as properties.
-        self.reuse = spack.config.get("concretizer:reuse", False)
+        self.reuse = self.configuration.get("concretizer:reuse", False)
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):
@@ -2894,13 +2889,14 @@ class Solver:
 
     def _reusable_specs(self, specs):
         reusable_specs = []
+        current_store = spack.store.create(self.configuration)
         if self.reuse:
             # Specs from the local Database
-            with spack.store.STORE.db.read_transaction():
+            with current_store.db.read_transaction():
                 reusable_specs.extend(
                     [
                         s
-                        for s in spack.store.STORE.db.query(installed=True)
+                        for s in current_store.db.query(installed=True)
                         if not s.satisfies("dev_path=*")
                     ]
                 )
@@ -2939,7 +2935,7 @@ class Solver:
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self._reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        setup = SpackSolverSetup(driver=self.driver, tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
         return result
@@ -2963,7 +2959,7 @@ class Solver:
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self._reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        setup = SpackSolverSetup(driver=self.driver, tests=tests)
 
         # Tell clingo that we don't have to solve all the inputs at once
         setup.concretize_everything = False

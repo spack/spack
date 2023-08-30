@@ -470,7 +470,7 @@ class TestConcretize:
 
         assert spec.satisfies("^openblas+shared")
 
-    def test_no_matching_compiler_specs(self, mock_low_high_config):
+    def test_no_matching_compiler_specs(self):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
             s = Spec("a %gcc@=0.0.0")
@@ -1601,7 +1601,7 @@ class TestConcretize:
         import spack.solver.asp
 
         specs = [Spec(s) for s in specs]
-        solver = spack.solver.asp.Solver()
+        solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
         solver.reuse = False
         concrete_specs = set()
         for result in solver.solve_in_rounds(specs):
@@ -1646,7 +1646,7 @@ class TestConcretize:
         import spack.solver.asp
 
         specs = [Spec(s) for s in specs]
-        solver = spack.solver.asp.Solver()
+        solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
         solver.reuse = False
         concrete_specs = {}
         for result in solver.solve_in_rounds(specs):
@@ -1669,8 +1669,8 @@ class TestConcretize:
         root_specs = [Spec("mpileaks"), Spec("zmpi")]
 
         with spack.config.override("concretizer:reuse", True):
-            solver = spack.solver.asp.Solver()
-            setup = spack.solver.asp.SpackSolverSetup()
+            solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
+            setup = spack.solver.asp.SpackSolverSetup(driver=solver.driver)
             result, _, _ = solver.driver.solve(setup, root_specs, reuse=reusable_specs)
 
         for spec in result.specs:
@@ -1688,8 +1688,8 @@ class TestConcretize:
         root_spec = Spec("non-existing-conditional-dep@2.0")
 
         with spack.config.override("concretizer:reuse", True):
-            solver = spack.solver.asp.Solver()
-            setup = spack.solver.asp.SpackSolverSetup()
+            solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
+            setup = spack.solver.asp.SpackSolverSetup(driver=solver.driver)
             with pytest.raises(
                 spack.solver.asp.UnsatisfiableSpecError, match="'dep-with-variants@999'"
             ):
@@ -1705,8 +1705,8 @@ class TestConcretize:
         root_spec = Spec("a foobar=bar")
 
         with spack.config.override("concretizer:reuse", True):
-            solver = spack.solver.asp.Solver()
-            setup = spack.solver.asp.SpackSolverSetup()
+            solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
+            setup = spack.solver.asp.SpackSolverSetup(driver=solver.driver)
             result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
             # The result here should have a single spec to build ('a')
             # and it should be using b@1.0 with a version badness of 2
@@ -1741,8 +1741,8 @@ class TestConcretize:
         wrong_os.architecture = spack.spec.ArchSpec("test-ubuntu2204-x86_64")
         reusable_specs = [wrong_compiler, wrong_os]
         with spack.config.override("concretizer:reuse", True):
-            solver = spack.solver.asp.Solver()
-            setup = spack.solver.asp.SpackSolverSetup()
+            solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
+            setup = spack.solver.asp.SpackSolverSetup(driver=solver.driver)
             result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
         concrete_spec = result.specs[0]
         assert concrete_spec.satisfies("%{}".format(s.compiler))
@@ -1997,8 +1997,8 @@ class TestConcretize:
         know a concretization exists.
         """
         specs = [Spec(s) for s in specs]
-        solver = spack.solver.asp.Solver()
-        setup = spack.solver.asp.SpackSolverSetup()
+        solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
+        setup = spack.solver.asp.SpackSolverSetup(driver=solver.driver)
         result, _, _ = solver.driver.solve(setup, specs, reuse=[])
 
         assert result.specs

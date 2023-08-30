@@ -20,7 +20,9 @@ class Counter:
         tests: if True, add test dependencies to the list of possible packages
     """
 
-    def __init__(self, specs: List["spack.spec.Spec"], tests: bool) -> None:
+    def __init__(
+        self, specs: List["spack.spec.Spec"], repository: spack.repo.RepoPath, tests: bool
+    ) -> None:
         self.specs = specs
 
         self.link_run_types: Tuple[str, ...] = ("link", "run", "test")
@@ -30,6 +32,7 @@ class Counter:
             self.all_types = ("link", "run", "build")
 
         self._possible_dependencies: PossibleDependencies = set()
+        self.repository = repository
         self._possible_virtuals: Set[str] = set(x.name for x in specs if x.virtual)
 
     def possible_dependencies(self) -> PossibleDependencies:
@@ -79,8 +82,10 @@ class NoDuplicatesCounter(Counter):
 
 
 class MinimalDuplicatesCounter(NoDuplicatesCounter):
-    def __init__(self, specs, tests):
-        super().__init__(specs, tests)
+    def __init__(
+        self, specs: List["spack.spec.Spec"], repository: spack.repo.RepoPath, tests: bool
+    ) -> None:
+        super().__init__(specs, repository, tests)
         self._link_run: PossibleDependencies = set()
         self._direct_build: PossibleDependencies = set()
         self._total_build: PossibleDependencies = set()
@@ -94,7 +99,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         )
         self._link_run_virtuals.update(self._possible_virtuals)
         for x in self._link_run:
-            current = spack.repo.PATH.get_pkg_class(x).dependencies_of_type("build")
+            current = self.repository.get_pkg_class(x).dependencies_of_type("build")
             self._direct_build.update(current)
 
         self._total_build = set(
@@ -105,7 +110,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         self._possible_dependencies = set(self._link_run) | set(self._total_build)
 
     def possible_packages_facts(self, gen, fn):
-        build_tools = set(spack.repo.PATH.packages_with_tags("build-tools"))
+        build_tools = set(self.repository.packages_with_tags("build-tools"))
         gen.h2("Packages with at most a single node")
         for package_name in sorted(self.possible_dependencies() - build_tools):
             gen.fact(fn.max_dupes(package_name, 1))
@@ -130,7 +135,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
 
 class FullDuplicatesCounter(MinimalDuplicatesCounter):
     def possible_packages_facts(self, gen, fn):
-        build_tools = set(spack.repo.PATH.packages_with_tags("build-tools"))
+        build_tools = set(self.repository.packages_with_tags("build-tools"))
         counter = collections.Counter(
             list(self._link_run) + list(self._total_build) + list(self._direct_build)
         )

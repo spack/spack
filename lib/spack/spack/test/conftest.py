@@ -583,6 +583,14 @@ def mock_packages(mock_repo_path, mock_pkg_install, request):
 
 
 @pytest.fixture(scope="function")
+def builder_test_repository(request):
+    ensure_configuration_fixture_run_before(request)
+    builder_test_path = os.path.join(spack.paths.repos_path, "builder.test")
+    with spack.repo.use_repositories(builder_test_path) as mock_repo:
+        yield mock_repo
+
+
+@pytest.fixture(scope="function")
 def mutable_mock_repo(mock_repo_path, request):
     """Function-scoped mock packages, for tests that need to modify them."""
     ensure_configuration_fixture_run_before(request)
