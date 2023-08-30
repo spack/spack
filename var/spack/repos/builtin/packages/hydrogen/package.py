@@ -7,10 +7,6 @@ import os
 
 from spack.package import *
 
-def cmake_cache_filepath(name, value, comment=""):
-    """Generate a string for a cmake cache variable"""
-    return 'set({0} "{1}" CACHE FILEPATH "{2}")\n'.format(name, value, comment)
-
 # This limits the versions of lots of things pretty severely.
 #
 #   - Only v1.5.2 and newer are buildable.

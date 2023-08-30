@@ -129,6 +129,9 @@ class Aluminum(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("hwloc@2.3.0:")
         depends_on("rccl", when="+nccl")
         depends_on("roctracer-dev", when="+roctracer")
+        for val in ROCmPackage.amdgpu_targets:
+            depends_on("rccl +rocm amdgpu_target=%s" % val,
+                       when="+rocm amdgpu_target=%s" % val)
         if (spack.platforms.cray.slingshot_network()):
             depends_on("aws-ofi-rccl", when="+nccl")
 
