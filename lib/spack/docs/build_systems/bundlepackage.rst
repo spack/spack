@@ -9,9 +9,20 @@
 Bundle
 ------
 
-``BundlePackage`` represents a set of packages that are expected to work well
-together, such as a collection of commonly used software libraries.  The
-associated software is specified as bundle dependencies.
+``BundlePackage`` represents a set of packages that are expected to work
+well together, such as a collection of commonly used software libraries.
+The associated software is specified as bundle dependencies.
+
+If it makes sense, variants and conflicts can be added to the package.
+Variants could ensure that common build options are consistent across
+the packages supporting them. Conflicts are used to prevent builds with
+known bugs or issues. For example, if the bundle is known to only build
+on ``linux`` then conflicts can be added, such as:
+
+.. code-block:: python
+
+    for platform in ["cray", "darwin", "windows"]:
+        conflicts(f"platform={platform}", msg="Only builds on linux")
 
 
 ^^^^^^^^
