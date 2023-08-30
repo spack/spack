@@ -14,7 +14,7 @@ class GatbCore(CMakePackage):
 
     depends_on("cmake@3.1.0:", type="build")
 
-    version("1.4.2", tag="v1.4.2")
-    version("1.4.1", tag="v1.4.1")
+    version("1.4.2", tag="v1.4.2", commit="99f573a465beb30acc22ab20be458d2ea0277684")
+    version("1.4.1", tag="v1.4.1", commit="b45a6c213597b23f8f5221902e2b86b4009c11d9")
 
     root_cmakelists_dir = "gatb-core"

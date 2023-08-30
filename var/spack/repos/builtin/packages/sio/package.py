@@ -37,7 +37,7 @@ class Sio(CMakePackage):
         description="Use the specified C++ standard when building.",
     )
 
-    depends_on("zlib", when="~builtin_zlib")
+    depends_on("zlib-api", when="~builtin_zlib")
 
     def cmake_args(self):
         return [

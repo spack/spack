@@ -6,7 +6,6 @@
 import filecmp
 import os
 import pickle
-import sys
 
 import pytest
 
@@ -16,9 +15,7 @@ import spack.environment as ev
 import spack.spec
 from spack.environment.environment import SpackEnvironmentViewError, _error_on_nonempty_view_dir
 
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32", reason="Envs are not supported on windows"
-)
+pytestmark = pytest.mark.not_on_windows("Envs are not supported on windows")
 
 
 class TestDirectoryInitialization:
@@ -551,3 +548,78 @@ spack:
     with spack.config.override("concretizer:unify", unify_in_config):
         with ev.Environment(manifest.parent) as e:
             assert e.unify == unify_in_config
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected_raise,expected_spec",
+    [
+        # vendorsb vendors "b" only when @=1.1
+        ("vendorsb", False, "vendorsb@=1.0"),
+        ("vendorsb@=1.1", True, None),
+    ],
+)
+def test_conflicts_with_packages_that_are_not_dependencies(
+    spec_str, expected_raise, expected_spec, tmp_path, mock_packages, config
+):
+    """Tests that we cannot concretize two specs together, if one conflicts with the other,
+    even though they don't have a dependency relation.
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.xfail("Known failure of the original concretizer")
+
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
+spack:
+  specs:
+  - {spec_str}
+  - b
+  concretizer:
+    unify: true
+"""
+    )
+    with ev.Environment(manifest.parent) as e:
+        if expected_raise:
+            with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+                e.concretize()
+        else:
+            e.concretize()
+            assert any(s.satisfies(expected_spec) for s in e.concrete_roots())
+
+
+@pytest.mark.regression("39455")
+@pytest.mark.only_clingo("Known failure of the original concretizer")
+@pytest.mark.parametrize(
+    "possible_mpi_spec,unify", [("mpich", False), ("mpich", True), ("zmpi", False), ("zmpi", True)]
+)
+def test_requires_on_virtual_and_potential_providers(
+    possible_mpi_spec, unify, tmp_path, mock_packages, config
+):
+    """Tests that in an environment we can add packages explicitly, even though they provide
+    a virtual package, and we require the provider of the same virtual to be another package,
+    if they are added explicitly by their name.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
+    spack:
+      specs:
+      - {possible_mpi_spec}
+      - mpich2
+      - mpileaks
+      packages:
+        mpi:
+          require: mpich2
+      concretizer:
+        unify: {unify}
+    """
+    )
+    with ev.Environment(manifest.parent) as e:
+        e.concretize()
+        assert e.matching_spec(possible_mpi_spec)
+        assert e.matching_spec("mpich2")
+
+        mpileaks = e.matching_spec("mpileaks")
+        assert mpileaks.satisfies("^mpich2")
+        assert mpileaks["mpi"].satisfies("mpich2")
+        assert not mpileaks.satisfies(f"^{possible_mpi_spec}")

@@ -30,7 +30,7 @@ class Weechat(CMakePackage):
     depends_on("aspell")
     depends_on("libgcrypt")
     depends_on("curl")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("ruby@1.9.1:", when="+ruby")
     depends_on("tcl@8.5:", when="+tcl")
     depends_on("perl", when="+perl")
