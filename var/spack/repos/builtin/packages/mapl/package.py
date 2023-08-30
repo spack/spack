@@ -204,9 +204,9 @@ class Mapl(CMakePackage):
 
     # pFlogger depends on yaFyaml in the same way. MAPL 2.22 and below uses old
     # yaFyaml so we need to use old pFlogger, but MAPL 2.23+ uses new yaFyaml
-    depends_on("pflogger@:1.6", when="@:2.22+pflogger")
-    depends_on("pflogger@1.9.1:", when="@2.23:2.39+pflogger")
-    depends_on("pflogger@1.9.5:", when="@2.40:+pflogger")
+    depends_on("pflogger@:1.6 +mpi", when="@:2.22+pflogger")
+    depends_on("pflogger@1.9.1: +mpi", when="@2.23:2.39+pflogger")
+    depends_on("pflogger@1.9.5: +mpi", when="@2.40:+pflogger")
 
     # fArgParse v1.4.1 is the first usable version with MAPL
     # we now require 1.5.0 with MAPL 2.40+
