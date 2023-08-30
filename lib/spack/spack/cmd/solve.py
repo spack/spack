@@ -172,7 +172,7 @@ def solve(parser, args):
 
     specs = list(env.user_specs) if env else spack.cmd.parse_specs(args.specs)
 
-    solver = asp.Solver()
+    solver = asp.Solver(configuration=spack.config.CONFIG)
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {"asp"}
     unify = spack.config.get("concretizer:unify")

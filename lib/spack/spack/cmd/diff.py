@@ -11,6 +11,7 @@ from llnl.util.tty.color import cprint, get_color_when
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
 import spack.environment as ev
 import spack.solver.asp as asp
 import spack.util.environment
@@ -74,7 +75,7 @@ def compare_specs(a, b, to_string=False, color=None):
         color = get_color_when()
 
     # Prepare a solver setup to parse differences
-    setup = asp.SpackSolverSetup()
+    setup = asp.SpackSolverSetup(configuration=spack.config.CONFIG)
 
     # get facts for specs, making sure to include build dependencies of concrete
     # specs and to descend into dependency hashes so we include all facts.

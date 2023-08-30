@@ -2960,7 +2960,7 @@ class Spec:
         if self._concrete:
             return
 
-        solver = spack.solver.asp.Solver()
+        solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
         result = solver.solve([self], tests=tests)
         result.raise_if_unsat()
 

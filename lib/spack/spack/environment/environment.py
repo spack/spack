@@ -1394,7 +1394,7 @@ class Environment:
         self.specs_by_hash = {}
 
         result_by_user_spec = {}
-        solver = spack.solver.asp.Solver()
+        solver = spack.solver.asp.Solver(configuration=spack.config.CONFIG)
         for result in solver.solve_in_rounds(specs_to_concretize, tests=tests):
             result_by_user_spec.update(result.specs_by_input)
 
