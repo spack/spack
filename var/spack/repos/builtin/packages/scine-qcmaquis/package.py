@@ -24,7 +24,7 @@ class ScineQcmaquis(CMakePackage):
     variant(
         "symmetries",
         default="TwoU1;SU2U1;SU2U1PG;TwoU1PG",
-        description='Which wave functions symmetries to compile (e.g. "TwoU1;SU2U1;SU2U1PG;TwoU1PG")',
+        description='Wave functions symmetries to compile (e.g. "TwoU1;SU2U1;SU2U1PG;TwoU1PG")',
     )
     variant(
         "build_tests",
