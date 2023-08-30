@@ -338,9 +338,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     @property
     def cache_name(self):
         hostname = socket.gethostname()
-        if "SYS_TYPE" in env:
-            # Get a hostname that has no node identifier
-            hostname = hostname.rstrip("1234567890")
+        # Get a hostname that has no node identifier
+        hostname = hostname.rstrip("1234567890")
         return "LBANN_{0}_{1}-{2}-{3}@{4}.cmake".format(
             hostname,
             self.spec.version,

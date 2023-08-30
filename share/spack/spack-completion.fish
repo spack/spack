@@ -365,8 +365,10 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a commands -d 'list
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a compiler -d 'manage compilers'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a compilers -d 'list available compilers'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a concretize -d 'concretize an environment and write a lockfile'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a concretise -d 'concretize an environment and write a lockfile'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a config -d 'get and set configuration options'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerize -d 'creates recipes to build images for different container runtimes'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerise -d 'creates recipes to build images for different container runtimes'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a create -d 'create a new package file'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a debug -d 'debugging commands for troubleshooting Spack'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependencies -d 'show dependencies of a package'
@@ -685,7 +687,7 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
@@ -703,9 +705,11 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l spec-file -
 complete -c spack -n '__fish_spack_using_command buildcache push' -l spec-file -r -d 'create buildcache entry for spec from json or yaml file'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -f -a 'package dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -f -a fail_fast
+complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
@@ -723,6 +727,8 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l spec-file
 complete -c spack -n '__fish_spack_using_command buildcache create' -l spec-file -r -d 'create buildcache entry for spec from json or yaml file'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -f -a 'package dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast -f -a fail_fast
+complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
 
 # spack buildcache install
 set -g __fish_spack_optspecs_spack_buildcache_install h/help f/force m/multiple u/unsigned o/otherarch
@@ -1096,6 +1102,25 @@ complete -c spack -n '__fish_spack_using_command concretize' -l reuse-deps -d 'r
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
+# spack concretise
+set -g __fish_spack_optspecs_spack_concretise h/help f/force test= q/quiet U/fresh reuse reuse-deps j/jobs=
+complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command concretise' -s f -l force -f -a force
+complete -c spack -n '__fish_spack_using_command concretise' -s f -l force -d 're-concretize even if already concretized'
+complete -c spack -n '__fish_spack_using_command concretise' -l test -r -f -a 'root all'
+complete -c spack -n '__fish_spack_using_command concretise' -l test -r -d 'concretize with test dependencies of only root packages or all packages'
+complete -c spack -n '__fish_spack_using_command concretise' -s q -l quiet -f -a quiet
+complete -c spack -n '__fish_spack_using_command concretise' -s q -l quiet -d 'don\'t print concretized specs'
+complete -c spack -n '__fish_spack_using_command concretise' -s U -l fresh -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command concretise' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
+complete -c spack -n '__fish_spack_using_command concretise' -l reuse -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command concretise' -l reuse -d 'reuse installed packages/buildcaches when possible'
+complete -c spack -n '__fish_spack_using_command concretise' -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command concretise' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command concretise' -s j -l jobs -r -f -a jobs
+complete -c spack -n '__fish_spack_using_command concretise' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
+
 # spack config
 set -g __fish_spack_optspecs_spack_config h/help scope=
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a get -d 'print configuration values'
@@ -1189,6 +1214,15 @@ complete -c spack -n '__fish_spack_using_command containerize' -l list-os -f -a 
 complete -c spack -n '__fish_spack_using_command containerize' -l list-os -d 'list all the OS that can be used in the bootstrap phase and exit'
 complete -c spack -n '__fish_spack_using_command containerize' -l last-stage -r -f -a 'bootstrap build final'
 complete -c spack -n '__fish_spack_using_command containerize' -l last-stage -r -d 'last stage in the container recipe'
+
+# spack containerise
+set -g __fish_spack_optspecs_spack_containerise h/help list-os last-stage=
+complete -c spack -n '__fish_spack_using_command containerise' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command containerise' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command containerise' -l list-os -f -a list_os
+complete -c spack -n '__fish_spack_using_command containerise' -l list-os -d 'list all the OS that can be used in the bootstrap phase and exit'
+complete -c spack -n '__fish_spack_using_command containerise' -l last-stage -r -f -a 'bootstrap build final'
+complete -c spack -n '__fish_spack_using_command containerise' -l last-stage -r -d 'last stage in the container recipe'
 
 # spack create
 set -g __fish_spack_optspecs_spack_create h/help keep-stage n/name= t/template= r/repo= N/namespace= f/force skip-editor b/batch

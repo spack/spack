@@ -31,7 +31,11 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     build_system("autotools", "cmake", default="autotools")
 
     # rpath shenanigans, see https://github.com/zlib-ng/zlib-ng/pull/1546
-    patch("pr-1546.patch", when="@2.1.3 platform=darwin")
+    with when("@2.1.3"):
+        patch("pr-1546.patch", when="platform=darwin")
+        patch("pr-1542.patch")  # fix sse4.2 detection
+        patch("pr-1561.patch", when="build_system=autotools")  # drop bash dependency
+        patch("pr-1562.patch")  # improve intrinsics detection
 
     with when("build_system=cmake"):
         depends_on("cmake@3.5.1:", type="build")

@@ -52,6 +52,20 @@ if test -n "${ZSH_VERSION:-}" ; then
   fi
 fi
 
+# compgen -W doesn't work in some versions of zsh, so use this instead.
+# see https://www.zsh.org/mla/workers/2011/msg00582.html
+_compgen_w() {
+    if test -n "${ZSH_VERSION:-}" ; then
+        typeset -a words
+        words=( ${~=1} )
+        local find="$2"
+        results=(${(M)words[@]:#$find*})
+        echo "${results[@]}"
+    else
+        compgen -W "$1" -- "$2"
+    fi
+}
+
 # Bash programmable completion for Spack
 _bash_completion_spack() {
     # In all following examples, let the cursor be denoted by brackets, i.e. []
@@ -137,8 +151,11 @@ _bash_completion_spack() {
     if [[ "$(LC_ALL=C type $subfunction 2>&1)" =~ $rgx ]]
     then
         $subfunction
-        COMPREPLY=($(compgen -W "$SPACK_COMPREPLY" -- "$cur"))
+        COMPREPLY=($(_compgen_w "$SPACK_COMPREPLY" "$cur"))
     fi
+
+    # if every completion is an alias for the same thing, just return that thing.
+    _spack_compress_aliases
 }
 
 # Helper functions for subcommands
@@ -328,16 +345,61 @@ _spacktivate() {
   _spack_env_activate
 }
 
+# Simple function to get the spack alias for a command
+_spack_get_alias() {
+    local possible_alias="${1-}"
+    local IFS=";"
+
+    # spack aliases are a ;-separated list of :-separated pairs
+    for item in $SPACK_ALIASES; do
+        # maps a possible alias to its command
+        eval "local real_command=\"\${item#*${possible_alias}:}\""
+        if [ "$real_command" != "$item" ]; then
+            SPACK_ALIAS="$real_command"
+            return
+        fi
+    done
+
+    # no alias found -- just return $1
+    SPACK_ALIAS="$possible_alias"
+}
+
+# If all commands in COMPREPLY alias to the same thing, set COMPREPLY to
+# just the real command, not the aliases.
+_spack_compress_aliases() {
+    # if there's only one thing, don't bother compressing aliases; complete the alias
+    if [ "${#COMPREPLY[@]}" == "1" ]; then
+        return
+    fi
+
+    # get the alias of the first thing in the list of completions
+    _spack_get_alias "${COMPREPLY[@]:0:1}"
+    local first_alias="$SPACK_ALIAS"
+
+    # if anything in the list would alias to something different, stop
+    for comp in "${COMPREPLY[@]:1}"; do
+        _spack_get_alias "$comp"
+        if [ "$SPACK_ALIAS" != "$first_alias" ]; then
+            return
+        fi
+    done
+
+    # all commands alias to first alias; just return that
+    COMPREPLY=("$first_alias")
+}
+
 # Spack commands
 #
 # Everything below here is auto-generated.
+SPACK_ALIASES="concretise:concretize;containerise:containerize;rm:remove"
+
 
 _spack() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -b --bootstrap -p --profile --sorted-profile --lines -v --verbose --stacktrace --backtrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="add arch audit blame bootstrap build-env buildcache cd change checksum ci clean clone commands compiler compilers concretize config containerize create debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers make-installer mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="add arch audit blame bootstrap build-env buildcache cd change checksum ci clean clone commands compiler compilers concretize concretise config containerize containerise create debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers make-installer mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -498,7 +560,7 @@ _spack_buildcache() {
 _spack_buildcache_push() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --key -k --update-index --rebuild-index --spec-file --only"
+        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --key -k --update-index --rebuild-index --spec-file --only --fail-fast"
     else
         _mirrors
     fi
@@ -507,7 +569,7 @@ _spack_buildcache_push() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --key -k --update-index --rebuild-index --spec-file --only"
+        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --key -k --update-index --rebuild-index --spec-file --only --fail-fast"
     else
         _mirrors
     fi
@@ -737,6 +799,10 @@ _spack_concretize() {
     SPACK_COMPREPLY="-h --help -f --force --test -q --quiet -U --fresh --reuse --reuse-deps -j --jobs"
 }
 
+_spack_concretise() {
+    SPACK_COMPREPLY="-h --help -f --force --test -q --quiet -U --fresh --reuse --reuse-deps -j --jobs"
+}
+
 _spack_config() {
     if $list_options
     then
@@ -827,6 +893,10 @@ _spack_config_revert() {
 }
 
 _spack_containerize() {
+    SPACK_COMPREPLY="-h --help --list-os --last-stage"
+}
+
+_spack_containerise() {
     SPACK_COMPREPLY="-h --help --list-os --last-stage"
 }
 

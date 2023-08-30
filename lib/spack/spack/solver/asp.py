@@ -808,6 +808,8 @@ class PyclingoDriver:
         # Load the file itself
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "heuristic.lp"))
+        if spack.config.CONFIG.get("concretizer:duplicates:strategy", "none") != "none":
+            self.control.load(os.path.join(parent_dir, "heuristic_separate.lp"))
         self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
