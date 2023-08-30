@@ -21,7 +21,6 @@ from spack.cmd.common import arguments
 from spack.package_base import PackageBase, deprecated_version, preferred_version
 from spack.util.editor import editor
 from spack.util.format import get_version_lines
-from spack.util.naming import valid_fully_qualified_module_name
 from spack.version import Version
 
 description = "checksum available versions of a package"
@@ -68,27 +67,19 @@ def setup_parser(subparser):
     modes_parser.add_argument(
         "--verify", action="store_true", default=False, help="verify known package checksums"
     )
-    arguments.add_common_arguments(subparser, ["package", "jobs"])
+    subparser.add_argument("package", help="package or spec. for example cmake or cmake@3.18")
     subparser.add_argument(
         "versions", nargs=argparse.REMAINDER, help="versions to generate checksums for"
     )
+    arguments.add_common_arguments(subparser, ["jobs"])
 
 
 def checksum(parser, args):
-    # Did the user pass 'package@version' string?
-    if len(args.versions) == 0 and "@" in args.package:
-        args.versions = [args.package.split("@")[1]]
-        args.package = args.package.split("@")[0]
-
-    # Make sure the user provided a package and not a URL
-    if not valid_fully_qualified_module_name(args.package):
-        tty.die("`spack checksum` accepts package names, not URLs.")
+    spec = spack.spec.Spec(args.package)
 
     # Get the package we're going to generate checksums for
-    pkg_cls = spack.repo.PATH.get_pkg_class(args.package)
-    pkg = pkg_cls(spack.spec.Spec(args.package))
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
 
-    # Build a list of versions to checksum
     versions = [Version(v) for v in args.versions]
 
     # Define placeholder for remote versions.
@@ -152,7 +143,10 @@ def checksum(parser, args):
         tty.die(f"Could not find any remote versions for {pkg.name}")
     elif len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
         filtered_url_dict = spack.stage.interactive_version_filter(
-            url_dict, pkg.versions, url_changes=url_changed_for_version
+            url_dict,
+            pkg.versions,
+            url_changes=url_changed_for_version,
+            initial_verion_filter=spec.versions,
         )
         if not filtered_url_dict:
             exit(0)
