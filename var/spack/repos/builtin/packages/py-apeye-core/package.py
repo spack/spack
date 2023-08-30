@@ -19,4 +19,3 @@ class PyApeyeCore(PythonPackage):
     depends_on("py-hatchling", type="build")
     depends_on("py-domdf-python-tools@2.6:", type=("build", "run"))
     depends_on("py-idna@2.5:", type=("build", "run"))
- 

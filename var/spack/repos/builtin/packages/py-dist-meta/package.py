@@ -20,4 +20,3 @@ class PyDistMeta(PythonPackage):
     depends_on("py-domdf-python-tools@3.1:", type=("build", "run"))
     depends_on("py-handy-archives@0.1:", type=("build", "run"))
     depends_on("py-packaging@20.9:", type=("build", "run"))
-  

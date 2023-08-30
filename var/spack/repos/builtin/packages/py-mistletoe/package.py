@@ -17,4 +17,3 @@ class PyMistletoe(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-pygments@2.11.2:2.16", type=("build", "run"))
-  
