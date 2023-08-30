@@ -15,7 +15,7 @@ class PyDomdfPythonTools(PythonPackage):
 
     version("3.6.1", sha256="acc04563d23bce4d437dd08af6b9bea788328c412772a044d8ca428a7ad861be")
 
-    depends_on("wheel@0.34.2:", type="build")
+    depends_on("py-wheel@0.34.2:", type="build")
     depends_on("py-setuptools@40.6:", type="build")
     depends_on("py-importlib-metadata@3.6:", type=("build", "run"), when="^python@:3.9")
     depends_on("py-importlib-resources@3:", type=("build", "run"), when="^python@:3.7")

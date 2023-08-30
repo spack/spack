@@ -15,9 +15,9 @@ class PyDistMeta(PythonPackage):
 
     version("0.8.0", sha256="541d51f75b7f580c80d8d7b23112d0b4bf3edbc9442e425a7c4fcd75f4138551")
 
-    depends_on("wheel@0.34.2:", type="build")
+    depends_on("py-wheel@0.34.2:", type="build")
     depends_on("py-setuptools@40.6:", type="build")
     depends_on("py-domdf-python-tools@3.1:", type=("build", "run"))
-    depends_on("handy-archives@0.1:", type=("build", "run"))
+    depends_on("py-handy-archives@0.1:", type=("build", "run"))
     depends_on("py-packaging@20.9:", type=("build", "run"))
   

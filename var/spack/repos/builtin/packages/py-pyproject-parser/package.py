@@ -15,7 +15,7 @@ class PyPyprojectParser(PythonPackage):
 
     version("0.9.1", sha256="fa0b2ff78bc95788b08d00e1aafa66d3f7f3ab693f19d9c2e23e20000a69fd9b")
 
-    depends_on("wheel@0.34.2:", type="build")
+    depends_on("py-wheel@0.34.2:", type="build")
     depends_on("py-setuptools@40.6:", type="build")
     depends_on("py-apeye-core@1:", type=("build", "run"))
     depends_on("py-attrs@20.3:", type=("build", "run"))
