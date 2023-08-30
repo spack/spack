@@ -1,19 +1,19 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# copyright 2013-2023 lawrence livermore national security, llc and other
+# spack project developers. see the top-level copyright file for details.
 #
-# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+# spdx-license-identifier: (apache-2.0 or mit)
 
 
 from spack.package import *
 
 
-class DuneCommon(PythonPackage):
-    """DUNE, the Distributed and Unified Numerics Environment 
-    is a modular toolbox for solving partial 
-    differential equations (PDEs) with grid-based methods.
-    It supports the easy implementation of methods like 
-    Finite Elements (FE), Finite Volumes (FV), 
-    and also Finite Differences (FD).
+class dunecommon(pythonpackage):
+    """dune, the distributed and unified numerics environment
+        is a modular toolbox for solving partial differential
+        equations (pdes) with grid-based methods.
+        it supports the easy implementation of methods
+        like finite elements (fe), finite volumes (fv),
+        and also finite differences (fd).
     """
 
     homepage = "https://www.dune-project.org/doc/gettingstarted/"
