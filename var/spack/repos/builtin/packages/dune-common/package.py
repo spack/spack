@@ -8,21 +8,17 @@ from spack.package import *
 
 
 class DuneCommon(PythonPackage):
-    """DUNE, the Distributed and Unified Numerics Environment is a modular toolbox for solving partial differential equations (PDEs) with grid-based methods. 
-    It supports the easy implementation of methods like Finite Elements (FE), Finite Volumes (FV), and also Finite Differences (FD)."""
+    """DUNE, the Distributed and Unified Numerics Environment is a modular toolbox for solving partial differential equations (PDEs) with grid-based methods.
+    It supports the easy implementation of methods like Finite Elements (FE), Finite Volumes (FV), and also Finite Differences (FD).
+    """
 
     homepage = "https://www.dune-project.org/doc/gettingstarted/"
-    git="https://gitlab.dune-project.org/core/dune-common"
+    git = "https://gitlab.dune-project.org/core/dune-common"
     pypi = "dune-common/dune-common-2.9.0.tar.gz"
 
-    version("2.9.0", sha256="785415bbd27ff9de5d22c63e9ea87773ec6cddaa")
+    version("2.9.0", 
+            sha256="785415bbd27ff9de5d22c63e9ea87773ec6cddaa")
 
-    depends_on("py-wheel@0.34.2", type="build")
-    depends_on("py-setuptools@40.6:", type="build")
-    depends_on("py-consolekit@1.4.1:", type=("build", "run"))
-    depends_on("py-dist-meta@0.1:", type=("build", "run"))
-    depends_on("py-handy-archives@0.2:", type=("build", "run"))
-    depends_on("py-pyproject-parser@0.6:", type=("build", "run"))
     depends_on("cmake@3.13.0:", type="build")
     depends_on("mpi@2:")
     depends_on("pkgconf", type="build")
