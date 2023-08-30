@@ -18,7 +18,7 @@ class Tandem(CMakePackage):
     version("main", branch="main", submodules=True)
 
     # we cannot use the tar.gz file because it does not contains submodules
-    version("1.0", tag="v1.0", submodules=True)
+    version("1.0", tag="v1.0", commit="eccab10cbdf5842ed9903fac7a023be5e2779f36", submodules=True)
     patch("fix_v1.0_compilation.diff", when="@1.0")
 
     maintainers("dmay23", "Thomas-Ulrich")
