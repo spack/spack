@@ -82,7 +82,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 f"-DKokkos_Core_DIR={self.spec['kokkos'].home}",
                 f"-DKokkos_Kernels_DIR={self.spec['kokkos-kernels'].home}",
             ]
-        else:
+        elif self.version < Version("0.32"):
             args += ["-DENABLE_KOKKOS=OFF"]
 
         return args
