@@ -888,11 +888,10 @@ def add(fullpath, scope=None):
                 value = {component: value}
             break
 
+    if override:
+        path += "::"
+
     if has_existing_value:
-        path, value, _ = fullpath.rpartition(components[-1])
-        # Breaking down path in this way leaves a dangling
-        # separator, remove it
-        path, *_ = path.rpartition(":")
         value = syaml.load_config(value)
         existing = get(path, scope=scope)
 
