@@ -11,7 +11,7 @@ class SpiralSoftware(CMakePackage):
     mathematical functions that produces very high performance code for a wide
     spectrum of hardware platforms."""
 
-    homepage = "https://https://spiralgen.com"
+    homepage = "https://spiralgen.com"
     url = "https://github.com/spiral-software/spiral-software/archive/refs/tags/8.5.0.tar.gz"
     git = "https://github.com/spiral-software/spiral-software.git"
 
@@ -25,16 +25,36 @@ class SpiralSoftware(CMakePackage):
 
     extendable = True
 
-    # No dependencies.
+    # No dependencies.  Spiral pacakges are listed here as variants.  If a
+    # variant (i.e., spiral-package) is enabled then spiral-software depends
+    # on the package, so dependencies may be added during the install process.
+    
+    variant("fftx", default=False, description="Install Spiral package FFTX.")
+    variant("simt", default=False,
+            description="Install Spiral package for Single Instruction, Multiple Threads (SIMT) to generate code for GPUs.")
+    variant("mpi", default=False, description="Install Spiral package for Message Passing Interface (MPI).")
+    variant("jit", default=False, description="Install Spiral supporting Just-In-Time (aka RTC) Compilation.")
+    variant("hcol", default=False, description="Install Spiral package for the Hybrid Control Operator Language (HCOL).")
+
+    # Dependencies
+    for pkg in ["fftx", "simt", "mpi", "jit", "hcol"]:
+        depends_on(f"spiral-package-{pkg}", when=f"+{pkg}")
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
             make("all")
             make("install")
 
+    def spiral_package_install(self, spec, prefix, pkg):
+        pkg_name = 'spiral-package-' + pkg
+        pkg_prefix = spec[pkg_name].prefix
+        dest = join_path(prefix, "namespaces", "packages", pkg)
+        src  = join_path(pkg_prefix, "namespaces", "packages", pkg)
+        install_tree(src, dest)
+        
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):
-            files = ("LICENSE", "README.md", "ReleaseNotes.md")
+            files = ("LICENSE", "README.md", "ReleaseNotes.md", "Contributing.md")
             for fil in files:
                 install(fil, prefix)
 
@@ -59,6 +79,10 @@ class SpiralSoftware(CMakePackage):
             install_tree("lib", prefix.gap.lib)
             install_tree("grp", prefix.gap.grp)
             install_tree("bin", prefix.gap.bin)
+
+        for pkg in ["fftx", "simt", "mpi", "jit", "hcol"]:
+            if f"+{pkg}" in spec:
+                self.spiral_package_install(spec, prefix, pkg)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("SPIRAL_HOME", self.prefix)
