@@ -30,14 +30,27 @@ class SpiralSoftware(CMakePackage):
     # on the package, so dependencies may be added during the install process.
 
     variant("fftx", default=False, description="Install Spiral package FFTX.")
-    variant("simt", default=False, description="Install Spiral package for Single Instruction,"
-            " Multiple Threads (SIMT) to generate code for GPUs.")
-    variant("mpi", default=False, description="Install Spiral package for Message Passing "
-            "Interface (MPI).")
-    variant("jit", default=False, description="Install Spiral supporting Just-In-Time "
-            "(aka RTC) Compilation.")
-    variant("hcol", default=False, description="Install Spiral package for the Hybrid "
-            "Control Operator Language (HCOL).")
+    variant(
+        "simt",
+        default=False,
+        description="Install Spiral package for Single Instruction, Multiple Threads"
+        " (SIMT) to generate code for GPUs.",
+    )
+    variant(
+        "mpi",
+        default=False,
+        description="Install Spiral package for Message Passing Interface (MPI).",
+    )
+    variant(
+        "jit",
+        default=False,
+        description="Install Spiral supporting Just-In-Time (aka RTC) Compilation.",
+    )
+    variant(
+        "hcol",
+        default=False,
+        description="Install Spiral package for the Hybrid Control Operator Language (HCOL).",
+    )
 
     # Dependencies
     for pkg in ["fftx", "simt", "mpi", "jit", "hcol"]:
