@@ -83,6 +83,8 @@ class Rocwmma(CMakePackage):
     for tgt in itertools.chain(["auto"], amdgpu_targets):
         depends_on("rocblas amdgpu_target={0}".format(tgt), when="amdgpu_target={0}".format(tgt))
 
+    patch("0001-add-rocm-smi-lib-path-for-building-tests.patch", when="@5.6.0")
+
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
 
@@ -107,5 +109,9 @@ class Rocwmma(CMakePackage):
         tgt = self.spec.variants["amdgpu_target"]
         if "auto" not in tgt:
             args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
+        if self.spec.satisfies("@5.6.0:"):
+            args.append(
+                    self.define("ROCM_SMI_DIR", self.spec["rocm-smi-lib"].prefix)
+                )
 
         return args
