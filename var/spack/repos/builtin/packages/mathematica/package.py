@@ -23,6 +23,11 @@ class Mathematica(Package):
     manual_download = True
 
     version(
+        "13.0.1",
+        sha256="3672a920c1b4af1afd480733f6d67665baf8258757dfe59a6ed6d7440cf26dba",
+        expand=False,
+    )
+    version(
         "12.2.0",
         sha256="3b6676a203c6adb7e9c418a5484b037974287b5be09c64e7dfea74ddc0e400d7",
         expand=False,
