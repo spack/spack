@@ -1599,8 +1599,6 @@ class TestConcretize:
     )
     @pytest.mark.only_clingo("Original concretizer cannot concretize in rounds")
     def test_best_effort_coconcretize(self, specs, expected):
-        import spack.solver.asp
-
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver()
         solver.reuse = False
@@ -1644,8 +1642,6 @@ class TestConcretize:
     @pytest.mark.only_clingo("Original concretizer cannot concretize in rounds")
     def test_best_effort_coconcretize_preferences(self, specs, expected_spec, occurances):
         """Test package preferences during coconcretization."""
-        import spack.solver.asp
-
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver()
         solver.reuse = False
@@ -1661,8 +1657,6 @@ class TestConcretize:
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_coconcretize_reuse_and_virtuals(self):
-        import spack.solver.asp
-
         reusable_specs = []
         for s in ["mpileaks ^mpich", "zmpi"]:
             reusable_specs.extend(Spec(s).concretized().traverse(root=True))
@@ -1683,8 +1677,6 @@ class TestConcretize:
         # For this bug to be triggered we need a reusable dependency
         # that is not optimal in terms of optimization scores.
         # We pick an old version of "b"
-        import spack.solver.asp
-
         reusable_specs = [Spec("non-existing-conditional-dep@1.0").concretized()]
         root_spec = Spec("non-existing-conditional-dep@2.0")
 
@@ -1700,8 +1692,6 @@ class TestConcretize:
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_version_weight_and_provenance(self):
         """Test package preferences during coconcretization."""
-        import spack.solver.asp
-
         reusable_specs = [Spec(spec_str).concretized() for spec_str in ("b@0.9", "b@1.0")]
         root_spec = Spec("a foobar=bar")
 
@@ -1733,8 +1723,6 @@ class TestConcretize:
     @pytest.mark.regression("31169")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_not_reusing_incompatible_os_or_compiler(self):
-        import spack.solver.asp
-
         root_spec = Spec("b")
         s = root_spec.concretized()
         wrong_compiler, wrong_os = s.copy(), s.copy()
