@@ -40,6 +40,13 @@ function Read-SpackArgs {
 }
 
 function Set-SpackEnv {
+    # This method is responsible
+    # for processing the return from $(spack <command>)
+    # which are returned as System.Object[]'s containing
+    # a list of env commands
+    # Invoke-Expression can only handle one command at a time
+    # so we iterate over the list to invoke the env modification
+    # expressions one at a time
     foreach($envop in $args[0]){
         Invoke-Expression $envop
     }
