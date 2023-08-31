@@ -355,8 +355,9 @@ class Nvhpc(Package):
     )
     variant("lapack", default=True, description="Enable LAPACK")
     variant("mpi", default=False, description="Enable MPI")
-    variant("default_cuda", default="default",
-            description="Default CUDA version, for example 11.8")
+    variant(
+        "default_cuda", default="default", description="Default CUDA version, for example 11.8"
+    )
 
     provides("blas", when="+blas")
     provides("lapack", when="+lapack")
