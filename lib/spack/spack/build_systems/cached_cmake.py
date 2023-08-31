@@ -265,13 +265,13 @@ class CachedCMakeBuilder(CMakeBuilder):
                 # way: radiuss used to define only the first arch in the list,
                 # even for CMAKE_CUDA_ARCHITECTURE. What do we want?
                 cuda_flags.append("-arch sm_{0}".format(archs[0]))
-                options.append(
+                entries.append(
                     cmake_cache_string("CUDA_ARCH", "sm_{0}".format(archs[0])))
             if spec_uses_toolchain(spec):
                 cuda_flags.append("-Xcompiler {}".format(spec_uses_toolchain(spec)[0]))
             if (spec.satisfies("%gcc@8.1: target=ppc64le")):
                 cuda_flags.append("-Xcompiler -mno-float128")
-            options.append(cmake_cache_string("CMAKE_CUDA_FLAGS", " ".join(cuda_flags)))
+            entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", " ".join(cuda_flags)))
 
         if "+rocm" in spec:
             entries.append("#------------------{0}".format("-" * 30))
