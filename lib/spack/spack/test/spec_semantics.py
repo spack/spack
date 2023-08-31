@@ -6,6 +6,7 @@
 import pathlib
 
 import pytest
+import sys
 
 import spack.directives
 import spack.error
@@ -1012,7 +1013,6 @@ class TestSpecSemantics:
         ("zlib@git.foo/bar", "{name}-{version}", str(pathlib.Path("zlib-git.foo_bar"))),
         ("zlib@git.foo/bar", "{name}-{version}-{/hash}", None),
         ("zlib@git.foo/bar", "{name}/{version}", str(pathlib.Path("zlib", "git.foo_bar"))),
-        ("zlib@git.foo/bar", r"C:\\installroot\{name}\{version}", None),
         (
             "zlib@{0}=1.0%gcc".format("a" * 40),
             "{name}/{version}/{compiler}",
@@ -1026,6 +1026,44 @@ class TestSpecSemantics:
     ],
 )
 def test_spec_format_path(spec_str, format_str, expected):
+    spec = Spec(spec_str)
+    if not expected:
+        with pytest.raises(spack.spec.SpecFormatPathError):
+            spec.format_path(format_str)
+    else:
+        formatted = spec.format_path(format_str)
+        assert formatted == expected
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Check behavior specific to Windows")
+@pytest.mark.parametrize(
+    "spec_str,format_str,expected",
+    [
+        ("zlib@git.foo/bar", r"C:\\installroot\{name}\{version}", r"C:\installroot\zlib\git.foo_bar"),
+        ("zlib@git.foo/bar", r"\\installroot\{name}\{version}", r"\\installroot\zlib\git.foo_bar"),
+        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", None),
+    ],
+)
+def test_spec_format_path_abs_windows(spec_str, format_str, expected):
+    spec = Spec(spec_str)
+    if not expected:
+        with pytest.raises(spack.spec.SpecFormatPathError):
+            spec.format_path(format_str)
+    else:
+        formatted = spec.format_path(format_str)
+        assert formatted == expected
+
+
+@pytest.mark.not_on_windows("Check behavior specific to POSIX")
+@pytest.mark.parametrize(
+    "spec_str,format_str,expected",
+    [
+        ("zlib@git.foo/bar", r"C:\\installroot\{name}\{version}", None),
+        ("zlib@git.foo/bar", r"\\installroot\{name}\{version}", None),
+        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", "/installroot/zlib/git.foo_bar"),
+    ],
+)
+def test_spec_format_path_abs_posix(spec_str, format_str, expected):
     spec = Spec(spec_str)
     if not expected:
         with pytest.raises(spack.spec.SpecFormatPathError):

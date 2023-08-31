@@ -56,6 +56,7 @@ import itertools
 import os
 import pathlib
 import re
+import sys
 import warnings
 from typing import List, Tuple, Union
 
@@ -4493,27 +4494,20 @@ class Spec:
         effect, "invalid" paths which mix these will be converted to OS-appropriate
         paths with consistent separators).
         """
-        # A root on Linux ("/"), or part of a Windows device namespace ("\")
-        any_sep = r"[/\\]"
-        # A drive on Windows (e.g. "C:\\")
-        drive = r"[a-zA-Z]:[/\\]"
-        root_pattern = rf"^({any_sep}|{drive})"
-        if re.match(root_pattern, format_string):
-            # Note: we could attempt to construct the absolute formatted path (i.e.
-            # produce a valid path instead of failing here), but we would want to
-            # account for the following cases:
-            # "\\root\{name}\{version}", "C:\\root\{name}\{version}".
-            # Also, if we allow abspaths, we probably want to prevent Windows
-            # abspaths on Linux (and vice versa).
-            raise SpecFormatPathError(
-                f"Input format string appears to be an absolute path: {format_string}"
-            )
-
         format_component_with_sep = r"\{[^}]*[/\\][^}]*}"
         if re.search(format_component_with_sep, format_string):
             raise SpecFormatPathError(
                 f"Format component requests a '/', but format_path must convert: {format_string}"
             )
+
+        # A root on Linux ("/"), or a Windows network drive ("\\")
+        any_sep = r"[/\\]"
+        # A drive on Windows (e.g. "C:\\")
+        drive = r"[a-zA-Z]:[/\\]"
+        root_pattern = rf"^({any_sep}|{drive})"
+        root = ""
+        if re.match(root_pattern, format_string):
+            root, format_string = _extract_root(format_string)
 
         # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
         # on Windows, we cannot use pathlib (since "/" is not a path separator
@@ -4521,7 +4515,7 @@ class Spec:
         # both separators, on all operating systems.
         components = re.split(any_sep, format_string)
         formatted_components = [fs.polite_filename(self.format(x)) for x in components]
-        return str(pathlib.Path(*formatted_components))
+        return str(pathlib.Path(root + os.sep.join(formatted_components)))
 
     def __str__(self):
         sorted_nodes = [self] + sorted(
@@ -4843,6 +4837,78 @@ class Spec:
         for v in self.versions:
             if isinstance(v, vn.GitVersion) and v._ref_version is None:
                 v.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(self.fullname))
+
+
+def _extract_root(format_string):
+    if sys.platform == "win32":
+        return _extract_windows_root(format_string)
+    else:
+        return _extract_posix_root(format_string)
+
+
+def _extract_windows_root(format_string):
+    tests = [
+        DriveMatch(True),
+        DeviceMatch(True),
+        PosixMatch(False)
+    ]
+    for t in tests:
+        m = t.check(format_string)
+        if m:
+            return m[0], m[1]
+
+
+def _extract_posix_root(format_string):
+    tests = [
+        DriveMatch(False),
+        DeviceMatch(False),
+        PosixMatch(True)
+    ]
+    for t in tests:
+        m = t.check(format_string)
+        if m:
+            return m[0], m[1]
+
+
+class RootMatch:
+    def __init__(self, pattern, allowed):
+        self.pattern = pattern
+        self.allowed = allowed
+
+    def check(self, string):
+        m = re.match(self.pattern, string)
+        if m:
+            if not self.allowed:
+                raise SpecFormatPathError("Incompatible absolute path for current system ({0}): {1}"
+                    .format(sys.platform, string))
+            return self.extract(m.group(1), string)
+
+    def extract(self, match, string):
+        raise NotImplementedError()
+
+
+class DriveMatch(RootMatch):
+    def __init__(self, allowed):
+        super().__init__(r"^([a-zA-Z]:[/\\])", allowed)
+
+    def extract(self, match, string):
+        return match, string[len(match):].lstrip(r"[/\\]")
+
+
+class DeviceMatch(RootMatch):
+    def __init__(self, allowed):
+        super().__init__(r"^(//)|(\\\\)", allowed)
+
+    def extract(self, match, string):
+        return "//", string.lstrip(r"[/\\]")
+
+
+class PosixMatch(RootMatch):
+    def __init__(self, allowed):
+        super().__init__(r"^([/\\])", allowed)
+
+    def extract(self, match, string):
+        return "/", string.lstrip(r"[/\\]")
 
 
 def parse_with_version_concrete(string: str, compiler: bool = False):
