@@ -7,9 +7,10 @@ from spack.package import *
 
 
 class G2(CMakePackage):
-    """Utilities for coding/decoding GRIB2 messages. This library contains
-    Fortran 90 decoder/encoder routines for GRIB edition 2, as well as
-    indexing/searching utility routines.
+    """The NCEPLIBS-g2 library reads and writes GRIB2 files. GRIdded Binary or General 
+    Regularly-distributed Information in Binary form (GRIB) is a data format for 
+    meteorological and forecast data, standardized by the World Meteorological 
+    Organization (WMO).
 
     This is part of the NCEPLIBS project."""
 
