@@ -97,8 +97,10 @@ class SpecList:
             msg += "Either %s is not in %s or %s is " % (spec, self.name, spec)
             msg += "expanded from a matrix and cannot be removed directly."
             raise SpecListError(msg)
-        assert len(remove) == 1
-        self.yaml_list.remove(remove[0])
+
+        # Remove may contain more than one string representation of the same spec
+        for item in remove:
+            self.yaml_list.remove(item)
 
         # invalidate cache variables when we change the list
         self._expanded_list = None

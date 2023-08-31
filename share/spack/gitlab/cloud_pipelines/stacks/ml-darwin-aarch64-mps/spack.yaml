@@ -29,8 +29,8 @@ spack:
   - py-keras-preprocessing
   - py-keras2onnx
 
-  # MXNet
-  - mxnet
+  # MXNet not supported on darwin aarch64 yet
+  # - mxnet
 
   # PyTorch
   - py-botorch

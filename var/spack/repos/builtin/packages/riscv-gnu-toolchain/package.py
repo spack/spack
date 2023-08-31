@@ -18,7 +18,12 @@ class RiscvGnuToolchain(AutotoolsPackage):
     maintainers("wanlinwang")
 
     version("develop", branch="master", submodules=True)
-    version("2022.08.08", tag="2022.08.08", submodules=True)
+    version(
+        "2022.08.08",
+        tag="2022.08.08",
+        commit="cb25bb862a3bf56d1577d7930bc41f259632ae24",
+        submodules=True,
+    )
 
     # Dependencies:
     depends_on("pkgconfig", type="build")

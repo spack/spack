@@ -136,6 +136,8 @@ default:
   variables:
     KUBERNETES_CPU_REQUEST: 4000m
     KUBERNETES_MEMORY_REQUEST: 16G
+    # avoid moving targets like branches and tags
+    SPACK_CONCRETIZER_REQUIRE_CHECKSUM: 1
   interruptible: true
   timeout: 60 minutes
   retry:

@@ -42,6 +42,7 @@ import spack.error
 import spack.patch
 import spack.spec
 import spack.url
+import spack.util.crypto
 import spack.variant
 from spack.dependency import Dependency, canonical_deptype, default_deptype
 from spack.fetch_strategy import from_kwargs
@@ -407,10 +408,7 @@ def version(
 
 def _execute_version(pkg, ver, **kwargs):
     if (
-        any(
-            s in kwargs
-            for s in ("sha256", "sha384", "sha512", "md5", "sha1", "sha224", "checksum")
-        )
+        (any(s in kwargs for s in spack.util.crypto.hashes) or "checksum" in kwargs)
         and hasattr(pkg, "has_code")
         and not pkg.has_code
     ):
