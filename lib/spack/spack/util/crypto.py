@@ -9,7 +9,8 @@ from typing import Any, Callable, Dict  # novm
 import llnl.util.tty as tty
 
 #: Set of hash algorithms that Spack can use, mapped to digest size in bytes
-hashes = {"md5": 16, "sha1": 20, "sha224": 28, "sha256": 32, "sha384": 48, "sha512": 64}
+hashes = {"sha256": 32, "md5": 16, "sha1": 20, "sha224": 28, "sha384": 48, "sha512": 64}
+# Note: keys are ordered by popularity for earliest return in ``hash_key in version_dict`` checks.
 
 
 #: size of hash digests in bytes, mapped to algoritm names
