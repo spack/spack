@@ -21,10 +21,11 @@ import spack.error
 import spack.hash_types as ht
 import spack.platforms
 import spack.repo
+import spack.solver.asp
 import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import CompilerSpec, Spec
-from spack.version import ver
+from spack.version import Version, ver
 
 
 def check_spec(abstract, concrete):
@@ -2114,6 +2115,14 @@ class TestConcretize:
             assert len(mpi_edges) == 1
             assert "mpi" in mpi_edges[0].virtuals
 
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_dont_define_new_version_from_input_if_checksum_required(self, working_env):
+        os.environ["SPACK_CONCRETIZER_REQUIRE_CHECKSUM"] = "yes"
+        with pytest.raises(spack.error.UnsatisfiableSpecError):
+            # normally spack concretizes to @=3.0 if it's not defined in package.py, except
+            # when checksums are required
+            Spec("a@=3.0").concretized()
+
 
 @pytest.fixture()
 def duplicates_test_repository():
@@ -2208,3 +2217,39 @@ class TestConcretizeSeparately:
         s = Spec("cycle-b").concretized()
         assert s["cycle-a"].satisfies("~cycle")
         assert s["cycle-b"].satisfies("+cycle")
+
+
+@pytest.mark.parametrize(
+    "v_str,v_opts,checksummed",
+    [
+        ("1.2.3", {"sha256": f"{1:064x}"}, True),
+        # it's not about the version being "infinite",
+        # but whether it has a digest
+        ("develop", {"sha256": f"{1:064x}"}, True),
+        # other hash types
+        ("1.2.3", {"checksum": f"{1:064x}"}, True),
+        ("1.2.3", {"md5": f"{1:032x}"}, True),
+        ("1.2.3", {"sha1": f"{1:040x}"}, True),
+        ("1.2.3", {"sha224": f"{1:056x}"}, True),
+        ("1.2.3", {"sha384": f"{1:096x}"}, True),
+        ("1.2.3", {"sha512": f"{1:0128x}"}, True),
+        # no digest key
+        ("1.2.3", {"bogus": f"{1:064x}"}, False),
+        # git version with full commit sha
+        ("1.2.3", {"commit": f"{1:040x}"}, True),
+        (f"{1:040x}=1.2.3", {}, True),
+        # git version with short commit sha
+        ("1.2.3", {"commit": f"{1:07x}"}, False),
+        (f"{1:07x}=1.2.3", {}, False),
+        # git tag is a moving target
+        ("1.2.3", {"tag": "v1.2.3"}, False),
+        ("1.2.3", {"tag": "v1.2.3", "commit": f"{1:07x}"}, False),
+        # git branch is a moving target
+        ("1.2.3", {"branch": "releases/1.2"}, False),
+        # git ref is a moving target
+        ("git.branch=1.2.3", {}, False),
+    ],
+)
+def test_drop_moving_targets(v_str, v_opts, checksummed):
+    v = Version(v_str)
+    assert spack.solver.asp._is_checksummed_version((v, v_opts)) == checksummed
