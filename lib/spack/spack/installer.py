@@ -2,8 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""
-This module encapsulates package installation functionality.
+"""This module encapsulates package installation functionality.
 
 The PackageInstaller coordinates concurrent builds of packages for the same
 Spack instance by leveraging the dependency DAG and file system locks.  It
@@ -17,13 +16,14 @@ of separate packages associated with a spec.
 File system locks enable coordination such that no two processes attempt to
 build the same or a failed dependency package.
 
-Failures to install dependency packages result in removal of their dependents'
-build tasks from the current process.  A failure file is also written (and
-locked) so that other processes can detect the failure and adjust their build
-tasks accordingly.
+Failures to install dependency packages result in removal of their
+dependents' tasks from the current process.  A failure file is also
+written (and locked) so that other processes can detect the failure
+and adjust their tasks accordingly.
 
 This module supports the coordination of local and distributed concurrent
 installations of packages in a Spack instance.
+
 """
 
 import copy
@@ -750,7 +750,7 @@ def log(pkg: "spack.package_base.PackageBase") -> None:
 def package_id(pkg: "spack.package_base.PackageBase") -> str:
     """A "unique" package identifier for installation purposes
 
-    The identifier is used to track build tasks, locks, install, and
+    The identifier is used to track tasks, locks, install, and
     failure statuses.
 
     The identifier needs to distinguish between combinations of compilers
@@ -931,7 +931,7 @@ class Task:
         installed: Set[str],
     ):
         """
-        Instantiate a build task for a package.
+        Instantiate a task for a package.
 
         Args:
             pkg: the package to be built and installed
@@ -965,7 +965,7 @@ class Task:
         # ensure priority queue invariants when tasks are "removed" from the
         # queue.
         if status == STATUS_REMOVED:
-            msg = "Cannot create a build task for {0} with status '{1}'"
+            msg = "Cannot create a task for {0} with status '{1}'"
             raise InstallError(msg.format(self.pkg_id, status), pkg=pkg)
 
         self.status = status
@@ -998,7 +998,7 @@ class Task:
         )
 
         # List of uninstalled dependencies, which is used to establish
-        # the priority of the build task.
+        # the priority of the task.
         #
         self.uninstalled_deps = set(
             pkg_id for pkg_id in self.dependencies if pkg_id not in installed
@@ -1158,7 +1158,7 @@ class Task:
         """The key is the tuple (# uninstalled dependencies, sequence)."""
         return (self.priority, self.sequence)
 
-    def next_attempt(self, installed) -> "BuildTask":
+    def next_attempt(self, installed) -> "Task":
         """Create a new, updated task for the next installation attempt."""
         task = copy.copy(self)
         task._update()
@@ -1217,12 +1217,7 @@ class BuildTask(Task):
         """
         Perform the installation of the requested spec and/or dependency
         represented by the build task.
-
-        Args:
-            task (BuildTask): the installation build task for a package"""
-        # Refactor to put most of the work in BuildTask
-        # Also could put a switch at the top that would determine build or rewire
-
+        """
         install_args = self.request.install_args
         tests = install_args.get("tests")
         unsigned = install_args.get("unsigned")
@@ -1280,7 +1275,7 @@ class BuildTask(Task):
 
 
 class RewireTask(Task):
-    """Class for representing a build task for a package."""
+    """Class for representing a rewire task for a package."""
 
     # TODO: Consider adding pid as a parameter here:
     def __init__(self, pkg, request, start, attempts, status, installed):
@@ -1342,11 +1337,11 @@ class PackageInstaller:
         # List of build requests
         self.build_requests = [BuildRequest(pkg, install_args) for pkg, install_args in installs]
 
-        # Priority queue of build tasks
-        self.build_pq: List[Tuple[Tuple[int, int], BuildTask]] = []
+        # Priority queue of tasks
+        self.build_pq: List[Tuple[Tuple[int, int], Task]] = []
 
-        # Mapping of unique package ids to build task
-        self.build_tasks: Dict[str, BuildTask] = {}
+        # Mapping of unique package ids to task
+        self.build_tasks: Dict[str, Task] = {}
 
         # Cache of package locks for failed packages, keyed on package's ids
         self.failed: Dict[str, Optional[lk.Lock]] = {}
@@ -1442,7 +1437,7 @@ class PackageInstaller:
         all_deps: Dict[str, Set[str]],
     ) -> None:
         """
-        Creates and queus the initial build task for the package.
+        Creates and queus the initial task for the package.
 
         Args:
             pkg: the package to be built and installed
@@ -1531,7 +1526,7 @@ class PackageInstaller:
             else:
                 lock.release_read()
 
-    def _prepare_for_install(self, task: BuildTask) -> None:
+    def _prepare_for_install(self, task: Task) -> None:
         """
         Check the database and leftover installation directories/files and
         prepare for a new install attempt for an uninstalled package.
@@ -1539,7 +1534,7 @@ class PackageInstaller:
         and ensuring the database is up-to-date.
 
         Args:
-            task (BuildTask): the build task whose associated package is
+            task: the task whose associated package is
                 being checked
         """
         install_args = task.request.install_args
@@ -1595,7 +1590,7 @@ class PackageInstaller:
                 spack.store.STORE.db.update_explicit(task.pkg.spec, True)
 
     def _cleanup_all_tasks(self) -> None:
-        """Cleanup all build tasks to include releasing their locks."""
+        """Cleanup all tasks to include releasing their locks."""
         for pkg_id in self.locks:
             self._release_lock(pkg_id)
 
@@ -1628,7 +1623,7 @@ class PackageInstaller:
 
     def _cleanup_task(self, pkg: "spack.package_base.PackageBase") -> None:
         """
-        Cleanup the build task for the spec
+        Cleanup the task for the spec
 
         Args:
             pkg: the package being installed
@@ -1700,7 +1695,7 @@ class PackageInstaller:
 
         if lock_type == "read":
             # Wait until the other process finishes if there are no more
-            # build tasks with priority 0 (i.e., with no uninstalled
+            # tasks with priority 0 (i.e., with no uninstalled
             # dependencies).
             no_p0 = len(self.build_tasks) == 0 or not self._next_is_pri0()
             timeout = None if no_p0 else 3.0
@@ -1924,13 +1919,13 @@ class PackageInstaller:
         fail_fast = bool(request.install_args.get("fail_fast"))
         self.fail_fast = self.fail_fast or fail_fast
 
-    def _install_task(self, task: BuildTask, install_status: InstallStatus) -> None:
+    def _install_task(self, task: Task, install_status: InstallStatus) -> None:
         """
         Perform the installation of the requested spec and/or dependency
-        represented by the build task.
+        represented by the task.
 
         Args:
-            task: the installation build task for a package
+            task: the installation task for a package
             install_status: the installation status for the package"""
         # TODO: use install_status
         rc = task.execute()
@@ -1941,7 +1936,7 @@ class PackageInstaller:
 
     def _next_is_pri0(self) -> bool:
         """
-        Determine if the next build task has priority 0
+        Determine if the next task has priority 0
 
         Return:
             True if it does, False otherwise
@@ -1951,9 +1946,9 @@ class PackageInstaller:
         task = self.build_pq[0][1]
         return task.priority == 0
 
-    def _pop_task(self) -> Optional[BuildTask]:
+    def _pop_task(self) -> Optional[Task]:
         """
-        Remove and return the lowest priority build task.
+        Remove and return the lowest priority task.
 
         Source: Variant of function at docs.python.org/2/library/heapq.html
         """
@@ -1965,17 +1960,17 @@ class PackageInstaller:
                 return task
         return None
 
-    def _push_task(self, task: BuildTask) -> None:
+    def _push_task(self, task: Task) -> None:
         """
-        Push (or queue) the specified build task for the package.
+        Push (or queue) the specified task for the package.
 
         Source: Customization of "add_task" function at
                 docs.python.org/2/library/heapq.html
 
         Args:
-            task: the installation build task for a package
+            task: the installation task for a package
         """
-        msg = "{0} a build task for {1} with status '{2}'"
+        msg = "{0} a task for {1} with status '{2}'"
         skip = "Skipping requeue of task for {0}: {1}"
 
         # Ensure do not (re-)queue installed or failed packages whose status
@@ -1988,7 +1983,7 @@ class PackageInstaller:
             tty.debug(skip.format(task.pkg_id, "failed"))
             return
 
-        # Remove any associated build task since its sequence will change
+        # Remove any associated task since its sequence will change
         self._remove_task(task.pkg_id)
         desc = "Queueing" if task.attempts == 0 else "Requeueing"
         tty.debug(msg.format(desc, task.pkg_id, task.status))
@@ -2021,9 +2016,9 @@ class PackageInstaller:
                 except Exception as exc:
                     tty.warn(err.format(exc.__class__.__name__, ltype, pkg_id, str(exc)))
 
-    def _remove_task(self, pkg_id: str) -> Optional[BuildTask]:
+    def _remove_task(self, pkg_id: str) -> Optional[Task]:
         """
-        Mark the existing package build task as being removed and return it.
+        Mark the existing package task as being removed and return it.
         Raises KeyError if not found.
 
         Source: Variant of function at docs.python.org/2/library/heapq.html
@@ -2032,19 +2027,19 @@ class PackageInstaller:
             pkg_id: identifier for the package to be removed
         """
         if pkg_id in self.build_tasks:
-            tty.debug("Removing build task for {0} from list".format(pkg_id))
+            tty.debug("Removing task for {0} from list".format(pkg_id))
             task = self.build_tasks.pop(pkg_id)
             task.status = STATUS_REMOVED
             return task
         else:
             return None
 
-    def _requeue_task(self, task: BuildTask, install_status: InstallStatus) -> None:
+    def _requeue_task(self, task: Task, install_status: InstallStatus) -> None:
         """
         Requeues a task that appears to be in progress by another process.
 
         Args:
-            task (Task): the installation build task for a package
+            task (Task): the installation task for a package
         """
         if task.status not in [STATUS_INSTALLED, STATUS_INSTALLING]:
             tty.debug(
@@ -2059,14 +2054,14 @@ class PackageInstaller:
         self._push_task(new_task)
 
     def _update_failed(
-        self, task: BuildTask, mark: bool = False, exc: Optional[BaseException] = None
+        self, task: Task, mark: bool = False, exc: Optional[BaseException] = None
     ) -> None:
         """
         Update the task and transitive dependents as failed; optionally mark
-        externally as failed; and remove associated build tasks.
+        externally as failed; and remove associated tasks.
 
         Args:
-            task: the build task for the failed package
+            task: the task for the failed package
             mark: ``True`` if the package and its dependencies are to
                 be marked as "failed", otherwise, ``False``
             exc: optional exception if associated with the failure
@@ -2084,19 +2079,19 @@ class PackageInstaller:
             if dep_id in self.build_tasks:
                 tty.warn("Skipping build of {0} since {1} failed".format(dep_id, pkg_id))
                 # Ensure the dependent's uninstalled dependents are
-                # up-to-date and their build tasks removed.
+                # up-to-date and their tasks removed.
                 dep_task = self.build_tasks[dep_id]
                 self._update_failed(dep_task, mark)
                 self._remove_task(dep_id)
             else:
-                tty.debug("No build task for {0} to skip since {1} failed".format(dep_id, pkg_id))
+                tty.debug("No task for {0} to skip since {1} failed".format(dep_id, pkg_id))
 
-    def _update_installed(self, task: BuildTask) -> None:
+    def _update_installed(self, task: Task) -> None:
         """
-        Mark the task as installed and ensure dependent build tasks are aware.
+        Mark the task as installed and ensure dependent tasks are aware.
 
         Args:
-            task (BuildTask): the build task for the installed package
+            task: the task for the installed package
         """
         task.status = STATUS_INSTALLED
         self._flag_installed(task.pkg, task.dependents)
@@ -2105,7 +2100,7 @@ class PackageInstaller:
         self, pkg: "spack.package_base.PackageBase", dependent_ids: Optional[Set[str]] = None
     ) -> None:
         """
-        Flag the package as installed and ensure known by all build tasks of
+        Flag the package as installed and ensure known by all tasks of
         known dependents.
 
         Args:
@@ -2134,7 +2129,7 @@ class PackageInstaller:
                 self._push_task(dep_task.next_attempt(self.installed))
             else:
                 tty.debug(
-                    "{0} has no build task to update for {1}'s success".format(dep_id, pkg_id)
+                    "{0} has no task to update for {1}'s success".format(dep_id, pkg_id)
                 )
 
     def _init_queue(self) -> None:
@@ -2156,7 +2151,7 @@ class PackageInstaller:
                     task.add_dependent(dependent_id)
         self.all_dependencies = all_dependencies
 
-    def _install_action(self, task: BuildTask) -> int:
+    def _install_action(self, task: Task) -> int:
         """
         Determine whether the installation should be overwritten (if it already
         exists) or skipped (if has been handled by another process).
@@ -2702,7 +2697,7 @@ class OverwriteInstall:
         self,
         installer: PackageInstaller,
         database: spack.database.Database,
-        task: BuildTask,
+        task: Task,
         install_status: InstallStatus,
     ):
         self.installer = installer
