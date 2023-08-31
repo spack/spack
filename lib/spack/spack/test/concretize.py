@@ -21,6 +21,7 @@ import spack.error
 import spack.hash_types as ht
 import spack.platforms
 import spack.repo
+import spack.solver.asp
 import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import CompilerSpec, Spec
@@ -2235,20 +2236,20 @@ class TestConcretizeSeparately:
         # no digest key
         ("1.2.3", {"bogus": f"{1:064x}"}, False),
         # git version with full commit sha
+        ("1.2.3", {"commit": f"{1:040x}"}, True),
         (f"{1:040x}=1.2.3", {}, True),
         # git version with short commit sha
+        ("1.2.3", {"commit": f"{1:07x}"}, False),
         (f"{1:07x}=1.2.3", {}, False),
         # git tag is a moving target
         ("1.2.3", {"tag": "v1.2.3"}, False),
+        ("1.2.3", {"tag": "v1.2.3", "commit": f"{1:07x}"}, False),
         # git branch is a moving target
         ("1.2.3", {"branch": "releases/1.2"}, False),
         # git ref is a moving target
         ("git.branch=1.2.3", {}, False),
     ],
 )
-@pytest.mark.only_clingo("Use case not supported by the original concretizer")
 def test_drop_moving_targets(v_str, v_opts, checksummed):
-    import spack.solver.asp
-
     v = Version(v_str)
     assert spack.solver.asp._is_checksummed_version((v, v_opts)) == checksummed

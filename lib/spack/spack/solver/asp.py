@@ -572,6 +572,10 @@ def _normalize_packages_yaml(packages_yaml):
     return normalized_yaml
 
 
+def _is_checksummed_git_version(v):
+    return isinstance(v, vn.GitVersion) and v.is_commit
+
+
 def _is_checksummed_version(version_info: Tuple[GitOrStandardVersion, dict]):
     """Returns true iff the version is not a moving target"""
     version, info = version_info
@@ -579,7 +583,7 @@ def _is_checksummed_version(version_info: Tuple[GitOrStandardVersion, dict]):
         if any(h in info for h in spack.util.crypto.hashes.keys()) or "checksum" in info:
             return True
         return "commit" in info and len(info["commit"]) == 40
-    return isinstance(version, spack.version.GitVersion) and version.is_commit
+    return _is_checksummed_git_version(version)
 
 
 def _concretization_version_order(version_info: Tuple[GitOrStandardVersion, dict]):
@@ -1930,9 +1934,7 @@ class SpackSolverSetup:
                     if not require_checksum or v.is_commit:
                         version_defs.append(v)
                 else:
-                    # TODO: stop re-defining existing versions, just relabel/adjust weights.
                     matches = [x for x in self.possible_versions[pkg_name] if x.satisfies(v)]
-                    # TODO: use concretization order instead of version order
                     matches.sort(reverse=True)
                     if not matches:
                         raise spack.config.ConfigError(
@@ -1958,8 +1960,10 @@ class SpackSolverSetup:
             if version is None or any(v == version for v in self.possible_versions[s.name]):
                 continue
 
-            if require_checksum and not (isinstance(version, vn.GitVersion) and version.is_commit):
-                continue
+            if require_checksum and not _is_checksummed_git_version(version):
+                raise UnsatisfiableSpecError(
+                    s.format("No matching version for constraint {name}{@versions}")
+                )
 
             declared = DeclaredVersion(version=version, idx=0, origin=origin)
             self.declared_versions[s.name].append(declared)
@@ -2467,7 +2471,8 @@ class SpackSolverSetup:
         """If package requirements mention concrete versions that are not mentioned
         elsewhere, then we need to collect those to mark them as possible
         versions. If they are abstract and statically have no match, then we
-        need to throw an error."""
+        need to throw an error. This function assumes all possible versions are already
+        registered in self.possible_versions."""
         for pkg_name, d in spack.config.get("packages").items():
             if pkg_name == "all" or "require" not in d:
                 continue
@@ -2497,7 +2502,7 @@ class SpackSolverSetup:
 
                 # If concrete an not yet defined, conditionally define it, like we do for specs
                 # from the command line.
-                if not require_checksum or (isinstance(v, vn.GitVersion) and v.is_commit):
+                if not require_checksum or _is_checksummed_git_version(v):
                     self.declared_versions[name].append(
                         DeclaredVersion(version=v, idx=0, origin=Provenance.PACKAGE_REQUIREMENT)
                     )
