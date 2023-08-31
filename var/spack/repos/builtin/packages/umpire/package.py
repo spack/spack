@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 
 from spack.package import *
 
-from .camp import blt_link_helpers, cuda_for_radiuss_projects
+from .camp import blt_link_helpers
 
 
 class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -304,7 +304,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-            cuda_for_radiuss_projects(entries, spec)
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 

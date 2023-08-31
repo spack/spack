@@ -9,7 +9,7 @@ import re
 
 from spack.package import *
 
-from .camp import blt_link_helpers, cuda_for_radiuss_projects
+from .camp import blt_link_helpers
 
 
 class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -143,15 +143,10 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
 
-        # T benefit from the shared function "cuda_for_radiuss_projects",
-        # we do not modify CMAKE_CUDA_FLAGS: it is already appended by the
-        # shared function.
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-            # Shared handling of cuda.
-            cuda_for_radiuss_projects(entries, spec)
 
-            # Custom options. We place everything in CMAKE_CUDA_FLAGS_(RELEASE|RELWITHDEBINFO|DEBUG) which are not set by cuda_for_radiuss_projects
+            # Custom options. We place everything in CMAKE_CUDA_FLAGS_(RELEASE|RELWITHDEBINFO|DEBUG) which are not set by CachedCMakePackages
             if ("xl" in self.compiler.cxx):
                 all_targets_flags = (
                     "-Xcompiler -qstrict -Xcompiler -qxlcompatmacros -Xcompiler -qalias=noansi" \

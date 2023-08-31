@@ -9,7 +9,7 @@ import socket
 
 from spack.package import *
 
-from .camp import blt_link_helpers, cuda_for_radiuss_projects
+from .camp import blt_link_helpers
 
 
 class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -216,7 +216,6 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-            cuda_for_radiuss_projects(entries, spec)
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
