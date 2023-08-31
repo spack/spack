@@ -2040,6 +2040,12 @@ sys.excepthook = global_except_hook
 
 """ if exit_on_failure else ""
 
+    # On windows, the "shebang" below actually constructs a mixed language batch script
+    # that wraps batch startup commands in a python multiline comment so batch
+    # can drive the python execution of the script
+    # the if 0==1:0 is just a stanza that is valid in both batch and python
+    # and is sufficient to hide the python mulitline comment """ from the batch
+    # interpreter which will throw an error it a line is just quotes
     shebang = "#!/usr/bin/env python3" if not is_windows else '''if 0==1: 0 ;"""
 python %0
 exit """
@@ -2049,9 +2055,12 @@ exit """
     # commands composed into os.system("command arg1 arg2 ... argn") calls
     args_to_string = lambda args: f'retcode = os.system("{" ".join(args)}")\n{fail_on_bad_return}\n'
     full_command = "\n".join(map(args_to_string, commands))
+    # unfortunately Windows cannot arbitrarily directly execute python files
+    # so we wrap it in a mixed language batch file
+    ext = "bat" if is_windows else ".py"
     # Write the command to a python script
     # or mixed language batch/python script if we're on Windows
-    script = f"{name}.py"
+    script = f"{name}.{ext}"
     with open(script, "w") as fd:
         fd.write(f"{shebang}\n\n")
         fd.write(f"\n# spack {name} command\n")
