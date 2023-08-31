@@ -30,5 +30,4 @@ class PyTensorboardx(PythonPackage):
     depends_on("py-protobuf@3.20:", when="@2.6.2.2:", type=("build", "run"))
     depends_on("py-packaging", when="@2.6.2.2:", type=("build", "run"))
 
-
     depends_on("py-six", when="@:2.1", type=("build", "run"))
