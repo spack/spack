@@ -56,6 +56,9 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     patch("locs.patch", when="@2.23:2.25")
     patch("locs-2.22.patch", when="@:2.22")
 
+    # _obstack_compat symbol is not initialized
+    patch("39b1f61.patch", when="@:2.17")
+
     def patch(self):
         # Deal with Make version detection not taking into account >= 4.x
         filter_file(
