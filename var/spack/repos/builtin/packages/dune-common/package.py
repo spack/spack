@@ -13,7 +13,6 @@ class DuneCommon(PythonPackage):
     homepage = "https://www.dune-project.org/doc/gettingstarted/"
     git = "https://gitlab.dune-project.org/core/dune-common"
     pypi = "dune-common/dune-common-2.9.0.tar.gz"
-    url = "https://files.pythonhosted.org/packages/c4/3e/48a506e9f42e1c3f384f55f578b887bba77916cb51f7ceff9d0bd9f315a8/dune-common-2.9.0.tar.gz"
 
     version("2.9.0", sha256="35e6ede3da10be5c665db4cabb2bf4bd76a2e483255b2fca63c0a9d5ecad064c")
 
