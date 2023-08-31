@@ -59,6 +59,9 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     # _obstack_compat symbol is not initialized
     patch("39b1f61.patch", when="@:2.17")
 
+    # Install fails with "unknown command hsep / vsep"
+    patch("texi.patch", when="@2.16.0")
+
     # rpc/types.h include issue
     patch("fb21f89.patch", when="@:2.16")
 
@@ -86,8 +89,6 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     # The GCC 10 issue here is not necessarily a build issue, but a broken configure
     # script that cannot deal with multi-digit major versions.
     conflicts("%gcc@10:", when="@:2.20")
-    conflicts("%gcc@5:", when="@:2.15")
-    conflicts("%gcc@3:", when="@:2.2")
 
     with when("@master"):
         depends_on("autoconf", type="build")
