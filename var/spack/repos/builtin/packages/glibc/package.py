@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from llnl.util.filesystem import find_first
+import os
 
 from spack.package import *
 from spack.util.elf import delete_rpath
@@ -95,9 +95,10 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
 
-    @run_after("build")
-    def remove_rpath_from_dynamic_linker(self):
-        # Our compiler/linker wrapper adds an rpath to the dynamic linker itself, which
-        # is not allowed by glibc, it'll error immediately. During install the dynamic
-        # linker is already executed sometimes, so we drop the rpath right after the build.
-        delete_rpath(find_first(self.build_directory, "ld-*.so.*"))
+    def build(self, spec, prefix):
+        # First build just the dynamic linker, and strip its rpath that Spack likes to
+        # add -- it will cause the dynamic linker to error when being executed.
+        with working_dir(self.build_directory):
+            make("-C", "..", f"objdir={os.getcwd()}", "lib")
+            delete_rpath("elf/ld.so")
+            make()
