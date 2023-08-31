@@ -1026,6 +1026,10 @@ class TestSpecSemantics:
     ],
 )
 def test_spec_format_path(spec_str, format_str, expected):
+    _check_spec_format_path(spec_str, format_str, expected)
+
+
+def _check_spec_format_path(spec_str, format_str, expected):
     spec = Spec(spec_str)
     if not expected:
         with pytest.raises(spack.spec.SpecFormatPathError):
@@ -1049,13 +1053,7 @@ def test_spec_format_path(spec_str, format_str, expected):
     ],
 )
 def test_spec_format_path_abs_windows(spec_str, format_str, expected):
-    spec = Spec(spec_str)
-    if not expected:
-        with pytest.raises(spack.spec.SpecFormatPathError):
-            spec.format_path(format_str)
-    else:
-        formatted = spec.format_path(format_str)
-        assert formatted == expected
+    _check_spec_format_path(spec_str, format_str, expected)
 
 
 @pytest.mark.not_on_windows("Check behavior specific to POSIX")
@@ -1068,13 +1066,7 @@ def test_spec_format_path_abs_windows(spec_str, format_str, expected):
     ],
 )
 def test_spec_format_path_abs_posix(spec_str, format_str, expected):
-    spec = Spec(spec_str)
-    if not expected:
-        with pytest.raises(spack.spec.SpecFormatPathError):
-            spec.format_path(format_str)
-    else:
-        formatted = spec.format_path(format_str)
-        assert formatted == expected
+    _check_spec_format_path(spec_str, format_str, expected)
 
 
 @pytest.mark.regression("3887")
