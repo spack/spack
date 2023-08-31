@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 
 from spack.package import *
 
-from .camp import blt_link_helpers, cuda_for_radiuss_projects, hip_for_radiuss_projects
+from .camp import blt_link_helpers, cuda_for_radiuss_projects
 
 
 class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
