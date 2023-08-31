@@ -892,7 +892,6 @@ def add(fullpath, scope=None):
         path += "::"
 
     if has_existing_value:
-        value = syaml.load_config(value)
         existing = get(path, scope=scope)
 
     # append values to lists
