@@ -21,14 +21,14 @@ class IntelXed(Package):
 
     # Current versions now have actual releases and tags.
     version("main", branch="main")
-    version("2023.07.09", tag="v2023.07.09")
-    version("2023.06.07", tag="v2023.06.07")
-    version("2023.04.16", tag="v2023.04.16")
-    version("2022.10.11", tag="v2022.10.11")
-    version("2022.08.11", tag="v2022.08.11")
-    version("2022.04.17", tag="v2022.04.17")
-    version("12.0.1", tag="12.0.1")
-    version("11.2.0", tag="11.2.0")
+    version("2023.07.09", tag="v2023.07.09", commit="539a6a349cf7538a182ed3ee1f48bb9317eb185f")
+    version("2023.06.07", tag="v2023.06.07", commit="4dc77137f651def2ece4ac0416607b215c18e6e4")
+    version("2023.04.16", tag="v2023.04.16", commit="a3055cd0209f5c63c88e280bbff9579b1e2942e2")
+    version("2022.10.11", tag="v2022.10.11", commit="9fc12ab6c0ba7a9eaadb20135369b4b4107fa670")
+    version("2022.08.11", tag="v2022.08.11", commit="1ce1036aa4ab280f9a498136b37421ab390e42db")
+    version("2022.04.17", tag="v2022.04.17", commit="ef19f00de14a9c2c253c1c9b1119e1617280e3f2")
+    version("12.0.1", tag="12.0.1", commit="5976632eeaaaad7890c2109d0cfaf4012eaca3b8")
+    version("11.2.0", tag="11.2.0", commit="40125558530137444b4ee6fd26b445bfa105b543")
 
     # The old 2019.03.01 version (before there were tags).
     version("10.2019.03", commit="b7231de4c808db821d64f4018d15412640c34113", deprecated=True)
@@ -43,7 +43,14 @@ class IntelXed(Package):
         name="mbuild", placement=mdir, git=mbuild_git, tag="v2022.07.28", when="@2022.07:9999"
     )
 
-    resource(name="mbuild", placement=mdir, git=mbuild_git, tag="v2022.04.17", when="@:2022.06")
+    resource(
+        name="mbuild",
+        placement=mdir,
+        git=mbuild_git,
+        tag="v2022.04.17",
+        commit="ef19f00de14a9c2c253c1c9b1119e1617280e3f2",
+        when="@:2022.06",
+    )
 
     variant("debug", default=False, description="Enable debug symbols")
     variant("pic", default=False, description="Compile with position independent code.")

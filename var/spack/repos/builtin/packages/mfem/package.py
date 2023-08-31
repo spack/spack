@@ -101,7 +101,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     )
 
     # Tagged development version used by the laghos package:
-    version("3.4.1-laghos-v2.0", tag="laghos-v2.0")
+    version(
+        "3.4.1-laghos-v2.0", tag="laghos-v2.0", commit="4cb8d2cbc19aac5528df650b4a41c54158d1d2c2"
+    )
 
     version(
         "3.4.0",
@@ -118,7 +120,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     )
 
     # Tagged development version used by the laghos package:
-    version("3.3.1-laghos-v1.0", tag="laghos-v1.0")
+    version(
+        "3.3.1-laghos-v1.0", tag="laghos-v1.0", commit="e1f466e6bf80d5f8449b9e1585c414bad4704195"
+    )
 
     version(
         "3.3",

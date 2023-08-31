@@ -18,9 +18,9 @@ class Amg2013(MakefilePackage):
     git = "https://github.com/LLNL/AMG.git"
 
     version("develop", branch="master")
-    version("1.2", tag="1.2")
-    version("1.1", tag="1.1")
-    version("1.0", tag="1.0")
+    version("1.2", tag="1.2", commit="3ada8a128e311543e84d9d66344ece77924127a8")
+    version("1.1", tag="1.1", commit="09fe8a78baf6ba5eaef7d2804f7b653885d60fee")
+    version("1.0", tag="1.0", commit="f5b864708ca3ef48a86e1e46fcb812cbbfa80c51")
 
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("optflags", default=False, description="Additional optimizations")
