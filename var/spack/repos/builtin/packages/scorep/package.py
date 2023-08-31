@@ -169,7 +169,10 @@ class Scorep(AutotoolsPackage):
         if "+unwind" in spec:
             config_args.append("--with-libunwind=%s" % spec["libunwind"].prefix)
         if "+cuda" in spec:
-            config_args.append("--with-libcuda=%s" % spec["cuda"].prefix)
+            if format(cname) == "nvhpc":
+              config_args.append("--with-libcudart=%s" % spec["cuda"].prefix)
+            else:
+              config_args.append("--with-libcuda=%s" % spec["cuda"].prefix)
         if "+hip" in spec:
             config_args.append("--with-rocm=%s" % spec["hip"].prefix)
 
