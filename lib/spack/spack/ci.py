@@ -2020,25 +2020,49 @@ def process_command(name, commands, repro_dir, run=True, exit_on_failure=True):
 
     Returns: the exit code from processing the command
     """
-    tty.debug("spack {0} arguments: {1}".format(name, commands))
-
+    tty.debug(f"spack {name} arguments: {commands}")
+    is_windows = sys.platform == "win32"
     if len(commands) == 0 or isinstance(commands[0], str):
         commands = [commands]
 
-    # Create a string [command 1] && [command 2] && ... && [command n] with commands
-    # quoted using double quotes.
-    args_to_string = lambda args: " ".join('"{}"'.format(arg) for arg in args)
-    full_command = " \n ".join(map(args_to_string, commands))
+    except_hook = """
+def global_except_hook(exctype, value, traceback):
+    if exctype == BaseException:
+        # Suppress all exceptions
+        pass
+    else:
+        sys.__excepthook__(exctype, value, traceback)
+sys.excepthook = global_except_hook
+"""
+    fail_on_bad_return = """
+    if retcode != 0:
+        raise RuntimeError(f"Command exited with failure: \{retcode\}")
 
-    # Write the command to a shell script
-    script = "{0}.sh".format(name)
+""" if exit_on_failure else ""
+
+    shebang = "#!/usr/bin/env python3" if not is_windows else '''if 0==1: 0 ;"""
+python %0
+exit """
+'''
+    imports = "import os; import sys"
+    # Create a string [command 1] \n [command 2] \n ... \n [command n] with
+    # commands composed into os.system("command arg1 arg2 ... argn") calls
+    args_to_string = lambda args: f'retcode = os.system("{" ".join(args)}")\n{fail_on_bad_return}\n'
+    full_command = "\n".join(map(args_to_string, commands))
+    # Write the command to a python script
+    # or mixed language batch/python script if we're on Windows
+    script = f"{name}.py"
     with open(script, "w") as fd:
-        fd.write("#!/bin/sh\n\n")
-        fd.write("\n# spack {0} command\n".format(name))
-        if exit_on_failure:
-            fd.write("set -e\n")
-        if os.environ.get("SPACK_VERBOSE_SCRIPT"):
-            fd.write("set -x\n")
+        fd.write(f"{shebang}\n\n")
+        fd.write(f"\n# spack {name} command\n")
+        fd.write(imports)
+        if not exit_on_failure:
+            fd.write(except_hook)
+        if not os.environ.get("SPACK_VERBOSE_SCRIPT"):
+            # Commands will by default be piped to script
+            # interpeters stdout. To suppresss them,
+            # turn off stdout
+            fd.write("sys.stdout=None")
         fd.write(full_command)
         fd.write("\n")
 
@@ -2055,15 +2079,18 @@ def process_command(name, commands, repro_dir, run=True, exit_on_failure=True):
     exit_code = None
     if run:
         try:
-            cmd_process = subprocess.Popen(["/bin/sh", "./{0}".format(script)])
+            # on Windows the /Q is needed below to prevent batch from echoing
+            # every command to the interpreter
+            interpreter = "/bin/sh" if not is_windows else "cmd /Q /c"
+            cmd_process = subprocess.Popen([interpreter, f"./{script}"])
             cmd_process.wait()
             exit_code = cmd_process.returncode
         except (ValueError, subprocess.CalledProcessError, OSError) as err:
-            tty.error("Encountered error running {0} script".format(name))
+            tty.error(f"Encountered error running {name} script")
             tty.error(err)
             exit_code = 1
 
-        tty.debug("spack {0} exited {1}".format(name, exit_code))
+        tty.debug(f"spack {name} exited {exit_code}")
     else:
         # Delete the script, it is copied to the destination dir
         os.remove(script)
