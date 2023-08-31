@@ -863,6 +863,7 @@ def add(fullpath, scope=None):
     has_existing_value = True
     path = ""
     override = False
+    value = syaml.load_config(components[-1])
     for idx, name in enumerate(components[:-1]):
         # First handle double colons in constructing path
         colon = "::" if override else ":" if path else ""
@@ -883,7 +884,6 @@ def add(fullpath, scope=None):
             existing = get_valid_type(path)
 
             # construct value from this point down
-            value = syaml.load_config(components[-1])
             for component in reversed(components[idx + 1 : -1]):
                 value = {component: value}
             break
