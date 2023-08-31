@@ -25,6 +25,8 @@ class PyLvis(PythonPackage):
     depends_on("py-pyparsing@2.4.0:", type=("build", "run"))
     depends_on("py-python-dateutil@2.8:", type=("build", "run"))
     depends_on("py-six@1.12:", type=("build", "run"))
+
+    # imported at lvis/lvis.py:15
     depends_on("py-pycocotools", type=("build", "run"))
 
     def patch(self):
