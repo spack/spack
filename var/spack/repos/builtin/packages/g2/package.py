@@ -23,6 +23,7 @@ class G2(CMakePackage):
 
     depends_on("jasper@:2.0.32")
     depends_on("libpng")
+    depends_on("bacio")
 
     def setup_run_environment(self, env):
         for suffix in ("4", "d"):
