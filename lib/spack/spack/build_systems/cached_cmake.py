@@ -264,9 +264,9 @@ class CachedCMakeBuilder(CMakeBuilder):
                 # This is an imperfect merge of the radiuss way and the "spack"
                 # way: radiuss used to define only the first arch in the list,
                 # even for CMAKE_CUDA_ARCHITECTURE. What do we want?
-                cuda_flags.append("-arch sm_{0}".format(cuda_arch[0]))
+                cuda_flags.append("-arch sm_{0}".format(archs[0]))
                 options.append(
-                    cmake_cache_string("CUDA_ARCH", "sm_{0}".format(cuda_arch[0])))
+                    cmake_cache_string("CUDA_ARCH", "sm_{0}".format(archs[0])))
             if spec_uses_toolchain(spec):
                 cuda_flags.append("-Xcompiler {}".format(spec_uses_toolchain(spec)[0]))
             if (spec.satisfies("%gcc@8.1: target=ppc64le")):
