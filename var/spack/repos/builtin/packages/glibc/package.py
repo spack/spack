@@ -59,6 +59,9 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     # _obstack_compat symbol is not initialized
     patch("39b1f61.patch", when="@:2.17")
 
+    # rpc/types.h include issue
+    patch("fb21f89.patch", when="@:2.16")
+
     def patch(self):
         # Deal with Make version detection not taking into account >= 4.x
         filter_file(
