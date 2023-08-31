@@ -279,12 +279,6 @@ class CachedCMakeBuilder(CMakeBuilder):
             else:
                 entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-Wl,-rpath={0}/llvm/lib/".format(rocm_root)))
 
-
-
-
-
-
-
         return entries
 
     def std_initconfig_entries(self):
@@ -296,7 +290,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             "#------------------{0}".format("-" * 60),
             "# CMake executable path: {0}".format(self.pkg.spec["cmake"].command.path),
             "#------------------{0}\n".format("-" * 60),
-            cmake_cache_path("CMAKE_PREFIX_PATH", cmake_prefix_path),
+            cmake_cache_string("CMAKE_PREFIX_PATH", cmake_prefix_path),
             self.define_cmake_cache_from_variant("CMAKE_BUILD_TYPE", "build_type"),
         ]
 
