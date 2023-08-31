@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from llnl.util.filesystem import find_first
+
 from spack.package import *
+from spack.util.elf import delete_rpath
 
 
 class Glibc(AutotoolsPackage, GNUMirrorPackage):
@@ -41,6 +44,34 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     version("2.19", sha256="18ad6db70724699d264add80b1f813630d0141cf3a3558b4e1a7c15f6beac796")
     version("2.18", sha256="c8e727b5feef883184241a4767725ec280c0288794bc5cd4432497370db47734")
     version("2.17", sha256="a3b2086d5414e602b4b3d5a8792213feb3be664ffc1efe783a829818d3fca37a")
+    version("2.16.0", sha256="a75be51658cc1cfb6324ec6dbdbed416526c44c14814823129f0fcc74c279f6e")
+    version("2.15", sha256="da6b95d14b722539c2ec02e7ae1221318dba3d27f19c098a882ffa71bb429c20")
+    version("2.14.1", sha256="f80c40897df49c463a6d5a45f734acbfe1bf42ef209a92a5c217aeb383631bdb")
+    version("2.14", sha256="4812ddcedb5270869ef97c165980af5b459f3986dd5d420a5eb749171c8facec")
+    version("2.13", sha256="bd90d6119bcc2898befd6e1bbb2cb1ed3bb1c2997d5eaa6fdbca4ee16191a906")
+    version("2.12.2", sha256="6b7392a7b339a3f2db6e4bc8d5418cf29116d9e7e36b313e845cb65e449c5346")
+    version("2.12.1", sha256="5ae2edf67169aac932a281cbe636f8be42a854cc3d8b7f325c53b949eab72d48")
+
+    # Fix for newer GCC, related to -fno-common
+    patch("locs.patch", when="@2.23:2.25")
+    patch("locs-2.22.patch", when="@:2.22")
+
+    def patch(self):
+        # Deal with Make version detection not taking into account >= 4.x
+        filter_file(
+            "    3.79* | 3.[89]*)",
+            "    3.79* | 3.[89]* |  [4-9].* | [1-9][0-9]*)",
+            "configure",
+            string=True,
+        )
+
+        # Similarly: gcc >= 5 was not anticipated.
+        filter_file(
+            "3.4* | 4.[0-9]* )",
+            "3.4* | 4.[0-9]* | [5-9].* | [1-9][0-9]*)",
+            "configure",
+            string=True,
+        )
 
     depends_on("bison", type="build")
     depends_on("texinfo", type="build")
@@ -52,10 +83,12 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     conflicts("%gcc@5:", when="@:2.15")
     conflicts("%gcc@3:", when="@:2.2")
 
-    # Old versions require gmake 3.x, which we don't have in Spack currently
-    # depends_on("gmake@:3", when="@:2.18", type="build")
-
     with when("@master"):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
+
+    @run_after("install")
+    def remove_rpath_from_dynamic_linker(self):
+        # find the ld-*.so file in lib/
+        delete_rpath(find_first(self.prefix.lib, "ld-*.so.*"))
