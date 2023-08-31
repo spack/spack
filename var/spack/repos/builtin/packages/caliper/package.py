@@ -8,8 +8,6 @@ import sys
 
 from spack.package import *
 
-from .camp import hip_for_radiuss_projects
-
 
 class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
     """Caliper is a program instrumentation and performance measurement
@@ -156,7 +154,6 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             entries.append(cmake_cache_option("WITH_ROCTRACER", True))
             entries.append(cmake_cache_option("WITH_ROCTX", True))
-            hip_for_radiuss_projects(entries, spec, compiler)
             # entries.append(cmake_cache_option("ROCM_ROOT_DIR", "/usr/"))
 
         return entries

@@ -9,7 +9,7 @@ import re
 
 from spack.package import *
 
-from .camp import blt_link_helpers, cuda_for_radiuss_projects, hip_for_radiuss_projects
+from .camp import blt_link_helpers, cuda_for_radiuss_projects
 
 
 class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -187,7 +187,6 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
-            hip_for_radiuss_projects(entries, spec, compiler)
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 
