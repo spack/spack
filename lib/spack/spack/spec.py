@@ -4840,70 +4840,38 @@ class Spec:
 
 
 def _extract_root(format_string):
-    if sys.platform == "win32":
-        return _extract_windows_root(format_string)
+    checks = [
+        (r"^([a-zA-Z]:[/\\])", "drive", "windows"),
+        (r"^(//)|(\\\\)", "device", "windows"),
+        (r"^([/\\])", "posixroot", "posix"),  # This comes after device (because it is a substring)
+    ]
+
+    root_match = False
+    for pattern, root_type, only_on in checks:
+        match = re.match(pattern, format_string)
+        if match:
+            break
+
+    if not match:
+        return
+
+    we_are_on = "posix" if sys.platform != "win32" else "windows"
+    if we_are_on != only_on:
+        raise SpecFormatPathError(
+            "Incompatible absolute path for current system ({0}): {1}".format(
+                sys.platform, format
+            )
+        )
+
+    if root_type == "drive":
+        drive = match.group(1)
+        return drive, format_string[len(drive) :].lstrip(r"[/\\]")
+    elif root_type == "device":
+        return "//", format_string.lstrip(r"[/\\]")
+    elif root_type == "posixroot":
+        return "/", format_string.lstrip(r"[/\\]")
     else:
-        return _extract_posix_root(format_string)
-
-
-def _extract_windows_root(format_string):
-    tests = [DriveMatch(True), DeviceMatch(True), PosixMatch(False)]
-    for t in tests:
-        m = t.check(format_string)
-        if m:
-            return m[0], m[1]
-
-
-def _extract_posix_root(format_string):
-    tests = [DriveMatch(False), DeviceMatch(False), PosixMatch(True)]
-    for t in tests:
-        m = t.check(format_string)
-        if m:
-            return m[0], m[1]
-
-
-class RootMatch:
-    def __init__(self, pattern, allowed):
-        self.pattern = pattern
-        self.allowed = allowed
-
-    def check(self, string):
-        m = re.match(self.pattern, string)
-        if m:
-            if not self.allowed:
-                raise SpecFormatPathError(
-                    "Incompatible absolute path for current system ({0}): {1}".format(
-                        sys.platform, string
-                    )
-                )
-            return self.extract(m.group(1), string)
-
-    def extract(self, match, string):
-        raise NotImplementedError()
-
-
-class DriveMatch(RootMatch):
-    def __init__(self, allowed):
-        super().__init__(r"^([a-zA-Z]:[/\\])", allowed)
-
-    def extract(self, match, string):
-        return match, string[len(match) :].lstrip(r"[/\\]")
-
-
-class DeviceMatch(RootMatch):
-    def __init__(self, allowed):
-        super().__init__(r"^(//)|(\\\\)", allowed)
-
-    def extract(self, match, string):
-        return "//", string.lstrip(r"[/\\]")
-
-
-class PosixMatch(RootMatch):
-    def __init__(self, allowed):
-        super().__init__(r"^([/\\])", allowed)
-
-    def extract(self, match, string):
-        return "/", string.lstrip(r"[/\\]")
+        raise ValueError("Internal function bug")
 
 
 def parse_with_version_concrete(string: str, compiler: bool = False):
