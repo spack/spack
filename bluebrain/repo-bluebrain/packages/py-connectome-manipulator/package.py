@@ -14,6 +14,7 @@ class PyConnectomeManipulator(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/conn/structural/connectome_manipulator.git"
 
     version("develop", branch="main")
+    version("0.0.7", tag="connectome-manipulator-v0.0.7")
     version("0.0.6", tag="connectome-manipulator-v0.0.6")
     version("0.0.4", tag="connectome-manipulator-v0.0.4")
 
@@ -30,5 +31,6 @@ class PyConnectomeManipulator(PythonPackage):
     depends_on("py-jsonpickle", type=("build", "run"))
     depends_on("py-distributed", type=("build", "run"), when="@0.0.6:")
     depends_on("py-dask-mpi", type=("build", "run"), when="@0.0.6:")
+    depends_on("py-tables", type=("build", "run"), when="@0.0.7:")
 
     depends_on("py-submitit", type=("build", "run"), when="@:0.0.4")
