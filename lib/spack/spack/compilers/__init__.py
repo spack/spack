@@ -312,6 +312,31 @@ def supported_compilers():
     )
 
 
+def supported_compilers_for_host_platform():
+    """Return a set of compiler class objects supported by Spack
+    that are also supported by the current host platform
+    """
+    host_plat = str(spack.platforms.real_host())
+    return supported_compilers_for_platform(host_plat)
+
+
+def supported_compilers_for_platform(platform: str):
+    """Return a set of compiler class objects supported by Spack
+    that are also supported by the provided platform
+
+    Args:
+        platform (str): string representation of platform
+            for which compiler compatability should be determined
+    """
+    def replace_apple_clang(name):
+        return name if name != "apple_clang" else "apple-clang"
+    return sorted(
+        name
+        for name in llnl.util.lang.list_modules(spack.paths.compilers_path)
+        if class_for_compiler_name(replace_apple_clang(name)).supported_platforms(platform)
+    )
+
+
 @_auto_compiler_spec
 def supported(compiler_spec):
     """Test if a particular compiler is supported."""

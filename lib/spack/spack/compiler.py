@@ -235,6 +235,8 @@ class Compiler:
     # by any compiler
     _all_compiler_rpath_libraries = ["libc", "libc++", "libstdc++"]
 
+    # string matcher for string representation of platforms supported by a compiler
+    supported_platforms = any
     # Default flags used by a compiler to set an rpath
     @property
     def cc_rpath_arg(self):
