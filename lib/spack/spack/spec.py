@@ -4847,11 +4847,7 @@ def _extract_root(format_string):
 
 
 def _extract_windows_root(format_string):
-    tests = [
-        DriveMatch(True),
-        DeviceMatch(True),
-        PosixMatch(False)
-    ]
+    tests = [DriveMatch(True), DeviceMatch(True), PosixMatch(False)]
     for t in tests:
         m = t.check(format_string)
         if m:
@@ -4859,11 +4855,7 @@ def _extract_windows_root(format_string):
 
 
 def _extract_posix_root(format_string):
-    tests = [
-        DriveMatch(False),
-        DeviceMatch(False),
-        PosixMatch(True)
-    ]
+    tests = [DriveMatch(False), DeviceMatch(False), PosixMatch(True)]
     for t in tests:
         m = t.check(format_string)
         if m:
@@ -4879,8 +4871,11 @@ class RootMatch:
         m = re.match(self.pattern, string)
         if m:
             if not self.allowed:
-                raise SpecFormatPathError("Incompatible absolute path for current system ({0}): {1}"
-                    .format(sys.platform, string))
+                raise SpecFormatPathError(
+                    "Incompatible absolute path for current system ({0}): {1}".format(
+                        sys.platform, string
+                    )
+                )
             return self.extract(m.group(1), string)
 
     def extract(self, match, string):
@@ -4892,7 +4887,7 @@ class DriveMatch(RootMatch):
         super().__init__(r"^([a-zA-Z]:[/\\])", allowed)
 
     def extract(self, match, string):
-        return match, string[len(match):].lstrip(r"[/\\]")
+        return match, string[len(match) :].lstrip(r"[/\\]")
 
 
 class DeviceMatch(RootMatch):
