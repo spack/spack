@@ -94,7 +94,9 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
 
-    @run_after("install")
+    @run_after("build")
     def remove_rpath_from_dynamic_linker(self):
-        # find the ld-*.so file in lib/
-        delete_rpath(find_first(self.prefix.lib, "ld-*.so.*"))
+        # Our compiler/linker wrapper adds an rpath to the dynamic linker itself, which
+        # is not allowed by glibc, it'll error immediately. During install the dynamic
+        # linker is already executed sometimes, so we drop the rpath right after the build.
+        delete_rpath(find_first(self.build_directory, "ld-*.so.*"))
