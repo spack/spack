@@ -110,8 +110,6 @@ class Rocwmma(CMakePackage):
         if "auto" not in tgt:
             args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
         if self.spec.satisfies("@5.6.0:"):
-            args.append(
-                    self.define("ROCM_SMI_DIR", self.spec["rocm-smi-lib"].prefix)
-                )
+            args.append(self.define("ROCM_SMI_DIR", self.spec["rocm-smi-lib"].prefix))
 
         return args
