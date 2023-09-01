@@ -1277,7 +1277,7 @@ class RewireTask(Task):
                 unsigned = install_args.get("unsigned")
                 binary_distribution.install_root_node(self.pkg.spec, unsigned=unsigned)
                 return ExecuteResult.SUCCESS
-            except Exception as e:
+            except BaseException as e:
                 tty.debug(f"Failed to rewire {self.pkg.spec} from binary. {e}")
                 self.status = oldstatus
                 return ExecuteResult.MISSING_BUILD_SPEC
