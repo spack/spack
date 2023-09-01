@@ -1031,7 +1031,7 @@ class Task:
                 dep_id = package_id(dep.package)
                 self.dependencies.add(dep_id)
 
-    def execute(self):
+    def execute(self, install_status):
         raise NotImplementedError
 
     def __eq__(self, other):
@@ -1201,7 +1201,7 @@ class Task:
 class BuildTask(Task):
     """Class for representing a build task for a package."""
 
-    def execute(self):
+    def execute(self, install_status):
         """
         Perform the installation of the requested spec and/or dependency
         represented by the build task.
@@ -1212,7 +1212,7 @@ class BuildTask(Task):
 
         pkg, pkg_id = self.pkg, self.pkg_id
 
-        tty.msg(install_msg(pkg_id, self.pid))
+        tty.msg(install_msg(pkg_id, self.pid, install_status))
         self.start = self.start or time.time()
         self.status = STATUS_INSTALLING
 
@@ -1247,7 +1247,7 @@ class BuildTask(Task):
             pkg.windows_establish_runtime_linkage()
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
-            spack.store.db.add(pkg.spec, spack.store.layout, explicit=self.explicit)
+            spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=self.explicit)
 
             # If a compiler, ensure it is added to the configuration
             if self.compiler:
@@ -1265,11 +1265,11 @@ class BuildTask(Task):
 class RewireTask(Task):
     """Class for representing a rewire task for a package."""
 
-    def execute(self):
+    def execute(self, install_status):
         # TODO: Docstring
         oldstatus = self.status
         self.status = STATUS_INSTALLING
-        tty.msg(install_msg(self.pkg_id, self.pid))
+        tty.msg(install_msg(self.pkg_id, self.pid, install_status))
         self.start = self.start or time.time()
         if not self.pkg.spec.build_spec.installed:
             try:
@@ -1743,7 +1743,7 @@ class PackageInstaller:
                 packages_per_compiler[compiler][arch].append(pkg)
                 pkg_id = package_id(pkg)
                 if pkg_id not in self.build_tasks:
-                    spack.store.db.clear_failure(dep, force=False)
+                    spack.store.STORE.db.clear_failure(dep, force=False)
                     self._add_init_task(dep.package, task.request, False, self.all_dependencies)
 
             compiler = spec.build_spec.compiler
@@ -1774,7 +1774,7 @@ class PackageInstaller:
             # Clear any persistent failure markings _unless_ they are
             # associated with another process in this parallel build
             # of the spec.
-            spack.store.db.clear_failure(dep, force=False)
+            spack.store.STORE.db.clear_failure(dep, force=False)
 
         # Queue the build spec.
         build_pkg_id = package_id(spec.build_spec.package)
@@ -1895,7 +1895,7 @@ class PackageInstaller:
             task: the installation task for a package
             install_status: the installation status for the package"""
         # TODO: use install_status
-        rc = task.execute()
+        rc = task.execute(install_status)
         if rc == ExecuteResult.MISSING_BUILD_SPEC:
             self._requeue_with_build_spec_tasks(task)
         else:  # if rc == ExecuteResult.SUCCESS or rc == ExecuteResult.FAILED
