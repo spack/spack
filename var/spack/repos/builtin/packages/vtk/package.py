@@ -190,6 +190,13 @@ class Vtk(CMakePackage):
         when="@9.1",
     )
 
+    @when("@9.2:")
+    def patch(self):
+        # provide definition for Ioss::Init::Initializer::Initializer(),
+        # required on macOS, as "-undefined error" is the default,
+        # but not on Linux, as undefined symbols are tolerated
+        filter_file("TARGETS Ioss", "TARGETS Ioss Ionit", "ThirdParty/ioss/CMakeLists.txt")
+
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
         return url.format(version.up_to(2), version)
