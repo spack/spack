@@ -27,7 +27,7 @@ class G2(CMakePackage):
         "build_with_w3emc",
         description="Enable GRIB1 conversion routine",
         default=True,
-        when="@3.4.5:"
+        when="@3.4.5:",
     )
 
     depends_on("libpng")
