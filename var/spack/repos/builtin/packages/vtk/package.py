@@ -167,8 +167,10 @@ class Vtk(CMakePackage):
     depends_on("proj@4:7", when="@9:")
     depends_on("cgns@4.1.1:+mpi", when="@9.1: +mpi")
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
-    depends_on("seacas@2021-05-12:+mpi", when="@9.1: +mpi")
-    depends_on("seacas@2021-05-12:~mpi", when="@9.1: ~mpi")
+    with when("@9.1:"):
+        depends_on("seacas@2021-05-12:2022-10-14")
+        depends_on("seacas+mpi", when="+mpi")
+        depends_on("seacas~mpi", when="~mpi")
     depends_on("nlohmann-json", when="@9.2:")
 
     # For finding Fujitsu-MPI wrapper commands
