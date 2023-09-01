@@ -498,7 +498,7 @@ class Boost(Package):
         with open("user-config.jam", "w") as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
-            if not spec.satisfies("%intel") and not spec.satisfies("platform=windows"):
+            if not spec.satisfies("platform=windows"):
                 # Skip this on Windows since we don't have a cl.exe wrapper in spack
                 f.write("using {0} : : {1} ;\n".format(boost_toolset_id, spack_cxx))
 
@@ -586,7 +586,7 @@ class Boost(Package):
 
         options.extend(["link=%s" % ",".join(link_types), "--layout=%s" % layout])
 
-        if not (spec.satisfies("@:1.75 %intel") or spec.satisfies("platform=windows")):
+        if not spec.satisfies("@:1.75 %intel") and not spec.satisfies("platform=windows"):
             # When building any version >= 1.76, the toolset must be specified.
             # Earlier versions could not specify Intel as the toolset
             # as that was considered to be redundant/conflicting with
