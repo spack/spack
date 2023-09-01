@@ -127,5 +127,5 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
         # 3. do the rest of the build that may directly run ld.so
         with working_dir(self.build_directory):
             make("-C", "..", f"objdir={os.getcwd()}", "lib")
-            delete_rpath("elf/ld.so")
+            delete_rpath(join_path("elf", "ld.so"))
             make()
