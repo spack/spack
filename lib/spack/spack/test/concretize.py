@@ -2094,7 +2094,7 @@ class TestConcretize:
         splice_info = {
             "target": "mpi",
             "replacement": f"/{mpich_spec.dag_hash()}",
-            "transitive": transitive
+            "transitive": transitive,
         }
         spack.config.set("splice", [splice_info])
 

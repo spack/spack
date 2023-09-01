@@ -20,8 +20,8 @@ properties = {
                 "target": {"type": "string"},
                 "replacement": {"type": "string"},
                 "transitive": {"type": "boolean", "default": False},
-            }
-        }
+            },
+        },
     }
 }
 

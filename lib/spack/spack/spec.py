@@ -4677,7 +4677,9 @@ class Spec:
         # For now, check that we don't have DAG with multiple specs from the
         # same package
         def multiple_specs(root):
-            counter = collections.Counter([node.name for node in root.traverse(deptype=("link", "run"))])
+            counter = collections.Counter(
+                [node.name for node in root.traverse(deptype=("link", "run"))]
+            )
             _, max_number = counter.most_common()[0]
             return max_number > 1
 

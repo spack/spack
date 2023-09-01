@@ -1640,7 +1640,7 @@ def relocate_package(spec):
         name, new_dep_prefix = prefix_info
         try:
             lookup_dag_hash = spec.build_spec[name].dag_hash()
-        except:
+        except KeyError:
             dependent_edges = spec[name].edges_from_dependents()
             virtuals = set()
             for edge in dependent_edges:

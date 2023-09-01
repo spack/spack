@@ -28,7 +28,6 @@ import spack.spec
 import spack.store
 import spack.util.lock as lk
 import spack.version
-
 from spack.main import SpackCommand
 
 
@@ -792,8 +791,9 @@ def test_installer_init_requests(install_mockery):
 
 
 @pytest.mark.parametrize("transitive", [True, False])
-def test_install_spliced(install_mockery, mock_fetch, default_mock_concretization, monkeypatch, capsys,
-                         transitive):
+def test_install_spliced(
+    install_mockery, mock_fetch, default_mock_concretization, monkeypatch, capsys, transitive
+):
     """TODO: description"""
     spec = default_mock_concretization("splice-t")
     dep = default_mock_concretization("splice-h+foo")
@@ -808,8 +808,9 @@ def test_install_spliced(install_mockery, mock_fetch, default_mock_concretizatio
 
 
 @pytest.mark.parametrize("transitive", [True, False])
-def test_install_spliced_build_spec_installed(install_mockery, default_mock_concretization,
-                                              capfd, mock_fetch, transitive):
+def test_install_spliced_build_spec_installed(
+    install_mockery, default_mock_concretization, capfd, mock_fetch, transitive
+):
     """TODO: description"""
     spec = default_mock_concretization("splice-t")
     dep = default_mock_concretization("splice-h+foo")
@@ -831,12 +832,13 @@ def test_install_spliced_build_spec_installed(install_mockery, default_mock_conc
 @pytest.mark.parametrize("transitive", [True, False])
 @pytest.mark.parametrize("root_str", ["splice-t^splice-h~foo", "splice-h~foo"])
 def test_install_splice_root_from_binary(
-        install_mockery,
-        default_mock_concretization,
-        mock_fetch,
-        mutable_temporary_mirror,
-        transitive,
-        root_str):
+    install_mockery,
+    default_mock_concretization,
+    mock_fetch,
+    mutable_temporary_mirror,
+    transitive,
+    root_str,
+):
     """TODO: Docstring"""
     # Test splicing and rewiring a spec with the same name, different hash.
     original_spec = spack.spec.Spec(root_str).concretized()
@@ -855,7 +857,7 @@ def test_install_splice_root_from_binary(
         "--update-index",
         mutable_temporary_mirror,
         str(original_spec),
-        str(spec_to_splice)
+        str(spec_to_splice),
     )
 
     uninstall = SpackCommand("uninstall")
@@ -1106,7 +1108,7 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
 
 
 def _interrupt(installer, task, install_status, **kwargs):
-    if task.pkg.name == 'a':
+    if task.pkg.name == "a":
         raise KeyboardInterrupt("mock keyboard interrupt for a")
     else:
         return installer._real_install_task(task)
@@ -1129,7 +1131,9 @@ def test_install_fail_on_interrupt(install_mockery, mock_fetch, monkeypatch):
         installer.install()
 
     assert not any(i.startswith("a-") for i in installer.installed)
-    assert any(i.startswith("b-") for i in installer.installed)  # ensure dependency of a is 'installed'
+    assert any(
+        i.startswith("b-") for i in installer.installed
+    )  # ensure dependency of a is 'installed'
     # assert spec_name not in installer.installed
 
 
