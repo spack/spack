@@ -143,10 +143,10 @@ class Quantlib(CMakePackage):
 
         return args
 
-    ## The Quantlib build process creates the `quantlib-config` file but it is
-    ## not part of the paths that get installed via spack.  This function updates
-    ## that file to include the spack paths needed and then copies the file from the
-    ## build directory to the prefix.bin directory.
+    # The Quantlib build process creates the `quantlib-config` file but it is
+    # not part of the paths that get installed via spack.  This function updates
+    # that file to include the spack paths needed and then copies the file from the
+    # build directory to the prefix.bin directory.
     @run_after("cmake")
     def install_quantlib_config(self):
         import os
