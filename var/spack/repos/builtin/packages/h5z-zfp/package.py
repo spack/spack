@@ -14,6 +14,8 @@ class H5zZfp(MakefilePackage):
     git = "https://github.com/LLNL/H5Z-ZFP.git"
     url = "https://github.com/LLNL/H5Z-ZFP/archive/refs/tags/v1.0.1.tar.gz"
 
+    maintainers("markcmiller86", "brtnfld", "byrnHDF")
+
     version("develop", branch="master")
     version("1.1.1", sha256="921af7b9d1c8c46c036b46544f2785f69d405c0701abe1c1ce3aca2bd5899171")
     version("1.0.1", sha256="b9ed91dab8e2ef82dc6706b4242c807fb352875e3b21c217dd00782dd1a22b24")
