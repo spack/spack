@@ -115,6 +115,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("bison", type="build")
     depends_on("texinfo", type="build")
     depends_on("gettext", type="build")
+    depends_on("perl", type="build")
 
     with when("@master"):
         depends_on("autoconf", type="build")
