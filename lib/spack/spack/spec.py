@@ -4846,7 +4846,6 @@ def _extract_root(format_string):
         (r"^([/\\])", "posixroot", "posix"),  # This comes after device (because it is a substring)
     ]
 
-    root_match = False
     for pattern, root_type, only_on in checks:
         match = re.match(pattern, format_string)
         if match:
@@ -4858,9 +4857,7 @@ def _extract_root(format_string):
     we_are_on = "posix" if sys.platform != "win32" else "windows"
     if we_are_on != only_on:
         raise SpecFormatPathError(
-            "Incompatible absolute path for current system ({0}): {1}".format(
-                sys.platform, format
-            )
+            "Incompatible absolute path for current system ({0}): {1}".format(sys.platform, format)
         )
 
     if root_type == "drive":
