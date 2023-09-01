@@ -4837,6 +4837,21 @@ class Spec:
 
 
 def _extract_root(format_string):
+    """
+    Split an input string into a root and a relative path.
+
+    On POSIX systems (Mac, Linux) this will fail if an absolute path like
+    "C:\\" is provided, since this looks like an absolute path on Windows.
+    Likewise, Windows network drives are prohibited.
+
+    On Windows, paths like "/root" are assumed to be a mistake and likewise
+    raise an exception.
+
+    Returns:
+        If the path is absolute, this returns a tuple where the first element
+        is the extracted root, and the second is the format string with the
+        root removed.
+    """
     checks = [
         (r"^([a-zA-Z]:[/\\])", "drive", "windows"),
         (r"^(//)|(\\\\)", "device", "windows"),
@@ -4860,13 +4875,14 @@ def _extract_root(format_string):
             )
         )
 
+    any_sep = r"[/\\]"
     if root_type == "drive":
         drive = match.group(1)
-        return drive, format_string[len(drive) :].lstrip(r"[/\\]")
+        return drive, format_string[len(drive) :].lstrip(any_sep)
     elif root_type == "device":
-        return "//", format_string.lstrip(r"[/\\]")
+        return "//", format_string.lstrip(any_sep)
     elif root_type == "posixroot":
-        return "/", format_string.lstrip(r"[/\\]")
+        return "/", format_string.lstrip(any_sep)
     else:
         raise ValueError("Internal function bug")
 
