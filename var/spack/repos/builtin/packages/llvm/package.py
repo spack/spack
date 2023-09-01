@@ -756,7 +756,6 @@ class Llvm(CMakePackage, CudaPackage):
         cmake_args = [
             define("LLVM_REQUIRES_RTTI", True),
             define("LLVM_ENABLE_RTTI", True),
-            define("LLVM_ENABLE_EH", True),
             define("LLVM_ENABLE_LIBXML2", False),
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
             define("PYTHON_EXECUTABLE", python.command.path),
@@ -764,6 +763,16 @@ class Llvm(CMakePackage, CudaPackage):
             define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
             from_variant("LLVM_ENABLE_ZSTD", "zstd"),
         ]
+
+        # Flang does not support exceptions from core llvm.
+        # LLVM_ENABLE_EH=True when building flang will soon
+        # fail (with changes at the llvm-project level).
+        # Only enable exceptions in LLVM if we are *not*
+        # building flang.  FYI: LLVM <= 16.x will build flang
+        # successfully but the executable will suffer from
+        # link errors looking for C++ EH support.
+        if "+flang" not in spec:
+            cmake_args.append(define("LLVM_ENABLE_EH", True))
 
         version_suffix = spec.variants["version_suffix"].value
         if version_suffix != "none":
