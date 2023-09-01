@@ -22,14 +22,30 @@ class Quantlib(CMakePackage):
     variant("test", default=True, description="Build test suite")
     variant("openmp", default=False, description="Detect and use OpenMP")
     variant("punit", default=False, description="Enable the parallel unit test runner")
-    variant("sessions", default=False, description="Singletons return different instances for different sessions")
+    variant(
+        "sessions",
+        default=False,
+        description="Singletons return different instances for different sessions",
+    )
     variant("threadsafe", default=False, description="Enable the thread-safe observer pattern")
     variant("tracing", default=False, description="Tracing messages should be allowed")
-    variant("errorfunctions", default=False, description="Error messages should include current function information")
-    variant("errorlines", default=False, description="Error messages should include file and line information")
+    variant(
+        "errorfunctions",
+        default=False,
+        description="Error messages should include current function information",
+    )
+    variant(
+        "errorlines",
+        default=False,
+        description="Error messages should include file and line information",
+    )
     variant("extra", default=False, description="Extra safety checks should be performed")
     variant("highres", default=False, description="Enable date resolution down to microseconds")
-    variant("null", default=False, description="Enable the implementation of Null as template functions")
+    variant(
+        "null",
+        default=False,
+        description="Enable the implementation of Null as template functions",
+    )
     variant("tagged", default=False, description="Library names use layout tags")
     variant("tidy", default=False, description="Use clang-tidy when building")
     variant("indexed", default=False, description="Use indexed coupons instead of par coupons")
@@ -40,93 +56,91 @@ class Quantlib(CMakePackage):
     def cmake_args(self):
         args = []
 
-        args += [ '-DCMAKE_CXX_FLAGS="-march=native"' ]
-
         if "+benchmark" in self.spec:
-            args += ['-DQL_BUILD_BENCHMARK=ON','-DQL_INSTALL_BENCHMARK=ON']
+            args += ["-DQL_BUILD_BENCHMARK=ON", "-DQL_INSTALL_BENCHMARK=ON"]
         else:
-            args += ['-DQL_BUILD_BENCHMARK=OFF','-DQL_INSTALL_BENCHMARK=OFF']
+            args += ["-DQL_BUILD_BENCHMARK=OFF", "-DQL_INSTALL_BENCHMARK=OFF"]
 
         if "+examples" in self.spec:
-            args += ['-DQL_BUILD_EXAMPLES=ON','-DQL_INSTALL_EXAMPLES=ON']
+            args += ["-DQL_BUILD_EXAMPLES=ON", "-DQL_INSTALL_EXAMPLES=ON"]
         else:
-            args += ['-DQL_BUILD_EXAMPLES=OFF','-DQL_INSTALL_EXAMPLES=OFF']
+            args += ["-DQL_BUILD_EXAMPLES=OFF", "-DQL_INSTALL_EXAMPLES=OFF"]
 
         if "+test" in self.spec:
-            args += ['-DQL_BUILD_TEST_SUITE=ON','-DQL_INSTALL_TEST_SUITE=ON']
+            args += ["-DQL_BUILD_TEST_SUITE=ON", "-DQL_INSTALL_TEST_SUITE=ON"]
         else:
-            args += ['-DQL_BUILD_TEST_SUITE=OFF','-DQL_INSTALL_TEST_SUITE=OFF']
+            args += ["-DQL_BUILD_TEST_SUITE=OFF", "-DQL_INSTALL_TEST_SUITE=OFF"]
 
         if "+openmp" in self.spec:
-            args += ['-DQL_ENABLE_OPENMP=ON']
+            args += ["-DQL_ENABLE_OPENMP=ON"]
         else:
-            args += ['-DQL_ENABLE_OPENMP=OFF']
+            args += ["-DQL_ENABLE_OPENMP=OFF"]
 
         if "+punit" in self.spec:
-            args += ['-DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON']
+            args += ["-DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON"]
         else:
-            args += ['-DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=OFF']
+            args += ["-DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=OFF"]
 
         if "+sessions" in self.spec:
-            args += ['-DQL_ENABLE_SESSIONS=ON']
+            args += ["-DQL_ENABLE_SESSIONS=ON"]
         else:
-            args += ['-DQL_ENABLE_SESSIONS=OFF']
+            args += ["-DQL_ENABLE_SESSIONS=OFF"]
 
         if "+threadsafe" in self.spec:
-            args += ['-DQL_ENABLE_THREAD_SAFE_OBSERVER_PATTERN=ON']
+            args += ["-DQL_ENABLE_THREAD_SAFE_OBSERVER_PATTERN=ON"]
         else:
-            args += ['-DQL_ENABLE_THREAD_SAFE_OBSERVER_PATTERN=OFF']
+            args += ["-DQL_ENABLE_THREAD_SAFE_OBSERVER_PATTERN=OFF"]
 
         if "+tracing" in self.spec:
-            args += ['-DQL_ENABLE_TRACING=ON']
+            args += ["-DQL_ENABLE_TRACING=ON"]
         else:
-            args += ['-DQL_ENABLE_TRACING=OFF']
+            args += ["-DQL_ENABLE_TRACING=OFF"]
 
         if "+errorfunctions" in self.spec:
-            args += ['-DQL_ERROR_FUNCTIONS=ON']
+            args += ["-DQL_ERROR_FUNCTIONS=ON"]
         else:
-            args += ['-DQL_ERROR_FUNCTIONS=OFF']
+            args += ["-DQL_ERROR_FUNCTIONS=OFF"]
 
         if "+errorlines" in self.spec:
-            args += ['-DQL_ERROR_LINES=ON']
+            args += ["-DQL_ERROR_LINES=ON"]
         else:
-            args += ['-DQL_ERROR_LINES=OFF']
+            args += ["-DQL_ERROR_LINES=OFF"]
 
         if "+extra" in self.spec:
-            args += ['-DQL_EXTRA_SAFETY_CHECKS=ON']
+            args += ["-DQL_EXTRA_SAFETY_CHECKS=ON"]
         else:
-            args += ['-DQL_EXTRA_SAFETY_CHECKS=OFF']
+            args += ["-DQL_EXTRA_SAFETY_CHECKS=OFF"]
 
         if "+high" in self.spec:
-            args += ['-DQL_HIGH_RESOLUTION_DATE=ON']
+            args += ["-DQL_HIGH_RESOLUTION_DATE=ON"]
         else:
-            args += ['-DQL_HIGH_RESOLUTION_DATE=OFF']
+            args += ["-DQL_HIGH_RESOLUTION_DATE=OFF"]
 
         if "+null" in self.spec:
-            args += ['-DQL_NULL_AS_FUNCTIONS=ON']
+            args += ["-DQL_NULL_AS_FUNCTIONS=ON"]
         else:
-            args += ['-DQL_NULL_AS_FUNCTIONS=OFF']
+            args += ["-DQL_NULL_AS_FUNCTIONS=OFF"]
 
         if "+tagged" in self.spec:
-            args += ['-DQL_TAGGED_LAYOUT=ON']
+            args += ["-DQL_TAGGED_LAYOUT=ON"]
         else:
-            args += ['-DQL_TAGGED_LAYOUT=OFF']
+            args += ["-DQL_TAGGED_LAYOUT=OFF"]
 
         if "+tidy" in self.spec:
-            args += ['-DQL_USE_CLANG_TIDY=ON']
+            args += ["-DQL_USE_CLANG_TIDY=ON"]
         else:
-            args += ['-DQL_USE_CLANG_TIDY=OFF']
+            args += ["-DQL_USE_CLANG_TIDY=OFF"]
 
         if "+indexed" in self.spec:
-            args += ['-DQL_USE_INDEXED_COUPON=ON']
+            args += ["-DQL_USE_INDEXED_COUPON=ON"]
         else:
-            args += ['-DQL_USE_INDEXED_COUPON=OFF']
+            args += ["-DQL_USE_INDEXED_COUPON=OFF"]
 
         if "+std" in self.spec:
-            args += ['-DQL_USE_STD_CLASSES=ON']
+            args += ["-DQL_USE_STD_CLASSES=ON"]
         else:
-            args += ['-DQL_USE_STD_CLASSES=OFF']
-        
+            args += ["-DQL_USE_STD_CLASSES=OFF"]
+
         return args
 
     ## The Quantlib build process creates the `quantlib-config` file but it is
@@ -136,6 +150,7 @@ class Quantlib(CMakePackage):
     @run_after("cmake")
     def install_quantlib_config(self):
         import os
+
         prefix = self.spec.prefix
         mkdir = which("mkdir")
         mkdir("-p", prefix.bin)
