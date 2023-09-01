@@ -47,10 +47,14 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     version("2.16.0", sha256="a75be51658cc1cfb6324ec6dbdbed416526c44c14814823129f0fcc74c279f6e")
     version("2.15", sha256="da6b95d14b722539c2ec02e7ae1221318dba3d27f19c098a882ffa71bb429c20")
     version("2.14.1", sha256="f80c40897df49c463a6d5a45f734acbfe1bf42ef209a92a5c217aeb383631bdb")
-    version("2.14", sha256="4812ddcedb5270869ef97c165980af5b459f3986dd5d420a5eb749171c8facec")
     version("2.13", sha256="bd90d6119bcc2898befd6e1bbb2cb1ed3bb1c2997d5eaa6fdbca4ee16191a906")
     version("2.12.2", sha256="6b7392a7b339a3f2db6e4bc8d5418cf29116d9e7e36b313e845cb65e449c5346")
-    version("2.12.1", sha256="5ae2edf67169aac932a281cbe636f8be42a854cc3d8b7f325c53b949eab72d48")
+    version("2.11.3", sha256="ddc3210f4029991f5142fda7f269f9bfb197917e5d9445ba2d90d31f74cc2765")
+    version("2.10.1", sha256="cd9743db33389e7b4eb2942a4f365d12fc015f115113b230152280c43ccc7e3f")
+    version("2.9", sha256="e0210dec2a4ca0a03d8ee26e2a4ebccc915d99f4cdb1489ff0f9f4ce7bda3e30")
+    version("2.8", sha256="a5b91339355a7bbafc5f44b524556f7f25de83dd56f2c00ef9240dabd6865663")
+    version("2.7", sha256="f5ef515cb70f8d4cfcee0b3aac05b73def60d897bdb7a71f4356782febfe415a")
+    version("2.6.1", sha256="6be7639ccad715d25eef560ce9d1637ef206fb9a162714f6ab8167fc0d971cae")
 
     # Fix for newer GCC, related to -fno-common
     patch("locs.patch", when="@2.23:2.25")
@@ -59,11 +63,21 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     # _obstack_compat symbol is not initialized
     patch("39b1f61.patch", when="@:2.17")
 
-    # Install fails with "unknown command hsep / vsep"
+    # docs: install fails with "unknown command hsep / vsep"
     patch("texi.patch", when="@2.16.0")
 
-    # rpc/types.h include issue
+    # rpc/types.h include issue, should be from local version, not system.
     patch("fb21f89.patch", when="@:2.16")
+
+    # Use init_array (modified commit 4a531bb to unconditionally define
+    # NO_CTORS_DTORS_SECTIONS)
+    patch("4a531bb.patch", when="@:2.12")
+
+    # make: mixed implicit and static pattern rules (trivial issue in docs)
+    patch("32cf406.patch", when="@:2.10")
+
+    # linker flag output regex
+    patch("7c8a673.patch", when="@:2.9")
 
     def patch(self):
         # Deal with Make version detection not taking into account >= 4.x
@@ -82,6 +96,14 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
             string=True,
         )
 
+        # Similarly ld version detection.
+        filter_file(
+            "2.1[3-9]*)",
+            "2.1[3-9]*|2.1[0-9][0-9]*|2.[2-9][0-9]*|[3-9].*|[1-9][0-9]*)",
+            "configure",
+            string=True,
+        )
+
     depends_on("bison", type="build")
     depends_on("texinfo", type="build")
     depends_on("gettext", type="build")
@@ -96,8 +118,9 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
         depends_on("libtool", type="build")
 
     def build(self, spec, prefix):
-        # First build just the dynamic linker, and strip its rpath that Spack likes to
-        # add -- it will cause the dynamic linker to error when being executed.
+        # 1. build just ld.so
+        # 2. drop the rpath from ld.so -- otherwise it cannot be executed
+        # 3. do the rest of the build that may directly run ld.so
         with working_dir(self.build_directory):
             make("-C", "..", f"objdir={os.getcwd()}", "lib")
             delete_rpath("elf/ld.so")
