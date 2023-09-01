@@ -1743,7 +1743,7 @@ class PackageInstaller:
                 packages_per_compiler[compiler][arch].append(pkg)
                 pkg_id = package_id(pkg)
                 if pkg_id not in self.build_tasks:
-                    spack.store.STORE.db.clear_failure(dep, force=False)
+                    spack.store.STORE.failure_tracker.clear(dep, force=False)
                     self._add_init_task(dep.package, task.request, False, self.all_dependencies)
 
             compiler = spec.build_spec.compiler
@@ -1774,7 +1774,7 @@ class PackageInstaller:
             # Clear any persistent failure markings _unless_ they are
             # associated with another process in this parallel build
             # of the spec.
-            spack.store.STORE.db.clear_failure(dep, force=False)
+            spack.store.STORE.failure_tracker.clear(dep, force=False)
 
         # Queue the build spec.
         build_pkg_id = package_id(spec.build_spec.package)
