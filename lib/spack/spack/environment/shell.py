@@ -43,7 +43,7 @@ def activate_header(env, shell, prompt=None):
         # TODO: despacktivate
         # TODO: prompt
     elif shell == "pwsh":
-        cmds += "$Env:SPACK_ENV=%s\n" % env.path
+        cmds += "$Env:SPACK_ENV='%s'\n" % env.path
     else:
         if "color" in os.getenv("TERM", "") and prompt:
             prompt = colorize("@G{%s}" % prompt, color=True, enclose=True)
@@ -82,7 +82,7 @@ def deactivate_header(shell):
         # TODO: despacktivate
         # TODO: prompt
     elif shell == "pwsh":
-        cmds += "Remove-Item Env:SPACK_ENV"
+        cmds += "Set-Item -Path Env:SPACK_ENV\n"
     else:
         cmds += "if [ ! -z ${SPACK_ENV+x} ]; then\n"
         cmds += "unset SPACK_ENV; export SPACK_ENV;\n"

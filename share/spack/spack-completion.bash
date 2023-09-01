@@ -1012,7 +1012,7 @@ _spack_env_activate() {
 }
 
 _spack_env_deactivate() {
-    SPACK_COMPREPLY="-h --help --sh --csh --fish --bat"
+    SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh"
 }
 
 _spack_env_create() {
@@ -1304,7 +1304,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --first --only --list"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --first --only --list"
     else
         _installed_packages
     fi
@@ -1922,7 +1922,7 @@ _spack_unit_test() {
 _spack_unload() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat -a --all"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh -a --all"
     else
         _installed_packages
     fi
