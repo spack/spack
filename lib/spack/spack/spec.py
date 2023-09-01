@@ -4501,7 +4501,7 @@ class Spec:
             )
 
         root = ""
-        extraction_tuple =  _extract_root(format_string)
+        extraction_tuple = _extract_root(format_string)
         if extraction_tuple:
             root, format_string = extraction_tuple
 
@@ -4855,7 +4855,9 @@ def _extract_root(format_string):
     we_are_on = "posix" if sys.platform != "win32" else "windows"
     if we_are_on != only_on:
         raise SpecFormatPathError(
-            "Incompatible absolute path for current system ({0}): {1}".format(sys.platform, format_string)
+            "Incompatible absolute path for current system ({0}): {1}".format(
+                sys.platform, format_string
+            )
         )
 
     if root_type == "drive":
