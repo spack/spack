@@ -279,7 +279,7 @@ class Gromacs(CMakePackage, CudaPackage):
     patch(
         "https://gitlab.com/gromacs/gromacs/-/commit/10262892e11a87fda0f59e633c89ed5ab1100509.diff",
         sha256="2c30d00404b76421c13866cc42afa5e63276f7926c862838751b158df8727b1b",
-        when="@2021.2",
+        when="@2021.1:2021.2",
     )
 
     filter_compiler_wrappers(
