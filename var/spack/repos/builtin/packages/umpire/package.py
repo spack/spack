@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 
 from spack.package import *
 
-from .camp import blt_link_helpers
+from .blt import llnl_link_helpers
 
 
 class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -287,7 +287,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option("{}ENABLE_C".format(option_prefix), "+c" in spec))
 
-        blt_link_helpers(entries, spec, compiler)
+        llnl_link_helpers(entries, spec, compiler)
 
         # adrienbernede-22-11:
         #  Specific to Umpire local package, worth sharing?
@@ -299,6 +299,10 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         compiler = self.compiler
         entries = super().initconfig_hardware_entries()
+
+        entries.append("#------------------{0}".format("-" * 30))
+        entries.append("# Package custom hardware settings")
+        entries.append("#------------------{0}\n".format("-" * 30))
 
         option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 

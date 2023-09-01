@@ -9,7 +9,7 @@ import socket
 
 from spack.package import *
 
-from .camp import blt_link_helpers
+from .blt import llnl_link_helpers
 
 
 class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -205,7 +205,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
         #### END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
 
-        blt_link_helpers(entries, spec, compiler)
+        llnl_link_helpers(entries, spec, compiler)
 
         return entries
 
@@ -213,6 +213,10 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         compiler = self.compiler
         entries = super().initconfig_hardware_entries()
+
+        entries.append("#------------------{0}".format("-" * 30))
+        entries.append("# Package custom hardware settings")
+        entries.append("#------------------{0}\n".format("-" * 30))
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))

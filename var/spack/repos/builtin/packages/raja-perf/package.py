@@ -9,7 +9,7 @@ import re
 
 from spack.package import *
 
-from .camp import blt_link_helpers
+from .blt import llnl_link_helpers
 
 
 class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -126,10 +126,10 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_string("CMAKE_CXX_FLAGS", cxxflags))
         #### END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
 
-        blt_link_helpers(entries, spec, compiler)
+        llnl_link_helpers(entries, spec, compiler)
 
         # adrienbernede-23-01
-        # Maybe we want to share this in the above blt_link_helpers function.
+        # Maybe we want to share this in the above llnl_link_helpers function.
         compilers_using_cxx14 = ["intel-17", "intel-18", "xl"]
         if any(compiler in self.compiler.cxx for compiler in compilers_using_cxx14):
             entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
@@ -140,6 +140,10 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         compiler = self.compiler
         entries = super(RajaPerf, self).initconfig_hardware_entries()
+
+        entries.append("#------------------{0}".format("-" * 30))
+        entries.append("# Package custom hardware settings")
+        entries.append("#------------------{0}\n".format("-" * 30))
 
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
 

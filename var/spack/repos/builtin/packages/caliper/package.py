@@ -146,10 +146,12 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
         compiler = self.compiler
         entries = super(Caliper, self).initconfig_hardware_entries()
 
+        entries.append("#------------------{0}".format("-" * 30))
+        entries.append("# Package custom hardware settings")
+        entries.append("#------------------{0}\n".format("-" * 30))
         if "+cuda" in spec:
             entries.append(cmake_cache_option("WITH_CUPTI", True))
             entries.append(cmake_cache_option("WITH_NVTX", True))
-            entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", spec["cuda"].prefix))
             entries.append(cmake_cache_path("CUPTI_PREFIX", spec["cuda"].prefix))
         if "+rocm" in spec:
             entries.append(cmake_cache_option("WITH_ROCTRACER", True))

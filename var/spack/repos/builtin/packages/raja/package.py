@@ -10,7 +10,7 @@ import socket
 
 from spack.package import *
 
-from .camp import blt_link_helpers
+from .blt import llnl_link_helpers
 
 
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -218,7 +218,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
 
-        blt_link_helpers(entries, spec, compiler)
+        llnl_link_helpers(entries, spec, compiler)
 
         return entries
 
@@ -226,6 +226,10 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         compiler = self.compiler
         entries = super().initconfig_hardware_entries()
+
+        entries.append("#------------------{0}".format("-" * 30))
+        entries.append("# Package custom hardware settings")
+        entries.append("#------------------{0}\n".format("-" * 30))
 
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
 
