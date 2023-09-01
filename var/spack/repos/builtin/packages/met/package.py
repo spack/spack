@@ -183,6 +183,3 @@ class Met(AutotoolsPackage):
         if self.spec.satisfies("%apple-clang@14:"):
             args.append("CXXFLAGS=-std=gnu++17")
         return args
-
-    def setup_run_environment(self, env):
-        env.set("MET_BASE", self.prefix)
