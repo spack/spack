@@ -1094,7 +1094,7 @@ class Task:
 
         Args:
             pkg_id (str):  package identifier of the dependency package
-            installed (boolean):  install status of the dependency package
+            installed (bool):  install status of the dependency package
         """
         if pkg_id != self.pkg_id and pkg_id not in self.dependencies:
             tty.debug("Adding {0} as a depencency of {1}".format(pkg_id, self.pkg_id))
