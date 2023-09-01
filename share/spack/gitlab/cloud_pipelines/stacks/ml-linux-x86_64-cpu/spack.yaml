@@ -3,31 +3,56 @@ spack:
   packages:
     all:
       require: target=x86_64_v3
-      variants: ~cuda~rocm
+    py-torch:
+      # Does not yet support Spack-installed ROCm
+      require: ~rocm
+    llvm:
+      # https://github.com/spack/spack/issues/27999
+      require: ~cuda
+      variants: "~clang~lldb~lld~polly+llvm_dylib+link_llvm_dylib libunwind=none libcxx=none targets=none"
     mpi:
       require: openmpi
+    gl:
+      require: osmesa
+    mesa:
+      require: "+osmesa~glx+llvm"
 
-  specs:
-    # Horovod
-    - py-horovod
+  definitions:
+  - cuda_variants: # Enable/disable CUDA
+    - +cuda cuda_arch=80
+    - ~cuda
+  - rocm_variants: # Enable/disable ROCm
+    - +rocm amdgpu_target=gfx90a
+    - ~rocm
+  - gpu_variants: # Enable/disable ROCm and CUDA
+    - +rocm amdgpu_target=gfx90a
+    - +cuda cuda_arch=80
+    - ~cuda ~rocm
 
-    # Hugging Face
+  - horovod_specs:
+    - matrix:
+      - - py-horovod
+      - [$cuda_variants]
+
+  - jax_specs:
+    - matrix:
+      - - py-jaxlib
+      - [$cuda_variants]
+    - py-jax
+
+  - hugging_face_specs:
     - py-transformers
 
-    # JAX
-    - py-jax
-    - py-jaxlib
-
-    # Keras
+  - keras_specs:
     - py-keras
     - py-keras-applications
     - py-keras-preprocessing
     - py-keras2onnx
 
-    # MXNet
+  - mxnet_specs:
     - mxnet
 
-    # PyTorch
+  - pytorch_specs:
     - py-botorch
     - py-efficientnet-pytorch
     - py-gpytorch
@@ -37,11 +62,9 @@ spack:
     - py-pytorch-lightning
     - py-segmentation-models-pytorch
     - py-timm
-    - py-torch
     - py-torch-cluster
-    - py-torch-geometric
-    - py-torch-nvidia-apex
     - py-torch-scatter
+    - py-torch-geometric
     - py-torch-sparse
     - py-torch-spline-conv
     - py-torchaudio
@@ -52,29 +75,71 @@ spack:
     - py-torchtext
     - py-torchvision
     - py-vector-quantize-pytorch
+    # GPU Specs
+    # PyTorch packages do not support Spack built ROCm
+    # so only configure CUDA and CPU versions
+    - matrix:
+      - - py-torch
+        - py-torch-nvidia-apex
+      - - $cuda_variants
 
-    # scikit-learn
+  - scikit_learn_specs:
     - py-scikit-learn
     - py-scikit-learn-extra
 
-    # TensorBoard
+  - tensorboard_specs:
     - py-tensorboard
     - py-tensorboard-data-server
     - py-tensorboard-plugin-wit
     - py-tensorboardx
 
-    # TensorFlow
-    - py-tensorflow
+  - tensorflow_specs:
     - py-tensorflow-datasets
     - py-tensorflow-estimator
     - py-tensorflow-hub
     - py-tensorflow-metadata
     - py-tensorflow-probability
+    - matrix:
+      - - py-tensorflow
+      - - $gpu_variants
 
-    # XGBoost
+  - xgboost_specs:
     - py-xgboost
     # - r-xgboost
-    - xgboost
+    - matrix:
+      - - xgboost
+      - - $cuda_variants
+
+  specs:
+    # Horovod
+    - $horovod_specs
+
+    # Hugging Face
+    - $hugging_face_specs
+
+    # JAX
+    - $jax_specs
+
+    # Keras
+    - $keras_specs
+
+    # MXNet
+    - $mxnet_specs
+
+    # PyTorch
+    - $pytorch_specs
+
+    # scikit-learn
+    - $scikit_learn_specs
+
+    # TensorBoard
+    - $tensorboard_specs
+
+    # TensorFlow
+    - $tensorflow_specs
+
+    # XGBoost
+    - $xgboost_specs
 
   mirrors:
     mirror: s3://spack-binaries/develop/ml-linux-x86_64-cpu
