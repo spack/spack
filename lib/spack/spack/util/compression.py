@@ -197,7 +197,7 @@ def _unzip(archive_file):
     """
     extracted_file = os.path.basename(strip_extension(archive_file, "zip"))
     if sys.platform == "win32":
-        return _system_untar(archive_file, remove_archive_file=True)
+        return _system_untar(archive_file)
     else:
         exe = "unzip"
         arg = "-q"
