@@ -121,6 +121,12 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
 
+    def configure_args(self):
+        # todo: deal better with kernel headers.
+        # this is added mostly s.t. new gcc/binutils doesn't hit broken assembly.
+        # with gcc 13 it works until but not including glibc 2.9.
+        return ["--enable-kernel=4.4.1"]
+
     def build(self, spec, prefix):
         # 1. build just ld.so
         # 2. drop the rpath from ld.so -- otherwise it cannot be executed
