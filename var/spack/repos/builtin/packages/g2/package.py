@@ -41,7 +41,6 @@ class G2(CMakePackage):
 
         if self.spec.satisfies("@3.4.5:"):
             args.append(self.define_from_variant("BUILD_WITH_W3EMC", "build_with_w3emc"))
-        
 
     def setup_run_environment(self, env):
         for suffix in ("4", "d"):
