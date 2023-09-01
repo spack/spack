@@ -4500,19 +4500,16 @@ class Spec:
                 f"Format component requests a '/', but format_path must convert: {format_string}"
             )
 
-        # A root on Linux ("/"), or a Windows network drive ("\\")
-        any_sep = r"[/\\]"
-        # A drive on Windows (e.g. "C:\\")
-        drive = r"[a-zA-Z]:[/\\]"
-        root_pattern = rf"^({any_sep}|{drive})"
         root = ""
-        if re.match(root_pattern, format_string):
-            root, format_string = _extract_root(format_string)
+        extraction_tuple =  _extract_root(format_string)
+        if extraction_tuple:
+            root, format_string = extraction_tuple
 
         # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
         # on Windows, we cannot use pathlib (since "/" is not a path separator
         # on Windows). Therefore, the path components are derived by splitting on
         # both separators, on all operating systems.
+        any_sep = r"[/\\]"
         components = re.split(any_sep, format_string)
         formatted_components = [fs.polite_filename(self.format(x)) for x in components]
         return str(pathlib.Path(root + os.sep.join(formatted_components)))
@@ -4852,6 +4849,7 @@ def _extract_root(format_string):
             break
 
     if not match:
+        # Not an absolute path on Windows or otherwise
         return
 
     we_are_on = "posix" if sys.platform != "win32" else "windows"
