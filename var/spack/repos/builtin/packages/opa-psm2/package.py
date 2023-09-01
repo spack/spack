@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class OpaPsm2(MakefilePackage):
+class OpaPsm2(MakefilePackage, CudaPackage):
     """Omni-Path Performance Scaled Messaging 2 (PSM2) library"""
 
     homepage = "https://github.com/cornelisnetworks/opa-psm2"
@@ -45,6 +45,8 @@ class OpaPsm2(MakefilePackage):
             # this variable must be set when we use the Intel compilers to
             # ensure that the proper flags are set
             env.set("CCARCH", "icc")
+        if "+cuda" in self.spec:
+            env.set("PSM_CUDA", "1")
 
     def edit(self, spec, prefix):
         # Change the makefile so libraries and includes are not
