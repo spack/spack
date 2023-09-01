@@ -24,4 +24,3 @@ class RHumaniformat(RPackage):
     version("0.5.0", sha256="02b585e3623a5c5faa7dc3abff92b932d748900be39097c5db8434b8e92709a0")
 
     depends_on("r-rcpp", type=("build", "run"))
-
