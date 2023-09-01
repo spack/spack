@@ -80,7 +80,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     patch("7c8a673.patch", when="@:2.9")
 
     def patch(self):
-        # Deal with Make version detection not taking into account >= 4.x
+        # Support gmake >= 4
         filter_file(
             "    3.79* | 3.[89]*)",
             "    3.79* | 3.[89]* |  [4-9].* | [1-9][0-9]*)",
@@ -88,7 +88,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
             string=True,
         )
 
-        # Similarly: gcc >= 5 was not anticipated.
+        # Suport gcc >= 5
         filter_file(
             "3.4* | 4.[0-9]* )",
             "3.4* | 4.[0-9]* | [5-9].* | [1-9][0-9]*)",
@@ -96,7 +96,15 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
             string=True,
         )
 
-        # Similarly ld version detection.
+        # Support gcc >= 10
+        filter_file(
+            "4.[4-9].* | 4.[1-9][0-9].* | [5-9].* )",
+            "4.[4-9].* | 4.[1-9][0-9].* | [5-9].* | [1-9][0-9]*)",
+            "configure",
+            string=True,
+        )
+
+        # Support binutils
         filter_file(
             "2.1[3-9]*)",
             "2.1[3-9]*|2.1[0-9][0-9]*|2.[2-9][0-9]*|[3-9].*|[1-9][0-9]*)",
@@ -107,10 +115,6 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("bison", type="build")
     depends_on("texinfo", type="build")
     depends_on("gettext", type="build")
-
-    # The GCC 10 issue here is not necessarily a build issue, but a broken configure
-    # script that cannot deal with multi-digit major versions.
-    conflicts("%gcc@10:", when="@:2.20")
 
     with when("@master"):
         depends_on("autoconf", type="build")
