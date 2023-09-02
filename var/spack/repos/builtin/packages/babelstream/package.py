@@ -208,13 +208,14 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         variant(
             "test", values=str, default="none", description="Test Variant for debugging purposes"
         )
+        
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    
     def cmake_args(self):
         # convert spec to string to work on it
         spec_string = str(self.spec)
-
         # take only the first portion of the spec until space
         spec_string_truncate = spec_string.split(" ", 1)[0]
         model_list = find_model_flag(spec_string_truncate)  # Prints out ['cuda', 'thrust']
@@ -237,7 +238,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         #             ACC
         # ===================================
         if ("+acc" in self.spec) and ("~cuda" in self.spec):
-            args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
+            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
             if "cuda_arch" in self.spec.variants:
                 cuda_arch_list = self.spec.variants["cuda_arch"].value
                 # the architecture value is only number so append sm_ to the name
@@ -256,7 +257,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         # ===================================
         std_list = ["+stddata", "+stdindices", "+stdranges"]
         if spec_string.startswith(tuple(std_list)):
-            args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
+            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
             if "offload" in self.spec.variants:
                 cuda_arch_list = self.spec.variants["offload"].value
                 # the architecture value is only number so append sm_ to the name
@@ -288,7 +289,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         # `~kokkos` option is there to prevent +kokkos +omp setting to use omp directly from here
         # Same applies for raja
         if ("+omp" in self.spec) and ("~kokkos" in self.spec) and ("~raja" in self.spec):
-            args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
+        
+            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
             if "cuda_arch" in self.spec.variants:
                 cuda_arch_list = self.spec.variants["cuda_arch"].value
                 # the architecture value is only number so append sm_ to the name
@@ -393,16 +395,16 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                     )
                     args.append("-DOpenCL_LIBRARY=" + intel_lib)
                 elif "pocl" in self.spec.variants["backend"].value:
-                    args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
+                    args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
                     pocl_lib = self.spec["pocl"].prefix + "/lib64/libOpenCL.so"
                     args.append("-DOpenCL_LIBRARY=" + pocl_lib)
-                args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
+                args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
 
         # ===================================
         #             RAJA
         # ===================================
         if "+raja" in self.spec:
-            args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
+            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
             args.append("-DRAJA_IN_TREE=" + self.spec.variants["dir"].value)
             if "offload" in self.spec.variants:
                 if "nvidia" in self.spec.variants["offload"].value:
@@ -454,7 +456,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         # kokkos implementation is versatile and it could use cuda or omp architectures as backend
         # The usage should be spack install babelstream +kokkos +cuda [or +omp]
         if "+kokkos" in self.spec:
-            args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
+            args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
             args.append("-DKOKKOS_IN_TREE=" + self.spec.variants["dir"].value)
             # args.append("-DKOKKOS_IN_PACKAGE=" + self.spec["kokkos"].prefix)
             if "backend" in self.spec.variants:
@@ -669,7 +671,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             flags = "-X08 -Kfast -KA64FX -KSVE -KARMV8_3_A -Kzfill=100 "
             flags += "-Kprefetch_sequential=soft " 
             flags += "-Kprefetch_line=8 -Kprefetch_line_L2=16 -Koptmsg=2 "
-            flags += "-Keval -DUSE_OMP_GET_WTIME=1 "  # FJ Fortran system_clock is low resolution
+            # FJ Fortran system_clock is low resolution
+            flags += "-Keval -DUSE_OMP_GET_WTIME=1 "  
 
             config["DOCONCURRENT_FLAG"] = "-Kparallel,reduction -DNOTSHARED"
             config["ARRAY_FLAG"] = "-Kparallel,reduction"
@@ -692,10 +695,10 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # of the top level ESMF directory before building the framework.
         env.set("COMPILER", self.spec.compiler.name)
         env.set("IMPLEMENTATION", self.spec.variants["impl"].value)
-        # env.set("IMPLEMENTATION_OBJECT",self.spec.variants["impl"].value + "Stream.o")
-        print(self.spec.variants["impl"].value)
-        print(self.spec.compiler.version)
-        print(platform.machine())
+        # DEBUG
+        # print(self.spec.variants["impl"].value)
+        # print(self.spec.compiler.version)
+        # print(platform.machine())
         # This creates a testing tree (if one doesn't already exist) and
         # copies the binaries from `src/fortran` to `SpackPackage/bin`.
         # This allows you to use the testing tree independently of the
