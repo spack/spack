@@ -7,7 +7,6 @@ import filecmp
 import json
 import os
 import shutil
-import sys
 
 import jsonschema
 import pytest
@@ -41,10 +40,7 @@ install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
 
-pytestmark = [
-    pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
-    pytest.mark.maybeslow,
-]
+pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.maybeslow]
 
 
 @pytest.fixture()
@@ -858,6 +854,43 @@ def test_ci_rebuild(
             assert have
 
         env_cmd("deactivate")
+
+
+def test_ci_require_signing(
+    tmpdir, working_env, mutable_mock_env_path, mock_gnupghome, ci_base_environment
+):
+    spack_yaml_contents = """
+spack:
+ specs:
+   - archive-files
+ mirrors:
+   test-mirror: file:///no-such-mirror
+ ci:
+   pipeline-gen:
+   - submapping:
+     - match:
+         - archive-files
+       build-job:
+         tags:
+           - donotcare
+         image: donotcare
+"""
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(spack_yaml_contents)
+
+    with tmpdir.as_cwd():
+        env_cmd("activate", "--without-view", "--sh", "-d", ".")
+
+        # Run without the variable to make sure we don't accidentally require signing
+        output = ci_cmd("rebuild", output=str, fail_on_error=False)
+        assert "spack must have exactly one signing key" not in output
+
+        # Now run with the variable to make sure it works
+        os.environ.update({"SPACK_REQUIRE_SIGNING": "True"})
+        output = ci_cmd("rebuild", output=str, fail_on_error=False)
+
+        assert "spack must have exactly one signing key" in output
 
 
 def test_ci_nothing_to_rebuild(
@@ -1992,10 +2025,10 @@ spack:
         working_dir.strpath,
         output=str,
     )
-    expect_out = "docker run --rm --name spack_reproducer -v {0}:{0}:Z -ti {1}".format(
-        os.path.realpath(working_dir.strpath), image_name
-    )
-
+    # Make sure the script was generated
+    assert os.path.exists(os.path.join(os.path.realpath(working_dir.strpath), "start.sh"))
+    # Make sure we tell the suer where it is when not in interactive mode
+    expect_out = "$ {0}/start.sh".format(os.path.realpath(working_dir.strpath))
     assert expect_out in rep_out
 
 

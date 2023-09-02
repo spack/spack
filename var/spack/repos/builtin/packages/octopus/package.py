@@ -192,8 +192,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
         if "+scalapack" in spec:
             args.extend(
                 [
-                    "--with-blacs=%s" % spec["scalapack"].libs,
-                    "--with-scalapack=%s" % spec["scalapack"].libs,
+                    f"--with-blacs={spec['scalapack'].libs.ld_flags}",
+                    f"--with-scalapack={spec['scalapack'].libs.ld_flags}",
                 ]
             )
 

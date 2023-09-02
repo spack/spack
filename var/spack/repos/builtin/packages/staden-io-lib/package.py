@@ -19,7 +19,7 @@ class StadenIoLib(AutotoolsPackage):
 
     variant("curl", default=False, description="Build with curl support")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("curl", when="+curl")
 
     def configure_args(self):

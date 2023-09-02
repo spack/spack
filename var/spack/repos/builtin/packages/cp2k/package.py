@@ -33,6 +33,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
     maintainers("dev-zero", "mtaillefumier")
 
+    version("2023.2", sha256="adbcc903c1a78cba98f49fe6905a62b49f12e3dfd7cedea00616d1a5f50550db")
     version("2023.1", sha256="dff343b4a80c3a79363b805429bdb3320d3e1db48e0ff7d20a3dfd1c946a51ce")
     version("2022.2", sha256="1a473dea512fe264bb45419f83de432d441f90404f829d89cbc3a03f723b8354")
     version("2022.1", sha256="2c34f1a7972973c62d471cd35856f444f11ab22f2ff930f6ead20f3454fd228b")
@@ -180,6 +181,11 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("libxc@5.1.3:5.1", when="@8.2:8")
         depends_on("libxc@5.1.7:5.1", when="@9:2022.2")
         depends_on("libxc@6.1:", when="@2023.1:")
+        depends_on("libxc@6.2:", when="@2023.2:")
+
+    with when("+spla"):
+        depends_on("spla+cuda+fortran", when="+cuda")
+        depends_on("spla+rocm+fortran", when="+rocm")
 
     with when("+mpi"):
         depends_on("mpi@2:")
@@ -191,6 +197,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("cosma@2.5.1:", when="@9:")
         depends_on("cosma@2.6.3:", when="@master:")
         depends_on("cosma+cuda", when="+cuda")
+        depends_on("cosma+rocm", when="+rocm")
         conflicts("~mpi")
         # COSMA support was introduced in 8+
         conflicts("@:7")
@@ -201,6 +208,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("elpa~openmp", when="~openmp")
         depends_on("elpa@2021.05:", when="@8.3:")
         depends_on("elpa@2021.11.001:", when="@9.1:")
+        depends_on("elpa@2023.05.001:", when="@2023.2:")
 
     with when("+plumed"):
         depends_on("plumed+shared")
@@ -219,6 +227,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     # a consistent/compatible combination is pulled into the dependency graph.
     with when("+sirius"):
         depends_on("sirius+fortran+shared")
+        depends_on("sirius+cuda", when="+cuda")
+        depends_on("sirius+rocm", when="+rocm")
         depends_on("sirius+openmp", when="+openmp")
         depends_on("sirius~openmp", when="~openmp")
         depends_on("sirius@:6", when="@:7")
@@ -865,16 +875,20 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 raise InstallError("CP2K supports only one cuda_arch at a time.")
             else:
                 gpu_ver = gpu_map[spec.variants["cuda_arch"].value[0]]
-                args += ["-DCP2K_USE_ACCEL=CUDA"]
-                args += [self.define("CP2K_WITH_GPU", gpu_ver)]
+                args += [
+                    self.define("CP2K_USE_ACCEL", "CUDA"),
+                    self.define("CP2K_WITH_GPU", gpu_ver),
+                ]
 
         if "+rocm" in spec:
             if len(spec.variants["amdgpu_target"].value) > 1:
                 raise InstallError("CP2K supports only one amdgpu_target at a time.")
             else:
                 gpu_ver = gpu_map[spec.variants["amdgpu_target"].value[0]]
-                args += ["-DCP2K_USE_ACCEL=HIP"]
-                args += [self.define("CP2K_WITH_GPU", gpu_ver)]
+                args += [
+                    self.define("CP2K_USE_ACCEL", "HIP"),
+                    self.define("CP2K_WITH_GPU", gpu_ver),
+                ]
 
         args += [
             self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),

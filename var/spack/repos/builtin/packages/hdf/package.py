@@ -35,7 +35,7 @@ class Hdf(AutotoolsPackage):
     variant("shared", default=False, description="Enable shared library")
     variant("pic", default=True, description="Produce position-independent code")
 
-    depends_on("zlib@1.1.4:")
+    depends_on("zlib-api")
     depends_on("jpeg")
     depends_on("szip", when="+szip")
     depends_on("rpc", when="+external-xdr")
@@ -144,13 +144,21 @@ class Hdf(AutotoolsPackage):
             elif name == "fflags":
                 flags.append(self.compiler.f77_pic_flag)
 
+        if name == "cflags":
+            # https://forum.hdfgroup.org/t/help-building-hdf4-with-clang-error-implicit-declaration-of-function-test-mgr-szip-is-invalid-in-c99/7680
+            if self.spec.satisfies("@:4.2.15 %apple-clang") or self.spec.satisfies("%clang@16:"):
+                flags.append("-Wno-error=implicit-function-declaration")
+
+            if self.spec.satisfies("%clang@16:"):
+                flags.append("-Wno-error=implicit-int")
+
         return flags, None, None
 
     def configure_args(self):
         config_args = [
             "--enable-production",
             "--enable-static",
-            "--with-zlib=%s" % self.spec["zlib"].prefix,
+            "--with-zlib=%s" % self.spec["zlib-api"].prefix,
             "--with-jpeg=%s" % self.spec["jpeg"].prefix,
         ]
 
@@ -177,10 +185,6 @@ class Hdf(AutotoolsPackage):
             config_args.extend(
                 ["FFLAGS=-fallow-argument-mismatch", "FCFLAGS=-fallow-argument-mismatch"]
             )
-
-        # https://forum.hdfgroup.org/t/help-building-hdf4-with-clang-error-implicit-declaration-of-function-test-mgr-szip-is-invalid-in-c99/7680
-        if self.spec.satisfies("@:4.2.15 %apple-clang"):
-            config_args.append("CFLAGS=-Wno-error=implicit-function-declaration")
 
         return config_args
 

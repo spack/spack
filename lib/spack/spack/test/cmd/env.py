@@ -8,7 +8,6 @@ import io
 import os
 import pathlib
 import shutil
-import sys
 from argparse import Namespace
 
 import pytest
@@ -41,7 +40,7 @@ from spack.version import Version
 pytestmark = [
     pytest.mark.usefixtures("mutable_mock_env_path", "config", "mutable_mock_repo"),
     pytest.mark.maybeslow,
-    pytest.mark.skipif(sys.platform == "win32", reason="Envs unsupported on Window"),
+    pytest.mark.not_on_windows("Envs unsupported on Window"),
 ]
 
 env = SpackCommand("env")
@@ -277,7 +276,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
     def setup_error(pkg, env):
         raise RuntimeError("cmake-client had issues!")
 
-    pkg = spack.repo.path.get_pkg_class("cmake-client")
+    pkg = spack.repo.PATH.get_pkg_class("cmake-client")
     monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
 
     spack.environment.shell.activate(e)

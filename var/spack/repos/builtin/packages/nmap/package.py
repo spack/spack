@@ -61,7 +61,7 @@ class Nmap(AutotoolsPackage):
 
     depends_on("libssh2@1.10")
     depends_on("pcre@8")
-    depends_on("zlib@1.2")
+    depends_on("zlib-api")
 
     def configure_args(self):
         args = []
