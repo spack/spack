@@ -23,16 +23,17 @@ class Duckdb(MakefilePackage):
 
     depends_on("python@3:")
 
-    variant("autocomplete", default=True)
-    variant("icu", default=True)
-    variant("json", default=True)
-    variant("httpfs", default=True)
-    variant("excel", default=True)
-    variant("openssl", default=True)
-    variant("odbc", default=False)
-    variant("jdbc", default=False)
-    variant("fts", default=True)
-    variant("parquet", default=True)
+    variant("autocomplete", default=True, description="Include autocomplete extension at build time")
+    variant("icu", default=True, description="Compile with bundled ICU library")
+    variant("json", default=True, description="Include JSON support in build (instead of requiring an external extension)")
+    variant("httpfs", default=True, description="Include HTTPFS (& S3) support in build (instead of requiring an external extension)")
+    variant("excel", default=True, description="Include Excel formatting extensions in build (instead of requiring an external extension)")
+    variant("openssl", default=True, description="Compile with bundled OpenSSl library")
+    variant("odbc", default=False, description="Build with ODBC driver")
+    variant("jdbc", default=False, description="Build JDBC driver")
+    variant("inet", default=True, description="Include INET (ip address) support in build (instead of requiring an external extension)")
+    variant("fts", default=True, description="Include FTS (full text search) support in build (instead of requiring an external extension)")
+    variant("parquet", default=True, description="Include parquent support in build")
 
     def edit(self, spec, prefix):
         extensions = [
