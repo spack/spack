@@ -277,6 +277,12 @@ def test_add_config_path(mutable_config):
     compilers = spack.config.get("packages")["all"]["compiler"]
     assert "gcc" in compilers
 
+    # Try with an escaped colon
+    path = 'config:install_tree:root:"C:/path/to/config.yaml"'
+    spack.config.add(path)
+    set_value = spack.config.get("config")["install_tree"]["root"]
+    assert set_value == "C:/path/to/config.yaml"
+
 
 @pytest.mark.regression("17543,23259")
 def test_add_config_path_with_enumerated_type(mutable_config):
