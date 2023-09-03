@@ -17,6 +17,7 @@ class PyShippinglabel(PythonPackage):
 
     depends_on("py-wheel@0.34.2:", type="build")
     depends_on("py-setuptools@40.6:", type="build")
+    conflicts("^py-setuptools@61")
     depends_on("py-apeye@1:", type=("build", "run"))
     depends_on("py-dist-meta@0.1.2:", type=("build", "run"))
     depends_on("py-dom-toml@0.2.2:", type=("build", "run"))

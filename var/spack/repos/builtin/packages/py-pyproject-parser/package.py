@@ -17,6 +17,7 @@ class PyPyprojectParser(PythonPackage):
 
     depends_on("py-wheel@0.34.2:", type="build")
     depends_on("py-setuptools@40.6:", type="build")
+    conflicts("^py-setuptools@61")
     depends_on("py-apeye-core@1:", type=("build", "run"))
     depends_on("py-attrs@20.3:", type=("build", "run"))
     depends_on("py-dom-toml@0.4:", type=("build", "run"))
@@ -25,5 +26,6 @@ class PyPyprojectParser(PythonPackage):
     depends_on("py-packaging@20.9:", type=("build", "run"))
     depends_on("py-shippinglabel@1:", type=("build", "run"))
     depends_on("py-toml@0.10.2:", type=("build", "run"))
-    depends_on("py-tomli@1.2.3:", type=("build", "run"), when="^python@:3.11")
+    depends_on("py-tomli@1.2.3:", type=("build", "run"), when="^python@:3.10")
     depends_on("py-typing-extensions@3.7.4.3:", type=("build", "run"))
+    conflicts("^py-typing-extensions@4.7.0")

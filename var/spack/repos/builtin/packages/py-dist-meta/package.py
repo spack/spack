@@ -17,6 +17,7 @@ class PyDistMeta(PythonPackage):
 
     depends_on("py-wheel@0.34.2:", type="build")
     depends_on("py-setuptools@40.6:", type="build")
+    conflicts("^py-setuptools@61")
     depends_on("py-domdf-python-tools@3.1:", type=("build", "run"))
     depends_on("py-handy-archives@0.1:", type=("build", "run"))
     depends_on("py-packaging@20.9:", type=("build", "run"))

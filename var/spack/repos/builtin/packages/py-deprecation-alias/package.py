@@ -17,5 +17,6 @@ class PyDeprecationAlias(PythonPackage):
 
     depends_on("py-wheel@0.34.2:", type="build")
     depends_on("py-setuptools@40.6:", type="build")
+    conflicts("^py-setuptools@61")
     depends_on("py-deprecation@2.1:", type=("build", "run"))
     depends_on("py-packaging@20.4:", type=("build", "run"))

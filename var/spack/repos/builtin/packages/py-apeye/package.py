@@ -15,7 +15,7 @@ class PyApeye(PythonPackage):
 
     version("1.4.1", sha256="14ea542fad689e3bfdbda2189a354a4908e90aee4bf84c15ab75d68453d76a36")
 
-    depends_on("py-flit-core@3.2:4", type="build")
-    depends_on("py-apeye-core@1.1.4:", type=("build", "run"))
+    depends_on("py-flit-core@3.2:3", type="build")
+    depends_on("py-apeye-core@1:", type=("build", "run"))
     depends_on("py-platformdirs@2.3:", type=("build", "run"))
     depends_on("py-requests@2.24:", type=("build", "run"))

@@ -15,4 +15,4 @@ class PyHandyArchives(PythonPackage):
 
     version("0.2.0", sha256="fba21101fd9e29d5e3b72823261aaae06b9350686f0d2067786d64dce73eb3f6")
 
-    depends_on("py-flit-core@3.2:4", type="build")
+    depends_on("py-flit-core@3.2:3", type="build")

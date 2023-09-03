@@ -15,6 +15,6 @@ class PyDomToml(PythonPackage):
 
     version("0.6.1", sha256="a0bfc204ae32c72ed36e526dce56108a3b20741ac3c055207206ce3b2f302868")
 
-    depends_on("py-flit-core@3.2:4", type="build")
+    depends_on("py-flit-core@3.2:3", type="build")
     depends_on("py-domdf-python-tools@2.8:", type=("build", "run"))
     depends_on("py-toml@0.10.2:", type=("build", "run"))
