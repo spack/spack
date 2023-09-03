@@ -23,16 +23,16 @@ class Duckdb(MakefilePackage):
 
     depends_on("python@3:")
 
-    variant("autocomplete", default=True, description="Include autocomplete extension at build time")
+    variant("autocomplete", default=True, description="Include autocomplete for CLI in build")
     variant("icu", default=True, description="Compile with bundled ICU library")
-    variant("json", default=True, description="Include JSON support in build (instead of requiring an external extension)")
-    variant("httpfs", default=True, description="Include HTTPFS (& S3) support in build (instead of requiring an external extension)")
-    variant("excel", default=True, description="Include Excel formatting extensions in build (instead of requiring an external extension)")
+    variant("json", default=True, description="Include JSON support in build")
+    variant("httpfs", default=True, description="Include HTTPFS (& S3) support in build")
+    variant("excel", default=True, description="Include Excel formatting extension in build")
     variant("openssl", default=True, description="Compile with bundled OpenSSl library")
-    variant("odbc", default=False, description="Build with ODBC driver")
-    variant("jdbc", default=False, description="Build JDBC driver")
-    variant("inet", default=True, description="Include INET (ip address) support in build (instead of requiring an external extension)")
-    variant("fts", default=True, description="Include FTS (full text search) support in build (instead of requiring an external extension)")
+    variant("odbc", default=False, description="Build with ODBC driver (may not work)")
+    variant("jdbc", default=False, description="Build JDBC driver (may not work)")
+    variant("inet", default=True, description="Include INET (ip address) support in build")
+    variant("fts", default=True, description="Include FTS (full text search) support in build")
     variant("parquet", default=True, description="Include parquent support in build")
 
     def edit(self, spec, prefix):
