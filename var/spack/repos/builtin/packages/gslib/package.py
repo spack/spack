@@ -13,14 +13,14 @@ class Gslib(Package):
     git = "https://github.com/gslib/gslib.git"
 
     version("develop", branch="master")
-    version("1.0.7", tag="v1.0.7")
-    version("1.0.6", tag="v1.0.6")
-    version("1.0.5", tag="v1.0.5")
-    version("1.0.4", tag="v1.0.4")
-    version("1.0.3", tag="v1.0.3")
-    version("1.0.2", tag="v1.0.2")
-    version("1.0.1", tag="v1.0.1")
-    version("1.0.0", tag="v1.0.0")
+    version("1.0.7", tag="v1.0.7", commit="88f90cb96953527e3e833f8dbf2719273fc8346d")
+    version("1.0.6", tag="v1.0.6", commit="1c2f74420fec36d5abe1d75f194a457c61f0df53")
+    version("1.0.5", tag="v1.0.5", commit="1de2fba1d94e27e20f3bc3af6a3a35901e223ecd")
+    version("1.0.4", tag="v1.0.4", commit="00a074c15a13fdfd121ac5781ae450af809dde3b")
+    version("1.0.3", tag="v1.0.3", commit="e2df99fad9480a981034fd0e4b3a7fe8f3cf9ae3")
+    version("1.0.2", tag="v1.0.2", commit="e53419c32a4a326e55e1c3e0d7de14ce665c1788")
+    version("1.0.1", tag="v1.0.1", commit="d16685f24551b7efd69e58d96dc76aec75239ea3")
+    version("1.0.0", tag="v1.0.0", commit="9533e652320a3b26a72c36487ae265b02072cd48")
 
     variant("mpi", default=True, description="Build with MPI")
     variant("mpiio", default=True, description="Build with MPI I/O")

@@ -51,7 +51,7 @@ class Libyogrt(AutotoolsPackage):
 
     conflicts("scheduler=lsf", when="@:1.22")
 
-    variant("static", default="False", description="build static library")
+    variant("static", default=False, description="build static library")
 
     def url_for_version(self, version):
         if version < Version("1.21"):
@@ -60,6 +60,12 @@ class Libyogrt(AutotoolsPackage):
             return "https://github.com/LLNL/libyogrt/releases/download/{0}/libyogrt-{0}.tar.gz".format(
                 version
             )
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
 
     def configure_args(self):
         args = []

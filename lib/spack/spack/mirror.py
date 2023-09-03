@@ -442,7 +442,7 @@ def mirror_archive_paths(fetcher, per_package_ref, spec=None):
     storage path of the resource associated with the specified ``fetcher``."""
     ext = None
     if spec:
-        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
         versions = pkg_cls.versions.get(spec.version, {})
         ext = versions.get("extension", None)
     # If the spec does not explicitly specify an extension (the default case),
@@ -474,7 +474,7 @@ def get_all_versions(specs):
     """
     version_specs = []
     for spec in specs:
-        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
         # Skip any package that has no known versions.
         if not pkg_cls.versions:
             tty.msg("No safe (checksummed) versions for package %s" % pkg_cls.name)
@@ -675,12 +675,9 @@ def create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats):
     num_retries = 3
     while num_retries > 0:
         try:
+            # Includes patches and resources
             with pkg_obj.stage as pkg_stage:
                 pkg_stage.cache_mirror(mirror_cache, mirror_stats)
-                for patch in pkg_obj.all_patches():
-                    if patch.stage:
-                        patch.stage.cache_mirror(mirror_cache, mirror_stats)
-                    patch.clean()
             exception = None
             break
         except Exception as e:

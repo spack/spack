@@ -18,7 +18,7 @@ class Stringtie(MakefilePackage):
     version("1.3.4a", sha256="6164a5fa9bf8807ef68ec89f47e3a61fe57fa07fe858f52fb6627f705bf71add")
     version("1.3.3b", sha256="30e8a3a29b474f0abeef1540d9b4624a827d8b29d7347226d86a38afea28bc0f")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def build(self, spec, prefix):
         make("release")

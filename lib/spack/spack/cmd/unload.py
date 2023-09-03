@@ -51,6 +51,13 @@ def setup_parser(subparser):
         const="bat",
         help="print bat commands to load the package",
     )
+    shells.add_argument(
+        "--pwsh",
+        action="store_const",
+        dest="shell",
+        const="pwsh",
+        help="print pwsh commands to load the package",
+    )
 
     subparser.add_argument(
         "-a", "--all", action="store_true", help="unload all loaded Spack packages"
@@ -71,7 +78,7 @@ def unload(parser, args):
             for spec in spack.cmd.parse_specs(args.specs)
         ]
     else:
-        specs = spack.store.db.query(hashes=hashes)
+        specs = spack.store.STORE.db.query(hashes=hashes)
 
     if not args.shell:
         specs_str = " ".join(args.specs) or "SPECS"

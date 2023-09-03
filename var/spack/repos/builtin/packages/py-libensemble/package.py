@@ -12,13 +12,14 @@ class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
 
     homepage = "https://libensemble.readthedocs.io"
-    pypi = "libensemble/libensemble-0.10.1.tar.gz"
+    pypi = "libensemble/libensemble-0.10.2.tar.gz"
     git = "https://github.com/Libensemble/libensemble.git"
     maintainers("shuds13", "jlnav")
 
     tags = ["e4s"]
 
     version("develop", branch="develop")
+    version("0.10.2", sha256="ef8dfe5d233dcae2636a3d6aa38f3c2ad0f42c65bd38f664e99b3e63b9f86622")
     version("0.10.1", sha256="56ae42ec9a28d3df8f46bdf7d016db9526200e9df2a28d849902e3c44fe5c1ba")
     version("0.10.0", sha256="f800f38d02def526f1d2a325710d01fdd3637cd1e33a9a083a3cf4a7f419a726")
     version("0.9.3", sha256="00e5a65d6891feee6a686c048d8de72097b8bff164431f163be96ec130a9c390")
@@ -49,7 +50,8 @@ class PyLibensemble(PythonPackage):
 
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"), when="@0.7.1:")
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools", when="@0.10.2:", type="build")
+    depends_on("py-setuptools", when="@:0.10.1", type=("build", "run"))
     depends_on("py-pydantic@:2", type=("build", "run"), when="@0.10:")
     depends_on("py-tomli", type=("build", "run"), when="@0.10:")
     depends_on("py-pyyaml", type=("build", "run"), when="@0.10:")

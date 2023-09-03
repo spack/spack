@@ -235,7 +235,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libffi", when="+cuda")  # libomptarget
 
     # llvm-config --system-libs libraries.
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # lldb dependencies
     depends_on("swig", when="+lldb")

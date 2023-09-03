@@ -22,7 +22,7 @@ class Icarus(AutotoolsPackage):
     depends_on("flex", type="build")
     depends_on("gperf @3.0:", type="build")
     depends_on("readline @4.2:", type=("build", "link"))
-    depends_on("zlib", type=("build", "link"))
+    depends_on("zlib-api", type=("build", "link"))
 
     patch("fix-gcc-10.patch", when="@v10_3")
 
