@@ -17,7 +17,7 @@ class PyWhey(PythonPackage):
 
     depends_on("py-wheel@0.34.2", type="build")
     depends_on("py-setuptools@40.6:", type="build")
-    
+
     conflicts("^py-setuptools@61")
 
     depends_on("py-click@7.1.2:", type=("build", "run"))
