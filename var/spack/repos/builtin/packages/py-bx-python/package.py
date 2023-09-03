@@ -17,6 +17,7 @@ class PyBxPython(PythonPackage):
     version("0.8.8", sha256="ad0808ab19c007e8beebadc31827e0d7560ac0e935f1100fb8cc93607400bb47")
 
     depends_on("python@3.7:", when="@0.8.13:", type=("build", "run"))
+    depends_on("python@3.5:3.8", when="@=0.8.8", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", type="build")
     depends_on("py-numpy", type=("build", "run"))
