@@ -117,16 +117,18 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("gettext", type="build")
     depends_on("perl", type="build")
 
+    depends_on("linux-headers")
+
     with when("@master"):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
 
     def configure_args(self):
-        # todo: deal better with kernel headers.
-        # this is added mostly s.t. new gcc/binutils doesn't hit broken assembly.
-        # with gcc 13 it works until but not including glibc 2.9.
-        return ["--enable-kernel=4.4.1"]
+        return [
+            "--enable-kernel=4.4.1",
+            "--with-headers={}".format(self.spec["linux-headers"].prefix.include),
+        ]
 
     def build(self, spec, prefix):
         # 1. build just ld.so
