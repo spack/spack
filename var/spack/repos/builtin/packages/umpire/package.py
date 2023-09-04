@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import re
 import socket
 
 import llnl.util.tty as tty
@@ -299,13 +298,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         # adrienbernede-22-11:
         #  Specific to Umpire local package, worth sharing?
-        entries = [x for x in entries if not "COMPILER_ID" in x]
+        entries = [x for x in entries if "COMPILER_ID" not in x]
 
         return entries
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        compiler = self.compiler
         entries = super().initconfig_hardware_entries()
 
         entries.append("#------------------{0}".format("-" * 30))

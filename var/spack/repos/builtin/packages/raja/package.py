@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
-import os
-import re
 import socket
 
 from spack.package import *
@@ -148,9 +145,9 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     # and remove the +tests conflict below.
     variant("tests", default=False, description="Build tests")
 
-    ## we don’t use variants to express the failing test, we only add a variant to
-    ## define whether we want to run all the tests (including those known to fail)
-    ## or only the passing ones.
+    # we don’t use variants to express the failing test, we only add a variant to
+    # define whether we want to run all the tests (including those known to fail)
+    # or only the passing ones.
     variant(
         "run-all-tests",
         default=False,
@@ -230,7 +227,6 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        compiler = self.compiler
         entries = super().initconfig_hardware_entries()
 
         entries.append("#------------------{0}".format("-" * 30))
@@ -298,17 +294,18 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         else:
             entries.append(cmake_cache_option("ENABLE_EXERCISES", "+exercises" in spec))
 
-        ### #TODO: Treat the workaround when building tests with spack wrapper
-        ### #      For now, removing it to test CI, which builds tests outside of wrapper.
-        ### # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
-        ### # is used by the spack compiler wrapper.  This can go away when BLT
-        ### # removes -Werror from GTest flags
-        ### if self.spec.satisfies("%clang target=ppc64le:") or ( not self.run_tests and not "+tests" in spec):
-        if not self.run_tests and not "+tests" in spec:
+        #TODO: Treat the workaround when building tests with spack wrapper
+        #      For now, removing it to test CI, which builds tests outside of wrapper.
+        # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
+        # is used by the spack compiler wrapper.  This can go away when BLT
+        # removes -Werror from GTest flags
+        if self.spec.satisfies("%clang target=ppc64le:") or
+           ( not self.run_tests and not "+tests" in spec):
+        if not self.run_tests and "+tests" not in spec:
             entries.append(cmake_cache_option("ENABLE_TESTS", False))
         else:
             entries.append(cmake_cache_option("ENABLE_TESTS", True))
-            if not "+run-all-tests" in spec:
+            if "+run-all-tests" not in spec:
                 if spec.satisfies("%clang@12.0.0:13.9.999"):
                     entries.append(
                         cmake_cache_string(
@@ -316,11 +313,16 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
                             "test-algorithm-sort-OpenMP.exe;test-algorithm-stable-sort-OpenMP.exe",
                         )
                     )
+                excluded_tests = [ "test-algorithm-sort-Cuda.exe",
+                    "test-algorithm-stable-sort-Cuda.exe",
+                    "test-algorithm-sort-OpenMP.exe",
+                    "test-algorithm-stable-sort-OpenMP.exe",
+                    ]
                 if spec.satisfies("+cuda %clang@12.0.0:13.9.999"):
                     entries.append(
                         cmake_cache_string(
                             "CTEST_CUSTOM_TESTS_IGNORE",
-                            "test-algorithm-sort-Cuda.exe;test-algorithm-stable-sort-Cuda.exe;test-algorithm-sort-OpenMP.exe;test-algorithm-stable-sort-OpenMP.exe",
+                            ";".join(excluded_tests),
                         )
                     )
                 if spec.satisfies("+cuda %xl@16.1.1.12"):

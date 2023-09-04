@@ -289,7 +289,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             hip_link_flags = ""
             if "%gcc" in spec or spec_uses_toolchain(spec):
                 if "%gcc" in spec:
-                    gcc_bin = os.path.dirname(compiler.cxx)
+                    gcc_bin = os.path.dirname(self.compiler.cxx)
                     gcc_prefix = os.path.join(gcc_bin, "..")
                 else:
                     gcc_prefix = spec_uses_toolchain(spec)[0]

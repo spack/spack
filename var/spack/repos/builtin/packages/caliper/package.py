@@ -128,7 +128,6 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
-        compiler = self.compiler
         entries = super(Caliper, self).initconfig_compiler_entries()
 
         if "+fortran" in spec:
@@ -143,7 +142,6 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        compiler = self.compiler
         entries = super(Caliper, self).initconfig_hardware_entries()
 
         entries.append("#------------------{0}".format("-" * 30))

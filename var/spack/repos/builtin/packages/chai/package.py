@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import re
 import socket
 
 from spack.package import *
@@ -169,21 +167,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         compiler = self.compiler
         entries = super().initconfig_compiler_entries()
 
-        # adrienbernede-22-11:
-        #   This was in upstream Spack raja package, but it’s causing the following failure for Umpire:
-        #     CMake Error in src/umpire/CMakeLists.txt:
-        #     No known features for CXX compiler
-        #
-        #   In CHAI, we see another error:
-        #       [ 15%] Linking C executable ../../../tests/blt_hip_runtime_c_smoke
-        #       clang (LLVM option parsing): for the --amdgpu-early-inline-all option: may only occur zero or one times!
-        #       clang (LLVM option parsing): for the --amdgpu-function-calls option: may only occur zero or one times!
-        #   We suspect this error comes from the use of hip compiler here, so we comment it:
-        #
-        # if "+rocm" in spec:
-        #    entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
-
-        #### BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+        # BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
         flags = spec.compiler_flags
 
         # use global spack compiler flags
@@ -203,7 +187,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         fflags = " ".join(flags["fflags"])
         if fflags:
             entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
-        #### END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+        # END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
 
         llnl_link_helpers(entries, spec, compiler)
 
@@ -211,7 +195,6 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        compiler = self.compiler
         entries = super().initconfig_hardware_entries()
 
         entries.append("#------------------{0}".format("-" * 30))

@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import re
 import socket
 
 from spack.package import *
@@ -111,7 +109,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super(RajaPerf, self).initconfig_compiler_entries()
 
-        #### BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+        # BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
         flags = spec.compiler_flags
 
         # use global spack compiler flags
@@ -127,7 +125,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         cxxflags = cppflags + " ".join(flags["cxxflags"])
         if cxxflags:
             entries.append(cmake_cache_string("CMAKE_CXX_FLAGS", cxxflags))
-        #### END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+        # END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
 
         llnl_link_helpers(entries, spec, compiler)
 
@@ -141,7 +139,6 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        compiler = self.compiler
         entries = super(RajaPerf, self).initconfig_hardware_entries()
 
         entries.append("#------------------{0}".format("-" * 30))
@@ -153,7 +150,9 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
 
-            # Custom options. We place everything in CMAKE_CUDA_FLAGS_(RELEASE|RELWITHDEBINFO|DEBUG) which are not set by CachedCMakePackages
+            # Custom options.
+            # We place everything in CMAKE_CUDA_FLAGS_(RELEASE|RELWITHDEBINFO|DEBUG)
+            # which are not set by CachedCMakePackages
             if "xl" in self.compiler.cxx:
                 all_targets_flags = (
                     "-Xcompiler -qstrict -Xcompiler -qxlcompatmacros -Xcompiler -qalias=noansi"
@@ -225,8 +224,6 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = []
 
-        option_prefix = "RAJA_" if spec.satisfies("@0.14.0:") else ""
-
         # TPL locations
         entries.append("#------------------{0}".format("-" * 60))
         entries.append("# TPLs")
@@ -253,7 +250,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option("ENABLE_BENCHMARKS", "tests=benchmarks" in spec))
         entries.append(
-            cmake_cache_option("ENABLE_TESTS", not "tests=none" in spec or self.run_tests)
+            cmake_cache_option("ENABLE_TESTS", "tests=none" not in spec or self.run_tests)
         )
 
         entries.append(cmake_cache_option("RAJA_PERFSUITE_USE_CALIPER", "+caliper" in spec))
