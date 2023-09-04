@@ -333,8 +333,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     )
 
     # Avoid using NULL() as subroutine argument as doing so breaks some versions of AOCC compiler
-    patch("null_2022.x.patch", when="@2022.1:2022.2 %aocc@:4.0")
-    patch("null_9.1.patch", when="@9.1 %aocc@:4.0")
+    # These patches backport 2023.x fixes to previous versions
+    patch("backport_avoid_null_2022.x.patch", when="@2022.1:2022.2 %aocc@:4.0")
+    patch("backport_avoid_null_9.1.patch", when="@9.1 %aocc@:4.0")
 
     # Patch for an undefined constant due to incompatible changes in ELPA
     @when("@9.1:2022.2 +elpa")
