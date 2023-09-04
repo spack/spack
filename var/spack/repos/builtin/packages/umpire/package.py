@@ -149,7 +149,11 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("c", default=True, description="Build C API")
     variant("mpi", default=False, description="Enable MPI support")
     variant("ipc_shmem", default=False, description="Enable POSIX shared memory")
-    variant("sqlite_experimental", default=False, description="Enable sqlite integration with umpire events (Experimental)")
+    variant(
+        "sqlite_experimental",
+        default=False,
+        description="Enable sqlite integration with umpire events (Experimental)",
+    )
     variant("numa", default=False, description="Enable NUMA support")
     variant("shared", default=True, description="Enable Shared libs")
     variant("openmp", default=False, description="Build with OpenMP support")
@@ -229,7 +233,11 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("~openmp", when="+openmp_target", msg="OpenMP target requires OpenMP")
     conflicts("+cuda", when="+rocm")
     conflicts("+tools", when="+rocm")
-    conflicts("+rocm", when="+openmp_target", msg="Cant support both rocm and openmp device backends at once")
+    conflicts(
+        "+rocm",
+        when="+openmp_target",
+        msg="Cant support both rocm and openmp device backends at once",
+    )
     conflicts("~mpi", when="+ipc_shmem", msg="Shared Memory Allocator requires MPI")
     conflicts("+ipc_shmem", when="@:5.0.1")
 
@@ -316,11 +324,17 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 
-        entries.append(cmake_cache_option(
-            "{}ENABLE_DEVICE_CONST".format(option_prefix), "+deviceconst" in spec))
+        entries.append(
+            cmake_cache_option(
+                "{}ENABLE_DEVICE_CONST".format(option_prefix), "+deviceconst" in spec
+            )
+        )
 
-        entries.append(cmake_cache_option(
-            "{}ENABLE_OPENMP_TARGET".format(option_prefix), "+openmp_target" in spec))
+        entries.append(
+            cmake_cache_option(
+                "{}ENABLE_OPENMP_TARGET".format(option_prefix), "+openmp_target" in spec
+            )
+        )
         if "+openmp_target" in spec and "%xl" in spec:
             entries.append(cmake_cache_string("OpenMP_CXX_FLAGS", "-qsmp;-qoffload"))
 
@@ -354,62 +368,59 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# Build Options")
         entries.append("#------------------{0}\n".format("-" * 60))
 
-        entries.append(cmake_cache_string(
-            "CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
-        entries.append(cmake_cache_option(
-            "BUILD_SHARED_LIBS", "+shared" in spec))
-        entries.append(cmake_cache_option(
-            "ENABLE_WARNINGS_AS_ERRORS", "+werror" in spec))
+        entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
+        entries.append(cmake_cache_option("ENABLE_WARNINGS_AS_ERRORS", "+werror" in spec))
 
         # Generic options that have a prefixed equivalent in Umpire CMake
-        entries.append(cmake_cache_option(
-            "ENABLE_OPENMP", "+openmp" in spec))
-        entries.append(cmake_cache_option(
-            "ENABLE_EXAMPLES", "+examples" in spec))
-        entries.append(cmake_cache_option(
-            "ENABLE_DOCS", False))
+        entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
+        entries.append(cmake_cache_option("ENABLE_EXAMPLES", "+examples" in spec))
+        entries.append(cmake_cache_option("ENABLE_DOCS", False))
         if "tests=benchmarks" in spec or "+dev_benchmarks" in spec:
             # BLT requires ENABLE_TESTS=True to enable benchmarks
-            entries.append(cmake_cache_option(
-                "ENABLE_BENCHMARKS", True))
-            entries.append(cmake_cache_option(
-                "ENABLE_TESTS", True))
+            entries.append(cmake_cache_option("ENABLE_BENCHMARKS", True))
+            entries.append(cmake_cache_option("ENABLE_TESTS", True))
         else:
-            entries.append(cmake_cache_option(
-                "ENABLE_BENCHMARKS", False))
-            entries.append(cmake_cache_option(
-                "ENABLE_TESTS", "tests=none" not in spec))
+            entries.append(cmake_cache_option("ENABLE_BENCHMARKS", False))
+            entries.append(cmake_cache_option("ENABLE_TESTS", "tests=none" not in spec))
 
         # Prefixed options that used to be name without one
-        entries.append(cmake_cache_option(
-            "{}ENABLE_NUMA".format(option_prefix), "+numa" in spec))
-        entries.append(cmake_cache_option(
-            "{}ENABLE_DEVELOPER_BENCHMARKS".format(option_prefix), "+dev_benchmarks" in spec))
-        entries.append(cmake_cache_option(
-            "{}ENABLE_TOOLS".format(option_prefix), "+tools" in spec))
-        entries.append(cmake_cache_option(
-            "{}ENABLE_BACKTRACE".format(option_prefix), "+backtrace" in spec))
-        entries.append(cmake_cache_option(
-            "{}ENABLE_ASAN".format(option_prefix), "+asan" in spec))
-        entries.append(cmake_cache_option(
-            "{}ENABLE_SANITIZER_TESTS".format(option_prefix), "+sanitizer_tests" in spec))
+        entries.append(cmake_cache_option("{}ENABLE_NUMA".format(option_prefix), "+numa" in spec))
+        entries.append(
+            cmake_cache_option(
+                "{}ENABLE_DEVELOPER_BENCHMARKS".format(option_prefix), "+dev_benchmarks" in spec
+            )
+        )
+        entries.append(
+            cmake_cache_option("{}ENABLE_TOOLS".format(option_prefix), "+tools" in spec)
+        )
+        entries.append(
+            cmake_cache_option("{}ENABLE_BACKTRACE".format(option_prefix), "+backtrace" in spec)
+        )
+        entries.append(cmake_cache_option("{}ENABLE_ASAN".format(option_prefix), "+asan" in spec))
+        entries.append(
+            cmake_cache_option(
+                "{}ENABLE_SANITIZER_TESTS".format(option_prefix), "+sanitizer_tests" in spec
+            )
+        )
 
         # Recent options, were never name without prefix
-        entries.append(cmake_cache_option(
-            "UMPIRE_ENABLE_DEVICE_ALLOCATOR", "+device_alloc" in spec))
-        entries.append(cmake_cache_option(
-            "UMPIRE_ENABLE_SQLITE_EXPERIMENTAL", "+sqlite_experimental" in spec))
+        entries.append(
+            cmake_cache_option("UMPIRE_ENABLE_DEVICE_ALLOCATOR", "+device_alloc" in spec)
+        )
+        entries.append(
+            cmake_cache_option("UMPIRE_ENABLE_SQLITE_EXPERIMENTAL", "+sqlite_experimental" in spec)
+        )
         if "+sqlite_experimental" in spec:
-            entries.append(cmake_cache_path(
-                "SQLite3_ROOT" ,spec["sqlite"].prefix))
+            entries.append(cmake_cache_path("SQLite3_ROOT", spec["sqlite"].prefix))
 
         # This option was renamed later than the others
         if spec.satisfies("@2022.10.0:"):
-            entries.append(cmake_cache_option(
-                "UMPIRE_ENABLE_IPC_SHARED_MEMORY", "+ipc_shmem" in spec))
+            entries.append(
+                cmake_cache_option("UMPIRE_ENABLE_IPC_SHARED_MEMORY", "+ipc_shmem" in spec)
+            )
         else:
-            entries.append(cmake_cache_option(
-                "ENABLE_IPC_SHARED_MEMORY", "+ipc_shmem" in spec))
+            entries.append(cmake_cache_option("ENABLE_IPC_SHARED_MEMORY", "+ipc_shmem" in spec))
 
         return entries
 

@@ -241,15 +241,11 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# TPLs")
         entries.append("#------------------{0}\n".format("-" * 60))
 
-        entries.append(cmake_cache_path(
-            "BLT_SOURCE_DIR", spec["blt"].prefix))
+        entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
         if "+raja" in spec:
-            entries.append(cmake_cache_option(
-                "{}ENABLE_RAJA_PLUGIN".format(option_prefix), True))
-            entries.append(cmake_cache_path(
-                "RAJA_DIR", spec["raja"].prefix))
-        entries.append(cmake_cache_path(
-            "umpire_DIR", spec["umpire"].prefix))
+            entries.append(cmake_cache_option("{}ENABLE_RAJA_PLUGIN".format(option_prefix), True))
+            entries.append(cmake_cache_path("RAJA_DIR", spec["raja"].prefix))
+        entries.append(cmake_cache_path("umpire_DIR", spec["umpire"].prefix))
 
         # Build options
         entries.append("#------------------{0}".format("-" * 60))
@@ -257,31 +253,24 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("#------------------{0}\n".format("-" * 60))
 
         # Build options
-        entries.append(cmake_cache_string(
-            "CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
-        entries.append(cmake_cache_option(
-            "BUILD_SHARED_LIBS", "+shared" in spec))
+        entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
 
         # Generic options that have a prefixed equivalent in CHAI CMake
-        entries.append(cmake_cache_option(
-            "ENABLE_OPENMP", "+openmp" in spec))
-        entries.append(cmake_cache_option(
-            "ENABLE_EXAMPLES", "+examples" in spec))
-        entries.append(cmake_cache_option(
-            "ENABLE_DOCS", False))
+        entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
+        entries.append(cmake_cache_option("ENABLE_EXAMPLES", "+examples" in spec))
+        entries.append(cmake_cache_option("ENABLE_DOCS", False))
         if "tests=benchmarks" in spec:
             # BLT requires ENABLE_TESTS=True to enable benchmarks
-            entries.append(cmake_cache_option(
-                "ENABLE_BENCHMARKS", True))
-            entries.append(cmake_cache_option(
-                "ENABLE_TESTS", True))
+            entries.append(cmake_cache_option("ENABLE_BENCHMARKS", True))
+            entries.append(cmake_cache_option("ENABLE_TESTS", True))
         else:
-            entries.append(cmake_cache_option(
-                "ENABLE_TESTS", "tests=none" not in spec))
+            entries.append(cmake_cache_option("ENABLE_TESTS", "tests=none" not in spec))
 
         # Prefixed options that used to be name without one
-        entries.append(cmake_cache_option(
-            "{}ENABLE_PICK".format(option_prefix), "+enable_pick" in spec))
+        entries.append(
+            cmake_cache_option("{}ENABLE_PICK".format(option_prefix), "+enable_pick" in spec)
+        )
 
         return entries
 

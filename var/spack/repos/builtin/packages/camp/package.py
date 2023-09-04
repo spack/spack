@@ -47,10 +47,9 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
         options.append("-DBLT_SOURCE_DIR={0}".format(spec["blt"].prefix))
 
         if "+cuda" in spec:
-            options.extend([
-                "-DENABLE_CUDA=ON",
-                "-DCUDA_TOOLKIT_ROOT_DIR=%s" % (spec["cuda"].prefix)
-            ])
+            options.extend(
+                ["-DENABLE_CUDA=ON", "-DCUDA_TOOLKIT_ROOT_DIR=%s" % (spec["cuda"].prefix)]
+            )
 
             if not spec.satisfies("cuda_arch=none"):
                 cuda_arch = spec.variants["cuda_arch"].value
@@ -62,10 +61,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
             options.append("-DENABLE_CUDA=OFF")
 
         if "+rocm" in spec:
-            options.extend([
-                "-DENABLE_HIP=ON",
-                "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix)
-            ])
+            options.extend(["-DENABLE_HIP=ON", "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix)])
 
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":

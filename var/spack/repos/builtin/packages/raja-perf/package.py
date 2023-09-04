@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import socket
 import re
+import socket
 
 from spack.package import *
 
@@ -71,7 +71,8 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("caliper +rocm")
         for arch in ROCmPackage.amdgpu_targets:
             depends_on(
-                "caliper +rocm amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
+                "caliper +rocm amdgpu_target={0}".format(arch),
+                when="amdgpu_target={0}".format(arch),
             )
         conflicts("+openmp", when="@:2022.03")
 
@@ -81,7 +82,9 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
             depends_on("caliper +cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
 
     conflicts("~openmp", when="+openmp_target", msg="OpenMP target requires OpenMP")
-    conflicts("+cuda", when="+openmp_target", msg="Cuda may not be activated when openmp_target is ON")
+    conflicts(
+        "+cuda", when="+openmp_target", msg="Cuda may not be activated when openmp_target is ON"
+    )
 
     def _get_sys_type(self, spec):
         sys_type = str(spec.architecture)
@@ -151,12 +154,12 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
 
             # Custom options. We place everything in CMAKE_CUDA_FLAGS_(RELEASE|RELWITHDEBINFO|DEBUG) which are not set by CachedCMakePackages
-            if ("xl" in self.compiler.cxx):
+            if "xl" in self.compiler.cxx:
                 all_targets_flags = (
-                    "-Xcompiler -qstrict -Xcompiler -qxlcompatmacros -Xcompiler -qalias=noansi" \
-                    + "-Xcompiler -qsmp=omp -Xcompiler -qhot -Xcompiler -qnoeh" \
-                    + "-Xcompiler -qsuppress=1500-029 -Xcompiler -qsuppress=1500-036" \
-                    + "-Xcompiler -qsuppress=1500-030" \
+                    "-Xcompiler -qstrict -Xcompiler -qxlcompatmacros -Xcompiler -qalias=noansi"
+                    + "-Xcompiler -qsmp=omp -Xcompiler -qhot -Xcompiler -qnoeh"
+                    + "-Xcompiler -qsuppress=1500-029 -Xcompiler -qsuppress=1500-036"
+                    + "-Xcompiler -qsuppress=1500-030"
                 )
 
                 cuda_release_flags = "-O3 -Xcompiler -O2 " + all_targets_flags
@@ -178,7 +181,9 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
                 cuda_debug_flags = "-O0 -g -Xcompiler -O0 " + all_targets_flags
 
             entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS_RELEASE", cuda_release_flags))
-            entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS_RELWITHDEBINFO", cuda_reldebinf_flags))
+            entries.append(
+                cmake_cache_string("CMAKE_CUDA_FLAGS_RELWITHDEBINFO", cuda_reldebinf_flags)
+            )
             entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS_DEBUG", cuda_debug_flags))
 
         else:
@@ -191,12 +196,28 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option("ENABLE_OPENMP_TARGET", "+openmp_target" in spec))
         if "+openmp_target" in spec:
-            if ("%xl" in spec):
-                entries.append(cmake_cache_string("BLT_OPENMP_COMPILE_FLAGS", "-qoffload;-qsmp=omp;-qnoeh;-qalias=noansi"))
-                entries.append(cmake_cache_string("BLT_OPENMP_LINK_FLAGS", "-qoffload;-qsmp=omp;-qnoeh;-qalias=noansi"))
-            if ("%clang" in spec):
-                entries.append(cmake_cache_string("BLT_OPENMP_COMPILE_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"))
-                entries.append(cmake_cache_string("BLT_OPENMP_LINK_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"))
+            if "%xl" in spec:
+                entries.append(
+                    cmake_cache_string(
+                        "BLT_OPENMP_COMPILE_FLAGS", "-qoffload;-qsmp=omp;-qnoeh;-qalias=noansi"
+                    )
+                )
+                entries.append(
+                    cmake_cache_string(
+                        "BLT_OPENMP_LINK_FLAGS", "-qoffload;-qsmp=omp;-qnoeh;-qalias=noansi"
+                    )
+                )
+            if "%clang" in spec:
+                entries.append(
+                    cmake_cache_string(
+                        "BLT_OPENMP_COMPILE_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"
+                    )
+                )
+                entries.append(
+                    cmake_cache_string(
+                        "BLT_OPENMP_LINK_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"
+                    )
+                )
 
         return entries
 
@@ -218,8 +239,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# Build Options")
         entries.append("#------------------{0}\n".format("-" * 60))
 
-        entries.append(cmake_cache_string(
-            "CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+        entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
 
         entries.append(cmake_cache_string("RAJA_RANGE_ALIGN", "4"))
         entries.append(cmake_cache_string("RAJA_RANGE_MIN_LENGTH", "32"))
@@ -227,20 +247,25 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option("RAJA_HOST_CONFIG_LOADED", True))
 
-        entries.append(cmake_cache_option("BUILD_SHARED_LIBS","+shared" in spec))
-        entries.append(cmake_cache_option("ENABLE_OPENMP","+openmp" in spec))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
+        entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
         entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", "+omptask" in spec))
 
         entries.append(cmake_cache_option("ENABLE_BENCHMARKS", "tests=benchmarks" in spec))
-        entries.append(cmake_cache_option("ENABLE_TESTS", not "tests=none" in spec or self.run_tests))
+        entries.append(
+            cmake_cache_option("ENABLE_TESTS", not "tests=none" in spec or self.run_tests)
+        )
 
-        entries.append(cmake_cache_option("RAJA_PERFSUITE_USE_CALIPER","+caliper" in spec))
+        entries.append(cmake_cache_option("RAJA_PERFSUITE_USE_CALIPER", "+caliper" in spec))
         if "caliper" in self.spec:
-            entries.append(cmake_cache_path("caliper_DIR", spec["caliper"].prefix+"/share/cmake/caliper/"))
-            entries.append(cmake_cache_path("adiak_DIR", spec["adiak"].prefix+"/lib/cmake/adiak/"))
+            entries.append(
+                cmake_cache_path("caliper_DIR", spec["caliper"].prefix + "/share/cmake/caliper/")
+            )
+            entries.append(
+                cmake_cache_path("adiak_DIR", spec["adiak"].prefix + "/lib/cmake/adiak/")
+            )
 
         return entries
 
     def cmake_args(self):
         return []
-

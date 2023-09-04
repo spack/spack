@@ -25,29 +25,37 @@ def llnl_link_helpers(options, spec, compiler):
     ### From local package:
     if compiler.fc:
         fortran_compilers = ["gfortran", "xlf"]
-        if any(f_comp in compiler.fc for f_comp in fortran_compilers) and ("clang" in compiler.cxx):
+        if any(f_comp in compiler.fc for f_comp in fortran_compilers) and (
+            "clang" in compiler.cxx
+        ):
             # Pass fortran compiler lib as rpath to find missing libstdc++
-            libdir = os.path.join(os.path.dirname(
-                           os.path.dirname(compiler.fc)), "lib")
+            libdir = os.path.join(os.path.dirname(os.path.dirname(compiler.fc)), "lib")
             flags = ""
             for _libpath in [libdir, libdir + "64"]:
                 if os.path.exists(_libpath):
                     flags += " -Wl,-rpath,{0}".format(_libpath)
-            description = ("Adds a missing libstdc++ rpath")
+            description = "Adds a missing libstdc++ rpath"
             if flags:
                 options.append(cmake_cache_string("BLT_EXE_LINKER_FLAGS", flags, description))
 
             # Ignore conflicting default gcc toolchain
-            options.append(cmake_cache_string("BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE",
-            "/usr/tce/packages/gcc/gcc-4.9.3/lib64;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64;/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3"))
+            options.append(
+                cmake_cache_string(
+                    "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE",
+                    "/usr/tce/packages/gcc/gcc-4.9.3/lib64;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64;/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3",
+                )
+            )
 
     compilers_using_toolchain = ["pgc++", "xlc++", "xlC_r", "icpc", "clang++", "icpx"]
     if any(tc_comp in compiler.cxx for tc_comp in compilers_using_toolchain):
         if spec_uses_toolchain(spec) or spec_uses_gccname(spec):
-
             # Ignore conflicting default gcc toolchain
-            options.append(cmake_cache_string("BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE",
-            "/usr/tce/packages/gcc/gcc-4.9.3/lib64;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64;/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3"))
+            options.append(
+                cmake_cache_string(
+                    "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE",
+                    "/usr/tce/packages/gcc/gcc-4.9.3/lib64;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3;/usr/tce/packages/gcc/gcc-4.9.3/gnu/lib64;/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3",
+                )
+            )
 
     if "cce" in compiler.cxx:
         description = "Adds a missing rpath for libraries " "associated with the fortran compiler"

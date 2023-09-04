@@ -138,7 +138,9 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared libs")
     variant("desul", default=False, description="Build desul atomics backend")
     variant("vectorization", default=True, description="Build SIMD/SIMT intrinsics support")
-    variant("omptask", default=False, description="Build OpenMP task variants of internal algorithms")
+    variant(
+        "omptask", default=False, description="Build OpenMP task variants of internal algorithms"
+    )
 
     variant("examples", default=True, description="Build examples.")
     variant("exercises", default=True, description="Build exercises.")
@@ -149,7 +151,11 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     ## we don’t use variants to express the failing test, we only add a variant to
     ## define whether we want to run all the tests (including those known to fail)
     ## or only the passing ones.
-    variant("run-all-tests", default=False, description="Run all the tests, including those known to fail.")
+    variant(
+        "run-all-tests",
+        default=False,
+        description="Run all the tests, including those known to fail.",
+    )
 
     depends_on("blt", type="build")
     depends_on("blt@0.5.3:", type="build", when="@2023.06.0:")
@@ -265,8 +271,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# Build Options")
         entries.append("#------------------{0}\n".format("-" * 60))
 
-        entries.append(cmake_cache_string(
-            "CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+        entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
 
         entries.append(cmake_cache_option("RAJA_ENABLE_DESUL_ATOMICS", "+desul" in spec))
@@ -275,7 +280,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", "+omptask" in spec))
 
-        entries.append(cmake_cache_string("BLT_CXX_STD","c++14"))
+        entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
 
         if "+desul" in spec:
             if "+cuda" in spec:
@@ -305,11 +310,26 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_TESTS", True))
             if not "+run-all-tests" in spec:
                 if spec.satisfies("%clang@12.0.0:13.9.999"):
-                    entries.append(cmake_cache_string("CTEST_CUSTOM_TESTS_IGNORE", "test-algorithm-sort-OpenMP.exe;test-algorithm-stable-sort-OpenMP.exe"))
+                    entries.append(
+                        cmake_cache_string(
+                            "CTEST_CUSTOM_TESTS_IGNORE",
+                            "test-algorithm-sort-OpenMP.exe;test-algorithm-stable-sort-OpenMP.exe",
+                        )
+                    )
                 if spec.satisfies("+cuda %clang@12.0.0:13.9.999"):
-                    entries.append(cmake_cache_string("CTEST_CUSTOM_TESTS_IGNORE", "test-algorithm-sort-Cuda.exe;test-algorithm-stable-sort-Cuda.exe;test-algorithm-sort-OpenMP.exe;test-algorithm-stable-sort-OpenMP.exe"))
+                    entries.append(
+                        cmake_cache_string(
+                            "CTEST_CUSTOM_TESTS_IGNORE",
+                            "test-algorithm-sort-Cuda.exe;test-algorithm-stable-sort-Cuda.exe;test-algorithm-sort-OpenMP.exe;test-algorithm-stable-sort-OpenMP.exe",
+                        )
+                    )
                 if spec.satisfies("+cuda %xl@16.1.1.12"):
-                    entries.append(cmake_cache_string("CTEST_CUSTOM_TESTS_IGNORE", "test-algorithm-sort-Cuda.exe;test-algorithm-stable-sort-Cuda.exe"))
+                    entries.append(
+                        cmake_cache_string(
+                            "CTEST_CUSTOM_TESTS_IGNORE",
+                            "test-algorithm-sort-Cuda.exe;test-algorithm-stable-sort-Cuda.exe",
+                        )
+                    )
 
         entries.append(cmake_cache_option("RAJA_HOST_CONFIG_LOADED", True))
 
