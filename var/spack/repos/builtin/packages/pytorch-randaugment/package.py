@@ -14,11 +14,9 @@ class PytorchRandaugment(PythonPackage):
 
     maintainers("sthalles")
 
-    version("1.0.2", md5="dd7106ba907eb0ad2b239e240d4e97c9")
+    version("1.0.2", sha256="7f2dda16f9daef2d5d76d376b63a31154a7e4d7d5a562e552ce1fbf4a8409566")
 
-    depends_on("py-pip", type='build')
     depends_on("py-setuptools", type='build')
-    depends_on("py-wheel", type='build')
     depends_on("python", type=('build', 'run'))
     depends_on("py-torch", type=('build', 'run'))
-    depends_on("py-torchvision", type=('build','run'))
+    depends_on("py-torchvision", type=('build', 'run'))
