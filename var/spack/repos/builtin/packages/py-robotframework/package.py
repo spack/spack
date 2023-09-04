@@ -8,7 +8,7 @@ from spack.package import *
 
 class PyRobotframework(PythonPackage):
     """Robot Framework is a generic open source automation framework for acceptance testing, acceptance test driven development (ATDD), and robotic process automation (RPA).
-    It has simple plain text syntax and it can be extended easily with generic and custom libraries. You can learn more about EPICS here: https://robotframework.org/
+    It has simple plain text syntax and it can be extended easily with generic and custom libraries. You can learn more about ROBOT FRAMEWORK here: https://robotframework.org/
     """
 
     homepage = "https://pypi.org/project/robotframework/"
