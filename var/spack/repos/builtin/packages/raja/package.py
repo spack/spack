@@ -20,25 +20,90 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
-    version("2022.10.4", tag="v2022.10.4", submodules=False)
-    version("2022.03.0", tag="v2022.03.0", submodules=False)
-    version("0.14.0", tag="v0.14.0", submodules="True")
-    version("0.13.0", tag="v0.13.0", submodules="True")
-    version("0.12.1", tag="v0.12.1", submodules="True")
-    version("0.12.0", tag="v0.12.0", submodules="True")
-    version("0.11.0", tag="v0.11.0", submodules="True")
-    version("0.10.1", tag="v0.10.1", submodules="True")
-    version("0.10.0", tag="v0.10.0", submodules="True")
-    version("0.9.0", tag="v0.9.0", submodules="True")
-    version("0.8.0", tag="v0.8.0", submodules="True")
-    version("0.7.0", tag="v0.7.0", submodules="True")
-    version("0.6.0", tag="v0.6.0", submodules="True")
-    version("0.5.3", tag="v0.5.3", submodules="True")
-    version("0.5.2", tag="v0.5.2", submodules="True")
-    version("0.5.1", tag="v0.5.1", submodules="True")
-    version("0.5.0", tag="v0.5.0", submodules="True")
-    version("0.4.1", tag="v0.4.1", submodules="True")
-    version("0.4.0", tag="v0.4.0", submodules="True")
+    version(
+        "2022.10.4",
+        tag="v2022.10.4",
+        commit="c2a6b1740759ae3ae7c85b35e20dbffbe235355d",
+        submodules=False,
+    )
+    version(
+        "2022.03.0",
+        tag="v2022.03.0",
+        commit="4351fe6a50bd579511a625b017c9e054885e7fd2",
+        submodules=False,
+    )
+    version(
+        "0.14.0",
+        tag="v0.14.0",
+        commit="357933a42842dd91de5c1034204d937fce0a2a44",
+        submodules="True",
+    )
+    version(
+        "0.13.0",
+        tag="v0.13.0",
+        commit="3047fa720132d19ee143b1fcdacaa72971f5988c",
+        submodules="True",
+    )
+    version(
+        "0.12.1",
+        tag="v0.12.1",
+        commit="9cb6370bb2868e35ebba23cdce927f5f7f9da530",
+        submodules="True",
+    )
+    version(
+        "0.12.0",
+        tag="v0.12.0",
+        commit="32d92e38da41cc8d4db25ec79b9884a73a0cb3a1",
+        submodules="True",
+    )
+    version(
+        "0.11.0",
+        tag="v0.11.0",
+        commit="0502b9b69c4cb60aa0afbdf699b555c76cb18f22",
+        submodules="True",
+    )
+    version(
+        "0.10.1",
+        tag="v0.10.1",
+        commit="be91e040130678b1350dbda56cc352433db758bd",
+        submodules="True",
+    )
+    version(
+        "0.10.0",
+        tag="v0.10.0",
+        commit="53cb89cf788d28bc4ed2b4e6f75483fdd26024aa",
+        submodules="True",
+    )
+    version(
+        "0.9.0", tag="v0.9.0", commit="df7ca1fa892b6ac4147c614d2d739d5022f63fc7", submodules="True"
+    )
+    version(
+        "0.8.0", tag="v0.8.0", commit="8d19a8c2cbac611de6f92ad8852b9f3454b27e63", submodules="True"
+    )
+    version(
+        "0.7.0", tag="v0.7.0", commit="caa33b371b586dfae3d8569caee91c5eddfd7b31", submodules="True"
+    )
+    version(
+        "0.6.0", tag="v0.6.0", commit="cc7a97e8b4e52c3de820c9dfacd358822a147871", submodules="True"
+    )
+    version(
+        "0.5.3", tag="v0.5.3", commit="1ca35c0ed2a43a3fa9c6cd70c5d25f16d88ecd8c", submodules="True"
+    )
+    version(
+        "0.5.2", tag="v0.5.2", commit="4d5c3d5d7f311838855f7010810610349e729f64", submodules="True"
+    )
+    version(
+        "0.5.1", tag="v0.5.1", commit="bf340abe5199d7e051520913c9a7a5de336b5820", submodules="True"
+    )
+    version(
+        "0.5.0", tag="v0.5.0", commit="9b539d84fdad049f65caeba836f41031f5baf4cc", submodules="True"
+    )
+    version(
+        "0.4.1", tag="v0.4.1", commit="3618cfe95d6a442fa50fbe7bfbcf654cf9f800b9", submodules="True"
+    )
+    version(
+        "0.4.0", tag="v0.4.0", commit="31b2a48192542c2da426885baa5af0ed57606b78", submodules="True"
+    )
 
     # export targets when building pre-2.4.0 release with BLT 0.4.0+
     patch(

@@ -112,50 +112,49 @@ __all__ = [
     "UnsatisfiableDependencySpecError",
     "AmbiguousHashError",
     "InvalidHashError",
-    "RedundantSpecError",
     "SpecDeprecatedError",
 ]
 
 #: Valid pattern for an identifier in Spack
 
-identifier_re = r"\w[\w-]*"
+IDENTIFIER_RE = r"\w[\w-]*"
 
-compiler_color = "@g"  #: color for highlighting compilers
-version_color = "@c"  #: color for highlighting versions
-architecture_color = "@m"  #: color for highlighting architectures
-enabled_variant_color = "@B"  #: color for highlighting enabled variants
-disabled_variant_color = "r"  #: color for highlighting disabled varaints
-dependency_color = "@."  #: color for highlighting dependencies
-hash_color = "@K"  #: color for highlighting package hashes
+COMPILER_COLOR = "@g"  #: color for highlighting compilers
+VERSION_COLOR = "@c"  #: color for highlighting versions
+ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
+ENABLED_VARIANT_COLOR = "@B"  #: color for highlighting enabled variants
+DISABLED_VARIANT_COLOR = "r"  #: color for highlighting disabled varaints
+DEPENDENCY_COLOR = "@."  #: color for highlighting dependencies
+HASH_COLOR = "@K"  #: color for highlighting package hashes
 
 #: This map determines the coloring of specs when using color output.
 #: We make the fields different colors to enhance readability.
 #: See llnl.util.tty.color for descriptions of the color codes.
-color_formats = {
-    "%": compiler_color,
-    "@": version_color,
-    "=": architecture_color,
-    "+": enabled_variant_color,
-    "~": disabled_variant_color,
-    "^": dependency_color,
-    "#": hash_color,
+COLOR_FORMATS = {
+    "%": COMPILER_COLOR,
+    "@": VERSION_COLOR,
+    "=": ARCHITECTURE_COLOR,
+    "+": ENABLED_VARIANT_COLOR,
+    "~": DISABLED_VARIANT_COLOR,
+    "^": DEPENDENCY_COLOR,
+    "#": HASH_COLOR,
 }
 
 #: Regex used for splitting by spec field separators.
 #: These need to be escaped to avoid metacharacters in
-#: ``color_formats.keys()``.
-_separators = "[\\%s]" % "\\".join(color_formats.keys())
+#: ``COLOR_FORMATS.keys()``.
+_SEPARATORS = "[\\%s]" % "\\".join(COLOR_FORMATS.keys())
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
-default_format = (
+DEFAULT_FORMAT = (
     "{name}{@versions}"
     "{%compiler.name}{@compiler.versions}{compiler_flags}"
     "{variants}{arch=architecture}{/abstract_hash}"
 )
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
-display_format = (
+DISPLAY_FORMAT = (
     "{name}{@version}"
     "{%compiler.name}{@compiler.version}{compiler_flags}"
     "{variants}{arch=architecture}{/abstract_hash}"
@@ -187,7 +186,7 @@ class InstallStatus(enum.Enum):
 
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
-    color_formats."""
+    COLOR_FORMATS."""
 
     class insert_color:
         def __init__(self):
@@ -200,9 +199,9 @@ def colorize_spec(spec):
                 return clr.cescape(sep)
             self.last = sep
 
-            return "%s%s" % (color_formats[sep], clr.cescape(sep))
+            return "%s%s" % (COLOR_FORMATS[sep], clr.cescape(sep))
 
-    return clr.colorize(re.sub(_separators, insert_color(), str(spec)) + "@.")
+    return clr.colorize(re.sub(_SEPARATORS, insert_color(), str(spec)) + "@.")
 
 
 @lang.lazy_lexicographic_ordering
@@ -985,16 +984,14 @@ class _EdgeMap(collections.abc.Mapping):
     def __len__(self):
         return len(self.edges)
 
-    def add(self, edge):
-        """Adds a new edge to this object.
-
-        Args:
-            edge (DependencySpec): edge to be added
-        """
+    def add(self, edge: DependencySpec):
         key = edge.spec.name if self.store_by_child else edge.parent.name
-        current_list = self.edges.setdefault(key, [])
-        current_list.append(edge)
-        current_list.sort(key=_sort_by_dep_types)
+        if key in self.edges:
+            lst = self.edges[key]
+            lst.append(edge)
+            lst.sort(key=_sort_by_dep_types)
+        else:
+            self.edges[key] = [edge]
 
     def __str__(self):
         return "{deps: %s}" % ", ".join(str(d) for d in sorted(self.values()))
@@ -1927,19 +1924,15 @@ class Spec:
         store, or finally, binary caches."""
         import spack.environment
 
-        matches = []
         active_env = spack.environment.active_environment()
 
-        if active_env:
-            env_matches = active_env.get_by_hash(self.abstract_hash) or []
-            matches = [m for m in env_matches if m._satisfies(self)]
-        if not matches:
-            db_matches = spack.store.STORE.db.get_by_hash(self.abstract_hash) or []
-            matches = [m for m in db_matches if m._satisfies(self)]
-        if not matches:
-            query = spack.binary_distribution.BinaryCacheQuery(True)
-            remote_matches = query("/" + self.abstract_hash) or []
-            matches = [m for m in remote_matches if m._satisfies(self)]
+        # First env, then store, then binary cache
+        matches = (
+            (active_env.all_matching_specs(self) if active_env else [])
+            or spack.store.STORE.db.query(self, installed=any)
+            or spack.binary_distribution.BinaryCacheQuery(True)(self)
+        )
+
         if not matches:
             raise InvalidHashError(self, self.abstract_hash)
 
@@ -1960,19 +1953,17 @@ class Spec:
         spec = self.copy(deps=False)
         # root spec is replaced
         if spec.abstract_hash:
-            new = self._lookup_hash()
-            spec._dup(new)
+            spec._dup(self._lookup_hash())
             return spec
 
         # Get dependencies that need to be replaced
         for node in self.traverse(root=False):
             if node.abstract_hash:
-                new = node._lookup_hash()
-                spec._add_dependency(new, deptypes=(), virtuals=())
+                spec._add_dependency(node._lookup_hash(), deptypes=(), virtuals=())
 
         # reattach nodes that were not otherwise satisfied by new dependencies
         for node in self.traverse(root=False):
-            if not any(n._satisfies(node) for n in spec.traverse()):
+            if not any(n.satisfies(node) for n in spec.traverse()):
                 spec._add_dependency(node.copy(), deptypes=(), virtuals=())
 
         return spec
@@ -1985,9 +1976,7 @@ class Spec:
         if not any(node for node in self.traverse(order="post") if node.abstract_hash):
             return
 
-        spec_by_hash = self.lookup_hash()
-
-        self._dup(spec_by_hash)
+        self._dup(self.lookup_hash())
 
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
@@ -3723,14 +3712,18 @@ class Spec:
         """
         other = self._autospec(other)
 
-        lhs = self.lookup_hash() or self
-        rhs = other.lookup_hash() or other
-
-        return lhs._intersects(rhs, deps)
-
-    def _intersects(self, other: "Spec", deps: bool = True) -> bool:
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
+
+        self_hash = self.dag_hash() if self.concrete else self.abstract_hash
+        other_hash = other.dag_hash() if other.concrete else other.abstract_hash
+
+        if (
+            self_hash
+            and other_hash
+            and not (self_hash.startswith(other_hash) or other_hash.startswith(self_hash))
+        ):
+            return False
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
@@ -3791,19 +3784,8 @@ class Spec:
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
             return self._intersects_dependencies(other)
-        else:
-            return True
 
-    def satisfies(self, other, deps=True):
-        """
-        This checks constraints on common dependencies against each other.
-        """
-        other = self._autospec(other)
-
-        lhs = self.lookup_hash() or self
-        rhs = other.lookup_hash() or other
-
-        return lhs._satisfies(rhs, deps=deps)
+        return True
 
     def _intersects_dependencies(self, other):
         if not other._dependencies or not self._dependencies:
@@ -3840,7 +3822,7 @@ class Spec:
 
         return True
 
-    def _satisfies(self, other: "Spec", deps: bool = True) -> bool:
+    def satisfies(self, other: "Spec", deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
@@ -3854,6 +3836,13 @@ class Spec:
             # package hashes can be different for otherwise indistinguishable concrete Spec
             # objects.
             return self.concrete and self.dag_hash() == other.dag_hash()
+
+        # If the right-hand side has an abstract hash, make sure it's a prefix of the
+        # left-hand side's (abstract) hash.
+        if other.abstract_hash:
+            compare_hash = self.dag_hash() if self.concrete else self.abstract_hash
+            if not compare_hash or not compare_hash.startswith(other.abstract_hash):
+                return False
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
@@ -4231,9 +4220,7 @@ class Spec:
     def _cmp_iter(self):
         """Lazily yield components of self for comparison."""
 
-        cmp_spec = self.lookup_hash() or self
-
-        for item in cmp_spec._cmp_node():
+        for item in self._cmp_node():
             yield item
 
         # This needs to be in _cmp_iter so that no specs with different process hashes
@@ -4244,10 +4231,10 @@ class Spec:
         # TODO: they exist for speed.  We should benchmark whether it's really worth
         # TODO: having two types of hashing now that we use `json` instead of `yaml` for
         # TODO: spec hashing.
-        yield cmp_spec.process_hash() if cmp_spec.concrete else None
+        yield self.process_hash() if self.concrete else None
 
         def deps():
-            for dep in sorted(itertools.chain.from_iterable(cmp_spec._dependencies.values())):
+            for dep in sorted(itertools.chain.from_iterable(self._dependencies.values())):
                 yield dep.spec.name
                 yield tuple(sorted(dep.deptypes))
                 yield hash(dep.spec)
@@ -4257,7 +4244,7 @@ class Spec:
     def colorized(self):
         return colorize_spec(self)
 
-    def format(self, format_string=default_format, **kwargs):
+    def format(self, format_string=DEFAULT_FORMAT, **kwargs):
         r"""Prints out particular pieces of a spec, depending on what is
         in the format string.
 
@@ -4336,7 +4323,7 @@ class Spec:
         def write(s, c=None):
             f = clr.cescape(s)
             if c is not None:
-                f = color_formats[c] + f + "@."
+                f = COLOR_FORMATS[c] + f + "@."
             clr.cwrite(f, stream=out, color=color)
 
         def write_attribute(spec, attribute, color):
@@ -4535,7 +4522,7 @@ class Spec:
         status_fn = kwargs.pop("status_fn", False)
         cover = kwargs.pop("cover", "nodes")
         indent = kwargs.pop("indent", 0)
-        fmt = kwargs.pop("format", default_format)
+        fmt = kwargs.pop("format", DEFAULT_FORMAT)
         prefix = kwargs.pop("prefix", None)
         show_types = kwargs.pop("show_types", False)
         deptypes = kwargs.pop("deptypes", "all")
@@ -5341,14 +5328,6 @@ class SpecFilenameError(spack.error.SpecError):
 
 class NoSuchSpecFileError(SpecFilenameError):
     """Raised when a spec file doesn't exist."""
-
-
-class RedundantSpecError(spack.error.SpecError):
-    def __init__(self, spec, addition):
-        super().__init__(
-            "Attempting to add %s to spec %s which is already concrete."
-            " This is likely the result of adding to a spec specified by hash." % (addition, spec)
-        )
 
 
 class SpecFormatStringError(spack.error.SpecError):

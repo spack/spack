@@ -27,7 +27,7 @@ import archspec.cpu.schema
 import llnl.util.lang
 import llnl.util.lock
 import llnl.util.tty as tty
-from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
+from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, working_dir
 
 import spack.binary_distribution
 import spack.caches
@@ -565,6 +565,8 @@ def mock_repo_path():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
+    if not os.path.exists(spec.package.build_log_path):
+        touchp(spec.package.build_log_path)
 
 
 @pytest.fixture
@@ -1940,3 +1942,20 @@ def nullify_globals(request, monkeypatch):
     monkeypatch.setattr(spack.caches, "FETCH_CACHE", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)
+
+
+def pytest_runtest_setup(item):
+    # Skip tests if they are marked only clingo and are run with the original concretizer
+    only_clingo_marker = item.get_closest_marker(name="only_clingo")
+    if only_clingo_marker and os.environ.get("SPACK_TEST_SOLVER") == "original":
+        pytest.skip(*only_clingo_marker.args)
+
+    # Skip tests if they are marked only original and are run with clingo
+    only_original_marker = item.get_closest_marker(name="only_original")
+    if only_original_marker and os.environ.get("SPACK_TEST_SOLVER", "clingo") == "clingo":
+        pytest.skip(*only_original_marker.args)
+
+    # Skip test marked "not_on_windows" if they're run on Windows
+    not_on_windows_marker = item.get_closest_marker(name="not_on_windows")
+    if not_on_windows_marker and sys.platform == "win32":
+        pytest.skip(*not_on_windows_marker.args)

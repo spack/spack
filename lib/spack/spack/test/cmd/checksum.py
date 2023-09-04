@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import sys
 
 import pytest
 
@@ -36,7 +35,7 @@ def test_checksum_args(arguments, expected):
     assert check == expected
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "arguments,expected",
     [
@@ -57,7 +56,7 @@ def test_checksum(arguments, expected, mock_packages, mock_clone_repo, mock_stag
         assert "version(" in output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_checksum_interactive(mock_packages, mock_fetch, mock_stage, monkeypatch):
     # TODO: mock_fetch doesn't actually work with stage, working around with ignoring
     # fail_on_error for now

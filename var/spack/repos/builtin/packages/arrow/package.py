@@ -148,6 +148,11 @@ class Arrow(CMakePackage, CudaPackage):
         args.append(self.define_from_variant("ARROW_WITH_ZLIB", "zlib"))
         args.append(self.define_from_variant("ARROW_WITH_ZSTD", "zstd"))
 
+        if not self.spec.dependencies("re2"):
+            args.append(self.define("ARROW_WITH_RE2", False))
+        if not self.spec.dependencies("utf8proc"):
+            args.append(self.define("ARROW_WITH_UTF8PROC", False))
+
         if self.spec.satisfies("@:8"):
             args.extend(
                 [

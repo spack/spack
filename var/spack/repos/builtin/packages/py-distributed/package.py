@@ -48,7 +48,7 @@ class PyDistributed(PythonPackage):
     depends_on("py-click@8.0:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-cloudpickle@1.5.0:", type=("build", "run"))
     depends_on("py-jinja2", type=("build", "run"), when="@2022.2.1:")
-    depends_on("py-jinja2@2.10.3", type=("build", "run"), when="@2023.4.1:")
+    depends_on("py-jinja2@2.10.3:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-locket@1:", type=("build", "run"), when="@2022.2.1:")
     depends_on("py-msgpack@0.6.0:", type=("build", "run"))
     depends_on("py-msgpack@1.0.0:", type=("build", "run"), when="@2023.4.1:")
