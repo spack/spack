@@ -5,6 +5,7 @@
 
 
 from spack.package import *
+from spack.variant import _ConditionalVariantValues, Value
 
 
 class Vecgeom(CMakePackage, CudaPackage):
@@ -138,7 +139,11 @@ class Vecgeom(CMakePackage, CudaPackage):
         deprecated=True,
     )
 
-    _cxxstd_values = ("11", "14", "17")
+    _cxxstd_values = (
+        conditional("11", "14", when="@:1.1"),
+        "17",
+        conditional("20", when="@1.2:")
+    )
     variant(
         "cxxstd",
         default="17",
@@ -158,8 +163,6 @@ class Vecgeom(CMakePackage, CudaPackage):
     depends_on("veccore@0.4.2", when="@:1.0")
 
     conflicts("+cuda", when="@:1.1.5")
-    conflicts("cxxstd=14", when="@1.2:")
-    conflicts("cxxstd=11", when="@1.2:")
 
     # Fix missing CMAKE_CUDA_STANDARD
     patch(
@@ -174,10 +177,12 @@ class Vecgeom(CMakePackage, CudaPackage):
         when="@1.1.18 +cuda ^cuda@:11.4",
     )
 
-    for std in _cxxstd_values:
-        depends_on("geant4 cxxstd=" + std, when="+geant4 cxxstd=" + std)
-        depends_on("root cxxstd=" + std, when="+root cxxstd=" + std)
-        depends_on("xerces-c cxxstd=" + std, when="+gdml cxxstd=" + std)
+    for _cxxstd in _cxxstd_values:
+        for _v in _cxxstd if isinstance(_cxxstd, _ConditionalVariantValues) else [Value(_cxxstd, when="")]:
+            (std, when) = (_v.value, _v.when)
+            depends_on(f"geant4 cxxstd={std}", when=f"{when} +geant4 cxxstd={std}")
+            depends_on(f"root cxxstd={std}", when=f"{when} +root cxxstd={std}")
+            depends_on(f"xerces-c cxxstd={std}", when=f"{when} +gdml cxxstd={std}")
 
     def cmake_args(self):
         spec = self.spec
