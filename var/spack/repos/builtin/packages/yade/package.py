@@ -38,9 +38,7 @@ class Yade(CMakePackage):
     depends_on("sqlite", type=("build", "run"))
 
     def cmake_args(self):
-        args = [
-            self.define("CMAKE_BUILD_TYPE", "Release"),
-        ]
+        args = [self.define("CMAKE_BUILD_TYPE", "Release")]
 
         args.append("-DCMAKE_INSTALL_PREFIX={0}".format(self.stage.source_path))
         return args
