@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Opennn(CMakePackage):
-    """OpenNN is a software library written in C++ for advanced analytics. 
+    """OpenNN is a software library written in C++ for advanced analytics.
     It implements neural networks, the most successful machine learning method."""
 
     homepage = "https://www.opennn.net/"
