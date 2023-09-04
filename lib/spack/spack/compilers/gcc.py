@@ -105,7 +105,7 @@ class Gcc(spack.compiler.Compiler):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C++20 standard", "cxx20_flag", "< 8.0"
             )
-        elif self.real_version < Version("10.0"):
+        elif self.real_version < Version("11.0"):
             return "-std=c++2a"
         else:
             return "-std=c++20"
