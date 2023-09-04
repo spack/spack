@@ -7,12 +7,15 @@ from spack.package import *
 
 
 class PyRobotframework(PythonPackage):
-    """Cross-platform lib for process and system monitoring in Python."""
+    """Robot Framework is a generic open source automation framework for acceptance testing, acceptance test driven development (ATDD), and robotic process automation (RPA). It has simple plain text syntax and it can be extended easily with generic and custom libraries.
+    
+    You can learn more about EPICS here: https://robotframework.org/
+    """
 
-    homepage = "https://opencollective.com/psutil"
-    url = "https://github.com/robotframework/robotframework/archive/v3.2.2.tar.gz"
+    homepage = "https://pypi.org/project/robotframework/"
+    url = "https://files.pythonhosted.org/packages/c6/37/fc94979077241a09f31f347cbae401c9f62705eadd441a392285537e603c/robotframework-6.1.1.zip"
 
-    version("3.2.2", sha256="6b2bddcecb5d1c6198999e38aeaf4c0366542a5e7b5bd788c6a3a36b055d5ea2")
-    version("3.2.1", sha256="9805faa0990125ff2c9689b673448d5f47e78470e7a8e95af1606a775fa8379f")
-
-    depends_on("py-setuptools", type=("build", "run"))
+    version("6.1.1", sha256="3fa18f2596a4df2418c4b59abf43248327c15ed38ad8665f6a9a9c75c95d7789")
+    
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run"))
