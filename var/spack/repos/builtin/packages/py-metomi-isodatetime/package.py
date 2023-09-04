@@ -27,11 +27,11 @@ class PyMetomiIsodatetime(PythonPackage):
     """Python ISO 8601 date time parser and data model/manipulation utilities."""
 
     homepage = "https://github.com/metomi/isodatetime"
-    pypi="metomi-isodatetime/metomi-isodatetime-1!3.0.0.tar.gz"
+    url = "https://github.com/metomi/isodatetime/archive/refs/tags/3.0.0.tar.gz"
     
     maintainers("LydDeb")
 
-    version("3.0.0", sha256="2141e8aaa526ea7f7f1cb883e6c8ed83ffdab73269658d84d0624f63a6e1357e")
+    version("3.0.0", sha256="ecf592e10ceef68ff31df79b909f919383752b57308299f6fc8b8d2ce8471d15")
 
     depends_on("python@3.6:3.9", type=("build", "run"))
     depends_on("py-setuptools", type="build")
