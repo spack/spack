@@ -43,5 +43,4 @@ class Yade(CMakePackage):
         ]
 
         args.append("-DCMAKE_INSTALL_PREFIX={0}".format(self.stage.source_path))
-
         return args
