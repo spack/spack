@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Create and run mock e2e tests for package detection."""
+import collections
 import contextlib
 import pathlib
 import tempfile
-from typing import Generator, List, NamedTuple
+from typing import Any, Deque, Dict, Generator, List, NamedTuple, Tuple
 
 import jinja2
 
@@ -51,7 +52,7 @@ class DetectionTest(NamedTuple):
 class Runner:
     """Runs an external detection test"""
 
-    def __init__(self, *, test: DetectionTest, repository: spack.repo.RepoPath):
+    def __init__(self, *, test: DetectionTest, repository: spack.repo.RepoPath) -> None:
         self.test = test
         self.repository = repository
         self.tmpdir = pathlib.Path(tempfile.mkdtemp())
@@ -67,7 +68,8 @@ class Runner:
             entries = by_executable(
                 [self.repository.get_pkg_class(self.test.pkg_name)], path_hints=path_hints
             )
-            specs = set(x.spec for x in entries[self.test.pkg_name])
+            _, unqualified_name = spack.repo.partition_package_name(self.test.pkg_name)
+            specs = set(x.spec for x in entries[unqualified_name])
         return list(specs)
 
     @contextlib.contextmanager
@@ -118,10 +120,7 @@ def detection_tests(pkg_name: str, repository: spack.repo.RepoPath) -> List[Runn
         repository: repository where the package lives
     """
     result = []
-    pkg_dir = pathlib.Path(repository.filename_for_package_name(pkg_name)).parent
-    detection_tests_yaml = pkg_dir / "detection_test.yaml"
-    with open(str(detection_tests_yaml)) as f:
-        detection_tests_content = spack_yaml.load(f)
+    detection_tests_content = read_detection_tests(pkg_name, repository)
 
     tests_by_path = detection_tests_content.get("paths", [])
     for single_test_data in tests_by_path:
@@ -140,3 +139,53 @@ def detection_tests(pkg_name: str, repository: spack.repo.RepoPath) -> List[Runn
         result.append(Runner(test=current_test, repository=repository))
 
     return result
+
+
+def read_detection_tests(pkg_name: str, repository: spack.repo.RepoPath) -> Dict[str, Any]:
+    """Returns the normalized content of the detection_tests.yaml associated with the package
+    passed in input.
+
+    The content is merged with that of any package that is transitively included using the
+    "includes" attribute.
+
+    Args:
+        pkg_name: name of the package to test
+        repository: repository in which to search for packages
+    """
+    content_stack, seen = [], set()
+    included_packages: Deque[str] = collections.deque()
+
+    root_detection_yaml, result = _detection_tests_yaml(pkg_name, repository)
+    included_packages.extend(result.get("includes", []))
+    seen |= set(result.get("includes", []))
+
+    while included_packages:
+        current_package = included_packages.popleft()
+        try:
+            current_detection_yaml, content = _detection_tests_yaml(current_package, repository)
+        except FileNotFoundError as e:
+            msg = (
+                f"cannot read the detection tests from the '{current_package}' package, "
+                f"included by {root_detection_yaml}"
+            )
+            raise FileNotFoundError(msg + f"\n\n\t{e}\n")
+
+        content_stack.append((current_package, content))
+        included_packages.extend(x for x in content.get("includes", []) if x not in seen)
+        seen |= set(content.get("includes", []))
+
+    result.setdefault("paths", [])
+    for pkg_name, content in content_stack:
+        result["paths"].extend(content.get("paths", []))
+
+    return result
+
+
+def _detection_tests_yaml(
+    pkg_name: str, repository: spack.repo.RepoPath
+) -> Tuple[pathlib.Path, Dict[str, Any]]:
+    pkg_dir = pathlib.Path(repository.filename_for_package_name(pkg_name)).parent
+    detection_tests_yaml = pkg_dir / "detection_test.yaml"
+    with open(str(detection_tests_yaml)) as f:
+        content = spack_yaml.load(f)
+    return detection_tests_yaml, content

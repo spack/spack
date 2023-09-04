@@ -6274,6 +6274,23 @@ package detection and checking that the outcome matches the expected
      - Any valid spec
      - Yes
 
+"""""""""""""""""""""""""""""""
+Reuse tests from other packages
+"""""""""""""""""""""""""""""""
+
+When using a custom repository, it is possible to customize a package that already exists in ``builtin``
+and reuse its external tests. To do so, just write a ``detection_tests.yaml`` alongside the customized
+``package.py`` with an ``includes`` attribute. For instance the ``detection_tests.yaml`` for
+``myrepo.llvm`` might look like:
+
+.. code-block:: yaml
+
+   includes:
+   - "builtin.llvm"
+
+This YAML file instructs Spack to run the detection tests defined in ``builtin.llvm`` in addition to
+those locally defined in the file.
+
 -----------------------------
 Style guidelines for packages
 -----------------------------

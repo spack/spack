@@ -41,7 +41,7 @@ import collections.abc
 import glob
 import inspect
 import itertools
-import os.path
+import pathlib
 import pickle
 import re
 import warnings
@@ -817,14 +817,14 @@ def packages_with_detection_tests():
     import spack.config
     import spack.util.path
 
-    # Directories where we have repositories
-    repo_dirs = [spack.util.path.canonicalize_path(x) for x in spack.config.get("repos")]
-
-    # Compute which files need to be tested
     to_be_tested = []
-    for repo_dir in repo_dirs:
-        pattern = os.path.join(repo_dir, "packages", "**", "detection_test.yaml")
-        pkgs_with_tests = [os.path.basename(os.path.dirname(x)) for x in glob.glob(pattern)]
+    for current_repo in spack.repo.PATH.repos:
+        namespace = current_repo.namespace
+        packages_dir = pathlib.PurePath(current_repo.packages_path)
+        pattern = packages_dir / "**" / "detection_test.yaml"
+        pkgs_with_tests = [
+            f"{namespace}.{str(pathlib.PurePath(x).parent.name)}" for x in glob.glob(str(pattern))
+        ]
         to_be_tested.extend(pkgs_with_tests)
 
     return to_be_tested
@@ -839,7 +839,13 @@ def _test_detection_by_executable(pkgs, error_cls):
 
     # Filter the packages and retain only the ones with detection tests
     pkgs_with_tests = packages_with_detection_tests()
-    selected_pkgs = list(sorted(set(pkgs).intersection(pkgs_with_tests)))
+    selected_pkgs = []
+    for current_package in pkgs_with_tests:
+        _, unqualified_name = spack.repo.partition_package_name(current_package)
+        # Check for both unqualified name and qualified name
+        if unqualified_name in pkgs or current_package in pkgs:
+            selected_pkgs.append(current_package)
+    selected_pkgs.sort()
 
     if not selected_pkgs:
         summary = "No detection test to run"
