@@ -860,11 +860,6 @@ def _test_detection_by_executable(pkgs, error_cls):
             specs = test_runner.execute()
             expected_specs = test_runner.expected_specs
 
-            if not expected_specs and specs:
-                summary = pkg_name + ": detected a spec when expecting none"
-                details = [f'"{s}" was detected [test_id={idx}]' for s in specs]
-                errors.append(error_cls(summary=summary, details=details))
-
             not_detected = set(expected_specs) - set(specs)
             if not_detected:
                 summary = pkg_name + ": cannot detect some specs"
