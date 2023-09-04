@@ -55,7 +55,7 @@ class Runner:
     def __init__(self, *, test: DetectionTest, repository: spack.repo.RepoPath) -> None:
         self.test = test
         self.repository = repository
-        self.tmpdir = pathlib.Path(tempfile.mkdtemp())
+        self.tmpdir = tempfile.TemporaryDirectory()
 
     def execute(self) -> List[spack.spec.Spec]:
         """Executes a test and returns the specs that have been detected.
@@ -74,19 +74,17 @@ class Runner:
 
     @contextlib.contextmanager
     def _mock_layout(self) -> Generator[List[str], None, None]:
-        hints, to_be_removed = set(), []
+        hints = set()
         try:
             for entry in self.test.layout:
                 exes = self._create_executable_scripts(entry)
-                to_be_removed.extend(exes)
 
                 for mock_executable in exes:
                     hints.add(str(mock_executable.parent))
 
             yield list(hints)
         finally:
-            for exe in to_be_removed:
-                exe.unlink()
+            self.tmpdir.cleanup()
 
     def _create_executable_scripts(self, mock_executables: MockExecutables) -> List[pathlib.Path]:
         relative_paths = mock_executables.executables
@@ -95,7 +93,7 @@ class Runner:
         result = []
         for mock_exe_path in relative_paths:
             rel_path = pathlib.Path(mock_exe_path)
-            abs_path = self.tmpdir / rel_path
+            abs_path = pathlib.Path(self.tmpdir.name) / rel_path
             abs_path.parent.mkdir(parents=True, exist_ok=True)
             abs_path.write_text(script_template.render(script=script))
             filesystem.set_executable(abs_path)
