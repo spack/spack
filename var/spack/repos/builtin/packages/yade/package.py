@@ -1,24 +1,3 @@
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
-#
-# SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install yade
-#
-# You can edit this file again by typing:
-#
-#     spack edit yade
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack.package import *
 
 
@@ -38,8 +17,8 @@ class Yade(CMakePackage):
     version("2017.01a", sha256="cd35caa6b6a017ee82f894e7d6f0826fddc1d921aea04b5896d3f1da95cb649b")
     version("2016.06a", sha256="6e7374d2dcb7c90026be9229a6b30373f9d82fdefd3dc1f952aa6262924f2579")
 
-    depends_on("cmake@3.0:", type="build")
-    depends_on("gcc@4.2:", type=("build", "run"))
+    depends_on("cmake", type="build")
+    depends_on("gcc@11.4:", type=("build", "run"))
     depends_on("boost@1.47:", type=("build", "run"))
     depends_on("qt", type=("build", "run"))
     depends_on("freeglut", type=("build", "run"))
@@ -53,20 +32,11 @@ class Yade(CMakePackage):
     depends_on("gdb", type=("build", "run"))
     depends_on("sqlite", type=("build", "run"))
 
-    def url_for_version(self, version):
-        if version >= Version("2023.02a"):
-            return super().url_for_version(version)
-        url_fmt = "https://gitlab.com/yade-dev/trunk/-/archive/{0}/trunk-{0}.tar.gz"
-        return url_fmt.format(version)
-
     def cmake_args(self):
         args = [
-            self.define("CMAKE_INSTALL_PREFIX", self.prefix),
-            self.define("BUILD_MJ2", False),
-            self.define("BUILD_THIRDPARTY", False),
             self.define("CMAKE_BUILD_TYPE", "Release"),
         ]
 
-        args.append("-DCMAKE_SOURCE_DIR={0}".format(self.stage.source_path))
+        args.append("-DCMAKE_INSTALL_PREFIX={0}".format(self.stage.source_path))
 
         return args
