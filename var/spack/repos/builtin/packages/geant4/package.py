@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.variant import _ConditionalVariantValues, Value
+from spack.variant import Value, _ConditionalVariantValues
 
 
 class Geant4(CMakePackage):
@@ -117,7 +117,11 @@ class Geant4(CMakePackage):
         depends_on("vecgeom@0.3rc", when="@10.3.0:10.3")
 
     for _cxxstd in _cxxstd_values:
-        for _v in _cxxstd if isinstance(_cxxstd, _ConditionalVariantValues) else [Value(_cxxstd, when="")]:
+        for _v in (
+            _cxxstd
+            if isinstance(_cxxstd, _ConditionalVariantValues)
+            else [Value(_cxxstd, when="")]
+        ):
             (std, when) = (_v.value, _v.when)
 
             depends_on(f"clhep cxxstd={std}", when=f"{when} cxxstd={std}")

@@ -5,7 +5,7 @@
 
 
 from spack.package import *
-from spack.variant import _ConditionalVariantValues, Value
+from spack.variant import Value, _ConditionalVariantValues
 
 
 class Vecgeom(CMakePackage, CudaPackage):
@@ -139,11 +139,7 @@ class Vecgeom(CMakePackage, CudaPackage):
         deprecated=True,
     )
 
-    _cxxstd_values = (
-        conditional("11", "14", when="@:1.1"),
-        "17",
-        conditional("20", when="@1.2:")
-    )
+    _cxxstd_values = (conditional("11", "14", when="@:1.1"), "17", conditional("20", when="@1.2:"))
     variant(
         "cxxstd",
         default="17",
@@ -178,7 +174,11 @@ class Vecgeom(CMakePackage, CudaPackage):
     )
 
     for _cxxstd in _cxxstd_values:
-        for _v in _cxxstd if isinstance(_cxxstd, _ConditionalVariantValues) else [Value(_cxxstd, when="")]:
+        for _v in (
+            _cxxstd
+            if isinstance(_cxxstd, _ConditionalVariantValues)
+            else [Value(_cxxstd, when="")]
+        ):
             (std, when) = (_v.value, _v.when)
             depends_on(f"geant4 cxxstd={std}", when=f"{when} +geant4 cxxstd={std}")
             depends_on(f"root cxxstd={std}", when=f"{when} +root cxxstd={std}")
