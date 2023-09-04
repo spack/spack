@@ -20,11 +20,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     periodic, material, crystal, and biological systems
     """
 
-    build_system(
-        conditional("cmake", when="@2023.2:"),
-        "makefile",
-        default="makefile",
-    )
+    build_system(conditional("cmake", when="@2023.2:"), "makefile", default="makefile")
 
     homepage = "https://www.cp2k.org"
     url = "https://github.com/cp2k/cp2k/releases/download/v3.0.0/cp2k-3.0.tar.bz2"
