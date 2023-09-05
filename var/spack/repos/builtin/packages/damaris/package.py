@@ -16,11 +16,11 @@ class Damaris(CMakePackage):
     maintainers("jcbowden")
 
     version("master", branch="master")
-    version("1.6.0", tag="v1.6.0")
-    version("1.5.0", tag="v1.5.0")
-    version("1.3.3", tag="v1.3.3")
-    version("1.3.2", tag="v1.3.2")
-    version("1.3.1", tag="v1.3.1")
+    version("1.6.0", tag="v1.6.0", commit="1fe4c61cce03babd24315b8e6156f226baac97a2")
+    version("1.5.0", tag="v1.5.0", commit="68206a696ad430aa8426ca370501aa71914fbc87")
+    version("1.3.3", tag="v1.3.3", commit="f1c473507c080738f7092f6a7d72deb938ade786")
+    version("1.3.2", tag="v1.3.2", commit="38b50664523e56900809a19f0cf52fc0ab5dca53")
+    version("1.3.1", tag="v1.3.1", commit="6cee3690fa7d387acc8f5f650a7b019e13b90284")
 
     variant("fortran", default=True, description="Enables Fortran support")
     variant("hdf5", default=False, description="Enables the HDF5 storage plugin")
