@@ -801,6 +801,7 @@ deprecated-ci-build:
     - echo $PATH
     - module avail
     - module list
+    - echo "$SPACK_USER_CACHE_PATH"
 
 .generate-cray-rhel:
   tags: [ "cray-rhel-zen4", "public" ]
