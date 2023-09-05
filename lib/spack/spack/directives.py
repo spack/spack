@@ -436,7 +436,7 @@ def _execute_version(pkg, ver, **kwargs):
     pkg.versions[version] = kwargs
 
 
-def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
+def pkg_depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
     when_spec = make_when_spec(when)
     if not when_spec:
         return
@@ -543,7 +543,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
     """
 
     def _execute_depends_on(pkg):
-        _depends_on(pkg, spec, when=when, type=type, patches=patches)
+        pkg_depends_on(pkg, spec, when=when, type=type, patches=patches)
 
     return _execute_depends_on
 
@@ -564,7 +564,7 @@ def extends(spec, type=("build", "run"), **kwargs):
         if not when_spec:
             return
 
-        _depends_on(pkg, spec, when=when, type=type)
+        pkg_depends_on(pkg, spec, when=when, type=type)
         spec_obj = spack.spec.Spec(spec)
         pkg.extendees[spec_obj.name] = (spec_obj, kwargs)
 
