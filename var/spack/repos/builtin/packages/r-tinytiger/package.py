@@ -16,7 +16,7 @@ class RTinytiger(RPackage):
     downloads can be set up with a cache to avoid multiple downloads. Data is
     available back to 2000 for most geographies."""
 
-    homepage = "https://github.com/alarm-redist/tinytiger"
+    homepage = "https://alarm-redist.org/tinytiger/"
     cran = "tinytiger"
 
     maintainers("jgaeb")
