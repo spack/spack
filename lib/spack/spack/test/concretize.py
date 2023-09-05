@@ -2089,7 +2089,9 @@ class TestConcretize:
         assert len(edges) == 1 and edges[0].virtuals == ()
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_explicit_splices(self, mutable_config, database_mutable_config, mock_packages, transitive):
+    def test_explicit_splices(
+        self, mutable_config, database_mutable_config, mock_packages, transitive
+    ):
         mpich_spec = database_mutable_config.query("mpich")[0]
         splice_info = {
             "target": "mpi",
