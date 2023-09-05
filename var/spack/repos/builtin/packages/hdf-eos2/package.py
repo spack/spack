@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from os import chmod
 import sys
 
 from spack.package import *
@@ -74,6 +75,11 @@ class HdfEos2(AutotoolsPackage):
                 "ERROR: cannot generate URL for version {0};"
                 "version/checksum not found in version_list".format(version)
             )
+
+    @run_before("configure")
+    def fix_permissions(self):
+        if not self.force_autoreconf:
+            chmod(join_path(self.stage.source_path, "configure"), 0o755)
 
     def flag_handler(self, name, flags):
         if self.spec.compiler.name == "apple-clang":
