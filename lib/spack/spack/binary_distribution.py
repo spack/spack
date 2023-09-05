@@ -1994,7 +1994,9 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, unsigned, force)
         if spec.spliced:  # overwrite old metadata with new
-            spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
+            spack.store.STORE.layout.write_spec(
+                spec, spack.store.STORE.layout.spec_file_path(spec)
+            )
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, spack.store.STORE.layout)
 

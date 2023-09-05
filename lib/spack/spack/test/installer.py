@@ -865,7 +865,7 @@ def test_install_splice_root_from_binary(
 
     out.package.do_install(unsigned=True)
 
-    assert len(spack.store.db.query()) == len(list(out.traverse()))
+    assert len(spack.store.STORE.db.query()) == len(list(out.traverse()))
 
 
 def test_install_task_use_cache(install_mockery, monkeypatch):
@@ -1111,7 +1111,7 @@ def _interrupt(installer, task, install_status, **kwargs):
     if task.pkg.name == "a":
         raise KeyboardInterrupt("mock keyboard interrupt for a")
     else:
-        return installer._real_install_task(task)
+        return installer._real_install_task(task, None)
         # installer.installed.add(task.pkg.name)
 
 
@@ -1137,58 +1137,50 @@ def test_install_fail_on_interrupt(install_mockery, mock_fetch, monkeypatch):
     # assert spec_name not in installer.installed
 
 
+class MyBuildException(Exception):
+    pass
+
+
+def _install_fail_my_build_exception(installer, task, install_status, **kwargs):
+    print(task, task.pkg.name)
+    if task.pkg.name == "a":
+        raise MyBuildException("mock internal package build error for a")
+    else:
+        # No need for more complex logic here because no splices
+        task.execute(install_status)
+        installer._update_installed(task)
+
+
 def test_install_fail_single(install_mockery, mock_fetch, monkeypatch):
     """Test expected results for failure of single package."""
-    spec_name = "a"
-    err_msg = "mock internal package build error for {0}".format(spec_name)
-
-    class MyBuildException(Exception):
-        pass
-
-    def _install(installer, task, install_status, **kwargs):
-        if task.pkg.name == spec_name:
-            raise MyBuildException(err_msg)
-        else:
-            installer.installed.add(task.pkg.name)
-
-    const_arg = installer_args([spec_name], {})
+    const_arg = installer_args(["a"], {})
     installer = create_installer(const_arg)
 
     # Raise a KeyboardInterrupt error to trigger early termination
-    monkeypatch.setattr(inst.PackageInstaller, "_install_task", _install)
+    monkeypatch.setattr(inst.PackageInstaller, "_install_task", _install_fail_my_build_exception)
 
-    with pytest.raises(MyBuildException, match=err_msg):
+    with pytest.raises(MyBuildException, match="mock internal package build error for a"):
         installer.install()
 
-    assert "b" in installer.installed  # ensure dependency of a is 'installed'
-    assert spec_name not in installer.installed
+    # ensure dependency of a is 'installed' and a is not
+    assert any(pkg_id.startswith("b-") for pkg_id in installer.installed)
+    assert not any(pkg_id.startswith("a-") for pkg_id in installer.installed)
 
 
-def test_install_fail_multi(install_mockery, monkeypatch):
+def test_install_fail_multi(install_mockery, mock_fetch, monkeypatch):
     """Test expected results for failure of multiple packages."""
-    spec_name = "c"
-    err_msg = "mock internal package build error"
-
-    class MyBuildException(Exception):
-        pass
-
-    def _install(installer, task, install_status, **kwargs):
-        if task.pkg.name == spec_name:
-            raise MyBuildException(err_msg)
-        else:
-            installer.installed.add(task.pkg.name)
-
-    const_arg = installer_args([spec_name, "a"], {})
+    const_arg = installer_args(["a", "c"], {})
     installer = create_installer(const_arg)
 
     # Raise a KeyboardInterrupt error to trigger early termination
-    monkeypatch.setattr(inst.PackageInstaller, "_install_task", _install)
+    monkeypatch.setattr(inst.PackageInstaller, "_install_task", _install_fail_my_build_exception)
 
     with pytest.raises(inst.InstallError, match="Installation request failed"):
         installer.install()
 
-    assert "a" in installer.installed  # ensure the the second spec installed
-    assert spec_name not in installer.installed
+    # ensure the the second spec installed but not the first
+    assert any(pkg_id.startswith("c-") for pkg_id in installer.installed)
+    assert not any(pkg_id.startswith("a-") for pkg_id in installer.installed)
 
 
 def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
