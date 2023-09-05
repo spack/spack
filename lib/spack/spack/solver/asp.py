@@ -2852,7 +2852,7 @@ class SpecBuilder:
         return specs
 
     def execute_splices(self):
-        splice_config = spack.config.get("splice", [])
+        splice_config = spack.config.CONFIG.get("splice", [])
         splice_triples = []
         for splice_set in splice_config:
             target = splice_set["target"]
