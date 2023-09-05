@@ -65,8 +65,6 @@ default:
 .base-job:
   variables:
     SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
-    SPACK_DISABLE_LOCAL_CONFIG: "1"
-    SPACK_USER_CACHE_PATH: "${CI_PROJECT_DIR}/tmp/_user_cache/"
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
       # Pipelines on develop only rebuild what is missing from the mirror
