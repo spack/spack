@@ -542,6 +542,9 @@ class Python(Package):
         config_args = []
         cflags = []
 
+        # https://bugs.python.org/issue1294959
+        config_args.append(f"--with-platlibdir={sys.platlibdir}")
+
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
         link_deps = spec.dependencies(deptype="link")
