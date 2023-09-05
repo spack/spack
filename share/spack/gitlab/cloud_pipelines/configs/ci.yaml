@@ -93,6 +93,8 @@ ci:
         SPACK_DISABLE_LOCAL_CONFIG: "1"
         SPACK_USER_CACHE_PATH: "${CI_PROJECT_DIR}/tmp/_user_cache/"
       before_script:
+      - - echo "$SPACK_USER_CACHE_PATH"
+        - exit 1
       - - uname -a || true
         - grep -E "vendor|model name" /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
         - nproc || true
