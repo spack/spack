@@ -47,7 +47,7 @@ _SHELL_SET_STRINGS = {
     "csh": "setenv {0} {1};\n",
     "fish": "set -gx {0} {1};\n",
     "bat": 'set "{0}={1}"\n',
-    "pwsh": "$Env:{0}={1}\n",
+    "pwsh": "$Env:{0}='{1}'\n",
 }
 
 
@@ -56,7 +56,7 @@ _SHELL_UNSET_STRINGS = {
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
     "bat": 'set "{0}="\n',
-    "pwsh": "Remove-Item Env:{0}\n",
+    "pwsh": "Set-Item -Path Env:{0}\n",
 }
 
 
@@ -429,7 +429,7 @@ class RemovePath(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemovePath: {self.name}-{str(self.value)}", level=3)
         environment_value = env.get(self.name, "")
-        directories = environment_value.split(self.separator) if environment_value else []
+        directories = environment_value.split(self.separator)
         directories = [
             path_to_os_path(os.path.normpath(x)).pop()
             for x in directories
@@ -724,11 +724,10 @@ class EnvironmentModifications:
                     cmds += _SHELL_UNSET_STRINGS[shell].format(name)
                 else:
                     if sys.platform != "win32":
-                        cmd = _SHELL_SET_STRINGS[shell].format(
-                            name, double_quote_escape(new_env[name])
-                        )
+                        new_env_name = double_quote_escape(new_env[name])
                     else:
-                        cmd = _SHELL_SET_STRINGS[shell].format(name, new_env[name])
+                        new_env_name = new_env[name]
+                    cmd = _SHELL_SET_STRINGS[shell].format(name, new_env_name)
                     cmds += cmd
         return cmds
 
