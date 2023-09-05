@@ -38,6 +38,16 @@ class DetectedPackage(NamedTuple):
     #: Prefix of the spec
     prefix: str
 
+    def __reduce__(self):
+        return DetectedPackage.restore, (str(self.spec), self.prefix, self.spec.extra_attributes)
+
+    @staticmethod
+    def restore(
+        spec_str: str, prefix: str, extra_attributes: Optional[Dict[str, str]]
+    ) -> "DetectedPackage":
+        spec = spack.spec.Spec.from_detection(spec_str=spec_str, extra_attributes=extra_attributes)
+        return DetectedPackage(spec=spec, prefix=prefix)
+
 
 def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
     """Returns all the specs mentioned as externals in packages.yaml"""
