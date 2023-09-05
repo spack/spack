@@ -91,7 +91,9 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("gawk", type="build")
     depends_on("sed", type="build")
     depends_on("gmake", type="build")
-    depends_on("gmake@:4.3", type="build", when="@:2.18")
+
+    # See 2d7ed98add14f75041499ac189696c9bd3d757fe
+    depends_on("gmake@:4.3", type="build", when="@:2.36")
 
     # From 2.29: generates locale/C-translit.h
     # before that it's a test dependency.
