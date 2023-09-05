@@ -11,6 +11,7 @@ import os.path
 import re
 import sys
 import warnings
+from typing import Dict, List, Optional, Set
 
 import llnl.util.filesystem
 import llnl.util.tty
@@ -18,7 +19,7 @@ import llnl.util.tty
 import spack.util.environment
 import spack.util.ld_so_conf
 
-from .common import (  # find_windows_compiler_bundled_packages,
+from .common import (
     DetectedPackage,
     WindowsCompilerExternalPaths,
     WindowsKitExternalPaths,
@@ -32,7 +33,7 @@ from .common import (  # find_windows_compiler_bundled_packages,
 )
 
 
-def common_windows_package_paths():
+def common_windows_package_paths() -> List[str]:
     paths = WindowsCompilerExternalPaths.find_windows_compiler_bundled_packages()
     paths.extend(find_win32_additional_install_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
@@ -41,7 +42,7 @@ def common_windows_package_paths():
     return paths
 
 
-def executables_in_path(path_hints):
+def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
     """Get the paths of all executables available from the current PATH.
 
     For convenience, this is constructed as a dictionary where the keys are
@@ -52,7 +53,7 @@ def executables_in_path(path_hints):
     assumed there are two different instances of the executable.
 
     Args:
-        path_hints (list): list of paths to be searched. If None the list will be
+        path_hints: list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
     if sys.platform == "win32":
@@ -61,7 +62,9 @@ def executables_in_path(path_hints):
     return path_to_dict(search_paths)
 
 
-def libraries_in_ld_and_system_library_path(path_hints=None):
+def libraries_in_ld_and_system_library_path(
+    path_hints: Optional[List[str]] = None,
+) -> Dict[str, str]:
     """Get the paths of all libraries available from LD_LIBRARY_PATH,
     LIBRARY_PATH, DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH, and
     standard system library paths.
@@ -74,7 +77,7 @@ def libraries_in_ld_and_system_library_path(path_hints=None):
     assumed there are two different instances of the library.
 
     Args:
-        path_hints (list): list of paths to be searched. If None the list will be
+        path_hints: list of paths to be searched. If None the list will be
             constructed based on the set of LD_LIBRARY_PATH, LIBRARY_PATH,
             DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH environment
             variables as well as the standard system library paths.
@@ -90,7 +93,7 @@ def libraries_in_ld_and_system_library_path(path_hints=None):
     return path_to_dict(search_paths)
 
 
-def libraries_in_windows_paths(path_hints):
+def libraries_in_windows_paths(path_hints: List[str]) -> Dict[str, str]:
     path_hints.extend(spack.util.environment.get_path("PATH"))
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
     # on Windows, some libraries (.dlls) are found in the bin directory or sometimes
@@ -106,17 +109,19 @@ def libraries_in_windows_paths(path_hints):
     return path_to_dict(search_paths)
 
 
-def _group_by_prefix(paths):
+def _group_by_prefix(paths: Set[str]) -> Dict[str, Set[str]]:
     groups = collections.defaultdict(set)
     for p in paths:
         groups[os.path.dirname(p)].add(p)
-    return groups.items()
+    return groups
 
 
 # TODO consolidate this with by_executable
 # Packages should be able to define both .libraries and .executables in the future
 # determine_spec_details should get all relevant libraries and executables in one call
-def by_library(packages_to_check, path_hints=None):
+def by_library(
+    packages_to_check: List[spack.package_base.PackageBase], path_hints: Optional[List[str]] = None
+) -> Dict[str, List[DetectedPackage]]:
     # Techniques for finding libraries is determined on a per recipe basis in
     # the determine_version class method. Some packages will extract the
     # version number from a shared libraries filename.
@@ -127,8 +132,8 @@ def by_library(packages_to_check, path_hints=None):
     DYLD_FALLBACK_LIBRARY_PATH, and standard system library paths.
 
     Args:
-        packages_to_check (list): list of packages to be detected
-        path_hints (list): list of paths to be searched. If None the list will be
+        packages_to_check: list of packages to be detected
+        path_hints: list of paths to be searched. If None the list will be
             constructed based on the LD_LIBRARY_PATH, LIBRARY_PATH,
             DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH environment variables
             and standard system library paths.
@@ -160,7 +165,7 @@ def by_library(packages_to_check, path_hints=None):
                     pkg_to_found_libs[pkg].add(path)
 
     pkg_to_entries = collections.defaultdict(list)
-    resolved_specs = {}  # spec -> lib found for the spec
+    resolved_specs: Dict[spack.spec.Spec, str] = {}  # spec -> lib found for the spec
 
     for pkg, libs in pkg_to_found_libs.items():
         if not hasattr(pkg, "determine_spec_details"):
@@ -171,7 +176,7 @@ def by_library(packages_to_check, path_hints=None):
             )
             continue
 
-        for prefix, libs_in_prefix in sorted(_group_by_prefix(libs)):
+        for prefix, libs_in_prefix in sorted(_group_by_prefix(libs).items()):
             try:
                 specs = _convert_to_iterable(pkg.determine_spec_details(prefix, libs_in_prefix))
             except Exception as e:
@@ -225,19 +230,21 @@ def by_library(packages_to_check, path_hints=None):
     return pkg_to_entries
 
 
-def by_executable(packages_to_check, path_hints=None):
+def by_executable(
+    packages_to_check: List[spack.package_base.PackageBase], path_hints: Optional[List[str]] = None
+) -> Dict[str, List[DetectedPackage]]:
     """Return the list of packages that have been detected on the system,
     searching by path.
 
     Args:
-        packages_to_check (list): list of package classes to be detected
-        path_hints (list): list of paths to be searched. If None the list will be
+        packages_to_check: list of package classes to be detected
+        path_hints: list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
     path_hints = spack.util.environment.get_path("PATH") if path_hints is None else path_hints
     exe_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
-        if hasattr(pkg, "executables"):
+        if hasattr(pkg, "executables") and hasattr(pkg, "platform_executables"):
             for exe in pkg.platform_executables():
                 exe_pattern_to_pkgs[exe].append(pkg)
         # Add Windows specific, package related paths to the search paths
@@ -254,7 +261,7 @@ def by_executable(packages_to_check, path_hints=None):
                     pkg_to_found_exes[pkg].add(path)
 
     pkg_to_entries = collections.defaultdict(list)
-    resolved_specs = {}  # spec -> exe found for the spec
+    resolved_specs: Dict[spack.spec.Spec, str] = {}  # spec -> exe found for the spec
 
     for pkg, exes in pkg_to_found_exes.items():
         if not hasattr(pkg, "determine_spec_details"):
@@ -265,7 +272,7 @@ def by_executable(packages_to_check, path_hints=None):
             )
             continue
 
-        for prefix, exes_in_prefix in sorted(_group_by_prefix(exes)):
+        for prefix, exes_in_prefix in sorted(_group_by_prefix(exes).items()):
             # TODO: multiple instances of a package can live in the same
             # prefix, and a package implementation can return multiple specs
             # for one prefix, but without additional details (e.g. about the

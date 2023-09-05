@@ -13,13 +13,13 @@ provided here.
 The module also contains other functions that might be useful across different
 detection mechanisms.
 """
-import collections
 import glob
 import itertools
 import os
 import os.path
 import re
 import sys
+from typing import Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import llnl.util.tty
 
@@ -29,12 +29,18 @@ import spack.spec
 import spack.util.spack_yaml
 import spack.util.windows_registry
 
-#: Information on a package that has been detected
-DetectedPackage = collections.namedtuple("DetectedPackage", ["spec", "prefix"])
+
+class DetectedPackage(NamedTuple):
+    """Information on a package that has been detected."""
+
+    #: Spec that was detected
+    spec: spack.spec.Spec
+    #: Prefix of the spec
+    prefix: str
 
 
-def _externals_in_packages_yaml():
-    """Return all the specs mentioned as externals in packages.yaml"""
+def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
+    """Returns all the specs mentioned as externals in packages.yaml"""
     packages_yaml = spack.config.get("packages")
     already_defined_specs = set()
     for pkg_name, package_configuration in packages_yaml.items():
@@ -43,7 +49,12 @@ def _externals_in_packages_yaml():
     return already_defined_specs
 
 
-def _pkg_config_dict(external_pkg_entries):
+ExternalEntryType = Union[str, Dict[str, str]]
+
+
+def _pkg_config_dict(
+    external_pkg_entries: List[DetectedPackage],
+) -> Dict[str, Union[bool, List[Dict[str, ExternalEntryType]]]]:
     """Generate a package specific config dict according to the packages.yaml schema.
 
     This does not generate the entire packages.yaml. For example, given some
@@ -65,7 +76,10 @@ def _pkg_config_dict(external_pkg_entries):
         if not _spec_is_valid(e.spec):
             continue
 
-        external_items = [("spec", str(e.spec)), ("prefix", e.prefix)]
+        external_items: List[Tuple[str, ExternalEntryType]] = [
+            ("spec", str(e.spec)),
+            ("prefix", e.prefix),
+        ]
         if e.spec.external_modules:
             external_items.append(("modules", e.spec.external_modules))
 
@@ -83,15 +97,14 @@ def _pkg_config_dict(external_pkg_entries):
     return pkg_dict
 
 
-def _spec_is_valid(spec):
+def _spec_is_valid(spec: spack.spec.Spec) -> bool:
     try:
         str(spec)
     except spack.error.SpackError:
-        # It is assumed here that we can at least extract the package name from
-        # the spec so we can look up the implementation of
-        # determine_spec_details
-        msg = "Constructed spec for {0} does not have a string representation"
-        llnl.util.tty.warn(msg.format(spec.name))
+        # It is assumed here that we can at least extract the package name from the spec so we
+        # can look up the implementation of determine_spec_details
+        msg = f"Constructed spec for {spec.name} does not have a string representation"
+        llnl.util.tty.warn(msg)
         return False
 
     try:
@@ -106,7 +119,7 @@ def _spec_is_valid(spec):
     return True
 
 
-def path_to_dict(search_paths):
+def path_to_dict(search_paths: List[str]):
     """Return dictionary[fullpath]: basename from list of paths"""
     path_to_lib = {}
     # Reverse order of search directories so that a lib in the first
@@ -124,7 +137,7 @@ def path_to_dict(search_paths):
     return path_to_lib
 
 
-def is_executable(file_path):
+def is_executable(file_path: str) -> bool:
     """Return True if the path passed as argument is that of an executable"""
     return os.path.isfile(file_path) and os.access(file_path, os.X_OK)
 
@@ -146,7 +159,7 @@ def _convert_to_iterable(single_val_or_multiple):
         return [x]
 
 
-def executable_prefix(executable_dir):
+def executable_prefix(executable_dir: str) -> str:
     """Given a directory where an executable is found, guess the prefix
     (i.e. the "root" directory of that installation) and return it.
 
@@ -167,12 +180,12 @@ def executable_prefix(executable_dir):
     return os.sep.join(components[:idx])
 
 
-def library_prefix(library_dir):
-    """Given a directory where an library is found, guess the prefix
+def library_prefix(library_dir: str) -> str:
+    """Given a directory where a library is found, guess the prefix
     (i.e. the "root" directory of that installation) and return it.
 
     Args:
-        library_dir: directory where an library is found
+        library_dir: directory where a library is found
     """
     # Given a prefix where an library is found, assuming that prefix
     # contains /lib/ or /lib64/, strip off the 'lib' or 'lib64' directory
@@ -195,13 +208,17 @@ def library_prefix(library_dir):
         return library_dir
 
 
-def update_configuration(detected_packages, scope=None, buildable=True):
+def update_configuration(
+    detected_packages: Dict[str, List[DetectedPackage]],
+    scope: Optional[str] = None,
+    buildable: bool = True,
+) -> List[spack.spec.Spec]:
     """Add the packages passed as arguments to packages.yaml
 
     Args:
-        detected_packages (list): list of DetectedPackage objects to be added
-        scope (str): configuration scope where to add the detected packages
-        buildable (bool): whether the detected packages are buildable or not
+        detected_packages: list of DetectedPackage objects to be added
+        scope: configuration scope where to add the detected packages
+        buildable: whether the detected packages are buildable or not
     """
     predefined_external_specs = _externals_in_packages_yaml()
     pkg_to_cfg, all_new_specs = {}, []
@@ -209,7 +226,10 @@ def update_configuration(detected_packages, scope=None, buildable=True):
         new_entries = [e for e in entries if (e.spec not in predefined_external_specs)]
 
         pkg_config = _pkg_config_dict(new_entries)
-        all_new_specs.extend([spack.spec.Spec(x["spec"]) for x in pkg_config.get("externals", [])])
+        external_entries = pkg_config.get("externals", [])
+        assert not isinstance(external_entries, bool), "unexpected value for external entry"
+
+        all_new_specs.extend([spack.spec.Spec(x["spec"]) for x in external_entries])
         if buildable is False:
             pkg_config["buildable"] = False
         pkg_to_cfg[package_name] = pkg_config
@@ -222,16 +242,19 @@ def update_configuration(detected_packages, scope=None, buildable=True):
     return all_new_specs
 
 
-def _windows_drive():
-    """Return Windows drive string extracted from PROGRAMFILES
-    env var, which is garunteed to be defined for all logins"""
-    drive = re.match(r"([a-zA-Z]:)", os.environ["PROGRAMFILES"]).group(1)
-    return drive
+def _windows_drive() -> str:
+    """Return Windows drive string extracted from the PROGRAMFILES environment variable,
+    which is guaranteed to be defined for all logins.
+    """
+    match = re.match(r"([a-zA-Z]:)", os.environ["PROGRAMFILES"])
+    if match is None:
+        raise RuntimeError("cannot read the PROGRAMFILES environment variable")
+    return match.group(1)
 
 
 class WindowsCompilerExternalPaths:
     @staticmethod
-    def find_windows_compiler_root_paths():
+    def find_windows_compiler_root_paths() -> List[str]:
         """Helper for Windows compiler installation root discovery
 
         At the moment simply returns location of VS install paths from VSWhere
@@ -239,7 +262,7 @@ class WindowsCompilerExternalPaths:
         return list(winOs.WindowsOs.vs_install_paths)
 
     @staticmethod
-    def find_windows_compiler_cmake_paths():
+    def find_windows_compiler_cmake_paths() -> List[str]:
         """Semi hard-coded search path for cmake bundled with MSVC"""
         return [
             os.path.join(
@@ -249,7 +272,7 @@ class WindowsCompilerExternalPaths:
         ]
 
     @staticmethod
-    def find_windows_compiler_ninja_paths():
+    def find_windows_compiler_ninja_paths() -> List[str]:
         """Semi hard-coded search heuristic for locating ninja bundled with MSVC"""
         return [
             os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "Ninja")
@@ -257,7 +280,7 @@ class WindowsCompilerExternalPaths:
         ]
 
     @staticmethod
-    def find_windows_compiler_bundled_packages():
+    def find_windows_compiler_bundled_packages() -> List[str]:
         """Return all MSVC compiler bundled packages"""
         return (
             WindowsCompilerExternalPaths.find_windows_compiler_cmake_paths()
@@ -266,14 +289,15 @@ class WindowsCompilerExternalPaths:
 
 
 class WindowsKitExternalPaths:
+    plat_major_ver = None
     if sys.platform == "win32":
         plat_major_ver = str(winOs.windows_version()[0])
 
     @staticmethod
-    def find_windows_kit_roots():
+    def find_windows_kit_roots() -> Optional[str]:
         """Return Windows kit root, typically %programfiles%\\Windows Kits\\10|11\\"""
         if sys.platform != "win32":
-            return []
+            return None
         program_files = os.environ["PROGRAMFILES(x86)"]
         kit_base = os.path.join(
             program_files, "Windows Kits", WindowsKitExternalPaths.plat_major_ver
@@ -281,21 +305,23 @@ class WindowsKitExternalPaths:
         return kit_base
 
     @staticmethod
-    def find_windows_kit_bin_paths(kit_base=None):
+    def find_windows_kit_bin_paths(kit_base: Optional[str] = None) -> List[str]:
         """Returns Windows kit bin directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
+        assert kit_base is not None, "unexpected value for kit_base"
         kit_bin = os.path.join(kit_base, "bin")
         return glob.glob(os.path.join(kit_bin, "[0-9]*", "*\\"))
 
     @staticmethod
-    def find_windows_kit_lib_paths(kit_base=None):
+    def find_windows_kit_lib_paths(kit_base: Optional[str] = None) -> List[str]:
         """Returns Windows kit lib directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
+        assert kit_base is not None, "unexpected value for kit_base"
         kit_lib = os.path.join(kit_base, "Lib")
         return glob.glob(os.path.join(kit_lib, "[0-9]*", "*", "*\\"))
 
     @staticmethod
-    def find_windows_driver_development_kit_paths():
+    def find_windows_driver_development_kit_paths() -> List[str]:
         """Provides a list of all installation paths
         for the WDK by version and architecture
         """
@@ -303,7 +329,7 @@ class WindowsKitExternalPaths:
         return WindowsKitExternalPaths.find_windows_kit_lib_paths(wdk_content_root)
 
     @staticmethod
-    def find_windows_kit_reg_installed_roots_paths():
+    def find_windows_kit_reg_installed_roots_paths() -> List[str]:
         reg = spack.util.windows_registry.WindowsRegistryView(
             "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
             root_key=spack.util.windows_registry.HKEY.HKEY_LOCAL_MACHINE,
@@ -316,7 +342,7 @@ class WindowsKitExternalPaths:
         )
 
     @staticmethod
-    def find_windows_kit_reg_sdk_paths():
+    def find_windows_kit_reg_sdk_paths() -> List[str]:
         reg = spack.util.windows_registry.WindowsRegistryView(
             "SOFTWARE\\WOW6432Node\\Microsoft\\Microsoft SDKs\\Windows\\v%s.0"
             % WindowsKitExternalPaths.plat_major_ver,
@@ -330,7 +356,7 @@ class WindowsKitExternalPaths:
         )
 
 
-def find_win32_additional_install_paths():
+def find_win32_additional_install_paths() -> List[str]:
     """Not all programs on Windows live on the PATH
     Return a list of other potential install locations.
     """
@@ -357,13 +383,12 @@ def find_win32_additional_install_paths():
     return windows_search_ext
 
 
-def compute_windows_program_path_for_package(pkg):
-    """Given a package, attempt to compute its Windows
-    program files location, return list of best guesses
+def compute_windows_program_path_for_package(pkg: spack.package_base.PackageBase) -> List[str]:
+    """Given a package, attempts to compute its Windows program files location,
+    and returns the list of best guesses.
 
     Args:
-        pkg (spack.package_base.PackageBase): package for which
-                           Program Files location is to be computed
+        pkg: package for which Program Files location is to be computed
     """
     if sys.platform != "win32":
         return []
@@ -378,7 +403,7 @@ def compute_windows_program_path_for_package(pkg):
     ]
 
 
-def compute_windows_user_path_for_package(pkg):
+def compute_windows_user_path_for_package(pkg: spack.package_base.PackageBase) -> List[str]:
     """Given a package attempt to compute its user scoped
     install location, return list of potential locations based
     on common heuristics. For more info on Windows user specific
