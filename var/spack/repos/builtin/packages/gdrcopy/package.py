@@ -26,7 +26,7 @@ class Gdrcopy(MakefilePackage, CudaPackage):
     patch("ldconfig.patch", when="@2.0:")
 
     depends_on("check")
-    require("+cuda")
+    requires("+cuda")
 
     def build(self, spec, prefix):
         make("lib")
