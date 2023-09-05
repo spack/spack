@@ -32,6 +32,7 @@ def test_spec():
     assert "mpich@3.0.4" in output
 
 
+@pytest.mark.only_clingo("Known failure of the original concretizer")
 def test_spec_concretizer_args(mutable_config, mutable_database):
     """End-to-end test of CLI concretizer prefs.
 
@@ -39,9 +40,6 @@ def test_spec_concretizer_args(mutable_config, mutable_database):
     options to `solver.py`, and that config options are not
     lost along the way.
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.xfail("Known failure of the original concretizer")
-
     # remove two non-preferred mpileaks installations
     # so that reuse will pick up the zmpi one
     uninstall = SpackCommand("uninstall")
