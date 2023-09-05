@@ -23,8 +23,22 @@ from spack.package import *
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 
-preferred_ver = "11.8.0"
+preferred_ver = "12.2.0"
 _versions = {
+    "12.2.0": {
+        "Linux-aarch64": (
+            "9c90d79bb63952cd30f1f57f9f8fe11e7a8967bba6f824df45d3464b5d37e5d8",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "ecf3d2afadcbac029f0f4505785810d52d006e4b87ba79ff3f984336a2bbf518",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "f7b5fde5f727b51c380c6199200d0525e8585475944ff8ad2791d06734f54230",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux_ppc64le.run",
+        ),
+    },
     "12.1.1": {
         "Linux-aarch64": (
             "45ea4cd860f0a26d3db8ce032530f2ee0b55abdd587545213d395a73623b4278",
