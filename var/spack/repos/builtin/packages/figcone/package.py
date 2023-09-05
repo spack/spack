@@ -12,7 +12,7 @@ class Figcone(CMakePackage):
 
     homepage = "https://github.com/kamchatka-volcano/figcone"
     url = "https://github.com/kamchatka-volcano/figcone/archive/refs/tags/v2.4.9.tar.gz"
-    
+
     version("2.4.9", sha256="735399e849621a4923e71a50d5e2ba928d5dfa3b01e54d56e0bac8e5102b7697")
     version("2.4.8", sha256="55922b27900524ab3fa4fc996bcf5459c89ee083671fa2f8f7d99a7c47113f80")
     version("2.4.7", sha256="75d84edbcf8aeb838245c8ea2188c969cceac5d6290e993291caa711fee3cdca")
