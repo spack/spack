@@ -25,7 +25,6 @@ class Discotec(CMakePackage):
     variant("lto", default=True, description="Build with link-time optimization")
     variant("openmp", default=True, description="Parallelize with OpenMP")
     variant("timing", default=True, description="With high-res timers")
-    variant("test", default=True, description="Build Boost tests")
     variant("selalib", default=False, description="Build selalib example")
     variant("vtk", default=False, description="Build with VTK support")
 
@@ -33,7 +32,7 @@ class Discotec(CMakePackage):
     depends_on("cmake@3.24.2:", type="build")
     depends_on("glpk")
     depends_on("highfive+mpi+boost+ipo", when="+hdf5")
-    depends_on("mpi", type=("build", "link", "run"))
+    depends_on("mpi")
     depends_on("vtk", when="+vtk")
 
     def cmake_args(self):
@@ -43,7 +42,6 @@ class Discotec(CMakePackage):
             self.define_from_variant("DISCOTEC_GENE", "gene"),
             self.define_from_variant("DISCOTEC_OPENMP", "openmp"),
             self.define_from_variant("DISCOTEC_TIMING", "timing"),
-            self.define_from_variant("DISCOTEC_TEST", "test"),
             self.define_from_variant("DISCOTEC_USE_HIGHFIVE", "hdf5"),
             self.define_from_variant("DISCOTEC_USE_LTO", "lto"),
             self.define_from_variant("DISCOTEC_USE_VTK", "vtk"),
