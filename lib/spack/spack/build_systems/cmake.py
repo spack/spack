@@ -274,7 +274,6 @@ class CMakeBuilder(BaseBuilder):
             generator,
             define("CMAKE_INSTALL_PREFIX", pathlib.Path(pkg.prefix).as_posix()),
             define("CMAKE_BUILD_TYPE", build_type),
-            define("BUILD_TESTING", pkg.run_tests),
         ]
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
@@ -451,7 +450,6 @@ class CMakeBuilder(BaseBuilder):
 
             * CMAKE_INSTALL_PREFIX
             * CMAKE_BUILD_TYPE
-            * BUILD_TESTING
 
         which will be set automatically.
         """
