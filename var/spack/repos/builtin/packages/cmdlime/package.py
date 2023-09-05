@@ -14,4 +14,3 @@ class Cmdlime(CMakePackage):
     url = "https://github.com/kamchatka-volcano/cmdlime/archive/refs/tags/v2.5.0.tar.gz"
 
     version("2.5.0", sha256="d5188d7f075142fcb546099a4ee2a967f8248109c0bee8c084e0e00f37603481")
-
