@@ -37,7 +37,7 @@ class RTidymodels(RPackage):
     version("1.1.1", sha256="807e8e3cbdd81e495f6dc2ef14c9808780c4b992aa1b8b36ef9fa5b86aef95c6")
 
     # FIXME: Add dependencies if required.
-    # depends_on("r-foo", type=("build", "run"))
+    depends_on("r-foo", type=("build", "run"))
 
     def configure_args(self):
         # FIXME: Add arguments to pass to install via --configure-args
