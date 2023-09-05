@@ -857,7 +857,7 @@ def add_from_file(filename, scope=None):
 def add(fullpath, scope=None):
     """Add the given configuration to the specified config scope.
     Add accepts a path. If you want to add from a filename, use add_from_file"""
-
+    import pdb; pdb.set_trace()
     components = process_config_path(fullpath)
 
     has_existing_value = True
@@ -1271,15 +1271,14 @@ def process_config_path(path):
 
         quote = "['\"]"
         not_quote = "[^'\"]"
-
+        result.append(front)
         if re.match(f"^{quote}", path):
-            m = re.match(rf"^{quote}({not_quote}+){quote}$", path)
+            m = re.match(rf"^({quote}{not_quote}+{quote})$", path)
             if not m:
                 raise ValueError("Quotes indicate value, but there are additional path entries")
             result.append(m.group(1))
             break
 
-        result.append(front)
     return result
 
 
