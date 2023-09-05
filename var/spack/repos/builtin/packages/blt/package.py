@@ -41,9 +41,10 @@ def llnl_link_helpers(options, spec, compiler):
             excluded_root = "/usr/tce/packages/gcc/gcc-4.9.3"
             excluded_dirs = [
                 "{0}/lib64".format(excluded_root),
-                "{0}/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3".format(excluded_root),
-                "{0}/gnu/lib64".format(excluded_root),
+                "{0}/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3".format(excluded_root),
                 "{0}/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3".format(excluded_root),
+                "{0}/gnu/lib64".format(excluded_root),
+                "{0}/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3".format(excluded_root),
             ]
             # Ignore conflicting default gcc toolchain
             options.append(
@@ -59,9 +60,10 @@ def llnl_link_helpers(options, spec, compiler):
             excluded_root = "/usr/tce/packages/gcc/gcc-4.9.3"
             excluded_dirs = [
                 "{0}/lib64".format(excluded_root),
-                "{0}/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3".format(excluded_root),
-                "{0}/gnu/lib64".format(excluded_root),
+                "{0}/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3".format(excluded_root),
                 "{0}/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3".format(excluded_root),
+                "{0}/gnu/lib64".format(excluded_root),
+                "{0}/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3".format(excluded_root),
             ]
             options.append(
                 cmake_cache_string(
