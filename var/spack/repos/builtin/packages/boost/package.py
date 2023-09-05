@@ -178,6 +178,7 @@ class Boost(Package):
             conditional("17", when="@1.63.0:"),
             # C++20/2a is not support by Boost < 1.73.0
             conditional("2a", when="@1.73.0:"),
+            conditional("20", when="@1.77.0:"),
         ),
         multi=False,
         description="Use the specified C++ standard when building.",
