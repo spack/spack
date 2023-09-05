@@ -72,9 +72,11 @@ class Qscintilla(QMakePackage):
     def fix_install_path(self):
         makefile = FileFilter(join_path(self.build_directory, 'Makefile'))
         if '^qt-base' in self.spec:
-            makefile.filter("$(INSTALL_ROOT)" + self.spec["qt-base"].prefix, "$(INSTALL_ROOT)", string=True)
+            makefile.filter("$(INSTALL_ROOT)" + self.spec["qt-base"].prefix,
+                    "$(INSTALL_ROOT)", string=True)
         else:
-            makefile.filter("$(INSTALL_ROOT)" + self.spec["qt"].prefix, "$(INSTALL_ROOT)", string=True)
+            makefile.filter("$(INSTALL_ROOT)" + self.spec["qt"].prefix,
+                    "$(INSTALL_ROOT)", string=True)
 
     @run_after("install", when='+designer')
     def make_designer(self):
@@ -101,10 +103,12 @@ class Qscintilla(QMakePackage):
         with working_dir(join_path(self.stage.source_path, "Python")):
             cp = which('cp')
             cp(ftoml, 'pyproject.toml')
-            sip_inc_dir = join_path(self.spec[py_pyqtx].prefix, self.spec['python'].package.platlib, pyqtx, 'bindings' )
+            sip_inc_dir = join_path(self.spec[py_pyqtx].prefix,
+                    self.spec['python'].package.platlib, pyqtx, 'bindings' )
 
             with open('pyproject.toml', 'a') as tomlfile:
-                tomlfile.write('\n[tool.sip.project]\nsip-include-dirs = ["'+str(sip_inc_dir)+'"]\n')
+                tomlfile.write(
+                        '\n[tool.sip.project]\nsip-include-dirs = ["'+str(sip_inc_dir)+'"]\n')
             mkdirp(os.path.join(self.prefix.share.sip, pyqtx))
 
             if '^py-pyqt5' in self.spec:
@@ -113,7 +117,8 @@ class Qscintilla(QMakePackage):
                 qsciproj = FileFilter(join_path("project.py"))
                 qsciproj.filter(
                     "super().__init__(project, 'Qsci', qmake_CONFIG=qmake_CONFIG)",
-                    "super().__init__(project, 'Qsci', qmake_CONFIG=qmake_CONFIG,qmake_QT=['widgets','printsupport'])", string=True)
+                    "super().__init__(project, 'Qsci', qmake_CONFIG=qmake_CONFIG,qmake_QT"
+                    +"=['widgets','printsupport'])", string=True)
             sip_build = Executable(self.spec["py-sip"].prefix.bin.join("sip-build"))
             sip_build(
                 "--target-dir=" + python_platlib,
@@ -125,8 +130,8 @@ class Qscintilla(QMakePackage):
 
             makefile = FileFilter(join_path("build","Qsci", "Makefile"))
             makefile.filter("$(INSTALL_ROOT)", "", string=True)
-            make("install","-C",join_path("build","Qsci"), parallel=False)
+            make("install","-C",join_path("build", "Qsci"), parallel=False)
 
-            makefile = FileFilter(join_path("build","Makefile"))
+            makefile = FileFilter(join_path("build", "Makefile"))
             makefile.filter("$(INSTALL_ROOT)", "", string=True)
             make("install","-C","build/", parallel=False)
