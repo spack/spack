@@ -130,8 +130,8 @@ class Qscintilla(QMakePackage):
 
             makefile = FileFilter(join_path("build","Qsci", "Makefile"))
             makefile.filter("$(INSTALL_ROOT)", "", string=True)
-            make("install","-C",join_path("build", "Qsci"), parallel=False)
+            make("install", "-C", join_path("build", "Qsci"), parallel=False)
 
             makefile = FileFilter(join_path("build", "Makefile"))
             makefile.filter("$(INSTALL_ROOT)", "", string=True)
-            make("install","-C","build/", parallel=False)
+            make("install", "-C", "build/", parallel=False)
