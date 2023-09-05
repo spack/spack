@@ -13,6 +13,7 @@ class Gdrcopy(MakefilePackage, CudaPackage):
     homepage = "https://github.com/NVIDIA/gdrcopy"
     url = "https://github.com/NVIDIA/gdrcopy/archive/v2.1.tar.gz"
     git = "https://github.com/NVIDIA/gdrcopy"
+    maintainers("scothalverson")
 
     version("master", branch="master")
     version("2.3", sha256="b85d15901889aa42de6c4a9233792af40dd94543e82abe0439e544c87fd79475")
@@ -25,7 +26,7 @@ class Gdrcopy(MakefilePackage, CudaPackage):
     patch("ldconfig.patch", when="@2.0:")
 
     depends_on("check")
-    depends_on("cuda")
+    require("+cuda")
 
     def build(self, spec, prefix):
         make("lib")
