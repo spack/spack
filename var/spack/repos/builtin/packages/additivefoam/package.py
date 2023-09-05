@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
+from spack.pkg.builtin.openfoam import add_extra_files
 
 
 class Additivefoam(Package):
@@ -21,3 +24,36 @@ class Additivefoam(Package):
     version("1.0.0", sha256="abbdf1b0230cd2f26f526be76e973f508978611f404fe8ec4ecdd7d5df88724c")
 
     depends_on("openfoam-org@10")
+
+    common = ["spack-derived-Allwmake"]
+    assets = ["applications/Allwmake", "Allwmake"]
+
+    build_script = "./spack-derived-Allwmake"
+
+    phases = ["configure", "build", "install"]
+
+    def patch(self):
+        add_extra_files(self, self.common, self.assets)
+
+    def configure(self, spec, prefix):
+        pass
+
+    def build(self, spec, prefix):
+        """Build with Allwmake script, wrapped to source environment first."""
+        args = []
+        if self.parallel:  # Parallel build? - pass via environment
+            os.environ["WM_NCOMPPROCS"] = str(make_jobs)
+        builder = Executable(self.build_script)
+        builder(*args)
+
+    def install(self, spec, prefix):
+        """Install under the prefix directory"""
+
+        for f in ["README.md", "LICENSE"]:
+            if os.path.isfile(f):
+                install(f, join_path(self.prefix, f))
+
+        dirs = ["tutorials", "applications"]
+        for d in dirs:
+            if os.path.isdir(d):
+                install_tree(d, join_path(self.prefix, d), symlinks=True)
