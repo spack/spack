@@ -1,5 +1,9 @@
 stages: [ "generate", "build", "publish" ]
 
+variables:
+  SPACK_DISABLE_LOCAL_CONFIG: "1"
+  SPACK_USER_CACHE_PATH: "${CI_PROJECT_DIR}/tmp/_user_cache/"
+
 default:
   image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
 
