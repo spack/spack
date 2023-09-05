@@ -65,6 +65,12 @@ class Itk(CMakePackage):
     depends_on("mpi")
     depends_on("zlib-api")
 
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/InsightSoftwareConsortium/ITK/pull/4041.diff",
+        sha256="6be7a28d41b8d56b782116b03b5fea70df35c3368e5c1bd83d166b46575f6172",
+        when="@5.2.0:5.3.0",
+    )
+
     def cmake_args(self):
         use_mkl = "^mkl" in self.spec
         args = [
