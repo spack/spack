@@ -53,12 +53,15 @@ class Clhep(CMakePackage):
     variant(
         "cxxstd",
         default="11",
-        values=("11", "14", "17"),
+        values=(
+            "11",
+            "14",
+            conditional("17", when="@2.3.4.3:"),
+            conditional("20", when="@2.4.6.4:"),
+        ),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
-
-    conflicts("cxxstd=17", when="@:2.3.4.2")
 
     depends_on("cmake@2.8.12.2:", when="@2.2.0.4:2.3.0.0", type="build")
     depends_on("cmake@3.2:", when="@2.3.0.1:", type="build")
