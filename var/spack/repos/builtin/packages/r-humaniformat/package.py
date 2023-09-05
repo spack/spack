@@ -9,11 +9,11 @@ from spack.package import *
 class RHumaniformat(RPackage):
     """A Parser for Human Names
 
-    Human names are complicated and nonstandard things. Humaniformat,
-    which is based on Anthony Ettinger's 'humanparser' project (https://github.com/
-    chovy/humanparser) provides functions for parsing human names, making a best-
-    guess attempt to distinguish sub-components such as prefixes, suffixes, middle
-    names and salutations."""
+    Human names are complicated and nonstandard things. Humaniformat, which is
+    based on Anthony Ettinger's 'humanparser' project
+    (https://github.com/chovy/humanparser) provides functions for parsing human
+    names, making a best- guess attempt to distinguish sub-components such as
+    prefixes, suffixes, middle names and salutations."""
 
     homepage = "https://github.com/Ironholds/humaniformat"
     cran = "humaniformat"
