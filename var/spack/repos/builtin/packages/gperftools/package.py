@@ -17,6 +17,7 @@ class Gperftools(AutotoolsPackage):
     url = "https://github.com/gperftools/gperftools/releases/download/gperftools-2.7/gperftools-2.7.tar.gz"
     maintainers("albestro", "eschnett", "msimberg", "teonnik")
 
+    version("2.12", sha256="fb611b56871a3d9c92ab0cc41f9c807e8dfa81a54a4a9de7f30e838756b5c7c6")
     version("2.11", sha256="8ffda10e7c500fea23df182d7adddbf378a203c681515ad913c28a64b87e24dc")
     version("2.10", sha256="83e3bfdd28b8bcf53222c3798d4d395d52dadbbae59e8730c4a6d31a9c3732d8")
     version("2.9.1", sha256="ea566e528605befb830671e359118c2da718f721c27225cbbc93858c7520fee3")

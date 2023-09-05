@@ -5,6 +5,8 @@
 
 import os
 
+from llnl.util import tty
+
 from spack.package import *
 from spack.pkg.builtin.fftw import FftwBase
 
@@ -26,8 +28,8 @@ class Amdfftw(FftwBase):
     LICENSING INFORMATION: By downloading, installing and using this software,
     you agree to the terms and conditions of the AMD AOCL-FFTW license
     agreement.  You may obtain a copy of this license agreement from
-    https://www.amd.com/en/developer/aocl/fftw/fftw-libraries-4-0-eula.html
-    https://www.amd.com/en/developer/aocl/fftw/fftw-libraries-eula.html
+    https://www.amd.com/en/developer/aocl/fftw/eula/fftw-libraries-4-1-eula.html
+    https://www.amd.com/en/developer/aocl/fftw/eula/fftw-libraries-eula.html
     """
 
     _name = "amdfftw"
@@ -37,6 +39,7 @@ class Amdfftw(FftwBase):
 
     maintainers("amd-toolchain-support")
 
+    version("4.1", sha256="f1cfecfcc0729f96a5bd61c6b26f3fa43bb0662d3fff370d4f73490c60cf4e59")
     version("4.0", sha256="5f02cb05f224bd86bd88ec6272b294c26dba3b1d22c7fb298745fd7b9d2271c0")
     version("3.2", sha256="31cab17a93e03b5b606e88dd6116a1055b8f49542d7d0890dbfcca057087b8d0")
     version("3.1", sha256="3e777f3acef13fa1910db097e818b1d0d03a6a36ef41186247c6ab1ab0afc132")
@@ -83,8 +86,15 @@ class Amdfftw(FftwBase):
     )
     variant(
         "amd-dynamic-dispatcher",
-        default=False,
-        when="@3.2:",
+        default=True,
+        when="@4.1: %aocc@4.1.0:",
+        description="Single portable optimized library"
+        " to execute on different x86 CPU architectures",
+    )
+    variant(
+        "amd-dynamic-dispatcher",
+        default=True,
+        when="@3.2: %gcc",
         description="Single portable optimized library"
         " to execute on different x86 CPU architectures",
     )
@@ -135,12 +145,6 @@ class Amdfftw(FftwBase):
         )
         conflicts("precision=quad", msg="Quad precision is not supported with amd-app-opt")
 
-    conflicts(
-        "+amd-dynamic-dispatcher",
-        when="%aocc",
-        msg="dynamic-dispatcher is not supported by AOCC clang compiler",
-    )
-
     def configure(self, spec, prefix):
         """Configure function"""
         # Base options
@@ -149,7 +153,7 @@ class Amdfftw(FftwBase):
         # Dynamic dispatcher builds a single portable optimized library
         # that can execute on different x86 CPU architectures.
         # It is supported for GCC compiler and Linux based systems only.
-        if "+amd-dynamic-dispatcher" in self.spec:
+        if "+amd-dynamic-dispatcher" in spec:
             options.append("--enable-dynamic-dispatcher")
 
         # Check if compiler is AOCC
@@ -157,6 +161,18 @@ class Amdfftw(FftwBase):
             options.append("CC={0}".format(os.path.basename(spack_cc)))
             options.append("FC={0}".format(os.path.basename(spack_fc)))
             options.append("F77={0}".format(os.path.basename(spack_fc)))
+
+        if not (
+            spec.satisfies(r"%aocc@3.2:4.1")
+            or spec.satisfies(r"%gcc@12.2:13.1")
+            or spec.satisfies(r"%clang@15:16")
+        ):
+            tty.warn(
+                "AOCL has been tested to work with the following compilers\
+                    versions - gcc@12.2:13.1, aocc@3.2:4.1, and clang@15:16\
+                    see the following aocl userguide for details: \
+                    https://www.amd.com/content/dam/amd/en/documents/developer/version-4-1-documents/aocl/aocl-4-1-user-guide.pdf"
+            )
 
         if "+debug" in spec:
             options.append("--enable-debug")
@@ -193,6 +209,10 @@ class Amdfftw(FftwBase):
         # Specific SIMD support.
         # float and double precisions are supported
         simd_features = ["sse2", "avx", "avx2", "avx512"]
+
+        # "avx512" is supported from amdfftw 4.0 version onwards
+        if "@2.2:3.2" in self.spec:
+            simd_features.remove("avx512")
 
         simd_options = []
         for feature in simd_features:

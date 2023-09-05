@@ -82,9 +82,9 @@ class SingularityBase(MakefilePackage):
             _config_options = ["--prefix=%s" % prefix]
             _config_options += self.config_options
             if "~suid" in spec:
-                _config_options += " --without-suid"
+                _config_options += ["--without-suid"]
             if "~network" in spec:
-                _config_options += " --without-network"
+                _config_options += ["--without-network"]
             configure = Executable("./mconfig")
             configure(*_config_options)
 
