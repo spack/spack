@@ -299,20 +299,16 @@ class WindowsCompilerExternalPaths:
 
 
 class WindowsKitExternalPaths:
-    plat_major_ver = None
-    if sys.platform == "win32":
-        plat_major_ver = str(winOs.windows_version()[0])
-
     @staticmethod
     def find_windows_kit_roots() -> Optional[str]:
         """Return Windows kit root, typically %programfiles%\\Windows Kits\\10|11\\"""
         if sys.platform != "win32":
-            return None
+            return []
         program_files = os.environ["PROGRAMFILES(x86)"]
         kit_base = os.path.join(
-            program_files, "Windows Kits", WindowsKitExternalPaths.plat_major_ver
+            program_files, "Windows Kits", "**"
         )
-        return kit_base
+        return glob.glob(kit_base)
 
     @staticmethod
     def find_windows_kit_bin_paths(kit_base: Optional[str] = None) -> List[str]:
@@ -347,23 +343,29 @@ class WindowsKitExternalPaths:
         if not reg:
             # couldn't find key, return empty list
             return []
-        return WindowsKitExternalPaths.find_windows_kit_lib_paths(
-            reg.get_value("KitsRoot%s" % WindowsKitExternalPaths.plat_major_ver).value
-        )
+        kit_root_reg = re.compile(r"KitsRoot[0-9]+")
+        root_paths = []
+        for kit_root in filter(kit_root_reg.match, reg.get_values().keys()):
+            root_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths(
+                reg.get_value(kit_root).value
+            ))
+        return root_paths
 
     @staticmethod
     def find_windows_kit_reg_sdk_paths() -> List[str]:
-        reg = spack.util.windows_registry.WindowsRegistryView(
-            "SOFTWARE\\WOW6432Node\\Microsoft\\Microsoft SDKs\\Windows\\v%s.0"
-            % WindowsKitExternalPaths.plat_major_ver,
+        sdk_paths = []
+        sdk_regex = re.compile(r"v[0-9]+.[0-9]+")
+        windows_reg = spack.util.windows_registry.WindowsRegistryView(
+            "SOFTWARE\\WOW6432Node\\Microsoft\\Microsoft SDKs\\Windows",
             root_key=spack.util.windows_registry.HKEY.HKEY_LOCAL_MACHINE,
         )
-        if not reg:
-            # couldn't find key, return empty list
-            return []
-        return WindowsKitExternalPaths.find_windows_kit_lib_paths(
-            reg.get_value("InstallationFolder").value
-        )
+        for key in filter(sdk_regex.match, [x.name for x in windows_reg.get_subkeys()]):
+            reg = windows_reg.get_subkey(key)
+            sdk_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths(
+                                reg.get_value("InstallationFolder").value
+                            )
+            )
+        return sdk_paths
 
 
 def find_win32_additional_install_paths() -> List[str]:
