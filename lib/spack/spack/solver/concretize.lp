@@ -718,7 +718,8 @@ debugtrigger.
 
 :- imposed_packages(NodeID, "zlib"),
   requirement_group_member(Y, "zlib", X),
-  activate_requirement(node(NodeID1, "zlib"), X).
+  activate_requirement(node(NodeID, "zlib"), X),
+  condition_requirement(node(NodeID, "zlib"),"node_flag", A1, A2, A3).
 
 
 %ORIGINAL CONSTRAINT
