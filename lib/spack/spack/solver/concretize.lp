@@ -694,14 +694,23 @@ requirement_group_satisfied(node(ID, Package), X) :-
 %  requirement_group_member(Y, Package, X),
 %  activate_requirement(node(ID, Package), X),
 %  imposed_constraint(Y,"node_flag_set", A1, A2, A3).
+attr("node_flag", node(NodeID1, A1), A2, A3) :-
+  requirement_group_member(Y, A1, X),
+  activate_requirement(node(NodeID1, A1), X),
+  imposed_constraint(Y,"node_flag_set", A1, A2, A3).
 
 %ORIGINAL CONSTRAINT
 %attr("node_flag_source", node(ID, A1), A2, node(ID, A3)) :-
 %  requirement_group_member(Y, Package, X),
 %  activate_requirement(node(ID, Package), X),
 %  imposed_constraint(Y,"node_flag_source", A1, A2, A3).
+attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) :-
+  requirement_group_member(Y, A1, X),
+  activate_requirement(node(NodeID1, A1), X),
+  imposed_constraint(Y,"node_flag_source", A1, A2, A3),
+  imposed_packages(NodeID2, A3).
 
-%{ attr("node_flag", node(ID, A1), A2, A3) } :- 
+%{ attr("node_flag", node(ID, A1), A2, A3) } :-
 %  condition_requirement(0,"node_flag","y","cflags","-g").
 %{ attr("node_flag_source", node(ID, A1), A2, node(ID, A3)) } :-
 %  condition_requirement(0,"node_flag_source","y","cflags","y").
@@ -715,14 +724,14 @@ requirement_group_satisfied(node(ID, Package), X) :-
 %  node(NodeID1, A1),
 %  node(NodeID2, A3).
 
-{ attr("node_flag", node(NodeID1, A1), A2, A3) } :- 
-  condition_requirement(_,"node_flag", A1, A2, A3),
-  imposed_packages(NodeID1, A1).
+%{ attr("node_flag", node(NodeID1, A1), A2, A3) } :-
+%  condition_requirement(_,"node_flag", A1, A2, A3),
+%  imposed_packages(NodeID1, A1).
 
-{ attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
-  condition_requirement(_,"node_flag_source", A1, A2, A3),
-  imposed_packages(NodeID1, A1),
-  imposed_packages(NodeID2, A3).
+%{ attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
+%  condition_requirement(_,"node_flag_source", A1, A2, A3),
+%  imposed_packages(NodeID1, A1),
+%  imposed_packages(NodeID2, A3).
 
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
