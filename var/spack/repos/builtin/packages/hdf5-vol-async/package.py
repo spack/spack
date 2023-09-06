@@ -24,9 +24,9 @@ class Hdf5VolAsync(CMakePackage):
     tags = ["e4s"]
 
     version("develop", branch="develop")
-    version("1.7", tag="v1.7")
-    version("1.6", tag="v1.6")
-    version("1.5", tag="v1.5")
+    version("1.7", tag="v1.7", commit="70a22cf9863a7c1386d97be865342deb751ca501")
+    version("1.6", tag="v1.6", commit="f3406d62ec055cdcfe077979a1068bd102c598a5")
+    version("1.5", tag="v1.5", commit="b917713ffcb207d9799c6d6863cf805ee54ccfea")
 
     variant("memcpy", default=False, description="Enable buffer copy for dataset write")
 
@@ -35,7 +35,8 @@ class Hdf5VolAsync(CMakePackage):
     depends_on("hdf5@1.14.0: +mpi +threadsafe")
 
     # Require MPI_THREAD_MULTIPLE.
-    depends_on("openmpi +thread_multiple", when="^openmpi")
+    depends_on("openmpi +thread_multiple", when="^openmpi@:2")
+    depends_on("openmpi", when="^openmpi@3:")
     depends_on("mvapich2 threads=multiple", when="^mvapich2")
 
     def setup_run_environment(self, env):

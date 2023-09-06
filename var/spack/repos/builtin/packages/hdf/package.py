@@ -35,7 +35,7 @@ class Hdf(AutotoolsPackage):
     variant("shared", default=False, description="Enable shared library")
     variant("pic", default=True, description="Produce position-independent code")
 
-    depends_on("zlib@1.1.4:")
+    depends_on("zlib-api")
     depends_on("jpeg")
     depends_on("szip", when="+szip")
     depends_on("rpc", when="+external-xdr")
@@ -158,7 +158,7 @@ class Hdf(AutotoolsPackage):
         config_args = [
             "--enable-production",
             "--enable-static",
-            "--with-zlib=%s" % self.spec["zlib"].prefix,
+            "--with-zlib=%s" % self.spec["zlib-api"].prefix,
             "--with-jpeg=%s" % self.spec["jpeg"].prefix,
         ]
 

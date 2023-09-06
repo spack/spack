@@ -29,7 +29,7 @@ class Wxparaver(AutotoolsPackage):
     depends_on("wxwidgets@2.8:")  # NOTE: using external for this one is usually simpler
     depends_on("wxpropgrid@1.4:")
     depends_on("libxml2")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def configure_args(self):
         spec = self.spec
