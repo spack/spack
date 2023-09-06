@@ -28,7 +28,7 @@ class PyPennylane(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-numpy@:1.23", type=("build", "run"))
-    depends_on("py-scipy@:1.10", type=("build", "run"))
+    depends_on("py-scipy@:1.10", type=("build", "run"), when="@:0.31.0")
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-rustworkx", type=("build", "run"), when="@0.30.0:")
     depends_on("py-retworkx", type=("build", "run"), when="@0.28.0:0.29.1")
@@ -44,6 +44,7 @@ class PyPennylane(PythonPackage):
         "py-pennylane-lightning@0.28.0:0.29.0", type=("build", "run"), when="@0.28.0:0.29.1"
     )
     depends_on("py-requests", type=("build", "run"))
+    depends_on("py-typing-extensions", type=("build", "run"), when="@0.32.0:")
 
     # Test deps
     depends_on("py-pytest", type="test")
