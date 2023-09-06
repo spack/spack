@@ -20,7 +20,7 @@ class Pocl(CMakePackage):
     git = "https://github.com/pocl/pocl.git"
 
     version("master", branch="master")
-    version("3.0", sha256="5f6bbc391ba144bc7becc3b90888b25468460d5aa6830f63a3b066137e7bfac3")
+    version("3.0", sha256="a3fd3889ef7854b90b8e4c7899c5de48b7494bf770e39fba5ad268a5cbcc719d")
     version("1.8", sha256="0f63377ae1826e16e90038fc8e7f65029be4ff6f9b059f6907174b5c0d1f8ab2")
     version("1.7", sha256="5f6bbc391ba144bc7becc3b90888b25468460d5aa6830f63a3b066137e7bfac3")
     version("1.6", sha256="b0a4c0c056371b6f0db726b88fbb76bbee94948fb2abd4dbc8d958f7c42f766c")
