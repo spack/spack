@@ -480,8 +480,8 @@ packages:
 """
     update_packages_config(conf_str)
 
-    asp = solve("--show=asp", "y")
-    import pdb; pdb.set_trace()
+    # asp = solve("--show=asp", "y")
+    # import pdb; pdb.set_trace()
 
     spec = Spec("y").concretized()
     assert spec.satisfies("cflags=-g")
