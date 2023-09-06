@@ -724,9 +724,6 @@ requirement_group_satisfied(node(ID, Package), X) :-
   imposed_packages(NodeID1, A1),
   imposed_packages(NodeID2, A3).
 
-% attr(Name, node(X, A1))
-% imposed_packages(ID, A1)
-
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
     Z : requirement_has_weight(Y, Z), condition_holds(Y, node(ID, Package)), requirement_group_member(Y, Package, Group);
