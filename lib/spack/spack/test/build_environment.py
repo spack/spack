@@ -474,8 +474,20 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
 
 
 def test_build_jobs_sequential_is_sequential():
+    config = spack.config.Configuration(
+        spack.config.InternalConfigScope("command_line", {
+            "config": {
+                "build_jobs": 8
+            }
+        }),
+        spack.config.InternalConfigScope("defaults", {
+            "config": {
+                "build_jobs": 8
+            }
+        })
+    )
     assert (
-        determine_number_of_jobs(parallel=False, command_line=8, config_default=8, max_cpus=8) == 1
+        determine_number_of_jobs(parallel=False, max_cpus=8, config=config) == 1
     )
 
 

@@ -93,7 +93,7 @@ class RacketBuilder(spack.builder.Builder):
                 "--copy",
                 "-i",
                 "-j",
-                str(determine_number_of_jobs(parallel)),
+                str(determine_number_of_jobs(parallel=parallel)),
                 "--",
                 os.getcwd(),
             ]

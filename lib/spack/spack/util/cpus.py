@@ -5,6 +5,7 @@
 
 import multiprocessing
 import os
+from typing import Optional
 
 import spack.config
 
@@ -22,9 +23,7 @@ def cpus_available():
         return multiprocessing.cpu_count()
 
 
-def determine_number_of_jobs(
-    parallel=False, command_line=None, config_default=None, max_cpus=None
-):
+def determine_number_of_jobs(*, parallel:bool=False, max_cpus:int = cpus_available(), config: Optional["spack.config.Configuration"] = None):
     """
     Packages that require sequential builds need 1 job. Otherwise we use the
     number of jobs set on the command line. If not set, then we use the config
@@ -32,23 +31,20 @@ def determine_number_of_jobs(
     cap to the number of CPUs available to avoid oversubscription.
 
     Parameters:
-        parallel (bool or None): true when package supports parallel builds
-        command_line (int or None): command line override
-        config_default (int or None): config default number of jobs
-        max_cpus (int or None): maximum number of CPUs available. When None, this
-            value is automatically determined.
+        parallel: true when package supports parallel builds
+        max_cpus: maximum number of CPUs to use (defaults to cpus_available())
+        config: configuration object (defaults to global config)
     """
     if not parallel:
         return 1
 
+    # Command line overrides all    
+    try:
+        command_line = config.get("config:build_jobs", default=None, scope="command_line")
+    except ValueError:
+        pass
+
     if command_line is not None:
         return command_line
-    elif "command_line" in spack.config.scopes():
-        command_line = spack.config.get("config:build_jobs", scope="command_line")
 
-    max_cpus = max_cpus or cpus_available()
-
-    # in some rare cases _builtin config may not be set, so default to max 16
-    config_default = config_default or spack.config.get("config:build_jobs", 16)
-
-    return min(max_cpus, config_default)
+    return min(max_cpus, config.get("config:build_jobs", 16))
