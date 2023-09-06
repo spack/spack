@@ -13,6 +13,7 @@ class PyDiameterSynthesis(PythonPackage):
     git = "https://github.com/BlueBrain/diameter-synthesis.git"
 
     version("develop", branch="main")
+    version("0.5.4", tag="0.5.4")
     version("0.5.3", tag="0.5.3")
     version("0.4.1", tag="0.4.1")  # Compatible with NeuroTS >= 3.1
     version("0.3.3", tag="0.3.3")
@@ -22,10 +23,15 @@ class PyDiameterSynthesis(PythonPackage):
     depends_on("py-setuptools-scm", type="build")
 
     depends_on("py-click@7.0:", type=("build", "run"))
-    depends_on("py-numpy@1.15.0:", type=("build", "run"))
-    depends_on("py-scipy@0.13.3:", type=("build", "run"))
-    depends_on("py-matplotlib@2.2:", type=("build", "run"))
-    depends_on("py-pandas@0.24:", type=("build", "run"))
+    depends_on("py-numpy@1.22.0:", type=("build", "run"), when="@0.5:")
+    depends_on("py-numpy@1.15.0:", type=("build", "run"), when="@:0.4")
+    depends_on("py-scipy@1.6:", type=("build", "run"), when="@0.5:")
+    depends_on("py-scipy@0.13.3:", type=("build", "run"), when="@:0.4")
+    depends_on("py-matplotlib@3.4:", type=("build", "run"), when="@0.5:")
+    depends_on("py-matplotlib@2.2:", type=("build", "run"), when="@:0.4")
+    depends_on("py-pandas@1.0.5:", type=("build", "run"), when="@0.5:")
+    depends_on("py-pandas@0.24:", type=("build", "run"), when="@:0.4")
     depends_on("py-neurom@3.0:3", type=("build", "run"))
-    depends_on("py-morphio@2.3.4:", type=("build", "run"))
+    depends_on("py-morphio@3.3.4:", type=("build", "run"), when="@0.5:")
+    depends_on("py-morphio@2.3.4:", type=("build", "run"), when="@:0.4")
     depends_on("py-jsonschema@3:", type=("build", "run"))

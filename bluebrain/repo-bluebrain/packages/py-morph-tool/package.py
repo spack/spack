@@ -11,9 +11,10 @@ class PyMorphTool(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/morph-tool"
     git = "https://github.com/BlueBrain/morph-tool.git"
-    pypi = "morph-tool/morph-tool-2.4.1.tar.gz"
+    pypi = "morph-tool/morph-tool-2.9.1.tar.gz"
 
     version("develop", branch="master")
+    version("2.9.1", sha256="305e9456c8047726588b23dfa070eb95ccbe5573e9fea3e0a83dc93eacdf61dc")
     version("2.9.0", sha256="c60d4010e17ddcc3f53c864c374fffee05713c8f8fd2ba4eed7706041ce1fa47")
 
     variant("neuron", default=False, description="Enable additional neuron support")
@@ -33,4 +34,5 @@ class PyMorphTool(PythonPackage):
     depends_on("py-bluepyopt@1.9.37:", type=("build", "run"), when="+neuron")
 
     depends_on("py-neurom@3.0:3.999,develop", type=("build", "run"))
-    depends_on("py-morphio@3.0:3.999,develop", type=("build", "run"))
+    depends_on("py-morphio@3.3.6:3,develop", type=("build", "run"), when="@2.9.1:")
+    depends_on("py-morphio@3.0:3,develop", type=("build", "run"), when="@2.9.0")
