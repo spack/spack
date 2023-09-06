@@ -300,7 +300,7 @@ class WindowsCompilerExternalPaths:
 
 class WindowsKitExternalPaths:
     @staticmethod
-    def find_windows_kit_roots() -> Optional[str]:
+    def find_windows_kit_roots() -> List[str]:
         """Return Windows kit root, typically %programfiles%\\Windows Kits\\10|11\\"""
         if sys.platform != "win32":
             return []
@@ -312,17 +312,23 @@ class WindowsKitExternalPaths:
     def find_windows_kit_bin_paths(kit_base: Optional[str] = None) -> List[str]:
         """Returns Windows kit bin directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
-        assert kit_base is not None, "unexpected value for kit_base"
-        kit_bin = os.path.join(kit_base, "bin")
-        return glob.glob(os.path.join(kit_bin, "[0-9]*", "*\\"))
+        assert kit_base, "unexpected value for kit_base"
+        kit_paths = []
+        for kit in kit_base:
+            kit_bin = os.path.join(kit, "bin")
+            kit_paths.extend(glob.glob(os.path.join(kit_bin, "[0-9]*", "*\\")))
+        return kit_paths
 
     @staticmethod
     def find_windows_kit_lib_paths(kit_base: Optional[str] = None) -> List[str]:
         """Returns Windows kit lib directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
-        assert kit_base is not None, "unexpected value for kit_base"
-        kit_lib = os.path.join(kit_base, "Lib")
-        return glob.glob(os.path.join(kit_lib, "[0-9]*", "*", "*\\"))
+        assert kit_base, "unexpected value for kit_base"
+        kit_paths = []
+        for kit in kit_base:
+            kit_lib = os.path.join(kit, "Lib")
+            kit_paths.extend(glob.glob(os.path.join(kit_lib, "[0-9]*", "*", "*\\")))
+        return kit_paths
 
     @staticmethod
     def find_windows_driver_development_kit_paths() -> List[str]:
