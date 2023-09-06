@@ -240,7 +240,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("costa+shared", when="@7.3.2:")
 
     with when("@7.5: +memory_pool"):
-        depends_on("umpire")
+        depends_on("umpire~cuda~rocm", when="~cuda~rocm")
         depends_on("umpire+cuda~device_alloc", when="+cuda")
         depends_on("umpire+rocm~device_alloc", when="+rocm")
 
@@ -347,12 +347,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+rocm" in spec:
             archs = ",".join(self.spec.variants["amdgpu_target"].value)
-            args.extend(
-                [
-                    self.define("HIP_ROOT_DIR", spec["hip"].prefix),
-                    self.define("HIP_HCC_FLAGS", "--amdgpu-target={0}".format(archs)),
-                    self.define("HIP_CXX_COMPILER", self.spec["hip"].hipcc),
-                ]
-            )
+            args.extend([self.define("CMAKE_HIP_ARCHITECTURES", archs)])
 
         return args
