@@ -1268,9 +1268,11 @@ def process_config_path(path):
             front = syaml.syaml_str(front)
             front.append = True
 
+        result.append(front)
+
         quote = "['\"]"
         not_quote = "[^'\"]"
-        result.append(front)
+
         if re.match(f"^{quote}", path):
             m = re.match(rf"^({quote}{not_quote}+{quote})$", path)
             if not m:

@@ -265,11 +265,6 @@ repos_high = {"repos": ["/some/other/path"]}
 
 
 def test_add_config_path(mutable_config):
-    # NOTE:
-    # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
-    # schemas (such as a dropped "root" component) which is a typical and may lead to passing tests
-    # when the behavior is in reality incorrect.
-
     # Try setting a new install tree root
     path = "config:install_tree:root:/path/to/config.yaml"
     spack.config.add(path)
@@ -291,6 +286,12 @@ def test_add_config_path(mutable_config):
         set_value
         == "morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
     )
+
+    # NOTE:
+    # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
+    # schemas (such as a dropped "root" component) which is atypical and may lead to passing tests
+    # when the behavior is in reality incorrect.
+    # the config path below is such that no subkey accepts a string as a valid entry in our schema
 
     # try quotes to escape colons
     path = "config:build_stage:'C:\\path\\to\\config.yaml'"
