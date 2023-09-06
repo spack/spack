@@ -23,7 +23,12 @@ def cpus_available():
         return multiprocessing.cpu_count()
 
 
-def determine_number_of_jobs(*, parallel:bool=False, max_cpus:int = cpus_available(), config: Optional["spack.config.Configuration"] = None):
+def determine_number_of_jobs(
+    *,
+    parallel: bool = False,
+    max_cpus: int = cpus_available(),
+    config: Optional["spack.config.Configuration"] = None,
+):
     """
     Packages that require sequential builds need 1 job. Otherwise we use the
     number of jobs set on the command line. If not set, then we use the config
@@ -38,13 +43,14 @@ def determine_number_of_jobs(*, parallel:bool=False, max_cpus:int = cpus_availab
     if not parallel:
         return 1
 
-    # Command line overrides all    
+    cfg = config or spack.config.CONFIG
+
+    # Command line overrides all
     try:
-        command_line = config.get("config:build_jobs", default=None, scope="command_line")
+        command_line = cfg.get("config:build_jobs", default=None, scope="command_line")
+        if command_line is not None:
+            return command_line
     except ValueError:
         pass
 
-    if command_line is not None:
-        return command_line
-
-    return min(max_cpus, config.get("config:build_jobs", 16))
+    return min(max_cpus, cfg.get("config:build_jobs", 16))

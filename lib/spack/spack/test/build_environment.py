@@ -443,7 +443,7 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
 
     spack.build_environment.set_module_variables_for_package(s["b"].package)
     assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
-        s["b"].package.parallel
+        parallel=s["b"].package.parallel
     )
 
 
@@ -474,41 +474,63 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
 
 
 def test_build_jobs_sequential_is_sequential():
-    config = spack.config.Configuration(
-        spack.config.InternalConfigScope("command_line", {
-            "config": {
-                "build_jobs": 8
-            }
-        }),
-        spack.config.InternalConfigScope("defaults", {
-            "config": {
-                "build_jobs": 8
-            }
-        })
-    )
     assert (
-        determine_number_of_jobs(parallel=False, max_cpus=8, config=config) == 1
+        determine_number_of_jobs(
+            parallel=False,
+            max_cpus=8,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 8}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 8}}),
+            ),
+        )
+        == 1
     )
 
 
 def test_build_jobs_command_line_overrides():
     assert (
-        determine_number_of_jobs(parallel=True, command_line=10, config_default=1, max_cpus=1)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=1,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}}),
+            ),
+        )
         == 10
     )
     assert (
-        determine_number_of_jobs(parallel=True, command_line=10, config_default=100, max_cpus=100)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=100,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}}),
+            ),
+        )
         == 10
     )
 
 
 def test_build_jobs_defaults():
     assert (
-        determine_number_of_jobs(parallel=True, command_line=None, config_default=1, max_cpus=10)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=10,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}})
+            ),
+        )
         == 1
     )
     assert (
-        determine_number_of_jobs(parallel=True, command_line=None, config_default=100, max_cpus=10)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=10,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}})
+            ),
+        )
         == 10
     )
 
