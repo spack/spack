@@ -51,7 +51,7 @@ from spack.error import SpackError
 stat_names = pstats.Stats.sort_arg_dict_default
 
 #: top-level aliases for Spack commands
-aliases = {"concretise": "concretize", "containerise": "containerize", "rm": "remove"}
+aliases = {"rm": "remove"}
 
 #: help levels in order of detail (i.e., number of commands shown)
 levels = ["short", "long"]
