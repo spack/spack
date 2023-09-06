@@ -19,6 +19,8 @@ class Selalib(CMakePackage):
     variant("fmempool", default=False)
     variant("mpi", default=True)
     variant("openmp", default=True)
+    variant("compression", default=False)
+
 
     requires("%gcc@10.0.0: +fortran", "%clang@16.0.0: +fortran", "%intel@18.0: +fortran", "%oneapi@18.0: +fortran",
         policy="one_of",
@@ -33,13 +35,13 @@ class Selalib(CMakePackage):
     depends_on("hdf5+fortran+cxx")
     depends_on("mpi+fortran+cxx")
     depends_on("python@3.0.0:")
-    depends_on("zfp+fortran")
+    depends_on("zfp+fortran", when="+compression") # beware: compiling w/ zfp may throw type mismatch errors
 
     def cmake_args(self):
         args = [
             self.define_from_variant("OPENMP_ENABLED", "openmp"),
             self.define_from_variant("HDF5_PARALLEL_ENABLED", "mpi"),
-            self.define_from_variant("USE_FMEMPOOOL", "fmempool"),
+            self.define_from_variant("USE_FMEMPOOL", "fmempool"),
             self.define("FFTW_ENABLED", "ON"),
             #self.define("CMAKE_Fortran_FLAGS","-ffree-line-length-512")
         ]
