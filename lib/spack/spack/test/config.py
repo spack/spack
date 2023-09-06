@@ -279,12 +279,12 @@ def test_add_config_path(mutable_config):
 
     # Try quotes to escape brackets
     path = "config:install_tree:projections:cmake:\
-'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+'{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
     spack.config.add(path)
     set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
     assert (
         set_value
-        == "morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+        == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
     )
 
     # NOTE:
