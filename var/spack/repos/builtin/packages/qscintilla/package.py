@@ -38,7 +38,7 @@ class Qscintilla(QMakePackage):
     extends("python", when="+python")
 
     # https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.12.0/ChangeLog
-    conflicts('^qt@4', when='@2.12:')
+    conflicts("^qt@4", when="@2.12:")
 
     build_directory = "src"
 
@@ -63,51 +63,53 @@ class Qscintilla(QMakePackage):
     # Fix install prefix
     @run_after("qmake")
     def fix_install_path(self):
-        makefile = FileFilter(join_path(self.build_directory, 'Makefile'))
-        makefile.filter("$(INSTALL_ROOT)" + self.spec["qmake"].prefix,
-                        "$(INSTALL_ROOT)", string=True)
+        makefile = FileFilter(join_path(self.build_directory, "Makefile"))
+        makefile.filter(
+            "$(INSTALL_ROOT)" + self.spec["qmake"].prefix, "$(INSTALL_ROOT)", string=True
+        )
 
-    @run_after("install", when='+designer')
+    @run_after("install", when="+designer")
     def make_designer(self):
         # Make designer plugin
         with working_dir(os.path.join(self.stage.source_path, "designer")):
             # TODO: qmake fails with qt6
-            qmake('designer.pro', 'INCLUDEPATH+=../src')
+            qmake("designer.pro", "INCLUDEPATH+=../src")
             make()
             makefile = FileFilter("Makefile")
-            makefile.filter("$(INSTALL_ROOT)" + self.spec["qt"].prefix, "$(INSTALL_ROOT)",
-                            string=True)
+            makefile.filter(
+                "$(INSTALL_ROOT)" + self.spec["qt"].prefix, "$(INSTALL_ROOT)", string=True
+            )
             make("install")
 
-    @run_after("install", when='+python')
+    @run_after("install", when="+python")
     def make_qsci_python(self):
         if "^py-pyqt5" in self.spec:
             py_pyqtx = "py-pyqt5"
             pyqtx = "PyQt5"
-            ftoml = 'pyproject-qt5.toml'
+            ftoml = "pyproject-qt5.toml"
         elif "^py-pyqt6" in self.spec:
             py_pyqtx = "py-pyqt6"
             pyqtx = "PyQt6"
-            ftoml = 'pyproject-qt6.toml'
+            ftoml = "pyproject-qt6.toml"
 
         with working_dir(join_path(self.stage.source_path, "Python")):
-            copy(ftoml, 'pyproject.toml')
-            sip_inc_dir = join_path(self.spec[py_pyqtx].prefix,
-                                    self.spec['python'].package.platlib, pyqtx, 'bindings')
+            copy(ftoml, "pyproject.toml")
+            sip_inc_dir = join_path(
+                self.spec[py_pyqtx].prefix, self.spec["python"].package.platlib, pyqtx, "bindings"
+            )
 
-            with open('pyproject.toml', 'a') as tomlfile:
-                tomlfile.write(
-                        f'\n[tool.sip.project]\nsip-include-dirs = ["{sip_inc_dir}"]\n')
+            with open("pyproject.toml", "a") as tomlfile:
+                tomlfile.write(f'\n[tool.sip.project]\nsip-include-dirs = ["{sip_inc_dir}"]\n')
             mkdirp(os.path.join(self.prefix.share.sip, pyqtx))
 
-            if '^py-pyqt5' in self.spec:
+            if "^py-pyqt5" in self.spec:
                 # QT += widgets and QT += printsupport need to be added to Qsci.pro file
                 # to be generated via project.py
                 qsciproj = FileFilter(join_path("project.py"))
-                ptrn = "super().__init__(project, 'Qsci', qmake_CONFIG=qmake_CONFIG",
+                ptrn = "super().__init__(project, 'Qsci', qmake_CONFIG=qmake_CONFIG"
                 qsciproj.filter(
-                    ptrn + ")",
-                    ptrn + ",qmake_QT=['widgets','printsupport'])", string=True)
+                    ptrn + ")", ptrn + ",qmake_QT=['widgets','printsupport'])", string=True
+                )
             sip_build = Executable(self.spec["py-sip"].prefix.bin.join("sip-build"))
             sip_build(
                 "--target-dir=" + python_platlib,
