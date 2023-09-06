@@ -27,9 +27,8 @@ class Qscintilla(QMakePackage):
     variant("designer", default=False, description="Enable pluging for Qt-Designer")
     variant("python", default=False, description="Build python bindings")
 
-    depends_on("qt+opengl", when="+python ^qt@5")
-    depends_on("qt-base+opengl", when="+python ^qt-base")
     depends_on("qmake")
+    depends_on("qmake+opengl", when="+python")
     depends_on("py-pyqt6", type=("build", "run"), when="+python ^qt-base")
     depends_on("py-pyqt-builder", type="build", when="+python")
     depends_on("py-pyqt5", type=("build", "run"), when="+python ^qt@5")
@@ -120,8 +119,8 @@ class Qscintilla(QMakePackage):
 
             makefile = FileFilter(join_path("build", "Qsci", "Makefile"))
             makefile.filter("$(INSTALL_ROOT)", "", string=True)
-            make("install", "-C", join_path("build", "Qsci"), parallel=False)
+            make("install", "-C", join_path("build", "Qsci"))
 
             makefile = FileFilter(join_path("build", "Makefile"))
             makefile.filter("$(INSTALL_ROOT)", "", string=True)
-            make("install", "-C", "build/", parallel=False)
+            make("install", "-C", "build/")
