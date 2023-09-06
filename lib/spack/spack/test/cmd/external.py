@@ -28,21 +28,13 @@ def executables_found(monkeypatch):
     return _factory
 
 
-@pytest.fixture
-def _platform_executables(monkeypatch):
-    def _win_exe_ext():
-        return ".bat"
-
-    monkeypatch.setattr(spack.util.path, "win_exe_ext", _win_exe_ext)
-
-
 def define_plat_exe(exe):
     if sys.platform == "win32":
         exe += ".bat"
     return exe
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
+
 def test_find_external_single_package(mock_executable):
     cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
     search_dir = cmake_path.parent.parent
@@ -236,7 +228,7 @@ def test_list_detectable_packages(mutable_config, mutable_mock_repo):
     assert external.returncode == 0
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
+
 def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _platform_executables):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
@@ -282,7 +274,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     assert gcc.external_path == os.path.sep + os.path.join("opt", "gcc", "bin")
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
+
 def test_new_entries_are_reported_correctly(
     mock_executable, mutable_config, monkeypatch, _platform_executables
 ):
