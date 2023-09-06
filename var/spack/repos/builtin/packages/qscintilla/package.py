@@ -17,12 +17,11 @@ class Qscintilla(QMakePackage):
     url = "https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.12.0/QScintilla_src-2.12.0.tar.gz"
 
     # Directory structure is changed in latest release, logic is lost
+
+    version("2.14.0", sha256="449353928340300804c47b3785c3e62096f918a723d5eed8a5439764e6507f4c")
+    version("2.13.4", sha256="890c261f31e116f426b0ea03a136d44fc89551ebfd126d7b0bdf8a7197879986")
     version("2.13.3", sha256="711d28e37c8fccaa8229e8e39a5b3b2d97f3fffc63da10b71c71b84fa3649398")
-    version(
-        "2.12.0",
-        sha256="2116181cce3076aa4897e36182532d0e6768081fb0cf6dcdd5be720519ab1434",
-        url="https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.12.0/QScintilla_src-2.12.0.tar.gz",
-    )
+    version("2.12.0", sha256="2116181cce3076aa4897e36182532d0e6768081fb0cf6dcdd5be720519ab1434")
 
     variant("designer", default=False, description="Enable pluging for Qt-Designer")
     variant("python", default=False, description="Build python bindings")
@@ -105,7 +104,7 @@ class Qscintilla(QMakePackage):
                 # QT += widgets and QT += printsupport need to be added to Qsci.pro file
                 # to be generated via project.py
                 qsciproj = FileFilter(join_path("project.py"))
-                ptrn="super().__init__(project, 'Qsci', qmake_CONFIG=qmake_CONFIG",
+                ptrn = "super().__init__(project, 'Qsci', qmake_CONFIG=qmake_CONFIG",
                 qsciproj.filter(
                     ptrn + ")",
                     ptrn + ",qmake_QT=['widgets','printsupport'])", string=True)
