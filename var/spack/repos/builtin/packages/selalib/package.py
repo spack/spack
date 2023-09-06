@@ -20,12 +20,12 @@ class Selalib(CMakePackage):
     variant("mpi", default=True)
     variant("openmp", default=True)
 
-    requires("%gcc@10.0.0:", "%clang@16.0.0:", "%intel@18.0:", "%oneapi@18.0:",
+    requires("%gcc@10.0.0: +fortran", "%clang@16.0.0: +fortran", "%intel@18.0: +fortran", "%oneapi@18.0: +fortran",
         policy="one_of",
         msg="SeLaLib requires new-enough Fortran compiler"
     )
 
-    depends_on("cmake@3.6.0:", type=("build"))
+    depends_on("cmake@3.6.0:3.9.999", type=("build"))
     depends_on("blas")
     depends_on("fftw+mpi+openmp")
     depends_on("fgsl")
