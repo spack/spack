@@ -47,7 +47,7 @@ def test_find_external_single_package(mock_executable, executables_found, _platf
     cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
     executables_found({str(cmake_path): define_plat_exe("cmake")})
 
-    pkg_to_entries = spack.detection.by_executable(pkgs_to_check)
+    pkg_to_entries = spack.detection.by_path(pkgs_to_check)
 
     pkg, entries = next(iter(pkg_to_entries.items()))
     single_entry = next(iter(entries))
@@ -72,7 +72,7 @@ def test_find_external_two_instances_same_package(
     cmake_exe = define_plat_exe("cmake")
     executables_found({str(cmake_path1): cmake_exe, str(cmake_path2): cmake_exe})
 
-    pkg_to_entries = spack.detection.by_executable(pkgs_to_check)
+    pkg_to_entries = spack.detection.by_path(pkgs_to_check)
 
     pkg, entries = next(iter(pkg_to_entries.items()))
     spec_to_path = dict((e.spec, e.prefix) for e in entries)

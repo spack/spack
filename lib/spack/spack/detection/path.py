@@ -12,7 +12,7 @@ import os.path
 import re
 import sys
 import warnings
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 import llnl.util.filesystem
 import llnl.util.tty
@@ -279,7 +279,11 @@ class ExecutablesFinder(Finder):
         return result
 
 
-class LibraryFinder(Finder):
+class LibrariesFinder(Finder):
+    """Finds libraries on the system, searching by LD_LIBRARY_PATH, LIBRARY_PATH,
+    DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH, and standard system library paths
+    """
+
     def search_patterns(self, *, pkg: spack.package_base.PackageBase) -> List[str]:
         result = []
         if hasattr(pkg, "libraries"):
@@ -308,54 +312,7 @@ class LibraryFinder(Finder):
         return result
 
 
-# TODO consolidate this with by_executable
-# Packages should be able to define both .libraries and .executables in the future
-# determine_spec_details should get all relevant libraries and executables in one call
-
-
-def by_library(
-    packages_to_search: List[str], path_hints: Optional[List[str]] = None
-) -> Dict[str, List[DetectedPackage]]:
-    # Techniques for finding libraries is determined on a per-recipe basis in
-    # the determine_version class method. Some packages will extract the
-    # version number from a shared library filename.
-    # Other libraries could use the strings function to extract it as described
-    # in https://unix.stackexchange.com/questions/58846/viewing-linux-library-executable-version-info
-    """Return the list of packages that have been detected on the system,
-    searching by LD_LIBRARY_PATH, LIBRARY_PATH, DYLD_LIBRARY_PATH,
-    DYLD_FALLBACK_LIBRARY_PATH, and standard system library paths.
-
-    Args:
-        packages_to_search: list of packages to be detected
-        path_hints: list of paths to be searched. If None the list will be
-            constructed based on the LD_LIBRARY_PATH, LIBRARY_PATH,
-            DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH environment variables
-            and standard system library paths.
-    """
-    # If no path hints from command line, intialize to empty list so
-    # we can add default hints on a per package basis
-    finder = LibraryFinder()
-    path_hints = [] if path_hints is None else path_hints
-    detected_specs_by_package: Dict[str, concurrent.futures.Future] = {}
-
-    result = {}
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        for pkg in packages_to_search:
-            future = executor.submit(finder.find, pkg_name=pkg, initial_guess=path_hints)
-            detected_specs_by_package[pkg] = future
-
-        for pkg_name, future in detected_specs_by_package.items():
-            try:
-                detected = future.result(timeout=DETECTION_TIMEOUT)
-                if detected:
-                    result[pkg_name] = detected
-            except Exception:
-                llnl.util.tty.debug(f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached")
-
-    return result
-
-
-def by_executable(
+def by_path(
     packages_to_search: List[str], path_hints: Optional[List[str]] = None
 ) -> Dict[str, List[DetectedPackage]]:
     """Return the list of packages that have been detected on the system,
@@ -363,25 +320,38 @@ def by_executable(
 
     Args:
         packages_to_search: list of package classes to be detected
-        path_hints: list of paths to be searched. If None the list will be
-            constructed based on the PATH environment variable.
+        path_hints: initial list of paths to be searched
     """
-    finder = ExecutablesFinder()
-    path_hints = spack.util.environment.get_path("PATH") if path_hints is None else path_hints
-    detected_specs_by_package: Dict[str, concurrent.futures.Future] = {}
+    # TODO: Packages should be able to define both .libraries and .executables in the future
+    # TODO: determine_spec_details should get all relevant libraries and executables in one call
+    executables_finder, libraries_finder = ExecutablesFinder(), LibrariesFinder()
 
-    result = {}
+    executables_path_guess = (
+        spack.util.environment.get_path("PATH") if path_hints is None else path_hints
+    )
+    libraries_path_guess = [] if path_hints is None else path_hints
+    detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
+
+    result = collections.defaultdict(list)
     with concurrent.futures.ProcessPoolExecutor() as executor:
         for pkg in packages_to_search:
-            future = executor.submit(finder.find, pkg_name=pkg, initial_guess=path_hints)
-            detected_specs_by_package[pkg] = future
+            executable_future = executor.submit(
+                executables_finder.find, pkg_name=pkg, initial_guess=executables_path_guess
+            )
+            library_future = executor.submit(
+                libraries_finder.find, pkg_name=pkg, initial_guess=libraries_path_guess
+            )
+            detected_specs_by_package[pkg] = executable_future, library_future
 
-        for pkg_name, future in detected_specs_by_package.items():
-            try:
-                detected = future.result(timeout=DETECTION_TIMEOUT)
-                if detected:
-                    result[pkg_name] = detected
-            except Exception:
-                llnl.util.tty.debug(f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached")
+        for pkg_name, futures in detected_specs_by_package.items():
+            for future in futures:
+                try:
+                    detected = future.result(timeout=DETECTION_TIMEOUT)
+                    if detected:
+                        result[pkg_name].extend(detected)
+                except Exception:
+                    llnl.util.tty.debug(
+                        f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached"
+                    )
 
     return result
