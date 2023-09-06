@@ -16,7 +16,7 @@ class Lcio(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers("gaede", "vvolkl")
+    maintainers("gaede", "vvolkl", "jmcarcell")
 
     version("master", branch="master")
     version("2.20", sha256="5ef92c9ef04ce468ffb48be0ec6010377a400b064e352cb50f9f4c9599e7e990")
@@ -107,6 +107,7 @@ class Lcio(CMakePackage):
         env.prepend_path("PYTHONPATH", self.prefix.python)
         # needed for the python bindings to find "Exceptions.h"
         env.prepend_path("CPATH", self.prefix)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["lcio"].libs.directories[0])
 
     @run_after("install")
     def install_source(self):
