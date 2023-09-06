@@ -4654,8 +4654,9 @@ class Spec:
                     # There was something provided by the original that we don't
                     # get from its replacement.
                     raise SpliceError(
-                        (f"Splice between {self.name} and {other.name} will not provide "
-                         "the same virtuals."
+                        (
+                            f"Splice between {self.name} and {other.name} will not provide "
+                            "the same virtuals."
                         )
                     )
 
