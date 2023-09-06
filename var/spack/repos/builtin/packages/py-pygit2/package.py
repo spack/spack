@@ -22,7 +22,6 @@ class PyPygit2(PythonPackage):
     version("0.28.2", sha256="4d8c3fbbf2e5793a9984681a94e6ac2f1bc91a92cbac762dbdfbea296b917f86")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-wheel", type="build")
     # https://www.pygit2.org/install.html#version-numbers
     depends_on("libgit2@1.6", when="@1.12")
     depends_on("libgit2@1.5", when="@1.10:1.11")
@@ -41,7 +40,7 @@ class PyPygit2(PythonPackage):
     depends_on("py-cffi@1.4.0:", when="@:1.5", type=("build", "run"))
     depends_on("py-cffi@1.6.0:", when="@1.6:1.7", type=("build", "run"))
     depends_on("py-cffi@1.9.1:", when="@1.8:", type=("build", "run"))
-    depends_on("py-cached-property", when="@1.1:1.9", type=("build", "run"))
+    depends_on("py-cached-property", when="@1.1:1.9 ^python@:3.7", type=("build", "run"))
 
     def setup_build_environment(self, env):
         spec = self.spec
