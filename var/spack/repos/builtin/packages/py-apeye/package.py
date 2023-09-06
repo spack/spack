@@ -17,5 +17,6 @@ class PyApeye(PythonPackage):
 
     depends_on("py-flit-core@3.2:3", type="build")
     depends_on("py-apeye-core@1:", type=("build", "run"))
+    depends_on("py-domdf-python-tools@2.6:", type=("build", "run"))
     depends_on("py-platformdirs@2.3:", type=("build", "run"))
     depends_on("py-requests@2.24:", type=("build", "run"))
