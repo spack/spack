@@ -81,7 +81,7 @@ class Qscintilla(QMakePackage):
             qmake('designer.pro', 'INCLUDEPATH+=../src')
             make()
             makefile = FileFilter("Makefile")
-            makefile.filter(r"\$\(INSTALL_ROOT\)" + self.spec["qt"].prefix, "$(INSTALL_ROOT)")
+            makefile.filter("$(INSTALL_ROOT)" + self.spec["qt"].prefix, "$(INSTALL_ROOT)", string=True)
             make("install")
 
     @run_after("install", when='+python')
