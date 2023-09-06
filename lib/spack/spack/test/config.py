@@ -277,11 +277,24 @@ def test_add_config_path(mutable_config):
     compilers = spack.config.get("packages")["all"]["compiler"]
     assert "gcc" in compilers
 
-    # Try with an escaped colon
-    path = 'config:install_tree:root:"C:/path/to/config.yaml"'
+    # Try quotes to escape brackets
+    path = "config:install_tree:projections:cmake:\
+'{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
     spack.config.add(path)
-    set_value = spack.config.get("config")["install_tree"]["root"]
-    assert set_value == "C:/path/to/config.yaml"
+    set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
+    assert set_value == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+
+    # NOTE:
+    # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
+    # schemas (such as a dropped "root" component) which is atypical and may lead to passing tests
+    # when the behavior is in reality incorrect.
+    # the config path below is such that no subkey accepts a string as a valid entry in our schema
+
+    # try quotes to escape colons
+    path = "config:build_stage:'C:\\path\\to\\config.yaml'"
+    spack.config.add(path)
+    set_value = spack.config.get("config")["build_stage"]
+    assert "C:\\path\\to\\config.yaml" in set_value
 
 
 @pytest.mark.regression("17543,23259")
