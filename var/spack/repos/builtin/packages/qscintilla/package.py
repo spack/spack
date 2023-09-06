@@ -76,7 +76,8 @@ class Qscintilla(QMakePackage):
             qmake('designer.pro', 'INCLUDEPATH+=../src')
             make()
             makefile = FileFilter("Makefile")
-            makefile.filter("$(INSTALL_ROOT)" + self.spec["qt"].prefix, "$(INSTALL_ROOT)", string=True)
+            makefile.filter("$(INSTALL_ROOT)" + self.spec["qt"].prefix, "$(INSTALL_ROOT)",
+                            string=True)
             make("install")
 
     @run_after("install", when='+python')
@@ -106,8 +107,8 @@ class Qscintilla(QMakePackage):
                 qsciproj = FileFilter(join_path("project.py"))
                 ptrn="super().__init__(project, 'Qsci', qmake_CONFIG=qmake_CONFIG",
                 qsciproj.filter(
-                    ptrn+")",
-                    ptrn+",qmake_QT=['widgets','printsupport'])", string=True)
+                    ptrn + ")",
+                    ptrn + ",qmake_QT=['widgets','printsupport'])", string=True)
             sip_build = Executable(self.spec["py-sip"].prefix.bin.join("sip-build"))
             sip_build(
                 "--target-dir=" + python_platlib,
