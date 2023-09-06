@@ -131,7 +131,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         "0.1.3", tag="v0.1.3", commit="cc347edeb17f5f30f694aa47f395d17369a2e449", submodules=True
     )
 
-    patch("export_includes.patch", when="@2022.10.0")
     patch("std-filesystem-pr784.patch", when="@2022.03.1 +rocm ^blt@0.5.2:")
     patch("camp_target_umpire_3.0.0.patch", when="@3.0.0")
     patch("cmake_version_check.patch", when="@4.1")
