@@ -49,6 +49,7 @@ class Wayland(MesonPackage, AutotoolsPackage):
     depends_on("xmlto", type="build")
     depends_on("libxslt", type="build")
     depends_on("docbook-xsl", type="build")
+    depends_on("graphviz+libgd", type="build")
     depends_on("libxml2")
     depends_on("chrpath")
     depends_on("expat")
