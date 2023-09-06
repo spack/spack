@@ -699,16 +699,38 @@ attr("node_flag", node(NodeID1, A1), A2, A3) :-
   activate_requirement(node(NodeID1, A1), X),
   imposed_constraint(Y,"node_flag_set", A1, A2, A3).
 
+%:- not activate_requirement(node(_, "zlib"), _).
+
+:- requirement_group_member(Y, "zlib", X),
+  not activate_requirement(node(_, "zlib"), X).
+
+%triggers
+%debugtrigger :- imposed_constraint(_, "node_flag_set", "zlib", "cflags", "-g").
+%triggers 
+%debugtrigger :- condition_requirement(_, "node_flag", "zlib", "cflags", "-g").
+%does not trigger
+%debugtrigger :- imposed_constraint(_, "node_flag", "zlib", "cflags", "-g").
+debugtrigger.
+
+:- requirement_group_member(Y, "zlib", X),
+  activate_requirement(node(_, "zlib"), X),
+  not debugtrigger.
+
+:- imposed_packages(NodeID, "zlib"),
+  requirement_group_member(Y, "zlib", X),
+  activate_requirement(node(NodeID1, "zlib"), X).
+
+
 %ORIGINAL CONSTRAINT
 %attr("node_flag_source", node(ID, A1), A2, node(ID, A3)) :-
 %  requirement_group_member(Y, Package, X),
 %  activate_requirement(node(ID, Package), X),
 %  imposed_constraint(Y,"node_flag_source", A1, A2, A3).
-attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) :-
-  requirement_group_member(Y, A1, X),
-  activate_requirement(node(NodeID1, A1), X),
-  imposed_constraint(Y,"node_flag_source", A1, A2, A3),
-  imposed_packages(NodeID2, A3).
+%attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) :-
+%  requirement_group_member(Y, A1, X),
+%  activate_requirement(node(NodeID1, A1), X),
+%  imposed_constraint(Y,"node_flag_source", A1, A2, A3),
+%  imposed_packages(NodeID2, A3).
 
 %{ attr("node_flag", node(ID, A1), A2, A3) } :-
 %  condition_requirement(0,"node_flag","y","cflags","-g").
@@ -728,10 +750,10 @@ attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) :-
 %  condition_requirement(_,"node_flag", A1, A2, A3),
 %  imposed_packages(NodeID1, A1).
 
-%{ attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
-%  condition_requirement(_,"node_flag_source", A1, A2, A3),
-%  imposed_packages(NodeID1, A1),
-%  imposed_packages(NodeID2, A3).
+{ attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
+  condition_requirement(_,"node_flag_source", A1, A2, A3),
+  imposed_packages(NodeID1, A1),
+  imposed_packages(NodeID2, A3).
 
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
