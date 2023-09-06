@@ -1024,7 +1024,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         compiler_dir = os.path.dirname(self.compiler.cc)
         detected_packages = by_executable(
-            [self.__class__], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
+            [self.name], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
         )
 
         # We consider only packages that satisfy the following constraint:

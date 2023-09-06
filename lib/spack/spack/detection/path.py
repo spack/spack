@@ -236,20 +236,21 @@ class Finder:
         return result
 
     def find(
-        self, *, pkg: spack.package_base.PackageBase, initial_guess: Optional[List[str]] = None
+        self, *, pkg_name: str, initial_guess: Optional[List[str]] = None
     ) -> List[DetectedPackage]:
         """For a given package, returns a list of detected specs.
 
         Args:
-            pkg: package being detected
+            pkg_name: package being detected
             initial_guess: initial list of paths to search from the caller
         """
-        patterns = self.search_patterns(pkg=pkg)
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        patterns = self.search_patterns(pkg=pkg_cls)
         if not patterns:
             return []
-        path_hints = self.path_hints(pkg=pkg, initial_guess=initial_guess)
+        path_hints = self.path_hints(pkg=pkg_cls, initial_guess=initial_guess)
         candidates = self.candidate_files(patterns=patterns, paths=path_hints)
-        result = self.detect_specs(pkg=pkg, paths=candidates)
+        result = self.detect_specs(pkg=pkg_cls, paths=candidates)
         return result
 
 
@@ -313,7 +314,7 @@ class LibraryFinder(Finder):
 
 
 def by_library(
-    packages_to_check: List[spack.package_base.PackageBase], path_hints: Optional[List[str]] = None
+    packages_to_search: List[str], path_hints: Optional[List[str]] = None
 ) -> Dict[str, List[DetectedPackage]]:
     # Techniques for finding libraries is determined on a per-recipe basis in
     # the determine_version class method. Some packages will extract the
@@ -325,7 +326,7 @@ def by_library(
     DYLD_FALLBACK_LIBRARY_PATH, and standard system library paths.
 
     Args:
-        packages_to_check: list of packages to be detected
+        packages_to_search: list of packages to be detected
         path_hints: list of paths to be searched. If None the list will be
             constructed based on the LD_LIBRARY_PATH, LIBRARY_PATH,
             DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH environment variables
@@ -339,9 +340,9 @@ def by_library(
 
     result = {}
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        for pkg in packages_to_check:
-            future = executor.submit(finder.find, pkg=pkg, initial_guess=path_hints)
-            detected_specs_by_package[pkg.name] = future
+        for pkg in packages_to_search:
+            future = executor.submit(finder.find, pkg_name=pkg, initial_guess=path_hints)
+            detected_specs_by_package[pkg] = future
 
         for pkg_name, future in detected_specs_by_package.items():
             try:
@@ -355,13 +356,13 @@ def by_library(
 
 
 def by_executable(
-    packages_to_check: List[spack.package_base.PackageBase], path_hints: Optional[List[str]] = None
+    packages_to_search: List[str], path_hints: Optional[List[str]] = None
 ) -> Dict[str, List[DetectedPackage]]:
     """Return the list of packages that have been detected on the system,
     searching by path.
 
     Args:
-        packages_to_check: list of package classes to be detected
+        packages_to_search: list of package classes to be detected
         path_hints: list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
@@ -371,9 +372,9 @@ def by_executable(
 
     result = {}
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        for pkg in packages_to_check:
-            future = executor.submit(finder.find, pkg=pkg, initial_guess=path_hints)
-            detected_specs_by_package[pkg.name] = future
+        for pkg in packages_to_search:
+            future = executor.submit(finder.find, pkg_name=pkg, initial_guess=path_hints)
+            detected_specs_by_package[pkg] = future
 
         for pkg_name, future in detected_specs_by_package.items():
             try:

@@ -141,10 +141,8 @@ def external_find(args):
     if args.exclude:
         candidate_packages = [x for x in candidate_packages if x not in args.exclude]
 
-    pkg_cls_to_check = [spack.repo.PATH.get_pkg_class(x) for x in candidate_packages]
-
-    detected_packages = spack.detection.by_executable(pkg_cls_to_check, path_hints=args.path)
-    detected_packages.update(spack.detection.by_library(pkg_cls_to_check, path_hints=args.path))
+    detected_packages = spack.detection.by_executable(candidate_packages, path_hints=args.path)
+    detected_packages.update(spack.detection.by_library(candidate_packages, path_hints=args.path))
 
     new_entries = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable
