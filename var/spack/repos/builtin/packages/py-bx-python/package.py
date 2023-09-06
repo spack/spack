@@ -26,4 +26,4 @@ class PyBxPython(PythonPackage):
     depends_on("py-six", when="@:0.8.9", type=("build", "run"))
     # py-python-lzo is listed as a dependency in `tox.ini` rather than in `setup.cfg`
     depends_on("py-python-lzo@1.14:", type=("build", "run"))
-    depends_on("zlib", type=("link", "run"))
+    depends_on("zlib", type="link")
