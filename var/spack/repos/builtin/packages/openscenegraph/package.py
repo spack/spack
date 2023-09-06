@@ -67,7 +67,7 @@ class Openscenegraph(CMakePackage):
     depends_on("libgta", when="+gta")
     depends_on("coin3d", when="+inventor")
     depends_on("opencascade@:7.5", when="+opencascade")
-    depends_on("openexr@2", when="+openexr")
+    depends_on("openexr", when="+openexr")
     depends_on("ilmbase", when="+openexr")
     depends_on("poppler+glib", when="+pdf")
     depends_on("librsvg", when="+svg")
@@ -78,6 +78,8 @@ class Openscenegraph(CMakePackage):
     depends_on("ffmpeg@:2", when="@:3.4.0+ffmpeg")
 
     patch("glibc-jasper.patch", when="@3.4%gcc")
+    # from gentoo: https://raw.githubusercontent.com/gentoo/gentoo/9523b20c27d12dd72d1fd5ced3ba4995099925a2/dev-games/openscenegraph/files/openscenegraph-3.6.5-openexr3.patch
+    patch("openscenegraph-3.6.5-openexr3.patch", when="@3.6:")
 
     def patch(self):
         # pkgconfig does not work for GTA on macos
