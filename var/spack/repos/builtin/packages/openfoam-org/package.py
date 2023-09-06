@@ -87,6 +87,7 @@ class OpenfoamOrg(Package):
         "source", default=True, description="Install library/application sources and tutorials"
     )
     variant("metis", default=False, description="With metis decomposition")
+    variant("scotch", default=True, description="With scotch/ptscotch decomposition")
     variant(
         "precision",
         default="dp",
@@ -101,8 +102,8 @@ class OpenfoamOrg(Package):
     depends_on("cmake", type="build")
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
-    depends_on("scotch~metis+mpi~int64", when="~int64")
-    depends_on("scotch~metis+mpi+int64", when="+int64")
+    depends_on("scotch~metis+mpi~int64", when="+scotch~int64")
+    depends_on("scotch~metis+mpi+int64", when="+scotch+int64")
 
     depends_on("metis@5:", when="+metis")
     depends_on("metis+int64", when="+metis+int64")
@@ -293,7 +294,7 @@ class OpenfoamOrg(Package):
             "gperftools": [],  # Currently unused
         }
 
-        if True:
+        if "+scotch" in spec:
             self.etc_config["scotch"] = {
                 "SCOTCH_ARCH_PATH": spec["scotch"].prefix,
                 # For src/parallel/decompose/Allwmake
