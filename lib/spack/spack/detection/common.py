@@ -393,7 +393,7 @@ def find_win32_additional_install_paths() -> List[str]:
     return windows_search_ext
 
 
-def compute_windows_program_path_for_package(pkg: spack.package_base.PackageBase) -> List[str]:
+def compute_windows_program_path_for_package(pkg: "spack.package_base.PackageBase") -> List[str]:
     """Given a package, attempts to compute its Windows program files location,
     and returns the list of best guesses.
 
@@ -413,7 +413,7 @@ def compute_windows_program_path_for_package(pkg: spack.package_base.PackageBase
     ]
 
 
-def compute_windows_user_path_for_package(pkg: spack.package_base.PackageBase) -> List[str]:
+def compute_windows_user_path_for_package(pkg: "spack.package_base.PackageBase") -> List[str]:
     """Given a package attempt to compute its user scoped
     install location, return list of potential locations based
     on common heuristics. For more info on Windows user specific
