@@ -96,8 +96,7 @@ class Qscintilla(QMakePackage):
             ftoml = 'pyproject-qt6.toml'
 
         with working_dir(join_path(self.stage.source_path, "Python")):
-            cp = which('cp')
-            cp(ftoml, 'pyproject.toml')
+            copy(ftoml, 'pyproject.toml')
             sip_inc_dir = join_path(self.spec[py_pyqtx].prefix,
                                     self.spec['python'].package.platlib, pyqtx, 'bindings')
 
