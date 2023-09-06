@@ -282,10 +282,7 @@ def test_add_config_path(mutable_config):
 '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
     spack.config.add(path)
     set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
-    assert (
-        set_value
-        == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
-    )
+    assert set_value == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
 
     # NOTE:
     # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
