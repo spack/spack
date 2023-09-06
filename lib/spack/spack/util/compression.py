@@ -90,8 +90,9 @@ def _system_untar(archive_file, remove_archive_file=False):
     tar.add_default_arg("-oxf")
     tar(archive_file)
     if remove_archive_file:
-        # remove input file to mimic end result produced by
-        # gunzip
+        # remove input file to prevent two stage
+        # extractions from being treated as exploding
+        # archives by the fetcher
         os.remove(archive_file)
     return outfile
 
@@ -247,7 +248,6 @@ def _win_compressed_tarball_handler(decompressor):
     def unarchive(archive_file):
         # perform intermediate extraction step
         # record name of new archive so we can extract
-        # and later clean up
         decomped_tarball = decompressor(archive_file)
         # run tar on newly decomped archive
         outfile = _system_untar(decomped_tarball, remove_archive_file=True)
