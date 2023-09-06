@@ -313,7 +313,10 @@ class LibrariesFinder(Finder):
 
 
 def by_path(
-    packages_to_search: List[str], path_hints: Optional[List[str]] = None
+    packages_to_search: List[str],
+    *,
+    path_hints: Optional[List[str]] = None,
+    max_workers: Optional[int] = None,
 ) -> Dict[str, List[DetectedPackage]]:
     """Return the list of packages that have been detected on the system,
     searching by path.
@@ -333,7 +336,7 @@ def by_path(
     detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
 
     result = collections.defaultdict(list)
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         for pkg in packages_to_search:
             executable_future = executor.submit(
                 executables_finder.find, pkg_name=pkg, initial_guess=executables_path_guess

@@ -54,7 +54,7 @@ def setup_parser(subparser):
     find_parser.add_argument(
         "--all", action="store_true", help="search for all packages that Spack knows about"
     )
-    spack.cmd.common.arguments.add_common_arguments(find_parser, ["tags"])
+    spack.cmd.common.arguments.add_common_arguments(find_parser, ["tags", "jobs"])
     find_parser.add_argument("packages", nargs=argparse.REMAINDER)
     find_parser.epilog = (
         'The search is by default on packages tagged with the "build-tools" or '
@@ -141,7 +141,9 @@ def external_find(args):
     if args.exclude:
         candidate_packages = [x for x in candidate_packages if x not in args.exclude]
 
-    detected_packages = spack.detection.by_path(candidate_packages, path_hints=args.path)
+    detected_packages = spack.detection.by_path(
+        candidate_packages, path_hints=args.path, max_workers=args.jobs
+    )
 
     new_entries = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable
