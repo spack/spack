@@ -120,43 +120,28 @@ def external_find(args):
             else:
                 tty.warn("Unable to read manifest, unexpected error: {0}".format(str(e)), skip_msg)
 
-    # If the user didn't specify anything, search for build tools by default
-    if not args.tags and not args.all and not args.packages:
-        args.tags = ["core-packages", "build-tools"]
+    # Outside the Cray manifest, the search is done by tag for performance reasons,
+    # since tags are cached.
 
     # If the user specified both --all and --tag, then --all has precedence
-    if args.all and args.tags:
-        args.tags = []
+    if args.all or args.packages:
+        # Each detectable package has at least the detectable tag
+        args.tags = ["detectable"]
+    elif not args.tags:
+        # If the user didn't specify anything, search for build tools by default
+        args.tags = ["core-packages", "build-tools"]
 
-    # Construct the list of possible packages to be detected
-    pkg_cls_to_check = []
+    candidate_packages = []
+    for current_tag in args.tags:
+        candidate_packages.extend(spack.repo.PATH.packages_with_tags(current_tag))
 
-    # Add the packages that have been required explicitly
     if args.packages:
-        pkg_cls_to_check = [spack.repo.PATH.get_pkg_class(pkg) for pkg in args.packages]
-        if args.tags:
-            allowed = set(spack.repo.PATH.packages_with_tags(*args.tags))
-            pkg_cls_to_check = [x for x in pkg_cls_to_check if x.name in allowed]
+        candidate_packages = [x for x in candidate_packages if x in args.packages]
 
-    if args.tags and not pkg_cls_to_check:
-        # If we arrived here we didn't have any explicit package passed
-        # as argument, which means to search all packages.
-        # Since tags are cached it's much faster to construct what we need
-        # to search directly, rather than filtering after the fact
-        pkg_cls_to_check = [
-            spack.repo.PATH.get_pkg_class(pkg_name)
-            for tag in args.tags
-            for pkg_name in spack.repo.PATH.packages_with_tags(tag)
-        ]
-        pkg_cls_to_check = list(set(pkg_cls_to_check))
-
-    # If the list of packages is empty, search for every possible package
-    if not args.tags and not pkg_cls_to_check:
-        pkg_cls_to_check = list(spack.repo.PATH.all_package_classes())
-
-    # If the user specified any packages to exclude from external find, add them here
     if args.exclude:
-        pkg_cls_to_check = [pkg for pkg in pkg_cls_to_check if pkg.name not in args.exclude]
+        candidate_packages = [x for x in candidate_packages if x not in args.exclude]
+
+    pkg_cls_to_check = [spack.repo.PATH.get_pkg_class(x) for x in candidate_packages]
 
     detected_packages = spack.detection.by_executable(pkg_cls_to_check, path_hints=args.path)
     detected_packages.update(spack.detection.by_library(pkg_cls_to_check, path_hints=args.path))
