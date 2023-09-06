@@ -543,7 +543,8 @@ class Python(Package):
         cflags = []
 
         # https://bugs.python.org/issue1294959
-        config_args.append(f"--with-platlibdir={sys.platlibdir}")
+        if "fedora" in self.spec.os or "suse" in self.spec.os:
+            config_args.append("--with-platlibdir=lib64")
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
