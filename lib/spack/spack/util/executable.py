@@ -124,9 +124,10 @@ class Executable:
         By default, the subprocess inherits the parent's file descriptors.
 
         """
+
         def process_cmd_output():
             result = None
-            if  output in (str, str.split) or error in (str, str.split):
+            if output in (str, str.split) or error in (str, str.split):
                 result = ""
                 if output in (str, str.split):
                     if sys.platform == "win32":
@@ -258,15 +259,14 @@ class Executable:
         except subprocess.TimeoutExpired as te:
             proc.kill()
             out, err = proc.communicate()
-            tty.warn(f"Command {cmd_line_string} experienced a timeout after {timeout}s running process {proc.pid}")
+            tty.warn(
+                f"Command {cmd_line_string} experienced a timeout after\
+{timeout}s running process {proc.pid}"
+            )
             result = process_cmd_output()
             long_msg = cmd_line_string + f"\n{result}"
             if fail_on_timeout:
-                raise ProcessError(
-                    str(te),
-                    f"\nProcess timed out after {timeout}s"
-                    f"{long_msg}"
-                )
+                raise ProcessError(str(te), f"\nProcess timed out after {timeout}s" f"{long_msg}")
 
         finally:
             if close_ostream:

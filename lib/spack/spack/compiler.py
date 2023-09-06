@@ -9,7 +9,6 @@ import os
 import platform
 import re
 import shutil
-import sys
 import tempfile
 from typing import List, Optional, Sequence
 
@@ -39,12 +38,13 @@ def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
         version_arg (str): the argument used to extract version information
     """
     compiler = spack.util.executable.Executable(compiler_path)
-    compiler_invocation_args = {"output": str,
-                                "error": str,
-                                "ignore_errors": ignore_errors,
-                                "timeout": 2.5,
-                                "fail_on_timeout": True
-                               }
+    compiler_invocation_args = {
+        "output": str,
+        "error": str,
+        "ignore_errors": ignore_errors,
+        "timeout": 2.5,
+        "fail_on_timeout": True,
+    }
     if version_arg:
         output = compiler(version_arg, **compiler_invocation_args)
     else:
@@ -237,6 +237,7 @@ class Compiler:
 
     # string matcher for string representation of platforms supported by a compiler
     supported_platforms = any
+
     # Default flags used by a compiler to set an rpath
     @property
     def cc_rpath_arg(self):

@@ -328,8 +328,10 @@ def supported_compilers_for_platform(platform: str):
         platform (str): string representation of platform
             for which compiler compatability should be determined
     """
+
     def replace_apple_clang(name):
         return name if name != "apple_clang" else "apple-clang"
+
     return sorted(
         name
         for name in llnl.util.lang.list_modules(spack.paths.compilers_path)
