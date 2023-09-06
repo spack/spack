@@ -467,6 +467,8 @@ packages:
     s2 = Spec("y@2.4").concretized()
     assert s2.satisfies("%gcc+shared")
 
+from spack.main import SpackCommand
+solve = SpackCommand("solve")
 
 @pytest.mark.regression("34241")
 def test_require_cflags(concretize_scope, test_repo):
@@ -477,6 +479,10 @@ packages:
     require: cflags="-g"
 """
     update_packages_config(conf_str)
+
+    asp = solve("--show=asp", "y")
+    import pdb; pdb.set_trace()
+
     spec = Spec("y").concretized()
     assert spec.satisfies("cflags=-g")
 
