@@ -43,7 +43,6 @@ class Selalib(CMakePackage):
             self.define_from_variant("HDF5_PARALLEL_ENABLED", "mpi"),
             self.define_from_variant("USE_FMEMPOOL", "fmempool"),
             self.define("FFTW_ENABLED", "ON"),
-            self.define("CMAKE_INSTALL_PREFIX","install"),
             #self.define("CMAKE_Fortran_FLAGS","-ffree-line-length-512")
         ]
         return args
