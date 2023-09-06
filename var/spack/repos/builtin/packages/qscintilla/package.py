@@ -66,12 +66,8 @@ class Qscintilla(QMakePackage):
     @run_after("qmake")
     def fix_install_path(self):
         makefile = FileFilter(join_path(self.build_directory, 'Makefile'))
-        if '^qt-base' in self.spec:
-            makefile.filter("$(INSTALL_ROOT)" + self.spec["qt-base"].prefix,
-                            "$(INSTALL_ROOT)", string=True)
-        else:
-            makefile.filter("$(INSTALL_ROOT)" + self.spec["qt"].prefix,
-                            "$(INSTALL_ROOT)", string=True)
+        makefile.filter("$(INSTALL_ROOT)" + self.spec["qmake"].prefix,
+                        "$(INSTALL_ROOT)", string=True)
 
     @run_after("install", when='+designer')
     def make_designer(self):
