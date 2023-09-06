@@ -305,9 +305,7 @@ class WindowsKitExternalPaths:
         if sys.platform != "win32":
             return []
         program_files = os.environ["PROGRAMFILES(x86)"]
-        kit_base = os.path.join(
-            program_files, "Windows Kits", "**"
-        )
+        kit_base = os.path.join(program_files, "Windows Kits", "**")
         return glob.glob(kit_base)
 
     @staticmethod
@@ -346,9 +344,9 @@ class WindowsKitExternalPaths:
         kit_root_reg = re.compile(r"KitsRoot[0-9]+")
         root_paths = []
         for kit_root in filter(kit_root_reg.match, reg.get_values().keys()):
-            root_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths(
-                reg.get_value(kit_root).value
-            ))
+            root_paths.extend(
+                WindowsKitExternalPaths.find_windows_kit_lib_paths(reg.get_value(kit_root).value)
+            )
         return root_paths
 
     @staticmethod
@@ -361,9 +359,10 @@ class WindowsKitExternalPaths:
         )
         for key in filter(sdk_regex.match, [x.name for x in windows_reg.get_subkeys()]):
             reg = windows_reg.get_subkey(key)
-            sdk_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths(
-                                reg.get_value("InstallationFolder").value
-                            )
+            sdk_paths.extend(
+                WindowsKitExternalPaths.find_windows_kit_lib_paths(
+                    reg.get_value("InstallationFolder").value
+                )
             )
         return sdk_paths
 
