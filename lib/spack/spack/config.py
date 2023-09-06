@@ -863,7 +863,6 @@ def add(fullpath, scope=None):
     has_existing_value = True
     path = ""
     override = False
-    value = syaml.load_config(components[-1])
     for idx, name in enumerate(components[:-1]):
         # First handle double colons in constructing path
         colon = "::" if override else ":" if path else ""
@@ -884,14 +883,14 @@ def add(fullpath, scope=None):
             existing = get_valid_type(path)
 
             # construct value from this point down
+            value = syaml.load_config(components[-1])
             for component in reversed(components[idx + 1 : -1]):
                 value = {component: value}
             break
 
-    if override:
-        path += "::"
-
     if has_existing_value:
+        path, _, value = fullpath.rpartition(":")
+        value = syaml.load_config(value)
         existing = get(path, scope=scope)
 
     # append values to lists
@@ -1232,17 +1231,11 @@ def merge_yaml(dest, source, prepend=False, append=False):
     return copy.copy(source)
 
 
+#
+# Process a path argument to config.set() that may contain overrides ('::' or
+# trailing ':')
+#
 def process_config_path(path):
-    """Process a path argument to config.set() that may contain overrides ('::' or
-    trailing ':')
-
-    Note: quoted value path components will be processed as a single value (escaping colons)
-        quoted path components outside of the value will be considered ill formed and will
-        raise.
-        e.g. `this:is:a:path:'value:with:colon'` will yield:
-
-            [this, is, a, path, value:with:colon]
-    """
     result = []
     if path.startswith(":"):
         raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".format(path), "")
@@ -1268,16 +1261,6 @@ def process_config_path(path):
             front = front.rstrip("-")
             front = syaml.syaml_str(front)
             front.append = True
-
-        quote = "['\"]"
-        not_quote = "[^'\"]"
-
-        if re.match(f"^{quote}", path):
-            m = re.match(rf"^{quote}({not_quote}+){quote}$", path)
-            if not m:
-                raise ValueError("Quotes indicate value, but there are additional path entries")
-            result.append(m.group(1))
-            break
 
         result.append(front)
     return result
