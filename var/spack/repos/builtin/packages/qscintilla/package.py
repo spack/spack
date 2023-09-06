@@ -108,7 +108,7 @@ class Qscintilla(QMakePackage):
 
             with open('pyproject.toml', 'a') as tomlfile:
                 tomlfile.write(
-                        '\n[tool.sip.project]\nsip-include-dirs = ["'+str(sip_inc_dir)+'"]\n')
+                        f'\n[tool.sip.project]\nsip-include-dirs = ["{sip_inc_dir}"]\n')
             mkdirp(os.path.join(self.prefix.share.sip, pyqtx))
 
             if '^py-pyqt5' in self.spec:
