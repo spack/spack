@@ -697,7 +697,8 @@ requirement_group_satisfied(node(ID, Package), X) :-
 attr("node_flag", node(NodeID1, A1), A2, A3) :-
   requirement_group_member(Y, A1, X),
   activate_requirement(node(NodeID1, A1), X),
-  imposed_constraint(Y,"node_flag_set", A1, A2, A3).
+  pkg_fact(A1, condition_trigger(Y, Z)),
+  condition_requirement(Z,"node_flag", A1, A2, A3).
 
 %:- not activate_requirement(node(_, "zlib"), _).
 
