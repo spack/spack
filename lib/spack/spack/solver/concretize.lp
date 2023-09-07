@@ -700,33 +700,6 @@ attr("node_flag", node(NodeID1, A1), A2, A3) :-
   pkg_fact(A1, condition_effect(Y, Z)),
   imposed_constraint(Z,"node_flag_set", A1, A2, A3).
 
-% This triggers a failure, so "corrects" the below stanzas by
-% accounting for the indirection between requirement group member
-% and condition requirement
-%:- imposed_packages(NodeID, "zlib"),
-%  requirement_group_member(Y, "zlib", X),
-%  activate_requirement(node(NodeID, "zlib"), X),
-%  pkg_fact("zlib", condition_trigger(Y, Z)),
-%  condition_requirement(Z, "node_flag", "zlib", "cflags", "-g").
-
-% This does not trigger a failure. So given the next few stanzas,
-% this means there is a condition requirement, but it is not 
-% associated with the activated requirement group
-%:- imposed_packages(NodeID, "zlib"),
-%  requirement_group_member(Y, "zlib", X),
-%  activate_requirement(node(NodeID, "zlib"), X),
-%  condition_requirement(Y, "node_flag", "zlib", "cflags", "-g").
-
-% This triggers a failure, so I know these things are true.
-% This is the same as the stanza directly above, minus the last
-% constraint.
-%:- imposed_packages(NodeID, "zlib"),
-%  requirement_group_member(Y, "zlib", X),
-%  activate_requirement(node(NodeID, "zlib"), X).
-
-% This triggers a failure, which means it is true *somewhere*
-%:- condition_requirement(_, "node_flag", "zlib", "cflags", "-g").
-
 %ORIGINAL CONSTRAINT
 %attr("node_flag_source", node(ID, A1), A2, node(ID, A3)) :-
 %  requirement_group_member(Y, Package, X),
