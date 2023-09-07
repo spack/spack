@@ -142,7 +142,7 @@ def checksum(parser, args):
                 *v_match.group(1, 2, 3, 4),
                 ",\n",
                 re.sub(r".", " ", v_match.group(1)),
-                'url="{0}"'.format(vstring_url_dict[url]),
+                'url="{0}"'.format(url),
                 ")",
                 sep="",
             )
