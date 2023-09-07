@@ -370,13 +370,18 @@ Bundling software
 If you have a collection of software expected to work well together with
 no source code of its own, you can create a :ref:`BundlePackage <bundlepackage>`.
 Examples where bundle packages can be useful include defining suites of
-applications, commonly used libraries, and software development kits.
+applications (e.g, `EcpProxyApps
+<https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/ecp-proxy-apps/package.py>`_), commonly used libraries
+(e.g., `AmdAocl <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/amd-aocl/package.py>`_),
+and software development kits (e.g., `EcpDataVisSdk <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/ecp-data-vis-sdk/package.py>`_).
 
 These versioned packages primarily consist of dependencies on the associated
 software packages. They can include :ref:`variants <variants>` to ensure
 common build options are consistently applied to dependencies. Known build
 failures, such as not building on a platform or when certain compilers or
-variants are used, can also be flagged with :ref:`conflicts <packaging_conflicts>`.
+variants are used, can be flagged with :ref:`conflicts <packaging_conflicts>`.
+Build requirements, such as only building with specific compilers, can similarly
+be flagged with :ref:`requires <packaging_conflicts>`.
 
 The ``spack create --template bundle`` command will create a skeleton
 ``BundlePackage`` ``package.py`` for you:
