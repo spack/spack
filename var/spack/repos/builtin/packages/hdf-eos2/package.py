@@ -21,6 +21,8 @@ class HdfEos2(AutotoolsPackage):
     # Template for url_for_version. 0 is sha256 checksum, 1 is filename
     url = "https://git.earthdata.nasa.gov/rest/git-lfs/storage/DAS/hdfeos/{0}?response-content-disposition=attachment%3B%20filename%3D%22{1}%22%3B%20filename*%3Dutf-8%27%27{1}"
 
+    maintainers("climbfuji")
+
     # Crazy URL scheme, differing with each version, and including the
     # sha256 checksum in the URL.  Yuck
     # The data in version_list is used to generate versions and urls
