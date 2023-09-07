@@ -739,15 +739,6 @@ attr("node_flag", node(NodeID1, A1), A2, A3) :-
   imposed_constraint(Z,"node_flag_source", A1, A2, A3),
   imposed_packages(NodeID2, A3).
 
-%{ attr("node_flag", node(NodeID1, A1), A2, A3) } :-
-%  condition_requirement(_,"node_flag", A1, A2, A3),
-%  imposed_packages(NodeID1, A1).
-
-%{ attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
-%  condition_requirement(_,"node_flag_source", A1, A2, A3),
-%  imposed_packages(NodeID1, A1),
-%  imposed_packages(NodeID2, A3).
-
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
     Z : requirement_has_weight(Y, Z), condition_holds(Y, node(ID, Package)), requirement_group_member(Y, Package, Group);
