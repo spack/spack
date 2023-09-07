@@ -716,12 +716,14 @@ debugtrigger.
   activate_requirement(node(_, "zlib"), X),
   not debugtrigger.
 
-% This triggers a failure
-:- imposed_packages(NodeID, "zlib"),
-  requirement_group_member(Y, "zlib", X),
-  activate_requirement(node(NodeID, "zlib"), X),
-  pkg_fact("zlib", condition_trigger(Y, Z)),
-  condition_requirement(Z, "node_flag", "zlib", "cflags", "-g").
+% This triggers a failure, so "corrects" the below stanzas by
+% accounting for the indirection between requirement group member
+% and condition requirement
+%:- imposed_packages(NodeID, "zlib"),
+%  requirement_group_member(Y, "zlib", X),
+%  activate_requirement(node(NodeID, "zlib"), X),
+%  pkg_fact("zlib", condition_trigger(Y, Z)),
+%  condition_requirement(Z, "node_flag", "zlib", "cflags", "-g").
 
 % This does not trigger a failure. So given the next few stanzas,
 % this means there is a condition requirement, but it is not 
