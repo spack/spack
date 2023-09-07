@@ -18,6 +18,7 @@ class RocmDeviceLibs(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="amd-stg-open")
+    version("5.6.1", sha256="f0dfab272ff936225bfa1e9dabeb3c5d12ce08b812bf53ffbddd2ddfac49761c")
     version("5.6.0", sha256="efb5dcdca9b3a9fbe408d494fb4a23e0b78417eb5fa8eebd4a5d226088f28921")
     version("5.5.1", sha256="3b5f6dd85f0e3371f6078da7b59bf77d5b210e30f1cc66ef1e2de6bbcb775833")
     version("5.5.0", sha256="5ab95aeb9c8bed0514f96f7847e21e165ed901ed826cdc9382c14d199cbadbd3")
@@ -140,11 +141,12 @@ class RocmDeviceLibs(CMakePackage):
         "5.5.0",
         "5.5.1",
         "5.6.0",
+        "5.6.1",
         "master",
     ]:
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     def cmake_args(self):

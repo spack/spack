@@ -18,6 +18,7 @@ class RocmBandwidthTest(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
+    version("5.6.1", sha256="849af715d08dfd89e7aa5e4453b624151db1cafaa567ab5fa36a77948b90bf0d")
     version("5.6.0", sha256="ae2f7263a21a3a650068f43e3112b2b765eea80a5af2297572f850c77f83c85e")
     version("5.5.1", sha256="768b3da49fe7d4bb4e6536a8ee15be9f5e865d961e813ed4a407f32402685e1f")
     version("5.5.0", sha256="1070ce14d45f34c2c6b2fb003184f3ae735ccfd640e9df1c228988b2a5a82949")
@@ -130,12 +131,13 @@ class RocmBandwidthTest(CMakePackage):
         "5.5.0",
         "5.5.1",
         "5.6.0",
+        "5.6.1",
         "master",
     ]:
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     build_targets = ["package"]

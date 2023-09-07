@@ -18,6 +18,7 @@ class HipifyClang(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
+    version("5.6.1", sha256="ec3a4f276556f9fd924ea3c89be11b6c6ddf999cdd4387f669e38e41ee0042e8")
     version("5.6.0", sha256="a2572037a7d3bd0813bd6819a5e6c0e911678db5fd3ab15a65370601df91891b")
     version("5.5.1", sha256="35b9c07a7afaf9cf6f3bbe9dd147fa81b1b297af3e5e26e60c55629e83feaa48")
     version("5.5.0", sha256="1b75c702799ac93027337f8fb61d7c27ba960e8ece60d907fc8c5ab3f15c3fe9")
@@ -135,11 +136,12 @@ class HipifyClang(CMakePackage):
         "5.5.0",
         "5.5.1",
         "5.6.0",
+        "5.6.1",
         "master",
     ]:
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     def setup_run_environment(self, env):

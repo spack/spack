@@ -25,6 +25,7 @@ class Hip(CMakePackage):
     libraries = ["libamdhip64"]
 
     version("master", branch="master")
+    version("5.6.1", sha256="4b3c4dfcf8595da0e1b8c3e8067b1ccebeaac337762ff098db14375fa8dd4487")
     version("5.6.0", sha256="a8237768c1ae70029d972376f8d279f4de18a1e6106fff6215d1e16847bc375e")
     version("5.5.1", sha256="1f5f6bb72d8d64335ccc8242ef2e2ea8efeb380cce2997f475b1ee77528d9fb4")
     version("5.5.0", sha256="5b0d0253e62f85cc21d043513f7c11c64e4a4ec416159668f0b160d732d09a3c")
@@ -164,6 +165,7 @@ class Hip(CMakePackage):
             "5.5.0",
             "5.5.1",
             "5.6.0",
+            "5.6.1",
         ]:
             depends_on("hsakmt-roct@" + ver, when="@" + ver)
             depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -172,10 +174,10 @@ class Hip(CMakePackage):
             depends_on("rocminfo@" + ver, when="@" + ver)
             depends_on("roctracer-dev-api@" + ver, when="@" + ver)
 
-        for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1", "5.6.0"]:
+        for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
             depends_on("hipify-clang", when="@" + ver)
 
-        for ver in ["5.5.0", "5.5.1", "5.6.0"]:
+        for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
             depends_on("rocm-core@" + ver, when="@" + ver)
         # hipcc likes to add `-lnuma` by default :(
         # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
@@ -273,7 +275,8 @@ class Hip(CMakePackage):
         )
     # Add hip-clr sources thru the below
     for d_version, d_shasum in [
-        ("5.6.0", "8dcd99110737a294f67a805639cf372890c8ca16c7603caaa793e71e84478fe4")
+        ("5.6.1", "0b88af1e99643899d11b1c8cf8a3c46601051b328a5e0ffbd44ee88b7eb0db33"),
+        ("5.6.0", "8dcd99110737a294f67a805639cf372890c8ca16c7603caaa793e71e84478fe4"),
     ]:
         resource(
             name="clr",
@@ -289,7 +292,8 @@ class Hip(CMakePackage):
 
     # Add hipcc sources thru the below
     for d_version, d_shasum in [
-        ("5.6.0", "fdb7fdc9e4648376120330f034ee8353038d34c8a015f9eb0c208c56eeddd097")
+        ("5.6.1", "5800fac92b841ef6f52acda78d9bf86f83970bec0fb848a6265d239bdb7eb51a"),
+        ("5.6.0", "fdb7fdc9e4648376120330f034ee8353038d34c8a015f9eb0c208c56eeddd097"),
     ]:
         resource(
             name="hipcc",
@@ -304,7 +308,8 @@ class Hip(CMakePackage):
         )
     # Add hiptests sources thru the below
     for d_version, d_shasum in [
-        ("5.6.0", "8cf4509bf9c0747dab8ed8fec1365a9156792034b517207a0b2d63270429fd2e")
+        ("5.6.1", "5b3002ddfafda162329e4d9e6ac1200eeb48ff08e666b342aa8aeca30750f48b"),
+        ("5.6.0", "8cf4509bf9c0747dab8ed8fec1365a9156792034b517207a0b2d63270429fd2e"),
     ]:
         resource(
             name="hip-tests",
@@ -382,7 +387,7 @@ class Hip(CMakePackage):
     patch("0014-hip-test-file-reorg-5.4.0.patch", when="@5.4.0:5.5")
     patch("0016-hip-sample-fix-hipMalloc-call.patch", when="@5.4.3:5.5")
     patch("0014-remove-compiler-rt-linkage-for-host.5.5.0.patch", when="@5.5")
-    patch("0014-remove-compiler-rt-linkage-for-host.5.6.0.patch", when="@5.6")
+    patch("0014-remove-compiler-rt-linkage-for-host.5.6.0.patch", when="@5.6:")
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/3206
     patch(
         "https://github.com/ROCm-Developer-Tools/HIP/commit/50ee82f6bc4aad10908ce09198c9f7ebfb2a3561.patch?full_index=1",
@@ -585,7 +590,7 @@ class Hip(CMakePackage):
                 "hipamd/hip-config.cmake.in",
                 string=True,
             )
-        if self.spec.satisfies("@5.6 +rocm"):
+        if self.spec.satisfies("@5.6: +rocm"):
             filter_file(
                 '"${ROCM_PATH}/llvm"',
                 self.spec["llvm-amdgpu"].prefix,

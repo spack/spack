@@ -21,6 +21,7 @@ class RocmValidationSuite(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
 
+    version("5.6.1", sha256="d5e4100e2d07311dfa101563c15d026a8130442cdee8af9ef861832cd7866c0d")
     version("5.6.0", sha256="54cc5167055870570c97ee7114f48d24d5415f984e0c9d7b58b83467e0cf18fb")
     version("5.5.1", sha256="0fbfaa9f68642b590ef04f9778013925bbf3f17bdcd35d4c85a8ffd091169a6e")
     version("5.5.0", sha256="296add772171db67ab8838d2db1ea56df21e895c0348c038768e40146e4fe86a")
@@ -152,6 +153,7 @@ class RocmValidationSuite(CMakePackage):
         "5.5.0",
         "5.5.1",
         "5.6.0",
+        "5.6.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocminfo@" + ver, when="@" + ver)
