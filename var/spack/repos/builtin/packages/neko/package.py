@@ -28,7 +28,7 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     variant("parmetis", default=False, description="Build with support for parmetis")
     variant("xsmm", default=False, description="Build with support for libxsmm")
-    variant("gslib", default=False, description="Build with support for gslib")
+    variant("gslib", default=False, when="@develop", description="Build with support for gslib")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -41,7 +41,7 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("json-fortran", when="@develop")
-    depends_on("gslib", when="@develop+gslib")
+    depends_on("gslib", when="+gslib")
 
     def configure_args(self):
         args = []
