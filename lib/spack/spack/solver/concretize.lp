@@ -699,6 +699,7 @@ attr("node_flag", node(NodeID1, A1), A2, A3) :-
   activate_requirement(node(NodeID1, A1), X),
   pkg_fact(A1, condition_trigger(Y, Z)),
   condition_requirement(Z,"node_flag", A1, A2, A3).
+  %imposed_constraint(Z,"node_flag", A1, A2, A3).
 
 % This triggers a failure, so "corrects" the below stanzas by
 % accounting for the indirection between requirement group member
@@ -737,6 +738,7 @@ attr("node_flag", node(NodeID1, A1), A2, A3) :-
   activate_requirement(node(NodeID1, A1), X),
   pkg_fact(A1, condition_trigger(Y, Z)),
   condition_requirement(Z,"node_flag_source", A1, A2, A3),
+  %imposed_constraint(Z,"node_flag_source", A1, A2, A3),
   imposed_packages(NodeID2, A3).
 
 %{ attr("node_flag", node(NodeID1, A1), A2, A3) } :-
