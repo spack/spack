@@ -20,11 +20,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     periodic, material, crystal, and biological systems
     """
 
-    build_system(
-        conditional("cmake", when="@master:"),
-        conditional("makefile", when="@:2023.1"),
-        default="makefile",
-    )
+    build_system(conditional("cmake", when="@2023.2:"), "makefile", default="makefile")
 
     homepage = "https://www.cp2k.org"
     url = "https://github.com/cp2k/cp2k/releases/download/v3.0.0/cp2k-3.0.tar.bz2"
@@ -195,7 +191,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     with when("+cosma"):
         depends_on("cosma+scalapack")
         depends_on("cosma@2.5.1:", when="@9:")
-        depends_on("cosma@2.6.3:", when="@master:")
+        depends_on("cosma@2.6.3:", when="@2023.2:")
         depends_on("cosma+cuda", when="+cuda")
         depends_on("cosma+rocm", when="+rocm")
         conflicts("~mpi")
@@ -235,7 +231,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("sirius@7.0.0:7.0", when="@8:8.2")
         depends_on("sirius@7.2", when="@8.3:8.9")
         depends_on("sirius@7.3:", when="@9.1")
-        depends_on("sirius@7.4:", when="@master")
+        depends_on("sirius@7.4:", when="@2023.2")
         conflicts("~mpi", msg="SIRIUS requires MPI")
         # sirius support was introduced in 7+
         conflicts("@:6")
@@ -850,8 +846,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
-    """Use the new cmake build system to build cp2k. It is the default when
-    building the master branch of cp2k."""
+    """Use the new CMake build system to build CP2K."""
 
     def cmake_args(self):
         spec = self.spec
