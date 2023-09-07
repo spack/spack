@@ -40,7 +40,7 @@ class Qscintilla(QMakePackage):
     # https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.12.0/ChangeLog
     conflicts("^qt@4", when="@2.12:")
 
-    build_directory = "src" # was Qt4Qt5 before 2.12.0
+    build_directory = "src"  # was Qt4Qt5 before 2.12.0
 
     def qmake_args(self):
         # below, DEFINES ... gets rid of ...regex...errors during build
