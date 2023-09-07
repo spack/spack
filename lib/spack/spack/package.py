@@ -96,6 +96,7 @@ from spack.package_base import (
     on_package_attributes,
 )
 from spack.spec import InvalidSpecDetected, Spec
+from spack.util.cpus import determine_number_of_jobs
 from spack.util.executable import *
 from spack.variant import (
     any_combination_of,

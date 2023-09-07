@@ -15,9 +15,9 @@ import archspec.cpu
 
 from llnl.util import tty
 
-import spack.build_environment
 import spack.environment
 import spack.tengine
+import spack.util.cpus
 import spack.util.executable
 from spack.environment import depfile
 
@@ -137,7 +137,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             "-C",
             str(self.environment_root()),
             "-j",
-            str(spack.build_environment.determine_number_of_jobs(parallel=True)),
+            str(spack.util.cpus.determine_number_of_jobs(parallel=True)),
             **kwargs,
         )
 
