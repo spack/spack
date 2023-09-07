@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import textwrap
 from itertools import zip_longest
 
@@ -66,14 +64,14 @@ def section_title(s):
 
 
 def version(s):
-    return spack.spec.version_color + s + plain_format
+    return spack.spec.VERSION_COLOR + s + plain_format
 
 
 def variant(s):
-    return spack.spec.enabled_variant_color + s + plain_format
+    return spack.spec.ENABLED_VARIANT_COLOR + s + plain_format
 
 
-class VariantFormatter(object):
+class VariantFormatter:
     def __init__(self, variants):
         self.variants = variants
         self.headers = ("Name [Default]", "When", "Allowed values", "Description")
@@ -351,7 +349,7 @@ def print_virtuals(pkg):
 
 def info(parser, args):
     spec = spack.spec.Spec(args.package)
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
 
     # Output core package information

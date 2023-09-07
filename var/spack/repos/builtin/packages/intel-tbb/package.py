@@ -184,7 +184,7 @@ class IntelTbb(CMakePackage, MakefilePackage):
         return find_libraries("libtbb*", root=self.prefix, shared=shared, recursive=True)
 
 
-class SetupEnvironment(object):
+class SetupEnvironment:
     # We set OS here in case the user has it set to something else
     # that TBB doesn't expect.
     def setup_build_environment(self, env):

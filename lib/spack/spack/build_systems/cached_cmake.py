@@ -162,17 +162,6 @@ class CachedCMakeBuilder(CMakeBuilder):
                 libs_string = libs_format_string.format(lang)
                 entries.append(cmake_cache_string(libs_string, libs_flags))
 
-        # Set the generator in the cached config
-        if self.spec.satisfies("generator=make"):
-            entries.append(cmake_cache_string("CMAKE_GENERATOR", "Unix Makefiles"))
-        if self.spec.satisfies("generator=ninja"):
-            entries.append(cmake_cache_string("CMAKE_GENERATOR", "Ninja"))
-            entries.append(
-                cmake_cache_string(
-                    "CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin)
-                )
-            )
-
         return entries
 
     def initconfig_mpi_entries(self):
@@ -312,7 +301,7 @@ class CachedCMakeBuilder(CMakeBuilder):
 
     @property
     def std_cmake_args(self):
-        args = super(CachedCMakeBuilder, self).std_cmake_args
+        args = super().std_cmake_args
         args.extend(["-C", self.cache_path])
         return args
 

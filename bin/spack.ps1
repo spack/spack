@@ -39,6 +39,20 @@ function Read-SpackArgs {
     return $SpackCMD_params, $SpackSubCommand, $SpackSubCommandArgs
 }
 
+function Set-SpackEnv {
+    # This method is responsible
+    # for processing the return from $(spack <command>)
+    # which are returned as System.Object[]'s containing
+    # a list of env commands
+    # Invoke-Expression can only handle one command at a time
+    # so we iterate over the list to invoke the env modification
+    # expressions one at a time
+    foreach($envop in $args[0]){
+        Invoke-Expression $envop
+    }
+}
+
+
 function Invoke-SpackCD {
     if (Compare-CommonArgs $SpackSubCommandArgs) {
         python $Env:SPACK_ROOT/bin/spack cd -h
@@ -79,7 +93,7 @@ function Invoke-SpackEnv {
                 }
                 else {
                     $SpackEnv = $(python $Env:SPACK_ROOT/bin/spack $SpackCMD_params env activate "--pwsh" $SubCommandSubCommandArgs)
-                    $ExecutionContext.InvokeCommand($SpackEnv)
+                    Set-SpackEnv $SpackEnv
                 }
             }
             "deactivate" {
@@ -90,8 +104,8 @@ function Invoke-SpackEnv {
                     python $Env:SPACK_ROOT/bin/spack env deactivate -h
                 }
                 else {
-                    $SpackEnv = $(python $Env:SPACK_ROOT/bin/spack $SpackCMD_params env deactivate --pwsh)
-                    $ExecutionContext.InvokeCommand($SpackEnv)
+                    $SpackEnv = $(python $Env:SPACK_ROOT/bin/spack $SpackCMD_params env deactivate "--pwsh")
+                    Set-SpackEnv $SpackEnv
                 }
             }
             default {python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs}
@@ -107,8 +121,9 @@ function Invoke-SpackLoad {
         python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
     }
     else {
+        # python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand "--pwsh" $SpackSubCommandArgs
         $SpackEnv = $(python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand "--pwsh" $SpackSubCommandArgs)
-        $ExecutionContext.InvokeCommand($SpackEnv)
+        Set-SpackEnv $SpackEnv
     }
 }
 

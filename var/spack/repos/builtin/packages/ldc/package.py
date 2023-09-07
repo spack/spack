@@ -24,7 +24,7 @@ class Ldc(CMakePackage):
     variant("shared", default=True, description="Build runtime and tooling as shared libs")
 
     depends_on("llvm@3.9:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libconfig")
     depends_on("curl")
     depends_on("libedit")

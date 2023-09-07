@@ -47,7 +47,7 @@ class Cube(AutotoolsPackage):
 
     depends_on("pkgconfig", type="build")
     depends_on("dbus")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("qt@5:", when="@4.3.0: +gui")
     depends_on("qt@4.8:", when="@4.2.0:4.2 +gui")

@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
@@ -21,7 +20,7 @@ install = spack.main.SpackCommand("install")
 #: Class of the writer tested in this module
 writer_cls = spack.modules.lmod.LmodModulefileWriter
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.fixture(params=["clang@=12.0.0", "gcc@=10.2.1"])
@@ -44,7 +43,7 @@ def provider(request):
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestLmod(object):
+class TestLmod:
     @pytest.mark.regression("37788")
     @pytest.mark.parametrize("modules_config", ["core_compilers", "core_compilers_at_equal"])
     def test_layout_for_specs_compiled_with_core_compilers(
@@ -232,6 +231,18 @@ class TestLmod(object):
         )
         assert help_msg in "".join(content)
 
+        content = modulefile_content("module-long-help target=core2")
+
+        help_msg = (
+            "help([[Name   : module-long-help]])"
+            "help([[Version: 1.0]])"
+            "help([[Target : core2]])"
+            "help()"
+            "help([[Package to test long description message generated in modulefile."
+            "Message too long is wrapped over multiple lines.]])"
+        )
+        assert help_msg in "".join(content)
+
     def test_exclude(self, modulefile_content, module_configuration):
         """Tests excluding the generation of selected modules."""
         module_configuration("exclude")
@@ -289,6 +300,26 @@ class TestLmod(object):
         module, spec = factory(mpileaks_spec_string)
         with pytest.raises(spack.modules.lmod.NonVirtualInHierarchyError):
             module.write()
+
+    def test_conflicts(self, modulefile_content, module_configuration):
+        """Tests adding conflicts to the module."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration("conflicts")
+        content = modulefile_content("mpileaks")
+
+        assert len([x for x in content if x.startswith("conflict")]) == 2
+        assert len([x for x in content if x == 'conflict("mpileaks")']) == 1
+        assert len([x for x in content if x == 'conflict("intel/14.0.1")']) == 1
+
+    def test_inconsistent_conflict_in_modules_yaml(self, modulefile_content, module_configuration):
+        """Tests inconsistent conflict definition in `modules.yaml`."""
+
+        # This configuration is inconsistent, check an error is raised
+        module_configuration("wrong_conflicts")
+        with pytest.raises(spack.modules.common.ModulesError):
+            modulefile_content("mpileaks")
 
     def test_override_template_in_package(self, modulefile_content, module_configuration):
         """Tests overriding a template from and attribute in the package."""

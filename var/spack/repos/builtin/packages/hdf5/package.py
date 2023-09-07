@@ -42,6 +42,11 @@ class Hdf5(CMakePackage):
     # Odd versions are considered experimental releases
     # Even versions are maintenance versions
     version(
+        "1.14.2",
+        sha256="1c342e634008284a8c2794c8e7608e2eaf26d01d445fb3dfd7f33cb2fb51ac53",
+        preferred=True,
+    )
+    version(
         "1.14.1-2",
         sha256="cbe93f275d5231df28ced9549253793e40cd2b555e3d288df09d7b89a9967b07",
         preferred=True,
@@ -127,6 +132,11 @@ class Hdf5(CMakePackage):
         preferred=True,
     )
     version(
+        "1.8.23",
+        sha256="37fa4eb6cd0e181eb49a10d54611cb00700e9537f805d03e6853503afe5abc27",
+        preferred=True,
+    )
+    version(
         "1.8.22",
         sha256="8406d96d9355ef8961d2739fb8fd5474ad4cdf52f3cfac657733defd9709bfaa",
         preferred=True,
@@ -208,7 +218,7 @@ class Hdf5(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
     depends_on("szip", when="+szip")
-    depends_on("zlib@1.1.2:")
+    depends_on("zlib-api")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     # Skip this on Windows since pkgconfig is autotools

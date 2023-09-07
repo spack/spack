@@ -8,8 +8,6 @@
 The YAML and JSON formats preserve DAG information in the spec.
 
 """
-from __future__ import print_function
-
 import ast
 import collections
 import collections.abc
@@ -328,9 +326,8 @@ def test_save_dependency_spec_jsons_subset(tmpdir, config):
         spec_a = Spec("a").concretized()
         b_spec = spec_a["b"]
         c_spec = spec_a["c"]
-        spec_a_json = spec_a.to_json()
 
-        save_dependency_specfiles(spec_a_json, output_path, ["b", "c"])
+        save_dependency_specfiles(spec_a, output_path, [Spec("b"), Spec("c")])
 
         assert check_specs_equal(b_spec, os.path.join(output_path, "b.json"))
         assert check_specs_equal(c_spec, os.path.join(output_path, "c.json"))

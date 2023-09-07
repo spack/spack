@@ -30,8 +30,6 @@ spack:
       variants: threads=openmp
     paraview:
       require: '@5.11 ~qt+osmesa'
-    python:
-      version: [3.7.15]
     trilinos:
       require:
       - one_of: [+amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext +ifpack

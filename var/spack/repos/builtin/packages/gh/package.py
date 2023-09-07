@@ -14,6 +14,7 @@ class Gh(Package):
 
     maintainers("lcnzg")
 
+    version("2.32.1", sha256="1d569dc82eb6520e6a8959568c2db84fea3bbaab2604c8dd5901849d320e1eae")
     version("2.28.0", sha256="cf3c0fb7f601d717d8b5177707a197c49fd426f5dc3c9aa52a932e96ba7166af")
     version("2.25.1", sha256="d3b28da03f49600697d2e80c2393425bd382e340040c34641bf3569593c7fbe8")
     version("2.25.0", sha256="b445dbb863643d30cc7991b134c694ea14492e7fac363a9e2648f245f67184f7")

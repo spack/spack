@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import email.message
 import os
+import pickle
+import urllib.request
 
 import pytest
 
@@ -12,6 +15,7 @@ import llnl.util.tty as tty
 import spack.config
 import spack.mirror
 import spack.paths
+import spack.util.path
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
@@ -222,12 +226,12 @@ def test_list_url(tmpdir):
     assert list_url(True) == ["dir/another-file.txt", "file-0.txt", "file-1.txt", "file-2.txt"]
 
 
-class MockPages(object):
+class MockPages:
     def search(self, *args, **kwargs):
         return [{"Key": "keyone"}, {"Key": "keytwo"}, {"Key": "keythree"}]
 
 
-class MockPaginator(object):
+class MockPaginator:
     def paginate(self, *args, **kwargs):
         return MockPages()
 
@@ -240,7 +244,7 @@ class MockClientError(Exception):
         }
 
 
-class MockS3Client(object):
+class MockS3Client:
     def get_paginator(self, *args, **kwargs):
         return MockPaginator()
 
@@ -267,7 +271,7 @@ class MockS3Client(object):
 
 
 def test_gather_s3_information(monkeypatch, capfd):
-    mirror = spack.mirror.Mirror.from_dict(
+    mirror = spack.mirror.Mirror(
         {
             "fetch": {
                 "access_token": "AAAAAAA",
@@ -338,3 +342,25 @@ def test_s3_url_exists(monkeypatch, capfd):
 def test_s3_url_parsing():
     assert spack.util.s3._parse_s3_endpoint_url("example.com") == "https://example.com"
     assert spack.util.s3._parse_s3_endpoint_url("http://example.com") == "http://example.com"
+
+
+def test_detailed_http_error_pickle(tmpdir):
+    tmpdir.join("response").write("response")
+
+    headers = email.message.Message()
+    headers.add_header("Content-Type", "text/plain")
+
+    # Use a temporary file object as a response body
+    with open(str(tmpdir.join("response")), "rb") as f:
+        error = spack.util.web.DetailedHTTPError(
+            urllib.request.Request("http://example.com"), 404, "Not Found", headers, f
+        )
+
+        deserialized = pickle.loads(pickle.dumps(error))
+
+    assert isinstance(deserialized, spack.util.web.DetailedHTTPError)
+    assert deserialized.code == 404
+    assert deserialized.filename == "http://example.com"
+    assert deserialized.reason == "Not Found"
+    assert str(deserialized.info()) == str(headers)
+    assert str(deserialized) == str(error)

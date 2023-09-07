@@ -252,7 +252,7 @@ class Curl(NMakePackage, AutotoolsPackage):
         ),
         multi=True,
     )
-    variant("nghttp2", default=False, description="build nghttp2 library (requires C++11)")
+    variant("nghttp2", default=True, description="build nghttp2 library (requires C++11)")
     variant("libssh2", default=False, description="enable libssh2 support")
     variant("libssh", default=False, description="enable libssh support", when="@7.58:")
     variant("gssapi", default=False, description="enable Kerberos support")
@@ -278,16 +278,19 @@ class Curl(NMakePackage, AutotoolsPackage):
     depends_on("mbedtls@2: +pic", when="@7.79: tls=mbedtls")
     depends_on("mbedtls@:2 +pic", when="@:7.78 tls=mbedtls")
     depends_on("nss", when="tls=nss")
-    depends_on("openssl", when="tls=openssl")
+
+    with when("tls=openssl"):
+        depends_on("openssl")
+        # Since https://github.com/curl/curl/commit/ee36e86ce8f77a017c49b8312814c33f4b969565
+        # there is OpenSSL 3 detection.
+        depends_on("openssl@:1", when="@:7.76")
+
     depends_on("libidn2", when="+libidn2")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("nghttp2", when="+nghttp2")
     depends_on("libssh2", when="+libssh2")
     depends_on("libssh", when="+libssh")
     depends_on("krb5", when="+gssapi")
-
-    # curl queries pkgconfig for openssl compilation flags
-    depends_on("pkgconfig", type="build")
 
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
@@ -333,7 +336,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         spec = self.spec
 
         args = [
-            "--with-zlib=" + spec["zlib"].prefix,
+            "--with-zlib=" + spec["zlib-api"].prefix,
             # Prevent unintentional linking against system libraries: we could
             # add variants for these in the future
             "--without-brotli",
@@ -422,7 +425,7 @@ class NMakeBuilder(NMakeBuilder):
         mode = "dll" if "libs=dll" in self.spec else "static"
         args.append("mode=%s" % mode)
         args.append("WITH_ZLIB=%s" % mode)
-        args.append("ZLIB_PATH=%s" % self.spec["zlib"].prefix)
+        args.append("ZLIB_PATH=%s" % self.spec["zlib-api"].prefix)
         if "+libssh" in self.spec:
             args.append("WITH_SSH=%s" % mode)
         if "+libssh2" in self.spec:
@@ -446,7 +449,7 @@ class NMakeBuilder(NMakeBuilder):
         args.append("WITH_PREFIX=%s" % self.prefix + "\\")
         return args
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         # Spack's env CC and CXX values will cause an error
         # if there is a path in the space, and escaping with
         # double quotes raises a syntax issues, instead

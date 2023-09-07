@@ -29,6 +29,8 @@ class PyTomopy(PythonPackage):
     depends_on("ninja", type=("build"))
     depends_on("py-setuptools-scm", type=("build"))
     depends_on("py-setuptools-scm-git-archive", type=("build"))
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
     # Note: The module name of py-scikit-build is skbuild:
     depends_on("py-scikit-build", type=("build"))
     depends_on("py-scikit-image@0.17:", type=("build", "run"))

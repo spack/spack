@@ -17,7 +17,7 @@ class Windows(Platform):
     priority = 101
 
     def __init__(self):
-        super(Windows, self).__init__("windows")
+        super().__init__("windows")
 
         for name in archspec.cpu.TARGETS:
             self.add_target(name, spack.target.Target(name))
