@@ -7,7 +7,7 @@ from spack.package import *
 from spack.pkg.builtin.kokkos import Kokkos
 
 
-class Cabana(CMakePackage):
+class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     """The Exascale Co-Design Center for Particle Applications Toolkit"""
 
     homepage = "https://github.com/ECP-copa/Cabana"
@@ -53,9 +53,24 @@ class Cabana(CMakePackage):
                 _kk_spec = "kokkos-legacy+pthreads"
             elif _kk_version == "-legacy" and _backend not in ["serial", "openmp", "cuda"]:
                 continue
+            # Handled separately by Cuda/ROCmPackage below
+            elif _backend == "cuda" or _backend == "hip":
+                continue
             else:
                 _kk_spec = "kokkos{0}+{1}".format(_kk_version, _backend)
             depends_on(_kk_spec, when="@{0}+{1}".format(_version, _backend))
+
+    for arch in CudaPackage.cuda_arch_values:
+        cuda_dep = "+cuda cuda_arch={0}".format(arch)
+        depends_on("kokkos {0}".format(cuda_dep), when=cuda_dep)
+
+    for arch in ROCmPackage.amdgpu_targets:
+        rocm_dep = "+rocm amdgpu_target={0}".format(arch)
+        depends_on("kokkos {0}".format(rocm_dep), when=rocm_dep)
+
+    conflicts("+cuda", when="cuda_arch=none")
+    depends_on("kokkos+cuda_lambda", when="+cuda")
+
     depends_on("arborx", when="@0.3.0:+arborx")
     depends_on("hypre-cmake@2.22.0:", when="@0.4.0:+hypre")
     depends_on("hypre-cmake@2.22.1:", when="@0.5.0:+hypre")
