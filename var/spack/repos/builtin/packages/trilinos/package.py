@@ -168,10 +168,18 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     # External package options
+    variant("binder", default=False, description="Enable Binder")
     variant("dtk", default=False, description="Enable DataTransferKit (deprecated)")
+    variant("mesquite", default=False, description="Enable Mesquite (deprecated)") 
     variant("scorec", default=False, description="Enable SCOREC")
-    variant("mesquite", default=False, description="Enable Mesquite (deprecated)")
 
+    resource(
+	name"binder",
+	git="https://github.com/RosettaCommons/binder.git",
+	commit="xxx", #tag v1.3.0
+	placement="packages/binder",
+	when="+binder",
+    )
     resource(
         name="dtk",
         git="https://github.com/ornl-cees/DataTransferKit.git",
