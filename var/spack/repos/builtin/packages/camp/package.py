@@ -32,6 +32,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     # TODO: figure out gtest dependency and then set this default True.
     variant("tests", default=False, description="Build tests")
     variant("openmp", default=False, description="Build with OpenMP support")
+    variant("mpi", default=False, description="Only used to export BLT MPI targets")
 
     depends_on("cub", when="+cuda")
 
@@ -70,6 +71,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
         else:
             options.append("-DENABLE_HIP=OFF")
 
+        options.append(self.define_from_variant("ENABLE_MPI", "mpi"))
         options.append(self.define_from_variant("ENABLE_OPENMP", "openmp"))
         options.append(self.define_from_variant("ENABLE_TESTS", "tests"))
 
