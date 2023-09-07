@@ -734,8 +734,9 @@ debugtrigger.
 %  activate_requirement(node(NodeID, "zlib"), X),
 %  condition_requirement(Y, "node_flag", "zlib", "cflags", "-g").
 
-% This is the same as the previous stanza, minus the last check.
-% It triggers a failure, so I know these things are true.
+% This triggers a failure, so I know these things are true.
+% This is the same as the stanza directly above, minus the last
+% constraint.
 %:- imposed_packages(NodeID, "zlib"),
 %  requirement_group_member(Y, "zlib", X),
 %  activate_requirement(node(NodeID, "zlib"), X).
