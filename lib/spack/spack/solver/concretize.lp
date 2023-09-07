@@ -716,11 +716,21 @@ debugtrigger.
   activate_requirement(node(_, "zlib"), X),
   not debugtrigger.
 
+% This does not trigger a failure. Given the next stanza, this means
+% the condition_requirement should not hold.
 :- imposed_packages(NodeID, "zlib"),
   requirement_group_member(Y, "zlib", X),
   activate_requirement(node(NodeID, "zlib"), X),
-  condition_requirement(node(NodeID, "zlib"),"node_flag", A1, A2, A3).
+  condition_requirement(Y, "node_flag", "zlib", "cflags", "-g").
 
+% This is the same as the previous stanza, minus the last check.
+% It triggers a failure, so I know these things are true.
+%:- imposed_packages(NodeID, "zlib"),
+%  requirement_group_member(Y, "zlib", X),
+%  activate_requirement(node(NodeID, "zlib"), X).
+
+% This triggers a failure, which means it is true *somewhere*
+%:- condition_requirement(_, "node_flag", "zlib", "cflags", "-g").
 
 %ORIGINAL CONSTRAINT
 %attr("node_flag_source", node(ID, A1), A2, node(ID, A3)) :-
