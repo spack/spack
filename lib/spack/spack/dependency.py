@@ -94,6 +94,7 @@ class Dependency:
         pkg: "spack.package_base.PackageBase",
         spec: "spack.spec.Spec",
         type: Optional[Tuple[str, ...]] = default_deptype,
+        explicit: None,
     ):
         """Create a new Dependency.
 
@@ -106,6 +107,7 @@ class Dependency:
 
         self.pkg = pkg
         self.spec = spec.copy()
+        self.explicit = explicit
 
         # This dict maps condition specs to lists of Patch objects, just
         # as the patches dict on packages does.

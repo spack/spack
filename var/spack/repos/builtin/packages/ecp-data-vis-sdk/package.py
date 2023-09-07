@@ -9,7 +9,7 @@ from spack.package import *
 # Wrapper around depends_on to propagate dependency variants
 def dav_sdk_depends_on(spec, when=None, propagate=None):
     # Do the basic depends_on
-    depends_on(spec, when=when)
+    depends_on(spec, when=when, explicit=True)
 
     # Strip spec string to just the base spec name
     # ie. A +c ~b -> A
@@ -166,7 +166,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     # releases 0.8 and ascent can build with conduit@0.8: and vtk-m@1.7:
     conflicts("^ascent@develop", when="+ascent")
 
-    depends_on("py-cinemasci", when="+cinema")
+    dav_sdk_depends_on("py-cinemasci", when="+cinema")
 
     # ParaView needs @5.11: in order to use CUDA/ROCM, therefore it is the minimum
     # required version since GPU capability is desired for ECP

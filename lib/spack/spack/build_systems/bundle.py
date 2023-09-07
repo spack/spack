@@ -6,6 +6,8 @@ import spack.builder
 import spack.directives
 import spack.package_base
 
+from typing import Tuple
+
 
 class BundlePackage(spack.package_base.PackageBase):
     """General purpose bundle, or no-code, package class."""
@@ -21,6 +23,16 @@ class BundlePackage(spack.package_base.PackageBase):
     has_code = False
 
     spack.directives.build_system("bundle")
+
+    phases: Tuple[str, ...] = ("promote")
+
+    def promote(self, spec, prefix):
+        # Update the explicit dependencies
+        for _, cond_dict in self.dependencies.items():
+            for cond, dep in cond_dict.items():
+                if dep.explicit and cond in spec:
+                    spack.store.db.update_explicit(spec[dep.spec.name], True)
+
 
 
 @spack.builder.builder("bundle")
