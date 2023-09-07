@@ -735,10 +735,8 @@ attr("node_flag", node(NodeID1, A1), A2, A3) :-
 { attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
   requirement_group_member(Y, A1, X),
   activate_requirement(node(NodeID1, A1), X),
-  pkg_fact(A1, condition_trigger(Y, Z)),
-  condition_requirement(Z,"node_flag_source", A1, A2, A3),
-  %pkg_fact(A1, condition_effect(Y, Z)),
-  %imposed_constraint(Z,"node_flag_source", A1, A2, A3),
+  pkg_fact(A1, condition_effect(Y, Z)),
+  imposed_constraint(Z,"node_flag_source", A1, A2, A3),
   imposed_packages(NodeID2, A3).
 
 %{ attr("node_flag", node(NodeID1, A1), A2, A3) } :-
