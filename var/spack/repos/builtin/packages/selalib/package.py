@@ -23,7 +23,7 @@ class Selalib(CMakePackage):
     variant("compression", default=False)
 
     requires(
-        "%gcc@10.0.0:", 
+        "%gcc@9.0.0:",
         "%clang@16.0.0:",
         "%intel@18.0:",
         "%oneapi@18.0:",
