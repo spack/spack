@@ -139,6 +139,8 @@ class Cray(Platform):
         # If no default version, sort available versions and return latest
         versions_available = [spack.version.Version(v) for v in os.listdir(craype_dir)]
         versions_available.sort(reverse=True)
+        if not versions_available:
+            return (craype_type, None)
         return (craype_type, versions_available[0])
 
     @classmethod
