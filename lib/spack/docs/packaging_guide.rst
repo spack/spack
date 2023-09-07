@@ -643,7 +643,7 @@ add a line like this in the package class:
 
 .. note::
 
-   Versions should be listed in descending order, from newest to oldest.
+   By convention, we list versions in descending order, from newest to oldest.
 
 .. note::
 
