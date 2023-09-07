@@ -110,6 +110,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
         return [
             "--enable-kernel=4.4.1",
             "--with-headers={}".format(self.spec["linux-headers"].prefix.include),
+            "--without-selinux",
         ]
 
     def build(self, spec, prefix):
