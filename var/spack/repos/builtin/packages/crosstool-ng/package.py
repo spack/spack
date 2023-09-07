@@ -19,8 +19,6 @@ class CrosstoolNg(AutotoolsPackage):
 
     version("1.25.0", sha256="68162f342243cd4189ed7c1f4e3bb1302caa3f2cbbf8331879bd01fe06c60cd3")
 
-    depends_on("bison")
-    depends_on("flex")
     depends_on("ncurses")
 
     depends_on("bash", type=("build", "run"))
@@ -37,6 +35,8 @@ class CrosstoolNg(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
 
+    depends_on("bison", type="build")
+    depends_on("flex", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("grep", type="build")
     depends_on("help2man", type="build")
