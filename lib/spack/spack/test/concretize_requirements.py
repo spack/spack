@@ -477,7 +477,6 @@ packages:
     require: cflags="-g"
 """
     update_packages_config(conf_str)
-
     spec = Spec("y").concretized()
     assert spec.satisfies("cflags=-g")
 
