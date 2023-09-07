@@ -34,7 +34,9 @@ from .common import (
 )
 
 #: Timeout used for package detection (seconds)
-DETECTION_TIMEOUT = 10
+DETECTION_TIMEOUT = 60
+if sys.platform == "win32":
+    DETECTION_TIMEOUT = 120
 
 
 def common_windows_package_paths() -> List[str]:
