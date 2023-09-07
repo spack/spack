@@ -28,11 +28,30 @@ def executables_found(monkeypatch):
     return _factory
 
 
+@pytest.fixture(scope="module")
+def limit_search_to_path(monkeypatch):
+    """Pytest fixture that prevents the use of default search paths on Windows during testing"""
+
+    def _mock_windows_search_paths(pkg):
+        return []
+
+    monkeypatch.setattr(
+        spack.detection.common, "compute_windows_user_path_for_package", _mock_windows_search_paths
+    )
+    monkeypatch.setattr(
+        spack.detection.common,
+        "compute_windows_program_path_for_package",
+        _mock_windows_search_paths,
+    )
+    monkeypatch.setattr(
+        spack.detection.path, "common_windows_package_paths", _mock_windows_search_paths
+    )
+
+
 def define_plat_exe(exe):
     if sys.platform == "win32":
         exe += ".bat"
     return exe
-
 
 
 def test_find_external_single_package(mock_executable):
@@ -46,7 +65,7 @@ def test_find_external_single_package(mock_executable):
     assert len(detected_spec) == 1 and detected_spec[0].spec == Spec("cmake@1.foo")
 
 
-def test_find_external_two_instances_same_package(mock_executable, _platform_executables):
+def test_find_external_two_instances_same_package(mock_executable):
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
     # we need to avoid that for proper regex.
@@ -228,8 +247,7 @@ def test_list_detectable_packages(mutable_config, mutable_mock_repo):
     assert external.returncode == 0
 
 
-
-def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _platform_executables):
+def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     prefix = os.path.dirname(gcc_exe)
@@ -253,7 +271,7 @@ def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _pla
     assert extra_attributes["compilers"]["c"] == str(gcc_exe)
 
 
-def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platform_executables):
+def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     search_dir = gcc_exe.parent
 
@@ -274,10 +292,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     assert gcc.external_path == os.path.sep + os.path.join("opt", "gcc", "bin")
 
 
-
-def test_new_entries_are_reported_correctly(
-    mock_executable, mutable_config, monkeypatch, _platform_executables
-):
+def test_new_entries_are_reported_correctly(mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     prefix = os.path.dirname(gcc_exe)

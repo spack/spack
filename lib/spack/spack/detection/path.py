@@ -40,6 +40,12 @@ if sys.platform == "win32":
 
 
 def common_windows_package_paths() -> List[str]:
+    """Get the paths for common package installation location on Windows
+    that are outside the PATH
+    Returns [] on unix
+    """
+    if sys.platform != "win32":
+        return []
     paths = WindowsCompilerExternalPaths.find_windows_compiler_bundled_packages()
     paths.extend(find_win32_additional_install_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
@@ -62,8 +68,6 @@ def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
         path_hints: list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    if sys.platform == "win32":
-        path_hints.extend(common_windows_package_paths())
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
     return path_to_dict(search_paths)
 
@@ -100,18 +104,17 @@ def libraries_in_ld_and_system_library_path(
 
 
 def libraries_in_windows_paths(path_hints: List[str]) -> Dict[str, str]:
-    path_hints.extend(spack.util.environment.get_path("PATH"))
-    search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
+    search_hints = path_hints or spack.util.environment.get_path("PATH")
+    search_paths = llnl.util.filesystem.search_paths_for_libraries(*search_hints)
     # on Windows, some libraries (.dlls) are found in the bin directory or sometimes
     # at the search root. Add both of those options to the search scheme
-    search_paths.extend(llnl.util.filesystem.search_paths_for_executables(*path_hints))
-    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
-    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
-    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
-    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
-    # SDK and WGL should be handled by above, however on occasion the WDK is in an atypical
-    # location, so we handle that case specifically.
-    search_paths.extend(WindowsKitExternalPaths.find_windows_driver_development_kit_paths())
+    search_paths.extend(llnl.util.filesystem.search_paths_for_executables(*search_hints))
+    if not path_hints:
+        # if no user provided path was given, add defaults to the search
+        search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
+        # SDK and WGL should be handled by above, however on occasion the WDK is in an atypical
+        # location, so we handle that case specifically.
+        search_paths.extend(WindowsKitExternalPaths.find_windows_driver_development_kit_paths())
     return path_to_dict(search_paths)
 
 
@@ -124,20 +127,6 @@ def _group_by_prefix(paths: Set[str]) -> Dict[str, Set[str]]:
 
 class Finder:
     """Inspects the file-system looking for packages. Guesses places where to look using PATH."""
-
-    def path_hints(
-        self, *, pkg: "spack.package_base.PackageBase", initial_guess: Optional[List[str]] = None
-    ) -> List[str]:
-        """Returns the list of paths to be searched.
-
-        Args:
-            pkg: package being detected
-            initial_guess: initial list of paths from caller
-        """
-        result = initial_guess or []
-        result.extend(compute_windows_user_path_for_package(pkg))
-        result.extend(compute_windows_program_path_for_package(pkg))
-        return result
 
     def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
         """Returns the list of patterns used to match candidate files.
@@ -252,8 +241,14 @@ class Finder:
         patterns = self.search_patterns(pkg=pkg_cls)
         if not patterns:
             return []
-        path_hints = self.path_hints(pkg=pkg_cls, initial_guess=initial_guess)
-        candidates = self.candidate_files(patterns=patterns, paths=path_hints)
+        if not initial_guess:
+            initial_guess = (
+                spack.util.environment.get_path("PATH") if initial_guess is None else initial_guess
+            )
+            initial_guess.extend(common_windows_package_paths())
+            initial_guess.extend(compute_windows_user_path_for_package(pkg_cls))
+            initial_guess.extend(compute_windows_program_path_for_package(pkg_cls))
+        candidates = self.candidate_files(patterns=patterns, paths=initial_guess)
         result = self.detect_specs(pkg=pkg_cls, paths=candidates)
         return result
 
@@ -334,10 +329,6 @@ def by_path(
     # TODO: Packages should be able to define both .libraries and .executables in the future
     # TODO: determine_spec_details should get all relevant libraries and executables in one call
     executables_finder, libraries_finder = ExecutablesFinder(), LibrariesFinder()
-
-    executables_path_guess = (
-        spack.util.environment.get_path("PATH") if path_hints is None else path_hints
-    )
     libraries_path_guess = [] if path_hints is None else path_hints
     detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
 
@@ -345,7 +336,7 @@ def by_path(
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         for pkg in packages_to_search:
             executable_future = executor.submit(
-                executables_finder.find, pkg_name=pkg, initial_guess=executables_path_guess
+                executables_finder.find, pkg_name=pkg, initial_guess=path_hints
             )
             library_future = executor.submit(
                 libraries_finder.find, pkg_name=pkg, initial_guess=libraries_path_guess
