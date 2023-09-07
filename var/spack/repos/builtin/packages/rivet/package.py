@@ -18,6 +18,7 @@ class Rivet(AutotoolsPackage):
 
     tags = ["hep"]
 
+    version("3.1.8", sha256="75b3f3d419ca6388d1fd2ec0eda7e1f90f324b996ccf0591f48a5d2e28dccc13")
     version("3.1.7", sha256="27c7dbbcb5fd7ee81caf136daf4e960bca0ec255d9fa1abe602f4d430861b27a")
     version("3.1.6", sha256="1cf6ebb6a79d181c441d1d0c7c6d623c423817c61093f36f21adaae23e679090")
     version("3.1.4", sha256="37edc80a2968ce1031589e43ba6b492877ca7901bea38f8bb7536a5c8cf8100d")
