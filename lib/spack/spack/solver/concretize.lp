@@ -700,23 +700,6 @@ attr("node_flag", node(NodeID1, A1), A2, A3) :-
   pkg_fact(A1, condition_trigger(Y, Z)),
   condition_requirement(Z,"node_flag", A1, A2, A3).
 
-%:- not activate_requirement(node(_, "zlib"), _).
-
-:- requirement_group_member(Y, "zlib", X),
-  not activate_requirement(node(_, "zlib"), X).
-
-%triggers
-%debugtrigger :- imposed_constraint(_, "node_flag_set", "zlib", "cflags", "-g").
-%triggers 
-%debugtrigger :- condition_requirement(_, "node_flag", "zlib", "cflags", "-g").
-%does not trigger
-%debugtrigger :- imposed_constraint(_, "node_flag", "zlib", "cflags", "-g").
-debugtrigger.
-
-:- requirement_group_member(Y, "zlib", X),
-  activate_requirement(node(_, "zlib"), X),
-  not debugtrigger.
-
 % This triggers a failure, so "corrects" the below stanzas by
 % accounting for the indirection between requirement group member
 % and condition requirement
