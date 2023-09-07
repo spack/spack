@@ -14,8 +14,8 @@ well together, such as a collection of commonly used software libraries.
 The associated software is specified as dependencies.
 
 If it makes sense, variants, conflicts, and requirements can be added to
-the package. :ref:`Variants <variants>` Variants ensure that common build
-options are consistent across the packages supporting them.  :ref:`Conflicts
+the package. :ref:`Variants <variants>` ensure that common build options
+are consistent across the packages supporting them.  :ref:`Conflicts
 and requirements <packaging_conflicts>` prevent attempts to build with known
 bugs or limitations.
 
