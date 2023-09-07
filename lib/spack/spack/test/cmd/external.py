@@ -42,45 +42,34 @@ def define_plat_exe(exe):
     return exe
 
 
-def test_find_external_single_package(mock_executable, executables_found, _platform_executables):
-    pkgs_to_check = ["cmake"]
+def test_find_external_single_package(mock_executable):
     cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
-    executables_found({str(cmake_path): define_plat_exe("cmake")})
+    search_dir = cmake_path.parent.parent
 
-    pkg_to_entries = spack.detection.by_path(pkgs_to_check)
+    specs_by_package = spack.detection.by_path(["cmake"], path_hints=[str(search_dir)])
 
-    pkg, entries = next(iter(pkg_to_entries.items()))
-    single_entry = next(iter(entries))
+    assert len(specs_by_package) == 1 and "cmake" in specs_by_package
+    detected_spec = specs_by_package["cmake"]
+    assert len(detected_spec) == 1 and detected_spec[0].spec == Spec("cmake@1.foo")
 
-    assert single_entry.spec == Spec("cmake@1.foo")
 
-
-def test_find_external_two_instances_same_package(
-    mock_executable, executables_found, _platform_executables
-):
-    pkgs_to_check = ["cmake"]
-
+def test_find_external_two_instances_same_package(mock_executable, _platform_executables):
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
     # we need to avoid that for proper regex.
-    cmake_path1 = mock_executable(
-        "cmake", output="echo cmake version 1.foo", subdir=("base1", "bin")
-    )
-    cmake_path2 = mock_executable(
-        "cmake", output="echo cmake version 3.17.2", subdir=("base2", "bin")
-    )
-    cmake_exe = define_plat_exe("cmake")
-    executables_found({str(cmake_path1): cmake_exe, str(cmake_path2): cmake_exe})
+    cmake1 = mock_executable("cmake", output="echo cmake version 1.foo", subdir=("base1", "bin"))
+    cmake2 = mock_executable("cmake", output="echo cmake version 3.17.2", subdir=("base2", "bin"))
+    search_paths = [str(cmake1.parent.parent), str(cmake2.parent.parent)]
 
-    pkg_to_entries = spack.detection.by_path(pkgs_to_check)
+    specs_by_package = spack.detection.by_path(["cmake"], path_hints=search_paths)
 
-    pkg, entries = next(iter(pkg_to_entries.items()))
-    spec_to_path = dict((e.spec, e.prefix) for e in entries)
+    assert len(specs_by_package) == 1 and "cmake" in specs_by_package
+    spec_to_path = {e.spec: e.prefix for e in specs_by_package["cmake"]}
     assert spec_to_path[Spec("cmake@1.foo")] == (
-        spack.detection.executable_prefix(os.path.dirname(cmake_path1))
+        spack.detection.executable_prefix(str(cmake1.parent))
     )
     assert spec_to_path[Spec("cmake@3.17.2")] == (
-        spack.detection.executable_prefix(os.path.dirname(cmake_path2))
+        spack.detection.executable_prefix(str(cmake2.parent))
     )
 
 
@@ -138,25 +127,8 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
     os.environ["PATH"] = os.pathsep.join([os.path.dirname(cmake_path1)])
     external("find", "--not-buildable", "cmake")
     pkgs_cfg = spack.config.get("packages")
+    assert "cmake" in pkgs_cfg
     assert not pkgs_cfg["cmake"]["buildable"]
-
-
-def test_find_external_cmd_full_repo(
-    mutable_config, working_env, mock_executable, mutable_mock_repo, _platform_executables
-):
-    """Test invoking 'spack external find' with no additional arguments, which
-    iterates through each package in the repository.
-    """
-    exe_path1 = mock_executable("find-externals1-exe", output="echo find-externals1 version 1.foo")
-    prefix = os.path.dirname(os.path.dirname(exe_path1))
-    os.environ["PATH"] = os.pathsep.join([os.path.dirname(exe_path1)])
-    external("find", "--all")
-
-    pkgs_cfg = spack.config.get("packages")
-    pkg_cfg = pkgs_cfg["find-externals1"]
-    pkg_externals = pkg_cfg["externals"]
-
-    assert {"spec": "find-externals1@1.foo", "prefix": prefix} in pkg_externals
 
 
 def test_find_external_cmd_exclude(
@@ -337,11 +309,8 @@ def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _pla
 
 
 def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platform_executables):
-    # Prepare an environment to detect a fake gcc that
-    # override its external prefix
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
-    prefix = os.path.dirname(gcc_exe)
-    monkeypatch.setenv("PATH", prefix)
+    search_dir = gcc_exe.parent
 
     @classmethod
     def _determine_variants(cls, exes, version_str):
@@ -350,16 +319,14 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     gcc_cls = spack.repo.PATH.get_pkg_class("gcc")
     monkeypatch.setattr(gcc_cls, "determine_variants", _determine_variants)
 
-    # Find the external spec
-    external("find", "gcc")
+    finder = spack.detection.path.ExecutablesFinder()
+    detected_specs = finder.find(pkg_name="gcc", initial_guess=[str(search_dir)])
 
-    # Check entries in 'packages.yaml'
-    packages_yaml = spack.config.get("packages")
-    assert "gcc" in packages_yaml
-    assert "externals" in packages_yaml["gcc"]
-    externals = packages_yaml["gcc"]["externals"]
-    assert len(externals) == 1
-    assert externals[0]["prefix"] == os.path.sep + os.path.join("opt", "gcc", "bin")
+    assert len(detected_specs) == 1
+
+    gcc = detected_specs[0].spec
+    assert gcc.name == "gcc"
+    assert gcc.external_path == os.path.sep + os.path.join("opt", "gcc", "bin")
 
 
 def test_new_entries_are_reported_correctly(

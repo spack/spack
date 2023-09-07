@@ -6,6 +6,7 @@ import argparse
 import errno
 import os
 import sys
+from typing import List, Optional
 
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
@@ -131,16 +132,9 @@ def external_find(args):
         # If the user didn't specify anything, search for build tools by default
         args.tags = ["core-packages", "build-tools"]
 
-    candidate_packages = []
-    for current_tag in args.tags:
-        candidate_packages.extend(spack.repo.PATH.packages_with_tags(current_tag))
-
-    if args.packages:
-        candidate_packages = [x for x in candidate_packages if x in args.packages]
-
-    if args.exclude:
-        candidate_packages = [x for x in candidate_packages if x not in args.exclude]
-
+    candidate_packages = packages_to_search_for(
+        names=args.packages, tags=args.tags, exclude=args.exclude
+    )
     detected_packages = spack.detection.by_path(
         candidate_packages, path_hints=args.path, max_workers=args.jobs
     )
@@ -155,6 +149,19 @@ def external_find(args):
         spack.cmd.display_specs(new_entries)
     else:
         tty.msg("No new external packages detected")
+
+
+def packages_to_search_for(
+    *, names: Optional[List[str]], tags: List[str], exclude: Optional[List[str]]
+):
+    result = []
+    for current_tag in tags:
+        result.extend(spack.repo.PATH.packages_with_tags(current_tag))
+    if names:
+        result = [x for x in result if x in names]
+    if exclude:
+        result = [x for x in result if x not in exclude]
+    return result
 
 
 def external_read_cray_manifest(args):
