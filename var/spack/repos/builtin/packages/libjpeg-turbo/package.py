@@ -67,12 +67,12 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
 
     patch(
         "https://github.com/libjpeg-turbo/libjpeg-turbo/commit/09c71da06a6346dca132db66f26f959f7e4dd5ad.patch?full_index=1",
-        sha256="8fb7cba4e278938dfbca99d8a3e4945a9dc6fb2bb77b3b1f0bf60b7f981c0f8d",
+        sha256="4d5bdfb5de5b04399144254ea383f5357ab7beb830b398aeb35b65f21dd6b4b0",
         when="@2.0.6 +partial_decoder",
     )
     patch(
         "https://github.com/libjpeg-turbo/libjpeg-turbo/commit/640d7ee1917fcd3b6a5271aa6cf4576bccc7c5fb.patch?full_index=1",
-        sha256="f737d8959f5cf45ebaab60ac3e13fed3c3c6e05b5b8b9d2290d988509c1c9c7d",
+        sha256="dc1ec567c2356b652100ecdc28713bbf25f544e46f7d2947f31a2395c362cc48",
         when="@2.0.6 +partial_decoder",
     )
 

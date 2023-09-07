@@ -115,7 +115,7 @@ class Mivisionx(CMakePackage):
     variant("opencl", default=False, description="Use OPENCL as the backend")
     variant("hip", default=True, description="Use HIP as backend")
     variant("add_tests", default=False, description="add tests and samples folder")
-    patch("0001-add-half-include-path.patch", when="+add_tests")
+    patch("0001-add-half-include-path.patch", when="@5.5:")
 
     def patch(self):
         if self.spec.satisfies("@4.2.0"):
@@ -282,8 +282,8 @@ class Mivisionx(CMakePackage):
     depends_on("miopengemm@1.1.6", when="@1.7+opencl")
     depends_on("openssl", when="@4.0.0:")
     depends_on("libjpeg-turbo@2.0.6+partial_decoder", type="build")
-    depends_on("rpp")
-    depends_on("lmdb")
+    depends_on("rpp", when="@5.5:")
+    depends_on("lmdb", when="@5.5:")
     depends_on("py-protobuf@3.20.3+cpp", type=("build", "run"), when="+add_tests")
     depends_on("py-future", when="+add_tests")
     depends_on("py-numpy", when="+add_tests")
@@ -365,14 +365,7 @@ class Mivisionx(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         protobuf = spec["protobuf"].prefix.include
-        args = [
-            self.define("CMAKE_CXX_FLAGS", "-I{0}".format(protobuf)),
-            self.define("AMDRPP_LIBRARIES", "{0}/lib/librpp.so".format(spec["rpp"].prefix)),
-            self.define("AMDRPP_INCLUDE_DIRS", "{0}/include/rpp".format(spec["rpp"].prefix)),
-            self.define(
-                "TurboJpeg_LIBRARIES_DIRS", "{0}/lib64".format(spec["libjpeg-turbo"].prefix)
-            ),
-        ]
+        args = [self.define("CMAKE_CXX_FLAGS", "-I{0}".format(protobuf))]
         if self.spec.satisfies("+opencl"):
             args.append(self.define("BACKEND", "OPENCL"))
             args.append(self.define("HSA_PATH", spec["hsa-rocr-dev"].prefix))
@@ -382,6 +375,18 @@ class Mivisionx(CMakePackage):
             args.append(self.define("HIP_PATH", spec["hip"].prefix))
         if self.spec.satisfies("~hip~opencl"):
             args.append(self.define("BACKEND", "CPU"))
+        if "@5.5:" in self.spec:
+            args.append(
+                self.define("AMDRPP_LIBRARIES", "{0}/lib/librpp.so".format(spec["rpp"].prefix))
+            )
+            args.append(
+                self.define("AMDRPP_INCLUDE_DIRS", "{0}/include/rpp".format(spec["rpp"].prefix))
+            )
+            args.append(
+                self.define(
+                    "TurboJpeg_LIBRARIES_DIRS", "{0}/lib64".format(spec["libjpeg-turbo"].prefix)
+                )
+            )
         return args
 
     @run_after("install")
