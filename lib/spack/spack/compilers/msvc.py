@@ -154,7 +154,7 @@ class Msvc(Compiler):
 
     #: Regex used to extract version from compiler's output
     version_regex = r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
-    suffixes = [".exe", ".bat"]
+    suffixes = [""]
     # Initialize, deferring to base class but then adding the vcvarsallfile
     # file based on compiler executable path.
 

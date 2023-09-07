@@ -9,6 +9,7 @@ import os
 import platform
 import re
 import shutil
+import sys
 import tempfile
 from typing import List, Optional, Sequence
 
@@ -602,7 +603,14 @@ class Compiler:
         # defined for the compiler
         compiler_names = getattr(cls, "{0}_names".format(language))
         prefixes = [""] + cls.prefixes
-        suffixes = [""] + cls.suffixes
+        suffixes = [""]
+        if sys.platform == "win32":
+            ext = r"\.(?:exe|bat)"
+            cls_suf = [suf + ext for suf in cls.suffixes]
+            ext_suf = [ext]
+            suffixes = suffixes + cls.suffixes + cls_suf + ext_suf
+        else:
+            suffixes = suffixes + cls.suffixes
         regexp_fmt = r"^({0}){1}({2})$"
         return [
             re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))

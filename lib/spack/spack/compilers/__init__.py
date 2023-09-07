@@ -333,7 +333,7 @@ def supported_compilers_for_platform(platform: str):
         return name if name != "apple_clang" else "apple-clang"
 
     return sorted(
-        name
+        replace_apple_clang(name)
         for name in llnl.util.lang.list_modules(spack.paths.compilers_path)
         if class_for_compiler_name(replace_apple_clang(name)).supported_platforms(platform)
     )
@@ -655,7 +655,7 @@ def arguments_to_detect_version_fn(operating_system, paths):
     def _default(search_paths):
         command_arguments = []
         files_to_be_tested = fs.files_in(*search_paths)
-        for compiler_name in spack.compilers.supported_compilers():
+        for compiler_name in spack.compilers.supported_compilers_for_host_platform():
             compiler_cls = class_for_compiler_name(compiler_name)
 
             for language in ("cc", "cxx", "f77", "fc"):
