@@ -16,7 +16,7 @@ class PyAniso8601(PythonPackage):
     version("7.0.0", sha256="513d2b6637b7853806ae79ffaca6f3e8754bdd547048f5ccc1420aec4b714f1e")
     version("3.0.2", sha256="7849749cf00ae0680ad2bdfe4419c7a662bef19c03691a19e008c8b9a5267802")
 
-    depends_on("python@3.4:3.9", type=("build","run"), when="@9.0.1")
-    depends_on("python@3.4:3.7", type=("build","run"), when="@7.0.0")
-    depends_on("python@3.4:3.6", type=("build","run"), when="@3.0.2")
+    depends_on("python@3.4:3.9", type=("build", "run"), when="@9.0.1")
+    depends_on("python@3.4:3.7", type=("build", "run"), when="@7.0.0")
+    depends_on("python@3.4:3.6", type=("build", "run"), when="@3.0.2")
     depends_on("py-setuptools", type="build")
