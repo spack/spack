@@ -16,6 +16,8 @@ class Openscenegraph(CMakePackage):
     git = "https://github.com/openscenegraph/OpenSceneGraph.git"
     url = "https://github.com/openscenegraph/OpenSceneGraph/archive/OpenSceneGraph-3.6.4.tar.gz"
 
+    maintainers("aumuell")
+
     version("master", branch="master")
     version("stable", branch="OpenSceneGraph-3.6")
     version("3.6.5", sha256="aea196550f02974d6d09291c5d83b51ca6a03b3767e234a8c0e21322927d1e12")
