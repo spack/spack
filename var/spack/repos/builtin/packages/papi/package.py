@@ -93,9 +93,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
             env.set("PAPI_ROCM_ROOT", spec["hsa-rocr-dev"].prefix)
             env.set("HSA_TOOLS_LIB", "%s/librocprofiler64.so" % spec["rocprofiler-dev"].prefix.lib)
             env.append_flags("CFLAGS", "-I%s/rocprofiler/include" % spec["rocprofiler-dev"].prefix)
-            env.set(
-                "ROCP_METRICS", "%s/rocprofiler/lib/metrics.xml" % spec["rocprofiler-dev"].prefix
-            )
+            env.set("ROCP_METRICS", find(spec["rocprofiler-dev"].prefix, "metrics.xml")[0])
             env.set("ROCPROFILER_LOG", "1")
             env.set("HSA_VEN_AMD_AQLPROFILE_LOG", "1")
             env.set("AQLPROFILE_READ_API", "1")
