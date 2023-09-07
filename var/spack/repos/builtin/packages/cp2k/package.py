@@ -253,7 +253,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("sirius@7.4:", when="@master")
         conflicts("~mpi", msg="SIRIUS requires MPI")
         # sirius support was introduced in 7, but effectively usable starting from CP2K 9
-        conflicts("@:7")
+        conflicts("@:8")
 
     with when("+libvori"):
         depends_on("libvori@201219:", when="@8.1")
