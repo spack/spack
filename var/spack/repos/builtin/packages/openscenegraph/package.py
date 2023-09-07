@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.package import *
 
 
@@ -24,11 +26,27 @@ class Openscenegraph(CMakePackage):
     version("3.1.5", sha256="dddecf2b33302076712100af59b880e7647bc595a9a7cc99186e98d6e0eaeb5c")
 
     variant("shared", default=True, description="Builds a shared version of the library")
+    variant("apps", default=False, description="Build OpenSceneGraph tools")
+    variant("dcmtk", default=False, description="Build support for DICOM files using DCMTK")
     variant(
         "ffmpeg", default=False, description="Builds ffmpeg plugin for audio encoding/decoding"
     )
+    variant("gdal", default=False, description="Build support for geospatial files using GDAL")
+    variant(
+        "gta", default=False, description="Build support for Generic Tagged Array (GTA) files"
+    )
+    variant(
+        "inventor", default=False, description="Build support for Open Inventor files using Coin3D"
+    )
+    variant(
+        "opencascade", default=False, description="Build support for CAD files using Open CASCADE"
+    )
+    variant("openexr", default=False, description="Build support for OpenEXR files")
+    variant("pdf", default=False, description="Build support for PDF files using Poppler")
+    variant("svg", default=False, description="Build support for SVD files using librsvg")
 
     depends_on("cmake@2.8.7:", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("gl")
     depends_on(
         "qt+opengl", when="@:3.5.4"
@@ -44,11 +62,27 @@ class Openscenegraph(CMakePackage):
     depends_on("zlib-api")
     depends_on("fontconfig")
 
-    depends_on("ffmpeg+avresample", when="+ffmpeg")
+    depends_on("dcmtk+pic", when="+dcmtk")
+    depends_on("gdal", when="+gdal")
+    depends_on("libgta", when="+gta")
+    depends_on("coin3d", when="+inventor")
+    depends_on("opencascade@:7.5", when="+opencascade")
+    depends_on("openexr@2", when="+openexr")
+    depends_on("ilmbase", when="+openexr")
+    depends_on("poppler+glib", when="+pdf")
+    depends_on("librsvg", when="+svg")
+
+    depends_on("ffmpeg@:4", when="+ffmpeg")
+    depends_on("ffmpeg+avresample", when="^ffmpeg@:4")
     # https://github.com/openscenegraph/OpenSceneGraph/issues/167
     depends_on("ffmpeg@:2", when="@:3.4.0+ffmpeg")
 
     patch("glibc-jasper.patch", when="@3.4%gcc")
+
+    def patch(self):
+        # pkgconfig does not work for GTA on macos
+        if sys.platform == "darwin":
+            filter_file("PKG_CHECK_MODULES\\(GTA gta\\)", "", "CMakeModules/FindGTA.cmake")
 
     def cmake_args(self):
         spec = self.spec
@@ -61,8 +95,8 @@ class Openscenegraph(CMakePackage):
             "-DDYNAMIC_OPENSCENEGRAPH={0}".format(shared_status),
             "-DDYNAMIC_OPENTHREADS={0}".format(shared_status),
             "-DOPENGL_PROFILE={0}".format(opengl_profile),
+            self.define_from_variant("BUILD_OSG_APPLICATIONS", "apps"),
             # General Options #
-            "-DBUILD_OSG_APPLICATIONS=OFF",
             "-DOSG_NOTIFY_DISABLED=ON",
             "-DLIB_POSTFIX=",
             "-DCMAKE_RELWITHDEBINFO_POSTFIX=",
