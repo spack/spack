@@ -90,6 +90,16 @@ STATUS_DEQUEUED = "dequeued"
 STATUS_REMOVED = "removed"
 
 
+def _write_timer_json(pkg, timer, cache):
+    extra_attributes = {"name": pkg.name, "cache": cache, "hash": pkg.spec.dag_hash()}
+    try:
+        with open(pkg.times_log_path, "w") as timelog:
+            timer.write_json(timelog, extra_attributes=extra_attributes)
+    except Exception as e:
+        tty.debug(str(e))
+        return
+
+
 class InstallAction:
     #: Don't perform an install
     NONE = 0
@@ -399,6 +409,8 @@ def _install_from_cache(
         return False
     t.stop()
     tty.debug("Successfully extracted {0} from binary cache".format(pkg_id))
+
+    _write_timer_json(pkg, t, True)
     _print_timer(pre=_log_prefix(pkg.name), pkg_id=pkg_id, timer=t)
     _print_installed_pkg(pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec, explicit)
@@ -481,7 +493,7 @@ def _process_binary_cache_tarball(
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(
-            pkg.spec, download_result, unsigned=unsigned, force=False
+            pkg.spec, download_result, unsigned=unsigned, force=False, timer=timer
         )
 
         pkg.installed_from_binary_cache = True
@@ -2093,7 +2105,6 @@ class PackageInstaller:
                 # another process has a write lock so must be (un)installing
                 # the spec (or that process is hung).
                 ltype, lock = self._ensure_locked("read", pkg)
-
             # Requeue the spec if we cannot get at least a read lock so we
             # can check the status presumably established by another process
             # -- failed, installed, or uninstalled -- on the next pass.
@@ -2373,8 +2384,7 @@ class BuildProcessInstaller:
 
             # Stop the timer and save results
             self.timer.stop()
-            with open(self.pkg.times_log_path, "w") as timelog:
-                self.timer.write_json(timelog)
+            _write_timer_json(self.pkg, self.timer, False)
 
         print_install_test_log(self.pkg)
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
