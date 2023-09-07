@@ -31,9 +31,12 @@ class CrosstoolNg(AutotoolsPackage):
     depends_on("sed", type=("build", "run"))
     depends_on("python@3.7:", type=("build", "run"))
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
+    depends_on("wget", type="run")
+    depends_on("curl", type="run")
+
+    depends_on("autoconf", type=("build", "run"))
+    depends_on("automake", type=("build", "run"))
+    depends_on("libtool", type=("build", "run"))
 
     depends_on("bison", type="build")
     depends_on("flex", type="build")
