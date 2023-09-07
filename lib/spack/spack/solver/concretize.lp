@@ -739,20 +739,6 @@ attr("node_flag", node(NodeID1, A1), A2, A3) :-
   condition_requirement(Z,"node_flag_source", A1, A2, A3),
   imposed_packages(NodeID2, A3).
 
-%{ attr("node_flag", node(ID, A1), A2, A3) } :-
-%  condition_requirement(0,"node_flag","y","cflags","-g").
-%{ attr("node_flag_source", node(ID, A1), A2, node(ID, A3)) } :-
-%  condition_requirement(0,"node_flag_source","y","cflags","y").
-
-%{ attr("node_flag", node(NodeID1, A1), A2, A3) } :- 
-%  condition_requirement(0,"node_flag", A1, A2, A3),
-%  node(NodeID1, A1).
-
-%{ attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
-%  condition_requirement(0,"node_flag_source", A1, A2, A3),
-%  node(NodeID1, A1),
-%  node(NodeID2, A3).
-
 %{ attr("node_flag", node(NodeID1, A1), A2, A3) } :-
 %  condition_requirement(_,"node_flag", A1, A2, A3),
 %  imposed_packages(NodeID1, A1).
