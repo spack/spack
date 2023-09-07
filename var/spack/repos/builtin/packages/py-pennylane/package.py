@@ -28,6 +28,7 @@ class PyPennylane(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-numpy@:1.23", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))
     depends_on("py-scipy@:1.10", type=("build", "run"), when="@:0.31.0")
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-rustworkx", type=("build", "run"), when="@0.30.0:")
