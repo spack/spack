@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.tty as tty
+import os
+
 from spack.package import *
 
 
@@ -34,6 +37,8 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     variant("openmp", default=False, description="Build with OpenMP support")
     variant("mpi", default=False, description="Only used to export BLT MPI targets")
 
+    depends_on("mpi", when="+mpi")
+
     depends_on("cub", when="+cuda")
 
     depends_on("blt")
@@ -47,9 +52,10 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
         options.append("-DBLT_SOURCE_DIR={0}".format(spec["blt"].prefix))
 
+        options.append(self.define_from_variant("ENABLE_CUDA", "cuda"))
         if "+cuda" in spec:
             options.extend(
-                ["-DENABLE_CUDA=ON", "-DCUDA_TOOLKIT_ROOT_DIR=%s" % (spec["cuda"].prefix)]
+                ["-DCUDA_TOOLKIT_ROOT_DIR=%s" % (spec["cuda"].prefix)]
             )
 
             if not spec.satisfies("cuda_arch=none"):
@@ -58,20 +64,61 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
                 options.append("-DCUDA_ARCH=sm_{0}".format(cuda_arch[0]))
                 flag = "-arch sm_{0}".format(cuda_arch[0])
                 options.append("-DCMAKE_CUDA_FLAGS:STRING={0}".format(flag))
-        else:
-            options.append("-DENABLE_CUDA=OFF")
 
+        options.append(self.define_from_variant("ENABLE_HIP", "hip"))
         if "+rocm" in spec:
-            options.extend(["-DENABLE_HIP=ON", "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix)])
+            options.extend(["-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix)])
 
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
                 options.append("-DCMAKE_HIP_ARCHITECTURES={0}".format(arch_str))
-        else:
-            options.append("-DENABLE_HIP=OFF")
 
+        # The dependency on MPI is completely artificial...
+        # We use it only to export the MPI BLT target as part of BLT_Targets.
+        # Otherwise, we have collisions when the latter is also defined in
+        # Umpire for example.
         options.append(self.define_from_variant("ENABLE_MPI", "mpi"))
+        if "+mpi" in spec:
+            options.append("-DMPI_C_COMPILER:PATH={0}".format(spec["mpi"].mpicc))
+            options.append("-DMPI_CXX_COMPILER:PATH={0}".format(spec["mpi"].mpicxx))
+            options.append("-DMPI_Fortran_COMPILER:PATH={0}".format(spec["mpi"].mpifc))
+
+            # Check for slurm
+            using_slurm = False
+            slurm_checks = ["+slurm", "schedulers=slurm", "process_managers=slurm"]
+            if any(spec["mpi"].satisfies(variant) for variant in slurm_checks):
+                using_slurm = True
+
+            # Determine MPIEXEC
+            if using_slurm:
+                if spec["mpi"].external:
+                    # Heuristic until we have dependents on externals
+                    mpiexec = "/usr/bin/srun"
+                else:
+                    mpiexec = os.path.join(spec["slurm"].prefix.bin, "srun")
+            else:
+                mpiexec = os.path.join(spec["mpi"].prefix.bin, "mpirun")
+                if not os.path.exists(mpiexec):
+                    mpiexec = os.path.join(spec["mpi"].prefix.bin, "mpiexec")
+
+            if not os.path.exists(mpiexec):
+                msg = "Unable to determine MPIEXEC, %s tests may fail" % self.pkg.name
+                tty.warn(msg)
+            else:
+                # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
+                # vs the older versions which expect MPIEXEC
+                if self.pkg.spec["cmake"].satisfies("@3.10:"):
+                    options.append("-DMPIEXEC_EXECUTABLE:PATH={0}".format(mpiexec))
+                else:
+                    options.append("-DMPIEXEC:PATH={0}".format(mpiexec))
+
+            # Determine MPIEXEC_NUMPROC_FLAG
+            if using_slurm:
+                options.append("MPIEXEC_NUMPROC_FLAG:STRING={0}".format("-n"))
+            else:
+                options.append("MPIEXEC_NUMPROC_FLAG:STRING={0}".format("-np"))
+
         options.append(self.define_from_variant("ENABLE_OPENMP", "openmp"))
         options.append(self.define_from_variant("ENABLE_TESTS", "tests"))
 
