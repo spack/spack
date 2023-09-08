@@ -63,7 +63,7 @@ class {class_name}({base_class_name}):
     # maintainers("github_user1", "github_user2")
 
     # FIXME: Add the SPDX identifier of the project's license below.
-    license("UNLICENSED")
+    license("UNKNOWN")
 
 {versions}
 

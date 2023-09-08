@@ -6676,7 +6676,7 @@ For example, a project might have switched licenses at some point or have
 certain build configurations that include files that are licensed differently.
 To account for this, you can specify when licenses should be applied. For
 example, to specify that a specific license identifier should only apply
-to versions before 1.5, you could write the following directive:
+to versionup to and including 1.5, you could write the following directive:
 
 .. code-block:: python
 
