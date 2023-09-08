@@ -1020,11 +1020,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         """
         # Detect GCC package in the directory of the GCC compiler
         # or in the $PATH if self.compiler.cc is not an absolute path:
-        from spack.detection import by_executable
+        from spack.detection import by_path
 
         compiler_dir = os.path.dirname(self.compiler.cc)
-        detected_packages = by_executable(
-            [self.__class__], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
+        detected_packages = by_path(
+            [self.name], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
         )
 
         # We consider only packages that satisfy the following constraint:
