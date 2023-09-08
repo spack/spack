@@ -42,5 +42,5 @@ class Awscli(PythonPackage):
     depends_on("py-rsa@3.1.2:4.7", when="@1.27:", type=("build", "run"))
     depends_on("py-rsa@3.1.2:3.5.0", when="@1.16", type=("build", "run"))
 
-    depends_on("py-s3transfer@0.6.0:0.6", when="@1.27:", type=("build", "run"))
-    depends_on("py-s3transfer@0.2.0:0.2", when="@1.16", type=("build", "run"))
+    depends_on("py-s3transfer@0.6", when="@1.27:", type=("build", "run"))
+    depends_on("py-s3transfer@0.2", when="@1.16", type=("build", "run"))
