@@ -347,7 +347,7 @@ complete -c spack --erase
 # Everything below here is auto-generated.
 
 # spack
-set -g __fish_spack_optspecs_spack h/help H/all-help color= c/config= C/config-scope= d/debug timestamp pdb interactive-pdb e/env= D/env-dir= E/no-env use-env-repo k/insecure l/enable-locks L/disable-locks m/mock b/bootstrap p/profile sorted-profile= lines= v/verbose stacktrace backtrace V/version print-shell-vars=
+set -g __fish_spack_optspecs_spack h/help H/all-help color= c/config= C/config-scope= d/debug timestamp interactive-pdb e/env= D/env-dir= E/no-env use-env-repo k/insecure l/enable-locks L/disable-locks m/mock b/bootstrap p/profile sorted-profile= lines= v/verbose stacktrace backtrace V/version print-shell-vars=
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a add -d 'add a spec to an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a arch -d 'print architecture information about this machine'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a audit -d 'audit configuration files, packages, etc.'
@@ -439,8 +439,6 @@ complete -c spack -n '__fish_spack_using_command ' -s d -l debug -f -a debug
 complete -c spack -n '__fish_spack_using_command ' -s d -l debug -d 'write out debug messages'
 complete -c spack -n '__fish_spack_using_command ' -l timestamp -f -a timestamp
 complete -c spack -n '__fish_spack_using_command ' -l timestamp -d 'add a timestamp to tty output'
-complete -c spack -n '__fish_spack_using_command ' -l pdb -f -a pdb
-complete -c spack -n '__fish_spack_using_command ' -l pdb -d 'run spack under the pdb debugger'
 complete -c spack -n '__fish_spack_using_command ' -l interactive-pdb -f -a interactive_pdb
 complete -c spack -n '__fish_spack_using_command ' -l interactive-pdb -d 'required if you set_trace() inside of a phase'
 complete -c spack -n '__fish_spack_using_command ' -s e -l env -r -f -a env

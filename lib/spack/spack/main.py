@@ -454,7 +454,6 @@ def make_argument_parser(**kwargs):
         help="write out debug messages\n\n(more d's for more verbosity: -d, -dd, -ddd, etc.)",
     )
     parser.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
-    parser.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
     parser.add_argument(
         "--interactive-pdb",
         action="store_true",
@@ -1006,11 +1005,6 @@ def finish_parse_and_run(parser, cmd_name, env_format_error):
     # now we can actually execute the command.
     if args.spack_profile or args.sorted_profile:
         _profile_wrapper(command, parser, args, unknown)
-    elif args.pdb:
-        import pdb
-
-        pdb.runctx("_invoke_command(command, parser, args, unknown)", globals(), locals())
-        return 0
     else:
         return _invoke_command(command, parser, args, unknown)
 
