@@ -989,8 +989,8 @@ spack:
     with tmpdir.as_cwd():
         with pytest.raises(spack.main.SpackCommandError) as e:
             output = env("create", "test", "./spack.yaml")
-        assert "'spacks' was unexpected" in str(output)
-        assert "'spacks' was unexpected" in str(e)
+            assert "'spacks' was unexpected" in str(output)
+            assert "exited with code 1: env('create', 'test', './spack.yaml')\"" in str(e)
 
         assert "test" not in env("list")
 
