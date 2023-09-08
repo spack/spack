@@ -321,6 +321,7 @@ class Root(CMakePackage):
     conflicts("+math", when="~gsl", msg="root+math requires GSL")
     conflicts("+tmva", when="~gsl", msg="root+tmva requires GSL")
     conflicts("+tmva", when="~mlp", msg="root+tmva requires MLP")
+    conflicts("~http", when="@6.29.00: +webgui", msg="root+webgui requires HTTP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
     conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root requires at least C++14")
     conflicts(
