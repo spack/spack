@@ -19,6 +19,7 @@ import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
 import spack.util.gpg as gpg_util
+import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 
@@ -253,6 +254,8 @@ def ci_rebuild(args):
     check a single spec against the remote mirror, and rebuild it from source if the mirror does
     not contain the hash
     """
+    rebuild_timer = timer.Timer()
+
     env = spack.cmd.require_active_env(cmd_name="ci rebuild")
 
     # Make sure the environment is "gitlab-enabled", or else there's nothing
@@ -735,6 +738,14 @@ If this project does not have public pipelines, you will need to first:
         )
 
         print(reproduce_msg)
+
+    rebuild_timer.stop()
+    try:
+        with open("install_timers.json", "w") as timelog:
+            extra_attributes = {"name": ".ci-rebuild"}
+            rebuild_timer.write_json(timelog, extra_attributes=extra_attributes)
+    except Exception as e:
+        tty.debug(str(e))
 
     # Tie job success/failure to the success/failure of building the spec
     return install_exit_code
