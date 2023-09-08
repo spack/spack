@@ -34,9 +34,7 @@ class Openscenegraph(CMakePackage):
         "ffmpeg", default=False, description="Builds ffmpeg plugin for audio encoding/decoding"
     )
     variant("gdal", default=False, description="Build support for geospatial files using GDAL")
-    variant(
-        "gta", default=False, description="Build support for Generic Tagged Array (GTA) files"
-    )
+    variant("gta", default=False, description="Build support for Generic Tagged Array (GTA) files")
     variant(
         "inventor", default=False, description="Build support for Open Inventor files using Coin3D"
     )
