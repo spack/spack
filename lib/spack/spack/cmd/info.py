@@ -72,7 +72,7 @@ def variant(s):
 
 
 def license(s):
-    return spack.spec.version_color + s + plain_format
+    return spack.spec.VERSION_COLOR + s + plain_format
 
 
 class VariantFormatter:
