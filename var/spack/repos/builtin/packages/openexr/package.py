@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Openexr(CMakePackage):
+class Openexr(CMakePackage, AutotoolsPackage):
     """OpenEXR Graphics Tools (high dynamic-range image file format)"""
 
     homepage = "https://www.openexr.com/"
@@ -66,7 +66,6 @@ class Openexr(CMakePackage):
         url="http://download.savannah.nongnu.org/releases/openexr/openexr-1.3.2.tar.gz",
     )
 
-    depends_on("cmake@3.12:", when="@2.4:", type="build")
     depends_on("pkgconfig", when="@:2", type="build")
     depends_on("imath", when="@3:")
     depends_on("ilmbase", when="@:2")
@@ -74,18 +73,10 @@ class Openexr(CMakePackage):
 
     conflicts("@:2.5.8 %gcc@13:")
 
-    @property
-    def build_directory(self):
-        if self.spec.satisfies("@3:"):
-            return super().build_directory
-        else:
-            return "."
+    # Build system
+    build_system(
+        conditional("cmake", when="@2.4:"), conditional("autotools", when="@:2.3"), default="cmake"
+    )
 
-    def configure_args(self):
-        args = ["--prefix=" + self.prefix]
-
-        return args
-
-    @when("@:2.3")
-    def cmake(self, spec, prefix):
-        configure(*self.configure_args())
+    with when("build_system=cmake"):
+        depends_on("cmake@3.12:", type="build")
