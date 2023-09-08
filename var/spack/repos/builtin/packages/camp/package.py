@@ -64,7 +64,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
                 flag = "-arch sm_{0}".format(cuda_arch[0])
                 options.append("-DCMAKE_CUDA_FLAGS:STRING={0}".format(flag))
 
-        options.append(self.define_from_variant("ENABLE_HIP", "hip"))
+        options.append(self.define_from_variant("ENABLE_HIP", "rocm"))
         if "+rocm" in spec:
             options.extend(["-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix)])
 
