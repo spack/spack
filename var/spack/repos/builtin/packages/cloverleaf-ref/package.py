@@ -16,7 +16,7 @@ class CloverleafRef(MakefilePackage):
     url = "https://github.com/UK-MAC/CloverLeaf_ref/archive/refs/tags/v1.3.tar.gz"
     git = "https://github.com/UK-MAC/CloverLeaf_ref.git"
 
-    maintainer("amd-toolchain-support")
+    maintainers("amd-toolchain-support")
 
     version("master", branch="master")
     version(
