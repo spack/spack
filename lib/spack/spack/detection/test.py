@@ -17,7 +17,7 @@ import spack.repo
 import spack.spec
 from spack.util import spack_yaml
 
-from .path import by_executable
+from .path import by_path
 
 
 class MockExecutables(NamedTuple):
@@ -65,9 +65,7 @@ class Runner:
         have been detected.
         """
         with self._mock_layout() as path_hints:
-            entries = by_executable(
-                [self.repository.get_pkg_class(self.test.pkg_name)], path_hints=path_hints
-            )
+            entries = by_path([self.test.pkg_name], path_hints=path_hints)
             _, unqualified_name = spack.repo.partition_package_name(self.test.pkg_name)
             specs = set(x.spec for x in entries[unqualified_name])
         return list(specs)

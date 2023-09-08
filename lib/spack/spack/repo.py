@@ -744,10 +744,18 @@ class RepoPath:
         for name in self.all_package_names():
             yield self.package_path(name)
 
-    def packages_with_tags(self, *tags):
+    def packages_with_tags(self, *tags, full=False):
+        """Returns a list of packages matching any of the tags in input.
+
+        Args:
+            full: if True the package names in the output are fully-qualified
+        """
         r = set()
         for repo in self.repos:
-            r |= set(repo.packages_with_tags(*tags))
+            current = repo.packages_with_tags(*tags)
+            if full:
+                current = [f"{repo.namespace}.{x}" for x in current]
+            r |= set(current)
         return sorted(r)
 
     def all_package_classes(self):
