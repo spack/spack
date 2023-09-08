@@ -55,3 +55,8 @@ class Selalib(CMakePackage):
     def setup_build_environment(self, env):
         env.set("FFTW_INCLUDE", self.spec["fftw"].prefix.include)
         env.set("FFTW_ROOT", self.spec["fftw"].prefix)
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def test_slurm(self):
+        make("test")  # TODO why does this not actually run the ctests?
