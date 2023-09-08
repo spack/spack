@@ -31,11 +31,15 @@ _os_map = {
     "rhel8": "RHEL-8",
     "rhel9": "RHEL-9",
     "rocky8": "RHEL-8",
+    "rocky9": "RHEL-9",
     "amzn2": "AmazonLinux-2",
     "amzn2023": "AmazonLinux-2023",
 }
 
 _versions = {
+    "23.06_flang-new_clang_16": {
+        "macOS": ("232f5e89e0f1f4777480c64a790e477dfd2f423d3cf5704a116a2736f36250ea")
+    },
     "23.04.1_gcc-12.2": {
         "RHEL-7": ("789cc093cb7e0d9294aff0fdf94b74987435a09cdff4c1b7118a03350548d03c"),
         "RHEL-8": ("1b668baec6d3df2d48c5aedc70baa6a9b638983b94bf2cd58d378859a1da49f0"),
@@ -177,20 +181,24 @@ _versions = {
 
 
 def get_os(ver):
-    spack_os = spack.platforms.host().default_os
+    platform = spack.platforms.host()
+    if platform.name == "darwin":
+        return "macOS"
     if ver.startswith("22."):
-        return _os_map_before_23.get(spack_os, "")
+        return _os_map_before_23.get(platform.default_os, "")
     else:
-        return _os_map.get(spack_os, "RHEL-7")
+        return _os_map.get(platform.default_os, "RHEL-7")
 
 
 def get_package_url(version):
     base_url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/"
     armpl_version = version.split("_")[0]
     armpl_version_dashed = armpl_version.replace(".", "-")
-    gcc_version = version.split("_")[1]
+    compiler_version = version.split("_", 1)[1]
     os = get_os(armpl_version)
-    filename = "arm-performance-libraries_" + armpl_version + "_" + os + "_" + gcc_version + ".tar"
+    if os == "macOS":
+        return f"{base_url}{armpl_version_dashed}/armpl_{armpl_version}_{compiler_version}.dmg"
+    filename = "arm-performance-libraries_{}_{}_{}.tar".format(armpl_version, os, compiler_version)
     os_short = ""
     if armpl_version.startswith("22.0."):
         os_short = os.replace("-", "")
@@ -219,7 +227,10 @@ class ArmplGcc(Package):
         sha256sum = packages.get(key)
         url = get_package_url(ver)
         if sha256sum:
-            version(ver, sha256=sha256sum, url=url)
+            extension = os.path.splitext(url)[1]
+            # Don't attempt to expand .dmg files
+            expand = extension != ".dmg"
+            version(ver, sha256=sha256sum, url=url, extension=extension, expand=expand)
 
     conflicts("target=x86:", msg="Only available on Aarch64")
     conflicts("target=ppc64:", msg="Only available on Aarch64")
@@ -266,6 +277,20 @@ class ArmplGcc(Package):
 
     # Run the installer with the desired install directory
     def install(self, spec, prefix):
+        if spec.platform == "darwin":
+            hdiutil = which("hdiutil")
+            # Mount image
+            mountpoint = os.path.join(self.stage.path, "mount")
+            hdiutil("attach", "-mountpoint", mountpoint, self.stage.archive_file)
+            try:
+                # Run installer
+                exe_name = "armpl_{}_install.sh".format(spec.version.string)
+                installer = Executable(os.path.join(mountpoint, exe_name))
+                installer("-y", "--install_dir={}".format(prefix))
+            finally:
+                # Unmount image
+                hdiutil("detach", mountpoint)
+            return
         if self.compiler.name != "gcc":
             raise spack.error.SpackError(("Only compatible with GCC.\n"))
 
@@ -330,14 +355,22 @@ class ArmplGcc(Package):
 
     def setup_run_environment(self, env):
         armpl_dir = get_armpl_prefix(self.spec)
-        env.prepend_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
+        if self.spec.platform == "darwin":
+            env.prepend_path("DYLD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
+        else:
+            env.prepend_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
 
     @run_after("install")
     def check_install(self):
         armpl_dir = get_armpl_prefix(self.spec)
         armpl_example_dir = join_path(armpl_dir, "examples")
         # run example makefile
-        make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir)
+        if self.spec.platform == "darwin":
+            # Fortran examples on MacOS requires flang-new which is
+            # not commonly installed, so only run the C examples.
+            make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir, "c_examples")
+        else:
+            make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir)
         # clean up
         make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir, "clean")
 
