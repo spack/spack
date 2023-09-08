@@ -12,8 +12,6 @@ class Gatetools(PythonPackage):
     homepage = "https://github.com/OpenGATE/GateTools"
     pypi = "gatetools/gatetools-0.9.14.tar.gz"
 
-    maintainers("glennpj")
-
     version("0.11.2", sha256="6eef8a779278b862823ae79d6aab210db4f7889c9127b2c2e4c3a4195f9a9928")
     version("0.9.14", sha256="78fe864bb52fd4c6aeeee90d8f6c1bc5406ce02ac6f48712379efac606b5c006")
 

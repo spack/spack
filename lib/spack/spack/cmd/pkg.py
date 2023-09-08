@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import argparse
 import itertools
 import os
@@ -60,7 +58,7 @@ def setup_parser(subparser):
         "--type",
         action="store",
         default="C",
-        help="Types of changes to show (A: added, R: removed, " "C: changed); default is 'C'",
+        help="types of changes to show (A: added, R: removed, C: changed); default is 'C'",
     )
 
     rm_parser = sp.add_parser("removed", help=pkg_removed.__doc__)
@@ -83,7 +81,7 @@ def setup_parser(subparser):
         "--canonical",
         action="store_true",
         default=False,
-        help="dump canonical source as used by package hash.",
+        help="dump canonical source as used by package hash",
     )
     arguments.add_common_arguments(source_parser, ["spec"])
 
@@ -145,7 +143,7 @@ def pkg_source(args):
         tty.die("spack pkg source requires exactly one spec")
 
     spec = specs[0]
-    filename = spack.repo.path.filename_for_package_name(spec.name)
+    filename = spack.repo.PATH.filename_for_package_name(spec.name)
 
     # regular source dump -- just get the package and print its contents
     if args.canonical:
@@ -186,7 +184,7 @@ def pkg_grep(args, unknown_args):
     grouper = lambda e: e[0] // 500
 
     # set up iterator and save the first group to ensure we don't end up with a group of size 1
-    groups = itertools.groupby(enumerate(spack.repo.path.all_package_paths()), grouper)
+    groups = itertools.groupby(enumerate(spack.repo.PATH.all_package_paths()), grouper)
     if not groups:
         return 0  # no packages to search
 

@@ -30,7 +30,7 @@ class RRjava(RPackage):
     depends_on("iconv")
     depends_on("pcre2")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def setup_build_environment(self, env):
         spec = self.spec

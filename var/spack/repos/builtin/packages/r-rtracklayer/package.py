@@ -18,6 +18,7 @@ class RRtracklayer(RPackage):
 
     bioc = "rtracklayer"
 
+    version("1.60.0", commit="de35bc03116fc7ad30f0e425b41715c3cb2e783b")
     version("1.58.0", commit="54a74972c08775fdf1e83e6e22cd0b8fad677fc1")
     version("1.56.1", commit="4c6d2201fcb102d471bd88f4f51cc34317669955")
     version("1.56.0", commit="1d70f7dc464ad87a1fde61588cd9ae0cb86b6e86")
@@ -57,5 +58,5 @@ class RRtracklayer(RPackage):
     depends_on("r-genomicalignments@1.15.6:", type=("build", "run"), when="@1.40.6:")
     depends_on("r-biocio", type=("build", "run"), when="@1.54.0:")
     depends_on("r-restfulr@0.0.13:", type=("build", "run"), when="@1.54.0:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("openssl")

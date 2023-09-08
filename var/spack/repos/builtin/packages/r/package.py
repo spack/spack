@@ -21,8 +21,6 @@ class R(AutotoolsPackage):
 
     extendable = True
 
-    maintainers("glennpj")
-
     version("4.3.0", sha256="45dcc48b6cf27d361020f77fde1a39209e997b81402b3663ca1c010056a6a609")
     version("4.2.2", sha256="0ff62b42ec51afa5713caee7c4fde7a0c45940ba39bef8c5c9487fef0c953df5")
     version("4.2.1", sha256="4d52db486d27848e54613d4ee977ad952ec08ce17807e1b525b10cd4436c643f")
@@ -83,7 +81,8 @@ class R(AutotoolsPackage):
     depends_on("readline")
     depends_on("xz")
     depends_on("which", type=("build", "run"))
-    depends_on("zlib@1.2.5:")
+    depends_on("zlib-api")
+    depends_on("zlib@1.2.5:", when="^zlib")
     depends_on("texinfo", type="build")
     depends_on("cairo+X+gobject+pdf", when="+X")
     depends_on("pango+X", when="+X")
@@ -103,6 +102,8 @@ class R(AutotoolsPackage):
     # Until the Fujitsu compiler resolves this problem,
     # temporary fix to lower the optimization level.
     patch("change_optflags_tmp.patch", when="%fj@4.1.0")
+
+    build_directory = "spack-build"
 
     # R custom URL version
     def url_for_version(self, version):

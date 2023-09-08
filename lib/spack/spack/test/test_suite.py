@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import os
-import sys
 
 import pytest
 
@@ -148,7 +147,7 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
         test_suite()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Cannot find echo executable")
+@pytest.mark.not_on_windows("Cannot find echo executable")
 def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monkeypatch):
     spec = spack.spec.Spec("simple-standalone-test").concretized()
     monkeypatch.setattr(spack.spec.Spec, "installed", _true)
@@ -439,6 +438,30 @@ def test_write_tested_status(
     with open(pkg.tester.tested_file, "r") as f:
         status = int(f.read().strip("\n"))
         assert TestStatus(status) == expected
+
+
+@pytest.mark.regression("37840")
+def test_write_tested_status_no_repeats(
+    tmpdir, install_mockery_mutable_config, mock_fetch, mock_test_stage
+):
+    """Emulate re-running the same stand-alone tests a second time."""
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+    statuses = [TestStatus.PASSED, TestStatus.PASSED]
+    for i, status in enumerate(statuses):
+        pkg.tester.test_parts[f"test_{i}"] = status
+        pkg.tester.counts[status] += 1
+
+    pkg.tester.tested_file = tmpdir.join("test-log.txt")
+    pkg.tester.write_tested_status()
+    pkg.tester.write_tested_status()
+
+    # The test should NOT result in a ValueError: invalid literal for int()
+    # with base 10: '2\n2' (i.e., the results being appended instead of
+    # written to the file).
+    with open(pkg.tester.tested_file, "r") as f:
+        status = int(f.read().strip("\n"))
+        assert TestStatus(status) == TestStatus.PASSED
 
 
 def test_check_special_outputs(tmpdir):

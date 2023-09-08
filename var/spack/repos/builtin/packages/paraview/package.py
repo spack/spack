@@ -71,6 +71,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("kits", default=True, description="Use module kits")
     variant("pagosa", default=False, description="Build the pagosa adaptor")
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
+    variant("tbb", default=False, description="Enable multi-threaded parallelism with TBB")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
     variant("raytracing", default=False, description="Enable Raytracing support")
@@ -138,9 +139,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         msg="Use paraview@5.9.0 with %xl_r. Earlier versions are not able to build with xl.",
     )
 
-    # Newer abseil-cpp requires C++14, but paraview uses C++11 by default
-    conflicts("^abseil-cpp@2023:")
-
     # We only support one single Architecture
     for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
         conflicts(
@@ -173,6 +171,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("openpmd-api@0.14.5: +python", when="+python +openpmd", type=("build", "run"))
     depends_on("openpmd-api +adios2", when="+openpmd +adios2", type=("build", "run"))
     depends_on("openpmd-api +hdf5", when="+openpmd +hdf5", type=("build", "run"))
+
+    depends_on("tbb", when="+tbb")
 
     depends_on("mpi", when="+mpi")
     depends_on("qt+opengl", when="@5.3.0:+qt+opengl2")
@@ -217,10 +217,19 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("netcdf-c")
     depends_on("pegtl")
     depends_on("protobuf@3.4:")
+    # Paraview 5.10 can't build with protobuf > 3.18
+    # https://github.com/spack/spack/issues/37437
+    depends_on("protobuf@3.4:3.18", when="@:5.10%oneapi")
+    depends_on("protobuf@3.4:3.18", when="@:5.10%intel@2021:")
+    depends_on("protobuf@3.4:3.18", when="@:5.10%xl")
+    depends_on("protobuf@3.4:3.18", when="@:5.10%xl_r")
+    # protobuf requires newer abseil-cpp, which in turn requires C++14,
+    # but paraview uses C++11 by default
+    depends_on("protobuf@3.4:3.21", when="@:5.11")
     depends_on("libxml2")
     depends_on("lz4")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libcatalyst@2:", when="+libcatalyst")
     depends_on("hip@5.2:", when="+rocm")
     for target in ROCmPackage.amdgpu_targets:
@@ -243,6 +252,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("nlohmann-json", when="@5.11:")
 
     # ParaView depends on proj@8.1.0 due to changes in MR
+    # v8.1.0 is required for VTK::GeoVis
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8474
     depends_on("proj@8.1.0", when="@5.11:")
 
@@ -288,6 +298,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # Fix VTK to remove deprecated ADIOS2 functions
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/10113
     patch("adios2-remove-deprecated-functions.patch", when="@5.10: ^adios2@2.9:")
+
+    patch("exodusII-netcdf4.9.0.patch", when="@:5.10.2")
 
     generator("ninja", "make", default="ninja")
     # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
@@ -592,6 +604,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+eyedomelighting" in spec:
             cmake_args.append("-DPARAVIEW_BUILD_PLUGIN_EyeDomeLighting:BOOL=ON")
+
+        if "+tbb" in spec:
+            cmake_args.append("-DVTK_SMP_IMPLEMENTATION_TYPE=TBB")
 
         # Hide git from Paraview so it will not use `git describe`
         # to find its own version number

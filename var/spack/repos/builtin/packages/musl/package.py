@@ -26,6 +26,7 @@ class Musl(MakefilePackage):
     homepage = "https://www.musl-libc.org"
     url = "https://www.musl-libc.org/releases/musl-1.1.23.tar.gz"
 
+    version("1.2.4", sha256="7a35eae33d5372a7c0da1188de798726f68825513b7ae3ebe97aaaa52114f039")
     version("1.2.3", sha256="7d5b0b6062521e4627e099e4c9dc8248d32a30285e959b7eecaa780cf8cfd4a4")
     version("1.2.2", sha256="9b969322012d796dc23dda27a35866034fa67d8fb67e0e2c45c913c3d43219dd")
     version("1.2.1", sha256="68af6e18539f646f9c41a3a2bb25be4a5cfa5a8f65f0bb647fd2bbfdf877e84b")
