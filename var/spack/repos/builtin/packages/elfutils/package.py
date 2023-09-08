@@ -48,6 +48,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     # Native language support from libintl.
     variant("nls", default=True, description="Enable Native Language Support.")
+    variant("exeprefix", default=True, description="Add a prefix to generated executables.")
 
     # libdebuginfod support
     # NB: For 0.181 and newer, this enables _both_ the client and server
@@ -114,6 +115,11 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
             "--with-lzma=%s" % spec["xz"].prefix,
             "--with-zlib=%s" % spec["zlib-api"].prefix,
         ]
+
+        if spec.satisfies("+exeprefix"):
+            args.append("--program-prefix='eu-'")
+        else:
+            args.append("--program-prefix=''")
 
         if "@0.182:" in spec:
             args.append("--with-zstd=%s" % spec["zstd"].prefix)
