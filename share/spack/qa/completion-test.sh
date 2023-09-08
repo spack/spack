@@ -67,6 +67,9 @@ contains 'concretise' _spack_completions spack c
 contains 'concretize' _spack_completions spack conc
 does_not_contain 'concretise' _spack_completions spack conc
 
+does_not_contain 'concretize' _spack_completions spack isnotacommand
+does_not_contain 'concretize' _spack_completions spack env isnotacommand
+
 # XFAIL: Fails for Python 2.6 because pkg_resources not found?
 #contains 'compilers.py' _spack_completions spack unit-test ''
 
