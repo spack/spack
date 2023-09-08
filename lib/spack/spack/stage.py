@@ -242,10 +242,7 @@ class Stage:
     similar, and are intended to persist for only one run of spack.
     """
 
-    """Shared dict of all stage locks."""
-    stage_locks: Dict[str, spack.util.lock.Lock] = {}
-
-    """Most staging is managed by Spack.  DIYStage is one exception."""
+    #: Most staging is managed by Spack. DIYStage is one exception.
     managed_by_spack = True
 
     def __init__(
@@ -331,17 +328,14 @@ class Stage:
         # details on this approach.
         self._lock = None
         if lock:
-            if self.name not in Stage.stage_locks:
-                sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
-                lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
-                stage_lock_path = os.path.join(get_stage_root(), ".lock")
+            sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
+            lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
+            stage_lock_path = os.path.join(get_stage_root(), ".lock")
 
-                tty.debug("Creating stage lock {0}".format(self.name))
-                Stage.stage_locks[self.name] = spack.util.lock.Lock(
-                    stage_lock_path, start=lock_id, length=1, desc=self.name
-                )
-
-            self._lock = Stage.stage_locks[self.name]
+            tty.debug("Creating stage lock {0}".format(self.name))
+            self._lock = spack.util.lock.Lock(
+                stage_lock_path, start=lock_id, length=1, desc=self.name
+            )
 
         # When stages are reused, we need to know whether to re-create
         # it.  This marks whether it has been created/destroyed.
