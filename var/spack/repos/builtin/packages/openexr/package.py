@@ -66,7 +66,7 @@ class Openexr(CMakePackage, AutotoolsPackage):
         url="http://download.savannah.nongnu.org/releases/openexr/openexr-1.3.2.tar.gz",
     )
 
-    depends_on("pkgconfig", when="@:2", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("imath", when="@3:")
     depends_on("ilmbase", when="@:2")
     depends_on("zlib-api")
