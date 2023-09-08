@@ -8,7 +8,7 @@ from spack.package import *
 
 class PyPipenv(PythonPackage):
     """Python virtualenv management tool that  supports a multitude of systems."""
-    
+
     homepage = "https://pypi.org/project/pipenv/#description"
     pypi = "pipenv/pipenv-2023.9.7.tar.gz"
 
