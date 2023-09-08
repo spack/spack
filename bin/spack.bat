@@ -14,7 +14,7 @@
 ::
 @echo off
 
-set spack=%SPACK_ROOT%\bin\spack
+set spack="%SPACK_ROOT%"\bin\spack
 
 ::#######################################################################
 :: This is a wrapper around the spack command that forwards calls to
