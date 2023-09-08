@@ -70,6 +70,7 @@ class Openexr(CMakePackage, AutotoolsPackage):
     depends_on("imath", when="@3:")
     depends_on("ilmbase", when="@:2")
     depends_on("zlib-api")
+    depends_on("libdeflate", when="@3.2:")
 
     conflicts("@:2.5.8 %gcc@13:")
 
