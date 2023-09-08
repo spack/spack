@@ -19,5 +19,3 @@ class PyPipenv(PythonPackage):
     depends_on("py-hatchling", type="build")
     depends_on("py-flit-core", type="build")
     depends_on("py-poetry-core", type="build")
-
-    depends_on("py-foo", type=("build", "run"))
