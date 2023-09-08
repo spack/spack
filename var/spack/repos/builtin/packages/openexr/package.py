@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 
@@ -81,3 +82,9 @@ class Openexr(CMakePackage, AutotoolsPackage):
 
     with when("build_system=cmake"):
         depends_on("cmake@3.12:", type="build")
+
+
+class CMakeBuilder(CMakeBuilder):
+    def cmake_args(self):
+        args = [self.define("BUILD_TESTING", self.pkg.run_tests)]
+        return args
