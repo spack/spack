@@ -375,28 +375,39 @@ def env_remove(args):
     and manifests embedded in repositories should be removed manually.
     """
     read_envs = []
+    bad_envs = []
     for env_name in args.rm_env:
-        env = ev.read(env_name)
-        read_envs.append(env)
+        try:
+            env = ev.read(env_name)
+            read_envs.append(env)
+        except spack.config.ConfigFormatError:
+            bad_envs.append(env_name)
 
-    if not args.yes_to_all:
-        answer = tty.get_yes_or_no(
-            "Really remove %s %s?"
-            % (
-                string.plural(len(args.rm_env), "environment", show_n=False),
-                string.comma_and(args.rm_env),
-            ),
-            default=False,
-        )
-        if not answer:
-            tty.die("Will not remove any environments")
+        if not args.yes_to_all:
+            answer = tty.get_yes_or_no(
+                "Really remove %s %s?"
+                % (
+                    string.plural(len(args.rm_env), "environment", show_n=False),
+                    string.comma_and(args.rm_env),
+                ),
+                default=False,
+            )
+            if not answer:
+                tty.die("Will not remove any environments")
 
-    for env in read_envs:
-        if env.active:
-            tty.die("Environment %s can't be removed while activated." % env.name)
+        for env in read_envs:
+            if env.active:
+                tty.die("Environment %s can't be removed while activated." % env.name)
+            env.destroy()
+            tty.msg("Successfully removed environment '%s'" % env.name)
 
-        env.destroy()
-        tty.msg("Successfully removed environment '%s'" % env.name)
+        for bad_env_name in bad_envs:
+            shutil.rmtree(
+                spack.environment.environment.environment_dir_from_name(
+                    bad_env_name, exists_ok=True
+                )
+            )
+            tty.msg("Successfully removed environment '%s'" % bad_env_name)
 
 
 #

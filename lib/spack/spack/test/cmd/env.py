@@ -6,7 +6,9 @@ import filecmp
 import glob
 import io
 import os
+
 import pathlib
+
 import shutil
 from argparse import Namespace
 
@@ -18,6 +20,7 @@ import llnl.util.link_tree
 import spack.cmd.env
 import spack.config
 import spack.environment as ev
+
 import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
@@ -26,10 +29,12 @@ import spack.modules
 import spack.package_base
 import spack.paths
 import spack.repo
+
 import spack.util.spack_json as sjson
 from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
+
 from spack.stage import stage_prefix
 from spack.util.executable import Executable
 from spack.util.path import substitute_path_variables
@@ -974,7 +979,7 @@ packages:
     assert any([x.satisfies("libelf@0.8.10") for x in e._get_environment_specs()])
 
 
-def test_bad_env_yaml_format(tmpdir):
+def test_create_bad_env_yaml_format(tmpdir):
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
@@ -984,12 +989,36 @@ spack:
     - mpileaks
 """
         )
+    f.close()
 
     with tmpdir.as_cwd():
-        with pytest.raises(spack.config.ConfigFormatError) as e:
+        with pytest.raises(spack.main.SpackCommandError) as e:
             env("create", "test", "./spack.yaml")
-        assert "spack.yaml:2" in str(e)
-        assert "'spacks' was unexpected" in str(e)
+            assert "'spacks' was unexpected" in str(e)
+
+        assert "test" not in env("list")
+
+
+def test_remove_bad_env_yaml_format():
+    badenv = "badenv"
+    env("create", badenv)
+    tmpdir = spack.environment.environment.environment_dir_from_name(badenv, exists_ok=True)
+    filename = os.path.join(tmpdir, "spack.yaml")
+    with open(filename, "w") as f:
+        f.write(
+            """\
+spack:
+  spacks:
+    - mpileaks
+"""
+        )
+    f.close()
+
+    assert badenv in env("list")
+
+    env("remove", "-y", badenv)
+
+    assert badenv not in env("list")
 
 
 def test_env_loads(install_mockery, mock_fetch):
