@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class Selalib(CMakePackage):
-    """SeLaLib is a modular library for the kinetic and gyrokinetic simulation of tokamak plasmas by the semi-lagrangian or particle-in-cell methods"""
+    """SeLaLib is a modular library for the kinetic and gyrokinetic simulation
+    of tokamak plasmas by the semi-lagrangian or particle-in-cell methods"""
 
     homepage = "https://selalib.github.io/selalib"
     url = "https://github.com/selalib/selalib"
@@ -17,10 +18,10 @@ class Selalib(CMakePackage):
 
     version("main", branch="main")
 
-    variant("fmempool", default=False)
-    variant("mpi", default=True)
-    variant("openmp", default=True)
-    variant("compression", default=False)
+    variant("fmempool", default=False, description="Use memory pool")
+    variant("mpi", default=True, description="Build with MPI support")
+    variant("openmp", default=True, description="Build with OpenMP support")
+    variant("compression", default=False, description="Add compression by ZFP")
 
     requires(
         "%gcc@9.0.0:",
