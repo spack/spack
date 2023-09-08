@@ -1,0 +1,30 @@
+diff --git a/src/cmake/Setup3rdParty.cmake b/src/cmake/Setup3rdParty.cmake
+index f7aebc1a..b00250cb 100644
+--- a/src/cmake/Setup3rdParty.cmake
++++ b/src/cmake/Setup3rdParty.cmake
+@@ -48,17 +48,19 @@ if(CALIPER_DIR)
+ endif()
+ 
+ ################################
+-# Camp
++# Umpire
+ ################################
+-if(CAMP_DIR) # optional for now
+-    include(cmake/thirdparty/SetupCamp.cmake)
++if(UMPIRE_DIR) # optional for now
++    include(cmake/thirdparty/SetupUmpire.cmake)
+ endif()
+ 
+ ################################
+-# Umpire
++# Camp
+ ################################
+-if(UMPIRE_DIR) # optional for now
+-    include(cmake/thirdparty/SetupUmpire.cmake)
++if(NOT UMPIRE_FOUND)
++    if(CAMP_DIR) # optional for now
++        include(cmake/thirdparty/SetupCamp.cmake)
++    endif()
+ endif()
+ 
+ ################################
