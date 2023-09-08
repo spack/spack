@@ -5,21 +5,22 @@
 
 from spack.package import *
 
+
 class Ploticus(MakefilePackage):
-    """"Ploticus is a free GPL software utility that can produce various types of plots and graphs.""" 
- 
-    homepage = "http://ploticus.sourceforge.net/doc/welcome.html" 
-    url = "https://sourceforge.net/projects/ploticus/files/ploticus/2.42/ploticus242_src.tar.gz/download" 
- 
-    maintainers("Christoph-TU") 
- 
-    version("2.42", sha256="3f29e4b9f405203a93efec900e5816d9e1b4381821881e241c08cab7dd66e0b0") 
+    """Ploticus can produce various types of plots and graphs."""
+
+    homepage = "http://ploticus.sourceforge.net/doc/welcome.html"
+    url = "https://sourceforge.net/projects/ploticus/files/ploticus/2.42/ploticus242_src.tar.gz/download"
+
+    maintainers("Christoph-TU")
+
+    version("2.42", sha256="3f29e4b9f405203a93efec900e5816d9e1b4381821881e241c08cab7dd66e0b0")
 
     depends_on("zlib")
     depends_on("libpng")
- 
-    build_directory = 'src'
- 
+
+    build_directory = "src"
+
     def setup_run_environment(self, env):
         env.set("PLOTICUS_PREFABS", self.prefix.prefabs)
 
