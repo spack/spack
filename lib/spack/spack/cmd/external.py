@@ -6,6 +6,7 @@ import argparse
 import errno
 import os
 import sys
+from typing import List, Optional
 
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
@@ -54,7 +55,7 @@ def setup_parser(subparser):
     find_parser.add_argument(
         "--all", action="store_true", help="search for all packages that Spack knows about"
     )
-    spack.cmd.common.arguments.add_common_arguments(find_parser, ["tags"])
+    spack.cmd.common.arguments.add_common_arguments(find_parser, ["tags", "jobs"])
     find_parser.add_argument("packages", nargs=argparse.REMAINDER)
     find_parser.epilog = (
         'The search is by default on packages tagged with the "build-tools" or '
@@ -120,46 +121,23 @@ def external_find(args):
             else:
                 tty.warn("Unable to read manifest, unexpected error: {0}".format(str(e)), skip_msg)
 
-    # If the user didn't specify anything, search for build tools by default
-    if not args.tags and not args.all and not args.packages:
-        args.tags = ["core-packages", "build-tools"]
+    # Outside the Cray manifest, the search is done by tag for performance reasons,
+    # since tags are cached.
 
     # If the user specified both --all and --tag, then --all has precedence
-    if args.all and args.tags:
-        args.tags = []
+    if args.all or args.packages:
+        # Each detectable package has at least the detectable tag
+        args.tags = ["detectable"]
+    elif not args.tags:
+        # If the user didn't specify anything, search for build tools by default
+        args.tags = ["core-packages", "build-tools"]
 
-    # Construct the list of possible packages to be detected
-    pkg_cls_to_check = []
-
-    # Add the packages that have been required explicitly
-    if args.packages:
-        pkg_cls_to_check = [spack.repo.PATH.get_pkg_class(pkg) for pkg in args.packages]
-        if args.tags:
-            allowed = set(spack.repo.PATH.packages_with_tags(*args.tags))
-            pkg_cls_to_check = [x for x in pkg_cls_to_check if x.name in allowed]
-
-    if args.tags and not pkg_cls_to_check:
-        # If we arrived here we didn't have any explicit package passed
-        # as argument, which means to search all packages.
-        # Since tags are cached it's much faster to construct what we need
-        # to search directly, rather than filtering after the fact
-        pkg_cls_to_check = [
-            spack.repo.PATH.get_pkg_class(pkg_name)
-            for tag in args.tags
-            for pkg_name in spack.repo.PATH.packages_with_tags(tag)
-        ]
-        pkg_cls_to_check = list(set(pkg_cls_to_check))
-
-    # If the list of packages is empty, search for every possible package
-    if not args.tags and not pkg_cls_to_check:
-        pkg_cls_to_check = list(spack.repo.PATH.all_package_classes())
-
-    # If the user specified any packages to exclude from external find, add them here
-    if args.exclude:
-        pkg_cls_to_check = [pkg for pkg in pkg_cls_to_check if pkg.name not in args.exclude]
-
-    detected_packages = spack.detection.by_executable(pkg_cls_to_check, path_hints=args.path)
-    detected_packages.update(spack.detection.by_library(pkg_cls_to_check, path_hints=args.path))
+    candidate_packages = packages_to_search_for(
+        names=args.packages, tags=args.tags, exclude=args.exclude
+    )
+    detected_packages = spack.detection.by_path(
+        candidate_packages, path_hints=args.path, max_workers=args.jobs
+    )
 
     new_entries = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable
@@ -171,6 +149,19 @@ def external_find(args):
         spack.cmd.display_specs(new_entries)
     else:
         tty.msg("No new external packages detected")
+
+
+def packages_to_search_for(
+    *, names: Optional[List[str]], tags: List[str], exclude: Optional[List[str]]
+):
+    result = []
+    for current_tag in tags:
+        result.extend(spack.repo.PATH.packages_with_tags(current_tag))
+    if names:
+        result = [x for x in result if x in names]
+    if exclude:
+        result = [x for x in result if x not in exclude]
+    return result
 
 
 def external_read_cray_manifest(args):
