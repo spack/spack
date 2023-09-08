@@ -640,10 +640,20 @@ class Cuda(Package):
         # CUDA 10.0 provides Compatability libraries for running newer versions
         # of CUDA with older drivers. These do not work with newer drivers.
         #
-        # Add all non-stub libraries
+        # Add all non-stub libraries while building a set of the filenames for
+        # later exclusion.
+        non_stub_libs = set()
         for lib in find_libraries("*", root=self.prefix, shared=True, recursive=True):
             parts = lib.split(os.sep)
             if "compat" not in parts and "stubs" not in parts:
+                filtered_libs.append(lib)
+                non_stub_libs.add(parts[-1])
+        # Add all stub libraries that don't have a non-stub version.
+        for lib in find_libraries(
+            os.path.join("stubs", "*"), root=self.prefix, shared=True, recursive=True
+        ):
+            parts = lib.split(os.sep)
+            if "compat" not in parts and parts[-1] not in non_stub_libs:
                 filtered_libs.append(lib)
         return LibraryList(filtered_libs)
 
