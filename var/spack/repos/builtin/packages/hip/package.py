@@ -708,14 +708,17 @@ class Hip(CMakePackage):
             args.append(self.define("CLR_BUILD_OCL", False)),
         return args
 
-    test_src_dir = "hip-tests/samples"
-
     @run_after("install")
     def cache_test_sources(self):
         """Copy the tests source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         if self.spec.satisfies("@:5.1.0"):
             return
+        else:
+            if "@:5.5" in self.spec:
+                self.test_src_dir = "samples"
+            else:
+                self.test_src_dir = "hip-tests/samples"
         self.cache_extra_test_sources([self.test_src_dir])
 
     def test_samples(self):

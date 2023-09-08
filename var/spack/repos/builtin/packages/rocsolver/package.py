@@ -181,7 +181,7 @@ class Rocsolver(CMakePackage):
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
     for ver in ["5.6.0", "5.6.1"]:
-        depends_on("rocsparse@" + ver, when="@" + ver)
+        depends_on("rocsparse@5.2:", when="@5.6:")
 
     for tgt in itertools.chain(["auto"], amdgpu_targets):
         depends_on("rocblas amdgpu_target={0}".format(tgt), when="amdgpu_target={0}".format(tgt))
