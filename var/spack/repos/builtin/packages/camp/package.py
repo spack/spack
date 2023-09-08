@@ -102,7 +102,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
                     mpiexec = os.path.join(spec["mpi"].prefix.bin, "mpiexec")
 
             if not os.path.exists(mpiexec):
-                msg = "Unable to determine MPIEXEC, %s tests may fail" % self.pkg.name
+                msg = "Unable to determine MPIEXEC, %s tests may fail" % self.name
                 tty.warn(msg)
             else:
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
