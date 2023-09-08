@@ -6,12 +6,13 @@
 and running executables.
 """
 import collections
+import concurrent.futures
 import os
 import os.path
 import re
 import sys
 import warnings
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 import llnl.util.filesystem
 import llnl.util.tty
@@ -31,6 +32,11 @@ from .common import (
     library_prefix,
     path_to_dict,
 )
+
+#: Timeout used for package detection (seconds)
+DETECTION_TIMEOUT = 60
+if sys.platform == "win32":
+    DETECTION_TIMEOUT = 120
 
 
 def common_windows_package_paths() -> List[str]:
@@ -116,215 +122,243 @@ def _group_by_prefix(paths: Set[str]) -> Dict[str, Set[str]]:
     return groups
 
 
-# TODO consolidate this with by_executable
-# Packages should be able to define both .libraries and .executables in the future
-# determine_spec_details should get all relevant libraries and executables in one call
-def by_library(
-    packages_to_check: List[spack.package_base.PackageBase], path_hints: Optional[List[str]] = None
-) -> Dict[str, List[DetectedPackage]]:
-    # Techniques for finding libraries is determined on a per recipe basis in
-    # the determine_version class method. Some packages will extract the
-    # version number from a shared libraries filename.
-    # Other libraries could use the strings function to extract it as described
-    # in https://unix.stackexchange.com/questions/58846/viewing-linux-library-executable-version-info
-    """Return the list of packages that have been detected on the system,
-    searching by LD_LIBRARY_PATH, LIBRARY_PATH, DYLD_LIBRARY_PATH,
-    DYLD_FALLBACK_LIBRARY_PATH, and standard system library paths.
+class Finder:
+    """Inspects the file-system looking for packages. Guesses places where to look using PATH."""
 
-    Args:
-        packages_to_check: list of packages to be detected
-        path_hints: list of paths to be searched. If None the list will be
-            constructed based on the LD_LIBRARY_PATH, LIBRARY_PATH,
-            DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH environment variables
-            and standard system library paths.
-    """
-    # If no path hints from command line, intialize to empty list so
-    # we can add default hints on a per package basis
-    path_hints = [] if path_hints is None else path_hints
+    def path_hints(
+        self, *, pkg: "spack.package_base.PackageBase", initial_guess: Optional[List[str]] = None
+    ) -> List[str]:
+        """Returns the list of paths to be searched.
 
-    lib_pattern_to_pkgs = collections.defaultdict(list)
-    for pkg in packages_to_check:
-        if hasattr(pkg, "libraries"):
-            for lib in pkg.libraries:
-                lib_pattern_to_pkgs[lib].append(pkg)
-        path_hints.extend(compute_windows_user_path_for_package(pkg))
-        path_hints.extend(compute_windows_program_path_for_package(pkg))
+        Args:
+            pkg: package being detected
+            initial_guess: initial list of paths from caller
+        """
+        result = initial_guess or []
+        result.extend(compute_windows_user_path_for_package(pkg))
+        result.extend(compute_windows_program_path_for_package(pkg))
+        return result
 
-    path_to_lib_name = (
-        libraries_in_ld_and_system_library_path(path_hints=path_hints)
-        if sys.platform != "win32"
-        else libraries_in_windows_paths(path_hints)
-    )
+    def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
+        """Returns the list of patterns used to match candidate files.
 
-    pkg_to_found_libs = collections.defaultdict(set)
-    for lib_pattern, pkgs in lib_pattern_to_pkgs.items():
-        compiled_re = re.compile(lib_pattern)
-        for path, lib in path_to_lib_name.items():
-            if compiled_re.search(lib):
-                for pkg in pkgs:
-                    pkg_to_found_libs[pkg].add(path)
+        Args:
+            pkg: package being detected
+        """
+        raise NotImplementedError("must be implemented by derived classes")
 
-    pkg_to_entries = collections.defaultdict(list)
-    resolved_specs: Dict[spack.spec.Spec, str] = {}  # spec -> lib found for the spec
+    def candidate_files(self, *, patterns: List[str], paths: List[str]) -> List[str]:
+        """Returns a list of candidate files found on the system.
 
-    for pkg, libs in pkg_to_found_libs.items():
+        Args:
+            patterns: search patterns to be used for matching files
+            paths: paths where to search for files
+        """
+        raise NotImplementedError("must be implemented by derived classes")
+
+    def prefix_from_path(self, *, path: str) -> str:
+        """Given a path where a file was found, returns the corresponding prefix.
+
+        Args:
+            path: path of a detected file
+        """
+        raise NotImplementedError("must be implemented by derived classes")
+
+    def detect_specs(
+        self, *, pkg: "spack.package_base.PackageBase", paths: List[str]
+    ) -> List[DetectedPackage]:
+        """Given a list of files matching the search patterns, returns a list of detected specs.
+
+        Args:
+            pkg: package being detected
+            paths: files matching the package search patterns
+        """
         if not hasattr(pkg, "determine_spec_details"):
-            llnl.util.tty.warn(
-                "{0} must define 'determine_spec_details' in order"
-                " for Spack to detect externally-provided instances"
-                " of the package.".format(pkg.name)
+            warnings.warn(
+                f"{pkg.name} must define 'determine_spec_details' in order"
+                f" for Spack to detect externally-provided instances"
+                f" of the package."
             )
-            continue
+            return []
 
-        for prefix, libs_in_prefix in sorted(_group_by_prefix(libs).items()):
-            try:
-                specs = _convert_to_iterable(pkg.determine_spec_details(prefix, libs_in_prefix))
-            except Exception as e:
-                specs = []
-                msg = 'error detecting "{0}" from prefix {1} [{2}]'
-                warnings.warn(msg.format(pkg.name, prefix, str(e)))
-
-            if not specs:
-                llnl.util.tty.debug(
-                    "The following libraries in {0} were decidedly not "
-                    "part of the package {1}: {2}".format(
-                        prefix, pkg.name, ", ".join(_convert_to_iterable(libs_in_prefix))
-                    )
-                )
-
-            for spec in specs:
-                pkg_prefix = library_prefix(prefix)
-
-                if not pkg_prefix:
-                    msg = "no lib/ or lib64/ dir found in {0}. Cannot "
-                    "add it as a Spack package"
-                    llnl.util.tty.debug(msg.format(prefix))
-                    continue
-
-                if spec in resolved_specs:
-                    prior_prefix = ", ".join(_convert_to_iterable(resolved_specs[spec]))
-
-                    llnl.util.tty.debug(
-                        "Libraries in {0} and {1} are both associated"
-                        " with the same spec {2}".format(prefix, prior_prefix, str(spec))
-                    )
-                    continue
-                else:
-                    resolved_specs[spec] = prefix
-
-                try:
-                    spec.validate_detection()
-                except Exception as e:
-                    msg = (
-                        '"{0}" has been detected on the system but will '
-                        "not be added to packages.yaml [reason={1}]"
-                    )
-                    llnl.util.tty.warn(msg.format(spec, str(e)))
-                    continue
-
-                if spec.external_path:
-                    pkg_prefix = spec.external_path
-
-                pkg_to_entries[pkg.name].append(DetectedPackage(spec=spec, prefix=pkg_prefix))
-
-    return pkg_to_entries
-
-
-def by_executable(
-    packages_to_check: List[spack.package_base.PackageBase], path_hints: Optional[List[str]] = None
-) -> Dict[str, List[DetectedPackage]]:
-    """Return the list of packages that have been detected on the system,
-    searching by path.
-
-    Args:
-        packages_to_check: list of package classes to be detected
-        path_hints: list of paths to be searched. If None the list will be
-            constructed based on the PATH environment variable.
-    """
-    path_hints = spack.util.environment.get_path("PATH") if path_hints is None else path_hints
-    exe_pattern_to_pkgs = collections.defaultdict(list)
-    for pkg in packages_to_check:
-        if hasattr(pkg, "executables") and hasattr(pkg, "platform_executables"):
-            for exe in pkg.platform_executables():
-                exe_pattern_to_pkgs[exe].append(pkg)
-        # Add Windows specific, package related paths to the search paths
-        path_hints.extend(compute_windows_user_path_for_package(pkg))
-        path_hints.extend(compute_windows_program_path_for_package(pkg))
-
-    path_to_exe_name = executables_in_path(path_hints=path_hints)
-    pkg_to_found_exes = collections.defaultdict(set)
-    for exe_pattern, pkgs in exe_pattern_to_pkgs.items():
-        compiled_re = re.compile(exe_pattern)
-        for path, exe in path_to_exe_name.items():
-            if compiled_re.search(exe):
-                for pkg in pkgs:
-                    pkg_to_found_exes[pkg].add(path)
-
-    pkg_to_entries = collections.defaultdict(list)
-    resolved_specs: Dict[spack.spec.Spec, str] = {}  # spec -> exe found for the spec
-
-    for pkg, exes in pkg_to_found_exes.items():
-        if not hasattr(pkg, "determine_spec_details"):
-            llnl.util.tty.warn(
-                "{0} must define 'determine_spec_details' in order"
-                " for Spack to detect externally-provided instances"
-                " of the package.".format(pkg.name)
-            )
-            continue
-
-        for prefix, exes_in_prefix in sorted(_group_by_prefix(exes).items()):
+        result = []
+        for candidate_path, items_in_prefix in sorted(_group_by_prefix(set(paths)).items()):
             # TODO: multiple instances of a package can live in the same
             # prefix, and a package implementation can return multiple specs
             # for one prefix, but without additional details (e.g. about the
             # naming scheme which differentiates them), the spec won't be
             # usable.
             try:
-                specs = _convert_to_iterable(pkg.determine_spec_details(prefix, exes_in_prefix))
+                specs = _convert_to_iterable(
+                    pkg.determine_spec_details(candidate_path, items_in_prefix)
+                )
             except Exception as e:
                 specs = []
-                msg = 'error detecting "{0}" from prefix {1} [{2}]'
-                warnings.warn(msg.format(pkg.name, prefix, str(e)))
-
-            if not specs:
-                llnl.util.tty.debug(
-                    "The following executables in {0} were decidedly not "
-                    "part of the package {1}: {2}".format(
-                        prefix, pkg.name, ", ".join(_convert_to_iterable(exes_in_prefix))
-                    )
+                warnings.warn(
+                    f'error detecting "{pkg.name}" from prefix {candidate_path} [{str(e)}]'
                 )
 
-            for spec in specs:
-                pkg_prefix = executable_prefix(prefix)
+            if not specs:
+                files = ", ".join(_convert_to_iterable(items_in_prefix))
+                llnl.util.tty.debug(
+                    f"The following files in {candidate_path} were decidedly not "
+                    f"part of the package {pkg.name}: {files}"
+                )
 
-                if not pkg_prefix:
-                    msg = "no bin/ dir found in {0}. Cannot add it as a Spack package"
-                    llnl.util.tty.debug(msg.format(prefix))
+            resolved_specs: Dict[spack.spec.Spec, str] = {}  # spec -> exe found for the spec
+            for spec in specs:
+                prefix = self.prefix_from_path(path=candidate_path)
+                if not prefix:
                     continue
 
                 if spec in resolved_specs:
                     prior_prefix = ", ".join(_convert_to_iterable(resolved_specs[spec]))
-
                     llnl.util.tty.debug(
-                        "Executables in {0} and {1} are both associated"
-                        " with the same spec {2}".format(prefix, prior_prefix, str(spec))
+                        f"Files in {candidate_path} and {prior_prefix} are both associated"
+                        f" with the same spec {str(spec)}"
                     )
                     continue
-                else:
-                    resolved_specs[spec] = prefix
 
+                resolved_specs[spec] = candidate_path
                 try:
                     spec.validate_detection()
                 except Exception as e:
                     msg = (
-                        '"{0}" has been detected on the system but will '
-                        "not be added to packages.yaml [reason={1}]"
+                        f'"{spec}" has been detected on the system but will '
+                        f"not be added to packages.yaml [reason={str(e)}]"
                     )
-                    llnl.util.tty.warn(msg.format(spec, str(e)))
+                    warnings.warn(msg)
                     continue
 
                 if spec.external_path:
-                    pkg_prefix = spec.external_path
+                    prefix = spec.external_path
 
-                pkg_to_entries[pkg.name].append(DetectedPackage(spec=spec, prefix=pkg_prefix))
+                result.append(DetectedPackage(spec=spec, prefix=prefix))
 
-    return pkg_to_entries
+        return result
+
+    def find(
+        self, *, pkg_name: str, initial_guess: Optional[List[str]] = None
+    ) -> List[DetectedPackage]:
+        """For a given package, returns a list of detected specs.
+
+        Args:
+            pkg_name: package being detected
+            initial_guess: initial list of paths to search from the caller
+        """
+        import spack.repo
+
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        patterns = self.search_patterns(pkg=pkg_cls)
+        if not patterns:
+            return []
+        path_hints = self.path_hints(pkg=pkg_cls, initial_guess=initial_guess)
+        candidates = self.candidate_files(patterns=patterns, paths=path_hints)
+        result = self.detect_specs(pkg=pkg_cls, paths=candidates)
+        return result
+
+
+class ExecutablesFinder(Finder):
+    def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
+        result = []
+        if hasattr(pkg, "executables") and hasattr(pkg, "platform_executables"):
+            result = pkg.platform_executables()
+        return result
+
+    def candidate_files(self, *, patterns: List[str], paths: List[str]) -> List[str]:
+        executables_by_path = executables_in_path(path_hints=paths)
+        patterns = [re.compile(x) for x in patterns]
+        result = []
+        for compiled_re in patterns:
+            for path, exe in executables_by_path.items():
+                if compiled_re.search(exe):
+                    result.append(path)
+        return list(sorted(set(result)))
+
+    def prefix_from_path(self, *, path: str) -> str:
+        result = executable_prefix(path)
+        if not result:
+            msg = f"no bin/ dir found in {path}. Cannot add it as a Spack package"
+            llnl.util.tty.debug(msg)
+        return result
+
+
+class LibrariesFinder(Finder):
+    """Finds libraries on the system, searching by LD_LIBRARY_PATH, LIBRARY_PATH,
+    DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH, and standard system library paths
+    """
+
+    def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
+        result = []
+        if hasattr(pkg, "libraries"):
+            result = pkg.libraries
+        return result
+
+    def candidate_files(self, *, patterns: List[str], paths: List[str]) -> List[str]:
+        libraries_by_path = (
+            libraries_in_ld_and_system_library_path(path_hints=paths)
+            if sys.platform != "win32"
+            else libraries_in_windows_paths(paths)
+        )
+        patterns = [re.compile(x) for x in patterns]
+        result = []
+        for compiled_re in patterns:
+            for path, exe in libraries_by_path.items():
+                if compiled_re.search(exe):
+                    result.append(path)
+        return result
+
+    def prefix_from_path(self, *, path: str) -> str:
+        result = library_prefix(path)
+        if not result:
+            msg = f"no lib/ or lib64/ dir found in {path}. Cannot add it as a Spack package"
+            llnl.util.tty.debug(msg)
+        return result
+
+
+def by_path(
+    packages_to_search: List[str],
+    *,
+    path_hints: Optional[List[str]] = None,
+    max_workers: Optional[int] = None,
+) -> Dict[str, List[DetectedPackage]]:
+    """Return the list of packages that have been detected on the system,
+    searching by path.
+
+    Args:
+        packages_to_search: list of package classes to be detected
+        path_hints: initial list of paths to be searched
+    """
+    # TODO: Packages should be able to define both .libraries and .executables in the future
+    # TODO: determine_spec_details should get all relevant libraries and executables in one call
+    executables_finder, libraries_finder = ExecutablesFinder(), LibrariesFinder()
+
+    executables_path_guess = (
+        spack.util.environment.get_path("PATH") if path_hints is None else path_hints
+    )
+    libraries_path_guess = [] if path_hints is None else path_hints
+    detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
+
+    result = collections.defaultdict(list)
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+        for pkg in packages_to_search:
+            executable_future = executor.submit(
+                executables_finder.find, pkg_name=pkg, initial_guess=executables_path_guess
+            )
+            library_future = executor.submit(
+                libraries_finder.find, pkg_name=pkg, initial_guess=libraries_path_guess
+            )
+            detected_specs_by_package[pkg] = executable_future, library_future
+
+        for pkg_name, futures in detected_specs_by_package.items():
+            for future in futures:
+                try:
+                    detected = future.result(timeout=DETECTION_TIMEOUT)
+                    if detected:
+                        result[pkg_name].extend(detected)
+                except Exception:
+                    llnl.util.tty.debug(
+                        f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached"
+                    )
+
+    return result
