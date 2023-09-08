@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
 import os
+
+import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -54,9 +55,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
         options.append(self.define_from_variant("ENABLE_CUDA", "cuda"))
         if "+cuda" in spec:
-            options.extend(
-                ["-DCUDA_TOOLKIT_ROOT_DIR=%s" % (spec["cuda"].prefix)]
-            )
+            options.extend(["-DCUDA_TOOLKIT_ROOT_DIR=%s" % (spec["cuda"].prefix)])
 
             if not spec.satisfies("cuda_arch=none"):
                 cuda_arch = spec.variants["cuda_arch"].value
