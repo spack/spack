@@ -38,6 +38,16 @@ class DetectedPackage(NamedTuple):
     #: Prefix of the spec
     prefix: str
 
+    def __reduce__(self):
+        return DetectedPackage.restore, (str(self.spec), self.prefix, self.spec.extra_attributes)
+
+    @staticmethod
+    def restore(
+        spec_str: str, prefix: str, extra_attributes: Optional[Dict[str, str]]
+    ) -> "DetectedPackage":
+        spec = spack.spec.Spec.from_detection(spec_str=spec_str, extra_attributes=extra_attributes)
+        return DetectedPackage(spec=spec, prefix=prefix)
+
 
 def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
     """Returns all the specs mentioned as externals in packages.yaml"""
@@ -383,7 +393,7 @@ def find_win32_additional_install_paths() -> List[str]:
     return windows_search_ext
 
 
-def compute_windows_program_path_for_package(pkg: spack.package_base.PackageBase) -> List[str]:
+def compute_windows_program_path_for_package(pkg: "spack.package_base.PackageBase") -> List[str]:
     """Given a package, attempts to compute its Windows program files location,
     and returns the list of best guesses.
 
@@ -403,7 +413,7 @@ def compute_windows_program_path_for_package(pkg: spack.package_base.PackageBase
     ]
 
 
-def compute_windows_user_path_for_package(pkg: spack.package_base.PackageBase) -> List[str]:
+def compute_windows_user_path_for_package(pkg: "spack.package_base.PackageBase") -> List[str]:
     """Given a package attempt to compute its user scoped
     install location, return list of potential locations based
     on common heuristics. For more info on Windows user specific

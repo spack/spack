@@ -1119,7 +1119,7 @@ _spack_external() {
 _spack_external_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --not-buildable --exclude -p --path --scope --all -t --tag"
+        SPACK_COMPREPLY="-h --help --not-buildable --exclude -p --path --scope --all -t --tag -j --jobs"
     else
         _all_packages
     fi

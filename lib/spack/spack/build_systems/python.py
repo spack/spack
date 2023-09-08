@@ -300,8 +300,8 @@ class PythonPackage(PythonExtension):
         if python_externals_configured:
             return python_externals_configured[0]
 
-        python_externals_detection = spack.detection.by_executable(
-            [spack.repo.PATH.get_pkg_class("python")], path_hints=[self.spec.external_path]
+        python_externals_detection = spack.detection.by_path(
+            ["python"], path_hints=[self.spec.external_path]
         )
 
         python_externals_detected = [
