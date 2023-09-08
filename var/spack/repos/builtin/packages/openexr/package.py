@@ -66,8 +66,6 @@ class Openexr(CMakePackage):
         url="http://download.savannah.nongnu.org/releases/openexr/openexr-1.3.2.tar.gz",
     )
 
-    variant("debug", default=False, description="Builds a debug version of the libraries")
-
     depends_on("cmake@3.12:", when="@2.4:", type="build")
     depends_on("pkgconfig", when="@:2", type="build")
     depends_on("imath", when="@3:")
@@ -85,11 +83,6 @@ class Openexr(CMakePackage):
 
     def configure_args(self):
         args = ["--prefix=" + self.prefix]
-
-        if "+debug" in self.spec:
-            args.append("--enable-debug")
-        else:
-            args.append("--disable-debug")
 
         return args
 
