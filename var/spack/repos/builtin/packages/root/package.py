@@ -450,7 +450,6 @@ class Root(CMakePackage):
 
         # Options controlling gross build / config behavior.
         options += [
-            define("cxxmodules", False),
             define("exceptions", True),
             define("explicitlink", True),
             define("fail-on-missing", True),
@@ -470,6 +469,9 @@ class Root(CMakePackage):
             # it was compiled with at run time; see #17488, #18078 and #23886
             define("CLING_CXX_PATH", self.compiler.cxx),
         ]
+
+        if self.spec.satisfies("@:6.28.99"):
+            options.append(define("cxxmodules", False))
 
         # Options related to ROOT's ability to download and build its own
         # dependencies. Per Spack convention, this should generally be avoided.
