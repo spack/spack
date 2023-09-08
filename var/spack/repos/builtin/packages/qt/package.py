@@ -691,7 +691,7 @@ class Qt(Package):
                 config_args.extend(["-skip", "connectivity"])
         elif "+gui" in spec:
             # Linux-only QT5 dependencies
-            config_args.append("-system-xcb")
+            config_args.append("-xcb")
             if "+opengl" in spec:
                 config_args.append("-I{0}/include".format(spec["libx11"].prefix))
                 config_args.append("-I{0}/include".format(spec["xproto"].prefix))
