@@ -107,7 +107,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
             else:
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
                 # vs the older versions which expect MPIEXEC
-                if self.pkg.spec["cmake"].satisfies("@3.10:"):
+                if spec["cmake"].satisfies("@3.10:"):
                     options.append("-DMPIEXEC_EXECUTABLE:PATH={0}".format(mpiexec))
                 else:
                     options.append("-DMPIEXEC:PATH={0}".format(mpiexec))
