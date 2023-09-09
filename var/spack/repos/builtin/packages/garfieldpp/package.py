@@ -38,3 +38,9 @@ class Garfieldpp(CMakePackage):
     def cmake_args(self):
         args = [self.define_from_variant("WITH_EXAMPLES", "examples")]
         return args
+
+    def setup_run_environment(self, env):
+        env.set("HEED_DATABASE", self.prefix.share.Heed.database)
+
+    def setup_dependent_build_environment(self, env):
+        env.set("HEED_DATABASE", self.prefix.share.Heed.database)
