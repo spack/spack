@@ -19,6 +19,7 @@ class BioconductorEbseq(RPackage):
 
     homepage = "https://www.biostat.wisc.edu/~kendzior/EBSEQ/"
     url = "https://bioconductor.org/packages/release/bioc/src/contrib/EBSeq_1.40.0.tar.gz"
+    maintainers("pabloaledo")
 
     bioc = "ebseq"
 
