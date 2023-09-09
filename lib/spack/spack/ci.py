@@ -2445,4 +2445,3 @@ def translate_deprecated_config(config):
         pipeline_gen.append({"cleanup-job": service_job_attributes})
 
     return True
-
