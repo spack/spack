@@ -34,7 +34,3 @@ class PyPytorchToolkitCu118(PythonPackage):
     #depends_on("python@3.X:2.Y,3.Z:", type=("build", "run"))
     depends_on("python@3.8:3.11", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-
-    def config_settings(self):
-        settings = {}
-        return settings
