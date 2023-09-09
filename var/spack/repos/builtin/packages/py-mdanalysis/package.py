@@ -64,6 +64,8 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-pytng@0.2.3:", when="+extra_formats", type=("build", "run"))
     depends_on("py-chemfiles@0.10:", when="+extra_formats", type=("build", "run"))
     depends_on("py-pyedr@0.7.0:", when="+extra_formats", type=("build", "run"))
+    # py-gsd is now an optional dependency and requires >3.0.0
+    # gsd>=2.9.0 requires setuptools>=64 and can't be concretised with py-numpy
     #    depends_on("py-gsd@3.0.1:", when="+extra_formats @2.6.0:", type=("build", "run"))
     depends_on(
         "rdkit@2020.03.1: +python ~coordgen ~maeparser ~yaehmop ~descriptors3d",
