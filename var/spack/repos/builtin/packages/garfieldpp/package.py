@@ -37,11 +37,24 @@ class Garfieldpp(CMakePackage):
     depends_on("geant4", when="+examples")
 
     def cmake_args(self):
-        args = [self.define_from_variant("WITH_EXAMPLES", "examples")]
+        args = [
+            "-DCMAKE_INSTALL_LIBDIR=lib",
+            self.define_from_variant("WITH_EXAMPLES", "examples"),
+        ]
         return args
 
     def setup_run_environment(self, env):
+        env.set("GARFIELD_INSTALL", self.prefix)
         env.set("HEED_DATABASE", self.prefix.share.Heed.database)
 
+        # In order to get Garfield work in python, need to setup both ROOT and GSL
+        pyver = self.spec["python"].version.up_to(2)
+        site_packages = "python{}/site-packages".format(pyver)
+        pypath = join_path(self.prefix.lib, site_packages)
+        env.prepend_path("PYTHONPATH", pypath)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["root"].prefix.lib.root)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["gsl"].prefix.lib.root)
+
     def setup_dependent_build_environment(self, env):
+        env.set("GARFIELD_INSTALL", self.prefix)
         env.set("HEED_DATABASE", self.prefix.share.Heed.database)
