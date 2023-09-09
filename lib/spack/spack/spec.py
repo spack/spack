@@ -2826,6 +2826,19 @@ class Spec:
         if not self.satisfies("platform=cray"):
             self.architecture.target.optimization_flags(self.compiler)
 
+        splice_config = spack.config.CONFIG.get("splice", [])
+        for splice_set in splice_config:
+            target = splice_set["target"]
+            if target not in self:
+                continue
+
+            replacement = spack.spec.Spec(splice_set["replacement"])
+            assert replacement.abstract_hash
+            replacement.replace_hash()
+            transitive = splice_set.get("transitive", False)
+            spliced = self.splice(replacement, transitive)
+            self._dup(spliced)
+
     def _patches_assigned(self):
         """Whether patches have been assigned to this spec by the concretizer."""
         # FIXME: _patches_in_order_of_appearance is attached after concretization
