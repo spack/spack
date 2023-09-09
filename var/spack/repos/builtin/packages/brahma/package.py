@@ -15,7 +15,7 @@ class Brahma(CMakePackage):
 
     version("develop", branch="dev")
     version("master", branch="master")
-    version("0.0.1", tag="v0.0.1")
+    version("0.0.1", tag="v0.0.1", commit="15156036f14e36511dfc3f3751dc953540526a2b")
 
     variant("mpi", default=False, description="Enable MPI support")
     depends_on("cpp-logger@0.0.1")

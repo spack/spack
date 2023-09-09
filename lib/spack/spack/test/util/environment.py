@@ -172,8 +172,8 @@ def test_escape_double_quotes_in_shell_modifications():
         assert r'set "VAR=$PATH;$ANOTHER_PATH"' in cmds
         assert r'set "QUOTED_VAR="MY_VAL"' in cmds
         cmds = to_validate.shell_modifications(shell="pwsh")
-        assert r"$Env:VAR=$PATH;$ANOTHER_PATH" in cmds
-        assert r'$Env:QUOTED_VAR="MY_VAL"' in cmds
+        assert "$Env:VAR='$PATH;$ANOTHER_PATH'" in cmds
+        assert "$Env:QUOTED_VAR='\"MY_VAL\"'" in cmds
     else:
         cmds = to_validate.shell_modifications()
         assert 'export VAR="$PATH:$ANOTHER_PATH"' in cmds

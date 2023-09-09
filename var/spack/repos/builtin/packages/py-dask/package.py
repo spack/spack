@@ -103,7 +103,7 @@ class PyDask(PythonPackage):
     depends_on("py-bokeh@2.4.2:2", type=("build", "run"), when="@2022.10.2:2023.3 +diagnostics")
     depends_on("py-bokeh@2.4.2:", type=("build", "run"), when="@2023.4.0: +diagnostics")
     depends_on("py-jinja2", type=("build", "run"), when="@2022.10.2: +diagnostics")
-    depends_on("py-jinja2@2.10.3", type=("build", "run"), when="@2023.4.0: +diagnostics")
+    depends_on("py-jinja2@2.10.3:", type=("build", "run"), when="@2023.4.0: +diagnostics")
 
     # Requirements for dask.delayed
     # The dependency on py-cloudpickle is non-optional starting version 2021.3.1
