@@ -930,13 +930,13 @@ def generate_gitlab_ci_yaml(
     except bindist.FetchCacheError as e:
         tty.warn(e)
 
-    spec_labels, dependencies, stages = stage_spec_jobs(
-        [
-            concrete
-            for abstract, concrete in env.concretized_specs()
-            if abstract in env.spec_lists["specs"]
-        ]
-    )
+    concretized_specs = {
+        concrete: abstract
+        for abstract, concrete in env.concretized_specs()
+        if abstract in env.spec_lists["specs"]
+    }
+
+    spec_labels, dependencies, stages = stage_spec_jobs(concretized_specs.keys())
 
     all_job_names = []
     output_object = {}
@@ -1029,6 +1029,7 @@ def generate_gitlab_ci_yaml(
             job_vars = job_object.setdefault("variables", {})
             job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
             job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
+            job_vars["SPECK_JOB_ABS_SPEC"] = str(concretized_specs[release_spec])
 
             job_object["needs"] = []
             if spec_label in dependencies:
@@ -2444,3 +2445,4 @@ def translate_deprecated_config(config):
         pipeline_gen.append({"cleanup-job": service_job_attributes})
 
     return True
+
