@@ -21,7 +21,7 @@ class Garfieldpp(CMakePackage):
     patch(
         "https://gitlab.cern.ch/garfield/garfieldpp/-/commit/882c3023cfa89b45ca7a0c95ab1518454536e8e1.patch",
         sha256="440bc8129c55168e6c45d39e4344911d48ddb13fd3f9ee05974b2ede46a23b93",
-        when="@:4.0",
+        when="@4.0",
     )
 
     # ###################### Variants ##########################
