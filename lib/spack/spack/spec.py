@@ -4746,7 +4746,7 @@ class Spec:
                         deps_to_check.extend(dep_spec.parameters.get("virtuals", []))
 
                 if any(dep not in self_nodes for dep in deps_to_check):
-                    nodes[name].build_spec = self[name].build_spec
+                    nodes[name].build_spec = self[name].build_spec.copy()
             else:
                 for edge in other[name].edges_to_dependencies():
                     nodes[name].add_dependency_edge(
@@ -4759,7 +4759,7 @@ class Spec:
                         deps_to_check.extend(dep_spec.parameters.get("virtuals", []))
 
                 if any(dep not in other_nodes for dep in deps_to_check):
-                    nodes[name].build_spec = other[name].build_spec
+                    nodes[name].build_spec = other[name].build_spec.copy()
 
         # If self.name not in nodes then we spliced the root with a different virtual provider
         ret = nodes[self.name] if self.name in nodes else nodes[other.name]
