@@ -2,8 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack.package import *
+
 
 class PyPytorchToolkitCu118(PythonPackage):
     """Python package used to dev neural networks using Pytorch==2.0.1 and CUDA==11.8"""
