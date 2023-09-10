@@ -35,8 +35,8 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cabana +cajita +heffte +silo +mpi")
 
     # Dependencies for specific versions/branches
-    depends_on("cabana @0.5.0", when="@1.0")
     depends_on("cabana @0.5.0", when="@main")
+    depends_on("cabana @0.6.0", when="@1.0")
     depends_on("cabana @master", when="@develop")
 
     # Dependencies for cabana, heffte, and kokkos based on cuda or rocm settings
