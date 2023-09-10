@@ -220,7 +220,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         resolved_libs = find_libraries(libs, lib_path, shared=shared)
         # Add MPI libraries for cluster support. If MPI is not in the
         # spec, then MKL is externally installed and application must
-        # link with MPI libaries. If MPI is in spect, but there are no
+        # link with MPI libaries. If MPI is in spec, but there are no
         # libraries, then the package (e.g. hpcx-mpi) relies on the
         # compiler wrapper to add the libraries.
         try:
