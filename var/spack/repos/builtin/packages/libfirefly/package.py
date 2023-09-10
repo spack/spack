@@ -11,10 +11,11 @@ class Libfirefly(CMakePackage):
 
     homepage = "https://libfirefly.tbhaxor.com"
     url = "https://github.com/tbhaxor/firefly/archive/refs/tags/v2.1.0.tar.gz"
+    git = "https://github.com/tbhaxor/firefly.git"
 
     maintainers("tbhaxor")
 
-    version("master", git="https://github.com/tbhaxor/firefly", branch="master")
+    version("master", branch="master")
     version("2.1.0", sha256="4de4b216c73199a1826de7a0d45205b401603315347d7947d8b5950d3e6b893d")
 
     variant(
