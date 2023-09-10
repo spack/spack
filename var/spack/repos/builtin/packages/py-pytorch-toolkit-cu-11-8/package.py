@@ -32,4 +32,3 @@ class PyPytorchToolkitCu118(PythonPackage):
     version("0.1.6.post20", sha256="a266c8bbc3c883f42888bdd85b6fd21da2a6941fb270db554caad409cca3b89c", expand=False)
 
     depends_on("python@3.8:3.11", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
