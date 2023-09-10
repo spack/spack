@@ -80,6 +80,13 @@ def env_activate_setup_parser(subparser):
         help="print fish commands to activate the environment",
     )
     shells.add_argument(
+        "--rc",
+        action="store_const",
+        dest="shell",
+        const="rc",
+        help="print rc commands to activate the environment",
+    )
+    shells.add_argument(
         "--bat",
         action="store_const",
         dest="shell",
@@ -231,6 +238,13 @@ def env_deactivate_setup_parser(subparser):
         dest="shell",
         const="fish",
         help="print fish commands to activate the environment",
+    )
+    shells.add_argument(
+        "--rc",
+        action="store_const",
+        dest="shell",
+        const="rc",
+        help="print rc commands to activate the environment",
     )
     shells.add_argument(
         "--bat",
