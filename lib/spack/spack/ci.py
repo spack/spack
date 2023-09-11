@@ -1063,7 +1063,6 @@ def generate_gitlab_ci_yaml(
             job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
             job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
             job_vars["SPACK_JOB_ABS_SPEC"] = abs_labels[spec_label]
-            print(job_vars["SPACK_JOB_ABS_SPEC"])
 
             job_object["needs"] = []
             if spec_label in dependencies:
