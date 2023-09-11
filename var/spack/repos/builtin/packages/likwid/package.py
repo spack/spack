@@ -195,7 +195,9 @@ class Likwid(Package):
                     "HWLOC_LIB_DIR = {0}".format(ll.directories[0]),
                     "config.mk",
                 )
-                filter_file("^#HWLOC_LIB_NAME.*", "HWLOC_LIB_NAME = {0}".format(ll.names[0]), "config.mk")
+                filter_file(
+                    "^#HWLOC_LIB_NAME.*", "HWLOC_LIB_NAME = {0}".format(ll.names[0]), "config.mk"
+                )
             else:
                 raise InstallError("Failed to find library path and/or name of hwloc dependency")
 
