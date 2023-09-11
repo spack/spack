@@ -1955,7 +1955,7 @@ class TestConcretize:
         def find_fake_python(classes, path_hints):
             return {"python": [spack.detection.DetectedPackage(python_spec, prefix=path_hints[0])]}
 
-        monkeypatch.setattr(spack.detection, "by_executable", find_fake_python)
+        monkeypatch.setattr(spack.detection, "by_path", find_fake_python)
         external_conf = {
             "py-extension1": {
                 "buildable": False,

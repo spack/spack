@@ -86,7 +86,7 @@ jobs:
           fi
 
       - name: Upload Dockerfile
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
         with:
           name: dockerfiles
           path: dockerfiles
@@ -112,7 +112,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Deploy ${{ matrix.dockerfile[0] }}
-        uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825 # @v2
+        uses: docker/build-push-action@0a97817b6ade9f46837855d676c4cca3a2471fc9 # @v2
         with:
           context: dockerfiles/${{ matrix.dockerfile[0] }}
           platforms: ${{ matrix.dockerfile[1] }}
