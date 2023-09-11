@@ -28,8 +28,8 @@ class G2(CMakePackage):
     variant("pic", default=True, description="Build with position-independent-code")
     variant(
         "precision",
-        default=["4", "d"],
-        values=["4", "d"],
+        default=("4", "d"),
+        values=("4", "d"),
         multi=True,
         description="Set precision (_4/_d library versions)",
         when="@3.4.6:",
