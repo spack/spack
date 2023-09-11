@@ -66,14 +66,17 @@ def symlink(source_path: str, link_path: str, allow_broken_symlinks: bool = not 
     if not allow_broken_symlinks:
         # Perform basic checks to make sure symlinking will succeed
         if os.path.lexists(link_path):
-            raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
+            raise SymlinkError(
+                f"Link path ({link_path}) already exists. Cannot create link.", errno=1
+            )
 
         if not os.path.exists(source_path):
             if os.path.isabs(source_path) and not allow_broken_symlinks:
                 # An absolute source path that does not exist will result in a broken link.
                 raise SymlinkError(
                     f"Source path ({source_path}) is absolute but does not exist. Resulting "
-                    f"link would be broken so not making link."
+                    f"link would be broken so not making link.",
+                    errno=2,
                 )
             else:
                 # os.symlink can create a link when the given source path is relative to
@@ -90,7 +93,8 @@ def symlink(source_path: str, link_path: str, allow_broken_symlinks: bool = not 
                 elif not allow_broken_symlinks:
                     raise SymlinkError(
                         f"The source path ({source_path}) is not relative to the link path "
-                        f"({link_path}). Resulting link would be broken so not making link."
+                        f"({link_path}). Resulting link would be broken so not making link.",
+                        errno=3,
                     )
 
     # Create the symlink
@@ -214,14 +218,14 @@ def _windows_create_link(source: str, link: str):
     be created.
     """
     if sys.platform != "win32":
-        raise SymlinkError("windows_create_link method can't be used on non-Windows OS.")
+        raise SymlinkError("windows_create_link method can't be used on non-Windows OS.", errno=4)
     elif os.path.isdir(source):
         _windows_create_junction(source=source, link=link)
     elif os.path.isfile(source):
         _windows_create_hard_link(path=source, link=link)
     else:
         raise SymlinkError(
-            f"Cannot create link from {source}. It is neither a file nor a directory."
+            f"Cannot create link from {source}. It is neither a file nor a directory.", errno=5
         )
 
 
@@ -230,13 +234,15 @@ def _windows_create_junction(source: str, link: str):
     then create the junction.
     """
     if sys.platform != "win32":
-        raise SymlinkError("windows_create_junction method can't be used on non-Windows OS.")
+        raise SymlinkError(
+            "windows_create_junction method can't be used on non-Windows OS.", errno=6
+        )
     elif not os.path.exists(source):
-        raise SymlinkError("Source path does not exist, cannot create a junction.")
+        raise SymlinkError("Source path does not exist, cannot create a junction.", errno=7)
     elif os.path.lexists(link):
-        raise SymlinkError("Link path already exists, cannot create a junction.")
+        raise SymlinkError("Link path already exists, cannot create a junction.", errno=8)
     elif not os.path.isdir(source):
-        raise SymlinkError("Source path is not a directory, cannot create a junction.")
+        raise SymlinkError("Source path is not a directory, cannot create a junction.", errno=9)
 
     import subprocess
 
@@ -247,7 +253,7 @@ def _windows_create_junction(source: str, link: str):
     if proc.returncode != 0:
         err = err.decode()
         tty.error(err)
-        raise SymlinkError("Make junction command returned a non-zero return code.", err)
+        raise SymlinkError("Make junction command returned a non-zero return code.", err, errno=10)
 
 
 def _windows_create_hard_link(path: str, link: str):
@@ -255,13 +261,17 @@ def _windows_create_hard_link(path: str, link: str):
     link, then create the hard link.
     """
     if sys.platform != "win32":
-        raise SymlinkError("windows_create_hard_link method can't be used on non-Windows OS.")
+        raise SymlinkError(
+            "windows_create_hard_link method can't be used on non-Windows OS.", errno=11
+        )
     elif not os.path.exists(path):
-        raise SymlinkError(f"File path {path} does not exist. Cannot create hard link.")
+        raise SymlinkError(f"File path {path} does not exist. Cannot create hard link.", errno=12)
     elif os.path.lexists(link):
-        raise SymlinkError(f"Link path ({link}) already exists. Cannot create hard link.")
+        raise SymlinkError(
+            f"Link path ({link}) already exists. Cannot create hard link.", errno=13
+        )
     elif not os.path.isfile(path):
-        raise SymlinkError(f"File path ({link}) is not a file. Cannot create hard link.")
+        raise SymlinkError(f"File path ({link}) is not a file. Cannot create hard link.", errno=14)
     else:
         tty.debug(f"Creating hard link {link} pointing to {path}")
         CreateHardLink(link, path)
@@ -280,13 +290,13 @@ def readlink(path: str):
 def _windows_read_hard_link(link: str) -> str:
     """Find all of the files that point to the same inode as the link"""
     if sys.platform != "win32":
-        raise SymlinkError("Can't read hard link on non-Windows OS.")
+        raise SymlinkError("Can't read hard link on non-Windows OS.", errno=15)
     link = os.path.abspath(link)
     fsutil_cmd = ["fsutil", "hardlink", "list", link]
     proc = subprocess.Popen(fsutil_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, err = proc.communicate()
     if proc.returncode != 0:
-        raise SymlinkError(f"An error occurred while reading hard link: {err.decode()}")
+        raise SymlinkError(f"An error occurred while reading hard link: {err.decode()}", errno=16)
 
     # fsutil response does not include the drive name, so append it back to each linked file.
     drive, link_tail = os.path.splitdrive(os.path.abspath(link))
@@ -296,15 +306,15 @@ def _windows_read_hard_link(link: str) -> str:
         return links.pop()
     elif len(links) > 1:
         # TODO: How best to handle the case where 3 or more paths point to a single inode?
-        raise SymlinkError(f"Found multiple paths pointing to the same inode {links}")
+        raise SymlinkError(f"Found multiple paths pointing to the same inode {links}", errno=17)
     else:
-        raise SymlinkError("Cannot determine hard link source path.")
+        raise SymlinkError("Cannot determine hard link source path.", errno=18)
 
 
 def _windows_read_junction(link: str):
     """Find the path that a junction points to."""
     if sys.platform != "win32":
-        raise SymlinkError("Can't read junction on non-Windows OS.")
+        raise SymlinkError("Can't read junction on non-Windows OS.", errno=19)
 
     link = os.path.abspath(link)
     link_basename = os.path.basename(link)
@@ -313,12 +323,12 @@ def _windows_read_junction(link: str):
     proc = subprocess.Popen(fsutil_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, err = proc.communicate()
     if proc.returncode != 0:
-        raise SymlinkError(f"An error occurred while reading junction: {err.decode()}")
+        raise SymlinkError(f"An error occurred while reading junction: {err.decode()}", errno=20)
     matches = re.search(rf"<JUNCTION>\s+{link_basename} \[(.*)]", out.decode())
     if matches:
         return matches.group(1)
     else:
-        raise SymlinkError("Could not find junction path.")
+        raise SymlinkError("Could not find junction path.", errno=21)
 
 
 @system_path_filter
@@ -336,7 +346,58 @@ def resolve_link_target_relative_to_the_link(link):
     return os.path.join(link_dir, target)
 
 
+class SymlinkErrorType:
+    # Link path already exists.
+    LinkAlreadyExists = 1
+    # Source path is absolute but does not exist.
+    SourceAbsButNoExist = 2
+    # The source path is not relative to the link path.
+    SourceNotRelativeToLink = 3
+    # windows_create_link method can't be used on non-Windows OS.
+    NoWinCreateLinkOnNix = 4
+    # Cannot create link. It is neither a file nor a directory.
+    LinkNotFileOrDir = 5
+    # windows_create_junction method can't be used on non-Windows OS.
+    NoJunctionOnNix = 6
+    # Source path does not exist, cannot create a junction.
+    NoSourcePathForJunction = 7
+    # Link path already exists. Cannot create hard link.
+    JunctionLinkAlreadyExists = 8
+    # Source path is not a directory, cannot create a junction.
+    JunctionSourceNotADir = 9
+    # Make junction command returned a non-zero return code.
+    JunctionCreationError = 10
+    # windows_create_hard_link method can't be used on non-Windows Os.
+    NoHardlinkOnNix = 11
+    # File path does not exist. Cannot create hard link.
+    NoFileForHardlink = 12
+    # Link path already exists. Cannot create hard link.
+    HardlinkPathAlreadyExists = 13
+    # File path is not a file. Cannot create hard link.
+    HardlinkPathNotAFile = 14
+    # Can't read hard link on non-Windows OS.
+    CantReadHardlinkOnNix = 15
+    # An error occurred while reading hard link.
+    HardlinkReadError = 16
+    # Found multiple paths pointing to the same inode.
+    MultiPathsForinode = 17
+    # Cannot determine hard link source path.
+    NoHardlinkSourcePath = 18
+    # Can't read junction on non-Windows OS.
+    CantReadJunctionOnNix = 19
+    # An error occurred while reading junction.
+    JunctionReadError = 20
+    # Could not find junction path.
+    NoJunctionPath = 21
+    # Unknown
+    UnknownError = 22
+
+
 class SymlinkError(SpackError):
     """Exception class for errors raised while creating symlinks,
     junctions and hard links
     """
+
+    def __init__(self, message, long_message=None, errno=22, *args, **kwargs):
+        self.errcode = errno
+        super(SymlinkError, self).__init__(message, long_message, *args, **kwargs)

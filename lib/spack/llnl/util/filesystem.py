@@ -2478,6 +2478,15 @@ class WindowsSimulatedRPath:
         This is because it is both meaningless from an rpath
         perspective, and will cause an error when Developer
         mode is not enabled"""
+
+        def report_already_linked():
+            already_linked = islink(dest_file)
+            tty.debug(
+                "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
+                if already_linked
+                else "library with name %s already exists at location %s." % (file_name, dest_dir)
+            )
+
         file_name = os.path.basename(path)
         dest_file = os.path.join(dest_dir, file_name)
         if os.path.exists(dest_dir) and not dest_file == path:
@@ -2485,20 +2494,25 @@ class WindowsSimulatedRPath:
                 symlink(path, dest_file)
             # For py2 compatibility, we have to catch the specific Windows error code
             # associate with trying to create a file that already exists (winerror 183)
+            # Catch OSErrors missed by the SymlinkError checks
             except OSError as e:
                 if sys.platform == "win32" and (e.winerror == 183 or e.errno == errno.EEXIST):
                     # We have either already symlinked or we are encoutering a naming clash
                     # either way, we don't want to overwrite existing libraries
-                    already_linked = islink(dest_file)
-                    tty.debug(
-                        "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
-                        if already_linked
-                        else "library with name %s already exists at location %s."
-                        % (file_name, dest_dir)
-                    )
+                    report_already_linked()
                     pass
                 else:
                     raise e
+            # catch errors we raise ourselves from Spack
+            except llnl.util.symlink.SymlinkError as e:
+                # We have either already symlinked or we are encoutering a naming clash
+                # either way, we don't want to overwrite existing libraries
+                if e.errcode == (
+                    llnl.util.symlink.SymlinkErrorType.LinkAlreadyExists
+                    or llnl.util.symlink.SymlinkErrorType.JunctionLinkAlreadyExists
+                    or llnl.util.symlink.SymlinkErrorType.HardlinkPathAlreadyExists
+                ):
+                    report_already_linked()
 
     def establish_link(self):
         """
