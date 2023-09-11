@@ -23,7 +23,6 @@ class Garfieldpp(CMakePackage):
         when="@4.0",
     )
 
-    # ###################### Variants ##########################
     variant("examples", default=False, description="Build garfield examples")
 
     # ###################### Versions ##########################
