@@ -20,4 +20,4 @@ class PyMdaXdrlib(PythonPackage):
     depends_on("python@:3.10", type=("build", "run"))
 
     depends_on("py-setuptools@61.2:", type="build")
-    depends_on("py-tomli", type="build")
+    depends_on("py-tomli", when="^python@:3.10", type="build")
