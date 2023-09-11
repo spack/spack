@@ -139,28 +139,27 @@ def _add_dependency(spec_label, dep_label, deps):
     deps[spec_label].add(dep_label)
 
 
-def _get_spec_dependencies(specs, abstract_map, deps, spec_labels, abs_labels):
-    spec_deps_obj = _compute_spec_deps(specs, abstract_map)
+def _get_spec_dependencies(specs, deps, spec_labels):
+    spec_deps_obj = _compute_spec_deps(specs)
+
     if spec_deps_obj:
         dependencies = spec_deps_obj["dependencies"]
         specs = spec_deps_obj["specs"]
 
         for entry in specs:
             spec_labels[entry["label"]] = entry["spec"]
-            abs_labels[entry["label"]] = entry["abstract"]
 
         for entry in dependencies:
             _add_dependency(entry["spec"], entry["depends"], deps)
 
 
-def stage_spec_jobs(specs, abstract_map={}):
+def stage_spec_jobs(specs):
     """Take a set of release specs and generate a list of "stages", where the
         jobs in any stage are dependent only on jobs in previous stages.  This
         allows us to maximize build parallelism within the gitlab-ci framework.
 
     Arguments:
         specs (Iterable): Specs to build
-        abstract_map (dict): A dictionary mapping concrete specs to abstract. Optional.
 
     Returns: A tuple of information objects describing the specs, dependencies
         and stages:
@@ -175,8 +174,6 @@ def stage_spec_jobs(specs, abstract_map={}):
         stages: An ordered list of sets, each of which contains all the jobs to
             built in that stage.  The jobs are expressed in the same format as
             the keys in the spec_labels and deps objects.
-
-        abs_labels: A dictionary mapping the spec labels to abstract specs.
 
     """
 
@@ -196,9 +193,8 @@ def stage_spec_jobs(specs, abstract_map={}):
 
     deps = {}
     spec_labels = {}
-    abs_labels = {}
 
-    _get_spec_dependencies(specs, abstract_map, deps, spec_labels, abs_labels)
+    _get_spec_dependencies(specs, deps, spec_labels)
 
     # Save the original deps, as we need to return them at the end of the
     # function.  In the while loop below, the "dependencies" variable is
@@ -221,7 +217,7 @@ def stage_spec_jobs(specs, abstract_map={}):
     if unstaged:
         stages.append(unstaged.copy())
 
-    return spec_labels, deps, stages, abs_labels
+    return spec_labels, deps, stages
 
 
 def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions):
@@ -253,22 +249,13 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
                     tty.msg("            {0}".format(murl))
 
 
-def _process_abstract_spec(abstract, pkg_name):
-    # search for the occurrence of the package name in the abstract spec
-    pkg_name_idx = abstract.find(pkg_name)
-    if pkg_name_idx != -1:
-        # remove the pkg_name from the abstract spec, but remove only up to the length
-        abstract = abstract[:pkg_name_idx] + abstract[pkg_name_idx + len(pkg_name) :]
-    return abstract.strip()
-
-
-def _compute_spec_deps(spec_list, abstract_map):
+def _compute_spec_deps(spec_list):
     """
     Computes all the dependencies for the spec(s) and generates a JSON
-    object which provides both a list of unique spec names, along with
-    abstract specs, in addition to a comprehensive list of all the
-    edges in the dependency graph.  For example, given a single spec
-    like 'readline@7.0', this function generates the following JSON object:
+    object which provides both a list of unique spec names as well as a
+    comprehensive list of all the edges in the dependency graph.  For
+    example, given a single spec like 'readline@7.0', this function
+    generates the following JSON object:
 
     .. code-block:: JSON
 
@@ -298,24 +285,22 @@ def _compute_spec_deps(spec_list, abstract_map):
            "specs": [
                {
                  "spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-highs...",
-                 "label": "readline/ip6aiun",
-                 "abstract": ""
+                 "label": "readline/ip6aiun"
                },
                {
                  "spec": "ncurses@6.1%apple-clang@9.1.0 arch=darwin-highsi...",
-                 "label": "ncurses/y43rifz",
-                 "abstract: ""
+                 "label": "ncurses/y43rifz"
                },
                {
                  "spec": "pkgconf@1.5.4%apple-clang@9.1.0 arch=darwin-high...",
                  "label": "pkgconf/eg355zb"
-                 "abstract": ""
                }
            ]
        }
 
     """
     spec_labels = {}
+
     specs = []
     dependencies = []
 
@@ -329,18 +314,7 @@ def _compute_spec_deps(spec_list, abstract_map):
                 continue
 
             skey = _spec_deps_key(s)
-            spec_labels[skey] = {"concrete": s, "abstract": ""}
-
-            abstract = abstract_map.get(spec)
-
-            if abstract:
-                # split up by dependency specs
-                abstracts = str(abstract).split("^")
-
-                for a in abstracts:
-                    if a.startswith(s.package.name):
-                        spec_labels[skey]["abstract"] = _process_abstract_spec(a, s.package.name)
-                        break
+            spec_labels[skey] = s
 
             for d in s.dependencies(deptype=all):
                 dkey = _spec_deps_key(d)
@@ -350,9 +324,11 @@ def _compute_spec_deps(spec_list, abstract_map):
 
                 append_dep(skey, dkey)
 
-    for spec_label, spec in spec_labels.items():
-        specs.append({"label": spec_label, "spec": spec["concrete"], "abstract": spec["abstract"]})
+    for spec_label, concrete_spec in spec_labels.items():
+        specs.append({"label": spec_label, "spec": concrete_spec})
+
     deps_json_obj = {"specs": specs, "dependencies": dependencies}
+
     return deps_json_obj
 
 
@@ -954,14 +930,12 @@ def generate_gitlab_ci_yaml(
     except bindist.FetchCacheError as e:
         tty.warn(e)
 
-    concretized_specs = {
-        concrete: abstract
-        for abstract, concrete in env.concretized_specs()
-        if abstract in env.spec_lists["specs"]
-    }
-
-    spec_labels, dependencies, stages, abs_labels = stage_spec_jobs(
-        concretized_specs.keys(), abstract_map=concretized_specs
+    spec_labels, dependencies, stages = stage_spec_jobs(
+        [
+            concrete
+            for abstract, concrete in env.concretized_specs()
+            if abstract in env.spec_lists["specs"]
+        ]
     )
 
     all_job_names = []
@@ -1055,7 +1029,7 @@ def generate_gitlab_ci_yaml(
             job_vars = job_object.setdefault("variables", {})
             job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
             job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
-            job_vars["SPACK_JOB_ABS_SPEC"] = abs_labels[spec_label]
+            job_vars["SPACK_JOB_SHORT_SPEC"] = release_spec.short_spec
 
             job_object["needs"] = []
             if spec_label in dependencies:

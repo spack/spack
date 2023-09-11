@@ -121,7 +121,7 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
         spec_f_label = ci._spec_deps_key(spec_a["f"])
         spec_g_label = ci._spec_deps_key(spec_a["g"])
 
-        spec_labels, dependencies, stages, spec_abstracts = ci.stage_spec_jobs([spec_a])
+        spec_labels, dependencies, stages = ci.stage_spec_jobs([spec_a])
 
         assert len(stages) == 4
 
@@ -139,8 +139,6 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 
         assert len(stages[3]) == 1
         assert spec_a_label in stages[3]
-
-        assert len(spec_abstracts) == len(spec_labels)
 
 
 def test_ci_generate_with_env(
