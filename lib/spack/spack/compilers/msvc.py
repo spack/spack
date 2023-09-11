@@ -158,7 +158,7 @@ class Msvc(Compiler):
     # Initialize, deferring to base class but then adding the vcvarsallfile
     # file based on compiler executable path.
 
-    supported_platforms = lambda x: x == "windows"
+    is_supported_on_platform = lambda x: x == "windows"
 
     def __init__(self, *args, **kwargs):
         # This positional argument "paths" is later parsed and process by the base class
