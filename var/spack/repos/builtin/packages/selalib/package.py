@@ -58,5 +58,8 @@ class Selalib(CMakePackage):
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
-    def test_slurm(self):
-        make("test")  # TODO why does this not actually run the ctests?
+    def test_slurm_ctest(self):
+        ctest = which("ctest")
+
+        with working_dir(self.build_directory):
+            ctest("--verbose")
