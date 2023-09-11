@@ -38,7 +38,7 @@ class Selalib(CMakePackage):
     depends_on("fgsl")
     depends_on("git")
     depends_on("hdf5+fortran+cxx")
-    depends_on("mpi+fortran+cxx")
+    depends_on("mpi")
     depends_on("python@3.0.0:")
     # beware: compiling w/ zfp may throw type mismatch errors
     depends_on("zfp+fortran", when="+compression")
