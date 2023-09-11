@@ -35,7 +35,6 @@ class G2(CMakePackage):
         when="@3.4.6:",
     )
     variant("w3emc", default=True, description="Enable GRIB1 through w3emc", when="@3.4.6:")
-    variant("shared", default=False, description="Build shared library", when="@3.4.7: +pic")
 
     depends_on("jasper@:2.0.32")
     depends_on("libpng")
@@ -50,15 +49,13 @@ class G2(CMakePackage):
             self.define_from_variant("BUILD_WITH_W3EMC", "w3emc"),
             self.define("BUILD_4", self.spec.satisfies("precision=4")),
             self.define("BUILD_D", self.spec.satisfies("precision=d")),
-            self.define("BUILD_SHARED_LIBS", self.define_from_variant("shared")),
         ]
 
         return args
 
     def setup_run_environment(self, env):
-        shared = self.spec.variants["shared"].value if self.spec.satisfies("@3.4.7:") else False
         precisions = self.spec.variants["precision"].value if self.spec.satisfies("@3.4.6:") else ("4", "d")
         for suffix in precisions:
-            lib = find_libraries("libg2_" + suffix, root=self.prefix, shared=shared, recursive=True)
+            lib = find_libraries("libg2_" + suffix, root=self.prefix, shared=True, recursive=True)
             env.set("G2_LIB" + suffix, lib[0])
             env.set("G2_INC" + suffix, join_path(self.prefix, "include_" + suffix))
