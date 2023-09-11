@@ -16,6 +16,7 @@ class PySlepc4py(PythonPackage):
     maintainers("joseeroman", "balay")
 
     version("main", branch="main")
+    version("3.19.2", sha256="da8b6a7aaaf5e4497b896b2e478c42dd9de4fb31da93eb294181bea3bb60c767")
     version("3.19.1", sha256="68303f4acef8efc0542ab288a19159d0e6cdf313726f573e0bea2edb3d2c9595")
     version("3.19.0", sha256="ae84d33cce259c1d6ff64308b2f819d1c0f7b018e048f9049ec6d5be15614ba5")
     version("3.18.3", sha256="93c978f115683900a575026111ff2abe6f3ce4de8c21eec53c07dfd97ea43c85")
