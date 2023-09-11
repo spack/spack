@@ -77,7 +77,7 @@ class Qscintilla(QMakePackage):
             make()
             makefile = FileFilter("Makefile")
             makefile.filter(
-                "$(INSTALL_ROOT)" + self.spec["qt"].prefix, "$(INSTALL_ROOT)", string=True
+                "$(INSTALL_ROOT)" + self.spec["qmake"].prefix, "$(INSTALL_ROOT)", string=True
             )
             make("install")
 
