@@ -90,7 +90,9 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     for __compiler in spack.compilers.supported_compilers():
         if __compiler != "oneapi":
             conflicts(
-                "%{0}".format(__compiler), when="+sycl", msg="lapackpp+sycl must be compiled with %oneapi"
+                "%{0}".format(__compiler),
+                when="+sycl",
+                msg="lapackpp+sycl must be compiled with %oneapi",
             )
 
     def cmake_args(self):

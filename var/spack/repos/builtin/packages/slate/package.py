@@ -90,7 +90,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     for __compiler in spack.compilers.supported_compilers():
         if __compiler != "oneapi":
             conflicts(
-                "%{0}".format(__compiler), when="+sycl", msg="slate+sycl must be compiled with %oneapi"
+                "%{0}".format(__compiler),
+                when="+sycl",
+                msg="slate+sycl must be compiled with %oneapi",
             )
 
     cpp_17_msg = "Requires C++17 compiler support"
