@@ -14,8 +14,7 @@ class Discotec(CMakePackage):
     url = "https://github.com/SGpp/DisCoTec"
     git = "https://github.com/SGpp/DisCoTec"
 
-    # notify when the package is updated.
-    maintainers = ["freifrauvonbleifrei", "pfluegdk"]
+    maintainers("freifrauvonbleifrei", "pfluegdk")
 
     version("main", branch="main")
 
