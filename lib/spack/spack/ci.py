@@ -144,10 +144,10 @@ def _get_spec_dependencies(specs, abstract_map, deps, spec_labels, abs_labels):
     if spec_deps_obj:
         dependencies = spec_deps_obj["dependencies"]
         specs = spec_deps_obj["specs"]
-        abs_labels.update(spec_deps_obj["abstracts"])
 
         for entry in specs:
             spec_labels[entry["label"]] = entry["spec"]
+            abs_labels[entry["label"]] = entry["abstract"]
 
         for entry in dependencies:
             _add_dependency(entry["spec"], entry["depends"], deps)
@@ -298,54 +298,48 @@ def _compute_spec_deps(spec_list, abstract_map):
            "specs": [
                {
                  "spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-highs...",
-                 "label": "readline/ip6aiun"
+                 "label": "readline/ip6aiun",
+                 "abstract": ""
                },
                {
                  "spec": "ncurses@6.1%apple-clang@9.1.0 arch=darwin-highsi...",
-                 "label": "ncurses/y43rifz"
+                 "label": "ncurses/y43rifz",
+                 "abstract: ""
                },
                {
                  "spec": "pkgconf@1.5.4%apple-clang@9.1.0 arch=darwin-high...",
                  "label": "pkgconf/eg355zb"
+                 "abstract": ""
                }
-           ],
-           "abstracts": {
-                "readline/ip6aiun": "readline",
-                "ncurses/y43rifz": "ncurses",
-                "pkgconf/eg355zb": "pkgconf"
-           }
+           ]
        }
 
     """
     spec_labels = {}
-    abs_labels = {}
-
     specs = []
     dependencies = []
 
     def append_dep(s, d):
         dependencies.append({"spec": s, "depends": d})
 
-    for concrete in spec_list:
-        for s in concrete.traverse(deptype=all):
+    for spec in spec_list:
+        for s in spec.traverse(deptype=all):
             if s.external:
                 tty.msg("Will not stage external pkg: {0}".format(s))
                 continue
 
             skey = _spec_deps_key(s)
-            spec_labels[skey] = s
+            spec_labels[skey] = {"concrete": s, "abstract": ""}
 
-            abstract = abstract_map.get(concrete)
+            abstract = abstract_map.get(spec)
 
             if abstract:
                 # split up by dependency specs
                 abstracts = str(abstract).split("^")
 
-                abs_labels[skey] = ""
-
                 for a in abstracts:
                     if a.startswith(s.package.name):
-                        abs_labels[skey] = _process_abstract_spec(a, s.package.name)
+                        spec_labels[skey]["abstract"] = _process_abstract_spec(a, s.package.name)
                         break
 
             for d in s.dependencies(deptype=all):
@@ -356,10 +350,9 @@ def _compute_spec_deps(spec_list, abstract_map):
 
                 append_dep(skey, dkey)
 
-    for spec_label, concrete_spec in spec_labels.items():
-        specs.append({"label": spec_label, "spec": concrete_spec})
-    deps_json_obj = {"specs": specs, "dependencies": dependencies, "abstracts": abs_labels}
-
+    for spec_label, spec in spec_labels.items():
+        specs.append({"label": spec_label, "spec": spec["concrete"], "abstract": spec["abstract"]})
+    deps_json_obj = {"specs": specs, "dependencies": dependencies}
     return deps_json_obj
 
 

@@ -140,7 +140,7 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
         assert len(stages[3]) == 1
         assert spec_a_label in stages[3]
 
-        assert len(spec_abstracts) == 0
+        assert len(spec_abstracts) == len(spec_labels)
 
 
 def test_ci_generate_with_env(
