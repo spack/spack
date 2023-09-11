@@ -31,6 +31,7 @@ _os_map = {
     "rhel8": "RHEL-8",
     "rhel9": "RHEL-9",
     "rocky8": "RHEL-8",
+    "rocky9": "RHEL-9",
     "amzn2": "AmazonLinux-2",
     "amzn2023": "AmazonLinux-2023",
 }
