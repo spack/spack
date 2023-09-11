@@ -6,13 +6,14 @@
 from spack.package import *
 
 
-class Gdrcopy(MakefilePackage):
+class Gdrcopy(MakefilePackage, CudaPackage):
     """A fast GPU memory copy library based on NVIDIA GPUDirect
     RDMA technology."""
 
     homepage = "https://github.com/NVIDIA/gdrcopy"
     url = "https://github.com/NVIDIA/gdrcopy/archive/v2.1.tar.gz"
     git = "https://github.com/NVIDIA/gdrcopy"
+    maintainers("scothalverson")
 
     version("master", branch="master")
     version("2.3", sha256="b85d15901889aa42de6c4a9233792af40dd94543e82abe0439e544c87fd79475")
@@ -24,13 +25,19 @@ class Gdrcopy(MakefilePackage):
     # Don't call ldconfig: https://github.com/NVIDIA/gdrcopy/pull/229
     patch("ldconfig.patch", when="@2.0:")
 
+    depends_on("check")
+    requires("+cuda")
+
     def build(self, spec, prefix):
         make("lib")
+        make("exes")
 
     def install(self, spec, prefix):
         mkdir(prefix.include)
         mkdir(prefix.lib64)
         if spec.satisfies("@2.2:"):
             make("lib_install", "prefix={0}".format(self.prefix))
+            make("exes_install", "prefix={0}".format(self.prefix))
         else:
             make("lib_install", "PREFIX={0}".format(self.prefix))
+            make("exes_install", "PREFIX={0}".format(self.prefix))
