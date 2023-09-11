@@ -16,7 +16,6 @@ class Qscintilla(QMakePackage):
     homepage = "https://www.riverbankcomputing.com/software/qscintilla/intro"
     url = "https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.12.0/QScintilla_src-2.12.0.tar.gz"
 
-    # Directory structure is changed as of ver. 2.12.0
     version("2.14.1", sha256="dfe13c6acc9d85dfcba76ccc8061e71a223957a6c02f3c343b30a9d43a4cdd4d")
     version("2.14.0", sha256="449353928340300804c47b3785c3e62096f918a723d5eed8a5439764e6507f4c")
     version("2.13.4", sha256="890c261f31e116f426b0ea03a136d44fc89551ebfd126d7b0bdf8a7197879986")
