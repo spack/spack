@@ -13,6 +13,7 @@ class PyHatchling(PythonPackage):
     pypi = "hatchling/hatchling-1.4.1.tar.gz"
     git = "https://github.com/pypa/hatch"
 
+    version("1.18.0", sha256="50e99c3110ce0afc3f7bdbadff1c71c17758e476731c27607940cfa6686489ca")
     version("1.17.0", sha256="b1244db3f45b4ef5a00106a46612da107cdfaf85f1580b8e1c059fefc98b0930")
     version("1.14.0", sha256="462ea91df03ff5d52813b5613fec1313a1a2059d2e37343e572b3f979867c5da")
     version("1.13.0", sha256="f8d275a2cc720735286b7c2e2bc35da05761e6d3695c2fa416550395f10c53c7")
@@ -20,6 +21,7 @@ class PyHatchling(PythonPackage):
     version("1.8.1", sha256="448b04b23faed669b2b565b998ac955af4feea66c5deed3a1212ac9399d2e1cd")
     version("1.4.1", sha256="13461b42876ade4f75ee5d2a2c656b288ca0aab7f048ef66657ef166996b2118")
 
+    depends_on("python@3.8:", when="@1.18:", type=("build", "run"))
     depends_on("py-editables@0.3:", type=("build", "run"))
     depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
     depends_on("py-packaging@21.3:", type=("build", "run"))
