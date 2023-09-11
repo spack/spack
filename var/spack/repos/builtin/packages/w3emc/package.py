@@ -31,7 +31,7 @@ class W3emc(CMakePackage):
     variant(
         "precision",
         default=["4", "d"],
-        values=["4", "d", "8"],
+        values=("4", "d", "8"),
         multi=True,
         description="Set precision (_4/_d/_8 library versions)",
         when="@2.10:",
