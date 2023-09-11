@@ -17,7 +17,7 @@ class G2(CMakePackage):
     url = "https://github.com/NOAA-EMC/NCEPLIBS-g2/archive/refs/tags/v3.4.3.tar.gz"
     git = "https://github.com/NOAA-EMC/NCEPLIBS-g2"
 
-    maintainers("t-brown", "AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
+    maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
     version("develop", branch="develop")
     version("3.4.7", sha256="d6530611e3a515122f11ed4aeede7641f6f8932ef9ee0d4828786572767304dc")
