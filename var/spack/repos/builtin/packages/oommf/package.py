@@ -168,15 +168,15 @@ class Oommf(Package):
     def configure(self, spec, prefix):
         # change into directory with source code
         with working_dir(self.get_oommf_source_root()):
-            configure = Executable("./oommf.tcl pimake distclean")
-            configure()
-            configure2 = Executable("./oommf.tcl pimake upgrade")
-            configure2()
+            configure = Executable("./oommf.tcl")
+            configure("pimake", "distclean")
+            configure2 = Executable("./oommf.tcl")
+            configure2("pimake", "upgrade")
 
     def build(self, spec, prefix):
         with working_dir(self.get_oommf_source_root()):
-            make = Executable("./oommf.tcl pimake ")
-            make()
+            make = Executable("./oommf.tcl")
+            make("pimake")
 
     def install(self, spec, prefix):
         # keep a copy of all the tcl files and everything oommf created.

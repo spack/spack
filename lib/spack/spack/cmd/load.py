@@ -52,6 +52,13 @@ def setup_parser(subparser):
         const="bat",
         help="print bat commands to load the package",
     )
+    shells.add_argument(
+        "--pwsh",
+        action="store_const",
+        dest="shell",
+        const="pwsh",
+        help="print pwsh commands to load the package",
+    )
 
     subparser.add_argument(
         "--first",

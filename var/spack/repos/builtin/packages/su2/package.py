@@ -52,7 +52,7 @@ class Su2(MesonPackage):
 
     depends_on("meson@0.61.1:", type=("build"))
     depends_on("python@3:", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("pkgconfig")
     depends_on("mpi", when="+mpi")
     depends_on("swig", type="build", when="+pywrapper")

@@ -182,7 +182,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         depends_on("isl@0.15:0.20", when="@9:9.9")
         depends_on("isl@0.15:", when="@10:")
 
-    depends_on("zlib", when="@6:")
+    depends_on("zlib-api", when="@6:")
     depends_on("zstd", when="@10:")
     depends_on("diffutils", type="build")
     depends_on("iconv", when="platform=darwin")
@@ -652,9 +652,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Use installed libz
         if self.version >= Version("6"):
-            filter_file("@zlibdir@", "-L{0}".format(spec["zlib"].prefix.lib), "gcc/Makefile.in")
             filter_file(
-                "@zlibinc@", "-I{0}".format(spec["zlib"].prefix.include), "gcc/Makefile.in"
+                "@zlibdir@", "-L{0}".format(spec["zlib-api"].prefix.lib), "gcc/Makefile.in"
+            )
+            filter_file(
+                "@zlibinc@", "-I{0}".format(spec["zlib-api"].prefix.include), "gcc/Makefile.in"
             )
 
         if spec.satisfies("+nvptx"):
@@ -1018,11 +1020,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         """
         # Detect GCC package in the directory of the GCC compiler
         # or in the $PATH if self.compiler.cc is not an absolute path:
-        from spack.detection import by_executable
+        from spack.detection import by_path
 
         compiler_dir = os.path.dirname(self.compiler.cc)
-        detected_packages = by_executable(
-            [self.__class__], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
+        detected_packages = by_path(
+            [self.name], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
         )
 
         # We consider only packages that satisfy the following constraint:
