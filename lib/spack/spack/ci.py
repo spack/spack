@@ -982,9 +982,8 @@ def generate_gitlab_ci_yaml(
                     spec_record.reason = "Pruned, untouched by change."
                     continue
 
-            up_to_date_mirrors = bindist.get_mirrors_for_spec(
-                spec=release_spec, mirrors_to_check=mirrors_to_check, index_only=check_index_only
-            )
+            # can spackbot fix this?
+            up_to_date_mirrors = bindist.get_mirrors_for_spec(spec=release_spec, mirrors_to_check=mirrors_to_check, index_only=check_index_only)
 
             spec_record.rebuild = not up_to_date_mirrors
             if up_to_date_mirrors:
