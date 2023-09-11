@@ -829,6 +829,7 @@ def test_install_spliced_build_spec_installed(
         assert node.build_spec.installed
 
 
+@pytest.mark.not_on_windows("lacking windows support for binary installs")
 @pytest.mark.parametrize("transitive", [True, False])
 @pytest.mark.parametrize("root_str", ["splice-t^splice-h~foo", "splice-h~foo"])
 def test_install_splice_root_from_binary(
