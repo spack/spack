@@ -27,7 +27,7 @@ class G2(CMakePackage):
         "build_with_w3emc",
         description="Enable GRIB1 conversion routine",
         default=True,
-        when="@3.4.5:",
+        when="@3.4.6:",
     )
 
     depends_on("libpng")
@@ -35,6 +35,7 @@ class G2(CMakePackage):
     depends_on("jasper@:2.0.32", when="@:3.4.5")
     depends_on("jasper", when="@3.4.6:")
     depends_on("w3emc", when="@:3.4.5")
+    depends_on("w3emc", when="+build_with_w3emc")
 
     def cmake_args(self):
         args = []
