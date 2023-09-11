@@ -1026,10 +1026,12 @@ def generate_gitlab_ci_yaml(
             osname = str(release_spec.architecture)
             job_name = get_job_name(release_spec, osname, build_group)
 
+            abstract_format  = "{name}{@version}{%compiler.name}{@compiler.version}{variants}{arch=architecture}"
+            
             job_vars = job_object.setdefault("variables", {})
             job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
             job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
-            job_vars["SPACK_JOB_SHORT_SPEC"] = release_spec.short_spec
+            job_vars["SPACK_JOB_ABSTRACT_SPEC"] = release_spec.format(abstract_format)
 
             job_object["needs"] = []
             if spec_label in dependencies:
