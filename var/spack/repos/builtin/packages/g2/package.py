@@ -54,7 +54,9 @@ class G2(CMakePackage):
         return args
 
     def setup_run_environment(self, env):
-        precisions = self.spec.variants["precision"].value if self.spec.satisfies("@3.4.6:") else ("4", "d")
+        precisions = (
+            self.spec.variants["precision"].value if self.spec.satisfies("@3.4.6:") else ("4", "d")
+        )
         for suffix in precisions:
             lib = find_libraries("libg2_" + suffix, root=self.prefix, shared=False, recursive=True)
             env.set("G2_LIB" + suffix, lib[0])
