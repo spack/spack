@@ -36,7 +36,7 @@ class W3emc(CMakePackage):
         description="Set precision (_4/_d/_8 library versions)",
         when="@2.10:",
     )
-    variant("shared", default=False, description="Build shared library", when="@2.10:")
+    variant("shared", default=False, description="Build shared library", when="@2.10: +pic")
     variant(
         "extradeps",
         default=False,
