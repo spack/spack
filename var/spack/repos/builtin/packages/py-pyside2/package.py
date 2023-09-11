@@ -17,12 +17,30 @@ class PyPyside2(PythonPackage):
     # https://wiki.qt.io/Qt_for_Python_Development_Getting_Started
 
     version("develop", tag="dev")
-    version("5.15.2.1", tag="v5.15.2.1", submodules=True)
-    version("5.14.2.1", tag="v5.14.2.1", submodules=True)
-    version("5.13.2", tag="v5.13.2", submodules=True)
-    version("5.13.1", tag="v5.13.1", submodules=True)
-    version("5.13.0", tag="v5.13.0", submodules=True)
-    version("5.12.5", tag="v5.12.5", submodules=True)
+    version(
+        "5.15.2.1",
+        tag="v5.15.2.1",
+        commit="9282e03de471bb3772c8d3997159e49c113d7678",
+        submodules=True,
+    )
+    version(
+        "5.14.2.1",
+        tag="v5.14.2.1",
+        commit="6341c063dea6022c1e40cca28d3bbf0f52350dcb",
+        submodules=True,
+    )
+    version(
+        "5.13.2", tag="v5.13.2", commit="a1a94b43c5b277fd4e65c1389e24c4fbbb1c5641", submodules=True
+    )
+    version(
+        "5.13.1", tag="v5.13.1", commit="de1e75b55f6f59bba4bae5cd036d6c355c62986a", submodules=True
+    )
+    version(
+        "5.13.0", tag="v5.13.0", commit="208d0c8bc8595aebc2191dafd9d0e3ec719e2550", submodules=True
+    )
+    version(
+        "5.12.5", tag="v5.12.5", commit="af0953e0d261ab9b1fc498d63e8d790a329dd285", submodules=True
+    )
 
     variant(
         "doc",

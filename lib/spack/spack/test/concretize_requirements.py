@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import pathlib
 
 import pytest
@@ -299,9 +300,14 @@ packages:
     assert s1.satisfies("@2.2")
 
 
+@pytest.mark.parametrize("require_checksum", (True, False))
 def test_requirement_adds_git_hash_version(
-    concretize_scope, test_repo, mock_git_version_info, monkeypatch
+    require_checksum, concretize_scope, test_repo, mock_git_version_info, monkeypatch, working_env
 ):
+    # A full commit sha is a checksummed version, so this test should pass in both cases
+    if require_checksum:
+        os.environ["SPACK_CONCRETIZER_REQUIRE_CHECKSUM"] = "yes"
+
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False

@@ -52,7 +52,7 @@ class Exodusii(CMakePackage):
     version(
         "2019-10-14", sha256="f143d90e8a7516d25979d1416e580dea638332db723f26ae94a712dfe4052e8f"
     )
-    version("2016-08-09", commit="2ffeb1b")
+    version("2016-08-09", commit="2ffeb1bd39454ad5aa230e12969ce976f3d1c92b")
     version("master", branch="master")
 
     variant("mpi", default=True, description="Enables MPI parallelism.")
