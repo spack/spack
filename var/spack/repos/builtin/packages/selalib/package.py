@@ -14,7 +14,7 @@ class Selalib(CMakePackage):
     url = "https://github.com/selalib/selalib"
     git = "https://github.com/selalib/selalib"
 
-    maintainers = ["pnavaro", "freifrauvonbleifrei"]
+    maintainers("pnavaro", "freifrauvonbleifrei")
 
     version("main", branch="main")
 
