@@ -83,7 +83,7 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+cuda", msg=backend_msg)
     conflicts("+rocm", when="+sycl", msg=backend_msg)
     conflicts("+cuda", when="+sycl", msg=backend_msg)
-    conflicts("+sycl", when="@:2023.06.00", msg="SYCL support requires LAPACK++ version 2023.08.25")
+    conflicts("+sycl", when="@:2023.06.00", msg="+sycl requires LAPACK++ version 2023.08.25")
 
     # TODO: +sycl requires use of the intel-oneapi compiler, but we cannot express that directly.
     #       For now, add conflicts for other compilers instead.
