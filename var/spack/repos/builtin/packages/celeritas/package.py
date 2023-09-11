@@ -17,6 +17,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("sethrj")
 
+    version("0.3.2", sha256="65a33de2518716638375df259d9dfc4d68b821ba1110f56b24c823ef5c5df249")
     version("0.3.1", sha256="0f1effab306856d66f5079e8cadcb63e8c1f8a79245b94bf44b89251b3fb0cf0")
     version("0.3.0", sha256="f9620b6bcd8c9b5324ef215f8e44461f915c3fff47bf85ae442c9dafacaa79ac")
     version("0.2.2", sha256="ba5e341d636e00e3d7dbac13a2016b97014917489f46b8b387a2adf9d9563872")
