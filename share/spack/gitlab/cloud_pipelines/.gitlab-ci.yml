@@ -842,6 +842,21 @@ deprecated-ci-build:
   tags: [ "cray-sles-zen4", "public" ]
   extends: [ ".generate-cray" ]
 
+.generate-cray-sles-amd:
+  tags: [ "cray-sles-zen4", "public" ]
+  extends: [ ".generate-cray" ]
+
+.generate-cray-sles-cray:
+  tags: [ "cray-sles-zen4", "public" ]
+  extends: [ ".generate-cray" ]
+
+.generate-cray-sles-intel:
+  tags: [ "cray-sles-zen4", "public" ]
+  extends: [ ".generate-cray" ]
+
+.generate-cray-sles-nvidia:
+  tags: [ "cray-sles-zen4", "public" ]
+  extends: [ ".generate-cray" ]
 
 #######################################
 # E4S - Cray RHEL

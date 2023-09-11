@@ -1,5 +1,31 @@
 compilers:
 - compiler:
+    spec: cce@=15.0.1
+    paths:
+      cc: /opt/cray/pe/cce/15.0.1/bin/craycc
+      cxx: /opt/cray/pe/cce/15.0.1/bin/crayCC
+      f77: /opt/cray/pe/cce/15.0.1/bin/crayftn
+      fc: /opt/cray/pe/cce/15.0.1/bin/crayftn
+    flags: {}
+    operating_system: sle_hpc15
+    target: x86_64
+    modules: [PrgEnv-cray]
+    environment: {}
+    extra_rpaths: []
+- compiler:
+    spec: dpcpp@=2023.1.0
+    paths:
+      cc: /opt/intel/oneapi/compiler/latest/linux/bin/icx
+      cxx: /opt/intel/oneapi/compiler/latest/linux/bin/dpcpp
+      f77: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
+      fc: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
+    flags: {}
+    operating_system: sle_hpc15
+    target: x86_64
+    modules: [PrgEnv-intel]
+    environment: {}
+    extra_rpaths: []
+- compiler:
     spec: gcc@=10.3.0
     paths:
       cc: /opt/cray/pe/gcc/10.3.0/bin/gcc
@@ -10,5 +36,59 @@ compilers:
     operating_system: sle_hpc15
     target: x86_64
     modules: [PrgEnv-gnu-amd]
+    environment: {}
+    extra_rpaths: []
+- compiler:
+    spec: intel@=2023.1.0
+    paths:
+      cc: /opt/intel/oneapi/compiler/latest/linux/bin/intel64/icc
+      cxx: /opt/intel/oneapi/compiler/latest/linux/bin/intel64/icpc
+      f77: /opt/intel/oneapi/compiler/latest/linux/bin/intel64/ifort
+      fc: /opt/intel/oneapi/compiler/latest/linux/bin/intel64/ifort
+    flags: {}
+    operating_system: sle_hpc15
+    target: x86_64
+    modules: [PrgEnv-intel]
+    environment: {}
+    extra_rpaths: []
+- compiler:
+    spec: nvhpc@=23.5
+    paths:
+      cc: /opt/nvidia/hpc_sdk/Linux_x86_64/23.5/compilers/bin/nvc
+      cxx: /opt/nvidia/hpc_sdk/Linux_x86_64/23.5/compilers/bin/nvc++
+      f77: /opt/nvidia/hpc_sdk/Linux_x86_64/23.5/compilers/bin/nvfortran
+      fc: /opt/nvidia/hpc_sdk/Linux_x86_64/23.5/compilers/bin/nvfortran
+    flags: {}
+    operating_system: sle_hpc15
+    target: x86_64
+    modules: [PrgEnv-nvidia]
+    environment: {}
+    extra_rpaths: []
+- compiler:
+    spec: oneapi@=2023.1.0
+    paths:
+      cc: /opt/intel/oneapi/compiler/latest/linux/bin/icx
+      cxx: /opt/intel/oneapi/compiler/latest/linux/bin/icpx
+      f77: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
+      fc: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
+    flags: {}
+    operating_system: sle_hpc15
+    target: x86_64
+    modules: [PrgEnv-intel]
+    environment: {}
+    extra_rpaths: []
+- compiler:
+    spec: rocmcc@=5.5.0
+    paths:
+      cc: /opt/rocm-5.5.0/bin/amdclang
+      cxx: /opt/rocm-5.5.0/bin/amdclang++
+      f77: /opt/rocm-5.5.0/bin/amdflang
+      fc: /opt/rocm-5.5.0/bin/amdflang
+    flags: {}
+    operating_system: sle_hpc15
+    target: x86_64
+    modules:
+    - PrgEnv-gnu-amd
+    - amd/5.5.0
     environment: {}
     extra_rpaths: []
