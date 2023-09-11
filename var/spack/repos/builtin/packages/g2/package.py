@@ -35,7 +35,7 @@ class G2(CMakePackage):
         when="@3.4.6:",
     )
     variant("w3emc", default=True, description="Enable GRIB1 through w3emc", when="@3.4.6:")
-    variant("shared", default=False, description="Build shared library", when="@3.4.7:")
+    variant("shared", default=False, description="Build shared library", when="@3.4.7: +pic")
 
     depends_on("jasper@:2.0.32")
     depends_on("libpng")
