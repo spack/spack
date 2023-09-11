@@ -97,7 +97,7 @@ spack:
   - lammps
   - legion
   - libnrm
-  - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed 
+  - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed
     +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +mgard
   - libquo
   - libunwind
@@ -176,8 +176,8 @@ spack:
   - hypre +cuda
   - kokkos +wrapper +cuda
   - kokkos-kernels +cuda ^kokkos +wrapper +cuda +cuda_lambda
-  - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua 
-    +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +cusz 
+  - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua
+    +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +cusz
     +mgard +cuda ^cusz +cuda
   - magma +cuda
   - mfem +cuda
@@ -242,7 +242,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: "ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01"
+        image: "ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01"
 
   cdash:
     build-group: E4S

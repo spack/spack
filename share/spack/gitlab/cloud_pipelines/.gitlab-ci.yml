@@ -279,7 +279,7 @@ protected-publish:
 
 e4s-generate:
   extends: [ ".e4s", ".generate-x86_64"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+  image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
 
 e4s-build:
   extends: [ ".e4s", ".build" ]
@@ -302,7 +302,7 @@ e4s-build:
 
 gpu-tests-generate:
   extends: [ ".gpu-tests", ".generate-x86_64"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+  image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
 
 gpu-tests-build:
   extends: [ ".gpu-tests", ".build" ]
@@ -472,7 +472,7 @@ radiuss-aws-aarch64-build:
 
 data-vis-sdk-generate:
   extends: [ ".data-vis-sdk", ".generate-x86_64"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+  image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
 
 data-vis-sdk-build:
   extends: [ ".data-vis-sdk", ".build" ]
