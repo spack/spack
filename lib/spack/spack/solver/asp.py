@@ -1313,7 +1313,7 @@ class SpackSolverSetup:
                         pkg.name, fn.variant_default_value_from_package_py(name, variant.default)
                     )
                 )
-            else:
+            elif not variant.values[1]:
                 spec_variant = variant.make_default()
                 defaults = spec_variant.value
                 for val in sorted(defaults):
