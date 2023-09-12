@@ -13,13 +13,15 @@ class PyBiomFormat(PythonPackage):
 
     pypi = "biom-format/biom-format-2.1.6.tar.gz"
 
+    version("2.1.15", sha256="3bda2096e663dc1cb6f90f51b394da0838b9be5164a44370c134ce5b3b2a4dd3")
     version("2.1.10", sha256="f5a277a8144f0b114606852c42f657b9cfde44b3cefa0b2638ab1c1d5e1d0488")
     version("2.1.9", sha256="18a6e4d4b4b2a6bf2d5544fa357ad168bedeac93f0837015ef9c72f41fa89491")
     version("2.1.7", sha256="b47e54282ef13cddffdb00aea9183a87175a2372c91a915259086a3f444c42f4")
     version("2.1.6", sha256="8eefc275a85cc937f6d6f408d91b7b45eae854cd5d1cbda411a3af51f5b49b0d")
 
     depends_on("python@2.7:", type=("build", "run"))
-    depends_on("python@3:", type=("build", "run"), when="@2.1.9:")
+    depends_on("python@3.6:3.9", type=("build", "run"), when="@2.1.9:2.1.10")
+    depends_on("python@3.10:", type=("build", "run"), when="@2.1.15:")
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-cython@0.29:", type="build")
     depends_on("py-h5py", type=("build", "run"))
