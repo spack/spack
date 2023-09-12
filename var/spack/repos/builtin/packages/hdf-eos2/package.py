@@ -83,6 +83,8 @@ class HdfEos2(AutotoolsPackage):
                 "version/checksum not found in version_list".format(version)
             )
 
+    # spack patches the configure file unless autoconf is run,
+    # and this fails because configure has the wrong permissions (644)
     @run_before("configure")
     def fix_permissions(self):
         if not self.force_autoreconf:
