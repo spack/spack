@@ -111,9 +111,9 @@ class Openscenegraph(CMakePackage):
             if not variant:
                 variant = plugin
             if spec.satisfies("+{}".format(variant)):
-                value=1
+                value = 1
             else:
-                value=0
+                value = 0
             return self.define("BUILD_OSG_PLUGIN_{}".format(plugin.upper()), value)
 
         args.append(build_plugin("dicom", "dcmtk"))
