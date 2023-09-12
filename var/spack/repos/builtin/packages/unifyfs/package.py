@@ -97,9 +97,6 @@ class Unifyfs(AutotoolsPackage):
     patch("unifyfs-sysio.c.patch", when="@0.9.1")
     patch("include-sys-sysmacros.h.patch", when="@0.9.1:0.9.2")
 
-    # Parallel disabled to prevent tests from being run out-of-order when
-    # installed with the --test={root, all} option.
-    parallel = False
     debug_build = False
     build_directory = "spack-build"
 
@@ -154,3 +151,6 @@ class Unifyfs(AutotoolsPackage):
     def patch(self):
         filter_file("-Werror", "", "client/src/Makefile.in")
         filter_file("-Werror", "", "client/src/Makefile.am")
+    def check(self):
+        with working_dir(self.build_directory):
+            make("check", parallel=False)
