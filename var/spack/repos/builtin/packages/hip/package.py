@@ -123,6 +123,7 @@ class Hip(CMakePackage):
     test_requires_compiler = True
 
     with when("+rocm"):
+        depends_on("mesa~llvm")
         depends_on("gl@4.5:")
         depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
         for ver in [
