@@ -116,6 +116,9 @@ class Rust(Package):
         opts.append(f"build.cargo={spec['rust-bootstrap'].prefix.bin.cargo}")
         opts.append(f"build.rustc={spec['rust-bootstrap'].prefix.bin.rustc}")
 
+        # Disable bootstrap LLVM download.
+        opts.append("llvm.download-ci-llvm=false")
+
         # Convert opts to '--set key=value' format.
         flags = [flag for opt in opts for flag in ("--set", opt)]
 

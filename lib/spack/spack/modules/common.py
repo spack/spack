@@ -178,7 +178,7 @@ def merge_config_rules(configuration, spec):
         if spec.satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
                 spec_configuration = {}
-            update_dictionary_extending_lists(spec_configuration, action)
+            update_dictionary_extending_lists(spec_configuration, copy.deepcopy(action))
 
     # Transform keywords for dependencies or prerequisites into a list of spec
 
@@ -833,7 +833,7 @@ def ensure_modules_are_enabled_or_warn():
         return
 
     # Check if we have custom TCL module sections
-    for scope in spack.config.config.file_scopes:
+    for scope in spack.config.CONFIG.file_scopes:
         # Skip default configuration
         if scope.name.startswith("default"):
             continue

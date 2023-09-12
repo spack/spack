@@ -51,15 +51,17 @@ FROM {{ run.image }}
 
 COPY --from=builder {{ paths.environment }} {{ paths.environment }}
 COPY --from=builder {{ paths.store }} {{ paths.store }}
-COPY --from=builder {{ paths.hidden_view }} {{ paths.hidden_view }}
-COPY --from=builder {{ paths.view }} {{ paths.view }}
+
+# paths.view is a symlink, so copy the parent to avoid dereferencing and duplicating it
+COPY --from=builder {{ paths.view_parent }} {{ paths.view_parent }}
 
 RUN { \
       echo '#!/bin/sh' \
       && echo '.' {{ paths.environment }}/activate.sh \
       && echo 'exec "$@"'; \
     } > /entrypoint.sh \
-&&  chmod a+x /entrypoint.sh
+&& chmod a+x /entrypoint.sh \
+&& ln -s {{ paths.view }} {{ paths.former_view }}
 
 {% block final_stage %}
 

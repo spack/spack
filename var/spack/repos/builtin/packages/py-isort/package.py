@@ -12,6 +12,7 @@ class PyIsort(PythonPackage):
     homepage = "https://github.com/timothycrosley/isort"
     pypi = "isort/isort-4.2.15.tar.gz"
 
+    version("5.12.0", sha256="8bef7dde241278824a6d83f44a544709b065191b95b6e50894bdc722fcba0504")
     version("5.10.1", sha256="e8443a5e7a020e9d7f97f1d7d9cd17c88bcb3bc7e218bf9cf5095fe550be2951")
     version("5.9.3", sha256="9c2ea1e62d871267b78307fe511c0838ba0da28698c5732d54e2790bf3ba9899")
     version("5.9.1", sha256="83510593e07e433b77bd5bff0f6f607dbafa06d1a89022616f02d8b699cfcd56")
@@ -20,8 +21,11 @@ class PyIsort(PythonPackage):
 
     variant("colors", default=False, description="Install colorama for --color support")
 
-    depends_on("python@3.6.1:3", type=("build", "run"), when="@5:")
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@4.3:")
-    depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
+    depends_on("python@3.8:", when="@5.12:", type=("build", "run"))
+    depends_on("python@3.6.1:3", when="@5:5.10", type=("build", "run"))
     depends_on("py-poetry-core@1:", type="build")
-    depends_on("py-colorama@0.4.3:0.4", type=("build", "run"), when="+colors")
+    depends_on("py-colorama@0.4.3:", when="+colors @5.12:", type=("build", "run"))
+    depends_on("py-colorama@0.4.3:0.4", when="+colors @:5.11", type=("build", "run"))
+
+    # https://github.com/PyCQA/isort/issues/2077
+    conflicts("^py-poetry-core@1.5:", when="@:5.11.4")

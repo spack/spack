@@ -23,8 +23,12 @@ class PyNanobind(PythonPackage):
     maintainers("ma595")
 
     version("master", branch="master", submodules=True)
-    version("1.4.0", tag="v1.4.0", submodules=True)
-    version("1.2.0", tag="v1.2.0", submodules=True)
+    version(
+        "1.4.0", tag="v1.4.0", commit="05cba0ef85ba2bb68aa115af4b74c30aa2aa7bec", submodules=True
+    )
+    version(
+        "1.2.0", tag="v1.2.0", commit="ec9350b805d2fe568f65746fd69225eedc5e37ae", submodules=True
+    )
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")

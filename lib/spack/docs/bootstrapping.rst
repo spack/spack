@@ -32,9 +32,14 @@ can't be found. You can readily check if any prerequisite for using Spack is mis
 
    Spack will take care of bootstrapping any missing dependency marked as [B]. Dependencies marked as [-] are instead required to be found on the system.
 
+   % echo $?
+   1
+
 In the case of the output shown above Spack detected that both ``clingo`` and ``gnupg``
 are missing and it's giving detailed information on why they are needed and whether
-they can be bootstrapped. Running a command that concretize a spec, like:
+they can be bootstrapped. The return code of this command summarizes the results, if any
+dependencies are missing the return code is ``1``, otherwise ``0``. Running a command that
+concretizes a spec, like:
 
 .. code-block:: console
 
@@ -44,7 +49,7 @@ they can be bootstrapped. Running a command that concretize a spec, like:
    ==> Installing "clingo-bootstrap@spack%apple-clang@12.0.0~docs~ipo+python build_type=Release arch=darwin-catalina-x86_64" from a buildcache
    [ ... ]
 
-triggers the bootstrapping of clingo from pre-built binaries as expected.
+automatically triggers the bootstrapping of clingo from pre-built binaries as expected.
 
 Users can also bootstrap all the dependencies needed by Spack in a single command, which
 might be useful to setup containers or other similar environments:

@@ -41,7 +41,7 @@ class Gnutls(AutotoolsPackage):
     depends_on("nettle", when="@3.5:")
     depends_on("libidn2@:2.0", when="@:3.5")
     depends_on("libidn2")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("gettext")
 
     depends_on("pkgconfig", type="build")

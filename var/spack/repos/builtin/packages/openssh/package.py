@@ -57,7 +57,7 @@ class Openssh(AutotoolsPackage):
     depends_on("openssl")
     depends_on("libedit")
     depends_on("ncurses")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("py-twisted", type="test")
     depends_on("libxcrypt", type="link")
 
