@@ -202,4 +202,6 @@ class HsaRocrDev(CMakePackage):
 
             args.append(self.define("BITCODE_DIR", bitcode_dir))
 
+        if self.spec.satisfies("@5.6:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
         return args
