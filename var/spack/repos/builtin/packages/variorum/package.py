@@ -55,7 +55,6 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         spec = self.spec
-
         cmake_args = []
 
         cmake_args.append("-DJANSSON_DIR={0}".format(spec["jansson"].prefix))
@@ -109,11 +108,15 @@ class Variorum(CMakePackage, CudaPackage, ROCmPackage):
                 + supported_ibm_cpu_targets
                 + supported_intel_cpu_targets
             ):
-                conflicts(f"target={target}", when="~cuda~rocm")
-            elif arch not in supported_amd_gpu_targets:
-                conflicts(f"amdgpu_target={target}", when="+rocm")
-            elif arch not in supported_nvidia_gpu_targets:
-                conflicts(f"cuda_arch={target}", when="+cuda")
+                conflicts(f"target={arch}", when="~cuda~rocm")
+
+        for arch in ROCmPackage.amdgpu_targets:
+            if arch not in supported_amd_gpu_targets:
+                conflicts(f"amdgpu_target={arch}", when="+rocm")
+
+        for arch in CudaPackage.cuda_arch_values:
+            if arch not in supported_nvidia_gpu_targets:
+                conflicts(f"cuda_arch={arch}", when="+cuda")
 
         if cpu_vendor == "AuthenticAMD":
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=ON")
