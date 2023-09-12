@@ -85,7 +85,7 @@ from spack.installer import (
     UpstreamPackageError,
 )
 from spack.mixins import filter_compiler_wrappers
-from spack.multimethod import when
+from spack.multimethod import default_args, when
 from spack.package_base import (
     DependencyConflictError,
     build_system_flags,
