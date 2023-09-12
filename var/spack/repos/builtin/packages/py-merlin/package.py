@@ -27,7 +27,7 @@ class PyMerlin(PythonPackage):
     depends_on("py-celery@5.0.3:+redis+sqlalchemy", when="@1.8.0:", type=("build", "run"))
     depends_on("py-celery@4.4.5:+redis+sqlalchemy", when="@1.7.5:", type=("build", "run"))
     depends_on("py-celery@4.3.0:4+redis+sqlalchemy", when="@:1.7.4", type=("build", "run"))
-    depends_on("py-coloredlogs@10.0:", type=("build", "run"))
+    depends_on("py-coloredlogs", type=("build", "run"))
     depends_on("py-cryptography", type=("build", "run"))
     depends_on("py-importlib-metadata@:4", when="@1.10: ^python@3.7", type=("build", "run"))
     depends_on("py-maestrowf@1.1.9:", when="@1.9.0:", type=("build", "run"))
