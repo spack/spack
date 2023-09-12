@@ -127,15 +127,6 @@ class Openscenegraph(CMakePackage):
         args.append(build_plugin("pdf"))
         args.append(build_plugin("svg"))
 
-        if spec.satisfies("~ffmpeg"):
-            for ffmpeg_lib in ["libavcodec", "libavformat", "libavutil"]:
-                args.extend(
-                    [
-                        "-DFFMPEG_{0}_INCLUDE_DIRS=".format(ffmpeg_lib.upper()),
-                        "-DFFMPEG_{0}_LIBRARIES=".format(ffmpeg_lib.upper()),
-                    ]
-                )
-
         # NOTE: This is necessary in order to allow OpenSceneGraph to compile
         # despite containing a number of implicit bool to int conversions.
         if spec.satisfies("%gcc"):
