@@ -36,13 +36,13 @@ class Eztrace(Package):
     depends_on("cmake@3.1:", type="build", when="@2.0:")
     depends_on("otf2", when="@2.0:")
 
-    variant("starpu", default=False, description="Enable StarPU support")
+    variant("starpu", default=False, description="Enable StarPU support", when="@2.1:")
     depends_on("starpu", when="@2.1:+starpu")
-    variant("cuda", default=False, description="Enable CUDA support")
+    variant("cuda", default=False, description="Enable CUDA support", when="@2.1:")
     depends_on("cuda", when="@2.1:+cuda")
-    variant("netcdf", default=False, description="Enable NetCDF support")
+    variant("netcdf", default=False, description="Enable NetCDF support", when="@2.1:")
     depends_on("netcdf-c", when="@2.1:+netcdf")
-    variant("pnetcdf", default=False, description="Enable PNetCDF support")
+    variant("pnetcdf", default=False, description="Enable PNetCDF support", when="@2.1:")
     depends_on("parallel-netcdf", when="@2.1:+pnetcdf")
 
     def url_for_version(self, version):
