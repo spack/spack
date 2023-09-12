@@ -73,7 +73,10 @@ class Unifyfs(AutotoolsPackage):
     # after v0.13.1.
     depends_on("mochi-margo@0.10:", when="@1.1:")
     depends_on("mpi")
-    depends_on("openssl@:1")
+
+    # unifyfs@:1.1 uses MD5 functions that are deprecated in OpenSSL 3, and
+    # likely to be removed in the next major release.
+    depends_on("openssl@:3")
 
     # Mochi-Margo dependencies
     depends_on("mercury@1.0.1+bmi", when="@:0.9.1")
