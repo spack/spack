@@ -69,6 +69,17 @@ class Selalib(CMakePackage):
         """quickly run a serial subset of tests for sanity check"""
         ctest = which("ctest")
         with working_dir(self.build_directory):
-            for smalltest in ["test_mud2", "sparse_grid_4d", "scalar_field_2d", "maxwell_3d_fem_fft"]:
-                out = ctest("--output-on-failure", "-R", smalltest, output=str.split, error=str.split)
+            for smalltest in [
+                "test_mud2",
+                "sparse_grid_4d",
+                "scalar_field_2d",
+                "maxwell_3d_fem_fft",
+            ]:
+                out = ctest(
+                    "--output-on-failure",
+                    "-R",
+                    smalltest,
+                    output=str.split,
+                    error=str.split,
+                )
                 assert "100% tests passed" in out
