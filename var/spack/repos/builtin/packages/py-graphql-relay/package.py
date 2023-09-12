@@ -16,8 +16,9 @@ class PyGraphqlRelay(PythonPackage):
 
     version("2.0.1", sha256="870b6b5304123a38a0b215a79eace021acce5a466bf40cd39fa18cb8528afabb")
 
-    depends_on("python@3.4:3.8", type=("build", "run"), when="@2")
     depends_on("py-setuptools", type="build")
     depends_on("py-graphql-core@2.2:2", type=("build", "run"), when="@2")
     depends_on("py-six@1.12:", type=("build", "run"), when="@2")
     depends_on("py-promise@2.2:2", type=("build", "run"), when="@2")
+    # spack test failed with message: ModuleNotFoundError: No module named rx
+    depends_on("py-rx", type=("build", "run"))
