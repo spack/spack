@@ -698,7 +698,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     # stable version 20220623.4. We still patch all other affected
     # versions here
     patch("intel-aocc.patch", when="@20220324:20220623.3,20220803:20221103 +intel %aocc")
-    
+
     patch(
         "https://github.com/lammps/lammps/commit/562300996285fdec4ef74542383276898555af06.patch?full_index=1",
         sha256="e6f1b62bbfdc79d632f4cea98019202d0dd25aa4ae61a70df1164cb4f290df79",
