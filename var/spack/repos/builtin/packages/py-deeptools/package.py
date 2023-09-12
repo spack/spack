@@ -12,13 +12,13 @@ class PyDeeptools(PythonPackage):
 
     # The test suite and associated test data is missing in the pypi tarball.
     homepage = "https://pypi.python.org/pypi/deepTools/"
-    url = "https://github.com/deeptools/deepTools/archive/3.3.0.tar.gz"
+    pypi = "deepTools/deepTools-3.5.3.tar.gz"
 
-    version("3.5.3", sha256="3457298ff8c66de9f661aee3daef12dfb375eebc640822ae409eb4b0f479d3c3")
-    version("3.5.2", sha256="31b28114c96271c1056e82112d74873267512d58ca6f59e15549c72fa5718554")
-    version("3.3.0", sha256="a7aaf79fe939ca307fe6ec5e156750389fdfa4324bf0dd6bf5f53d5fda109358")
-    version("3.2.1", sha256="dbee7676951a9fdb1b88956fe4a3294c99950ef193ea1e9edfba1ca500bd6a75")
-    version("2.5.2", sha256="16d0cfed29af37eb3c4cedd9da89b4952591dc1a7cd8ec71fcba87c89c62bf79")
+    version("3.5.3", sha256="d57ede59417dcde09763d3c4e2aabd45abba1155200777a73a9cb0e94df73ff9")
+    version("3.5.2", sha256="9367f9037b1822b7d69d5abaf47ca25bf0e5dc4cb8be85bd55b6f63c90781941")
+    version("3.3.0", sha256="a9a6d2aff919f45e869acfb477e977db627da84f8136e4b4af0a5100057e6bc3")
+    version("3.2.1", sha256="ccbabb46d6c17c927e96fadc43d8d4770efeaf40b9bcba3b94915a211007378e")
+    version("2.5.2", sha256="305d0b85d75bd8af19dbe8947bb76c399fd5aaebd02f441455f4ba9e6c66ad9b")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.9.0:", type=("build", "run"))
@@ -32,6 +32,7 @@ class PyDeeptools(PythonPackage):
     depends_on("py-plotly@4.9:", when="@3.5.1:", type=("build", "run"))
     depends_on("py-plotly@2.0.0:", when="@:3.5.0", type=("build", "run"))
     depends_on("py-deeptoolsintervals@0.1.8:", type=("build", "run"))
+    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
 
     def patch(self):
         # Add nosetest hook for "python setup.py test" argument.
