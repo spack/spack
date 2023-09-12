@@ -107,6 +107,9 @@ class Dpcpp(CMakePackage):
         is_cuda = "+cuda" in self.spec
         is_hip = "+hip" in self.spec
 
+        if "+lld" in self.spec:
+            llvm_enable_projects += ";lld"
+
         if "+esimd-emulator" in self.spec:
             sycl_enabled_plugins += ";esimd_emulator"
         if is_cuda or is_hip:
