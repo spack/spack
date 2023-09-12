@@ -70,7 +70,7 @@ ci:
         KUBERNETES_MEMORY_REQUEST: "16G"
 
   - reindex-job:
-      tags: ["service"]
+      tags: ["service", "x86_64"]
       image: "ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01"
       variables:
         CI_JOB_SIZE: "medium"
