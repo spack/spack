@@ -74,6 +74,8 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("py-wheel", type="build")
     depends_on("py-pennylane@0.28:", type=("build", "run"), when="@:0.30")
     depends_on("py-pennylane@0.30:", type=("build", "run"), when="@0.31:")
+    # This requirement differs from `pennylane>=0.30` in `setup.py`,
+    # but the introduction of `StatePrep` demands `pennylane>=0.32`
     depends_on("py-pennylane@0.32:", type=("build", "run"), when="@0.32:")
     depends_on("py-pennylane-lightning~kokkos", type=("build", "run"), when="@:0.31")
 
