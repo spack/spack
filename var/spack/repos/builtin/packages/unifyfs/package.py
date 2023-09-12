@@ -124,6 +124,15 @@ class Unifyfs(AutotoolsPackage):
         if self.spec.satisfies("%oneapi"):
             env.append_flags("CFLAGS", "-Wno-unused-function")
 
+    @when("%cce@11.0.3:")
+    def patch(self):
+        filter_file("-Werror", "", "client/src/Makefile.in")
+        filter_file("-Werror", "", "client/src/Makefile.am")
+
+    @when("@develop")
+    def autoreconf(self, spec, prefix):
+        Executable("./autogen.sh")()
+
     def configure_args(self):
         spec = self.spec
         args = ["--with-gotcha=%s" % spec["gotcha"].prefix]
@@ -142,15 +151,6 @@ class Unifyfs(AutotoolsPackage):
 
         return args
 
-    @when("@develop")
-    def autoreconf(self, spec, prefix):
-        sh = which("sh")
-        sh("./autogen.sh")
-
-    @when("%cce@11.0.3:")
-    def patch(self):
-        filter_file("-Werror", "", "client/src/Makefile.in")
-        filter_file("-Werror", "", "client/src/Makefile.am")
     def check(self):
         with working_dir(self.build_directory):
             make("check", parallel=False)
