@@ -28,21 +28,13 @@ def executables_found(monkeypatch):
     return _factory
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(autouse=True)
 def limit_search_to_path(monkeypatch):
     """Pytest fixture that prevents the use of default search paths on Windows during testing"""
 
-    def _mock_windows_search_paths(pkg):
+    def _mock_windows_search_paths(pkg=None):
         return []
 
-    monkeypatch.setattr(
-        spack.detection.common, "compute_windows_user_path_for_package", _mock_windows_search_paths
-    )
-    monkeypatch.setattr(
-        spack.detection.common,
-        "compute_windows_program_path_for_package",
-        _mock_windows_search_paths,
-    )
     monkeypatch.setattr(
         spack.detection.path, "common_windows_package_paths", _mock_windows_search_paths
     )

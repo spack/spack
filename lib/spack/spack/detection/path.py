@@ -39,7 +39,7 @@ if sys.platform == "win32":
     DETECTION_TIMEOUT = 120
 
 
-def common_windows_package_paths() -> List[str]:
+def common_windows_package_paths(pkg_cls) -> List[str]:
     """Get the paths for common package installation location on Windows
     that are outside the PATH
     Returns [] on unix
@@ -51,6 +51,8 @@ def common_windows_package_paths() -> List[str]:
     paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
+    paths.extend(compute_windows_user_path_for_package(pkg_cls))
+    paths.extend(compute_windows_program_path_for_package(pkg_cls))
     return paths
 
 
@@ -241,13 +243,9 @@ class Finder:
         patterns = self.search_patterns(pkg=pkg_cls)
         if not patterns:
             return []
-        if not initial_guess:
-            initial_guess = (
-                spack.util.environment.get_path("PATH") if initial_guess is None else initial_guess
-            )
-            initial_guess.extend(common_windows_package_paths())
-            initial_guess.extend(compute_windows_user_path_for_package(pkg_cls))
-            initial_guess.extend(compute_windows_program_path_for_package(pkg_cls))
+        if initial_guess is None:
+            initial_guess = spack.util.environment.get_path("PATH")
+            initial_guess.extend(common_windows_package_paths(pkg_cls))
         candidates = self.candidate_files(patterns=patterns, paths=initial_guess)
         result = self.detect_specs(pkg=pkg_cls, paths=candidates)
         return result
@@ -329,7 +327,6 @@ def by_path(
     # TODO: Packages should be able to define both .libraries and .executables in the future
     # TODO: determine_spec_details should get all relevant libraries and executables in one call
     executables_finder, libraries_finder = ExecutablesFinder(), LibrariesFinder()
-    libraries_path_guess = [] if path_hints is None else path_hints
     detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
 
     result = collections.defaultdict(list)
@@ -339,7 +336,7 @@ def by_path(
                 executables_finder.find, pkg_name=pkg, initial_guess=path_hints
             )
             library_future = executor.submit(
-                libraries_finder.find, pkg_name=pkg, initial_guess=libraries_path_guess
+                libraries_finder.find, pkg_name=pkg, initial_guess=path_hints
             )
             detected_specs_by_package[pkg] = executable_future, library_future
 
