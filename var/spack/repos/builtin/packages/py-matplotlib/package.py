@@ -17,26 +17,14 @@ class PyMatplotlib(PythonPackage):
     pypi = "matplotlib/matplotlib-3.3.2.tar.gz"
 
     maintainers("adamjstewart")
-    import_modules = [
-        "mpl_toolkits.axes_grid1",
-        "mpl_toolkits.axes_grid",
-        "mpl_toolkits.mplot3d",
-        "mpl_toolkits.axisartist",
-        "matplotlib",
-        "matplotlib.compat",
-        "matplotlib.tri",
-        "matplotlib.axes",
-        "matplotlib.sphinxext",
-        "matplotlib.cbook",
-        "matplotlib.backends",
-        "matplotlib.backends.qt_editor",
-        "matplotlib.style",
-        "matplotlib.projections",
-        "matplotlib.testing",
-        "matplotlib.testing.jpl_units",
-        "pylab",
+    skip_modules = [
+        "matplotlib.tests",
+        "mpl_toolkits.axes_grid1.tests",
+        "mpl_toolkits.axisartist.tests",
+        "mpl_toolkits.mplot3d.tests",
     ]
 
+    version("3.7.3", sha256="f09b3dd6bdeb588de91f853bbb2d6f0ff8ab693485b0c49035eaa510cb4f142e")
     version("3.7.2", sha256="a8cdb91dddb04436bd2f098b8fdf4b81352e68cf4d2c6756fcc414791076569b")
     version("3.7.1", sha256="7b73305f25eab4541bd7ee0b96d87e53ae9c9f1823be5659b806cd85786fe882")
     version("3.7.0", sha256="8f6efd313430d7ef70a38a3276281cb2e8646b3a22b3b21eb227da20e15e6813")
@@ -142,15 +130,16 @@ class PyMatplotlib(PythonPackage):
     # Runtime dependencies
     # Mandatory dependencies
     depends_on("python@3.8:", when="@3.6:", type=("build", "link", "run"))
+    depends_on("python", type=("build", "link", "run"))
     depends_on("py-contourpy@1.0.1:", when="@3.6:", type=("build", "run"))
     depends_on("py-cycler@0.10:", type=("build", "run"))
     depends_on("py-fonttools@4.22:", when="@3.5:", type=("build", "run"))
     depends_on("py-kiwisolver@1.0.1:", type=("build", "run"), when="@2.2.0:")
-    depends_on("py-numpy@1.20:", when="@3.7:", type=("build", "run"))
-    depends_on("py-numpy@1.19:", when="@3.6:", type=("build", "run"))
-    depends_on("py-numpy@1.17:", when="@3.5:", type=("build", "run"))
-    depends_on("py-numpy@1.16:", when="@3.4:", type=("build", "run"))
-    depends_on("py-numpy@1.15:", when="@3.3:", type=("build", "run"))
+    depends_on("py-numpy@1.20:", when="@3.7:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.19:", when="@3.6:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.17:", when="@3.5:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.16:", when="@3.4:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.15:", when="@3.3:", type=("build", "link", "run"))
     depends_on("py-numpy@1.11:", type=("build", "run"))
     depends_on("py-packaging@20:", when="@3.6:", type=("build", "run"))
     depends_on("py-packaging", when="@3.5:", type=("build", "run"))
