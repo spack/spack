@@ -35,14 +35,13 @@ class Selalib(CMakePackage):
     depends_on("cmake@3.6.0:", type=("build"))
     depends_on("blas")
     depends_on("fftw")
+    depends_on("fftw+mpi", when="+mpi")
     depends_on("fftw+openmp", when="+openmp")
     depends_on("fgsl")
     depends_on("git", type=("build", "run", "test"))
     depends_on("hdf5+fortran+cxx")
-    with when("mpi"):
-        depends_on("mpi")
-        depends_on("hdf5+mpi")
-        depends_on("fftw+mpi")
+    depends_on("hdf5+mpi", when="+mpi")
+    depends_on("mpi", when="+mpi")
     depends_on("python@3.0.0:", type=("build"))
     # beware: compiling w/ zfp may throw type mismatch errors
     depends_on("zfp+fortran", when="+compression")
