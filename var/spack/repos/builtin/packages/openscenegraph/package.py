@@ -43,7 +43,7 @@ class Openscenegraph(CMakePackage):
     )
     variant("openexr", default=False, description="Build support for OpenEXR files")
     variant("pdf", default=False, description="Build support for PDF files using Poppler")
-    variant("svg", default=False, description="Build support for SVD files using librsvg")
+    variant("svg", default=False, description="Build support for SVG files using librsvg")
 
     depends_on("cmake@2.8.7:", type="build")
     depends_on("pkgconfig", type="build")
