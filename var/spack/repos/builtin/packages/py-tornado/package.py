@@ -22,4 +22,3 @@ class PyTornado(PythonPackage):
 
     depends_on("python@3.8:", when="@6.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-
