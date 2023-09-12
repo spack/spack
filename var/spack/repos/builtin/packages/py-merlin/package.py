@@ -26,9 +26,12 @@ class PyMerlin(PythonPackage):
     depends_on("py-cached-property", type=("build", "run"))
     depends_on("py-celery@5.0.3:+redis+sqlalchemy", when="@1.7.6:", type=("build", "run"))
     depends_on("py-celery@5.0.0:+redis+sqlalchemy", when="@1.7.5", type=("build", "run"))
-    depends_on("py-celery@4.4.5:4+redis+sqlalchemy", when="@1.6.2:1.7.4", type=("build", "run"))
-    depends_on("py-celery@4.3.0:4+redis+sqlalchemy", when="@:1.5.2", type=("build", "run"))
-    depends_on("py-celery@4.3.0:4+redis", when="@1.4.1:1.5.1", type=("build", "run"))
+    depends_on("py-celery@4.4.5:+redis+sqlalchemy", when="@1.6.2:1.7.4", type=("build", "run"))
+    depends_on("py-celery@4.3.0:+redis+sqlalchemy", when="@:1.5.2", type=("build", "run"))
+    depends_on("py-celery@4.3.0:+redis", when="@1.4.1:1.5.1", type=("build", "run"))
+    # The upperbound on py-celery is not in requirements.txt because there was no 5.x release
+    # then. See commit 61b4fc708a3d6fd22709b35836065c778bf6304e for why it's needed.
+    depends_on("py-celery@:4", when="@:1.7.4", type=("build", "run"))
     depends_on("py-coloredlogs", type=("build", "run"))
     depends_on("py-cryptography", type=("build", "run"))
     depends_on("py-importlib-metadata@:4", when="@1.10: ^python@3.7", type=("build", "run"))
