@@ -105,6 +105,28 @@ class Openscenegraph(CMakePackage):
             "-DCMAKE_MINSIZEREL_POSTFIX=",
         ]
 
+        # explicitly disable or enable plugins depending on variants
+        # CMake will still search for the packages, but won't build the plugins requiring them
+        def build_plugin(plugin, variant=False):
+            if not variant:
+                variant = plugin
+            if spec.satisfies("+{}".format(variant)):
+                value=1
+            else:
+                value=0
+            return self.define("BUILD_OSG_PLUGIN_{}".format(plugin.upper()), value)
+
+        args.append(build_plugin("dicom", "dcmtk"))
+        args.append(build_plugin("exr", "openexr"))
+        args.append(build_plugin("ffmpeg"))
+        args.append(build_plugin("gdal"))
+        args.append(build_plugin("ogr", "gdal"))
+        args.append(build_plugin("gta"))
+        args.append(build_plugin("inventor"))
+        args.append(build_plugin("opencascade"))
+        args.append(build_plugin("pdf"))
+        args.append(build_plugin("svg"))
+
         if spec.satisfies("~ffmpeg"):
             for ffmpeg_lib in ["libavcodec", "libavformat", "libavutil"]:
                 args.extend(
