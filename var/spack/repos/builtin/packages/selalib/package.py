@@ -18,6 +18,8 @@ class Selalib(CMakePackage):
 
     version("main", branch="main")
 
+    test_requires_compiler = True
+
     variant("fmempool", default=False, description="Use memory pool")
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=True, description="Build with OpenMP support")
@@ -67,7 +69,6 @@ class Selalib(CMakePackage):
         """quickly run a serial subset of tests for sanity check"""
         ctest = which("ctest")
         with working_dir(self.build_directory):
-            ctest("--output-on-failure", "-R", "test_mud2")
-            ctest("--output-on-failure", "-R", "sparse_grid_4d")
-            ctest("--output-on-failure", "-R", "scalar_field_2d")
-            ctest("--output-on-failure", "-R", "maxwell_3d_fem_fft")
+            for smalltest in ["test_mud2", "sparse_grid_4d", "scalar_field_2d", "maxwell_3d_fem_fft"]:
+                out = ctest("--output-on-failure", "-R", smalltest, output=str.split, error=str.split)
+                assert "100% tests passed" in out
