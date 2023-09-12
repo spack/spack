@@ -35,9 +35,7 @@ def limit_search_to_path(monkeypatch):
     def _mock_windows_search_paths(pkg=None):
         return []
 
-    monkeypatch.setattr(
-        spack.detection.path, "common_windows_package_paths", _mock_windows_search_paths
-    )
+    monkeypatch.setattr(spack.detection.path.Finder, "path_hints", _mock_windows_search_paths)
 
 
 def define_plat_exe(exe):

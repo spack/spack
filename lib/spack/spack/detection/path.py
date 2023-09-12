@@ -39,7 +39,7 @@ if sys.platform == "win32":
     DETECTION_TIMEOUT = 120
 
 
-def common_windows_package_paths(pkg_cls) -> List[str]:
+def common_windows_package_paths(pkg_cls=None) -> List[str]:
     """Get the paths for common package installation location on Windows
     that are outside the PATH
     Returns [] on unix
@@ -51,8 +51,9 @@ def common_windows_package_paths(pkg_cls) -> List[str]:
     paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
-    paths.extend(compute_windows_user_path_for_package(pkg_cls))
-    paths.extend(compute_windows_program_path_for_package(pkg_cls))
+    if pkg_cls:
+        paths.extend(compute_windows_user_path_for_package(pkg_cls))
+        paths.extend(compute_windows_program_path_for_package(pkg_cls))
     return paths
 
 
