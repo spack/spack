@@ -545,10 +545,7 @@ packages:
 
 def test_requirements_are_higher_priority_than_deprecation(concretize_scope, test_repo):
     """Test that users can override a deprecated version with a requirement."""
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
-    # @=2.3 is a deprecated versions. Ensure that any_of picks both constraints,
+    # 2.3 is a deprecated versions. Ensure that any_of picks both constraints,
     # since they are possible
     conf_str = """\
 packages:
