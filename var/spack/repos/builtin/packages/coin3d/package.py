@@ -62,18 +62,18 @@ class Coin3d(AutotoolsPackage, CMakePackage):
     # 2 patches for fixing missing dlopen, ... on CentOS 8
     patch(
         "https://github.com/coin3d/coin/commit/962e613609ba93301999f83e283b7f489dfac503.patch?full_index=1",
-        sha256="a7c41cb67e44d43138524185a0688e2e64afb1f40e917c09195739fcfb998a92",
+        sha256="33da720d6ff50916403320c47c72600737bdfb4113a4d527bc3fa9e8fe368f49",
         when="@4.0.0",
     )
     patch(
         "https://github.com/coin3d/coin/commit/9a36b15d66c5e340cd8695415ce5867ad07ee2bb.patch?full_index=1",
-        sha256="38d71271696039c704740197e48023b2b121756b6cdcd5e9f478e3ea08122fa7",
+        sha256="fcfe07c45e4981976ccf8df377f8cea24c48231b9e5d9538e5c7e4e038970597",
         when="@4.0.0",
     )
     # fix missing X11 libraries on CentOS 8
     patch(
         "https://github.com/coin3d/coin/commit/58a1b4c3e968f96d3a2091fa5cb625f360ce6811.patch?full_index=1",
-        sha256="bba2d96ff07367b61fbb99082e0580684add03ecd36cde8253975c025b1f90e8",
+        sha256="a4fe39d430068a7b107d4bca1fdb932e40cf92c3b5be0f846c70cbdc333e924d",
         when="@4.0.0",
     )
 
