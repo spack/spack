@@ -31,7 +31,7 @@ class PyMerlin(PythonPackage):
     depends_on("py-cryptography", type=("build", "run"))
     depends_on("py-importlib-metadata@:4", when="@1.10: ^python@3.7", type=("build", "run"))
     depends_on("py-maestrowf@1.1.9:", when="@1.9.0:", type=("build", "run"))
-    depends_on("py-maestrowf@1.1.7dev0", when="@1.2.0:", type=("build", "run"))
+    depends_on("py-maestrowf@1.1.7dev0", when="@1.2.0:1.8", type=("build", "run"))
     depends_on("py-maestrowf@1.1.6:", when="@:1.1", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-parse", type=("build", "run"))
