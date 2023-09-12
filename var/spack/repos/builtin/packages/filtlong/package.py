@@ -19,6 +19,7 @@ class Filtlong(MakefilePackage):
 
     depends_on("zlib-api")
 
+    # %gcc@13: requires std libraries be manually added - add an include for `cstdint`
     patch("gcc13.patch", level=0, when="%gcc@13:")
 
     def install(self, spec, prefix):
