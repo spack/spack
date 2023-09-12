@@ -63,6 +63,8 @@ class Dpcpp(CMakePackage):
     depends_on("ninja@1.10.0:", type="build")
 
     depends_on("cuda@10.2.0:", when="+cuda")
+    depends_on("hip +rocm", when="+hip hip-platform=AMD")
+    depends_on("hip +cuda", when="+hip hip-platform=NVIDIA")
 
     conflicts("~lld", when="+hip hip-platform=AMD", msg="lld is needed for HIP plugin on AMD")
     conflicts("~lld", when=(sys.platform == "windows"), msg="lld is needed on Windows")
@@ -161,6 +163,9 @@ class Dpcpp(CMakePackage):
 
         if is_cuda or (is_hip and sycl_build_pi_hip_platform == "NVIDIA"):
             args.append(self.define("CUDA_TOOLKIT_ROOT_DIR", self.spec["cuda"].prefix))
+
+        if is_hip and sycl_build_pi_hip_platform == "AMD":
+            args.append(self.define("SYCL_BUILD_PI_HIP_ROCM_DIR", self.spec["rocm"].prefix))
 
         if self.compiler.name == "gcc":
             gcc_prefix = ancestor(self.compiler.cc, 2)
