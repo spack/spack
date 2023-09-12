@@ -60,8 +60,11 @@ class Selalib(CMakePackage):
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
-    def test_slurm_ctest(self):
+    def quick_serial_ctest(self):
+        """quickly run a serial subset of tests for sanity check"""
         ctest = which("ctest")
-
         with working_dir(self.build_directory):
-            ctest("--verbose")
+            ctest("--output-on-failure", "-R", "test_mud2")
+            ctest("--output-on-failure", "-R", "sparse_grid_4d")
+            ctest("--output-on-failure", "-R", "scalar_field_2d")
+            ctest("--output-on-failure", "-R", "maxwell_3d_fem_fft")
