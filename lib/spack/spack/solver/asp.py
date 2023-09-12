@@ -2730,7 +2730,7 @@ class SpecBuilder:
 
                 spec.compiler_flags.update({flag_type: ordered_compiler_flags})
 
-    def deprecated(self, node, version):
+    def deprecated(self, node: NodeArgument, version: str) -> None:
         tty.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
 
     @staticmethod
