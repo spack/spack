@@ -2434,9 +2434,15 @@ class SpackSolverSetup:
 
         # TODO: make a config option for this undocumented feature
         checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
-        self.define_package_versions_and_validate_preferences(self.pkgs, deprecated=deprecated, require_checksum=checksummed)
-        self.define_ad_hoc_versions_from_specs(specs, Provenance.SPEC, require_checksum=checksummed)
-        self.define_ad_hoc_versions_from_specs(dev_specs, Provenance.DEV_SPEC, require_checksum=checksummed)
+        self.define_package_versions_and_validate_preferences(
+            self.pkgs, deprecated=deprecated, require_checksum=checksummed
+        )
+        self.define_ad_hoc_versions_from_specs(
+            specs, Provenance.SPEC, require_checksum=checksummed
+        )
+        self.define_ad_hoc_versions_from_specs(
+            dev_specs, Provenance.DEV_SPEC, require_checksum=checksummed
+        )
         self.validate_and_define_versions_from_requirements(require_checksum=checksummed)
 
         self.gen.h1("Package Constraints")
