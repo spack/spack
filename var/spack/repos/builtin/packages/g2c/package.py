@@ -63,6 +63,7 @@ class G2c(CMakePackage):
             self.define_from_variant("USE_OpenJPEG", "openjpeg"),
             self.define_from_variant("PTHREADS", "pthreads"),
             self.define_from_variant("UTILS", "utils"),
+            self.define("BUILD_TESTING", self.run_tests),
         ]
 
         return args
@@ -75,3 +76,7 @@ class G2c(CMakePackage):
         lib = find_libraries("libg2c", root=self.prefix, shared=shared, recursive=True)
         env.set("G2C_LIB", lib[0])
         env.set("G2C_INC", join_path(self.prefix, "include"))
+
+    def check(self):
+        with working_dir(self.builder.build_directory):
+            make("test")
