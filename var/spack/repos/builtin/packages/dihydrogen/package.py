@@ -234,12 +234,6 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
         entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", True))
 
-        if "+rocm" in spec:
-            entries.append(
-                cmake_cache_filepath(
-                    "CMAKE_HIP_COMPILER",
-                    os.path.join(spec["llvm-amdgpu"].prefix.bin, "clang++")))
-
         # It's possible this should have a `if "platform=cray" in
         # spec:` in front of it, but it's not clear to me when this is
         # set. In particular, I don't actually see this blurb showing

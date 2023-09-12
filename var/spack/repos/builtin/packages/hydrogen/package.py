@@ -195,12 +195,6 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
         entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", True))
 
-        if "+rocm" in spec:
-            entries.append(
-                cmake_cache_filepath(
-                    "CMAKE_HIP_COMPILER",
-                    os.path.join(spec["llvm-amdgpu"].prefix.bin, "clang++")))
-
         entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
 
         if spec.satisfies("%clang +openmp platform=darwin") or spec.satisfies("%clang +omp_taskloops platform=darwin"):

@@ -130,7 +130,7 @@ class Aluminum(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("rccl", when="+nccl")
         depends_on("roctracer-dev", when="+roctracer")
         for val in ROCmPackage.amdgpu_targets:
-            depends_on("rccl +rocm amdgpu_target=%s" % val,
+            depends_on("rccl amdgpu_target=%s" % val,
                        when="+rocm amdgpu_target=%s" % val)
         if (spack.platforms.cray.slingshot_network()):
             depends_on("aws-ofi-rccl", when="+nccl")
@@ -171,12 +171,6 @@ class Aluminum(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
         entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", True))
         entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
-
-        if "+rocm" in spec:
-            entries.append(
-                cmake_cache_filepath(
-                    "CMAKE_HIP_COMPILER",
-                    os.path.join(spec["llvm-amdgpu"].prefix.bin, "clang++")))
 
         return entries
 
