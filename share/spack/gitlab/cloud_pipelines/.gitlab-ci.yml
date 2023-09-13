@@ -635,6 +635,7 @@ ml-linux-x86_64-rocm-build:
   extends: [".darwin_aarch64"]
   variables:
     SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
+  allow_failure: true  # runners unavailable
 
 ml-darwin-aarch64-mps-generate:
   tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
