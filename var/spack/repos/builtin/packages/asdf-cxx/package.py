@@ -47,4 +47,4 @@ class AsdfCxx(CMakePackage):
     depends_on("swig @3.0.0:3", type="build")
     # Neither earlier nor later versions of yaml-cpp work
     depends_on("yaml-cpp @0.6.3")
-    depends_on("zlib")
+    depends_on("zlib-api")

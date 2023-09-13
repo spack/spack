@@ -20,7 +20,7 @@ class Darwin(Platform):
     binary_formats = ["macho"]
 
     def __init__(self):
-        super(Darwin, self).__init__("darwin")
+        super().__init__("darwin")
 
         for name in archspec.cpu.TARGETS:
             self.add_target(name, spack.target.Target(name))

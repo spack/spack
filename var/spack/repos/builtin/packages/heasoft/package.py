@@ -29,7 +29,7 @@ class Heasoft(AutotoolsPackage):
 
     variant("X", default=True, description="Enable X11 support")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("ncurses")
     depends_on("curl")
     depends_on("libxt", when="+X")
@@ -97,8 +97,8 @@ class Heasoft(AutotoolsPackage):
     def configure_args(self):
         config_args = [
             "--with-png={0}".format(self.spec["libpng"].prefix),
-            "CPPFLAGS={0}".format(self.spec["zlib"].headers.include_flags),
-            "LDFLAGS={0}".format(self.spec["zlib"].libs.search_flags),
+            "CPPFLAGS={0}".format(self.spec["zlib-api"].headers.include_flags),
+            "LDFLAGS={0}".format(self.spec["zlib-api"].libs.search_flags),
         ]
 
         config_args += self.enable_or_disable("x", variant="X")

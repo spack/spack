@@ -26,6 +26,7 @@ class Wps(Package):
     variant(
         "build_type",
         default="serial",
+        description="Build type",
         values=("serial", "serial_NO_GRIB2", "dmpar", "dmpar_NO_GRIB2"),
     )
 
@@ -34,7 +35,7 @@ class Wps(Package):
     patch("patches/4.2/arch.configure.defaults.patch", when="@4.2")
     patch("patches/4.2/configure.patch", when="@4.2:4.3.1")
     patch("patches/4.2/preamble.patch", when="@4.2:")
-    patch("patches/4.3/arch.configure.defaults.patch", when="@4.3:4.3.0")
+    patch("patches/4.3/arch.configure.defaults.patch", when="@=4.3")
     patch("patches/4.3.1/arch.configure.defaults.patch", when="@4.3.1")
     patch("patches/4.4/configure.patch", when="@4.4:")
 

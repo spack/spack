@@ -59,9 +59,9 @@ def test_repo_unknown_pkg(mutable_mock_repo):
 @pytest.mark.maybeslow
 def test_repo_last_mtime():
     latest_mtime = max(
-        os.path.getmtime(p.module.__file__) for p in spack.repo.path.all_package_classes()
+        os.path.getmtime(p.module.__file__) for p in spack.repo.PATH.all_package_classes()
     )
-    assert spack.repo.path.last_mtime() == latest_mtime
+    assert spack.repo.PATH.last_mtime() == latest_mtime
 
 
 def test_repo_invisibles(mutable_mock_repo, extra_repo):
@@ -90,10 +90,10 @@ def test_use_repositories_doesnt_change_class():
     """Test that we don't create the same package module and class multiple times
     when swapping repositories.
     """
-    zlib_cls_outer = spack.repo.path.get_pkg_class("zlib")
-    current_paths = [r.root for r in spack.repo.path.repos]
+    zlib_cls_outer = spack.repo.PATH.get_pkg_class("zlib")
+    current_paths = [r.root for r in spack.repo.PATH.repos]
     with spack.repo.use_repositories(*current_paths):
-        zlib_cls_inner = spack.repo.path.get_pkg_class("zlib")
+        zlib_cls_inner = spack.repo.PATH.get_pkg_class("zlib")
     assert id(zlib_cls_inner) == id(zlib_cls_outer)
 
 
@@ -123,12 +123,11 @@ def test_relative_import_spack_packages_as_python_modules(mock_packages):
 
 def test_all_virtual_packages_have_default_providers():
     """All virtual packages must have a default provider explicitly set."""
-    defaults = spack.config.get("packages", scope="defaults")
+    configuration = spack.config.create()
+    defaults = configuration.get("packages", scope="defaults")
     default_providers = defaults["all"]["providers"]
-    providers = spack.repo.path.provider_index.providers
-    default_providers_filename = spack.config.config.scopes["defaults"].get_section_filename(
-        "packages"
-    )
+    providers = spack.repo.PATH.provider_index.providers
+    default_providers_filename = configuration.scopes["defaults"].get_section_filename("packages")
     for provider in providers:
         assert provider in default_providers, (
             "all providers must have a default in %s" % default_providers_filename
@@ -167,3 +166,18 @@ def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_deb
     captured = capsys.readouterr()[1]
     assert "Installing" in captured
     assert "package.py" in os.listdir(tmpdir), "Expected the virtual's package to be copied"
+
+
+@pytest.mark.parametrize(
+    "repo_paths,namespaces",
+    [
+        ([spack.paths.packages_path], ["builtin"]),
+        ([spack.paths.mock_packages_path], ["builtin.mock"]),
+        ([spack.paths.packages_path, spack.paths.mock_packages_path], ["builtin", "builtin.mock"]),
+        ([spack.paths.mock_packages_path, spack.paths.packages_path], ["builtin.mock", "builtin"]),
+    ],
+)
+def test_repository_construction_doesnt_use_globals(nullify_globals, repo_paths, namespaces):
+    repo_path = spack.repo.RepoPath(*repo_paths)
+    assert len(repo_path.repos) == len(namespaces)
+    assert [x.namespace for x in repo_path.repos] == namespaces

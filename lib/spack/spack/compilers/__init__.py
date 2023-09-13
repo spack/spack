@@ -37,7 +37,6 @@ _other_instance_vars = [
     "implicit_rpaths",
     "extra_rpaths",
 ]
-_cache_config_file = []
 
 # TODO: Caches at module level make it difficult to mock configurations in
 # TODO: unit tests. It might be worth reworking their implementation.
@@ -112,41 +111,31 @@ def _to_dict(compiler):
 def get_compiler_config(scope=None, init_config=True):
     """Return the compiler configuration for the specified architecture."""
 
-    def init_compiler_config():
-        """Compiler search used when Spack has no compilers."""
-        compilers = find_compilers()
-        compilers_dict = []
-        for compiler in compilers:
-            compilers_dict.append(_to_dict(compiler))
-        spack.config.set("compilers", compilers_dict, scope=scope)
+    config = spack.config.get("compilers", scope=scope) or []
+    if config or not init_config:
+        return config
 
+    merged_config = spack.config.get("compilers")
+    if merged_config:
+        return config
+
+    _init_compiler_config(scope=scope)
     config = spack.config.get("compilers", scope=scope)
-    # Update the configuration if there are currently no compilers
-    # configured.  Avoid updating automatically if there ARE site
-    # compilers configured but no user ones.
-    if not config and init_config:
-        if scope is None:
-            # We know no compilers were configured in any scope.
-            init_compiler_config()
-            config = spack.config.get("compilers", scope=scope)
-        elif scope == "user":
-            # Check the site config and update the user config if
-            # nothing is configured at the site level.
-            site_config = spack.config.get("compilers", scope="site")
-            sys_config = spack.config.get("compilers", scope="system")
-            if not site_config and not sys_config:
-                init_compiler_config()
-                config = spack.config.get("compilers", scope=scope)
-        return config
-    elif config:
-        return config
-    else:
-        return []  # Return empty list which we will later append to.
+    return config
+
+
+def _init_compiler_config(*, scope):
+    """Compiler search used when Spack has no compilers."""
+    compilers = find_compilers()
+    compilers_dict = []
+    for compiler in compilers:
+        compilers_dict.append(_to_dict(compiler))
+    spack.config.set("compilers", compilers_dict, scope=scope)
 
 
 def compiler_config_files():
     config_files = list()
-    config = spack.config.config
+    config = spack.config.CONFIG
     for scope in config.file_scopes:
         name = scope.name
         compiler_config = config.get("compilers", scope=name)
@@ -165,52 +154,65 @@ def add_compilers_to_config(compilers, scope=None, init_config=True):
     compiler_config = get_compiler_config(scope, init_config)
     for compiler in compilers:
         compiler_config.append(_to_dict(compiler))
-    global _cache_config_file
-    _cache_config_file = compiler_config
     spack.config.set("compilers", compiler_config, scope=scope)
 
 
 @_auto_compiler_spec
 def remove_compiler_from_config(compiler_spec, scope=None):
-    """Remove compilers from the config, by spec.
+    """Remove compilers from configuration by spec.
+
+    If scope is None, all the scopes are searched for removal.
 
     Arguments:
-        compiler_specs: a list of CompilerSpec objects.
-        scope: configuration scope to modify.
+        compiler_spec: compiler to be removed
+        scope: configuration scope to modify
     """
-    # Need a better way for this
-    global _cache_config_file
+    candidate_scopes = [scope]
+    if scope is None:
+        candidate_scopes = spack.config.CONFIG.scopes.keys()
 
+    removal_happened = False
+    for current_scope in candidate_scopes:
+        removal_happened |= _remove_compiler_from_scope(compiler_spec, scope=current_scope)
+
+    return removal_happened
+
+
+def _remove_compiler_from_scope(compiler_spec, scope):
+    """Removes a compiler from a specific configuration scope.
+
+    Args:
+        compiler_spec: compiler to be removed
+        scope: configuration scope under consideration
+
+    Returns:
+         True if one or more compiler entries were actually removed, False otherwise
+    """
+    assert scope is not None, "a specific scope is needed when calling this function"
     compiler_config = get_compiler_config(scope)
-    config_length = len(compiler_config)
-
     filtered_compiler_config = [
-        comp
-        for comp in compiler_config
+        compiler_entry
+        for compiler_entry in compiler_config
         if not spack.spec.parse_with_version_concrete(
-            comp["compiler"]["spec"], compiler=True
+            compiler_entry["compiler"]["spec"], compiler=True
         ).satisfies(compiler_spec)
     ]
 
-    # Update the cache for changes
-    _cache_config_file = filtered_compiler_config
-    if len(filtered_compiler_config) == config_length:  # No items removed
-        CompilerSpecInsufficientlySpecificError(compiler_spec)
-    spack.config.set("compilers", filtered_compiler_config, scope=scope)
+    if len(filtered_compiler_config) == len(compiler_config):
+        return False
+
+    # We need to preserve the YAML type for comments, hence we are copying the
+    # items in the list that has just been retrieved
+    compiler_config[:] = filtered_compiler_config
+    spack.config.set("compilers", compiler_config, scope=scope)
+    return True
 
 
 def all_compilers_config(scope=None, init_config=True):
     """Return a set of specs for all the compiler versions currently
     available to build with.  These are instances of CompilerSpec.
     """
-    # Get compilers for this architecture.
-    # Create a cache of the config file so we don't load all the time.
-    global _cache_config_file
-    if not _cache_config_file:
-        _cache_config_file = get_compiler_config(scope, init_config)
-        return _cache_config_file
-    else:
-        return _cache_config_file
+    return get_compiler_config(scope, init_config)
 
 
 def all_compiler_specs(scope=None, init_config=True):
@@ -367,7 +369,7 @@ def compiler_specs_for_arch(arch_spec, scope=None):
     return [c.spec for c in compilers_for_arch(arch_spec, scope)]
 
 
-class CacheReference(object):
+class CacheReference:
     """This acts as a hashable reference to any object (regardless of whether
     the object itself is hashable) and also prevents the object from being
     garbage-collected (so if two CacheReference objects are equal, they
@@ -513,7 +515,7 @@ def compiler_for_spec(compiler_spec, arch_spec):
     if len(compilers) < 1:
         raise NoCompilerForSpecError(compiler_spec, arch_spec.os)
     if len(compilers) > 1:
-        msg = "Multiple definitions of compiler %s" % compiler_spec
+        msg = "Multiple definitions of compiler %s " % compiler_spec
         msg += "for architecture %s:\n %s" % (arch_spec, compilers)
         tty.debug(msg)
     return compilers[0]
@@ -521,7 +523,7 @@ def compiler_for_spec(compiler_spec, arch_spec):
 
 @_auto_compiler_spec
 def get_compiler_duplicates(compiler_spec, arch_spec):
-    config = spack.config.config
+    config = spack.config.CONFIG
 
     scope_to_compilers = {}
     for scope in config.scopes:
@@ -818,7 +820,7 @@ def is_mixed_toolchain(compiler):
 
 class InvalidCompilerConfigurationError(spack.error.SpackError):
     def __init__(self, compiler_spec):
-        super(InvalidCompilerConfigurationError, self).__init__(
+        super().__init__(
             'Invalid configuration for [compiler "%s"]: ' % compiler_spec,
             "Compiler configuration must contain entries for all compilers: %s"
             % _path_instance_vars,
@@ -827,19 +829,17 @@ class InvalidCompilerConfigurationError(spack.error.SpackError):
 
 class NoCompilersError(spack.error.SpackError):
     def __init__(self):
-        super(NoCompilersError, self).__init__("Spack could not find any compilers!")
+        super().__init__("Spack could not find any compilers!")
 
 
 class UnknownCompilerError(spack.error.SpackError):
     def __init__(self, compiler_name):
-        super(UnknownCompilerError, self).__init__(
-            "Spack doesn't support the requested compiler: {0}".format(compiler_name)
-        )
+        super().__init__("Spack doesn't support the requested compiler: {0}".format(compiler_name))
 
 
 class NoCompilerForSpecError(spack.error.SpackError):
     def __init__(self, compiler_spec, target):
-        super(NoCompilerForSpecError, self).__init__(
+        super().__init__(
             "No compilers for operating system %s satisfy spec %s" % (target, compiler_spec)
         )
 
@@ -858,11 +858,9 @@ class CompilerDuplicateError(spack.error.SpackError):
             + " in the following files:\n\t"
             + "\n\t".join(duplicate_msg(x, y) for x, y in duplicate_table)
         )
-        super(CompilerDuplicateError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
     def __init__(self, compiler_spec):
-        super(CompilerSpecInsufficientlySpecificError, self).__init__(
-            "Multiple compilers satisfy spec %s" % compiler_spec
-        )
+        super().__init__("Multiple compilers satisfy spec %s" % compiler_spec)

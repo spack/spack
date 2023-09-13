@@ -12,13 +12,16 @@ class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
 
     homepage = "https://libensemble.readthedocs.io"
-    pypi = "libensemble/libensemble-0.9.3.tar.gz"
+    pypi = "libensemble/libensemble-0.10.2.tar.gz"
     git = "https://github.com/Libensemble/libensemble.git"
     maintainers("shuds13", "jlnav")
 
     tags = ["e4s"]
 
     version("develop", branch="develop")
+    version("0.10.2", sha256="ef8dfe5d233dcae2636a3d6aa38f3c2ad0f42c65bd38f664e99b3e63b9f86622")
+    version("0.10.1", sha256="56ae42ec9a28d3df8f46bdf7d016db9526200e9df2a28d849902e3c44fe5c1ba")
+    version("0.10.0", sha256="f800f38d02def526f1d2a325710d01fdd3637cd1e33a9a083a3cf4a7f419a726")
     version("0.9.3", sha256="00e5a65d6891feee6a686c048d8de72097b8bff164431f163be96ec130a9c390")
     version("0.9.2", sha256="e46598e5696f770cbff4cb90507b52867faad5654f1b80de35405a95228c909f")
     version("0.9.1", sha256="684e52b0ea64f5ec610e7868b7e4c9fa5fd2316a370a726870aa5fd5fb1b0ede")
@@ -44,11 +47,14 @@ class PyLibensemble(PythonPackage):
     variant("mpmath", default=False, description="Install with mpmath")
     variant("deap", default=False, description="Install with DEAP")
     variant("tasmanian", default=False, description="Install with tasmanian")
-    variant("pyyaml", default=False, description="Install with pyyaml")
 
-    depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"), when="@0.7.1:")
+    depends_on("py-setuptools", when="@0.10.2:", type="build")
+    depends_on("py-setuptools", when="@:0.10.1", type=("build", "run"))
+    depends_on("py-pydantic@:2", type=("build", "run"), when="@0.10:")
+    depends_on("py-tomli", type=("build", "run"), when="@0.10:")
+    depends_on("py-pyyaml", type=("build", "run"), when="@0.10:")
     depends_on("mpi", when="@:0.4.1")
     depends_on("mpi", when="+mpi")
     depends_on("py-mpi4py@2.0:", type=("build", "run"), when="@:0.4.1")
@@ -60,7 +66,6 @@ class PyLibensemble(PythonPackage):
     depends_on("py-mpmath", type=("build", "run"), when="+mpmath")
     depends_on("py-deap", type=("build", "run"), when="+deap")
     depends_on("tasmanian+python", type=("build", "run"), when="+tasmanian")
-    depends_on("py-pyyaml", type=("build", "run"), when="+pyyaml")
     conflicts("~mpi", when="@:0.4.1")
 
     @run_after("install")
@@ -69,28 +74,24 @@ class PyLibensemble(PythonPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(join_path("examples", "calling_scripts", "regression_tests"))
 
-    def run_tutorial_tests(self, exe):
-        """Run example stand alone test"""
+    def run_tutorial_script(self, script):
+        """run the tutorial example regression test"""
 
-        test_dir = join_path(
-            self.test_suite.current_test_cache_dir,
-            "examples",
-            "calling_scripts",
-            "regression_tests",
+        exe = (
+            self.test_suite.current_test_cache_dir.examples.calling_scripts.regression_tests.join(
+                script
+            )
         )
+        if not os.path.isfile(exe):
+            raise SkipTest(f"{script} is missing")
 
-        if not os.path.isfile(join_path(test_dir, exe)):
-            print("SKIPPED: {0} test does not exist".format(exe))
-            return
+        python = self.spec["python"].command
+        python(exe, "--comms", "local", "--nworkers", "2")
 
-        self.run_test(
-            self.spec["python"].command.path,
-            options=[exe, "--comms", "local", "--nworkers", "2"],
-            purpose="test: run {0} example".format(exe),
-            work_dir=test_dir,
-        )
+    def test_uniform_sampling(self):
+        """run test_uniform_sampling.py"""
+        self.run_tutorial_script("test_uniform_sampling.py")
 
-    def test(self):
-        super(__class__, self).test()
-        for tutorial in ["test_uniform_sampling.py", "test_1d_sampling.py"]:
-            self.run_tutorial_tests(tutorial)
+    def test_1d_sampling(self):
+        """run test_1d_sampling.py"""
+        self.run_tutorial_script("test_1d_sampling.py")
