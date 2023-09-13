@@ -4497,7 +4497,7 @@ class Spec:
         format_component_with_sep = r"\{[^}]*[/\\][^}]*}"
         if re.search(format_component_with_sep, format_string):
             raise SpecFormatPathError(
-                f"Invalid path format string: cannot contain {{/...}}\n\t{format_string})"
+                f"Invalid path format string: cannot contain {{/...}}\n\t{format_string}"
             )
 
         root = ""
