@@ -27,8 +27,6 @@ class Dpcpp(CMakePackage):
 
     maintainers("ravil-mobile")
 
-    requires("%gcc", msg="DPC++ builds only with GCC")
-
     variant("cuda", default=False, description="switch from OpenCL to CUDA")
     variant("hip", default=False, description="switch from OpenCL to HIP")
     variant(
@@ -170,10 +168,6 @@ class Dpcpp(CMakePackage):
 
         if is_hip and sycl_build_pi_hip_platform == "AMD":
             args.append(self.define("SYCL_BUILD_PI_HIP_ROCM_DIR", self.spec["hip"].prefix))
-
-        if self.compiler.name == "gcc":
-            gcc_prefix = ancestor(self.compiler.cc, 2)
-            args.append(self.define("GCC_INSTALL_PREFIX", gcc_prefix))
 
         return args
 
