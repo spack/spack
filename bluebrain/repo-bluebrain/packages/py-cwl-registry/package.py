@@ -10,6 +10,7 @@ class PyCwlRegistry(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/cwl-registry.git"
 
     version("develop", branch="main")
+    version("0.4.1", tag="cwl-registry-v0.4.1")
     version("0.3.14", tag="cwl-registry-v0.3.14")
     version("0.3.12", tag="cwl-registry-v0.3.12")
     version("0.3.10", tag="cwl-registry-v0.3.10")
@@ -23,14 +24,17 @@ class PyCwlRegistry(PythonPackage):
     depends_on("py-voxcell", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-joblib", type=("build", "run"))
+    depends_on("py-lxml", type=("build", "run"))
 
     depends_on("py-libsonata", type=("build", "run"))
     depends_on("py-nexusforge@0.8.1:", type=("build", "run"))
     depends_on("py-bba-data-push@1.0.4:", type=("build", "run"))
-    depends_on("py-joblib", type=("build", "run"))
     depends_on("py-cwl-luigi@0.3.1:", type=("build", "run"))
-    depends_on("py-entity-management@1.2.0:", type=("build", "run"))
+    depends_on("py-entity-management@1.2.24:", type=("build", "run"))
     depends_on("py-fz-td-recipe", type=("build", "run"))
+    depends_on("py-pydantic", type=("build", "run"))
+    depends_on("py-morphio", type=("build", "run"))
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
