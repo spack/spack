@@ -1586,7 +1586,7 @@ complete -c spack -n '__fish_spack_using_command external' -s h -l help -f -a he
 complete -c spack -n '__fish_spack_using_command external' -s h -l help -d 'show this help message and exit'
 
 # spack external find
-set -g __fish_spack_optspecs_spack_external_find h/help not-buildable exclude= p/path= scope= all t/tag=
+set -g __fish_spack_optspecs_spack_external_find h/help not-buildable exclude= p/path= scope= all t/tag= j/jobs=
 
 complete -c spack -n '__fish_spack_using_command external find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external find' -s h -l help -d 'show this help message and exit'
@@ -1602,6 +1602,8 @@ complete -c spack -n '__fish_spack_using_command external find' -l all -f -a all
 complete -c spack -n '__fish_spack_using_command external find' -l all -d 'search for all packages that Spack knows about'
 complete -c spack -n '__fish_spack_using_command external find' -s t -l tag -r -f -a tags
 complete -c spack -n '__fish_spack_using_command external find' -s t -l tag -r -d 'filter a package query by tag (multiple use allowed)'
+complete -c spack -n '__fish_spack_using_command external find' -s j -l jobs -r -f -a jobs
+complete -c spack -n '__fish_spack_using_command external find' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack external list
 set -g __fish_spack_optspecs_spack_external_list h/help

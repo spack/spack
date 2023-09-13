@@ -67,7 +67,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: {name: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01, entrypoint: ['']}
+        image: {name: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01, entrypoint: [''] }
 
   cdash:
     'build-group:': Data and Vis SDK

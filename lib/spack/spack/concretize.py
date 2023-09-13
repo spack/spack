@@ -744,8 +744,11 @@ def concretize_specs_together(*abstract_specs, **kwargs):
 def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
 
+    allow_deprecated = spack.config.get("config:deprecated", False)
     solver = spack.solver.asp.Solver()
-    result = solver.solve(abstract_specs, tests=kwargs.get("tests", False))
+    result = solver.solve(
+        abstract_specs, tests=kwargs.get("tests", False), deprecated=allow_deprecated
+    )
     result.raise_if_unsat()
     return [s.copy() for s in result.specs]
 

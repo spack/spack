@@ -1356,7 +1356,7 @@ class TestConcretize:
             # Version 1.1.0 is deprecated and should not be selected, unless we
             # explicitly asked for that
             ("deprecated-versions", ["deprecated-versions@1.0.0"]),
-            ("deprecated-versions@1.1.0", ["deprecated-versions@1.1.0"]),
+            ("deprecated-versions@=1.1.0", ["deprecated-versions@1.1.0"]),
         ],
     )
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
@@ -1943,7 +1943,7 @@ class TestConcretize:
         def find_fake_python(classes, path_hints):
             return {"python": [spack.detection.DetectedPackage(python_spec, prefix=path_hints[0])]}
 
-        monkeypatch.setattr(spack.detection, "by_executable", find_fake_python)
+        monkeypatch.setattr(spack.detection, "by_path", find_fake_python)
         external_conf = {
             "py-extension1": {
                 "buildable": False,

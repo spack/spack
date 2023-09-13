@@ -175,10 +175,12 @@ class WindowsRPath:
 detectable_packages = collections.defaultdict(list)
 
 
-class DetectablePackageMeta:
+class DetectablePackageMeta(type):
     """Check if a package is detectable and add default implementations
     for the detection function.
     """
+
+    TAG = "detectable"
 
     def __init__(cls, name, bases, attr_dict):
         if hasattr(cls, "executables") and hasattr(cls, "libraries"):
@@ -195,6 +197,11 @@ class DetectablePackageMeta:
         # If a package has the executables or libraries  attribute then it's
         # assumed to be detectable
         if hasattr(cls, "executables") or hasattr(cls, "libraries"):
+            # Append a tag to each detectable package, so that finding them is faster
+            if hasattr(cls, "tags"):
+                getattr(cls, "tags").append(DetectablePackageMeta.TAG)
+            else:
+                setattr(cls, "tags", [DetectablePackageMeta.TAG])
 
             @classmethod
             def platform_executables(cls):
