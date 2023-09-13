@@ -233,7 +233,7 @@ class Python(Package):
     if sys.platform != "win32":
         depends_on("pkgconfig@0.9.0:", type="build")
         depends_on("gettext +libxml2", when="+libxml2")
-        depends_on("gettext ~libxml2", when="~libxml2")
+        depends_on("iconv", when="~libxml2")
 
         # Optional dependencies
         # See detect_modules() in setup.py for details
