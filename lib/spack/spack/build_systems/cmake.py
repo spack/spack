@@ -11,11 +11,14 @@ import re
 import sys
 from typing import List, Optional, Tuple
 
+import archspec.cpu
+
 import llnl.util.filesystem as fs
 
 import spack.build_environment
 import spack.builder
 import spack.package_base
+import spack.util.path
 from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
 
@@ -274,7 +277,12 @@ class CMakeBuilder(BaseBuilder):
             generator,
             define("CMAKE_INSTALL_PREFIX", pathlib.Path(pkg.prefix).as_posix()),
             define("CMAKE_BUILD_TYPE", build_type),
+            define("BUILD_TESTING", pkg.run_tests),
         ]
+
+        # if we're building for a 64 bit system, prefer lib64 paths
+        if str(archspec.cpu.host().generic).find("_64_") > 0:
+            args.append(define("FIND_LIBRARY_USE_LIB64_PATHS", True))
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
         if pkg.spec.satisfies("^cmake@3.9:"):
@@ -450,6 +458,7 @@ class CMakeBuilder(BaseBuilder):
 
             * CMAKE_INSTALL_PREFIX
             * CMAKE_BUILD_TYPE
+            * BUILD_TESTING
 
         which will be set automatically.
         """

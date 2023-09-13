@@ -2351,7 +2351,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
     # perform first non-recursive search in root/lib then in root/lib64 and
     # finally search all of root recursively. The search stops when the first
     # match is found.
-    common_lib_dirs = ["lib", "lib64"]
+    common_lib_dirs = ["lib64", "lib"]
     if sys.platform == "win32":
         common_lib_dirs.extend(["bin", "Lib"])
 

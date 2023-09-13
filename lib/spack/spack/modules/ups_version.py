@@ -38,7 +38,7 @@ def make_configuration(spec, module_set_name, explicit):
         return configuration_registry[key]
     except KeyError:
         return configuration_registry.setdefault(
-            key, UpsVersionConfiguration(spec, module_set_name)
+            key, UpsVersionConfiguration(spec, module_set_name, explicit)
         )
 
 

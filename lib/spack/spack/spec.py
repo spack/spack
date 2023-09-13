@@ -2848,6 +2848,7 @@ class Spec:
                 # don't blow up if there is a package in the buildcache we do not have
                 # a recipe for -- mengel
                 continue
+
             if dspec.spec.name not in pkg_deps:
                 continue
 

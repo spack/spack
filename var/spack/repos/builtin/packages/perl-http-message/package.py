@@ -48,9 +48,7 @@ class PerlHttpMessage(PerlPackage):
     depends_on("perl-encode-locale@1:", type="run")
     depends_on("perl-extutils-makemaker", type=("build", "test"))
     depends_on("perl-http-date@6:", type="run")
-    depends_on(
-        "perl-io-uncompress-brotli@0.4.1:", type=("build", "run", "test")
-    )
+    depends_on("perl-io-uncompress-brotli@0.4.1:", type=("build", "run", "test"))
     depends_on("perl-io-compress-bzip2@2.21:", type="run")
     depends_on("perl-io-compress-deflate", type="run")
     depends_on("perl-io-compress-gzip", type="run")

@@ -154,7 +154,10 @@ class ConfigScope:
             with open(filename, "w") as f:
                 syaml.dump_config(data, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, IOError) as e:
-            raise ConfigFileError(f"cannot write to '{filename}'") from e
+            if hasattr(e, "errno") and e.errno in [13, 30]:
+                tty.warn("Ignoring write error on readonly %s" % filename)
+            else:
+                raise ConfigFileError(f"cannot write to '{filename}'") from e
 
     def clear(self):
         """Empty cached config information."""
@@ -753,9 +756,9 @@ def _add_platform_scope(cfg, scope_type, name, path):
 def _add_os_scope(cfg, scope_type, name, path):
     """Add an os-specific subdirectory for the current platform."""
     host_platform = spack.platforms.host()
-    oss = host_platform.operating_system("frontend")
-    os_name = "%s/%s" % (name, oss)
-    os_path = "%s/%s" % (path, oss)
+    oss = str(host_platform.operating_system("frontend"))
+    os_name = os.path.join(name, oss)
+    os_path = os.path.join(path, oss)
     cfg.push_scope(scope_type(os_name, os_path))
 
 

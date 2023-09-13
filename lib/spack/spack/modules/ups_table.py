@@ -37,7 +37,9 @@ def make_configuration(spec, module_set_name, explicit):
     try:
         return configuration_registry[key]
     except KeyError:
-        return configuration_registry.setdefault(key, UpsTableConfiguration(spec, module_set_name))
+        return configuration_registry.setdefault(
+            key, UpsTableConfiguration(spec, module_set_name, explicit)
+        )
 
 
 def make_layout(spec, module_set_name, explicit):
