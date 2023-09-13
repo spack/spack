@@ -175,7 +175,7 @@ class WindowsRPath:
 detectable_packages = collections.defaultdict(list)
 
 
-class DetectablePackageMeta:
+class DetectablePackageMeta(type):
     """Check if a package is detectable and add default implementations
     for the detection function.
     """

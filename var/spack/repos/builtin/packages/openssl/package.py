@@ -31,6 +31,8 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     executables = ["openssl"]
 
     version("3.1.2", sha256="a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539")
+    version("3.0.10", sha256="1761d4f5b13a1028b9b6f3d4b8e17feb0cedc9370f6afe61d7193d2cdce83323")
+
     version(
         "3.1.1",
         sha256="b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674",
@@ -41,7 +43,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         sha256="aaa925ad9828745c4cad9d9efeb273deca820f2cdcf2c3ac7d7c1212b7c497b4",
         deprecated=True,
     )
-    version("3.0.10", sha256="1761d4f5b13a1028b9b6f3d4b8e17feb0cedc9370f6afe61d7193d2cdce83323")
     version(
         "3.0.9",
         sha256="eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90",
@@ -82,10 +83,11 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         sha256="59eedfcb46c25214c9bd37ed6078297b4df01d012267fe9e9eee31f61bc70536",
         deprecated=True,
     )
-
-    # The latest stable version is the 1.1.1 series. This is also our Long Term
-    # Support (LTS) version, supported until 11th September 2023.
-    version("1.1.1v", sha256="d6697e2871e77238460402e9362d47d18382b15ef9f246aba6c7bd780d38a6b0")
+    version(
+        "1.1.1v",
+        sha256="d6697e2871e77238460402e9362d47d18382b15ef9f246aba6c7bd780d38a6b0",
+        deprecated=True,
+    )
     version(
         "1.1.1u",
         sha256="e2f8d84b523eecd06c7be7626830370300fbcc15386bf5142d72758f6963ebc6",
@@ -191,8 +193,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         sha256="2836875a0f89c03d0fdf483941512613a50cfb421d6fd94b9f41d7279d586a3d",
         deprecated=True,
     )
-
-    # The 1.1.0 series is out of support and should not be used.
     version(
         "1.1.0l",
         sha256="74a2f756c64fd7386a29184dc0344f4831192d61dc2481a93a4c5dd727f41148",
@@ -233,8 +233,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         sha256="fc436441a2e05752d31b4e46115eb89709a28aef96d4fe786abe92409b2fd6f5",
         deprecated=True,
     )
-
-    # The 1.0.2 series is out of support and should not be used.
     version(
         "1.0.2u",
         sha256="ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16",
@@ -315,8 +313,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         sha256="671c36487785628a703374c652ad2cebea45fa920ae5681515df25d9f2c9a8c8",
         deprecated=True,
     )
-
-    # The 1.0.1 version is out of support and should not be used.
     version(
         "1.0.1u",
         sha256="4312b4ca1215b6f2c97007503d80db80d5157f76f8f7d3febbe6b4c56ff26739",
