@@ -25,5 +25,5 @@ class PyRseqc(PythonPackage):
     depends_on("py-bx-python", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pybigwig", type=("build", "run"))
-    
+
     depends_on("r", type="run")
