@@ -65,7 +65,7 @@ from llnl.util.filesystem import getuid, touch
 if sys.platform != "win32":
     import fcntl
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 #
@@ -307,7 +307,7 @@ class AcquireWrite:
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         lock.acquire_write()  # grab exclusive lock
         barrier.wait()
         barrier.wait()  # hold the lock until timeout in other procs.
@@ -324,7 +324,7 @@ class AcquireRead:
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         lock.acquire_read()  # grab shared lock
         barrier.wait()
         barrier.wait()  # hold the lock until timeout in other procs.
@@ -341,7 +341,7 @@ class TimeoutWrite:
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         barrier.wait()  # wait for lock acquire in first process
         with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
@@ -359,7 +359,7 @@ class TimeoutRead:
         return self.__class__.__name__
 
     def __call__(self, barrier):
-        lock = lk.Lock(self.lock_path, self.start, self.length)
+        lock = lk.Lock(self.lock_path, start=self.start, length=self.length)
         barrier.wait()  # wait for lock acquire in first process
         with pytest.raises(lk.LockTimeoutError):
             lock.acquire_read(lock_fail_timeout)
@@ -687,8 +687,8 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         with pytest.raises(lk.LockROFileError):
             lock.acquire_write()
 
-        # TODO: lk.file_tracker does not release private_lock_path
-        lk.file_tracker.release_by_stat(os.stat(private_lock_path))
+        # TODO: lk.FILE_TRACKER does not release private_lock_path
+        lk.FILE_TRACKER.release_by_stat(os.stat(private_lock_path))
 
 
 class ComplexAcquireAndRelease:
@@ -1345,8 +1345,7 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
     with tmpdir.as_cwd():
         lockfile = "lockfile"
         lock = lk.Lock(lockfile)
-
-        touch(lockfile)
+        lock.acquire_read()
 
         monkeypatch.setattr(fcntl, "lockf", _lockf)
 
@@ -1355,6 +1354,9 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
         else:
             with pytest.raises(IOError, match=err_msg):
                 lock._poll_lock(fcntl.LOCK_EX)
+
+        monkeypatch.undo()
+        lock.release_read()
 
 
 def test_upgrade_read_okay(tmpdir):

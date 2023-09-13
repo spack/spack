@@ -154,7 +154,7 @@ class CudaPackage(PackageBase):
         conflicts("%pgi@:15.3,15.5:", when="+cuda ^cuda@7.5 target=x86_64:")
         conflicts("%pgi@:16.2,16.0:16.3", when="+cuda ^cuda@8 target=x86_64:")
         conflicts("%pgi@:15,18:", when="+cuda ^cuda@9.0:9.1 target=x86_64:")
-        conflicts("%pgi@:16,19:", when="+cuda ^cuda@9.2.88:10 target=x86_64:")
+        conflicts("%pgi@:16,19:", when="+cuda ^cuda@9.2.88:10.0 target=x86_64:")
         conflicts("%pgi@:17,20:", when="+cuda ^cuda@10.1.105:10.2.89 target=x86_64:")
         conflicts("%pgi@:17,21:", when="+cuda ^cuda@11.0.2:11.1.0 target=x86_64:")
         conflicts("%clang@:3.4", when="+cuda ^cuda@:7.5 target=x86_64:")

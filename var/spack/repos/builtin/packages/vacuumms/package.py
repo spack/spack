@@ -23,7 +23,7 @@ class Vacuumms(CMakePackage):
     maintainers("frankwillmore")
 
     version("master", branch="master")
-    version("1.1.1", tag="v1.1.1")
+    version("1.1.1", tag="v1.1.1", commit="a395930c87f5b52ab0ab8db278bd2bde592e8f12")
     version(
         "1.0.0",
         sha256="c18fe52f5041880da7f50d3808d37afb3e9c936a56f80f67838d045bf7af372f",

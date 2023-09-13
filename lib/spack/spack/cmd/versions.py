@@ -26,7 +26,7 @@ def setup_parser(subparser):
     output.add_argument(
         "--safe-only",
         action="store_true",
-        help="[deprecated] only list safe versions " "of the package",
+        help="[deprecated] only list safe versions of the package",
     )
     output.add_argument(
         "-r", "--remote", action="store_true", help="only list remote versions of the package"
@@ -35,7 +35,7 @@ def setup_parser(subparser):
         "-n",
         "--new",
         action="store_true",
-        help="only list remote versions newer than " "the latest checksummed version",
+        help="only list remote versions newer than the latest checksummed version",
     )
     subparser.add_argument(
         "-c", "--concurrency", default=32, type=int, help="number of concurrent requests"
@@ -45,7 +45,7 @@ def setup_parser(subparser):
 
 def versions(parser, args):
     spec = spack.spec.Spec(args.package)
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
 
     safe_versions = pkg.versions

@@ -42,9 +42,15 @@ class Lvarray(CMakePackage, CudaPackage):
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
-    version("0.2.2", tag="v0.2.2", submodules=False)
-    version("0.2.1", tag="v0.2.1", submodules=False)
-    version("0.1.0", tag="v0.1.0", submodules=True)
+    version(
+        "0.2.2", tag="v0.2.2", commit="3f7bacf5a4e967d4628b860132f5c29673314d3a", submodules=False
+    )
+    version(
+        "0.2.1", tag="v0.2.1", commit="3fece6bbbeb172442275d1ad1a52d6b54cd53163", submodules=False
+    )
+    version(
+        "0.1.0", tag="v0.1.0", commit="0bf5f7d077de4a08f58db24baed207f9dba95f6e", submodules=True
+    )
 
     variant("shared", default=True, description="Build Shared Libs")
     variant("umpire", default=False, description="Build Umpire support")

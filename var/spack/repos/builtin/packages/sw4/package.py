@@ -18,7 +18,7 @@ class Sw4(MakefilePackage):
 
     version("master", branch="master")
     version("developer", branch="developer")
-    version("3.0-beta2", tag="v3.0-beta2")
+    version("3.0-beta2", tag="v3.0-beta2", commit="3ee429b91d05f9c5f43f4e2c97f4d67863060340")
 
     variant("openmp", default=True, description="build with OpenMP")
     variant("hdf5", default=True, description="build with HDF5")

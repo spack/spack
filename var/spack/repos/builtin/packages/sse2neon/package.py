@@ -13,8 +13,12 @@ class Sse2neon(Package):
 
     homepage = "https://github.com/DLTcollab/sse2neon"
     git = "https://github.com/DLTcollab/sse2neon.git"
+    url = "https://github.com/DLTcollab/sse2neon/archive/refs/tags/v1.6.0.tar.gz"
 
     version("master", branch="master")
+    version("1.6.0", sha256="06f4693219deccb91b457135d836fc514a1c0a57e9fa66b143982901d2d19677")
+    version("1.5.1", sha256="4001e2dfb14fcf3831211581ed83bcc83cf6a3a69f638dcbaa899044a351bb2a")
+    version("1.5.0", sha256="92ab852aac6c8726a615f77438f2aa340f168f9f6e70c72033d678613e97b65a")
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)

@@ -11,8 +11,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     problems on parallel and distributed architectures, particularly targeted
     for exascale machines."""
 
-    homepage = "https://gitlab.pnnl.gov/exasgd/frameworks/exago"
-    git = "https://gitlab.pnnl.gov/exasgd/frameworks/exago.git"
+    homepage = "https://github.com/pnnl/ExaGO"
+    git = "https://github.com/pnnl/ExaGO.git"
     maintainers("ryandanehy", "CameronRutherford", "pelesh")
 
     version("1.5.1", commit="7abe482c8da0e247f9de4896f5982c4cacbecd78", submodules=True)
@@ -20,16 +20,22 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     version("1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True)
     version("1.4.0", commit="4f4c3fdb40b52ace2d6ba000e7f24b340ec8e886", submodules=True)
     version("1.3.0", commit="58b039d746a6eac8e84b0afc01354cd58caec485", submodules=True)
-    version("1.2.0", commit="255a214e", submodules=True)
-    version("1.1.2", commit="db3bb16e", submodules=True)
-    version("1.1.1", commit="0e0a3f27", submodules=True)
-    version("1.1.0", commit="dc8dd855", submodules=True)
-    version("1.0.0", commit="230d7df2")
-    version("0.99.2", commit="56961641")
-    version("0.99.1", commit="0ae426c7")
+    version("1.2.0", commit="255a214ec747b7bdde7a6d8151c083067b4d0907", submodules=True)
+    version("1.1.2", commit="db3bb16e19c09e01402071623258dae4d13e5133", submodules=True)
+    version("1.1.1", commit="0e0a3f27604876749d47c06ec71daaca4b270df9", submodules=True)
+    version("1.1.0", commit="dc8dd85544ff1b55a64a3cbbbdf12b8a0c6fdaf6", submodules=True)
+    version("1.0.0", commit="230d7df2f384f68b952a1ea03aad41431eaad283")
+    version("0.99.2", commit="56961641f50827b3aa4c14524f2f978dc48b9ce5")
+    version("0.99.1", commit="0ae426c76651ba5a9dbcaeb95f18d1b8ba961690")
     version("main", branch="main", submodules=True)
     version("develop", branch="develop", submodules=True)
-    version("5-18-2022-snapshot", tag="5-18-2022-snapshot", submodules=True)
+    version(
+        "5-18-2022-snapshot",
+        tag="5-18-2022-snapshot",
+        commit="3eb58335db71bb72341153a7867eb607402067ca",
+        submodules=True,
+    )
+    version("kpp2", tag="kpp2", commit="1da764d80a2db793f4c43ca50e50981f7ed3880a", submodules=True)
 
     # Progrmming model options
     variant("mpi", default=True, description="Enable/Disable MPI")

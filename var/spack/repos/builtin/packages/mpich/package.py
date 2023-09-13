@@ -25,7 +25,10 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     tags = ["e4s"]
     executables = ["^mpichversion$"]
 
+    keep_werror = "specific"
+
     version("develop", submodules=True)
+    version("4.1.2", sha256="3492e98adab62b597ef0d292fb2459b6123bc80070a8aa0a30be6962075a12f0")
     version("4.1.1", sha256="ee30471b35ef87f4c88f871a5e2ad3811cd9c4df32fd4f138443072ff4284ca2")
     version("4.1", sha256="8b1ec63bc44c7caa2afbb457bc5b3cd4a70dbe46baba700123d67c48dc5ab6a0")
     version("4.0.3", sha256="17406ea90a6ed4ecd5be39c9ddcbfac9343e6ab4f77ac4e8c5ebe4a3e3b6c501")
@@ -93,15 +96,6 @@ spack package at this time.""",
     )
     variant("argobots", default=False, description="Enable Argobots support")
     variant("fortran", default=True, description="Enable Fortran support")
-
-    variant(
-        "two_level_namespace",
-        default=False,
-        description="""Build shared libraries and programs
-built with the mpicc/mpifort/etc. compiler wrappers
-with '-Wl,-commons,use_dylibs' and without
-'-Wl,-flat_namespace'.""",
-    )
 
     variant(
         "vci",
@@ -207,6 +201,18 @@ with '-Wl,-commons,use_dylibs' and without
         # Apply the patch only when yaksa is used:
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=yaksa")
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=auto device=ch4")
+
+    # Fix false positive result of the configure time check for CFI support
+    # https://github.com/pmodels/mpich/pull/6537
+    # https://github.com/pmodels/mpich/issues/6505
+    with when("@3.2.2:4.1.1"):
+        # Apply the patch from the upstream repo in case we have to run the autoreconf stage:
+        patch(
+            "https://github.com/pmodels/mpich/commit/d901a0b731035297dd6598888c49322e2a05a4e0.patch?full_index=1",
+            sha256="de0de41ec42ac5f259ea02f195eea56fba84d72b0b649a44c947eab6632995ab",
+        )
+        # Apply the changes to the configure script to skip the autoreconf stage if possible:
+        patch("mpich32_411_CFI_configure.patch")
 
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build")
@@ -484,6 +490,7 @@ with '-Wl,-commons,use_dylibs' and without
     def configure_args(self):
         spec = self.spec
         config_args = [
+            "--disable-maintainer-mode",
             "--disable-silent-rules",
             "--enable-shared",
             "--with-pm={0}".format("hydra" if "+hydra" in spec else "no"),
@@ -492,6 +499,10 @@ with '-Wl,-commons,use_dylibs' and without
             "--enable-wrapper-rpath={0}".format("no" if "~wrapperrpath" in spec else "yes"),
             "--with-yaksa={0}".format(spec["yaksa"].prefix if "^yaksa" in spec else "embedded"),
         ]
+
+        # see https://github.com/pmodels/mpich/issues/5530
+        if spec.platform == "darwin":
+            config_args.append("--enable-two-level-namespace")
 
         # hwloc configure option changed in 4.0
         if spec.satisfies("@4.0:"):
@@ -574,9 +585,6 @@ with '-Wl,-commons,use_dylibs' and without
         if "+argobots" in spec:
             config_args.append("--with-thread-package=argobots")
             config_args.append("--with-argobots=" + spec["argobots"].prefix)
-
-        if "+two_level_namespace" in spec:
-            config_args.append("--enable-two-level-namespace")
 
         if "+vci" in spec:
             config_args.append("--enable-thread-cs=per-vci")

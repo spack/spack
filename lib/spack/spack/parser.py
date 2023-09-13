@@ -288,9 +288,6 @@ class SpecParser:
                     )
                     raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
 
-                if root_spec.concrete:
-                    raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
-
                 root_spec._add_dependency(dependency, deptypes=(), virtuals=())
 
             else:
@@ -306,13 +303,12 @@ class SpecParser:
 class SpecNodeParser:
     """Parse a single spec node from a stream of tokens"""
 
-    __slots__ = "ctx", "has_compiler", "has_version", "has_hash"
+    __slots__ = "ctx", "has_compiler", "has_version"
 
     def __init__(self, ctx):
         self.ctx = ctx
         self.has_compiler = False
         self.has_version = False
-        self.has_hash = False
 
     def parse(self, initial_spec: Optional[spack.spec.Spec] = None) -> Optional[spack.spec.Spec]:
         """Parse a single spec node from a stream of tokens
@@ -343,7 +339,6 @@ class SpecNodeParser:
 
         while True:
             if self.ctx.accept(TokenType.COMPILER):
-                self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 if self.has_compiler:
                     raise spack.spec.DuplicateCompilerSpecError(
                         f"{initial_spec} cannot have multiple compilers"
@@ -353,7 +348,6 @@ class SpecNodeParser:
                 initial_spec.compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
                 self.has_compiler = True
             elif self.ctx.accept(TokenType.COMPILER_AND_VERSION):
-                self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 if self.has_compiler:
                     raise spack.spec.DuplicateCompilerSpecError(
                         f"{initial_spec} cannot have multiple compilers"
@@ -367,7 +361,6 @@ class SpecNodeParser:
             elif self.ctx.accept(TokenType.VERSION) or self.ctx.accept(
                 TokenType.VERSION_HASH_PAIR
             ):
-                self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 if self.has_version:
                     raise spack.spec.MultipleVersionError(
                         f"{initial_spec} cannot have multiple versions"
@@ -378,25 +371,21 @@ class SpecNodeParser:
                 initial_spec.attach_git_version_lookup()
                 self.has_version = True
             elif self.ctx.accept(TokenType.BOOL_VARIANT):
-                self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 variant_value = self.ctx.current_token.value[0] == "+"
                 initial_spec._add_flag(
                     self.ctx.current_token.value[1:].strip(), variant_value, propagate=False
                 )
             elif self.ctx.accept(TokenType.PROPAGATED_BOOL_VARIANT):
-                self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 variant_value = self.ctx.current_token.value[0:2] == "++"
                 initial_spec._add_flag(
                     self.ctx.current_token.value[2:].strip(), variant_value, propagate=True
                 )
             elif self.ctx.accept(TokenType.KEY_VALUE_PAIR):
-                self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 name, value = self.ctx.current_token.value.split("=", maxsplit=1)
                 name = name.strip("'\" ")
                 value = value.strip("'\" ")
                 initial_spec._add_flag(name, value, propagate=False)
             elif self.ctx.accept(TokenType.PROPAGATED_KEY_VALUE_PAIR):
-                self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 name, value = self.ctx.current_token.value.split("==", maxsplit=1)
                 name = name.strip("'\" ")
                 value = value.strip("'\" ")
@@ -410,12 +399,6 @@ class SpecNodeParser:
                 break
 
         return initial_spec
-
-    def hash_not_parsed_or_raise(self, spec, addition):
-        if not self.has_hash:
-            return
-
-        raise spack.spec.RedundantSpecError(spec, addition)
 
 
 class FileParser:

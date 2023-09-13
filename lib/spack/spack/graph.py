@@ -535,7 +535,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
 
 def _static_edges(specs, deptype):
     for spec in specs:
-        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
         possible = pkg_cls.possible_dependencies(expand_virtuals=True, deptype=deptype)
 
         for parent_name, dependencies in possible.items():

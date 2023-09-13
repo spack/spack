@@ -46,6 +46,7 @@ class Silo(AutotoolsPackage):
     variant("hzip", default=True, description="Enable hzip support")
     variant("fpzip", default=True, description="Enable fpzip support")
 
+    depends_on("perl", type="build")
     depends_on("m4", type="build", when="+shared")
     depends_on("autoconf", type="build", when="+shared")
     depends_on("autoconf-archive", type="build", when="+shared")
@@ -59,7 +60,7 @@ class Silo(AutotoolsPackage):
     # Xmu dependency is required on Ubuntu 18-20
     depends_on("libxmu", when="+silex")
     depends_on("readline")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     patch("remove-mpiposix.patch", when="@4.8:4.10.2")
 
@@ -80,7 +81,7 @@ class Silo(AutotoolsPackage):
     # API changes in hdf5-1.13 cause breakage
     # See https://github.com/LLNL/Silo/pull/260
     patch("hdf5-113.patch", when="@4.11: +hdf5 ^hdf5@1.13:")
-    conflicts("hdf5@1.13:", when="@:4.10.2-bsd")
+    conflicts("^hdf5@1.13:", when="@:4.10.2-bsd")
 
     # hzip and fpzip are not available in the BSD releases
     conflicts("+hzip", when="@4.10.2-bsd,4.11-bsd")
@@ -88,6 +89,9 @@ class Silo(AutotoolsPackage):
 
     # zfp include missing
     patch("zfp_error.patch", when="@4.11 +hdf5")
+
+    # use /usr/bin/env perl for portability
+    patch("mkinc-usr-bin-env-perl.patch")
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -105,6 +109,9 @@ class Silo(AutotoolsPackage):
             elif name == "fcflags":
                 flags.append(self.compiler.fc_pic_flag)
         if name == "cflags" or name == "cxxflags":
+            if spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=int")
+                flags.append("-Wno-error=int-conversion")
             if "+hdf5" in spec:
                 # @:4.10 can use up to the 1.10 API
                 if "@:4.10" in spec:
@@ -187,7 +194,7 @@ class Silo(AutotoolsPackage):
 
         # Do not specify the prefix of zlib if it is in a system directory
         # (see https://github.com/spack/spack/pull/21900).
-        zlib_prefix = self.spec["zlib"].prefix
+        zlib_prefix = self.spec["zlib-api"].prefix
         if is_system_path(zlib_prefix):
             config_args.append("--with-zlib=yes")
         else:
