@@ -18,6 +18,7 @@ from spack.environment.environment import (
     SpackEnvironmentViewError,
     _error_on_nonempty_view_dir,
 )
+from spack.spec_list import UndefinedReferenceError
 
 pytestmark = pytest.mark.not_on_windows("Envs are not supported on windows")
 
@@ -716,3 +717,66 @@ def test_variant_propagation_with_unify_false(tmp_path, mock_packages):
     root = env.matching_spec("parent-foo")
     for node in root.traverse():
         assert node.satisfies("+foo")
+
+
+def test_env_with_include_defs(clean_test_environment, mutable_mock_env_path, mock_packages):
+    env_path = mutable_mock_env_path
+    env_path.mkdir()
+    defs_file = env_path / "definitions.yaml"
+    defs_file.write_text(
+        """definitions:
+- core_specs: [libdwarf, libelf]
+- compilers: ['%gcc']
+"""
+    )
+
+    spack_yaml = env_path / ev.manifest_name
+    spack_yaml.write_text(
+        """spack:
+  include:
+  - file://{0}
+
+  definitions:
+  - my_packages: [zlib]
+
+  specs:
+  - matrix:
+    - [$core_specs]
+    - [$compilers]
+  - $my_packages
+""".format(
+            defs_file
+        )
+    )
+    e = ev.Environment(env_path)
+    ev.activate(e)
+    e.concretize()
+
+
+def test_env_with_include_def_missing(
+    clean_test_environment, mutable_mock_env_path, mock_packages
+):
+    env_path = mutable_mock_env_path
+    env_path.mkdir()
+    filename = "missing-def.yaml"
+    defs_file = env_path / filename
+    defs_file.write_text("definitions:\n- my_compilers: ['%gcc']\n")
+
+    spack_yaml = env_path / ev.manifest_name
+    spack_yaml.write_text(
+        """spack:
+  include:
+  - file://{0}
+
+  specs:
+  - matrix:
+    - [$core_specs]
+    - [$my_compilers]
+""".format(
+            defs_file
+        )
+    )
+    e = ev.Environment(env_path)
+    ev.activate(e)
+    with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):
+        e.concretize()
