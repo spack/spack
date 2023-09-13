@@ -10,12 +10,14 @@ from spack.package import *
 class PyScikitLearn(PythonPackage):
     """A set of python modules for machine learning and data mining."""
 
+    homepage = "https://scikit-learn.org/"
     pypi = "scikit-learn/scikit-learn-0.24.0.tar.gz"
     git = "https://github.com/scikit-learn/scikit-learn.git"
 
     maintainers("adamjstewart")
 
     version("master", branch="master")
+    version("1.3.0", sha256="8be549886f5eda46436b6e555b0e4873b4f10aa21c07df45c4bc1735afbccd7a")
     version("1.2.2", sha256="8429aea30ec24e7a8c7ed8a3fa6213adf3814a6efbea09e16e0a0c71e1a1a3d7")
     version("1.2.1", sha256="fbf8a5c893c9b4b99bcc7ed8fb3e8500957a113f4101860386d06635520f7cfb")
     version("1.2.0", sha256="680b65b3caee469541385d2ca5b03ff70408f6c618c583948312f0d2125df680")
@@ -44,17 +46,16 @@ class PyScikitLearn(PythonPackage):
     version("0.20.2", sha256="bc5bc7c7ee2572a1edcb51698a6caf11fae554194aaab9a38105d9ec419f29e6")
     version("0.20.0", sha256="97d1d971f8ec257011e64b7d655df68081dd3097322690afa1a71a1d755f8c18")
     version("0.19.2", sha256="b276739a5f863ccacb61999a3067d0895ee291c95502929b2ae56ea1f882e888")
-    version("0.19.1", sha256="5ca0ad32ee04abe0d4ba02c8d89d501b4e5e0304bdf4d45c2e9875a735b323a0")
-    version("0.18.1", sha256="1eddfc27bb37597a5d514de1299981758e660e0af56981c0bfdf462c9568a60c")
-    version("0.15.2", sha256="1a8a881f6f13edc0ac58931ce21f899eb7920af50aa08802413d1239e2aa5fa6")
-    version("0.16.1", sha256="c0721e295056c95c7002e05726f2bd271a7923e88bdeab34a2b60aac2b0ee6e4")
-    version("0.17.1", sha256="9f4cf58e57d81783289fc503caaed1f210bab49b7a6f680bf3c04b1e0a96e5f0")
-    version("0.13.1", sha256="a6e4759a779ba792435d096c882a0d66ee29d369755c09209f1a4e50877bdc94")
 
     variant("openmp", default=True, description="Build with OpenMP support")
 
-    # setup.py
-    depends_on("python@3.8:", when="@1.1:", type=("build", "run"))
+    # Based on PyPI wheel availability
+    depends_on("python@3.8:3.11", when="@1.1.3:", type=("build", "run"))
+    depends_on("python@3.8:3.10", when="@1.1.0:1.1.2", type=("build", "run"))
+    depends_on("python@:3.10", when="@1.0.2", type=("build", "run"))
+    depends_on("python@:3.9", when="@0.24:1.0.1", type=("build", "run"))
+    depends_on("python@:3.8", when="@0.22:0.23", type=("build", "run"))
+    depends_on("python@:3.7", when="@:0.21", type=("build", "run"))
 
     # pyproject.toml
     depends_on("py-setuptools", type="build")
@@ -67,6 +68,7 @@ class PyScikitLearn(PythonPackage):
     depends_on("py-numpy@1.11.0:", when="@0.21:", type=("build", "run"))
     depends_on("py-numpy@1.8.2:", when="@0.20", type=("build", "run"))
     depends_on("py-numpy@1.6.1:", when="@:0.19", type=("build", "run"))
+    depends_on("py-scipy@1.5:", when="@1.3:", type=("build", "run"))
     depends_on("py-scipy@1.3.2:", when="@1.1:", type=("build", "run"))
     depends_on("py-scipy@1.1.0:", when="@1.0:", type=("build", "run"))
     depends_on("py-scipy@0.19.1:", when="@0.23:", type=("build", "run"))
@@ -77,6 +79,7 @@ class PyScikitLearn(PythonPackage):
     depends_on("py-joblib@1:", when="@1.1:", type=("build", "run"))
     depends_on("py-joblib@0.11:", type=("build", "run"))
     depends_on("py-threadpoolctl@2.0.0:", when="@0.23:", type=("build", "run"))
+    depends_on("py-cython@0.29.33:", when="@1.3:", type="build")
     depends_on("py-cython@0.29.24:", when="@1.0.2:", type="build")
     depends_on("py-cython@0.28.5:", when="@0.21:", type="build")
     depends_on("py-cython@0.23:", type="build")
@@ -86,8 +89,9 @@ class PyScikitLearn(PythonPackage):
     depends_on("py-matplotlib@3.1.3:", type="test")
     depends_on("py-scikit-image@0.16.2:", type="test")
     depends_on("py-pandas@1.0.5:", type="test")
-    depends_on("py-pytest@5.3.1:", type="test")
+    depends_on("py-pytest@7.1.2:", type="test")
     depends_on("py-pyamg@4:", type="test")
+    depends_on("py-pooch@1.6:", type="test")
 
     # Release tarballs are already cythonized. If you wanted to build a release
     # version without OpenMP support, you would need to delete all .c files

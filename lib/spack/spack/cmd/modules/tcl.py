@@ -29,7 +29,7 @@ def add_command(parser, command_dict):
 
 
 def setdefault(module_type, specs, args):
-    """Set the default module file, when multiple are present"""
+    """set the default module file, when multiple are present"""
     # Currently, accepts only a single matching spec
     spack.cmd.modules.one_spec_or_raise(specs)
     spec = specs[0]

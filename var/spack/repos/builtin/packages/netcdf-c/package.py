@@ -79,6 +79,18 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         )
         _force_autoreconf_when.append("@4.8.1")
 
+        # See https://github.com/Unidata/netcdf-c/pull/2710
+        # Versions 4.9.0 and 4.9.1 had a bug in the configure script, which worked to our benefit.
+        # The bug has been fixed in
+        # https://github.com/Unidata/netcdf-c/commit/267b26f1239310ca7ba8304315834939f7cc9886 and
+        # now we need a patch in cases when we build for macOS with DAP disabled:
+        patch(
+            "https://github.com/Unidata/netcdf-c/commit/cfe6231aa6b018062b443cbe2fd9073f15283344.patch?full_index=1",
+            sha256="4e105472de95a1bb5d8b0b910d6935ce9152777d4fe18b678b58347fa0122abc",
+            when="@4.9.2~dap platform=darwin",
+        )
+        _force_autoreconf_when.append("@4.9.2~dap platform=darwin")
+
     with when("@4.7.2"):
         # Fix headers
         # See https://github.com/Unidata/netcdf-c/pull/1505
@@ -97,6 +109,13 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         "https://github.com/Unidata/netcdf-c/commit/00a722b253bae186bba403d0f92ff1eba719591f.patch?full_index=1",
         sha256="25b83de1e081f020efa9e21c94c595220849f78c125ad43d8015631d453dfcb9",
         when="@4.9.0:4.9.1~mpi+parallel-netcdf",
+    )
+
+    # See https://github.com/Unidata/netcdf-c/issues/2674
+    patch(
+        "https://github.com/Unidata/netcdf-c/commit/f8904d5a1d89420dde0f9d2c0e051ba08d08e086.patch?full_index=1",
+        sha256="0161eb870fdfaf61be9d70132c9447a537320342366362e76b8460c823bf95ca",
+        when="@4.9.0:4.9.2",
     )
 
     variant("mpi", default=True, description="Enable parallel I/O for netcdf-4")
@@ -222,7 +241,8 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html), zlib 1.2.5 or
     # later is required for netCDF-4 compression. However, zlib became a direct dependency only
     # starting NetCDF 4.9.0 (for the deflate plugin):
-    depends_on("zlib@1.2.5:", when="@4.9.0:+shared")
+    depends_on("zlib-api", when="@4.9.0:+shared")
+    depends_on("zlib@1.2.5:", when="^zlib")
 
     # Use the vendored bzip2 on Windows:
     for __p in ["darwin", "cray", "linux"]:
@@ -414,7 +434,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
                     extra_libs.append(hdf["szip"].libs)
                 if "+external-xdr" in hdf:
                     extra_libs.append(hdf["rpc"].libs)
-                extra_libs.append(hdf["zlib"].libs)
+                extra_libs.append(hdf["zlib-api"].libs)
 
         hdf5 = self.spec["hdf5:hl"]
         lib_search_dirs.extend(hdf5.libs.directories)
@@ -424,7 +444,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
             extra_libs.append(hdf5["zlib"].libs)
 
         if self.spec.satisfies("@4.9.0:+shared"):
-            lib_search_dirs.extend(self.spec["zlib"].libs.directories)
+            lib_search_dirs.extend(self.spec["zlib-api"].libs.directories)
         else:
             # Prevent overlinking to zlib:
             config_args.append("ac_cv_search_deflate=")

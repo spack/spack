@@ -37,6 +37,8 @@ class Scotch(CMakePackage, MakefilePackage):
     version("5.1.10b", sha256="54c9e7fafefd49d8b2017d179d4f11a655abe10365961583baaddc4eeb6a9add")
 
     build_system(conditional("cmake", when="@7:"), "makefile", default="cmake")
+    variant("threads", default=True, description="use POSIX Pthreads within Scotch and PT-Scotch")
+    variant("mpi_thread", default=False, description="use multi-threaded algorithms")
     variant("mpi", default=True, description="Compile parallel libraries")
     variant("compression", default=True, description="May use compressed files")
     variant("esmumps", default=False, description="Compile esmumps (needed by mumps)")
@@ -54,9 +56,9 @@ class Scotch(CMakePackage, MakefilePackage):
 
     # Does not build with flex 2.6.[23]
     depends_on("flex@:2.6.1,2.6.4:", type="build")
-    depends_on("bison", type="build")
+    depends_on("bison@3.4:", type="build")
     depends_on("mpi", when="+mpi")
-    depends_on("zlib", when="+compression")
+    depends_on("zlib-api", when="+compression")
 
     # Version-specific patches
     patch("nonthreaded-6.0.4.patch", when="@6.0.4")
@@ -68,8 +70,8 @@ class Scotch(CMakePackage, MakefilePackage):
 
     # Vendored dependency of METIS/ParMETIS conflicts with standard
     # installations
-    conflicts("^metis", when="+metis")
-    conflicts("^parmetis", when="+metis")
+    conflicts("metis", when="+metis")
+    conflicts("parmetis", when="+metis")
 
     parallel = False
 
@@ -101,7 +103,7 @@ class Scotch(CMakePackage, MakefilePackage):
 
         scotchlibs = find_libraries(libraries, root=self.prefix, recursive=True, shared=shared)
         if "+compression" in self.spec:
-            zlibs = self.spec["zlib"].libs
+            zlibs = self.spec["zlib-api"].libs
 
         return scotchlibs + zlibs
 
@@ -115,9 +117,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("BUILD_LIBESMUMPS", "esmumps"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("BUILD_PTSCOTCH", "mpi"),
+            self.define_from_variant("THREADS", "threads"),
+            self.define_from_variant("MPI_THREAD_MULTIPLE", "mpi_thread"),
         ]
-
-        # TODO should we enable/disable THREADS?
 
         if "+int64" in spec:
             args.append("-DINTSIZE=64")
@@ -205,7 +207,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         if "+compression" in self.spec:
             cflags.append("-DCOMMON_FILE_COMPRESS_GZ")
-            ldflags.append(" {0} ".format(self.spec["zlib"].libs.joined()))
+            ldflags.append(" {0} ".format(self.spec["zlib-api"].libs.joined()))
 
         cflags.append("-DCOMMON_PTHREAD")
 

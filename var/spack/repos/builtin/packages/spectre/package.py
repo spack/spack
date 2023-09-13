@@ -30,6 +30,21 @@ class Spectre(CMakePackage):
 
     version("develop", branch="develop")
     version(
+        "2023.09.07", sha256="2375117df09d99a2716d445ff51d151422467bd42cd38b5f1177d2d40cb90916"
+    )
+    version(
+        "2023.08.18", sha256="bdeb7da707d51d0e3b2a29b1d28646c5a64cba15844612e7b3726e8a28b37692"
+    )
+    version(
+        "2023.07.29", sha256="134668b81b8e89e3fd02b8b1415a1198889d7fb90f04ca6556458d3ce4489e43"
+    )
+    version(
+        "2023.06.19", sha256="f1140dfca1a9cf58f04acfe853c5597fa19c463d52b3643428e379496bff1236"
+    )
+    version(
+        "2023.05.16", sha256="9cfe585e85b63e69d1b9b3922c68d3bd83d95853b6955e706133f2aaa933bd2b"
+    )
+    version(
         "2023.04.07", sha256="f18238788155413c4c1f73c5591f4bf60a3d331f0c926b3737a61b33c99dfb9c"
     )
     version(
@@ -341,9 +356,7 @@ class Spectre(CMakePackage):
     @property
     def archive_files(self):
         # Archive the `BuildInfo.txt` file for debugging builds
-        return super(Spectre, self).archive_files + [
-            join_path(self.build_directory, "BuildInfo.txt")
-        ]
+        return super().archive_files + [join_path(self.build_directory, "BuildInfo.txt")]
 
     def check(self):
         with working_dir(self.build_directory):

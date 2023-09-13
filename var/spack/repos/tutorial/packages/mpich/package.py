@@ -60,7 +60,7 @@ spack package at this time.""",
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
-    patch("mpich32_clang.patch", when="@3.2:3.2.0%clang")
+    patch("mpich32_clang.patch", when="@=3.2%clang")
 
     depends_on("findutils", type="build")
 
