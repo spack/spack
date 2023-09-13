@@ -16,7 +16,7 @@ class Neovim(CMakePackage):
     maintainers("albestro", "trws")
 
     version("master", branch="master")
-    version("stable", tag="stable")
+    version("stable", tag="stable", commit="7d4bba7aa7a4a3444919ea7a3804094c290395ef")
     version("0.9.1", sha256="8db17c2a1f4776dcda00e59489ea0d98ba82f7d1a8ea03281d640e58d8a3a00e")
     version("0.9.0", sha256="39d79107c54d2f3babcad2cd157c399241c04f6e75e98c18e8afaf2bb5e82937")
     version("0.8.3", sha256="adf45ff160e1d89f519b6114732eba03485ae469beb27919b0f7a4f6b44233c1")
@@ -119,7 +119,7 @@ class Neovim(CMakePackage):
     with when("@0.6:"):
         depends_on("cmake@3.10:", type="build")
         depends_on("gperf@3.1:", type="link")
-        conflicts("libiconv@:1.14")
+        conflicts("^libiconv@:1.14")
         depends_on("libtermkey@0.22:", type="link")
         depends_on("libvterm@0.1.4:", type="link")
         depends_on("msgpack-c@3.0.0:", type="link")
@@ -136,7 +136,7 @@ class Neovim(CMakePackage):
     # Support for `libvterm@0.2:` has been added in neovim@0.8.0
     # term: Add support for libvterm >= 0.2 (https://github.com/neovim/neovim/releases/tag/v0.8.0)
     # https://github.com/neovim/neovim/issues/16217#issuecomment-958590493
-    conflicts("libvterm@0.2:", when="@:0.7")
+    conflicts("^libvterm@0.2:", when="@:0.7")
 
     @when("^lua")
     def cmake_args(self):

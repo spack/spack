@@ -17,7 +17,7 @@ class Notmuch(AutotoolsPackage):
 
     version("0.23.7", sha256="f11bb10d71945f6c3f16d23117afc70810aa485878e66bb4bf43cc3f08038913")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("talloc")
     depends_on("gmime@2.6:")
     depends_on("xapian-core")

@@ -291,7 +291,7 @@ def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 
-    format_string = "{name}{@version}{%compiler}{arch=architecture}"
+    format_string = "{name}{@version}{%compiler.name}{@compiler.version}{arch=architecture}"
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
         colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
@@ -342,9 +342,9 @@ def iter_groups(specs, indent, all_headers):
             print()
 
         header = "%s{%s} / %s{%s}" % (
-            spack.spec.architecture_color,
+            spack.spec.ARCHITECTURE_COLOR,
             architecture if architecture else "no arch",
-            spack.spec.compiler_color,
+            spack.spec.COMPILER_COLOR,
             f"{compiler.display_str}" if compiler else "no compiler",
         )
 

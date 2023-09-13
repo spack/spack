@@ -32,7 +32,7 @@ class File(AutotoolsPackage):
 
     depends_on("bzip2")
     depends_on("xz", when="@5.38:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd", when="@5.44:")
 
     @classmethod

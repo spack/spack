@@ -52,7 +52,7 @@ class Mariadb(CMakePackage):
     depends_on("libedit")
     depends_on("libevent", when="+nonblocking")
     depends_on("ncurses")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("curl")
     depends_on("libxml2")
     depends_on("lz4")
