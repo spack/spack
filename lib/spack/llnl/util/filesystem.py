@@ -152,7 +152,7 @@ if sys.version_info < (3, 7, 4):
     shutil.copystat = copystat
 
 
-def polite_path(components):
+def polite_path(components: Iterable[str]):
     """
     Given a list of strings which are intended to be path components,
     generate a path, and format each component to avoid generating extra
@@ -162,6 +162,12 @@ def polite_path(components):
     "_". Other characters like "=" will also be replaced.
     """
     return os.path.join(*[polite_filename(x) for x in components])
+
+
+@memoized
+def _polite_antipattern():
+    # A regex of all the characters we don't want in a filename
+    return re.compile(r"[^A-Za-z0-9_.-]")
 
 
 def polite_filename(filename: str) -> str:
@@ -174,7 +180,7 @@ def polite_filename(filename: str) -> str:
     """
     # This character set applies for both Windows and Linux. It does not
     # account for reserved filenames in Windows.
-    return re.sub(r"[^A-Za-z0-9_.-]", "_", filename)
+    return _polite_antipattern().sub("_", filename)
 
 
 def getuid():
