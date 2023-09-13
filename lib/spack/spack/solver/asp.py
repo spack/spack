@@ -13,7 +13,7 @@ import pprint
 import re
 import types
 import warnings
-from typing import List, NamedTuple, Tuple, Union
+from typing import List, NamedTuple, Optional, Sequence, Tuple, Union
 
 import archspec.cpu
 
@@ -137,7 +137,15 @@ class RequirementKind(enum.Enum):
     PACKAGE = enum.auto()
 
 
-DeclaredVersion = collections.namedtuple("DeclaredVersion", ["version", "idx", "origin"])
+class DeclaredVersion(NamedTuple):
+    """Data class to contain information on declared versions used in the solve"""
+
+    #: String representation of the version
+    version: str
+    #: Unique index assigned to this version
+    idx: int
+    #: Provenance of the version
+    origin: Provenance
 
 
 # Below numbers are used to map names of criteria to the order
@@ -784,7 +792,7 @@ class PyclingoDriver:
         if choice:
             self.assumptions.append(atom)
 
-    def solve(self, setup, specs, reuse=None, output=None, control=None):
+    def solve(self, setup, specs, reuse=None, output=None, control=None, deprecated=False):
         """Set up the input and solve for dependencies of ``specs``.
 
         Arguments:
@@ -795,6 +803,7 @@ class PyclingoDriver:
                 the output of this solve.
             control (clingo.Control): configuration for the solver. If None,
                 default values will be used
+            deprecated: if True, allow deprecated versions in the solve
 
         Return:
             A tuple of the solve result, the timer for the different phases of the
@@ -814,7 +823,7 @@ class PyclingoDriver:
         timer.start("setup")
         with self.control.backend() as backend:
             self.backend = backend
-            setup.setup(self, specs, reuse=reuse)
+            setup.setup(self, specs, reuse=reuse, deprecated=deprecated)
         timer.stop("setup")
 
         timer.start("load")
@@ -1894,7 +1903,7 @@ class SpackSolverSetup:
         return clauses
 
     def define_package_versions_and_validate_preferences(
-        self, possible_pkgs, require_checksum: bool
+        self, possible_pkgs, *, require_checksum: bool, deprecated: bool
     ):
         """Declare any versions in specs not declared in packages."""
         packages_yaml = spack.config.get("packages")
@@ -1914,13 +1923,15 @@ class SpackSolverSetup:
                 ]
 
             for idx, (v, version_info) in enumerate(package_py_versions):
+                if version_info.get("deprecated", False):
+                    self.deprecated_versions[pkg_name].add(v)
+                    if not deprecated:
+                        continue
+
                 self.possible_versions[pkg_name].add(v)
                 self.declared_versions[pkg_name].append(
                     DeclaredVersion(version=v, idx=idx, origin=Provenance.PACKAGE_PY)
                 )
-                deprecated = version_info.get("deprecated", False)
-                if deprecated:
-                    self.deprecated_versions[pkg_name].add(v)
 
             if pkg_name not in packages_yaml or "version" not in packages_yaml[pkg_name]:
                 continue
@@ -1949,7 +1960,7 @@ class SpackSolverSetup:
                 )
                 self.possible_versions[pkg_name].add(vdef)
 
-    def define_ad_hoc_versions_from_specs(self, specs, origin, require_checksum: bool):
+    def define_ad_hoc_versions_from_specs(self, specs, origin, *, require_checksum: bool):
         """Add concrete versions to possible versions from lists of CLI/dev specs."""
         for s in traverse.traverse_nodes(specs):
             # If there is a concrete version on the CLI *that we know nothing
@@ -2329,7 +2340,14 @@ class SpackSolverSetup:
                 if spec.concrete:
                     self._facts_from_concrete_spec(spec, possible)
 
-    def setup(self, driver, specs, reuse=None):
+    def setup(
+        self,
+        driver: PyclingoDriver,
+        specs: Sequence[spack.spec.Spec],
+        *,
+        reuse: Optional[List[spack.spec.Spec]] = None,
+        deprecated: bool = False,
+    ):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -2337,9 +2355,10 @@ class SpackSolverSetup:
         specs, as well as constraints from the specs themselves.
 
         Arguments:
-            driver (PyclingoDriver): driver instance of this solve
-            specs (list): list of Specs to solve
-            reuse (None or list): list of concrete specs that can be reused
+            driver: driver instance of this solve
+            specs: list of Specs to solve
+            reuse: list of concrete specs that can be reused
+            deprecated: if True adds deprecated versions into the solve
         """
         self._condition_id_counter = itertools.count()
 
@@ -2368,7 +2387,7 @@ class SpackSolverSetup:
         # Calculate develop specs
         # they will be used in addition to command line specs
         # in determining known versions/targets/os
-        dev_specs = ()
+        dev_specs: Tuple[spack.spec.Spec, ...] = ()
         env = ev.active_environment()
         if env:
             dev_specs = tuple(
@@ -2414,11 +2433,17 @@ class SpackSolverSetup:
         self.external_packages()
 
         # TODO: make a config option for this undocumented feature
-        require_checksum = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
-        self.define_package_versions_and_validate_preferences(self.pkgs, require_checksum)
-        self.define_ad_hoc_versions_from_specs(specs, Provenance.SPEC, require_checksum)
-        self.define_ad_hoc_versions_from_specs(dev_specs, Provenance.DEV_SPEC, require_checksum)
-        self.validate_and_define_versions_from_requirements(require_checksum)
+        checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
+        self.define_package_versions_and_validate_preferences(
+            self.pkgs, deprecated=deprecated, require_checksum=checksummed
+        )
+        self.define_ad_hoc_versions_from_specs(
+            specs, Provenance.SPEC, require_checksum=checksummed
+        )
+        self.define_ad_hoc_versions_from_specs(
+            dev_specs, Provenance.DEV_SPEC, require_checksum=checksummed
+        )
+        self.validate_and_define_versions_from_requirements(require_checksum=checksummed)
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
@@ -2467,7 +2492,7 @@ class SpackSolverSetup:
             if self.concretize_everything:
                 self.gen.fact(fn.solve_literal(idx))
 
-    def validate_and_define_versions_from_requirements(self, require_checksum: bool):
+    def validate_and_define_versions_from_requirements(self, *, require_checksum: bool):
         """If package requirements mention concrete versions that are not mentioned
         elsewhere, then we need to collect those to mark them as possible
         versions. If they are abstract and statically have no match, then we
@@ -2932,7 +2957,16 @@ class Solver:
 
         return reusable_specs
 
-    def solve(self, specs, out=None, timers=False, stats=False, tests=False, setup_only=False):
+    def solve(
+        self,
+        specs,
+        out=None,
+        timers=False,
+        stats=False,
+        tests=False,
+        setup_only=False,
+        deprecated=False,
+    ):
         """
         Arguments:
           specs (list): List of ``Spec`` objects to solve for.
@@ -2943,6 +2977,7 @@ class Solver:
             If a tuple of package names, concretize test dependencies for named
             packages (defaults to False: do not concretize test dependencies).
           setup_only (bool): if True, stop after setup and don't solve (default False).
+          deprecated (bool): allow deprecated version in the solve
         """
         # Check upfront that the variants are admissible
         specs = [s.lookup_hash() for s in specs]
@@ -2950,10 +2985,14 @@ class Solver:
         reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
-        result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
+        result, _, _ = self.driver.solve(
+            setup, specs, reuse=reusable_specs, output=output, deprecated=deprecated
+        )
         return result
 
-    def solve_in_rounds(self, specs, out=None, timers=False, stats=False, tests=False):
+    def solve_in_rounds(
+        self, specs, out=None, timers=False, stats=False, tests=False, deprecated=False
+    ):
         """Solve for a stable model of specs in multiple rounds.
 
         This relaxes the assumption of solve that everything must be consistent and
@@ -2968,6 +3007,7 @@ class Solver:
             timers (bool): print timing if set to True
             stats (bool): print internal statistics if set to True
             tests (bool): add test dependencies to the solve
+            deprecated (bool): allow deprecated version in the solve
         """
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
@@ -2981,7 +3021,7 @@ class Solver:
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
         while True:
             result, _, _ = self.driver.solve(
-                setup, input_specs, reuse=reusable_specs, output=output
+                setup, input_specs, reuse=reusable_specs, output=output, deprecated=deprecated
             )
             yield result
 

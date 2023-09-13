@@ -176,17 +176,29 @@ def solve(parser, args):
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {"asp"}
     unify = spack.config.get("concretizer:unify")
+    allow_deprecated = spack.config.get("config:deprecated", False)
     if unify != "when_possible":
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
         result = solver.solve(
-            specs, out=output, timers=args.timers, stats=args.stats, setup_only=setup_only
+            specs,
+            out=output,
+            timers=args.timers,
+            stats=args.stats,
+            setup_only=setup_only,
+            deprecated=allow_deprecated,
         )
         if not setup_only:
             _process_result(result, show, required_format, kwargs)
     else:
         for idx, result in enumerate(
-            solver.solve_in_rounds(specs, out=output, timers=args.timers, stats=args.stats)
+            solver.solve_in_rounds(
+                specs,
+                out=output,
+                timers=args.timers,
+                stats=args.stats,
+                deprecated=allow_deprecated,
+            )
         ):
             if "solutions" in show:
                 tty.msg("ROUND {0}".format(idx))
