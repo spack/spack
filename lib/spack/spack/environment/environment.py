@@ -784,9 +784,14 @@ class Environment:
         self._read()
 
     def _read(self):
-        # TODO: This must be done before constructing the state BUT is this
-        #    the right place?
-        prepare_config_scope(self)
+        # If the manifest has included files, then some of the information
+        # (e.g., definitions) MAY be in those files. So we need to ensure
+        # the config is populated with any associated spec lists in order
+        # to fully construct the manifest state.
+        includes = self.manifest[TOP_LEVEL_KEY].get("include", [])
+        if includes:
+            prepare_config_scope(self)
+
         self._construct_state_from_manifest()
 
         if os.path.exists(self.lock_path):
@@ -1019,9 +1024,7 @@ class Environment:
 
             elif include_url.scheme:
                 raise ValueError(
-                    "Unsupported URL scheme ({}) for environment include: {}".format(
-                        include_url.scheme, config_path
-                    )
+                    f"Unsupported URL scheme ({include_url.scheme}) for environment include: {config_path}"
                 )
 
             # treat relative paths as relative to the environment

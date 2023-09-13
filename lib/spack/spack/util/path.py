@@ -53,14 +53,12 @@ NOMATCH = object()
 
 
 # Substitutions to perform
-def replacements(env_default=None):
+def replacements():
     # break circular imports
     import spack.environment as ev
     import spack.paths
 
     arch = architecture()
-    active_env = ev.active_environment()
-    env_path = active_env.path if active_env else env_default or NOMATCH
 
     return {
         "spack": lambda: spack.paths.prefix,
@@ -75,7 +73,7 @@ def replacements(env_default=None):
         "target": lambda: arch.target,
         "target_family": lambda: arch.target.microarchitecture.family,
         "date": lambda: date.today().strftime("%Y-%m-%d"),
-        "env": lambda: env_path,
+        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
     }
 
 
@@ -151,7 +149,7 @@ def substitute_config_variables(path):
 
     Spack allows paths in configs to have some placeholders, as follows:
 
-    - $env               The active Spack environment or env_root.
+    - $env               The active Spack environment.
     - $spack             The Spack instance's prefix
     - $tempdir           Default temporary directory returned by tempfile.gettempdir()
     - $user              The current user's username
@@ -170,7 +168,7 @@ def substitute_config_variables(path):
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
-    _replacements = replacements(env_root)
+    _replacements = replacements()
 
     # Look up replacements
     def repl(match):
@@ -185,8 +183,7 @@ def substitute_config_variables(path):
 
 def substitute_path_variables(path):
     """Substitute config vars, expand environment vars, expand user home."""
-    env_root = path if "$env" in path or "${env}" in path else None
-    path = substitute_config_variables(path, env_root=env_root)
+    path = substitute_config_variables(path)
     path = os.path.expandvars(path)
     path = os.path.expanduser(path)
     return path
