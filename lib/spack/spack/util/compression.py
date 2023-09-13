@@ -70,7 +70,7 @@ def allowed_archive(path):
     return False if not path else any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
-def _system_untar(archive_file):
+def _system_untar(archive_file, remove_archive_file=False):
     """Returns path to unarchived tar file.
     Untars archive via system tar.
 
@@ -89,6 +89,11 @@ def _system_untar(archive_file):
     tar = which("tar", required=True)
     tar.add_default_arg("-oxf")
     tar(archive_file)
+    if remove_archive_file:
+        # remove input file to prevent two stage
+        # extractions from being treated as exploding
+        # archives by the fetcher
+        os.remove(archive_file)
     return outfile
 
 
@@ -243,13 +248,9 @@ def _win_compressed_tarball_handler(decompressor):
     def unarchive(archive_file):
         # perform intermediate extraction step
         # record name of new archive so we can extract
-        # and later clean up
         decomped_tarball = decompressor(archive_file)
         # run tar on newly decomped archive
-        outfile = _system_untar(decomped_tarball)
-        # clean intermediate archive to mimic end result
-        # produced by one shot decomp/extraction
-        os.remove(decomped_tarball)
+        outfile = _system_untar(decomped_tarball, remove_archive_file=True)
         return outfile
 
     return unarchive

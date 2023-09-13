@@ -138,7 +138,7 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
     depends_on("python", type="build")
     depends_on("z3", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("ncurses+termlib", type="link")
     depends_on("pkgconfig", type="build")
 
@@ -230,6 +230,7 @@ class LlvmAmdgpu(CMakePackage):
                 self.define("LIBCXXABI_ENABLE_STATIC", "ON"),
                 self.define("LIBCXXABI_INSTALL_STATIC_LIBRARY", "OFF"),
             ]
+        args.append(self.define("LLVM_ENABLE_RTTI", "ON"))
         if self.spec.satisfies("@4.3.0:4.5.2"):
             llvm_projects.append("libcxx")
             llvm_projects.append("libcxxabi")
@@ -307,3 +308,13 @@ class LlvmAmdgpu(CMakePackage):
                     int(match.group(1)), int(match.group(2)), int(match.group(3))
                 )
         return detected_version
+
+    # Make sure that the compiler paths are in the LD_LIBRARY_PATH
+    def setup_run_environment(self, env):
+        llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")
+
+    # Make sure that the compiler paths are in the LD_LIBRARY_PATH
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")

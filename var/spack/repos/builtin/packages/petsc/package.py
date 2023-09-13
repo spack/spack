@@ -22,6 +22,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.19.4", sha256="7c941b71be52c3b764214e492df60109d12f97f7d854c97a44df0c4d958b3906")
     version("3.19.3", sha256="008239c016b869693ec8e81368a0b7638462e667d07f7d50ed5f9b75ccc58d17")
     version("3.19.2", sha256="114f363f779bb16839b25c0e70f8b0ae0d947d50e72f7c6cddcb11b001079b16")
     version("3.19.1", sha256="74db60c53c80b48d5c39e07bc39a883ecced88b9f24a5de17cf6f485a903e120")
@@ -138,6 +139,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     )
     variant("cgns", default=False, description="Activates support for CGNS (only parallel)")
     variant("memkind", default=False, description="Activates support for Memkind")
+    variant(
+        "memalign",
+        default="none",
+        description="Specify alignment of allocated arrays",
+        values=("4", "8", "16", "32", "64", "none"),
+        multi=False,
+    )
     variant("p4est", default=False, description="Activates support for P4Est (only parallel)")
     variant("saws", default=False, description="Activates support for Saws")
     variant("libyaml", default=False, description="Activates support for YAML")
@@ -237,9 +245,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hdf5+mpi", when="@3.13:+hdf5+mpi")
     depends_on("hdf5+mpi", when="+exodusii+mpi")
     depends_on("hdf5+mpi", when="+cgns+mpi")
-    depends_on("zlib", when="+hdf5")
-    depends_on("zlib", when="+libpng")
-    depends_on("zlib", when="+p4est")
+    depends_on("zlib-api", when="+hdf5")
+    depends_on("zlib-api", when="+libpng")
+    depends_on("zlib-api", when="+p4est")
     depends_on("parmetis+int64", when="+metis+mpi+int64")
     depends_on("parmetis~int64", when="+metis+mpi~int64")
     depends_on("valgrind", when="+valgrind")
@@ -412,6 +420,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if "+knl" in spec:
             options.append("--with-avx-512-kernels")
             options.append("--with-memalign=64")
+        elif self.spec.variants["memalign"].value != "none":
+            alignement = self.spec.variants["memalign"].value
+            options.append(f"--with-memalign={alignement}")
+
         if "+X" in spec:
             options.append("--with-x=1")
         else:
