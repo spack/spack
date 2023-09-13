@@ -1361,6 +1361,16 @@ opt_criterion(75, "requirement weight").
       build_priority(PackageNode, Priority)
 }.
 
+% Minimize the number of deprecated versions being used
+opt_criterion(73, "deprecated versions used").
+#minimize{ 0@273: #true }.
+#minimize{ 0@73: #true }.
+#minimize{
+    1@73+Priority,PackageNode
+    : attr("deprecated", PackageNode, _),
+      build_priority(PackageNode, Priority)
+}.
+
 % Minimize the:
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
