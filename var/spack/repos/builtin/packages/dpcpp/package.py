@@ -61,7 +61,7 @@ class Dpcpp(CMakePackage):
     depends_on("ninja@1.10.0:", type="build")
 
     depends_on("cuda@10.2.0:", when="+cuda")
-    
+
     depends_on("hip +cuda", when="+hip hip-platform=NVIDIA")
     depends_on("hip +rocm", when="+hip hip-platform=AMD")
 
