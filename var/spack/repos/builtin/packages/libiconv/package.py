@@ -42,3 +42,8 @@ class Libiconv(AutotoolsPackage, GNUMirrorPackage):
         # A hack to patch config.guess in the libcharset sub directory
         copy("./build-aux/config.guess", "libcharset/build-aux/config.guess")
         return args
+
+    @property
+    def libs(self):
+        shared = "libs=shared" in self.spec
+        return find_libraries(["libiconv"], root=self.prefix, recursive=True, shared=shared)
