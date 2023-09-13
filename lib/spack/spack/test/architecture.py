@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import platform
+import sys
 
 import pytest
 
@@ -199,14 +200,10 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
     ],
 )
 @pytest.mark.usefixtures("mock_packages", "config")
+@pytest.mark.only_clingo("Fixing the parser broke this test for the original concretizer.")
 def test_concretize_target_ranges(root_target_range, dep_target_range, result, monkeypatch):
     # Monkeypatch so that all concretization is done as if the machine is core2
     monkeypatch.setattr(spack.platforms.test.Test, "default", "core2")
-
-    # use foobar=bar to make the problem simpler for the old concretizer
-    # the new concretizer should not need that help
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Fixing the parser broke this test for the original concretizer.")
 
     spec_str = "a %%gcc@10 foobar=bar target=%s ^b target=%s" % (
         root_target_range,
@@ -227,6 +224,7 @@ def test_concretize_target_ranges(root_target_range, dep_target_range, result, m
         (["21.11", "21.9"], None, False),
     ],
 )
+@pytest.mark.skipif(sys.platform == "win32", reason="Cray does not use windows")
 def test_cray_platform_detection(versions, default, expected, tmpdir, monkeypatch, working_env):
     ex_path = str(tmpdir.join("fake_craype_dir"))
     fs.mkdirp(ex_path)

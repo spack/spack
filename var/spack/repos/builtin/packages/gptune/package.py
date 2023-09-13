@@ -41,7 +41,7 @@ class Gptune(CMakePackage):
     depends_on("py-scikit-learn", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-scikit-optimize@master+gptune", type=("build", "run"))
+    depends_on("py-scikit-optimize@0.9.0", patches=[patch("space.patch")], type=("build", "run"))
     depends_on("py-gpy", type=("build", "run"))
     depends_on("py-lhsmdu", type=("build", "run"))
     depends_on("py-hpbandster", type=("build", "run"))
@@ -61,10 +61,10 @@ class Gptune(CMakePackage):
     depends_on("hypre+gptune@2.19.0", when="+hypre", type=("build", "run"))
 
     depends_on("openmpi@4:", when="+mpispawn", type=("build", "run"))
-    conflicts("mpich", when="+mpispawn")
-    conflicts("spectrum-mpi", when="+mpispawn")
-    conflicts("cray-mpich", when="+mpispawn")
-    conflicts("gcc@:7")
+    conflicts("^mpich", when="+mpispawn")
+    conflicts("^spectrum-mpi", when="+mpispawn")
+    conflicts("^cray-mpich", when="+mpispawn")
+    conflicts("%gcc@:7")
 
     def cmake_args(self):
         spec = self.spec

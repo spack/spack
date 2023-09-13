@@ -1,5 +1,9 @@
 stages: [ "generate", "build", "publish" ]
 
+variables:
+  SPACK_DISABLE_LOCAL_CONFIG: "1"
+  SPACK_USER_CACHE_PATH: "${CI_PROJECT_DIR}/tmp/_user_cache/"
+
 default:
   image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
 
@@ -18,6 +22,11 @@ default:
   variables:
     SPACK_TARGET_PLATFORM: "darwin"
     SPACK_TARGET_ARCH: "x86_64"
+
+.darwin_aarch64:
+  variables:
+    SPACK_TARGET_PLATFORM: "darwin"
+    SPACK_TARGET_ARCH: "aarch64"
 
 .linux_x86_64_v3:
   variables:
@@ -101,7 +110,7 @@ default:
         AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
 
-.generate-base:
+.generate-common:
   stage: generate
   script:
     - uname -a || true
@@ -129,6 +138,9 @@ default:
   variables:
     KUBERNETES_CPU_REQUEST: 4000m
     KUBERNETES_MEMORY_REQUEST: 16G
+    # avoid moving targets like branches and tags
+    SPACK_CONCRETIZER_REQUIRE_CHECKSUM: 1
+    SPACK_BACKTRACE: 1
   interruptible: true
   timeout: 60 minutes
   retry:
@@ -136,41 +148,17 @@ default:
     when:
       - always
 
-.generate:
-  extends: [ ".base-job", ".generate-base" ]
+# Generate without tags for cases using external runners
+.generate-base:
+  extends: [ ".base-job", ".generate-common" ]
+
+.generate-x86_64:
+  extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "x86_64"]
 
-.darwin-generate-base:
-  stage: generate
-  script:
-  - export SPACK_DISABLE_LOCAL_CONFIG=1
-  - export SPACK_USER_CACHE_PATH=$(pwd)/_user_cache
-  - uname -a || true
-  - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
-  - nproc || true
-  - . "./share/spack/setup-env.sh"
-  - spack --version
-  - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
-  - spack env activate --without-view .
-  - spack -d ci generate --check-index-only
-      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
-      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
-      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
-  after_script:
-  - cat /proc/loadavg || true
-  artifacts:
-    paths:
-    - "${CI_PROJECT_DIR}/jobs_scratch_dir"
-  interruptible: true
-  timeout: 60 minutes
-  retry:
-    max: 2
-    when:
-    - always
-
-.darwin-generate:
-  extends: [ ".base-job", ".darwin-generate-base" ]
-
+.generate-aarch64:
+  extends: [ ".generate-base" ]
+  tags: ["spack", "public", "medium", "aarch64"]
 
 .generate-deprecated:
   extends: [ ".base-job" ]
@@ -203,10 +191,6 @@ default:
     when:
       - always
   tags: ["spack", "public", "medium", "x86_64"]
-
-.generate-aarch64:
-  extends: [ ".base-job", ".generate" ]
-  tags: ["spack", "public", "medium", "aarch64"]
 
 .build:
   extends: [ ".base-job" ]
@@ -294,8 +278,8 @@ protected-publish:
     SPACK_CI_STACK_NAME: e4s
 
 e4s-generate:
-  extends: [ ".e4s", ".generate"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+  extends: [ ".e4s", ".generate-x86_64"]
+  image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
 
 e4s-build:
   extends: [ ".e4s", ".build" ]
@@ -317,8 +301,8 @@ e4s-build:
     SPACK_CI_STACK_NAME: gpu-tests
 
 gpu-tests-generate:
-  extends: [ ".gpu-tests", ".generate"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+  extends: [ ".gpu-tests", ".generate-x86_64"]
+  image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
 
 gpu-tests-build:
   extends: [ ".gpu-tests", ".build" ]
@@ -340,7 +324,7 @@ gpu-tests-build:
     SPACK_CI_STACK_NAME: e4s-oneapi
 
 e4s-oneapi-generate:
-  extends: [ ".e4s-oneapi", ".generate"]
+  extends: [ ".e4s-oneapi", ".generate-x86_64"]
   image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2023.07.21
 
 e4s-oneapi-build:
@@ -367,7 +351,7 @@ e4s-oneapi-build:
     SPACK_CI_STACK_NAME: e4s-power
 
 e4s-power-generate:
-  extends: [ ".e4s-power", ".generate", ".e4s-power-generate-tags-and-image"]
+  extends: [ ".e4s-power", ".generate-x86_64", ".e4s-power-generate-tags-and-image"]
 
 e4s-power-build:
   extends: [ ".e4s-power", ".build" ]
@@ -389,7 +373,7 @@ e4s-power-build:
     SPACK_CI_STACK_NAME: build_systems
 
 build_systems-generate:
-  extends: [ ".build_systems", ".generate"]
+  extends: [ ".build_systems", ".generate-x86_64"]
 
 build_systems-build:
   extends: [ ".build_systems", ".build" ]
@@ -411,7 +395,7 @@ build_systems-build:
     SPACK_CI_STACK_NAME: radiuss
 
 radiuss-generate:
-  extends: [ ".radiuss", ".generate" ]
+  extends: [ ".radiuss", ".generate-x86_64" ]
 
 radiuss-build:
   extends: [ ".radiuss", ".build" ]
@@ -443,7 +427,7 @@ radiuss-build:
     SPACK_CI_STACK_NAME: radiuss-aws
 
 radiuss-aws-generate:
-  extends: [ ".radiuss-aws", ".generate", ".radiuss-aws-overrides", ".tags-x86_64_v4" ]
+  extends: [ ".radiuss-aws", ".generate-x86_64", ".radiuss-aws-overrides", ".tags-x86_64_v4" ]
 
 radiuss-aws-build:
   extends: [ ".radiuss-aws", ".build" ]
@@ -487,8 +471,8 @@ radiuss-aws-aarch64-build:
     SPACK_CI_STACK_NAME: data-vis-sdk
 
 data-vis-sdk-generate:
-  extends: [ ".data-vis-sdk", ".generate"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+  extends: [ ".data-vis-sdk", ".generate-x86_64"]
+  image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
 
 data-vis-sdk-build:
   extends: [ ".data-vis-sdk", ".build" ]
@@ -517,7 +501,7 @@ data-vis-sdk-build:
     SPACK_CI_STACK_NAME: aws-isc
 
 aws-isc-generate:
-  extends: [ ".aws-isc", ".generate", ".aws-isc-overrides", ".tags-x86_64_v4" ]
+  extends: [ ".aws-isc", ".generate-x86_64", ".aws-isc-overrides", ".tags-x86_64_v4" ]
 
 aws-isc-build:
   extends: [ ".aws-isc", ".build" ]
@@ -561,7 +545,7 @@ aws-isc-aarch64-build:
     SPACK_CI_STACK_NAME: tutorial
 
 tutorial-generate:
-  extends: [ ".tutorial", ".generate"]
+  extends: [ ".tutorial", ".generate-x86_64"]
   image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-07
 
 tutorial-build:
@@ -584,7 +568,7 @@ tutorial-build:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cpu
 
 ml-linux-x86_64-cpu-generate:
-  extends: [ ".generate", .ml-linux-x86_64-cpu, ".tags-x86_64_v4" ]
+  extends: [ ".generate-x86_64", .ml-linux-x86_64-cpu, ".tags-x86_64_v4" ]
   image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
 
 ml-linux-x86_64-cpu-build:
@@ -607,7 +591,7 @@ ml-linux-x86_64-cpu-build:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cuda
 
 ml-linux-x86_64-cuda-generate:
-  extends: [ ".generate", .ml-linux-x86_64-cuda, ".tags-x86_64_v4" ]
+  extends: [ ".generate-x86_64", .ml-linux-x86_64-cuda, ".tags-x86_64_v4" ]
   image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
 
 ml-linux-x86_64-cuda-build:
@@ -630,7 +614,7 @@ ml-linux-x86_64-cuda-build:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-rocm
 
 ml-linux-x86_64-rocm-generate:
-  extends: [ ".generate", .ml-linux-x86_64-rocm, ".tags-x86_64_v4" ]
+  extends: [ ".generate-x86_64", .ml-linux-x86_64-rocm, ".tags-x86_64_v4" ]
   image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
 
 ml-linux-x86_64-rocm-build:
@@ -647,24 +631,26 @@ ml-linux-x86_64-rocm-build:
 ########################################
 # Machine Learning - Darwin aarch64 (MPS)
 ########################################
-.ml-darwin-aarch64-mps:
-  variables:
-    SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
+# No runners available right now
+# .ml-darwin-aarch64-mps:
+#   extends: [".darwin_aarch64"]
+#   variables:
+#     SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
 
-ml-darwin-aarch64-mps-generate:
-  tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
-  extends: [ ".ml-darwin-aarch64-mps", ".darwin-generate"]
+# ml-darwin-aarch64-mps-generate:
+#   tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
+#   extends: [ ".ml-darwin-aarch64-mps", ".generate-base"]
 
-ml-darwin-aarch64-mps-build:
-  extends: [ ".ml-darwin-aarch64-mps", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-darwin-aarch64-mps-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: ml-darwin-aarch64-mps-generate
+# ml-darwin-aarch64-mps-build:
+#   extends: [ ".ml-darwin-aarch64-mps", ".build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: ml-darwin-aarch64-mps-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: ml-darwin-aarch64-mps-generate
 
 ########################################
 # Deprecated CI testing
@@ -717,7 +703,7 @@ deprecated-ci-build:
     SPACK_CI_STACK_NAME: aws-pcluster-icelake
 
 # aws-pcluster-generate-icelake:
-#   extends: [ ".linux_icelake", ".aws-pcluster-icelake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+#   extends: [ ".linux_icelake", ".aws-pcluster-icelake", ".generate-x86_64", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
 # aws-pcluster-build-icelake:
 #   extends: [ ".linux_icelake", ".aws-pcluster-icelake", ".build" ]
@@ -736,7 +722,7 @@ deprecated-ci-build:
     SPACK_CI_STACK_NAME: aws-pcluster-skylake
 
 # aws-pcluster-generate-skylake:
-#   extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+#   extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate-x86_64", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
 # aws-pcluster-build-skylake:
 #   extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".build" ]
@@ -810,42 +796,12 @@ deprecated-ci-build:
         SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
 
 .generate-cray:
-  extends: [ ".base-cray-job" ]
+  extends: [ ".generate-common", ".base-cray-job" ]
   stage: generate
-  script:
+  before_script:
     - echo $PATH
     - module avail
     - module list
-    - export SPACK_DISABLE_LOCAL_CONFIG=1
-    - export SPACK_USER_CACHE_PATH=$(pwd)/_user_cache
-    - uname -a || true
-    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
-    - nproc || true
-    - . "./share/spack/setup-env.sh"
-    - spack --version
-    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
-    - spack env activate --without-view .
-    - export SPACK_CI_CONFIG_ROOT="${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
-    - spack
-      --config-scope "${SPACK_CI_CONFIG_ROOT}"
-      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
-      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
-      ${CI_STACK_CONFIG_SCOPES}
-      ci generate --check-index-only
-      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
-      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
-      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
-  after_script:
-    - cat /proc/loadavg || true
-  artifacts:
-    paths:
-      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
-  interruptible: true
-  timeout: 60 minutes
-  retry:
-    max: 2
-    when:
-      - always
 
 .generate-cray-rhel:
   tags: [ "cray-rhel-zen4", "public" ]

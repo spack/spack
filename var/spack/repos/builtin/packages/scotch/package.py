@@ -58,7 +58,7 @@ class Scotch(CMakePackage, MakefilePackage):
     depends_on("flex@:2.6.1,2.6.4:", type="build")
     depends_on("bison@3.4:", type="build")
     depends_on("mpi", when="+mpi")
-    depends_on("zlib", when="+compression")
+    depends_on("zlib-api", when="+compression")
 
     # Version-specific patches
     patch("nonthreaded-6.0.4.patch", when="@6.0.4")
@@ -70,8 +70,8 @@ class Scotch(CMakePackage, MakefilePackage):
 
     # Vendored dependency of METIS/ParMETIS conflicts with standard
     # installations
-    conflicts("^metis", when="+metis")
-    conflicts("^parmetis", when="+metis")
+    conflicts("metis", when="+metis")
+    conflicts("parmetis", when="+metis")
 
     parallel = False
 
@@ -103,7 +103,7 @@ class Scotch(CMakePackage, MakefilePackage):
 
         scotchlibs = find_libraries(libraries, root=self.prefix, recursive=True, shared=shared)
         if "+compression" in self.spec:
-            zlibs = self.spec["zlib"].libs
+            zlibs = self.spec["zlib-api"].libs
 
         return scotchlibs + zlibs
 
@@ -207,7 +207,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         if "+compression" in self.spec:
             cflags.append("-DCOMMON_FILE_COMPRESS_GZ")
-            ldflags.append(" {0} ".format(self.spec["zlib"].libs.joined()))
+            ldflags.append(" {0} ".format(self.spec["zlib-api"].libs.joined()))
 
         cflags.append("-DCOMMON_PTHREAD")
 

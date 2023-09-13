@@ -52,7 +52,7 @@ def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch
 
     # Mock deletion of the package
     spec._package = None
-    monkeypatch.setattr(spack.repo.path, "get", find_nothing)
+    monkeypatch.setattr(spack.repo.PATH, "get", find_nothing)
     with pytest.raises(spack.repo.UnknownPackageError):
         spec.package
 
@@ -159,7 +159,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
         s.package.remove_prefix = rm_prefix_checker.remove_prefix
 
         # must clear failure markings for the package before re-installing it
-        spack.store.STORE.db.clear_failure(s, True)
+        spack.store.STORE.failure_tracker.clear(s, True)
 
         s.package.set_install_succeed()
         s.package.stage = MockStage(s.package.stage)
@@ -288,7 +288,7 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
     prepared_db = spack.database.Database(mock_db_root)
     upstream_layout = gen_mock_layout("/a/")
-    spack.config.config.push_scope(
+    spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(
             name="install-upstream-fixture",
             data={"upstreams": {"mock1": {"install_tree": prepared_db.root}}},
@@ -354,7 +354,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, w
     assert os.path.exists(s.package.prefix)
 
     # must clear failure markings for the package before re-installing it
-    spack.store.STORE.db.clear_failure(s, True)
+    spack.store.STORE.failure_tracker.clear(s, True)
 
     s.package.set_install_succeed()
     s.package.stage = MockStage(s.package.stage)
@@ -616,7 +616,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
 def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     """Test attempts to perform install phases with unconcretized spec."""
     spec = Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
 
     with pytest.raises(ValueError, match="must have a concrete spec"):
         pkg_cls(spec).do_install()
