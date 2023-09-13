@@ -15,6 +15,7 @@ class PyLightly(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("1.4.18", sha256="41794f6815db178b031236793b379e5573e074fdf730506872b73766396a6bdf")
     version("1.4.17", sha256="1533ddf28c8a08b3eafd404964d03f9a62fe76405fcf8dc7206ca4093725285e")
     version("1.4.16", sha256="9bd2af53e144e4f9823409cd33b39651f579ed671ff242a1445640c9df504d92")
     version("1.4.15", sha256="9b02f523b35621a98c3e87efdda735897b726b39cf4a8bf106769f54b3df154e")

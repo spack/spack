@@ -3,6 +3,7 @@ ci:
 
   broken-tests-packages:
     - gptune
+    - superlu-dist    # srun -n 4 hangs
 
   broken-specs-url: "https://dummy.io" # s3://spack-binaries/broken-specs"
 
@@ -20,7 +21,11 @@ ci:
         - k=$CI_GPG_KEY_ROOT/intermediate_ci_signing_key.gpg; [[ -r $k ]] && spack gpg trust $k
         - k=$CI_GPG_KEY_ROOT/spack_public_key.gpg; [[ -r $k ]] && spack gpg trust $k
       script::
-      - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+      - - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+      - - spack python ${CI_PROJECT_DIR}/share/spack/gitlab/cloud_pipelines/scripts/common/aggregate_package_logs.spack.py
+          --prefix /home/software/spack:${CI_PROJECT_DIR}
+          --log install_times.json
+          ${SPACK_ARTIFACTS_ROOT}/user_data/install_times.json
       after_script:
       - - cat /proc/loadavg || true
       variables:
@@ -65,7 +70,8 @@ ci:
         KUBERNETES_MEMORY_REQUEST: "16G"
 
   - reindex-job:
-      tags: ["service"]
+      tags: ["service", "x86_64"]
+      image: "ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01"
       variables:
         CI_JOB_SIZE: "medium"
         KUBERNETES_CPU_REQUEST: "4000m"
