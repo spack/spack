@@ -23,4 +23,4 @@ class PyPykwalify(PythonPackage):
     depends_on("py-python-dateutil@2.4.2:", type=("build", "run"))
     depends_on("py-pyyaml@3.11:", type=("build", "run"), when="@1.6.1")
 
-    conflicts("^py-ruamel@0.16.0:", when="@1.6.1")
+    conflicts("^py-ruamel-yaml@0.16.0:", when="@1.6.1")

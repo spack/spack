@@ -25,7 +25,7 @@ class Alembic(CMakePackage):
     depends_on("openexr@2.2.0:")
     depends_on("hdf5@1.8.9:", when="+hdf5")
     depends_on("boost@1.55:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("py-ilmbase", when="+python")
 
     def cmake_args(self):

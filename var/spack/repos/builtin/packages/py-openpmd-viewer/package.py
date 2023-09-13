@@ -19,7 +19,13 @@ class PyOpenpmdViewer(PythonPackage):
     version("1.3.0", sha256="236c065a37881fcb7603efde0bf2d61acc355a8acc595bebc3d6b9d03251b081")
     version("1.2.0", sha256="a27f8ac522c4c76fd774095e156a8b280c9211128f50aa07f16ac70d8222384d")
 
-    variant("backend", default="h5py,openpmd-api", multi=True, values=("h5py", "openpmd-api"))
+    variant(
+        "backend",
+        default="h5py,openpmd-api",
+        description="Visualization backend",
+        multi=True,
+        values=("h5py", "openpmd-api"),
+    )
     variant("jupyter", default=False, description="Enable Jupyter Widget GUI")
     variant("numba", default=False, description="Enable accelerated depositions for histograms")
     variant("plot", default=True, description="Enable plotting support")

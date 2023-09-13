@@ -39,7 +39,7 @@ def txt_to_rtf(file_path):
 def setup_parser(subparser):
     spack_source_group = subparser.add_mutually_exclusive_group(required=True)
     spack_source_group.add_argument(
-        "-v", "--spack-version", default="", help="download given spack version e.g. 0.16.0"
+        "-v", "--spack-version", default="", help="download given spack version"
     )
     spack_source_group.add_argument(
         "-s", "--spack-source", default="", help="full path to spack source"
@@ -49,9 +49,8 @@ def setup_parser(subparser):
         "-g",
         "--git-installer-verbosity",
         default="",
-        choices=set(["SILENT", "VERYSILENT"]),
-        help="Level of verbosity provided by bundled Git Installer.\
-             Default is fully verbose",
+        choices=["SILENT", "VERYSILENT"],
+        help="level of verbosity provided by bundled git installer (default is fully verbose)",
         required=False,
         action="store",
         dest="git_verbosity",

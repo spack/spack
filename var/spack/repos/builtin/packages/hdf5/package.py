@@ -40,12 +40,12 @@ class Hdf5(CMakePackage):
     version("develop-1.8", branch="hdf5_1_8")
 
     # Odd versions are considered experimental releases
-    # Note: These are still required to build some VOL adapters, but even releases should be
-    #       preferred.
-    version("1.13.3", sha256="83c7c06671f975cee6944b0b217f95005faa55f79ea5532cf4ac268989866af4")
-    version("1.13.2", sha256="01643fa5b37dba7be7c4db6bbf3c5d07adf5c1fa17dbfaaa632a279b1b2f06da")
-
     # Even versions are maintenance versions
+    version(
+        "1.14.2",
+        sha256="1c342e634008284a8c2794c8e7608e2eaf26d01d445fb3dfd7f33cb2fb51ac53",
+        preferred=True,
+    )
     version(
         "1.14.1-2",
         sha256="cbe93f275d5231df28ced9549253793e40cd2b555e3d288df09d7b89a9967b07",
@@ -69,6 +69,11 @@ class Hdf5(CMakePackage):
     version(
         "1.12.0",
         sha256="a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a",
+        preferred=True,
+    )
+    version(
+        "1.10.10",
+        sha256="a6877ab7bd5d769d2d68618fdb54beb50263dcc2a8c157fe7e2186925cdb02db",
         preferred=True,
     )
     version(
@@ -124,6 +129,11 @@ class Hdf5(CMakePackage):
     version(
         "1.10.0",
         sha256="81f6201aba5c30dced5dcd62f5d5477a2790fd5850e02ac514ca8bf3e2bb375a",
+        preferred=True,
+    )
+    version(
+        "1.8.23",
+        sha256="37fa4eb6cd0e181eb49a10d54611cb00700e9537f805d03e6853503afe5abc27",
         preferred=True,
     )
     version(
@@ -208,7 +218,7 @@ class Hdf5(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
     depends_on("szip", when="+szip")
-    depends_on("zlib@1.1.2:")
+    depends_on("zlib-api")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     # Skip this on Windows since pkgconfig is autotools
@@ -489,9 +499,7 @@ class Hdf5(CMakePackage):
     @classmethod
     def determine_variants(cls, exes, version):
         def is_enabled(text):
-            if text in set(["t", "true", "enabled", "yes", "1"]):
-                return True
-            return False
+            return text.lower() in ["t", "true", "enabled", "yes", "1", "on"]
 
         results = []
         for exe in exes:
