@@ -20,8 +20,18 @@ class UfsWeatherModel(CMakePackage):
     maintainers("AlexanderRichert-NOAA")
 
     version("develop", branch="develop", submodules=True)
-    version("2.0.0", tag="ufs-v2.0.0", submodules=True)
-    version("1.1.0", tag="ufs-v1.1.0", submodules=True)
+    version(
+        "2.0.0",
+        tag="ufs-v2.0.0",
+        commit="e3cb92f1cd8941c019ee5ef7da5c9aef67d55cf8",
+        submodules=True,
+    )
+    version(
+        "1.1.0",
+        tag="ufs-v1.1.0",
+        commit="5bea16b6d41d810dc2e45cba0fa3841f45ea7c7a",
+        submodules=True,
+    )
 
     variant("mpi", default=True, description="Enable MPI")
     variant(
