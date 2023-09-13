@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import stat
-import sys
 
 import pytest
 
@@ -18,7 +17,7 @@ import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_update_dictionary_extending_list():
@@ -82,7 +81,7 @@ def test_modules_default_symlink(
     assert not os.path.lexists(link_path)
 
 
-class MockDb(object):
+class MockDb:
     def __init__(self, db_ids, spec_hash_to_db):
         self.upstream_dbs = db_ids
         self.spec_hash_to_db = spec_hash_to_db
@@ -91,7 +90,7 @@ class MockDb(object):
         return self.spec_hash_to_db.get(spec_hash)
 
 
-class MockSpec(object):
+class MockSpec:
     def __init__(self, unique_id):
         self.unique_id = unique_id
 
@@ -181,7 +180,7 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
 
     # Mock deletion of the package
     spec._package = None
-    monkeypatch.setattr(spack.repo.path, "get", find_nothing)
+    monkeypatch.setattr(spack.repo.PATH, "get", find_nothing)
     with pytest.raises(spack.repo.UnknownPackageError):
         spec.package
 

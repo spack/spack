@@ -12,7 +12,7 @@ import spack.repo
 import spack.store
 import spack.tag
 
-description = "Show package tags and associated packages"
+description = "show package tags and associated packages"
 section = "basic"
 level = "long"
 
@@ -68,7 +68,7 @@ def tags(parser, args):
         return
 
     # unique list of available tags
-    available_tags = sorted(spack.repo.path.tag_index.keys())
+    available_tags = sorted(spack.repo.PATH.tag_index.keys())
     if not available_tags:
         tty.msg("No tagged packages")
         return

@@ -14,6 +14,9 @@ class Glab(Package):
 
     maintainers("alecbcs")
 
+    version("1.31.0", sha256="5648e88e7d6cc993227f5a4e80238af189bed09c7aed1eb12be7408e9a042747")
+    version("1.30.0", sha256="d3c1a9ba723d94a0be10fc343717cf7b61732644f5c42922f1c8d81047164b99")
+    version("1.29.4", sha256="f6c628d376ea2db9872b1df20abc886281ba58b7bdf29f19dc179c541958640b")
     version("1.28.1", sha256="243a0f15e4400aab7b4d27ec71c6ae650bf782473c47520ffccd57af8d939c90")
     version("1.28.0", sha256="9a0b433c02033cf3d257405d845592e2b7c2e38741027769bb97a8fd763aeeac")
     version("1.27.0", sha256="26bf5fe24eeaeb0f861c89b31129498f029441ae11cc9958e14ad96ec1356d51")

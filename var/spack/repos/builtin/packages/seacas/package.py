@@ -32,6 +32,9 @@ class Seacas(CMakePackage):
     # ###################### Versions ##########################
     version("master", branch="master")
     version(
+        "2023-05-30", sha256="3dd982841854466820a3902163ad1cf1b3fbab65ed7542456d328f2d1a5373c1"
+    )
+    version(
         "2022-10-14", sha256="cde91e7561d2352045d669a25bdf46a604d85ed1ea7f3f5028004455e4ce9d56"
     )
     version(
@@ -138,7 +141,8 @@ class Seacas(CMakePackage):
     depends_on("hdf5+hl~mpi", when="~mpi")
 
     depends_on("fmt@8.1.0:", when="@2022-03-04:2022-05-16")
-    depends_on("fmt@9.1.0:", when="@2022-10-14")
+    depends_on("fmt@9.1.0", when="@2022-10-14")
+    depends_on("fmt@9.1.0:", when="@2023-05-30")
     depends_on("matio", when="+matio")
     depends_on("libx11", when="+x11")
 
@@ -191,6 +195,8 @@ class Seacas(CMakePackage):
                 from_variant("BUILD_SHARED_LIBS", "shared"),
                 from_variant("SEACASExodus_ENABLE_THREADSAFE", "thread_safe"),
                 from_variant("SEACASIoss_ENABLE_THREADSAFE", "thread_safe"),
+                # SEACASExodus_ENABLE_THREADSAFE=ON requires TPL_ENABLE_Pthread=ON
+                from_variant("TPL_ENABLE_Pthread", "thread_safe"),
                 from_variant("TPL_ENABLE_X11", "x11"),
                 from_variant(project_name_base + "_ENABLE_Fortran", "fortran"),
             ]

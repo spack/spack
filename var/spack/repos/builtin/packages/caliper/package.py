@@ -18,7 +18,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/Caliper"
     git = "https://github.com/LLNL/Caliper.git"
-    url = "https://github.com/LLNL/Caliper/archive/v2.9.0.tar.gz"
+    url = "https://github.com/LLNL/Caliper/archive/v2.10.0.tar.gz"
     tags = ["e4s", "radiuss"]
 
     maintainers("daboehme")
@@ -26,20 +26,51 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("2.10.0", sha256="14c4fb5edd5e67808d581523b4f8f05ace8549698c0e90d84b53171a77f58565")
     version("2.9.0", sha256="507ea74be64a2dfd111b292c24c4f55f459257528ba51a5242313fa50978371f")
     version("2.8.0", sha256="17807b364b5ac4b05997ead41bd173e773f9a26ff573ff2fe61e0e70eab496e4")
-    version("2.7.0", sha256="b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b")
-    version("2.6.0", sha256="6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f")
-    version("2.5.0", sha256="d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c")
-    version("2.4.0", tag="v2.4.0")
-    version("2.3.0", tag="v2.3.0")
-    version("2.2.0", tag="v2.2.0")
-    version("2.1.1", tag="v2.1.1")
-    version("2.0.1", tag="v2.0.1")
-    version("1.9.1", tag="v1.9.1")
-    version("1.9.0", tag="v1.9.0")
-    version("1.8.0", tag="v1.8.0")
-    version("1.7.0", tag="v1.7.0")
+    version(
+        "2.7.0",
+        sha256="b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b",
+        deprecated=True,
+    )
+    version(
+        "2.6.0",
+        sha256="6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f",
+        deprecated=True,
+    )
+    version(
+        "2.5.0",
+        sha256="d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c",
+        deprecated=True,
+    )
+    version(
+        "2.4.0", tag="v2.4.0", commit="30577b4b8beae104b2b35ed487fec52590a99b3d", deprecated=True
+    )
+    version(
+        "2.3.0", tag="v2.3.0", commit="9fd89bb0120750d1f9dfe37bd963e24e478a2a20", deprecated=True
+    )
+    version(
+        "2.2.0", tag="v2.2.0", commit="c408e9b3642c7aa80eff37b0826d819c57e7bc04", deprecated=True
+    )
+    version(
+        "2.1.1", tag="v2.1.1", commit="0593b0e01c1d8d3e50c990399cc0fee403485599", deprecated=True
+    )
+    version(
+        "2.0.1", tag="v2.0.1", commit="4d7ff46381c53a461e62edd949e2d9dea9db7b08", deprecated=True
+    )
+    version(
+        "1.9.1", tag="v1.9.1", commit="cfc1defbbee20b50dd3e3477badd09a92b1df970", deprecated=True
+    )
+    version(
+        "1.9.0", tag="v1.9.0", commit="8356e747349b285aa621c5b74e71559f0babc4a1", deprecated=True
+    )
+    version(
+        "1.8.0", tag="v1.8.0", commit="117c1ef596b617dc71407b8b67eebef094a654f8", deprecated=True
+    )
+    version(
+        "1.7.0", tag="v1.7.0", commit="898277c93d884d4e7ca1ffcf3bbea81d22364f26", deprecated=True
+    )
 
     is_linux = sys.platform.startswith("linux")
     variant("shared", default=True, description="Build shared libraries")
@@ -58,6 +89,8 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     variant("sampler", default=is_linux, description="Enable sampling support on Linux")
     variant("sosflow", default=False, description="Enable SOSflow support")
     variant("fortran", default=False, description="Enable Fortran support")
+    variant("variorum", default=False, description="Enable Variorum support")
+    variant("kokkos", default=True, when="@2.3.0:", description="Enable Kokkos profiling support")
 
     depends_on("adiak@0.1:0", when="@2.2: +adiak")
 
@@ -69,6 +102,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("unwind@1.2:1", when="+libunwind")
     depends_on("elfutils", when="+libdw")
+    depends_on("variorum", when="+variorum")
 
     depends_on("sosflow@spack", when="@1.0:1+sosflow")
 
@@ -106,6 +140,8 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("WITH_NVTX", "cuda"),
             self.define_from_variant("WITH_ROCTRACER", "rocm"),
             self.define_from_variant("WITH_ROCTX", "rocm"),
+            self.define_from_variant("WITH_VARIORUM", "variorum"),
+            self.define_from_variant("WITH_KOKKOS", "kokkos"),
         ]
 
         if "+papi" in spec:
@@ -116,6 +152,8 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DLIBPFM_INSTALL=%s" % spec["libpfm4"].prefix)
         if "+sosflow" in spec:
             args.append("-DSOS_PREFIX=%s" % spec["sosflow"].prefix)
+        if "+variorum" in spec:
+            args.append("-DVARIORUM_PREFIX=%s" % spec["variorum"].prefix)
 
         # -DWITH_CALLPATH was renamed -DWITH_LIBUNWIND in 2.5
         callpath_flag = "LIBUNWIND" if spec.satisfies("@2.5:") else "CALLPATH"

@@ -17,10 +17,13 @@ concurrency:
 jobs:
   # Run audits on all the packages in the built-in repository
   package-audits:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.operating_system }}
+    strategy:
+      matrix:
+        operating_system: ["ubuntu-latest", "macos-latest"]
     steps:
-    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # @v2
-    - uses: actions/setup-python@57ded4d7d5e986d7296eab16560982c6dd7c923b # @v2
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # @v2
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # @v2
       with:
         python-version: ${{inputs.python_version}}
     - name: Install Python packages
@@ -38,7 +41,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           $(which spack) audit packages
-    - uses: codecov/codecov-action@894ff025c7b54547a9a2a1e9f228beae737ad3c2 # @v2.1.0
+    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # @v2.1.0
       if: ${{ inputs.with_coverage == 'true' }}
       with:
-        flags: unittests,linux,audits
+        flags: unittests,audits

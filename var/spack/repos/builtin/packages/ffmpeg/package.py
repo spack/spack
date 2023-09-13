@@ -77,7 +77,7 @@ class Ffmpeg(AutotoolsPackage):
     depends_on("alsa-lib", when="platform=linux")
     depends_on("iconv")
     depends_on("yasm@1.2.0:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("aom", when="+libaom")
     depends_on("bzip2", when="+bzlib")
@@ -103,6 +103,20 @@ class Ffmpeg(AutotoolsPackage):
     depends_on("x264", when="+libx264")
 
     conflicts("%nvhpc")
+
+    # Patch solving a build failure when vulkan is enabled
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/eb0455d64690",
+        sha256="967d25a67297c53dde7151f7bc5eb37ae674525ee468880f973b9ebc3e12ed2c",
+        when="@5.1.2",
+    )
+
+    # Patch fixing a build failure with binutils 2.41.0
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/effadce6c756247ea8bae32dc13bb3e6f464f0eb",
+        sha256="d1ea47c29968507fee772234bc734d29958b62ab92400801ef28559b538a9168",
+        when="@6.0",
+    )
 
     @property
     def libs(self):

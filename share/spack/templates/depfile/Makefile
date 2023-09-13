@@ -1,4 +1,4 @@
-SPACK ?= spack
+SPACK ?= spack -c config:install_status:false
 SPACK_INSTALL_FLAGS ?=
 
 # This variable can be used to add post install hooks
