@@ -7,12 +7,12 @@ from spack.package import *
 
 
 class Trompeloeil(CMakePackage):
-    """A thread-safe header-only mocking framework for C++11/14 using the Boost Software License 1.0"""
+    """Trompeloeil is a thread-safe header-only mocking framework for C++11/14
+    using the Boost Software License 1.0"""
 
     homepage = "https://github.com/rollbear/trompeloeil"
     url = "https://github.com/rollbear/trompeloeil/archive/v43.tar.gz"
     git = "https://github.com/rollbear/trompeloeil.git"
-
 
     version("master", branch="master")
     version("45", sha256="124b0aa45d84415193719376b6557fc1f1180cbfebf4dc4f7ca247cb404d6bd8")
