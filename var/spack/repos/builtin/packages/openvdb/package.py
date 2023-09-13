@@ -41,7 +41,7 @@ class Openvdb(CMakePackage):
     depends_on("openexr@2.3:3.1", when="@10:")
     depends_on("intel-tbb@:2020.1", when="@:8.1")
     depends_on("intel-tbb@2021", when="@8.2:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("c-blosc@1.17.0")  # depends_on('c-blosc@1.5:')
     depends_on("py-numpy", when="+python")
     depends_on("boost+iostreams+system+python+numpy", when="+python")

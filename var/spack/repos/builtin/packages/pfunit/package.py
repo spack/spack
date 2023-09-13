@@ -19,6 +19,9 @@ class Pfunit(CMakePackage):
 
     maintainers("mathomp4", "tclune")
 
+    version("4.7.3", sha256="247239298b55e847417b7830183d7fc62cca93dc92c8ec7c0067784b7ce34544")
+    version("4.7.2", sha256="3142a1e56b7d127fdc9589cf6deff8505174129834a6a268d0ce7e296f51ab02")
+    version("4.7.1", sha256="64de3eb9f364b57ef6df81ba33400dfd4dcebca6eb5d0e9b7955ed8156e29165")
     version("4.7.0", sha256="5faf52d0ab8589b3cd3ea488b34a65dc931f70c07aaa7bf4f209b18af2b38e4e")
     version("4.6.3", sha256="a43a64c4338be57fdbe1cae1a89e277196f10931bc1f73418a463e05e5e7b2d1")
     version("4.6.2", sha256="fd302a1f7a131b38e18bc31ede69a216e580c640152e5e313f5a1e084669a950")
@@ -85,11 +88,11 @@ class Pfunit(CMakePackage):
 
     # The maximum rank of an array in the Fortran 2008 standard is 15
     max_rank = 15
-    allowed_array_ranks = tuple(str(i) for i in range(1, max_rank + 1))
+    allowed_array_ranks = tuple(str(i) for i in range(3, max_rank + 1))
 
     variant(
         "max_array_rank",
-        default=5,
+        default="5",
         values=allowed_array_ranks,
         description="Max rank for assertion overloads (higher values may be slower to build)",
     )

@@ -19,13 +19,21 @@ class Cmake(Package):
     homepage = "https://www.cmake.org"
     url = "https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0.tar.gz"
     git = "https://gitlab.kitware.com/cmake/cmake.git"
-    maintainers("chuckatkins")
+
+    maintainers("alalazo")
 
     tags = ["build-tools", "windows"]
 
     executables = ["^cmake[0-9]*$"]
 
     version("master", branch="master")
+    version("3.27.4", sha256="0a905ca8635ca81aa152e123bdde7e54cbe764fdd9a70d62af44cad8b92967af")
+    version("3.27.3", sha256="66afdc0f181461b70b6fedcde9ecc4226c5cd184e7203617c83b7d8e47f49521")
+    version("3.27.2", sha256="798e50085d423816fe96c9ef8bee5e50002c9eca09fed13e300de8a91d35c211")
+    version("3.27.1", sha256="b1a6b0135fa11b94476e90f5b32c4c8fad480bf91cf22d0ded98ce22c5132004")
+    version("3.27.0", sha256="aaeddb6b28b993d0a6e32c88123d728a17561336ab90e0bf45032383564d3cb8")
+    version("3.26.5", sha256="c0970b1e44a7fbca4322997ce05dac521b04748fe424922152faf22d20782bf9")
+    version("3.26.4", sha256="313b6880c291bd4fe31c0aa51d6e62659282a521e695f30d5cc0d25abbd5c208")
     version("3.26.3", sha256="bbd8d39217509d163cb544a40d6428ac666ddc83e22905d3e52c925781f0f659")
     version("3.26.2", sha256="d54f25707300064308ef01d4d21b0f98f508f52dda5d527d882b9d88379f89a8")
     version("3.26.1", sha256="f29964290ad3ced782a1e58ca9fda394a82406a647e24d6afd4e6c32e42c412f")
@@ -185,7 +193,6 @@ class Cmake(Package):
     # a build dependency, and its libs will not interfere with others in
     # the build.
     variant("ownlibs", default=True, description="Use CMake-provided third-party libraries")
-    variant("qt", default=False, description="Enables the build of cmake-gui")
     variant(
         "doc",
         default=False,
@@ -210,10 +217,20 @@ class Cmake(Package):
     # transparent to patch Spack's versions of CMake's dependencies.
     conflicts("+ownlibs %nvhpc")
 
+    # Use Spack's curl even if +ownlibs, since that allows us to make use of
+    # the conflicts on the curl package for TLS libs like OpenSSL.
+    # In the past we let CMake build a vendored copy of curl, but had to
+    # provide Spack's TLS libs anyways, which is not flexible, and actually
+    # leads to issues where we have to keep track of the vendored curl version
+    # and its conflicts with OpenSSL.
+    depends_on("curl")
+
+    # When using curl, cmake defaults to using system zlib too, probably because
+    # curl already depends on zlib. Therefore, also unconditionaly depend on zlib.
+    depends_on("zlib-api")
+
     with when("~ownlibs"):
-        depends_on("curl")
         depends_on("expat")
-        depends_on("zlib")
         # expat/zlib are used in CMake/CTest, so why not require them in libarchive.
         depends_on("libarchive@3.1.0: xar=expat compression=zlib")
         depends_on("libarchive@3.3.3:", when="@3.15.0:")
@@ -222,12 +239,6 @@ class Cmake(Package):
         depends_on("libuv@1.10.0:", when="@3.12.0:")
         depends_on("rhash", when="@3.8.0:")
 
-    for plat in ["darwin", "linux", "cray"]:
-        with when("+ownlibs platform=%s" % plat):
-            depends_on("openssl")
-            depends_on("openssl@:1.0", when="@:3.6.9")
-
-    depends_on("qt", when="+qt")
     depends_on("ncurses", when="+ncurses")
 
     with when("+doc"):
@@ -271,8 +282,6 @@ class Cmake(Package):
         when="@3.19.0:3.19",
     )
 
-    conflicts("+qt", when="^qt@5.4.0")  # qt-5.4.0 has broken CMake modules
-
     # https://gitlab.kitware.com/cmake/cmake/issues/18166
     conflicts("%intel", when="@3.11.0:3.11.4")
     conflicts("%intel@:14", when="@3.14:", msg="Intel 14 has immature C++11 support")
@@ -310,11 +319,6 @@ class Cmake(Package):
             elif not any(f in flags for f in cxx11plus_flags):
                 flags.append(self.compiler.cxx11_flag)
         return (flags, None, None)
-
-    def setup_build_environment(self, env):
-        spec = self.spec
-        if "+ownlibs" in spec and "platform=windows" not in spec:
-            env.set("OPENSSL_ROOT_DIR", spec["openssl"].prefix)
 
     def bootstrap_args(self):
         spec = self.spec
@@ -354,11 +358,13 @@ class Cmake(Package):
                     # jsoncpp requires CMake to build
                     # use CMake-provided library to avoid circular dependency
                     args.append("--no-system-jsoncpp")
+                if spec.satisfies("@3.27:"):
+                    # cppdap depends on jsoncpp in CMake.
+                    args.append("--no-system-cppdap")
 
-            if "+qt" in spec:
-                args.append("--qt-gui")
-            else:
-                args.append("--no-qt-gui")
+            # Whatever +/~ownlibs, use system curl.
+            args.append("--system-curl")
+            args.append("--no-qt-gui")
 
             if "+doc" in spec:
                 args.append("--sphinx-html")
@@ -369,21 +375,15 @@ class Cmake(Package):
         else:
             args.append("-DCMAKE_INSTALL_PREFIX=%s" % self.prefix)
 
-        args.append("-DCMAKE_BUILD_TYPE={0}".format(self.spec.variants["build_type"].value))
-
-        # Install CMake correctly, even if `spack install` runs
-        # inside a ctest environment
-        args.append("-DCMake_TEST_INSTALL=OFF")
-
-        # When building our own private copy of curl we still require an
-        # external openssl.
-        if "+ownlibs" in spec:
-            if "platform=windows" in spec:
-                args.append("-DCMAKE_USE_OPENSSL=OFF")
-            else:
-                args.append("-DCMAKE_USE_OPENSSL=ON")
-
-        args.append("-DBUILD_CursesDialog=%s" % str("+ncurses" in spec))
+        args.extend(
+            [
+                f"-DCMAKE_BUILD_TYPE={self.spec.variants['build_type'].value}",
+                # Install CMake correctly, even if `spack install` runs
+                # inside a ctest environment
+                "-DCMake_TEST_INSTALL=OFF",
+                f"-DBUILD_CursesDialog={'ON' if '+ncurses' in spec else 'OFF'}",
+            ]
+        )
 
         # Make CMake find its own dependencies.
         rpaths = spack.build_environment.get_rpaths(self)
@@ -436,17 +436,44 @@ class Cmake(Package):
         module.cmake = Executable(self.spec.prefix.bin.cmake)
         module.ctest = Executable(self.spec.prefix.bin.ctest)
 
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        spec_vers_str = "version {0}".format(self.spec.version)
+    @property
+    def libs(self):
+        """CMake has no libraries, so if you ask for `spec['cmake'].libs`
+        (which happens automatically for packages that depend on CMake as
+        a link dependency) the default implementation of ``.libs` will
+        search the entire root prefix recursively before failing.
 
-        for exe in ["ccmake", "cmake", "cpack", "ctest"]:
-            reason = "test version of {0} is {1}".format(exe, spec_vers_str)
-            self.run_test(
-                exe,
-                ["--version"],
-                [spec_vers_str],
-                installed=True,
-                purpose=reason,
-                skip_missing=True,
-            )
+        The longer term solution is for all dependents of CMake to change
+        their deptype. For now, this returns an empty set of libraries.
+        """
+        return LibraryList([])
+
+    @property
+    def headers(self):
+        return HeaderList([])
+
+    def run_version_check(self, bin):
+        """Runs and checks output of the installed binary."""
+        exe_path = join_path(self.prefix.bin, bin)
+        if not os.path.exists(exe_path):
+            raise SkipTest(f"{exe} is not installed")
+
+        exe = which(exe_path)
+        out = exe("--version", output=str.split, error=str.split)
+        assert f"version {self.spec.version}" in out
+
+    def test_ccmake(self):
+        """check version from ccmake"""
+        self.run_version_check("ccmake")
+
+    def test_cmake(self):
+        """check version from cmake"""
+        self.run_version_check("cmake")
+
+    def test_cpack(self):
+        """check version from cpack"""
+        self.run_version_check("cpack")
+
+    def test_ctest(self):
+        """check version from ctest"""
+        self.run_version_check("ctest")

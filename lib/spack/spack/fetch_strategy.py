@@ -42,10 +42,10 @@ import spack.error
 import spack.url
 import spack.util.crypto as crypto
 import spack.util.git
-import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
+import spack.version.git_ref_lookup
 from spack.util.compression import decompressor_for, extension_from_path
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
@@ -93,7 +93,7 @@ def fetcher(cls):
     return cls
 
 
-class FetchStrategy(object):
+class FetchStrategy:
     """Superclass of all fetch strategies."""
 
     #: The URL attribute must be specified either at the package class
@@ -228,26 +228,6 @@ class BundleFetchStrategy(FetchStrategy):
         """BundlePackages don't have a mirror id."""
 
 
-class FetchStrategyComposite(pattern.Composite):
-    """Composite for a FetchStrategy object."""
-
-    matches = FetchStrategy.matches
-
-    def __init__(self):
-        super(FetchStrategyComposite, self).__init__(
-            ["fetch", "check", "expand", "reset", "archive", "cachable", "mirror_id"]
-        )
-
-    def source_id(self):
-        component_ids = tuple(i.source_id() for i in self)
-        if all(component_ids):
-            return component_ids
-
-    def set_package(self, package):
-        for item in self:
-            item.package = package
-
-
 @fetcher
 class URLFetchStrategy(FetchStrategy):
     """URLFetchStrategy pulls source code from a URL for an archive, check the
@@ -263,7 +243,7 @@ class URLFetchStrategy(FetchStrategy):
     optional_attrs = list(crypto.hashes.keys()) + ["checksum"]
 
     def __init__(self, url=None, checksum=None, **kwargs):
-        super(URLFetchStrategy, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # Prefer values in kwargs to the positionals.
         self.url = kwargs.get("url", url)
@@ -490,17 +470,7 @@ class URLFetchStrategy(FetchStrategy):
         if not self.digest:
             raise NoDigestError("Attempt to check URLFetchStrategy with no digest.")
 
-        checker = crypto.Checker(self.digest)
-        if not checker.check(self.archive_file):
-            # On failure, provide some information about the file size and
-            # contents, so that we can quickly see what the issue is (redirect
-            # was not followed, empty file, text instead of binary, ...)
-            size, contents = fs.filesummary(self.archive_file)
-            raise ChecksumError(
-                f"{checker.hash_name} checksum failed for {self.archive_file}",
-                f"Expected {self.digest} but got {checker.sum}. "
-                f"File size = {size} bytes. Contents = {contents!r}",
-            )
+        verify_checksum(self.archive_file, self.digest)
 
     @_needs_stage
     def reset(self):
@@ -580,7 +550,7 @@ class VCSFetchStrategy(FetchStrategy):
     """
 
     def __init__(self, **kwargs):
-        super(VCSFetchStrategy, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # Set a URL based on the type of fetch strategy.
         self.url = kwargs.get(self.url_attr, None)
@@ -652,7 +622,7 @@ class GoFetchStrategy(VCSFetchStrategy):
         # call to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop("name", None)
-        super(GoFetchStrategy, self).__init__(**forwarded_args)
+        super().__init__(**forwarded_args)
 
         self._go = None
 
@@ -681,7 +651,7 @@ class GoFetchStrategy(VCSFetchStrategy):
             self.go("get", "-v", "-d", self.url, env=env)
 
     def archive(self, destination):
-        super(GoFetchStrategy, self).archive(destination, exclude=".git")
+        super().archive(destination, exclude=".git")
 
     @_needs_stage
     def expand(self):
@@ -740,7 +710,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         # to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop("name", None)
-        super(GitFetchStrategy, self).__init__(**forwarded_args)
+        super().__init__(**forwarded_args)
 
         self._git = None
         self.submodules = kwargs.get("submodules", False)
@@ -948,7 +918,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 git(*args)
 
     def archive(self, destination):
-        super(GitFetchStrategy, self).archive(destination, exclude=".git")
+        super().archive(destination, exclude=".git")
 
     @_needs_stage
     def reset(self):
@@ -997,7 +967,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
         # to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop("name", None)
-        super(CvsFetchStrategy, self).__init__(**forwarded_args)
+        super().__init__(**forwarded_args)
 
         self._cvs = None
         if self.branch is not None:
@@ -1077,7 +1047,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
                         os.unlink(path)
 
     def archive(self, destination):
-        super(CvsFetchStrategy, self).archive(destination, exclude="CVS")
+        super().archive(destination, exclude="CVS")
 
     @_needs_stage
     def reset(self):
@@ -1113,7 +1083,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
         # to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop("name", None)
-        super(SvnFetchStrategy, self).__init__(**forwarded_args)
+        super().__init__(**forwarded_args)
 
         self._svn = None
         if self.revision is not None:
@@ -1172,7 +1142,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
                     shutil.rmtree(path, ignore_errors=True)
 
     def archive(self, destination):
-        super(SvnFetchStrategy, self).archive(destination, exclude=".svn")
+        super().archive(destination, exclude=".svn")
 
     @_needs_stage
     def reset(self):
@@ -1216,7 +1186,7 @@ class HgFetchStrategy(VCSFetchStrategy):
         # to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop("name", None)
-        super(HgFetchStrategy, self).__init__(**forwarded_args)
+        super().__init__(**forwarded_args)
 
         self._hg = None
 
@@ -1277,7 +1247,7 @@ class HgFetchStrategy(VCSFetchStrategy):
             shutil.move(repo_name, self.stage.source_path)
 
     def archive(self, destination):
-        super(HgFetchStrategy, self).archive(destination, exclude=".hg")
+        super().archive(destination, exclude=".hg")
 
     @_needs_stage
     def reset(self):
@@ -1306,7 +1276,7 @@ class S3FetchStrategy(URLFetchStrategy):
 
     def __init__(self, *args, **kwargs):
         try:
-            super(S3FetchStrategy, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
         except ValueError:
             if not kwargs.get("url"):
                 raise ValueError("S3FetchStrategy requires a url for fetching.")
@@ -1353,7 +1323,7 @@ class GCSFetchStrategy(URLFetchStrategy):
 
     def __init__(self, *args, **kwargs):
         try:
-            super(GCSFetchStrategy, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
         except ValueError:
             if not kwargs.get("url"):
                 raise ValueError("GCSFetchStrategy requires a url for fetching.")
@@ -1388,6 +1358,45 @@ class GCSFetchStrategy(URLFetchStrategy):
 
         if not self.archive_file:
             raise FailedDownloadError(self.url)
+
+
+@fetcher
+class FetchAndVerifyExpandedFile(URLFetchStrategy):
+    """Fetch strategy that verifies the content digest during fetching,
+    as well as after expanding it."""
+
+    def __init__(self, url, archive_sha256: str, expanded_sha256: str):
+        super().__init__(url, archive_sha256)
+        self.expanded_sha256 = expanded_sha256
+
+    def expand(self):
+        """Verify checksum after expanding the archive."""
+
+        # Expand the archive
+        super().expand()
+
+        # Ensure a single patch file.
+        src_dir = self.stage.source_path
+        files = os.listdir(src_dir)
+
+        if len(files) != 1:
+            raise ChecksumError(self, f"Expected a single file in {src_dir}.")
+
+        verify_checksum(os.path.join(src_dir, files[0]), self.expanded_sha256)
+
+
+def verify_checksum(file, digest):
+    checker = crypto.Checker(digest)
+    if not checker.check(file):
+        # On failure, provide some information about the file size and
+        # contents, so that we can quickly see what the issue is (redirect
+        # was not followed, empty file, text instead of binary, ...)
+        size, contents = fs.filesummary(file)
+        raise ChecksumError(
+            f"{checker.hash_name} checksum failed for {file}",
+            f"Expected {digest} but got {checker.sum}. "
+            f"File size = {size} bytes. Contents = {contents!r}",
+        )
 
 
 def stable_target(fetcher):
@@ -1532,7 +1541,7 @@ def for_package_version(pkg, version=None):
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
         # Populate the version with comparisons to other commits
-        version.attach_git_lookup_from_package(pkg.name)
+        version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(pkg.name))
 
         # For GitVersion, we have no way to determine whether a ref is a branch or tag
         # Fortunately, we handle branches and tags identically, except tags are
@@ -1652,7 +1661,7 @@ def from_list_url(pkg):
             tty.msg("Could not determine url from list_url.")
 
 
-class FsCache(object):
+class FsCache:
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
@@ -1686,7 +1695,7 @@ class FailedDownloadError(web_util.FetchError):
     """Raised when a download fails."""
 
     def __init__(self, url, msg=""):
-        super(FailedDownloadError, self).__init__("Failed to fetch file from URL: %s" % url, msg)
+        super().__init__("Failed to fetch file from URL: %s" % url, msg)
         self.url = url
 
 
@@ -1716,7 +1725,7 @@ class InvalidArgsError(web_util.FetchError):
             if version:
                 msg += "@{version}".format(version=version)
         long_msg = "with arguments: {args}".format(args=args)
-        super(InvalidArgsError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)
 
 
 class ChecksumError(web_util.FetchError):
@@ -1727,6 +1736,4 @@ class NoStageError(web_util.FetchError):
     """Raised when fetch operations are called before set_stage()."""
 
     def __init__(self, method):
-        super(NoStageError, self).__init__(
-            "Must call FetchStrategy.set_stage() before calling %s" % method.__name__
-        )
+        super().__init__("Must call FetchStrategy.set_stage() before calling %s" % method.__name__)

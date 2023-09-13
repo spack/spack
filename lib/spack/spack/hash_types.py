@@ -10,7 +10,7 @@ import spack.repo
 hashes = []
 
 
-class SpecHashDescriptor(object):
+class SpecHashDescriptor:
     """This class defines how hashes are generated on Spec objects.
 
     Spec hashes in Spack are generated from a serialized (e.g., with
@@ -49,7 +49,7 @@ process_hash = SpecHashDescriptor(
 
 
 def _content_hash_override(spec):
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
     return pkg.content_hash()
 

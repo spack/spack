@@ -80,7 +80,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
     depends_on("icu4c")
     depends_on("freetype")
     depends_on("cairo+pdf+ft")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("graphite2", when="+graphite2")
 
     conflicts(
@@ -116,7 +116,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
         change_sed_delimiter("@", ";", "src/Makefile.in")
 
 
-class SetupEnvironment(object):
+class SetupEnvironment:
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
