@@ -12,6 +12,7 @@ import tarfile
 import urllib.error
 import urllib.request
 import urllib.response
+from pathlib import PurePath
 
 import py
 import pytest
@@ -28,6 +29,7 @@ import spack.mirror
 import spack.repo
 import spack.store
 import spack.util.gpg
+import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.binary_distribution import get_buildfile_manifest
@@ -35,7 +37,7 @@ from spack.directory_layout import DirectoryLayout
 from spack.paths import test_path
 from spack.spec import Spec
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 mirror_cmd = spack.main.SpackCommand("mirror")
 install_cmd = spack.main.SpackCommand("install")
@@ -49,7 +51,7 @@ legacy_mirror_dir = os.path.join(test_path, "data", "mirrors", "legacy_yaml")
 def cache_directory(tmpdir):
     fetch_cache_dir = tmpdir.ensure("fetch_cache", dir=True)
     fsc = spack.fetch_strategy.FsCache(str(fetch_cache_dir))
-    spack.config.caches, old_cache_path = fsc, spack.caches.fetch_cache
+    spack.config.caches, old_cache_path = fsc, spack.caches.FETCH_CACHE
 
     yield spack.config.caches
 
@@ -113,8 +115,8 @@ def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutabl
         ]
     )
 
-    spack.config.config, old_config = cfg, spack.config.config
-    spack.config.config.set("repos", [spack.paths.mock_packages_path])
+    spack.config.CONFIG, old_config = cfg, spack.config.CONFIG
+    spack.config.CONFIG.set("repos", [spack.paths.mock_packages_path])
     njobs = spack.config.get("config:build_jobs")
     if not njobs:
         spack.config.set("config:build_jobs", 4, scope="user")
@@ -136,9 +138,9 @@ def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutabl
     if not timeout:
         spack.config.set("config:connect_timeout", 10, scope="user")
 
-    yield spack.config.config
+    yield spack.config.CONFIG
 
-    spack.config.config = old_config
+    spack.config.CONFIG = old_config
     mutable_dir.remove()
 
 
@@ -148,15 +150,15 @@ def install_dir_default_layout(tmpdir):
     scheme = os.path.join(
         "${architecture}", "${compiler.name}-${compiler.version}", "${name}-${version}-${hash}"
     )
-    real_store, real_layout = spack.store.store, spack.store.layout
+    real_store, real_layout = spack.store.STORE, spack.store.STORE.layout
     opt_dir = tmpdir.join("opt")
-    spack.store.store = spack.store.Store(str(opt_dir))
-    spack.store.layout = DirectoryLayout(str(opt_dir), path_scheme=scheme)
+    spack.store.STORE = spack.store.Store(str(opt_dir))
+    spack.store.STORE.layout = DirectoryLayout(str(opt_dir), path_scheme=scheme)
     try:
         yield spack.store
     finally:
-        spack.store.store = real_store
-        spack.store.layout = real_layout
+        spack.store.STORE = real_store
+        spack.store.STORE.layout = real_layout
 
 
 @pytest.fixture(scope="function")
@@ -165,18 +167,45 @@ def install_dir_non_default_layout(tmpdir):
     scheme = os.path.join(
         "${name}", "${version}", "${architecture}-${compiler.name}-${compiler.version}-${hash}"
     )
-    real_store, real_layout = spack.store.store, spack.store.layout
+    real_store, real_layout = spack.store.STORE, spack.store.STORE.layout
     opt_dir = tmpdir.join("opt")
-    spack.store.store = spack.store.Store(str(opt_dir))
-    spack.store.layout = DirectoryLayout(str(opt_dir), path_scheme=scheme)
+    spack.store.STORE = spack.store.Store(str(opt_dir))
+    spack.store.STORE.layout = DirectoryLayout(str(opt_dir), path_scheme=scheme)
     try:
         yield spack.store
     finally:
-        spack.store.store = real_store
-        spack.store.layout = real_layout
+        spack.store.STORE = real_store
+        spack.store.STORE.layout = real_layout
 
 
-args = ["strings", "file"]
+@pytest.fixture(scope="function")
+def dummy_prefix(tmpdir):
+    """Dummy prefix used for testing tarball creation, validation, extraction"""
+    p = tmpdir.mkdir("prefix")
+    assert os.path.isabs(p)
+
+    p.mkdir("bin")
+    p.mkdir("share")
+    p.mkdir(".spack")
+
+    app = p.join("bin", "app")
+    relative_app_link = p.join("bin", "relative_app_link")
+    absolute_app_link = p.join("bin", "absolute_app_link")
+    data = p.join("share", "file")
+
+    with open(app, "w") as f:
+        f.write("hello world")
+
+    with open(data, "w") as f:
+        f.write("hello world")
+
+    os.symlink("app", relative_app_link)
+    os.symlink(app, absolute_app_link)
+
+    return str(p)
+
+
+args = ["file"]
 if sys.platform == "darwin":
     args.extend(["/usr/bin/clang++", "install_name_tool"])
 else:
@@ -201,12 +230,14 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     install_cmd("--no-cache", sy_spec.name)
 
     # Create a buildache
-    buildcache_cmd("push", "-au", mirror_dir, cspec.name, sy_spec.name)
+    buildcache_cmd("push", "-u", mirror_dir, cspec.name, sy_spec.name)
+
     # Test force overwrite create buildcache (-f option)
-    buildcache_cmd("push", "-auf", mirror_dir, cspec.name)
+    buildcache_cmd("push", "-uf", mirror_dir, cspec.name)
 
     # Create mirror index
     buildcache_cmd("update-index", mirror_dir)
+
     # List the buildcaches in the mirror
     buildcache_cmd("list", "-alv")
 
@@ -376,7 +407,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     install_cmd(s.name)
 
     # Put installed package in the buildcache
-    buildcache_cmd("push", "-u", "-a", mirror_dir.strpath, s.name)
+    buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
 
     rebuild = bindist.needs_rebuild(s, mirror_url)
 
@@ -405,7 +436,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     install_cmd("--no-cache", s.name)
 
     # Create a buildcache and update index
-    buildcache_cmd("push", "-ua", mirror_dir.strpath, s.name)
+    buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
     buildcache_cmd("update-index", mirror_dir.strpath)
 
     # Check package and dependency in buildcache
@@ -479,9 +510,6 @@ def test_update_sbang(tmpdir, test_mirror):
     into the non-default directory layout scheme, triggering an update of the
     sbang.
     """
-    scheme = os.path.join(
-        "${name}", "${version}", "${architecture}-${compiler.name}-${compiler.version}-${hash}"
-    )
     spec_str = "old-sbang"
     # Concretize a package with some old-fashioned sbang lines.
     old_spec = Spec(spec_str).concretized()
@@ -494,7 +522,7 @@ def test_update_sbang(tmpdir, test_mirror):
     install_cmd("--no-cache", old_spec.name)
 
     # Create a buildcache with the installed spec.
-    buildcache_cmd("push", "-u", "-a", mirror_dir, old_spec_hash_str)
+    buildcache_cmd("push", "-u", mirror_dir, old_spec_hash_str)
 
     # Need to force an update of the buildcache index
     buildcache_cmd("update-index", mirror_dir)
@@ -504,12 +532,8 @@ def test_update_sbang(tmpdir, test_mirror):
 
     # Switch the store to the new install tree locations
     newtree_dir = tmpdir.join("newtree")
-    s = spack.store.Store(str(newtree_dir))
-    s.layout = DirectoryLayout(str(newtree_dir), path_scheme=scheme)
-
-    with spack.store.use_store(s):
-        new_spec = Spec("old-sbang")
-        new_spec.concretize()
+    with spack.store.use_store(str(newtree_dir)):
+        new_spec = Spec("old-sbang").concretized()
         assert new_spec.dag_hash() == old_spec.dag_hash()
 
         # Install package from buildcache
@@ -861,6 +885,39 @@ def test_default_index_json_404():
         fetcher.conditional_fetch()
 
 
+def test_tarball_doesnt_include_buildinfo_twice(tmpdir):
+    """When tarballing a package that was installed from a buildcache, make
+    sure that the buildinfo file is not included twice in the tarball."""
+    p = tmpdir.mkdir("prefix")
+    p.mkdir(".spack")
+
+    # Create a binary_distribution file in the .spack folder
+    with open(p.join(".spack", "binary_distribution"), "w") as f:
+        f.write(syaml.dump({"metadata", "old"}))
+
+    # Now create a tarball, which should include a new binary_distribution file
+    tarball = str(tmpdir.join("prefix.tar.gz"))
+
+    bindist._do_create_tarball(
+        tarfile_path=tarball,
+        binaries_dir=str(p),
+        pkg_dir="my-pkg-prefix",
+        buildinfo={"metadata": "new"},
+    )
+
+    # Verify we don't have a repeated binary_distribution file,
+    # and that the tarball contains the new one, not the old one.
+    with tarfile.open(tarball) as tar:
+        assert syaml.load(tar.extractfile("my-pkg-prefix/.spack/binary_distribution")) == {
+            "metadata": "new"
+        }
+        assert tar.getnames() == [
+            "my-pkg-prefix",
+            "my-pkg-prefix/.spack",
+            "my-pkg-prefix/.spack/binary_distribution",
+        ]
+
+
 def test_reproducible_tarball_is_reproducible(tmpdir):
     p = tmpdir.mkdir("prefix")
     p.mkdir("bin")
@@ -937,3 +994,71 @@ def test_tarball_normalized_permissions(tmpdir):
 
     # not-executable-by-user files should be 0o644
     assert path_to_member["pkg/share/file"].mode == 0o644
+
+
+def test_tarball_common_prefix(dummy_prefix, tmpdir):
+    """Tests whether Spack can figure out the package directory
+    from the tarball contents, and strip them when extracting."""
+
+    # When creating a tarball, Python (and tar) use relative paths,
+    # Absolute paths become relative to `/`, so drop the leading `/`.
+    assert os.path.isabs(dummy_prefix)
+    expected_prefix = PurePath(dummy_prefix).as_posix().lstrip("/")
+
+    with tmpdir.as_cwd():
+        # Create a tarball (using absolute path for prefix dir)
+        with tarfile.open("example.tar", mode="w") as tar:
+            tar.add(name=dummy_prefix)
+
+        # Open, verify common prefix, and extract it.
+        with tarfile.open("example.tar", mode="r") as tar:
+            common_prefix = bindist._ensure_common_prefix(tar)
+            assert common_prefix == expected_prefix
+
+            # Strip the prefix from the tar entries
+            bindist._tar_strip_component(tar, common_prefix)
+
+            # Extract into prefix2
+            tar.extractall(path="prefix2")
+
+        # Verify files are all there at the correct level.
+        assert set(os.listdir("prefix2")) == {"bin", "share", ".spack"}
+        assert set(os.listdir(os.path.join("prefix2", "bin"))) == {
+            "app",
+            "relative_app_link",
+            "absolute_app_link",
+        }
+        assert set(os.listdir(os.path.join("prefix2", "share"))) == {"file"}
+
+        # Relative symlink should still be correct
+        assert os.readlink(os.path.join("prefix2", "bin", "relative_app_link")) == "app"
+
+        # Absolute symlink should remain absolute -- this is for relocation to fix up.
+        assert os.readlink(os.path.join("prefix2", "bin", "absolute_app_link")) == os.path.join(
+            dummy_prefix, "bin", "app"
+        )
+
+
+def test_tarfile_without_common_directory_prefix_fails(tmpdir):
+    """A tarfile that only contains files without a common package directory
+    should fail to extract, as we won't know where to put the files."""
+    with tmpdir.as_cwd():
+        # Create a broken tarball with just a file, no directories.
+        with tarfile.open("empty.tar", mode="w") as tar:
+            tar.addfile(tarfile.TarInfo(name="example/file"), fileobj=io.BytesIO(b"hello"))
+
+        with pytest.raises(ValueError, match="Tarball does not contain a common prefix"):
+            bindist._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
+
+
+def test_tarfile_with_files_outside_common_prefix(tmpdir, dummy_prefix):
+    """If a file is outside of the common prefix, we should fail."""
+    with tmpdir.as_cwd():
+        with tarfile.open("broken.tar", mode="w") as tar:
+            tar.add(name=dummy_prefix)
+            tar.addfile(tarfile.TarInfo(name="/etc/config_file"), fileobj=io.BytesIO(b"hello"))
+
+        with pytest.raises(
+            ValueError, match="Tarball contains file /etc/config_file outside of prefix"
+        ):
+            bindist._ensure_common_prefix(tarfile.open("broken.tar", mode="r"))

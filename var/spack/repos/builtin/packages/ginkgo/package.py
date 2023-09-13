@@ -50,6 +50,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipsparse", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("rocrand", when="+rocm")
+    depends_on("hiprand", when="+rocm")
+    depends_on("hipfft", when="+rocm")
     # ROCPRIM is not a direct dependency, but until we have reviewed our CMake
     # setup for rocthrust, this needs to also be added here.
     depends_on("rocprim", when="+rocm")

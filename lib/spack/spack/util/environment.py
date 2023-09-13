@@ -47,7 +47,7 @@ _SHELL_SET_STRINGS = {
     "csh": "setenv {0} {1};\n",
     "fish": "set -gx {0} {1};\n",
     "bat": 'set "{0}={1}"\n',
-    "pwsh": "$Env:{0}={1}\n",
+    "pwsh": "$Env:{0}='{1}'\n",
 }
 
 
@@ -56,7 +56,7 @@ _SHELL_UNSET_STRINGS = {
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
     "bat": 'set "{0}="\n',
-    "pwsh": "Remove-Item Env:{0}\n",
+    "pwsh": "Set-Item -Path Env:{0}\n",
 }
 
 
@@ -429,7 +429,7 @@ class RemovePath(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemovePath: {self.name}-{str(self.value)}", level=3)
         environment_value = env.get(self.name, "")
-        directories = environment_value.split(self.separator) if environment_value else []
+        directories = environment_value.split(self.separator)
         directories = [
             path_to_os_path(os.path.normpath(x)).pop()
             for x in directories
@@ -724,11 +724,10 @@ class EnvironmentModifications:
                     cmds += _SHELL_UNSET_STRINGS[shell].format(name)
                 else:
                     if sys.platform != "win32":
-                        cmd = _SHELL_SET_STRINGS[shell].format(
-                            name, double_quote_escape(new_env[name])
-                        )
+                        new_env_name = double_quote_escape(new_env[name])
                     else:
-                        cmd = _SHELL_SET_STRINGS[shell].format(name, new_env[name])
+                        new_env_name = new_env[name]
+                    cmd = _SHELL_SET_STRINGS[shell].format(name, new_env_name)
                     cmds += cmd
         return cmds
 
@@ -1066,8 +1065,8 @@ def environment_after_sourcing_files(
 
     Keyword Args:
         env (dict): the initial environment (default: current environment)
-        shell (str): the shell to use (default: ``/bin/bash``)
-        shell_options (str): options passed to the shell (default: ``-c``)
+        shell (str): the shell to use (default: ``/bin/bash`` or ``cmd.exe`` (Windows))
+        shell_options (str): options passed to the shell (default: ``-c`` or ``/C`` (Windows))
         source_command (str): the command to run (default: ``source``)
         suppress_output (str): redirect used to suppress output of command
             (default: ``&> /dev/null``)
@@ -1075,15 +1074,23 @@ def environment_after_sourcing_files(
             only when the previous command succeeds (default: ``&&``)
     """
     # Set the shell executable that will be used to source files
-    shell_cmd = kwargs.get("shell", "/bin/bash")
-    shell_options = kwargs.get("shell_options", "-c")
-    source_command = kwargs.get("source_command", "source")
-    suppress_output = kwargs.get("suppress_output", "&> /dev/null")
+    if sys.platform == "win32":
+        shell_cmd = kwargs.get("shell", "cmd.exe")
+        shell_options = kwargs.get("shell_options", "/C")
+        suppress_output = kwargs.get("suppress_output", "")
+        source_command = kwargs.get("source_command", "")
+    else:
+        shell_cmd = kwargs.get("shell", "/bin/bash")
+        shell_options = kwargs.get("shell_options", "-c")
+        suppress_output = kwargs.get("suppress_output", "&> /dev/null")
+        source_command = kwargs.get("source_command", "source")
     concatenate_on_success = kwargs.get("concatenate_on_success", "&&")
 
-    shell = Executable(" ".join([shell_cmd, shell_options]))
+    shell = Executable(shell_cmd)
 
     def _source_single_file(file_and_args, environment):
+        shell_options_list = shell_options.split()
+
         source_file = [source_command]
         source_file.extend(x for x in file_and_args)
         source_file = " ".join(source_file)
@@ -1101,7 +1108,14 @@ def environment_after_sourcing_files(
         source_file_arguments = " ".join(
             [source_file, suppress_output, concatenate_on_success, dump_environment_cmd]
         )
-        output = shell(source_file_arguments, output=str, env=environment, ignore_quotes=True)
+        output = shell(
+            *shell_options_list,
+            source_file_arguments,
+            output=str,
+            env=environment,
+            ignore_quotes=True,
+        )
+
         return json.loads(output)
 
     current_environment = kwargs.get("env", dict(os.environ))

@@ -83,20 +83,29 @@ class OpenfoamOrg(Package):
     )
 
     variant("int64", default=False, description="Compile with 64-bit label")
-    variant("float32", default=False, description="Compile with 32-bit scalar (single-precision)")
     variant(
         "source", default=True, description="Install library/application sources and tutorials"
     )
     variant("metis", default=False, description="With metis decomposition")
+    variant("scotch", default=True, description="With scotch/ptscotch decomposition")
+    variant("zoltan", default=False, description="Enable Zoltan renumbering and decomposition")
+    variant(
+        "precision",
+        default="dp",
+        description="Precision option",
+        values=("sp", "dp", conditional("lp", when="@6:")),
+        multi=False,
+    )
 
     depends_on("mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("flex")
     depends_on("cmake", type="build")
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
-    depends_on("scotch~metis+mpi~int64", when="~int64")
-    depends_on("scotch~metis+mpi+int64", when="+int64")
+    depends_on("scotch~metis+mpi~int64", when="+scotch~int64")
+    depends_on("scotch~metis+mpi+int64", when="+scotch+int64")
+    depends_on("zoltan+shared", when="+zoltan")
 
     depends_on("metis@5:", when="+metis")
     depends_on("metis+int64", when="+metis+int64")
@@ -253,6 +262,13 @@ class OpenfoamOrg(Package):
         rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
             edits, posix=join_path("etc", "bashrc"), cshell=join_path("etc", "cshrc")
         )
+        if self.spec.satisfies("@10:") and "+zoltan" in self.spec:
+            filter_file("libzoltan.a", "libzoltan.so", join_path("src", "renumber", "Allwmake"))
+            filter_file(
+                "libzoltan.a",
+                "libzoltan.so",
+                join_path("src", "parallel", "decompose", "Allwmake"),
+            )
 
     def configure(self, spec, prefix):
         """Make adjustments to the OpenFOAM configuration files in their various
@@ -282,17 +298,28 @@ class OpenfoamOrg(Package):
         self.etc_config = {
             "CGAL": {},
             "scotch": {},
+            "zoltan": {},
             "metis": {},
             "paraview": [],
             "gperftools": [],  # Currently unused
         }
 
-        if True:
+        if "+scotch" in spec:
             self.etc_config["scotch"] = {
                 "SCOTCH_ARCH_PATH": spec["scotch"].prefix,
                 # For src/parallel/decompose/Allwmake
                 "SCOTCH_VERSION": "scotch-{0}".format(spec["scotch"].version),
             }
+
+        if "+zoltan" in spec:
+            if spec.satisfies("@:9"):
+                self.etc_prefs["ZOLTAN_ARCH_PATH"] = spec["zoltan"].prefix
+                self.etc_prefs["ZOLTAN_VERSION"] = "Zoltan-{0}".format(spec["zoltan"].version)
+            else:
+                self.etc_config["zoltan"] = {
+                    "ZOLTAN_ARCH_PATH": spec["zoltan"].prefix,
+                    "ZOLTAN_VERSION": "Zoltan-{0}".format(spec["zoltan"].version),
+                }
 
         if "+metis" in spec:
             self.etc_config["metis"] = {"METIS_ARCH_PATH": spec["metis"].prefix}
@@ -414,6 +441,14 @@ class OpenfoamOrg(Package):
 
 class OpenfoamOrgArch(OpenfoamArch):
     """An openfoam-org variant of OpenfoamArch"""
+
+    def __init__(self, spec, **kwargs):
+        super().__init__(spec, **kwargs)
+        if "precision=lp" in spec:
+            self.precision_option = "LP"
+        elif "precision=sp" in spec:
+            self.precision_option = "SP"
+        self.update_options()
 
     def update_arch(self, spec):
         """Handle differences in WM_ARCH naming"""

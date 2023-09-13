@@ -51,7 +51,7 @@ from spack.error import SpackError
 stat_names = pstats.Stats.sort_arg_dict_default
 
 #: top-level aliases for Spack commands
-aliases = {"rm": "remove"}
+aliases = {"concretise": "concretize", "containerise": "containerize", "rm": "remove"}
 
 #: help levels in order of detail (i.e., number of commands shown)
 levels = ["short", "long"]
@@ -436,7 +436,7 @@ def make_argument_parser(**kwargs):
         default=None,
         action="append",
         dest="config_vars",
-        help="add one or more custom, one off config settings.",
+        help="add one or more custom, one off config settings",
     )
     parser.add_argument(
         "-C",
@@ -451,9 +451,9 @@ def make_argument_parser(**kwargs):
         "--debug",
         action="count",
         default=0,
-        help="write out debug messages " "(more d's for more verbosity: -d, -dd, -ddd, etc.)",
+        help="write out debug messages\n\n(more d's for more verbosity: -d, -dd, -ddd, etc.)",
     )
-    parser.add_argument("--timestamp", action="store_true", help="Add a timestamp to tty output")
+    parser.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
     parser.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
 
     env_group = parser.add_mutually_exclusive_group()
@@ -527,8 +527,7 @@ def make_argument_parser(**kwargs):
         "--sorted-profile",
         default=None,
         metavar="STAT",
-        help="profile and sort by one or more of:\n[%s]"
-        % ",\n ".join([", ".join(line) for line in stat_lines]),
+        help=f"profile and sort\n\none or more of: {stat_lines[0]}",
     )
     parser.add_argument(
         "--lines",
@@ -555,7 +554,7 @@ def make_argument_parser(**kwargs):
         "-V", "--version", action="store_true", help="show version number and exit"
     )
     parser.add_argument(
-        "--print-shell-vars", action="store", help="print info needed by setup-env.[c]sh"
+        "--print-shell-vars", action="store", help="print info needed by setup-env.*sh"
     )
 
     return parser
@@ -603,10 +602,10 @@ def setup_main_options(args):
 
         key = syaml.syaml_str("repos")
         key.override = True
-        spack.config.config.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
+        spack.config.CONFIG.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
             [(key, [spack.paths.mock_packages_path])]
         )
-        spack.repo.path = spack.repo.create(spack.config.config)
+        spack.repo.PATH = spack.repo.create(spack.config.CONFIG)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
@@ -848,7 +847,7 @@ def print_setup_info(*info):
     if "modules" in info:
         generic_arch = archspec.cpu.host().family
         module_spec = "environment-modules target={0}".format(generic_arch)
-        specs = spack.store.db.query(module_spec)
+        specs = spack.store.STORE.db.query(module_spec)
         if specs:
             shell_set("_sp_module_prefix", specs[-1].prefix)
         else:
@@ -931,7 +930,7 @@ def _main(argv=None):
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:
-        spack.config.command_line_scopes = args.config_scopes
+        spack.config.COMMAND_LINE_SCOPES = args.config_scopes
 
     # ensure options on spack command come before everything
     setup_main_options(args)

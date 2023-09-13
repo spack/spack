@@ -15,6 +15,13 @@ class PyLightly(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("1.4.18", sha256="41794f6815db178b031236793b379e5573e074fdf730506872b73766396a6bdf")
+    version("1.4.17", sha256="1533ddf28c8a08b3eafd404964d03f9a62fe76405fcf8dc7206ca4093725285e")
+    version("1.4.16", sha256="9bd2af53e144e4f9823409cd33b39651f579ed671ff242a1445640c9df504d92")
+    version("1.4.15", sha256="9b02f523b35621a98c3e87efdda735897b726b39cf4a8bf106769f54b3df154e")
+    version("1.4.14", sha256="edbad4c95866fea6951a4fc5e851518f3afb2ff19381648accb4e1a005366720")
+    version("1.4.13", sha256="d3819d75b85534f98603743486b263eb1dc62cd5b20de30d5bad07227f1e0d98")
+    version("1.4.12", sha256="66aea90f096c474b26515bafbef728632516d6f8f13ab5caba38b09903d1b86e")
     version("1.4.11", sha256="3c767a15368c4294a14067a93a4b07e91bd45295313f1e132f28d00270bb69d0")
     version("1.4.10", sha256="77381c913d06f3c02ad7b36a0434bfd7e27a738648f555a51c9912d80dd11125")
     version("1.4.9", sha256="33c7988b41447c9beeb1781805ad24c8a61aa174e1a37b0b95d8e91e4a7c7f96")
@@ -43,6 +50,7 @@ class PyLightly(PythonPackage):
 
     # requirements/openapi.txt
     depends_on("py-python-dateutil@2.5.3:", when="@1.4.8:", type=("build", "run"))
+    depends_on("py-setuptools@21:", when="@1.4.15:", type=("build", "run"))
     depends_on("py-urllib3@1.25.3:", when="@1.4.8:", type=("build", "run"))
     depends_on("py-pydantic@1.10.5:1", when="@1.4.8:", type=("build", "run"))
     depends_on("py-aenum@3.1.11:", when="@1.4.8:", type=("build", "run"))

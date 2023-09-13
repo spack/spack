@@ -26,7 +26,7 @@ class JhpcnDf(CMakePackage):
     variant("lz4", default=False, description="Enable lz4")
     variant("fortran", default=False, description="Enable Fortran Interface")
 
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("lz4@:1.7", when="+lz4", type="link")
 
     def cmake_args(self):

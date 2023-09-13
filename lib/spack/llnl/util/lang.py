@@ -821,7 +821,7 @@ class Singleton:
         # 'instance'/'_instance' to be defined or it will enter an infinite
         # loop, so protect against that here.
         if name in ["_instance", "instance"]:
-            raise AttributeError()
+            raise AttributeError(f"cannot create {name}")
         return getattr(self.instance, name)
 
     def __getitem__(self, name):
@@ -841,27 +841,6 @@ class Singleton:
 
     def __repr__(self):
         return repr(self.instance)
-
-
-class LazyReference:
-    """Lazily evaluated reference to part of a singleton."""
-
-    def __init__(self, ref_function):
-        self.ref_function = ref_function
-
-    def __getattr__(self, name):
-        if name == "ref_function":
-            raise AttributeError()
-        return getattr(self.ref_function(), name)
-
-    def __getitem__(self, name):
-        return self.ref_function()[name]
-
-    def __str__(self):
-        return str(self.ref_function())
-
-    def __repr__(self):
-        return repr(self.ref_function())
 
 
 def load_module_from_file(module_name, module_path):

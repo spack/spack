@@ -98,6 +98,9 @@ class Visit(CMakePackage):
     # Fix pthread and librt link errors
     patch("visit32-missing-link-libs.patch", when="@3.2")
 
+    # Fix const-correctness in VTK interface
+    patch("vtk-8.2-constcorrect.patch", when="@3.3.3 ^vtk@8.2.1a")
+
     # Exactly one of 'gui' or 'osmesa' has to be enabled
     conflicts("+gui", when="+osmesa")
 
@@ -129,7 +132,8 @@ class Visit(CMakePackage):
     depends_on("qwt+opengl", when="+gui")
 
     # python@3.8 doesn't work with VisIt.
-    depends_on("python@3.2:3.7,3.9:", when="+python")
+    depends_on("python@3.2:3.7,3.9:", when="@:3.2 +python")
+    depends_on("python@3.2:", when="@3.3: +python")
     extends("python", when="+python")
 
     # VisIt uses the hdf5 1.8 api
@@ -175,7 +179,7 @@ class Visit(CMakePackage):
     # vtk-m operations are performed.
     depends_on("vtk-m", patches=[patch("vtk-m_transport_tag_topology_field_in.patch")])
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     @when("@3:,develop")
     def patch(self):
@@ -212,7 +216,7 @@ class Visit(CMakePackage):
             self.define("VTK_MAJOR_VERSION", spec["vtk"].version[0]),
             self.define("VTK_MINOR_VERSION", spec["vtk"].version[1]),
             self.define("VISIT_VTK_DIR", spec["vtk"].prefix),
-            self.define("VISIT_ZLIB_DIR", spec["zlib"].prefix),
+            self.define("VISIT_ZLIB_DIR", spec["zlib-api"].prefix),
             self.define("VISIT_JPEG_DIR", spec["jpeg"].prefix),
             self.define("VISIT_USE_GLEW", False),
             self.define("VISIT_CONFIG_SITE", "NONE"),
