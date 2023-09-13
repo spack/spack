@@ -31,7 +31,7 @@ class PyCwlRegistry(PythonPackage):
     depends_on("py-nexusforge@0.8.1:", type=("build", "run"))
     depends_on("py-bba-data-push@1.0.4:", type=("build", "run"))
     depends_on("py-cwl-luigi@0.3.1:", type=("build", "run"))
-    depends_on("py-entity-management@1.2.24:", type=("build", "run"))
+    depends_on("py-entity-management@1.2.26:", type=("build", "run"))
     depends_on("py-fz-td-recipe", type=("build", "run"))
     depends_on("py-pydantic", type=("build", "run"))
     depends_on("py-morphio", type=("build", "run"))

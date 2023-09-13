@@ -12,6 +12,7 @@ class PyEntityManagement(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/entity-management"
     git = "ssh://git@bbpgitlab.epfl.ch/nse/entity-management.git"
 
+    version("1.2.26", tag="entity-management-v1.2.26")
     version("1.2.25", tag="entity-management-v1.2.25")
     version("1.2.19", tag="entity-management-v1.2.19")
 
