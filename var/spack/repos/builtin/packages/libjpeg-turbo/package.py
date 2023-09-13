@@ -88,3 +88,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         ]
 
         return args
+
+    @run_after("install")
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies("platform=darwin") and ("+shared" in self.spec):
+            fix_darwin_install_name(self.prefix.lib)
