@@ -83,7 +83,7 @@ class CMakeBuilder(CMakeBuilder):
 class MakefileBuilder(MakefileBuilder):
     def setup_build_environment(self, env):
         if self.spec.satisfies("+pic"):
-            env.set("CFLAGS", "-fPIC")
+            env.set("CFLAGS", self.pkg.compiler.cc_pic_flag)
 
     def build(self, pkg, spec, prefix):
         par = True
