@@ -56,7 +56,7 @@ import itertools
 import os
 import re
 import warnings
-from typing import List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -174,9 +174,12 @@ CLEARSIGN_FILE_REGEX = re.compile(
 SPECFILE_FORMAT_VERSION = 4
 
 
-# InstallStatus is used to map install statuses to symbols for display
-# Options are artificially disjoint for dispay purposes
 class InstallStatus(enum.Enum):
+    """Maps install statuses to symbols for display.
+
+    Options are artificially disjoint for display purposes
+    """
+
     installed = "@g{[+]}  "
     upstream = "@g{[^]}  "
     external = "@g{[e]}  "
@@ -4509,28 +4512,50 @@ class Spec:
         except KeyError:
             return None
 
-    def tree(self, **kwargs):
+    def tree(
+        self,
+        *,
+        color: Optional[bool] = None,
+        depth: bool = False,
+        hashes: bool = False,
+        hashlen: Optional[int] = None,
+        cover: str = "nodes",
+        indent: int = 0,
+        format: str = DEFAULT_FORMAT,
+        deptypes: Union[Tuple[str, ...], str] = "all",
+        show_types: bool = False,
+        depth_first: bool = False,
+        recurse_dependencies: bool = True,
+        status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
+        prefix: Optional[Callable[["Spec"], str]] = None,
+    ) -> str:
         """Prints out this spec and its dependencies, tree-formatted
         with indentation.
 
         Status function may either output a boolean or an InstallStatus
-        """
-        color = kwargs.pop("color", clr.get_color_when())
-        depth = kwargs.pop("depth", False)
-        hashes = kwargs.pop("hashes", False)
-        hlen = kwargs.pop("hashlen", None)
-        status_fn = kwargs.pop("status_fn", False)
-        cover = kwargs.pop("cover", "nodes")
-        indent = kwargs.pop("indent", 0)
-        fmt = kwargs.pop("format", DEFAULT_FORMAT)
-        prefix = kwargs.pop("prefix", None)
-        show_types = kwargs.pop("show_types", False)
-        deptypes = kwargs.pop("deptypes", "all")
-        recurse_dependencies = kwargs.pop("recurse_dependencies", True)
-        depth_first = kwargs.pop("depth_first", False)
-        lang.check_kwargs(kwargs, self.tree)
 
+        Args:
+            color: if True, always colorize the tree. If False, don't colorize the tree. If None,
+                use the default from llnl.tty.color
+            depth: print the depth from the root
+            hashes: if True, print the hash of each node
+            hashlen: length of the hash to be printed
+            cover: either "nodes" or "edges"
+            indent: extra indentation for the tree being printed
+            format: format to be used to print each node
+            deptypes: dependency types to be represented in the tree
+            show_types: if True, show the (merged) dependency type of a node
+            depth_first: if True, traverse the DAG depth first when representing it as a tree
+            recurse_dependencies: if True, recurse on dependencies
+            status_fn: optional callable that takes a node as an argument and return its
+                installation status
+            prefix: optional callable that takes a node as an argument and return its
+                installation prefix
+        """
         out = ""
+
+        if color is None:
+            color = clr.get_color_when()
 
         for d, dep_spec in traverse.traverse_tree(
             [self], cover=cover, deptype=deptypes, depth_first=depth_first
@@ -4554,7 +4579,7 @@ class Spec:
                     out += clr.colorize("@r{[-]}  ", color=color)
 
             if hashes:
-                out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hlen)
+                out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hashlen)
 
             if show_types:
                 if cover == "nodes":
@@ -4572,7 +4597,7 @@ class Spec:
             out += "    " * d
             if d > 0:
                 out += "^"
-            out += node.format(fmt, color=color) + "\n"
+            out += node.format(format, color=color) + "\n"
 
             # Check if we wanted just the first line
             if not recurse_dependencies:
