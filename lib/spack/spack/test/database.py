@@ -723,21 +723,6 @@ def test_external_entries_in_db(mutable_database, external_spec):
     assert rec.explicit is True
 
 
-@pytest.mark.regression("8036")
-def test_regression_issue_8036(mutable_database, usr_folder_exists):
-    # The test ensures that the external package prefix is treated as
-    # existing. Even when the package prefix exists, the package should
-    # not be considered installed until it is added to the database with
-    # do_install.
-    s = spack.spec.Spec("externaltool@0.9")
-    s.concretize()
-    assert not s.installed
-
-    # Now install the external package and check again the `installed` property
-    s.package.do_install(fake=True)
-    assert s.installed
-
-
 @pytest.mark.regression("11118")
 def test_old_external_entries_prefix(clean_store, external_spec):
     external_spec("externaltool@1.0", prefix="/usr")

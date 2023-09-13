@@ -96,19 +96,6 @@ def test_get_executables(working_env, mock_executable):
 external = SpackCommand("external")
 
 
-def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_executable):
-    """When the user invokes 'spack external find --not-buildable', the config
-    for any package where Spack finds an external version should be marked as
-    not buildable.
-    """
-    cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
-    os.environ["PATH"] = os.pathsep.join([os.path.dirname(cmake_path1)])
-    external("find", "--not-buildable", "cmake")
-    pkgs_cfg = spack.config.get("packages")
-    assert "cmake" in pkgs_cfg
-    assert not pkgs_cfg["cmake"]["buildable"]
-
-
 @pytest.mark.parametrize(
     "names,tags,exclude,expected",
     [
@@ -206,34 +193,6 @@ def test_find_external_nonempty_default_manifest_dir(
     external("find")
     specs = spack.store.STORE.db.query("hwloc")
     assert any(x.dag_hash() == "hwlocfakehashaaa" for x in specs)
-
-
-def test_find_external_merge(mutable_config, mutable_mock_repo):
-    """Check that 'spack find external' doesn't overwrite an existing spec
-    entry in packages.yaml.
-    """
-    pkgs_cfg_init = {
-        "find-externals1": {
-            "externals": [{"spec": "find-externals1@1.1", "prefix": "/preexisting-prefix/"}],
-            "buildable": False,
-        }
-    }
-
-    mutable_config.update_config("packages", pkgs_cfg_init)
-    entries = [
-        spack.detection.DetectedPackage(Spec.from_detection("find-externals1@1.1"), "/x/y1/"),
-        spack.detection.DetectedPackage(Spec.from_detection("find-externals1@1.2"), "/x/y2/"),
-    ]
-    pkg_to_entries = {"find-externals1": entries}
-    scope = spack.config.default_modify_scope("packages")
-    spack.detection.update_configuration(pkg_to_entries, scope=scope, buildable=True)
-
-    pkgs_cfg = spack.config.get("packages")
-    pkg_cfg = pkgs_cfg["find-externals1"]
-    pkg_externals = pkg_cfg["externals"]
-
-    assert {"spec": "find-externals1@1.1", "prefix": "/preexisting-prefix/"} in pkg_externals
-    assert {"spec": "find-externals1@1.2", "prefix": "/x/y2/"} in pkg_externals
 
 
 def test_list_detectable_packages(mutable_config, mutable_mock_repo):

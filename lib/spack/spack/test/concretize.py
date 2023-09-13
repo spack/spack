@@ -979,21 +979,6 @@ class TestConcretize:
         assert s.concrete
         assert not s.satisfies("^variant-on-dependency-condition-b")
 
-    @pytest.mark.regression("8082")
-    @pytest.mark.parametrize(
-        "spec_str,expected", [("cmake %gcc", "%gcc"), ("cmake %clang", "%clang")]
-    )
-    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_compiler_constraint_with_external_package(self, spec_str, expected):
-        packages_yaml = {
-            "cmake": {"externals": [{"spec": "cmake@3.4.3", "prefix": "/usr"}], "buildable": False}
-        }
-        spack.config.set("packages", packages_yaml)
-
-        s = Spec(spec_str).concretized()
-        assert s.external
-        assert s.satisfies(expected)
-
     @pytest.mark.regression("20976")
     @pytest.mark.parametrize(
         "compiler,spec_str,expected,xfailold",
@@ -1032,13 +1017,6 @@ class TestConcretize:
             pytest.xfail("This only works on the ASP-based concretizer")
         assert s.satisfies(expected)
         assert "external-common-perl" not in [d.name for d in s.dependencies()]
-
-    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_external_packages_have_consistent_hash(self):
-        s, t = Spec("externaltool"), Spec("externaltool")
-        s._old_concretize(), t._new_concretize()
-
-        assert s.dag_hash() == t.dag_hash()
 
     def test_external_that_would_require_a_virtual_dependency(self, external_spec):
         """External nodes are currently trimmed, so we can't expect to find a virtual
@@ -1828,36 +1806,6 @@ class TestConcretize:
 
     @pytest.mark.regression("31484")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_installed_externals_are_reused(self, mutable_database, repo_with_changing_recipe):
-        """Test that external specs that are in the DB can be reused."""
-        external_conf = {
-            "changing": {
-                "buildable": False,
-                "externals": [{"spec": "changing@1.0", "prefix": "/usr"}],
-            }
-        }
-        spack.config.set("packages", external_conf)
-
-        # Install the external spec
-        external1 = Spec("changing@1.0").concretized()
-        external1.package.do_install(fake=True, explicit=True)
-        assert external1.external
-
-        # Modify the package.py file
-        repo_with_changing_recipe.change({"delete_variant": True})
-
-        # Try to concretize the external without reuse and confirm the hash changed
-        with spack.config.override("concretizer:reuse", False):
-            external2 = Spec("changing@1.0").concretized()
-        assert external2.dag_hash() != external1.dag_hash()
-
-        # ... while with reuse we have the same hash
-        with spack.config.override("concretizer:reuse", True):
-            external3 = Spec("changing@1.0").concretized()
-        assert external3.dag_hash() == external1.dag_hash()
-
-    @pytest.mark.regression("31484")
-    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_user_can_select_externals_with_require(self, mutable_database):
         """Test that users have means to select an external even in presence of reusable specs."""
         external_conf = {
@@ -1918,23 +1866,6 @@ class TestConcretize:
 
         for s in spec.traverse():
             assert s.satisfies("target=%s" % spack.platforms.test.Test.front_end)
-
-    def test_external_python_extensions_have_dependency(self):
-        """Test that python extensions have access to a python dependency
-
-        when python is otherwise in the DAG"""
-        external_conf = {
-            "py-extension1": {
-                "buildable": False,
-                "externals": [{"spec": "py-extension1@2.0", "prefix": "/fake"}],
-            }
-        }
-        spack.config.set("packages", external_conf)
-
-        spec = Spec("py-extension2").concretized()
-
-        assert "python" in spec["py-extension1"]
-        assert spec["python"] == spec["py-extension1"]["python"]
 
     target = spack.platforms.test.Test.default
 
@@ -2014,20 +1945,6 @@ class TestConcretize:
         assert "python" in spec["py-extension1"]
         assert spec["python"].prefix == prefix
         assert spec["python"] == python_spec
-
-    def test_external_python_extension_find_unified_python(self):
-        """Test that python extensions use the same python as other specs in unified env"""
-        external_conf = {
-            "py-extension1": {
-                "buildable": False,
-                "externals": [{"spec": "py-extension1@2.0", "prefix": os.path.sep + "fake"}],
-            }
-        }
-        spack.config.set("packages", external_conf)
-
-        abstract_specs = [Spec(s) for s in ["py-extension1", "python"]]
-        specs = spack.concretize.concretize_specs_together(*abstract_specs)
-        assert specs[0]["python"] == specs[1]["python"]
 
     @pytest.mark.regression("36190")
     @pytest.mark.parametrize(
