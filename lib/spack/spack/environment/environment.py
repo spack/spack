@@ -1395,10 +1395,7 @@ class Environment:
 
         result_by_user_spec = {}
         solver = spack.solver.asp.Solver()
-        allow_deprecated = spack.config.get("config:deprecated", False)
-        for result in solver.solve_in_rounds(
-            specs_to_concretize, tests=tests, deprecated=allow_deprecated
-        ):
+        for result in solver.solve_in_rounds(specs_to_concretize, tests=tests):
             result_by_user_spec.update(result.specs_by_input)
 
         result = []
