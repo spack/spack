@@ -12,17 +12,15 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 
     homepage = "https://docs.pennylane.ai/projects/lightning"
     git = "https://github.com/PennyLaneAI/pennylane-lightning.git"
-    url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.28.2.tar.gz"
+    url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.32.0.tar.gz"
 
     maintainers("mlxd", "AmintorDusko")
 
     version("master", branch="master")
+    version("0.32.0", sha256="124edae1828c7e72e7b3bfbb0e75e98a07a490d7f1eab19eebb3311bfa8a23d4")
+    version("0.31.0", sha256="b177243625b6fdac0699d163bbc330c92ca87fb9f427643785069273d2a255f6")
+    version("0.30.0", sha256="0f4032409d20d00991b5d14fe0b2b928baca4a13c5a1b16eab91f61f9273e58d")
     version("0.29.0", sha256="da9912f0286d1a54051cc19cf8bdbdcd732795636274c95f376db72a88e52d85")
-    version(
-        "0.28.0",
-        sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18",
-        deprecated=True,
-    )  # on Spack v0.19.0
 
     variant("blas", default=True, description="Build with BLAS support")
     variant(
@@ -30,7 +28,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
         default=True,
         description="Build with AVX2/AVX512 gate automatic dispatching support",
     )
-    variant("kokkos", default=True, description="Build with Kokkos support")
+    variant("kokkos", default=True, description="Build with Kokkos support", when="@:0.31")
     variant("openmp", default=True, description="Build with OpenMP support")
 
     variant("native", default=False, description="Build natively for given hardware")
@@ -47,14 +45,15 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 
     # variant defined dependencies
     depends_on("blas", when="+blas")
-    depends_on("kokkos@3.7.00", when="+kokkos")
-    depends_on("kokkos-kernels@3.7.00", when="+kokkos")
+    depends_on("kokkos@:4.0.01", when="@:0.31+kokkos")
+    depends_on("kokkos-kernels@:4.0.01", when="@:0.31+kokkos")
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 
-    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@:0.31")
+    depends_on("python@3.9:", type=("build", "run"), when="@0.32:")
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pybind11", type=("build"))
+    depends_on("py-pybind11", type="link")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
     # depends_on("py-pennylane@0.28:", type=("build", "run"))  # circular dependency
@@ -83,7 +82,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 f"-DKokkos_Core_DIR={self.spec['kokkos'].home}",
                 f"-DKokkos_Kernels_DIR={self.spec['kokkos-kernels'].home}",
             ]
-        else:
+        elif self.spec.version < Version("0.32"):
             args += ["-DENABLE_KOKKOS=OFF"]
 
         return args

@@ -27,7 +27,7 @@ class Generax(CMakePackage):
     depends_on("bison")
     depends_on("flex")
 
-    variant("mpi", default=False)
+    variant("mpi", default=False, description="Build with MPI support")
 
     build_directory = "build"
 

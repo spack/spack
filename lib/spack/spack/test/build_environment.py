@@ -6,7 +6,6 @@ import inspect
 import os
 import platform
 import posixpath
-import sys
 
 import pytest
 
@@ -17,8 +16,9 @@ import spack.config
 import spack.package_base
 import spack.spec
 import spack.util.spack_yaml as syaml
-from spack.build_environment import _static_to_shared_library, determine_number_of_jobs, dso_suffix
+from spack.build_environment import _static_to_shared_library, dso_suffix
 from spack.paths import build_env_path
+from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.path import Path, convert_to_platform_path
@@ -103,7 +103,7 @@ def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
 
 @pytest.fixture
 def mock_module_cmd(monkeypatch):
-    class Logger(object):
+    class Logger:
         def __init__(self, fn=None):
             self.fn = fn
             self.calls = []
@@ -119,7 +119,7 @@ def mock_module_cmd(monkeypatch):
     return mock_module_cmd
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Static to Shared not supported on Win (yet)")
+@pytest.mark.not_on_windows("Static to Shared not supported on Win (yet)")
 def test_static_to_shared_library(build_environment):
     os.environ["SPACK_TEST_COMMAND"] = "dump-args"
 
@@ -443,7 +443,7 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
 
     spack.build_environment.set_module_variables_for_package(s["b"].package)
     assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
-        s["b"].package.parallel
+        parallel=s["b"].package.parallel
     )
 
 
@@ -475,28 +475,62 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
 
 def test_build_jobs_sequential_is_sequential():
     assert (
-        determine_number_of_jobs(parallel=False, command_line=8, config_default=8, max_cpus=8) == 1
+        determine_number_of_jobs(
+            parallel=False,
+            max_cpus=8,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 8}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 8}}),
+            ),
+        )
+        == 1
     )
 
 
 def test_build_jobs_command_line_overrides():
     assert (
-        determine_number_of_jobs(parallel=True, command_line=10, config_default=1, max_cpus=1)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=1,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}}),
+            ),
+        )
         == 10
     )
     assert (
-        determine_number_of_jobs(parallel=True, command_line=10, config_default=100, max_cpus=100)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=100,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}}),
+            ),
+        )
         == 10
     )
 
 
 def test_build_jobs_defaults():
     assert (
-        determine_number_of_jobs(parallel=True, command_line=None, config_default=1, max_cpus=10)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=10,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}})
+            ),
+        )
         == 1
     )
     assert (
-        determine_number_of_jobs(parallel=True, command_line=None, config_default=100, max_cpus=10)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=10,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}})
+            ),
+        )
         == 10
     )
 

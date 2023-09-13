@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import os
 import sys
 
@@ -22,14 +20,13 @@ level = "long"
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="repo_command")
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
 
     # Create
     create_parser = sp.add_parser("create", help=repo_create.__doc__)
     create_parser.add_argument("directory", help="directory to create the repo in")
     create_parser.add_argument(
         "namespace",
-        help="namespace to identify packages in the repository. " "defaults to the directory name",
+        help="namespace to identify packages in the repository (defaults to the directory name)",
         nargs="?",
     )
     create_parser.add_argument(
@@ -38,10 +35,8 @@ def setup_parser(subparser):
         action="store",
         dest="subdir",
         default=spack.repo.packages_dir_name,
-        help=(
-            "subdirectory to store packages in the repository."
-            " Default 'packages'. Use an empty string for no subdirectory."
-        ),
+        help="subdirectory to store packages in the repository\n\n"
+        "default 'packages'. use an empty string for no subdirectory",
     )
 
     # List
@@ -49,7 +44,7 @@ def setup_parser(subparser):
     list_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_list_scope(),
         help="configuration scope to read from",
     )
@@ -60,7 +55,7 @@ def setup_parser(subparser):
     add_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
@@ -73,21 +68,21 @@ def setup_parser(subparser):
     remove_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
 
 
 def repo_create(args):
-    """Create a new package repository."""
+    """create a new package repository"""
     full_path, namespace = spack.repo.create_repo(args.directory, args.namespace, args.subdir)
     tty.msg("Created repo with namespace '%s'." % namespace)
     tty.msg("To register it with spack, run this command:", "spack repo add %s" % full_path)
 
 
 def repo_add(args):
-    """Add a package source to Spack's configuration."""
+    """add a package source to Spack's configuration"""
     path = args.path
 
     # real_path is absolute and handles substitution.
@@ -118,7 +113,7 @@ def repo_add(args):
 
 
 def repo_remove(args):
-    """Remove a repository from Spack's configuration."""
+    """remove a repository from Spack's configuration"""
     repos = spack.config.get("repos", scope=args.scope)
     namespace_or_path = args.namespace_or_path
 
@@ -148,7 +143,7 @@ def repo_remove(args):
 
 
 def repo_list(args):
-    """Show registered repositories and their namespaces."""
+    """show registered repositories and their namespaces"""
     roots = spack.config.get("repos", scope=args.scope)
     repos = []
     for r in roots:
