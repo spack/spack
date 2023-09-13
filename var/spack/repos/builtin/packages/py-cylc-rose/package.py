@@ -16,9 +16,7 @@ class PyCylcRose(PythonPackage):
 
     version("1.3.0", sha256="017072b69d7a50fa6d309a911d2428743b07c095f308529b36b1b787ebe7ab88")
 
-    depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-
     depends_on("py-metomi-rose@2.1", type=("build", "run"))
     depends_on("py-cylc-flow@8.2", type=("build", "run"))
     depends_on("py-metomi-isodatetime", type=("build", "run"))
