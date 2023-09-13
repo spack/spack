@@ -41,7 +41,7 @@ class Bcl2fastq2(Package):
     depends_on("libxml2@2.7.8")
     depends_on("libxslt@1.1.26~crypto")
     depends_on("libgcrypt")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Their cmake macros don't set the flag when they find a library
     # that makes them happy.
@@ -70,7 +70,7 @@ class Bcl2fastq2(Package):
         # wrap (decorate) the standard expand_archive step with a
         # helper, then call the real do_stage().
         self.stage.expand_archive = self.unpack_it(self.stage.expand_archive)
-        super(Bcl2fastq2, self).do_stage(mirror_only)
+        super().do_stage(mirror_only)
 
     def unpack_it(self, f):
         def wrap():

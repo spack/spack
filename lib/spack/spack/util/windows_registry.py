@@ -17,7 +17,7 @@ if sys.platform == "win32":
     import winreg
 
 
-class RegistryValue(object):
+class RegistryValue:
     """
     Class defining a Windows registry entry
     """
@@ -28,7 +28,7 @@ class RegistryValue(object):
         self.key = parent_key
 
 
-class RegistryKey(object):
+class RegistryKey:
     """
     Class wrapping a Windows registry key
     """
@@ -115,7 +115,7 @@ class _HKEY_CONSTANT(RegistryKey):
         return self._handle
 
 
-class HKEY(object):
+class HKEY:
     """
     Predefined, open registry HKEYs
     From the Microsoft docs:
@@ -133,7 +133,7 @@ class HKEY(object):
     HKEY_PERFORMANCE_DATA = _HKEY_CONSTANT("HKEY_PERFORMANCE_DATA")
 
 
-class WindowsRegistryView(object):
+class WindowsRegistryView:
     """
     Interface to provide access, querying, and searching to Windows registry entries.
     This class represents a single key entrypoint into the Windows registry

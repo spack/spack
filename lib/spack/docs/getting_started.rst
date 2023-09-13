@@ -317,7 +317,7 @@ installed, but you know that new compilers have been added to your
 
 .. code-block:: console
 
-   $ module load gcc-4.9.0
+   $ module load gcc/4.9.0
    $ spack compiler find
    ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
        gcc@4.9.0

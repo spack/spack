@@ -23,6 +23,14 @@ class PyJsonschema(PythonPackage):
     version("2.6.0", sha256="6ff5f3180870836cae40f06fa10419f557208175f13ad7bc26caa77beb1f6e02")
     version("2.5.1", sha256="36673ac378feed3daa5956276a829699056523d7961027911f064b52255ead41")
 
+    # for versions @:4.5 this same variant was called format_nongpl
+    variant(
+        "format-nongpl",
+        default=False,
+        when="@3.2:",
+        description="Enable format-nongpl functionality",
+    )
+
     depends_on("py-hatchling", when="@4.10:", type="build")
     depends_on("py-hatch-vcs", when="@4.10:", type="build")
     depends_on("py-hatch-fancy-pypi-readme", when="@4.11:", type="build")
@@ -45,3 +53,14 @@ class PyJsonschema(PythonPackage):
     depends_on("py-six@1.11:", when="@3", type=("build", "run"))
 
     conflicts("^py-pyrsistent@0.17.0:0.17.2")
+
+    with when("+format-nongpl"):
+        depends_on("py-fqdn", when="@4:", type=("build", "run"))
+        depends_on("py-idna", type=("build", "run"))
+        depends_on("py-isoduration", when="@4:", type=("build", "run"))
+        depends_on("py-jsonpointer@1.14:", type=("build", "run"))
+        depends_on("py-rfc3339-validator", type=("build", "run"))
+        depends_on("py-rfc3986-validator@0.1.1:", type=("build", "run"))
+        depends_on("py-uri-template", when="@4:", type=("build", "run"))
+        depends_on("py-webcolors@1.11:", when="@4:", type=("build", "run"))
+        depends_on("py-webcolors", type=("build", "run"))
