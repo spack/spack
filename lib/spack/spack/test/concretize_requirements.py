@@ -545,13 +545,13 @@ packages:
 
 def test_requirements_are_higher_priority_than_deprecation(concretize_scope, test_repo):
     """Test that users can override a deprecated version with a requirement."""
-    # 2.3 is a deprecated versions. Ensure that any_of picks both constraints,
+    # @2.3 is a deprecated versions. Ensure that any_of picks both constraints,
     # since they are possible
     conf_str = """\
 packages:
   y:
     require:
-    - any_of: ["@=2.3", "%gcc"]
+    - any_of: ["@2.3", "%gcc"]
 """
     update_packages_config(conf_str)
 

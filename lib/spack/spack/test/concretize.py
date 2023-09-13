@@ -1356,7 +1356,7 @@ class TestConcretize:
             # Version 1.1.0 is deprecated and should not be selected, unless we
             # explicitly asked for that
             ("deprecated-versions", ["deprecated-versions@1.0.0"]),
-            ("deprecated-versions@=1.1.0", ["deprecated-versions@1.1.0"]),
+            ("deprecated-versions@1.1.0", ["deprecated-versions@1.1.0"]),
         ],
     )
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
