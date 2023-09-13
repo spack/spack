@@ -1066,13 +1066,18 @@ compiler_match(PackageNode, DependencyNode)
      node_compiler(PackageNode, CompilerID),
      node_compiler(DependencyNode, CompilerID).
 
-compiler_mismatch(PackageNode, DependencyNode)
+mismatch_candidates(PackageNode, DependencyNode)
   :- depends_on(PackageNode, DependencyNode),
+     unification_set(X, PackageNode),
+     unification_set(X, DependencyNode).
+
+compiler_mismatch(PackageNode, DependencyNode)
+  :- mismatch_candidates(PackageNode, DependencyNode),
      not attr("node_compiler_set", DependencyNode, _),
      not compiler_match(PackageNode, DependencyNode).
 
 compiler_mismatch_required(PackageNode, DependencyNode)
-  :- depends_on(PackageNode, DependencyNode),
+  :- mismatch_candidates(PackageNode, DependencyNode),
      attr("node_compiler_set", DependencyNode, _),
      not compiler_match(PackageNode, DependencyNode).
 
