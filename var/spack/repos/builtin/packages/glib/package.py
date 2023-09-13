@@ -26,6 +26,7 @@ class Glib(MesonPackage, AutotoolsPackage):
 
     maintainers("michaelkuhn")
 
+    version("2.76.4", sha256="5a5a191c96836e166a7771f7ea6ca2b0069c603c7da3cba1cd38d1694a395dda")
     version("2.76.3", sha256="c0be444e403d7c3184d1f394f89f0b644710b5e9331b54fa4e8b5037813ad32a")
     version("2.76.2", sha256="24f3847857b1d8674cdb0389a36edec0f13c666cd3ce727ecd340eb9da8aca9e")
     version("2.76.1", sha256="43dc0f6a126958f5b454136c4398eab420249c16171a769784486e25f2fda19f")
@@ -135,7 +136,7 @@ class Glib(MesonPackage, AutotoolsPackage):
 
     depends_on("pkgconfig", type="build")
     depends_on("libffi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("gettext")
     depends_on("perl", type=("build", "run"))
     depends_on("python", type=("build", "run"), when="@2.53.4:")

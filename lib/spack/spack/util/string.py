@@ -5,7 +5,7 @@
 
 
 def comma_list(sequence, article=""):
-    if type(sequence) != list:
+    if type(sequence) is not list:
         sequence = list(sequence)
 
     if not sequence:

@@ -26,7 +26,7 @@ class PhotosF(MakefilePackage):
 
     def do_stage(self, mirror_only=False):
         # Fix directory structure - remove extra "<version>" subdirectory
-        super(PhotosF, self).do_stage(mirror_only)
+        super().do_stage(mirror_only)
         root = join_path(self.stage.source_path, self.spec.version)
         for fn in os.listdir(root):
             shutil.move(join_path(root, fn), self.stage.source_path)

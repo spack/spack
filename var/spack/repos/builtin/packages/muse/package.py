@@ -14,7 +14,7 @@ class Muse(MakefilePackage):
 
     version("1.0-rc", sha256="b48b8be0044a2249bdc0b625fe0192c65089c598bbd1b1142902dfa81e804023")
 
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
