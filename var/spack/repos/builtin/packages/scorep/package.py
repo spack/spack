@@ -140,6 +140,12 @@ class Scorep(AutotoolsPackage):
     # https://github.com/spack/spack/issues/1609
     conflicts("platform=darwin")
 
+    def find_libpath(self, libname, root):
+        libs = find_libraries(libname, root, shared=True, recursive=True)
+        if len(libs.directories) == 0:
+            return None
+        return libs.directories[0]
+
     def configure_args(self):
         spec = self.spec
 
@@ -169,10 +175,9 @@ class Scorep(AutotoolsPackage):
         if "+unwind" in spec:
             config_args.append("--with-libunwind=%s" % spec["libunwind"].prefix)
         if "+cuda" in spec:
-            if format(cname) == "nvhpc":
-                config_args.append("--with-libcudart=%s" % spec["cuda"].prefix)
-            else:
-                config_args.append("--with-libcuda=%s" % spec["cuda"].prefix)
+            config_args.append("--with-libcudart=%s" % spec["cuda"].prefix)
+            cuda_driver_path = self.find_libpath("libcuda", spec["cuda"].prefix)
+            config_args.append("--with-libcuda-lib=%s" % cuda_driver_path)
         if "+hip" in spec:
             config_args.append("--with-rocm=%s" % spec["hip"].prefix)
 
