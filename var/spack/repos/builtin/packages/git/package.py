@@ -256,7 +256,14 @@ class Git(AutotoolsPackage):
             if not is_system_path(spec["gettext"].prefix):
                 env.append_flags("CFLAGS", spec["gettext"].headers.include_flags)
 
-        if "~perl" in spec:
+        if not self.spec["curl"].satisfies("libs=shared"):
+            curlconfig = which(os.path.join(self.spec["curl"].prefix.bin, "curl-config"))
+            # For configure step:
+            env.append_flags("LIBS", curlconfig("--static-libs", output=str).strip())
+            # For build step:
+            env.append_flags("EXTLIBS", curlconfig("--static-libs", output=str).strip())
+
+        if "~perl" in self.spec:
             env.append_flags("NO_PERL", "1")
 
     def configure_args(self):
