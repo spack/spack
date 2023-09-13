@@ -14,4 +14,4 @@ class PyBeartype(PythonPackage):
 
     version("0.15.0", sha256="2af6a8d8a7267ccf7d271e1a3bd908afbc025d2a09aa51123567d7d7b37438df")
 
-    depends_on("py-setuptools@:49,51:", type="build")
+    depends_on("py-setuptools@:49,50.1:", type="build")
