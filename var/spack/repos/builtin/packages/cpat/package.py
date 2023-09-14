@@ -22,4 +22,3 @@ class Cpat(PythonPackage):
     depends_on("py-pysam", type=("build", "run"))
 
     depends_on("r", type="run")
-
