@@ -1491,7 +1491,7 @@ class SpackSolverSetup:
                 for t in dt.flag_iterator:
                     if t & depflag:
                         # there is a declared dependency of type t
-                        self.gen.fact(fn.dependency_type(condition_id, dt.flag_to_type(t)))
+                        self.gen.fact(fn.dependency_type(condition_id, dt.flag_to_string(t)))
 
                 self.gen.newline()
 

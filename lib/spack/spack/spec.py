@@ -2065,7 +2065,7 @@ class Spec:
                         "parameters",
                         syaml.syaml_dict(
                             (
-                                ("deptypes", dt.flag_to_types(dspec.depflag)),
+                                ("deptypes", dt.flag_to_tuple(dspec.depflag)),
                                 ("virtuals", dspec.virtuals),
                             )
                         ),
@@ -2349,13 +2349,12 @@ class Spec:
             if dep_like is None:
                 return spec
 
-            def name_and_dependency_types(s):
+            def name_and_dependency_types(s: str) -> Tuple[str, dt.DepFlag]:
                 """Given a key in the dictionary containing the literal,
                 extracts the name of the spec and its dependency types.
 
                 Args:
-                    s (str): key in the dictionary containing the literal
-
+                    s: key in the dictionary containing the literal
                 """
                 t = s.split(":")
 
@@ -2363,38 +2362,35 @@ class Spec:
                     msg = 'more than one ":" separator in key "{0}"'
                     raise KeyError(msg.format(s))
 
-                n = t[0]
+                name = t[0]
                 if len(t) == 2:
-                    dtypes = tuple(dt.strip() for dt in t[1].split(","))
+                    depflag = dt.flag_from_strings(dep_str.strip() for dep_str in t[1].split(","))
                 else:
-                    dtypes = ()
+                    depflag = 0
+                return name, depflag
 
-                return n, dtypes
-
-            def spec_and_dependency_types(s):
+            def spec_and_dependency_types(
+                s: Union[Spec, Tuple[Spec, str]]
+            ) -> Tuple[Spec, dt.DepFlag]:
                 """Given a non-string key in the literal, extracts the spec
                 and its dependency types.
 
                 Args:
-                    s (spec or tuple): either a Spec object or a tuple
-                        composed of a Spec object and a string with the
-                        dependency types
-
+                    s: either a Spec object, or a tuple of Spec and string of dependency types
                 """
                 if isinstance(s, Spec):
-                    return s, ()
+                    return s, 0
 
                 spec_obj, dtypes = s
-                return spec_obj, tuple(dt.strip() for dt in dtypes.split(","))
+                return spec_obj, dt.flag_from_strings(dt.strip() for dt in dtypes.split(","))
 
             # Recurse on dependencies
             for s, s_dependencies in dep_like.items():
                 if isinstance(s, str):
-                    dag_node, dependency_types = name_and_dependency_types(s)
+                    dag_node, dep_flag = name_and_dependency_types(s)
                 else:
-                    dag_node, dependency_types = spec_and_dependency_types(s)
+                    dag_node, dep_flag = spec_and_dependency_types(s)
 
-                dep_flag = dt.type_to_flag(dependency_types)
                 dependency_spec = spec_builder({dag_node: s_dependencies})
                 spec._add_dependency(dependency_spec, depflag=dep_flag, virtuals=())
 
@@ -4018,7 +4014,7 @@ class Spec:
                 new_specs[spid(edge.spec)], depflag=edge.depflag, virtuals=edge.virtuals
             )
 
-    def copy(self, deps: Union[bool, dt.CanonicalDepTypes, dt.DepFlag] = True, **kwargs):
+    def copy(self, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, **kwargs):
         """Make a copy of this spec.
 
         Args:

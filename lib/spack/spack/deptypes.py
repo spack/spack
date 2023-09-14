@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Data structures that represent Spack's edge types."""
 
-from typing import List, Tuple, Union
+from typing import Iterable, List, Tuple, Union
 
 #: Type hint for the low-level dependency input (enum.Flag is too slow)
 DepFlag = int
@@ -12,11 +12,8 @@ DepFlag = int
 #: Type hint for the high-level dependency input
 DepTypes = Union[str, List[str], Tuple[str, ...]]
 
-#: Individual dependency types that make up CanonicalDepTypes
+#: Individual dependency types
 DepType = str  # Python 3.8: Literal["build", "link", "run", "test"]
-
-#: Canonical dependency types
-CanonicalDepTypes = Tuple[DepType, ...]
 
 # Flag values. NOTE: these values are not arbitrary, since hash computation imposes
 # the order (link, run, build, test) when depending on the same package multiple times,
@@ -28,7 +25,7 @@ BUILD = 0b0100
 TEST = 0b1000
 
 #: The types of dependency relationships that Spack understands.
-all_types: CanonicalDepTypes = ("build", "link", "run", "test")
+all_types: Tuple[DepType, ...] = ("build", "link", "run", "test")
 
 #: An iterator of all dependency types
 flag_iterator: Tuple[DepFlag, DepFlag, DepFlag, DepFlag] = (BUILD, LINK, RUN, TEST)
@@ -37,7 +34,7 @@ flag_iterator: Tuple[DepFlag, DepFlag, DepFlag, DepFlag] = (BUILD, LINK, RUN, TE
 all_flag = BUILD | LINK | RUN | TEST
 
 #: Default dependency type if none is specified
-default_deptype: CanonicalDepTypes = ("build", "link")
+default_deptype: Tuple[DepType, ...] = ("build", "link")
 
 #: Default dependency type if none is specified
 default_deptype_flag: DepFlag = BUILD | LINK
@@ -56,38 +53,12 @@ def flag_from_string(s: str) -> DepFlag:
         raise ValueError(f"Invalid dependency type: {s}")
 
 
-def type_to_flag(deptype: CanonicalDepTypes) -> DepFlag:
-    """Take a canonical deptype tuple and return a DepFlag."""
+def flag_from_strings(deptype: Iterable[str]) -> DepFlag:
+    """Transform an iterable of deptype strings into a flag."""
     flag = 0
     for deptype_str in deptype:
         flag |= flag_from_string(deptype_str)
     return flag
-
-
-def flag_to_types(x: DepFlag) -> CanonicalDepTypes:
-    deptype: List[DepType] = []
-    if x & BUILD:
-        deptype.append("build")
-    if x & LINK:
-        deptype.append("link")
-    if x & RUN:
-        deptype.append("run")
-    if x & TEST:
-        deptype.append("test")
-    return tuple(deptype)
-
-
-def flag_to_type(x: DepFlag) -> DepType:
-    if x == BUILD:
-        return "build"
-    elif x == LINK:
-        return "link"
-    elif x == RUN:
-        return "run"
-    elif x == TEST:
-        return "test"
-    else:
-        raise ValueError(f"Invalid dependency type flag: {x}")
 
 
 def canonicalize(deptype: DepTypes) -> DepFlag:
@@ -111,6 +82,32 @@ def canonicalize(deptype: DepTypes) -> DepFlag:
         return flag
 
     raise ValueError(f"Invalid dependency type: {deptype!r}")
+
+
+def flag_to_tuple(x: DepFlag) -> Tuple[DepType, ...]:
+    deptype: List[DepType] = []
+    if x & BUILD:
+        deptype.append("build")
+    if x & LINK:
+        deptype.append("link")
+    if x & RUN:
+        deptype.append("run")
+    if x & TEST:
+        deptype.append("test")
+    return tuple(deptype)
+
+
+def flag_to_string(x: DepFlag) -> DepType:
+    if x == BUILD:
+        return "build"
+    elif x == LINK:
+        return "link"
+    elif x == RUN:
+        return "run"
+    elif x == TEST:
+        return "test"
+    else:
+        raise ValueError(f"Invalid dependency type flag: {x}")
 
 
 def flag_to_chars(depflag: DepFlag) -> str:
