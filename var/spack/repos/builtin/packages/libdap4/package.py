@@ -32,6 +32,12 @@ class Libdap4(AutotoolsPackage):
     depends_on("curl")
     depends_on("libxml2")
     depends_on("uuid")
+    depends_on("rpc")
+
+    def setup_build_environment(self, env):
+        # Configure script can insert library path here, resulting in a failure
+        if self.spec.satisfies("^libtirpc"):
+            env.set("TIRPC_LIBS", "-ltirpc")
 
     def configure_args(self):
         # libxml2 exports ./include/libxml2/ instead of ./include/, which we
