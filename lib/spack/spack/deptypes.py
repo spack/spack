@@ -76,10 +76,7 @@ def canonicalize(deptype: DepTypes) -> DepFlag:
         return flag_from_string(deptype)
 
     if isinstance(deptype, (tuple, list, set)):
-        flag = 0
-        for t in deptype:
-            flag |= flag_from_string(t)
-        return flag
+        return flag_from_strings(deptype)
 
     raise ValueError(f"Invalid dependency type: {deptype!r}")
 
