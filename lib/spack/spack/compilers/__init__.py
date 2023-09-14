@@ -298,7 +298,7 @@ def select_new_compilers(compilers, scope=None):
     return compilers_not_in_config
 
 
-def supported_compilers()  -> List[str]:
+def supported_compilers() -> List[str]:
     """Return a set of names of compilers supported by Spack.
 
     See available_compilers() to get a list of all the available
@@ -306,12 +306,10 @@ def supported_compilers()  -> List[str]:
     """
     # Hack to be able to call the compiler `apple-clang` while still
     # using a valid python name for the module
-    return sorted(
-        all_compiler_names()
-    )
+    return sorted(all_compiler_names())
 
 
-def supported_compilers_for_host_platform()  -> List[str]:
+def supported_compilers_for_host_platform() -> List[str]:
     """Return a set of compiler class objects supported by Spack
     that are also supported by the current host platform
     """
