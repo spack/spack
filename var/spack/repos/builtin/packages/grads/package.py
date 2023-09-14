@@ -72,7 +72,7 @@ class Grads(AutotoolsPackage):
         # Recent versions configure scripts break without PKG_CONFIG set
         env.set("PKG_CONFIG", self.spec["pkgconfig"].prefix.bin.join("pkg-config"))
 
-        if self.spec.satisfies("+hdf4") and self.spec["hdf"].satisfies("~shared"):
+        if "+hdf4" in self.spec and "~shared" in self.spec["hdf"]:
             env.set("LIBS", self.spec["hdf:transitive"].libs)
 
     def setup_run_environment(self, env):
