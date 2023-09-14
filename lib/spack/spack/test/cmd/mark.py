@@ -31,7 +31,7 @@ def test_mark_all_explicit(mutable_database):
     mark("-e", "-a")
     gc("-y")
     all_specs = spack.store.STORE.layout.all_specs()
-    assert len(all_specs) == 15
+    assert len(all_specs) == 14
 
 
 @pytest.mark.db
@@ -48,15 +48,15 @@ def test_mark_one_explicit(mutable_database):
     uninstall("-y", "-a", "mpileaks")
     gc("-y")
     all_specs = spack.store.STORE.layout.all_specs()
-    assert len(all_specs) == 3
+    assert len(all_specs) == 2
 
 
 @pytest.mark.db
 def test_mark_one_implicit(mutable_database):
-    mark("-i", "externaltest")
+    mark("-i", "trivial-smoke-test")
     gc("-y")
     all_specs = spack.store.STORE.layout.all_specs()
-    assert len(all_specs) == 14
+    assert len(all_specs) == 13
 
 
 @pytest.mark.db
@@ -65,4 +65,4 @@ def test_mark_all_implicit_then_explicit(mutable_database):
     mark("-e", "-a")
     gc("-y")
     all_specs = spack.store.STORE.layout.all_specs()
-    assert len(all_specs) == 15
+    assert len(all_specs) == 14

@@ -223,14 +223,15 @@ class TestAutotoolsPackage:
             s.package.do_install()
 
     @pytest.mark.disable_clean_stage_check
-    def test_broken_external_gnuconfig(self, mutable_database, tmpdir):
+    def test_broken_external_gnuconfig(self, external_spec, tmpdir):
         """
         Tests whether we get a useful error message when gnuconfig is marked
         external, but the install prefix is misconfigured and no config.guess
         and config.sub substitute files are found in the provided prefix.
         """
         env_dir = str(tmpdir.ensure("env", dir=True))
-        gnuconfig_dir = str(tmpdir.ensure("gnuconfig", dir=True))  # empty dir
+        gnuconfig_dir = str(tmpdir.ensure("gnuconfig", dir=True))
+        external_spec("gnuconfig@1.0.0", prefix=gnuconfig_dir)
         with open(os.path.join(env_dir, "spack.yaml"), "w") as f:
             f.write(
                 """\
@@ -240,15 +241,9 @@ spack:
   packages:
     gnuconfig:
       buildable: false
-      externals:
-      - spec: gnuconfig@1.0.0
-        prefix: {0}
-""".format(
-                    gnuconfig_dir
-                )
+"""
             )
-
-        msg = "Spack could not find `config.guess`.*misconfigured as an " "external package"
+        msg = "Spack could not find `config.guess`.*misconfigured as an external package"
         with spack.environment.Environment(env_dir) as e:
             e.concretize()
             with pytest.raises(ChildError, match=msg):

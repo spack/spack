@@ -393,28 +393,24 @@ def test_wrapper_variables(
         delattr(dep_pkg, "libs")
 
 
-def test_external_prefixes_last(mutable_config, mock_packages, working_env, monkeypatch):
+def test_external_prefixes_last(external_spec, mock_packages, tmp_path, working_env, monkeypatch):
     # Sanity check: under normal circumstances paths associated with
     # dt-diamond-left would appear first. We'll mark it as external in
     # the test to check if the associated paths are placed last.
     assert "dt-diamond-left" < "dt-diamond-right"
 
+    external_spec("dt-diamond-left@1.0", prefix=f"{tmp_path}")
+    (tmp_path / "lib").mkdir()
+    (tmp_path / "lib64").mkdir()
+
     cfg_data = syaml.load_config(
-        """\
+        """
 dt-diamond-left:
-  externals:
-  - spec: dt-diamond-left@1.0
-    prefix: /fake/path1
   buildable: false
 """
     )
     spack.config.set("packages", cfg_data)
     top = spack.spec.Spec("dt-diamond").concretized()
-
-    def _trust_me_its_a_dir(path):
-        return True
-
-    monkeypatch.setattr(os.path, "isdir", _trust_me_its_a_dir)
 
     env_mods = EnvironmentModifications()
     spack.build_environment.set_wrapper_variables(top.package, env_mods)
@@ -422,9 +418,7 @@ dt-diamond-left:
     env_mods.apply_modifications()
     link_dir_var = os.environ["SPACK_LINK_DIRS"]
     link_dirs = link_dir_var.split(":")
-    external_lib_paths = set(
-        [os.path.normpath("/fake/path1/lib"), os.path.normpath("/fake/path1/lib64")]
-    )
+    external_lib_paths = {os.path.normpath(tmp_path / "lib"), os.path.normpath(tmp_path / "lib64")}
     # The external lib paths should be the last two entries of the list and
     # should not appear anywhere before the last two entries
     assert set(os.path.normpath(x) for x in link_dirs[-2:]) == external_lib_paths

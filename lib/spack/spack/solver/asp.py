@@ -1598,58 +1598,23 @@ class SpackSolverSetup:
                 self.gen.newline()
                 requirement_weight += 1
 
-    def external_packages(self):
-        """Facts on external packages, as read from packages.yaml"""
-        # Read packages.yaml and normalize it, so that it
-        # will not contain entries referring to virtual
-        # packages.
+    def unbuildable_packages(self, possible_packages):
+        """Emit facts to prevent building certain packages from sources."""
+        # Read packages.yaml and normalize it, so that it will not contain entries
+        # referring to virtual packages.
         packages_yaml = spack.config.get("packages")
         packages_yaml = _normalize_packages_yaml(packages_yaml)
-
-        self.gen.h1("External packages")
+        self.gen.h1("Packages that cannot be built from sources (packages.yaml)")
         for pkg_name, data in packages_yaml.items():
             if pkg_name == "all":
                 continue
 
-            # This package does not appear in any repository
-            if pkg_name not in spack.repo.PATH:
+            if pkg_name not in possible_packages:
                 continue
 
-            self.gen.h2("External package: {0}".format(pkg_name))
-            # Check if the external package is buildable. If it is
-            # not then "external(<pkg>)" is a fact, unless we can
-            # reuse an already installed spec.
             external_buildable = data.get("buildable", True)
             if not external_buildable:
                 self.gen.fact(fn.buildable_false(pkg_name))
-
-            # Read a list of all the specs for this package
-            externals = data.get("externals", [])
-            external_specs = [spack.spec.parse_with_version_concrete(x["spec"]) for x in externals]
-
-            # Order the external versions to prefer more recent versions
-            # even if specs in packages.yaml are not ordered that way
-            external_versions = [
-                (x.version, external_id) for external_id, x in enumerate(external_specs)
-            ]
-            external_versions = [
-                (v, idx, external_id)
-                for idx, (v, external_id) in enumerate(sorted(external_versions, reverse=True))
-            ]
-            for version, idx, external_id in external_versions:
-                self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=version, idx=idx, origin=Provenance.EXTERNAL)
-                )
-
-            # Declare external conditions with a local index into packages.yaml
-            for local_idx, spec in enumerate(external_specs):
-                msg = "%s available as external when satisfying %s" % (spec.name, spec)
-                condition_id = self.condition(spec, msg=msg)
-                self.gen.fact(fn.pkg_fact(pkg_name, fn.possible_external(condition_id, local_idx)))
-                self.possible_versions[spec.name].add(spec.version)
-                self.gen.newline()
-
-            self.trigger_rules()
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
@@ -2411,7 +2376,7 @@ class SpackSolverSetup:
         self.virtual_providers()
         self.provider_defaults()
         self.provider_requirements()
-        self.external_packages()
+        self.unbuildable_packages(self.pkgs)
 
         # TODO: make a config option for this undocumented feature
         require_checksum = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
@@ -2631,28 +2596,6 @@ class SpecBuilder:
 
     def no_flags(self, node, flag_type):
         self._specs[node].compiler_flags[flag_type] = []
-
-    def external_spec_selected(self, node, idx):
-        """This means that the external spec and index idx
-        has been selected for this package.
-        """
-
-        packages_yaml = spack.config.get("packages")
-        packages_yaml = _normalize_packages_yaml(packages_yaml)
-        spec_info = packages_yaml[node.pkg]["externals"][int(idx)]
-        self._specs[node].external_path = spec_info.get("prefix", None)
-        self._specs[node].external_modules = spack.spec.Spec._format_module_list(
-            spec_info.get("modules", None)
-        )
-        self._specs[node].extra_attributes = spec_info.get("extra_attributes", {})
-
-        # If this is an extension, update the dependencies to include the extendee
-        package = self._specs[node].package_class(self._specs[node])
-        extendee_spec = package.extendee_spec
-
-        if extendee_spec:
-            extendee_node = SpecBuilder.make_node(pkg=extendee_spec.name)
-            package.update_external_dependencies(self._specs.get(extendee_node, None))
 
     def depends_on(self, parent_node, dependency_node, type):
         dependency_spec = self._specs[dependency_node]
@@ -2902,7 +2845,10 @@ class Solver:
         return reusable
 
     def _reusable_specs(self, specs):
-        reusable_specs = []
+        # We always reuse unconditionally external specs that are is user config
+        externals = spack.detection.import_externals()
+        reusable_specs, _ = spack.detection.update_database(externals)
+
         if self.reuse:
             # Specs from the local Database
             with spack.store.STORE.db.read_transaction():
@@ -2927,7 +2873,9 @@ class Solver:
         # If we only want to reuse dependencies, remove the root specs
         if self.reuse == "dependencies":
             reusable_specs = [
-                spec for spec in reusable_specs if not any(root in spec for root in specs)
+                spec
+                for spec in reusable_specs
+                if spec.external or not any(root in spec for root in specs)
             ]
 
         return reusable_specs

@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Define a common data structure to represent external packages and a
-function to update packages.yaml given a list of detected packages.
+function to update the DB given a list of external packages.
 
 Ideally, each detection method should be placed in a specific subpackage
 and implement at least a function that returns a list of DetectedPackage
-objects. The update in packages.yaml can then be done using the function
+objects. The update in to the DB can then be done using the function
 provided here.
 
 The module also contains other functions that might be useful across different
@@ -218,38 +218,47 @@ def library_prefix(library_dir: str) -> str:
         return library_dir
 
 
-def update_configuration(
-    detected_packages: Dict[str, List[DetectedPackage]],
-    scope: Optional[str] = None,
-    buildable: bool = True,
-) -> List[spack.spec.Spec]:
-    """Add the packages passed as arguments to packages.yaml
+def ensure_architecture_and_compiler(abstract_spec: spack.spec.Spec):
+    """Adds a fully concrete architecture and compiler to the spec passed as
+    input, if not already present.
+    """
+    c = spack.concretize.Concretizer()
+    c.concretize_architecture(spec=abstract_spec)
+    c.concretize_compiler(spec=abstract_spec)
+
+
+def update_database(
+    externals: Dict[str, List[DetectedPackage]]
+) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
+    """Add the external packages passed as input to the database.
 
     Args:
-        detected_packages: list of DetectedPackage objects to be added
-        scope: configuration scope where to add the detected packages
-        buildable: whether the detected packages are buildable or not
+        externals: mapping from package name to the external package that needs to be added.
+
+    Returns:
+        The list of all externals that have been considered and the list of
+        the ones newly added to the DB
     """
-    predefined_external_specs = _externals_in_packages_yaml()
-    pkg_to_cfg, all_new_specs = {}, []
-    for package_name, entries in detected_packages.items():
-        new_entries = [e for e in entries if (e.spec not in predefined_external_specs)]
+    all_specs, new_specs = [], []
+    database = spack.store.STORE.db
+    for package_name, entries in externals.items():
+        for entry in entries:
+            s = entry.spec
+            s.external_path = entry.prefix
+            s._finalize_concretization()
 
-        pkg_config = _pkg_config_dict(new_entries)
-        external_entries = pkg_config.get("externals", [])
-        assert not isinstance(external_entries, bool), "unexpected value for external entry"
+            # This traversal accounts for externals with detected dependencies
+            for node in s.traverse():
+                all_specs.append(node)
+                rec = database.query(node)
+                if rec:
+                    continue
+                new_specs.append(node)
 
-        all_new_specs.extend([spack.spec.Spec(x["spec"]) for x in external_entries])
-        if buildable is False:
-            pkg_config["buildable"] = False
-        pkg_to_cfg[package_name] = pkg_config
+        for node in new_specs:
+            database.add(node, spack.store.STORE.layout, explicit=False)
 
-    pkgs_cfg = spack.config.get("packages", scope=scope)
-
-    pkgs_cfg = spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
-    spack.config.set("packages", pkgs_cfg, scope=scope)
-
-    return all_new_specs
+    return all_specs, new_specs
 
 
 def _windows_drive() -> str:

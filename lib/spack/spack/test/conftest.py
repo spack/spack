@@ -65,6 +65,16 @@ def ensure_configuration_fixture_run_before(request):
         request.getfixturevalue("mutable_config")
 
 
+def ensure_database_fixture_run_before(request):
+    """Ensure that fixture mutating the database run before the one where
+    the function is called.
+    """
+    if "database" in request.fixturenames:
+        request.getfixturevalue("config")
+    if "mutable_database" in request.fixturenames:
+        request.getfixturevalue("mutable_config")
+
+
 @pytest.fixture(scope="session")
 def git():
     """Fixture for tests that use git."""
@@ -798,6 +808,15 @@ def mock_low_high_config(tmpdir):
         yield config
 
 
+@pytest.fixture()
+def clean_store(tmp_path, request):
+    """Creates a new, empty store for the test"""
+    ensure_configuration_fixture_run_before(request)
+    ensure_database_fixture_run_before(request)
+    with spack.store.use_store(str(tmp_path)) as s:
+        yield s
+
+
 def _populate(mock_db):
     r"""Populate a mock database with packages.
 
@@ -827,7 +846,6 @@ def _populate(mock_db):
     _install("mpileaks ^mpich")
     _install("mpileaks ^mpich2")
     _install("mpileaks ^zmpi")
-    _install("externaltest")
     _install("trivial-smoke-test")
 
 
@@ -902,6 +920,24 @@ def mutable_database(database_mutable_config, _store_dir_and_cache):
     store_path.remove(rec=1)
     copy_tree(str(store_cache), str(store_path))
     store_path.join(".spack-db").chmod(mode=0o555, rec=1)
+
+
+@pytest.fixture(scope="function")
+def external_spec(mutable_database, mock_store):
+    """Adds an external spec to a mutable database."""
+    with spack.config.override("concretizer:reuse", True):
+
+        def _add(spec_str, prefix=None, modules=None):
+            s = spack.spec.parse_with_version_concrete(spec_str)
+            s = spack.spec.Spec(str(s), external_path=prefix, external_modules=modules)
+            c = spack.concretize.Concretizer()
+            c.concretize_architecture(spec=s)
+            c.concretize_compiler(spec=s)
+            s._finalize_concretization()
+            spack.store.STORE.db.add(s, spack.store.STORE.layout, explicit=False)
+            return s
+
+        yield _add
 
 
 @pytest.fixture()

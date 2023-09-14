@@ -158,7 +158,7 @@ error(100, multiple_values_error, Attribute, Package)
 %-----------------------------------------------------------------------------
 
 % Versions are declared with a weight and an origin, which indicates where the
-% version was declared (e.g. "package_py" or "external").
+% version was declared (e.g. "package_py" or "installed").
 pkg_fact(Package, version_declared(Version, Weight)) :- pkg_fact(Package, version_declared(Version, Weight, _)).
 
 % We can't emit the same version **with the same weight** from two different sources
@@ -199,14 +199,6 @@ attr("deprecated", node(ID, Package), Version) :-
 possible_version_weight(node(ID, Package), Weight)
  :- attr("version", node(ID, Package), Version),
     pkg_fact(Package, version_declared(Version, Weight)).
-
-% we can't use the weight for an external version if we don't use the
-% corresponding external spec.
-:- attr("version", node(ID, Package), Version),
-   version_weight(node(ID, Package), Weight),
-   pkg_fact(Package, version_declared(Version, Weight, "external")),
-   not external(node(ID, Package)),
-   internal_error("External weight used for built package").
 
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
@@ -424,10 +416,8 @@ dependency_holds(node(NodeID, Package), Dependency, Type) :-
   pkg_fact(Package, dependency_condition(ID, Dependency)),
   dependency_type(ID, Type),
   build(node(NodeID, Package)),
-  not external(node(NodeID, Package)),
   condition_holds(ID, node(NodeID, Package)).
 
-% We cut off dependencies of externals (as we don't really know them).
 % Don't impose constraints on dependencies that don't exist.
 do_not_impose(EffectID, node(NodeID, Package)) :-
   not dependency_holds(node(NodeID, Package), Dependency, _),
@@ -462,19 +452,17 @@ error(1, Msg)
      condition_holds(ConstraintID, node(ID2, Package)),
      unification_set(X, node(ID2, Package)),
      unification_set(X, node(ID1, TriggerPackage)),
-     not external(node(ID, Package)),  % ignore conflicts for externals
      not attr("hash", node(ID, Package), _).  % ignore conflicts for installed packages
 
 %-----------------------------------------------------------------------------
 % Virtual dependencies
 %-----------------------------------------------------------------------------
 
-% if a package depends on a virtual, it's not external and we have a
+% if a package depends on a virtual and we have a
 % provider for that virtual then it depends on the provider
 node_depends_on_virtual(PackageNode, Virtual, Type)
   :- dependency_holds(PackageNode, Virtual, Type),
-     virtual(Virtual),
-     not external(PackageNode).
+     virtual(Virtual).
 
 node_depends_on_virtual(PackageNode, Virtual) :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
@@ -484,8 +472,7 @@ node_depends_on_virtual(PackageNode, Virtual) :- node_depends_on_virtual(Package
 attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
   :- dependency_holds(PackageNode, Virtual, Type),
      attr("depends_on", PackageNode, ProviderNode, Type),
-     provider(ProviderNode, node(_, Virtual)),
-     not external(PackageNode).
+     provider(ProviderNode, node(_, Virtual)).
 
 % dependencies on virtuals also imply that the virtual is a virtual node
 1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }
@@ -565,11 +552,6 @@ do_not_impose(EffectID, node(X, Package))
     possible_provider_weight(DependencyNode, VirtualNode, Weight, _) } 1
  :- provider(DependencyNode, VirtualNode), internal_error("Package provider weights must be unique").
 
-% A provider that is an external can use a weight of 0
-possible_provider_weight(DependencyNode, VirtualNode, 0, "external")
-  :- provider(DependencyNode, VirtualNode),
-     external(DependencyNode).
-
 % A provider mentioned in packages.yaml can use a weight
 % according to its priority in the list of providers
 possible_provider_weight(node(DependencyID, Dependency), node(VirtualID, Virtual), Weight, "packages_yaml")
@@ -589,64 +571,15 @@ possible_provider_weight(node(DependencyID, Dependency), VirtualNode, 100, "fall
 % do not warn if generated program contains none of these.
 #defined virtual/1.
 #defined virtual_condition_holds/2.
-#defined external/1.
 #defined buildable_false/1.
 #defined default_provider_preference/3.
 
-%-----------------------------------------------------------------------------
-% External semantics
-%-----------------------------------------------------------------------------
-
-% if a package is external its version must be one of the external versions
-{ external_version(node(ID, Package), Version, Weight):
-    pkg_fact(Package, version_declared(Version, Weight, "external")) }
-    :- external(node(ID, Package)).
-
-error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
-  :- external(node(ID, Package)),
-     not external_version(node(ID, Package), _, _).
-
-error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
-  :- external(node(ID, Package)),
-     2 { external_version(node(ID, Package), Version, Weight) }.
-
-version_weight(PackageNode, Weight) :- external_version(PackageNode, Version, Weight).
-attr("version", PackageNode, Version) :- external_version(PackageNode, Version, Weight).
-
-% if a package is not buildable, only externals or hashed specs are allowed
-external(node(ID, Package))
+% If a package is not buildable, only hashed specs are allowed
+error(100, "Cannot build '{0}' from sources, since it is marked 'buildable:false' in packages.yaml", Package)
   :- buildable_false(Package),
      attr("node", node(ID, Package)),
      not attr("hash", node(ID, Package), _).
 
-% a package is a real_node if it is not external
-real_node(PackageNode) :- attr("node", PackageNode), not external(PackageNode).
-
-% a package is external if we are using an external spec for it
-external(PackageNode) :- attr("external_spec_selected", PackageNode, _).
-
-% we can't use the weight for an external version if we don't use the
-% corresponding external spec.
-:- attr("version",  node(ID, Package), Version),
-   version_weight(node(ID, Package), Weight),
-   pkg_fact(Package, version_declared(Version, Weight, "external")),
-   not external(node(ID, Package)),
-   internal_error("External weight used for internal spec").
-
-% determine if an external spec has been selected
-attr("external_spec_selected", node(ID, Package), LocalIndex) :-
-    external_conditions_hold(node(ID, Package), LocalIndex),
-    attr("node", node(ID, Package)),
-    not attr("hash", node(ID, Package), _).
-
-external_conditions_hold(node(PackageID, Package), LocalIndex) :-
-    pkg_fact(Package, possible_external(ID, LocalIndex)), condition_holds(ID, node(PackageID, Package)).
-
-% it cannot happen that a spec is external, but none of the external specs
-% conditions hold.
-error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
- :- external(node(ID, Package)),
-    not external_conditions_hold(node(ID, Package), _).
 
 %-----------------------------------------------------------------------------
 % Config required semantics
@@ -835,8 +768,8 @@ attr("variant_value", PackageNode, Variant, Value)
     attr("variant_set", PackageNode, Variant, Value).
 
 % The rules below allow us to prefer default values for variants
-% whenever possible. If a variant is set in a spec, or if it is
-% specified in an external, we score it as if it was a default value.
+% whenever possible. If a variant is set in a spec we score it
+% as if it was a default value.
 variant_not_default(node(ID, Package), Variant, Value)
  :- attr("variant_value", node(ID, Package), Variant, Value),
     not variant_default_value(Package, Variant, Value),
@@ -844,10 +777,6 @@ variant_not_default(node(ID, Package), Variant, Value)
     not attr("variant_set", node(ID, Package), Variant, Value),
     % variant values forced by propagation don't count as non-default
     not attr("variant_propagate", node(ID, Package), Variant, Value, _),
-    % variants set on externals that we could use don't count as non-default
-    % this makes spack prefer to use an external over rebuilding with the
-    % default configuration
-    not external_with_variant_set(node(ID, Package), Variant, Value),
     attr("node", node(ID, Package)).
 
 
@@ -857,14 +786,6 @@ variant_default_not_used(node(ID, Package), Variant, Value)
      node_has_variant(node(ID, Package), Variant),
      not attr("variant_value", node(ID, Package), Variant, Value),
      attr("node", node(ID, Package)).
-
-% The variant is set in an external spec
-external_with_variant_set(node(NodeID, Package), Variant, Value)
- :- attr("variant_value", node(NodeID, Package), Variant, Value),
-    condition_requirement(ID, "variant_value", Package, Variant, Value),
-    pkg_fact(Package, possible_external(ID, _)),
-    external(node(NodeID, Package)),
-    attr("node", node(NodeID, Package)).
 
 % The default value for a variant in a package is what is prescribed:
 %
@@ -1145,13 +1066,18 @@ compiler_match(PackageNode, DependencyNode)
      node_compiler(PackageNode, CompilerID),
      node_compiler(DependencyNode, CompilerID).
 
-compiler_mismatch(PackageNode, DependencyNode)
+mismatch_candidates(PackageNode, DependencyNode)
   :- depends_on(PackageNode, DependencyNode),
+     unification_set(X, PackageNode),
+     unification_set(X, DependencyNode).
+
+compiler_mismatch(PackageNode, DependencyNode)
+  :- mismatch_candidates(PackageNode, DependencyNode),
      not attr("node_compiler_set", DependencyNode, _),
      not compiler_match(PackageNode, DependencyNode).
 
 compiler_mismatch_required(PackageNode, DependencyNode)
-  :- depends_on(PackageNode, DependencyNode),
+  :- mismatch_candidates(PackageNode, DependencyNode),
      attr("node_compiler_set", DependencyNode, _),
      not compiler_match(PackageNode, DependencyNode).
 

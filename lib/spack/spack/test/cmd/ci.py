@@ -556,8 +556,11 @@ def test_ci_generate_with_external_pkg(
     mock_packages,
     monkeypatch,
     ci_base_environment,
+    external_spec,
 ):
     """Make sure we do not generate jobs for external pkgs"""
+    external_spec("externaltool@1.0%gcc@10.2.1", prefix="/usr")
+    external_spec("externalvirtual@2.2%gcc@10.2.1", prefix="/usr")
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(

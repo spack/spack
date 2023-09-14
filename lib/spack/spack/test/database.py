@@ -454,7 +454,7 @@ def test_005_db_exists(database):
 def test_010_all_install_sanity(database):
     """Ensure that the install layout reflects what we think it does."""
     all_specs = spack.store.STORE.layout.all_specs()
-    assert len(all_specs) == 15
+    assert len(all_specs) == 14
 
     # Query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies("mpileaks")]
@@ -571,7 +571,7 @@ def test_050_basic_query(database):
     """Ensure querying database is consistent with what is installed."""
     # query everything
     total_specs = len(spack.store.STORE.db.query())
-    assert total_specs == 17
+    assert total_specs == 14
 
     # query specs with multiple configurations
     mpileaks_specs = database.query("mpileaks")
@@ -705,7 +705,8 @@ def test_115_reindex_with_packages_not_in_repo(mutable_database, tmpdir):
         _check_db_sanity(mutable_database)
 
 
-def test_external_entries_in_db(mutable_database):
+def test_external_entries_in_db(mutable_database, external_spec):
+    external_spec("externaltool@1.0%gcc@10.2.1", prefix="/path/to/external_tool")
     rec = mutable_database.get_record("mpileaks ^zmpi")
     assert rec.spec.external_path is None
     assert not rec.spec.external_modules
@@ -722,23 +723,9 @@ def test_external_entries_in_db(mutable_database):
     assert rec.explicit is True
 
 
-@pytest.mark.regression("8036")
-def test_regression_issue_8036(mutable_database, usr_folder_exists):
-    # The test ensures that the external package prefix is treated as
-    # existing. Even when the package prefix exists, the package should
-    # not be considered installed until it is added to the database with
-    # do_install.
-    s = spack.spec.Spec("externaltool@0.9")
-    s.concretize()
-    assert not s.installed
-
-    # Now install the external package and check again the `installed` property
-    s.package.do_install(fake=True)
-    assert s.installed
-
-
 @pytest.mark.regression("11118")
-def test_old_external_entries_prefix(mutable_database):
+def test_old_external_entries_prefix(clean_store, external_spec):
+    external_spec("externaltool@1.0", prefix="/usr")
     with open(spack.store.STORE.db._index_path, "r") as f:
         db_obj = json.loads(f.read())
 

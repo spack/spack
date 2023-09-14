@@ -25,7 +25,7 @@ import textwrap
 import time
 import traceback
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -172,7 +172,7 @@ class WindowsRPath:
 
 #: Registers which are the detectable packages, by repo and package name
 #: Need a pass of package repositories to be filled.
-detectable_packages = collections.defaultdict(list)
+DETECTABLE_PACKAGES = collections.defaultdict(list)
 
 
 class DetectablePackageMeta(type):
@@ -194,8 +194,7 @@ class DetectablePackageMeta(type):
         # for example detecting "foo.exe" when the package writer specified
         # that "foo" was a possible executable.
 
-        # If a package has the executables or libraries  attribute then it's
-        # assumed to be detectable
+        # If a package has the executables or libraries attribute, then it's detectable
         if hasattr(cls, "executables") or hasattr(cls, "libraries"):
             # Append a tag to each detectable package, so that finding them is faster
             if hasattr(cls, "tags"):
@@ -221,21 +220,20 @@ class DetectablePackageMeta(type):
                 return plat_exe
 
             @classmethod
-            def determine_spec_details(cls, prefix, objs_in_prefix):
+            def determine_spec_details(
+                cls, prefix: str, objs_in_prefix: Set[Any]
+            ) -> List["spack.spec.Spec"]:
                 """Allow ``spack external find ...`` to locate installations.
 
                 Args:
-                    prefix (str): the directory containing the executables
-                                  or libraries
-                    objs_in_prefix (set): the executables or libraries that
-                                          match the regex
+                    prefix: the directory containing the executables or libraries
+                    objs_in_prefix: the executables or libraries that match the regex
 
                 Returns:
                     The list of detected specs for this package
                 """
                 objs_by_version = collections.defaultdict(list)
-                # The default filter function is the identity function for the
-                # list of executables
+                # The default filter function is the identity function for the list of executables
                 filter_fn = getattr(cls, "filter_detected_exes", lambda x, exes: exes)
                 objs_in_prefix = filter_fn(prefix, objs_in_prefix)
                 for obj in objs_in_prefix:
@@ -244,10 +242,9 @@ class DetectablePackageMeta(type):
                         if version_str:
                             objs_by_version[version_str].append(obj)
                     except Exception as e:
-                        msg = (
-                            "An error occurred when trying to detect " 'the version of "{0}" [{1}]'
+                        tty.debug(
+                            f'An error occurred when trying to detect the version of "{obj}" [{e}]'
                         )
-                        tty.debug(msg.format(obj, str(e)))
 
                 specs = []
                 for version_str, objs in objs_by_version.items():
@@ -260,7 +257,7 @@ class DetectablePackageMeta(type):
                         if isinstance(variant, str):
                             variant = (variant, {})
                         variant_str, extra_attributes = variant
-                        spec_str = "{0}@{1} {2}".format(cls.name, version_str, variant_str)
+                        spec_str = f"{cls.name}@={version_str} {variant_str}"
 
                         # Pop a few reserved keys from extra attributes, since
                         # they have a different semantics
@@ -273,9 +270,11 @@ class DetectablePackageMeta(type):
                                 external_modules=external_modules,
                             )
                         except Exception as e:
-                            msg = 'Parsing failed [spec_str="{0}", error={1}]'
-                            tty.debug(msg.format(spec_str, str(e)))
+                            tty.debug(f'Parsing failed [spec_str="{spec_str}", error={str(e)}]')
                         else:
+                            c = spack.concretize.Concretizer()
+                            c.concretize_architecture(spec=spec)
+                            c.concretize_compiler(spec=spec)
                             specs.append(
                                 spack.spec.Spec.from_detection(
                                     spec, extra_attributes=extra_attributes
@@ -289,7 +288,7 @@ class DetectablePackageMeta(type):
                 return ""
 
             # Register the class as a detectable package
-            detectable_packages[cls.namespace].append(cls.name)
+            DETECTABLE_PACKAGES[cls.namespace].append(cls.name)
 
             # Attach function implementations to the detectable class
             default = False

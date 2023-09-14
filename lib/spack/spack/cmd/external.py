@@ -8,17 +8,17 @@ import os
 import sys
 from typing import List, Optional
 
-import llnl.util.tty as tty
-import llnl.util.tty.colify as colify
+from llnl.util import tty
+from llnl.util.tty import colify
 
 import spack
 import spack.cmd
 import spack.cmd.common.arguments
 import spack.config
-import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
 import spack.util.environment
+from spack import cray_manifest
 
 description = "manage external packages in Spack configuration"
 section = "config"
@@ -30,12 +30,8 @@ def setup_parser(subparser):
 
     scopes = spack.config.scopes()
 
-    find_parser = sp.add_parser("find", help="add external packages to packages.yaml")
-    find_parser.add_argument(
-        "--not-buildable",
-        action="store_true",
-        default=False,
-        help="packages with detected externals won't be built with Spack",
+    find_parser = sp.add_parser(
+        "find", help="search for external packages and add them to the local DB"
     )
     find_parser.add_argument("--exclude", action="append", help="packages to exclude from search")
     find_parser.add_argument(
@@ -44,13 +40,6 @@ def setup_parser(subparser):
         default=None,
         action="append",
         help="one or more alternative search paths for finding externals",
-    )
-    find_parser.add_argument(
-        "--scope",
-        choices=scopes,
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_modify_scope("packages"),
-        help="configuration scope to modify",
     )
     find_parser.add_argument(
         "--all", action="store_true", help="search for all packages that Spack knows about"
@@ -62,6 +51,21 @@ def setup_parser(subparser):
         '"core-packages" tags. Use the --all option to search for every possible '
         "package Spack knows how to find."
     )
+
+    import_parser = sp.add_parser(
+        "import", help="import external packages from user configuration to the local DB"
+    )
+    import_parser.add_argument(
+        "--scope",
+        choices=scopes,
+        metavar=spack.config.SCOPES_METAVAR,
+        default=spack.config.default_modify_scope("packages"),
+        help="configuration scope to read from",
+    )
+    import_parser.add_argument(
+        "--exclude", action="append", help="packages to exclude from import"
+    )
+    import_parser.add_argument("packages", nargs=argparse.REMAINDER)
 
     sp.add_parser("list", help="list detectable packages, by repository and name")
 
@@ -139,13 +143,9 @@ def external_find(args):
         candidate_packages, path_hints=args.path, max_workers=args.jobs
     )
 
-    new_entries = spack.detection.update_configuration(
-        detected_packages, scope=args.scope, buildable=not args.not_buildable
-    )
+    _, new_entries = spack.detection.update_database(detected_packages)
     if new_entries:
-        path = spack.config.CONFIG.get_config_filename(args.scope, "packages")
-        msg = "The following specs have been detected on this system and added to {0}"
-        tty.msg(msg.format(path))
+        tty.msg("The following specs have been detected on this system and added to the local DB")
         spack.cmd.display_specs(new_entries)
     else:
         tty.msg("No new external packages detected")
@@ -162,6 +162,22 @@ def packages_to_search_for(
     if exclude:
         result = [x for x in result if x not in exclude]
     return result
+
+
+def external_import(args):
+    externals = spack.detection.import_externals(scope=args.scope)
+    if args.packages:
+        externals = {key: value for key, value in externals.items() if key in args.packages}
+
+    _, new_entries = spack.detection.update_database(externals)
+    if new_entries:
+        tty.msg(
+            "The following specs have been imported from user configuration "
+            "and added to the local DB"
+        )
+        spack.cmd.display_specs(new_entries)
+    else:
+        tty.msg("No new external packages detected")
 
 
 def external_read_cray_manifest(args):
@@ -233,7 +249,7 @@ def external_list(args):
     list(spack.repo.PATH.all_package_classes())
     # Print all the detectable packages
     tty.msg("Detectable packages per repository")
-    for namespace, pkgs in sorted(spack.package_base.detectable_packages.items()):
+    for namespace, pkgs in sorted(spack.package_base.DETECTABLE_PACKAGES.items()):
         print("Repository:", namespace)
         colify.colify(pkgs, indent=4, output=sys.stdout)
 
@@ -241,6 +257,7 @@ def external_list(args):
 def external(parser, args):
     action = {
         "find": external_find,
+        "import": external_import,
         "list": external_list,
         "read-cray-manifest": external_read_cray_manifest,
     }

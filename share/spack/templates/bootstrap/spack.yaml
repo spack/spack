@@ -17,11 +17,11 @@ spack:
       root: {{ store_path }}
       padded_length: 0
 
-  packages:
+  packages::
     python:
       buildable: false
       externals:
-        - spec: "{{ python_spec }}"
+        - spec: "{{ python_spec }} target={{ architecture }}"
           prefix: "{{ python_prefix }}"
 
     py-typed-ast:
