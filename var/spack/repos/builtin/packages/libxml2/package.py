@@ -43,6 +43,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     variant("shared", default=True, description="Build shared library")
     variant("pic", default=True, description="Enable position-independent code (PIC)")
 
+    conflicts("~pic+shared")
+
     depends_on("pkgconfig@0.9.0:", type="build", when="build_system=autotools")
     # conditional on non Windows, but rather than specify for each platform
     # specify for non Windows builder, which has equivalent effect
@@ -77,6 +79,12 @@ class Libxml2(AutotoolsPackage, NMakePackage):
         when="@2.9.11:2.9.14",
     )
     build_system(conditional("nmake", when="platform=windows"), "autotools", default="autotools")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags" and self.spec.satisfies("+pic"):
+            flags.append(self.compiler.cc_pic_flag)
+            flags.append("-DPIC")
+        return (flags, None, None)
 
     @property
     def command(self):
@@ -218,7 +226,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
             args.append("--without-python")
 
         args.extend(self.enable_or_disable("shared"))
-        args.extend(self.with_or_without("pic"))
+        args.append("--without-pic")
 
         return args
 
