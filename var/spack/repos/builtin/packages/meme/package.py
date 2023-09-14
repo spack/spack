@@ -23,7 +23,7 @@ class Meme(AutotoolsPackage):
     version("4.11.4", sha256="3e869ff57e327a9c8615dbef784e3f1095f7f7a0120cecd55efe10c3f2ee8eb3")
 
     variant("mpi", default=True, description="Enable MPI support")
-    variant("imagemagick", default=False, description="Enable imagemagick for png output")
+    variant("magick", default=False, description="Enable imagemagick for png output")
 
     # Perl runtime deps
     depends_on("perl@5.16:", type=("build", "run"))
@@ -37,7 +37,7 @@ class Meme(AutotoolsPackage):
     depends_on("libxml2")
     depends_on("libxslt")
     # Variant deps
-    depends_on("imagemagick", type=("build", "run"), when="+imagemagick")
+    depends_on("imagemagick", type=("build", "run"), when="+magick")
     depends_on("mpi", when="+mpi")
 
     patch("arm.patch", when="%arm")
