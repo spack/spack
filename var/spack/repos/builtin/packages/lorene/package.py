@@ -110,7 +110,6 @@ class Lorene(MakefilePackage):
                 )
 
     def install(self, spec, prefix):
-        mkdirp(prefix.lib)
         install_tree("Lib", prefix.lib)
         install_tree("Export/C++/Include", prefix.include)
         install_tree("C++/Include", prefix.include)
