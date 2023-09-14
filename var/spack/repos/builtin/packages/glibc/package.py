@@ -75,6 +75,12 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     # rpc/types.h include issue, should be from local version, not system.
     patch("fb21f89.patch", when="@:2.16")
 
+    # Avoid linking libgcc_eh
+    patch("95f5a9a.patch", when="@2.16")
+    patch("95f5a9a-2.15.patch", when="@2.14:2.15")
+    patch("95f5a9a-2.13.patch", when="@2.12:2.13")
+    patch("95f5a9a-2.11.patch", when="@:2.11")
+
     # Use init_array (modified commit 4a531bb to unconditionally define
     # NO_CTORS_DTORS_SECTIONS)
     patch("4a531bb.patch", when="@:2.12")
