@@ -18,6 +18,9 @@ class Ip(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA")
 
     version("develop", branch="develop")
+    version("4.3.0", sha256="799308a868dea889d2527d96a0405af7b376869581410fe4cff681205e9212b4")
+    # Note that versions 4.0-4.2 contain constants_mod module, and should not be used when
+    # also compiling with packages containing Fortran modules of the same name, namely, FMS.
     version("4.2.0", sha256="9b9f47106822044ff224c6dfd9f140c146dffc833904f2a0c5db7b5d8932e39e")
     version("4.1.0", sha256="b83ca037d9a5ad3eb0fb1acfe665c38b51e01f6bd73ce9fb8bb2a14f5f63cdbe")
     version("4.0.0", sha256="a2ef0cc4e4012f9cb0389fab6097407f4c623eb49772d96eb80c44f804aa86b8")
