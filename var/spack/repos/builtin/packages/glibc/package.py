@@ -76,7 +76,8 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     patch("fb21f89.patch", when="@:2.16")
 
     # Avoid linking libgcc_eh
-    patch("95f5a9a.patch", when="@2.16")
+    patch("95f5a9a-stub.patch", when="@:2.16")
+    patch("95f5a9a-2.16.patch", when="@2.16")
     patch("95f5a9a-2.15.patch", when="@2.14:2.15")
     patch("95f5a9a-2.13.patch", when="@2.12:2.13")
     patch("95f5a9a-2.11.patch", when="@:2.11")
