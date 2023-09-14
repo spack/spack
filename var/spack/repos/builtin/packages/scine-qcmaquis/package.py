@@ -44,7 +44,7 @@ class ScineQcmaquis(CMakePackage):
     depends_on("intel-oneapi-mkl", when="blas=mkl")
     depends_on("gsl")
     depends_on("boost+program_options+filesystem+system+thread+serialization+chrono")
-    depends_on("googletest+gmock", when="build_tests=True")
+    depends_on("googletest+gmock", when="+build_tests")
 
     def cmake_args(self):
         args = [
