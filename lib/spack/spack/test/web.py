@@ -310,7 +310,7 @@ def test_remove_s3_url(monkeypatch, capfd):
     def get_s3_session(url, method="fetch"):
         return MockS3Client()
 
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+    monkeypatch.setattr(spack.util.web, "get_s3_session", get_s3_session)
 
     current_debug_level = tty.debug_level()
     tty.set_debug(1)

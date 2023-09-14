@@ -27,12 +27,11 @@ from llnl.util.filesystem import mkdirp, rename, working_dir
 
 import spack.config
 import spack.error
-import spack.gcs_handler
-import spack.s3_handler
-import spack.util.gcs as gcs_util
-import spack.util.s3 as s3_util
 import spack.util.url as url_util
-from spack.util.executable import CommandNotFoundError, which
+
+from .executable import CommandNotFoundError, which
+from .gcs import GCSBlob, GCSBucket, GCSHandler
+from .s3 import UrllibS3Handler, get_s3_session
 
 
 class DetailedHTTPError(HTTPError):
@@ -61,8 +60,8 @@ class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
 
 
 def _urlopen():
-    s3 = spack.s3_handler.UrllibS3Handler()
-    gcs = spack.gcs_handler.GCSHandler()
+    s3 = UrllibS3Handler()
+    gcs = GCSHandler()
     error_handler = SpackHTTPDefaultErrorHandler()
 
     # One opener with HTTPS ssl enabled
@@ -185,14 +184,14 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         while remote_path.startswith("/"):
             remote_path = remote_path[1:]
 
-        s3 = s3_util.get_s3_session(remote_url, method="push")
+        s3 = get_s3_session(remote_url, method="push")
         s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
             os.remove(local_file_path)
 
     elif remote_url.scheme == "gs":
-        gcs = gcs_util.GCSBlob(remote_url)
+        gcs = GCSBlob(remote_url)
         gcs.upload_to_blob(local_file_path)
         if not keep_original:
             os.remove(local_file_path)
@@ -422,7 +421,7 @@ def remove_url(url, recursive=False):
 
     if url.scheme == "s3":
         # Try to find a mirror for potential connection information
-        s3 = s3_util.get_s3_session(url, method="push")
+        s3 = get_s3_session(url, method="push")
         bucket = url.netloc
         if recursive:
             # Because list_objects_v2 can only return up to 1000 items
@@ -455,10 +454,10 @@ def remove_url(url, recursive=False):
 
     elif url.scheme == "gs":
         if recursive:
-            bucket = gcs_util.GCSBucket(url)
+            bucket = GCSBucket(url)
             bucket.destroy(recursive=recursive)
         else:
-            blob = gcs_util.GCSBlob(url)
+            blob = GCSBlob(url)
             blob.delete_blob()
         return
 
@@ -533,14 +532,14 @@ def list_url(url, recursive=False):
         ]
 
     if url.scheme == "s3":
-        s3 = s3_util.get_s3_session(url, method="fetch")
+        s3 = get_s3_session(url, method="fetch")
         if recursive:
             return list(_iter_s3_prefix(s3, url))
 
         return list(set(key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)))
 
     elif url.scheme == "gs":
-        gcs = gcs_util.GCSBucket(url)
+        gcs = GCSBucket(url)
         return gcs.get_all_blobs(recursive=recursive)
 
 
