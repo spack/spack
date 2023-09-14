@@ -197,6 +197,10 @@ class Hdf(AutotoolsPackage):
 
     extra_install_tests = join_path("hdf", "util", "testfiles")
 
+    # Filter h4cc compiler wrapper to substitute the Spack compiler
+    # wrappers with the path of the underlying compilers.
+    filter_compiler_wrappers("h4cc", relative_root="bin")
+
     @property
     def cached_tests_work_dir(self):
         """The working directory for cached test sources."""
