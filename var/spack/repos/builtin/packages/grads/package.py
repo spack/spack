@@ -29,7 +29,7 @@ class Grads(AutotoolsPackage):
 
     # TODO: This variant depends on the "simple X" library, which is no longer available
     # from any trusted source. Revisit if this changes.
-    #variant("gui", default=False, description="Enable graphical user interface")
+    # variant("gui", default=False, description="Enable graphical user interface")
 
     # These variants are broken in 2.2.1
     # See https://github.com/j-m-adams/GrADS/issues/2
@@ -62,6 +62,7 @@ class Grads(AutotoolsPackage):
 
     # Name of grib2 C library has changed in recent versions
     with when("+grib2"):
+
         def patch(self):
             filter_file("grib2c", "g2c", "configure")
 
@@ -71,7 +72,7 @@ class Grads(AutotoolsPackage):
         # Recent versions configure scripts break without PKG_CONFIG set
         env.set("PKG_CONFIG", self.spec["pkgconfig"].prefix.bin.join("pkg-config"))
 
-        with when("^hdf~shared"):
+        if self.spec.satisfies("+hdf4") and self.spec["hdf"].satisfies("~shared"):
             env.set("LIBS", self.spec["hdf:transitive"].libs)
 
     def setup_run_environment(self, env):
