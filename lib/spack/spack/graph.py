@@ -79,7 +79,7 @@ class AsciiGraph:
         self.node_character = "o"
         self.debug = False
         self.indent = 0
-        self.depflag = dt.all_flag
+        self.depflag = dt.ALL
 
         # These are colors in the order they'll be used for edges.
         # See llnl.util.tty.color for details on color characters.
@@ -435,7 +435,7 @@ class AsciiGraph:
 
 
 def graph_ascii(
-    spec, node="o", out=None, debug=False, indent=0, color=None, depflag: dt.DepFlag = dt.all_flag
+    spec, node="o", out=None, debug=False, indent=0, color=None, depflag: dt.DepFlag = dt.ALL
 ):
     graph = AsciiGraph()
     graph.debug = debug
@@ -551,7 +551,7 @@ def _static_edges(specs, depflag):
 
 
 def static_graph_dot(
-    specs: List[spack.spec.Spec], depflag: dt.DepFlag = dt.all_flag, out: Optional[TextIO] = None
+    specs: List[spack.spec.Spec], depflag: dt.DepFlag = dt.ALL, out: Optional[TextIO] = None
 ):
     """Static DOT graph with edges to all possible dependencies.
 
@@ -570,7 +570,7 @@ def static_graph_dot(
 def graph_dot(
     specs: List[spack.spec.Spec],
     builder: Optional[DotGraphBuilder] = None,
-    depflag: dt.DepFlag = dt.all_flag,
+    depflag: dt.DepFlag = dt.ALL,
     out: Optional[TextIO] = None,
 ):
     """DOT graph of the concrete specs passed as input.

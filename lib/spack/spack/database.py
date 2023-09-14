@@ -1378,7 +1378,7 @@ class Database:
         spec,
         direction="children",
         transitive=True,
-        deptype: Union[dt.DepFlag, dt.DepTypes] = dt.all_flag,
+        deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
     ):
         """Return installed specs related to this one."""
         if direction not in ("parents", "children"):

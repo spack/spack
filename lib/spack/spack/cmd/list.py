@@ -149,7 +149,7 @@ def rows_for_ncols(elts, ncols):
 
 def get_dependencies(pkg):
     all_deps = {}
-    for deptype in dt.all_types:
+    for deptype in dt.ALL_TYPES:
         deps = pkg.dependencies_of_type(dt.flag_from_string(deptype))
         all_deps[deptype] = [d for d in deps]
 
@@ -275,7 +275,7 @@ def html(pkg_names, out):
             out.write("\n")
             out.write("</dd>\n")
 
-        for deptype in dt.all_types:
+        for deptype in dt.ALL_TYPES:
             deps = pkg_cls.dependencies_of_type(dt.flag_from_string(deptype))
             if deps:
                 out.write("<dt>%s Dependencies:</dt>\n" % deptype.capitalize())

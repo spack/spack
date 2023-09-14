@@ -912,8 +912,8 @@ class TestSpecDag:
 
     def test_canonical_deptype(self):
         # special values
-        assert dt.canonicalize(all) == dt.all_flag
-        assert dt.canonicalize("all") == dt.all_flag
+        assert dt.canonicalize(all) == dt.ALL
+        assert dt.canonicalize("all") == dt.ALL
 
         with pytest.raises(ValueError):
             dt.canonicalize(None)
@@ -921,7 +921,7 @@ class TestSpecDag:
             dt.canonicalize([None])
 
         # everything in all_types is canonical
-        for v in dt.all_types:
+        for v in dt.ALL_TYPES:
             assert dt.canonicalize(v) == dt.flag_from_string(v)
 
         # tuples
@@ -1090,8 +1090,8 @@ def test_indexing_prefers_direct_or_transitive_link_deps():
     root.add_dependency_edge(a1, depflag=dt.BUILD | dt.RUN | dt.TEST, virtuals=())
 
     # unique package as a dep of a build/run/test type dep.
-    a1.add_dependency_edge(a2, depflag=dt.all_flag, virtuals=())
-    a1.add_dependency_edge(z3_flavor_1, depflag=dt.all_flag, virtuals=())
+    a1.add_dependency_edge(a2, depflag=dt.ALL, virtuals=())
+    a1.add_dependency_edge(z3_flavor_1, depflag=dt.ALL, virtuals=())
 
     # chain of link type deps root -> z1 -> z2 -> z3
     root.add_dependency_edge(z1, depflag=dt.LINK, virtuals=())

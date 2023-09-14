@@ -987,7 +987,7 @@ class _EdgeMap(collections.abc.Mapping):
 
         return clone
 
-    def select(self, parent=None, child=None, depflag: dt.DepFlag = dt.all_flag):
+    def select(self, parent=None, child=None, depflag: dt.DepFlag = dt.ALL):
         """Select a list of edges and return them.
 
         If an edge:
@@ -1441,7 +1441,7 @@ class Spec:
             raise spack.error.SpecError(err_msg.format(name, len(deps)))
         return deps[0]
 
-    def edges_from_dependents(self, name=None, depflag: dt.DepFlag = dt.all_flag):
+    def edges_from_dependents(self, name=None, depflag: dt.DepFlag = dt.ALL):
         """Return a list of edges connecting this node in the DAG
         to parents.
 
@@ -1451,7 +1451,7 @@ class Spec:
         """
         return [d for d in self._dependents.select(parent=name, depflag=depflag)]
 
-    def edges_to_dependencies(self, name=None, depflag: dt.DepFlag = dt.all_flag):
+    def edges_to_dependencies(self, name=None, depflag: dt.DepFlag = dt.ALL):
         """Return a list of edges connecting this node in the DAG
         to children.
 
@@ -1461,7 +1461,7 @@ class Spec:
         """
         return [d for d in self._dependencies.select(child=name, depflag=depflag)]
 
-    def dependencies(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.all_flag):
+    def dependencies(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL):
         """Return a list of direct dependencies (nodes in the DAG).
 
         Args:
@@ -1472,7 +1472,7 @@ class Spec:
             deptype = dt.canonicalize(deptype)
         return [d.spec for d in self.edges_to_dependencies(name, depflag=deptype)]
 
-    def dependents(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.all_flag):
+    def dependents(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL):
         """Return a list of direct dependents (nodes in the DAG).
 
         Args:
@@ -1483,7 +1483,7 @@ class Spec:
             deptype = dt.canonicalize(deptype)
         return [d.parent for d in self.edges_from_dependents(name, depflag=deptype)]
 
-    def _dependencies_dict(self, depflag: dt.DepFlag = dt.all_flag):
+    def _dependencies_dict(self, depflag: dt.DepFlag = dt.ALL):
         """Return a dictionary, keyed by package name, of the direct
         dependencies.
 
@@ -3971,7 +3971,7 @@ class Spec:
         if deps:
             # If caller restricted deptypes to be copied, adjust that here.
             # By default, just copy all deptypes
-            depflag = dt.all_flag
+            depflag = dt.ALL
             if isinstance(deps, (tuple, list, str)):
                 depflag = dt.canonicalize(deps)
             self._dup_deps(other, depflag)

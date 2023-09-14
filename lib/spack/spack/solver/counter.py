@@ -25,7 +25,7 @@ class Counter:
         self.specs = specs
 
         self.link_run_types: dt.DepFlag = dt.LINK | dt.RUN | dt.TEST
-        self.all_types: dt.DepFlag = dt.all_flag
+        self.all_types: dt.DepFlag = dt.ALL
         if not tests:
             self.link_run_types = dt.LINK | dt.RUN
             self.all_types = dt.LINK | dt.RUN | dt.BUILD

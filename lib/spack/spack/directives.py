@@ -437,7 +437,7 @@ def _execute_version(pkg, ver, **kwargs):
     pkg.versions[version] = kwargs
 
 
-def _depends_on(pkg, spec, when=None, type=dt.default_deptype, patches=None):
+def _depends_on(pkg, spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
     when_spec = make_when_spec(when)
     if not when_spec:
         return
@@ -526,7 +526,7 @@ def conflicts(conflict_spec, when=None, msg=None):
 
 
 @directive(("dependencies"))
-def depends_on(spec, when=None, type=dt.default_deptype, patches=None):
+def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
     """Creates a dict of deps with specs defining when they apply.
 
     Args:

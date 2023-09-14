@@ -1488,7 +1488,7 @@ class SpackSolverSetup:
                     fn.pkg_fact(pkg.name, fn.dependency_condition(condition_id, dep.spec.name))
                 )
 
-                for t in dt.flag_iterator:
+                for t in dt.ALL_FLAGS:
                     if t & depflag:
                         # there is a declared dependency of type t
                         self.gen.fact(fn.dependency_type(condition_id, dt.flag_to_string(t)))
@@ -1865,7 +1865,7 @@ class SpackSolverSetup:
                 if spec.concrete:
                     # We know dependencies are real for concrete specs. For abstract
                     # specs they just mean the dep is somehow in the DAG.
-                    for dtype in dt.flag_iterator:
+                    for dtype in dt.ALL_FLAGS:
                         if not dspec.depflag & dtype:
                             continue
                         # skip build dependencies of already-installed specs

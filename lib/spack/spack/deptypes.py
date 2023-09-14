@@ -25,19 +25,19 @@ BUILD = 0b0100
 TEST = 0b1000
 
 #: The types of dependency relationships that Spack understands.
-all_types: Tuple[DepType, ...] = ("build", "link", "run", "test")
+ALL_TYPES: Tuple[DepType, ...] = ("build", "link", "run", "test")
 
-#: An iterator of all dependency types
-flag_iterator: Tuple[DepFlag, DepFlag, DepFlag, DepFlag] = (BUILD, LINK, RUN, TEST)
+#: Default dependency type if none is specified
+DEFAULT_TYPES: Tuple[DepType, ...] = ("build", "link")
 
 #: A flag with all dependency types set
-all_flag = BUILD | LINK | RUN | TEST
+ALL = BUILD | LINK | RUN | TEST
 
 #: Default dependency type if none is specified
-default_deptype: Tuple[DepType, ...] = ("build", "link")
+DEFAULT: DepFlag = BUILD | LINK
 
-#: Default dependency type if none is specified
-default_deptype_flag: DepFlag = BUILD | LINK
+#: An iterator of all flags
+ALL_FLAGS: Tuple[DepFlag, DepFlag, DepFlag, DepFlag] = (BUILD, LINK, RUN, TEST)
 
 
 def flag_from_string(s: str) -> DepFlag:
@@ -70,7 +70,7 @@ def canonicalize(deptype: DepTypes) -> DepFlag:
             a tuple of all dependency types known to Spack.
     """
     if deptype in ("all", all):
-        return all_flag
+        return ALL
 
     if isinstance(deptype, str):
         return flag_from_string(deptype)
@@ -119,5 +119,5 @@ def flag_to_chars(depflag: DepFlag) -> str:
     whether ANY dpeendency in the list has the deptypes (so the deptypes
     are merged)."""
     return "".join(
-        t_str[0] if t_flag & depflag else " " for t_str, t_flag in zip(all_types, flag_iterator)
+        t_str[0] if t_flag & depflag else " " for t_str, t_flag in zip(ALL_TYPES, ALL_FLAGS)
     )

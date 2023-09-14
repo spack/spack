@@ -28,7 +28,7 @@ class BaseVisitor:
     """A simple visitor that accepts all edges unconditionally and follows all
     edges to dependencies of a given ``deptype``."""
 
-    def __init__(self, depflag: dt.DepFlag = dt.all_flag):
+    def __init__(self, depflag: dt.DepFlag = dt.ALL):
         self.depflag = depflag
 
     def accept(self, item):
@@ -51,7 +51,7 @@ class BaseVisitor:
 class ReverseVisitor:
     """A visitor that reverses the arrows in the DAG, following dependents."""
 
-    def __init__(self, visitor, depflag: dt.DepFlag = dt.all_flag):
+    def __init__(self, visitor, depflag: dt.DepFlag = dt.ALL):
         self.visitor = visitor
         self.depflag = depflag
 

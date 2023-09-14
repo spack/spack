@@ -685,7 +685,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         cls,
         transitive=True,
         expand_virtuals=True,
-        depflag: dt.DepFlag = dt.all_flag,
+        depflag: dt.DepFlag = dt.ALL,
         visited=None,
         missing=None,
         virtuals=None,

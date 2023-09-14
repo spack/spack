@@ -40,7 +40,7 @@ class Dependency:
         self,
         pkg: "spack.package_base.PackageBase",
         spec: "spack.spec.Spec",
-        depflag: dt.DepFlag = dt.default_deptype_flag,
+        depflag: dt.DepFlag = dt.DEFAULT,
     ):
         """Create a new Dependency.
 

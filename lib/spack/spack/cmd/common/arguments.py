@@ -118,7 +118,7 @@ class DeptypeAction(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         if not values or values == "all":
-            deptype = dt.all_flag
+            deptype = dt.ALL
         else:
             deptype = dt.canonicalize(values.split(","))
         setattr(namespace, self.dest, deptype)
@@ -282,8 +282,8 @@ def deptype():
     return Args(
         "--deptype",
         action=DeptypeAction,
-        default=dt.all_flag,
-        help="comma-separated list of deptypes to traverse (default=%s)" % ",".join(dt.all_types),
+        default=dt.ALL,
+        help="comma-separated list of deptypes to traverse (default=%s)" % ",".join(dt.ALL_TYPES),
     )
 
 
