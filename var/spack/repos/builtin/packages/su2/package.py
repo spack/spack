@@ -75,16 +75,14 @@ class Su2(MesonPackage):
     patch("meson_version.patch", when="@7.4.0:7.5.1")
 
     def patch(self):
-        if self.spec.satisfies("+autodiff") or self.spec.satisfies("+directdiff"):
+        if "+autodiff" in self.spec or "+directdiff" in self.spec:
             filter_file(
                 "externals/codi/include",
                 join_path(self.spec["codipack"].prefix, "include"),
                 "meson.build",
             )
 
-        if (
-            self.spec.satisfies("+autodiff") or self.spec.satisfies("+directdiff")
-        ) and self.spec.satisfies("+mpi"):
+        if ("+autodiff" in self.spec or "+directdiff" in self.spec) and "+mpi" in self.spec:
             filter_file(
                 "externals/medi/include",
                 join_path(self.spec["medipack"].prefix, "include"),
@@ -94,9 +92,7 @@ class Su2(MesonPackage):
                 "externals/medi/src", join_path(self.spec["medipack"].prefix, "src"), "meson.build"
             )
 
-        if (
-            self.spec.satisfies("+autodiff") or self.spec.satisfies("+directdiff")
-        ) and self.spec.satisfies("+openmp"):
+        if ("+autodiff" in self.spec or "+directdiff" in self.spec) and "+openmp" in self.spec:
             filter_file(
                 "externals/opdi/include",
                 join_path(self.spec["opdilib"].prefix, "include"),
