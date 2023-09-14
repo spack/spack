@@ -34,7 +34,7 @@ from llnl.util.link_tree import LinkTree
 
 import spack.compilers
 import spack.config
-import spack.dependency
+import spack.deptypes as dt
 import spack.directives
 import spack.directory_layout
 import spack.environment
@@ -525,6 +525,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # This allows analysis tools to correctly interpret the class attributes.
     versions: dict
 
+    # Same for dependencies
+    dependencies: dict
+
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
     virtual = False
@@ -682,7 +685,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         cls,
         transitive=True,
         expand_virtuals=True,
-        deptype="all",
+        depflag: dt.DepFlag = dt.ALL,
         visited=None,
         missing=None,
         virtuals=None,
@@ -694,7 +697,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 True, only direct dependencies if False (default True)..
             expand_virtuals (bool or None): expand virtual dependencies into
                 all possible implementations (default True)
-            deptype (str or tuple or None): dependency types to consider
+            depflag: dependency types to consider
             visited (dict or None): dict of names of dependencies visited so
                 far, mapped to their immediate dependencies' names.
             missing (dict or None): dict to populate with packages and their
@@ -720,8 +723,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Note: the returned dict *includes* the package itself.
 
         """
-        deptype = spack.dependency.canonical_deptype(deptype)
-
         visited = {} if visited is None else visited
         missing = {} if missing is None else missing
 
@@ -729,9 +730,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         for name, conditions in cls.dependencies.items():
             # check whether this dependency could be of the type asked for
-            deptypes = [dep.type for cond, dep in conditions.items()]
-            deptypes = set.union(*deptypes)
-            if not any(d in deptypes for d in deptype):
+            depflag_union = 0
+            for dep in conditions.values():
+                depflag_union |= dep.depflag
+            if not (depflag & depflag_union):
                 continue
 
             # expand virtuals if enabled, otherwise just stop at virtuals
@@ -770,7 +772,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     continue
 
                 dep_cls.possible_dependencies(
-                    transitive, expand_virtuals, deptype, visited, missing, virtuals
+                    transitive, expand_virtuals, depflag, visited, missing, virtuals
                 )
 
         return visited
@@ -1203,7 +1205,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self._fetcher.set_package(self)
 
     @classmethod
-    def dependencies_of_type(cls, *deptypes):
+    def dependencies_of_type(cls, deptypes: dt.DepFlag):
         """Get dependencies that can possibly have these deptypes.
 
         This analyzes the package and determines which dependencies *can*
@@ -1215,7 +1217,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return dict(
             (name, conds)
             for name, conds in cls.dependencies.items()
-            if any(dt in cls.dependencies[name][cond].type for cond in conds for dt in deptypes)
+            if any(deptypes & cls.dependencies[name][cond].depflag for cond in conds)
         )
 
     # TODO: allow more than one active extendee.

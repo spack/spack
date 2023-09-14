@@ -7,12 +7,13 @@ These tests check Spec DAG operations using dummy packages.
 """
 import pytest
 
+import spack.deptypes as dt
 import spack.error
 import spack.package_base
 import spack.parser
 import spack.repo
 import spack.util.hash as hashutil
-from spack.dependency import Dependency, all_deptypes, canonical_deptype
+from spack.dependency import Dependency
 from spack.spec import Spec
 
 
@@ -37,7 +38,7 @@ def set_dependency(saved_deps, monkeypatch):
     for a package in the ``saved_deps`` fixture.
     """
 
-    def _mock(pkg_name, spec, deptypes=all_deptypes):
+    def _mock(pkg_name, spec):
         """Alters dependence information for a package.
 
         Adds a dependency on <spec> to pkg. Use this to mock up constraints.
@@ -49,7 +50,7 @@ def set_dependency(saved_deps, monkeypatch):
             saved_deps[pkg_name] = (pkg_cls, pkg_cls.dependencies.copy())
 
         cond = Spec(pkg_cls.name)
-        dependency = Dependency(pkg_cls, spec, type=deptypes)
+        dependency = Dependency(pkg_cls, spec)
         monkeypatch.setitem(pkg_cls.dependencies, spec.name, {cond: dependency})
 
     return _mock
@@ -123,7 +124,7 @@ def test_installed_deps(monkeypatch, mock_packages):
     # use the installed C.  It should *not* force A to use the installed D
     # *if* we're doing a fresh installation.
     a_spec = Spec(a)
-    a_spec._add_dependency(c_spec, deptypes=("build", "link"), virtuals=())
+    a_spec._add_dependency(c_spec, depflag=dt.BUILD | dt.LINK, virtuals=())
     a_spec.concretize()
     assert spack.version.Version("2") == a_spec[c][d].version
     assert spack.version.Version("2") == a_spec[e].version
@@ -146,7 +147,7 @@ def test_specify_preinstalled_dep(tmpdir, monkeypatch):
         monkeypatch.setattr(Spec, "installed", property(lambda x: x.name != "a"))
 
         a_spec = Spec("a")
-        a_spec._add_dependency(b_spec, deptypes=("build", "link"), virtuals=())
+        a_spec._add_dependency(b_spec, depflag=dt.BUILD | dt.LINK, virtuals=())
         a_spec.concretize()
 
         assert set(x.name for x in a_spec.traverse()) == set(["a", "b", "c"])
@@ -788,13 +789,13 @@ class TestSpecDag:
             {"a": {"b": {"c:build": None}, "d": {"e:build,link": {"f:run": None}}}}
         )
 
-        assert s["b"].edges_to_dependencies(name="c")[0].deptypes == ("build",)
-        assert s["d"].edges_to_dependencies(name="e")[0].deptypes == ("build", "link")
-        assert s["e"].edges_to_dependencies(name="f")[0].deptypes == ("run",)
+        assert s["b"].edges_to_dependencies(name="c")[0].depflag == dt.BUILD
+        assert s["d"].edges_to_dependencies(name="e")[0].depflag == dt.BUILD | dt.LINK
+        assert s["e"].edges_to_dependencies(name="f")[0].depflag == dt.RUN
 
-        assert s["c"].edges_from_dependents(name="b")[0].deptypes == ("build",)
-        assert s["e"].edges_from_dependents(name="d")[0].deptypes == ("build", "link")
-        assert s["f"].edges_from_dependents(name="e")[0].deptypes == ("run",)
+        assert s["c"].edges_from_dependents(name="b")[0].depflag == dt.BUILD
+        assert s["e"].edges_from_dependents(name="d")[0].depflag == dt.BUILD | dt.LINK
+        assert s["f"].edges_from_dependents(name="e")[0].depflag == dt.RUN
 
     def check_diamond_deptypes(self, spec):
         """Validate deptypes in dt-diamond spec.
@@ -803,23 +804,22 @@ class TestSpecDag:
         depend on the same dependency in different ways.
 
         """
-        assert spec["dt-diamond"].edges_to_dependencies(name="dt-diamond-left")[0].deptypes == (
-            "build",
-            "link",
+        assert (
+            spec["dt-diamond"].edges_to_dependencies(name="dt-diamond-left")[0].depflag
+            == dt.BUILD | dt.LINK
         )
-
-        assert spec["dt-diamond"].edges_to_dependencies(name="dt-diamond-right")[0].deptypes == (
-            "build",
-            "link",
+        assert (
+            spec["dt-diamond"].edges_to_dependencies(name="dt-diamond-right")[0].depflag
+            == dt.BUILD | dt.LINK
         )
-
-        assert spec["dt-diamond-left"].edges_to_dependencies(name="dt-diamond-bottom")[
-            0
-        ].deptypes == ("build",)
-
-        assert spec["dt-diamond-right"].edges_to_dependencies(name="dt-diamond-bottom")[
-            0
-        ].deptypes == ("build", "link", "run")
+        assert (
+            spec["dt-diamond-left"].edges_to_dependencies(name="dt-diamond-bottom")[0].depflag
+            == dt.BUILD
+        )
+        assert (
+            spec["dt-diamond-right"].edges_to_dependencies(name="dt-diamond-bottom")[0].depflag
+            == dt.BUILD | dt.LINK | dt.RUN
+        )
 
     def check_diamond_normalized_dag(self, spec):
         dag = Spec.from_literal(
@@ -912,48 +912,52 @@ class TestSpecDag:
 
     def test_canonical_deptype(self):
         # special values
-        assert canonical_deptype(all) == all_deptypes
-        assert canonical_deptype("all") == all_deptypes
+        assert dt.canonicalize(all) == dt.ALL
+        assert dt.canonicalize("all") == dt.ALL
 
         with pytest.raises(ValueError):
-            canonical_deptype(None)
+            dt.canonicalize(None)
         with pytest.raises(ValueError):
-            canonical_deptype([None])
+            dt.canonicalize([None])
 
-        # everything in all_deptypes is canonical
-        for v in all_deptypes:
-            assert canonical_deptype(v) == (v,)
+        # everything in all_types is canonical
+        for v in dt.ALL_TYPES:
+            assert dt.canonicalize(v) == dt.flag_from_string(v)
 
         # tuples
-        assert canonical_deptype(("build",)) == ("build",)
-        assert canonical_deptype(("build", "link", "run")) == ("build", "link", "run")
-        assert canonical_deptype(("build", "link")) == ("build", "link")
-        assert canonical_deptype(("build", "run")) == ("build", "run")
+        assert dt.canonicalize(("build",)) == dt.BUILD
+        assert dt.canonicalize(("build", "link", "run")) == dt.BUILD | dt.LINK | dt.RUN
+        assert dt.canonicalize(("build", "link")) == dt.BUILD | dt.LINK
+        assert dt.canonicalize(("build", "run")) == dt.BUILD | dt.RUN
 
         # lists
-        assert canonical_deptype(["build", "link", "run"]) == ("build", "link", "run")
-        assert canonical_deptype(["build", "link"]) == ("build", "link")
-        assert canonical_deptype(["build", "run"]) == ("build", "run")
+        assert dt.canonicalize(["build", "link", "run"]) == dt.BUILD | dt.LINK | dt.RUN
+        assert dt.canonicalize(["build", "link"]) == dt.BUILD | dt.LINK
+        assert dt.canonicalize(["build", "run"]) == dt.BUILD | dt.RUN
 
         # sorting
-        assert canonical_deptype(("run", "build", "link")) == ("build", "link", "run")
-        assert canonical_deptype(("run", "link", "build")) == ("build", "link", "run")
-        assert canonical_deptype(("run", "link")) == ("link", "run")
-        assert canonical_deptype(("link", "build")) == ("build", "link")
+        assert dt.canonicalize(("run", "build", "link")) == dt.BUILD | dt.LINK | dt.RUN
+        assert dt.canonicalize(("run", "link", "build")) == dt.BUILD | dt.LINK | dt.RUN
+        assert dt.canonicalize(("run", "link")) == dt.LINK | dt.RUN
+        assert dt.canonicalize(("link", "build")) == dt.BUILD | dt.LINK
+
+        # deduplication
+        assert dt.canonicalize(("run", "run", "link")) == dt.RUN | dt.LINK
+        assert dt.canonicalize(("run", "link", "link")) == dt.RUN | dt.LINK
 
         # can't put 'all' in tuple or list
         with pytest.raises(ValueError):
-            canonical_deptype(["all"])
+            dt.canonicalize(["all"])
         with pytest.raises(ValueError):
-            canonical_deptype(("all",))
+            dt.canonicalize(("all",))
 
         # invalid values
         with pytest.raises(ValueError):
-            canonical_deptype("foo")
+            dt.canonicalize("foo")
         with pytest.raises(ValueError):
-            canonical_deptype(("foo", "bar"))
+            dt.canonicalize(("foo", "bar"))
         with pytest.raises(ValueError):
-            canonical_deptype(("foo",))
+            dt.canonicalize(("foo",))
 
     def test_invalid_literal_spec(self):
         # Can't give type 'build' to a top-level spec
@@ -987,16 +991,16 @@ def test_synthetic_construction_of_split_dependencies_from_same_package(mock_pac
     link_run_spec = Spec("c@=1.0").concretized()
     build_spec = Spec("c@=2.0").concretized()
 
-    root.add_dependency_edge(link_run_spec, deptypes="link", virtuals=())
-    root.add_dependency_edge(link_run_spec, deptypes="run", virtuals=())
-    root.add_dependency_edge(build_spec, deptypes="build", virtuals=())
+    root.add_dependency_edge(link_run_spec, depflag=dt.LINK, virtuals=())
+    root.add_dependency_edge(link_run_spec, depflag=dt.RUN, virtuals=())
+    root.add_dependency_edge(build_spec, depflag=dt.BUILD, virtuals=())
 
     # Check dependencies from the perspective of root
     assert len(root.dependencies()) == 2
     assert all(x.name == "c" for x in root.dependencies())
 
-    assert "@2.0" in root.dependencies(name="c", deptype="build")[0]
-    assert "@1.0" in root.dependencies(name="c", deptype=("link", "run"))[0]
+    assert "@2.0" in root.dependencies(name="c", deptype=dt.BUILD)[0]
+    assert "@1.0" in root.dependencies(name="c", deptype=dt.LINK | dt.RUN)[0]
 
     # Check parent from the perspective of the dependencies
     assert len(build_spec.dependents()) == 1
@@ -1015,7 +1019,7 @@ def test_synthetic_construction_bootstrapping(mock_packages, config):
     root = Spec("b@=2.0").concretized()
     bootstrap = Spec("b@=1.0").concretized()
 
-    root.add_dependency_edge(bootstrap, deptypes="build", virtuals=())
+    root.add_dependency_edge(bootstrap, depflag=dt.BUILD, virtuals=())
 
     assert len(root.dependencies()) == 1
     assert root.dependencies()[0].name == "b"
@@ -1033,37 +1037,38 @@ def test_addition_of_different_deptypes_in_multiple_calls(mock_packages, config)
     root = Spec("b@=2.0").concretized()
     bootstrap = Spec("b@=1.0").concretized()
 
-    for current_deptype in ("build", "link", "run"):
-        root.add_dependency_edge(bootstrap, deptypes=current_deptype, virtuals=())
+    for current_depflag in (dt.BUILD, dt.LINK, dt.RUN):
+        root.add_dependency_edge(bootstrap, depflag=current_depflag, virtuals=())
 
         # Check edges in dependencies
         assert len(root.edges_to_dependencies()) == 1
-        forward_edge = root.edges_to_dependencies(deptype=current_deptype)[0]
-        assert current_deptype in forward_edge.deptypes
+        forward_edge = root.edges_to_dependencies(depflag=current_depflag)[0]
+        assert current_depflag & forward_edge.depflag
         assert id(forward_edge.parent) == id(root)
         assert id(forward_edge.spec) == id(bootstrap)
 
         # Check edges from dependents
         assert len(bootstrap.edges_from_dependents()) == 1
-        backward_edge = bootstrap.edges_from_dependents(deptype=current_deptype)[0]
-        assert current_deptype in backward_edge.deptypes
+        backward_edge = bootstrap.edges_from_dependents(depflag=current_depflag)[0]
+        assert current_depflag & backward_edge.depflag
         assert id(backward_edge.parent) == id(root)
         assert id(backward_edge.spec) == id(bootstrap)
 
 
 @pytest.mark.parametrize(
-    "c1_deptypes,c2_deptypes", [("link", ("build", "link")), (("link", "run"), ("build", "link"))]
+    "c1_depflag,c2_depflag",
+    [(dt.LINK, dt.BUILD | dt.LINK), (dt.LINK | dt.RUN, dt.BUILD | dt.LINK)],
 )
 def test_adding_same_deptype_with_the_same_name_raises(
-    mock_packages, config, c1_deptypes, c2_deptypes
+    mock_packages, config, c1_depflag, c2_depflag
 ):
     p = Spec("b@=2.0").concretized()
     c1 = Spec("b@=1.0").concretized()
     c2 = Spec("b@=2.0").concretized()
 
-    p.add_dependency_edge(c1, deptypes=c1_deptypes, virtuals=())
+    p.add_dependency_edge(c1, depflag=c1_depflag, virtuals=())
     with pytest.raises(spack.error.SpackError):
-        p.add_dependency_edge(c2, deptypes=c2_deptypes, virtuals=())
+        p.add_dependency_edge(c2, depflag=c2_depflag, virtuals=())
 
 
 @pytest.mark.regression("33499")
@@ -1082,16 +1087,16 @@ def test_indexing_prefers_direct_or_transitive_link_deps():
     z3_flavor_1 = Spec("z3 +through_a1")
     z3_flavor_2 = Spec("z3 +through_z1")
 
-    root.add_dependency_edge(a1, deptypes=("build", "run", "test"), virtuals=())
+    root.add_dependency_edge(a1, depflag=dt.BUILD | dt.RUN | dt.TEST, virtuals=())
 
     # unique package as a dep of a build/run/test type dep.
-    a1.add_dependency_edge(a2, deptypes="all", virtuals=())
-    a1.add_dependency_edge(z3_flavor_1, deptypes="all", virtuals=())
+    a1.add_dependency_edge(a2, depflag=dt.ALL, virtuals=())
+    a1.add_dependency_edge(z3_flavor_1, depflag=dt.ALL, virtuals=())
 
     # chain of link type deps root -> z1 -> z2 -> z3
-    root.add_dependency_edge(z1, deptypes="link", virtuals=())
-    z1.add_dependency_edge(z2, deptypes="link", virtuals=())
-    z2.add_dependency_edge(z3_flavor_2, deptypes="link", virtuals=())
+    root.add_dependency_edge(z1, depflag=dt.LINK, virtuals=())
+    z1.add_dependency_edge(z2, depflag=dt.LINK, virtuals=())
+    z2.add_dependency_edge(z3_flavor_2, depflag=dt.LINK, virtuals=())
 
     # Indexing should prefer the link-type dep.
     assert "through_z1" in root["z3"].variants

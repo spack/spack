@@ -27,6 +27,8 @@ import sys
 import time
 from typing import Any, Callable, Dict, Generator, List, NamedTuple, Set, Type, Union
 
+import spack.deptypes as dt
+
 try:
     import uuid
 
@@ -89,7 +91,7 @@ _DEFAULT_PKG_LOCK_TIMEOUT = None
 
 #: Types of dependencies tracked by the database
 #: We store by DAG hash, so we track the dependencies that the DAG hash includes.
-_TRACKED_DEPENDENCIES = ht.dag_hash.deptype
+_TRACKED_DEPENDENCIES = ht.dag_hash.depflag
 
 #: Default list of fields written for each install record
 DEFAULT_INSTALL_RECORD_FIELDS = (
@@ -795,7 +797,7 @@ class Database:
                     tty.warn(msg)
                     continue
 
-                spec._add_dependency(child, deptypes=dtypes, virtuals=virtuals)
+                spec._add_dependency(child, depflag=dt.canonicalize(dtypes), virtuals=virtuals)
 
     def _read_from_file(self, filename):
         """Fill database from file, do not maintain old data.
@@ -1146,7 +1148,7 @@ class Database:
         # Retrieve optional arguments
         installation_time = installation_time or _now()
 
-        for edge in spec.edges_to_dependencies(deptype=_TRACKED_DEPENDENCIES):
+        for edge in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
             if edge.spec.dag_hash() in self._data:
                 continue
             # allow missing build-only deps. This prevents excessive
@@ -1154,7 +1156,7 @@ class Database:
             # is missing a build dep; there's no need to install the
             # build dep's build dep first, and there's no need to warn
             # about it missing.
-            dep_allow_missing = allow_missing or edge.deptypes == ("build",)
+            dep_allow_missing = allow_missing or edge.depflag == dt.BUILD
             self._add(
                 edge.spec,
                 directory_layout,
@@ -1198,10 +1200,10 @@ class Database:
             self._data[key] = InstallRecord(new_spec, path, installed, ref_count=0, **extra_args)
 
             # Connect dependencies from the DB to the new copy.
-            for dep in spec.edges_to_dependencies(deptype=_TRACKED_DEPENDENCIES):
+            for dep in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                new_spec._add_dependency(record.spec, deptypes=dep.deptypes, virtuals=dep.virtuals)
+                new_spec._add_dependency(record.spec, depflag=dep.depflag, virtuals=dep.virtuals)
                 if not upstream:
                     record.ref_count += 1
 
@@ -1371,7 +1373,13 @@ class Database:
             return self._deprecate(spec, deprecator)
 
     @_autospec
-    def installed_relatives(self, spec, direction="children", transitive=True, deptype="all"):
+    def installed_relatives(
+        self,
+        spec,
+        direction="children",
+        transitive=True,
+        deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
+    ):
         """Return installed specs related to this one."""
         if direction not in ("parents", "children"):
             raise ValueError("Invalid direction: %s" % direction)

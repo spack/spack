@@ -38,13 +38,14 @@ from typing import Any, Callable, List, Optional, Set, Tuple, Union
 import llnl.util.lang
 import llnl.util.tty.color
 
+import spack.deptypes as dt
 import spack.error
 import spack.patch
 import spack.spec
 import spack.url
 import spack.util.crypto
 import spack.variant
-from spack.dependency import Dependency, canonical_deptype, default_deptype
+from spack.dependency import Dependency
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import (
@@ -436,7 +437,7 @@ def _execute_version(pkg, ver, **kwargs):
     pkg.versions[version] = kwargs
 
 
-def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
+def _depends_on(pkg, spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
     when_spec = make_when_spec(when)
     if not when_spec:
         return
@@ -447,7 +448,7 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
     if pkg.name == dep_spec.name:
         raise CircularReferenceError("Package '%s' cannot depend on itself." % pkg.name)
 
-    type = canonical_deptype(type)
+    depflag = dt.canonicalize(type)
     conditions = pkg.dependencies.setdefault(dep_spec.name, {})
 
     # call this patches here for clarity -- we want patch to be a list,
@@ -477,12 +478,12 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
 
     # this is where we actually add the dependency to this package
     if when_spec not in conditions:
-        dependency = Dependency(pkg, dep_spec, type=type)
+        dependency = Dependency(pkg, dep_spec, depflag=depflag)
         conditions[when_spec] = dependency
     else:
         dependency = conditions[when_spec]
         dependency.spec.constrain(dep_spec, deps=False)
-        dependency.type |= set(type)
+        dependency.depflag |= depflag
 
     # apply patches to the dependency
     for execute_patch in patches:
@@ -525,7 +526,7 @@ def conflicts(conflict_spec, when=None, msg=None):
 
 
 @directive(("dependencies"))
-def depends_on(spec, when=None, type=default_deptype, patches=None):
+def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
     """Creates a dict of deps with specs defining when they apply.
 
     Args:

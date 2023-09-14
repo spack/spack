@@ -38,11 +38,12 @@ graph_dot() will output a graph of a spec (or multiple specs) in dot format.
 """
 import enum
 import sys
-from typing import List, Optional, Set, TextIO, Tuple, Union
+from typing import List, Optional, Set, TextIO, Tuple
 
 import llnl.util.tty.color
 
-import spack.dependency
+import spack.deptypes as dt
+import spack.repo
 import spack.spec
 import spack.tengine
 
@@ -78,7 +79,7 @@ class AsciiGraph:
         self.node_character = "o"
         self.debug = False
         self.indent = 0
-        self.deptype = spack.dependency.all_deptypes
+        self.depflag = dt.ALL
 
         # These are colors in the order they'll be used for edges.
         # See llnl.util.tty.color for details on color characters.
@@ -326,7 +327,7 @@ class AsciiGraph:
         nodes_in_topological_order = [
             edge.spec
             for edge in spack.traverse.traverse_edges_topo(
-                [spec], direction="children", deptype=self.deptype
+                [spec], direction="children", deptype=self.depflag
             )
         ]
         nodes_in_topological_order.reverse()
@@ -424,7 +425,7 @@ class AsciiGraph:
 
                 # Replace node with its dependencies
                 self._frontier.pop(i)
-                edges = sorted(node.edges_to_dependencies(deptype=self.deptype), reverse=True)
+                edges = sorted(node.edges_to_dependencies(depflag=self.depflag), reverse=True)
                 if edges:
                     deps = [e.spec.dag_hash() for e in edges]
                     self._connect_deps(i, deps, "new-deps")  # anywhere.
@@ -433,13 +434,14 @@ class AsciiGraph:
                     self._collapse_line(i)
 
 
-def graph_ascii(spec, node="o", out=None, debug=False, indent=0, color=None, deptype="all"):
+def graph_ascii(
+    spec, node="o", out=None, debug=False, indent=0, color=None, depflag: dt.DepFlag = dt.ALL
+):
     graph = AsciiGraph()
     graph.debug = debug
     graph.indent = indent
     graph.node_character = node
-    if deptype:
-        graph.deptype = spack.dependency.canonical_deptype(deptype)
+    graph.depflag = depflag
 
     graph.write(spec, color=color, out=out)
 
@@ -513,7 +515,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
 
     def visit(self, edge):
         if edge.parent is None:
-            for node in spack.traverse.traverse_nodes([edge.spec], deptype=("link", "run")):
+            for node in spack.traverse.traverse_nodes([edge.spec], deptype=dt.LINK | dt.RUN):
                 self.main_unified_space.add(node.dag_hash())
         super().visit(edge)
 
@@ -533,36 +535,34 @@ class DAGWithDependencyTypes(DotGraphBuilder):
         )
 
 
-def _static_edges(specs, deptype):
+def _static_edges(specs, depflag):
     for spec in specs:
         pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-        possible = pkg_cls.possible_dependencies(expand_virtuals=True, deptype=deptype)
+        possible = pkg_cls.possible_dependencies(expand_virtuals=True, depflag=depflag)
 
         for parent_name, dependencies in possible.items():
             for dependency_name in dependencies:
                 yield spack.spec.DependencySpec(
                     spack.spec.Spec(parent_name),
                     spack.spec.Spec(dependency_name),
-                    deptypes=deptype,
+                    depflag=depflag,
                     virtuals=(),
                 )
 
 
 def static_graph_dot(
-    specs: List[spack.spec.Spec],
-    deptype: Optional[Union[str, Tuple[str, ...]]] = "all",
-    out: Optional[TextIO] = None,
+    specs: List[spack.spec.Spec], depflag: dt.DepFlag = dt.ALL, out: Optional[TextIO] = None
 ):
     """Static DOT graph with edges to all possible dependencies.
 
     Args:
         specs: abstract specs to be represented
-        deptype: dependency types to consider
+        depflag: dependency types to consider
         out: optional output stream. If None sys.stdout is used
     """
     out = out or sys.stdout
     builder = StaticDag()
-    for edge in _static_edges(specs, deptype):
+    for edge in _static_edges(specs, depflag):
         builder.visit(edge)
     out.write(builder.render())
 
@@ -570,7 +570,7 @@ def static_graph_dot(
 def graph_dot(
     specs: List[spack.spec.Spec],
     builder: Optional[DotGraphBuilder] = None,
-    deptype: spack.dependency.DependencyArgument = "all",
+    depflag: dt.DepFlag = dt.ALL,
     out: Optional[TextIO] = None,
 ):
     """DOT graph of the concrete specs passed as input.
@@ -578,7 +578,7 @@ def graph_dot(
     Args:
         specs: specs to be represented
         builder: builder to use to render the graph
-        deptype: dependency types to consider
+        depflag: dependency types to consider
         out: optional output stream. If None sys.stdout is used
     """
     if not specs:
@@ -587,10 +587,9 @@ def graph_dot(
     if out is None:
         out = sys.stdout
 
-    deptype = spack.dependency.canonical_deptype(deptype)
     builder = builder or SimpleDAG()
     for edge in spack.traverse.traverse_edges(
-        specs, cover="edges", order="breadth", deptype=deptype
+        specs, cover="edges", order="breadth", deptype=depflag
     ):
         builder.visit(edge)
 

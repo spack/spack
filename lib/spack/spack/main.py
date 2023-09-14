@@ -716,7 +716,7 @@ class SpackCommand:
 
             out = io.StringIO()
             try:
-                with log_output(out):
+                with log_output(out, echo=True):
                     self.returncode = _invoke_command(self.command, self.parser, args, unknown)
 
             except SystemExit as e:

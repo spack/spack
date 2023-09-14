@@ -308,7 +308,7 @@ def _compute_spec_deps(spec_list):
         dependencies.append({"spec": s, "depends": d})
 
     for spec in spec_list:
-        for s in spec.traverse(deptype=all):
+        for s in spec.traverse(deptype="all"):
             if s.external:
                 tty.msg("Will not stage external pkg: {0}".format(s))
                 continue
@@ -316,7 +316,7 @@ def _compute_spec_deps(spec_list):
             skey = _spec_deps_key(s)
             spec_labels[skey] = s
 
-            for d in s.dependencies(deptype=all):
+            for d in s.dependencies(deptype="all"):
                 dkey = _spec_deps_key(d)
                 if d.external:
                     tty.msg("Will not stage external dep: {0}".format(d))
@@ -1035,7 +1035,7 @@ def generate_gitlab_ci_yaml(
                 if enable_artifacts_buildcache:
                     # Get dependencies transitively, so they're all
                     # available in the artifacts buildcache.
-                    dep_jobs = [d for d in release_spec.traverse(deptype=all, root=False)]
+                    dep_jobs = [d for d in release_spec.traverse(deptype="all", root=False)]
                 else:
                     # In this case, "needs" is only used for scheduling
                     # purposes, so we only get the direct dependencies.

@@ -12,7 +12,7 @@ from llnl.util.lang import stable_partition
 
 import spack.cmd
 import spack.config
-import spack.dependency as dep
+import spack.deptypes as dt
 import spack.environment as ev
 import spack.mirror
 import spack.modules
@@ -114,16 +114,13 @@ class SetParallelJobs(argparse.Action):
 
 
 class DeptypeAction(argparse.Action):
-    """Creates a tuple of valid dependency types from a deptype argument."""
+    """Creates a flag of valid dependency types from a deptype argument."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        deptype = dep.all_deptypes
-        if values:
-            deptype = tuple(x.strip() for x in values.split(","))
-            if deptype == ("all",):
-                deptype = "all"
-            deptype = dep.canonical_deptype(deptype)
-
+        if not values or values == "all":
+            deptype = dt.ALL
+        else:
+            deptype = dt.canonicalize(values.split(","))
         setattr(namespace, self.dest, deptype)
 
 
@@ -285,9 +282,8 @@ def deptype():
     return Args(
         "--deptype",
         action=DeptypeAction,
-        default=dep.all_deptypes,
-        help="comma-separated list of deptypes to traverse\n\ndefault=%s"
-        % ",".join(dep.all_deptypes),
+        default=dt.ALL,
+        help="comma-separated list of deptypes to traverse (default=%s)" % ",".join(dt.ALL_TYPES),
     )
 
 

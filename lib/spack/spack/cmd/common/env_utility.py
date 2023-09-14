@@ -10,6 +10,7 @@ import llnl.util.tty as tty
 import spack.build_environment as build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.deptypes as dt
 import spack.error
 import spack.paths
 import spack.spec
@@ -46,9 +47,9 @@ class AreDepsInstalledVisitor:
             raise ValueError("context can only be build or test")
 
         if context == "build":
-            self.direct_deps = ("build", "link", "run")
+            self.direct_deps = dt.BUILD | dt.LINK | dt.RUN
         else:
-            self.direct_deps = ("build", "test", "link", "run")
+            self.direct_deps = dt.BUILD | dt.TEST | dt.LINK | dt.RUN
 
         self.has_uninstalled_deps = False
 
@@ -71,8 +72,8 @@ class AreDepsInstalledVisitor:
     def neighbors(self, item):
         # Direct deps: follow build & test edges.
         # Transitive deps: follow link / run.
-        deptypes = self.direct_deps if item.depth == 0 else ("link", "run")
-        return item.edge.spec.edges_to_dependencies(deptype=deptypes)
+        depflag = self.direct_deps if item.depth == 0 else dt.LINK | dt.RUN
+        return item.edge.spec.edges_to_dependencies(depflag=depflag)
 
 
 def emulate_env_utility(cmd_name, context, args):

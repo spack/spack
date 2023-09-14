@@ -16,6 +16,7 @@ import llnl.util.tty as tty
 
 import spack.builder
 import spack.config
+import spack.deptypes as dt
 import spack.detection
 import spack.multimethod
 import spack.package_base
@@ -226,7 +227,7 @@ class PythonExtension(spack.package_base.PackageBase):
 
                     python.external_path = self.spec.external_path
                     python._mark_concrete()
-            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"), virtuals=())
+            self.spec.add_dependency_edge(python, depflag=dt.BUILD | dt.LINK | dt.RUN, virtuals=())
 
 
 class PythonPackage(PythonExtension):
