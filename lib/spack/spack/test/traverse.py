@@ -21,7 +21,7 @@ def create_dag(nodes, edges):
     specs = {name: Spec(name) for name in nodes}
     for parent, child, deptypes in edges:
         specs[parent].add_dependency_edge(
-            specs[child], depflag=dt.type_to_flag(dt.canonical_deptype(deptypes)), virtuals=()
+            specs[child], depflag=dt.canonicalize(deptypes), virtuals=()
         )
     return specs
 

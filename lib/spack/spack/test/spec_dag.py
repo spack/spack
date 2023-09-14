@@ -912,48 +912,52 @@ class TestSpecDag:
 
     def test_canonical_deptype(self):
         # special values
-        assert dt.canonical_deptype(all) == dt.all_types
-        assert dt.canonical_deptype("all") == dt.all_types
+        assert dt.canonicalize(all) == dt.all_flag
+        assert dt.canonicalize("all") == dt.all_flag
 
         with pytest.raises(ValueError):
-            dt.canonical_deptype(None)
+            dt.canonicalize(None)
         with pytest.raises(ValueError):
-            dt.canonical_deptype([None])
+            dt.canonicalize([None])
 
         # everything in all_types is canonical
         for v in dt.all_types:
-            assert dt.canonical_deptype(v) == (v,)
+            assert dt.canonicalize(v) == dt.flag_from_string(v)
 
         # tuples
-        assert dt.canonical_deptype(("build",)) == ("build",)
-        assert dt.canonical_deptype(("build", "link", "run")) == ("build", "link", "run")
-        assert dt.canonical_deptype(("build", "link")) == ("build", "link")
-        assert dt.canonical_deptype(("build", "run")) == ("build", "run")
+        assert dt.canonicalize(("build",)) == dt.BUILD
+        assert dt.canonicalize(("build", "link", "run")) == dt.BUILD | dt.LINK | dt.RUN
+        assert dt.canonicalize(("build", "link")) == dt.BUILD | dt.LINK
+        assert dt.canonicalize(("build", "run")) == dt.BUILD | dt.RUN
 
         # lists
-        assert dt.canonical_deptype(["build", "link", "run"]) == ("build", "link", "run")
-        assert dt.canonical_deptype(["build", "link"]) == ("build", "link")
-        assert dt.canonical_deptype(["build", "run"]) == ("build", "run")
+        assert dt.canonicalize(["build", "link", "run"]) == dt.BUILD | dt.LINK | dt.RUN
+        assert dt.canonicalize(["build", "link"]) == dt.BUILD | dt.LINK
+        assert dt.canonicalize(["build", "run"]) == dt.BUILD | dt.RUN
 
         # sorting
-        assert dt.canonical_deptype(("run", "build", "link")) == ("build", "link", "run")
-        assert dt.canonical_deptype(("run", "link", "build")) == ("build", "link", "run")
-        assert dt.canonical_deptype(("run", "link")) == ("link", "run")
-        assert dt.canonical_deptype(("link", "build")) == ("build", "link")
+        assert dt.canonicalize(("run", "build", "link")) == dt.BUILD | dt.LINK | dt.RUN
+        assert dt.canonicalize(("run", "link", "build")) == dt.BUILD | dt.LINK | dt.RUN
+        assert dt.canonicalize(("run", "link")) == dt.LINK | dt.RUN
+        assert dt.canonicalize(("link", "build")) == dt.BUILD | dt.LINK
+
+        # deduplication
+        assert dt.canonicalize(("run", "run", "link")) == dt.RUN | dt.LINK
+        assert dt.canonicalize(("run", "link", "link")) == dt.RUN | dt.LINK
 
         # can't put 'all' in tuple or list
         with pytest.raises(ValueError):
-            dt.canonical_deptype(["all"])
+            dt.canonicalize(["all"])
         with pytest.raises(ValueError):
-            dt.canonical_deptype(("all",))
+            dt.canonicalize(("all",))
 
         # invalid values
         with pytest.raises(ValueError):
-            dt.canonical_deptype("foo")
+            dt.canonicalize("foo")
         with pytest.raises(ValueError):
-            dt.canonical_deptype(("foo", "bar"))
+            dt.canonicalize(("foo", "bar"))
         with pytest.raises(ValueError):
-            dt.canonical_deptype(("foo",))
+            dt.canonicalize(("foo",))
 
     def test_invalid_literal_spec(self):
         # Can't give type 'build' to a top-level spec

@@ -95,7 +95,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         )
         self._link_run_virtuals.update(self._possible_virtuals)
         for x in self._link_run:
-            current = spack.repo.PATH.get_pkg_class(x).dependencies_of_type("build")
+            current = spack.repo.PATH.get_pkg_class(x).dependencies_of_type(dt.BUILD)
             self._direct_build.update(current)
 
         self._total_build = set(

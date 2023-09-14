@@ -90,8 +90,8 @@ def flag_to_type(x: DepFlag) -> DepType:
         raise ValueError(f"Invalid dependency type flag: {x}")
 
 
-def canonical_deptype(deptype: DepTypes) -> CanonicalDepTypes:
-    """Convert deptype to a canonical sorted tuple, or raise ValueError.
+def canonicalize(deptype: DepTypes) -> DepFlag:
+    """Convert deptype user input to a DepFlag, or raise ValueError.
 
     Args:
         deptype: string representing dependency type, or a list/tuple of such strings.
@@ -99,21 +99,16 @@ def canonical_deptype(deptype: DepTypes) -> CanonicalDepTypes:
             a tuple of all dependency types known to Spack.
     """
     if deptype in ("all", all):
-        return all_types
+        return all_flag
 
-    elif isinstance(deptype, str):
-        if deptype not in all_types:
-            raise ValueError(f"Invalid dependency type: {deptype!r}")
-        return (deptype,)  # type: ignore
+    if isinstance(deptype, str):
+        return flag_from_string(deptype)
 
-    elif isinstance(deptype, (tuple, list, set)):
-        deptypes_set = sorted(set(deptype))
-        if any(d not in all_types for d in deptypes_set):
-            raise ValueError(
-                "Invalid dependency types: %s"
-                % ",".join(repr(t) for t in deptypes_set if t not in all_types)
-            )
-        return tuple(deptypes_set)  # type: ignore
+    if isinstance(deptype, (tuple, list, set)):
+        flag = 0
+        for t in deptype:
+            flag |= flag_from_string(t)
+        return flag
 
     raise ValueError(f"Invalid dependency type: {deptype!r}")
 

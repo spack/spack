@@ -797,9 +797,7 @@ class Database:
                     tty.warn(msg)
                     continue
 
-                spec._add_dependency(
-                    child, depflag=dt.type_to_flag(dt.canonical_deptype(dtypes)), virtuals=virtuals
-                )
+                spec._add_dependency(child, depflag=dt.canonicalize(dtypes), virtuals=virtuals)
 
     def _read_from_file(self, filename):
         """Fill database from file, do not maintain old data.
@@ -1375,7 +1373,13 @@ class Database:
             return self._deprecate(spec, deprecator)
 
     @_autospec
-    def installed_relatives(self, spec, direction="children", transitive=True, deptype="all"):
+    def installed_relatives(
+        self,
+        spec,
+        direction="children",
+        transitive=True,
+        deptype: Union[dt.DepFlag, dt.DepTypes] = dt.all_flag,
+    ):
         """Return installed specs related to this one."""
         if direction not in ("parents", "children"):
             raise ValueError("Invalid direction: %s" % direction)

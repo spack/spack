@@ -1205,7 +1205,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self._fetcher.set_package(self)
 
     @classmethod
-    def dependencies_of_type(cls, *deptypes):
+    def dependencies_of_type(cls, deptypes: dt.DepFlag):
         """Get dependencies that can possibly have these deptypes.
 
         This analyzes the package and determines which dependencies *can*
@@ -1214,11 +1214,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         so something may be a build dependency in one configuration and a
         run dependency in another.
         """
-        depflag = dt.type_to_flag(deptypes)
         return dict(
             (name, conds)
             for name, conds in cls.dependencies.items()
-            if any(depflag & cls.dependencies[name][cond].depflag for cond in conds)
+            if any(deptypes & cls.dependencies[name][cond].depflag for cond in conds)
         )
 
     # TODO: allow more than one active extendee.

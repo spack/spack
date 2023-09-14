@@ -79,7 +79,7 @@ class AsciiGraph:
         self.node_character = "o"
         self.debug = False
         self.indent = 0
-        self.deptype = dt.all_types
+        self.depflag = dt.all_flag
 
         # These are colors in the order they'll be used for edges.
         # See llnl.util.tty.color for details on color characters.
@@ -327,7 +327,7 @@ class AsciiGraph:
         nodes_in_topological_order = [
             edge.spec
             for edge in spack.traverse.traverse_edges_topo(
-                [spec], direction="children", deptype=self.deptype
+                [spec], direction="children", deptype=self.depflag
             )
         ]
         nodes_in_topological_order.reverse()
@@ -425,9 +425,7 @@ class AsciiGraph:
 
                 # Replace node with its dependencies
                 self._frontier.pop(i)
-                edges = sorted(
-                    node.edges_to_dependencies(depflag=dt.type_to_flag(self.deptype)), reverse=True
-                )
+                edges = sorted(node.edges_to_dependencies(depflag=self.depflag), reverse=True)
                 if edges:
                     deps = [e.spec.dag_hash() for e in edges]
                     self._connect_deps(i, deps, "new-deps")  # anywhere.
@@ -436,13 +434,14 @@ class AsciiGraph:
                     self._collapse_line(i)
 
 
-def graph_ascii(spec, node="o", out=None, debug=False, indent=0, color=None, deptype="all"):
+def graph_ascii(
+    spec, node="o", out=None, debug=False, indent=0, color=None, depflag: dt.DepFlag = dt.all_flag
+):
     graph = AsciiGraph()
     graph.debug = debug
     graph.indent = indent
     graph.node_character = node
-    if deptype:
-        graph.deptype = dt.canonical_deptype(deptype)
+    graph.depflag = depflag
 
     graph.write(spec, color=color, out=out)
 
@@ -516,7 +515,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
 
     def visit(self, edge):
         if edge.parent is None:
-            for node in spack.traverse.traverse_nodes([edge.spec], deptype=("link", "run")):
+            for node in spack.traverse.traverse_nodes([edge.spec], deptype=dt.LINK | dt.RUN):
                 self.main_unified_space.add(node.dag_hash())
         super().visit(edge)
 
@@ -558,7 +557,7 @@ def static_graph_dot(
 
     Args:
         specs: abstract specs to be represented
-        deptype: dependency types to consider
+        depflag: dependency types to consider
         out: optional output stream. If None sys.stdout is used
     """
     out = out or sys.stdout
@@ -571,7 +570,7 @@ def static_graph_dot(
 def graph_dot(
     specs: List[spack.spec.Spec],
     builder: Optional[DotGraphBuilder] = None,
-    deptype: dt.DepTypes = "all",
+    depflag: dt.DepFlag = dt.all_flag,
     out: Optional[TextIO] = None,
 ):
     """DOT graph of the concrete specs passed as input.
@@ -579,7 +578,7 @@ def graph_dot(
     Args:
         specs: specs to be represented
         builder: builder to use to render the graph
-        deptype: dependency types to consider
+        depflag: dependency types to consider
         out: optional output stream. If None sys.stdout is used
     """
     if not specs:
@@ -588,10 +587,9 @@ def graph_dot(
     if out is None:
         out = sys.stdout
 
-    deptype = dt.canonical_deptype(deptype)
     builder = builder or SimpleDAG()
     for edge in spack.traverse.traverse_edges(
-        specs, cover="edges", order="breadth", deptype=deptype
+        specs, cover="edges", order="breadth", deptype=depflag
     ):
         builder.visit(edge)
 

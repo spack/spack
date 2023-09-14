@@ -114,16 +114,13 @@ class SetParallelJobs(argparse.Action):
 
 
 class DeptypeAction(argparse.Action):
-    """Creates a tuple of valid dependency types from a deptype argument."""
+    """Creates a flag of valid dependency types from a deptype argument."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        deptype = dt.all_types
-        if values:
-            deptype = tuple(x.strip() for x in values.split(","))
-            if deptype == ("all",):
-                deptype = "all"
-            deptype = dt.canonical_deptype(deptype)
-
+        if not values or values == "all":
+            deptype = dt.all_flag
+        else:
+            deptype = dt.canonicalize(values.split(","))
         setattr(namespace, self.dest, deptype)
 
 
@@ -285,8 +282,8 @@ def deptype():
     return Args(
         "--deptype",
         action=DeptypeAction,
-        default=dt.all_types,
-        help="comma-separated list of deptypes to traverse\n\ndefault=%s" % ",".join(dt.all_types),
+        default=dt.all_flag,
+        help="comma-separated list of deptypes to traverse (default=%s)" % ",".join(dt.all_types),
     )
 
 

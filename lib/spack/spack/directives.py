@@ -448,7 +448,7 @@ def _depends_on(pkg, spec, when=None, type=dt.default_deptype, patches=None):
     if pkg.name == dep_spec.name:
         raise CircularReferenceError("Package '%s' cannot depend on itself." % pkg.name)
 
-    depflag = dt.type_to_flag(dt.canonical_deptype(type))
+    depflag = dt.canonicalize(type)
     conditions = pkg.dependencies.setdefault(dep_spec.name, {})
 
     # call this patches here for clarity -- we want patch to be a list,

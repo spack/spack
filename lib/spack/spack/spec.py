@@ -1469,7 +1469,7 @@ class Spec:
             deptype: allowed dependency types
         """
         if not isinstance(deptype, dt.DepFlag):
-            deptype = dt.type_to_flag(dt.canonical_deptype(deptype))
+            deptype = dt.canonicalize(deptype)
         return [d.spec for d in self.edges_to_dependencies(name, depflag=deptype)]
 
     def dependents(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.all_flag):
@@ -1480,7 +1480,7 @@ class Spec:
             deptype: allowed dependency types
         """
         if not isinstance(deptype, dt.DepFlag):
-            deptype = dt.type_to_flag(dt.canonical_deptype(deptype))
+            deptype = dt.canonicalize(deptype)
         return [d.parent for d in self.edges_from_dependents(name, depflag=deptype)]
 
     def _dependencies_dict(self, depflag: dt.DepFlag = dt.all_flag):
@@ -3977,7 +3977,7 @@ class Spec:
             # By default, just copy all deptypes
             depflag = dt.all_flag
             if isinstance(deps, (tuple, list, str)):
-                depflag = dt.type_to_flag(dt.canonical_deptype(deps))
+                depflag = dt.canonicalize(deps)
             self._dup_deps(other, depflag)
 
         self._concrete = other._concrete
@@ -4966,7 +4966,7 @@ class SpecfileReaderBase:
             for _, dhash, dtype, _, virtuals in cls.dependencies_from_node_dict(node):
                 node_spec._add_dependency(
                     hash_dict[dhash]["node_spec"],
-                    depflag=dt.type_to_flag(dt.canonical_deptype(dtype)),
+                    depflag=dt.canonicalize(dtype),
                     virtuals=virtuals,
                 )
             if "build_spec" in node.keys():
@@ -5004,9 +5004,7 @@ class SpecfileV1(SpecfileReaderBase):
             name, data = cls.name_and_data(node)
             for dname, _, dtypes, _, virtuals in cls.dependencies_from_node_dict(data):
                 deps[name]._add_dependency(
-                    deps[dname],
-                    depflag=dt.type_to_flag(dt.canonical_deptype(dtypes)),
-                    virtuals=virtuals,
+                    deps[dname], depflag=dt.canonicalize(dtypes), virtuals=virtuals
                 )
 
         reconstruct_virtuals_on_edges(result)

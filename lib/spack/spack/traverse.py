@@ -203,7 +203,7 @@ def get_visitor_from_args(
         A visitor
     """
     if not isinstance(depflag, dt.DepFlag):
-        depflag = dt.type_to_flag(dt.canonical_deptype(depflag))
+        depflag = dt.canonicalize(depflag)
     visitor = visitor or BaseVisitor(depflag)
     if cover == "nodes":
         visitor = CoverNodesVisitor(visitor, key, visited)
@@ -404,7 +404,7 @@ def traverse_edges_topo(
             ``True`` all reachable edges are returned.
     """
     if not isinstance(deptype, dt.DepFlag):
-        deptype = dt.type_to_flag(dt.canonical_deptype(deptype))
+        deptype = dt.canonicalize(deptype)
     visitor: Union[BaseVisitor, ReverseVisitor, TopoVisitor] = BaseVisitor(deptype)
     if direction == "parents":
         visitor = ReverseVisitor(visitor, deptype)

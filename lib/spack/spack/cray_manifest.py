@@ -159,7 +159,7 @@ def entries_to_specs(entries):
         dependencies = entry["dependencies"]
         for name, properties in dependencies.items():
             dep_hash = properties["hash"]
-            depflag = dt.type_to_flag(dt.canonical_deptype(properties["type"]))
+            depflag = dt.canonicalize(properties["type"])
             if dep_hash in spec_dict:
                 if entry["hash"] not in spec_dict:
                     continue
