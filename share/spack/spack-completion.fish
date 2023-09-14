@@ -1579,31 +1579,38 @@ complete -c spack -n '__fish_spack_using_command extensions' -s s -l show -r -d 
 
 # spack external
 set -g __fish_spack_optspecs_spack_external h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a find -d 'add external packages to packages.yaml'
+complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a find -d 'search for external packages and add them to the local DB'
+complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a import -d 'import external packages from user configuration to the local DB'
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a list -d 'list detectable packages, by repository and name'
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a read-cray-manifest -d 'consume a Spack-compatible description of externally-installed packages, including dependency relationships'
 complete -c spack -n '__fish_spack_using_command external' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external' -s h -l help -d 'show this help message and exit'
 
 # spack external find
-set -g __fish_spack_optspecs_spack_external_find h/help not-buildable exclude= p/path= scope= all t/tag= j/jobs=
+set -g __fish_spack_optspecs_spack_external_find h/help exclude= p/path= all t/tag= j/jobs=
 
 complete -c spack -n '__fish_spack_using_command external find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external find' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command external find' -l not-buildable -f -a not_buildable
-complete -c spack -n '__fish_spack_using_command external find' -l not-buildable -d 'packages with detected externals won\'t be built with Spack'
 complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -f -a exclude
 complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -d 'packages to exclude from search'
 complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -f -a path
 complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -d 'one or more alternative search paths for finding externals'
-complete -c spack -n '__fish_spack_using_command external find' -l scope -r -f -a '_builtin defaults system site user command_line'
-complete -c spack -n '__fish_spack_using_command external find' -l scope -r -d 'configuration scope to modify'
 complete -c spack -n '__fish_spack_using_command external find' -l all -f -a all
 complete -c spack -n '__fish_spack_using_command external find' -l all -d 'search for all packages that Spack knows about'
 complete -c spack -n '__fish_spack_using_command external find' -s t -l tag -r -f -a tags
 complete -c spack -n '__fish_spack_using_command external find' -s t -l tag -r -d 'filter a package query by tag (multiple use allowed)'
 complete -c spack -n '__fish_spack_using_command external find' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command external find' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
+
+# spack external import
+set -g __fish_spack_optspecs_spack_external_import h/help scope= exclude=
+
+complete -c spack -n '__fish_spack_using_command external import' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command external import' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command external import' -l scope -r -f -a '_builtin defaults system site user command_line'
+complete -c spack -n '__fish_spack_using_command external import' -l scope -r -d 'configuration scope to read from'
+complete -c spack -n '__fish_spack_using_command external import' -l exclude -r -f -a exclude
+complete -c spack -n '__fish_spack_using_command external import' -l exclude -r -d 'packages to exclude from import'
 
 # spack external list
 set -g __fish_spack_optspecs_spack_external_list h/help
