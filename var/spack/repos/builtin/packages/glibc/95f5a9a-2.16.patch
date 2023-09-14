@@ -4,7 +4,7 @@ Date: Tue, 3 Jul 2012 19:14:59 +0000
 Subject: [PATCH] Avoid use of libgcc_s and libgcc_eh when building glibc.
 
 diff --git a/Makeconfig b/Makeconfig
-index 417fa508a6..859b588e00 100644
+index 417fa508a6..c860e68cdd 100644
 --- a/Makeconfig
 +++ b/Makeconfig
 @@ -415,9 +415,9 @@ LDFLAGS.so += $(hashstyle-LDFLAGS)
@@ -77,51 +77,15 @@ index 417fa508a6..859b588e00 100644
  endif
  endif
  
-@@ -513,8 +524,43 @@ endif
+@@ -513,6 +524,7 @@ endif
  
  # The static libraries.
  link-libc-static = -Wl,--start-group $(common-objpfx)libc.a $(static-gnulib) -Wl,--end-group
 +link-libc-static-tests = -Wl,--start-group $(common-objpfx)libc.a $(static-gnulib-tests) -Wl,--end-group
  link-libc-bounded = $(common-objpfx)libc_b.a $(gnulib) $(common-objpfx)libc_b.a
  
-+# How to link against libgcc.  Some libgcc functions, such as those
-+# for "long long" arithmetic or software floating point, can always be
-+# built without use of C library headers and do not have any global
-+# state so can safely be linked statically into any executable or
-+# shared library requiring them; these functions are in libgcc.a.
-+# Other functions, relating to exception handling, may require C
-+# library headers to build and it may not be safe to have more than
-+# one copy of them in a process; these functions are only in
-+# libgcc_s.so and libgcc_eh.a.
-+#
-+# To avoid circular dependencies when bootstrapping, it is desirable
-+# to avoid use of libgcc_s and libgcc_eh in building glibc.  Where any
-+# glibc functionality (in particular, thread cancellation) requires
-+# exception handling, this is implemented through dlopen of libgcc_s
-+# to avoid unnecessary dependencies on libgcc_s by programs not using
-+# that functionality; executables built with glibc do not use
-+# exception handling other than through thread cancellation.
-+#
-+# Undefined references to functions from libgcc_eh or libgcc_s may
-+# arise for code built with -fexceptions.  In the case of statically
-+# linked programs installed by glibc, unwinding will never actually
-+# occur at runtime and the use of elf/static-stubs.c to resolve these
-+# references is safe.  In the case of statically linked test programs
-+# and test programs built with -fexceptions, unwinding may occur in
-+# some cases and it is preferable to link with libgcc_eh or libgcc_s
-+# so that the testing is as similar as possible to how programs will
-+# be built with the installed glibc.
-+#
-+# Some architectures have architecture-specific systems for exception
-+# handling that may involve undefined references to
-+# architecture-specific functions.  On those architectures,
-+# gnulib-arch and static-gnulib-arch may be defined in sysdeps
-+# makefiles to use additional libraries for linking executables and
-+# shared libraries built by glibc.
  ifndef gnulib
- ifneq ($(have-cc-with-libunwind),yes)
-   libunwind =
-@@ -522,8 +568,12 @@ else
+@@ -522,8 +534,12 @@ else
    libunwind = -lunwind
  endif
  libgcc_eh := -Wl,--as-needed -lgcc_s $(libunwind) -Wl,--no-as-needed
@@ -137,10 +101,10 @@ index 417fa508a6..859b588e00 100644
  endif
  +preinit = $(addprefix $(csu-objpfx),crti.o)
 diff --git a/Rules b/Rules
-index 3c61a2933b..17d938e39c 100644
+index 3c61a2933b..be3a738574 100644
 --- a/Rules
 +++ b/Rules
-@@ -103,29 +102,46 @@ xtests: tests $(xtests:%=$(objpfx)%.out) $(xtests-bp.out)
+@@ -103,29 +103,46 @@ xtests: tests $(xtests:%=$(objpfx)%.out) $(xtests-bp.out)
  endif
  
  ifeq ($(build-programs),yes)
@@ -194,7 +158,7 @@ index 3c61a2933b..17d938e39c 100644
  ifneq "$(strip $(binaries-pie))" ""
  $(addprefix $(objpfx),$(binaries-pie)): %: %.o \
    $(sort $(filter $(common-objpfx)lib%,$(link-libc))) \
-@@ -133,13 +149,20 @@ $(addprefix $(objpfx),$(binaries-pie)): %: %.o \
+@@ -133,13 +150,20 @@ $(addprefix $(objpfx),$(binaries-pie)): %: %.o \
  	$(+link-pie)
  endif
  
