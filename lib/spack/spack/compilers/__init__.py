@@ -10,7 +10,7 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-from typing import Dict
+from typing import Dict, List
 
 import archspec.cpu
 
@@ -298,7 +298,7 @@ def select_new_compilers(compilers, scope=None):
     return compilers_not_in_config
 
 
-def supported_compilers():
+def supported_compilers()  -> List[str]:
     """Return a set of names of compilers supported by Spack.
 
     See available_compilers() to get a list of all the available
@@ -307,12 +307,11 @@ def supported_compilers():
     # Hack to be able to call the compiler `apple-clang` while still
     # using a valid python name for the module
     return sorted(
-        name if name != "apple_clang" else "apple-clang"
-        for name in llnl.util.lang.list_modules(spack.paths.compilers_path)
+        all_compiler_names()
     )
 
 
-def supported_compilers_for_host_platform():
+def supported_compilers_for_host_platform()  -> List[str]:
     """Return a set of compiler class objects supported by Spack
     that are also supported by the current host platform
     """
@@ -320,7 +319,7 @@ def supported_compilers_for_host_platform():
     return supported_compilers_for_platform(host_plat)
 
 
-def supported_compilers_for_platform(platform: str):
+def supported_compilers_for_platform(platform: str) -> List[str]:
     """Return a set of compiler class objects supported by Spack
     that are also supported by the provided platform
 
@@ -328,15 +327,22 @@ def supported_compilers_for_platform(platform: str):
         platform (str): string representation of platform
             for which compiler compatability should be determined
     """
+    return [
+        name
+        for name in supported_compilers()
+        if class_for_compiler_name(name).supported_platforms(platform)
+    ]
 
+
+def all_compiler_names() -> List[str]:
     def replace_apple_clang(name):
         return name if name != "apple_clang" else "apple-clang"
 
-    return sorted(
-        replace_apple_clang(name)
-        for name in llnl.util.lang.list_modules(spack.paths.compilers_path)
-        if class_for_compiler_name(replace_apple_clang(name)).supported_platforms(platform)
-    )
+    return [replace_apple_clang(name) for name in all_compiler_module_names()]
+
+
+def all_compiler_module_names() -> List[str]:
+    return [name for name in llnl.util.lang.list_modules(spack.paths.compilers_path)]
 
 
 @_auto_compiler_spec
