@@ -14,7 +14,8 @@ class Xxdiff(MakefilePackage):
 
     maintainers("vanderwb")
 
-    version("latest", branch="master")
+    version("master", branch="master")
+    version("2023-01-10", commit="604300e")
 
     depends_on("flex@2.5.31:")
     depends_on("bison")
