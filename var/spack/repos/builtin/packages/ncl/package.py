@@ -101,7 +101,8 @@ class Ncl(Package):
     # ESMF is only required at runtime (for ESMF_regridding.ncl)
     # There might be more requirements to ESMF but at least the NetCDF support is required to run
     # the examples (see https://www.ncl.ucar.edu/Applications/ESMF.shtml)
-    depends_on("esmf+netcdf", type="run")
+    # Using an ESMF newer than 8.0 will cause failures
+    depends_on("esmf+netcdf@:8.0", type="run")
 
     # Some of the optional dependencies according to the manual:
     depends_on("hdf", when="+hdf4")
@@ -151,6 +152,34 @@ class Ncl(Package):
         exes = os.listdir(self.spec.prefix.bin)
         if "ncl" not in exes:
             raise RuntimeError("Installation failed (ncl executable was not created)")
+
+        # NCL provides compiler wrappers, but they make assumptions that Spack build
+        # will not conform to. This section edits the wrappers to fix them.
+        c_wrappers = ["ncargcc", "nhlcc"]
+        f77_wrappers = ["ncargf77", "nhlf77"]
+        f90_wrappers = ["ncargf90", "nhlf90"]
+        lib_paths = []
+
+        for dep in ["cairo", "libx11"]:
+            lib_paths.append(self.spec[dep].prefix.lib)
+
+        with working_dir(self.spec.prefix.bin):
+            # Change NCARG compiler wrappers to use real compiler, not Spack wrappers
+            for wrapper in c_wrappers:
+                filter_file(spack_cc, self.compiler.cc, wrapper)
+            for wrapper in f77_wrappers:
+                filter_file(spack_f77, self.compiler.f77, wrapper)
+            for wrapper in f90_wrappers:
+                filter_file(spack_fc, self.compiler.fc, wrapper)
+
+            # Make library reference and corrections to wrappers
+            for wrapper in c_wrappers + f77_wrappers + f90_wrappers:
+                filter_file(
+                    "^(set syslibdir[ ]*=).*",
+                    r'\1 "{}"'.format(" ".join(["-L{}".format(p) for p in lib_paths])),
+                    wrapper,
+                )
+                filter_file("^(set cairolib[ ]*=).*", r'\1 "-lcairo"', wrapper)
 
     def setup_run_environment(self, env):
         env.set("NCARG_ROOT", self.spec.prefix)
