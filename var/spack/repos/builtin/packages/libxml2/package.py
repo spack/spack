@@ -226,6 +226,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
             args.append("--without-python")
 
         args.extend(self.enable_or_disable("shared"))
+        # PIC setting is taken care of above by self.flag_handler()
         args.append("--without-pic")
 
         return args
