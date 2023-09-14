@@ -328,7 +328,7 @@ def supported_compilers_for_platform(platform: str) -> List[str]:
     return [
         name
         for name in supported_compilers()
-        if class_for_compiler_name(name).supported_platforms(platform)
+        if class_for_compiler_name(name).is_supported_on_platform(platform)
     ]
 
 
