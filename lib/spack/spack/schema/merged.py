@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,11 +12,11 @@ from llnl.util.lang import union_dicts
 
 import spack.schema.bootstrap
 import spack.schema.cdash
+import spack.schema.ci
 import spack.schema.compilers
 import spack.schema.concretizer
 import spack.schema.config
 import spack.schema.container
-import spack.schema.gitlab_ci
 import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
@@ -31,7 +31,7 @@ properties = union_dicts(
     spack.schema.concretizer.properties,
     spack.schema.config.properties,
     spack.schema.container.properties,
-    spack.schema.gitlab_ci.properties,
+    spack.schema.ci.properties,
     spack.schema.mirrors.properties,
     spack.schema.modules.properties,
     spack.schema.packages.properties,

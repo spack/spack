@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Variorum(CMakePackage):
     git = "https://github.com/llnl/variorum.git"
     url = "https://github.com/llnl/variorum/archive/v0.1.0.tar.gz"
 
-    maintainers = ["slabasan", "rountree"]
+    maintainers("slabasan", "rountree")
 
     version("0.6.0", sha256="c0928a0e6901808ee50142d1034de15edc2c90d7d1b9fbce43757226e7c04306")
     version("0.5.0", sha256="de331762e7945ee882d08454ff9c66436e2b6f87f761d2b31c6ab3028723bfed")
@@ -23,7 +23,7 @@ class Variorum(CMakePackage):
     version("0.4.0", sha256="70ff1c5a3ae15d0bd07d409ab6f3c128e69528703a829cb18ecb4a50adeaea34")
     version("0.3.0", sha256="f79563f09b8fe796283c879b05f7730c36d79ca0346c12995b7bccc823653f42")
     version("0.2.0", sha256="b8c010b26aad8acc75d146c4461532cf5d9d3d24d6fc30ee68f6330a68e65744")
-    version("0.1.0", tag="v0.1.0")
+    version("0.1.0", tag="v0.1.0", commit="7747ee48cc60567bb3f09e732f24c041ecac894d")
 
     ############
     # Variants #

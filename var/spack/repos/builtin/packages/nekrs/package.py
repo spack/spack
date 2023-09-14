@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,9 +28,9 @@ class Nekrs(Package, CudaPackage, ROCmPackage):
         "ecp-apps",
     ]
 
-    maintainers = ["thilinarmtb", "stgeke"]
+    maintainers("thilinarmtb", "stgeke")
 
-    version("21.0", tag="v21.0")
+    version("21.0", tag="v21.0", commit="bcd890bf3f9fb4d91224c83aeda75c33570f1eaa")
 
     variant("opencl", default=False, description="Activates support for OpenCL")
 

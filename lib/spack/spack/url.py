@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,11 +25,10 @@ This is useful if a user asks for a package at a particular version number;
 spack doesn't need anyone to tell it where to get the tarball even though
 it's never been told about that version before.
 """
+import io
 import os
 import re
-
-from six import StringIO
-from six.moves.urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
@@ -874,7 +873,7 @@ def color_url(path, **kwargs):
     vends = [vo + vl - 1 for vo in voffs]
 
     nerr = verr = 0
-    out = StringIO()
+    out = io.StringIO()
     for i in range(len(path)):
         if i == vs:
             out.write("@c")
@@ -917,7 +916,7 @@ class UrlParseError(spack.error.SpackError):
     """Raised when the URL module can't parse something correctly."""
 
     def __init__(self, msg, path):
-        super(UrlParseError, self).__init__(msg)
+        super().__init__(msg)
         self.path = path
 
 
@@ -925,13 +924,11 @@ class UndetectableVersionError(UrlParseError):
     """Raised when we can't parse a version from a string."""
 
     def __init__(self, path):
-        super(UndetectableVersionError, self).__init__("Couldn't detect version in: " + path, path)
+        super().__init__("Couldn't detect version in: " + path, path)
 
 
 class UndetectableNameError(UrlParseError):
     """Raised when we can't parse a package name from a string."""
 
     def __init__(self, path):
-        super(UndetectableNameError, self).__init__(
-            "Couldn't parse package name in: " + path, path
-        )
+        super().__init__("Couldn't parse package name in: " + path, path)

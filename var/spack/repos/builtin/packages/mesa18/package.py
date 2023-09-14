@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Mesa18(AutotoolsPackage):
     - a system for rendering interactive 3D graphics."""
 
     homepage = "https://www.mesa3d.org"
-    maintainers = ["v-dobrev", "chuckatkins", "ChristianTackeGSI"]
+    maintainers("v-dobrev", "ChristianTackeGSI")
 
     # Note that we always want to build from the git repo instead of a
     # tarball since the tarball has pre-generated files for certain versions
@@ -21,7 +21,7 @@ class Mesa18(AutotoolsPackage):
     # whatever version of LLVM you're using.
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
 
-    version("18.3.6", tag="mesa-18.3.6")
+    version("18.3.6", tag="mesa-18.3.6", commit="11049bcff86da8013a4f63bd68daf637e3af22f3")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -36,7 +36,7 @@ class Mesa18(AutotoolsPackage):
     depends_on("python@:3.8", type="build")  # https://github.com/spack/spack/issues/28219
     depends_on("py-mako@0.8.0:", type="build")
     depends_on("libxml2")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("expat")
     depends_on("ncurses+termlib")
 
@@ -45,14 +45,7 @@ class Mesa18(AutotoolsPackage):
     variant(
         "swr",
         values=spack.variant.DisjointSetsOfValues(
-            ("none",),
-            ("auto",),
-            (
-                "avx",
-                "avx2",
-                "knl",
-                "skx",
-            ),
+            ("none",), ("auto",), ("avx", "avx2", "knl", "skx")
         )
         .with_non_feature_values("auto")
         .with_non_feature_values("none")

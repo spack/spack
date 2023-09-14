@@ -1,12 +1,16 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+from spack.build_systems.cmake import CMakeBuilder
+from spack.build_systems.makefile import MakefileBuilder
 from spack.package import *
 
 
-class Zstd(MakefilePackage):
+class Zstd(CMakePackage, MakefilePackage):
     """Zstandard, or zstd as short version, is a fast lossless compression
     algorithm, targeting real-time compression scenarios at zlib-level and
     better compression ratios."""
@@ -15,9 +19,11 @@ class Zstd(MakefilePackage):
     url = "https://github.com/facebook/zstd/archive/v1.4.3.tar.gz"
     git = "https://github.com/facebook/zstd.git"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("develop", branch="dev")
+    version("1.5.5", sha256="98e9c3d949d1b924e28e01eccb7deed865eefebf25c2f21c702e5cd5b63b85e1")
+    version("1.5.4", sha256="35ad983197f8f8eb0c963877bf8be50490a0b3df54b4edeb8399ba8a8b2f60a4")
     version("1.5.2", sha256="f7de13462f7a82c29ab865820149e778cbfe01087b3a55b5332707abf9db4a6e")
     version("1.5.0", sha256="0d9ade222c64e912d6957b11c923e214e2e010a18f39bec102f572e693ba2867")
     version("1.4.9", sha256="acf714d98e3db7b876e5b540cbf6dee298f60eb3c0723104f6d3f065cd60d6a8")
@@ -47,7 +53,7 @@ class Zstd(MakefilePackage):
         description="Enable support for additional compression methods in programs",
     )
 
-    depends_on("zlib", when="compression=zlib")
+    depends_on("zlib-api", when="compression=zlib")
     depends_on("lz4", when="compression=lz4")
     depends_on("xz", when="compression=lzma")
 
@@ -55,16 +61,43 @@ class Zstd(MakefilePackage):
     # (last tested: nvhpc@22.3)
     conflicts("+programs %nvhpc")
 
-    def build(self, spec, prefix):
+    build_system("cmake", "makefile", default="makefile")
+
+
+class CMakeBuilder(CMakeBuilder):
+    @property
+    def root_cmakelists_dir(self):
+        return os.path.join(super().root_cmakelists_dir, "build", "cmake")
+
+    def cmake_args(self):
+        spec = self.spec
+        args = []
+        args.append(self.define_from_variant("ZSTD_BUILD_PROGRAMS", "programs"))
+        args.extend(
+            [
+                self.define("ZSTD_BUILD_STATIC", self.spec.satisfies("libs=static")),
+                self.define("ZSTD_BUILD_SHARED", self.spec.satisfies("libs=shared")),
+            ]
+        )
+        if "compression=zlib" in spec:
+            args.append(self.define("ZSTD_ZLIB_SUPPORT", True))
+        if "compression=lzma" in spec:
+            args.append(self.define("ZSTD_LZMA_SUPPORT", True))
+        if "compression=lz4" in spec:
+            args.append(self.define("ZSTD_LZ4_SUPPORT", True))
+        return args
+
+
+class MakefileBuilder(MakefileBuilder):
+    def build(self, pkg, spec, prefix):
         pass
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         args = ["VERBOSE=1", "PREFIX=" + prefix]
 
         # Tested %nvhpc@22.3. No support for -MP
         if "%nvhpc" in self.spec:
             args.append("DEPFLAGS=-MT $@ -MMD -MF")
-
         # library targets
         lib_args = ["-C", "lib"] + args + ["install-pc", "install-includes"]
         if "libs=shared" in spec:
@@ -74,7 +107,6 @@ class Zstd(MakefilePackage):
 
         # install the library
         make(*lib_args)
-
         # install the programs
         if "+programs" in spec:
             programs_args = ["-C", "programs"] + args

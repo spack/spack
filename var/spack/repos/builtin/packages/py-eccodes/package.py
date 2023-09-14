@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,11 +23,11 @@ class PyEccodes(PythonPackage):
     depends_on("eccodes@2.21.0:+shared", type="run")
 
     def setup_build_environment(self, env):
-        eccodes_libs = self.spec["eccodes:c,shared"].libs
+        eccodes_spec = self.spec["eccodes:c,shared"]
         # ECCODES_HOME has the highest precedence when searching for the library with py-findlibs:
-        env.set("ECCODES_HOME", eccodes_libs.directories[0])
+        env.set("ECCODES_HOME", eccodes_spec.prefix)
         # but not if ecmwflibs (https://pypi.org/project/ecmwflibs/) is in the PYTHONPATH:
-        env.set("ECMWFLIBS_ECCODES", eccodes_libs.files[0])
+        env.set("ECMWFLIBS_ECCODES", eccodes_spec.libs.files[0])
 
     def setup_run_environment(self, env):
         self.setup_build_environment(env)
@@ -38,12 +38,7 @@ class PyEccodes(PythonPackage):
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_build_environment(env)
 
-    def test(self):
-        super(PyEccodes, self).test()
-
-        self.run_test(
-            self.spec["python"].command.path,
-            ["-m", "eccodes", "selfcheck"],
-            purpose="checking system setup",
-            work_dir="spack-test",
-        )
+    def test_selfcheck(self):
+        """checking system setup"""
+        python = self.spec["python"].command
+        python("-m", "eccodes", "selfcheck")

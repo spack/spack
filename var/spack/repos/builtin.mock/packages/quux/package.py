@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -97,7 +97,12 @@ const int quux_version_minor = %s;
             f.write(quux_h)
         with open("%s/quux/quuxifier.cc" % self.stage.source_path, "w") as f:
             f.write(quuxifier_cc)
-        gpp = which("/usr/bin/g++")
+        gpp = which(
+            "g++",
+            path=":".join(
+                [s for s in os.environ["PATH"].split(os.pathsep) if "lib/spack/env" not in s]
+            ),
+        )
         if sys.platform == "darwin":
             gpp = which("/usr/bin/clang++")
         gpp(

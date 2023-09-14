@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class _7zip(SourceforgePackage, Package):
 
     homepage = "https://sourceforge.net/projects/sevenzip"
     sourceforge_mirror_path = "sevenzip/files/7z2107-src.tar.xz"
+    tags = ["windows"]
 
     executables = ["7z"]
 
@@ -69,7 +70,7 @@ class _7zip(SourceforgePackage, Package):
         return arch
 
     def is_64bit(self):
-        return platform.machine().endswith("64")
+        return "64" in str(self.pkg.spec.target.family)
 
     def build(self, spec, prefix):
         link_type = "1" if "static" in spec.variants["link_type"].value else "0"

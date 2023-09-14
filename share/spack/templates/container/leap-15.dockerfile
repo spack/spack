@@ -9,13 +9,16 @@ RUN zypper ref && \
     gcc-c++\
     gcc-fortran\
     make\
+    mercurial\
     git\
     gzip\
     patch\
-    patchelf\
     python3-base \
     python3-boto3\
+    subversion\
     tar\
+    unzip\
     xz\
+    zstd\
 &&  zypper clean
 {% endblock %}

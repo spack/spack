@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,9 @@ class PyPythonCertifiWin32(PythonPackage):
     git = "https://gitlab.com/alelec/python-certifi-win32.git"
 
     # Tarball missing version information, need to use git checkout
-    version("1.6", tag="v1.6")
+    version("1.6", tag="v1.6", commit="8ef45c73e203024ed2e1df5151a23e27faff5b60")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")
     depends_on("py-wrapt@1.10.4:", type=("build", "run"))
-    depends_on("py-wincertstore", type=("build", "run"), when="^python@:3.3")
     depends_on("py-certifi", type=("build", "run"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Krb5(AutotoolsPackage):
     list_url = "https://kerberos.org/dist/krb5/"
     list_depth = 1
 
+    version("1.20.1", sha256="704aed49b19eb5a7178b34b2873620ec299db08752d6a8574f95d41879ab8851")
+    version("1.19.4", sha256="41f5981c5a4de0a26b3937e679a116cd5b3739641fd253124aac91f7179b54eb")
     version("1.19.3", sha256="56d04863cfddc9d9eb7af17556e043e3537d41c6e545610778676cf551b9dcd0")
     version("1.19.2", sha256="10453fee4e3a8f8ce6129059e5c050b8a65dab1c257df68b99b3112eaa0cdf6a")
     version("1.18.2", sha256="c6e4c9ec1a98141c3f5d66ddf1a135549050c9fab4e9a4620ee9b22085873ae0")
@@ -29,8 +31,10 @@ class Krb5(AutotoolsPackage):
 
     depends_on("diffutils", type="build")
     depends_on("bison", type="build")
-    depends_on("openssl@:1")
+    depends_on("openssl@:1", when="@:1.19")
+    depends_on("openssl")
     depends_on("gettext")
+    depends_on("findutils", type="build")
 
     variant(
         "shared", default=True, description="install shared libraries if True, static if false"
@@ -72,12 +76,13 @@ class Krb5(AutotoolsPackage):
         else:
             args.append("--disable-static")
 
+        # https://github.com/spack/spack/issues/34193
+        if "%gcc@10:" in self.spec:
+            args.append("CFLAGS=-fcommon")
+
         return args
 
-    def setup_build_environment(self, env):
-        env.prepend_path("LD_LIBRARY_PATH", self.spec["gettext"].prefix.lib)
-
     def flag_handler(self, name, flags):
-        if name == "ldlibs":
+        if name == "ldlibs" and "intl" in self.spec["gettext"].libs.names:
             flags.append("-lintl")
-        return (flags, None, None)
+        return inject_flags(name, flags)

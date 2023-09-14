@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,9 @@ class PyRtree(PythonPackage):
     homepage = "https://github.com/Toblerity/rtree"
     pypi = "Rtree/Rtree-0.8.3.tar.gz"
 
-    maintainers = ["adamjstewart", "hobu"]
+    maintainers("adamjstewart", "hobu")
 
+    version("1.0.1", sha256="222121699c303a64065d849bf7038b1ecabc37b65c7fa340bedb38ef0e805429")
     version("1.0.0", sha256="d0483482121346b093b9a42518d40f921adf445915b7aea307eb26768c839682")
     version("0.9.7", sha256="be8772ca34699a9ad3fb4cfe2cfb6629854e453c10b3328039301bbfc128ca3e")
     version("0.8.3", sha256="6cb9cf3000963ea6a3db777a597baee2bc55c4fc891e4f1967f262cc96148649")

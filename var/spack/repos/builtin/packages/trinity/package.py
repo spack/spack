@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,16 @@ class Trinity(MakefilePackage):
     homepage = "https://trinityrnaseq.github.io/"
     url = "https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v2.6.6.tar.gz"
 
+    version(
+        "2.15.1.FULL",
+        sha256="ba37e5f696d3d54e8749c4ba439901a3e97e14a4314a5229d7a069ad7b1ee580",
+        url="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.15.1/trinityrnaseq-v2.15.1.FULL.tar.gz",
+    )
+    version(
+        "2.15.0.FULL",
+        sha256="d67de43e535e1173be75de98dcfbdab0bf67f814c9e465a44dfd056cefeb529d",
+        url="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.15.0/trinityrnaseq-v2.15.0.FULL.tar.gz",
+    )
     version(
         "2.14.0.FULL",
         sha256="8adf0c6890f9c9b29c21080dee29a174c60a9e32f5f2a707af86bac4c9fca4ea",
@@ -81,6 +91,8 @@ class Trinity(MakefilePackage):
     depends_on("r-goplot", type="run")
     depends_on("r-argparse", type="run")
     depends_on("r-sm", type="run")
+
+    patch("2.15.1.patch", when="@2.15.1.FULL")
 
     def build(self, spec, prefix):
         make()

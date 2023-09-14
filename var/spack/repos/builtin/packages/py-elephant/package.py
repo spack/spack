@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,9 @@ class PyElephant(PythonPackage):
     git = "https://github.com/NeuralEnsemble/elephant.git"
 
     # list of GitHub accounts to notify when the package is updated.
-    maintainers = ["Moritz-Alexander-Kern"]
+    maintainers("Moritz-Alexander-Kern")
 
+    version("0.11.2", sha256="f8759fff0bbb136ae4ffc8d1eacadeea8ba56610d705c3bf207de87ada3ba240")
     version("0.11.1", sha256="d604a202583440fdf9d95d42cef50a410bd74fcaaa1a925b139435f27ab012ef")
     version("0.11.0", sha256="7b547964dbd196361edc922db2c5a7c0c886ef1effcca6c6dc7adb06f966a3be")
     version("0.10.0", sha256="7e69a113475e4db01b3563328953c037d37f1597d9f2edf0d51fb65e9aebf096")

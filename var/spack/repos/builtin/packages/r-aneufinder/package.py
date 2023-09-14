@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RAneufinder(RPackage):
 
     bioc = "AneuFinder"
 
+    version("1.28.0", commit="e17d810171bdab1c6a26a3ab7b7931db4e073e7e")
+    version("1.26.0", commit="7cd59a1e24c6512f2e4fcbe2c53a0d3cd2d06217")
     version("1.24.0", commit="4c6906eee514eba3e8ac159654a6953e37a99bba")
     version("1.22.0", commit="ea0beb3d827c2dd4bc56708a839a93c55304918b")
     version("1.18.0", commit="76ec9af947f97212084ca478e8e82f9e0eb79de9")
@@ -32,7 +34,7 @@ class RAneufinder(RPackage):
     depends_on("r-aneufinderdata", type=("build", "run"))
     depends_on("r-foreach", type=("build", "run"))
     depends_on("r-doparallel", type=("build", "run"))
-    depends_on("r-biocgenerics", type=("build", "run"), when="@1.4.0:1.6.0")
+    depends_on("r-biocgenerics", type=("build", "run"), when="@1.4.0:")
     depends_on("r-biocgenerics@0.31.6:", type=("build", "run"), when="@1.18.0:")
     depends_on("r-s4vectors", type=("build", "run"))
     depends_on("r-genomeinfodb", type=("build", "run"))
@@ -46,5 +48,5 @@ class RAneufinder(RPackage):
     depends_on("r-reshape2", type=("build", "run"))
     depends_on("r-ggdendro", type=("build", "run"))
     depends_on("r-ggrepel", type=("build", "run"))
-    depends_on("r-reordercluster", type=("build", "run"))
     depends_on("r-mclust", type=("build", "run"))
+    depends_on("r-reordercluster", type=("build", "run"), when="@:1.26.0")

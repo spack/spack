@@ -1,11 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import io
 import sys
-
-import six
 
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
@@ -14,13 +12,13 @@ import spack.repo
 import spack.store
 import spack.tag
 
-description = "Show package tags and associated packages"
+description = "show package tags and associated packages"
 section = "basic"
 level = "long"
 
 
 def report_tags(category, tags):
-    buffer = six.StringIO()
+    buffer = io.StringIO()
     isatty = sys.stdout.isatty()
 
     if isatty:
@@ -70,7 +68,7 @@ def tags(parser, args):
         return
 
     # unique list of available tags
-    available_tags = sorted(spack.repo.path.tag_index.keys())
+    available_tags = sorted(spack.repo.PATH.tag_index.keys())
     if not available_tags:
         tty.msg("No tagged packages")
         return
@@ -88,7 +86,7 @@ def tags(parser, args):
         return
 
     # Report packages associated with tags
-    buffer = six.StringIO()
+    buffer = io.StringIO()
     isatty = sys.stdout.isatty()
 
     tags = args.tag if args.tag else available_tags

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Pandaseq(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type=("build", "link"))
     depends_on("m4", type="build")
-    depends_on("zlib", type="build")
+    depends_on("zlib-api", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("bzip2", type="link")
 

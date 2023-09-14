@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -143,5 +143,5 @@ class Aocc(Compiler):
     def _handle_default_flag_addtions(self):
         # This is a known issue for AOCC 3.0 see:
         # https://developer.amd.com/wp-content/resources/AOCC-3.0-Install-Guide.pdf
-        if self.real_version == ver("3.0.0"):
+        if self.real_version.satisfies(ver("3.0.0")):
             return "-Wno-unused-command-line-argument " "-mllvm -eliminate-similar-expr=false"

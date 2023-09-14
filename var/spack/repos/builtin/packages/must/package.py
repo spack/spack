@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,20 +17,13 @@ class Must(CMakePackage):
     homepage = "https://www.i12.rwth-aachen.de/go/id/nrbe"
     url = "https://hpc.rwth-aachen.de/must/files/MUST-v1.8.0-rc1.tar.gz"
 
-    maintainers = ["jgalarowicz", "dmont"]
+    maintainers("jgalarowicz", "dmont")
 
+    version("1.8.0-rc1", sha256="49fd2487fbd1aa41f4252c7e37efebd3f6ff48218c88e82f34b88d59348fe406")
     version(
-        "1.8.0-rc1",
-        sha256="49fd2487fbd1aa41f4252c7e37efebd3f6ff48218c88e82f34b88d59348fe406",
+        "1.8-preview", sha256="67b4b061db7a893e22a6610e2085072716d11738bc6cc3cb3ffd60d6833e8bad"
     )
-    version(
-        "1.8-preview",
-        sha256="67b4b061db7a893e22a6610e2085072716d11738bc6cc3cb3ffd60d6833e8bad",
-    )
-    version(
-        "1.7.2",
-        sha256="616c54b7487923959df126ac4b47ae8c611717d679fe7ec29f57a89bf0e2e0d0",
-    )
+    version("1.7.2", sha256="616c54b7487923959df126ac4b47ae8c611717d679fe7ec29f57a89bf0e2e0d0")
     variant("test", default=False, description="Enable must internal tests")
     variant("tsan", default=True, description="Enable thread sanitizer")
     variant("graphviz", default=False, description="Use to generate graphs")

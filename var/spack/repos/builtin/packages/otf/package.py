@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,13 +14,13 @@ class Otf(AutotoolsPackage):
     homepage = "http://tu-dresden.de/die_tu_dresden/zentrale_einrichtungen/zih/forschung/projekte/otf/index_html/document_view?set_language=en"
     url = "https://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz"
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
     version(
         "1.12.5salmon", sha256="0a8427360dedb38e8ddca30f14d95f826420c550337c5a79dbb754904e194088"
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def configure_args(self):
         args = []
@@ -30,6 +30,6 @@ class Otf(AutotoolsPackage):
         args.append("--without-zoidfs")
 
         args.append("--with-zlib")
-        args.append("--with-zlib-dir={0}".format(self.spec["zlib"].prefix))
+        args.append("--with-zlib-dir={0}".format(self.spec["zlib-api"].prefix))
 
         return args

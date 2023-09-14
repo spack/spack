@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class GNUMirrorPackage(spack.package_base.PackageBase):
     """Mixin that takes care of setting url and mirrors for GNU packages."""
 
     #: Path of the package in a GNU mirror
-    gnu_mirror_path = None  # type: Optional[str]
+    gnu_mirror_path: Optional[str] = None
 
     #: List of GNU mirrors used by Spack
     base_mirrors = [

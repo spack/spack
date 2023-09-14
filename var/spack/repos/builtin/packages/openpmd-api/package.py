@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,15 +10,18 @@ class OpenpmdApi(CMakePackage):
     """C++ & Python API for Scientific I/O"""
 
     homepage = "https://www.openPMD.org"
-    url = "https://github.com/openPMD/openPMD-api/archive/0.14.2.tar.gz"
+    url = "https://github.com/openPMD/openPMD-api/archive/0.15.2.tar.gz"
     git = "https://github.com/openPMD/openPMD-api.git"
 
-    maintainers = ["ax3l", "franzpoeschel"]
+    maintainers("ax3l", "franzpoeschel")
 
     tags = ["e4s"]
 
     # C++17 up until here
     version("develop", branch="dev")
+    version("0.15.2", sha256="fbe3b356fe6f4589c659027c8056844692c62382e3ec53b953bed1c87e58ba13")
+    version("0.15.1", sha256="0e81652152391ba4d2b62cfac95238b11233a4f89ff45e1fcffcc7bcd79dabe1")
+    version("0.15.0", sha256="290e3a3c5814204ea6527d53423bfacf7a8dc490713227c9e0eaa3abf4756177")
     # C++14 up until here
     version("0.14.5", sha256="e3f509098e75014394877e0dc91f833e57ced5552b110c7339a69e9dbe49bf62")
     version("0.14.4", sha256="42b7bcd043e772d63f0fe0e5e70da411f001db10096d5b8be797ffc88e786379")
@@ -32,8 +35,8 @@ class OpenpmdApi(CMakePackage):
     version("0.13.1", sha256="81ff79419982eb1b0865d1736f73f950f5d4c356d3c78200ceeab7f54dc07fd7")
     version("0.13.0", sha256="97c2e43d80ee5c5288f278bd54f0dcb40e7f48a575b278fcef9660214b779bb0")
     # C++11 up until here
-    version("0.12.0", tag="0.12.0-alpha")
-    version("0.11.1", tag="0.11.1-alpha")
+    version("0.12.0", tag="0.12.0-alpha", commit="23be484dd2570b5277779eafcc5f1eb70c6d98f2")
+    version("0.11.1", tag="0.11.1-alpha", commit="c40292aafbf564807710424d106304f9670a8304")
 
     variant("shared", default=True, description="Build a shared version of the library")
     variant("mpi", default=True, description="Enable parallel I/O")
@@ -43,11 +46,12 @@ class OpenpmdApi(CMakePackage):
     variant("python", default=False, description="Enable Python bindings")
 
     depends_on("cmake@3.15.0:", type="build")
-    depends_on("catch2@2.6.1:", type="test")
-    depends_on("catch2@2.13.4:", type="test", when="@0.14.0:")
+    depends_on("catch2@2.6.1:2", type="test")
+    depends_on("catch2@2.13.4:2", type="test", when="@0.14.0:")
+    depends_on("catch2@2.13.10:2", type="test", when="@0.15.0:")
     depends_on("mpi@2.3:", when="+mpi")  # might become MPI 3.0+
     depends_on("nlohmann-json@3.9.1:")
-    depends_on("mpark-variant@1.4.0:", when="@:0.14.99")  # pre C++17 releases
+    depends_on("mpark-variant@1.4.0:", when="@:0.14")  # pre C++17 releases
     depends_on("toml11@3.7.1:", when="@0.15.0:")
     with when("+hdf5"):
         depends_on("hdf5@1.8.13:")
@@ -67,13 +71,35 @@ class OpenpmdApi(CMakePackage):
         depends_on("py-pybind11@2.6.2:", type="link")
         depends_on("py-numpy@1.15.1:", type=["test", "run"])
         depends_on("py-mpi4py@2.1.0:", when="+mpi", type=["test", "run"])
-        depends_on("python@3.6:", type=["link", "test", "run"])
+        depends_on("python@3.7:", type=["link", "test", "run"])
+        depends_on("python@3.8:", when="@0.15.2:", type=["link", "test", "run"])
 
     conflicts("^hdf5 api=v16", msg="openPMD-api requires HDF5 APIs for 1.8+")
 
     # Fix breaking HDF5 1.12.0 API when build with legacy api options
     # https://github.com/openPMD/openPMD-api/pull/1012
     patch("hdf5-1.12.0.patch", when="@:0.13 +hdf5")
+
+    # CMake: Fix Python Install Directory
+    patch(
+        "https://github.com/openPMD/openPMD-api/pull/1393.patch?full_index=1",
+        sha256="b5cecbdbe16d98c0ba352fa861fcdf9d7c7cc85f21226fa03effa7d62a7cb276",
+        when="@0.15.0",
+    )
+
+    # macOS AppleClang12 Fixes
+    patch(
+        "https://github.com/openPMD/openPMD-api/pull/1395.patch?full_index=1",
+        sha256="791c0a9d1dc09226beb26e8e67824b3337d95f4a2a6e7e64637ea8f0d95eee61",
+        when="@0.15.0",
+    )
+
+    # forgot to bump version.hpp in 0.15.1
+    patch(
+        "https://github.com/openPMD/openPMD-api/pull/1417.patch?full_index=1",
+        sha256="c306483f1f94b308775a401c9cd67ee549fac6824a2264f5985499849fe210d5",
+        when="@0.15.1",
+    )
 
     extends("python", when="+python")
 

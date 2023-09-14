@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Callflow(PythonPackage):
     url = "https://github.com/LLNL/CallFlow/archive/v1.1.0.tar.gz"
     git = "https://github.com/LLNL/CallFlow.git"
 
-    maintainers = ["bhatiaharsh", "jarusified"]
+    maintainers("bhatiaharsh", "jarusified")
 
     version("develop", branch="develop")
     version("1.1.2", sha256="60d2327843469f42be9366ff31d7a6afc85021af4e38b7d6704b2d8c3da7ed36")

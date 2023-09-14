@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Squashfuse(AutotoolsPackage):
     url = "https://github.com/vasi/squashfuse/releases/download/0.1.104/squashfuse-0.1.104.tar.gz"
     git = "https://github.com/vasi/squashfuse.git"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("master", branch="master")
     version("0.1.104", sha256="aa52460559e0d0b1753f6b1af5c68cfb777ca5a13913285e93f4f9b7aa894b3a")
@@ -40,7 +40,7 @@ class Squashfuse(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
 
     # compression libs
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("lz4", when="+lz4")
     depends_on("lzo", when="+lzo")
     depends_on("xz", when="+xz")
@@ -63,7 +63,10 @@ class Squashfuse(AutotoolsPackage):
         args = ["--disable-demo"]
         args += self.enable_or_disable("shared")
         args += self.enable_or_disable("static")
-        args += self.with_or_without("zlib", activation_value="prefix")
+        if "+zlib" in self.spec:
+            args.append("--with-zlib=%s" % self.spec["zlib-api"].prefix)
+        else:
+            args.append("--without-zlib")
         args += self.with_or_without("lz4", activation_value="prefix")
         args += self.with_or_without("lzo", activation_value="prefix")
         args += self.with_or_without("xz", activation_value="prefix")

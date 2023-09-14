@@ -1,14 +1,17 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
+from spack.build_systems.cmake import CMakeBuilder
+from spack.build_systems.makefile import MakefileBuilder
 from spack.package import *
 
 
-class Lz4(MakefilePackage):
+class Lz4(CMakePackage, MakefilePackage):
     """LZ4 is lossless compression algorithm, providing compression speed
     at 400 MB/s per core, scalable with multi-cores CPU. It also features
     an extremely fast decoder, with speed in multiple GB/s per core,
@@ -17,6 +20,7 @@ class Lz4(MakefilePackage):
     homepage = "https://lz4.github.io/lz4/"
     url = "https://github.com/lz4/lz4/archive/v1.9.2.tar.gz"
 
+    version("1.9.4", sha256="0b0e3aa07c8c063ddf40b082bdf7e37a1562bda40a0ff5272957f3e987e0e54b")
     version("1.9.3", sha256="030644df4611007ff7dc962d981f390361e6c97a34e5cbc393ddfbe019ffe2c1")
     version("1.9.2", sha256="658ba6191fa44c92280d4aa2c271b0f4fbc0e34d249578dd05e50e76d0e5efcc")
     version("1.9.0", sha256="f8b6d5662fa534bd61227d313535721ae41a68c9d84058b7b7d86e143572dcfb")
@@ -27,6 +31,8 @@ class Lz4(MakefilePackage):
 
     depends_on("valgrind", type="test")
 
+    build_system("cmake", "makefile", default="makefile")
+    parallel = False if sys.platform == "win32" else True
     variant(
         "libs",
         default="shared,static",
@@ -43,7 +49,35 @@ class Lz4(MakefilePackage):
         else:
             return "{0}/r{1}.tar.gz".format(url, version.joined)
 
-    def build(self, spec, prefix):
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies("%nvhpc@:20.11"):
+            filter_file("-fvisibility=hidden", "", "Makefile")
+            filter_file("-fvisibility=hidden", "", "lib/Makefile")
+            filter_file("-pedantic", "", "Makefile")
+
+
+class CMakeBuilder(CMakeBuilder):
+    @property
+    def root_cmakelists_dir(self):
+        return os.path.join(super().root_cmakelists_dir, "build", "cmake")
+
+    def cmake_args(self):
+        args = [self.define("CMAKE_POLICY_DEFAULT_CMP0042", "NEW")]
+        # # no pic on windows
+        if "platform=windows" in self.spec:
+            args.append(self.define("LZ4_POSITION_INDEPENDENT_LIB", False))
+        args.append(
+            self.define("BUILD_SHARED_LIBS", True if "libs=shared" in self.spec else False)
+        )
+        args.append(
+            self.define("BUILD_STATIC_LIBS", True if "libs=static" in self.spec else False)
+        )
+        return args
+
+
+class MakefileBuilder(MakefileBuilder):
+    def build(self, pkg, spec, prefix):
         par = True
         if spec.compiler.name == "nvhpc":
             # relocation error when building shared and dynamic libs in
@@ -55,7 +89,7 @@ class Lz4(MakefilePackage):
         else:
             make(parallel=par)
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         make(
             "install",
             "PREFIX={0}".format(prefix),
@@ -63,14 +97,6 @@ class Lz4(MakefilePackage):
             "BUILD_STATIC={0}".format("yes" if "libs=static" in self.spec else "no"),
         )
 
-    def patch(self):
-        # Remove flags not recognized by the NVIDIA compiler
-        if self.spec.satisfies("%nvhpc@:20.11"):
-            filter_file("-fvisibility=hidden", "", "Makefile")
-            filter_file("-fvisibility=hidden", "", "lib/Makefile")
-            filter_file("-pedantic", "", "Makefile")
-
-    @run_after("install")
+    @run_after("install", when="platform=darwin")
     def darwin_fix(self):
-        if sys.platform == "darwin":
-            fix_darwin_install_name(self.prefix.lib)
+        fix_darwin_install_name(self.prefix.lib)

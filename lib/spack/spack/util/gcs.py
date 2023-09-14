@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,7 +34,7 @@ def gcs_client():
     return storage_client
 
 
-class GCSBucket(object):
+class GCSBucket:
     """GCS Bucket Object
     Create a wrapper object for a GCS Bucket. Provides methods to wrap spack
     related tasks, such as destroy.
@@ -153,14 +153,13 @@ class GCSBucket(object):
             sys.exit(1)
 
 
-class GCSBlob(object):
+class GCSBlob:
     """GCS Blob object
 
     Wraps some blob methods for spack functionality
     """
 
     def __init__(self, url, client=None):
-
         self.url = url
         if url.scheme != "gs":
             raise ValueError(

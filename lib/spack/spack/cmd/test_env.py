@@ -1,11 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack.cmd.common.env_utility as env_utility
 
 description = (
-    "run a command in a spec's test environment, " "or dump its environment to screen or file"
+    "run a command in a spec's test environment, or dump its environment to screen or file"
 )
 section = "admin"
 level = "long"

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class MgcfdOp2(MakefilePackage):
     homepage = "https://github.com/warwick-hpsc/MG-CFD-app-OP2"
     git = "https://github.com/warwick-hpsc/MG-CFD-app-OP2.git"
 
-    maintainers = ["tomdeakin", "gihanmudalige", "bozbez"]
+    maintainers("tomdeakin", "gihanmudalige", "bozbez")
 
     version("v1.0.0-rc1")
 
@@ -33,12 +33,7 @@ class MgcfdOp2(MakefilePackage):
     depends_on("op2-dsl~mpi", when="~mpi")
 
     def setup_build_environment(self, env):
-        compiler_map = {
-            "gcc": "gnu",
-            "arm": "clang",
-            "cce": "cray",
-            "nvhpc": "pgi",
-        }
+        compiler_map = {"gcc": "gnu", "arm": "clang", "cce": "cray", "nvhpc": "pgi"}
         if self.spec.compiler.name in compiler_map:
             env.set("COMPILER", compiler_map[self.spec.compiler.name])
         else:

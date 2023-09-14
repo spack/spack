@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Med(CMakePackage):
     homepage = "https://docs.salome-platform.org/latest/dev/MEDCoupling/med-file.html"
     url = "https://files.salome-platform.org/Salome/other/med-3.2.0.tar.gz"
 
-    maintainers = ["likask"]
+    maintainers("likask")
 
     # 4.1.0 does not compile in static mode
     version("4.1.0", sha256="847db5d6fbc9ce6924cb4aea86362812c9a5ef6b9684377e4dd6879627651fce")
@@ -43,6 +43,16 @@ class Med(CMakePackage):
     # fix problem where CMake "could not find TARGET hdf5"
     patch("med-4.1.0-hdf5-target.patch", when="@4.0.0:4.1.99")
 
+    def patch(self):
+        # resembles FindSalomeHDF5.patch as in salome-configuration
+        # see https://cmake.org/cmake/help/latest/prop_tgt/IMPORTED_LINK_INTERFACE_LIBRARIES.html
+        filter_file(
+            "GET_PROPERTY(_lib_lst TARGET hdf5-shared PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501
+            "#GET_PROPERTY(_lib_lst TARGET hdf5-shared PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501
+            "config/cmake_files/FindMedfileHDF5.cmake",
+            string=True,
+        )
+
     def cmake_args(self):
         spec = self.spec
 
@@ -65,19 +75,9 @@ class Med(CMakePackage):
             )
 
         if "+shared" in spec:
-            options.extend(
-                [
-                    "-DMEDFILE_BUILD_SHARED_LIBS=ON",
-                    "-DMEDFILE_BUILD_STATIC_LIBS=OFF",
-                ]
-            )
+            options.extend(["-DMEDFILE_BUILD_SHARED_LIBS=ON", "-DMEDFILE_BUILD_STATIC_LIBS=OFF"])
         else:
-            options.extend(
-                [
-                    "-DMEDFILE_BUILD_SHARED_LIBS=OFF",
-                    "-DMEDFILE_BUILD_STATIC_LIBS=ON",
-                ]
-            )
+            options.extend(["-DMEDFILE_BUILD_SHARED_LIBS=OFF", "-DMEDFILE_BUILD_STATIC_LIBS=ON"])
 
         if "+mpi" in spec:
             options.extend(["-DMEDFILE_USE_MPI=YES", "-DMPI_ROOT_DIR=%s" % spec["mpi"].prefix])

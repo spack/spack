@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,6 +41,9 @@ class Memkind(AutotoolsPackage):
     # memkind includes a copy of jemalloc; see
     # <https://github.com/memkind/memkind#jemalloc>.
     conflicts("jemalloc")
+
+    # https://github.com/spack/spack/issues/37292
+    parallel = False
 
     def patch(self):
         with open("VERSION", "w") as version_file:

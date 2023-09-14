@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Exempi(AutotoolsPackage):
     version("2.6.1", sha256="072451ac1e0dc97ed69a2e5bfc235fd94fe093d837f65584d0e3581af5db18cd")
     version("2.5.2", sha256="52f54314aefd45945d47a6ecf4bd21f362e6467fa5d0538b0d45a06bc6eaaed5")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("iconv")
     # needs +test variant to prevent following error:
     # 118    checking for the Boost unit_test_framework library... no

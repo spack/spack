@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,14 +8,12 @@ from spack.package import *
 
 
 class AttributesFoo(BundlePackage):
-    phases = ["install"]
     version("1.0")
 
     provides("bar")
     provides("baz")
 
     def install(self, spec, prefix):
-
         lib_suffix = ".so"
         if sys.platform == "win32":
             lib_suffix = ".dll"

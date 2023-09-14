@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Hyperqueue(Package):
     url = "https://github.com/It4innovations/hyperqueue/archive/refs/tags/v0.11.0.tar.gz"
     git = "https://github.com/It4innovations/hyperqueue"
 
-    maintainers = ["Nortamo", "Kobzol"]
+    maintainers("Nortamo", "Kobzol")
 
     version("main", branch="main")
     version(

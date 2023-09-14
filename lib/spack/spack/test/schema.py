@@ -1,11 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
 import os.path
-import sys
 
 import jsonschema
 import pytest
@@ -36,11 +35,7 @@ def module_suffixes_schema():
                         "properties": {
                             "suffixes": {
                                 "validate_spec": True,
-                                "patternProperties": {
-                                    r"\w[\w-]*": {
-                                        "type": "string",
-                                    }
-                                },
+                                "patternProperties": {r"\w[\w-]*": {"type": "string"}},
                             }
                         },
                     }
@@ -69,10 +64,8 @@ def test_validate_spec(validate_spec_schema):
 
     # Check that invalid data throws
     data["^python@3.7@"] = "baz"
-    with pytest.raises(jsonschema.ValidationError) as exc_err:
+    with pytest.raises(jsonschema.ValidationError, match="unexpected tokens"):
         v.validate(data)
-
-    assert "is an invalid spec" in str(exc_err.value)
 
 
 @pytest.mark.regression("9857")
@@ -80,22 +73,17 @@ def test_module_suffixes(module_suffixes_schema):
     v = spack.schema.Validator(module_suffixes_schema)
     data = {"tcl": {"all": {"suffixes": {"^python@2.7@": "py2.7"}}}}
 
-    with pytest.raises(jsonschema.ValidationError) as exc_err:
+    with pytest.raises(jsonschema.ValidationError, match="unexpected tokens"):
         v.validate(data)
-
-    assert "is an invalid spec" in str(exc_err.value)
 
 
 @pytest.mark.regression("10246")
-@pytest.mark.skipif(
-    sys.version_info < (2, 7), reason="requires python2.7 or higher because of importlib"
-)
 @pytest.mark.parametrize(
     "config_name",
     ["compilers", "config", "env", "merged", "mirrors", "modules", "packages", "repos"],
 )
 def test_schema_validation(meta_schema, config_name):
-    import importlib  # novm
+    import importlib
 
     module_name = "spack.schema.{0}".format(config_name)
     module = importlib.import_module(module_name)

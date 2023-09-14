@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,13 @@ class Gaudi(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("36.14", sha256="b11e0afcb797d61a305856dfe8079d48d74c6b6867ceccc0a83aab5978c9ba5f")
+    version("36.13", sha256="41e711c83428663996c825044b268ce515bef85dad74b4a9453f2207b4b1be7b")
+    version("36.12", sha256="dfce9156cedfa0a7234f880a3c395e592a5f3dc79070d5d196fdb94b83ae203e")
+    version("36.11", sha256="81664d033b0aa8598a0e4cb7e455e697baeb063a11bbde2390164776238ba9f7")
+    version("36.10", sha256="2c1f181c54a76b493b913aeecbd6595236afc08e41d7f1d80be6fe65ac95adb3")
+    version("36.9", sha256="b4e080094771f111bd0bcdf744bcab7b028c7e2af7c5dfaa4a977ebbf0160a8f")
+    version("36.8", sha256="64b4300a57335af7c1f74c736d7610041a1ef0c1f976e3342a22385b60519afc")
     version("36.7", sha256="8dca43185ba11e1b33f5535d2e384542d84500407b0d1f8cb920be00f05c9716")
     version("36.6", sha256="8fc7be0ce32f99cc6b0be4ebbb246f4bb5008ffbf0c012cb39c0aff813dce6af")
     version("36.5", sha256="593e0316118411a5c5fde5d4d87cbfc3d2bb748a8c72a66f4025498fcbdb0f7e")
@@ -31,10 +38,8 @@ class Gaudi(CMakePackage):
     version("33.1", sha256="7eb6b2af64aeb965228d4b6ea66c7f9f57f832f93d5b8ad55c9105235af5b042")
     version("33.0", sha256="76a967c41f579acc432593d498875dd4dc1f8afd5061e692741a355a9cf233c8")
     version("32.2", sha256="e9ef3eb57fd9ac7b9d5647e278a84b2e6263f29f0b14dbe1321667d44d969d2e")
-    version("31.0", commit="aeb156f0c40571b5753a9e1dab31e331491b2f3e")
-    version("30.5", commit="2c70e73ee5b543b26197b90dd59ea4e4d359d230")
 
-    maintainers = ["drbenmorgan", "vvolkl"]
+    maintainers("drbenmorgan", "vvolkl", "jmcarcell")
 
     variant("aida", default=False, description="Build AIDA interfaces support")
     variant("cppunit", default=False, description="Build with CppUnit unit testing")
@@ -52,6 +57,7 @@ class Gaudi(CMakePackage):
     # fixes for the cmake config which could not find newer boost versions
     patch("link_target_fixes.patch", when="@33.0:34")
     patch("link_target_fixes32.patch", when="@:32.2")
+    patch("fmt_fix.patch", when="@36.6:36.12 ^fmt@10:")
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
@@ -65,29 +71,22 @@ class Gaudi(CMakePackage):
     depends_on("cmake", type="build")
     depends_on("cppgsl")
     depends_on("fmt", when="@33.2:")
-    depends_on("fmt@:8", when="@:36.7")
-    depends_on("intel-tbb")
+    depends_on("fmt@:8", when="@:36.9")
+    depends_on("intel-tbb@:2020.3")
     depends_on("uuid")
     depends_on("nlohmann-json", when="@35.0:")
     depends_on("python", type=("build", "run"))
     depends_on("python@:3.7", when="@32.2:34", type=("build", "run"))
-    depends_on("python@:2", when="@:32.1", type=("build", "run"))
-    depends_on("py-networkx@:2.2", when="^python@:2.7")
-    depends_on("py-networkx", when="^python@3.0.0:")
-    depends_on("py-setuptools@:45", when="^python@:2.7", type="build")
+    depends_on("py-networkx", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
     depends_on("py-xenv@1:", when="@:34.9", type=("build", "run"))
     depends_on("range-v3")
     depends_on("root +python +root7 +ssl +tbb +threads")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Testing dependencies
     # Note: gaudi only builds examples when testing enabled
-    for pv in (
-        ["py-nose", "@35:"],
-        ["py-pytest", "@36.2:"],
-        ["py-qmtest", "@35:"],
-    ):
+    for pv in (["catch2", "@36.8:"], ["py-nose", "@35:"], ["py-pytest", "@36.2:"]):
         depends_on(pv[0], when=pv[1], type="test")
         depends_on(pv[0], when=pv[1] + " +examples")
 
@@ -138,6 +137,8 @@ class Gaudi(CMakePackage):
         # environment as in Gaudi.xenv
         env.prepend_path("PATH", self.prefix.scripts)
         env.prepend_path("PYTHONPATH", self.prefix.python)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
 
     def url_for_version(self, version):
         major = str(version[0])

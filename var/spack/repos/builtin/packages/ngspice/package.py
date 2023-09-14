@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,13 @@ class Ngspice(AutotoolsPackage):
     url = "https://sourceforge.net/projects/ngspice/files/ngspice-33.tar.gz"
     git = "git://git.code.sf.net/p/ngspice/ngspice"
 
-    maintainers = ["aweits", "cessenat"]
+    maintainers("aweits", "cessenat")
 
     # Master version by default adds the experimental adms feature
     version("master", branch="master")
+    version("40", sha256="e303ca7bc0f594e2d6aa84f68785423e6bf0c8dad009bb20be4d5742588e890d")
+    version("39", sha256="bf94e811eaad8aaf05821d036a9eb5f8a65d21d30e1cab12701885e09618d771")
+    version("38", sha256="2c3e22f6c47b165db241cf355371a0a7558540ab2af3f8b5eedeeb289a317c56")
     version("37", sha256="9beea6741a36a36a70f3152a36c82b728ee124c59a495312796376b30c8becbe")
     version("34", sha256="2263fffc6694754972af7072ef01cfe62ac790800dad651bc290bfcae79bd7b5")
     version("33", sha256="b99db66cc1c57c44e9af1ef6ccb1dcbc8ae1df3e35acf570af578f606f8541f1")
@@ -104,10 +107,7 @@ class Ngspice(AutotoolsPackage):
                 args.append("--with-x")
                 x = spec["libx11"]
                 args.extend(
-                    [
-                        "--x-includes=%s" % x.prefix.include,
-                        "--x-libraries=%s" % x.prefix.lib,
-                    ]
+                    ["--x-includes=%s" % x.prefix.include, "--x-libraries=%s" % x.prefix.lib]
                 )
             else:
                 args.append("--without-x")

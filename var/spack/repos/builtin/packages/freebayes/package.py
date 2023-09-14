@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,13 +24,13 @@ class Freebayes(MesonPackage):
     )
 
     depends_on("cmake", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Deps for @1.3.5 and beyond
     depends_on("ninja", type="build", when="@1.3.5:")
     depends_on("pkgconfig", type="build", when="@1.3.5:")
     depends_on("htslib", when="@1.3.5:")
-    depends_on("zlib", when="@1.3.5:")
+    depends_on("zlib-api", when="@1.3.5:")
     depends_on("xz", when="@1.3.5:")
     depends_on("parallel", when="@1.3.5:")
     depends_on("vcftools", when="@1.3.5:")

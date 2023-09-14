@@ -1,12 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import inspect
 import os
 import platform
 import posixpath
-import sys
 
 import pytest
 
@@ -14,14 +13,12 @@ from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.build_environment
 import spack.config
+import spack.package_base
 import spack.spec
 import spack.util.spack_yaml as syaml
-from spack.build_environment import (
-    _static_to_shared_library,
-    determine_number_of_jobs,
-    dso_suffix,
-)
+from spack.build_environment import _static_to_shared_library, dso_suffix
 from spack.paths import build_env_path
+from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.path import Path, convert_to_platform_path
@@ -106,7 +103,7 @@ def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
 
 @pytest.fixture
 def mock_module_cmd(monkeypatch):
-    class Logger(object):
+    class Logger:
         def __init__(self, fn=None):
             self.fn = fn
             self.calls = []
@@ -122,7 +119,7 @@ def mock_module_cmd(monkeypatch):
     return mock_module_cmd
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Static to Shared not supported on Win (yet)")
+@pytest.mark.not_on_windows("Static to Shared not supported on Win (yet)")
 def test_static_to_shared_library(build_environment):
     os.environ["SPACK_TEST_COMMAND"] = "dump-args"
 
@@ -130,13 +127,13 @@ def test_static_to_shared_library(build_environment):
         "linux": (
             "/bin/mycc -shared"
             " -Wl,--disable-new-dtags"
-            " -Wl,-soname,{2} -Wl,--whole-archive {0}"
+            " -Wl,-soname -Wl,{2} -Wl,--whole-archive {0}"
             " -Wl,--no-whole-archive -o {1}"
         ),
         "darwin": (
             "/bin/mycc -dynamiclib"
             " -Wl,--disable-new-dtags"
-            " -install_name {1} -Wl,-force_load,{0} -o {1}"
+            " -install_name {1} -Wl,-force_load -Wl,{0} -o {1}"
         ),
     }
 
@@ -159,7 +156,6 @@ def test_static_to_shared_library(build_environment):
 @pytest.mark.regression("8345")
 @pytest.mark.usefixtures("config", "mock_packages")
 def test_cc_not_changed_by_modules(monkeypatch, working_env):
-
     s = spack.spec.Spec("cmake")
     s.concretize()
     pkg = s.package
@@ -175,6 +171,14 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
 
     assert os.environ["CC"] != "NOT_THIS_PLEASE"
     assert os.environ["ANOTHER_VAR"] == "THIS_IS_SET"
+
+
+def test_setup_dependent_package_inherited_modules(
+    config, working_env, mock_packages, install_mockery, mock_fetch
+):
+    # This will raise on regression
+    s = spack.spec.Spec("cmake-client-inheritor").concretized()
+    s.package.do_install()
 
 
 @pytest.mark.parametrize(
@@ -427,20 +431,20 @@ dt-diamond-left:
     assert not (set(os.path.normpath(x) for x in link_dirs[:-2]) & external_lib_paths)
 
 
-def test_parallel_false_is_not_propagating(config, mock_packages):
-    class AttributeHolder(object):
-        pass
+def test_parallel_false_is_not_propagating(default_mock_concretization):
+    """Test that parallel=False is not propagating to dependencies"""
+    # a foobar=bar (parallel = False)
+    # |
+    # b (parallel =True)
+    s = default_mock_concretization("a foobar=bar")
 
-    # Package A has parallel = False and depends on B which instead
-    # can be built in parallel
-    s = spack.spec.Spec("a foobar=bar")
-    s.concretize()
+    spack.build_environment.set_module_variables_for_package(s.package)
+    assert s["a"].package.module.make_jobs == 1
 
-    for spec in s.traverse():
-        expected_jobs = spack.config.get("config:build_jobs") if s.package.parallel else 1
-        m = AttributeHolder()
-        spack.build_environment._set_variables_for_single_module(s.package, m)
-        assert m.make_jobs == expected_jobs
+    spack.build_environment.set_module_variables_for_package(s["b"].package)
+    assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
+        parallel=s["b"].package.parallel
+    )
 
 
 @pytest.mark.parametrize(
@@ -457,7 +461,7 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
     pkg = s.package
 
     env = EnvironmentModifications()
-    with spack.config.override("config:shared_linking", config_setting):
+    with spack.config.override("config:shared_linking", {"type": config_setting, "bind": False}):
         spack.build_environment.set_compiler_environment_variables(pkg, env)
         modifications = env.group_by_name()
         assert "SPACK_DTAGS_TO_STRIP" in modifications
@@ -471,28 +475,62 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
 
 def test_build_jobs_sequential_is_sequential():
     assert (
-        determine_number_of_jobs(parallel=False, command_line=8, config_default=8, max_cpus=8) == 1
+        determine_number_of_jobs(
+            parallel=False,
+            max_cpus=8,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 8}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 8}}),
+            ),
+        )
+        == 1
     )
 
 
 def test_build_jobs_command_line_overrides():
     assert (
-        determine_number_of_jobs(parallel=True, command_line=10, config_default=1, max_cpus=1)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=1,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}}),
+            ),
+        )
         == 10
     )
     assert (
-        determine_number_of_jobs(parallel=True, command_line=10, config_default=100, max_cpus=100)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=100,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}}),
+            ),
+        )
         == 10
     )
 
 
 def test_build_jobs_defaults():
     assert (
-        determine_number_of_jobs(parallel=True, command_line=None, config_default=1, max_cpus=10)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=10,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}})
+            ),
+        )
         == 1
     )
     assert (
-        determine_number_of_jobs(parallel=True, command_line=None, config_default=100, max_cpus=10)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=10,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}})
+            ),
+        )
         == 10
     )
 
@@ -513,3 +551,27 @@ def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_mo
     assert mock_module_cmd.calls
     assert any(("unload", "cray-libsci") == item[0] for item in mock_module_cmd.calls)
     assert any(("unload", "cray-mpich") == item[0] for item in mock_module_cmd.calls)
+
+
+class TestModuleMonkeyPatcher:
+    def test_getting_attributes(self, default_mock_concretization):
+        s = default_mock_concretization("libelf")
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
+        assert module_wrapper.Libelf == s.package.module.Libelf
+
+    def test_setting_attributes(self, default_mock_concretization):
+        s = default_mock_concretization("libelf")
+        module = s.package.module
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
+
+        # Setting an attribute has an immediate effect
+        module_wrapper.SOME_ATTRIBUTE = 1
+        assert module.SOME_ATTRIBUTE == 1
+
+        # We can also propagate the settings to classes in the MRO
+        module_wrapper.propagate_changes_to_mro()
+        for cls in inspect.getmro(type(s.package)):
+            current_module = cls.module
+            if current_module == spack.package_base:
+                break
+            assert current_module.SOME_ATTRIBUTE == 1

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,13 @@ class Libxc(AutotoolsPackage, CudaPackage):
     density-functional theory."""
 
     homepage = "https://tddft.org/programs/libxc/"
-    url = "https://www.tddft.org/programs/libxc/down.php?file=2.2.2/libxc-2.2.2.tar.gz"
+    url = "https://gitlab.com/libxc/libxc/-/archive/6.1.0/libxc-6.1.0.tar.gz"
 
+    version("6.2.2", sha256="3b0523924579cf494cafc6fea92945257f35692b004217d3dfd3ea7ca780e8dc")
+    version("6.2.1", sha256="b5f3b4514db6bc4ccda1da90ac6176ea1f82e12241cc66427c58cbc4a5197b9b")
+    version("6.2.0", sha256="3d25878782b5f94e7e4d41bd6de27f98983584cd0be0c65e69a9ada986b56b4d")
+    version("6.1.0", sha256="f593745fa47ebfb9ddc467aaafdc2fa1275f0d7250c692ce9761389a90dd8eaf")
+    version("6.0.0", sha256="0c774e8e195dd92800b9adf3df5f5721e29acfe9af4b191a9937c7de4f9aa9f6")
     version("5.2.3", sha256="7b7a96d8eeb472c7b8cca7ac38eae27e0a8113ef44dae5359b0eb12592b4bcf2")
     version("5.1.7", sha256="1a818fdfe5c5f74270bc8ef0c59064e8feebcd66b8f642c08aecc1e7d125be34")
     version("5.1.5", sha256="02e4615a22dc3ec87a23efbd3d9be5bfad2445337140bad1720699571c45c3f9")
@@ -28,17 +33,38 @@ class Libxc(AutotoolsPackage, CudaPackage):
     version("2.2.1", sha256="ade61c1fa4ed238edd56408fd8ee6c2e305a3d5753e160017e2a71817c98fd00")
 
     variant("shared", default=True, description="Build shared libraries")
+    variant("kxc", default=False, when="@5:", description="Build with third derivatives")
+    variant("lxc", default=False, when="@5:", description="Build with fourth derivatives")
 
     conflicts("+shared +cuda", msg="Only ~shared supported with +cuda")
     conflicts("+cuda", when="@:4", msg="CUDA support only in libxc 5.0.0 and above")
+
+    # Remove this when the release tarballs become available for 6.0.0 and above.
+    with when("@6.0.0:"):
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("libtool", type="build")
 
     depends_on("perl", type="build")
 
     patch("0001-Bugfix-avoid-implicit-pointer-cast-to-make-libxc-com.patch", when="@5.0.0")
     patch("0002-Mark-xc_erfcx-a-GPU_FUNCTION.patch", when="@5.0.0")
+    patch(
+        "https://raw.githubusercontent.com/cp2k/cp2k/d9e473979eaef93bf16d7abafb9f21845af16eb8/tools/toolchain/scripts/stage3/libxc-6.0.0_mgga_xc_b97mv.patch",
+        sha256="938113a697ee14988ccff153e1a8287fdb78072adc4f388a0af434261082fee5",
+        when="@6.0.0",
+    )
 
     patch("nvhpc-configure.patch", when="%nvhpc")
     patch("nvhpc-libtool.patch", when="@develop %nvhpc")
+
+    def url_for_version(self, version):
+        # The webserver at https://tddft.org/programs/libxc/download is unreliable,
+        # see https://gitlab.com/libxc/libxc/-/issues/453. The pre 6.0.0 release tarballs
+        # ar available in our source mirror, but the latest versions are not.
+        if version < Version("6"):
+            return f"https://www.tddft.org/programs/libxc/down/{version}/libxc-{version}.tar.gz"
+        return f"https://gitlab.com/libxc/libxc/-/archive/{version}/libxc-{version}.tar.gz"
 
     @property
     def libs(self):
@@ -73,8 +99,10 @@ class Libxc(AutotoolsPackage, CudaPackage):
         # by Spack, otherwise we may end up with contradictory or invalid flags
         # see https://github.com/spack/spack/issues/17794
 
+        # https://gitlab.com/libxc/libxc/-/issues/430 (configure script does not ensure C99)
+        # TODO: Switch to cmake since this is better supported
+        env.append_flags("CFLAGS", self.compiler.c99_flag)
         if "%intel" in self.spec:
-            env.append_flags("CFLAGS", "-std=c99")
             if which("xiar"):
                 env.set("AR", "xiar")
 
@@ -92,13 +120,13 @@ class Libxc(AutotoolsPackage, CudaPackage):
                 env.append_flags("CFLAGS", "-arch=sm_{0}".format(cuda_arch))
 
     def configure_args(self):
-        spec = self.spec
-
-        args = [
-            "--enable-shared" if "+shared" in spec else "--disable-shared",
-            "--enable-cuda" if "+cuda" in spec else "--disable-cuda",
-        ]
-
+        args = []
+        args += self.enable_or_disable("shared")
+        args += self.enable_or_disable("cuda")
+        if "+kxc" in self.spec:
+            args.append("--enable-kxc")
+        if "+lxc" in self.spec:
+            args.append("--enable-lxc")
         return args
 
     @run_after("configure")

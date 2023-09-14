@@ -1,0 +1,11 @@
+--- a/CMakeLists.txt	2022-07-20 21:17:20.352231603 +0200
++++ b/CMakeLists.txt	2022-07-20 21:19:28.998269385 +0200
+@@ -1,7 +1,7 @@
+ cmake_minimum_required(VERSION 2.8)
+ project(METIS)
+
+-set(GKLIB_PATH "GKlib" CACHE PATH "path to GKlib")
++set(GKLIB_PATH "${CMAKE_SOURCE_DIR}/GKlib" CACHE PATH "path to GKlib")
+ set(SHARED FALSE CACHE BOOL "build a shared library")
+
+ if(MSVC)

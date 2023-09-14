@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Uftrace(AutotoolsPackage):
     url = "https://github.com/namhyung/uftrace/archive/v0.11.tar.gz"
     git = "https://github.com/namhyung/uftrace.git"
     executables = ["^uftrace$"]
-    maintainers = ["bernhardkaindl"]
+    maintainers("bernhardkaindl")
     tags = ["trace-tools"]
 
     # The build process uses 'git describe --tags' to get the package version

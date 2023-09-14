@@ -1,7 +1,8 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
 
 from spack.package import *
 
@@ -10,10 +11,13 @@ class Scons(PythonPackage):
     """SCons is a software construction tool"""
 
     homepage = "https://scons.org"
-    pypi = "SCons/SCons-4.3.0.tar.gz"
+    pypi = "SCons/SCons-4.5.1.tar.gz"
 
-    tags = ["build-tools"]
+    tags = ["build-tools", "windows"]
 
+    version("4.5.2", sha256="813360b2bce476bc9cc12a0f3a22d46ce520796b352557202cb07d3e402f5458")
+    version("4.5.1", sha256="9daeabe4d87ba2bd4ea15410765fc1ed2d931b723e4dc730a487a3911b9a1738")
+    version("4.4.0", sha256="7703c4e9d2200b4854a31800c1dbd4587e1fa86e75f58795c740bcfa7eca7eaa")
     version("4.3.0", sha256="d47081587e3675cc168f1f54f0d74a69b328a2fc90ec4feb85f728677419b879")
     version("4.2.0", sha256="691893b63f38ad14295f5104661d55cb738ec6514421c6261323351c25432b0a")
     version(
@@ -27,15 +31,7 @@ class Scons(PythonPackage):
     version("3.0.5", sha256="e95eaae17d9e490cf12cd37f091a6cbee8a628b5c8dbd3cab1f348f602f46462")
     version("3.0.4", sha256="72c0b56db84f40d3558f351918a0ab98cb4345e8696e879d3e271f4df4a5913c")
     version("3.0.1", sha256="24475e38d39c19683bc88054524df018fe6949d70fbd4c69e298d39a0269f173")
-    version("2.5.1", sha256="c8de85fc02ed1a687b1f2ac791eaa0c1707b4382a204f17d782b5b111b9fdf07")
-    version("2.5.0", sha256="01f1b3d6023516a8e1b5e77799e5a82a23b32953b1102d339059ffeca8600493")
 
-    # Python 3 support was added in SCons 3.0.0
-    depends_on("python@:2", when="@:2", type=("build", "run"))
-    # Python 2 support was dropped in SCons 4.0.0
-    depends_on("python@3.5:", when="@4:4.2.0")
-    # Python 3.5 support was dropped in SCons 4.3.0
-    depends_on("python@3.6:", when="@4.3.0:")
     depends_on("py-setuptools", type=("build", "run"))
 
     patch("fjcompiler.patch", when="%fj")
@@ -59,4 +55,7 @@ class Scons(PythonPackage):
         env.prepend_path("PYTHONPATH", self.prefix.lib.scons)
 
     def setup_dependent_package(self, module, dspec):
-        module.scons = Executable(self.spec.prefix.bin.scons)
+        if sys.platform == "win32":
+            module.scons = Executable(self.spec.prefix.Scripts.scons)
+        else:
+            module.scons = Executable(self.spec.prefix.bin.scons)

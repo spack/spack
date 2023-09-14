@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Draco(CMakePackage):
     homepage = "https://github.com/lanl/draco"
     url = "https://github.com/lanl/Draco/archive/draco-7_1_0.zip"
     git = "https://github.com/lanl/Draco.git"
-    maintainers = ["KineticTheory"]
+    maintainers("KineticTheory")
 
     version("develop", branch="develop")
     version("7.14.1", sha256="b05c75f1b8ea1d4fac4900d897fb1c948b470826b174ed8b97b32c6da9f030bf")
@@ -88,8 +88,7 @@ class Draco(CMakePackage):
     conflicts("+caliper", when="@:7.7")
 
     # Fix python discovery.
-    patch("d710.patch", when="@7.1.0^python@3:")
-    patch("d710-python2.patch", when="@7.1.0^python@2.7:2")
+    patch("d710.patch", when="@7.1.0")
     patch("d730.patch", when="@7.3.0:7.3")
     patch("d740.patch", when="@7.4.0:7.4")
     patch("d750-intel17.patch", when="@7.5.0:7.6.99%intel@17.0.0:18.0.0")

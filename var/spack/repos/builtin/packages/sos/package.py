@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Sos(AutotoolsPackage):
     url = "https://github.com/Sandia-OpenSHMEM/SOS/archive/refs/tags/v1.5.0.zip"
 
     # notify when the package is updated.
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     version("1.5.1", sha256="0a6303dcbdd713ef2d83c617c1eb821227603c98cb9816c53585fd993da8a984")
     version("1.5.0", sha256="02679da6085cca2919f900022c46bad48479690586cb4e7f971ec3a735bab4d4")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Mgis(CMakePackage):
     homepage = "https://thelfer.github.io/mgis/web/index.html"
     url = "https://github.com/thelfer/MFrontGenericInterfaceSupport/archive/MFrontGenericInterfaceSupport-1.2.tar.gz"
     git = "https://github.com/thelfer/MFrontGenericInterfaceSupport.git"
-    maintainers = ["thelfer"]
+    maintainers("thelfer")
 
     # development branches
     version("master", branch="master")
@@ -46,6 +46,7 @@ class Mgis(CMakePackage):
     variant("c", default=True, description="Enables c bindings")
     variant("fortran", default=True, description="Enables fortran bindings")
     variant("python", default=True, description="Enables python bindings")
+    variant("static", default=False, description="Enables static libraries")
     variant(
         "build_type",
         default="Release",
@@ -85,7 +86,6 @@ class Mgis(CMakePackage):
                 self._if_ninja_target_execute("check")
 
     def cmake_args(self):
-
         args = []
 
         args.append("-DUSE_EXTERNAL_COMPILER_FLAGS=ON")
@@ -104,5 +104,8 @@ class Mgis(CMakePackage):
             args.append("-DPython_ADDITIONAL_VERSIONS={0}".format(python.version.up_to(2)))
             # adding path to boost
             args.append("-DBOOST_ROOT={0}".format(self.spec["boost"].prefix))
+
+        if "+static" in self.spec:
+            args.append("-Denable-static=ON")
 
         return args

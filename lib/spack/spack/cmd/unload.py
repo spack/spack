@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,17 +51,24 @@ def setup_parser(subparser):
         const="bat",
         help="print bat commands to load the package",
     )
+    shells.add_argument(
+        "--pwsh",
+        action="store_const",
+        dest="shell",
+        const="pwsh",
+        help="print pwsh commands to load the package",
+    )
 
     subparser.add_argument(
-        "-a", "--all", action="store_true", help="unload all loaded Spack packages."
+        "-a", "--all", action="store_true", help="unload all loaded Spack packages"
     )
 
 
 def unload(parser, args):
-    """Unload spack packages from the user environment."""
+    """unload spack packages from the user environment"""
     if args.specs and args.all:
         raise spack.error.SpackError(
-            "Cannot specify specs on command line" " when unloading all specs with '--all'"
+            "Cannot specify specs on command line when unloading all specs with '--all'"
         )
 
     hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(":")
@@ -71,14 +78,13 @@ def unload(parser, args):
             for spec in spack.cmd.parse_specs(args.specs)
         ]
     else:
-        specs = spack.store.db.query(hashes=hashes)
+        specs = spack.store.STORE.db.query(hashes=hashes)
 
     if not args.shell:
         specs_str = " ".join(args.specs) or "SPECS"
 
         spack.cmd.common.shell_init_instructions(
-            "spack unload",
-            "    eval `spack unload {sh_arg}` %s" % specs_str,
+            "spack unload", "    eval `spack unload {sh_arg}` %s" % specs_str
         )
         return 1
 

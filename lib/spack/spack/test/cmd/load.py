@@ -1,10 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import re
-import sys
 
 import pytest
 
@@ -17,7 +16,7 @@ unload = SpackCommand("unload")
 install = SpackCommand("install")
 location = SpackCommand("location")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_manpath_trailing_colon(

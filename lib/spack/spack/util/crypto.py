@@ -1,16 +1,16 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import hashlib
-import sys
 from typing import Any, Callable, Dict  # novm
 
 import llnl.util.tty as tty
 
 #: Set of hash algorithms that Spack can use, mapped to digest size in bytes
-hashes = {"md5": 16, "sha1": 20, "sha224": 28, "sha256": 32, "sha384": 48, "sha512": 64}
+hashes = {"sha256": 32, "md5": 16, "sha1": 20, "sha224": 28, "sha384": 48, "sha512": 64}
+# Note: keys are ordered by popularity for earliest return in ``hash_key in version_dict`` checks.
 
 
 #: size of hash digests in bytes, mapped to algoritm names
@@ -23,10 +23,10 @@ _deprecated_hash_algorithms = ["md5"]
 
 
 #: cache of hash functions generated
-_hash_functions = {}  # type: Dict[str, Callable[[], Any]]
+_hash_functions: Dict[str, Callable[[], Any]] = {}
 
 
-class DeprecatedHash(object):
+class DeprecatedHash:
     def __init__(self, hash_alg, alert_fn, disable_security_check):
         self.hash_alg = hash_alg
         self.alert_fn = alert_fn
@@ -82,7 +82,7 @@ def checksum(hashlib_algo, filename, **kwargs):
     """Returns a hex digest of the filename generated using an
     algorithm from hashlib.
     """
-    block_size = kwargs.get("block_size", 2 ** 20)
+    block_size = kwargs.get("block_size", 2**20)
     hasher = hashlib_algo()
     with open(filename, "rb") as file:
         while True:
@@ -93,7 +93,7 @@ def checksum(hashlib_algo, filename, **kwargs):
     return hasher.hexdigest()
 
 
-class Checker(object):
+class Checker:
     """A checker checks files against one particular hex digest.
     It will automatically determine what hashing algorithm
     to used based on the length of the digest it's initialized
@@ -116,7 +116,7 @@ class Checker(object):
     """
 
     def __init__(self, hexdigest, **kwargs):
-        self.block_size = kwargs.get("block_size", 2 ** 20)
+        self.block_size = kwargs.get("block_size", 2**20)
         self.hexdigest = hexdigest
         self.sum = None
         self.hash_fun = hash_fun_for_digest(hexdigest)
@@ -137,11 +137,7 @@ class Checker(object):
 
 def prefix_bits(byte_array, bits):
     """Return the first <bits> bits of a byte array as an integer."""
-    if sys.version_info < (3,):
-        b2i = ord  # In Python 2, indexing byte_array gives str
-    else:
-        b2i = lambda b: b  # In Python 3, indexing byte_array gives int
-
+    b2i = lambda b: b  # In Python 3, indexing byte_array gives int
     result = 0
     n = 0
     for i, b in enumerate(byte_array):

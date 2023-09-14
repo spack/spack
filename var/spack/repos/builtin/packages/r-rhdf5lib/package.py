@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RRhdf5lib(RPackage):
 
     bioc = "Rhdf5lib"
 
+    version("1.22.0", commit="2bf06b364e8d478549b07a298eaf60177a050dc9")
+    version("1.20.0", commit="760679995f17996a9de328cf7a8bcaa6c87286d4")
     version("1.18.2", commit="d104bbfdb91ac5ec7db3c453f23e4d1d6feb671f")
     version("1.16.0", commit="534c49705dbdb27ae0c564acff2c72df2b27b3f1")
     version("1.12.1", commit="cf464f40fd95274d0d351cf28b586c49307c4f0b")
@@ -23,4 +25,6 @@ class RRhdf5lib(RPackage):
 
     depends_on("r@3.3.0:", type="build", when="@1.12.1:")
     depends_on("r@4.0.0:", type="build", when="@1.16.0:")
+    depends_on("r@4.2.0:", type=("build", "run"), when="@1.22.0:")
     depends_on("gmake", type="build")
+    depends_on("zlib-api")

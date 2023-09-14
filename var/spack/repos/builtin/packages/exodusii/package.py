@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,10 +52,11 @@ class Exodusii(CMakePackage):
     version(
         "2019-10-14", sha256="f143d90e8a7516d25979d1416e580dea638332db723f26ae94a712dfe4052e8f"
     )
-    version("2016-08-09", commit="2ffeb1b")
+    version("2016-08-09", commit="2ffeb1bd39454ad5aa230e12969ce976f3d1c92b")
     version("master", branch="master")
 
     variant("mpi", default=True, description="Enables MPI parallelism.")
+    variant("fortran", default=False, description="Build Fortran wrapper libraries.")
 
     depends_on("cmake@2.8.11:", type="build")
     depends_on("mpi", when="+mpi")
@@ -88,6 +89,16 @@ class Exodusii(CMakePackage):
             "-DCMAKE_C_COMPILER={0}".format(cc_path),
             "-DCMAKE_CXX_COMPILER={0}".format(cxx_path),
         ]
+        if "+fortran" in spec:
+            fc_path = spec["mpi"].mpifc if "+mpi" in spec else self.compiler.f90
+            options.extend(
+                [
+                    "-DSEACASProj_ENABLE_Fortran:BOOL=ON",
+                    "-DCMAKE_Fortran_COMPILER={0}".format(fc_path),
+                    "-DSEACASProj_ENABLE_SEACASExodus_for:BOOL=ON",
+                    "-DSEACASProj_ENABLE_SEACASExoIIv2for32:BOOL=ON",
+                ]
+            )
         # Python #
         # Handle v2016 separately because of older tribits
         if spec.satisfies("@:2016-08-09"):

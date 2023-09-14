@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,13 @@ class PyTorchvision(PythonPackage):
     url = "https://github.com/pytorch/vision/archive/v0.8.2.tar.gz"
     git = "https://github.com/pytorch/vision.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("main", branch="main")
+    version("0.15.2", sha256="1efcb80e0a6e42c54f07ee16167839b4d302aeeecc12839cc47c74b06a2c20d4")
+    version("0.15.1", sha256="689d23d4ebb0c7e54e8651c89b17155b64341c14ae4444a04ca7dc6f2b6a0a43")
+    version("0.14.1", sha256="ced67e1cf1f97e168cdf271851a4d0b6d382ab7936e7bcbb39aaa87239c324b6")
+    version("0.14.0", sha256="be1621c85c56eb40537cb74e6ec5d8e58ed8b69f8374a58bcb6ec413cb540c8b")
     version("0.13.1", sha256="c32fab734e62c7744dadeb82f7510ff58cc3bca1189d17b16aa99b08afc42249")
     version("0.13.0", sha256="2fe9139150800820d02c867a0b64b7c7fbc964d48d76fae235d6ef9215eabcf4")
     version("0.12.0", sha256="99e6d3d304184895ff4f6152e2d2ec1cbec89b3e057d9c940ae0125546b04e91")
@@ -47,12 +51,18 @@ class PyTorchvision(PythonPackage):
         "backend",
         default="pil",
         description="Image backend",
-        values=("pil", "accimage", "png", "jpeg"),
+        values=[
+            "pil",
+            "accimage",
+            conditional("png", when="@0.8:"),
+            conditional("jpeg", when="@0.8:"),
+        ],
         multi=False,
     )
 
     # https://github.com/pytorch/vision#installation
-    depends_on("python@3.7:3.10", when="@0.12:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@0.15:", type=("build", "link", "run"))
+    depends_on("python@3.7:3.10", when="@0.12:0.14", type=("build", "link", "run"))
     depends_on("python@3.6:3.9", when="@0.8.2:0.11", type=("build", "link", "run"))
     depends_on("python@3.6:3.8", when="@0.7:0.8.1", type=("build", "link", "run"))
     depends_on("python@3.5:3.8", when="@0.6", type=("build", "link", "run"))
@@ -68,12 +78,17 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision#installation
     depends_on("py-torch@master", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.0.1", when="@0.15.2", type=("build", "link", "run"))
+    depends_on("py-torch@2.0.0", when="@0.15.1", type=("build", "link", "run"))
+    depends_on("py-torch@1.13.1", when="@0.14.1", type=("build", "link", "run"))
+    depends_on("py-torch@1.13.0", when="@0.14.0", type=("build", "link", "run"))
     depends_on("py-torch@1.12.1", when="@0.13.1", type=("build", "link", "run"))
     depends_on("py-torch@1.12.0", when="@0.13.0", type=("build", "link", "run"))
     depends_on("py-torch@1.11.0", when="@0.12.0", type=("build", "link", "run"))
     depends_on("py-torch@1.10.2", when="@0.11.3", type=("build", "link", "run"))
     depends_on("py-torch@1.10.1", when="@0.11.2", type=("build", "link", "run"))
-    depends_on("py-torch@1.10.0", when="@0.11.0:0.11.1", type=("build", "link", "run"))
+    depends_on("py-torch@1.10.0", when="@0.11.1", type=("build", "link", "run"))
+    depends_on("py-torch@1.10.0", when="@0.11.0", type=("build", "link", "run"))
     depends_on("py-torch@1.9.1", when="@0.10.1", type=("build", "link", "run"))
     depends_on("py-torch@1.9.0", when="@0.10.0", type=("build", "link", "run"))
     depends_on("py-torch@1.8.2", when="@0.9.2", type=("build", "link", "run"))
@@ -92,25 +107,23 @@ class PyTorchvision(PythonPackage):
     depends_on("py-torch@1.1.0", when="@0.3.0", type=("build", "link", "run"))
     depends_on("py-torch@:1.0.1", when="@0.2.2", type=("build", "link", "run"))
 
-    # https://github.com/pytorch/vision/issues/1712
-    depends_on("pil@4.1.1:6", when="@:0.4 backend=pil", type=("build", "run"))
-    depends_on("pil@4.1.1:9", when="@0.5: backend=pil", type=("build", "run"))
+    # https://github.com/pytorch/vision/pull/5898
+    depends_on("pil@5.3:8.2,8.4:", when="@0.13: backend=pil", type=("build", "run"))
     # https://github.com/pytorch/vision/issues/4146
     # https://github.com/pytorch/vision/issues/4934
     depends_on("pil@5.3:8.2,8.4:9", when="@0.10:0.12 backend=pil", type=("build", "run"))
-    # https://github.com/pytorch/vision/pull/5898
-    depends_on("pil@5.3:8.2,8.4:", when="@0.13: backend=pil", type=("build", "run"))
+    depends_on("pil@4.1.1:9", when="@0.5: backend=pil", type=("build", "run"))
+    # https://github.com/pytorch/vision/issues/1712
+    depends_on("pil@4.1.1:6", when="@:0.4 backend=pil", type=("build", "run"))
     depends_on("py-accimage", when="backend=accimage", type=("build", "run"))
     depends_on("libpng@1.6.0:", when="backend=png")
-    depends_on("jpeg")
+    depends_on("jpeg")  # seems to be required for all backends
+    # https://github.com/pytorch/vision/pull/7378
+    depends_on("ffmpeg@3.1:5", when="@0.13:")
+    depends_on("ffmpeg@3.1:4.4", when="@0.4.2:0.12")
 
     # Many of the datasets require additional dependencies to use.
     # These can be installed after the fact.
-
-    depends_on("ffmpeg@3.1:", when="@0.4.2:")
-
-    conflicts("backend=png", when="@:0.7")
-    conflicts("backend=jpeg", when="@:0.7")
 
     def setup_build_environment(self, env):
         include = []
@@ -138,10 +151,10 @@ class PyTorchvision(PythonPackage):
         if "+cuda" in self.spec["py-torch"]:
             env.set("FORCE_CUDA", 1)
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
-            pytorch_cuda_arch = ";".join(
+            torch_cuda_arch_list = ";".join(
                 "{0:.1f}".format(float(i) / 10.0)
                 for i in self.spec["py-torch"].variants["cuda_arch"].value
             )
-            env.set("TORCH_CUDA_ARCH_LIST", pytorch_cuda_arch)
+            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch_list)
         else:
             env.set("FORCE_CUDA", 0)

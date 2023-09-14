@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Uriparser(CMakePackage):
     homepage = "https://uriparser.github.io/"
     url = "https://github.com/uriparser/uriparser/releases/download/uriparser-0.9.3/uriparser-0.9.3.tar.gz"
 
+    version("0.9.7", sha256="11553b2abd2b5728a6c88e35ab08e807d0a0f23c44920df937778ce8cc4d40ff")
     version("0.9.6", sha256="10e6f90d359c1087c45f907f95e527a8aca84422251081d1533231e031a084ff")
     version(
         "0.9.5",

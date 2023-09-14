@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Minizip(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # error: implicit declaration of function 'mkdir' is invalid in C99
     patch("implicit.patch", when="%apple-clang@12:")

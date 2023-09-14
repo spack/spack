@@ -1,0 +1,11 @@
+--- a/configure	2011-09-30 09:34:31.000000000 -0500
++++ b/configure	2022-12-16 22:16:06.250866499 -0600
+@@ -2329,7 +2329,7 @@
+ 
+ # Create the VERSION file, which contains the package version from
+ # AC_INIT.
+-echo -n 4.2>VERSION
++echo -n 4.2>VERSION.txt
+ 
+ 
+ { $as_echo "$as_me:${as_lineno-$LINENO}: netCDF-cxx 4.2" >&5

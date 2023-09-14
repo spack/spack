@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,4 @@ class Sfcgal(CMakePackage):
         # It seems viewer is discontinued as of v1.3.0
         # https://github.com/Oslandia/SFCGAL/releases/tag/v1.3.0
         # Also, see https://github.com/Oslandia/SFCGAL-viewer
-        return [
-            self.define("BUILD_SHARED_LIBS", True),
-            self.define("SFCGAL_BUILD_VIEWER", False),
-        ]
+        return [self.define("BUILD_SHARED_LIBS", True), self.define("SFCGAL_BUILD_VIEWER", False)]

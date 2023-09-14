@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Freefem(AutotoolsPackage):
     homepage = "https://freefem.org"
     url = "https://github.com/FreeFem/FreeFem-sources/archive/refs/tags/v4.10.tar.gz"
 
-    maintainers = ["corentin-dev"]
+    maintainers("corentin-dev")
 
     version("4.10", sha256="957994c8f24cc2a671b8c116ae530796c3a431d4157ee71a3d6aab7122e7570d")
     version("4.9", sha256="299ba2b73dfff578b7890f693c1e835680bf55eba87263cabd60d81909e1e0e4")
@@ -29,6 +29,18 @@ class Freefem(AutotoolsPackage):
 
     variant("mpi", default=False, description="Activate MPI support")
     variant("petsc", default=False, description="Compile with PETSc/SLEPc")
+
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+
+    depends_on("bison", type="build")
+    depends_on("flex", type="build")
+    depends_on("m4", type="build")
+    # depends_on("patch", type="build")
+    # depends_on("unzip", type="build")
+
+    depends_on("netlib-lapack")
 
     depends_on("mpi", when="+mpi")
     depends_on("slepc", when="+petsc")
@@ -45,10 +57,6 @@ class Freefem(AutotoolsPackage):
         when="@:4.8",
         sha256="be84f7b1b8182ff0151c258056a09bda70d72a611b0a4da1fa1954df2e0fe84e",
     )
-
-    def autoreconf(self, spec, prefix):
-        autoreconf = which("autoreconf")
-        autoreconf("-i")
 
     def configure_args(self):
         spec = self.spec

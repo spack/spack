@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Compose(MakefilePackage):
 
     homepage = "https://compose.obspm.fr/home"
     url = "https://compose.obspm.fr/download/code/codehdf5.zip"
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     # Spack must not modify our url which doesn't contain a version number
     def url_for_version(self, version):

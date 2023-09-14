@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,20 +19,27 @@ class Xgboost(CMakePackage, CudaPackage):
     homepage = "https://xgboost.ai/"
     git = "https://github.com/dmlc/xgboost.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master", submodules=True)
-    version("1.6.2", tag="v1.6.2", submodules=True)
-    version("1.6.1", tag="v1.6.1", submodules=True)
-    version("1.5.2", tag="v1.5.2", submodules=True)
-    version("1.3.3", tag="v1.3.3", submodules=True)
+    version(
+        "1.6.2", tag="v1.6.2", commit="b9934246faa9a25e10a12339685dfbe56d56f70b", submodules=True
+    )
+    version(
+        "1.6.1", tag="v1.6.1", commit="5d92a7d936fc3fad4c7ecb6031c3c1c7da882a14", submodules=True
+    )
+    version(
+        "1.5.2", tag="v1.5.2", commit="742c19f3ecf2135b4e008a4f4a10b59add8b1045", submodules=True
+    )
+    version(
+        "1.3.3", tag="v1.3.3", commit="000292ce6d99ed658f6f9aebabc6e9b330696e7e", submodules=True
+    )
 
     variant("nccl", default=False, description="Build with NCCL to enable distributed GPU support")
     variant("openmp", default=True, description="Build with OpenMP support")
 
     depends_on("cmake@3.13:", type="build")
     depends_on("cmake@3.16:", when="platform=darwin", type="build")
-    depends_on("ninja", type="build")
     depends_on("cuda@10:", when="+cuda")
     # https://github.com/dmlc/xgboost/pull/7379
     depends_on("cuda@10:11.4", when="@:1.5.0+cuda")
@@ -52,7 +59,7 @@ class Xgboost(CMakePackage, CudaPackage):
         "https://developer.nvidia.com/cuda-gpus",
     )
 
-    generator = "Ninja"
+    generator("ninja")
 
     def cmake_args(self):
         # https://xgboost.readthedocs.io/en/latest/build.html

@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from __future__ import print_function
-
 import argparse
 import os
 
@@ -12,7 +10,12 @@ import llnl.util.tty as tty
 import spack.build_environment as build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.deptypes as dt
+import spack.error
 import spack.paths
+import spack.spec
+import spack.store
+from spack import traverse
 from spack.util.environment import dump_environment, pickle_environment
 
 
@@ -36,6 +39,41 @@ def setup_parser(subparser):
         "are specified.\n\nIf a command is specified and spec is "
         "multi-word, then the -- separator is obligatory."
     )
+
+
+class AreDepsInstalledVisitor:
+    def __init__(self, context="build"):
+        if context not in ("build", "test"):
+            raise ValueError("context can only be build or test")
+
+        if context == "build":
+            self.direct_deps = dt.BUILD | dt.LINK | dt.RUN
+        else:
+            self.direct_deps = dt.BUILD | dt.TEST | dt.LINK | dt.RUN
+
+        self.has_uninstalled_deps = False
+
+    def accept(self, item):
+        # The root may be installed or uninstalled.
+        if item.depth == 0:
+            return True
+
+        # Early exit after we've seen an uninstalled dep.
+        if self.has_uninstalled_deps:
+            return False
+
+        spec = item.edge.spec
+        if not spec.external and not spec.installed:
+            self.has_uninstalled_deps = True
+            return False
+
+        return True
+
+    def neighbors(self, item):
+        # Direct deps: follow build & test edges.
+        # Transitive deps: follow link / run.
+        depflag = self.direct_deps if item.depth == 0 else dt.LINK | dt.RUN
+        return item.edge.spec.edges_to_dependencies(depflag=depflag)
 
 
 def emulate_env_utility(cmd_name, context, args):
@@ -64,6 +102,27 @@ def emulate_env_utility(cmd_name, context, args):
     spec = specs[0]
 
     spec = spack.cmd.matching_spec_from_env(spec)
+
+    # Require that dependencies are installed.
+    visitor = AreDepsInstalledVisitor(context=context)
+
+    # Mass install check needs read transaction.
+    with spack.store.STORE.db.read_transaction():
+        traverse.traverse_breadth_first_with_visitor([spec], traverse.CoverNodesVisitor(visitor))
+
+    if visitor.has_uninstalled_deps:
+        raise spack.error.SpackError(
+            f"Not all dependencies of {spec.name} are installed. "
+            f"Cannot setup {context} environment:",
+            spec.tree(
+                status_fn=spack.spec.Spec.install_status,
+                hashlen=7,
+                hashes=True,
+                # This shows more than necessary, but we cannot dynamically change deptypes
+                # in Spec.tree(...).
+                deptypes="all" if context == "build" else ("build", "test", "link", "run"),
+            ),
+        )
 
     build_environment.setup_package(spec.package, args.dirty, context)
 

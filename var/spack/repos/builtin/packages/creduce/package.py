@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,10 @@ class Creduce(CMakePackage):
     homepage = "https://embed.cs.utah.edu/creduce/"
     url = "https://github.com/csmith-project/creduce"
     git = "https://github.com/csmith-project/creduce"
-    maintainers = ["olupton"]
+    maintainers("olupton")
 
     version("develop", branch="master")
-    version("2.10.0", tag="creduce-2.10.0")
+    version("2.10.0", tag="creduce-2.10.0", commit="fb91843c547794f165e5764a003166191e6c6643")
 
     depends_on("flex")
     depends_on("libxml2")
@@ -29,4 +29,4 @@ class Creduce(CMakePackage):
     depends_on("perl-getopt-tabular")
     depends_on("perl-regexp-common")
     depends_on("perl-termreadkey")
-    depends_on("zlib")
+    depends_on("zlib-api")
