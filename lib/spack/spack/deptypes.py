@@ -31,7 +31,7 @@ ALL_TYPES: Tuple[DepType, ...] = ("build", "link", "run", "test")
 DEFAULT_TYPES: Tuple[DepType, ...] = ("build", "link")
 
 #: A flag with all dependency types set
-ALL = BUILD | LINK | RUN | TEST
+ALL: DepFlag = BUILD | LINK | RUN | TEST
 
 #: Default dependency type if none is specified
 DEFAULT: DepFlag = BUILD | LINK
