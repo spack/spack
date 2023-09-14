@@ -720,6 +720,7 @@ def test_variant_propagation_with_unify_false(tmp_path, mock_packages):
 
 
 def test_env_with_include_defs(clean_test_environment, mutable_mock_env_path, mock_packages):
+    """Test environment with included definitions file."""
     env_path = mutable_mock_env_path
     env_path.mkdir()
     defs_file = env_path / "definitions.yaml"
@@ -732,9 +733,9 @@ def test_env_with_include_defs(clean_test_environment, mutable_mock_env_path, mo
 
     spack_yaml = env_path / ev.manifest_name
     spack_yaml.write_text(
-        """spack:
+        f"""spack:
   include:
-  - file://{0}
+  - file://{defs_file}
 
   definitions:
   - my_packages: [zlib]
@@ -744,10 +745,9 @@ def test_env_with_include_defs(clean_test_environment, mutable_mock_env_path, mo
     - [$core_specs]
     - [$compilers]
   - $my_packages
-""".format(
-            defs_file
-        )
+"""
     )
+
     e = ev.Environment(env_path)
     ev.activate(e)
     e.concretize()
@@ -756,6 +756,7 @@ def test_env_with_include_defs(clean_test_environment, mutable_mock_env_path, mo
 def test_env_with_include_def_missing(
     clean_test_environment, mutable_mock_env_path, mock_packages
 ):
+    """Test environment with included definitions file that is missing a definition."""
     env_path = mutable_mock_env_path
     env_path.mkdir()
     filename = "missing-def.yaml"
@@ -764,18 +765,17 @@ def test_env_with_include_def_missing(
 
     spack_yaml = env_path / ev.manifest_name
     spack_yaml.write_text(
-        """spack:
+        f"""spack:
   include:
-  - file://{0}
+  - file://{defs_file}
 
   specs:
   - matrix:
     - [$core_specs]
     - [$my_compilers]
-""".format(
-            defs_file
-        )
+"""
     )
+
     e = ev.Environment(env_path)
     ev.activate(e)
     with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):

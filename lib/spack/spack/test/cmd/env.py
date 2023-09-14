@@ -720,38 +720,23 @@ spack:
 
 def test_with_config_bad_include(environment_from_manifest):
     """Confirm missing include paths raise expected exception and error."""
-    e = environment_from_manifest(
-        """
+    with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
+        e = environment_from_manifest(
+            """
 spack:
   include:
   - /no/such/directory
   - no/such/file.yaml
 """
-    )
-    with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
-        with e:
-            e.concretize()
+        )
 
     assert ev.active_environment() is None
 
 
-def test_env_with_include_config_files_same_basename(environment_from_manifest):
-    e = environment_from_manifest(
-        """
-spack:
-  include:
-  - ./path/to/included-config.yaml
-  - ./second/path/to/include-config.yaml
-  specs:
-  - libelf
-  - mpileaks
-"""
-    )
-
-    e = ev.read("test")
-
-    fs.mkdirp(os.path.join(e.path, "path", "to"))
-    with open(os.path.join(e.path, "./path/to/included-config.yaml"), "w") as f:
+def test_env_with_include_config_files_same_basename(tmp_path, environment_from_manifest):
+    file1 = fs.join_path(tmp_path, "path", "to", "included-config.yaml")
+    fs.mkdirp(os.path.dirname(file1))
+    with open(file1, "w") as f:
         f.write(
             """\
         packages:
@@ -760,8 +745,9 @@ spack:
         """
         )
 
-    fs.mkdirp(os.path.join(e.path, "second", "path", "to"))
-    with open(os.path.join(e.path, "./second/path/to/include-config.yaml"), "w") as f:
+    file2 = fs.join_path(tmp_path, "second", "path", "included-config.yaml")
+    fs.mkdirp(os.path.dirname(file2))
+    with open(file2, "w") as f:
         f.write(
             """\
         packages:
@@ -770,6 +756,19 @@ spack:
         """
         )
 
+    e = environment_from_manifest(
+        f"""
+spack:
+  include:
+  - {file1}
+  - {file2}
+  specs:
+  - libelf
+  - mpileaks
+"""
+    )
+
+    e = ev.read("test")
     with e:
         e.concretize()
 
@@ -806,11 +805,14 @@ spack:
     )
 
 
-def test_env_with_included_config_file(environment_from_manifest, packages_file):
+def test_env_with_included_config_file(tmp_path, environment_from_manifest, packages_file):
     """Test inclusion of a relative packages configuration file added to an
     existing environment.
     """
     include_filename = "included-config.yaml"
+    included_path = os.path.join(tmp_path, include_filename)
+    shutil.move(packages_file.strpath, included_path)
+
     e = environment_from_manifest(
         f"""\
 spack:
@@ -820,9 +822,6 @@ spack:
   - mpileaks
 """
     )
-
-    included_path = os.path.join(e.path, include_filename)
-    shutil.move(packages_file.strpath, included_path)
 
     with e:
         e.concretize()
@@ -856,9 +855,8 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
     with spack_yaml.open("w") as f:
         f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
 
-    env = ev.Environment(tmpdir.strpath)
     with pytest.raises(spack.config.ConfigError, match="missing include path"):
-        ev.activate(env)
+        e = ev.Environment(tmpdir.strpath)
 
 
 def test_env_with_included_config_scope(environment_from_manifest, packages_file):
@@ -867,10 +865,6 @@ def test_env_with_included_config_scope(environment_from_manifest, packages_file
     file has already been staged."""
     config_scope_path = os.path.join(ev.root("test"), "config")
 
-    # Configure the environment to include file(s) from the environment's
-    # remote configuration stage directory.
-    e = environment_from_manifest(mpileaks_env_config(config_scope_path))
-
     # Copy the packages.yaml file to the environment configuration
     # directory, so it is picked up during concretization. (Using
     # copy instead of rename in case the fixture scope changes.)
@@ -878,6 +872,10 @@ def test_env_with_included_config_scope(environment_from_manifest, packages_file
     include_filename = os.path.basename(packages_file.strpath)
     included_path = os.path.join(config_scope_path, include_filename)
     fs.copy(packages_file.strpath, included_path)
+
+    # Configure the environment to include file(s) from the environment's
+    # remote configuration stage directory.
+    e = environment_from_manifest(mpileaks_env_config(config_scope_path))
 
     # Ensure the concretized environment reflects contents of the
     # packages.yaml file.
