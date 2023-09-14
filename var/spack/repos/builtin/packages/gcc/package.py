@@ -340,6 +340,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # aarch64/M1 is supported in GCC 11.3-12.2 and 13
     requires(
         "@11.3,12.2,13.1:",
+        when="target=aarch64: platform=darwin",
         msg="Only GCC 11.3-12.2, 13.1+ support macOS M1 (aarch64)",
     )
 
