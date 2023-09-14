@@ -41,13 +41,13 @@ spack:
 
   specs:
   - adios2
-  - amrex  
+  - amrex
   - butterflypack
   - conduit
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
-  - hdf5-vol-log  
+  - hdf5-vol-log
   - hypre
   - kokkos
   - kokkos-kernels
@@ -57,7 +57,7 @@ spack:
   - superlu-dist
   # - flux-core # python cray sles issue
 
-  mirrors: { "mirror": "s3://spack-binaries-cray/develop/e4s-cray-sles" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-cray-sles" }
 
   cdash:
     build-group: E4S Cray SLES
