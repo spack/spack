@@ -754,14 +754,26 @@ def override(
 COMMAND_LINE_SCOPES: List[str] = []
 
 
-def _add_platform_scope(
+def _add_platform_scopes(
     cfg: Union[Configuration, lang.Singleton], scope_type: Type[ConfigScope], name: str, path: str
 ) -> None:
-    """Add a platform-specific subdirectory for the current platform."""
-    platform = spack.platforms.host().name
-    plat_name = os.path.join(name, platform)
-    plat_path = os.path.join(path, platform)
-    cfg.push_scope(scope_type(plat_name, plat_path))
+    """Add subdirectories for the current platform, os, and target."""
+    host_platform = spack.platforms.host()
+    platform = host_platform.name
+    oss = str(host_platform.operating_system("frontend"))
+    host_target = str(host_platform.target("frontend"))
+
+    scope_name = os.path.join(name, platform)
+    scope_path = os.path.join(path, platform)
+    cfg.push_scope(scope_type(scope_name, scope_path))
+
+    scope_name = os.path.join(scope_name, oss)
+    scope_path = os.path.join(scope_path, oss)
+    cfg.push_scope(scope_type(scope_name, scope_path))
+
+    scope_name = os.path.join(scope_name, host_target)
+    scope_path = os.path.join(scope_path, host_target)
+    cfg.push_scope(scope_type(scope_name, scope_path))
 
 
 def config_paths_from_entry_points() -> List[Tuple[str, str]]:
@@ -807,7 +819,7 @@ def _add_command_line_scopes(
         # name based on order on the command line
         name = f"cmd_scope_{i:d}"
         cfg.push_scope(ImmutableConfigScope(name, path))
-        _add_platform_scope(cfg, ImmutableConfigScope, name, path)
+        _add_platform_scopes(cfg, ImmutableConfigScope, name, path)
 
 
 def create() -> Configuration:
@@ -854,7 +866,7 @@ def create() -> Configuration:
         cfg.push_scope(ConfigScope(name, path))
 
         # Each scope can have per-platfom overrides in subdirectories
-        _add_platform_scope(cfg, ConfigScope, name, path)
+        _add_platform_scopes(cfg, ConfigScope, name, path)
 
     # add command-line scopes
     _add_command_line_scopes(cfg, COMMAND_LINE_SCOPES)
