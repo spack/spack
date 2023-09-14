@@ -125,7 +125,7 @@ class Executable:
 
         """
 
-        def process_cmd_output():
+        def process_cmd_output(out, err):
             result = None
             if output in (str, str.split) or error in (str, str.split):
                 result = ""
@@ -227,7 +227,7 @@ class Executable:
             )
             out, err = proc.communicate(timeout=timeout)
 
-            result = process_cmd_output()
+            result = process_cmd_output(out, err)
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
                 long_msg = cmd_line_string
@@ -263,10 +263,10 @@ class Executable:
                 f"Command {cmd_line_string} experienced a timeout after\
 {timeout}s running process {proc.pid}"
             )
-            result = process_cmd_output()
+            result = process_cmd_output(out, err)
             long_msg = cmd_line_string + f"\n{result}"
             if fail_on_timeout:
-                raise ProcessError(str(te), f"\nProcess timed out after {timeout}s" f"{long_msg}")
+                raise ProcessError(f"\nProcess timed out after {timeout}s" f"{long_msg}") from te
 
         finally:
             if close_ostream:
