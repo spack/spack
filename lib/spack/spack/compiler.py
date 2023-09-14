@@ -43,7 +43,7 @@ def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
         "output": str,
         "error": str,
         "ignore_errors": ignore_errors,
-        "timeout": 2.5,
+        "timeout": 120,
         "fail_on_timeout": True,
     }
     if version_arg:
