@@ -313,11 +313,11 @@ def supported_compilers_for_host_platform() -> List[str]:
     """Return a set of compiler class objects supported by Spack
     that are also supported by the current host platform
     """
-    host_plat = str(spack.platforms.real_host())
+    host_plat = spack.platforms.real_host()
     return supported_compilers_for_platform(host_plat)
 
 
-def supported_compilers_for_platform(platform: str) -> List[str]:
+def supported_compilers_for_platform(platform: spack.platforms.Platform) -> List[str]:
     """Return a set of compiler class objects supported by Spack
     that are also supported by the provided platform
 
