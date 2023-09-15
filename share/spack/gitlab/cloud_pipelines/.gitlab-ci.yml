@@ -232,7 +232,7 @@ protected-publish:
     - spack buildcache update-index --keys "${SPACK_COPY_BUILDCACHE}"
   id_tokens:
     GITLAB_OIDC_TOKEN:
-      aud: "${OIDC_TOKEN_AUDIENCE}"
+      aud: "protected_binary_mirror"
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
