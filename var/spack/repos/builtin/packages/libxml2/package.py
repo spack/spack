@@ -17,6 +17,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     url = "https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.13.tar.xz"
     list_url = "https://gitlab.gnome.org/GNOME/libxml2/-/releases"
 
+    maintainers("AlexanderRichert-NOAA")
+
     def url_for_version(self, version):
         if version >= Version("2.9.13"):
             url = "https://download.gnome.org/sources/libxml2/{0}/libxml2-{1}.tar.xz"
@@ -38,6 +40,10 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     version("2.7.8", sha256="cda23bc9ebd26474ca8f3d67e7d1c4a1f1e7106364b690d822e009fdc3c417ec")
 
     variant("python", default=False, description="Enable Python support")
+    variant("shared", default=True, description="Build shared library")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
+
+    conflicts("~pic+shared")
 
     depends_on("pkgconfig@0.9.0:", type="build", when="build_system=autotools")
     # conditional on non Windows, but rather than specify for each platform
@@ -73,6 +79,12 @@ class Libxml2(AutotoolsPackage, NMakePackage):
         when="@2.9.11:2.9.14",
     )
     build_system(conditional("nmake", when="platform=windows"), "autotools", default="autotools")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags" and self.spec.satisfies("+pic"):
+            flags.append(self.compiler.cc_pic_flag)
+            flags.append("-DPIC")
+        return (flags, None, None)
 
     @property
     def command(self):
@@ -212,6 +224,10 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
             )
         else:
             args.append("--without-python")
+
+        args.extend(self.enable_or_disable("shared"))
+        # PIC setting is taken care of above by self.flag_handler()
+        args.append("--without-pic")
 
         return args
 
