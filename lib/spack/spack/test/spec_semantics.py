@@ -1063,6 +1063,7 @@ def test_spec_format_path_abs_windows(spec_str, format_str, expected):
         ("zlib@git.foo/bar", r"C:\\installroot\{name}\{version}", None),
         ("zlib@git.foo/bar", r"\\installroot\{name}\{version}", None),
         ("zlib@git.foo/bar", r"/installroot/{name}/{version}", "/installroot/zlib/git.foo_bar"),
+        ("zlib@git.foo/bar", r"//installroot/{name}/{version}", "/installroot/zlib/git.foo_bar"),
     ],
 )
 def test_spec_format_path_abs_posix(spec_str, format_str, expected):

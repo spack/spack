@@ -4853,12 +4853,13 @@ def _extract_root(format_string):
         root removed.
     """
     checks = [
-        (r"^([a-zA-Z]:[/\\])", "drive", "windows"),
-        (r"^(//)|(\\\\)", "device", "windows"),
-        (r"^([/\\])", "posixroot", "posix"),  # This comes after device (because it is a substring)
+        (r"^([a-zA-Z]:[/\\])", "drive", ["windows"]),
+        (r"^(\\\\)", "device", ["windows"]),
+        (r"^(//)", "device_or_root", ["windows", "posix"]),
+        (r"^([/\\])", "posixroot", ["posix"]),
     ]
 
-    for pattern, root_type, only_on in checks:
+    for pattern, root_type, supported_on in checks:
         match = re.match(pattern, format_string)
         if match:
             break
@@ -4868,7 +4869,7 @@ def _extract_root(format_string):
         return
 
     we_are_on = "posix" if sys.platform != "win32" else "windows"
-    if we_are_on != only_on:
+    if we_are_on not in supported_on:
         raise SpecFormatPathError(
             "Incompatible absolute path for current system ({0}): {1}".format(
                 sys.platform, format_string
@@ -4883,6 +4884,11 @@ def _extract_root(format_string):
         return "//", format_string.lstrip(any_sep)
     elif root_type == "posixroot":
         return "/", format_string.lstrip(any_sep)
+    elif root_type == "device_or_root":
+        if we_are_on == "posix":
+            return "/", format_string.lstrip(any_sep)
+        else:
+            return "//", format_string.lstrip(any_sep)
     else:
         raise ValueError("Internal function bug")
 
