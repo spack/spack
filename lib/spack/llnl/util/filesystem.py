@@ -2506,11 +2506,7 @@ class WindowsSimulatedRPath:
                 else:
                     raise e
             # catch errors we raise ourselves from Spack
-            except llnl.util.symlink.SymlinkAlreadyExistsError:
-                report_already_linked()
-            except llnl.util.symlink.JunctionLinkAlreadyExistsError:
-                report_already_linked()
-            except llnl.util.symlink.HardlinkPathAlreadyExistsError:
+            except llnl.util.symlink.AlreadyExistsError:
                 report_already_linked()
 
     def establish_link(self):
