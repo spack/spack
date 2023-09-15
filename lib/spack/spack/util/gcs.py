@@ -230,10 +230,8 @@ class GCSBlob:
 
 def gcs_open(req, *args, **kwargs):
     """Open a reader stream to a blob object on GCS"""
-    import spack.util.gcs as gcs_util
-
     url = urllib.parse.urlparse(req.get_full_url())
-    gcsblob = gcs_util.GCSBlob(url)
+    gcsblob = GCSBlob(url)
 
     if not gcsblob.exists():
         raise URLError("GCS blob {0} does not exist".format(gcsblob.blob_path))
