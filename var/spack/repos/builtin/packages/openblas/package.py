@@ -220,6 +220,66 @@ class Openblas(CMakePackage, MakefilePackage):
 
     build_system("makefile", "cmake", default="makefile")
 
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        iflags = []
+        if name == "cflags":
+            if spec.satisfies("@0.3.20: %oneapi") or spec.satisfies("@0.3.20: %arm"):
+                iflags.append("-Wno-error=implicit-function-declaration")
+        return (iflags, None, None)
+
+    @classmethod
+    def determine_version(cls, lib):
+        ver = None
+        for ext in library_extensions:
+            match = re.search(r"lib(\S*?)-r(\d+\.\d+\.\d+)\.%s" % ext, lib)
+            if match:
+                ver = match.group(2)
+        return ver
+
+    @property
+    def parallel(self):
+        # unclear whether setting `-j N` externally was supported before 0.3
+        return self.spec.version >= Version("0.3.0")
+
+    @run_before("edit")
+    def check_compilers(self):
+        # As of 06/2016 there is no mechanism to specify that packages which
+        # depends on Blas/Lapack need C or/and Fortran symbols. For now
+        # require both.
+        # As of 08/2022 (0.3.21), we can build purely with a C compiler using
+        # a f2c translated LAPACK version
+        #   https://github.com/xianyi/OpenBLAS/releases/tag/v0.3.21
+        if self.compiler.fc is None and "~fortran" not in self.spec:
+            raise InstallError(
+                self.compiler.cc
+                + " has no Fortran compiler added in spack. Add it or use openblas~fortran!"
+            )
+
+    @property
+    def headers(self):
+        # The only public headers for cblas and lapacke in
+        # openblas are cblas.h and lapacke.h. The remaining headers are private
+        # headers either included in one of these two headers, or included in
+        # one of the source files implementing functions declared in these
+        # headers.
+        return find_headers(["cblas", "lapacke"], self.prefix.include)
+
+    @property
+    def libs(self):
+        spec = self.spec
+
+        # Look for openblas{symbol_suffix}
+        name = ["libopenblas", "openblas"]
+        search_shared = bool(spec.variants["shared"].value)
+        suffix = spec.variants["symbol_suffix"].value
+        if suffix != "none":
+            name += suffix
+
+        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
+
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     @staticmethod
     def _read_targets(target_file):
         """Parse a list of available targets from the OpenBLAS/TargetList.txt
@@ -315,67 +375,7 @@ class Openblas(CMakePackage, MakefilePackage):
 
         return args
 
-    def flag_handler(self, name, flags):
-        spec = self.spec
-        iflags = []
-        if name == "cflags":
-            if spec.satisfies("@0.3.20: %oneapi") or spec.satisfies("@0.3.20: %arm"):
-                iflags.append("-Wno-error=implicit-function-declaration")
-        return (iflags, None, None)
-
-    @classmethod
-    def determine_version(cls, lib):
-        ver = None
-        for ext in library_extensions:
-            match = re.search(r"lib(\S*?)-r(\d+\.\d+\.\d+)\.%s" % ext, lib)
-            if match:
-                ver = match.group(2)
-        return ver
-
-    @property
-    def parallel(self):
-        # unclear whether setting `-j N` externally was supported before 0.3
-        return self.spec.version >= Version("0.3.0")
-
-    @run_before("edit")
-    def check_compilers(self):
-        # As of 06/2016 there is no mechanism to specify that packages which
-        # depends on Blas/Lapack need C or/and Fortran symbols. For now
-        # require both.
-        # As of 08/2022 (0.3.21), we can build purely with a C compiler using
-        # a f2c translated LAPACK version
-        #   https://github.com/xianyi/OpenBLAS/releases/tag/v0.3.21
-        if self.compiler.fc is None and "~fortran" not in self.spec:
-            raise InstallError(
-                self.compiler.cc
-                + " has no Fortran compiler added in spack. Add it or use openblas~fortran!"
-            )
-
-    @property
-    def headers(self):
-        # The only public headers for cblas and lapacke in
-        # openblas are cblas.h and lapacke.h. The remaining headers are private
-        # headers either included in one of these two headers, or included in
-        # one of the source files implementing functions declared in these
-        # headers.
-        return find_headers(["cblas", "lapacke"], self.prefix.include)
-
-    @property
-    def libs(self):
-        spec = self.spec
-
-        # Look for openblas{symbol_suffix}
-        name = ["libopenblas", "openblas"]
-        search_shared = bool(spec.variants["shared"].value)
-        suffix = spec.variants["symbol_suffix"].value
-        if suffix != "none":
-            name += suffix
-
-        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
-
-
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
-    def setup_build_environment(self, env):
+   def setup_build_environment(self, env):
         # When building OpenBLAS with threads=openmp, `make all`
         # runs tests, so we set the max number of threads at runtime
         # accordingly
@@ -402,7 +402,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             make_defs.append("MAKE_NB_JOBS=0")  # flag provided by OpenBLAS
 
         # Add target and architecture flags
-        make_defs += self.package._microarch_target_args()
+        make_defs += self._microarch_target_args()
 
         # Fortran-free compilation
         if "~fortran" in self.spec:
