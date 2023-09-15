@@ -117,6 +117,15 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
 
     def patch(self):
         change_sed_delimiter("@", ";", "src/Makefile.in")
+        filter_file(
+            r'#include "hb-subset.h"',
+            """
+             #include "hb-subset.h"
+             #include <cstdio>
+             #include <cstdlib>
+            """,
+            "test/threads/hb-subset-threads.cc",
+        )
 
 
 class SetupEnvironment(object):
