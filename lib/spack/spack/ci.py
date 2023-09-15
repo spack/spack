@@ -1029,6 +1029,11 @@ def generate_gitlab_ci_yaml(
             job_vars = job_object.setdefault("variables", {})
             job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
             job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
+            job_vars["SPACK_JOB_SPEC_PKG_VERSION"] = release_spec.format("{version}")
+            job_vars["SPACK_JOB_SPEC_COMPILER_NAME"] = release_spec.format("{compiler.name}")
+            job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
+            job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
+            job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
 
             job_object["needs"] = []
             if spec_label in dependencies:
