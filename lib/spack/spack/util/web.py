@@ -257,11 +257,11 @@ def check_curl_code(returncode):
     if returncode != 0:
         if returncode == 22:
             # This is a 404. Curl will print the error.
-            raise FetchError("URL was not found!")
+            raise spack.error.FetchError("URL was not found!")
 
         if returncode == 60:
             # This is a certificate error.  Suggest spack -k
-            raise FetchError(
+            raise spack.error.FetchError(
                 "Curl was unable to fetch due to invalid certificate. "
                 "This is either an attack, or your cluster's SSL "
                 "configuration is bad.  If you believe your SSL "
@@ -270,7 +270,7 @@ def check_curl_code(returncode):
                 "Use this at your own risk."
             )
 
-        raise FetchError("Curl failed with error {0}".format(returncode))
+        raise spack.error.FetchError("Curl failed with error {0}".format(returncode))
 
 
 def _curl(curl=None):
@@ -279,7 +279,7 @@ def _curl(curl=None):
             curl = which("curl", required=True)
         except CommandNotFoundError as exc:
             tty.error(str(exc))
-            raise FetchError("Missing required curl fetch method")
+            raise spack.error.FetchError("Missing required curl fetch method")
     return curl
 
 
@@ -307,7 +307,7 @@ def fetch_url_text(url, curl=None, dest_dir="."):
     Raises FetchError if the curl returncode indicates failure
     """
     if not url:
-        raise FetchError("A URL is required to fetch its text")
+        raise spack.error.FetchError("A URL is required to fetch its text")
 
     tty.debug("Fetching text at {0}".format(url))
 
@@ -319,7 +319,7 @@ def fetch_url_text(url, curl=None, dest_dir="."):
     if fetch_method == "curl":
         curl_exe = _curl(curl)
         if not curl_exe:
-            raise FetchError("Missing required fetch method (curl)")
+            raise spack.error.FetchError("Missing required fetch method (curl)")
 
         curl_args = ["-O"]
         curl_args.extend(base_curl_fetch_args(url))
@@ -337,7 +337,9 @@ def fetch_url_text(url, curl=None, dest_dir="."):
 
             returncode = response.getcode()
             if returncode and returncode != 200:
-                raise FetchError("Urllib failed with error code {0}".format(returncode))
+                raise spack.error.FetchError(
+                    "Urllib failed with error code {0}".format(returncode)
+                )
 
             output = codecs.getreader("utf-8")(response).read()
             if output:
@@ -348,7 +350,7 @@ def fetch_url_text(url, curl=None, dest_dir="."):
                 return path
 
         except SpackWebError as err:
-            raise FetchError("Urllib fetch failed to verify url: {0}".format(str(err)))
+            raise spack.error.FetchError("Urllib fetch failed to verify url: {0}".format(str(err)))
 
     return None
 
@@ -755,10 +757,6 @@ def parse_etag(header_value):
     valid = re.match(r"([\x21\x23-\x7e\x80-\xFF]+)$", header_value)
 
     return valid.group(1) if valid else None
-
-
-class FetchError(spack.error.SpackError):
-    """Superclass for fetch-related errors."""
 
 
 class SpackWebError(spack.error.SpackError):

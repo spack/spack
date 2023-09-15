@@ -40,7 +40,6 @@ import spack.util.pattern as pattern
 import spack.util.string
 import spack.util.url as url_util
 from spack.util.crypto import bit_length, prefix_bits
-from spack.util.web import FetchError
 
 # The well-known stage source subdirectory name.
 _source_path_subdir = "spack-src"
@@ -517,7 +516,7 @@ class Stage:
 
             self.fetcher = self.default_fetcher
             default_msg = "All fetchers failed for {0}".format(self.name)
-            raise FetchError(err_msg or default_msg, None)
+            raise spack.error.FetchError(err_msg or default_msg, None)
 
         print_errors(errors)
 
