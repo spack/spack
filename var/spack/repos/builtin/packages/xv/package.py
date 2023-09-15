@@ -13,7 +13,6 @@ class Xv(CMakePackage):
     http://www.trilon.com/xv
     """
 
-    # It seems it's repackaged nicely by the following github repo.
     homepage = "https://github.com/jasper-software/xv"
     url      = "https://github.com/jasper-software/xv/archive/refs/tags/v4.2.0.tar.gz"
 
