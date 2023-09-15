@@ -11,6 +11,7 @@ import sys
 
 import llnl.util.filesystem
 import llnl.util.lang
+from llnl.url import allowed_archive
 
 import spack
 import spack.error
@@ -19,7 +20,6 @@ import spack.mirror
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
-from spack.util.compression import allowed_archive
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
 

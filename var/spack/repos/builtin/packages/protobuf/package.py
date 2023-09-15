@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.util.web
+import spack.url
 from spack.package import *
 
 
@@ -120,9 +120,7 @@ class Protobuf(CMakePackage):
         return dict(
             map(
                 lambda u: (u, self.url_for_version(u)),
-                spack.util.web.find_versions_of_archive(
-                    self.all_urls, self.list_url, self.list_depth
-                ),
+                spack.url.find_versions_of_archive(self.all_urls, self.list_url, self.list_depth),
             )
         )
 

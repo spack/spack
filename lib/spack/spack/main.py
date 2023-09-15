@@ -30,7 +30,6 @@ import llnl.util.tty.colify
 import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
 
-import spack
 import spack.cmd
 import spack.config
 import spack.environment as ev

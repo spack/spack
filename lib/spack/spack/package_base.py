@@ -2377,7 +2377,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             return {}
 
         try:
-            return spack.util.web.find_versions_of_archive(
+            return spack.url.find_versions_of_archive(
                 self.all_urls, self.list_url, self.list_depth, concurrency, reference_package=self
             )
         except spack.util.web.NoNetworkConnectionError as e:
