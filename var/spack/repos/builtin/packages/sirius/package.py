@@ -289,12 +289,12 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant(cm_label + "CREATE_PYTHON_MODULE", "python"),
             self.define_from_variant(cm_label + "USE_CUDA", "cuda"),
             self.define_from_variant(cm_label + "USE_ROCM", "rocm"),
-            self.define_from_variant(cm_label + "BUILD_TESTING", "tests"),
             self.define_from_variant(cm_label + "BUILD_APPS", "apps"),
             self.define_from_variant(cm_label + "BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant(cm_label + "USE_FP32", "single_precision"),
             self.define_from_variant(cm_label + "USE_PROFILER", "profiler"),
             self.define_from_variant(cm_label + "USE_WANNIER90", "wannier90"),
+            self.define_from_variant("BUILD_TESTING", "tests"),
         ]
 
         lapack = spec["lapack"]
@@ -342,8 +342,10 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
                     )
 
                 # Make SIRIUS handle it
+                elif "@6:7.4.3" in spec:
+                    args.append(self.define("CMAKE_CUDA_ARCH", ";".join(cuda_arch)))
                 else:
-                    args.append(self.define("CUDA_ARCH", ";".join(cuda_arch)))
+                    args.append(self.define("CMAKE_CUDA_ARCHITECTURES", ";".join(cuda_arch)))
 
         if "+rocm" in spec:
             archs = ",".join(self.spec.variants["amdgpu_target"].value)

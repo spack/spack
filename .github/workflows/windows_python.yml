@@ -75,6 +75,5 @@ jobs:
     - name: Build Test
       run: |
         spack compiler find
-        spack external find cmake
-        spack external find ninja
+        spack -d external find cmake ninja
         spack -d install abseil-cpp

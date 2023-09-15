@@ -30,7 +30,6 @@ import llnl.util.tty.colify
 import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
 
-import spack
 import spack.cmd
 import spack.config
 import spack.environment as ev
@@ -716,7 +715,7 @@ class SpackCommand:
 
             out = io.StringIO()
             try:
-                with log_output(out):
+                with log_output(out, echo=True):
                     self.returncode = _invoke_command(self.command, self.parser, args, unknown)
 
             except SystemExit as e:
