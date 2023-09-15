@@ -17,7 +17,7 @@ class Nextflow(Package):
     version(
         "23.04.3",
         sha256="258714c0772db3cab567267e8441c5b72102381f6bd58fc6957c2972235be7e0",
-        expand=False
+        expand=False,
     )
     version(
         "23.04.1",
