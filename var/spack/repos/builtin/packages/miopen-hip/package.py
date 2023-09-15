@@ -155,6 +155,9 @@ class MiopenHip(CMakePackage):
 
     for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
         depends_on("nlohmann-json", type="link")
+    for ver in ["5.4.0", "5.4.3", "5.5.0"]:
+        depends_on("rocmmlir@" + ver, when="@" + ver)
+    for ver in ["5.5.1"]:
         depends_on("composable-kernel@" + ver, when="@" + ver)
 
     def setup_build_environment(self, env):
@@ -204,6 +207,9 @@ class MiopenHip(CMakePackage):
             args.append(
                 "-DNLOHMANN_JSON_INCLUDE={0}".format(self.spec["nlohmann-json"].prefix.include)
             )
+        if self.spec.satisfies("@5.4.0:5.5.0"):
+            args.append(self.define("MIOPEN_USE_COMPOSABLEKERNEL", "OFF"))
+        if self.spec.satisfies("@5.5.1:"):
             args.append(self.define("MIOPEN_USE_COMPOSABLEKERNEL", "ON"))
             args.append(self.define("MIOPEN_USE_MLIR", "OFF"))
         return args
