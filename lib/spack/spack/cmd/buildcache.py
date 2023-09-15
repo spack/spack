@@ -1157,22 +1157,25 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
 
     # Otherwise, assume a normal mirror.
     url = mirror.push_url
+    try:
+        bindist.generate_package_index(url_util.join(url, bindist.build_cache_relative_path()))
 
-    bindist.generate_package_index(url_util.join(url, bindist.build_cache_relative_path()))
+        if update_keys:
+            keys_url = url_util.join(
+                url, bindist.build_cache_relative_path(), bindist.build_cache_keys_relative_path()
+            )
 
-    if update_keys:
-        keys_url = url_util.join(
-            url, bindist.build_cache_relative_path(), bindist.build_cache_keys_relative_path()
-        )
-
-        bindist.generate_key_index(keys_url)
+            bindist.generate_key_index(keys_url)
+    except bindist.GenerateIndexError as e:
+        tty.error(str(e))
+        return 1
 
 
 def update_index_fn(args):
     """update a buildcache index"""
-    update_index(args.mirror, update_keys=args.keys)
+    return update_index(args.mirror, update_keys=args.keys)
 
 
 def buildcache(parser, args):
     if args.func:
-        args.func(args)
+        return args.func(args)

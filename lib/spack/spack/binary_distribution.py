@@ -17,7 +17,6 @@ import sys
 import tarfile
 import tempfile
 import time
-import traceback
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -113,6 +112,14 @@ class FetchCacheError(Exception):
 
 class ListMirrorSpecsError(spack.error.SpackError):
     """Raised when unable to retrieve list of specs from the mirror"""
+
+
+class GenerateIndexError(spack.error.SpackError):
+    """Raised when unable to generate key or package index for mirror"""
+
+
+class PushToBuildCacheError(spack.error.SpackError):
+    """Raised when unable to push objects to binary mirror"""
 
 
 class BinaryCacheIndex:
@@ -1048,8 +1055,7 @@ def generate_package_index(cache_prefix, concurrency=32):
     try:
         file_list, read_fn = _spec_files_from_cache(cache_prefix)
     except ListMirrorSpecsError as err:
-        tty.error("Unable to generate package index, {0}".format(err))
-        return
+        raise GenerateIndexError("Unable to generate package index") from err
 
     tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
 
@@ -1062,9 +1068,8 @@ def generate_package_index(cache_prefix, concurrency=32):
     try:
         _read_specs_and_push_index(file_list, read_fn, cache_prefix, db, db_root_dir, concurrency)
     except Exception as err:
-        msg = "Encountered problem pushing package index to {0}: {1}".format(cache_prefix, err)
-        tty.warn(msg)
-        tty.debug("\n" + traceback.format_exc())
+        msg = f"Encountered problem pushing package index to {cache_prefix}"
+        raise GenerateIndexError(msg) from err
     finally:
         shutil.rmtree(tmpdir)
 
@@ -1090,16 +1095,14 @@ def generate_key_index(key_prefix, tmpdir=None):
             if entry.endswith(".pub")
         )
     except KeyError as inst:
-        msg = "No keys at {0}: {1}".format(key_prefix, inst)
-        tty.warn(msg)
-        return
+        msg = f"No keys at {key_prefix}"
+        raise GenerateIndexError(msg) from inst
     except Exception as err:
         # If we got some kind of S3 (access denied or other connection
         # error), the first non boto-specific class in the exception
-        # hierarchy is Exception.  Just print a warning and return
-        msg = "Encountered problem listing keys at {0}: {1}".format(key_prefix, err)
-        tty.warn(msg)
-        return
+        # hierarchy is Exception.
+        msg = f"Encountered problem listing keys at {key_prefix}"
+        raise GenerateIndexError(msg) from err
 
     remove_tmpdir = False
 
@@ -1125,8 +1128,8 @@ def generate_key_index(key_prefix, tmpdir=None):
                 extra_args={"ContentType": "application/json"},
             )
         except Exception as err:
-            msg = "Encountered problem pushing key index to {0}: {1}".format(key_prefix, err)
-            tty.warn(msg)
+            msg = f"Encountered problem pushing key index to {key_prefix}"
+            raise GenerateIndexError(msg) from err
         finally:
             if remove_tmpdir:
                 shutil.rmtree(tmpdir)
@@ -1278,13 +1281,17 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
         key = select_signing_key(options.key)
         sign_specfile(key, options.force, specfile_path)
 
-    # push tarball and signed spec json to remote mirror
-    web_util.push_to_url(spackfile_path, remote_spackfile_path, keep_original=False)
-    web_util.push_to_url(
-        signed_specfile_path if not options.unsigned else specfile_path,
-        remote_signed_specfile_path if not options.unsigned else remote_specfile_path,
-        keep_original=False,
-    )
+    try:
+        # push tarball and signed spec json to remote mirror
+        web_util.push_to_url(spackfile_path, remote_spackfile_path, keep_original=False)
+        web_util.push_to_url(
+            signed_specfile_path if not options.unsigned else specfile_path,
+            remote_signed_specfile_path if not options.unsigned else remote_specfile_path,
+            keep_original=False,
+        )
+    except Exception as err:
+        msg = f"Encountered problem pushing binary {remote_spackfile_path}"
+        raise PushToBuildCacheError(msg) from err
 
     # push the key to the build cache's _pgp directory so it can be
     # imported
@@ -1295,8 +1302,6 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     # found
     if options.regenerate_index:
         generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, stage_dir)))
-
-    return None
 
 
 class NotInstalledError(spack.error.SpackError):
@@ -1369,6 +1374,9 @@ def push(spec: Spec, mirror_url: str, options: PushOptions):
         push_or_raise(spec, mirror_url, options)
     except NoOverwriteException as e:
         warnings.warn(str(e))
+        return False
+    except PushToBuildCacheError as e:
+        tty.error(str(e))
         return False
 
     return True

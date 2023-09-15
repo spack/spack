@@ -32,6 +32,7 @@ level = "long"
 SPACK_COMMAND = "spack"
 MAKE_COMMAND = "make"
 INSTALL_FAIL_CODE = 1
+FAILED_CREATE_BUILDCACHE_CODE = 100
 
 
 def deindent(desc):
@@ -721,7 +722,11 @@ def ci_rebuild(args):
             destination_mirror_urls=mirror_urls,
             sign_binaries=spack_ci.can_sign_binaries(),
         ):
-            msg = tty.msg if result.success else tty.warn
+            msg = tty.msg
+            if not result.success:
+                msg = tty.error
+                # If pushing failed, then rebuild should report an error
+                install_exit_code = FAILED_CREATE_BUILDCACHE_CODE
             msg(
                 "{} {} to {}".format(
                     "Pushed" if result.success else "Failed to push",

@@ -34,7 +34,7 @@ import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.binary_distribution import get_buildfile_manifest
+from spack.binary_distribution import GenerateIndexError, get_buildfile_manifest
 from spack.directory_layout import DirectoryLayout
 from spack.paths import test_path
 from spack.spec import Spec
@@ -472,17 +472,19 @@ def test_generate_indices_key_error(monkeypatch, capfd):
 
     test_url = "file:///fake/keys/dir"
 
-    # Make sure generate_key_index handles the KeyError
-    bindist.generate_key_index(test_url)
+    expect = f"No keys at {test_url}"
+    with pytest.raises(GenerateIndexError, match=expect):
+        # Make sure generate_key_index handles the KeyError
+        bindist.generate_key_index(test_url)
 
-    err = capfd.readouterr()[1]
-    assert "Warning: No keys at {0}".format(test_url) in err
+    expect = "Unable to generate package index"
+    with pytest.raises(GenerateIndexError, match=expect):
+        # Make sure generate_package_index handles the KeyError
+        bindist.generate_package_index(test_url)
 
-    # Make sure generate_package_index handles the KeyError
-    bindist.generate_package_index(test_url)
-
-    err = capfd.readouterr()[1]
-    assert "Warning: No packages at {0}".format(test_url) in err
+    outerr = capfd.readouterr()[1]
+    expect = f"Warning: No packages at {test_url}"
+    assert expect in outerr
 
 
 def test_generate_indices_exception(monkeypatch, capfd):
@@ -494,19 +496,19 @@ def test_generate_indices_exception(monkeypatch, capfd):
 
     test_url = "file:///fake/keys/dir"
 
-    # Make sure generate_key_index handles the Exception
-    bindist.generate_key_index(test_url)
+    expect = f"Encountered problem listing keys at {test_url}"
+    with pytest.raises(GenerateIndexError, match=expect):
+        # Make sure generate_key_index handles the Exception
+        bindist.generate_key_index(test_url)
 
-    err = capfd.readouterr()[1]
-    expect = "Encountered problem listing keys at {0}".format(test_url)
-    assert expect in err
+    expect = "Unable to generate package index"
+    with pytest.raises(GenerateIndexError, match=expect):
+        # Make sure generate_package_index handles the Exception
+        bindist.generate_package_index(test_url)
 
-    # Make sure generate_package_index handles the Exception
-    bindist.generate_package_index(test_url)
-
-    err = capfd.readouterr()[1]
+    outerr = capfd.readouterr()[1]
     expect = "Encountered problem listing packages at {0}".format(test_url)
-    assert expect in err
+    assert expect in outerr
 
 
 @pytest.mark.usefixtures("mock_fetch", "install_mockery")
