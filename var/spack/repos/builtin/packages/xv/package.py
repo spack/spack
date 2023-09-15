@@ -16,6 +16,11 @@ class Xv(CMakePackage):
     homepage = "https://github.com/jasper-software/xv"
     url      = "https://github.com/jasper-software/xv/archive/refs/tags/v4.2.0.tar.gz"
 
+    # Licencing
+    # "... XV IS SHAREWARE FOR PERSONAL USE ONLY ..."
+    # full licencing details can be found at:
+    # https://github.com/jasper-software/xv/blob/main/src/README
+
     version('4.2.0', sha256='2871338c517a7444fc9d6a3d146bc2c5c7bd98b50c83369b24d24ad49fa0ab87')
 
     depends_on('libpng')
