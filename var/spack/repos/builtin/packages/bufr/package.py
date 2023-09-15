@@ -33,9 +33,14 @@ class Bufr(CMakePackage):
 
     def url_for_version(self, version):
         if version >= Version("12.0.1"):
-            return "https://github.com/NOAA-EMC/NCEPLIBS-bufr/archive/refs/tags/v%s.tar.gz" % version
+            return (
+                "https://github.com/NOAA-EMC/NCEPLIBS-bufr/archive/refs/tags/v%s.tar.gz" % version
+            )
         else:
-            return "https://github.com/NOAA-EMC/NCEPLIBS-bufr/archive/refs/tags/bufr_v%s.tar.gz" % version
+            return (
+                "https://github.com/NOAA-EMC/NCEPLIBS-bufr/archive/refs/tags/bufr_v%s.tar.gz"
+                % version
+            )
 
     # Patch to not add "-c" to ranlib flags when using llvm-ranlib on Apple systems
     patch("cmakelists-apple-llvm-ranlib.patch", when="@11.5.0:11.6.0")
