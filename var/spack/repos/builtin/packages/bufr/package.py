@@ -23,12 +23,19 @@ class Bufr(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA", "jbathegit")
 
     version("develop", branch="develop")
+    version("12.0.1", sha256="525f26238dba6511a453fc71cecc05f59e4800a603de2abbbbfb8cbb5adf5708")
     version("12.0.0", sha256="d01c02ea8e100e51fd150ff1c4a1192ca54538474acb1b7f7a36e8aeab76ee75")
     version("11.7.1", sha256="6533ce6eaa6b02c0cb5424cfbc086ab120ccebac3894980a4daafd4dfadd71f8")
     version("11.7.0", sha256="6a76ae8e7682bbc790321bf80c2f9417775c5b01a5c4f10763df92e01b20b9ca")
     version("11.6.0", sha256="af4c04e0b394aa9b5f411ec5c8055888619c724768b3094727e8bb7d3ea34a54")
     version("11.5.0", sha256="d154839e29ef1fe82e58cf20232e9f8a4f0610f0e8b6a394b7ca052e58f97f43")
     version("11.4.0", sha256="946482405e675b99e8e0c221d137768f246076f5e9ba92eed6cae47fb68b7a26")
+
+    def url_for_version(self, version):
+        if version >= Version("12.0.1"):
+            return "https://github.com/NOAA-EMC/NCEPLIBS-bufr/archive/refs/tags/v%s.tar.gz" % version
+        else:
+            return "https://github.com/NOAA-EMC/NCEPLIBS-bufr/archive/refs/tags/bufr_v%s.tar.gz" % version
 
     # Patch to not add "-c" to ranlib flags when using llvm-ranlib on Apple systems
     patch("cmakelists-apple-llvm-ranlib.patch", when="@11.5.0:11.6.0")
