@@ -236,7 +236,7 @@ class Compiler:
     # by any compiler
     _all_compiler_rpath_libraries = ["libc", "libc++", "libstdc++"]
 
-    # string matcher for string representation of platforms supported by a compiler
+    #: Platform matcher for Platform objects supported by compiler
     is_supported_on_platform = lambda x: True
 
     # Default flags used by a compiler to set an rpath

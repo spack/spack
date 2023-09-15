@@ -259,14 +259,14 @@ class Executable:
         except subprocess.TimeoutExpired as te:
             proc.kill()
             out, err = proc.communicate()
-            tty.warn(
-                f"Command {cmd_line_string} experienced a timeout after\
-{timeout}s running process {proc.pid}"
-            )
             result = process_cmd_output(out, err)
             long_msg = cmd_line_string + f"\n{result}"
             if fail_on_timeout:
-                raise ProcessError(f"\nProcess timed out after {timeout}s" f"{long_msg}") from te
+                raise ProcessError(
+                    f"\nProcess timed out after {timeout}s"
+                    f"We expected the following command to run quickly but\
+it did not, please report this as an issue: {long_msg}"
+                ) from te
 
         finally:
             if close_ostream:
