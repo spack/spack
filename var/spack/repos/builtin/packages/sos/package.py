@@ -15,6 +15,7 @@ class Sos(AutotoolsPackage):
     # notify when the package is updated.
     maintainers("rscohn2")
 
+    version("1.5.2", sha256="c9df8c6ab43890e5d8970467c188ae2fad736845875ca4c370ff047dbb37d017")
     version("1.5.1", sha256="0a6303dcbdd713ef2d83c617c1eb821227603c98cb9816c53585fd993da8a984")
     version("1.5.0", sha256="02679da6085cca2919f900022c46bad48479690586cb4e7f971ec3a735bab4d4")
     version("1.4.5", sha256="42778ba3cedb632ac3fbbf8917f415a804f8ca3b67fb3da6d636e6c50c501906")
