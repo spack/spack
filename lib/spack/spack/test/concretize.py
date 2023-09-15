@@ -1362,9 +1362,10 @@ class TestConcretize:
     )
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_deprecated_versions_not_selected(self, spec_str, expected):
-        s = Spec(spec_str).concretized()
-        for abstract_spec in expected:
-            assert abstract_spec in s
+        with spack.config.override("config:deprecated", True):
+            s = Spec(spec_str).concretized()
+            for abstract_spec in expected:
+                assert abstract_spec in s
 
     @pytest.mark.regression("24196")
     def test_version_badness_more_important_than_default_mv_variants(self):
