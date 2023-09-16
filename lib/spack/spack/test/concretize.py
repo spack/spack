@@ -16,6 +16,7 @@ import llnl.util.lang
 import spack.compilers
 import spack.concretize
 import spack.config
+import spack.deptypes as dt
 import spack.detection
 import spack.error
 import spack.hash_types as ht
@@ -235,13 +236,13 @@ class TestConcretize:
         # Check parent's perspective of child
         to_dependencies = spec.edges_to_dependencies(name="cmake")
         assert len(to_dependencies) == 1
-        assert set(to_dependencies[0].deptypes) == set(["build"])
+        assert to_dependencies[0].depflag == dt.BUILD
 
         # Check child's perspective of parent
         cmake = spec["cmake"]
         from_dependents = cmake.edges_from_dependents(name="cmake-client")
         assert len(from_dependents) == 1
-        assert set(from_dependents[0].deptypes) == set(["build"])
+        assert from_dependents[0].depflag == dt.BUILD
 
     def test_concretize_preferred_version(self):
         spec = check_concretize("python")
