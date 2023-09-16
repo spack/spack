@@ -335,7 +335,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 if microarch.name in available_targets:
                     break
 
-        if self.version >= Version("0.3"):
+        if self.spec.version >= Version("0.3"):
             # 'ARCH' argument causes build errors in older OpenBLAS
             # see https://github.com/spack/spack/issues/15385
             arch_name = microarch.family.name
