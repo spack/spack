@@ -129,6 +129,7 @@ class Qgis(CMakePackage):
     depends_on("qwtpolar")
     depends_on("sqlite@3.0.0: +column_metadata")
     depends_on("protobuf", when="@3.16.4:")
+    depends_on("protobuf@:3.21", when="@:3.28")
     depends_on("zstd", when="@3.22:")
 
     # Runtime python dependencies, not mentioned in install instructions
