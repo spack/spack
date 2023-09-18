@@ -18,7 +18,7 @@ class Mesa(MesonPackage):
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
-    version("main", tag="main")
+    version("main", branch="main")
 
     version(
         "23.0.3",
