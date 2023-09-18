@@ -729,6 +729,8 @@ spack:
   - no/such/file.yaml
 """
         )
+        with e:
+            e.concretize()
 
     assert ev.active_environment() is None
 
@@ -768,7 +770,6 @@ spack:
 """
     )
 
-    e = ev.read("test")
     with e:
         e.concretize()
 
@@ -892,7 +893,7 @@ def test_env_with_included_config_scope(mutable_mock_env_path, packages_file):
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_var_path(tmpdir, packages_file, clean_test_environment):
+def test_env_with_included_config_var_path(tmpdir, packages_file):
     """Test inclusion of a package configuration file with path variables
     "staged" in the environment's configuration stage directory."""
     included_file = packages_file.strpath

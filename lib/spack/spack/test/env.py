@@ -753,9 +753,7 @@ def test_env_with_include_defs(clean_test_environment, mutable_mock_env_path, mo
     e.concretize()
 
 
-def test_env_with_include_def_missing(
-    clean_test_environment, mutable_mock_env_path, mock_packages
-):
+def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
     """Test environment with included definitions file that is missing a definition."""
     env_path = mutable_mock_env_path
     env_path.mkdir()

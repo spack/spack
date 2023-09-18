@@ -1024,7 +1024,8 @@ class Environment:
 
             elif include_url.scheme:
                 raise ValueError(
-                    f"Unsupported URL scheme ({include_url.scheme}) for environment include: {config_path}"
+                    f"Unsupported URL scheme ({include_url.scheme}) for "
+                    f"environment include: {config_path}"
                 )
 
             # treat relative paths as relative to the environment
