@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class Conquest(MakefilePackage):
-    """CONQUEST is a DFT code designed for large-scale calculations, with excellent parallelisation."""
+    """CONQUEST is a DFT code designed for large-scale calculations,
+    with excellent parallelisation."""
 
     homepage = "http://www.order-n.org/"
     url = "https://github.com/OrderN/CONQUEST-release/archive/refs/tags/v1.2.tar.gz"
@@ -37,8 +38,8 @@ class Conquest(MakefilePackage):
         ldflags = ""
 
         if "+openmp" in self.spec:
-            fflags += " "+self.compiler.openmp_flag
-            ldflags += " "+self.compiler.openmp_flag
+            fflags += " " + self.compiler.openmp_flag
+            ldflags += " " + self.compiler.openmp_flag
 
         libxc = self.spec["libxc:fortran"]
         fflags += " " + libxc.headers.include_flags
