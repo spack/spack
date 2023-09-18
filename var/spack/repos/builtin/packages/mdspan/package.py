@@ -14,15 +14,15 @@ class Mdspan(CMakePackage):
     url = "https://github.com/kokkos/mdspan/archive/refs/tags/mdspan-0.6.0.zip"
     git = "https://github.com/kokkos/mdspan.git"
 
+    version("stable", branch="stable")
+    version("0.6.0", sha256="d6b7b9d4f472106df1d28729bd8383a8a7ea7938adf9f82d3be9c151344830d9")
+    
     variant("examples", default=True, description="Enable examples")
     variant("tests", default=False, description="Enable tests")
     variant("benchmarks", default=False, description="Enable benchmarks")
 
     depends_on("benchmark", when="+benchmarks")
     depends_on("googletest@main", when="+tests")
-
-    version("stable", branch="stable")
-    version("0.6.0", sha256="d6b7b9d4f472106df1d28729bd8383a8a7ea7938adf9f82d3be9c151344830d9")
 
     def cmake_args(self):
         args = []
