@@ -5,9 +5,9 @@
 
 from spack.package import *
 
+
 class Conquest(MakefilePackage):
-    """CONQUEST is a DFT code designed for large-scale calculations, 
-    with excellent parallelisation."""
+    """CONQUEST is a DFT code designed for large-scale calculations, with excellent parallelisation."""
 
     homepage = "http://www.order-n.org/"
     url = "https://github.com/OrderN/CONQUEST-release/archive/refs/tags/v1.2.tar.gz"
@@ -18,7 +18,7 @@ class Conquest(MakefilePackage):
 
     version("1.2", sha256="74d974f20ec15ff31d97cd42aae6dbe95288eedfa785896d5872b9ff44ee7ae2")
     version("1.1", sha256="772e058f073cccfee45521aa62bb13192ab07cb2979b6076ddbf21ba22f9ba5d")
-    version("master",  branch="master")
+    version("master", branch="master")
     version("develop", branch="develop")
 
     depends_on("blas")
@@ -41,13 +41,13 @@ class Conquest(MakefilePackage):
             ldflags += " "+self.compiler.openmp_flag
 
         libxc = self.spec["libxc:fortran"]
-        fflags += " "+libxc.headers.include_flags
-        ldflags += " "+self.spec["scalapack"].libs.ld_flags
+        fflags += " " + libxc.headers.include_flags
+        ldflags += " " + self.spec["scalapack"].libs.ld_flags
 
         lapack_ld = self.spec["lapack"].libs.ld_flags
         blas_ld = self.spec["blas"].libs.ld_flags
 
-        defs_file = FileFilter('./src/system.make')
+        defs_file = FileFilter("./src/system.make")
 
         defs_file.filter("COMPFLAGS=.*", f"COMPFLAGS= {fflags}")
         defs_file.filter("LINKFLAGS=.*", f"LINKFLAGS= {ldflags}")
@@ -55,4 +55,4 @@ class Conquest(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('./bin/Conquest', prefix.bin)
+        install("./bin/Conquest", prefix.bin)
