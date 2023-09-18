@@ -138,8 +138,6 @@ class Phist(CMakePackage):
     conflicts("^trilinos@14:", when="@:1.11.2")
     # Build error with cray-libsci because they define macro 'I', workaround in phist-1.11.2
     conflicts("^cray-libsci", when="@:1.11.1")
-    # phist@1.11.2 got rid of some deprecated python code
-    conflicts("^python@3.11:", when="@:1.11.1")
     # The builtin kernels switched from the 'mpi' to the 'mpi_f08' module in
     # phist 1.9.6, which causes compile-time errors with mpich and older
     # GCC versions.
@@ -175,7 +173,8 @@ class Phist(CMakePackage):
     # Python 3 or later is required for generating the Fortran 2003 bindings
     # since version 1.7, you can get rid of the dependency by switching off
     # the feature (e.g. use the '~fortran' variant)
-    depends_on("python@3:", when="@1.7: +fortran", type="build")
+    # For the upperbound see https://bitbucket.org/essex/phist/issues/246/does-not-build-with-python-311
+    depends_on("python@3:3.10", when="@1.7: +fortran", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("trilinos@12:+tpetra gotype=long_long", when="kernel_lib=tpetra +int64")
     depends_on("trilinos@12:+tpetra gotype=int", when="kernel_lib=tpetra ~int64")
