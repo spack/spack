@@ -17,6 +17,8 @@ from typing import List, NamedTuple, Tuple, Union
 
 import archspec.cpu
 
+import spack.deptypes as dt
+
 try:
     import clingo  # type: ignore[import]
 
@@ -34,7 +36,6 @@ import spack.binary_distribution
 import spack.cmd
 import spack.compilers
 import spack.config
-import spack.dependency
 import spack.directives
 import spack.environment as ev
 import spack.error
@@ -1462,18 +1463,18 @@ class SpackSolverSetup:
         """Translate 'depends_on' directives into ASP logic."""
         for _, conditions in sorted(pkg.dependencies.items()):
             for cond, dep in sorted(conditions.items()):
-                deptypes = dep.type.copy()
+                depflag = dep.depflag
                 # Skip test dependencies if they're not requested
                 if not self.tests:
-                    deptypes.discard("test")
+                    depflag &= ~dt.TEST
 
                 # ... or if they are requested only for certain packages
-                if not isinstance(self.tests, bool) and pkg.name not in self.tests:
-                    deptypes.discard("test")
+                elif not isinstance(self.tests, bool) and pkg.name not in self.tests:
+                    depflag &= ~dt.TEST
 
                 # if there are no dependency types to be considered
                 # anymore, don't generate the dependency
-                if not deptypes:
+                if not depflag:
                     continue
 
                 msg = "%s depends on %s" % (pkg.name, dep.spec.name)
@@ -1487,9 +1488,10 @@ class SpackSolverSetup:
                     fn.pkg_fact(pkg.name, fn.dependency_condition(condition_id, dep.spec.name))
                 )
 
-                for t in sorted(deptypes):
-                    # there is a declared dependency of type t
-                    self.gen.fact(fn.dependency_type(condition_id, t))
+                for t in dt.ALL_FLAGS:
+                    if t & depflag:
+                        # there is a declared dependency of type t
+                        self.gen.fact(fn.dependency_type(condition_id, dt.flag_to_string(t)))
 
                 self.gen.newline()
 
@@ -1863,9 +1865,11 @@ class SpackSolverSetup:
                 if spec.concrete:
                     # We know dependencies are real for concrete specs. For abstract
                     # specs they just mean the dep is somehow in the DAG.
-                    for dtype in dspec.deptypes:
+                    for dtype in dt.ALL_FLAGS:
+                        if not dspec.depflag & dtype:
+                            continue
                         # skip build dependencies of already-installed specs
-                        if concrete_build_deps or dtype != "build":
+                        if concrete_build_deps or dtype != dt.BUILD:
                             clauses.append(fn.attr("depends_on", spec.name, dep.name, dtype))
                             for virtual_name in dspec.virtuals:
                                 clauses.append(
@@ -1875,7 +1879,7 @@ class SpackSolverSetup:
 
                     # imposing hash constraints for all but pure build deps of
                     # already-installed concrete specs.
-                    if concrete_build_deps or dspec.deptypes != ("build",):
+                    if concrete_build_deps or dspec.depflag != dt.BUILD:
                         clauses.append(fn.attr("hash", dep.name, dep.dag_hash()))
 
                 # if the spec is abstract, descend into dependencies.
@@ -2658,13 +2662,14 @@ class SpecBuilder:
         dependency_spec = self._specs[dependency_node]
         edges = self._specs[parent_node].edges_to_dependencies(name=dependency_spec.name)
         edges = [x for x in edges if id(x.spec) == id(dependency_spec)]
+        depflag = dt.flag_from_string(type)
 
         if not edges:
             self._specs[parent_node].add_dependency_edge(
-                self._specs[dependency_node], deptypes=(type,), virtuals=()
+                self._specs[dependency_node], depflag=depflag, virtuals=()
             )
         else:
-            edges[0].update_deptypes(deptypes=(type,))
+            edges[0].update_deptypes(depflag=depflag)
 
     def virtual_on_edge(self, parent_node, provider_node, virtual):
         dependencies = self._specs[parent_node].edges_to_dependencies(name=(provider_node.pkg))
