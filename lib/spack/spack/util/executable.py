@@ -102,8 +102,6 @@ class Executable:
                 as Spack does not use a shell. Defaults to False.
             timeout (int or float): The number of seconds to wait before killing
                 the child process
-            fail_on_timeout (bool): Raise an exception if the subprocess times out
-                Note: this is a no-op if `timeout` is not specified as an argument
             input: Where to read stdin from
             output: Where to send stdout
             error: Where to send stderr
@@ -261,7 +259,7 @@ class Executable:
             out, err = proc.communicate()
             result = process_cmd_output(out, err)
             long_msg = cmd_line_string + f"\n{result}"
-            if fail_on_timeout:
+            if fail_on_error:
                 raise ProcessError(
                     f"\nProcess timed out after {timeout}s"
                     f"We expected the following command to run quickly but\
