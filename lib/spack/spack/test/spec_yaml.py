@@ -198,7 +198,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(config, mock_packages
         round_trip_reversed_json_spec = Spec.from_yaml(reversed_json_string)
 
         # Strip spec if we stripped the yaml
-        spec = spec.copy(deps=ht.dag_hash.deptype)
+        spec = spec.copy(deps=ht.dag_hash.depflag)
 
         # specs are equal to the original
         assert spec == round_trip_yaml_spec
