@@ -102,6 +102,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # TPLs (alphabet order)
     variant("adios2", default=False, description="Enable ADIOS2")
     variant("boost", default=False, description="Compile with Boost")
+    variant("binder", default=False, description="Compile with Binder")
     variant("hdf5", default=False, description="Compile with HDF5")
     variant("hypre", default=False, description="Compile with Hypre preconditioner")
     variant("mpi", default=True, description="Compile with MPI parallelism")
@@ -136,6 +137,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("nox", default=False, description="Compile with NOX")
     variant("panzer", default=False, description="Compile with Panzer")
     variant("piro", default=False, description="Compile with Piro")
+    variant("pytrilinos2", default=True, description="Compile with PyTrilinos2")
     variant("phalanx", default=False, description="Compile with Phalanx")
     variant("rol", default=False, description="Compile with ROL")
     variant("rythmos", default=False, description="Compile with Rythmos")
@@ -168,18 +170,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     # External package options
-    variant("binder", default=False, description="Enable Binder")
     variant("dtk", default=False, description="Enable DataTransferKit (deprecated)")
     variant("mesquite", default=False, description="Enable Mesquite (deprecated)") 
     variant("scorec", default=False, description="Enable SCOREC")
 
-    resource(
-	name"binder",
-	git="https://github.com/RosettaCommons/binder.git",
-	commit="xxx", #tag v1.3.0
-	placement="packages/binder",
-	when="+binder",
-    )
     resource(
         name="dtk",
         git="https://github.com/ornl-cees/DataTransferKit.git",
@@ -392,6 +386,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(kokkos_spec, when="@14.4.0 +kokkos {0}".format(arch_str))
 
     depends_on("adios2", when="+adios2")
+    depends_on("binder", when="+pytrilinos2", type=("build", "run"))
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
     # Need to revisit the requirement of STK
@@ -416,6 +411,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-mpi4py", when="+mpi+python", type=("build", "run"))
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("python", when="+python")
+    depends_on("py-mpi4py", when="+mpi+pytrilinos2", type=("build", "run"))
+    depends_on("py-numpy", when="+pytrilinos2", type=("build", "run"))
+    depends_on("python", when="+pytrilinos2")
     depends_on("python", when="@13.2: +ifpack +hypre", type="build")
     depends_on("python", when="@13.2: +ifpack2 +hypre", type="build")
     depends_on("scalapack", when="+mumps")
@@ -652,7 +650,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_trilinos_enable("Piro"),
                 define_trilinos_enable("Phalanx"),
                 define_trilinos_enable("PyTrilinos", "python"),
-                define_trilinos_enable("ROL"),
+		        define_trilinos_enable("PyTrilinos2"),
+		        define_trilinos_enable("ROL"),
                 define_trilinos_enable("Rythmos"),
                 define_trilinos_enable("Sacado"),
                 define_trilinos_enable("SCOREC"),
