@@ -31,6 +31,7 @@ import shutil
 import urllib.parse
 from typing import List, Optional
 
+import llnl.url
 import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -46,7 +47,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
 import spack.version.git_ref_lookup
-from spack.util.compression import decompressor_for, extension_from_path
+from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
 
@@ -441,7 +442,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # TODO: replace this by mime check.
         if not self.extension:
-            self.extension = spack.url.determine_url_file_extension(self.url)
+            self.extension = llnl.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
             tty.debug("Source already staged to %s" % self.stage.source_path)
@@ -570,7 +571,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, **kwargs):
-        assert extension_from_path(destination) == "tar.gz"
+        assert llnl.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
 
         tar = which("tar", required=True)

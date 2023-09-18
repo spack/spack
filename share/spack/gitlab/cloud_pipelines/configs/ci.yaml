@@ -32,6 +32,9 @@ ci:
         CI_JOB_SIZE: "default"
         CI_GPG_KEY_ROOT: /mnt/key
         # SPACK_VERBOSE_SCRIPT: "1"
+      id_tokens:
+        GITLAB_OIDC_TOKEN:
+          aud: "${OIDC_TOKEN_AUDIENCE}"
 
   - signing-job:
       image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
@@ -41,6 +44,9 @@ ci:
         - /sign.sh
         - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
         - aws s3 cp /tmp/public_keys ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/_pgp --recursive --exclude "*" --include "*.pub"
+      id_tokens:
+        GITLAB_OIDC_TOKEN:
+          aud: "${OIDC_TOKEN_AUDIENCE}"
 
   - copy-job:
       tags: ["service", "x86_64"]
@@ -68,6 +74,9 @@ ci:
         CI_JOB_SIZE: "medium"
         KUBERNETES_CPU_REQUEST: "4000m"
         KUBERNETES_MEMORY_REQUEST: "16G"
+      id_tokens:
+        GITLAB_OIDC_TOKEN:
+          aud: "${OIDC_TOKEN_AUDIENCE}"
 
   - reindex-job:
       tags: ["service", "x86_64"]
@@ -76,6 +85,9 @@ ci:
         CI_JOB_SIZE: "medium"
         KUBERNETES_CPU_REQUEST: "4000m"
         KUBERNETES_MEMORY_REQUEST: "16G"
+      id_tokens:
+        GITLAB_OIDC_TOKEN:
+          aud: "${OIDC_TOKEN_AUDIENCE}"
 
   - cleanup-job:
       tags: ["service"]
@@ -83,6 +95,9 @@ ci:
         CI_JOB_SIZE: "small"
         KUBERNETES_CPU_REQUEST: "500m"
         KUBERNETES_MEMORY_REQUEST: "500M"
+      id_tokens:
+        GITLAB_OIDC_TOKEN:
+          aud: "${OIDC_TOKEN_AUDIENCE}"
 
   - noop-job:
       tags: ["service"]

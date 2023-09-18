@@ -308,7 +308,7 @@ def _compute_spec_deps(spec_list):
         dependencies.append({"spec": s, "depends": d})
 
     for spec in spec_list:
-        for s in spec.traverse(deptype=all):
+        for s in spec.traverse(deptype="all"):
             if s.external:
                 tty.msg("Will not stage external pkg: {0}".format(s))
                 continue
@@ -316,7 +316,7 @@ def _compute_spec_deps(spec_list):
             skey = _spec_deps_key(s)
             spec_labels[skey] = s
 
-            for d in s.dependencies(deptype=all):
+            for d in s.dependencies(deptype="all"):
                 dkey = _spec_deps_key(d)
                 if d.external:
                     tty.msg("Will not stage external dep: {0}".format(d))
@@ -1029,13 +1029,18 @@ def generate_gitlab_ci_yaml(
             job_vars = job_object.setdefault("variables", {})
             job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
             job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
+            job_vars["SPACK_JOB_SPEC_PKG_VERSION"] = release_spec.format("{version}")
+            job_vars["SPACK_JOB_SPEC_COMPILER_NAME"] = release_spec.format("{compiler.name}")
+            job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
+            job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
+            job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
 
             job_object["needs"] = []
             if spec_label in dependencies:
                 if enable_artifacts_buildcache:
                     # Get dependencies transitively, so they're all
                     # available in the artifacts buildcache.
-                    dep_jobs = [d for d in release_spec.traverse(deptype=all, root=False)]
+                    dep_jobs = [d for d in release_spec.traverse(deptype="all", root=False)]
                 else:
                     # In this case, "needs" is only used for scheduling
                     # purposes, so we only get the direct dependencies.

@@ -239,7 +239,7 @@ def add_versions_to_package(pkg: PackageBase, version_lines: str):
                 parsed_version = Version(contents_version.group(1))
 
                 if parsed_version < new_versions[0][0]:
-                    split_contents[i:i] = [new_versions.pop(0)[1], " # FIX ME", "\n"]
+                    split_contents[i:i] = [new_versions.pop(0)[1], " # FIXME", "\n"]
                     num_versions_added += 1
 
                 elif parsed_version == new_versions[0][0]:
