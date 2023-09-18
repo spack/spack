@@ -1273,7 +1273,7 @@ complete -c spack -n '__fish_spack_using_command dependencies' -s i -l installed
 complete -c spack -n '__fish_spack_using_command dependencies' -s t -l transitive -f -a transitive
 complete -c spack -n '__fish_spack_using_command dependencies' -s t -l transitive -d 'show all transitive dependencies'
 complete -c spack -n '__fish_spack_using_command dependencies' -l deptype -r -f -a deptype
-complete -c spack -n '__fish_spack_using_command dependencies' -l deptype -r -d 'comma-separated list of deptypes to traverse'
+complete -c spack -n '__fish_spack_using_command dependencies' -l deptype -r -d 'comma-separated list of deptypes to traverse (default=build,link,run,test)'
 complete -c spack -n '__fish_spack_using_command dependencies' -s V -l no-expand-virtuals -f -a expand_virtuals
 complete -c spack -n '__fish_spack_using_command dependencies' -s V -l no-expand-virtuals -d 'do not expand virtual dependencies'
 
@@ -1815,7 +1815,7 @@ complete -c spack -n '__fish_spack_using_command graph' -s c -l color -d 'use di
 complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -f -a installed
 complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -d 'graph installed specs, or specs in the active env (implies --dot)'
 complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -f -a deptype
-complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -d 'comma-separated list of deptypes to traverse'
+complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -d 'comma-separated list of deptypes to traverse (default=build,link,run,test)'
 
 # spack help
 set -g __fish_spack_optspecs_spack_help h/help a/all spec
