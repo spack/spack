@@ -330,8 +330,6 @@ class Stage:
             sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
             lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
             stage_lock_path = os.path.join(get_stage_root(), ".lock")
-
-            tty.debug("Creating stage lock {0}".format(self.name))
             self._lock = spack.util.lock.Lock(
                 stage_lock_path, start=lock_id, length=1, desc=self.name
             )
@@ -928,21 +926,20 @@ def get_checksums_for_versions(
     else:
         concurrency = min(os.cpu_count() or 1, len(search_arguments))
 
+    # The function might have side effects in memory, that would not be reflected in the
+    # parent process, if run in a child process. If this pattern happens frequently, we
+    # can move this function call *after* having distributed the work to executors.
+    if first_stage_function is not None:
+        (url, version), search_arguments = search_arguments[0], search_arguments[1:]
+        checksum, error = _fetch_and_checksum(url, fetch_options, keep_stage, first_stage_function)
+        if error is not None:
+            errors.append(error)
+
+        if checksum is not None:
+            version_hashes[version] = checksum
+
     with concurrent.futures.ProcessPoolExecutor(max_workers=concurrency) as executor:
         results = []
-        # The function might have side effects in memory, that would not be reflected in the
-        # parent process, if run in a child process. If this pattern happens frequently, we
-        # can move this function call *after* having distributed the work to executors.
-        if first_stage_function is not None:
-            (url, version), search_arguments = search_arguments[0], search_arguments[1:]
-            checksum, error = _fetch_and_checksum(
-                url, fetch_options, keep_stage, first_stage_function
-            )
-            if error is not None:
-                errors.append(error)
-            if checksum is not None:
-                version_hashes[version] = checksum
-
         for url, version in search_arguments:
             future = executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage)
             results.append((version, future))
