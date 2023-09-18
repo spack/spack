@@ -31,6 +31,7 @@ class OpaPsm2(MakefilePackage, CudaPackage):
     variant("avx2", default=True, description="Enable AVX2 instructions")
 
     depends_on("numactl")
+    depends_on("cuda@8:", when="+cuda")
 
     # patch to get the Makefile to use the spack compiler wrappers
     patch(
