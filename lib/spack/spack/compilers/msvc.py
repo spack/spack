@@ -154,7 +154,10 @@ class Msvc(Compiler):
 
     #: Regex used to extract version from compiler's output
     version_regex = r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
-    suffixes = [""]
+    # The MSVC compiler class overrides this to prevent instances
+    # of erroneous matching on executable names that cannot be msvc
+    # compilers
+    suffixes = []
 
     is_supported_on_platform = lambda x: isinstance(x, spack.platforms.Windows)
 
