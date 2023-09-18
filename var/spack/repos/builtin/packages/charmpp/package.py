@@ -187,7 +187,7 @@ class Charmpp(Package):
             ("linux", "ppc", "pami"): "pami-linux-ppc64le",
             ("linux", "ppc", "verbs"): "verbs-linux-ppc64le",
             ("linux", "arm", "netlrts"): "netlrts-linux-arm7",
-            ("linux", "arm", "multicore"): "multicore-arm7",
+            ("linux", "arm", "multicore"): "multicore-linux-arm7",
             ("linux", "aarch64", "netlrts"): "netlrts-linux-arm8",
             ("linux", "aarch64", "multicore"): "multicore-linux-arm8",
             ("win", "x86_64", "mpi"): "mpi-win-x86_64",
