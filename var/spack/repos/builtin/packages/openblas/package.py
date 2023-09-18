@@ -410,9 +410,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         if "~shared" in self.spec:
             if "+pic" in self.spec:
-                make_defs.append("CFLAGS={0}".format(self.compiler.cc_pic_flag))
+                make_defs.append("CFLAGS={0}".format(self.package.compiler.cc_pic_flag))
                 if "~fortran" not in self.spec:
-                    make_defs.append("FFLAGS={0}".format(self.compiler.f77_pic_flag))
+                    make_defs.append("FFLAGS={0}".format(self.package.compiler.f77_pic_flag))
             make_defs += ["NO_SHARED=1"]
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies("@0.2.16"):
