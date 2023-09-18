@@ -639,26 +639,25 @@ ml-linux-x86_64-rocm-build:
 ########################################
 # Machine Learning - Darwin aarch64 (MPS)
 ########################################
-# No runners available right now
-# .ml-darwin-aarch64-mps:
-#   extends: [".darwin_aarch64"]
-#   variables:
-#     SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
+.ml-darwin-aarch64-mps:
+  extends: [".darwin_aarch64"]
+  variables:
+    SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
 
-# ml-darwin-aarch64-mps-generate:
-#   tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
-#   extends: [ ".ml-darwin-aarch64-mps", ".generate-base"]
+ml-darwin-aarch64-mps-generate:
+  tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
+  extends: [ ".ml-darwin-aarch64-mps", ".generate-base"]
 
-# ml-darwin-aarch64-mps-build:
-#   extends: [ ".ml-darwin-aarch64-mps", ".build" ]
-#   trigger:
-#     include:
-#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: ml-darwin-aarch64-mps-generate
-#     strategy: depend
-#   needs:
-#     - artifacts: True
-#       job: ml-darwin-aarch64-mps-generate
+ml-darwin-aarch64-mps-build:
+  extends: [ ".ml-darwin-aarch64-mps", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-darwin-aarch64-mps-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-darwin-aarch64-mps-generate
 
 ########################################
 # Deprecated CI testing
