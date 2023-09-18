@@ -15,10 +15,10 @@ class Xxdiff(MakefilePackage):
     maintainers("vanderwb")
 
     version("master", branch="master")
-    version("2023-01-10", commit="604300e")
+    version("2023-01-10", commit="604300ea9875611726ba885fb14f872b964df579")
 
-    depends_on("flex@2.5.31:")
-    depends_on("bison")
+    depends_on("flex@2.5.31:", type="build")
+    depends_on("bison", type="build")
     depends_on("qt@5:", type=("build", "link", "run"))
 
     def edit(self, spec, prefix):
