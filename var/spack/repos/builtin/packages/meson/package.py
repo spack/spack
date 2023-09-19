@@ -18,6 +18,7 @@ class Meson(PythonPackage):
 
     maintainers("eli-schwartz", "michaelkuhn")
 
+    version("1.2.2", sha256="1caa0ef6082e311bdca9836e7907f548b8c3f041a42ed41f0ff916b83ac7dddd")
     version("1.2.1", sha256="e1f3b32b636cc86496261bd89e63f00f206754697c7069788b62beed5e042713")
     version("1.2.0", sha256="603489f0aaa6305f806c6cc4a4455a965f22290fc74f65871f589b002110c790")
     version("1.1.1", sha256="1c3b9e1a3a36b51adb5de498d582fd5cbf6763fadbcf151de9f2a762e02bd2e6")
@@ -84,6 +85,9 @@ class Meson(PythonPackage):
     # https://github.com/mesonbuild/meson/pull/10909
     # https://github.com/mesonbuild/meson/pull/9850
     patch("oneapi.patch", when="@0.62:0.63 %oneapi")
+
+    # Python 3.12 detection support
+    patch("python-3.12-support.patch", when="@1.1:1.2.2")
 
     executables = ["^meson$"]
 
