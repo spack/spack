@@ -1473,42 +1473,49 @@ class SpackSolverSetup:
             int: id of the condition created by this function
         """
         named_cond = required_spec.copy()
-        named_cond.name = named_cond.name or name
-        assert named_cond.name, "must provide name for anonymous conditions!"
-
+        if isinstance(named_cond, spack.spec.Spec):
+            named_cond.name = named_cond.name or name
+            name = named_cond.name
+        assert name, "must provide name for anonymous conditions!"
         # Check if we can emit the requirements before updating the condition ID counter.
         # In this way, if a condition can't be emitted but the exception is handled in the caller,
         # we won't emit partial facts.
 
         condition_id = next(self._condition_id_counter)
-        self.gen.fact(fn.pkg_fact(named_cond.name, fn.condition(condition_id)))
+        self.gen.fact(fn.pkg_fact(name, fn.condition(condition_id)))
         self.gen.fact(fn.condition_reason(condition_id, msg))
 
-        cache = self._trigger_cache[named_cond.name]
+        cache = self._trigger_cache[name]
 
         named_cond_key = str(named_cond)
         if named_cond_key not in cache:
             trigger_id = next(self._trigger_id_counter)
-            requirements = self.spec_clauses(named_cond, body=True, required_from=name)
+            if isinstance(named_cond, spack.spec.Spec):
+                requirements = self.spec_clauses(named_cond, body=True, required_from=name)
+            else:
+                requirements = named_cond
             cache[named_cond_key] = (trigger_id, requirements)
         trigger_id, requirements = cache[named_cond_key]
-        self.gen.fact(fn.pkg_fact(named_cond.name, fn.condition_trigger(condition_id, trigger_id)))
+        self.gen.fact(fn.pkg_fact(name, fn.condition_trigger(condition_id, trigger_id)))
 
         if not imposed_spec:
             return condition_id
 
-        cache = self._effect_cache[named_cond.name]
+        cache = self._effect_cache[name]
         imposed_spec_key = str(imposed_spec)
         if imposed_spec_key not in cache:
             effect_id = next(self._effect_id_counter)
-            requirements = self.spec_clauses(imposed_spec, body=False, required_from=name)
+            if isinstance(imposed_spec, spack.spec.Spec):
+                requirements = self.spec_clauses(imposed_spec, body=False, required_from=name)
+            else:
+                requirements = imposed_spec
             if not node:
                 requirements = list(
                     filter(lambda x: x.args[0] not in ("node", "virtual_node"), requirements)
                 )
             cache[imposed_spec_key] = (effect_id, requirements)
         effect_id, requirements = cache[imposed_spec_key]
-        self.gen.fact(fn.pkg_fact(named_cond.name, fn.condition_effect(condition_id, effect_id)))
+        self.gen.fact(fn.pkg_fact(name, fn.condition_effect(condition_id, effect_id)))
         return condition_id
 
     def impose(self, condition_id, imposed_spec, node=True, name=None, body=False):
