@@ -958,7 +958,8 @@ class PyclingoDriver:
                 if sym.name not in ("attr", "error", "opt_criterion"):
                     tty.debug(
                         "UNKNOWN SYMBOL: %s(%s)"
-                        % (sym.name, ", ".join(intermediate_repr(sym.arguments)))
+
+                        % (sym.name, ", ".join([str(s) for s in intermediate_repr(sym.arguments)]))
                     )
 
         elif cores:
@@ -1952,6 +1953,7 @@ class SpackSolverSetup:
         if not body:
             for virtual in virtuals:
                 clauses.append(fn.attr("provider_set", spec.name, virtual))
+                clauses.append(fn.attr("virtual_node", virtual))
         else:
             for virtual in virtuals:
                 clauses.append(fn.attr("virtual_on_incoming_edges", spec.name, virtual))
@@ -2591,18 +2593,32 @@ class SpackSolverSetup:
     def literal_specs(self, specs):
         for idx, spec in enumerate(specs):
             self.gen.h2("Spec: %s" % str(spec))
-            self.gen.fact(fn.literal(idx))
+            condition_id = next(self._condition_id_counter)
+            trigger_id = next(self._trigger_id_counter)
 
-            self.gen.fact(fn.literal(idx, "virtual_root" if spec.virtual else "root", spec.name))
-            for clause in self.spec_clauses(spec):
-                self.gen.fact(fn.literal(idx, *clause.args))
+            # Special condition triggered by "literal_solved"
+            self.gen.fact(fn.pkg_fact(spec.name, fn.condition_trigger(condition_id, trigger_id)))
+            self.gen.fact(fn.condition_reason(condition_id, f"{spec} requested from CLI"))
+            self.gen.fact(fn.literal(trigger_id))
+
+            # Effect imposes the spec
+            imposed_spec_key = str(spec)
+            cache = self._effect_cache[spec.name]
+            msg = "literal specs have different requirements. clear cache before computing literals"
+            assert imposed_spec_key not in cache,     msg
+            effect_id = next(self._effect_id_counter)
+            requirements = self.spec_clauses(spec)
+            for clause in requirements:
                 if clause.args[0] == "variant_set":
-                    self.gen.fact(
-                        fn.literal(idx, "variant_default_value_from_cli", *clause.args[1:])
-                    )
+                    requirements.append(fn.attr("variant_default_value_from_cli", *clause.args[1:]))
+            requirements.append(fn.attr("virtual_root" if spec.virtual else "root", spec.name))
+            cache[imposed_spec_key] = (effect_id, requirements)
+            self.gen.fact(fn.pkg_fact(spec.name, fn.condition_effect(condition_id, effect_id)))
 
             if self.concretize_everything:
-                self.gen.fact(fn.solve_literal(idx))
+                self.gen.fact(fn.solve_literal(trigger_id))
+
+        self.effect_rules()
 
     def validate_and_define_versions_from_requirements(
         self, *, allow_deprecated: bool, require_checksum: bool

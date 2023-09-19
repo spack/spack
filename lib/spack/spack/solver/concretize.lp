@@ -115,29 +115,53 @@ multiple_nodes_attribute("depends_on").
 multiple_nodes_attribute("virtual_on_edge").
 multiple_nodes_attribute("provider_set").
 
-% Map constraint on the literal ID to facts on the node
-attr(Name, node(min_dupe_id, A1))             :- literal(LiteralID, Name, A1), solve_literal(LiteralID).
-attr(Name, node(min_dupe_id, A1), A2)         :- literal(LiteralID, Name, A1, A2), solve_literal(LiteralID), not multiple_nodes_attribute(Name).
-attr(Name, node(min_dupe_id, A1), A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), solve_literal(LiteralID), not multiple_nodes_attribute(Name).
-attr(Name, node(min_dupe_id, A1), A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), solve_literal(LiteralID).
+trigger_condition_holds(TriggerID, node(min_dupe_id, Package)) :-
+  solve_literal(TriggerID),
+  pkg_fact(Package, condition_trigger(_, TriggerID)),
+  literal(TriggerID).
 
-% Special cases where nodes occur in arguments other than A1
-attr("node_flag_source", node(min_dupe_id, A1), A2, node(min_dupe_id, A3)) :- literal(LiteralID, "node_flag_source", A1, A2, A3), solve_literal(LiteralID).
-attr("depends_on",       node(min_dupe_id, A1), node(min_dupe_id, A2), A3) :- literal(LiteralID, "depends_on",       A1, A2, A3), solve_literal(LiteralID).
+trigger_node(TriggerID, Node, Node) :-
+  trigger_condition_holds(TriggerID, Node),
+  literal(TriggerID).
 
-attr("virtual_node", node(min_dupe_id, Virtual))                              :- literal(LiteralID, "provider_set", _,        Virtual), solve_literal(LiteralID).
-attr("provider_set", node(min_dupe_id, Provider), node(min_dupe_id, Virtual)) :- literal(LiteralID, "provider_set", Provider, Virtual), solve_literal(LiteralID).
-provider(node(min_dupe_id, Provider), node(min_dupe_id, Virtual))             :- literal(LiteralID, "provider_set", Provider, Virtual), solve_literal(LiteralID).
+mentioned_in_literal(Root, Mentioned) :-
+  literal(TriggerID),
+  trigger_and_effect(Root, TriggerID, EffectID),
+  imposed_constraint(EffectID, _, Mentioned).
+mentioned_in_literal(Root, Mentioned) :-
+  literal(TriggerID),
+  trigger_and_effect(Root, TriggerID, EffectID),
+  imposed_constraint(EffectID, _, Mentioned, _).
+mentioned_in_literal(Root, Mentioned) :-
+  literal(TriggerID),
+  trigger_and_effect(Root, TriggerID, EffectID),
+  imposed_constraint(EffectID, _, Mentioned, _, _).
+mentioned_in_literal(Root, Mentioned) :-
+  literal(TriggerID),
+  trigger_and_effect(Root, TriggerID, EffectID),
+  imposed_constraint(EffectID, _, Mentioned, _, _, _).
+mentioned_in_literal(Root, Mentioned) :-
+  literal(TriggerID),
+  trigger_and_effect(Root, TriggerID, EffectID),
+  imposed_constraint(EffectID, "depends_on", _, _, Mentioned, _).
+mentioned_in_literal(Root, Mentioned) :-
+  literal(TriggerID),
+  trigger_and_effect(Root, TriggerID, EffectID),
+  imposed_constraint(EffectID, "provider_set", _, Mentioned).
+
+condition_set(node(min_dupe_id, Root), node(min_dupe_id, Mentioned), link_run) :-
+  mentioned_in_literal(Root, Mentioned).
+
+provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, VirtualNode).
 
 % Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
-explicitly_requested_root(node(min_dupe_id, A1)) :- literal(LiteralID, "root", A1), solve_literal(LiteralID).
+explicitly_requested_root(node(min_dupe_id, Package)) :-
+  solve_literal(TriggerID),
+  trigger_and_effect(Package, TriggerID, EffectID),
+  imposed_constraint(EffectID, "root", Package).
 
 #defined concretize_everything/0.
 #defined literal/1.
-#defined literal/3.
-#defined literal/4.
-#defined literal/5.
-#defined literal/6.
 
 % Attributes for node packages which must have a single value
 attr_single_value("version").

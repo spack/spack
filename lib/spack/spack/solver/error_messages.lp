@@ -47,10 +47,10 @@ condition_cause(Condition2, Condition1, ID) :-
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(0, "AAACannot satisfy '{0}@{1}'", node(ID, Package), Constraint, startcauses, ID, ConstraintCause)
+error(0, "AAACannot satisfy '{0}@{1}'", Package, Constraint, startcauses, ID, ConstraintCause)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
-     pkg_fact(Package, condition_effect(ConstraintCause, EffectID)),
+     pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
      imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
-     condition_holds(ConstraintCause, node(ID, Package)),
+     condition_holds(ConstraintCause, node(_, TriggerPkg)),
      attr("version", node(ID, Package), Version),
      not pkg_fact(Package, version_satisfies(Constraint, Version)).
