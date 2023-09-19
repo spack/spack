@@ -13,7 +13,7 @@ class PyNeurots(PythonPackage):
     git = "https://github.com/BlueBrain/NeuroTS.git"
 
     version("develop", branch="main")
-    version("3.4.0", tag="3.4.0")
+    version("3.4.2", tag="3.4.2")
     version("3.3.1", tag="3.3.1")
     version("3.1.0", tag="3.1.0")  # Breaking change to use diameter-synthesis >= 0.4
     version("3.0.0", tag="3.0.0")  # First version of NeuroTS
