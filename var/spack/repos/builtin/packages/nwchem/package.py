@@ -53,7 +53,8 @@ class Nwchem(Package):
     depends_on("mpi")
     depends_on("scalapack")
     depends_on("fftw-api")
-    depends_on("python@3", type=("build", "link", "run"))
+    depends_on("python@3:3.9", type=("build", "link", "run"), when="@:7.0.2")
+    depends_on("python@3", type=("build", "link", "run"), when="@7.2.0:")
 
     def install(self, spec, prefix):
         scalapack = spec["scalapack"].libs
