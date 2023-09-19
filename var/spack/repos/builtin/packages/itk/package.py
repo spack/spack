@@ -65,8 +65,8 @@ class Itk(CMakePackage):
     depends_on("zlib-api")
 
     patch(
-        "https://patch-diff.githubusercontent.com/raw/InsightSoftwareConsortium/ITK/pull/4041.diff?full_index=1",
-        sha256="6be7a28d41b8d56b782116b03b5fea70df35c3368e5c1bd83d166b46575f6172",
+        "https://github.com/InsightSoftwareConsortium/ITK/commit/9a719a0d2f5f489eeb9351b0ef913c3693147a4f.patch?full_index=1",
+        sha256="ec1f7fa71f2b7f05d9632c6b0321e7d436fff86fca92c60c12839b13ea79bd70",
         when="@5.2.0:5.3.0",
     )
 
