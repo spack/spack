@@ -10,6 +10,7 @@ class PyCwlRegistry(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/cwl-registry.git"
 
     version("develop", branch="main")
+    version("0.4.3", tag="cwl-registry-v0.4.3")
     version("0.4.2", tag="cwl-registry-v0.4.2")
     version("0.3.14", tag="cwl-registry-v0.3.14")
     version("0.3.12", tag="cwl-registry-v0.3.12")
@@ -35,6 +36,7 @@ class PyCwlRegistry(PythonPackage):
     depends_on("py-fz-td-recipe", type=("build", "run"))
     depends_on("py-pydantic", type=("build", "run"))
     depends_on("py-morphio", type=("build", "run"))
+    depends_on("py-jsonschema", type=("build", "run"))
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
