@@ -205,6 +205,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
             if "+rocm" in self.spec:
                 options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
                 options.append(self.define("CMAKE_C_COMPILER", self.spec["hip"].hipcc))
+            elif "+kokkos" in self.spec:
+                options.append(self.define("CMAKE_CXX_COMPILER", self.spec["kokkos"].kokkos_cxx))
         else:
             # kept for supporing version prior to 2.2
             options = [
