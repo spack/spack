@@ -27,7 +27,7 @@ import archspec.cpu.schema
 import llnl.util.lang
 import llnl.util.lock
 import llnl.util.tty as tty
-from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
+from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, working_dir
 
 import spack.binary_distribution
 import spack.caches
@@ -36,6 +36,7 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.error
 import spack.package_base
 import spack.package_prefs
 import spack.paths
@@ -52,7 +53,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
-from spack.util.web import FetchError
 
 
 def ensure_configuration_fixture_run_before(request):
@@ -472,7 +472,7 @@ class MockCache:
 
 class MockCacheFetcher:
     def fetch(self):
-        raise FetchError("Mock cache always fails for tests")
+        raise spack.error.FetchError("Mock cache always fails for tests")
 
     def __str__(self):
         return "[mock fetch cache]"
@@ -565,6 +565,8 @@ def mock_repo_path():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
+    if not os.path.exists(spec.package.build_log_path):
+        touchp(spec.package.build_log_path)
 
 
 @pytest.fixture

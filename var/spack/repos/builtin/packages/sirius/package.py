@@ -193,7 +193,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("costa+shared", when="@7.3.2:")
 
     with when("@7.5: +memory_pool"):
-        depends_on("umpire")
+        depends_on("umpire~cuda~rocm", when="~cuda~rocm")
         depends_on("umpire+cuda~device_alloc", when="+cuda")
         depends_on("umpire+rocm~device_alloc", when="+rocm")
 
@@ -228,12 +228,12 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant(cm_label + "CREATE_PYTHON_MODULE", "python"),
             self.define_from_variant(cm_label + "USE_CUDA", "cuda"),
             self.define_from_variant(cm_label + "USE_ROCM", "rocm"),
-            self.define_from_variant(cm_label + "BUILD_TESTING", "tests"),
             self.define_from_variant(cm_label + "BUILD_APPS", "apps"),
             self.define_from_variant(cm_label + "BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant(cm_label + "USE_FP32", "single_precision"),
             self.define_from_variant(cm_label + "USE_PROFILER", "profiler"),
             self.define_from_variant(cm_label + "USE_WANNIER90", "wannier90"),
+            self.define_from_variant("BUILD_TESTING", "tests"),
         ]
 
         lapack = spec["lapack"]
@@ -274,16 +274,14 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         if "+cuda" in spec:
             cuda_arch = self.spec.variants["cuda_arch"].value
             if cuda_arch[0] != "none":
-                args += [self.define("CMAKE_CUDA_ARCHITECTURES", cuda_arch)]
+                # Make SIRIUS handle it
+                elif "@6:7.4.3" in spec:
+                    args.append(self.define("CMAKE_CUDA_ARCH", ";".join(cuda_arch)))
+                else:
+                    args.append(self.define("CMAKE_CUDA_ARCHITECTURES", ";".join(cuda_arch)))
 
         if "+rocm" in spec:
             archs = ",".join(self.spec.variants["amdgpu_target"].value)
-            args.extend(
-                [
-                    self.define("HIP_ROOT_DIR", spec["hip"].prefix),
-                    self.define("HIP_HCC_FLAGS", "--amdgpu-target={0}".format(archs)),
-                    self.define("HIP_CXX_COMPILER", self.spec["hip"].hipcc),
-                ]
-            )
+            args.extend([self.define("CMAKE_HIP_ARCHITECTURES", archs)])
 
         return args
