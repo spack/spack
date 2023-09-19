@@ -23,5 +23,10 @@
 #show error/4.
 #show error/5.
 #show error/6.
+#show error/7.
+
+% error cause information
+#show condition_cause/3.
+#show condition_reason/2.
 
 % debug

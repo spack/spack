@@ -692,6 +692,24 @@ class ErrorHandler:
     def no_value_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
 
+    # TODO GBB: make these only track within the same condition set
+    def _get_cause_tree(self, cause, conditions, condition_causes, literals, indent="        "):
+        parents = [c for e, c, _ in condition_causes if e == cause]
+        local = "required because %s " % conditions[cause]
+
+        return [indent + local] + [
+            c
+            for parent in parents
+            for c in self._get_cause_tree(
+                parent, conditions, condition_causes, literals, indent=indent + "  "
+            )
+        ]
+
+    def get_cause_tree(self, cause):
+        conditions = dict(extract_args(self.model, "condition_reason"))
+        condition_causes = list(extract_args(self.model, "condition_cause"))
+        return self._get_cause_tree(cause, conditions, condition_causes, [])
+
     def handle_error(self, msg, *args):
         """Handle an error state derived by the solver."""
         if msg == "multiple_values_error":
@@ -700,13 +718,27 @@ class ErrorHandler:
         if msg == "no_value_error":
             return self.no_value_error(*args)
 
+        try:
+            idx = args.index("startcauses")
+        except ValueError:
+            msg_args = args
+            cause_args = []
+        else:
+            msg_args = args[:idx]
+            cause_args = args[idx + 1 :]
+
+        msg = msg.format(*msg_args)
+
         # For variant formatting, we sometimes have to construct specs
         # to format values properly. Find/replace all occurances of
         # Spec(...) with the string representation of the spec mentioned
-        msg = msg.format(*args)
         specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
         for spec_str in specs_to_construct:
             msg = msg.replace("Spec(%s)" % spec_str, str(spack.spec.Spec(spec_str)))
+
+        for cause in set(cause_args):
+            for c in self.get_cause_tree(cause):
+                msg += f"\n{c}"
 
         return msg
 
@@ -861,6 +893,8 @@ class PyclingoDriver:
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
+        # TODO: make this only debug mode
+        self.control.load(os.path.join(parent_dir, "error_messages.lp"))
         timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
