@@ -155,6 +155,9 @@ class Qt(Package):
     # causing qt to fail in ci.  This increases that limit to 1024.
     patch("qt59-qtbase-qtconfig256.patch", working_dir="qtbase", when="@5.9:5")
 
+    # https://bugzilla.altlinux.org/attachment.cgi?id=13362&action=diff#a/gcc13-compilefix.patch_sec1
+    patch("qt5-15-gcc13.patch", when="@5.15: %gcc@13")
+
     conflicts("%gcc@10:", when="@5.9:5.12.6 +opengl")
     conflicts("%gcc@11:", when="@5.8")
     conflicts("%apple-clang@13:", when="@:5.13")
