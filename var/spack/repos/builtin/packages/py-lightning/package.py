@@ -16,6 +16,8 @@ class PyLightning(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("2.0.9", sha256="2395ece6e29e12064718ff16b8edec5685df7f7095d4fee78edb0a654f5cd7eb")
+    version("2.0.8", sha256="db914e211b5c3b079a821be6e4344e72d0a729163676a65c4e00aae98390ae7b")
     version("2.0.7", sha256="f05acd4ba846505d40125b4f9f0bda0804b2b0356e2ad2fd4e4bf7d1c61c8cc6")
     version("2.0.6", sha256="bff959f65eed2f626dd65e7b2cfd0d3ddcd0c4ca19ffc8f5f49a4ba4494ca528")
     version("2.0.5", sha256="77df233129b29c11df7b5e071e24e29420d5efbdbbac9cb6fb4602b7b5afce8a")
@@ -47,6 +49,7 @@ class PyLightning(PythonPackage):
     depends_on("py-fsspec@2022.5:2024+http", when="@2.0.5:", type=("build", "run"))
     depends_on("py-fsspec@2022.5:2023+http", when="@:2.0.4", type=("build", "run"))
     depends_on("py-inquirer@2.10:4", type=("build", "run"))
+    depends_on("py-lightning-cloud@0.5.38:", when="@2.0.9:", type=("build", "run"))
     depends_on("py-lightning-cloud@0.5.37:", when="@2.0.5:", type=("build", "run"))
     depends_on("py-lightning-cloud@0.5.34:", when="@2.0.3:", type=("build", "run"))
     depends_on("py-lightning-cloud@0.5.31:", when="@2:", type=("build", "run"))
@@ -70,7 +73,8 @@ class PyLightning(PythonPackage):
     depends_on("py-starsessions@1.2.1:1", type=("build", "run"))
     depends_on("py-torch@1.11:3", when="@2:", type=("build", "run"))
     depends_on("py-torch@1.10:3", when="@:1", type=("build", "run"))
-    depends_on("py-torchmetrics@0.7:1", type=("build", "run"))
+    depends_on("py-torchmetrics@0.7:2", when="@2.0.9:", type=("build", "run"))
+    depends_on("py-torchmetrics@0.7:1", when="@:2.0.8", type=("build", "run"))
     depends_on("py-tqdm@4.57:5", type=("build", "run"))
     depends_on("py-traitlets@5.3:6", type=("build", "run"))
     depends_on("py-typing-extensions@4:5", type=("build", "run"))
