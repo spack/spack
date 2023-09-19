@@ -54,9 +54,11 @@ import enum
 import io
 import itertools
 import os
+import platform
 import re
+import socket
 import warnings
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import llnl.path
 import llnl.string
@@ -5146,6 +5148,43 @@ def save_dependency_specfiles(root: Spec, output_directory: str, dependencies: L
 
         with open(json_path, "w") as fd:
             fd.write(spec.to_json(hash=ht.dag_hash))
+
+
+def get_host_environment_metadata() -> Dict[str, str]:
+    """Get the host environment, reduce to a subset that we can store in
+    the install directory, and add the spack version.
+    """
+    import spack.main
+
+    environ = get_host_environment()
+    return {
+        "host_os": environ["os"],
+        "platform": environ["platform"],
+        "host_target": environ["target"],
+        "hostname": environ["hostname"],
+        "spack_version": spack.main.get_version(),
+        "kernel_version": platform.version(),
+    }
+
+
+def get_host_environment() -> Dict[str, Any]:
+    """Return a dictionary (lookup) with host information (not including the
+    os.environ).
+    """
+    host_platform = spack.platforms.host()
+    host_target = host_platform.target("default_target")
+    host_os = host_platform.operating_system("default_os")
+    arch_fmt = "platform={0} os={1} target={2}"
+    arch_spec = Spec(arch_fmt.format(host_platform, host_os, host_target))
+    return {
+        "target": str(host_target),
+        "os": str(host_os),
+        "platform": str(host_platform),
+        "arch": arch_spec,
+        "architecture": arch_spec,
+        "arch_str": str(arch_spec),
+        "hostname": socket.gethostname(),
+    }
 
 
 class SpecParseError(spack.error.SpecError):
