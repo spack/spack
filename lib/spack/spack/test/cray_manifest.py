@@ -188,7 +188,7 @@ def test_compatibility():
 
 def test_compiler_from_entry():
     compiler_data = json.loads(example_compiler_entry)
-    compiler_from_entry(compiler_data)
+    compiler_from_entry(compiler_data, "/example/file")
 
 
 def generate_openmpi_entries():
@@ -270,7 +270,7 @@ def test_translate_compiler_name():
         executables={"cc": "/path/to/compiler/nvc", "cxx": "/path/to/compiler/nvc++"},
     )
 
-    compiler = compiler_from_entry(nvidia_compiler.compiler_json())
+    compiler = compiler_from_entry(nvidia_compiler.compiler_json(), "/example/file")
     assert compiler.name == "nvhpc"
 
     spec_json = JsonSpecEntry(
@@ -292,7 +292,7 @@ def test_failed_translate_compiler_name():
     unknown_compiler = JsonCompilerEntry(name="unknown", version="1.0")
 
     with pytest.raises(spack.compilers.UnknownCompilerError):
-        compiler_from_entry(unknown_compiler.compiler_json())
+        compiler_from_entry(unknown_compiler.compiler_json(), "/example/file")
 
     spec_json = JsonSpecEntry(
         name="packagey",
