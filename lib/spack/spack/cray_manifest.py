@@ -52,7 +52,10 @@ def compiler_from_entry(entry, manifest_path):
 
     if "prefix" in entry:
         prefix = entry["prefix"]
-        paths = dict((lang, os.path.join(prefix, relpath)) for (lang, relpath) in entry["executables"].items())
+        paths = dict(
+            (lang, os.path.join(prefix, relpath))
+            for (lang, relpath) in entry["executables"].items()
+        )
     else:
         paths = entry["executables"]
 
@@ -76,11 +79,12 @@ def compiler_from_entry(entry, manifest_path):
     paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
 
     if missing_paths:
-        tty.warn("Manifest entry refers to nonexistent paths:\n\t" +
-                 "\n\t".join(missing_paths) +
-                 f"\nfor {str(spec)}" +
-                 f"\nin {manifest_path}" +
-                 "\nPlease report this issue"
+        tty.warn(
+            "Manifest entry refers to nonexistent paths:\n\t"
+            + "\n\t".join(missing_paths)
+            + f"\nfor {str(spec)}"
+            + f"\nin {manifest_path}"
+            + "\nPlease report this issue"
         )
 
     return compiler_cls(spec, operating_system, target, paths)
@@ -220,11 +224,13 @@ def read(path, apply_updates):
         for compiler in compilers:
             try:
                 spack.compilers.add_compilers_to_config([compiler], init_config=False)
-            except Exception as e:
+            except Exception:
                 import traceback
-                tty.warn(f"Could not add compiler {str(compiler.spec)}: "
-                         f"\n\tfrom manifest: {path}"
-                         "\nPlease reexecute with 'spack -d' and include the stack trace"
+
+                tty.warn(
+                    f"Could not add compiler {str(compiler.spec)}: "
+                    f"\n\tfrom manifest: {path}"
+                    "\nPlease reexecute with 'spack -d' and include the stack trace"
                 )
                 tty.debug(f"Include this\n{traceback.format_exc()}")
     if apply_updates:
