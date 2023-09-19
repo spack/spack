@@ -12,9 +12,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     provide a very general set of infrastructure design patterns that can
     be specialized and extended to suit the needs of a broad variety of
     solver and data requirements. Current support includes multi-dimensional
-    mesh topology, mesh geometry, and mesh adjacency information,
-    n-dimensional hashed-tree data structures, graph partitioning
-    interfaces,and dependency closures.
+    mesh topology, mesh geometry, and mesh adjacency information.
     """
 
     homepage = "http://flecsi.org/"
@@ -63,7 +61,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
     )
     variant("shared", default=True, description="Build shared libraries")
-    variant("flog", default=False, description="Enable flog testing")
+    variant("flog", default=False, description="Enable logging support")
     variant("graphviz", default=False, description="Enable GraphViz Support")
     variant("doc", default=False, description="Enable documentation")
     variant("hdf5", default=True, description="Enable HDF5 Support")
