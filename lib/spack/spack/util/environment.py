@@ -17,6 +17,7 @@ import sys
 from functools import wraps
 from typing import Any, Callable, Dict, List, MutableMapping, Optional, Tuple, Union
 
+from llnl.path import path_to_os_path, system_path_filter
 from llnl.util import tty
 from llnl.util.lang import dedupe
 
@@ -24,7 +25,6 @@ import spack.platforms
 import spack.spec
 
 from .executable import Executable, which
-from .path import path_to_os_path, system_path_filter
 
 if sys.platform == "win32":
     SYSTEM_PATHS = [

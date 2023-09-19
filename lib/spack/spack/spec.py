@@ -58,6 +58,7 @@ import re
 import warnings
 from typing import Callable, List, Optional, Tuple, Union
 
+import llnl.path
 import llnl.string
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -83,7 +84,6 @@ import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
 import spack.util.module_cmd as md
-import spack.util.path as pth
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -1390,7 +1390,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return pth.path_to_os_path(self._external_path)[0]
+        return llnl.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -1799,7 +1799,7 @@ class Spec:
 
     @prefix.setter
     def prefix(self, value):
-        self._prefix = spack.util.prefix.Prefix(pth.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(llnl.path.convert_to_platform_path(value))
 
     def spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.

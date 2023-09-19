@@ -11,7 +11,7 @@ import tempfile
 
 from llnl.util import lang, tty
 
-from spack.util.path import system_path_filter
+from ..path import system_path_filter
 
 if sys.platform == "win32":
     from win32file import CreateHardLink
