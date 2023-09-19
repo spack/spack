@@ -118,8 +118,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             when="+umpire+rocm amdgpu_target={0}".format(gfx),
         )
 
-    # Uses deprecated cuSPARSE functions/types (e.g. csrsv2Info_t).
-    depends_on("cuda@:11", when="+cuda")
+    # hypre@:2.28.0 uses deprecated cuSPARSE functions/types (e.g. csrsv2Info_t).
+    depends_on("cuda@:11", when="@:2.28.0+cuda")
 
     # Conflicts
     conflicts("+cuda", when="+int64")
