@@ -8,9 +8,9 @@ import os
 import pytest
 
 import spack.config as spack_config
+import spack.error
 import spack.fetch_strategy as spack_fs
 import spack.stage as spack_stage
-from spack.util.web import FetchError
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
@@ -33,7 +33,7 @@ def test_s3fetchstrategy_bad_url(tmpdir, _fetch_method):
         with spack_stage.Stage(fetcher, path=testpath) as stage:
             assert stage is not None
             assert fetcher.archive_file is None
-            with pytest.raises(FetchError):
+            with pytest.raises(spack.error.FetchError):
                 fetcher.fetch()
 
 

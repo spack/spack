@@ -36,6 +36,7 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.error
 import spack.package_base
 import spack.package_prefs
 import spack.paths
@@ -52,7 +53,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
-from spack.util.web import FetchError
 
 
 def ensure_configuration_fixture_run_before(request):
@@ -472,7 +472,7 @@ class MockCache:
 
 class MockCacheFetcher:
     def fetch(self):
-        raise FetchError("Mock cache always fails for tests")
+        raise spack.error.FetchError("Mock cache always fails for tests")
 
     def __str__(self):
         return "[mock fetch cache]"

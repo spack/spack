@@ -66,7 +66,7 @@ def setup_parser(subparser):
     modes_parser.add_argument(
         "--verify", action="store_true", default=False, help="verify known package checksums"
     )
-    arguments.add_common_arguments(subparser, ["package"])
+    arguments.add_common_arguments(subparser, ["package", "jobs"])
     subparser.add_argument(
         "versions", nargs=argparse.REMAINDER, help="versions to generate checksums for"
     )
@@ -96,7 +96,7 @@ def checksum(parser, args):
 
     # Add latest version if requested
     if args.latest:
-        remote_versions = pkg.fetch_remote_versions()
+        remote_versions = pkg.fetch_remote_versions(args.jobs)
         if len(remote_versions) > 0:
             latest_version = sorted(remote_versions.keys(), reverse=True)[0]
             versions.append(latest_version)
@@ -119,13 +119,13 @@ def checksum(parser, args):
         # if we get here, it's because no valid url was provided by the package
         # do expensive fallback to try to recover
         if remote_versions is None:
-            remote_versions = pkg.fetch_remote_versions()
+            remote_versions = pkg.fetch_remote_versions(args.jobs)
         if version in remote_versions:
             url_dict[version] = remote_versions[version]
 
     if len(versions) <= 0:
         if remote_versions is None:
-            remote_versions = pkg.fetch_remote_versions()
+            remote_versions = pkg.fetch_remote_versions(args.jobs)
         url_dict = remote_versions
 
     if not url_dict:

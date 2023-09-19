@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import codecs
+import concurrent.futures
 import email.message
 import errno
-import multiprocessing.pool
 import os
 import os.path
 import re
@@ -17,7 +17,7 @@ import traceback
 import urllib.parse
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
-from typing import IO, Optional
+from typing import IO, Dict, List, Optional, Set, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
@@ -257,11 +257,11 @@ def check_curl_code(returncode):
     if returncode != 0:
         if returncode == 22:
             # This is a 404. Curl will print the error.
-            raise FetchError("URL was not found!")
+            raise spack.error.FetchError("URL was not found!")
 
         if returncode == 60:
             # This is a certificate error.  Suggest spack -k
-            raise FetchError(
+            raise spack.error.FetchError(
                 "Curl was unable to fetch due to invalid certificate. "
                 "This is either an attack, or your cluster's SSL "
                 "configuration is bad.  If you believe your SSL "
@@ -270,7 +270,7 @@ def check_curl_code(returncode):
                 "Use this at your own risk."
             )
 
-        raise FetchError("Curl failed with error {0}".format(returncode))
+        raise spack.error.FetchError("Curl failed with error {0}".format(returncode))
 
 
 def _curl(curl=None):
@@ -279,7 +279,7 @@ def _curl(curl=None):
             curl = which("curl", required=True)
         except CommandNotFoundError as exc:
             tty.error(str(exc))
-            raise FetchError("Missing required curl fetch method")
+            raise spack.error.FetchError("Missing required curl fetch method")
     return curl
 
 
@@ -307,7 +307,7 @@ def fetch_url_text(url, curl=None, dest_dir="."):
     Raises FetchError if the curl returncode indicates failure
     """
     if not url:
-        raise FetchError("A URL is required to fetch its text")
+        raise spack.error.FetchError("A URL is required to fetch its text")
 
     tty.debug("Fetching text at {0}".format(url))
 
@@ -319,7 +319,7 @@ def fetch_url_text(url, curl=None, dest_dir="."):
     if fetch_method == "curl":
         curl_exe = _curl(curl)
         if not curl_exe:
-            raise FetchError("Missing required fetch method (curl)")
+            raise spack.error.FetchError("Missing required fetch method (curl)")
 
         curl_args = ["-O"]
         curl_args.extend(base_curl_fetch_args(url))
@@ -337,7 +337,9 @@ def fetch_url_text(url, curl=None, dest_dir="."):
 
             returncode = response.getcode()
             if returncode and returncode != 200:
-                raise FetchError("Urllib failed with error code {0}".format(returncode))
+                raise spack.error.FetchError(
+                    "Urllib failed with error code {0}".format(returncode)
+                )
 
             output = codecs.getreader("utf-8")(response).read()
             if output:
@@ -348,7 +350,7 @@ def fetch_url_text(url, curl=None, dest_dir="."):
                 return path
 
         except SpackWebError as err:
-            raise FetchError("Urllib fetch failed to verify url: {0}".format(str(err)))
+            raise spack.error.FetchError("Urllib fetch failed to verify url: {0}".format(str(err)))
 
     return None
 
@@ -543,168 +545,158 @@ def list_url(url, recursive=False):
         return gcs.get_all_blobs(recursive=recursive)
 
 
-def spider(root_urls, depth=0, concurrency=32):
+def spider(root_urls: Union[str, List[str]], depth: int = 0, concurrency: Optional[int] = None):
     """Get web pages from root URLs.
 
-    If depth is specified (e.g., depth=2), then this will also follow
-    up to <depth> levels of links from each root.
+    If depth is specified (e.g., depth=2), then this will also follow up to <depth> levels
+    of links from each root.
 
     Args:
-        root_urls (str or list): root urls used as a starting point
-            for spidering
-        depth (int): level of recursion into links
-        concurrency (int): number of simultaneous requests that can be sent
+        root_urls: root urls used as a starting point for spidering
+        depth: level of recursion into links
+        concurrency: number of simultaneous requests that can be sent
 
     Returns:
-        A dict of pages visited (URL) mapped to their full text and the
-        set of visited links.
+        A dict of pages visited (URL) mapped to their full text and the set of visited links.
     """
-    # Cache of visited links, meant to be captured by the closure below
-    _visited = set()
-
-    def _spider(url, collect_nested):
-        """Fetches URL and any pages it links to.
-
-        Prints out a warning only if the root can't be fetched; it ignores
-        errors with pages that the root links to.
-
-        Args:
-            url (str): url being fetched and searched for links
-            collect_nested (bool): whether we want to collect arguments
-                for nested spidering on the links found in this url
-
-        Returns:
-            A tuple of:
-            - pages: dict of pages visited (URL) mapped to their full text.
-            - links: set of links encountered while visiting the pages.
-            - spider_args: argument for subsequent call to spider
-        """
-        pages = {}  # dict from page URL -> text content.
-        links = set()  # set of all links seen on visited pages.
-        subcalls = []
-
-        try:
-            response_url, _, response = read_from_url(url, "text/html")
-            if not response_url or not response:
-                return pages, links, subcalls
-
-            page = codecs.getreader("utf-8")(response).read()
-            pages[response_url] = page
-
-            # Parse out the include-fragments in the page
-            # https://github.github.io/include-fragment-element
-            include_fragment_parser = IncludeFragmentParser()
-            include_fragment_parser.feed(page)
-
-            fragments = set()
-            while include_fragment_parser.links:
-                raw_link = include_fragment_parser.links.pop()
-                abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
-
-                try:
-                    # This seems to be text/html, though text/fragment+html is also used
-                    fragment_response_url, _, fragment_response = read_from_url(
-                        abs_link, "text/html"
-                    )
-                except Exception as e:
-                    msg = f"Error reading fragment: {(type(e), str(e))}:{traceback.format_exc()}"
-                    tty.debug(msg)
-
-                if not fragment_response_url or not fragment_response:
-                    continue
-
-                fragment = codecs.getreader("utf-8")(fragment_response).read()
-                fragments.add(fragment)
-
-                pages[fragment_response_url] = fragment
-
-            # Parse out the links in the page and all fragments
-            link_parser = LinkParser()
-            link_parser.feed(page)
-            for fragment in fragments:
-                link_parser.feed(fragment)
-
-            while link_parser.links:
-                raw_link = link_parser.links.pop()
-                abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
-                links.add(abs_link)
-
-                # Skip stuff that looks like an archive
-                if any(raw_link.endswith(s) for s in llnl.url.ALLOWED_ARCHIVE_TYPES):
-                    continue
-
-                # Skip already-visited links
-                if abs_link in _visited:
-                    continue
-
-                # If we're not at max depth, follow links.
-                if collect_nested:
-                    subcalls.append((abs_link,))
-                    _visited.add(abs_link)
-
-        except URLError as e:
-            tty.debug(str(e))
-
-            if hasattr(e, "reason") and isinstance(e.reason, ssl.SSLError):
-                tty.warn(
-                    "Spack was unable to fetch url list due to a "
-                    "certificate verification problem. You can try "
-                    "running spack -k, which will not check SSL "
-                    "certificates. Use this at your own risk."
-                )
-
-        except HTMLParseError as e:
-            # This error indicates that Python's HTML parser sucks.
-            msg = "Got an error parsing HTML."
-            tty.warn(msg, url, "HTMLParseError: " + str(e))
-
-        except Exception as e:
-            # Other types of errors are completely ignored,
-            # except in debug mode
-            tty.debug("Error in _spider: %s:%s" % (type(e), str(e)), traceback.format_exc())
-
-        finally:
-            tty.debug("SPIDER: [url={0}]".format(url))
-
-        return pages, links, subcalls
-
     if isinstance(root_urls, str):
         root_urls = [root_urls]
-
-    # Clear the local cache of visited pages before starting the search
-    _visited.clear()
 
     current_depth = 0
     pages, links, spider_args = {}, set(), []
 
-    collect = current_depth < depth
-    for root in root_urls:
-        root = urllib.parse.urlparse(root)
-        spider_args.append((root, collect))
+    _visited: Set[str] = set()
+    go_deeper = current_depth < depth
+    for root_str in root_urls:
+        root = urllib.parse.urlparse(root_str)
+        spider_args.append((root, go_deeper, _visited))
 
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
-    try:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=concurrency) as tp:
         while current_depth <= depth:
             tty.debug(
-                "SPIDER: [depth={0}, max_depth={1}, urls={2}]".format(
-                    current_depth, depth, len(spider_args)
-                )
+                f"SPIDER: [depth={current_depth}, max_depth={depth}, urls={len(spider_args)}]"
             )
-            results = tp.map(lang.star(_spider), spider_args)
+            results = [tp.submit(_spider, *one_search_args) for one_search_args in spider_args]
             spider_args = []
-            collect = current_depth < depth
-            for sub_pages, sub_links, sub_spider_args in results:
-                sub_spider_args = [x + (collect,) for x in sub_spider_args]
+            go_deeper = current_depth < depth
+            for future in results:
+                sub_pages, sub_links, sub_spider_args, sub_visited = future.result()
+                _visited.update(sub_visited)
+                sub_spider_args = [(x, go_deeper, _visited) for x in sub_spider_args]
                 pages.update(sub_pages)
                 links.update(sub_links)
                 spider_args.extend(sub_spider_args)
 
             current_depth += 1
-    finally:
-        tp.terminate()
-        tp.join()
 
     return pages, links
+
+
+def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[str]):
+    """Fetches URL and any pages it links to.
+
+    Prints out a warning only if the root can't be fetched; it ignores errors with pages
+    that the root links to.
+
+    Args:
+        url: url being fetched and searched for links
+        collect_nested: whether we want to collect arguments for nested spidering on the
+            links found in this url
+        _visited: links already visited
+
+    Returns:
+        A tuple of:
+        - pages: dict of pages visited (URL) mapped to their full text.
+        - links: set of links encountered while visiting the pages.
+        - spider_args: argument for subsequent call to spider
+        - visited: updated set of visited urls
+    """
+    pages: Dict[str, str] = {}  # dict from page URL -> text content.
+    links: Set[str] = set()  # set of all links seen on visited pages.
+    subcalls: List[str] = []
+
+    try:
+        response_url, _, response = read_from_url(url, "text/html")
+        if not response_url or not response:
+            return pages, links, subcalls, _visited
+
+        page = codecs.getreader("utf-8")(response).read()
+        pages[response_url] = page
+
+        # Parse out the include-fragments in the page
+        # https://github.github.io/include-fragment-element
+        include_fragment_parser = IncludeFragmentParser()
+        include_fragment_parser.feed(page)
+
+        fragments = set()
+        while include_fragment_parser.links:
+            raw_link = include_fragment_parser.links.pop()
+            abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
+
+            try:
+                # This seems to be text/html, though text/fragment+html is also used
+                fragment_response_url, _, fragment_response = read_from_url(abs_link, "text/html")
+            except Exception as e:
+                msg = f"Error reading fragment: {(type(e), str(e))}:{traceback.format_exc()}"
+                tty.debug(msg)
+
+            if not fragment_response_url or not fragment_response:
+                continue
+
+            fragment = codecs.getreader("utf-8")(fragment_response).read()
+            fragments.add(fragment)
+
+            pages[fragment_response_url] = fragment
+
+        # Parse out the links in the page and all fragments
+        link_parser = LinkParser()
+        link_parser.feed(page)
+        for fragment in fragments:
+            link_parser.feed(fragment)
+
+        while link_parser.links:
+            raw_link = link_parser.links.pop()
+            abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
+            links.add(abs_link)
+
+            # Skip stuff that looks like an archive
+            if any(raw_link.endswith(s) for s in llnl.url.ALLOWED_ARCHIVE_TYPES):
+                continue
+
+            # Skip already-visited links
+            if abs_link in _visited:
+                continue
+
+            # If we're not at max depth, follow links.
+            if collect_nested:
+                subcalls.append(abs_link)
+                _visited.add(abs_link)
+
+    except URLError as e:
+        tty.debug(f"[SPIDER] Unable to read: {url}")
+        tty.debug(str(e), level=2)
+        if hasattr(e, "reason") and isinstance(e.reason, ssl.SSLError):
+            tty.warn(
+                "Spack was unable to fetch url list due to a "
+                "certificate verification problem. You can try "
+                "running spack -k, which will not check SSL "
+                "certificates. Use this at your own risk."
+            )
+
+    except HTMLParseError as e:
+        # This error indicates that Python's HTML parser sucks.
+        msg = "Got an error parsing HTML."
+        tty.warn(msg, url, "HTMLParseError: " + str(e))
+
+    except Exception as e:
+        # Other types of errors are completely ignored,
+        # except in debug mode
+        tty.debug(f"Error in _spider: {type(e)}:{str(e)}", traceback.format_exc())
+
+    finally:
+        tty.debug(f"SPIDER: [url={url}]")
+
+    return pages, links, subcalls, _visited
 
 
 def get_header(headers, header_name):
@@ -765,10 +757,6 @@ def parse_etag(header_value):
     valid = re.match(r"([\x21\x23-\x7e\x80-\xFF]+)$", header_value)
 
     return valid.group(1) if valid else None
-
-
-class FetchError(spack.error.SpackError):
-    """Superclass for fetch-related errors."""
 
 
 class SpackWebError(spack.error.SpackError):

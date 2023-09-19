@@ -890,7 +890,7 @@ complete -c spack -n '__fish_spack_using_command change' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command change' -s a -l all -d 'change all matching specs (allow changing more than one spec)'
 
 # spack checksum
-set -g __fish_spack_optspecs_spack_checksum h/help keep-stage b/batch l/latest p/preferred a/add-to-package verify
+set -g __fish_spack_optspecs_spack_checksum h/help keep-stage b/batch l/latest p/preferred a/add-to-package verify j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos 0 checksum' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 checksum' -f -a '(__fish_spack_package_versions $__fish_spack_argparse_argv[1])'
 complete -c spack -n '__fish_spack_using_command checksum' -s h -l help -f -a help
@@ -907,6 +907,8 @@ complete -c spack -n '__fish_spack_using_command checksum' -s a -l add-to-packag
 complete -c spack -n '__fish_spack_using_command checksum' -s a -l add-to-package -d 'add new versions to package'
 complete -c spack -n '__fish_spack_using_command checksum' -l verify -f -a verify
 complete -c spack -n '__fish_spack_using_command checksum' -l verify -d 'verify known package checksums'
+complete -c spack -n '__fish_spack_using_command checksum' -s j -l jobs -r -f -a jobs
+complete -c spack -n '__fish_spack_using_command checksum' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack ci
 set -g __fish_spack_optspecs_spack_ci h/help
@@ -2931,7 +2933,7 @@ complete -c spack -n '__fish_spack_using_command verify' -s f -l files -f -a typ
 complete -c spack -n '__fish_spack_using_command verify' -s f -l files -d 'treat entries as absolute filenames'
 
 # spack versions
-set -g __fish_spack_optspecs_spack_versions h/help s/safe safe-only r/remote n/new c/concurrency=
+set -g __fish_spack_optspecs_spack_versions h/help s/safe safe-only r/remote n/new j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos 0 versions' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command versions' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command versions' -s h -l help -d 'show this help message and exit'
@@ -2943,8 +2945,8 @@ complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -f -a 
 complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -d 'only list remote versions of the package'
 complete -c spack -n '__fish_spack_using_command versions' -s n -l new -f -a new
 complete -c spack -n '__fish_spack_using_command versions' -s n -l new -d 'only list remote versions newer than the latest checksummed version'
-complete -c spack -n '__fish_spack_using_command versions' -s c -l concurrency -r -f -a concurrency
-complete -c spack -n '__fish_spack_using_command versions' -s c -l concurrency -r -d 'number of concurrent requests'
+complete -c spack -n '__fish_spack_using_command versions' -s j -l jobs -r -f -a jobs
+complete -c spack -n '__fish_spack_using_command versions' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack view
 set -g __fish_spack_optspecs_spack_view h/help v/verbose e/exclude= d/dependencies=

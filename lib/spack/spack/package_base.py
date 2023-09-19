@@ -66,7 +66,6 @@ from spack.installer import InstallError, PackageInstaller
 from spack.stage import DIYStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
-from spack.util.web import FetchError
 from spack.version import GitVersion, StandardVersion, Version
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
@@ -1394,7 +1393,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     tty.debug("Fetching with no checksum. {0}".format(ck_msg))
 
             if not ignore_checksum:
-                raise FetchError(
+                raise spack.error.FetchError(
                     "Will not fetch %s" % self.spec.format("{name}{@version}"), ck_msg
                 )
 
@@ -1420,7 +1419,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     tty.debug("Fetching deprecated version. {0}".format(dp_msg))
 
             if not ignore_deprecation:
-                raise FetchError(
+                raise spack.error.FetchError(
                     "Will not fetch {0}".format(self.spec.format("{name}{@version}")), dp_msg
                 )
 
@@ -1447,7 +1446,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             self.stage.expand_archive()
 
             if not os.listdir(self.stage.path):
-                raise FetchError("Archive was empty for %s" % self.name)
+                raise spack.error.FetchError("Archive was empty for %s" % self.name)
         else:
             # Support for post-install hooks requires a stage.source_path
             fsys.mkdirp(self.stage.source_path)
@@ -2365,7 +2364,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 urls.append(args["url"])
         return urls
 
-    def fetch_remote_versions(self, concurrency=128):
+    def fetch_remote_versions(self, concurrency=None):
         """Find remote versions of this package.
 
         Uses ``list_url`` and any other URLs listed in the package file.
