@@ -201,6 +201,12 @@ class Charmpp(Package):
             versions.update({("linux", "i386", "multicore"): "multicore-linux"})
             versions.update({("linux", "i386", "netlrts"): "netlrts-linux"})
             versions.update({("linux", "i386", "uth"): "uth-linux"})
+            versions.update(
+                {
+                    ("linux", "arm", "multicore"): "multicore-arm7",
+                    ("linux", "aarch64", "multicore"): "multicore-arm8",
+                }
+            )
         else:
             versions.update({("linux", "i386", "mpi"): "mpi-linux-i386"})
             versions.update({("linux", "i386", "multicore"): "multicore-linux-i386"})
