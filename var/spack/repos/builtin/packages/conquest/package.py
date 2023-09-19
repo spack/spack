@@ -30,6 +30,7 @@ class Conquest(MakefilePackage):
     depends_on("mpi")
 
     variant("openmp", default=False, description="Build with OpenMP support")
+    variant("mult_kern", default="default", description="Matrix multiplication kernel type")
 
     build_directory = "src"
 
@@ -53,6 +54,11 @@ class Conquest(MakefilePackage):
         defs_file.filter("COMPFLAGS=.*", f"COMPFLAGS= {fflags}")
         defs_file.filter("LINKFLAGS=.*", f"LINKFLAGS= {ldflags}")
         defs_file.filter("# BLAS=.*", f"BLAS= {lapack_ld} -llapack {blas_ld} -lblas")
+
+        if self.spec.variants["mult_kern"].value != "default":
+            defs_file.filter(
+                "MULT_KERN =.*", f"MULT_KERN = {self.spec.variants['mult_kern'].value}"
+            )
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
