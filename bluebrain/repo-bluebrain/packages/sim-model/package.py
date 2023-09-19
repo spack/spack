@@ -243,6 +243,9 @@ class SimModel(Package):
             env.prepend_path("PYTHONPATH", self.prefix.lib.python)
         env.set("{}_ROOT".format(self.name.upper().replace("-", "_")), self.prefix)
 
+        if "+coreneuron" in self.spec:
+            env.set("CORENEURONLIB", self.prefix.lib + "/libcorenrnmech_ext.so")
+
         # ENV variables to enable Caliper with certain settings
         if "+caliper" in self.spec:
             env.set("NEURODAMUS_CALI_ENABLED", "true")  # Needed for slurm.taskprolog
