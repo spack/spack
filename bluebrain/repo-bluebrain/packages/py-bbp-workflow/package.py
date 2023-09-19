@@ -12,7 +12,7 @@ class PyBbpWorkflow(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/bbp-workflow"
     git = "ssh://git@bbpgitlab.epfl.ch/nse/bbp-workflow.git"
 
-    version("3.1.33", tag="bbp-workflow-v3.1.33")
+    version("3.1.34", tag="bbp-workflow-v3.1.34")
 
     depends_on("py-setuptools", type=("build"))
 
