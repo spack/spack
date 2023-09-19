@@ -1569,7 +1569,9 @@ class SpackSolverSetup:
                     )
                 except Exception as e:
                     if rule.kind != RequirementKind.DEFAULT:
-                        raise RuntimeError("cannot emit requirements for the solver") from e
+                        raise RuntimeError(
+                            "cannot emit requirements for the solver: " + str(e)
+                        ) from e
                     continue
 
                 self.gen.fact(
@@ -1601,7 +1603,9 @@ class SpackSolverSetup:
                     # would be impaired. If a rule does not apply for a specific package, just
                     # discard it.
                     if rule.kind != RequirementKind.DEFAULT:
-                        raise RuntimeError("cannot emit requirements for the solver") from e
+                        raise RuntimeError(
+                            "cannot emit requirements for the solver: " + str(e)
+                        ) from e
                     continue
 
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
