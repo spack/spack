@@ -68,6 +68,10 @@ class Papi(AutotoolsPackage, ROCmPackage):
     conflicts("%gcc@8:", when="@5.3.0", msg="Requires GCC version less than 8.0")
     conflicts("+sde", when="@:5", msg="Software defined events (SDE) added in 6.0.0")
     conflicts("^cuda", when="@:5", msg="CUDA support for versions < 6.0.0 not implemented")
+    conflicts("^hip@5.4:")
+    conflicts("^hsa-rocr-dev@5.4:")
+    conflicts("^rocprofiler-dev@5.4:")
+    conflicts("^rocm-smi-lib@5.4:")
 
     conflicts("@=6.0.0", when="+static_tools", msg="Static tools cannot build on version 6.0.0")
 
