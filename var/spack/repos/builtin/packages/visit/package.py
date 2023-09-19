@@ -198,7 +198,7 @@ class Visit(CMakePackage):
         # NetCDF components are in separate directories using Spack, which is
         # not what Visit's CMake logic expects
         if "+netcdf" in self.spec:
-            filter_file("(set\(NETCDF_CXX_DIR)", r"#\1", "src/CMake/FindNetcdf.cmake")
+            filter_file(r"(set\(NETCDF_CXX_DIR)", r"#\1", "src/CMake/FindNetcdf.cmake")
 
     def flag_handler(self, name, flags):
         if name in ("cflags", "cxxflags"):
