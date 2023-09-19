@@ -11,7 +11,7 @@ class Conquest(MakefilePackage):
     with excellent parallelisation."""
 
     homepage = "http://www.order-n.org/"
-    url = "https://github.com/OrderN/CONQUEST-release/archive/refs/tags/v1.2.tar.gz"
+    url = "https://github.com/OrderN/CONQUEST-release/releases/download/v1.2/CONQUEST-release-1.2.tar.gz"
     git = "https://github.com/OrderN/CONQUEST-release/"
 
     # notify when the package is updated.
