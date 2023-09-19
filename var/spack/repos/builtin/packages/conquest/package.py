@@ -55,6 +55,9 @@ class Conquest(MakefilePackage):
         defs_file.filter("LINKFLAGS=.*", f"LINKFLAGS= {ldflags}")
         defs_file.filter("# BLAS=.*", f"BLAS= {lapack_ld} -llapack {blas_ld} -lblas")
 
+        if "+openmp" in self.spec:
+            defs_file.filter("OMP_DUMMY = DUMMY", "OMP_DUMMY = ")
+
         if self.spec.variants["mult_kern"].value != "default":
             defs_file.filter(
                 "MULT_KERN =.*", f"MULT_KERN = {self.spec.variants['mult_kern'].value}"
