@@ -30,7 +30,22 @@ class Conquest(MakefilePackage):
     depends_on("mpi")
 
     variant("openmp", default=False, description="Build with OpenMP support")
-    variant("mult_kern", default="default", description="Matrix multiplication kernel type")
+    variant(
+        "mult_kern",
+        default="default",
+        values=[
+            "default",
+            "gemm",
+            "ompDoii",
+            "ompDoik",
+            "ompDoji",
+            "ompDojk",
+            "ompGemm",
+            "ompGemm_m",
+            "ompTsk",
+        ],
+        description="Matrix multiplication kernel type",
+    )
 
     build_directory = "src"
 
