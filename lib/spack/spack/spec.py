@@ -58,6 +58,7 @@ import re
 import warnings
 from typing import Callable, List, Optional, Tuple, Union
 
+import llnl.string
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -86,7 +87,6 @@ import spack.util.path as pth
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.string
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
@@ -5208,7 +5208,7 @@ class InvalidDependencyError(spack.error.SpecError):
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super().__init__(
-            "Package {0} does not depend on {1}".format(pkg, spack.util.string.comma_or(deps))
+            "Package {0} does not depend on {1}".format(pkg, llnl.string.comma_or(deps))
         )
 
 
