@@ -24,8 +24,7 @@ class Libressl(AutotoolsPackage):
     variant("static", default=False, description="Build static libraries")
 
     def configure_args(self):
-        args = [
-            "--enable-shared" if "+shared" in self.spec else "--disable-shared",
-            "--enable-static" if "+static" in self.spec else "--disable-static",
-        ]
+        args = []
+        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.enable_or_disable("static"))
         return args
