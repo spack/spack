@@ -63,7 +63,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("fortran", default=False, description="Enable Fortran support")
     variant("mpi", default=True, description="Enable MPI support")
     variant("osmesa", default=False, description="Enable OSMesa support")
-    variant("egl", default=False, description="The OpenGL library being used supports EGL")
+    variant("egl", default=False, description="Enable EGL in the OpenGL library being used")
     variant("qt", default=False, description="Enable Qt (gui) support")
     variant("opengl2", default=True, description="Enable OpenGL2 backend")
     variant("examples", default=False, description="Build examples")
