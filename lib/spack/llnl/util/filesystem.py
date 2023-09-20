@@ -11,6 +11,7 @@ import hashlib
 import itertools
 import numbers
 import os
+import pathlib
 import posixpath
 import re
 import shutil
@@ -2426,7 +2427,7 @@ class WindowsSimulatedRPath:
         """
         Set of directories where package binaries/libraries are located.
         """
-        return set([self.pkg.prefix.bin]) | self._additional_library_dependents
+        return set([pathlib.Path(self.pkg.prefix.bin)]) | self._additional_library_dependents
 
     def add_library_dependent(self, *dest):
         """
@@ -2439,9 +2440,9 @@ class WindowsSimulatedRPath:
         """
         for pth in dest:
             if os.path.isfile(pth):
-                self._additional_library_dependents.add(os.path.dirname)
+                self._additional_library_dependents.add(pathlib.Path(pth).parent)
             else:
-                self._additional_library_dependents.add(pth)
+                self._additional_library_dependents.add(pathlib.Path(pth))
 
     @property
     def rpaths(self):
@@ -2454,7 +2455,7 @@ class WindowsSimulatedRPath:
             dependent_libs.extend(list(find_all_shared_libraries(path, recursive=True)))
         for extra_path in self._addl_rpaths:
             dependent_libs.extend(list(find_all_shared_libraries(extra_path, recursive=True)))
-        return set(dependent_libs)
+        return set([pathlib.Path(x) for x in dependent_libs])
 
     def add_rpath(self, *paths):
         """
@@ -2470,7 +2471,7 @@ class WindowsSimulatedRPath:
         """
         self._addl_rpaths = self._addl_rpaths | set(paths)
 
-    def _link(self, path, dest_dir):
+    def _link(self, path: pathlib.Path, dest_dir: pathlib.Path):
         """Perform link step of simulated rpathing, installing
         simlinks of file in path to the dest_dir
         location. This method deliberately prevents
@@ -2478,27 +2479,35 @@ class WindowsSimulatedRPath:
         This is because it is both meaningless from an rpath
         perspective, and will cause an error when Developer
         mode is not enabled"""
-        file_name = os.path.basename(path)
-        dest_file = os.path.join(dest_dir, file_name)
-        if os.path.exists(dest_dir) and not dest_file == path:
+
+        def report_already_linked():
+            # We have either already symlinked or we are encoutering a naming clash
+            # either way, we don't want to overwrite existing libraries
+            already_linked = islink(str(dest_file))
+            tty.debug(
+                "Linking library %s to %s failed, " % (str(path), str(dest_file))
+                + "already linked."
+                if already_linked
+                else "library with name %s already exists at location %s."
+                % (str(file_name), str(dest_dir))
+            )
+
+        file_name = path.name
+        dest_file = dest_dir / file_name
+        if not dest_file.exists() and dest_dir.exists() and not dest_file == path:
             try:
-                symlink(path, dest_file)
+                symlink(str(path), str(dest_file))
             # For py2 compatibility, we have to catch the specific Windows error code
             # associate with trying to create a file that already exists (winerror 183)
+            # Catch OSErrors missed by the SymlinkError checks
             except OSError as e:
                 if sys.platform == "win32" and (e.winerror == 183 or e.errno == errno.EEXIST):
-                    # We have either already symlinked or we are encoutering a naming clash
-                    # either way, we don't want to overwrite existing libraries
-                    already_linked = islink(dest_file)
-                    tty.debug(
-                        "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
-                        if already_linked
-                        else "library with name %s already exists at location %s."
-                        % (file_name, dest_dir)
-                    )
-                    pass
+                    report_already_linked()
                 else:
                     raise e
+            # catch errors we raise ourselves from Spack
+            except llnl.util.symlink.AlreadyExistsError:
+                report_already_linked()
 
     def establish_link(self):
         """
