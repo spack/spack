@@ -119,6 +119,7 @@ class Glib(Package):
         description="Enable tracing support",
     )
 
+    depends_on("meson@0.60.0:", when="@2.76.1:", type="build")
     depends_on("meson@0.49.2:", when="@2.61.2:", type="build")
     depends_on("meson@0.48.0:", when="@2.58.0:", type="build")
     depends_on("ninja", when="@2.58.0:", type="build")
