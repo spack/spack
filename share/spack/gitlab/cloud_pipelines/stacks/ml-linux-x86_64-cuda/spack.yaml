@@ -88,15 +88,16 @@ spack:
       submapping:
       - match:
         - os=ubuntu20.04
-          build-job:
-            image:
-              name: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
-              entrypoint: ['']
+        build-job:
+          image:
+            name: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
+            entrypoint: ['']
+      - match:
         - os=rhel8
-          build-job:
-            image:
-              name: ecpe4s/rhel8-runner-ppc64le:2023-01-01
-              entrypoint: ['']
+        build-job:
+          image:
+            name: ecpe4s/rhel8-runner-ppc64le:2023-01-01
+            entrypoint: ['']
               #    - build-job:
               #        image:
               #          name: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
