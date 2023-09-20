@@ -26,7 +26,8 @@ class PyGevent(PythonPackage):
     depends_on("py-setuptools@40.8:", when="@20.5.1:", type=("build", "run"))
     depends_on("py-setuptools@40.8:", when="@1.5:", type="build")
     depends_on("py-setuptools@24.2:", when="@:1.4", type="build")
-    depends_on("py-cython@3:", when="@20.5.1:", type="build")
+    # project claims it requires py-cython@3 when @20.5.1:, but 0.29 works too, so
+    # don't overconstrain it.
     depends_on("py-cython@0.29.14:", when="@1.5:", type="build")
     depends_on("py-cython@0.27:", when="@:1.4", type="build")
     depends_on("py-cffi@1.12.3:", when="@1.5:", type=("build", "run"))  # from pyproject.toml
