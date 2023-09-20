@@ -85,7 +85,6 @@ class Egl(BundlePackage):
 
     @property
     def egl_libs(self):
-        spec = self.spec
         lib_name = "libGL"
         gl_lib = find_libraries(lib_name, root=self.prefix, recursive=True)
         lib_name = "libEGL"
