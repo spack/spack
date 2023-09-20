@@ -186,10 +186,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("glew gl=egl", when="+egl")
 
     depends_on("osmesa", when="+osmesa")
-    with when("~egl"):
-        for p in ["linux", "cray"]:
-            depends_on("glx", when="~osmesa platform={}".format(p))
-            depends_on("libxt", when="~osmesa platform={}".format(p))
+    for p in ["linux", "cray"]:
+        depends_on("glx", when="~egl ~osmesa platform={}".format(p))
+        depends_on("libxt", when="~egl ~osmesa platform={}".format(p))
     conflicts("+qt", when="+osmesa")
     conflicts("+qt", when="+egl")
     conflicts("+egl", when="+osmesa")
