@@ -51,6 +51,8 @@ class Libuv(AutotoolsPackage):
         "See: https://github.com/libuv/libuv/issues/2805",
     )
 
+    conflicts("%gcc@:4.8.99", when="@1.44:", msg="libuv requires stdatomic.h")
+
     @when("@:1.43")
     def autoreconf(self, spec, prefix):
         # This is needed because autogen.sh generates on-the-fly
