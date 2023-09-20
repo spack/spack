@@ -13,8 +13,8 @@ class Opengl(BundlePackage):
     """Placeholder for external OpenGL libraries from hardware vendors"""
 
     homepage = "https://www.opengl.org/"
-
     version("4.5")
+    maintainers("biddisco")
 
     # This should really be when='platform=linux' but can't because of a
     # current bug in when and how ArchSpecs are constructed

@@ -13,6 +13,7 @@ class Egl(BundlePackage):
     """Placeholder for external EGL(OpenGL) libraries from hardware vendors"""
 
     homepage = "https://www.khronos.org/egl"
+    maintainers("biddisco")
 
     version("1.5")
 
