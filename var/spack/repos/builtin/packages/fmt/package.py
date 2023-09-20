@@ -41,7 +41,7 @@ class Fmt(CMakePackage):
     variant(
         "cxxstd",
         default="11",
-        values=("98", "11", "14", "17", "20"),
+        values=("98", "11", "14", "17", "20", conditional("23", when="^cmake@3.20.3:")),
         multi=False,
         description="Use the specified C++ standard when building",
     )
