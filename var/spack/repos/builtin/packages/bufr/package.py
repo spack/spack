@@ -54,8 +54,7 @@ class Bufr(CMakePackage):
     def url_for_version(self, version):
         pre = "bufr_" if version < Version("12.0.1") else ""
         return (
-            f"https://github.com/NOAA-EMC/NCEPLIBS-bufr/archive/refs/tags/{pre}v
-{version}.tar.gz"
+            f"https://github.com/NOAA-EMC/NCEPLIBS-bufr/archive/refs/tags/{pre}v{version}.tar.gz"
         )
 
     # Need to make the lines shorter at least on some systems
