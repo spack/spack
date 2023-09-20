@@ -26,7 +26,6 @@ class Libsixel(MesonPackage):
     variant("libcurl", default=False, description="build with libcurl")
     variant("gdk-pixbuf2", default=False, description="build with gdk-pixbuf2")
 
-
     depends_on("curl", when="+libcurl")
     depends_on("libgd", when="+gd")
     depends_on("gdk-pixbuf", when="+gdk-pixbuf2")
@@ -34,17 +33,9 @@ class Libsixel(MesonPackage):
     depends_on("libpng", when="+png")
 
     def meson_args(self):
-        options = [
-            "img2sixel",
-            "sixel2png",
-            "gd",
-            "jpeg",
-            "png",
-            "libcurl",
-            "gdk-pixbuf2"
-        ]
-        args=[]
+        options = ["img2sixel", "sixel2png", "gd", "jpeg", "png", "libcurl", "gdk-pixbuf2"]
+        args = []
         for option in options:
-            state="enabled" if "+{}".format(option) in self.spec else "disabled"
+            state = "enabled" if "+{}".format(option) in self.spec else "disabled"
             args.append("-D{option}={state}".format(option=option, state=state))
         return args
