@@ -11,6 +11,7 @@ import jsonschema.exceptions
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.deptypes as dt
 import spack.error
 import spack.hash_types as hash_types
 import spack.platforms
@@ -158,13 +159,13 @@ def entries_to_specs(entries):
         dependencies = entry["dependencies"]
         for name, properties in dependencies.items():
             dep_hash = properties["hash"]
-            deptypes = properties["type"]
+            depflag = dt.canonicalize(properties["type"])
             if dep_hash in spec_dict:
                 if entry["hash"] not in spec_dict:
                     continue
                 parent_spec = spec_dict[entry["hash"]]
                 dep_spec = spec_dict[dep_hash]
-                parent_spec._add_dependency(dep_spec, deptypes=deptypes, virtuals=())
+                parent_spec._add_dependency(dep_spec, depflag=depflag, virtuals=())
 
     for spec in spec_dict.values():
         spack.spec.reconstruct_virtuals_on_edges(spec)
