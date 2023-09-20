@@ -263,7 +263,7 @@ class Executable:
                     f"\nProcess timed out after {timeout}s"
                     f"We expected the following command to run quickly but\
 it did not, please report this as an issue: {long_msg}",
-                long_message=long_msg
+                    long_message=long_msg,
                 ) from te
 
         finally:
@@ -366,7 +366,6 @@ class ProcessError(spack.error.SpackError):
 class ProcessTimeoutError(ProcessError):
     """ProcessTimeoutErrors are raised when Executable calls with a
     specified timeout exceed that time"""
-
 
 
 class CommandNotFoundError(spack.error.SpackError):
