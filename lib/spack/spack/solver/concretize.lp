@@ -458,24 +458,11 @@ depends_on(PackageNode, DependencyNode) :- attr("depends_on", PackageNode, Depen
 % concrete. We chop off dependencies for externals, and dependencies of
 % concrete specs don't need to be resolved -- they arise from the concrete
 % specs themselves.
-dependency_holds(node(NodeID, Package), Dependency, Type) :-
-  pkg_fact(Package, dependency_condition(ID, Dependency)),
-  dependency_type(ID, Type),
-  build(node(NodeID, Package)),
-  not external(node(NodeID, Package)),
-  condition_holds(ID, node(NodeID, Package)).
-
-% We cut off dependencies of externals (as we don't really know them).
-% Don't impose constraints on dependencies that don't exist.
-do_not_impose(EffectID, node(NodeID, Package)) :-
-  not dependency_holds(node(NodeID, Package), Dependency, _),
-  attr("node", node(NodeID, Package)),
-  pkg_fact(Package, dependency_condition(ID, Dependency)),
-  pkg_fact(Package, condition_effect(ID, EffectID)).
+attr("track_dependencies", Node) :- build(Node), not external(Node).
 
 % If a dependency holds on a package node, there must be one and only one dependency node satisfying it
 1 { attr("depends_on", PackageNode, node(0..Y-1, Dependency), Type) : max_dupes(Dependency, Y) } 1
-  :- dependency_holds(PackageNode, Dependency, Type),
+  :- attr("dependency_holds", PackageNode, Dependency, Type),
      not virtual(Dependency).
 
 % all nodes in the graph must be reachable from some root
@@ -523,7 +510,7 @@ error(100, "Package '{0}' needs to provide both '{1}' and '{2}' together, but pr
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
 node_depends_on_virtual(PackageNode, Virtual, Type)
-  :- dependency_holds(PackageNode, Virtual, Type),
+  :- attr("dependency_holds", PackageNode, Virtual, Type),
      virtual(Virtual),
      not external(PackageNode).
 
@@ -533,7 +520,7 @@ node_depends_on_virtual(PackageNode, Virtual) :- node_depends_on_virtual(Package
   :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
 attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
-  :- dependency_holds(PackageNode, Virtual, Type),
+  :- attr("dependency_holds", PackageNode, Virtual, Type),
      attr("depends_on", PackageNode, ProviderNode, Type),
      provider(ProviderNode, node(_, Virtual)),
      not external(PackageNode).

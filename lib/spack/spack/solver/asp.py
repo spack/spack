@@ -1325,9 +1325,6 @@ class SpackSolverSetup:
         # virtuals
         self.package_provider_rules(pkg)
 
-        # dependencies
-        self.package_dependencies_rules(pkg)
-
         # virtual preferences
         self.virtual_preferences(
             pkg.name,
@@ -1339,6 +1336,14 @@ class SpackSolverSetup:
         # trigger and effect tables
         self.trigger_rules()
         self.effect_rules()
+
+        # dependencies have special triggers/effects, have to be handled separately
+        self.package_dependencies_rules(pkg)
+
+        # trigger and effect tables
+        self.trigger_rules()
+        self.effect_rules()
+
 
     def trigger_rules(self):
         """Flushes all the trigger rules collected so far, and clears the cache."""
@@ -1578,15 +1583,18 @@ class SpackSolverSetup:
                 else:
                     pass
 
-                condition_id = self.condition(cond, dep.spec, pkg.name, msg)
-                self.gen.fact(
-                    fn.pkg_fact(pkg.name, fn.dependency_condition(condition_id, dep.spec.name))
-                )
+                required_spec = cond.copy()
+                required_spec.name = cond.name or pkg.name
+                required = self.spec_clauses(required_spec, body=True)
+                required += [fn.attr("track_dependencies", pkg.name)]
+                imposed = self.spec_clauses(dep.spec)
+                imposed += [
+                    fn.attr("dependency_holds", pkg.name, dep.spec.name, dt.flag_to_string(t))
+                    for t in dt.ALL_FLAGS
+                    if t & depflag
+                ]
 
-                for t in dt.ALL_FLAGS:
-                    if t & depflag:
-                        # there is a declared dependency of type t
-                        self.gen.fact(fn.dependency_type(condition_id, dt.flag_to_string(t)))
+                condition_id = self.condition(required, imposed, pkg.name, msg)
 
                 self.gen.newline()
 
