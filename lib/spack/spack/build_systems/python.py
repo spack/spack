@@ -319,9 +319,12 @@ class PythonPackage(PythonExtension):
     def headers(self):
         """Discover header files in platlib."""
 
+        # Remove py- prefix in package name
+        name = self.spec.name[3:]
+
         # Headers may be in either location
-        include = self.prefix.join(self.spec["python"].package.include)
-        platlib = self.prefix.join(self.spec["python"].package.platlib)
+        include = self.prefix.join(self.spec["python"].package.include).join(name)
+        platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
         headers = fs.find_all_headers(include) + fs.find_all_headers(platlib)
 
         if headers:
@@ -335,13 +338,14 @@ class PythonPackage(PythonExtension):
         """Discover libraries in platlib."""
 
         # Remove py- prefix in package name
-        library = "lib" + self.spec.name[3:].replace("-", "?")
-        root = self.prefix.join(self.spec["python"].package.platlib)
+        name = self.spec.name[3:]
 
-        for shared in [True, False]:
-            libs = fs.find_libraries(library, root, shared=shared, recursive=True)
-            if libs:
-                return libs
+        root = self.prefix.join(self.spec["python"].package.platlib).join(name)
+
+        libs = fs.find_all_libraries(root, recursive=True)
+
+        if libs:
+            return libs
 
         msg = "Unable to recursively locate {} libraries in {}"
         raise NoLibrariesError(msg.format(self.spec.name, root))

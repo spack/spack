@@ -98,7 +98,7 @@ def test_spider(depth, expected_found, expected_not_found, expected_text):
 def test_spider_no_response(monkeypatch):
     # Mock the absence of a response
     monkeypatch.setattr(spack.util.web, "read_from_url", lambda x, y: (None, None, None))
-    pages, links = spack.util.web.spider(root, depth=0)
+    pages, links, _, _ = spack.util.web._spider(root, collect_nested=False, _visited=set())
     assert not pages and not links
 
 
