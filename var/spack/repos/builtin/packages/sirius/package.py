@@ -188,20 +188,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
     patch("mpi_datatypes.patch", when="@:7.2.6")
 
-    @property
-    def libs(self):
-        libraries = []
-
-        if "+fortran" in self.spec:
-            libraries += ["libsirius_f"]
-
-        if "+cuda" in self.spec:
-            libraries += ["libsirius_cu"]
-
-        return find_libraries(
-            libraries, root=self.prefix, shared="+shared" in self.spec, recursive=True
-        )
-
     def cmake_args(self):
         spec = self.spec
 
