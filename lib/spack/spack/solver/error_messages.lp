@@ -47,10 +47,26 @@ condition_cause(Condition2, Condition1, ID) :-
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(0, "Cannot satisfy '{0}@{1}'", Package, Constraint, startcauses, ID, ConstraintCause)
+error(0, "Cannot satisfy '{0}@{1}'", Package, Constraint, startcauses, ConstraintCause)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
      imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
      condition_holds(ConstraintCause, node(_, TriggerPkg)),
      attr("version", node(ID, Package), Version),
      not pkg_fact(Package, version_satisfies(Constraint, Version)).
+
+error(0, "Cannot satisfy '{0}@{1}' and '{0}@{2}", Package, Constraint1, Constraint2, startcauses, Cause1, Cause2)
+  :- attr("node_version_satisfies", node(ID, Package), Constraint1),
+     pkg_fact(TriggerPkg1, condition_effect(Cause1, EffectID1)),
+     imposed_constraint(EffectID1, "node_version_satisfies", Package, Constraint1),
+     condition_holds(Cause1, node(_, TriggerPkg1)),
+     % two constraints
+     attr("node_version_satisfies", node(ID, Package), Constraint2),
+     pkg_fact(TriggerPkg2, condition_effect(Cause2, EffectID2)),
+     imposed_constraint(EffectID2, "node_version_satisfies", Package, Constraint2),
+     condition_holds(Cause2, node(_, TriggerPkg2)),
+     % version chosen
+     attr("version", node(ID, Package), Version),
+     % version satisfies one but not the other
+     pkg_fact(Package, version_satisfies(Constraint1, Version)),
+     not pkg_fact(Package, version_satisfies(Constraint2, Version)).
