@@ -89,7 +89,7 @@ spack:
 
   ci:
     pipeline-gen:
-    - match_behavior: all
+    - match_behavior: merge
       submapping:
       - match:
         - os=ubuntu20.04
