@@ -65,14 +65,16 @@ class Eztrace(Package):
         ]
 
         if spec.satisfies("@2.1:"):
-            args.extend(
-                [
-                    "-DEZTRACE_ENABLE_OMPT=%s" % ("ON" if spec.satisfies("%llvm-openmp-ompt") else "OFF"),
-                    "-DEZTRACE_ENABLE_STARPU=%s" % ("ON" if "+starpu" in spec else "OFF"),
-                    "-DEZTRACE_ENABLE_CUDA=%s" % ("ON" if "+cuda" in spec else "OFF"),
-                    "-DEZTRACE_ENABLE_NETCDF=%s" % ("ON" if "+netcdf" in spec else "OFF"),
-                    "-DEZTRACE_ENABLE_PNETCDF=%s" % ("ON" if "+pnetcdf" in spec else "OFF"),
-                ])
+            if spec.satisfies("%llvm-openmp-ompt"):
+                args.extend(["-DEZTRACE_ENABLE_OMPT=ON"])
+            if "+starpu" in spec:
+                args.extend(["-DEZTRACE_ENABLE_STARPU=ON"])
+            if "+cuda" in spec:
+                args.extend(["-DEZTRACE_ENABLE_CUDA=ON"])
+            if "+netcdf" in spec:
+                args.extend(["-DEZTRACE_ENABLE_NETCDF=ON"])
+            if "+pnetcdf" in spec:
+                args.extend(["-DEZTRACE_ENABLE_PNETCDF=ON"])
 
         args.extend(std_cmake_args)
 
