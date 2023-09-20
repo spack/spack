@@ -25,7 +25,7 @@ class PikaAlgorithms(CMakePackage):
     generator("ninja")
 
     map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
-    cxxstds = ("17", "20")
+    cxxstds = ("17", "20", "23")
     variant(
         "cxxstd",
         default="17",
@@ -39,6 +39,7 @@ class PikaAlgorithms(CMakePackage):
 
     conflicts("%gcc@:8")
     conflicts("%clang@:8")
+    conflicts("cxxstd=23", when="^cmake@:3.20.2")
 
     # Other dependencies
     depends_on("boost@1.71:")

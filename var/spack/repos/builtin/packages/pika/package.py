@@ -41,7 +41,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     generator("ninja")
 
     map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
-    cxxstds = ("17", "20")
+    cxxstds = ("17", "20", "23")
     variant(
         "cxxstd",
         default="17",
@@ -88,6 +88,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%gcc@:8", when="@0.2:")
     conflicts("%clang@:8", when="@0.2:")
     conflicts("+stdexec", when="cxxstd=17")
+    conflicts("cxxstd=23", when="^cmake@:3.20.2")
 
     # Other dependencies
     depends_on("boost@1.71:")
