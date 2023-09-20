@@ -49,8 +49,6 @@ class Bufr(CMakePackage):
     depends_on("py-pip", type="build", when="+python")
     depends_on("py-wheel", type="build", when="+python")
 
-
-
     def url_for_version(self, version):
         pre = "bufr_" if version < Version("12.0.1") else ""
         return (
