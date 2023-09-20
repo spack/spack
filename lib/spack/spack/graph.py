@@ -531,7 +531,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
         return (
             edge.parent.dag_hash(),
             edge.spec.dag_hash(),
-            f"[color=\"{':'.join(colormap[x] for x in edge.deptypes)}\"]",
+            f"[color=\"{':'.join(colormap[x] for x in dt.flag_to_tuple(edge.depflag))}\"]",
         )
 
 
