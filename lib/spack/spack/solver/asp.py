@@ -1757,8 +1757,8 @@ class SpackSolverSetup:
             # Declare external conditions with a local index into packages.yaml
             for local_idx, spec in enumerate(external_specs):
                 msg = "%s available as external when satisfying %s" % (spec.name, spec)
-                condition_id = self.condition(spec, msg=msg)
-                self.gen.fact(fn.pkg_fact(pkg_name, fn.possible_external(condition_id, local_idx)))
+                external_imposition = [fn.attr("external_conditions_hold", spec.name, local_idx)]
+                condition_id = self.condition(spec, external_imposition, msg=msg)
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 

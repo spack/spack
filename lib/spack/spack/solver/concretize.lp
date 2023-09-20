@@ -635,11 +635,11 @@ possible_provider_weight(node(DependencyID, Dependency), VirtualNode, 100, "fall
     pkg_fact(Package, version_declared(Version, Weight, "external")) }
     :- external(node(ID, Package)).
 
-error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
+error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec version", Package)
   :- external(node(ID, Package)),
      not external_version(node(ID, Package), _, _).
 
-error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
+error(100, "Attempted to use external for '{0}' which does not satisfy a unique configured external spec version", Package)
   :- external(node(ID, Package)),
      2 { external_version(node(ID, Package), Version, Weight) }.
 
@@ -668,18 +668,15 @@ external(PackageNode) :- attr("external_spec_selected", PackageNode, _).
 
 % determine if an external spec has been selected
 attr("external_spec_selected", node(ID, Package), LocalIndex) :-
-    external_conditions_hold(node(ID, Package), LocalIndex),
+    attr("external_conditions_hold", node(ID, Package), LocalIndex),
     attr("node", node(ID, Package)),
     not attr("hash", node(ID, Package), _).
-
-external_conditions_hold(node(PackageID, Package), LocalIndex) :-
-    pkg_fact(Package, possible_external(ID, LocalIndex)), condition_holds(ID, node(PackageID, Package)).
 
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.
 error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
  :- external(node(ID, Package)),
-    not external_conditions_hold(node(ID, Package), _).
+    not attr("external_conditions_hold", node(ID, Package), _).
 
 %-----------------------------------------------------------------------------
 % Config required semantics
@@ -897,8 +894,9 @@ variant_default_not_used(node(ID, Package), Variant, Value)
 % The variant is set in an external spec
 external_with_variant_set(node(NodeID, Package), Variant, Value)
  :- attr("variant_value", node(NodeID, Package), Variant, Value),
-    condition_requirement(ID, "variant_value", Package, Variant, Value),
-    pkg_fact(Package, possible_external(ID, _)),
+    condition_requirement(TriggerID, "variant_value", Package, Variant, Value),
+    trigger_and_effect(Package, TriggerID, EffectID),
+    imposed_constraint(EffectID, "external_conditions_hold", Package, _),
     external(node(NodeID, Package)),
     attr("node", node(NodeID, Package)).
 
