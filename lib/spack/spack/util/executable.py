@@ -176,7 +176,6 @@ class Executable:
         ignore_errors = kwargs.pop("ignore_errors", ())
         ignore_quotes = kwargs.pop("ignore_quotes", False)
         timeout = kwargs.pop("timeout", None)
-        fail_on_timeout = kwargs.pop("fail_on_timeout", False)
 
         # If they just want to ignore one error code, make it a tuple.
         if isinstance(ignore_errors, int):
@@ -260,10 +259,11 @@ class Executable:
             result = process_cmd_output(out, err)
             long_msg = cmd_line_string + f"\n{result}"
             if fail_on_error:
-                raise ProcessError(
+                raise ProcessTimeoutError(
                     f"\nProcess timed out after {timeout}s"
                     f"We expected the following command to run quickly but\
-it did not, please report this as an issue: {long_msg}"
+it did not, please report this as an issue: {long_msg}",
+                long_message=long_msg
                 ) from te
 
         finally:
@@ -361,6 +361,12 @@ def which(*args, **kwargs):
 
 class ProcessError(spack.error.SpackError):
     """ProcessErrors are raised when Executables exit with an error code."""
+
+
+class ProcessTimeoutError(ProcessError):
+    """ProcessTimeoutErrors are raised when Executable calls with a
+    specified timeout exceed that time"""
+
 
 
 class CommandNotFoundError(spack.error.SpackError):

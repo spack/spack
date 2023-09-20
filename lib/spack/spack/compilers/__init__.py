@@ -718,9 +718,11 @@ def detect_version(detect_version_args):
                 value = fn_args._replace(id=compiler_id._replace(version=version))
                 return value, None
 
-            error = "Couldn't get version for compiler {0}".format(path)
+            error = f"Couldn't get version for compiler {path}".format(path)
         except spack.util.executable.ProcessError as e:
-            error = "Couldn't get version for compiler {0}\n".format(path) + str(e)
+            error = f"Couldn't get version for compiler {path}\n" + str(e)
+        except spack.util.executable.ProcessTimeoutError as e:
+            error = f"Couldn't get version for compiler {path}\n" + str(e)
         except Exception as e:
             # Catching "Exception" here is fine because it just
             # means something went wrong running a candidate executable.
