@@ -678,7 +678,6 @@ ml-linux-ppc64le-cpu-ubuntu-generate:
 
 ml-linux-ppc64le-cpu-ubuntu-build:
   extends: [ ".build", ".ml-linux-ppc64le-cpu" ]
-  image: { "name": "ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01", "entrypoint": [""] }
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -694,7 +693,6 @@ ml-linux-ppc64le-cpu-rhel8-generate:
 
 ml-linux-ppc64le-cpu-rhel8-build:
   extends: [ ".build", ".ml-linux-ppc64le-cpu" ]
-  image: { "name": "ecpe4s/rhel8-runner-ppc64le:2023-01-01", "entrypoint": [""] }
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -718,7 +716,6 @@ ml-linux-ppc64le-cuda-ubuntu-generate:
 
 ml-linux-ppc64le-cuda-ubuntu-build:
   extends: [ ".build", ".ml-linux-ppc64le-cuda"  ]
-  image: { "name": "ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01", "entrypoint": [""] }
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -734,7 +731,6 @@ ml-linux-ppc64le-cuda-rhel8-generate:
 
 ml-linux-ppc64le-cuda-rhel8-build:
   extends: [ ".build", ".ml-linux-ppc64le-cuda"  ]
-  image: { "name": "ecpe4s/rhel8-runner-ppc64le:2023-01-01", "entrypoint": [""] }
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
