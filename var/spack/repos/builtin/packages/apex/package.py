@@ -116,6 +116,9 @@ class Apex(CMakePackage):
     conflicts("+jemalloc", when="+gperftools")
     conflicts("+plugins", when="~activeharmony")
 
+    # https://github.com/UO-OACISS/apex/pull/177#issuecomment-1726322959
+    conflicts("+openmp", when="%gcc")
+
     # Patches
 
     # This patch ensures that the missing dependency_tree.hpp header is
