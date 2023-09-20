@@ -121,7 +121,7 @@ class RocmSmiLib(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define("CMAKE_INSTALL_LIBDIR", self.prefix.lib),
+            self.define("CMAKE_INSTALL_LIBDIR", "lib"),
         ]
         return args
 
