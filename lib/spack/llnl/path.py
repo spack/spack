@@ -72,12 +72,12 @@ def system_path_filter(_func=None, arg_slice: Optional[slice] = None):
     This decorator takes all (or a slice) of a method's positional arguments
     and normalizes usage of filepath separators on a per platform basis.
 
-    Note: **kwargs, urls, and any type that is not a string are ignored
+    Note: `**kwargs`, urls, and any type that is not a string are ignored
     so in such cases where path normalization is required, that should be
     handled by calling path_to_os_path directly as needed.
 
     Parameters:
-        arg_slice (slice): a slice object specifying the slice of arguments
+        arg_slice: a slice object specifying the slice of arguments
             in the decorated method over which filepath separators are
             normalized
     """
