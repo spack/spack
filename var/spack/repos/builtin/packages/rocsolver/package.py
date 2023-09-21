@@ -134,10 +134,6 @@ class Rocsolver(CMakePackage):
     # Maximize compatibility with other libraries that are using fmt.
     patch("fmt-9-compatibility.patch", when="@5.2.0:")
 
-    def check(self):
-        exe = join_path(self.build_directory, "clients", "staging", "rocsolver-test")
-        self.run_test(exe, options=["--gtest_filter=checkin*-*known_bug*"])
-
     depends_on("hip@4.1.0:", when="@4.1.0:")
     depends_on("rocm-cmake@master", type="build", when="@master:")
     depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
@@ -230,3 +226,9 @@ class Rocsolver(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        exe = Executable(join_path(self.build_directory, "clients", "staging", "rocsolver-test"))
+        exe("--gtest_filter=checkin*-*known_bug*")
