@@ -18,6 +18,8 @@ import llnl.util.tty.color
 
 import spack.directives
 import spack.error as error
+import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 from spack.util.string import comma_or
 
 special_variant_values = [None, "none", "*"]
@@ -662,6 +664,10 @@ class VariantMap(lang.HashableMap):
             string.write(str(self[key]))
 
         return string.getvalue()
+
+    def to_json(self, stream=None):
+        variants_dict = syaml.syaml_dict(sorted(v.yaml_entry() for _, v in self.items()))
+        return sjson.dump(variants_dict, stream)
 
 
 def substitute_abstract_variants(spec):
