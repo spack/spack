@@ -597,6 +597,8 @@ class Llvm(CMakePackage, CudaPackage):
             output = compiler("--version", output=str, error=str)
             if "Apple" in output:
                 return None
+            if "AMD" in output:
+                return None
             match = version_regex.search(output)
             if match:
                 return match.group(match.lastindex)
