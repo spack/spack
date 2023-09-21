@@ -70,7 +70,7 @@ class Libzmq(AutotoolsPackage):
 
     # Fix aggressive compiler warning false positive
     patch(
-        "https://github.com/zeromq/libzmq/pull/4213.patch?full_index=1",
+        "https://github.com/zeromq/libzmq/commit/92b2c38a2c51a1942a380c7ee08147f7b1ca6845.patch?full_index=1",
         sha256="310b8aa57a8ea77b7ac74debb3bf928cbafdef5e7ca35beaac5d9c61c7edd239",
         when="@4.3.3:4.3.4",
     )
@@ -84,7 +84,7 @@ class Libzmq(AutotoolsPackage):
 
     # Fix static assertion failure with gcc-13
     patch(
-        "https://github.com/zeromq/libzmq/pull/4480.patch?full_index=1",
+        "https://github.com/zeromq/libzmq/commit/438d5d88392baffa6c2c5e0737d9de19d6686f0d.patch?full_index=1",
         sha256="e15a8bfe8131f3e648fd79f3c1c931f99cd896b2733a7df1760f5b4354a0687c",
         when="@4.3.3:4.3.4",
     )
