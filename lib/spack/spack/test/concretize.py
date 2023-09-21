@@ -1356,15 +1356,15 @@ class TestConcretize:
         [
             # Version 1.1.0 is deprecated and should not be selected, unless we
             # explicitly asked for that
-            ("deprecated-versions", ["deprecated-versions@1.0.0"]),
-            ("deprecated-versions@1.1.0", ["deprecated-versions@1.1.0"]),
+            ("deprecated-versions", "deprecated-versions@1.0.0"),
+            ("deprecated-versions@=1.1.0", "deprecated-versions@1.1.0"),
         ],
     )
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_deprecated_versions_not_selected(self, spec_str, expected):
-        s = Spec(spec_str).concretized()
-        for abstract_spec in expected:
-            assert abstract_spec in s
+        with spack.config.override("config:deprecated", True):
+            s = Spec(spec_str).concretized()
+            s.satisfies(expected)
 
     @pytest.mark.regression("24196")
     def test_version_badness_more_important_than_default_mv_variants(self):
