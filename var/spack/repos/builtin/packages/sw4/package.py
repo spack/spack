@@ -23,7 +23,7 @@ class Sw4(MakefilePackage):
     variant("openmp", default=True, description="build with OpenMP")
     variant("hdf5", default=True, description="build with HDF5")
     variant("proj", default=True, description="build with proj")
-    variant("zfp", default=True, description="build with ZFP")
+    variant("zfp", default=False, description="build with ZFP")
     variant("fftw", default=True, description="build with FFTW")
 
     depends_on("mpi")
