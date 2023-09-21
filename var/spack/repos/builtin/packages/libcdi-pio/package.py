@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack.package import *
 from spack.util.environment import is_system_path
 
