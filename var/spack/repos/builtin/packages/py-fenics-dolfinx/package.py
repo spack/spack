@@ -27,7 +27,7 @@ class PyFenicsDolfinx(PythonPackage):
 
     depends_on("python@3.8:", type=("build", "run"), when="@main")
     depends_on("python@3.8:3.10", type=("build", "run"), when="@0.5:")
-    depends_on("python@3.7::3.10", type=("build", "run"))
+    depends_on("python@3.7:3.10", type=("build", "run"))
 
     depends_on("fenics-dolfinx@main", when="@main")
     depends_on("fenics-dolfinx@0.6.0", when="@0.6.0")
