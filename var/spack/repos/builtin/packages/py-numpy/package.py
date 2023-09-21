@@ -5,16 +5,13 @@
 
 import platform
 import subprocess
+from typing import Tuple
 
 from spack.package import *
 
 
 class PyNumpy(PythonPackage):
-    """NumPy is the fundamental package for scientific computing with Python.
-    It contains among other things: a powerful N-dimensional array object,
-    sophisticated (broadcasting) functions, tools for integrating C/C++ and
-    Fortran code, and useful linear algebra, Fourier transform, and random
-    number capabilities"""
+    """Fundamental package for array computing in Python."""
 
     homepage = "https://numpy.org/"
     pypi = "numpy/numpy-1.23.0.tar.gz"
@@ -88,9 +85,6 @@ class PyNumpy(PythonPackage):
     version("1.14.6", sha256="1250edf6f6c43e1d7823f0967416bc18258bb271dc536298eb0ea00a9e45b80a")
     version("1.14.5", sha256="a4a433b3a264dbc9aa9c7c241e87c0358a503ea6394f8737df1683c7c9a102ac")
 
-    variant("blas", default=True, description="Build with BLAS support")
-    variant("lapack", default=True, description="Build with LAPACK support")
-
     depends_on("python@3.9:3.12", when="@2.26:", type=("build", "link", "run"))
     depends_on("python@3.9:3.11", when="@1.25", type=("build", "link", "run"))
     depends_on("python@3.8:3.11", when="@1.23.2:1.24", type=("build", "link", "run"))
@@ -115,11 +109,13 @@ class PyNumpy(PythonPackage):
     depends_on("py-setuptools@:59", when="@:1.22.1", type=("build", "run"))
     depends_on("py-colorama", when="@1.26: platform=windows", type="build")
 
+    # Required to use --config-settings
+    depends_on("py-pip@23.1:", when="@1.26:", type="build")
     # meson is vendored, ninja and pkgconfig are not
     depends_on("ninja@1.8.2:", when="@1.26:", type="build")
     depends_on("pkgconfig", when="@1.26:", type="build")
-    depends_on("blas", when="+blas")
-    depends_on("lapack", when="+lapack")
+    depends_on("blas")
+    depends_on("lapack")
 
     # test_requirements.txt
     depends_on("py-nose@1.0.0:", when="@:1.14", type="test")
@@ -169,6 +165,10 @@ class PyNumpy(PythonPackage):
     conflicts("%intel", when="@1.23.0:1.23.3")
     conflicts("%oneapi", when="@1.23.0:1.23.3")
 
+    @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, "build", "meson-logs", "meson-log.txt")]
+
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/n/numpy/numpy-{}.{}"
         if version >= Version("1.23"):
@@ -203,16 +203,58 @@ class PyNumpy(PythonPackage):
 
         return (flags, None, None)
 
-    @run_before("install")
-    def set_blas_lapack(self):
+    def blas_lapack_pkg_config(self) -> Tuple[str, str]:
+        """Convert library names to pkg-config names.
+
+        Returns:
+            The names of the blas and lapack libs that pkg-config should search for.
+        """
+        spec = self.spec
+        blas = spec["blas"].libs.names[0]
+        lapack = spec["lapack"].libs.names[0]
+
+        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            blas = "mkl-dynamic-lp64-seq"
+
+        if spec["lapack"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            lapack = "mkl-dynamic-lp64-seq"
+
+        if spec["blas"].name in ["blis", "amdblis"]:
+            blas = "blis"
+
+        if "armpl" in blas:
+            if "_mp" in blas:
+                blas = "armpl-dynamic-lp64-omp"
+            else:
+                blas = "armpl-dynamic-lp64-seq"
+
+        if "armpl" in lapack:
+            if "_mp" in lapack:
+                lapack = "armpl-dynamic-lp64-omp"
+            else:
+                lapack = "armpl-dynamic-lp64-seq"
+
+        return blas, lapack
+
+    @when("@1.26:")
+    def config_settings(self, spec, prefix):
+        blas, lapack = self.blas_lapack_pkg_config()
+        return {
+            "compile-args": f"-j{make_jobs}",
+            # http://scipy.github.io/devdocs/building/blas_lapack.html
+            "setup-args=-Dblas": blas,
+            "setup-args=-Dlapack": lapack,
+            # https://numpy.org/doc/stable/reference/simd/build-options.html
+            "setup-args=-Dcpu-baseline": "native",
+            "setup-args=-Dcpu-dispatch": "none",
+        }
+
+    def blas_lapack_site_cfg(self) -> None:
+        """Write a site.cfg file to configure BLAS/LAPACK."""
+        spec = self.spec
+
         # https://numpy.org/devdocs/user/building.html
         # https://github.com/numpy/numpy/blob/master/site.cfg.example
-
-        # Skip if no BLAS/LAPACK requested
-        spec = self.spec
-        if "+blas" not in spec and "+lapack" not in spec:
-            return
-
         def write_library_dirs(f, dirs):
             f.write("library_dirs = {0}\n".format(dirs))
             if not (
@@ -221,17 +263,11 @@ class PyNumpy(PythonPackage):
             ):
                 f.write("rpath = {0}\n".format(dirs))
 
-        blas_libs = LibraryList([])
-        blas_headers = HeaderList([])
-        if "+blas" in spec:
-            blas_libs = spec["blas"].libs
-            blas_headers = spec["blas"].headers
+        blas_libs = spec["blas"].libs
+        blas_headers = spec["blas"].headers
 
-        lapack_libs = LibraryList([])
-        lapack_headers = HeaderList([])
-        if "+lapack" in spec:
-            lapack_libs = spec["lapack"].libs
-            lapack_headers = spec["lapack"].headers
+        lapack_libs = spec["lapack"].libs
+        lapack_headers = spec["lapack"].headers
 
         lapackblas_libs = lapack_libs + blas_libs
         lapackblas_headers = lapack_headers + blas_headers
@@ -344,15 +380,15 @@ class PyNumpy(PythonPackage):
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write("include_dirs = {0}\n".format(lapack_header_dirs))
 
+    @when("@:1.25")
     def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
+        self.blas_lapack_site_cfg()
+        spec = self.spec
         # https://github.com/numpy/numpy/pull/13132
         # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
-        spec = self.spec
         # https://numpy.org/devdocs/user/building.html#blas
-        if "blas" not in spec:
-            blas = ""
-        elif (
+        if (
             spec["blas"].name == "intel-mkl"
             or spec["blas"].name == "intel-parallel-studio"
             or spec["blas"].name == "intel-oneapi-mkl"
@@ -372,9 +408,7 @@ class PyNumpy(PythonPackage):
         env.set("NPY_BLAS_ORDER", blas)
 
         # https://numpy.org/devdocs/user/building.html#lapack
-        if "lapack" not in spec:
-            lapack = ""
-        elif (
+        if (
             spec["lapack"].name == "intel-mkl"
             or spec["lapack"].name == "intel-parallel-studio"
             or spec["lapack"].name == "intel-oneapi-mkl"
