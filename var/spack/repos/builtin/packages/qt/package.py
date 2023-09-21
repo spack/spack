@@ -333,6 +333,8 @@ class Qt(Package):
                 # Prevent possibly incompatible system LLVM from being found
                 llvm_path = "/spack-disable-llvm"
             env.set("LLVM_INSTALL_DIR", llvm_path)
+        if self.spec.satisfies("os=scientific7"):
+            env.set("OPENSSL_LIBS", "-L/usr/lib64/openssl11 -lssl -lcrypto")
 
     def setup_run_environment(self, env):
         env.set("QTDIR", self.prefix)
@@ -557,6 +559,9 @@ class Qt(Package):
             config_args.append("-openssl-linked")
             config_args.extend(pkg.libs.search_flags.split())
             config_args.extend(pkg.headers.include_flags.split())
+            if spec.satisfies("os=scientific7"):
+                config_args.append("-I/usr/include/openssl11")
+                config_args.append("-L/usr/lib64/openssl11")
         else:
             config_args.append("-no-openssl")
 
