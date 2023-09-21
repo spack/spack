@@ -1,0 +1,192 @@
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -305,6 +305,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+ LD = @LD@
+ LDFLAGS = @LDFLAGS@
+ LIBOBJS = @LIBOBJS@
++LIBRT = @LIBRT@
+ LIBS = @LIBS@
+ LIBTOOL = @LIBTOOL@
+ LIPO = @LIPO@
+--- a/app/Makefile.in
++++ b/app/Makefile.in
+@@ -272,6 +272,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+ LD = @LD@
+ LDFLAGS = @LDFLAGS@
+ LIBOBJS = @LIBOBJS@
++LIBRT = @LIBRT@
+ LIBS = @LIBS@
+ LIBTOOL = @LIBTOOL@
+ LIPO = @LIPO@
+--- a/configure
++++ b/configure
+@@ -712,6 +712,7 @@ ENABLE_F2003_ISOC
+ CREATE_ISOC_FALSE
+ CREATE_ISOC_TRUE
+ RUBY
++LIBRT
+ ENABLE_MPI
+ USE_MPI
+ HAVE_PARALLEL_NC4_FALSE
+@@ -31571,6 +31572,72 @@ fi
+ 
+ ENABLE_MPI=`test x"$enable_mpi" = xyes && echo true || echo false`
+ 
++LIBRT=''
++
++if test "x$USE_MPI" = xyes; then :
++  ac_fn_c_check_decl "$LINENO" "_POSIX_ASYNCHRONOUS_IO" "ac_cv_have_decl__POSIX_ASYNCHRONOUS_IO" "$ac_includes_default"
++if test "x$ac_cv_have_decl__POSIX_ASYNCHRONOUS_IO" = xyes; then :
++  saved_LIBS=$LIBS
++      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing aio_suspend" >&5
++$as_echo_n "checking for library containing aio_suspend... " >&6; }
++if ${ac_cv_search_aio_suspend+:} false; then :
++  $as_echo_n "(cached) " >&6
++else
++  ac_func_search_save_LIBS=$LIBS
++cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++
++/* Override any GCC internal prototype to avoid an error.
++   Use char because int might match the return type of a GCC
++   builtin and then its argument prototype would still apply.  */
++#ifdef __cplusplus
++extern "C"
++#endif
++char aio_suspend ();
++int
++main ()
++{
++return aio_suspend ();
++  ;
++  return 0;
++}
++_ACEOF
++for ac_lib in '' rt; do
++  if test -z "$ac_lib"; then
++    ac_res="none required"
++  else
++    ac_res=-l$ac_lib
++    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
++  fi
++  if ac_fn_c_try_link "$LINENO"; then :
++  ac_cv_search_aio_suspend=$ac_res
++fi
++rm -f core conftest.err conftest.$ac_objext \
++    conftest$ac_exeext
++  if ${ac_cv_search_aio_suspend+:} false; then :
++  break
++fi
++done
++if ${ac_cv_search_aio_suspend+:} false; then :
++
++else
++  ac_cv_search_aio_suspend=no
++fi
++rm conftest.$ac_ext
++LIBS=$ac_func_search_save_LIBS
++fi
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_aio_suspend" >&5
++$as_echo "$ac_cv_search_aio_suspend" >&6; }
++ac_res=$ac_cv_search_aio_suspend
++if test "$ac_res" != no; then :
++  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
++  test "$ac_res" = "none required" || LIBRT=$ac_res
++fi
++
++      LIBS=$saved_LIBS
++fi
++
++fi
+ #  ----------------------------------------------------------------------
+ #  Create the Fortran Interface via iso_c_binding module (Fortran 2003 Standard)
+ #
+--- a/examples/Makefile.in
++++ b/examples/Makefile.in
+@@ -332,6 +332,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+ LD = @LD@
+ LDFLAGS = @LDFLAGS@
+ LIBOBJS = @LIBOBJS@
++LIBRT = @LIBRT@
+ LIBS = @LIBS@
+ LIBTOOL = @LIBTOOL@
+ LIPO = @LIPO@
+--- a/examples/pio/Makefile.in
++++ b/examples/pio/Makefile.in
+@@ -314,6 +314,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+ LD = @LD@
+ LDFLAGS = @LDFLAGS@
+ LIBOBJS = @LIBOBJS@
++LIBRT = @LIBRT@
+ LIBS = @LIBS@
+ LIBTOOL = @LIBTOOL@
+ LIPO = @LIPO@
+--- a/interfaces/Makefile.in
++++ b/interfaces/Makefile.in
+@@ -292,6 +292,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+ LD = @LD@
+ LDFLAGS = @LDFLAGS@
+ LIBOBJS = @LIBOBJS@
++LIBRT = @LIBRT@
+ LIBS = @LIBS@
+ LIBTOOL = @LIBTOOL@
+ LIPO = @LIPO@
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -242,7 +242,8 @@ libcdi_f2003_la_OBJECTS = $(am_libcdi_f2003_la_OBJECTS)
+ @CREATE_ISOC_TRUE@@ENABLE_CDI_LIB_TRUE@am_libcdi_f2003_la_rpath =  \
+ @CREATE_ISOC_TRUE@@ENABLE_CDI_LIB_TRUE@	-rpath $(libdir)
+ libcdipio_la_DEPENDENCIES = libcdi.la $(am__DEPENDENCIES_1) \
+-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
++	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
++	$(am__DEPENDENCIES_1)
+ am__libcdipio_la_SOURCES_DIST = cdipio.h cdipioFortran.c cfortran.h \
+ 	pio.c pio.h pio_comm.c pio_comm.h pio_conf.c pio_conf.h \
+ 	pio_dbuffer.c pio_dbuffer.h pio_dist_grid.c \
+@@ -426,6 +427,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+ LD = @LD@
+ LDFLAGS = @LDFLAGS@
+ LIBOBJS = @LIBOBJS@
++LIBRT = @LIBRT@
+ LIBS = @LIBS@
+ LIBTOOL = @LIBTOOL@
+ LIPO = @LIPO@
+@@ -617,7 +619,7 @@ libcdipio_la_SOURCES = cdipio.h cdipioFortran.c cfortran.h pio.c pio.h \
+ libcdipio_la_HAVE_PARALLEL_NC4_extra_sources = \
+ 	pio_cdf_int.c
+ 
+-libcdipio_la_LIBADD = libcdi.la $(PPM_CORE_LIBS) $(YAXT_LIBS) $(MPI_C_LIB)
++libcdipio_la_LIBADD = libcdi.la $(LIBRT) $(PPM_CORE_LIBS) $(YAXT_LIBS) $(MPI_C_LIB)
+ libcdi_la_LIBADD = $(UUID_C_LIB)
+ #
+ #cdilib.c:
+--- a/src/pkgconfig/cdipio.pc.in
++++ b/src/pkgconfig/cdipio.pc.in
+@@ -4,7 +4,7 @@ libdir=@libdir@
+ includedir=@includedir@
+ cflags=-I@includedir@
+ fcflags=@FPP_INCOPT@@includedir@ @CDI_F90_INTERFACE_FCFLAGS@
+-libs=-L@libdir@ -lcdipio @PPM_CORE_LIBS@ @YAXT_LIBS@ -lcdi @GRIB_API_LIBS@ @ECCODES_LIBS@ @NETCDF_LIBS@ @SZLIB_LIBS@ @THREADS_LIBS@ @LIBS@
++libs=-L@libdir@ -lcdipio @LIBRT@ @PPM_CORE_LIBS@ @YAXT_LIBS@ -lcdi @GRIB_API_LIBS@ @ECCODES_LIBS@ @NETCDF_LIBS@ @SZLIB_LIBS@ @THREADS_LIBS@ @LIBS@
+ threads_libs=@THREADS_LIBS@
+ threads_cflags=@THREADS_INCLUDE@
+ szlib_cflags=@SZLIB_INCLUDE@
+@@ -22,7 +22,7 @@ yaxt_c_cflags=@YAXT_C_CFLAGS@
+ yaxt_c_libs=@YAXT_C_LIBS@
+ ppm_core_cflags=@PPM_CORE_CFLAGS@
+ ppm_core_libs=@PPM_CORE_LIBS@
+-aux_libs=@LIBS@
++aux_libs=@LIBRT@ @LIBS@
+ cdipio_build_cc=@CC@
+ cdipio_build_cflags=@CFLAGS@
+ cdipio_build_cppflags=@CPPFLAGS@
+--- a/tests/Makefile.in
++++ b/tests/Makefile.in
+@@ -411,6 +411,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+ LD = @LD@
+ LDFLAGS = @LDFLAGS@
+ LIBOBJS = @LIBOBJS@
++LIBRT = @LIBRT@
+ LIBS = @LIBS@
+ LIBTOOL = @LIBTOOL@
+ LIPO = @LIPO@
