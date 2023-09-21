@@ -1,0 +1,14 @@
+# This patch is applicable only for version 12.3
+# but a similar one is needed for version 12.2
+--- a/src/main/rttov_types.F90
++++ b/src/main/rttov_types.F90
+@@ -1308,3 +1308,3 @@ MODULE rttov_types
+-    REAL(jpim), POINTER    :: coef_pdt(:,:)       => NULL()
+-    REAL(jpim), POINTER    :: val_mean(:)         => NULL()
+-    REAL(jpim), POINTER    :: val_norm(:)         => NULL()
++    REAL(jprb), POINTER    :: coef_pdt(:,:)       => NULL()
++    REAL(jprb), POINTER    :: val_mean(:)         => NULL()
++    REAL(jprb), POINTER    :: val_norm(:)         => NULL()
+@@ -1314 +1314 @@ MODULE rttov_types
+-    REAL(jpim), POINTER    :: pc(:,:)             => NULL()
++    REAL(jprb), POINTER    :: pc(:,:)             => NULL()

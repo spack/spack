@@ -1,0 +1,10 @@
+# This patch is applicable starting version 12.1
+--- a/src/brdf_atlas/mod_brdf_atlas.F90
++++ b/src/brdf_atlas/mod_brdf_atlas.F90
+@@ -83,3 +83,3 @@ MODULE mod_brdf_atlas
+-  INTEGER(KIND=jpim), PARAMETER :: brdfmodis_gridres = 100_jprb     ! 0.1 deg
+-  INTEGER(KIND=jpim), PARAMETER :: brdfmodis_ygrid1 = 89950_jprb    ! 89.95 deg
+-  INTEGER(KIND=jpim), PARAMETER :: brdfmodis_xgrid1 = -179950_jprb  ! -179.95 deg
++  INTEGER(KIND=jpim), PARAMETER :: brdfmodis_gridres = 100_jpim     ! 0.1 deg
++  INTEGER(KIND=jpim), PARAMETER :: brdfmodis_ygrid1 = 89950_jpim    ! 89.95 deg
++  INTEGER(KIND=jpim), PARAMETER :: brdfmodis_xgrid1 = -179950_jpim  ! -179.95 deg
