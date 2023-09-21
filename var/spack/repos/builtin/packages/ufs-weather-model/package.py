@@ -42,10 +42,6 @@ class UfsWeatherModel(CMakePackage):
         default=False,
         description="Enable CCPP_32BIT (single precision arithmetic in slow physics)",
     )
-    variant("avx2", default=True, description="Enable AVX2 instruction set")
-    variant(
-        "simdmultiarch", default=False, description="Enable multi-target SIMD instruction sets"
-    )
     variant("debug", default=False, description="Enable DEBUG mode", when="@develop")
     variant(
         "debug_linkmpi",
@@ -196,8 +192,8 @@ class UfsWeatherModel(CMakePackage):
         args = [
             from_variant("32BIT", "32bit"),
             from_variant("CCPP_32BIT", "ccpp_32bit"),
-            from_variant("AVX2", "avx2"),
-            from_variant("SIMDMULTIARCH", "simdmultiarch"),
+            self.define("AVX2", False), # use target setting from Spack
+            self.define("SIMDMULTIARCH", False), # use target setting from Spack
             from_variant("DEBUG", "debug"),
             from_variant("DEBUG_LINKMPI", "debug_linkmpi"),
             from_variant("INLINE_POST", "inline_post"),
