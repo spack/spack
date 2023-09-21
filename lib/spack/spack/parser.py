@@ -65,6 +65,7 @@ from typing import Iterator, List, Match, Optional
 
 from llnl.util.tty import color
 
+import spack.deptypes
 import spack.error
 import spack.spec
 import spack.version
@@ -479,6 +480,11 @@ class EdgeAttributeParser:
             else:
                 msg = "unexpected token in edge attributes"
                 raise SpecParsingError(msg, self.ctx.next_token, self.literal_str)
+
+        # Turn deptypes=... to depflag representation
+        if "deptypes" in attributes:
+            deptype_string = attributes.pop("deptypes")
+            attributes["depflag"] = spack.deptypes.canonicalize(deptype_string)
         return attributes
 
 

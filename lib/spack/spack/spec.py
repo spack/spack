@@ -1475,7 +1475,9 @@ class Spec:
         for edge in edges:
             union.update_deptypes(edge.depflag)
             union.update_virtuals(edge.virtuals)
-        deptypes_str = f"deptypes={','.join(dt.flag_to_tuple(union.depflag))}" if union.depflag else ""
+        deptypes_str = (
+            f"deptypes={','.join(dt.flag_to_tuple(union.depflag))}" if union.depflag else ""
+        )
         virtuals_str = f"virtuals={','.join(union.virtuals)}" if union.virtuals else ""
         if not deptypes_str and not virtuals_str:
             return ""
@@ -3921,7 +3923,7 @@ class Spec:
                     for virtual_name in lhs_edge.virtuals:
                         lhs_edges[virtual_name].add(lhs_edge)
 
-                build_edges = self.edges_to_dependencies(deptype="build")
+                build_edges = self.edges_to_dependencies(depflag=dt.BUILD)
                 for lhs_edge in build_edges:
                     lhs_edges[lhs_edge.spec.name].add(lhs_edge)
                     for virtual_name in lhs_edge.virtuals:
