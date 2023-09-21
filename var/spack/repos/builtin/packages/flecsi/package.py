@@ -12,9 +12,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     provide a very general set of infrastructure design patterns that can
     be specialized and extended to suit the needs of a broad variety of
     solver and data requirements. Current support includes multi-dimensional
-    mesh topology, mesh geometry, and mesh adjacency information,
-    n-dimensional hashed-tree data structures, graph partitioning
-    interfaces,and dependency closures.
+    mesh topology, mesh geometry, and mesh adjacency information.
     """
 
     homepage = "http://flecsi.org/"
@@ -24,11 +22,15 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("develop", branch="develop")
-    version("2.2.1", tag="v2.2.1", preferred=True)
-    version("2.2.0", tag="v2.2.0")
-    version("2.1.0", tag="v2.1.0")
-    version("2.0.0", tag="v2.0.0")
-    version("1.4.1", tag="v1.4.1", submodules=True)
+    version(
+        "2.2.1", tag="v2.2.1", commit="84b5b232aebab40610f57387778db80f6c8c84c5", preferred=True
+    )
+    version("2.2.0", tag="v2.2.0", commit="dd531ac16c5df124d76e385c6ebe9b9589c2d3ad")
+    version("2.1.0", tag="v2.1.0", commit="533df139c267e2a93c268dfe68f9aec55de11cf0")
+    version("2.0.0", tag="v2.0.0", commit="5ceebadf75d1c98999ea9e9446926722d061ec22")
+    version(
+        "1.4.1", tag="v1.4.1", commit="ab974c3164056e6c406917c8ca771ffd43c5a031", submodules=True
+    )
     version(
         "1.4.develop",
         git="https://github.com/laristra/flecsi.git",
@@ -59,7 +61,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
     )
     variant("shared", default=True, description="Build shared libraries")
-    variant("flog", default=False, description="Enable flog testing")
+    variant("flog", default=False, description="Enable logging support")
     variant("graphviz", default=False, description="Enable GraphViz Support")
     variant("doc", default=False, description="Enable documentation")
     variant("hdf5", default=True, description="Enable HDF5 Support")
@@ -203,6 +205,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
             if "+rocm" in self.spec:
                 options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
                 options.append(self.define("CMAKE_C_COMPILER", self.spec["hip"].hipcc))
+            elif "+kokkos" in self.spec:
+                options.append(self.define("CMAKE_CXX_COMPILER", self.spec["kokkos"].kokkos_cxx))
         else:
             # kept for supporing version prior to 2.2
             options = [

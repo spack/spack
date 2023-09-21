@@ -12,7 +12,10 @@ class Whizard(AutotoolsPackage):
     and simulated event samples."""
 
     homepage = "whizard.hepforge.org"
-    url = "https://whizard.hepforge.org/downloads/?f=whizard-2.8.3.tar.gz"
+    urls = [
+        "https://launchpad.net/whizard/3.1.x/3.1.2/+download/whizard-3.1.2.tar.gz",
+        "https://whizard.hepforge.org/downloads/?f=whizard-2.8.3.tar.gz",
+    ]
     git = "https://gitlab.tp.nt.uni-siegen.de/whizard/public.git"
 
     tags = ["hep"]

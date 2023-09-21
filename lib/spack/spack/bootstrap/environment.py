@@ -15,9 +15,9 @@ import archspec.cpu
 
 from llnl.util import tty
 
-import spack.build_environment
 import spack.environment
 import spack.tengine
+import spack.util.cpus
 import spack.util.executable
 from spack.environment import depfile
 
@@ -37,7 +37,6 @@ class BootstrapEnvironment(spack.environment.Environment):
             mypy_root_spec(),
             black_root_spec(),
             flake8_root_spec(),
-            fish_root_spec(),
             pytest_root_spec(),
         ]
 
@@ -138,7 +137,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             "-C",
             str(self.environment_root()),
             "-j",
-            str(spack.build_environment.determine_number_of_jobs(parallel=True)),
+            str(spack.util.cpus.determine_number_of_jobs(parallel=True)),
             **kwargs,
         )
 
@@ -178,12 +177,6 @@ def black_root_spec() -> str:
 def flake8_root_spec() -> str:
     """Return the root spec used to bootstrap flake8"""
     return _root_spec("py-flake8@3.8.2:")
-
-
-def fish_root_spec() -> str:
-    """Return the root spec used to bootstrap fish"""
-    # fish 3.2.0 introduces the `--check` flag to `fish_indent`
-    return _root_spec("fish@3.2:")
 
 
 def pytest_root_spec() -> str:
