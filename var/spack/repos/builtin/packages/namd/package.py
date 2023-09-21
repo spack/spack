@@ -31,10 +31,7 @@ class Namd(MakefilePackage, CudaPackage):
     version(
         "2.15a1.manual", sha256="474006e98e32dddae59616b3b75f13a2bb149deaf7a0d617ce7fb9fd5a56a33a"
     )
-    version(
-        "2.14",
-        sha256="34044d85d9b4ae61650ccdba5cda4794088c3a9075932392dd0752ef8c049235",
-    )
+    version("2.14", sha256="34044d85d9b4ae61650ccdba5cda4794088c3a9075932392dd0752ef8c049235")
     version("2.13", md5="9e3323ed856e36e34d5c17a7b0341e38")
     version("2.12", md5="2a1191909b1ab03bf0205971ad4d8ee9")
 
@@ -90,7 +87,7 @@ class Namd(MakefilePackage, CudaPackage):
 
     def _copy_arch_file(self, lib):
         config_filename = "arch/{0}.{1}".format(self.arch, lib)
-        if(self.arch == "linux-aarch64"):
+        if self.arch == "linux-aarch64":
             copy("arch/Linux-ARM64.{0}".format(lib), config_filename)
         else:
             copy("arch/Linux-x86_64.{0}".format(lib), config_filename)
