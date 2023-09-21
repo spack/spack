@@ -153,6 +153,8 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
+    # remove 'rU' file mode in a python script
+    patch("remove_rU_mode_in_python_script.patch", when="@:1.12.0 +fortran ^python@3.11:")
     # Avoid trying to compile some SSE code if SSE is not available
     # This patch will be part of phist 1.11.3 and greater and only affects
     # the 'builtin' kernel_lib.
