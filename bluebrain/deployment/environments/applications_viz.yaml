@@ -5,6 +5,7 @@ spack:
       tcl:
         include:
           - brayns
+          - py-bcsb
           - py-brayns
           - py-brayns-circuit-studio-backend
           - brion
@@ -14,6 +15,7 @@ spack:
     - brayns
     - brayns@3.2.0
     - brayns@3.1.2
+    - py-bcsb
     - py-brayns
     - py-brayns@3.2.0
     - py-brayns@3.1.2
