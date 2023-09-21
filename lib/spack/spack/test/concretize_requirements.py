@@ -91,6 +91,17 @@ class U(Package):
 )
 
 
+_pkgw = (
+    "w",
+    """\
+class W(Package):
+    provides('virtualw')
+
+    version('1.0')
+""",
+)
+
+
 @pytest.fixture
 def create_test_repo(tmpdir, mutable_config):
     repo_path = str(tmpdir)
@@ -104,7 +115,7 @@ repo:
         )
 
     packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu]:
+    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu, _pkgw]:
         pkg_dir = packages_dir.ensure(pkg_name, dir=True)
         pkg_file = pkg_dir.join("package.py")
         with open(str(pkg_file), "w") as f:
@@ -475,10 +486,16 @@ def test_require_cflags(concretize_scope, test_repo):
 packages:
   y:
     require: cflags="-g"
+  virtualw:
+    require: cflags="-O1"
 """
     update_packages_config(conf_str)
-    spec = Spec("y").concretized()
-    assert spec.satisfies("cflags=-g")
+
+    spec_y = Spec("y").concretized()
+    assert spec_y.satisfies("cflags=-g")
+
+    spec_w = Spec("w").concretized()
+    assert spec_w.satisfies("cflags=-O1")
 
 
 def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo):

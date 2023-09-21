@@ -689,11 +689,20 @@ requirement_group_satisfied(node(ID, Package), X) :-
 % flags if their only source is from a requirement. This is overly-specific
 % and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
 
-attr("node_flag", node(NodeID1, A1), A2, A3) :-
-  requirement_group_member(Y, A1, X),
-  activate_requirement(node(NodeID1, A1), X),
-  pkg_fact(A1, condition_effect(Y, Z)),
-  imposed_constraint(Z,"node_flag_set", A1, A2, A3).
+% works
+% { attr("node_flag", node(NodeID1, A1), A2, A3) } :-
+%  requirement_group_member(Y, A1, X),
+%  activate_requirement(node(NodeID1, A1), X),
+%  pkg_fact(A1, condition_effect(Y, Z)),
+%  imposed_constraint(Z,"node_flag_set", A1, A2, A3).
+
+{ attr("node_flag", node(ID, SubPackage), FlagType, FlagValue) } :-
+  requirement_group_member(ConditionID, SubPackage, RequirementID),
+  activate_requirement(node(ID, SubPackage), RequirementID),
+  pkg_fact(SubPackage, condition_effect(ConditionID, EffectID)),
+  imposed_constraint(EffectID, "node_flag_set", SubPackage, FlagType, FlagValue).
+
+% provider(node(PackageID, Package), node(VirtualID, Virtual))
 
 { attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
   requirement_group_member(Y, A1, X),
