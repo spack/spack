@@ -16,11 +16,10 @@ class PyGrapheneTornado(PythonPackage):
 
     version("2.6.1", sha256="953bf812267177224ce1ac2a93c669069d85a8fa187a9fac681b76b63dffebc2")
 
-    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-six@1.10.0:", type=("build", "run"))
-    depends_on("py-graphene@2.1:2", type=("build", "run"), when="@:2")
-    depends_on("py-jinja2@2.10.1:", type=("build", "run"))
-    depends_on("py-tornado@5.1.0:", type=("build", "run"))
-    depends_on("py-werkzeug@0.12.2", type=("build", "run"))
-    depends_on("py-pytest", type=("build", "run"))
+    depends_on("py-graphene@2.1:2", type=("build", "run"))
+    depends_on("py-jinja2@2.10.1:", type=("build"))
+    depends_on("py-tornado@5.1.0:", type=("build"))
+    depends_on("py-werkzeug@0.12.2", type=("build"))
+    depends_on("py-pytest", type=("build"))
