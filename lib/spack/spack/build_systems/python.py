@@ -303,7 +303,7 @@ class PythonPackage(PythonExtension):
 
     # Optional extra features provided by the Python package: see
     # optional_extras()
-    provides_extras = []  # type: List[str]
+    provides_extras: List[str] = []
 
     build_system("python_pip")
 

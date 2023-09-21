@@ -23,7 +23,7 @@ import urllib.request
 import warnings
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import List, NamedTuple, Optional, Tuple, Union
+from typing import List, NamedTuple, Optional, Union
 from urllib.error import HTTPError, URLError
 
 import llnl.util.filesystem as fsys
@@ -34,7 +34,7 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
-import spack.dependency as dep
+import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.hooks.sbang
@@ -1344,7 +1344,7 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
 
 def specs_to_be_packaged(
     specs: List[Spec],
-    deptype: Union[str, Tuple[str, ...]] = dep.default_deptype,
+    deptype: dt.DepTypes = dt.DEFAULT_TYPES,
     root: bool = True,
     dependencies: bool = True,
 ) -> List[Spec]:
