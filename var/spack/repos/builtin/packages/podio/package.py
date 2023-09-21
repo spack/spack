@@ -156,6 +156,12 @@ class Podio(CMakePackage):
         env.prepend_path("PYTHONPATH", self.prefix.python)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["podio"].libs.directories[0])
         env.prepend_path("ROOT_INCLUDE_PATH", self.prefix.include)
+        if self.spec.satisfies("+sio @0.17:"):
+            # sio needs to be on LD_LIBRARY_PATH for ROOT to be able to
+            # dynamicaly load the python libraries also in dependent build
+            # environments since the import structure has changed with
+            # podio@0.17
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["sio"].libs.directories[0])
 
     def url_for_version(self, version):
         """Translate version numbers to ilcsoft conventions.
