@@ -31,6 +31,8 @@ class Counter:
 
         self._possible_dependencies: PossibleDependencies = set()
         self._possible_virtuals: Set[str] = set(x.name for x in specs if x.virtual)
+        for x in specs:
+            self._possible_virtuals.update(x.package_class.provided)
 
     def possible_dependencies(self) -> PossibleDependencies:
         """Returns the list of possible dependencies"""
