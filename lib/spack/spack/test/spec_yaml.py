@@ -500,3 +500,8 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
 
     openmpi_edges = s2.edges_to_dependencies(name="openmpi")
     assert len(openmpi_edges) == 1
+
+    # The virtuals attribute must be a tuple, when read from a
+    # JSON or YAML file, not a list
+    for edge in s2.traverse_edges():
+        assert isinstance(edge.virtuals, tuple), edge

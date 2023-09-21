@@ -740,7 +740,7 @@ class DependencySpec:
         self.parent = parent
         self.spec = spec
         self.depflag = depflag
-        self.virtuals = virtuals
+        self.virtuals = tuple(sorted(set(virtuals)))
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
         """Update the current dependency types"""
