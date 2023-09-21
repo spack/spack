@@ -18,25 +18,21 @@ class PyGevent(PythonPackage):
     version("21.8.0", sha256="43e93e1a4738c922a2416baf33f0afb0a20b22d3dba886720bc037cd02a98575")
     version("1.5.0", sha256="b2814258e3b3fb32786bb73af271ad31f51e1ac01f33b37426b66cb8491b4c29")
 
-    # limits according to wheels available on PyPI
-    depends_on("python@3.8:3.12", when="@23.7.0:", type=("build", "run"))
-    depends_on("python@2.7:3.10", when="@21.8:21.12", type=("build", "run"))
-    depends_on("python@2.7:3.8", when="@1.5:20.6.0", type=("build", "run"))
+    depends_on("python@3.8:", when="@23.7.0:", type=("build", "run"))
+    depends_on("python@:3.10", when="@:21.12", type=("build", "run"))
 
     depends_on("py-setuptools@40.8:", when="@20.5.1:", type=("build", "run"))
     depends_on("py-setuptools@40.8:", when="@1.5:", type="build")
     depends_on("py-setuptools@24.2:", when="@:1.4", type="build")
-    depends_on("py-cython@3:", when="@20.5.1:", type="build")
+    # TODO: relax this until we support separate concretization of build deps by default
+    # depends_on("py-cython@3:", when="@20.5.1:", type="build")
     depends_on("py-cython@0.29.14:", when="@1.5:", type="build")
-    depends_on("py-cython@0.27:", when="@:1.4", type="build")
-    depends_on("py-cffi@1.12.3:", when="@1.5:", type=("build", "run"))  # from pyproject.toml
-    depends_on("py-cffi@1.4:", when="@:1.4", type=("build", "run"))
+    depends_on("py-cffi@1.12.3:", type=("build", "run"))
     depends_on("py-greenlet@3:", when="@23.7: ^python@3.12:", type=("build", "run"))
     depends_on("py-greenlet@2:", when="@22.10.2: ^python@:3.11", type=("build", "run"))
     depends_on("py-greenlet@1.1:1", when="@21.8:21.12.0", type=("build", "run"))
     depends_on("py-greenlet@0.4.17:1", when="@20.12:21.1.2", type=("build", "run"))
-    depends_on("py-greenlet@0.4.14:", when="@1.5:", type=("build", "run"))
-    depends_on("py-greenlet@0.4.13:", when="@:1.4", type=("build", "run"))
+    depends_on("py-greenlet@0.4.14:", type=("build", "run"))
     depends_on("py-zope-event", when="@20.5.1:", type=("build", "run"))
     depends_on("py-zope-interface", when="@20.5.1:", type=("build", "run"))
 
