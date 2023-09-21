@@ -6,6 +6,7 @@
 import os
 from collections import defaultdict
 from llnl.util import lang
+from spack.package import *
 
 
 class Rttov(Package):

@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
 
 class ScalesPpm(AutotoolsPackage):
     """Convenience library to provide parallelization and performance oriented

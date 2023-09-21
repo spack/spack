@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
 
 class Yaxt(AutotoolsPackage):
     """Yet Another eXchange Tool"""
