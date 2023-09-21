@@ -2351,7 +2351,10 @@ class SpackSolverSetup:
 
         node_counter = _create_counter(specs, tests=self.tests)
         self.possible_virtuals = node_counter.possible_virtuals()
+        for x in specs:
+            self.possible_virtuals.update(x.package_class.provided)
         self.pkgs = node_counter.possible_dependencies()
+        self.pkgs.update(self.possible_virtuals)
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:

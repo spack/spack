@@ -95,9 +95,18 @@ _pkgw = (
     "w",
     """\
 class W(Package):
-    provides('virtualw')
+    provides('virtual-w')
 
     version('1.0')
+""",
+)
+
+
+_virtualw = (
+    "virtual-w",
+    """\
+class VirtualW(Package):
+    virtual = True
 """,
 )
 
@@ -478,21 +487,29 @@ packages:
     s2 = Spec("y@2.4").concretized()
     assert s2.satisfies("%gcc+shared")
 
+from spack.main import SpackCommand
+solve = SpackCommand("solve")
 
 @pytest.mark.regression("34241")
 def test_require_cflags(concretize_scope, test_repo):
     """Ensures that flags can be required from configuration."""
     conf_str = """\
 packages:
+  all:
+    providers:
+      virtual-w: [w]
   y:
     require: cflags="-g"
-  virtualw:
+  virtual-w:
     require: cflags="-O1"
 """
     update_packages_config(conf_str)
 
     spec_y = Spec("y").concretized()
     assert spec_y.satisfies("cflags=-g")
+
+    asp = solve("--show=asp", "w")
+    import pdb; pdb.set_trace()
 
     spec_w = Spec("w").concretized()
     assert spec_w.satisfies("cflags=-O1")

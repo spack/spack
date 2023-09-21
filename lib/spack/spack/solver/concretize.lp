@@ -702,7 +702,12 @@ requirement_group_satisfied(node(ID, Package), X) :-
   pkg_fact(SubPackage, condition_effect(ConditionID, EffectID)),
   imposed_constraint(EffectID, "node_flag_set", SubPackage, FlagType, FlagValue).
 
-% provider(node(PackageID, Package), node(VirtualID, Virtual))
+{ attr("node_flag", node(SubPackageID, SubPackage), FlagType, FlagValue) } :-
+  requirement_group_member(ConditionID, Package, RequirementID),
+  activate_requirement(node(PackageID, Package), RequirementID),
+  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue),
+  provider(node(SubPackageID, SubPackage), node(PackageID, Package)).
 
 { attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
   requirement_group_member(Y, A1, X),
