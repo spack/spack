@@ -77,6 +77,13 @@ class Amdlibflame(LibflameBase):
             "libflame", root=self.prefix, shared="+shared" in self.spec, recursive=True
         )
 
+    @property
+    def libs(self):
+        """find libflame libs function"""
+        return find_libraries(
+            "libflame", root=self.prefix, shared="+shared" in self.spec, recursive=True
+        )
+
     def flag_handler(self, name, flags):
         if name == "cflags":
             if self.spec.satisfies("%clang@16:") or self.spec.satisfies("%aocc@4.1.0:"):
