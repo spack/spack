@@ -192,8 +192,8 @@ class UfsWeatherModel(CMakePackage):
         args = [
             from_variant("32BIT", "32bit"),
             from_variant("CCPP_32BIT", "ccpp_32bit"),
-            self.define("AVX2", False), # use target setting from Spack
-            self.define("SIMDMULTIARCH", False), # use target setting from Spack
+            self.define("AVX2", False),  # use target settings from Spack
+            self.define("SIMDMULTIARCH", False),  # use target settings from Spack
             from_variant("DEBUG", "debug"),
             from_variant("DEBUG_LINKMPI", "debug_linkmpi"),
             from_variant("INLINE_POST", "inline_post"),
