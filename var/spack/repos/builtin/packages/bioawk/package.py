@@ -17,7 +17,7 @@ class Bioawk(MakefilePackage):
 
     version("1.0", sha256="316a6561dda41e8327b85106db3704e94e23d7a89870392d19ef8559f7859e2d")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bison", type=("build"))
 
     parallel = False

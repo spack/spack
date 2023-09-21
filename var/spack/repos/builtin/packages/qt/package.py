@@ -169,7 +169,7 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("libtiff")
     depends_on("libxml2")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("freetype", when="+gui")
     depends_on("gtkplus", when="+gtk")
     depends_on("sqlite+column_metadata", when="+sql", type=("build", "run"))
@@ -584,7 +584,7 @@ class Qt(Package):
             # FIXME: those could work for other versions
             use_spack_dep("libpng")
             use_spack_dep("jpeg", "libjpeg")
-            use_spack_dep("zlib")
+            use_spack_dep("zlib-api", "zlib")
 
         if "@:5.5" in spec:
             config_args.extend(

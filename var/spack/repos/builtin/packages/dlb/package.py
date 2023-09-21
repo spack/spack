@@ -20,6 +20,7 @@ class Dlb(AutotoolsPackage):
     maintainers("vlopezh")
 
     version("main", branch="main")
+    version("3.3.1", sha256="1b245acad80b03eb83e815fd59dcfc598cfddd899de4504cf6a9572fe5359f40")
     version("3.3", sha256="55b87aea14f3954d8878912f3134938db235e6984fae26fdf5134148007eb722")
     version("3.2", sha256="b1c65ce3179b5275cfdf0bf921c0565a4a3ebcfdab72d7cef014957c17136c7e")
     version("3.1", sha256="d63ee89429fdb54af5510ed956f86d11561911a7860b46324f25200d32d0d333")

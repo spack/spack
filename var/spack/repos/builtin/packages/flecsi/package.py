@@ -12,26 +12,39 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     provide a very general set of infrastructure design patterns that can
     be specialized and extended to suit the needs of a broad variety of
     solver and data requirements. Current support includes multi-dimensional
-    mesh topology, mesh geometry, and mesh adjacency information,
-    n-dimensional hashed-tree data structures, graph partitioning
-    interfaces,and dependency closures.
+    mesh topology, mesh geometry, and mesh adjacency information.
     """
 
     homepage = "http://flecsi.org/"
     git = "https://github.com/flecsi/flecsi.git"
-    maintainers("rspavel", "ktsai7", "rbberger")
+    maintainers("ktsai7", "rbberger")
 
     tags = ["e4s"]
 
     version("develop", branch="develop")
-    version("2.2.0", tag="v2.2.0", preferred=True)
-    version("2.1.0", tag="v2.1.0")
-    version("2.0.0", tag="v2.0.0")
-    version("1.4.1", tag="v1.4.1")
     version(
-        "1.4.develop", git="https://github.com/laristra/flecsi.git", branch="1.4", deprecated=True
+        "2.2.1", tag="v2.2.1", commit="84b5b232aebab40610f57387778db80f6c8c84c5", preferred=True
     )
-    version("1.4.2", git="https://github.com/laristra/flecsi.git", tag="v1.4.2", deprecated=True)
+    version("2.2.0", tag="v2.2.0", commit="dd531ac16c5df124d76e385c6ebe9b9589c2d3ad")
+    version("2.1.0", tag="v2.1.0", commit="533df139c267e2a93c268dfe68f9aec55de11cf0")
+    version("2.0.0", tag="v2.0.0", commit="5ceebadf75d1c98999ea9e9446926722d061ec22")
+    version(
+        "1.4.1", tag="v1.4.1", commit="ab974c3164056e6c406917c8ca771ffd43c5a031", submodules=True
+    )
+    version(
+        "1.4.develop",
+        git="https://github.com/laristra/flecsi.git",
+        branch="1.4",
+        submodules=True,
+        deprecated=True,
+    )
+    version(
+        "1.4.2",
+        git="https://github.com/laristra/flecsi.git",
+        tag="v1.4.2",
+        submodules=True,
+        deprecated=True,
+    )
     version(
         "flecsph",
         git="https://github.com/laristra/flecsi.git",
@@ -48,7 +61,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
     )
     variant("shared", default=True, description="Build shared libraries")
-    variant("flog", default=False, description="Enable flog testing")
+    variant("flog", default=False, description="Enable logging support")
     variant("graphviz", default=False, description="Enable GraphViz Support")
     variant("doc", default=False, description="Enable documentation")
     variant("hdf5", default=True, description="Enable HDF5 Support")
@@ -71,21 +84,21 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     variant("doxygen", default=False, description="Enable doxygen", when="@:1")
     variant("tutorial", default=False, description="Build FleCSI Tutorials", when="@:1")
     variant("flecstan", default=False, description="Build FleCSI Static Analyzer", when="@:1")
-    variant("external_cinch", default=True, description="Enable External Cinch", when="@:1")
+    variant("external_cinch", default=False, description="Enable External Cinch", when="@:1")
     variant("unit_tests", default=False, description="Build with Unit Tests Enabled", when="@:1")
 
     # All Current FleCSI Releases
     for level in ("low", "medium", "high"):
         depends_on("caliper@2.0.1~adiak~libdw", when="@:1 caliper_detail=%s" % level)
         depends_on("caliper", when="@2.0: caliper_detail=%s" % level)
-        conflicts("caliper@2.6", when="@2.0: caliper_detail=%s" % level)
-        conflicts("caliper@2.7", when="@2.0: caliper_detail=%s" % level)
+        conflicts("^caliper@2.6", when="@2.0: caliper_detail=%s" % level)
+        conflicts("^caliper@2.7", when="@2.0: caliper_detail=%s" % level)
 
     depends_on("graphviz", when="+graphviz")
     depends_on("hdf5+hl+mpi", when="+hdf5")
     depends_on("metis@5.1.0:")
     depends_on("parmetis@4.0.3:")
-    depends_on("boost@1.70.0: cxxstd=17 +program_options")
+    depends_on("boost@1.70.0: cxxstd=17 +program_options +stacktrace")
     depends_on("legion network=gasnet", when="backend=legion")
 
     # FleCSI@1.x
@@ -112,19 +125,19 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     # FleCSI@2.x
     depends_on("cmake@3.15:", when="@2.0:")
     depends_on("cmake@3.19:", when="@2.2:")
-    depends_on("boost +atomic +filesystem +regex +system", when="@2.0:")
-    depends_on(
-        "boost@1.79.0: cxxstd=17 +program_options +atomic +filesystem +regex +system", when="@2.2:"
-    )
+    depends_on("boost +atomic +filesystem +regex +system", when="@2.0:2.2.1")
+    depends_on("boost@1.79.0:", when="@2.2:")
     depends_on("kokkos@3.2.00:", when="+kokkos @2.0:")
     depends_on("kokkos +cuda +cuda_constexpr +cuda_lambda", when="+kokkos +cuda @2.0:")
     depends_on("kokkos +rocm", when="+kokkos +rocm @2.0:")
     depends_on("legion@cr", when="backend=legion @2.0:")
     depends_on("legion+shared", when="backend=legion +shared @2.0:")
     depends_on("legion+hdf5", when="backend=legion +hdf5 @2.0:")
-    depends_on("legion +kokkos +cuda", when="backend=legion +kokkos +cuda @2.0:")
+    depends_on("legion+kokkos", when="backend=legion +kokkos @2.0:")
+    depends_on("legion+cuda", when="backend=legion +cuda @2.0:")
+    depends_on("legion+rocm", when="backend=legion +rocm @2.0:")
     depends_on("hdf5@1.10.7:", when="backend=legion +hdf5 @2.0:")
-    depends_on("hpx@1.3.0 cxxstd=17 malloc=system", when="backend=hpx @2.0:")
+    depends_on("hpx@1.8.1: cxxstd=17 malloc=system", when="backend=hpx @2.0:")
     depends_on("mpi", when="@2.0:")
     depends_on("mpich@3.4.1:", when="@2.0: ^mpich")
     depends_on("openmpi@4.1.0:", when="@2.0: ^openmpi")
@@ -134,10 +147,10 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-sphinx-rtd-theme", when="@2.2: +doc")
     depends_on("py-recommonmark", when="@2.2: +doc")
     depends_on("doxygen", when="@2.2: +doc")
+    depends_on("graphviz", when="@2.2: +doc")
 
     # Propagate cuda_arch requirement to dependencies
-    cuda_arch_list = ("60", "70", "75", "80")
-    for _flag in cuda_arch_list:
+    for _flag in CudaPackage.cuda_arch_values:
         depends_on("kokkos cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag + " @2.0:")
         depends_on(
             "legion cuda_arch=" + _flag, when="backend=legion +cuda cuda_arch=" + _flag + " @2.0:"
@@ -146,8 +159,12 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     # Propagate amdgpu_target requirement to dependencies
     for _flag in ROCmPackage.amdgpu_targets:
         depends_on("kokkos amdgpu_target=" + _flag, when="+kokkos +rocm amdgpu_target=" + _flag)
+        depends_on(
+            "legion amdgpu_target=" + _flag,
+            when="backend=legion +rocm amdgpu_target=" + _flag + " @2.0:",
+        )
 
-    conflicts("%gcc@:8", when="@2.1:")
+    requires("%gcc@9:", when="@2: %gcc", msg="Version 9 or newer of GNU compilers required!")
 
     conflicts("+tutorial", when="backend=hpx")
     # FleCSI@2: no longer supports serial or charmpp backends
@@ -188,6 +205,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
             if "+rocm" in self.spec:
                 options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
                 options.append(self.define("CMAKE_C_COMPILER", self.spec["hip"].hipcc))
+            elif "+kokkos" in self.spec:
+                options.append(self.define("CMAKE_CXX_COMPILER", self.spec["kokkos"].kokkos_cxx))
         else:
             # kept for supporing version prior to 2.2
             options = [

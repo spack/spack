@@ -73,7 +73,7 @@ class Thepeg(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     variant("hepmc", default="2", values=("2", "3"), description="HepMC interface to build ")
     variant("rivet", default=True, description="Add rivet integration")
@@ -95,7 +95,7 @@ class Thepeg(AutotoolsPackage):
 
     def configure_args(self):
         args = ["--with-gsl=" + self.spec["gsl"].prefix, "--without-javagui"]
-        args += ["--with-zlib=" + self.spec["zlib"].prefix]
+        args += ["--with-zlib=" + self.spec["zlib-api"].prefix]
 
         if self.spec.satisfies("@:1.8"):
             args += ["--with-LHAPDF=" + self.spec["lhapdf"].prefix]

@@ -33,17 +33,19 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import List, Optional, Set, Union
+from typing import Any, Callable, List, Optional, Set, Tuple, Union
 
 import llnl.util.lang
 import llnl.util.tty.color
 
+import spack.deptypes as dt
 import spack.error
 import spack.patch
 import spack.spec
 import spack.url
+import spack.util.crypto
 import spack.variant
-from spack.dependency import Dependency, canonical_deptype, default_deptype
+from spack.dependency import Dependency
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import (
@@ -407,10 +409,7 @@ def version(
 
 def _execute_version(pkg, ver, **kwargs):
     if (
-        any(
-            s in kwargs
-            for s in ("sha256", "sha384", "sha512", "md5", "sha1", "sha224", "checksum")
-        )
+        (any(s in kwargs for s in spack.util.crypto.hashes) or "checksum" in kwargs)
         and hasattr(pkg, "has_code")
         and not pkg.has_code
     ):
@@ -438,7 +437,7 @@ def _execute_version(pkg, ver, **kwargs):
     pkg.versions[version] = kwargs
 
 
-def pkg_depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
+def _depends_on(pkg, spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
     when_spec = make_when_spec(when)
     if not when_spec:
         return
@@ -449,7 +448,7 @@ def pkg_depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
     if pkg.name == dep_spec.name:
         raise CircularReferenceError("Package '%s' cannot depend on itself." % pkg.name)
 
-    type = canonical_deptype(type)
+    depflag = dt.canonicalize(type)
     conditions = pkg.dependencies.setdefault(dep_spec.name, {})
 
     # call this patches here for clarity -- we want patch to be a list,
@@ -479,12 +478,12 @@ def pkg_depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
 
     # this is where we actually add the dependency to this package
     if when_spec not in conditions:
-        dependency = Dependency(pkg, dep_spec, type=type)
+        dependency = Dependency(pkg, dep_spec, depflag=depflag)
         conditions[when_spec] = dependency
     else:
         dependency = conditions[when_spec]
         dependency.spec.constrain(dep_spec, deps=False)
-        dependency.type |= set(type)
+        dependency.depflag |= depflag
 
     # apply patches to the dependency
     for execute_patch in patches:
@@ -520,13 +519,14 @@ def conflicts(conflict_spec, when=None, msg=None):
 
         # Save in a list the conflicts and the associated custom messages
         when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
-        when_spec_list.append((when_spec, msg))
+        msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
+        when_spec_list.append((when_spec, msg_with_name))
 
     return _execute_conflicts
 
 
 @directive(("dependencies"))
-def depends_on(spec, when=None, type=default_deptype, patches=None, version_translator=None):
+def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None, version_translator=None):
     """Creates a dict of deps with specs defining when they apply.
 
     Args:
@@ -560,7 +560,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None, version_tran
                 if version_ish is not None:
                     constrained_spec = spack.spec.Spec(spec)
                     if constrained_spec.constrain(f"@{version_ish}"):
-                        pkg_depends_on(
+                        _depends_on(
                             pkg,
                             constrained_spec,
                             when=f"@{pkg_version} {when}" if when else f"@{pkg_version}",
@@ -572,7 +572,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None, version_tran
         # If we haven't already produced one or more version-specific
         # dependencies, do the basic dependency for spec.
         if not executed:
-            pkg_depends_on(pkg, spec, when=when, type=type, patches=patches)
+            _depends_on(pkg, spec, when=when, type=type, patches=patches)
 
     return _execute_depends_on
 
@@ -593,7 +593,7 @@ def extends(spec, type=("build", "run"), **kwargs):
         if not when_spec:
             return
 
-        pkg_depends_on(pkg, spec, when=when, type=type)
+        _depends_on(pkg, spec, when=when, type=type)
         spec_obj = spack.spec.Spec(spec)
         pkg.extendees[spec_obj.name] = (spec_obj, kwargs)
 
@@ -691,39 +691,35 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
 
 @directive("variants")
 def variant(
-    name,
-    default=None,
-    description="",
-    values=None,
-    multi=None,
-    validator=None,
-    when=None,
-    sticky=False,
+    name: str,
+    default: Optional[Any] = None,
+    description: str = "",
+    values: Optional[Union[collections.abc.Sequence, Callable[[Any], bool]]] = None,
+    multi: Optional[bool] = None,
+    validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]] = None,
+    when: Optional[Union[str, bool]] = None,
+    sticky: bool = False,
 ):
-    """Define a variant for the package. Packager can specify a default
-    value as well as a text description.
+    """Define a variant for the package.
+
+    Packager can specify a default value as well as a text description.
 
     Args:
-        name (str): name of the variant
-        default (str or bool): default value for the variant, if not
-            specified otherwise the default will be False for a boolean
-            variant and 'nothing' for a multi-valued variant
-        description (str): description of the purpose of the variant
-        values (tuple or typing.Callable): either a tuple of strings containing the
-            allowed values, or a callable accepting one value and returning
-            True if it is valid
-        multi (bool): if False only one value per spec is allowed for
-            this variant
-        validator (typing.Callable): optional group validator to enforce additional
-            logic. It receives the package name, the variant name and a tuple
-            of values and should raise an instance of SpackError if the group
-            doesn't meet the additional constraints
-        when (spack.spec.Spec, bool): optional condition on which the
-            variant applies
-        sticky (bool): the variant should not be changed by the concretizer to
-            find a valid concrete spec.
+        name: Name of the variant
+        default: Default value for the variant, if not specified otherwise the default will be
+            False for a boolean variant and 'nothing' for a multi-valued variant
+        description: Description of the purpose of the variant
+        values: Either a tuple of strings containing the allowed values, or a callable accepting
+            one value and returning True if it is valid
+        multi: If False only one value per spec is allowed for this variant
+        validator: Optional group validator to enforce additional logic. It receives the package
+            name, the variant name and a tuple of values and should raise an instance of SpackError
+            if the group doesn't meet the additional constraints
+        when: Optional condition on which the variant applies
+        sticky: The variant should not be changed by the concretizer to find a valid concrete spec
+
     Raises:
-        DirectiveError: if arguments passed to the directive are invalid
+        DirectiveError: If arguments passed to the directive are invalid
     """
 
     def format_error(msg, pkg):
@@ -791,7 +787,7 @@ def variant(
         when_spec = make_when_spec(when)
         when_specs = [when_spec]
 
-        if not re.match(spack.spec.identifier_re, name):
+        if not re.match(spack.spec.IDENTIFIER_RE, name):
             directive = "variant"
             msg = "Invalid variant name in {0}: '{1}'"
             raise DirectiveError(directive, msg.format(pkg.name, name))
@@ -928,7 +924,8 @@ def requires(*requirement_specs, policy="one_of", when=None, msg=None):
 
         # Save in a list the requirements and the associated custom messages
         when_spec_list = pkg.requirements.setdefault(tuple(requirement_specs), [])
-        when_spec_list.append((when_spec, policy, msg))
+        msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
+        when_spec_list.append((when_spec, policy, msg_with_name))
 
     return _execute_requires
 

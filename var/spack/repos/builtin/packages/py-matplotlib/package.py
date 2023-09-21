@@ -37,6 +37,7 @@ class PyMatplotlib(PythonPackage):
         "pylab",
     ]
 
+    version("3.7.2", sha256="a8cdb91dddb04436bd2f098b8fdf4b81352e68cf4d2c6756fcc414791076569b")
     version("3.7.1", sha256="7b73305f25eab4541bd7ee0b96d87e53ae9c9f1823be5659b806cd85786fe882")
     version("3.7.0", sha256="8f6efd313430d7ef70a38a3276281cb2e8646b3a22b3b21eb227da20e15e6813")
     version("3.6.3", sha256="1f4d69707b1677560cd952544ee4962f68ff07952fb9069ff8c12b56353cb8c9")
@@ -154,11 +155,13 @@ class PyMatplotlib(PythonPackage):
     depends_on("py-packaging@20:", when="@3.6:", type=("build", "run"))
     depends_on("py-packaging", when="@3.5:", type=("build", "run"))
     depends_on("pil@6.2:", when="@3.3:", type=("build", "run"))
+    depends_on("py-pyparsing@2.3.1:3.0", when="@3.7.2:", type=("build", "run"))
     depends_on("py-pyparsing@2.3.1:", when="@3.7:", type=("build", "run"))
     depends_on("py-pyparsing@2.2.1:", when="@3.4:", type=("build", "run"))
     depends_on("py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:", type=("build", "run"))
     depends_on("py-python-dateutil@2.7:", when="@3.4:", type=("build", "run"))
     depends_on("py-python-dateutil@2.1:", type=("build", "run"))
+    depends_on("py-setuptools@42:", when="@3.7.2:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-importlib-resources@3.2:", when="@3.7: ^python@:3.9", type=("build", "run"))
 
@@ -174,13 +177,16 @@ class PyMatplotlib(PythonPackage):
         depends_on("tk@8.4:8.5,8.6.2:", when="backend=" + backend, type="run")
         depends_on("python+tkinter", when="backend=" + backend, type="run")
     # Qt
+    # matplotlib/backends/qt_compat.py
     for backend in ["qt4agg", "qt4cairo"]:
         depends_on("py-pyqt4@4.6:", when="backend=" + backend, type="run")
+        depends_on("qt+gui", when="backend=" + backend, type="run")
     for backend in ["qt5agg", "qt5cairo"]:
         depends_on("py-pyqt5", when="backend=" + backend, type="run")
-    # https://github.com/spack/spack/pull/32696
-    # for backend in ["qtagg", "qtcairo"]:
-    #     depends_on("py-pyqt6@6.1:", when="backend=" + backend, type="run")
+        depends_on("qt+gui", when="backend=" + backend, type="run")
+    for backend in ["qtagg", "qtcairo"]:
+        depends_on("py-pyqt6@6.1:", when="backend=" + backend, type="run")
+        depends_on("qt-base+gui+widgets", when="backend=" + backend, type="run")
     # GTK
     for backend in ["gtk", "gtkagg", "gtkcairo", "gtk3agg", "gtk3cairo", "gtk4agg", "gtk4cairo"]:
         depends_on("py-pygobject", when="backend=" + backend, type="run")
@@ -254,6 +260,12 @@ class PyMatplotlib(PythonPackage):
     @property
     def archive_files(self):
         return [os.path.join(self.build_directory, self.config_file)]
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=register")
+        return (flags, None, None)
 
     def setup_build_environment(self, env):
         include = []

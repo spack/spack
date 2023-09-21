@@ -22,6 +22,8 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("main", branch="main")
+    version("3.19.2", sha256="ca7ed906795971fbe35f08ee251a26b86a4442a18609b878cba00835c9d62034")
+    version("3.19.1", sha256="280737e9ef762d7f0079ad3ad29913215c799ebf124651c723c1972f71fbc0db")
     version("3.19.0", sha256="724f6610a2e38b1be7586fd494fe350b58f5aee1ca734bd85e783aa9d3daa8de")
     version("3.18.3", sha256="1b02bdf87c083749e81b3735aae7728098eaab78143b262b92c2ab164924c6f5")
     version("3.18.2", sha256="5bd90a755934e702ab1fdb3320b9fe75ab5fc28c93d364248ea86a372fbe6a62")
@@ -182,48 +184,36 @@ class Slepc(Package, CudaPackage, ROCmPackage):
             join_path(self.stage.source_path, "make.log"),
         ]
 
-    def run_hello_test(self):
-        """Run stand alone test: hello"""
+    def test_hello(self):
+        """build and run hello"""
         test_dir = self.test_suite.current_test_data_dir
-
         if not os.path.exists(test_dir):
-            print("Skipping slepc test")
-            return
+            raise SkipTest(f"Test data directory ({test_dir}) is missing")
 
-        exe = "hello"
-        cc_exe = os.environ["CC"]
+        test_exe = "hello"
+        options = [
+            f"-I{self.prefix.include}",
+            "-L",
+            self.prefix.lib,
+            "-l",
+            "slepc",
+            "-L",
+            self.spec["petsc"].prefix.lib,
+            "-l",
+            "petsc",
+            "-L",
+            self.spec["mpi"].prefix.lib,
+            "-l",
+            "mpi",
+            "-o",
+            test_exe,
+            join_path(test_dir, f"{test_exe}.c"),
+        ]
 
-        self.run_test(
-            exe=cc_exe,
-            options=[
-                "-I{0}".format(self.prefix.include),
-                "-L",
-                self.prefix.lib,
-                "-l",
-                "slepc",
-                "-L",
-                self.spec["petsc"].prefix.lib,
-                "-l",
-                "petsc",
-                "-L",
-                self.spec["mpi"].prefix.lib,
-                "-l",
-                "mpi",
-                "-o",
-                exe,
-                join_path(test_dir, "hello.c"),
-            ],
-            purpose="test: compile {0} example".format(exe),
-            work_dir=test_dir,
-        )
+        cc = which(os.environ["CC"])
+        with working_dir(test_dir):
+            cc(*options)
 
-        self.run_test(
-            exe=exe,
-            options=[],
-            expected=["Hello world"],
-            purpose="test: run {0} example".format(exe),
-            work_dir=test_dir,
-        )
-
-    def test(self):
-        self.run_hello_test()
+            hello = which(test_exe)
+            out = hello(output=str.split, error=str.split)
+            assert "Hello world" in out

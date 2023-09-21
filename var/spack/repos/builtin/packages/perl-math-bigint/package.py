@@ -13,6 +13,11 @@ class PerlMathBigint(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/P/PJ/PJACKLAM/Math-BigInt-1.999837.tar.gz"
 
     version(
+        "1.999.838",
+        sha256="d3c2fb37d412ac8d126452caad5764f02193147261b59c56e652167c41d1e9d5",
+        url="https://cpan.metacpan.org/authors/id/P/PJ/PJACKLAM/Math-BigInt-1.999838.tar.gz",
+    )
+    version(
         "1.999.837",
         sha256="038f9aad6318f20a84a7b1afe3087a1b02406c9988ce5919311a797f85a32962",
         url="https://cpan.metacpan.org/authors/id/P/PJ/PJACKLAM/Math-BigInt-1.999837.tar.gz",
@@ -23,10 +28,10 @@ class PerlMathBigint(PerlPackage):
         url="https://cpan.metacpan.org/authors/id/P/PJ/PJACKLAM/Math-BigInt-1.999836.tar.gz",
     )
 
-    provides("perl-math-bigfloat")  # AUTO-CPAN2Spack
-    provides("perl-math-bigint-calc")  # AUTO-CPAN2Spack
-    provides("perl-math-bigint-lib")  # AUTO-CPAN2Spack
-    depends_on("perl@5.6.1:", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-extutils-makemaker@6.58:", type="build")  # AUTO-CPAN2Spack
-    depends_on("perl-scalar-util", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-math-complex@1.36:", type="run")  # AUTO-CPAN2Spack
+    provides("perl-math-bigfloat")
+    provides("perl-math-bigint-calc")
+    provides("perl-math-bigint-lib")
+    depends_on("perl@5.6.1:", type="run")
+    depends_on("perl-extutils-makemaker@6.58:", type="build")
+    depends_on("perl-scalar-util", type="run")
+    depends_on("perl-math-complex@1.36:", type="run")

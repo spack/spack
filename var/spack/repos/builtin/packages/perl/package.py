@@ -37,27 +37,69 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # see https://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
 
+    # Maintenance releases (even numbers, preferred)
+    version(
+        "5.38.0",
+        sha256="213ef58089d2f2c972ea353517dc60ec3656f050dcc027666e118b508423e517",
+        preferred=True,
+    )
+    version(
+        "5.36.1",
+        sha256="68203665d8ece02988fc77dc92fccbb297a83a4bb4b8d07558442f978da54cc1",
+        preferred=True,
+    )
+    version(
+        "5.36.0",
+        sha256="e26085af8ac396f62add8a533c3a0ea8c8497d836f0689347ac5abd7b7a4e00a",
+        preferred=True,
+    )
+    version(
+        "5.34.1",
+        sha256="357951a491b0ba1ce3611263922feec78ccd581dddc24a446b033e25acf242a1",
+        preferred=True,
+    )
+    version(
+        "5.34.0",
+        sha256="551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a",
+        preferred=True,
+    )
+    version(
+        "5.32.1",
+        sha256="03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c",
+        preferred=True,
+    )
+    version(
+        "5.32.0",
+        sha256="efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4",
+        preferred=True,
+    )
+    version(
+        "5.30.3",
+        sha256="32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f",
+        preferred=True,
+    )
+    version(
+        "5.30.2",
+        sha256="66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689",
+        preferred=True,
+    )
+    version(
+        "5.30.1",
+        sha256="bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964",
+        preferred=True,
+    )
+    version(
+        "5.30.0",
+        sha256="851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2",
+        preferred=True,
+    )
+
     # Development releases (odd numbers)
     version("5.37.9", sha256="9884fa8a4958bf9434b50f01cbfd187f9e2738f38fe1ae37f844e9950c5117c1")
     version("5.35.0", sha256="d6c0eb4763d1c73c1d18730664d43fcaf6100c31573c3b81e1504ec8f5b22708")
     version("5.33.3", sha256="4f4ba0aceb932e6cf7c05674d05e51ef759d1c97f0685dee65a8f3d190f737cd")
     version("5.31.7", sha256="d05c4e72128f95ef6ffad42728ecbbd0d9437290bf0f88268b51af011f26b57d")
     version("5.31.4", sha256="418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5")
-
-    # Maintenance releases (even numbers, recommended)
-    version(
-        "5.36.0",
-        sha256="e26085af8ac396f62add8a533c3a0ea8c8497d836f0689347ac5abd7b7a4e00a",
-        preferred=True,
-    )
-    version("5.34.1", sha256="357951a491b0ba1ce3611263922feec78ccd581dddc24a446b033e25acf242a1")
-    version("5.34.0", sha256="551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a")
-    version("5.32.1", sha256="03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c")
-    version("5.32.0", sha256="efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4")
-    version("5.30.3", sha256="32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f")
-    version("5.30.2", sha256="66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689")
-    version("5.30.1", sha256="bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964")
-    version("5.30.0", sha256="851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2")
 
     # End of life releases
     version("5.28.0", sha256="7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8")
@@ -82,15 +124,21 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         depends_on("gdbm@:1.14.1", when="@:5.28.0")
         depends_on("berkeley-db")
         depends_on("bzip2")
-        depends_on("zlib")
+        depends_on("zlib-api")
         # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
-        depends_on("zlib@:1.2.8", when="@5.20.3:5.24.1")
+        conflicts("^zlib@1.2.9:", when="@5.20.3:5.24.1")
 
     conflicts("@5.34.1:", when="%msvc@:19.29.30136")
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch("protect-quotes-in-ccflags.patch", when="@5.22.0")
+
+    # Support zlib-ng 2.1.2 and above for recent Perl
+    # Restrict zlib-ng to older versions for older Perl
+    # See https://github.com/pmqs/Compress-Raw-Zlib/issues/24
+    patch("zlib-ng.patch", when="@5.38 ^zlib-ng@2.1.2:")
+    conflicts("^zlib-ng@2.1.2:", when="@:5.37")
 
     # Fix the Time-Local testase http://blogs.perl.org/users/tom_wyant/2020/01/my-y2020-bug.html
     patch(
@@ -213,7 +261,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # source and make everything writeable in the future.
     def do_stage(self, mirror_only=False):
         # Do Spack's regular stage
-        super(Perl, self).do_stage(mirror_only)
+        super().do_stage(mirror_only)
         # Add write permissions on file to be patched
         filename = join_path(self.stage.source_path, "pp.c")
         perm = os.stat(filename).st_mode
@@ -412,8 +460,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         env.set("BZIP2_INCLUDE", spec["bzip2"].prefix.include)
         env.set("BZIP2_LIB", spec["bzip2"].libs.directories[0])
         env.set("BUILD_ZLIB", 0)
-        env.set("ZLIB_INCLUDE", spec["zlib"].prefix.include)
-        env.set("ZLIB_LIB", spec["zlib"].libs.directories[0])
+        env.set("ZLIB_INCLUDE", spec["zlib-api"].prefix.include)
+        env.set("ZLIB_LIB", spec["zlib-api"].libs.directories[0])
 
     @run_after("install")
     def filter_config_dot_pm(self):
@@ -500,16 +548,19 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             msg = "Unable to locate {0} command in {1}"
             raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))
 
-    def test(self):
-        """Smoke tests"""
-        exe = self.spec["perl"].command.name
+    def test_version(self):
+        """check version"""
+        perl = self.spec["perl"].command
+        out = perl("--version", output=str.split, error=str.split)
+        expected = ["perl", str(self.spec.version)]
+        for expect in expected:
+            assert expect in out
 
-        reason = "test: checking version is {0}".format(self.spec.version)
-        self.run_test(
-            exe, "--version", ["perl", str(self.spec.version)], installed=True, purpose=reason
-        )
-
-        reason = "test: ensuring perl runs"
+    def test_hello(self):
+        """ensure perl runs hello world"""
         msg = "Hello, World!"
-        options = ["-e", 'use warnings; use strict;\nprint("%s\n");' % msg]
-        self.run_test(exe, options, msg, installed=True, purpose=reason)
+        options = ["-e", "use warnings; use strict;\nprint('%s\n');" % msg]
+
+        perl = self.spec["perl"].command
+        out = perl(*options, output=str.split, error=str.split)
+        assert msg in out

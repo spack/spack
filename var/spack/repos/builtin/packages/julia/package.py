@@ -23,9 +23,10 @@ class Julia(MakefilePackage):
     url = "https://github.com/JuliaLang/julia/releases/download/v1.7.0/julia-1.7.0.tar.gz"
     git = "https://github.com/JuliaLang/julia.git"
 
-    maintainers("glennpj", "vchuravy", "haampie", "giordano")
+    maintainers("vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
+    version("1.9.2", sha256="015438875d591372b80b09d01ba899657a6517b7c72ed41222298fef9d4ad86b")
     version("1.9.0", sha256="48f4c8a7d5f33d0bc6ce24226df20ab49e385c2d0c3767ec8dfdb449602095b2")
     version("1.8.5", sha256="d31026cc6b275d14abce26fd9fd5b4552ac9d2ce8bde4291e494468af5743031")
     version("1.8.4", sha256="b7b8ee64fb947db8d61104f231e1b25342fe330d29e0d2273f93c264f32c5333")
@@ -123,7 +124,7 @@ class Julia(MakefilePackage):
         when="^llvm@12.0.1",
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch",
-            sha256="10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4",
+            sha256="37f2f6193e1205ea49b9a56100a70b038b64abf402115f263c6132cdf0df80c3",
         ),
     )
     depends_on(
@@ -131,15 +132,15 @@ class Julia(MakefilePackage):
         when="^llvm@13.0.1",
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch",
-            sha256="45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f",
+            sha256="d9e7f0befeddddcba40eaed3895c4f4734980432b156c39d7a251bc44abb13ca",
         ),
     )
     depends_on(
         "llvm",
         when="^llvm@14.0.6",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...5c82f5309b10fab0adf6a94969e0dddffdb3dbce.patch",
-            sha256="9f2bc98e876e85a3edb158064aae782281ea7099e4c34e83ac456609cb7acd10",
+            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff",
+            sha256="f3fd1803459bdaac0e26d0f3b1874b0e3f97e9411a9e98043d36f788ab4fd00e",
         ),
     )
 
@@ -184,12 +185,29 @@ class Julia(MakefilePackage):
     depends_on("suite-sparse +pic")
     depends_on("unwind")
     depends_on("utf8proc")
-    depends_on("zlib +shared +pic +optimize")
+    depends_on("zlib-api")
+    depends_on("zlib +shared +pic +optimize", when="^zlib")
 
     # Patches for julia
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
     patch("use-add-rpath.patch", when="@:1.8.0")
     patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
+
+    # Fix libstdc++ not being found (https://github.com/JuliaLang/julia/issues/47987)
+    patch(
+        "https://github.com/JuliaLang/julia/pull/48342.patch?full_index=1",
+        sha256="10f7cab89c8353b2648a968d2c8e8ed8bd90961df3227084f1d69d3d482933d7",
+        when="@1.8.4:1.8.5",
+    )
+
+    # Fix printing of `BigFloat`s when using MPFR 4.2.0, but the patch is
+    # applicable to previous versions of the library too
+    # (https://github.com/JuliaLang/julia/issues/49895).
+    patch(
+        "https://github.com/JuliaLang/julia/pull/49909.patch?full_index=1",
+        sha256="7fa53516b97d83ccf06f6d387c04d337849808f7e8ee2bdc2e79894d84578afc",
+        when="@1.6.4:1.9.0",
+    )
 
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
     patch("fix-gfortran.patch", when="@1.7.0:1.7.2")
@@ -235,7 +253,6 @@ class Julia(MakefilePackage):
             "pcre2",
             "suite-sparse",
             "utf8proc",
-            "zlib",
         ]
         if "+openlibm" in self.spec:
             pkgs.append("openlibm")
@@ -244,6 +261,8 @@ class Julia(MakefilePackage):
         for pkg in pkgs:
             for dir in self.spec[pkg].libs.directories:
                 env.prepend_path(linker_var, dir)
+        for dir in self.spec["zlib-api"].libs.directories:
+            env.prepend_path(linker_var, dir)
 
     def edit(self, spec, prefix):
         # TODO: use a search query for blas / lapack?

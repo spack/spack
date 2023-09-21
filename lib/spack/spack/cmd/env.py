@@ -85,6 +85,13 @@ def env_activate_setup_parser(subparser):
         const="bat",
         help="print bat commands to activate the environment",
     )
+    shells.add_argument(
+        "--pwsh",
+        action="store_const",
+        dest="shell",
+        const="pwsh",
+        help="print powershell commands to activate environment",
+    )
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
@@ -94,7 +101,7 @@ def env_activate_setup_parser(subparser):
         dest="with_view",
         const=True,
         default=True,
-        help="update PATH etc. with associated view",
+        help="update PATH, etc., with associated view",
     )
     view_options.add_argument(
         "-V",
@@ -103,7 +110,7 @@ def env_activate_setup_parser(subparser):
         dest="with_view",
         const=False,
         default=True,
-        help="do not update PATH etc. with associated view",
+        help="do not update PATH, etc., with associated view",
     )
 
     subparser.add_argument(
@@ -153,7 +160,7 @@ def env_activate(args):
 
     # Error out when -e, -E, -D flags are given, cause they are ambiguous.
     if args.env or args.no_env or args.env_dir:
-        tty.die("Calling spack env activate with --env, --env-dir and --no-env " "is ambiguous")
+        tty.die("Calling spack env activate with --env, --env-dir and --no-env is ambiguous")
 
     env_name_or_dir = args.activate_env or args.dir
 
@@ -231,6 +238,13 @@ def env_deactivate_setup_parser(subparser):
         const="bat",
         help="print bat commands to activate the environment",
     )
+    shells.add_argument(
+        "--pwsh",
+        action="store_const",
+        dest="shell",
+        const="pwsh",
+        help="print pwsh commands to activate the environment",
+    )
 
 
 def env_deactivate(args):
@@ -242,7 +256,7 @@ def env_deactivate(args):
 
     # Error out when -e, -E, -D flags are given, cause they are ambiguous.
     if args.env or args.no_env or args.env_dir:
-        tty.die("Calling spack env deactivate with --env, --env-dir and --no-env " "is ambiguous")
+        tty.die("Calling spack env deactivate with --env, --env-dir and --no-env is ambiguous")
 
     if ev.active_environment() is None:
         tty.die("No environment is currently active.")
@@ -282,7 +296,7 @@ def env_create_setup_parser(subparser):
         "envfile",
         nargs="?",
         default=None,
-        help="either a lockfile (must end with '.json' or '.lock') or a manifest file.",
+        help="either a lockfile (must end with '.json' or '.lock') or a manifest file",
     )
 
 
@@ -301,13 +315,16 @@ def env_create(args):
         # the environment should not include a view.
         with_view = None
 
-    _env_create(
+    env = _env_create(
         args.create_env,
         init_file=args.envfile,
         dir=args.dir,
         with_view=with_view,
         keep_relative=args.keep_relative,
     )
+
+    # Generate views, only really useful for environments created from spack.lock files.
+    env.regenerate_views()
 
 
 def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):
@@ -407,7 +424,7 @@ def env_list(args):
     colify(color_names, indent=4)
 
 
-class ViewAction(object):
+class ViewAction:
     regenerate = "regenerate"
     enable = "enable"
     disable = "disable"
@@ -597,16 +614,16 @@ def env_depfile_setup_parser(subparser):
         "--make-target-prefix",
         default=None,
         metavar="TARGET",
-        help="prefix Makefile targets (and variables) with <TARGET>/<name>. By default "
+        help="prefix Makefile targets (and variables) with <TARGET>/<name>\n\nby default "
         "the absolute path to the directory makedeps under the environment metadata dir is "
-        "used. Can be set to an empty string --make-prefix ''.",
+        "used. can be set to an empty string --make-prefix ''",
     )
     subparser.add_argument(
         "--make-disable-jobserver",
         default=True,
         action="store_false",
         dest="jobserver",
-        help="disable POSIX jobserver support.",
+        help="disable POSIX jobserver support",
     )
     subparser.add_argument(
         "--use-buildcache",
@@ -614,8 +631,8 @@ def env_depfile_setup_parser(subparser):
         type=arguments.use_buildcache,
         default="package:auto,dependencies:auto",
         metavar="[{auto,only,never},][package:{auto,only,never},][dependencies:{auto,only,never}]",
-        help="When using `only`, redundant build dependencies are pruned from the DAG. "
-        "This flag is passed on to the generated spack install commands.",
+        help="when using `only`, redundant build dependencies are pruned from the DAG\n\n"
+        "this flag is passed on to the generated spack install commands",
     )
     subparser.add_argument(
         "-o",
@@ -629,7 +646,7 @@ def env_depfile_setup_parser(subparser):
         "--generator",
         default="make",
         choices=("make",),
-        help="specify the depfile type. Currently only make is supported.",
+        help="specify the depfile type\n\ncurrently only make is supported",
     )
     subparser.add_argument(
         metavar="specs",

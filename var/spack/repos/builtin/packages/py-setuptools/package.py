@@ -14,6 +14,13 @@ class PySetuptools(Package, PythonExtension):
     url = "https://files.pythonhosted.org/packages/py3/s/setuptools/setuptools-62.3.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/setuptools/"
 
+    tags = ["build-tools"]
+
+    version(
+        "68.0.0",
+        sha256="11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f",
+        expand=False,
+    )
     version(
         "67.2.0",
         sha256="16ccf598aab3b506593c17378473978908a2734d7336755a8769b480906bec1c",
@@ -191,11 +198,16 @@ class PySetuptools(Package, PythonExtension):
     )
 
     extends("python")
+
     depends_on("python@3.7:", when="@59.7:", type=("build", "run"))
     depends_on("python@3.6:", when="@51:", type=("build", "run"))
     depends_on("python@3.5:", when="@45:50", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", when="@44", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:", when="@:43", type=("build", "run"))
+
+    # https://github.com/pypa/setuptools/issues/3661
+    conflicts("python@3.12:", when="@:67")
+
     depends_on("py-pip", type="build")
 
     def url_for_version(self, version):

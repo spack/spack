@@ -25,7 +25,7 @@ class Lcms(AutotoolsPackage):
 
     depends_on("jpeg")
     depends_on("libtiff")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     @property
     def libs(self):

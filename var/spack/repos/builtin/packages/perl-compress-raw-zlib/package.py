@@ -36,5 +36,5 @@ class PerlCompressRawZlib(PerlPackage):
     version("2.083", sha256="5642998fe8c4a814326c10a97428335565525763761fe37f86e14a45a25c9e3e")
     version("2.081", sha256="e156de345bd224bbdabfcab0eeb3f678a3099a4e86c9d1b6771d880b55aa3a1b")
 
-    depends_on("zlib")
-    depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
+    depends_on("zlib-api")
+    depends_on("perl-extutils-makemaker", type="build")

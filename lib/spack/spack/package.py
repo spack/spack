@@ -67,7 +67,7 @@ from spack.build_systems.sourceware import SourcewarePackage
 from spack.build_systems.waf import WafPackage
 from spack.build_systems.xorg import XorgPackage
 from spack.builder import run_after, run_before
-from spack.dependency import all_deptypes
+from spack.deptypes import ALL_TYPES as all_deptypes
 from spack.directives import *
 from spack.install_test import (
     SkipTest,
@@ -96,6 +96,7 @@ from spack.package_base import (
     on_package_attributes,
 )
 from spack.spec import InvalidSpecDetected, Spec
+from spack.util.cpus import determine_number_of_jobs
 from spack.util.executable import *
 from spack.variant import (
     any_combination_of,
@@ -108,6 +109,5 @@ from spack.version import Version, ver
 # These are just here for editor support; they will be replaced when the build env
 # is set up.
 make = MakeExecutable("make", jobs=1)
-gmake = MakeExecutable("gmake", jobs=1)
 ninja = MakeExecutable("ninja", jobs=1)
 configure = Executable(join_path(".", "configure"))

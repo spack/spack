@@ -165,6 +165,7 @@ jobs:
     - name: Install Python packages
       run: |
           pip install --upgrade pip setuptools pytest coverage[toml] pytest-cov clingo pytest-xdist
+          pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.

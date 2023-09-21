@@ -23,6 +23,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ["^nm$", "^readelf$"]
 
+    version("2.41", sha256="a4c4bec052f7b8370024e60389e194377f3f48b56618418ea51067f67aaab30b")
     version("2.40", sha256="f8298eb153a4b37d112e945aa5cb2850040bcf26a3ea65b5a715c83afe05e48a")
     version("2.39", sha256="da24a84fef220102dd24042df06fdea851c2614a5377f86effa28f33b7b16148")
     version("2.38", sha256="070ec71cf077a6a58e0b959f05a09a35015378c2d8a51e90f3aeabfe30590ef8")
@@ -140,7 +141,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # pkg-config is used to find zstd in gas/configure
     depends_on("pkgconfig", type="build")
     depends_on("zstd@1.4.0:", when="@2.40:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("diffutils", type="build")
     depends_on("gettext", when="+nls")
@@ -233,31 +234,36 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
                 iflags.append("-Wl,-z,notext")
         return (iflags, None, flags)
 
-    def test(self):
-        spec_vers = str(self.spec.version)
+    def test_binaries(self):
+        binaries = [
+            "ar",
+            "c++filt",
+            "coffdump",
+            "dlltool",
+            "elfedit",
+            "gprof",
+            "ld",
+            "nm",
+            "objdump",
+            "ranlib",
+            "readelf",
+            "size",
+            "strings",
+        ]
 
-        checks = {
-            "ar": spec_vers,
-            "c++filt": spec_vers,
-            "coffdump": spec_vers,
-            "dlltool": spec_vers,
-            "elfedit": spec_vers,
-            "gprof": spec_vers,
-            "ld": spec_vers,
-            "nm": spec_vers,
-            "objdump": spec_vers,
-            "ranlib": spec_vers,
-            "readelf": spec_vers,
-            "size": spec_vers,
-            "strings": spec_vers,
-        }
+        # Since versions can have mixed separator characters after the minor
+        # version, just check the first two components
+        version = str(self.spec.version.up_to(2))
+        for _bin in binaries:
+            reason = "checking version of {0} is {1}".format(_bin, version)
+            with test_part(self, "test_binaries_{0}".format(_bin), purpose=reason):
+                installed_exe = join_path(self.prefix.bin, _bin)
+                if not os.path.exists(installed_exe):
+                    raise SkipTest("{0} is not installed".format(_bin))
 
-        for exe in checks:
-            expected = checks[exe]
-            reason = "test: ensuring version of {0} is {1}".format(exe, expected)
-            self.run_test(
-                exe, "--version", expected, installed=True, purpose=reason, skip_missing=True
-            )
+                exe = which(installed_exe)
+                out = exe("--version", output=str.split, error=str.split)
+                assert version in out
 
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):

@@ -24,6 +24,7 @@ class Dd4hep(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("1.26", sha256="de2cc8d8e99217e23fdf0a55b879d3fd3a864690d6660e7808f1ff99eb47f384")
     version("1.25.1", sha256="6267e76c74fbb346aa881bc44de84434ebe788573f2997a189996252fc5b271b")
     version("1.25", sha256="102a049166a95c2f24fc1c03395a819fc4501c175bf7915d69ccc660468d094d")
     version("1.24", sha256="361a932b9af2479458c0759281fef0161439d8bd119da426ce462a0467adc679")
@@ -110,6 +111,12 @@ class Dd4hep(CMakePackage):
     # Workaround for failing build file generation in some cases
     # See https://github.com/spack/spack/issues/24232
     patch("cmake_language.patch", when="@:1.17")
+    # Fix missing SimCaloHits when using the LCIO format
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/AIDASoft/DD4hep/pull/1019.patch?full_index=1",
+        when="@1.19:1.23",
+        sha256="6466719c82de830ce728db57004fb7db03983587a63b804f6dc95c6b92b3fc76",
+    )
 
     # variants for subpackages
     variant("ddcad", default=True, description="Enable CAD interface based on Assimp")
@@ -125,6 +132,12 @@ class Dd4hep(CMakePackage):
     # variants for other build options
     variant("xercesc", default=False, description="Enable 'Detector Builders' based on XercesC")
     variant("hepmc3", default=False, description="Enable build with hepmc3")
+    variant(
+        "hepmc3-gz",
+        default=False,
+        description="Enable build with compressed hepmc3",
+        when="@1.26: +hepmc3",
+    )
     variant("lcio", default=False, description="Enable build with lcio")
     variant("edm4hep", default=True, description="Enable build with edm4hep")
     variant("geant4units", default=False, description="Use geant4 units throughout")
@@ -137,6 +150,7 @@ class Dd4hep(CMakePackage):
     )
 
     depends_on("cmake @3.12:", type="build")
+    depends_on("cmake @3.14:", type="build", when="@1.26:")
     depends_on("boost @1.49:")
     depends_on("boost +iostreams", when="+ddg4")
     depends_on("boost +system +filesystem", when="%gcc@:7")
@@ -152,12 +166,18 @@ class Dd4hep(CMakePackage):
     depends_on("geant4@10.2.2:", when="+ddg4")
     depends_on("assimp@5.0.2:", when="+ddcad")
     depends_on("hepmc3", when="+hepmc3")
+    depends_on("hepmc3@3.2.6:", when="+hepmc3-gz")
+    depends_on("bzip2", when="+hepmc3-gz")
+    depends_on("xz", when="+hepmc3-gz")
+    depends_on("zlib-api", when="+hepmc3-gz")
     depends_on("tbb", when="+tbb")
     depends_on("intel-tbb@:2020.3", when="+tbb @:1.23")
     depends_on("lcio", when="+lcio")
     depends_on("edm4hep", when="+edm4hep")
     depends_on("podio", when="+edm4hep")
+    depends_on("podio@:0.16.03", when="@:1.23 +edm4hep")
     depends_on("podio@0.16:", when="@1.24: +edm4hep")
+    depends_on("podio@0.16.3:", when="@1.26: +edm4hep")
     depends_on("py-pytest", type=("build", "test"))
 
     # See https://github.com/AIDASoft/DD4hep/pull/771 and https://github.com/AIDASoft/DD4hep/pull/876
@@ -167,6 +187,13 @@ class Dd4hep(CMakePackage):
         msg="cmake version with buggy FindPython breaks dd4hep cmake config",
     )
     conflicts("~ddrec+dddetectors", msg="Need to enable +ddrec to build +dddetectors.")
+
+    @property
+    def libs(self):
+        # We need to override libs here, because we don't build a libdd4hep so
+        # the default discovery fails. All libraries that are built by DD4hep
+        # start with libDD
+        return find_libraries("libDD*", root=self.prefix, shared=True, recursive=True)
 
     def cmake_args(self):
         spec = self.spec
@@ -183,6 +210,10 @@ class Dd4hep(CMakePackage):
             self.define_from_variant("DD4HEP_USE_HEPMC3", "hepmc3"),
             self.define_from_variant("DD4HEP_USE_GEANT4_UNITS", "geant4units"),
             self.define_from_variant("DD4HEP_BUILD_DEBUG", "debug"),
+            # DD4hep@1.26: with hepmc3@3.2.6: allows compressed hepmc3 files
+            self.define(
+                "DD4HEP_HEPMC3_COMPRESSION_SUPPORT", self.spec.satisfies("@1.26: ^hepmc3@3.2.6:")
+            ),
             # Downloads assimp from github and builds it on the fly.
             # However, with spack it is preferrable to have a proper external
             # dependency, so we disable it.
@@ -222,6 +253,7 @@ class Dd4hep(CMakePackage):
         env.set("DD4HEP", self.prefix.examples)
         env.set("DD4hep_DIR", self.prefix)
         env.set("DD4hep_ROOT", self.prefix)
+        env.prepend_path("LD_LIBRARY_PATH", self.libs.directories[0])
 
     def url_for_version(self, version):
         # dd4hep releases are dashes and padded with a leading zero

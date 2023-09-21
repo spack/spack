@@ -53,7 +53,7 @@ class Openblas(MakefilePackage):
 
     variant(
         "fortran",
-        default="True",
+        default=True,
         when="@0.3.21:",
         description="w/o a Fortran compiler, OpenBLAS will build an f2c-converted LAPACK",
     )

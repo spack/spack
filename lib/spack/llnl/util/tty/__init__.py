@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import unicode_literals
-
 import contextlib
 import io
 import os
@@ -14,6 +12,7 @@ import textwrap
 import traceback
 from datetime import datetime
 from sys import platform as _platform
+from typing import NoReturn
 
 if _platform != "win32":
     import fcntl
@@ -246,7 +245,7 @@ def warn(message, *args, **kwargs):
     info("Warning: " + str(message), *args, **kwargs)
 
 
-def die(message, *args, **kwargs):
+def die(message, *args, **kwargs) -> NoReturn:
     kwargs.setdefault("countback", 4)
     error(message, *args, **kwargs)
     sys.exit(1)

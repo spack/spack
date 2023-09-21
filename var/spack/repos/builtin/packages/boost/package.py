@@ -27,6 +27,7 @@ class Boost(Package):
     maintainers("hainest")
 
     version("develop", branch="develop", submodules=True)
+    version("1.83.0", sha256="6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e")
     version("1.82.0", sha256="a6e1ab9b0860e6a2881dd7b21fe9f737a095e5f33a3a874afc6a345228597ee6")
     version("1.81.0", sha256="71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa")
     version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
@@ -177,7 +178,9 @@ class Boost(Package):
             conditional("17", when="@1.63.0:"),
             # C++20/2a is not supported by Boost < 1.73.0
             conditional("2a", when="@1.73.0:"),
-            conditional("20", when="@1.73.0:"),
+            conditional("20", when="@1.77.0:"),
+            conditional("23", when="@1.79.0:"),
+            conditional("26", when="@1.79.0:"),
         ),
         multi=False,
         description="Use the specified C++ standard when building.",
@@ -230,7 +233,7 @@ class Boost(Package):
 
     depends_on("mpi", when="+mpi")
     depends_on("bzip2", when="+iostreams")
-    depends_on("zlib", when="+iostreams")
+    depends_on("zlib-api", when="+iostreams")
     depends_on("zstd", when="+iostreams")
     depends_on("xz", when="+iostreams")
     depends_on("py-numpy", when="+numpy", type=("build", "run"))
@@ -431,6 +434,12 @@ class Boost(Package):
 
         return url.format(version.dotted, version.underscored)
 
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("@1.79.0 %oneapi"):
+                flags.append("-Wno-error=enum-constexpr-conversion")
+        return (flags, None, None)
+
     def determine_toolset(self, spec):
         toolsets = {
             "g++": "gcc",
@@ -527,9 +536,9 @@ class Boost(Package):
                     "-s",
                     "BZIP2_LIBPATH=%s" % spec["bzip2"].prefix.lib,
                     "-s",
-                    "ZLIB_INCLUDE=%s" % spec["zlib"].prefix.include,
+                    "ZLIB_INCLUDE=%s" % spec["zlib-api"].prefix.include,
                     "-s",
-                    "ZLIB_LIBPATH=%s" % spec["zlib"].prefix.lib,
+                    "ZLIB_LIBPATH=%s" % spec["zlib-api"].prefix.lib,
                     "-s",
                     "LZMA_INCLUDE=%s" % spec["xz"].prefix.include,
                     "-s",

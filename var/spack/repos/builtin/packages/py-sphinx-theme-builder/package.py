@@ -9,8 +9,9 @@ from spack.package import *
 class PySphinxThemeBuilder(PythonPackage):
     """A tool for authoring Sphinx themes with a simple (opinionated) workflow."""
 
-    homepage = "https://github.com/pradyunsg/sphinx-theme-builder"
-    pypi = "sphinx-theme-builder/sphinx-theme-builder-0.2.0b1.tar.gz"
+    homepage = "https://sphinx-theme-builder.readthedocs.io/en/latest"
+    pypi = "sphinx-theme-builder/sphinx-theme-builder-0.2.0b2.tar.gz"
+    git = "https://github.com/pradyunsg/sphinx-theme-builder"
 
     maintainers("chissg", "gartung", "marcmengel", "vitodb")
 
@@ -27,4 +28,4 @@ class PySphinxThemeBuilder(PythonPackage):
     depends_on("py-nodeenv", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-tomli", when="^python@:3.10", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@3.7", type=("build", "run"))
+    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))

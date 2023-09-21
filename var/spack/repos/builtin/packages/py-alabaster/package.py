@@ -12,6 +12,7 @@ class PyAlabaster(PythonPackage):
 
     homepage = "https://alabaster.readthedocs.io/"
     pypi = "alabaster/alabaster-0.7.10.tar.gz"
+    git = "https://github.com/sphinx-doc/alabaster.git"
 
     version("0.7.13", sha256="a27a4a084d5e690e16e01e03ad2b2e552c61a65469419b907243193de1a84ae2")
     version("0.7.12", sha256="a661d72d58e6ea8a57f7a86e37d86716863ee5e92788398526d58b26a4e4dc02")

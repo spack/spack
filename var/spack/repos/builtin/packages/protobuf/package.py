@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.util.web
+import spack.url
 from spack.package import *
 
 
@@ -14,6 +14,7 @@ class Protobuf(CMakePackage):
     url = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
     maintainers("hyoklee")
 
+    version("3.23.3", sha256="5e4b555f72a7e3f143a7aff7262292500bb02c49b174351684bb70fc7f2a6d33")
     version("3.22.2", sha256="2118051b4fb3814d59d258533a4e35452934b1ddb41230261c9543384cbb4dfc")
     version("3.21.12", sha256="930c2c3b5ecc6c9c12615cf5ad93f1cd6e12d0aba862b572e076259970ac3a53")
     version("3.21.9", sha256="1add10f9bd92775b91f326da259f243881e904dd509367d5031d4c782ba82810")
@@ -80,9 +81,10 @@ class Protobuf(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
+    depends_on("abseil-cpp@20230125.3:", when="@3.22.5:")
     # https://github.com/protocolbuffers/protobuf/issues/11828#issuecomment-1433557509
     depends_on("abseil-cpp@20230125:", when="@3.22:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     conflicts("%gcc@:4.6", when="@3.6.0:")  # Requires c++11
     conflicts("%gcc@:4.6", when="@3.2.0:3.3.0")  # Breaks
@@ -102,6 +104,15 @@ class Protobuf(CMakePackage):
         sha256="fa1abf042eddc1b3b43875dc018c651c90cd1c0c5299975a818a1610bee54ab8",
     )
 
+    # fix build on Centos 8, see also https://github.com/protocolbuffers/protobuf/issues/5144
+    patch(
+        "https://github.com/protocolbuffers/protobuf/pull/11032/commits/3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch?full_index=1",
+        when="@:3.21",
+        sha256="cefc4bf4aadf9ca33a336b2aa6d0d82006b6563e85122ae8cfb70345f85321dd",
+    )
+
+    patch("msvc-abseil-target-namespace.patch", when="@3.22 %msvc")
+
     def fetch_remote_versions(self, *args, **kwargs):
         """Ignore additional source artifacts uploaded with releases,
         only keep known versions
@@ -109,9 +120,7 @@ class Protobuf(CMakePackage):
         return dict(
             map(
                 lambda u: (u, self.url_for_version(u)),
-                spack.util.web.find_versions_of_archive(
-                    self.all_urls, self.list_url, self.list_depth
-                ),
+                spack.url.find_versions_of_archive(self.all_urls, self.list_url, self.list_depth),
             )
         )
 
@@ -123,10 +132,11 @@ class Protobuf(CMakePackage):
         ]
 
         if self.spec.satisfies("@3.22:"):
+            cxxstd = self.spec["abseil-cpp"].variants["cxxstd"].value
             args.extend(
                 [
                     self.define("protobuf_ABSL_PROVIDER", "package"),
-                    self.define("CMAKE_CXX_STANDARD", 14),
+                    self.define("CMAKE_CXX_STANDARD", cxxstd),
                 ]
             )
 

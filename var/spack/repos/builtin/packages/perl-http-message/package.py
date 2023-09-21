@@ -34,36 +34,37 @@ class PerlHttpMessage(PerlPackage):
     version("6.14", sha256="71aab9f10eb4b8ec6e8e3a85fc5acb46ba04db1c93eb99613b184078c5cf2ac9")
     version("6.13", sha256="f25f38428de851e5661e72f124476494852eb30812358b07f1c3a289f6f5eded")
 
-    provides("perl-http-config")  # AUTO-CPAN2Spack
-    provides("perl-http-headers")  # AUTO-CPAN2Spack
-    provides("perl-http-headers-auth")  # AUTO-CPAN2Spack
-    provides("perl-http-headers-etag")  # AUTO-CPAN2Spack
-    provides("perl-http-headers-util")  # AUTO-CPAN2Spack
-    provides("perl-http-request")  # AUTO-CPAN2Spack
-    provides("perl-http-request-common")  # AUTO-CPAN2Spack
-    provides("perl-http-response")  # AUTO-CPAN2Spack
-    provides("perl-http-status")  # AUTO-CPAN2Spack
-    depends_on("perl-io-uncompress-gunzip", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-time-local", type=("build", "test"))  # AUTO-CPAN2Spack
-    depends_on("perl-encode-locale@1:", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-io-compress-gzip", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-io-html", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
+    provides("perl-http-config")
+    provides("perl-http-headers")
+    provides("perl-http-headers-auth")
+    provides("perl-http-headers-etag")
+    provides("perl-http-headers-util")
+    provides("perl-http-request")
+    provides("perl-http-request-common")
+    provides("perl-http-response")
+    provides("perl-http-status")
+    depends_on("perl-clone", type=("build", "run"))
+    depends_on("perl-compress-raw-zlib", type="run")
+    depends_on("perl-encode-locale@1:", type="run")
+    depends_on("perl-extutils-makemaker", type=("build", "test"))
+    depends_on("perl-http-date@6:", type="run")
     depends_on(
         "perl-io-uncompress-brotli@0.4.1:", type=("build", "run", "test")
-    )  # AUTO-CPAN2Spack
-    depends_on("perl-test-needs", type=("build", "test"))  # AUTO-CPAN2Spack
-    depends_on("perl-io-compress-deflate", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl@5.8.1:", type=("run", "test"))  # AUTO-CPAN2Spack
-    depends_on("perl@5.6:", type="build")  # AUTO-CPAN2Spack
-    depends_on("perl-io-uncompress-inflate", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-uri@1.10:", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-io-uncompress-bunzip2@2.21:", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-uri-url", type=("build", "test"))  # AUTO-CPAN2Spack
-    depends_on("perl-io-compress-bzip2@2.21:", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-http-date@6:", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-lwp-mediatypes@6:", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-io-compress-brotli@0.4.1:", type=("build", "run", "test"))  # AUTO-CPAN2Spack
-    depends_on("perl-io-uncompress-rawinflate", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-compress-raw-zlib", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-try-tiny", type=("build", "test"))  # AUTO-CPAN2Spack
+    )
+    depends_on("perl-io-compress-bzip2@2.21:", type="run")
+    depends_on("perl-io-compress-deflate", type="run")
+    depends_on("perl-io-compress-gzip", type="run")
+    depends_on("perl-io-html", type="run")
+    depends_on("perl-io-uncompress-brotli@0.4.1:", type=("build", "run", "test"))
+    depends_on("perl-io-uncompress-bunzip2@2.21:", type="run")
+    depends_on("perl-io-uncompress-gunzip", type="run")
+    depends_on("perl-io-uncompress-inflate", type="run")
+    depends_on("perl-io-uncompress-rawinflate", type="run")
+    depends_on("perl-lwp-mediatypes@6:", type="run")
+    depends_on("perl-test-needs", type=("build", "test"))
+    depends_on("perl-time-local", type=("build", "test"))
+    depends_on("perl-try-tiny", type=("build", "test"))
+    depends_on("perl-uri-url", type=("build", "test"))
+    depends_on("perl-uri@1.10:", type="run")
+    depends_on("perl@5.6:", type="build")
+    depends_on("perl@5.8.1:", type=("run", "test"))

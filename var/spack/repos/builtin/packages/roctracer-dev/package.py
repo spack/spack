@@ -15,12 +15,13 @@ class RoctracerDev(CMakePackage, ROCmPackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/roctracer"
     git = "https://github.com/ROCm-Developer-Tools/roctracer.git"
-    url = "https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libroctracer64"]
-
+    version("5.5.1", sha256="3afc31ebfdb14b0365185ca6b9326a83b1503a94a51d910f5ce7ced192d8c133")
+    version("5.5.0", sha256="fe9ad95628fa96639db6fc33f78d334c814c7161b4a754598f5a4a7852625777")
     version("5.4.3", sha256="6b5111be5efd4d7fd6935ca99b06fab19b43d97a58d26fc1fe6e783c4de9a926")
     version("5.4.0", sha256="04c1e955267a3e8440833a177bb976f57697aba0b90c325d07fc0c6bd4065aea")
     version("5.3.3", sha256="f2cb1e6bb69ea1a628c04f984741f781ae1d8498dc58e15795bb03015f924d13")
@@ -51,13 +52,6 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3:", type="build")
     depends_on("python@3:", type="build")
     depends_on("py-cppheaderparser", type="build")
@@ -76,14 +70,34 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("rocminfo@" + ver, when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
+    for ver in [
+        "4.5.0",
+        "4.5.2",
+        "5.0.0",
+        "5.0.2",
+        "5.1.0",
+        "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+    ]:
         depends_on("rocprofiler-dev@" + ver, when="@" + ver)
 
-    patch("0001-include-rocprofiler-dev-path.patch", when="@5.3:")
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
+    patch("0001-include-rocprofiler-dev-path.patch", when="@5.3:5.4")
 
     @classmethod
     def determine_version(cls, lib):
@@ -116,7 +130,8 @@ class RoctracerDev(CMakePackage, ROCmPackage):
             "-DHIP_VDI=1",
             "-DCMAKE_MODULE_PATH={0}/cmake_modules".format(self.stage.source_path),
             "-DHSA_RUNTIME_HSA_INC_PATH={0}/include".format(self.spec["hsa-rocr-dev"].prefix),
-            "-DROCPROFILER_PATH={0}".format(self.spec["rocprofiler-dev"].prefix),
             "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON",
         ]
+        if self.spec.satisfies("@:5.4.0"):
+            "-DROCPROFILER_PATH={0}".format(self.spec["rocprofiler-dev"].prefix)
         return args

@@ -11,7 +11,11 @@ class PyPygments(PythonPackage):
 
     homepage = "https://pygments.org/"
     pypi = "Pygments/Pygments-2.4.2.tar.gz"
+    git = "https://github.com/pygments/pygments.git"
 
+    version("2.16.1", sha256="1daff0494820c69bc8941e407aa20f577374ee88364ee10a98fdbe0aece96e29")
+    version("2.16.0", sha256="4f6df32f21dca07a54a0a130bda9a25d2241e9e0a206841d061c85a60cc96145")
+    version("2.15.1", sha256="8ace4d3c1dd481894b2005f560ead0f9f19ee64fe983366be1a21e171d12775c")
     version("2.14.0", sha256="b3ed06a9e8ac9a9aae5a6f5dbe78a8a58655d17b43b93c078f094ddc476ae297")
     version("2.13.0", sha256="56a8508ae95f98e2b9bdf93a6be5ae3f7d8af858b43e02c5a2ff083726be40c1")
     version("2.12.0", sha256="5eb116118f9612ff1ee89ac96437bb6b49e8f04d8a13b514ba26f620208e26eb")
@@ -24,7 +28,6 @@ class PyPygments(PythonPackage):
     version("2.0.1", sha256="5e039e1d40d232981ed58914b6d1ac2e453a7e83ddea22ef9f3eeadd01de45cb")
     version("2.0.2", sha256="7320919084e6dac8f4540638a46447a3bd730fca172afc17d2c03eed22cf4f51")
 
-    depends_on("python@3.6:", type=("build", "run"), when="@2.12:")
-    depends_on("python@3.5:", type=("build", "run"), when="@2.6:")
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@:2.5")
+    depends_on("python@3.7:", when="@2.15:", type=("build", "run"))
+    depends_on("py-setuptools@61:", when="@2.15:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))

@@ -20,6 +20,7 @@ class RTictoc(RPackage):
 
     cran = "tictoc"
 
+    version("1.2", sha256="f05ea4b4142a90b0dc5d10356be3748625ef86bbd0e4399c56455654165ff20c")
     version("1.1", sha256="120f868ba276bda70c8edef5d6c092586cf73db0fa02eb5459d8f55350fb474d")
     version("1.0.1", sha256="a09a1535c417ddf6637bbbda5fca6edab6c7f7b252a64e57e99d4d0748712705")
     version("1.0", sha256="47da097c1822caa2d8e262381987cfa556ad901131eb96109752742526b2e2fe")
