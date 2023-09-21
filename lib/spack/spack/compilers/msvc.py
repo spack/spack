@@ -154,9 +154,12 @@ class Msvc(Compiler):
 
     #: Regex used to extract version from compiler's output
     version_regex = r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
+    # The MSVC compiler class overrides this to prevent instances
+    # of erroneous matching on executable names that cannot be msvc
+    # compilers
+    suffixes = []
 
-    # Initialize, deferring to base class but then adding the vcvarsallfile
-    # file based on compiler executable path.
+    is_supported_on_platform = lambda x: isinstance(x, spack.platforms.Windows)
 
     def __init__(self, *args, **kwargs):
         # This positional argument "paths" is later parsed and process by the base class
@@ -167,6 +170,8 @@ class Msvc(Compiler):
         cspec = args[0]
         new_pth = [pth if pth else get_valid_fortran_pth(cspec.version) for pth in paths]
         paths[:] = new_pth
+        # Initialize, deferring to base class but then adding the vcvarsallfile
+        # file based on compiler executable path.
         super().__init__(*args, **kwargs)
         # To use the MSVC compilers, VCVARS must be invoked
         # VCVARS is located at a fixed location, referencable

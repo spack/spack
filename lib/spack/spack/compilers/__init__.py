@@ -10,7 +10,7 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-from typing import Dict
+from typing import Dict, List
 
 import archspec.cpu
 
@@ -298,7 +298,7 @@ def select_new_compilers(compilers, scope=None):
     return compilers_not_in_config
 
 
-def supported_compilers():
+def supported_compilers() -> List[str]:
     """Return a set of names of compilers supported by Spack.
 
     See available_compilers() to get a list of all the available
@@ -306,10 +306,41 @@ def supported_compilers():
     """
     # Hack to be able to call the compiler `apple-clang` while still
     # using a valid python name for the module
-    return sorted(
-        name if name != "apple_clang" else "apple-clang"
-        for name in llnl.util.lang.list_modules(spack.paths.compilers_path)
-    )
+    return sorted(all_compiler_names())
+
+
+def supported_compilers_for_host_platform() -> List[str]:
+    """Return a set of compiler class objects supported by Spack
+    that are also supported by the current host platform
+    """
+    host_plat = spack.platforms.real_host()
+    return supported_compilers_for_platform(host_plat)
+
+
+def supported_compilers_for_platform(platform: spack.platforms.Platform) -> List[str]:
+    """Return a set of compiler class objects supported by Spack
+    that are also supported by the provided platform
+
+    Args:
+        platform (str): string representation of platform
+            for which compiler compatability should be determined
+    """
+    return [
+        name
+        for name in supported_compilers()
+        if class_for_compiler_name(name).is_supported_on_platform(platform)
+    ]
+
+
+def all_compiler_names() -> List[str]:
+    def replace_apple_clang(name):
+        return name if name != "apple_clang" else "apple-clang"
+
+    return [replace_apple_clang(name) for name in all_compiler_module_names()]
+
+
+def all_compiler_module_names() -> List[str]:
+    return [name for name in llnl.util.lang.list_modules(spack.paths.compilers_path)]
 
 
 @_auto_compiler_spec
@@ -628,7 +659,7 @@ def arguments_to_detect_version_fn(operating_system, paths):
     def _default(search_paths):
         command_arguments = []
         files_to_be_tested = fs.files_in(*search_paths)
-        for compiler_name in spack.compilers.supported_compilers():
+        for compiler_name in spack.compilers.supported_compilers_for_host_platform():
             compiler_cls = class_for_compiler_name(compiler_name)
 
             for language in ("cc", "cxx", "f77", "fc"):
@@ -687,9 +718,11 @@ def detect_version(detect_version_args):
                 value = fn_args._replace(id=compiler_id._replace(version=version))
                 return value, None
 
-            error = "Couldn't get version for compiler {0}".format(path)
+            error = f"Couldn't get version for compiler {path}".format(path)
         except spack.util.executable.ProcessError as e:
-            error = "Couldn't get version for compiler {0}\n".format(path) + str(e)
+            error = f"Couldn't get version for compiler {path}\n" + str(e)
+        except spack.util.executable.ProcessTimeoutError as e:
+            error = f"Couldn't get version for compiler {path}\n" + str(e)
         except Exception as e:
             # Catching "Exception" here is fine because it just
             # means something went wrong running a candidate executable.
