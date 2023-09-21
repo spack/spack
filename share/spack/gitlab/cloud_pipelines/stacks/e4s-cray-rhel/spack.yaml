@@ -63,6 +63,8 @@ spack:
       variants: +pic
     mesa:
       version: [21.3.8]
+    unzip:
+      require: "%gcc"
 
   specs:
   # CPU
@@ -91,7 +93,7 @@ spack:
   - flit
   - flux-core
   - fortrilinos
-  - gasnet
+  # - gasnet # configure error: User requested --enable-ofi but I don't know how to build ofi programs for your system
   - ginkgo
   - globalarrays
   - gmp
