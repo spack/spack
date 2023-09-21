@@ -14,7 +14,9 @@ class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = "https://www.openblas.net"
-    url = "https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.2.19/OpenBLAS-0.2.19.tar.gz"
+    url = (
+        "https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.2.19/OpenBLAS-0.2.19.tar.gz"
+    )
     git = "https://github.com/OpenMathLib/OpenBLAS.git"
 
     libraries = ["libopenblas"]
