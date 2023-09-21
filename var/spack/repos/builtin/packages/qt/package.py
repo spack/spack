@@ -557,7 +557,7 @@ class Qt(Package):
             config_args.append("-openssl-linked")
             config_args.extend(pkg.libs.search_flags.split())
             config_args.extend(pkg.headers.include_flags.split())
-            if spec.satisfies("os=scientific7")
+            if spec.satisfies("os=scientific7"):
                 config_args.append("-I/usr/include/openssl11")
                 config_args.append("-L/usr/lib64/libopenssl.so.1.1")
         else:
