@@ -16,7 +16,7 @@ import spack.schema.projections
 #:
 #: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
 #: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
-spec_regex = (
+SPEC_REGEX = (
     r"(?!hierarchy|core_specs|verbose|hash_length|defaults|filter_hierarchy_specs|"
     r"whitelist|blacklist|"  # DEPRECATED: remove in 0.20.
     r"include|exclude|"  # use these more inclusive/consistent options
@@ -24,10 +24,10 @@ spec_regex = (
 )
 
 #: Matches a valid name for a module set
-valid_module_set_name = r"^(?!prefix_inspections$)\w[\w-]*$"
+VALID_MODULE_SET_NAME = r"^(?!prefix_inspections$)\w[\w-]*$"
 
 #: Matches an anonymous spec, i.e. a spec without a root name
-anonymous_spec_regex = r"^[\^@%+~]"
+ANONYMOUS_SPEC_REGEX = r"^[\^@%+~]"
 
 #: Definitions for parts of module schema
 array_of_strings = {"type": "array", "default": [], "items": {"type": "string"}}
@@ -97,8 +97,8 @@ module_type_configuration = {
         {
             "validate_spec": True,
             "patternProperties": {
-                spec_regex: module_file_configuration,
-                anonymous_spec_regex: module_file_configuration,
+                SPEC_REGEX: module_file_configuration,
+                ANONYMOUS_SPEC_REGEX: module_file_configuration,
             },
         },
     ],
@@ -129,7 +129,7 @@ module_config_properties = {
                     "core_specs": array_of_strings,
                     "filter_hierarchy_specs": {
                         "type": "object",
-                        "patternProperties": {spec_regex: array_of_strings},
+                        "patternProperties": {SPEC_REGEX: array_of_strings},
                     },
                 },
             },  # Specific lmod extensions
@@ -169,7 +169,7 @@ properties = {
             }
         },
         "patternProperties": {
-            valid_module_set_name: {
+            VALID_MODULE_SET_NAME: {
                 "type": "object",
                 "default": {},
                 "additionalProperties": False,

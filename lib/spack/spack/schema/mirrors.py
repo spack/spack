@@ -12,6 +12,7 @@
 #: Common properties for connection specification
 connection = {
     "url": {"type": "string"},
+    # pylint: disable=fixme
     # todo: replace this with named keys "username" / "password" or "id" / "secret"
     "access_pair": {
         "type": "array",
@@ -51,6 +52,7 @@ mirror_entry = {
 #: Properties for inclusion in other schemas
 properties = {
     "mirrors": {
+        # pylint: disable=duplicate-code
         "type": "object",
         "default": {},
         "additionalProperties": False,

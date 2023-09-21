@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+"""Configuration for upstream DBs."""
 
 #: Properties for inclusion in other schemas
 properties = {
@@ -10,6 +10,7 @@ properties = {
         "type": "object",
         "default": {},
         "patternProperties": {
+            # pylint: disable=duplicate-code
             r"\w[\w-]*": {
                 "type": "object",
                 "default": {},
@@ -29,7 +30,7 @@ properties = {
 #: Full schema with metadata
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Spack core configuration file schema",
+    "title": "Spack upstream configuration file schema",
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
