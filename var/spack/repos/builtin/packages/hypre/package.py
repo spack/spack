@@ -113,13 +113,17 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     gpu_pkgs = ["magma", "umpire"]
     for sm_ in CudaPackage.cuda_arch_values:
         for pkg in gpu_pkgs:
-            depends_on("{0}+cuda cuda_arch={1}".format(pkg, sm_),
-                       when="+{0}+cuda cuda_arch={1}".format(pkg, sm_))
+            depends_on(
+                "{0}+cuda cuda_arch={1}".format(pkg, sm_),
+                when="+{0}+cuda cuda_arch={1}".format(pkg, sm_),
+            )
 
     for gfx in ROCmPackage.amdgpu_targets:
         for pkg in gpu_pkgs:
-            depends_on("{0}+rocm amdgpu_target={1}".format(pkg, gfx),
-                       when="+{0}+rocm amdgpu_target={1}".format(pkg, gfx))
+            depends_on(
+                "{0}+rocm amdgpu_target={1}".format(pkg, gfx),
+                when="+{0}+rocm amdgpu_target={1}".format(pkg, gfx),
+            )
 
     # hypre@:2.28.0 uses deprecated cuSPARSE functions/types (e.g. csrsv2Info_t).
     depends_on("cuda@:11", when="@:2.28.0+cuda")
@@ -287,9 +291,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.append("--enable-unified-memory")
 
         if "+magma" in spec:
-            configure_args.append(
-                "--with-magma-include=%s" % spec["magma"].prefix.include
-            )
+            configure_args.append("--with-magma-include=%s" % spec["magma"].prefix.include)
             configure_args.append("--with-magma-lib=%s" % spec["magma"].libs)
             configure_args.append("--with-magma")
 
