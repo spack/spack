@@ -1,0 +1,11 @@
+--- a/configure
++++ b/configure
+@@ -27203,7 +27203,7 @@ LIBS="$LIBS $MPI_C_LIB"
+ 
+ # Check whether --with-regard-for-quality was given.
+ if test "${with_regard_for_quality+set}" = set; then :
+-  withval=$with_regard_for_quality; if test x"$withval" != no; then :
++  withval=$with_regard_for_quality; if test x"$withval" != xno; then :
+   with_regard_for_quality=yes
+ fi
+ else
