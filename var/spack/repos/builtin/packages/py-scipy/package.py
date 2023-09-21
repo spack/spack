@@ -191,8 +191,6 @@ class PyScipy(PythonPackage):
             # http://scipy.github.io/devdocs/building/blas_lapack.html
             "setup-args=-Dblas": blas,
             "setup-args=-Dlapack": lapack,
-            "setup-args=-Ddebug": False,
-            "setup-args=-Doptimization": 2,
         }
 
     @when("@:1.8")
