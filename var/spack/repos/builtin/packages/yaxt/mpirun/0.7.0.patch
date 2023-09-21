@@ -1,0 +1,89 @@
+--- a/configure
++++ b/configure
+@@ -22092,6 +22092,15 @@ saved_LIBS=$LIBS
+ CFLAGS="$CFLAGS $MPI_C_INCLUDE"
+ FCFLAGS="$FCFLAGS $MPI_FC_MOD"
+ LIBS="$LIBS $MPI_C_LIB"
++# check MPI defects
++
++# Check whether --with-regard-for-quality was given.
++if test "${with_regard_for_quality+set}" = set; then :
++  withval=$with_regard_for_quality;
++else
++  with_regard_for_quality=yes
++fi
++
+ for ac_prog in mpirun mpiexec
+ do
+   # Extract the first word of "$ac_prog", so it can be a program name with args.
+@@ -22214,25 +22223,19 @@ fi
+    if test x"$MPI_LAUNCH" = xtrue; then :
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+ $as_echo "no" >&6; }
+-      { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
++      if test "x$with_regard_for_quality" = xyes; then :
++  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+ $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+-as_fn_error $? "$MPI_LAUNCH_failMsg
++as_fn_error $? "unable to find a working MPI launch program, which is required for checks for known MPI defects (see --without-regard-for-quality)
+ See \`config.log' for more details" "$LINENO" 5; }
++fi
+ else
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ fi
+ 
+-# check MPI defects
+-
+-# Check whether --with-regard-for-quality was given.
+-if test "${with_regard_for_quality+set}" = set; then :
+-  withval=$with_regard_for_quality;
+-else
+-  with_regard_for_quality=yes
+-fi
+-
+-# Check whether --enable-cross-mpi-defect-checks was given.
++if test "x$with_regard_for_quality" = xyes; then :
++  # Check whether --enable-cross-mpi-defect-checks was given.
+ if test "${enable_cross_mpi_defect_checks+set}" = set; then :
+   enableval=$enable_cross_mpi_defect_checks; if test x"$enable_cross_mpi_defect_checks" != xno; then :
+   enable_cross_mpi_defect_checks=yes
+@@ -22326,26 +22329,22 @@ $as_echo "error" >&6; }
+ 	      if test -r "$srcdir/config/checkdoc/${acx_subtestname}.txt"; then :
+   cat "$srcdir/config/checkdoc/${acx_subtestname}.txt" >&2
+ fi
+-   if test "$with_regard_for_quality" != no; then :
+-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
++      { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+ $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+-as_fn_error $? "test for known defect $subtestname failed, re-configure with --without-regard-for-quality in case you must use the given MPI implementation, but some tests might fail
++as_fn_error $? "test for known defect $acx_subtestname failed, re-configure with --without-regard-for-quality in case you must use the given MPI implementation, but some tests might fail
+ See \`config.log' for more details" "$LINENO" 5; }
+ fi
+-fi
+ else
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: error" >&5
+ $as_echo "error" >&6; }
+ 	   if test -r "$srcdir/config/checkdoc/${acx_subtestname}.txt"; then :
+   cat "$srcdir/config/checkdoc/${acx_subtestname}.txt" >&2
+ fi
+-   if test "$with_regard_for_quality" != no; then :
+-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
++      { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+ $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+-as_fn_error $? "test for known defect $subtestname failed, re-configure with --without-regard-for-quality in case you must use the given MPI implementation, but some tests might fail
++as_fn_error $? "test for known defect $acx_subtestname failed, re-configure with --without-regard-for-quality in case you must use the given MPI implementation, but some tests might fail
+ See \`config.log' for more details" "$LINENO" 5; }
+ fi
+-fi
+ rm -f core conftest.err conftest.$ac_objext \
+     conftest$ac_exeext
+ 	case $acx_suffix in #(
+@@ -22376,6 +22375,7 @@ done
+       unset acx_suffix
+       unset acx_subtestname
+ 
++fi
+ fi
+ if test "x$MPI_LAUNCH" = xtrue; then :
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: MPI launch command unavailable" >&5

@@ -1,0 +1,11 @@
+--- a/tests/test_redist_repeat_f.f90
++++ b/tests/test_redist_repeat_f.f90
+@@ -142,7 +142,7 @@ CONTAINS
+     DOUBLE PRECISION, PARAMETER :: src_data(5, 5) = RESHAPE((/&
+          (DBLE(i), i = 1, 25)/), (/ 5, 5 /))
+     DOUBLE PRECISION :: dst_data(3, 5)
+-#if defined(__PGI) || defined(_CRAYFTN)
++#if defined(__PGI) || defined(_CRAYFTN) || defined(NO_2D_PARAM)
+     DOUBLE PRECISION :: ref_dst_data(3, 5)
+     ref_dst_data &
+          = RESHAPE((/ ((DBLE((i + j)*MOD(j+1,2)-MOD(j,2)), i = 1,5,2), &

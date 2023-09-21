@@ -1,0 +1,11 @@
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -1102,7 +1102,7 @@ mpich_workaround.lo: mpich_workaround.c
+ @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mpich_workaround.Tpo $(DEPDIR)/mpich_workaround.Plo
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mpich_workaround.c' object='mpich_workaround.lo' libtool=yes @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=cmpichle $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) -I../config/workarounds/mpich34_yaksa_patch $(CFLAGS) -c -o $@ `test -f 'mpich_workaround.c' || echo '$(srcdir)/'`mpich_workaround.c
++@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) -I../config/workarounds/mpich34_yaksa_patch $(CFLAGS) -c -o $@ `test -f 'mpich_workaround.c' || echo '$(srcdir)/'`mpich_workaround.c
+ 
+ xt_redist_real_sp.f90: \
+ 	m4-templates/xt_redist_template_module.f90.m4 \
