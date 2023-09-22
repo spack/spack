@@ -44,7 +44,7 @@ class Fiat(CMakePackage):
         args = [
             self.define_from_variant("ENABLE_OMP", "openmp"),
             self.define_from_variant("ENABLE_MPI", "mpi"),
-            self.define_from_variant("ENABLE_FCKIT", "fckit")
+            self.define_from_variant("ENABLE_FCKIT", "fckit"),
         ]
 
         return args
