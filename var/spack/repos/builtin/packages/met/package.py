@@ -20,6 +20,7 @@ class Met(AutotoolsPackage):
     maintainers("AlexanderRichert-NOAA")
 
     version("develop", branch="develop")
+    version("11.1.0", sha256="e2e371ae1f49185ff8bf08201b1a3e90864a467aa3369b04132d231213c3c9e5")
     version("11.0.2", sha256="f720d15e1d6c235c9a41fd97dbeb0eb1082fb8ae99e1bcdcb5e51be9b50bdfbf")
     version("11.0.1", sha256="48d471ad4634f1b969d9358c51925ce36bf0a1cec5312a6755203a4794b81646")
     version("11.0.0", sha256="648ebb54d07ca099680f4fc23b7ef5095c1a8ac5537c0a5d0e8587bf15991cff")
