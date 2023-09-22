@@ -695,55 +695,19 @@ requirement_group_satisfied(node(ID, Package), X) :-
   pkg_fact(SubPackage, condition_effect(ConditionID, EffectID)),
   imposed_constraint(EffectID, "node_flag_set", SubPackage, FlagType, FlagValue).
 
-{ attr("node_flag", node(SubPackageID, SubPackage), FlagType, FlagValue) } :-
-  requirement_group_member(ConditionID, Package, RequirementID),
-  activate_requirement(node(PackageID, Package), RequirementID),
-  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
-  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue),
-  virtual_condition_holds(node(SubPackageID, SubPackage), Package).
+%{ attr("node_flag", node(SubPackageID, SubPackage), FlagType, FlagValue) } :-
+%  requirement_group_member(ConditionID, Package, RequirementID),
+%  activate_requirement(node(PackageID, Package), RequirementID),
+%  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+%  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue),
+%  virtual_condition_holds(node(SubPackageID, SubPackage), Package).
 
 % I want to say that the fact that an existing node providing a virtual
 % mandates the existence of a virtual, but how do I do that? Generate a new
 % ID for the virtual node?
-virtual(Virtual) :- virtual_condition_holds(node(_, Provider), Virtual).
 
 1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) } :- 
   virtual_condition_holds(node(_, Provider), Virtual).
-
-%This does not trigger, the requirement is not activated
-:- virtual_condition_holds(node(_, "w"), "virtual-w"),
-  requirement_group_member(ConditionID, "virtual-w", RequirementID),
-  activate_requirement(node(_, "virtual-w"), RequirementID).
-
-%This does not trigger, so more-fundamentally, the package does not exist
-:- activate_requirement(node(_, "virtual-w"), RequirementID).
-
-%This triggers
-%:- virtual_condition_holds(node(_, "w"), "virtual-w"),
-%  requirement_group_member(ConditionID, "virtual-w", RequirementID).
-
-%This triggers
-%:- virtual_condition_holds(node(_, "w"), "virtual-w").
-
-%This doesn't trigger
-%:- virtual_condition_holds(node(SubPackageID, SubPackage), node(PackageID, Package)).
-
-%This appears to be more promising than provider(...)
-%:- virtual_condition_holds(node(ProviderID, Provider), Virtual).
-
-% virtual_condition_holds(node(ProviderID, Provider), Virtual) 
-% provider(node(PackageID, Package), node(VirtualID, Virtual)) :-
-
-% pkg_fact(Package, condition_trigger(X, Y)),
-% condition_holds(X),
-
-% pkg_fact(Package, provider_condition(ID, Virtual)).
-% pkg_fact(Package, trigger_id(Y)).
-
-% pkg_fact("w",provider_condition(1,"virtual-w")).
-% pkg_fact("w",trigger_id(1)).
-
-:- provider(_, _).
 
 { attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
   requirement_group_member(Y, A1, X),
