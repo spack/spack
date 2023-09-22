@@ -511,8 +511,8 @@ packages:
     spec_y = Spec("y").concretized()
     assert spec_y.satisfies("cflags=-g")
 
-    asp = solve("--show=asp", "w")
-    import pdb; pdb.set_trace()
+    # asp = solve("--show=asp", "w")
+    # import pdb; pdb.set_trace()
 
     spec_w = Spec("w").concretized()
     assert spec_w.satisfies("cflags=-O1")
