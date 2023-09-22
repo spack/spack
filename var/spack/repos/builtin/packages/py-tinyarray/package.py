@@ -30,5 +30,4 @@ class PyTinyarray(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # See https://gitlab.kwant-project.org/kwant/tinyarray/-/merge_requests/14
-    conflicts("^python@3.10:", when="@:1.2.3", 
-            msg="py-tinyarray must be @1.2.4: for python@3.10")
+    conflicts("^python@3.10:", when="@:1.2.3", msg="py-tinyarray must be @1.2.4: for python@3.10")
