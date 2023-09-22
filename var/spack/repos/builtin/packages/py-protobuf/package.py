@@ -62,7 +62,6 @@ class PyProtobuf(PythonPackage):
     variant("cpp", default=True, when="@:4.21", description="Enable the cpp implementation")
 
     depends_on("python", type=("build", "link", "run"))
-    depends_on("python@:3.10", when="@:4.21", type=("build", "link", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", when="+cpp", type=("build", "run"))
@@ -74,6 +73,8 @@ class PyProtobuf(PythonPackage):
     # Handle the 3.x series releases
     for ver in list(range(0, 21)):
         depends_on(f"protobuf@3.{ver}", when=f"@3.{ver}+cpp")
+
+    conflicts("+cpp ^python@3.11:", when="%apple-clang@15:")
 
     @property
     def build_directory(self):
