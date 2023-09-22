@@ -83,3 +83,19 @@ error(0, "Cannot satisfy '{0}@{1}' and '{0}@{2}", Package, Constraint1, Constrai
      % version satisfies one but not the other
      pkg_fact(Package, version_satisfies(Constraint1, Version)),
      not pkg_fact(Package, version_satisfies(Constraint2, Version)).
+
+% At most one variant value for single-valued variants
+error(0, "'{0}' required multiple values for single-valued variant '{1}'\n    Requested 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2, startcauses, Cause1, Cause2)
+  :- attr("node", node(X, Package)),
+     node_has_variant(node(X, Package), Variant),
+     pkg_fact(Package, variant_single_value(Variant)),
+     build(node(X, Package)),
+     attr("variant_value", node(X, Package), Variant, Value1),
+     imposed_constraint(EID1, "variant_set", Package, Variant, Value1),
+     pkg_fact(TriggerPkg1, condition_effect(Cause1, EID1)),
+     condition_holds(Cause1, node(X, TriggerPkg1)),
+     attr("variant_value", node(X, Package), Variant, Value2),
+     imposed_constraint(EID2, "variant_set", Package, Variant, Value2),
+     pkg_fact(TriggerPkg2, condition_effect(Cause2, EID2)),
+     condition_holds(Cause2, node(X, TriggerPkg2)),
+     Value1 < Value2. % see[1] in concretize.lp
