@@ -133,6 +133,18 @@ error(0, "Attempted to build package {0} which is not buildable and does not hav
      condition_requirement(TID, Name, A1, A2, A3),
      not attr(Name, node(_, A1), A2, A3).
 
+error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        'Spec({0} {1}={2})' is an external constraint for {0} which was not satisfied\n        'Spec({0} {1}={3})' required", Package, Variant, Value, OtherValue, startcauses, OtherValueCause)
+  :- external(node(ID, Package)),
+     not attr("external_conditions_hold", node(ID, Package), _),
+     imposed_constraint(EID, "external_conditions_hold", Package, _),
+     trigger_and_effect(Package, TID, EID),
+     condition_requirement(TID, "variant_value", Package, Variant, Value),
+     not attr("variant_value", node(ID, Package), Variant, Value),
+     attr("variant_value", node(ID, Package), Variant, OtherValue),
+     imposed_constraint(EID2, "variant_set", Package, Variant, OtherValue),
+     pkg_fact(TriggerPkg, condition_effect(OtherValueCause, EID2)),
+     condition_holds(OtherValueCause, node(_, TriggerPkg)).
+
 error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}', '{3}', '{4}', '{5}') is an external constraint for {0} which was not satisfied", Package, Name, A1, A2, A3, A4)
   :- external(node(ID, Package)),
      not attr("external_conditions_hold", node(ID, Package), _),
