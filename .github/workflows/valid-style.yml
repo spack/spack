@@ -18,15 +18,15 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # @v2
-    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # @v2
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1
       with:
         python-version: '3.11'
         cache: 'pip'
     - name: Install Python Packages
       run: |
-        pip install --upgrade pip
-        pip install --upgrade vermin
+        pip install --upgrade pip setuptools
+        pip install -r .github/workflows/style/requirements.txt
     - name: vermin (Spack's Core)
       run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
@@ -35,16 +35,17 @@ jobs:
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # @v2
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # @v2
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1
       with:
         python-version: '3.11'
         cache: 'pip'
     - name: Install Python packages
       run: |
-        python3 -m pip install --upgrade pip setuptools types-six black==23.1.0 mypy isort clingo flake8
+        pip install --upgrade pip setuptools
+        pip install -r .github/workflows/style/requirements.txt
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
