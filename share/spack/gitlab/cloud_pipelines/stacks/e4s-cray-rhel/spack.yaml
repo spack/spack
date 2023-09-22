@@ -42,8 +42,6 @@ spack:
       variants: ~wrapperrpath
     ncurses:
       variants: +termlib
-    openblas:
-      variants: threads=openmp
     paraview:
       # Don't build GUI support or GLX rendering for HPC/container deployments
       require: "@5.11 ~qt+osmesa"
@@ -65,6 +63,9 @@ spack:
       version: [21.3.8]
     unzip:
       require: "%gcc"
+    openblas:
+      require: '@0.3.20'
+      variants: threads=openmp
 
   specs:
   # CPU
