@@ -10,39 +10,39 @@
 % Create a causal tree between trigger conditions by locating the effect conditions
 % that are triggers for another condition. Condition2 is caused by Condition1
 condition_cause(Condition2, Condition1, ID) :-
-  condition_holds(Condition2, node(ID, Package)),
-  pkg_fact(Package, condition_trigger(Condition2, Trigger)),
+  condition_holds(Condition2, node(ID2, Package2)),
+  pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, Name, Package),
   attr(Name, node(ID, Package)),
-  condition_holds(Condition1, node(ID, Package)),
-  pkg_fact(Package, condition_effect(Condition1, Effect)),
+  condition_holds(Condition1, node(ID1, Package1)),
+  pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package).
 
 condition_cause(Condition2, Condition1, ID) :-
-  condition_holds(Condition2, node(ID, Package)),
-  pkg_fact(Package, condition_trigger(Condition2, Trigger)),
+  condition_holds(Condition2, node(ID2, Package2)),
+  pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, Name, Package, A1),
   attr(Name, node(ID, Package), A1),
-  condition_holds(Condition1, node(ID, Package)),
-  pkg_fact(Package, condition_effect(Condition1, Effect)),
+  condition_holds(Condition1, node(ID1, Package1)),
+  pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1).
 
 condition_cause(Condition2, Condition1, ID) :-
-  condition_holds(Condition2, node(ID, Package)),
-  pkg_fact(Package, condition_trigger(Condition2, Trigger)),
+  condition_holds(Condition2, node(ID2, Package2)),
+  pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, Name, Package, A1, A2),
   attr(Name, node(ID, Package), A1, A2),
-  condition_holds(Condition1, node(ID, Package)),
-  pkg_fact(Package, condition_effect(Condition1, Effect)),
+  condition_holds(Condition1, node(ID1, Package1)),
+  pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1, A2).
 
 condition_cause(Condition2, Condition1, ID) :-
-  condition_holds(Condition2, node(ID, Package)),
-  pkg_fact(Package, condition_trigger(Condition2, Trigger)),
+  condition_holds(Condition2, node(ID2, Package2)),
+  pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, Name, Package, A1, A2, A3),
   attr(Name, node(ID, Package), A1, A2, A3),
-  condition_holds(Condition1, node(ID, Package)),
-  pkg_fact(Package, condition_effect(Condition1, Effect)),
+  condition_holds(Condition1, node(ID1, Package1)),
+  pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1, A2, A3).
 
 % special condition cause for dependency conditions
