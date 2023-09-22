@@ -50,9 +50,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     version("develop", branch="master")
 
     # TODO: when v4.6 is released, replace the branch below with the proper link
-    version(
-        "4.6.0", branch="master"
-    )
+    version("4.6.0", branch="master")
 
     version(
         "4.5.2",
