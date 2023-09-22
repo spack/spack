@@ -54,8 +54,6 @@ class EcmwfAtlas(CMakePackage):
 
     variant("trans", default=False, description="Enable trans")
     depends_on("ectrans@1.1.0:", when="@0.31.0: +trans")
-    # variant('cgal', default=False)
-    # depends_on('cgal', when='+cgal')
     variant("eigen", default=True, description="Enable eigen")
     depends_on("eigen", when="+eigen")
     variant("fftw", default=True, description="Enable fftw")
