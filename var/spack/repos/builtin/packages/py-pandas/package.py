@@ -123,8 +123,8 @@ class PyPandas(PythonPackage):
     depends_on("py-bottleneck@1.3.1:", when="@1.4:", type=("build", "run"))
     depends_on("py-bottleneck@1.2.1:", when="@0.25:", type=("build", "run"))
     depends_on("py-bottleneck", type=("build", "run"))
-    # depends_on("py-numba@0.55.2:", when="@2.1:", type=("build", "run"))
-    # depends_on("py-numba@0.53.1:", when="@2.0:", type=("build", "run"))
+    depends_on("py-numba@0.55.2:", when="@2.1:", type=("build", "run"))
+    depends_on("py-numba@0.53.1:", when="@2.0:", type=("build", "run"))
 
     # Optional dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#optional-dependencies
