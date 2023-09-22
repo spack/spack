@@ -72,6 +72,21 @@ class Openssh(AutotoolsPackage):
         "^ssh-keyscan$",
     ]
 
+    # Both these patches are applied by Apple.
+    # https://github.com/Homebrew/homebrew-core/blob/7aabdeb30506be9b01708793ae553502c115dfc8/Formula/o/openssh.rb#L40-L45
+    patch(
+        "https://raw.githubusercontent.com/Homebrew/patches/1860b0a745f1fe726900974845d1b0dd3c3398d6/openssh/patch-sandbox-darwin.c-apple-sandbox-named-external.diff",
+        sha256="d886b98f99fd27e3157b02b5b57f3fb49f43fd33806195970d4567f12be66e71",
+        when="platform=darwin",
+    )
+
+    # https://github.com/Homebrew/homebrew-core/blob/7aabdeb30506be9b01708793ae553502c115dfc8/Formula/o/openssh.rb#L48-L52C6
+    patch(
+        "https://raw.githubusercontent.com/Homebrew/patches/d8b2d8c2612fd251ac6de17bf0cc5174c3aab94c/openssh/patch-sshd.c-apple-sandbox-named-external.diff",
+        sha256="3505c58bf1e584c8af92d916fe5f3f1899a6b15cc64a00ddece1dc0874b2f78f",
+        when="platform=darwin",
+    )
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("-V", output=str, error=str).rstrip()
@@ -81,6 +96,10 @@ class Openssh(AutotoolsPackage):
     def patch(self):
         # #29938: skip set-suid (also see man ssh-key-sign: it's not enabled by default)
         filter_file(r"\$\(INSTALL\) -m 4711", "$(INSTALL) -m711", "Makefile.in")
+
+        # https://github.com/Homebrew/homebrew-core/blob/7aabdeb30506be9b01708793ae553502c115dfc8/Formula/o/openssh.rb#L71-L77
+        if self.spec.target.family == "x86_64" and self.spec.platform == "darwin":
+            filter_file(r"-fzero-call-used-regs=all", "-fzero-call-used-regs=used", "configure")
 
     def configure_args(self):
         # OpenSSH's privilege separation path defaults to /var/empty. At
@@ -103,6 +122,11 @@ class Openssh(AutotoolsPackage):
         """Until spack supports a real implementation of setup_test_environment()"""
         if self.run_tests:
             self.setup_test_environment(env)
+
+        # https://github.com/Homebrew/homebrew-core/blob/7aabdeb30506be9b01708793ae553502c115dfc8/Formula/o/openssh.rb#L65C31-L65C65
+        # to use the MacOS patches
+        if self.spec.platform == "darwin":
+            env.append_flags("CPPFLAGS", "-D__APPLE_SANDBOX_NAMED_EXTERNAL__")
 
     def setup_test_environment(self, env):
         """Configure the regression test suite like Debian's openssh-tests package"""
