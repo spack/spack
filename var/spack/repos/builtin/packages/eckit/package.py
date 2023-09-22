@@ -34,7 +34,6 @@ class Eckit(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
-    variant("shared", default=True, description="Build shared libraries")
     variant("tools", default=True, description="Build the command line tools")
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
@@ -158,9 +157,7 @@ class Eckit(CMakePackage):
 
         # Static build of eckit not working, many places in eckit's build
         # system have SHARED hardcoded (in several CMakeLists.txt files).
-        if "~shared" in self.spec:
-            # args.append("-DBUILD_SHARED_LIBS=OFF")
-            raise InstallError("eckit static build not supported")
+        args.append("-DBUILD_SHARED_LIBS=ON")
 
         if "linalg=mkl" not in self.spec:
             # ENABLE_LAPACK is ignored if MKL backend is enabled
