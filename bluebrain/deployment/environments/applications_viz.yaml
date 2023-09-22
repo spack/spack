@@ -14,11 +14,9 @@ spack:
   specs:
     - brayns
     - brayns@3.2.0
-    - brayns@3.1.2
     - py-bcsb
     - py-brayns
     - py-brayns@3.2.0
-    - py-brayns@3.1.2
     - py-brayns-circuit-studio-backend
     - brion +python
     - ultraliser ^hdf5~mpi
