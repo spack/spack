@@ -94,7 +94,7 @@ class PyNumpy(PythonPackage):
     depends_on("python@:3.8", when="@1.17.3:1.19.2", type=("build", "link", "run"))
     depends_on("python@:3.7", when="@1.14.5:1.17.2", type=("build", "link", "run"))
 
-    depends_on("py-cython@0.29.34:3.0", when="@1.26:", type="build")
+    depends_on("py-cython@0.29.34:3", when="@1.26:", type="build")
     depends_on("py-cython@0.29.34:2", when="@1.25:", type="build")
     depends_on("py-cython@0.29.13:2", when="@1.18.0:", type="build")
     depends_on("py-cython@0.29.14:2", when="@1.18.1:", type="build")
