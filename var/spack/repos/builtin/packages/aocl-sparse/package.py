@@ -98,13 +98,11 @@ class AoclSparse(CMakePackage):
             args.append(self.define_from_variant("BUILD_ILP64", "ilp64"))
 
         if self.spec.satisfies("@4.0:"):
-            args.append("-DAOCL_BLIS_LIB={0}/libblis.so".format(self.spec["amdblis"].prefix.lib))
+            args.append("-DAOCL_BLIS_LIB=" + str(self.spec["amdblis"].libs))
             args.append(
                 "-DAOCL_BLIS_INCLUDE_DIR={0}/blis".format(self.spec["amdblis"].prefix.include)
             )
-            args.append(
-                "-DAOCL_LIBFLAME={0}/libflame.so".format(self.spec["amdlibflame"].prefix.lib)
-            )
+            args.append("-DAOCL_LIBFLAME=" + str(self.spec["amdlibflame"].libs))
             args.append(
                 "-DAOCL_LIBFLAME_INCLUDE_DIR={0}".format(self.spec["amdlibflame"].prefix.include)
             )
