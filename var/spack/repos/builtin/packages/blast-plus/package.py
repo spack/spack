@@ -14,6 +14,7 @@ class BlastPlus(AutotoolsPackage):
 
     maintainers("weijianwen")
 
+    version("2.14.1", sha256="712c2dbdf0fb13cc1c2d4f4ef5dd1ce4b06c3b57e96dfea8f23e6e99f5b1650e")
     version("2.13.0", sha256="89553714d133daf28c477f83d333794b3c62e4148408c072a1b4620e5ec4feb2")
     version("2.12.0", sha256="fda3c9c9d488cad6c1880a98a236d842bcf3610e3e702af61f7a48cf0a714b88")
     version("2.11.0", sha256="d88e1858ae7ce553545a795a2120e657a799a6d334f2a07ef0330cc3e74e1954")
