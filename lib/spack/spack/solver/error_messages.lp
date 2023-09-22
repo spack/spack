@@ -45,6 +45,19 @@ condition_cause(Condition2, Condition1, ID) :-
   pkg_fact(Package, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1, A2, A3).
 
+% special condition cause for dependency conditions
+% we can't simply impose the existence of the node for dependency conditions
+% because we need to allow for the choice of which dupe ID the node gets
+condition_cause(Condition2, Condition1, ID) :-
+  condition_holds(Condition2, node(ID2, Package2)),
+  pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
+  condition_requirement(Trigger, "node", Package),
+  attr("node", node(ID, Package)),
+  condition_holds(Condition1, node(ID1, Package1)),
+  pkg_fact(Package1, condition_effect(Condition1, Effect)),
+  imposed_constraint(Effect, "dependency_holds", Parent, Package, Type),
+  attr("depends_on", node(X, Parent), node(ID, Package), Type).
+
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
 error(1, "Cannot satisfy '{0}@{1}'", Package, Constraint, startcauses, ConstraintCause)
