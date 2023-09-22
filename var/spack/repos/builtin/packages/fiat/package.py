@@ -45,9 +45,6 @@ class Fiat(CMakePackage):
             self.define_from_variant("ENABLE_OMP", "openmp"),
             self.define_from_variant("ENABLE_MPI", "mpi"),
             self.define_from_variant("ENABLE_FCKIT", "fckit")
-            # self.define_from_variant("ENABLE_DR_HOOK_MULTI_PRECISION_HANDLES",
-            #   "dr_hook_multi_precision_handles")
-            # self.define_from_variant("ENABLE_WARNINGS, "warnings")
         ]
 
         return args
