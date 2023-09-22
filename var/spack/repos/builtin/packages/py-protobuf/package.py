@@ -59,7 +59,7 @@ class PyProtobuf(PythonPackage):
     version("3.3.0", sha256="1cbcee2c45773f57cb6de7ee0eceb97f92b9b69c0178305509b162c0160c1f04")
     version("3.0.0", sha256="ecc40bc30f1183b418fe0ec0c90bc3b53fa1707c4205ee278c6b90479e5b6ff5")
 
-    variant("cpp", default=True, when="@:4.21", description="Enable the cpp implementation")
+    variant("cpp", default=False, when="@:4.21", description="Enable the cpp implementation")
 
     depends_on("python", type=("build", "link", "run"))
     depends_on("py-setuptools", type=("build", "run"))
@@ -74,7 +74,7 @@ class PyProtobuf(PythonPackage):
     for ver in list(range(0, 21)):
         depends_on(f"protobuf@3.{ver}", when=f"@3.{ver}+cpp")
 
-    conflicts("+cpp ^python@3.11:", when="%apple-clang@15:")
+    conflicts("+cpp", when="^python@3.11:")
 
     @property
     def build_directory(self):
