@@ -19,7 +19,7 @@ import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
-import spack.dependency as dep
+import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
 import spack.mirror
@@ -47,9 +47,9 @@ def deptype_default_default_deptype():
         "--deptype",
         action=arguments.DeptypeAction,
         metavar="deptype",
-        default=dep.default_deptype,
+        default=dt.DEFAULT_TYPES,
         help="comma-separated list of deptypes to traverse\ndefault=%s"
-        % ",".join(dep.default_deptype),
+        % ",".join(dt.DEFAULT_TYPES),
     )
 
 
