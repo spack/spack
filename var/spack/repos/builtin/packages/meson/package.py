@@ -18,6 +18,7 @@ class Meson(PythonPackage):
 
     maintainers("eli-schwartz", "michaelkuhn")
 
+    version("1.2.1", sha256="e1f3b32b636cc86496261bd89e63f00f206754697c7069788b62beed5e042713")
     version("1.2.0", sha256="603489f0aaa6305f806c6cc4a4455a965f22290fc74f65871f589b002110c790")
     version("1.1.1", sha256="1c3b9e1a3a36b51adb5de498d582fd5cbf6763fadbcf151de9f2a762e02bd2e6")
     version("1.1.0", sha256="f29a3e14062043d75e82d16f1e41856e6b1ed7a7c016e10c7b13afa7ee6364cc")
