@@ -29,6 +29,9 @@ class Pumi(CMakePackage):
     # to the added instability.
     version("master", submodules=True, branch="master")
     version(
+        "2.2.8", submodules=True, commit="736bb87ccd8db51fc499a1b91e53717a88841b1f"
+    )  # tag 2.2.8
+    version(
         "2.2.7", submodules=True, commit="a295720d7b4828282484f2b78bac1f6504512de4"
     )  # tag 2.2.7
     version("2.2.6", commit="4dd330e960b1921ae0d8d4039b8de8680a20d993")  # tag 2.2.6
