@@ -47,7 +47,7 @@ condition_cause(Condition2, Condition1, ID) :-
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(0, "Cannot satisfy '{0}@{1}'", Package, Constraint, startcauses, ConstraintCause)
+error(1, "Cannot satisfy '{0}@{1}'", Package, Constraint, startcauses, ConstraintCause)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
      imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
