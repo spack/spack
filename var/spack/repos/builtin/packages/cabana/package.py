@@ -39,7 +39,8 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     variant("hypre", default=False, description="Build with HYPRE support")
     variant("silo", default=False, description="Build with SILO support")
     variant("hdf5", default=False, description="Build with HDF5 support")
-    variant("cajita", default=False, description="Build Cajita subpackage")
+    variant("cajita", default=False, description="Build Cajita subpackage (Grid in 0.6:)")
+    variant("grid", default=False, description="Build Grid subpackage")
     variant("testing", default=False, description="Build unit tests")
     variant("examples", default=False, description="Build tutorial examples")
     variant("performance_testing", default=False, description="Build performance tests")
@@ -86,6 +87,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
 
     conflicts("+cajita ~mpi")
+    conflicts("+grid ~mpi")
 
     conflicts("+rocm", when="@:0.2.0")
     conflicts("+sycl", when="@:0.3.0")
@@ -105,6 +107,10 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
             enable += ["MPI"]
         else:
             require += ["MPI"]
+
+        # Cajita was renamed Grid in 0.6
+        if self.spec.satisfies("@0.6.0:"):
+            enable += ["GRID"]
 
         for category, cname in zip([enable, require], ["ENABLE", "REQUIRE"]):
             for var in category:
