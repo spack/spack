@@ -14,9 +14,9 @@ rocm_arch="gfx908"
 spack_jobs=''
 # spack_jobs='-j 128'
 
-mfem='mfem@4.5.2'${compiler}
+mfem='mfem@4.6.0'${compiler}
 # mfem_dev='mfem@develop'${compiler}
-mfem_dev='mfem@4.5.2'${compiler}
+mfem_dev='mfem@4.6.0'${compiler}
 
 backends='+occa+raja+libceed'
 backends_specs='^occa~cuda ^raja~openmp'
@@ -24,11 +24,9 @@ backends_specs='^occa~cuda ^raja~openmp'
 # ~fortran is needed for Cray Fortran linking with tcmalloc*
 conduit_spec='^conduit~fortran'
 # petsc spec
-petsc_spec='^petsc+suite-sparse+mumps'
-petsc_spec_cuda='^petsc+cuda+suite-sparse+mumps'
-# superlu-dist specs
-superlu_spec_cuda='^superlu-dist+cuda cuda_arch='"${cuda_arch}"
-superlu_spec_rocm='^superlu-dist+rocm amdgpu_target='"${rocm_arch}"
+petsc_spec='^petsc+mumps'
+petsc_spec_cuda='^petsc+cuda+mumps'
+petsc_spec_rocm='^petsc+rocm+mumps'
 # strumpack spec without cuda (use version > 6.3.1)
 strumpack_spec='^strumpack~slate~openmp~cuda'
 strumpack_cuda_spec='^strumpack+cuda~slate~openmp'
@@ -138,7 +136,7 @@ builds_cuda=(
         +superlu-dist+strumpack+suite-sparse+gslib+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared'" $strumpack_cuda_spec"' \
-        '"$superlu_spec_cuda $petsc_spec_cuda $conduit_spec"
+        '"$petsc_spec_cuda $conduit_spec"
 
     # hypre with cuda:
     # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
@@ -150,7 +148,7 @@ builds_cuda=(
         +superlu-dist+strumpack+suite-sparse+gslib \
         +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared ^hypre+cuda \
-        '" $superlu_spec_cuda $strumpack_cuda_spec $conduit_spec"
+        '" $strumpack_cuda_spec $conduit_spec"
 
     #
     # same builds as above with ${mfem_dev}
@@ -175,7 +173,7 @@ builds_cuda=(
         +superlu-dist+strumpack+suite-sparse+gslib+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared'" $strumpack_cuda_spec"' \
-        '"$superlu_spec_cuda $petsc_spec_cuda $conduit_spec"
+        '"$petsc_spec_cuda $conduit_spec"
 
     # hypre with cuda:
     # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
@@ -187,7 +185,7 @@ builds_cuda=(
         +superlu-dist+strumpack+suite-sparse+gslib \
         +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared ^hypre+cuda \
-        '"$superlu_spec_cuda $strumpack_cuda_spec $conduit_spec"
+        '"$strumpack_cuda_spec $conduit_spec"
 )
 
 
@@ -203,15 +201,14 @@ builds_rocm=(
         ^raja+rocm~openmp ^occa~cuda~openmp ^hypre+rocm'
 
     # hypre without rocm:
-    # TODO: add "+petsc+slepc $petsc_spec_rocm" when it is supported.
     # TODO: add back '+hiop' when it is no longer linked with tcmalloc* through
     #       its magma dependency.
     # TODO: add back '+ginkgo' when the Ginkgo example works.
     ${mfem}'+rocm+openmp+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
-        +superlu-dist+strumpack+suite-sparse+gslib \
+        +superlu-dist+strumpack+suite-sparse+gslib+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
         ^raja+rocm~openmp ^occa~cuda'" $strumpack_rocm_spec"' \
-        '"$superlu_spec_rocm $conduit_spec"
+        '"$petsc_spec_rocm $conduit_spec"
 
     # hypre with rocm:
     # TODO: add back "+petsc+slepc $petsc_spec_rocm" when it works.
@@ -223,7 +220,7 @@ builds_rocm=(
         +superlu-dist+strumpack+suite-sparse+gslib \
         +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
         ^raja+rocm~openmp ^occa~cuda ^hypre+rocm \
-        '"$strumpack_rocm_spec $superlu_spec_rocm $conduit_spec"
+        '"$strumpack_rocm_spec $conduit_spec"
 
     #
     # same builds as above with ${mfem_dev}
