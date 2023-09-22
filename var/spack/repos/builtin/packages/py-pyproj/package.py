@@ -16,6 +16,7 @@ class PyPyproj(PythonPackage):
 
     maintainers("citibeth", "adamjstewart")
 
+    version("3.6.1", sha256="44aa7c704c2b7d8fb3d483bbf75af6cb2350d30a63b144279a09b75fead501bf")
     version("3.6.0", sha256="a5b111865b3f0f8b77b3983f2fbe4dd6248fc09d3730295949977c8dcd988062")
     version("3.5.0", sha256="9859d1591c1863414d875ae0759e72c2cffc01ab989dc64137fbac572cc81bf6")
     version("3.4.1", sha256="261eb29b1d55b1eb7f336127344d9b31284d950a9446d1e0d1c2411f7dd8e3ac")
@@ -35,7 +36,8 @@ class PyPyproj(PythonPackage):
     # In pyproject.toml
     depends_on("py-setuptools@61:", when="@3.4:", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython@0.28.4:", when="@2:", type="build")
+    depends_on("py-cython@3:", when="@3.6.1:", type="build")
+    depends_on("py-cython@0.28.4:2", when="@2:3.6.0", type="build")
     depends_on("python@3.9:", when="@3.6:", type=("build", "link", "run"))
     depends_on("python@3.8:", when="@3.3:", type=("build", "link", "run"))
     depends_on("py-certifi", when="@3:", type=("build", "run"))
