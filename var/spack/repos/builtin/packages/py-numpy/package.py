@@ -241,13 +241,15 @@ class PyNumpy(PythonPackage):
         blas, lapack = self.blas_lapack_pkg_config()
         return {
             "compile-args": f"-j{make_jobs}",
-            # http://scipy.github.io/devdocs/building/blas_lapack.html
-            "setup-args=-Dblas": blas,
-            "setup-args=-Dlapack": lapack,
-            # https://numpy.org/doc/stable/reference/simd/build-options.html
-            # TODO: get this working in CI
-            # "setup-args=-Dcpu-baseline": "native",
-            # "setup-args=-Dcpu-dispatch": "none",
+            "setup-args": {
+                # http://scipy.github.io/devdocs/building/blas_lapack.html
+                "-Dblas": blas,
+                "-Dlapack": lapack,
+                # https://numpy.org/doc/stable/reference/simd/build-options.html
+                # TODO: get this working in CI
+                # "-Dcpu-baseline": "native",
+                # "-Dcpu-dispatch": "none",
+            },
         }
 
     def blas_lapack_site_cfg(self) -> None:

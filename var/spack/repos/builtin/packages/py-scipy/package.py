@@ -188,9 +188,11 @@ class PyScipy(PythonPackage):
         blas, lapack = self.spec["py-numpy"].package.blas_lapack_pkg_config()
         return {
             "compile-args": f"-j{make_jobs}",
-            # http://scipy.github.io/devdocs/building/blas_lapack.html
-            "setup-args=-Dblas": blas,
-            "setup-args=-Dlapack": lapack,
+            "setup-args": {
+                # http://scipy.github.io/devdocs/building/blas_lapack.html
+                "-Dblas": blas,
+                "-Dlapack": lapack,
+            },
         }
 
     @when("@:1.8")
