@@ -245,8 +245,9 @@ class PyNumpy(PythonPackage):
             "setup-args=-Dblas": blas,
             "setup-args=-Dlapack": lapack,
             # https://numpy.org/doc/stable/reference/simd/build-options.html
-            "setup-args=-Dcpu-baseline": "native",
-            "setup-args=-Dcpu-dispatch": "none",
+            # TODO: get this working in CI
+            # "setup-args=-Dcpu-baseline": "native",
+            # "setup-args=-Dcpu-dispatch": "none",
         }
 
     def blas_lapack_site_cfg(self) -> None:

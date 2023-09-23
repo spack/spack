@@ -109,7 +109,7 @@ class PyScipy(PythonPackage):
     depends_on("py-pytest", type="test")
 
     # Required to use --config-settings
-    depends_on("py-pip@23.1:", when="@1.26:", type="build")
+    depends_on("py-pip@23.1:", when="@1.9:", type="build")
 
     # https://docs.scipy.org/doc/scipy/dev/toolchain.html#other-libraries
     depends_on("lapack@3.7.1:", when="@1.9:")
