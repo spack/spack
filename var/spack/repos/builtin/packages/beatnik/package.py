@@ -26,27 +26,29 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     # Dependencies for all Beatnik versions
     depends_on("blt", type='build')
     depends_on("mpi")
+
+    # Kokkos dependencies
     depends_on("kokkos @4:")
-    depends_on("silo @4.11:")
-    depends_on("heffte +fftw") # We make heffte explicit so we can propagate the right 
-                               # cuda/rocm flags to it. Cabana currently may not. We also
-                               # always require FFTW so that there's a host backend even
-                               # when we're compiling for GPUs
-    depends_on("cabana +cajita +heffte +silo +mpi")
-
-    # Dependencies for specific versions/branches
-    depends_on("cabana @0.5.0", when="@main")
-    depends_on("cabana @0.6.0", when="@1.0")
-    depends_on("cabana @master", when="@develop")
-
-    # Dependencies for cabana, heffte, and kokkos based on cuda or rocm settings
-    depends_on("cabana +cuda", when="+cuda")
-    depends_on("cabana +rocm", when="+rocm")
-
     depends_on("kokkos +cuda +cuda_lambda +cuda_constexpr", when="+cuda")
     depends_on("kokkos +rocm", when="+rocm")
     depends_on("kokkos +wrapper", when="%gcc+cuda") # XXX figure out what other compilers need the wrapper
 
+    # Cabana dependencies
+    depends_on("cabana +cajita +heffte +silo +mpi")
+    depends_on("cabana @0.5.0", when="@main")
+    depends_on("cabana @0.6.0", when="@1.0")
+    depends_on("cabana @master", when="@develop")
+    depends_on("cabana +cuda", when="+cuda")
+    depends_on("cabana +rocm", when="+rocm")
+
+    # Silo dependencies
+    depends_on("silo @4.11:")
+
+    # Heffte dependencies
+    depends_on("heffte +fftw") # We make heffte explicit so we can propagate the right 
+                               # cuda/rocm flags to it. Cabana currently may not. We also
+                               # always require FFTW so that there's a host backend even
+                               # when we're compiling for GPUs
     depends_on("heffte +cuda", when="+cuda")
     depends_on("heffte +rocm", when="+rocm")
 
@@ -56,7 +58,7 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("openmpi ~cuda", when="+cuda")
     conflicts("^intel-mpi") # Heffte won't build with intel MPI because of needed C++ MPI support
 
-    # Propagate CUDA and AMD GPU targets to any submodules that need them
+    # Propagate CUDA and AMD GPU targets to the submodules that need them
     for cuda_arch in CudaPackage.cuda_arch_values:
         depends_on(
             "kokkos cuda_arch=%s" % cuda_arch,
@@ -72,6 +74,10 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
             when="+rocm amdgpu_target=%s" % amdgpu_value,
         )
         depends_on(
+            "cabana amdgpu_target=%s" % amdgpu_value,
+            when="+rocm amdgpu_target=%s" % amdgpu_value,
+        )
+        depends_on(
             "heffte amdgpu_target=%s" % amdgpu_value,
             when="+rocm amdgpu_target=%s" % amdgpu_value,
         )
@@ -79,6 +85,17 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     # CMake specific build functions
     def cmake_args(self):
         args = []
+
+        if "+rocm" in self.spec:
+            args.append("-DCMAKE_CXX_COMPILER={0}".format(self.spec["hip"].hipcc))
+
+            rocm_arch = self.spec.variants["amdgpu_target"].value
+            if "none" not in rocm_arch:
+                args.append("-DCMAKE_CXX_FLAGS={0}".format(self.hip_flags(rocm_arch)))
+
+            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+            if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
+                args.append(self.define("__skip_rocmclang", "ON"))
 
         # Pull BLT from teh spack spec so we don't need the submodule
         args.append("-DBLT_SOURCE_DIR:PATH={0}".format(self.spec["blt"].prefix))
