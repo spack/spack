@@ -60,8 +60,7 @@ class PyPyzmq(PythonPackage):
     # Undocumented dependencies
     depends_on("py-gevent", type=("build", "run"))
 
-    @run_before("install")
-    @when("@15:19")
+    @run_before("install", when="@15:19")
     def remove_cythonized_files(self):
         # Before v20.0.0 an ancient cythonize API was used, for which we cannot
         # force re-cythonization. Re-cythonizing v14.x fails in general, so
