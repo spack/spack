@@ -14,6 +14,7 @@ import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
 import spack.version
+from spack.main import SpackCommand
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
@@ -487,8 +488,6 @@ packages:
     s2 = Spec("y@2.4").concretized()
     assert s2.satisfies("%gcc+shared")
 
-
-from spack.main import SpackCommand
 
 solve = SpackCommand("solve")
 
