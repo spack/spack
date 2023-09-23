@@ -14,9 +14,11 @@ class Gfsio(CMakePackage):
 
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS-gfsio"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-gfsio/archive/refs/tags/v1.4.1.tar.gz"
+    git = "https://github.com/NOAA-EMC/NCEPLIBS-gfsio"
 
-    maintainers("t-brown", "AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
+    maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
+    version("develop", branch="develop")
     version("1.4.1", sha256="eab106302f520600decc4f9665d7c6a55e7b4901fab6d9ef40f29702b89b69b1")
 
     def setup_run_environment(self, env):

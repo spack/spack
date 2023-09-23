@@ -28,6 +28,7 @@ from llnl.util.symlink import symlink
 import spack.compilers
 import spack.concretize
 import spack.config
+import spack.deptypes as dt
 import spack.error
 import spack.fetch_strategy
 import spack.hash_types as ht
@@ -1395,7 +1396,10 @@ class Environment:
 
         result_by_user_spec = {}
         solver = spack.solver.asp.Solver()
-        for result in solver.solve_in_rounds(specs_to_concretize, tests=tests):
+        allow_deprecated = spack.config.get("config:deprecated", False)
+        for result in solver.solve_in_rounds(
+            specs_to_concretize, tests=tests, allow_deprecated=allow_deprecated
+        ):
             result_by_user_spec.update(result.specs_by_input)
 
         result = []
@@ -1536,13 +1540,13 @@ class Environment:
             for h in self.specs_by_hash:
                 current_spec, computed_spec = self.specs_by_hash[h], by_hash[h]
                 for node in computed_spec.traverse():
-                    test_edges = node.edges_to_dependencies(deptype="test")
+                    test_edges = node.edges_to_dependencies(depflag=dt.TEST)
                     for current_edge in test_edges:
                         test_dependency = current_edge.spec
                         if test_dependency in current_spec[node.name]:
                             continue
                         current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), deptypes="test", virtuals=current_edge.virtuals
+                            test_dependency.copy(), depflag=dt.TEST, virtuals=current_edge.virtuals
                         )
 
         results = [
@@ -2190,7 +2194,7 @@ class Environment:
             name, data = reader.name_and_data(node_dict)
             for _, dep_hash, deptypes, _, virtuals in reader.dependencies_from_node_dict(data):
                 specs_by_hash[lockfile_key]._add_dependency(
-                    specs_by_hash[dep_hash], deptypes=deptypes, virtuals=virtuals
+                    specs_by_hash[dep_hash], depflag=dt.canonicalize(deptypes), virtuals=virtuals
                 )
 
         # Traverse the root specs one at a time in the order they appear.
