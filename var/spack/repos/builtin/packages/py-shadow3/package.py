@@ -17,7 +17,6 @@ class PyShadow3(PythonPackage):
 
     maintainers("luccabavia")
 
-    version("23.9.19", sha256=(
-        "d06920433552526398fd1373df03264a65dcdf020c0a67e196ac6f78f8673867"), expand=False)
+    version("23.9.19", sha256=("d06920433552526398fd1373df03264a65dcdf020c0a67e196ac6f78f8673867"))
 
     depends_on("py-setuptools", type="build")
