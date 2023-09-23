@@ -151,12 +151,20 @@ class PyNumpy(PythonPackage):
         when="@1.22.0:1.22.3",
     )
 
+    # meson.build
+    # https://docs.scipy.org/doc/scipy/dev/toolchain.html#compilers
+    conflicts("%gcc@:8.3", when="@1.26:", msg="NumPy requires GCC >= 8.4")
+    conflicts("%gcc@:4.7", msg="NumPy requires GCC >= 4.8")
+    conflicts(
+        "%msvc@:19.19",
+        when="@1.26:",
+        msg="NumPy requires at least vc142 (default with Visual Studio 2019) "
+        "when building with MSVC",
+    )
+
     # version 1.21.0 runs into an infinit loop during printing
     # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
     conflicts("%gcc@11:", when="@1.21.0")
-
-    # GCC 4.8 is the minimum version that works
-    conflicts("%gcc@:4.7", msg="GCC 4.8+ required")
 
     # NVHPC support added in https://github.com/numpy/numpy/pull/17344
     conflicts("%nvhpc", when="@:1.19")

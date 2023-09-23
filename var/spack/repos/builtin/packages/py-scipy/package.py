@@ -117,11 +117,16 @@ class PyScipy(PythonPackage):
     depends_on("lapack")
     depends_on("blas")
 
+    # meson.build
     # https://docs.scipy.org/doc/scipy/dev/toolchain.html#compilers
-    conflicts("%gcc@:7", when="@1.10:")
-    conflicts("%gcc@:4.7", when="@:1.9")
-    conflicts("%apple-clang@:9", when="@1.10:")
-    conflicts("%msvc@:19.19", when="@1.10:")
+    conflicts("%gcc@:7", when="@1.10:", msg="SciPy requires GCC >= 8.0")
+    conflicts("%gcc@:4.7", when="@:1.9", msg="SciPy requires GCC >= 4.8")
+    conflicts(
+        "%msvc@:19.19",
+        when="@1.10:",
+        msg="SciPy requires at least vc142 (default with Visual Studio 2019) "
+        "when building with MSVC",
+    )
 
     # https://github.com/scipy/scipy/pull/11324
     conflicts("@1.4.0:1.4.1", when="target=ppc64le:")
