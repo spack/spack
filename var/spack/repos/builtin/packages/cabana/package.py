@@ -12,13 +12,14 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/ECP-copa/Cabana"
     git = "https://github.com/ECP-copa/Cabana.git"
-    url = "https://github.com/ECP-copa/Cabana/archive/0.5.0.tar.gz"
+    url = "https://github.com/ECP-copa/Cabana/archive/0.6.0.tar.gz"
 
     maintainers("junghans", "streeve", "sslattery")
 
     tags = ["e4s", "ecp"]
 
     version("master", branch="master")
+    version("0.6.0", sha256="a88a3f80215998169cdbd37661c0c0af57e344af74306dcd2b61983d7c69e6e5")
     version("0.5.0", sha256="b7579d44e106d764d82b0539285385d28f7bbb911a572efd05c711b28b85d8b1")
     version("0.4.0", sha256="c347d23dc4a5204f9cc5906ccf3454f0b0b1612351bbe0d1c58b14cddde81e85")
     version("0.3.0", sha256="fb67ab9aaf254b103ae0eb5cc913ddae3bf3cd0cf6010e9686e577a2981ca84f")
@@ -77,7 +78,8 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     # Heffte pinned at 2.x.0 because its cmakefiles can't roll forward
     # compatibilty to later minor versions.
     depends_on("heffte@2.0.0", when="@0.4.0+heffte")
-    depends_on("heffte@2.1.0", when="@0.5.0:+heffte")
+    depends_on("heffte@2.1.0", when="@0.5.0+heffte")
+    depends_on("heffte@2.3.0", when="@0.6.0:+heffte")
     depends_on("silo", when="@0.5.0:+silo")
     depends_on("mpi", when="+mpi")
 
