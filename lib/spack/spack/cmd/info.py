@@ -11,6 +11,7 @@ import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
 import spack.cmd.common.arguments as arguments
+import spack.deptypes as dt
 import spack.fetch_strategy as fs
 import spack.install_test
 import spack.repo
@@ -64,11 +65,11 @@ def section_title(s):
 
 
 def version(s):
-    return spack.spec.version_color + s + plain_format
+    return spack.spec.VERSION_COLOR + s + plain_format
 
 
 def variant(s):
-    return spack.spec.enabled_variant_color + s + plain_format
+    return spack.spec.ENABLED_VARIANT_COLOR + s + plain_format
 
 
 class VariantFormatter:
@@ -160,7 +161,7 @@ def print_dependencies(pkg):
     for deptype in ("build", "link", "run"):
         color.cprint("")
         color.cprint(section_title("%s Dependencies:" % deptype.capitalize()))
-        deps = sorted(pkg.dependencies_of_type(deptype))
+        deps = sorted(pkg.dependencies_of_type(dt.flag_from_string(deptype)))
         if deps:
             colify(deps, indent=4)
         else:
@@ -349,7 +350,7 @@ def print_virtuals(pkg):
 
 def info(parser, args):
     spec = spack.spec.Spec(args.package)
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
 
     # Output core package information

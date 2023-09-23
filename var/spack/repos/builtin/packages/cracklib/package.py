@@ -22,7 +22,7 @@ class Cracklib(AutotoolsPackage):
     depends_on("python", type=("build", "run"))
     depends_on("gettext")
     depends_on("fmt")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     configure_directory = "src"
 

@@ -23,7 +23,7 @@ class Freeglut(CMakePackage, SourceforgePackage):
     depends_on("glu")
 
     # FreeGLUT does not support OSMesa
-    conflicts("osmesa")
+    conflicts("^osmesa")
 
     # FreeGLUT only works with GLX on linux (cray is also linux)
     with when("platform=linux"):
@@ -71,3 +71,7 @@ class Freeglut(CMakePackage, SourceforgePackage):
         ]
 
         return args
+
+    @property
+    def libs(self):
+        return find_libraries(["libglut"], root=self.prefix, recursive=True)

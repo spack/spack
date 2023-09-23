@@ -198,7 +198,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(config, mock_packages
         round_trip_reversed_json_spec = Spec.from_yaml(reversed_json_string)
 
         # Strip spec if we stripped the yaml
-        spec = spec.copy(deps=ht.dag_hash.deptype)
+        spec = spec.copy(deps=ht.dag_hash.depflag)
 
         # specs are equal to the original
         assert spec == round_trip_yaml_spec
@@ -326,9 +326,8 @@ def test_save_dependency_spec_jsons_subset(tmpdir, config):
         spec_a = Spec("a").concretized()
         b_spec = spec_a["b"]
         c_spec = spec_a["c"]
-        spec_a_json = spec_a.to_json()
 
-        save_dependency_specfiles(spec_a_json, output_path, ["b", "c"])
+        save_dependency_specfiles(spec_a, output_path, [Spec("b"), Spec("c")])
 
         assert check_specs_equal(b_spec, os.path.join(output_path, "b.json"))
         assert check_specs_equal(c_spec, os.path.join(output_path, "c.json"))
@@ -501,3 +500,8 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
 
     openmpi_edges = s2.edges_to_dependencies(name="openmpi")
     assert len(openmpi_edges) == 1
+
+    # The virtuals attribute must be a tuple, when read from a
+    # JSON or YAML file, not a list
+    for edge in s2.traverse_edges():
+        assert isinstance(edge.virtuals, tuple), edge

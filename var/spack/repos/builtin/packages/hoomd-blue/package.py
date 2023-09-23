@@ -28,8 +28,12 @@ class HoomdBlue(CMakePackage):
     # with a .git directory, causing the build to fail. As a workaround,
     # clone a specific tag from Bitbucket instead of using the tarballs.
     # https://bitbucket.org/glotzer/hoomd-blue/issues/238
-    version("2.2.2", tag="v2.2.2", submodules=True)
-    version("2.1.6", tag="v2.1.6", submodules=True)
+    version(
+        "2.2.2", tag="v2.2.2", commit="5007cf262c48aa72210bf93266aa175898ebb254", submodules=True
+    )
+    version(
+        "2.1.6", tag="v2.1.6", commit="aa650aaf13721f2abf945e868f65b806fcc54fea", submodules=True
+    )
 
     variant("mpi", default=True, description="Compile with MPI enabled")
     variant("cuda", default=True, description="Compile with CUDA Toolkit")

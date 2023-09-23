@@ -22,10 +22,10 @@ class Binder(CMakePackage):
     maintainers("lyskov", "kliegeois")
 
     version("master", branch="master")
-    version("1.3.0", tag="v1.3.0")
-    version("1.2.0", tag="v1.2.0")
-    version("1.1.0", tag="v1.0.0")
-    version("1.0.0", tag="v1.0.0")
+    version("1.3.0", tag="v1.3.0", commit="e9b55985af297ca161d615058e4a5da07c22bc77")
+    version("1.2.0", tag="v1.2.0", commit="90cf5b31b6f4ecad3fe87518ca2b949dc9e8ed1a")
+    version("1.1.0", tag="v1.0.0", commit="3de7949343197295250f988716d511a264b21324")
+    version("1.0.0", tag="v1.0.0", commit="3de7949343197295250f988716d511a264b21324")
 
     # Add dependencies
     depends_on("llvm+clang+llvm_dylib@7.0:9")
