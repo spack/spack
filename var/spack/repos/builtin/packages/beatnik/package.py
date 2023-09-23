@@ -35,9 +35,7 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
 
     # Cabana dependencies
     depends_on("cabana +cajita +heffte +silo +mpi")
-    depends_on("cabana @0.5.0", when="@main")
-    depends_on("cabana @0.6.0", when="@1.0")
-    depends_on("cabana @master", when="@develop")
+    depends_on("cabana @0.6.0") # From it's first release, cabana is going to rely on Cabana 0.6.0
     depends_on("cabana +cuda", when="+cuda")
     depends_on("cabana +rocm", when="+rocm")
 
@@ -62,6 +60,10 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     for cuda_arch in CudaPackage.cuda_arch_values:
         depends_on(
             "kokkos cuda_arch=%s" % cuda_arch,
+            when="+cuda cuda_arch=%s" % cuda_arch,
+        )
+        depends_on(
+            "cabana cuda_arch=%s" % cuda_arch,
             when="+cuda cuda_arch=%s" % cuda_arch,
         )
         depends_on(
