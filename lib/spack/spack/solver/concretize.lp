@@ -702,38 +702,9 @@ requirement_group_satisfied(node(ID, Package), X) :-
   imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue),
   provider(node(SubPackageID, SubPackage), node(PackageID, Package)).
 
-% I want to say that the fact that an existing node providing a virtual
-% mandates the existence of a virtual, but how do I do that? Generate a new
-% ID for the virtual node?
-
-1 { attr("virtual_node", node(0..X-1, "virtual-w")) : max_dupes("virtual-w", X) } :- 
-  virtual_condition_holds(node(ProviderID, Provider), "virtual-w"),
-  attr("node", node(ProviderID, Provider)).
-
 %1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) } :- 
 %  virtual_condition_holds(node(ProviderID, Provider), Virtual),
 %  attr("node", node(ProviderID, Provider)).
-
-%Elsewhere we have:
-%1 { provider(PackageNode, node(X, Virtual)) :
-%    attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual) } 1
-%  :- attr("virtual_node", node(X, Virtual)).
-%So the following is not necessary
-%provider(node(ProviderID, Provider), Virtual) :-
-%  virtual_condition_holds(node(ProviderID, Provider), Virtual).
-
-%:- virtual_condition_holds(node(ProviderID, Provider), Virtual),
-%  attr("node", node(ProviderID, Provider)).
-
-%1 { provider(PackageNode, node(X, Virtual)) :
-%    attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual) } 1
-%  :- attr("virtual_node", node(X, Virtual)).
-
-%1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) } :-
-%  provider(Provider, node(_, Virtual)).
-
-%1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) } :- 
-%  virtual_condition_holds(node(_, Provider), Virtual).
 
 { attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
   requirement_group_member(Y, A1, X),
