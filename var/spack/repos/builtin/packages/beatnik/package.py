@@ -34,8 +34,7 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos +wrapper", when="%gcc+cuda") # XXX figure out what other compilers need the wrapper
 
     # Cabana dependencies
-    depends_on("cabana +cajita +heffte +silo +mpi")
-    depends_on("cabana @0.6.0") # From it's first release, cabana is going to rely on Cabana 0.6.0
+    depends_on("cabana @0.6.0 +cajita +heffte +silo +hdf5 +mpi")
     depends_on("cabana +cuda", when="+cuda")
     depends_on("cabana +rocm", when="+rocm")
 
@@ -56,31 +55,16 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("openmpi ~cuda", when="+cuda")
     conflicts("^intel-mpi") # Heffte won't build with intel MPI because of needed C++ MPI support
 
-    # Propagate CUDA and AMD GPU targets to the submodules that need them
+    # Propagate CUDA and AMD GPU targets to cabana, which now propagates them to kokkos and heffte
+    # submodules that need them
     for cuda_arch in CudaPackage.cuda_arch_values:
-        depends_on(
-            "kokkos cuda_arch=%s" % cuda_arch,
-            when="+cuda cuda_arch=%s" % cuda_arch,
-        )
         depends_on(
             "cabana cuda_arch=%s" % cuda_arch,
             when="+cuda cuda_arch=%s" % cuda_arch,
         )
-        depends_on(
-            "heffte +cuda cuda_arch=%s" % cuda_arch,
-            when="+cuda cuda_arch=%s" % cuda_arch,
-        )
     for amdgpu_value in ROCmPackage.amdgpu_targets:
         depends_on(
-            "kokkos amdgpu_target=%s" % amdgpu_value,
-            when="+rocm amdgpu_target=%s" % amdgpu_value,
-        )
-        depends_on(
-            "cabana amdgpu_target=%s" % amdgpu_value,
-            when="+rocm amdgpu_target=%s" % amdgpu_value,
-        )
-        depends_on(
-            "heffte amdgpu_target=%s" % amdgpu_value,
+            "cabana +rocm amdgpu_target=%s" % amdgpu_value,
             when="+rocm amdgpu_target=%s" % amdgpu_value,
         )
 
