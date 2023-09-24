@@ -18,7 +18,7 @@ class Pandorapfa(Package):
 
     tags = ["hep"]
 
-    maintainers("vvolkl", "wdconinc")
+    maintainers("jmcarcell", "wdconinc")
 
     version("master", branch="master")
     version("4.3.1", sha256="2f4757a6ed2e10d3effc300b330f67ba13c499dbf21ba720b29b50527332fcdb")
