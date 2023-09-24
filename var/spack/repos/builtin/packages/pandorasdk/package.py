@@ -18,7 +18,7 @@ class Pandorasdk(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers("vvolkl", "wdconinc")
+    maintainers("jmcarcell", "wdconinc")
 
     version("master", branch="master")
     version("3.4.2", sha256="e076adb2e3d28d3ac5dcc06bcc6e96815d23ef7782e1a87842b1e3e96e194994")
