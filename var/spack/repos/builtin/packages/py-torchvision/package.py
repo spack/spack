@@ -46,19 +46,12 @@ class PyTorchvision(PythonPackage):
     version("0.4.0", sha256="c270d74e568bad4559fed4544f6dd1e22e2eb1c60b088e04a5bd5787c4150589")
     version("0.3.0", sha256="c205f0618c268c6ed2f8abb869ef6eb83e5339c1336c243ad321a2f2a85195f0")
 
-    # https://github.com/pytorch/vision#image-backend
-    variant(
-        "backend",
-        default="pil",
-        description="Image backend",
-        values=[
-            "pil",
-            "accimage",
-            conditional("png", when="@0.8:"),
-            conditional("jpeg", when="@0.8:"),
-        ],
-        multi=False,
-    )
+    desc = "Enable support for native encoding/decoding of {} formats in torchvision.io"
+    variant("png", default=False, description=desc.format("PNG"))
+    variant("jpeg", default=False, description=desc.format("JPEG"))
+    variant("nvjpeg", default=False, description=desc.format("JPEG"))
+    variant("ffmpeg", default=False, description=desc.format("FFMPEG"))
+    variant("video_codec", default=False, description=desc.format("video_codec"))
 
     # https://github.com/pytorch/vision#installation
     depends_on("python@3.8:3.11", when="@0.15:", type=("build", "link", "run"))
@@ -69,15 +62,8 @@ class PyTorchvision(PythonPackage):
     depends_on("python@2.7,3.5:3.8", when="@0.5", type=("build", "link", "run"))
     depends_on("python@2.7,3.5:3.7", when="@:0.4", type=("build", "link", "run"))
 
-    depends_on("py-setuptools", type="build")
-    depends_on("ninja", type="build")
-    depends_on("py-typing-extensions", when="@0.12:", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-requests", when="@0.12:", type=("build", "run"))
-    depends_on("py-six", when="@:0.5", type=("build", "run"))
-
     # https://github.com/pytorch/vision#installation
-    depends_on("py-torch@master", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@main", when="@main", type=("build", "link", "run"))
     depends_on("py-torch@2.0.1", when="@0.15.2", type=("build", "link", "run"))
     depends_on("py-torch@2.0.0", when="@0.15.1", type=("build", "link", "run"))
     depends_on("py-torch@1.13.1", when="@0.14.1", type=("build", "link", "run"))
@@ -107,25 +93,72 @@ class PyTorchvision(PythonPackage):
     depends_on("py-torch@1.1.0", when="@0.3.0", type=("build", "link", "run"))
     depends_on("py-torch@:1.0.1", when="@0.2.2", type=("build", "link", "run"))
 
+    depends_on("ninja", type="build")
+
+    # setup.py
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-requests", when="@0.12:", type=("build", "run"))
+    depends_on("pil@5.3:", when="@0.10:", type=("build", "run"))
+    depends_on("pil@4.1.1:", type=("build", "run"))
+
+    # Extensions
+    depends_on("libpng@1.6:", when="+png")
+    depends_on("jpeg", when="+jpeg")
+    depends_on("cuda", when="+nvjpeg")
+    depends_on("ffmpeg@3.1:", when="+ffmpeg")
+    depends_on("cuda", when="+video_codec")
+
+    # Historical dependencies
+    depends_on("py-typing-extensions", when="@0.12:0.14", type=("build", "run"))
+    depends_on("py-six", when="@:0.5", type=("build", "run"))
+
     # https://github.com/pytorch/vision/pull/5898
-    depends_on("pil@5.3:8.2,8.4:", when="@0.13: backend=pil", type=("build", "run"))
+    conflicts("^pil@10:", when="@:0.12")
+    # https://github.com/pytorch/vision/issues/1712
+    conflicts("^pil@7:", when="@:0.4")
     # https://github.com/pytorch/vision/issues/4146
     # https://github.com/pytorch/vision/issues/4934
-    depends_on("pil@5.3:8.2,8.4:9", when="@0.10:0.12 backend=pil", type=("build", "run"))
-    depends_on("pil@4.1.1:9", when="@0.5: backend=pil", type=("build", "run"))
-    # https://github.com/pytorch/vision/issues/1712
-    depends_on("pil@4.1.1:6", when="@:0.4 backend=pil", type=("build", "run"))
-    depends_on("py-accimage", when="backend=accimage", type=("build", "run"))
-    depends_on("libpng@1.6.0:", when="backend=png")
-    depends_on("jpeg")  # seems to be required for all backends
+    conflicts("^pil@8.3")
+    # https://github.com/pytorch/pytorch/issues/65000
+    conflicts("+ffmpeg", when="platform=darwin")
+    # https://github.com/pytorch/vision/issues/3367
+    conflicts("+ffmpeg", when="^python@3.9")
     # https://github.com/pytorch/vision/pull/7378
-    depends_on("ffmpeg@3.1:5", when="@0.13:")
-    depends_on("ffmpeg@3.1:4.4", when="@0.4.2:0.12")
+    conflicts("^ffmpeg@6:")
+    # https://github.com/pytorch/vision/issues/5616
+    # https://github.com/pytorch/vision/pull/5644
+    conflicts("^ffmpeg@5:", when="@:0.12")
 
     # Many of the datasets require additional dependencies to use.
     # These can be installed after the fact.
 
     def setup_build_environment(self, env):
+        # The only documentation on building is what is found in setup.py and:
+        # https://github.com/pytorch/vision/blob/main/CONTRIBUTING.md#development-installation
+
+        # By default, version is read from `version.txt`, but this includes an `a0`
+        # suffix used for alpha builds. Override the version for stable releases.
+        if not self.spec.satisfies("@main"):
+            env.set("BUILD_VERSION", self.version)
+
+        # Used by ninja
+        env.set("MAX_JOBS", make_jobs)
+
+        if "^cuda" in self.spec:
+            env.set("CUDA_HOME", self.spec["cuda"].prefix)
+            torch_cuda_arch_list = ";".join(
+                "{0:.1f}".format(float(i) / 10.0)
+                for i in self.spec["py-torch"].variants["cuda_arch"].value
+            )
+            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch_list)
+
+        for gpu in ["cuda", "mps"]:
+            env.set(f"FORCE_{gpu.upper()}", int(f"+{gpu}" in self.spec["py-torch"]))
+
+        for extension in ["png", "jpeg", "nvjpeg", "ffmpeg", "video_codec"]:
+            env.set(f"TORCHVISION_USE_{extension.upper()}", int(f"+{extension}" in self.spec))
+
         include = []
         library = []
         for dep in self.spec.dependencies(deptype="link"):
@@ -133,28 +166,11 @@ class PyTorchvision(PythonPackage):
             include.extend(query.headers.directories)
             library.extend(query.libs.directories)
 
-        # README says to use TORCHVISION_INCLUDE and TORCHVISION_LIBRARY,
-        # but these do not work for older releases. Build uses a mix of
-        # Spack's compiler wrapper and the actual compiler, so this is
-        # needed to get parts of the build working.
+        # CONTRIBUTING.md says to use TORCHVISION_INCLUDE and TORCHVISION_LIBRARY, but
+        # these do not work for older releases. Build uses a mix of Spack's compiler wrapper
+        # and the actual compiler, so this is needed to get parts of the build working.
         # See https://github.com/pytorch/vision/issues/2591
         env.set("TORCHVISION_INCLUDE", ":".join(include))
         env.set("TORCHVISION_LIBRARY", ":".join(library))
         env.set("CPATH", ":".join(include))
         env.set("LIBRARY_PATH", ":".join(library))
-
-        # By default, version is read from `version.txt`, but this includes an `a0`
-        # suffix used for alpha builds. Override the version for stable releases.
-        if not self.spec.satisfies("@main"):
-            env.set("BUILD_VERSION", self.version)
-
-        if "+cuda" in self.spec["py-torch"]:
-            env.set("FORCE_CUDA", 1)
-            env.set("CUDA_HOME", self.spec["cuda"].prefix)
-            torch_cuda_arch_list = ";".join(
-                "{0:.1f}".format(float(i) / 10.0)
-                for i in self.spec["py-torch"].variants["cuda_arch"].value
-            )
-            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch_list)
-        else:
-            env.set("FORCE_CUDA", 0)
