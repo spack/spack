@@ -7,8 +7,8 @@ from spack.package import *
 
 
 class PyShadow3(PythonPackage):
-    """SHADOW is an open source ray tracing code for modeling optical systems. 
-    Targeted to synchrotron radiation beamlines, it has unique features for 
+    """SHADOW is an open source ray tracing code for modeling optical systems.
+    Targeted to synchrotron radiation beamlines, it has unique features for
     designing X-ray optical systems.
     """
 
