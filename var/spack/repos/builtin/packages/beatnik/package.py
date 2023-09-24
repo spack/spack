@@ -83,7 +83,4 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
             if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
                 args.append(self.define("__skip_rocmclang", "ON"))
 
-        # Pull BLT from teh spack spec so we don't need the submodule
-        args.append("-DBLT_SOURCE_DIR:PATH={0}".format(self.spec["blt"].prefix))
-
         return args
