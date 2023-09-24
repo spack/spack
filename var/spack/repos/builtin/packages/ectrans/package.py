@@ -31,16 +31,16 @@ class Ectrans(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
-    variant("mpi", default=True, description="Use MPI?")
-    variant("openmp", default=True, description="Use OpenMP?")
+    variant("mpi", default=True, description="Use MPI")
+    variant("openmp", default=True, description="Use OpenMP")
 
-    variant("double_precision", default=True, description="Support for double precision?")
-    variant("single_precision", default=True, description="Support for single precision?")
+    variant("double_precision", default=True, description="Support for double precision")
+    variant("single_precision", default=True, description="Support for single precision")
 
-    variant("mkl", default=False, description="Use MKL?")
-    variant("fftw", default=True, description="Use FFTW?")
+    variant("mkl", default=False, description="Use MKL")
+    variant("fftw", default=True, description="Use FFTW")
 
-    variant("transi", default=True, description="Compile TransI C-interface to trans?")
+    variant("transi", default=True, description="Compile TransI C-interface to trans")
 
     depends_on("ecbuild", type="build")
     depends_on("mpi", when="+mpi")

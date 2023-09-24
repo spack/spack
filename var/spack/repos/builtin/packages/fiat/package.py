@@ -28,9 +28,9 @@ class Fiat(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
-    variant("mpi", default=True, description="Use MPI?")
-    variant("openmp", default=True, description="Use OpenMP?")
-    variant("fckit", default=True, description="Use fckit?")
+    variant("mpi", default=True, description="Use MPI")
+    variant("openmp", default=True, description="Use OpenMP")
+    variant("fckit", default=True, description="Use fckit")
 
     depends_on("ecbuild", type=("build"))
     depends_on("mpi", when="+mpi")
