@@ -16,8 +16,5 @@ class PyMdaXdrlib(PythonPackage):
 
     version("0.2.0", sha256="f26f7158a83c32b96d15b530fce2cbc1190c4b7024e41faa4ab3e3db74e272af")
 
-    # See pyproject.toml for restriction on Python versions
-    depends_on("python@:3.10", type=("build", "run"))
-
     depends_on("py-setuptools@61.2:", type="build")
     depends_on("py-tomli", when="^python@:3.10", type="build")
