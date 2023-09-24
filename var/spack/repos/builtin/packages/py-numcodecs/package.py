@@ -28,6 +28,7 @@ class PyNumcodecs(PythonPackage):
 
     depends_on("python@3.6:3", when="@0.7:", type=("build", "link", "run"))
     depends_on("python@2.7:2.8,3.5:", when="@:0.6", type=("build", "link", "run"))
+    depends_on("python@:3.10", when="@:0.10", type=("build", "link", "run"))
     depends_on("py-setuptools@18.1:", type="build")
     depends_on("py-setuptools-scm@1.5.5:", type="build")
     depends_on("py-cython", type="build")
@@ -35,3 +36,9 @@ class PyNumcodecs(PythonPackage):
     depends_on("py-msgpack", type=("build", "run"), when="+msgpack")
 
     patch("apple-clang-12.patch", when="%apple-clang@12:")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)

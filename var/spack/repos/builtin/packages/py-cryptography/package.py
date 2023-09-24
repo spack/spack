@@ -32,7 +32,8 @@ class PyCryptography(PythonPackage):
     depends_on("py-setuptools@40.6:", when="@2.7:36", type="build")
     depends_on("py-setuptools@18.5:", when="@2.2:2.6", type="build")
     depends_on("py-setuptools@11.3:", when="@:2.1", type="build")
-    depends_on("py-setuptools-rust@0.11.4:", when="@3.4:", type=("build", "run"))
+    depends_on("py-setuptools-rust@0.11.4:", when="@3.4.2:", type="build")
+    depends_on("py-setuptools-rust@0.11.4:", when="@3.4:3.4.1", type=("build", "run"))
     depends_on("rust@1.48:", when="@38:", type="build")
     depends_on("rust@1.41:", when="@3.4.5:", type="build")
     depends_on("rust@1.45:", when="@3.4.3:3.4.4", type="build")
@@ -47,8 +48,11 @@ class PyCryptography(PythonPackage):
     depends_on("py-six@1.4.1:", type=("build", "run"), when="@:3.3")
     depends_on("py-idna@2.1:", type=("build", "run"), when="@:2.4")  # deprecated
     depends_on("py-idna@2.1:", type=("build", "run"), when="@2.5: +idna")  # deprecated
-    depends_on("openssl@:1.0", when="@:1.8.1")
+
     depends_on("openssl")
+    depends_on("openssl@:1.0", when="@:1.8.1")
+    depends_on("openssl@:1.1", when="@:3.4")
+    depends_on("openssl@1.1.1:", when="@39:")
 
     # To fix https://github.com/spack/spack/issues/29669
     # https://community.home-assistant.io/t/error-failed-building-wheel-for-cryptography/352020/14

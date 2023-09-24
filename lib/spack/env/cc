@@ -416,30 +416,14 @@ input_command="$*"
 # The lists are all bell-separated to be as flexible as possible, as their
 # contents may come from the command line, from ' '-separated lists,
 # ':'-separated lists, etc.
-include_dirs_list=""
-lib_dirs_list=""
-rpath_dirs_list=""
-system_include_dirs_list=""
-system_lib_dirs_list=""
-system_rpath_dirs_list=""
-isystem_system_include_dirs_list=""
-isystem_include_dirs_list=""
-libs_list=""
-other_args_list=""
-
-# Global state for keeping track of -Wl,-rpath -Wl,/path
-wl_expect_rpath=no
-
-# Same, but for -Xlinker -rpath -Xlinker /path
-xlinker_expect_rpath=no
 
 parse_Wl() {
     while [ $# -ne 0 ]; do
     if [ "$wl_expect_rpath" = yes ]; then
         if system_dir "$1"; then
-            append system_rpath_dirs_list "$1"
+            append return_system_rpath_dirs_list "$1"
         else
-            append rpath_dirs_list "$1"
+            append return_rpath_dirs_list "$1"
         fi
         wl_expect_rpath=no
     else
@@ -449,9 +433,9 @@ parse_Wl() {
                 if [ -z "$arg" ]; then
                     shift; continue
                 elif system_dir "$arg"; then
-                    append system_rpath_dirs_list "$arg"
+                    append return_system_rpath_dirs_list "$arg"
                 else
-                    append rpath_dirs_list "$arg"
+                    append return_rpath_dirs_list "$arg"
                 fi
                 ;;
             --rpath=*)
@@ -459,9 +443,9 @@ parse_Wl() {
                 if [ -z "$arg" ]; then
                     shift; continue
                 elif system_dir "$arg"; then
-                    append system_rpath_dirs_list "$arg"
+                    append return_system_rpath_dirs_list "$arg"
                 else
-                    append rpath_dirs_list "$arg"
+                    append return_rpath_dirs_list "$arg"
                 fi
                 ;;
             -rpath|--rpath)
@@ -475,7 +459,7 @@ parse_Wl() {
                 return 1
                 ;;
             *)
-                append other_args_list "-Wl,$1"
+                append return_other_args_list "-Wl,$1"
                 ;;
         esac
     fi
@@ -483,177 +467,210 @@ parse_Wl() {
     done
 }
 
+categorize_arguments() {
 
-while [ $# -ne 0 ]; do
+    unset IFS
 
-    # an RPATH to be added after the case statement.
-    rp=""
+    return_other_args_list=""
+    return_isystem_was_used=""
+    return_isystem_system_include_dirs_list=""
+    return_isystem_include_dirs_list=""
+    return_system_include_dirs_list=""
+    return_include_dirs_list=""
+    return_system_lib_dirs_list=""
+    return_lib_dirs_list=""
+    return_system_rpath_dirs_list=""
+    return_rpath_dirs_list=""
 
-    # Multiple consecutive spaces in the command line can
-    # result in blank arguments
-    if [ -z "$1" ]; then
-        shift
-        continue
-    fi
+    # Global state for keeping track of -Wl,-rpath -Wl,/path
+    wl_expect_rpath=no
 
-    if [ -n "${SPACK_COMPILER_FLAGS_KEEP}" ] ; then
-        # NOTE: the eval is required to allow `|` alternatives inside the variable
-        eval "\
-        case \"\$1\" in
-            $SPACK_COMPILER_FLAGS_KEEP)
-                append other_args_list \"\$1\"
+    # Same, but for -Xlinker -rpath -Xlinker /path
+    xlinker_expect_rpath=no
+
+    while [ $# -ne 0 ]; do
+
+        # an RPATH to be added after the case statement.
+        rp=""
+
+        # Multiple consecutive spaces in the command line can
+        # result in blank arguments
+        if [ -z "$1" ]; then
+            shift
+            continue
+        fi
+
+        if [ -n "${SPACK_COMPILER_FLAGS_KEEP}" ] ; then
+            # NOTE: the eval is required to allow `|` alternatives inside the variable
+            eval "\
+            case \"\$1\" in
+                $SPACK_COMPILER_FLAGS_KEEP)
+                    append return_other_args_list \"\$1\"
+                    shift
+                    continue
+                    ;;
+            esac
+            "
+        fi
+        # the replace list is a space-separated list of pipe-separated pairs,
+        # the first in each pair is the original prefix to be matched, the
+        # second is the replacement prefix
+        if [ -n "${SPACK_COMPILER_FLAGS_REPLACE}" ] ; then
+            for rep in ${SPACK_COMPILER_FLAGS_REPLACE} ; do
+                before=${rep%|*}
+                after=${rep#*|}
+                eval "\
+                stripped=\"\${1##$before}\"
+                "
+                if [ "$stripped" = "$1" ] ; then
+                    continue
+                fi
+
+                replaced="$after$stripped" 
+
+                # it matched, remove it
                 shift
-                continue
+
+                if [ -z "$replaced" ] ; then
+                    # completely removed, continue OUTER loop
+                    continue 2
+                fi
+
+                # re-build argument list with replacement
+                set -- "$replaced" "$@"
+            done
+        fi
+
+        case "$1" in
+            -isystem*)
+                arg="${1#-isystem}"
+                return_isystem_was_used=true
+                if [ -z "$arg" ]; then shift; arg="$1"; fi
+                if system_dir "$arg"; then
+                    append return_isystem_system_include_dirs_list "$arg"
+                else
+                    append return_isystem_include_dirs_list "$arg"
+                fi
+                ;;
+            -I*)
+                arg="${1#-I}"
+                if [ -z "$arg" ]; then shift; arg="$1"; fi
+                if system_dir "$arg"; then
+                    append return_system_include_dirs_list "$arg"
+                else
+                    append return_include_dirs_list "$arg"
+                fi
+                ;;
+            -L*)
+                arg="${1#-L}"
+                if [ -z "$arg" ]; then shift; arg="$1"; fi
+                if system_dir "$arg"; then
+                    append return_system_lib_dirs_list "$arg"
+                else
+                    append return_lib_dirs_list "$arg"
+                fi
+                ;;
+            -l*)
+                # -loopopt=0 is generated erroneously in autoconf <= 2.69,
+                # and passed by ifx to the linker, which confuses it with a
+                # library. Filter it out.
+                # TODO: generalize filtering of args with an env var, so that
+                # TODO: we do not have to special case this here.
+                if { [ "$mode" = "ccld" ] || [ $mode = "ld" ]; } \
+                    && [ "$1" != "${1#-loopopt}" ]; then
+                    shift
+                    continue
+                fi
+                arg="${1#-l}"
+                if [ -z "$arg" ]; then shift; arg="$1"; fi
+                append return_other_args_list "-l$arg"
+                ;;
+            -Wl,*)
+                IFS=,
+                if ! parse_Wl ${1#-Wl,}; then
+                    append return_other_args_list "$1"
+                fi
+                unset IFS
+                ;;
+            -Xlinker)
+                shift
+                if [ $# -eq 0 ]; then
+                    # -Xlinker without value: let the compiler error about it.
+                    append return_other_args_list -Xlinker
+                    xlinker_expect_rpath=no
+                    break
+                elif [ "$xlinker_expect_rpath" = yes ]; then
+                    # Register the path of -Xlinker -rpath <other args> -Xlinker <path>
+                    if system_dir "$1"; then
+                        append return_system_rpath_dirs_list "$1"
+                    else
+                        append return_rpath_dirs_list "$1"
+                    fi
+                    xlinker_expect_rpath=no
+                else
+                    case "$1" in
+                        -rpath=*)
+                            arg="${1#-rpath=}"
+                            if system_dir "$arg"; then
+                                append return_system_rpath_dirs_list "$arg"
+                            else
+                                append return_rpath_dirs_list "$arg"
+                            fi
+                            ;;
+                        --rpath=*)
+                            arg="${1#--rpath=}"
+                            if system_dir "$arg"; then
+                                append return_system_rpath_dirs_list "$arg"
+                            else
+                                append return_rpath_dirs_list "$arg"
+                            fi
+                            ;;
+                        -rpath|--rpath)
+                            xlinker_expect_rpath=yes
+                            ;;
+                        "$dtags_to_strip")
+                            ;;
+                        *)
+                            append return_other_args_list -Xlinker
+                            append return_other_args_list "$1"
+                            ;;
+                    esac
+                fi
+                ;;
+            "$dtags_to_strip")
+                ;;
+            *)
+                append return_other_args_list "$1"
                 ;;
         esac
-        "
-    fi
-    # the replace list is a space-separated list of pipe-separated pairs,
-    # the first in each pair is the original prefix to be matched, the
-    # second is the replacement prefix
-    if [ -n "${SPACK_COMPILER_FLAGS_REPLACE}" ] ; then
-        for rep in ${SPACK_COMPILER_FLAGS_REPLACE} ; do
-            before=${rep%|*}
-            after=${rep#*|}
-            eval "\
-            stripped=\"\${1##$before}\"
-            "
-            if [ "$stripped" = "$1" ] ; then
-                continue
-            fi
+        shift
+    done
 
-            replaced="$after$stripped" 
-
-            # it matched, remove it
-            shift
-
-            if [ -z "$replaced" ] ; then
-                # completely removed, continue OUTER loop
-                continue 2
-            fi
-
-            # re-build argument list with replacement
-            set -- "$replaced" "$@"
-        done
+    # We found `-Xlinker -rpath` but no matching value `-Xlinker /path`. Just append
+    # `-Xlinker -rpath` again and let the compiler or linker handle the error during arg
+    # parsing.
+    if [ "$xlinker_expect_rpath" = yes ]; then
+        append return_other_args_list -Xlinker
+        append return_other_args_list -rpath
     fi
 
-    case "$1" in
-        -isystem*)
-            arg="${1#-isystem}"
-            isystem_was_used=true
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
-                append isystem_system_include_dirs_list "$arg"
-            else
-                append isystem_include_dirs_list "$arg"
-            fi
-            ;;
-        -I*)
-            arg="${1#-I}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
-                append system_include_dirs_list "$arg"
-            else
-                append include_dirs_list "$arg"
-            fi
-            ;;
-        -L*)
-            arg="${1#-L}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
-                append system_lib_dirs_list "$arg"
-            else
-                append lib_dirs_list "$arg"
-            fi
-            ;;
-        -l*)
-            # -loopopt=0 is generated erroneously in autoconf <= 2.69,
-            # and passed by ifx to the linker, which confuses it with a
-            # library. Filter it out.
-            # TODO: generalize filtering of args with an env var, so that
-            # TODO: we do not have to special case this here.
-            if { [ "$mode" = "ccld" ] || [ $mode = "ld" ]; } \
-                && [ "$1" != "${1#-loopopt}" ]; then
-                shift
-                continue
-            fi
-            arg="${1#-l}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            append other_args_list "-l$arg"
-            ;;
-        -Wl,*)
-            IFS=,
-            if ! parse_Wl ${1#-Wl,}; then
-                append other_args_list "$1"
-            fi
-            unset IFS
-            ;;
-        -Xlinker)
-            shift
-            if [ $# -eq 0 ]; then
-                # -Xlinker without value: let the compiler error about it.
-                append other_args_list -Xlinker
-                xlinker_expect_rpath=no
-                break
-            elif [ "$xlinker_expect_rpath" = yes ]; then
-                # Register the path of -Xlinker -rpath <other args> -Xlinker <path>
-                if system_dir "$1"; then
-                    append system_rpath_dirs_list "$1"
-                else
-                    append rpath_dirs_list "$1"
-                fi
-                xlinker_expect_rpath=no
-            else
-                case "$1" in
-                    -rpath=*)
-                        arg="${1#-rpath=}"
-                        if system_dir "$arg"; then
-                            append system_rpath_dirs_list "$arg"
-                        else
-                            append rpath_dirs_list "$arg"
-                        fi
-                        ;;
-                    --rpath=*)
-                        arg="${1#--rpath=}"
-                        if system_dir "$arg"; then
-                            append system_rpath_dirs_list "$arg"
-                        else
-                            append rpath_dirs_list "$arg"
-                        fi
-                        ;;
-                    -rpath|--rpath)
-                        xlinker_expect_rpath=yes
-                        ;;
-                    "$dtags_to_strip")
-                        ;;
-                    *)
-                        append other_args_list -Xlinker
-                        append other_args_list "$1"
-                        ;;
-                esac
-            fi
-            ;;
-        "$dtags_to_strip")
-            ;;
-        *)
-            append other_args_list "$1"
-            ;;
-    esac
-    shift
-done
+    # Same, but for -Wl flags.
+    if [ "$wl_expect_rpath" = yes ]; then
+        append return_other_args_list -Wl,-rpath
+    fi
+}
 
-# We found `-Xlinker -rpath` but no matching value `-Xlinker /path`. Just append
-# `-Xlinker -rpath` again and let the compiler or linker handle the error during arg
-# parsing.
-if [ "$xlinker_expect_rpath" = yes ]; then
-    append other_args_list -Xlinker
-    append other_args_list -rpath
-fi
-
-# Same, but for -Wl flags.
-if [ "$wl_expect_rpath" = yes ]; then
-    append other_args_list -Wl,-rpath
-fi
+categorize_arguments "$@"
+    include_dirs_list="$return_include_dirs_list"
+    lib_dirs_list="$return_lib_dirs_list"
+    rpath_dirs_list="$return_rpath_dirs_list"
+    system_include_dirs_list="$return_system_include_dirs_list"
+    system_lib_dirs_list="$return_system_lib_dirs_list"
+    system_rpath_dirs_list="$return_system_rpath_dirs_list"
+    isystem_was_used="$return_isystem_was_used"
+    isystem_system_include_dirs_list="$return_isystem_system_include_dirs_list"
+    isystem_include_dirs_list="$return_isystem_include_dirs_list"
+    other_args_list="$return_other_args_list"
 
 #
 # Add flags from Spack's cppflags, cflags, cxxflags, fcflags, fflags, and
@@ -673,12 +690,14 @@ elif [ "$SPACK_ADD_DEBUG_FLAGS" = "custom" ]; then
     extend flags_list SPACK_DEBUG_FLAGS
 fi
 
+spack_flags_list=""
+
 # Fortran flags come before CPPFLAGS
 case "$mode" in
     cc|ccld)
         case $lang_flags in
             F)
-                extend flags_list SPACK_FFLAGS
+                extend spack_flags_list SPACK_FFLAGS
                 ;;
         esac
         ;;
@@ -687,7 +706,7 @@ esac
 # C preprocessor flags come before any C/CXX flags
 case "$mode" in
     cpp|as|cc|ccld)
-        extend flags_list SPACK_CPPFLAGS
+        extend spack_flags_list SPACK_CPPFLAGS
         ;;
 esac
 
@@ -697,10 +716,10 @@ case "$mode" in
     cc|ccld)
         case $lang_flags in
             C)
-                extend flags_list SPACK_CFLAGS
+                extend spack_flags_list SPACK_CFLAGS
                 ;;
             CXX)
-                extend flags_list SPACK_CXXFLAGS
+                extend spack_flags_list SPACK_CXXFLAGS
                 ;;
         esac
 
@@ -712,9 +731,24 @@ esac
 # Linker flags
 case "$mode" in
     ld|ccld)
-        extend flags_list SPACK_LDFLAGS
+        extend spack_flags_list SPACK_LDFLAGS
         ;;
 esac
+
+IFS="$lsep"
+    categorize_arguments $spack_flags_list
+unset IFS
+        spack_flags_include_dirs_list="$return_include_dirs_list"
+        spack_flags_lib_dirs_list="$return_lib_dirs_list"
+        spack_flags_rpath_dirs_list="$return_rpath_dirs_list"
+        spack_flags_system_include_dirs_list="$return_system_include_dirs_list"
+        spack_flags_system_lib_dirs_list="$return_system_lib_dirs_list"
+        spack_flags_system_rpath_dirs_list="$return_system_rpath_dirs_list"
+        spack_flags_isystem_was_used="$return_isystem_was_used"
+        spack_flags_isystem_system_include_dirs_list="$return_isystem_system_include_dirs_list"
+        spack_flags_isystem_include_dirs_list="$return_isystem_include_dirs_list"
+        spack_flags_other_args_list="$return_other_args_list"
+
 
 # On macOS insert headerpad_max_install_names linker flag
 if [ "$mode" = ld ] || [ "$mode" = ccld ]; then
@@ -740,6 +774,8 @@ fi
 if [ "$mode" = ccld ] || [ "$mode" = ld ]; then
     extend lib_dirs_list SPACK_LINK_DIRS
 fi
+
+libs_list=""
 
 # add RPATHs if we're in in any linking mode
 case "$mode" in
@@ -769,12 +805,16 @@ args_list="$flags_list"
 
 # Insert include directories just prior to any system include directories
 # NOTE: adding ${lsep} to the prefix here turns every added element into two
+extend args_list spack_flags_include_dirs_list "-I"
 extend args_list include_dirs_list "-I"
+extend args_list spack_flags_isystem_include_dirs_list "-isystem${lsep}"
 extend args_list isystem_include_dirs_list "-isystem${lsep}"
 
 case "$mode" in
     cpp|cc|as|ccld)
-        if [ "$isystem_was_used" = "true" ]; then
+        if [ "$spack_flags_isystem_was_used" = "true" ]; then
+            extend args_list SPACK_INCLUDE_DIRS "-isystem${lsep}"
+        elif [ "$isystem_was_used" = "true" ]; then
             extend args_list SPACK_INCLUDE_DIRS "-isystem${lsep}"
         else
             extend args_list SPACK_INCLUDE_DIRS "-I"
@@ -782,11 +822,15 @@ case "$mode" in
         ;;
 esac
 
+extend args_list spack_flags_system_include_dirs_list -I
 extend args_list system_include_dirs_list -I
+extend args_list spack_flags_isystem_system_include_dirs_list "-isystem${lsep}"
 extend args_list isystem_system_include_dirs_list "-isystem${lsep}"
 
 # Library search paths
+extend args_list spack_flags_lib_dirs_list "-L"
 extend args_list lib_dirs_list "-L"
+extend args_list spack_flags_system_lib_dirs_list "-L"
 extend args_list system_lib_dirs_list "-L"
 
 # RPATHs arguments
@@ -795,20 +839,25 @@ case "$mode" in
         if [ -n "$dtags_to_add" ] ; then
             append args_list "$linker_arg$dtags_to_add"
         fi
+        extend args_list spack_flags_rpath_dirs_list "$rpath"
         extend args_list rpath_dirs_list "$rpath"
+        extend args_list spack_flags_system_rpath_dirs_list "$rpath"
         extend args_list system_rpath_dirs_list "$rpath"
         ;;
     ld)
         if [ -n "$dtags_to_add" ] ; then
             append args_list "$dtags_to_add"
         fi
+        extend args_list spack_flags_rpath_dirs_list "-rpath${lsep}"
         extend args_list rpath_dirs_list "-rpath${lsep}"
+        extend args_list spack_flags_system_rpath_dirs_list "-rpath${lsep}"
         extend args_list system_rpath_dirs_list "-rpath${lsep}"
         ;;
 esac
 
 # Other arguments from the input command
 extend args_list other_args_list
+extend args_list spack_flags_other_args_list
 
 # Inject SPACK_LDLIBS, if supplied
 extend args_list libs_list "-l"
@@ -864,3 +913,4 @@ fi
 # Execute the full command, preserving spaces with IFS set
 # to the alarm bell separator.
 IFS="$lsep"; exec $full_command_list
+

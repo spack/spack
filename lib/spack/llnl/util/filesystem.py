@@ -11,6 +11,7 @@ import hashlib
 import itertools
 import numbers
 import os
+import pathlib
 import posixpath
 import re
 import shutil
@@ -18,11 +19,13 @@ import stat
 import sys
 import tempfile
 from contextlib import contextmanager
+from itertools import accumulate
 from typing import Callable, Iterable, List, Match, Optional, Tuple, Union
 
+import llnl.util.symlink
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
-from llnl.util.symlink import islink, symlink
+from llnl.util.symlink import islink, readlink, resolve_link_target_relative_to_the_link, symlink
 
 from spack.util.executable import Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
@@ -101,7 +104,7 @@ if sys.version_info < (3, 7, 4):
             pass
 
         # follow symlinks (aka don't not follow symlinks)
-        follow = follow_symlinks or not (os.path.islink(src) and os.path.islink(dst))
+        follow = follow_symlinks or not (islink(src) and islink(dst))
         if follow:
             # use the real function if it exists
             def lookup(name):
@@ -169,7 +172,7 @@ def rename(src, dst):
     if sys.platform == "win32":
         # Windows path existence checks will sometimes fail on junctions/links/symlinks
         # so check for that case
-        if os.path.exists(dst) or os.path.islink(dst):
+        if os.path.exists(dst) or islink(dst):
             os.remove(dst)
     os.rename(src, dst)
 
@@ -402,7 +405,7 @@ def filter_file(
                 os.remove(backup_filename)
 
 
-class FileFilter(object):
+class FileFilter:
     """Convenience class for calling ``filter_file`` a lot."""
 
     def __init__(self, *filenames):
@@ -566,7 +569,7 @@ def set_install_permissions(path):
     # If this points to a file maintained in a Spack prefix, it is assumed that
     # this function will be invoked on the target. If the file is outside a
     # Spack-maintained prefix, the permissions should not be modified.
-    if os.path.islink(path):
+    if islink(path):
         return
     if os.path.isdir(path):
         os.chmod(path, 0o755)
@@ -610,6 +613,8 @@ def chgrp(path, group, follow_symlinks=True):
         gid = grp.getgrnam(group).gr_gid
     else:
         gid = group
+    if os.stat(path).st_gid == gid:
+        return
     if follow_symlinks:
         os.chown(path, -1, gid)
     else:
@@ -633,7 +638,7 @@ def chmod_x(entry, perms):
 @system_path_filter
 def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link."""
-    if os.path.islink(dest):
+    if islink(dest):
         return
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
@@ -720,25 +725,11 @@ def install(src, dest):
 
 
 @system_path_filter
-def resolve_link_target_relative_to_the_link(link):
-    """
-    os.path.isdir uses os.path.exists, which for links will check
-    the existence of the link target. If the link target is relative to
-    the link, we need to construct a pathname that is valid from
-    our cwd (which may not be the same as the link's directory)
-    """
-    target = os.readlink(link)
-    if os.path.isabs(target):
-        return target
-    link_dir = os.path.dirname(os.path.abspath(link))
-    return os.path.join(link_dir, target)
-
-
-@system_path_filter
 def copy_tree(
     src: str,
     dest: str,
     symlinks: bool = True,
+    allow_broken_symlinks: bool = sys.platform != "win32",
     ignore: Optional[Callable[[str], bool]] = None,
     _permissions: bool = False,
 ):
@@ -761,6 +752,8 @@ def copy_tree(
         src (str): the directory to copy
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
+        allow_broken_symlinks (bool): whether or not to allow broken (dangling) symlinks,
+            On Windows, setting this to True will raise an exception. Defaults to true on unix.
         ignore (typing.Callable): function indicating which files to ignore
         _permissions (bool): for internal use only
 
@@ -768,6 +761,8 @@ def copy_tree(
         IOError: if *src* does not match any files or directories
         ValueError: if *src* is a parent directory of *dest*
     """
+    if allow_broken_symlinks and sys.platform == "win32":
+        raise llnl.util.symlink.SymlinkError("Cannot allow broken symlinks on Windows!")
     if _permissions:
         tty.debug("Installing {0} to {1}".format(src, dest))
     else:
@@ -780,6 +775,11 @@ def copy_tree(
     files = glob.glob(src)
     if not files:
         raise IOError("No such file or directory: '{0}'".format(src))
+
+    # For Windows hard-links and junctions, the source path must exist to make a symlink. Add
+    # all symlinks to this list while traversing the tree, then when finished, make all
+    # symlinks at the end.
+    links = []
 
     for src in files:
         abs_src = os.path.abspath(src)
@@ -803,7 +803,7 @@ def copy_tree(
             ignore=ignore,
             follow_nonexisting=True,
         ):
-            if os.path.islink(s):
+            if islink(s):
                 link_target = resolve_link_target_relative_to_the_link(s)
                 if symlinks:
                     target = os.readlink(s)
@@ -817,7 +817,9 @@ def copy_tree(
                             tty.debug("Redirecting link {0} to {1}".format(target, new_target))
                             target = new_target
 
-                    symlink(target, d)
+                    links.append((target, d, s))
+                    continue
+
                 elif os.path.isdir(link_target):
                     mkdirp(d)
                 else:
@@ -832,9 +834,17 @@ def copy_tree(
                 set_install_permissions(d)
                 copy_mode(s, d)
 
+    for target, d, s in links:
+        symlink(target, d, allow_broken_symlinks=allow_broken_symlinks)
+        if _permissions:
+            set_install_permissions(d)
+            copy_mode(s, d)
+
 
 @system_path_filter
-def install_tree(src, dest, symlinks=True, ignore=None):
+def install_tree(
+    src, dest, symlinks=True, ignore=None, allow_broken_symlinks=sys.platform != "win32"
+):
     """Recursively install an entire directory tree rooted at *src*.
 
     Same as :py:func:`copy_tree` with the addition of setting proper
@@ -845,12 +855,21 @@ def install_tree(src, dest, symlinks=True, ignore=None):
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
         ignore (typing.Callable): function indicating which files to ignore
+        allow_broken_symlinks (bool): whether or not to allow broken (dangling) symlinks,
+            On Windows, setting this to True will raise an exception.
 
     Raises:
         IOError: if *src* does not match any files or directories
         ValueError: if *src* is a parent directory of *dest*
     """
-    copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
+    copy_tree(
+        src,
+        dest,
+        symlinks=symlinks,
+        allow_broken_symlinks=allow_broken_symlinks,
+        ignore=ignore,
+        _permissions=True,
+    )
 
 
 @system_path_filter
@@ -1254,7 +1273,12 @@ def traverse_tree(
     Keyword Arguments:
         order (str): Whether to do pre- or post-order traversal. Accepted
             values are 'pre' and 'post'
-        ignore (typing.Callable): function indicating which files to ignore
+        ignore (typing.Callable): function indicating which files to ignore. This will also
+            ignore symlinks if they point to an ignored file (regardless of whether the symlink
+            is explicitly ignored); note this only supports one layer of indirection (i.e. if
+            you have x -> y -> z, and z is ignored but x/y are not, then y would be ignored
+            but not x). To avoid this, make sure the ignore function also ignores the symlink
+            paths too.
         follow_nonexisting (bool): Whether to descend into directories in
             ``src`` that do not exit in ``dest``. Default is True
         follow_links (bool): Whether to descend into symlinks in ``src``
@@ -1281,11 +1305,24 @@ def traverse_tree(
         dest_child = os.path.join(dest_path, f)
         rel_child = os.path.join(rel_path, f)
 
+        # If the source path is a link and the link's source is ignored, then ignore the link too,
+        # but only do this if the ignore is defined.
+        if ignore is not None:
+            if islink(source_child) and not follow_links:
+                target = readlink(source_child)
+                all_parents = accumulate(target.split(os.sep), lambda x, y: os.path.join(x, y))
+                if any(map(ignore, all_parents)):
+                    tty.warn(
+                        f"Skipping {source_path} because the source or a part of the source's "
+                        f"path is included in the ignores."
+                    )
+                    continue
+
         # Treat as a directory
         # TODO: for symlinks, os.path.isdir looks for the link target. If the
         # target is relative to the link, then that may not resolve properly
         # relative to our cwd - see resolve_link_target_relative_to_the_link
-        if os.path.isdir(source_child) and (follow_links or not os.path.islink(source_child)):
+        if os.path.isdir(source_child) and (follow_links or not islink(source_child)):
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
@@ -1311,7 +1348,11 @@ def traverse_tree(
 
 def lexists_islink_isdir(path):
     """Computes the tuple (lexists(path), islink(path), isdir(path)) in a minimal
-    number of stat calls."""
+    number of stat calls on unix. Use os.path and symlink.islink methods for windows."""
+    if sys.platform == "win32":
+        if not os.path.lexists(path):
+            return False, False, False
+        return os.path.lexists(path), islink(path), os.path.isdir(path)
     # First try to lstat, so we know if it's a link or not.
     try:
         lst = os.lstat(path)
@@ -1336,7 +1377,7 @@ def lexists_islink_isdir(path):
     return True, is_link, is_dir
 
 
-class BaseDirectoryVisitor(object):
+class BaseDirectoryVisitor:
     """Base class and interface for :py:func:`visit_directory_tree`."""
 
     def visit_file(self, root, rel_path, depth):
@@ -1526,7 +1567,7 @@ def remove_if_dead_link(path):
     Parameters:
         path (str): The potential dead link
     """
-    if os.path.islink(path) and not os.path.exists(path):
+    if islink(path) and not os.path.exists(path):
         os.unlink(path)
 
 
@@ -1585,7 +1626,7 @@ def remove_linked_tree(path):
         kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
 
     if os.path.exists(path):
-        if os.path.islink(path):
+        if islink(path):
             shutil.rmtree(os.path.realpath(path), **kwargs)
             os.unlink(path)
         else:
@@ -1752,9 +1793,14 @@ def find(root, files, recursive=True):
         files = [files]
 
     if recursive:
-        return _find_recursive(root, files)
+        tty.debug(f"Find (recursive): {root} {str(files)}")
+        result = _find_recursive(root, files)
     else:
-        return _find_non_recursive(root, files)
+        tty.debug(f"Find (not recursive): {root} {str(files)}")
+        result = _find_non_recursive(root, files)
+
+    tty.debug(f"Find complete: {root} {str(files)}")
+    return result
 
 
 @system_path_filter
@@ -1890,7 +1936,7 @@ class HeaderList(FileList):
     include_regex = re.compile(r"(.*?)(\binclude\b)(.*)")
 
     def __init__(self, files):
-        super(HeaderList, self).__init__(files)
+        super().__init__(files)
 
         self._macro_definitions = []
         self._directories = None
@@ -1916,7 +1962,7 @@ class HeaderList(FileList):
         """Default computation of directories based on the list of
         header files.
         """
-        dir_list = super(HeaderList, self).directories
+        dir_list = super().directories
         values = []
         for d in dir_list:
             # If the path contains a subdirectory named 'include' then stop
@@ -2352,7 +2398,7 @@ def find_all_libraries(root, recursive=False):
     )
 
 
-class WindowsSimulatedRPath(object):
+class WindowsSimulatedRPath:
     """Class representing Windows filesystem rpath analog
 
     One instance of this class is associated with a package (only on Windows)
@@ -2381,7 +2427,7 @@ class WindowsSimulatedRPath(object):
         """
         Set of directories where package binaries/libraries are located.
         """
-        return set([self.pkg.prefix.bin]) | self._additional_library_dependents
+        return set([pathlib.Path(self.pkg.prefix.bin)]) | self._additional_library_dependents
 
     def add_library_dependent(self, *dest):
         """
@@ -2394,9 +2440,9 @@ class WindowsSimulatedRPath(object):
         """
         for pth in dest:
             if os.path.isfile(pth):
-                self._additional_library_dependents.add(os.path.dirname)
+                self._additional_library_dependents.add(pathlib.Path(pth).parent)
             else:
-                self._additional_library_dependents.add(pth)
+                self._additional_library_dependents.add(pathlib.Path(pth))
 
     @property
     def rpaths(self):
@@ -2409,7 +2455,7 @@ class WindowsSimulatedRPath(object):
             dependent_libs.extend(list(find_all_shared_libraries(path, recursive=True)))
         for extra_path in self._addl_rpaths:
             dependent_libs.extend(list(find_all_shared_libraries(extra_path, recursive=True)))
-        return set(dependent_libs)
+        return set([pathlib.Path(x) for x in dependent_libs])
 
     def add_rpath(self, *paths):
         """
@@ -2425,7 +2471,7 @@ class WindowsSimulatedRPath(object):
         """
         self._addl_rpaths = self._addl_rpaths | set(paths)
 
-    def _link(self, path, dest_dir):
+    def _link(self, path: pathlib.Path, dest_dir: pathlib.Path):
         """Perform link step of simulated rpathing, installing
         simlinks of file in path to the dest_dir
         location. This method deliberately prevents
@@ -2433,27 +2479,35 @@ class WindowsSimulatedRPath(object):
         This is because it is both meaningless from an rpath
         perspective, and will cause an error when Developer
         mode is not enabled"""
-        file_name = os.path.basename(path)
-        dest_file = os.path.join(dest_dir, file_name)
-        if os.path.exists(dest_dir) and not dest_file == path:
+
+        def report_already_linked():
+            # We have either already symlinked or we are encoutering a naming clash
+            # either way, we don't want to overwrite existing libraries
+            already_linked = islink(str(dest_file))
+            tty.debug(
+                "Linking library %s to %s failed, " % (str(path), str(dest_file))
+                + "already linked."
+                if already_linked
+                else "library with name %s already exists at location %s."
+                % (str(file_name), str(dest_dir))
+            )
+
+        file_name = path.name
+        dest_file = dest_dir / file_name
+        if not dest_file.exists() and dest_dir.exists() and not dest_file == path:
             try:
-                symlink(path, dest_file)
+                symlink(str(path), str(dest_file))
             # For py2 compatibility, we have to catch the specific Windows error code
             # associate with trying to create a file that already exists (winerror 183)
+            # Catch OSErrors missed by the SymlinkError checks
             except OSError as e:
                 if sys.platform == "win32" and (e.winerror == 183 or e.errno == errno.EEXIST):
-                    # We have either already symlinked or we are encoutering a naming clash
-                    # either way, we don't want to overwrite existing libraries
-                    already_linked = islink(dest_file)
-                    tty.debug(
-                        "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
-                        if already_linked
-                        else "library with name %s already exists at location %s."
-                        % (file_name, dest_dir)
-                    )
-                    pass
+                    report_already_linked()
                 else:
                     raise e
+            # catch errors we raise ourselves from Spack
+            except llnl.util.symlink.AlreadyExistsError:
+                report_already_linked()
 
     def establish_link(self):
         """
@@ -2686,7 +2740,7 @@ def remove_directory_contents(dir):
     """Remove all contents of a directory."""
     if os.path.exists(dir):
         for entry in [os.path.join(dir, entry) for entry in os.listdir(dir)]:
-            if os.path.isfile(entry) or os.path.islink(entry):
+            if os.path.isfile(entry) or islink(entry):
                 os.unlink(entry)
             else:
                 shutil.rmtree(entry)

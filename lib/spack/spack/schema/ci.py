@@ -134,23 +134,6 @@ pipeline_gen_schema = {
 core_shared_properties = union_dicts(
     {
         "pipeline-gen": pipeline_gen_schema,
-        "bootstrap": {
-            "type": "array",
-            "items": {
-                "anyOf": [
-                    {"type": "string"},
-                    {
-                        "type": "object",
-                        "additionalProperties": False,
-                        "required": ["name"],
-                        "properties": {
-                            "name": {"type": "string"},
-                            "compiler-agnostic": {"type": "boolean", "default": False},
-                        },
-                    },
-                ]
-            },
-        },
         "rebuild-index": {"type": "boolean"},
         "broken-specs-url": {"type": "string"},
         "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
