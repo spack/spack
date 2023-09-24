@@ -18,7 +18,7 @@ class Pandoramonitoring(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers("vvolkl", "wdconinc")
+    maintainers("jmcarcell", "wdconinc")
 
     version("master", branch="master")
     version("3.5.0", sha256="274562abb7c797194634d5460a56227444a1de07a240c88ae35ca806abcbaf60")
