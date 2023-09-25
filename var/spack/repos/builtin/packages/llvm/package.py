@@ -560,6 +560,8 @@ class Llvm(CMakePackage, CudaPackage):
     patch("add-include-for-libelf-llvm-12-14.patch", when="@12:14")
     patch("add-include-for-libelf-llvm-15.patch", when="@15")
 
+    patch("sanitizer-platform-limits-posix-xdr-macos.patch", when="@10:14 platform=darwin")
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
@@ -926,6 +928,29 @@ class Llvm(CMakePackage, CudaPackage):
 
         # Semicolon seperated list of runtimes to enable
         if runtimes:
+            if self.spec.satisfies("@:14"):
+                # The older versions are not
+                # careful enough with the order of
+                # the runtimes.
+                # Instead of
+                # applying
+                # https://github.com/llvm/llvm-project/commit/06400a0142af8297b5d39b8f34a7c59db6f9910c,
+                # which might be incompatible with the version that we install,
+                # we sort the runtimes here according to the same order as
+                # in the aforementioned commit:
+                runtimes_order = [
+                    "libc",
+                    "libunwind",
+                    "libcxxabi",
+                    "libcxx",
+                    "compiler-rt",
+                    "openmp",
+                ]
+                runtimes.sort(
+                    key=lambda x: runtimes_order.index(x)
+                    if x in runtimes_order
+                    else len(runtimes_order)
+                )
             cmake_args.extend(
                 [
                     define("LLVM_ENABLE_RUNTIMES", runtimes),
