@@ -134,10 +134,10 @@ class Podio(CMakePackage):
     patch("python-tests.patch", when="@:0.14.0")
 
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
-    depends_on("root@6.28.02: cxxstd=20", when="cxxstd=20")
+    depends_on("root@6.28.04:", when="+rntuple")
+    depends_on("root@6.28:", when="@0.17:")
     for cxxstd in ("17", "20"):
-        depends_on("root@6.28: cxxstd={}".format(cxxstd), when="@0.17: cxxstd={}".format(cxxstd))
-        depends_on("root@6.28: cxxstd={}".format(cxxstd), when="+rntuple cxxstd={}".format(cxxstd))
+        depends_on("root cxxstd={}".format(cxxstd), when="cxxstd={}".format(cxxstd))
 
     depends_on("cmake@3.12:", type="build")
     depends_on("python", type=("build", "run"))
@@ -149,6 +149,7 @@ class Podio(CMakePackage):
     depends_on("py-tabulate", type=("run", "test"), when="@0.16.6:")
 
     conflicts("+sio", when="@:0.12", msg="sio support requires at least podio@0.13")
+    conflicts("+rntuple", when="@:0.16", msg="rntuple support requires at least podio@0.17")
 
     def cmake_args(self):
         args = [
