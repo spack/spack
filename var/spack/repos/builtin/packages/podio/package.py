@@ -21,7 +21,12 @@ class Podio(CMakePackage):
 
     version("master", branch="master")
     version("0.17", sha256="0c19f69970a891459cab227ab009514f1c1ce102b70e8c4b7d204eb6a0c643c1")
-    version("0.16.6", sha256="859f7cd16bd2b833bee9c1f33eb4cdbc2a0c2b1a48a853f67c30e8a0301d16df")
+    version("0.16.7", sha256="8af7c947e2637f508b7af053412bacd9218d41a455d69addd7492f05b7a4338d")
+    version(
+        "0.16.6",
+        sha256="859f7cd16bd2b833bee9c1f33eb4cdbc2a0c2b1a48a853f67c30e8a0301d16df",
+        deprecated=True,
+    )
     version(
         "0.16.5",
         sha256="42135e4d0e11be6f0d88748799fa2ec985514d4b4c979a10a56a00a378f65ee0",
