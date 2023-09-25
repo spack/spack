@@ -34,6 +34,7 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
+import spack.error
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -1417,7 +1418,7 @@ def try_fetch(url_to_fetch):
 
     try:
         stage.fetch()
-    except web_util.FetchError:
+    except spack.error.FetchError:
         stage.destroy()
         return None
 
@@ -2144,7 +2145,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
                 if not os.path.exists(stage.save_filename):
                     try:
                         stage.fetch()
-                    except web_util.FetchError:
+                    except spack.error.FetchError:
                         continue
 
             tty.debug("Found key {0}".format(fingerprint))
@@ -2296,7 +2297,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
             try:
                 stage.fetch()
                 break
-            except web_util.FetchError as e:
+            except spack.error.FetchError as e:
                 tty.debug(e)
         else:
             if fail_if_missing:

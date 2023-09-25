@@ -9,26 +9,12 @@ import os
 import re
 import shutil
 import sys
-from itertools import product
 
+import llnl.url
 from llnl.util import tty
 
-import spack.util.path as spath
 from spack.error import SpackError
 from spack.util.executable import CommandNotFoundError, which
-
-# Supported archive extensions.
-PRE_EXTS = ["tar", "TAR"]
-EXTS = ["gz", "bz2", "xz", "Z"]
-NOTAR_EXTS = ["zip", "tgz", "tbz2", "tbz", "txz"]
-CONTRACTION_MAP = {"tgz": "tar.gz", "txz": "tar.xz", "tbz": "tar.bz2", "tbz2": "tar.bz2"}
-
-# Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
-ALLOWED_ARCHIVE_TYPES = (
-    [".".join(ext) for ext in product(PRE_EXTS, EXTS)] + PRE_EXTS + EXTS + NOTAR_EXTS
-)
-
-ALLOWED_SINGLE_EXT_ARCHIVE_TYPES = PRE_EXTS + EXTS + NOTAR_EXTS
 
 try:
     import bz2  # noqa
@@ -66,10 +52,6 @@ def is_bz2_supported():
     return _bz2_support
 
 
-def allowed_archive(path):
-    return False if not path else any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
-
-
 def _system_untar(archive_file, remove_archive_file=False):
     """Returns path to unarchived tar file.
     Untars archive via system tar.
@@ -78,7 +60,7 @@ def _system_untar(archive_file, remove_archive_file=False):
         archive_file (str): absolute path to the archive to be extracted.
         Can be one of .tar(.[gz|bz2|xz|Z]) or .(tgz|tbz|tbz2|txz).
     """
-    archive_file_no_ext = strip_extension(archive_file)
+    archive_file_no_ext = llnl.url.strip_extension(archive_file)
     outfile = os.path.basename(archive_file_no_ext)
     if archive_file_no_ext == archive_file:
         # the archive file has no extension. Tar on windows cannot untar onto itself
@@ -114,7 +96,7 @@ def _bunzip2(archive_file):
 def _py_bunzip(archive_file):
     """Returns path to decompressed file.
     Decompresses bz2 compressed archives/files via python's bz2 module"""
-    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "bz2"))
+    decompressed_file = os.path.basename(llnl.url.strip_compression_extension(archive_file, "bz2"))
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
     f_bz = bz2.BZ2File(archive_file, mode="rb")
@@ -128,7 +110,7 @@ def _system_bunzip(archive_file):
     """Returns path to decompressed file.
     Decompresses bz2 compressed archives/files via system bzip2 utility"""
     compressed_file_name = os.path.basename(archive_file)
-    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "bz2"))
+    decompressed_file = os.path.basename(llnl.url.strip_compression_extension(archive_file, "bz2"))
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
     copy_path = os.path.join(working_dir, compressed_file_name)
@@ -158,7 +140,7 @@ def _gunzip(archive_file):
 def _py_gunzip(archive_file):
     """Returns path to gunzip'd file
     Decompresses `.gz` compressed archvies via python gzip module"""
-    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "gz"))
+    decompressed_file = os.path.basename(llnl.url.strip_compression_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     f_in = gzip.open(archive_file, "rb")
@@ -171,7 +153,7 @@ def _py_gunzip(archive_file):
 def _system_gunzip(archive_file):
     """Returns path to gunzip'd file
     Decompresses `.gz` compressed files via system gzip"""
-    archive_file_no_ext = strip_compression_extension(archive_file)
+    archive_file_no_ext = llnl.url.strip_compression_extension(archive_file)
     if archive_file_no_ext == archive_file:
         # the zip file has no extension. On Unix gunzip cannot unzip onto itself
         archive_file = archive_file + ".gz"
@@ -196,7 +178,7 @@ def _unzip(archive_file):
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
-    extracted_file = os.path.basename(strip_extension(archive_file, "zip"))
+    extracted_file = os.path.basename(llnl.url.strip_extension(archive_file, extension="zip"))
     if sys.platform == "win32":
         return _system_untar(archive_file)
     else:
@@ -259,7 +241,7 @@ def _win_compressed_tarball_handler(decompressor):
 def _py_lzma(archive_file):
     """Returns path to decompressed .xz files
     Decompress lzma compressed .xz files via python lzma module"""
-    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "xz"))
+    decompressed_file = os.path.basename(llnl.url.strip_compression_extension(archive_file, "xz"))
     archive_out = os.path.join(os.getcwd(), decompressed_file)
     with open(archive_out, "wb") as ar:
         with lzma.open(archive_file) as lar:
@@ -272,7 +254,7 @@ def _xz(archive_file):
     Decompress lzma compressed .xz files via xz command line
     tool.
     """
-    decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
+    decompressed_file = os.path.basename(llnl.url.strip_extension(archive_file, extension="xz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     compressed_file = os.path.basename(archive_file)
@@ -297,13 +279,13 @@ def _system_7zip(archive_file):
     Args:
         archive_file (str): absolute path of file to be unarchived
     """
-    outfile = os.path.basename(strip_compression_extension(archive_file))
+    outfile = os.path.basename(llnl.url.strip_compression_extension(archive_file))
     _7z = which("7z")
     if not _7z:
         raise CommandNotFoundError(
             "7z unavailable,\
 unable to extract %s files. 7z can be installed via Spack"
-            % extension_from_path(archive_file)
+            % llnl.url.extension_from_path(archive_file)
         )
     _7z.add_default_arg("e")
     _7z(archive_file)
@@ -318,7 +300,7 @@ def decompressor_for(path, extension=None):
     if not extension:
         extension = extension_from_file(path, decompress=True)
 
-    if not allowed_archive(extension):
+    if not llnl.url.allowed_archive(extension):
         raise CommandNotFoundError(
             "Cannot extract archive, \
 unrecognized file extension: '%s'"
@@ -394,7 +376,7 @@ def decompressor_for_win(extension):
         path (str): path of the archive file requiring decompression
         extension (str): extension
     """
-    extension = expand_contracted_extension(extension)
+    extension = llnl.url.expand_contracted_extension(extension)
     # Windows native tar can handle .zip extensions, use standard
     # unzip method
     if re.match(r"zip$", extension):
@@ -415,7 +397,7 @@ def decompressor_for_win(extension):
     # python based decompression strategy
     # Expand extension from contracted extension i.e. tar.gz from .tgz
     # no-op on non contracted extensions
-    compression_extension = compression_ext_from_compressed_archive(extension)
+    compression_extension = llnl.url.compression_ext_from_compressed_archive(extension)
     decompressor = _determine_py_decomp_archive_strategy(compression_extension)
     if not decompressor:
         raise SpackError(
@@ -657,7 +639,7 @@ def extension_from_stream(stream, decompress=False):
                         "Cannot derive file extension from magic number;"
                         " falling back to regex path parsing."
                     )
-                    return extension_from_path(stream.name)
+                    return llnl.url.extension_from_path(stream.name)
             resultant_ext = suffix_ext if not prefix_ext else ".".join([prefix_ext, suffix_ext])
             tty.debug("File extension %s successfully derived by magic number." % resultant_ext)
             return resultant_ext
@@ -693,114 +675,11 @@ def extension_from_file(file, decompress=False):
             if ext and ext.startswith("tar."):
                 suf = ext.split(".")[1]
                 abbr = "t" + suf
-                if check_extension(file, abbr):
+                if llnl.url.has_extension(file, abbr):
                     return abbr
             if not ext:
                 # If unable to parse extension from stream,
                 # attempt to fall back to string parsing
-                ext = extension_from_path(file)
+                ext = llnl.url.extension_from_path(file)
             return ext
     return None
-
-
-def extension_from_path(path):
-    """Returns the allowed archive extension for a path.
-    If path does not include a valid archive extension
-    (see`spack.util.compression.ALLOWED_ARCHIVE_TYPES`) return None
-    """
-    if path is None:
-        raise ValueError("Can't call extension() on None")
-
-    for t in ALLOWED_ARCHIVE_TYPES:
-        if check_extension(path, t):
-            return t
-    return None
-
-
-def strip_compression_extension(path, ext=None):
-    """Returns path with last supported (can be combined with tar) or
-    provided archive extension stripped"""
-    path_ext = extension_from_path(path)
-    if path_ext:
-        path = expand_contracted_extension_in_path(path)
-        exts_to_check = EXTS
-        if ext:
-            exts_to_check = [ext]
-        for ext_check in exts_to_check:
-            mod_path = check_and_remove_ext(path, ext_check)
-            if mod_path != path:
-                return mod_path
-    return path
-
-
-def strip_extension(path, ext=None):
-    """Returns the part of a path that does not include extension.
-    If ext is given, only attempts to remove that extension. If no
-    extension given, attempts to strip any valid extension from path"""
-    if ext:
-        return check_and_remove_ext(path, ext)
-    for t in ALLOWED_ARCHIVE_TYPES:
-        mod_path = check_and_remove_ext(path, t)
-        if mod_path != path:
-            return mod_path
-    return path
-
-
-def check_extension(path, ext):
-    """Returns true if extension is present in path
-    false otherwise"""
-    # Strip sourceforge suffix.
-    prefix, _ = spath.find_sourceforge_suffix(path)
-    if not ext.startswith(r"\."):
-        ext = r"\.%s$" % ext
-    if re.search(ext, prefix):
-        return True
-    return False
-
-
-def reg_remove_ext(path, ext):
-    """Returns path with ext remove via regex"""
-    if path and ext:
-        suffix = r"\.%s$" % ext
-        return re.sub(suffix, "", path)
-    return path
-
-
-def check_and_remove_ext(path, ext):
-    """Returns path with extension removed if extension
-    is present in path. Otherwise just returns path"""
-    if check_extension(path, ext):
-        return reg_remove_ext(path, ext)
-    return path
-
-
-def _substitute_extension(path, old_ext, new_ext):
-    """Returns path with old_ext replaced with new_ext.
-    old_ext and new_ext can be extension strings or regexs"""
-    return re.sub(rf"{old_ext}", rf"{new_ext}", path)
-
-
-def expand_contracted_extension_in_path(path, ext=None):
-    """Returns path with any contraction extension (i.e. tgz) expanded
-    (i.e. tar.gz). If ext is specified, only attempt to expand that extension"""
-    if not ext:
-        ext = extension_from_path(path)
-    expanded_ext = expand_contracted_extension(ext)
-    if expanded_ext != ext:
-        return _substitute_extension(path, ext, expanded_ext)
-    return path
-
-
-def expand_contracted_extension(extension):
-    """Return expanded version of contracted extension
-    i.e. .tgz -> .tar.gz, no op on non contracted extensions"""
-    extension = extension.strip(".")
-    return CONTRACTION_MAP.get(extension, extension)
-
-
-def compression_ext_from_compressed_archive(extension):
-    """Returns compression extension for a compressed archive"""
-    extension = expand_contracted_extension(extension)
-    for ext in [*EXTS]:
-        if ext in extension:
-            return ext

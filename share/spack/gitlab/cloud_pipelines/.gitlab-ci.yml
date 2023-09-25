@@ -69,6 +69,7 @@ default:
 .base-job:
   variables:
     SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
       # Pipelines on develop only rebuild what is missing from the mirror
@@ -79,6 +80,7 @@ default:
         SPACK_REQUIRE_SIGNING: "True"
         AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+        OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
     - if: $CI_COMMIT_REF_NAME =~ /^releases\/v.*/
       # Pipelines on release branches always rebuild everything
       when: always
@@ -90,6 +92,7 @@ default:
         SPACK_REQUIRE_SIGNING: "True"
         AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+        OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
     - if: $CI_COMMIT_TAG =~ /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/ || $CI_COMMIT_TAG =~ /^v.*/
       # Pipelines on tags (release or dev snapshots) only copy binaries from one mirror to another
       when: always
@@ -99,6 +102,7 @@ default:
         SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
         AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+        OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
     - if: $CI_COMMIT_REF_NAME =~ /^pr[\d]+_.*$/
       # Pipelines on PR branches rebuild only what's missing, and do extra pruning
       when: always
@@ -109,6 +113,7 @@ default:
         SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
         AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
+        OIDC_TOKEN_AUDIENCE: "pr_binary_mirror"
 
 .generate-common:
   stage: generate
@@ -225,6 +230,9 @@ protected-publish:
     - curl -fLsS https://spack.github.io/keys/spack-public-binary-key.pub -o /tmp/spack-public-binary-key.pub
     - aws s3 cp /tmp/spack-public-binary-key.pub "${SPACK_COPY_BUILDCACHE}/build_cache/_pgp/spack-public-binary-key.pub"
     - spack buildcache update-index --keys "${SPACK_COPY_BUILDCACHE}"
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: "protected_binary_mirror"
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
@@ -569,7 +577,7 @@ tutorial-build:
 
 ml-linux-x86_64-cpu-generate:
   extends: [ ".generate-x86_64", .ml-linux-x86_64-cpu, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2023-07-01
 
 ml-linux-x86_64-cpu-build:
   extends: [ ".build", ".ml-linux-x86_64-cpu" ]
@@ -592,7 +600,7 @@ ml-linux-x86_64-cpu-build:
 
 ml-linux-x86_64-cuda-generate:
   extends: [ ".generate-x86_64", .ml-linux-x86_64-cuda, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2023-07-01
 
 ml-linux-x86_64-cuda-build:
   extends: [ ".build", ".ml-linux-x86_64-cuda"  ]
@@ -615,7 +623,7 @@ ml-linux-x86_64-cuda-build:
 
 ml-linux-x86_64-rocm-generate:
   extends: [ ".generate-x86_64", .ml-linux-x86_64-rocm, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2023-07-01
 
 ml-linux-x86_64-rocm-build:
   extends: [ ".build", ".ml-linux-x86_64-rocm" ]
@@ -773,30 +781,8 @@ deprecated-ci-build:
 #       job: aws-pcluster-generate-neoverse_v1
 
 # Cray definitions
-.base-cray-job:
-  variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-cray/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
-    AWS_ACCESS_KEY_ID: ${CRAY_MIRRORS_AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${CRAY_MIRRORS_AWS_SECRET_ACCESS_KEY}
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "develop"
-      # Pipelines on develop only rebuild what is missing from the mirror
-      when: always
-      variables:
-        SPACK_PIPELINE_TYPE: "spack_protected_branch"
-        SPACK_REQUIRE_SIGNING: "True"
-    - if: $CI_COMMIT_REF_NAME =~ /^pr[\d]+_.*$/
-      # Pipelines on PR branches rebuild only what's missing, and do extra pruning
-      when: always
-      variables:
-        SPACK_PIPELINE_TYPE: "spack_pull_request"
-        SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-cray/prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
-        SPACK_PRUNE_UNTOUCHED: "True"
-        SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
-
 .generate-cray:
-  extends: [ ".generate-common", ".base-cray-job" ]
-  stage: generate
+  extends: [ ".generate-common", ".base-job" ]
   before_script:
     - echo $PATH
     - module avail
@@ -811,11 +797,6 @@ deprecated-ci-build:
   extends: [ ".generate-cray" ]
 
 
-.build-cray:
-  extends: [ ".base-cray-job" ]
-  stage: build
-
-
 #######################################
 # E4S - Cray RHEL
 #######################################
@@ -828,7 +809,7 @@ e4s-cray-rhel-generate:
   extends: [ ".generate-cray-rhel", ".e4s-cray-rhel" ]
 
 e4s-cray-rhel-build:
-  extends: [ ".build-cray", ".e4s-cray-rhel" ]
+  extends: [ ".build", ".e4s-cray-rhel" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -850,7 +831,7 @@ e4s-cray-sles-generate:
   extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
 
 e4s-cray-sles-build:
-  extends: [ ".build-cray", ".e4s-cray-sles" ]
+  extends: [ ".build", ".e4s-cray-sles" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml

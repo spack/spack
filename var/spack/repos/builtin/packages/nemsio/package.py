@@ -15,13 +15,15 @@ class Nemsio(CMakePackage):
 
     homepage = "https://noaa-emc.github.io/NCEPLIBS-nemsio"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-nemsio/archive/refs/tags/v2.5.2.tar.gz"
+    git = "https://github.com/NOAA-EMC/NCEPLIBS-nemsio"
 
-    maintainers("t-brown", "edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA")
+    maintainers("edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA")
 
     variant("mpi", default=True, description="Build Nemsio with MPI")
     # Nemsio 2.5.3 and below require MPI
     conflicts("~mpi", when="@:2.5.3")
 
+    version("develop", branch="develop")
     version("2.5.4", sha256="186a5f37d509d280c0237d4917db86ad676c5dd12d8a892df0333a10e751e481")
     version("2.5.3", sha256="3fe8a781fc96197803d369cafe0138f3a5cbbca9816a7f8fd57567a1719a4d49")
     version("2.5.2", sha256="c59e9379969690de8d030cbf4bbbbe3726faf13c304f3b88b0f6aec1496d2c08")

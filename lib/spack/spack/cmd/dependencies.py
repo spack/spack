@@ -74,7 +74,7 @@ def dependencies(parser, args):
             spec,
             transitive=args.transitive,
             expand_virtuals=args.expand_virtuals,
-            deptype=args.deptype,
+            depflag=args.deptype,
         )
 
         if spec.name in dependencies:

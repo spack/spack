@@ -199,6 +199,13 @@ attr("deprecated", node(ID, Package), Version) :-
      attr("version", node(ID, Package), Version),
      pkg_fact(Package, deprecated_version(Version)).
 
+error(100, "Package '{0}' needs the deprecated version '{1}', and this is not allowed", Package, Version)
+  :- deprecated_versions_not_allowed(),
+     attr("version", node(ID, Package), Version),
+     not external(node(ID, Package)),
+     not concrete(node(ID, Package)),
+     pkg_fact(Package, deprecated_version(Version)).
+
 possible_version_weight(node(ID, Package), Weight)
  :- attr("version", node(ID, Package), Version),
     pkg_fact(Package, version_declared(Version, Weight)).
@@ -255,6 +262,7 @@ attr("node_version_satisfies", node(ID, Package), Constraint)
      pkg_fact(Package, version_satisfies(Constraint, Version)).
 
 #defined version_satisfies/3.
+#defined deprecated_versions_not_allowed/0.
 #defined deprecated_version/2.
 
 %-----------------------------------------------------------------------------
