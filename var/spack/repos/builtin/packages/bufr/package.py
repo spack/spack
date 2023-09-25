@@ -105,7 +105,7 @@ class Bufr(CMakePackage):
 
         if self.spec.satisfies("+python"):
             pyver = self.spec["python"].version.up_to(2)
-            pydir = os.path.join(os.path.dirname(lib[0]), "python%s/site-packages" % pyver)
+            pydir = join_path(os.path.dirname(lib[0]), f"python{pyver}", "site-packages")
             env.prepend_path("PYTHONPATH", pydir)
 
     def setup_run_environment(self, env):
