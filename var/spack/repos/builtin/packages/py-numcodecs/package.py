@@ -21,21 +21,38 @@ class PyNumcodecs(PythonPackage):
     import_modules = ["numcodecs"]
 
     version("master", branch="master", submodules=True)
+    version("0.11.0", sha256="6c058b321de84a1729299b0eae4d652b2e48ea1ca7f9df0da65cb13470e635eb")
     version("0.7.3", sha256="022b12ad83eb623ec53f154859d49f6ec43b15c36052fa864eaf2d9ee786dd85")
     version("0.6.4", sha256="ef4843d5db4d074e607e9b85156835c10d006afc10e175bda62ff5412fca6e4d")
 
     variant("msgpack", default=False, description="Codec to encode data as msgpacked bytes.")
 
-    depends_on("python@3.6:3", when="@0.7:", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@:0.6", type=("build", "link", "run"))
-    depends_on("python@:3.10", when="@:0.10", type=("build", "link", "run"))
+    depends_on("python@3.8:", when="@0.11:", type=("build", "link", "run"))
+    depends_on("python@3.6:3", when="@0.7:0.10", type=("build", "link", "run"))
+    depends_on("py-setuptools@64:", when="@0.11:", type="build")
     depends_on("py-setuptools@18.1:", type="build")
-    depends_on("py-setuptools-scm@1.5.5:", type="build")
+    depends_on("py-setuptools-scm@6.2: +toml", when="@0.11:", type="build")
+    depends_on("py-setuptools-scm@1.5.5: +toml", type="build")
     depends_on("py-cython", type="build")
     depends_on("py-numpy@1.7:", type=("build", "run"))
+    depends_on("py-py-cpuinfo", when="@0.11:", type="build")
+    depends_on("py-entrypoints", when="@0.10.1:0.11", type=("build", "run"))
     depends_on("py-msgpack", type=("build", "run"), when="+msgpack")
 
     patch("apple-clang-12.patch", when="%apple-clang@12:")
+
+    # TODO: this package should really depend on blosc, zstd, lz4, zlib, but right now it vendors
+    # those libraries without any way to use the system versions.
+    # https://github.com/zarr-developers/numcodecs/issues/464
+
+    def setup_build_environment(self, env):
+        # This package likes to compile natively by checking cpu features and then setting flags
+        # -msse2 and -mavx2, which we want to avoid in Spack. This could go away if the package
+        # supports external libraries.
+        if "avx2" not in self.spec.target.features:
+            env.set("DISABLE_NUMCODECS_AVX2", "1")
+        if "sse2" not in self.spec.target.features:
+            env.set("DISABLE_NUMCODECS_SSE2", "1")
 
     def flag_handler(self, name, flags):
         if name == "cflags":
