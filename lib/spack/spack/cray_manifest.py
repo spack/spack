@@ -5,6 +5,7 @@
 
 import json
 import os
+import traceback
 
 import jsonschema
 import jsonschema.exceptions
@@ -49,7 +50,7 @@ def translated_compiler_name(manifest_compiler_name):
 
 def compiler_from_entry(entry, manifest_path):
     # Note that manifest_path is only passed here to compose a
-    # useful warning message paths appear to be missing.
+    # useful warning message when paths appear to be missing.
     compiler_name = translated_compiler_name(entry["name"])
 
     if "prefix" in entry:
@@ -227,8 +228,6 @@ def read(path, apply_updates):
             try:
                 spack.compilers.add_compilers_to_config([compiler], init_config=False)
             except Exception:
-                import traceback
-
                 tty.warn(
                     f"Could not add compiler {str(compiler.spec)}: "
                     f"\n\tfrom manifest: {path}"
