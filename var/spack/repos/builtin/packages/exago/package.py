@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -13,7 +15,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/pnnl/ExaGO"
     git = "https://github.com/pnnl/ExaGO.git"
-    maintainers("ryandanehy", "CameronRutherford", "pelesh")
+    maintainers("ryandanehy", "cameronrutherford", "pelesh")
 
     version("1.5.1", commit="7abe482c8da0e247f9de4896f5982c4cacbecd78", submodules=True)
     version("1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True)
@@ -45,6 +47,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     conflicts(
         "+python", when="+ipopt+rocm", msg="Python bindings require -fPIC with Ipopt for rocm."
     )
+    variant("tests", default=True, description="Enable/Disable Testing")
 
     # Solver options
     variant("hiop", default=False, description="Enable/Disable HiOp")
@@ -178,7 +181,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("EXAGO_ENABLE_CUDA", "cuda"),
                 self.define_from_variant("EXAGO_ENABLE_HIP", "rocm"),
                 self.define("PETSC_DIR", spec["petsc"].prefix),
-                self.define("EXAGO_RUN_TESTS", True),
+                self.define_from_variant("EXAGO_RUN_TESTS", "tests"),
                 self.define_from_variant("EXAGO_ENABLE_MPI", "mpi"),
                 self.define_from_variant("EXAGO_ENABLE_RAJA", "raja"),
                 self.define_from_variant("EXAGO_ENABLE_HIOP", "hiop"),
