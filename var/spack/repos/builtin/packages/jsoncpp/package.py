@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Jsoncpp(CMakePackage):
+class Jsoncpp(CMakePackage, MesonPackage):
     """JsonCpp is a C++ library that allows manipulating JSON values,
     including serialization and deserialization to and from strings.
     It can also preserve existing comment in unserialization/serialization
@@ -33,22 +33,25 @@ class Jsoncpp(CMakePackage):
     version("1.7.4", sha256="10dcd0677e80727e572a1e462193e51a5fde3e023b99e144b2ee1a469835f769")
     version("1.7.3", sha256="1cfcad14054039ba97c22531888796cb9369e6353f257aacaad34fda956ada53")
 
-    variant(
-        "build_type",
-        default="RelWithDebInfo",
-        description="The build type to build",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel", "Coverage"),
-    )
-
+    # From 1.9.3 onwards CMAKE_CXX_STANDARD is finally set to 11.
     variant(
         "cxxstd",
         default="default",
-        values=("default", "98", "11", "14", "17"),
+        values=("default", conditional("98", when="@:1.8"), "11", "14", "17"),
         multi=False,
         description="Use the specified C++ standard when building.",
+        when="@:1.9.2 build_system=cmake",
     )
 
-    depends_on("cmake@3.1:", type="build")
+    build_system("cmake", conditional("meson", when="@1.9.2:"), default="cmake")
+
+    with when("build_system=cmake"):
+        depends_on("cmake@3.1:", type="build")
+        depends_on("cmake@1.9:", when="@1.9:", type="build")
+
+    with when("build_system=meson"):
+        depends_on("meson@0.49.0:", type="build")
+
     depends_on("python", type="test")
 
     # Ref: https://github.com/open-source-parsers/jsoncpp/pull/1023
@@ -62,13 +65,20 @@ class Jsoncpp(CMakePackage):
             "src/lib_json/json_value.cpp",
         )
 
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
-        args = ["-DBUILD_SHARED_LIBS=ON"]
-        cxxstd = self.spec.variants["cxxstd"].value
-        if cxxstd != "default":
-            args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
-        if self.run_tests:
-            args.append("-DJSONCPP_WITH_TESTS=ON")
-        else:
-            args.append("-DJSONCPP_WITH_TESTS=OFF")
+        args = [
+            self.define("BUILD_SHARED_LIBS", True),
+            self.define("JSONCPP_WITH_TESTS", self.pkg.run_tests),
+        ]
+        if "cxxstd" in self.spec.variants:
+            cxxstd = self.spec.variants["cxxstd"].value
+            if cxxstd != "default":
+                args.append(self.define("CMAKE_CXX_STANDARD", cxxstd))
         return args
+
+
+class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+    def meson_args(self):
+        return ["-Dtests={}".format("true" if self.pkg.run_tests else "false")]
