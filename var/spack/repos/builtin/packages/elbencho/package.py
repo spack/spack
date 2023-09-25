@@ -66,7 +66,15 @@ class Elbencho(MakefilePackage):
 
     depends_on("cuda", when="+cuda")
     depends_on("boost+filesystem+program_options+thread")
-
+    depends_on("ncurses")
+    depends_on("numactl")
+    depends_on("libaio")
+    depends_on("curl", when="+s3")
+    depends_on("libarchive", when="+s3")
+    depends_on("openssl", when="+s3")
+    depends_on("libuuid", when="+s3")
+    depends_on("zlib", when="+s3")
+    depends_on("cmake", when="+s3")
 
     conflicts("+cufile", when="~cuda")
 
