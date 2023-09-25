@@ -152,6 +152,17 @@ _common_compiler = JsonCompilerEntry(
     },
 )
 
+_other_compiler = JsonCompilerEntry(
+    name="clang",
+    version="3.0.0",
+    arch={"os": "centos8", "target": "x86_64"},
+    executables={
+        "cc": "/path/to/compiler/clang",
+        "cxx": "/path/to/compiler/clang++",
+        "fc": "/path/to/compiler/flang",
+    },
+)
+
 
 def test_compatibility():
     """Make sure that JsonSpecEntry outputs the expected JSON structure
@@ -320,7 +331,7 @@ def create_manifest_content():
             "cpe-version": "22.06",
         },
         "specs": list(x.to_dict() for x in generate_openmpi_entries()),
-        "compilers": [_common_compiler.compiler_json()],
+        "compilers": [_common_compiler.compiler_json(), _other_compiler.compiler_json()],
     }
 
 
