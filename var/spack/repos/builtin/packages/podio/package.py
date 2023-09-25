@@ -20,9 +20,18 @@ class Podio(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version("master", branch="master")
+    version("0.17", sha256="0c19f69970a891459cab227ab009514f1c1ce102b70e8c4b7d204eb6a0c643c1")
     version("0.16.6", sha256="859f7cd16bd2b833bee9c1f33eb4cdbc2a0c2b1a48a853f67c30e8a0301d16df")
-    version("0.16.5", sha256="42135e4d0e11be6f0d88748799fa2ec985514d4b4c979a10a56a00a378f65ee0")
-    version("0.16.3", sha256="d8208f98496af68ca8d02d302f428aab510e50d07575b90c3477fff7e499335b")
+    version(
+        "0.16.5",
+        sha256="42135e4d0e11be6f0d88748799fa2ec985514d4b4c979a10a56a00a378f65ee0",
+        deprecated=True,
+    )
+    version(
+        "0.16.3",
+        sha256="d8208f98496af68ca8d02d302f428aab510e50d07575b90c3477fff7e499335b",
+        deprecated=True,
+    )
     version(
         "0.16.2",
         sha256="faf7167290faf322f23c734adff19904b10793b5ab14e1dfe90ce257c225114b",
@@ -112,6 +121,7 @@ class Podio(CMakePackage):
         description="Use the specified C++ standard when building.",
     )
     variant("sio", default=False, description="Build the SIO I/O backend")
+    variant("rntuple", default=False, description="Build the RNTuple backend")
 
     # cpack config throws an error on some systems
     patch("cpack.patch", when="@:0.10.0")
@@ -119,10 +129,12 @@ class Podio(CMakePackage):
     patch("python-tests.patch", when="@:0.14.0")
 
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
-    depends_on("root@6.25.02: cxxstd=20", when="cxxstd=20")
     depends_on("root@6.28.02: cxxstd=20", when="cxxstd=20")
+    for cxxstd in ("17", "20"):
+        depends_on("root@6.28: cxxstd={}".format(cxxstd), when="@0.17:")
+        depends_on("root@6.28: cxxstd={}".format(cxxstd), when="+rntuple")
 
-    depends_on("cmake@3.8:", type="build")
+    depends_on("cmake@3.12:", type="build")
     depends_on("python", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-jinja2@2.10.1:", type=("build", "run"), when="@0.12.0:")
@@ -136,6 +148,7 @@ class Podio(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("ENABLE_SIO", "sio"),
+            self.define_from_variant("ENABLE_RNTUPLE", "rntuple"),
             self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
