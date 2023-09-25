@@ -65,7 +65,7 @@ class Elbencho(MakefilePackage):
         if "+cuda" in spec:
             os.environ["CUDA_SUPPORT"] = "1"
         if "+cufile" in spec:
-            os.environ["CUDA_SUPPORT"] = "1"
+            os.environ["CUFILE_SUPPORT"] = "1"
         makefile = FileFilter("Makefile")
         makefile.filter(r"\s+/etc/bash_completion.d/", f" {prefix}/etc/bash_completion.d/")
         makefile.filter(r"-lncurses", "-ltinfo -lncurses")
