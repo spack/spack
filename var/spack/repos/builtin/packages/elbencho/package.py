@@ -8,6 +8,11 @@ import os
 
 
 class Elbencho(MakefilePackage):
+
+    """
+    Elbencho storage benchmark
+    """
+
     homepage = "https://github.com/breuner/elbencho"
     url = "https://github.com/breuner/elbencho/archive/refs/tags/v3.0-1.tar.gz"
 
