@@ -78,7 +78,6 @@ class Elbencho(MakefilePackage):
 
     conflicts("+cufile", when="~cuda")
 
-
     def edit(self, spec, prefix):
         os.mkdir(prefix.bin)
         os.environ['INST_PATH'] = prefix.bin
