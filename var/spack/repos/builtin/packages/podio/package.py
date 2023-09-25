@@ -120,6 +120,7 @@ class Podio(CMakePackage):
 
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
     depends_on("root@6.25.02: cxxstd=20", when="cxxstd=20")
+    depends_on("root@6.28.02: cxxstd=20", when="cxxstd=20")
 
     depends_on("cmake@3.8:", type="build")
     depends_on("python", type=("build", "run"))
