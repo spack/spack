@@ -65,7 +65,7 @@ class Elbencho(MakefilePackage):
         default=False, description="GDS GPU Direct Storage support")
 
     depends_on("cuda", when="+cuda")
-    depends_on("boost+filesystem+program_options+thread")
+    depends_on("boost+filesystem+program_options+thread+system+date_time+regex+serialization+iostreams")
     depends_on("ncurses")
     depends_on("numactl")
     depends_on("libaio")
@@ -91,3 +91,5 @@ class Elbencho(MakefilePackage):
         makefile = FileFilter("Makefile")
         makefile.filter(
             r'\s+/etc/bash_completion.d/', f' {prefix}/etc/bash_completion.d/')
+        makefile.filter(
+            r'-lncurses', '-ltinfo -lncurses')
