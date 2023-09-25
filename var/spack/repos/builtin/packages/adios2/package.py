@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import tempfile
 
 from spack.package import *
 
@@ -15,6 +16,7 @@ class Adios2(CMakePackage, CudaPackage):
     homepage = "https://csmd.ornl.gov/software/adios2"
     url = "https://github.com/ornladios/ADIOS2/archive/v2.8.0.tar.gz"
     git = "https://github.com/ornladios/ADIOS2.git"
+    test_requires_compiler = True
 
     maintainers("ax3l", "vicentebolea", "williamfgc")
 
@@ -281,3 +283,58 @@ class Adios2(CMakePackage, CudaPackage):
             env.prepend_path("HDF5_PLUGIN_PATH", os.path.dirname(all_libs[idx]))
         except ValueError:
             pass
+
+    @run_after("install")
+    def setup_install_tests(self):
+        """
+        Copy the example files after the package is installed to an
+        install test subdirectory for use during `spack test run`.
+        """
+        extra_install_tests = [join_path("testing", "install", "C")]
+        self.cache_extra_test_sources(extra_install_tests)
+
+    def test_run_executables(self):
+        """Run installed adios2 executables"""
+
+        commands_and_args = [("bpls", ["-v", "-V"]), ("adios2-config", ["-v"])]
+
+        for cmd, opts in commands_and_args:
+            with test_part(
+                self,
+                f"test_run_executables_{cmd}",
+                purpose=f"run installed adios2 executable {cmd}",
+            ):
+                exe = which(join_path(self.prefix.bin, cmd))
+                exe(*opts)
+
+    def test_examples(self):
+        """Build and run an example program"""
+        src_dir = self.test_suite.current_test_cache_dir.testing.install.C
+        test_stage_dir = self.test_suite.test_dir_for_spec(self.spec)
+
+        # Create the build tree within this spec's test stage dir so it gets
+        # cleaned up automatically
+        build_dir = tempfile.mkdtemp(dir=test_stage_dir)
+
+        std_cmake_args = []
+
+        if "+mpi" in self.spec:
+            mpi_exec = join_path(self.spec["mpi"].prefix, "bin", "mpiexec")
+            std_cmake_args.append(f"-DMPIEXEC_EXECUTABLE={mpi_exec}")
+
+        built_programs = ["adios_c_mpi_test", "adios_adios2c_test", "adios_c_test"]
+
+        with working_dir(build_dir):
+            with test_part(
+                self, "test_examples_build", purpose="build example against installed adios2"
+            ):
+                cmake(src_dir, *std_cmake_args)
+                make()
+
+            for p in built_programs:
+                exe = which(join_path(".", p))
+                if exe:
+                    with test_part(
+                        self, f"test_examples_run_{p}", purpose=f"run built adios2 example {p}"
+                    ):
+                        exe()

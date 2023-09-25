@@ -12,6 +12,7 @@ from llnl.util import tty
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
+import spack.url
 import spack.util.crypto as crypto
 from spack.url import (
     UndetectableNameError,
@@ -26,7 +27,6 @@ from spack.url import (
     substitution_offsets,
 )
 from spack.util.naming import simplify_name
-from spack.util.web import find_versions_of_archive
 
 description = "debugging tool for url parsing"
 section = "developer"
@@ -139,7 +139,7 @@ def url_parse(args):
     if args.spider:
         print()
         tty.msg("Spidering for versions:")
-        versions = find_versions_of_archive(url)
+        versions = spack.url.find_versions_of_archive(url)
 
         if not versions:
             print("  Found no versions for {0}".format(name))

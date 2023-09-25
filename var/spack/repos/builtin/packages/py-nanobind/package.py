@@ -36,3 +36,8 @@ class PyNanobind(PythonPackage):
 
     depends_on("py-cmake@3.17:", type="build")
     depends_on("py-ninja", type="build")
+
+    @property
+    def cmake_prefix_paths(self):
+        paths = [join_path(self.prefix, self.spec["python"].package.platlib, "nanobind", "cmake")]
+        return paths
