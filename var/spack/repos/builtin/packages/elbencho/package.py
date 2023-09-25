@@ -65,7 +65,17 @@ class Elbencho(MakefilePackage):
         default=False, description="GDS GPU Direct Storage support")
 
     depends_on("cuda", when="+cuda")
-    depends_on("boost+filesystem+program_options+thread+system+date_time+regex+serialization+iostreams")
+    depends_on(
+        """
+           boost
+           +filesystem+program_options
+           +thread
+           +system+date_time
+           +regex
+           +serialization
+           +iostreams
+        """
+        )
     depends_on("ncurses")
     depends_on("numactl")
     depends_on("libaio")
