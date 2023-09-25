@@ -46,4 +46,4 @@ class PyJoeynmt(PythonPackage):
     depends_on("py-pytest", when="@2.2", type=("build", "run"))
     depends_on("py-datasets", when="@2.2", type=("build", "run"))
     depends_on("py-packaging", when="@2.2", type=("build", "run"))
-    depends_on("sentencepiece", when="2.2", type=("build","run"))
+    depends_on("sentencepiece", when="2.2", type=("build", "run"))
