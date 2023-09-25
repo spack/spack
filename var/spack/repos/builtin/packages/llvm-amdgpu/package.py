@@ -163,6 +163,7 @@ class LlvmAmdgpu(CMakePackage):
     # Below patch is to look in the old path.
     patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:")
     patch("patch-llvm-5.5.0.patch", when="@5.5:")
+    patch("001-Add-i1-mul-patterns.patch", when="@5.6:")
 
     conflicts("^cmake@3.19.0")
 
