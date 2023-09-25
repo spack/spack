@@ -28,7 +28,7 @@ class PyNumcodecs(PythonPackage):
     variant("msgpack", default=False, description="Codec to encode data as msgpacked bytes.")
 
     depends_on("python@3.8:", when="@0.11:", type=("build", "link", "run"))
-    depends_on("python@3.6:3", when="@0.7:", type=("build", "link", "run"))
+    depends_on("python@3.6:3", when="@0.7:0.10", type=("build", "link", "run"))
     depends_on("py-setuptools@64:", when="@0.11:", type="build")
     depends_on("py-setuptools@18.1:", type="build")
     depends_on("py-setuptools-scm@6.2: +toml", when="@0.11:", type="build")
