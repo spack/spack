@@ -776,6 +776,12 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         return find_libraries(libraries, root=self.prefix, shared=True, recursive=True)
 
+    # work around a failure in ./configure: https://github.com/open-mpi/ompi/issues/11935
+    # instead of the issue's patch, this has the advantage that it also works with @4.0
+    @when("@:6.0 %apple-clang@15:")
+    def setup_build_environment(self, env):
+        env.append_flags("LDFLAGS", "-Wl,-ld_classic")
+
     def setup_run_environment(self, env):
         # Because MPI is both a runtime and a compiler, we have to setup the
         # compiler components as part of the run environment.
