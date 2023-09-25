@@ -65,7 +65,11 @@ class Elbencho(MakefilePackage):
         default=False, description="GDS GPU Direct Storage support")
 
     depends_on("cuda", when="+cuda")
+    depends_on("boost")
+
+
     conflicts("+cufile", when="~cuda")
+
 
     def edit(self, spec, prefix):
         os.mkdir(prefix.bin)
