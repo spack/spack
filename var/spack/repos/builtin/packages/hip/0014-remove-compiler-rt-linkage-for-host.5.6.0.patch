@@ -1,3 +1,17 @@
+From e7ebbec90e21d90cff449db09db1b5e8bca3c67a Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Tue, 26 Sep 2023 07:02:42 +0000
+Subject: [PATCH] Remove-compiler-rt-linkage-for-host and revert operator mixup
+ fix
+
+---
+ clr/hipamd/CMakeLists.txt                     |  6 ++--
+ clr/hipamd/hip-config.cmake.in                |  1 -
+ .../include/hip/amd_detail/amd_hip_complex.h  | 17 ++++------
+ .../hip/amd_detail/amd_hip_vector_types.h     | 31 +++++++++++--------
+ hipcc/bin/hipcc.pl                            | 11 +++++--
+ 5 files changed, 36 insertions(+), 30 deletions(-)
+
 diff --git a/clr/hipamd/CMakeLists.txt b/clr/hipamd/CMakeLists.txt
 index c14a9ad..ca49f7f 100755
 --- a/clr/hipamd/CMakeLists.txt
@@ -27,6 +41,100 @@ index 537a599..7d10273 100755
      set_property(TARGET hip::device APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CLANGRT_BUILTINS}")
    else()
      message(STATUS "clangrt builtins lib not found: ${CLANGRT_BUILTINS_FETCH_EXIT_CODE}")
+diff --git a/clr/hipamd/include/hip/amd_detail/amd_hip_complex.h b/clr/hipamd/include/hip/amd_detail/amd_hip_complex.h
+index 9d9dfd5..eba6eb5 100644
+--- a/clr/hipamd/include/hip/amd_detail/amd_hip_complex.h
++++ b/clr/hipamd/include/hip/amd_detail/amd_hip_complex.h
+@@ -106,20 +106,15 @@ THE SOFTWARE.
+         return lhs;                                                                                \
+     }
+ 
+-#define COMPLEX_MUL_PREOP_OVERLOAD(type)                                                            \
+-    __HOST_DEVICE__ static inline type& operator*=(type& lhs, const type& rhs) {                    \
+-        type temp{lhs};                                                                             \
+-        lhs.x = rhs.x * temp.x - rhs.y * temp.y;                                                    \
+-        lhs.y = rhs.y * temp.x + rhs.x * temp.y;                                                    \
+-        return lhs;                                                                                 \
++#define COMPLEX_MUL_PREOP_OVERLOAD(type)                                                           \
++    __HOST_DEVICE__ static inline type& operator*=(type& lhs, const type& rhs) {               \
++        lhs = lhs * rhs;                                                                           \
++        return lhs;                                                                                \
+     }
+ 
+ #define COMPLEX_DIV_PREOP_OVERLOAD(type)                                                           \
+-    __HOST_DEVICE__ static inline type& operator/=(type& lhs, const type& rhs) {                   \
+-        type temp;                                                                                 \
+-        temp.x = (lhs.x*rhs.x + lhs.y * rhs.y) / (rhs.x*rhs.x + rhs.y*rhs.y);                      \
+-        temp.y = (lhs.y * rhs.x - lhs.x * rhs.y) / (rhs.x*rhs.x + rhs.y*rhs.y);                    \
+-        lhs = temp;                                                                                \
++    __HOST_DEVICE__ static inline type& operator/=(type& lhs, const type& rhs) {               \
++        lhs = lhs / rhs;                                                                           \
+         return lhs;                                                                                \
+     }
+ 
+diff --git a/clr/hipamd/include/hip/amd_detail/amd_hip_vector_types.h b/clr/hipamd/include/hip/amd_detail/amd_hip_vector_types.h
+index 8215fb0..dfd3b39 100644
+--- a/clr/hipamd/include/hip/amd_detail/amd_hip_vector_types.h
++++ b/clr/hipamd/include/hip/amd_detail/amd_hip_vector_types.h
+@@ -544,13 +544,6 @@ template <typename __T> struct is_scalar : public integral_constant<bool, __is_s
+             data *= x.data;
+             return *this;
+         }
+-
+-        friend __HOST_DEVICE__ inline constexpr HIP_vector_type operator*(
+-        HIP_vector_type x, const HIP_vector_type& y) noexcept
+-        {
+-          return HIP_vector_type{ x } *= y;
+-        }
+-
+         template<
+             typename U,
+             typename std::enable_if<
+@@ -561,12 +554,6 @@ template <typename __T> struct is_scalar : public integral_constant<bool, __is_s
+             return *this *= HIP_vector_type{x};
+         }
+ 
+-        friend __HOST_DEVICE__ inline constexpr HIP_vector_type operator/(
+-        HIP_vector_type x, const HIP_vector_type& y) noexcept
+-        {
+-          return HIP_vector_type{ x } /= y;
+-        }
+-
+         __HOST_DEVICE__
+         HIP_vector_type& operator/=(const HIP_vector_type& x) noexcept
+         {
+@@ -722,6 +709,15 @@ template <typename __T> struct is_scalar : public integral_constant<bool, __is_s
+         return HIP_vector_type<T, n>{x} -= y;
+     }
+ 
++    template<typename T, unsigned int n>
++    __HOST_DEVICE__
++    inline
++    constexpr
++    HIP_vector_type<T, n> operator*(
++        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
++    {
++        return HIP_vector_type<T, n>{x} *= y;
++    }
+     template<typename T, unsigned int n, typename U>
+     __HOST_DEVICE__
+     inline
+@@ -741,6 +737,15 @@ template <typename __T> struct is_scalar : public integral_constant<bool, __is_s
+         return HIP_vector_type<T, n>{x} *= y;
+     }
+ 
++    template<typename T, unsigned int n>
++    __HOST_DEVICE__
++    inline
++    constexpr
++    HIP_vector_type<T, n> operator/(
++        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
++    {
++        return HIP_vector_type<T, n>{x} /= y;
++    }
+     template<typename T, unsigned int n, typename U>
+     __HOST_DEVICE__
+     inline
 diff --git a/hipcc/bin/hipcc.pl b/hipcc/bin/hipcc.pl
 index 56dcda2..c7ae60b 100755
 --- a/hipcc/bin/hipcc.pl
@@ -59,3 +167,6 @@ index 56dcda2..c7ae60b 100755
              $targetsStr = `${ROCM_AGENT_ENUM} -t GPU`;
              $targetsStr =~ s/\n/,/g;
          }
+-- 
+2.31.1
+
