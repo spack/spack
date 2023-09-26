@@ -26,10 +26,10 @@ class PyBiomFormat(PythonPackage):
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-click", type=("build", "run"), when="@2.1.5:")
     depends_on("py-numpy@1.9.2:", type=("build", "run"))
-    depends_on("py-future@0.16.0:", type=("build", "run"))
+    depends_on("py-future@0.16.0:", type=("build", "run"), when="@:2.1.10")
     depends_on("py-scipy@1.3.1:", type=("build", "run"))
     depends_on("py-pandas@0.20.0:", type=("build", "run"))
-    depends_on("py-six@1.10.0:", when="@:2.1.10", type=("build", "run"))
+    depends_on("py-six@1.10.0:", type=("build", "run")), when="@:2.1.10"
 
     # https://github.com/biocore/biom-format/pull/865
     conflicts("^python@3.10:", when="@:2.1.10")
