@@ -958,7 +958,6 @@ class PyclingoDriver:
                 if sym.name not in ("attr", "error", "opt_criterion"):
                     tty.debug(
                         "UNKNOWN SYMBOL: %s(%s)"
-
                         % (sym.name, ", ".join([str(s) for s in intermediate_repr(sym.arguments)]))
                     )
 
@@ -1344,7 +1343,6 @@ class SpackSolverSetup:
         self.trigger_rules()
         self.effect_rules()
 
-
     def trigger_rules(self):
         """Flushes all the trigger rules collected so far, and clears the cache."""
         self.gen.h2("Trigger conditions")
@@ -1594,7 +1592,7 @@ class SpackSolverSetup:
                     if t & depflag
                 ]
 
-                condition_id = self.condition(required, imposed, pkg.name, msg)
+                _ = self.condition(required, imposed, pkg.name, msg)
 
                 self.gen.newline()
 
@@ -1694,7 +1692,7 @@ class SpackSolverSetup:
                         imposed_spec=spec,
                         name=pkg_name,
                         node=virtual,
-                        msg=f"{spec_str} is a requirement for package {pkg_name}"
+                        msg=f"{spec_str} is a requirement for package {pkg_name}",
                     )
                 except Exception as e:
                     # Do not raise if the rule comes from the 'all' subsection, since usability
@@ -1758,7 +1756,7 @@ class SpackSolverSetup:
             for local_idx, spec in enumerate(external_specs):
                 msg = "%s available as external when satisfying %s" % (spec.name, spec)
                 external_imposition = [fn.attr("external_conditions_hold", spec.name, local_idx)]
-                condition_id = self.condition(spec, external_imposition, msg=msg)
+                _ = self.condition(spec, external_imposition, msg=msg)
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
@@ -2623,13 +2621,17 @@ class SpackSolverSetup:
             # Effect imposes the spec
             imposed_spec_key = str(spec)
             cache = self._effect_cache[spec.name]
-            msg = "literal specs have different requirements. clear cache before computing literals"
-            assert imposed_spec_key not in cache,     msg
+            msg = (
+                "literal specs have different requirements. clear cache before computing literals"
+            )
+            assert imposed_spec_key not in cache, msg
             effect_id = next(self._effect_id_counter)
             requirements = self.spec_clauses(spec)
             for clause in requirements:
                 if clause.args[0] == "variant_set":
-                    requirements.append(fn.attr("variant_default_value_from_cli", *clause.args[1:]))
+                    requirements.append(
+                        fn.attr("variant_default_value_from_cli", *clause.args[1:])
+                    )
             requirements.append(fn.attr("virtual_root" if spec.virtual else "root", spec.name))
             cache[imposed_spec_key] = (effect_id, requirements)
             self.gen.fact(fn.pkg_fact(spec.name, fn.condition_effect(condition_id, effect_id)))
