@@ -41,7 +41,7 @@ class PyLibensemble(PythonPackage):
     version("0.2.0", sha256="ecac7275d4d0f4a5e497e5c9ef2cd998da82b2c020a0fb87546eeea262f495ff")
     version("0.1.0", sha256="0b27c59ae80f7af8b1bee92fcf2eb6c9a8fd3494bf2eb6b3ea17a7c03d3726bb")
 
-    variant("mpi", default=True, description="Install with MPI")  #  Optional communications method
+    variant("mpi", default=True, description="Install with MPI")  # Optional communications method
     variant("scipy", default=False, description="Install with scipy")  # Used in built-in generators
     variant("petsc4py", default=False, description="Install with petsc4py")  # Used in built-in generators
     variant("nlopt", default=False, description="Install with nlopt")  # Used in built-in generators
@@ -50,23 +50,23 @@ class PyLibensemble(PythonPackage):
     variant("tasmanian", default=False, description="Install with tasmanian")  # Used in built-in generators
 
     depends_on("py-numpy@1.21:", type=("build", "run"))
-    depends_on("py-psutil@5.9.4:", type=("build", "run"), when="@0.7.1:")
+    depends_on("py-psutil@5.9.4:", when="@0.7.1:", type=("build", "run"))
     depends_on("py-setuptools", when="@0.10.2:", type="build")
     depends_on("py-setuptools", when="@:0.10.1", type=("build", "run"))
-    depends_on("py-pydantic@:1", type=("build", "run"), when="@0.10:")
-    depends_on("py-tomli@1.2.1:", type=("build", "run"), when="@0.10:")
-    depends_on("py-pyyaml@6.0:", type=("build", "run"), when="@0.10:")
+    depends_on("py-pydantic@:1", when="@0.10:", type=("build", "run"))
+    depends_on("py-tomli@1.2.1:", when="@0.10:", type=("build", "run"))
+    depends_on("py-pyyaml@6.0:", when="@0.10:", type=("build", "run"))
     depends_on("mpi", when="@:0.4.1")
     depends_on("mpi", when="+mpi")
-    depends_on("py-mpi4py@2.0:", type=("build", "run"), when="@:0.4.1")
-    depends_on("py-mpi4py@2.0:", type=("build", "run"), when="+mpi")
-    depends_on("py-scipy", type=("build", "run"), when="+scipy")
-    depends_on("py-petsc4py", type=("build", "run"), when="+petsc4py")
-    depends_on("py-petsc4py@main", type=("build", "run"), when="@develop+petsc4py")
-    depends_on("nlopt", type=("build", "run"), when="+nlopt")
-    depends_on("py-mpmath", type=("build", "run"), when="+mpmath")
-    depends_on("py-deap", type=("build", "run"), when="+deap")
-    depends_on("tasmanian+python", type=("build", "run"), when="+tasmanian")
+    depends_on("py-mpi4py@2.0:", when="@:0.4.1", type=("build", "run"))
+    depends_on("py-mpi4py@2.0:", when="+mpi", type=("build", "run"))
+    depends_on("py-scipy", when="+scipy", type=("build", "run"))
+    depends_on("py-petsc4py", when="+petsc4py", type=("build", "run"))
+    depends_on("py-petsc4py@main", when="@develop+petsc4py", type=("build", "run"))
+    depends_on("nlopt", when="+nlopt", type=("build", "run"))
+    depends_on("py-mpmath", when="+mpmath", type=("build", "run"))
+    depends_on("py-deap", when="+deap", type=("build", "run"))
+    depends_on("tasmanian+python", when="+tasmanian", type=("build", "run"))
     conflicts("~mpi", when="@:0.4.1")
 
     @run_after("install")
