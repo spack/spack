@@ -124,7 +124,7 @@ class Julia(MakefilePackage):
         when="^llvm@12.0.1",
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch",
-            sha256="6383aed07cf5dba52efa3a8197dacf19eb8f5c413faeb7fc923d25d1e0eaf5ee",
+            sha256="37f2f6193e1205ea49b9a56100a70b038b64abf402115f263c6132cdf0df80c3",
         ),
     )
     depends_on(
@@ -132,7 +132,7 @@ class Julia(MakefilePackage):
         when="^llvm@13.0.1",
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch",
-            sha256="9a38ca275d46f53847f37fa6278c0f20b27baa2a408c889f6b623b91f73b965c",
+            sha256="d9e7f0befeddddcba40eaed3895c4f4734980432b156c39d7a251bc44abb13ca",
         ),
     )
     depends_on(
@@ -140,7 +140,7 @@ class Julia(MakefilePackage):
         when="^llvm@14.0.6",
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff",
-            sha256="7314e392f9e2070bbc01c257f2b6ab4e9ffbd8cb9046f3272366f73c4c01e2a5",
+            sha256="f3fd1803459bdaac0e26d0f3b1874b0e3f97e9411a9e98043d36f788ab4fd00e",
         ),
     )
 
