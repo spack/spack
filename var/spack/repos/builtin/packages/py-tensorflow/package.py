@@ -437,6 +437,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("~rocm", when="@2.7.4-rocm-enhanced")
     conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:")
 
+    # wheel 0.40 upgrades vendored packaging, trips over tensorflow-io-gcs-filesystem identifier
+    conflicts("^py-wheel@0.40:", when="@2.11:2.13")
+
     # https://www.tensorflow.org/install/source#tested_build_configurations
     conflicts("%gcc@:9.3.0", when="@2.9:")
     conflicts("%gcc@:7.3.0", when="@1.15:")
