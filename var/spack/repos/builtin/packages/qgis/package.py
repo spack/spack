@@ -197,7 +197,7 @@ class Qgis(CMakePackage):
                 "-DLIBZIP_INCLUDE_DIR=" + self.spec["libzip"].prefix.include,
                 "-DLIBZIP_CONF_INCLUDE_DIR=" + self.spec["libzip"].prefix.lib.libzip.include,
                 "-DGDAL_CONFIG_PREFER_PATH=" + self.spec["gdal"].prefix.bin,
-                "-DGDAL_LIBRARY=" + self.spec["gdal"].lib+'/lib64/libgdal.so',
+                "-DGDAL_LIBRARY=" + self.spec["gdal"].prefix+'/lib64/libgdal.so',
                 "-DGEOS_CONFIG_PREFER_PATH=" + self.spec["geos"].prefix.bin,
                 "-DGSL_CONFIG_PREFER_PATH=" + self.spec["gsl"].prefix.bin,
                 "-DPOSTGRES_CONFIG_PREFER_PATH=" + self.spec["postgresql"].prefix.bin,
