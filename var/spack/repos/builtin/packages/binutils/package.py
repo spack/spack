@@ -168,6 +168,12 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         match = re.search(r"GNU (nm|readelf).* (\S+)", output)
         return Version(match.group(2)).dotted.up_to(3) if match else None
 
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        variants = "+gold" if "gold" in os.listdir(os.path.dirname(exes[0])) else "~gold"
+        # 29350: llvm needs +headers for plugin-api.h which most distros don't install:
+        return "~headers" + variants
+
     def flag_handler(self, name, flags):
         spec = self.spec
 
