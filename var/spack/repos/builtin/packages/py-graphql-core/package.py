@@ -21,3 +21,6 @@ class PyGraphqlCore(PythonPackage):
 
     depends_on("python@3.6:3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-six@1.10.0:", type=("build", "run"), when="@2.3.2")
+    depends_on("py-promise@2.3:2", type=("build", "run"), when="@2.3.2")
+    depends_on("py-rx@1.6:1", type=("build", "run"), when="@2.3.2")
