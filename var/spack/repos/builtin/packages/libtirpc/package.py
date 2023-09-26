@@ -30,7 +30,8 @@ class Libtirpc(AutotoolsPackage):
     # https://github.com/unfs3/unfs3/pull/25#issuecomment-1631198490
     patch("macos-1.3.3.patch", when="@1.3.3 platform=darwin")
 
-    # Only the latest version is known to build on macOS
+    # Only the latest version is known to build on macOS. Previous versions fail
+    # with auth_none.c:81:9: error: unknown type name 'mutex_t'
     conflicts("platform=darwin", when="@:1.3.2", msg="Does not build on macOS")
 
     @property
