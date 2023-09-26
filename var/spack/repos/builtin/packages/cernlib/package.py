@@ -16,7 +16,7 @@ class Cernlib(CMakePackage):
     maintainers("andriish")
     version(
         "2022.11.08.0-free",
-        sha256="733d148415ef78012ff81f21922d3bf641be7514b0242348dd0200cf1b003e46"
+        sha256="733d148415ef78012ff81f21922d3bf641be7514b0242348dd0200cf1b003e46",
     )            
     version(
         "2023.08.14.0-free",
