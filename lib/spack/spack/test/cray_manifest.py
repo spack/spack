@@ -354,6 +354,38 @@ def test_read_cray_manifest(
         assert concretized_specs[0]["hwloc"].dag_hash() == "hwlocfakehashaaa"
 
 
+def test_read_cray_manifest_add_compiler_failure(
+    tmpdir, mutable_config, mock_packages, mutable_database, manifest_content, monkeypatch
+):
+    """Check that cray manifest can be read even if some compilers cannot
+    be added.
+    """
+    orig_add_compilers_to_config = spack.compilers.add_compilers_to_config
+
+    class fail_for_clang:
+        def __init__(self):
+            self.called_with_clang = False
+
+        def __call__(self, compilers, **kwargs):
+            if any(x.name == "clang" for x in compilers):
+                self.called_with_clang = True
+                raise Exception()
+            return orig_add_compilers_to_config(compilers, **kwargs)
+
+    checker = fail_for_clang()
+    monkeypatch.setattr(spack.compilers, "add_compilers_to_config", checker)
+
+    with tmpdir.as_cwd():
+        test_db_fname = "external-db.json"
+        with open(test_db_fname, "w") as db_file:
+            json.dump(manifest_content, db_file)
+        cray_manifest.read(test_db_fname, True)
+        query_specs = spack.store.STORE.db.query("openmpi")
+        assert any(x.dag_hash() == "openmpifakehasha" for x in query_specs)
+
+    assert checker.called_with_clang
+
+
 def test_read_cray_manifest_twice_no_compiler_duplicates(
     tmpdir, mutable_config, mock_packages, mutable_database, manifest_content
 ):
