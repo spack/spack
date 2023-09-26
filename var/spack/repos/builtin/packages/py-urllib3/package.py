@@ -25,9 +25,9 @@ class PyUrllib3(PythonPackage):
     version("1.20", sha256="97ef2b6e2878d84c0126b9f4e608e37a951ca7848e4855a7f7f4437d5c34a72f")
     version("1.14", sha256="dd4fb13a4ce50b18338c7e4d665b21fd38632c5d4b1d9f1a1379276bd3c08d37")
 
-    variant("brotli", default=False, description="Add Brotli support")
+    variant("brotli", default=False, when="@1.25:", description="Add Brotli support")
     variant("secure", default=False, description="Add SSL/TLS support")
-    variant("socks", default=False, description="SOCKS and HTTP proxy support")
+    variant("socks", default=False, when="@1.15:", description="SOCKS and HTTP proxy support")
 
     depends_on("py-hatchling@1.6:1", when="@2:", type="build")
 
