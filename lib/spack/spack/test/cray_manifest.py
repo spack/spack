@@ -22,6 +22,7 @@ import spack.cray_manifest as cray_manifest
 import spack.spec
 import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
+from spack.main import SpackCommand
 
 
 class JsonSpecEntry:
@@ -460,3 +461,30 @@ def test_convert_validation_error(tmpdir, mutable_config, mock_packages, mutable
     with pytest.raises(cray_manifest.ManifestValidationError) as e:
         cray_manifest.read(invalid_schema_path, True)
     str(e)
+
+
+@pytest.fixture
+def directory_with_manifest(tmpdir, manifest_content):
+    """Create a manifest file in a directory. Used by 'spack external'."""
+    with tmpdir.as_cwd():
+        test_db_fname = "external-db.json"
+        with open(test_db_fname, "w") as db_file:
+            json.dump(manifest_content, db_file)
+
+    yield str(tmpdir)
+
+
+external = SpackCommand("external")
+
+
+def test_find_external_nonempty_default_manifest_dir(
+    mutable_database, mutable_mock_repo, tmpdir, monkeypatch, directory_with_manifest
+):
+    """The user runs 'spack external find'; the default manifest directory
+    contains a manifest file. Ensure that the specs are read.
+    """
+    monkeypatch.setenv("PATH", "")
+    monkeypatch.setattr(spack.cray_manifest, "default_path", str(directory_with_manifest))
+    external("find")
+    specs = spack.store.STORE.db.query("hwloc")
+    assert any(x.dag_hash() == "hwlocfakehashaaa" for x in specs)
