@@ -72,6 +72,8 @@ class Vtk(CMakePackage):
     # We cannot build with both osmesa and qt in spack
     conflicts("+osmesa", when="+qt")
 
+    conflicts("%gcc@13", when="@9.2")
+
     with when("+python"):
         # Depend on any Python, add bounds below.
         extends("python@2.7:", type=("build", "run"))
@@ -165,8 +167,20 @@ class Vtk(CMakePackage):
     depends_on("proj@4:7", when="@9:")
     depends_on("cgns@4.1.1:+mpi", when="@9.1: +mpi")
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
-    depends_on("seacas@2021-05-12:+mpi", when="@9.1: +mpi")
-    depends_on("seacas@2021-05-12:~mpi", when="@9.1: ~mpi")
+    with when("@9.1:"):
+        depends_on("seacas+mpi", when="+mpi")
+        depends_on("seacas~mpi", when="~mpi")
+        depends_on("seacas@2021-05-12:")
+
+    # seacas@2023-05-30 does not provide needed SEACASIoss_INCLUDE_DIRS:
+    # CMake Error at CMake/vtkModule.cmake:5552 (message):
+    # The variable `SEACASIoss_INCLUDE_DIRS` was expected to have been available,
+    # but was not defined:
+    conflicts("seacas@2023-05-30", when="@:9.2")
+
+    # vtk@9.2: need Ioss::Utils::get_debug_stream() which only 2022-10-14 provides,
+    # and to be safe against other issues, make them build with this version only:
+    depends_on("seacas@2022-10-14", when="@9.2:")
     depends_on("nlohmann-json", when="@9.2:")
 
     # For finding Fujitsu-MPI wrapper commands
@@ -185,6 +199,13 @@ class Vtk(CMakePackage):
         sha256="65175731c080961f85d779d613ac1f6bce89783745e54e864edec7637b03b18a",
         when="@9.1",
     )
+
+    @when("@9.2:")
+    def patch(self):
+        # provide definition for Ioss::Init::Initializer::Initializer(),
+        # required on macOS, as "-undefined error" is the default,
+        # but not on Linux, as undefined symbols are tolerated
+        filter_file("TARGETS Ioss", "TARGETS Ioss Ionit", "ThirdParty/ioss/CMakeLists.txt")
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
