@@ -68,7 +68,7 @@ class Openscenegraph(CMakePackage):
     depends_on("coin3d", when="+inventor")
     depends_on("opencascade@:7.5", when="+opencascade")
     depends_on("openexr", when="+openexr")
-    depends_on("ilmbase", when="+openexr")
+    depends_on("ilmbase", when="+openexr ^openexr@:2")
     depends_on("poppler+glib", when="+pdf")
     depends_on("librsvg", when="+svg")
 
