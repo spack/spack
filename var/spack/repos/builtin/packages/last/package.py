@@ -21,7 +21,7 @@ class Last(MakefilePackage):
     version("869", sha256="6371a6282bc1bb02a5e5013cc463625f2ce3e7746ff2ea0bdf9fe6b15605a67c")
 
     def edit(self, spec, prefix):
-        if spec.satisfies("target=aarch64:"):
+        if not spec.satisfies("target=x86_64:"):
             filter_file("-msse4", "", "makefile")
         files = ["mat-doc.sh", "mat-inc.sh", "seed-doc.sh", "seed-inc.sh"]
         if spec.satisfies("@1282:"):
