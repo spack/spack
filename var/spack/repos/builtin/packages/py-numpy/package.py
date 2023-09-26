@@ -230,6 +230,12 @@ class PyNumpy(PythonPackage):
         if spec["blas"].name in ["blis", "amdblis"]:
             blas = "blis"
 
+        if spec["blas"].name == "cray-libsci":
+            blas = "cray-libsci"
+
+        if spec["lapack"].name == "cray-libsci":
+            lapack = "cray-libsci"
+
         if "armpl" in blas:
             if "_mp" in blas:
                 blas = "armpl-dynamic-lp64-omp"
