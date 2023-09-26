@@ -93,13 +93,15 @@ class JsonCompilerEntry:
         """
         return {"name": self.name, "version": self.version}
 
+
 @pytest.fixture
 def _common_arch(test_platform):
     return JsonArchEntry(
         platform=test_platform.name,
         os=test_platform.front_os,
-        target=test_platform.target("fe").name
+        target=test_platform.target("fe").name,
     )
+
 
 @pytest.fixture
 def _common_compiler(_common_arch):
@@ -113,6 +115,7 @@ def _common_compiler(_common_arch):
             "fc": "/path/to/compiler/fc",
         },
     )
+
 
 @pytest.fixture
 def _other_compiler(_common_arch):
@@ -136,19 +139,9 @@ def _raw_json_x(_common_arch):
         "prefix": "/path/to/packagex-install/",
         "version": "1.0",
         "arch": _common_arch.spec_json(),
-        "compiler": {
-            "name": "gcc",
-            "version": "10.2.0.cray"
-        },
-        "dependencies": {
-            "packagey": {
-                "hash": "hash-of-y",
-                "type": ["link"]
-            }
-        },
-        "parameters": {
-            "precision": ["double", "float"]
-        }
+        "compiler": {"name": "gcc", "version": "10.2.0.cray"},
+        "dependencies": {"packagey": {"hash": "hash-of-y", "type": ["link"]}},
+        "parameters": {"precision": ["double", "float"]},
     }
 
 
@@ -185,7 +178,8 @@ def test_manifest_compatibility(_common_arch, _common_compiler, _raw_json_x):
 
 
 def test_compiler_from_entry():
-    compiler_data = json.loads("""\
+    compiler_data = json.loads(
+        """\
 {
   "name": "gcc",
   "prefix": "/path/to/compiler/",
@@ -200,8 +194,10 @@ def test_compiler_from_entry():
     "fc": "/path/to/compiler/fc"
   }
 }
-""")
+"""
+    )
     compiler_from_entry(compiler_data, "/example/file")
+
 
 @pytest.fixture
 def generate_openmpi_entries(_common_arch, _common_compiler):
@@ -338,7 +334,9 @@ def manifest_content(generate_openmpi_entries, _common_compiler, _other_compiler
     }
 
 
-def test_read_cray_manifest(tmpdir, mutable_config, mock_packages, mutable_database, manifest_content):
+def test_read_cray_manifest(
+    tmpdir, mutable_config, mock_packages, mutable_database, manifest_content
+):
     """Check that (a) we can read the cray manifest and add it to the Spack
     Database and (b) we can concretize specs based on that.
     """
@@ -351,8 +349,7 @@ def test_read_cray_manifest(tmpdir, mutable_config, mock_packages, mutable_datab
         assert any(x.dag_hash() == "openmpifakehasha" for x in query_specs)
 
         concretized_specs = spack.cmd.parse_specs(
-            "depends-on-openmpi ^/openmpifakehasha".split(),
-            concretize=True,
+            "depends-on-openmpi ^/openmpifakehasha".split(), concretize=True
         )
         assert concretized_specs[0]["hwloc"].dag_hash() == "hwlocfakehashaaa"
 
