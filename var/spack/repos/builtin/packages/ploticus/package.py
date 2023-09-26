@@ -10,7 +10,6 @@ class Ploticus(MakefilePackage):
     """Ploticus can produce various types of plots and graphs."""
 
     homepage = "http://ploticus.sourceforge.net/doc/welcome.html"
-    url = "https://sourceforge.net/projects/ploticus/files/ploticus/2.42/ploticus242_src.tar.gz/download"
 
     maintainers("Christoph-TU")
 
@@ -20,6 +19,13 @@ class Ploticus(MakefilePackage):
     depends_on("libpng")
 
     build_directory = "src"
+
+    def url_for_version(self, version):
+        # spack's default url_for_version may replace "242_src" with 2.42_src, causing a 404.
+        # Returning the correct url here instead of as 'url =' fixes this issue:
+        return (
+            "https://sourceforge.net/projects/ploticus/files/ploticus/2.42/ploticus242_src.tar.gz"
+        )
 
     def setup_run_environment(self, env):
         env.set("PLOTICUS_PREFABS", self.prefix.prefabs)
