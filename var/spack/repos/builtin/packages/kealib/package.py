@@ -42,7 +42,8 @@ class Kealib(CMakePackage):
     version("1.4.7", sha256="ec38751b3b555d3a26f0c7445f2d2cd9d7c3a3502237519a206a50cb58df56ec")
 
     depends_on("cmake@3.5:", type="build")
-    depends_on("hdf5+cxx+hl")
+    depends_on("hdf5+cxx+hl", when="@:1.5.1")
+    depends_on("hdf5+cxx", when="@1.5.2:")
 
     patch("cmake.patch", when="@1.4.7")
 
