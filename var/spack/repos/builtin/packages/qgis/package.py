@@ -177,6 +177,15 @@ class Qgis(CMakePackage):
         cmfile.filter('SET(PYQT5_MOD_DIR "${Python_SITEARCH}/PyQt5")', 'SET(PYQT5_MOD_DIR "'+pyqtpath+'")', string=True)
         cmfile.filter('SET(PYQT5_SIP_DIR "${Python_SITEARCH}/PyQt5/bindings")', 'SET(PYQT5_SIP_DIR "'+pyqtpath+'/bindings")', string=True)
 
+    @run_before('build')
+    def fix_qsci_sip(self):
+        pyqtx='PyQt5'
+        sip_inc_dir = join_path(
+            self.spec['qscintilla'].prefix, self.spec["python"].package.platlib, pyqtx, "bindings"
+        )
+        with open(join_path("python","gui","pyproject.toml.in", "a") as tomlfile:
+            tomlfile.write(f'\n[tool.sip.project]\nsip-include-dirs = ["{sip_inc_dir}"]\n')
+
 
     def cmake_args(self):
         spec = self.spec
