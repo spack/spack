@@ -22,10 +22,15 @@ class Libtirpc(AutotoolsPackage):
 
     # Remove -pipe flag to compiler in Makefiles when using nvhpc
     patch("libtirpc-remove-pipe-flag-for-nvhpc.patch", when="%nvhpc")
+    # Allow to build on macOS
+    # - Remove versioning linker flags and include
+    # - Include missing / apple specific headers
+    # - Add apple pre-processor guards to guard / ignore some sections
+    # Taken from:
+    # https://github.com/unfs3/unfs3/pull/25#issuecomment-1631198490
     patch("macos-1.3.3.patch", when="@1.3.3 platform=darwin")
 
-    # FIXME: build error on macOS
-    # auth_none.c:81:9: error: unknown type name 'mutex_t'
+    # Only the latest version is known to build on macOS
     conflicts("platform=darwin", when="@:1.3.2", msg="Does not build on macOS")
 
     @property
@@ -39,6 +44,8 @@ class Libtirpc(AutotoolsPackage):
         return hdrs or None
 
     def configure_args(self):
+        # See discussion in
+        # https://github.com/unfs3/unfs3/pull/25#issuecomment-1631198490
         if self.spec.satisfies("@1.3.3 platform=darwin"):
             return ["--disable-gssapi"]
         return []
