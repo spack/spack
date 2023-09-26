@@ -31,7 +31,12 @@ class PyUrllib3(PythonPackage):
 
     depends_on("py-hatchling@1.6:1", when="@2:", type="build")
 
-    depends_on("brotli@1.0.9:", when="+brotli @2:", type=("build", "run"))
+    with when("+brotli"):
+        depends_on("py-brotli@1.0.9:", when="@1.26: platform=linux", type=("build", "run"))
+        depends_on("py-brotli@1.0.9:", when="@1.26: platform=darwin", type=("build", "run"))
+        depends_on("py-brotli@1.0.9:", when="@1.26: platform=cray", type=("build", "run"))
+        depends_on("py-brotlipy@0.6:", when="@1.26: platform=windows", type=("build", "run"))
+        depends_on("py-brotlipy@0.6:", when="@1.25", type=("build", "run"))
 
     with when("+secure"):
         depends_on("py-pyopenssl@17.1:", when="@2:", type=("build", "run"))
@@ -47,5 +52,3 @@ class PyUrllib3(PythonPackage):
     # Historical dependencies
     depends_on("py-setuptools", when="@1", type="build")
     depends_on("python@3.6:3", when="@1.26.12:1", type=("build", "run"))
-
-    depends_on("py-brotlipy@0.6:", when="+brotli @1", type=("build", "run"))
