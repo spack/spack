@@ -183,7 +183,7 @@ class Qgis(CMakePackage):
         sip_inc_dir = join_path(
             self.spec['qscintilla'].prefix, self.spec["python"].package.platlib, pyqtx, "bindings"
         )
-        with open(join_path("python","gui","pyproject.toml.in", "a") as tomlfile:
+        with open(join_path("python","gui","pyproject.toml.in"), "a") as tomlfile:
             tomlfile.write(f'\n[tool.sip.project]\nsip-include-dirs = ["{sip_inc_dir}"]\n')
 
 
