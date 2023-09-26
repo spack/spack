@@ -41,13 +41,13 @@ class PyLibensemble(PythonPackage):
     version("0.2.0", sha256="ecac7275d4d0f4a5e497e5c9ef2cd998da82b2c020a0fb87546eeea262f495ff")
     version("0.1.0", sha256="0b27c59ae80f7af8b1bee92fcf2eb6c9a8fd3494bf2eb6b3ea17a7c03d3726bb")
 
-    variant("mpi", default=True, description="Install with MPI")
-    variant("scipy", default=False, description="Install with scipy")
-    variant("petsc4py", default=False, description="Install with petsc4py")
-    variant("nlopt", default=False, description="Install with nlopt")
-    variant("mpmath", default=False, description="Install with mpmath")
-    variant("deap", default=False, description="Install with DEAP")
-    variant("tasmanian", default=False, description="Install with tasmanian")
+    variant("mpi", default=True, description="Install with MPI")  #  Optional communications method
+    variant("scipy", default=False, description="Install with scipy")  # Used in built-in generators
+    variant("petsc4py", default=False, description="Install with petsc4py")  # Used in built-in generators
+    variant("nlopt", default=False, description="Install with nlopt")  # Used in built-in generators
+    variant("mpmath", default=False, description="Install with mpmath")  # Used in built-in generators
+    variant("deap", default=False, description="Install with DEAP")  # Used in built-in generators
+    variant("tasmanian", default=False, description="Install with tasmanian")  # Used in built-in generators
 
     depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-psutil@5.9.4:", type=("build", "run"), when="@0.7.1:")
