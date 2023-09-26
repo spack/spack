@@ -239,6 +239,13 @@ def env_deactivate_setup_parser(subparser):
         const="bat",
         help="print bat commands to activate the environment",
     )
+    shells.add_argument(
+        "--pwsh",
+        action="store_const",
+        dest="shell",
+        const="pwsh",
+        help="print pwsh commands to activate the environment",
+    )
 
 
 def env_deactivate(args):

@@ -37,7 +37,7 @@ from spack.directory_layout import DirectoryLayout
 from spack.paths import test_path
 from spack.spec import Spec
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 mirror_cmd = spack.main.SpackCommand("mirror")
 install_cmd = spack.main.SpackCommand("install")
@@ -51,7 +51,7 @@ legacy_mirror_dir = os.path.join(test_path, "data", "mirrors", "legacy_yaml")
 def cache_directory(tmpdir):
     fetch_cache_dir = tmpdir.ensure("fetch_cache", dir=True)
     fsc = spack.fetch_strategy.FsCache(str(fetch_cache_dir))
-    spack.config.caches, old_cache_path = fsc, spack.caches.fetch_cache
+    spack.config.caches, old_cache_path = fsc, spack.caches.FETCH_CACHE
 
     yield spack.config.caches
 
@@ -115,8 +115,8 @@ def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutabl
         ]
     )
 
-    spack.config.config, old_config = cfg, spack.config.config
-    spack.config.config.set("repos", [spack.paths.mock_packages_path])
+    spack.config.CONFIG, old_config = cfg, spack.config.CONFIG
+    spack.config.CONFIG.set("repos", [spack.paths.mock_packages_path])
     njobs = spack.config.get("config:build_jobs")
     if not njobs:
         spack.config.set("config:build_jobs", 4, scope="user")
@@ -138,9 +138,9 @@ def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutabl
     if not timeout:
         spack.config.set("config:connect_timeout", 10, scope="user")
 
-    yield spack.config.config
+    yield spack.config.CONFIG
 
-    spack.config.config = old_config
+    spack.config.CONFIG = old_config
     mutable_dir.remove()
 
 

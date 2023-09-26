@@ -50,6 +50,7 @@ import spack.build_environment
 import spack.compilers
 import spack.config
 import spack.database
+import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.mirror
@@ -88,6 +89,16 @@ STATUS_DEQUEUED = "dequeued"
 #: Build status indicating task has been removed (to maintain priority
 #: queue invariants).
 STATUS_REMOVED = "removed"
+
+
+def _write_timer_json(pkg, timer, cache):
+    extra_attributes = {"name": pkg.name, "cache": cache, "hash": pkg.spec.dag_hash()}
+    try:
+        with open(pkg.times_log_path, "w") as timelog:
+            timer.write_json(timelog, extra_attributes=extra_attributes)
+    except Exception as e:
+        tty.debug(str(e))
+        return
 
 
 class InstallAction:
@@ -303,7 +314,7 @@ def _packages_needed_to_bootstrap_compiler(
     # mark compiler as depended-on by the packages that use it
     for pkg in pkgs:
         dep._dependents.add(
-            spack.spec.DependencySpec(pkg.spec, dep, deptypes=("build",), virtuals=())
+            spack.spec.DependencySpec(pkg.spec, dep, depflag=dt.BUILD, virtuals=())
         )
     packages = [(s.package, False) for s in dep.traverse(order="post", root=False)]
 
@@ -399,6 +410,8 @@ def _install_from_cache(
         return False
     t.stop()
     tty.debug("Successfully extracted {0} from binary cache".format(pkg_id))
+
+    _write_timer_json(pkg, t, True)
     _print_timer(pre=_log_prefix(pkg.name), pkg_id=pkg_id, timer=t)
     _print_installed_pkg(pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec, explicit)
@@ -481,7 +494,7 @@ def _process_binary_cache_tarball(
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(
-            pkg.spec, download_result, unsigned=unsigned, force=False
+            pkg.spec, download_result, unsigned=unsigned, force=False, timer=timer
         )
 
         pkg.installed_from_binary_cache = True
@@ -517,13 +530,6 @@ def _try_install_from_binary_cache(
     return _process_binary_cache_tarball(
         pkg, explicit, unsigned, mirrors_for_spec=matches, timer=timer
     )
-
-
-def clear_failures() -> None:
-    """
-    Remove all failure tracking markers for the Spack instance.
-    """
-    spack.store.STORE.db.clear_all_failures()
 
 
 def combine_phase_logs(phase_log_files: List[str], log_path: str) -> None:
@@ -597,9 +603,11 @@ def dump_packages(spec: "spack.spec.Spec", path: str) -> None:
         # Get the location of the package in the dest repo.
         dest_pkg_dir = repo.dirname_for_package_name(node.name)
         if node is spec:
-            spack.repo.path.dump_provenance(node, dest_pkg_dir)
+            spack.repo.PATH.dump_provenance(node, dest_pkg_dir)
         elif source_pkg_dir:
-            fs.install_tree(source_pkg_dir, dest_pkg_dir)
+            fs.install_tree(
+                source_pkg_dir, dest_pkg_dir, allow_broken_symlinks=(sys.platform != "win32")
+            )
 
 
 def get_dependent_ids(spec: "spack.spec.Spec") -> List[str]:
@@ -781,10 +789,9 @@ class BuildRequest:
         # Save off dependency package ids for quick checks since traversals
         # are not able to return full dependents for all packages across
         # environment specs.
-        deptypes = self.get_deptypes(self.pkg)
         self.dependencies = set(
             package_id(d.package)
-            for d in self.pkg.spec.dependencies(deptype=deptypes)
+            for d in self.pkg.spec.dependencies(deptype=self.get_depflags(self.pkg))
             if package_id(d.package) != self.pkg_id
         )
 
@@ -823,7 +830,7 @@ class BuildRequest:
         ]:
             _ = self.install_args.setdefault(arg, default)
 
-    def get_deptypes(self, pkg: "spack.package_base.PackageBase") -> Tuple[str, ...]:
+    def get_depflags(self, pkg: "spack.package_base.PackageBase") -> int:
         """Determine the required dependency types for the associated package.
 
         Args:
@@ -832,7 +839,7 @@ class BuildRequest:
         Returns:
             tuple: required dependency type(s) for the package
         """
-        deptypes = ["link", "run"]
+        depflag = dt.LINK | dt.RUN
         include_build_deps = self.install_args.get("include_build_deps")
 
         if self.pkg_id == package_id(pkg):
@@ -844,10 +851,10 @@ class BuildRequest:
         # is False, or if build depdencies are explicitly called for
         # by include_build_deps.
         if include_build_deps or not (cache_only or pkg.spec.installed):
-            deptypes.append("build")
+            depflag |= dt.BUILD
         if self.run_tests(pkg):
-            deptypes.append("test")
-        return tuple(sorted(deptypes))
+            depflag |= dt.TEST
+        return depflag
 
     def has_dependency(self, dep_id) -> bool:
         """Returns ``True`` if the package id represents a known dependency
@@ -880,9 +887,8 @@ class BuildRequest:
             spec = self.spec
         if visited is None:
             visited = set()
-        deptype = self.get_deptypes(spec.package)
 
-        for dep in spec.dependencies(deptype=deptype):
+        for dep in spec.dependencies(deptype=self.get_depflags(spec.package)):
             hash = dep.dag_hash()
             if hash in visited:
                 continue
@@ -966,10 +972,9 @@ class BuildTask:
         # Be consistent wrt use of dependents and dependencies.  That is,
         # if use traverse for transitive dependencies, then must remove
         # transitive dependents on failure.
-        deptypes = self.request.get_deptypes(self.pkg)
         self.dependencies = set(
             package_id(d.package)
-            for d in self.pkg.spec.dependencies(deptype=deptypes)
+            for d in self.pkg.spec.dependencies(deptype=self.request.get_depflags(self.pkg))
             if package_id(d.package) != self.pkg_id
         )
 
@@ -1126,15 +1131,13 @@ class PackageInstaller:
     instance.
     """
 
-    def __init__(self, installs: List[Tuple["spack.package_base.PackageBase", dict]] = []):
+    def __init__(self, installs: List[Tuple["spack.package_base.PackageBase", dict]] = []) -> None:
         """Initialize the installer.
 
         Args:
             installs (list): list of tuples, where each
                 tuple consists of a package (PackageBase) and its associated
                  install arguments (dict)
-        Return:
-            PackageInstaller: instance
         """
         # List of build requests
         self.build_requests = [BuildRequest(pkg, install_args) for pkg, install_args in installs]
@@ -1287,7 +1290,7 @@ class PackageInstaller:
             dep_id = package_id(dep_pkg)
 
             # Check for failure since a prefix lock is not required
-            if spack.store.STORE.db.prefix_failed(dep):
+            if spack.store.STORE.failure_tracker.has_failed(dep):
                 action = "'spack install' the dependency"
                 msg = "{0} is marked as an install failure: {1}".format(dep_id, action)
                 raise InstallError(err.format(request.pkg_id, msg), pkg=dep_pkg)
@@ -1325,7 +1328,6 @@ class PackageInstaller:
         """
         Check the database and leftover installation directories/files and
         prepare for a new install attempt for an uninstalled package.
-
         Preparation includes cleaning up installation and stage directories
         and ensuring the database is up-to-date.
 
@@ -1502,7 +1504,7 @@ class PackageInstaller:
             if lock is None:
                 tty.debug(msg.format("Acquiring", desc, pkg_id, pretty_seconds(timeout or 0)))
                 op = "acquire"
-                lock = spack.store.STORE.db.prefix_lock(pkg.spec, timeout)
+                lock = spack.store.STORE.prefix_locker.lock(pkg.spec, timeout)
                 if timeout != lock.default_timeout:
                     tty.warn(
                         "Expected prefix lock timeout {0}, not {1}".format(
@@ -1627,12 +1629,12 @@ class PackageInstaller:
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
                 # of the spec.
-                spack.store.STORE.db.clear_failure(dep, force=False)
+                spack.store.STORE.failure_tracker.clear(dep, force=False)
 
         install_package = request.install_args.get("install_package")
         if install_package and request.pkg_id not in self.build_tasks:
             # Be sure to clear any previous failure
-            spack.store.STORE.db.clear_failure(request.spec, force=True)
+            spack.store.STORE.failure_tracker.clear(request.spec, force=True)
 
             # If not installing dependencies, then determine their
             # installation status before proceeding
@@ -1888,7 +1890,7 @@ class PackageInstaller:
         err = "" if exc is None else ": {0}".format(str(exc))
         tty.debug("Flagging {0} as failed{1}".format(pkg_id, err))
         if mark:
-            self.failed[pkg_id] = spack.store.STORE.db.mark_failed(task.pkg.spec)
+            self.failed[pkg_id] = spack.store.STORE.failure_tracker.mark(task.pkg.spec)
         else:
             self.failed[pkg_id] = None
         task.status = STATUS_FAILED
@@ -2074,7 +2076,7 @@ class PackageInstaller:
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
             # assume using a separate (failed) prefix lock file.
-            if pkg_id in self.failed or spack.store.STORE.db.prefix_failed(spec):
+            if pkg_id in self.failed or spack.store.STORE.failure_tracker.has_failed(spec):
                 term_status.clear()
                 tty.warn("{0} failed to install".format(pkg_id))
                 self._update_failed(task)
@@ -2101,7 +2103,6 @@ class PackageInstaller:
                 # another process has a write lock so must be (un)installing
                 # the spec (or that process is hung).
                 ltype, lock = self._ensure_locked("read", pkg)
-
             # Requeue the spec if we cannot get at least a read lock so we
             # can check the status presumably established by another process
             # -- failed, installed, or uninstalled -- on the next pass.
@@ -2381,8 +2382,7 @@ class BuildProcessInstaller:
 
             # Stop the timer and save results
             self.timer.stop()
-            with open(self.pkg.times_log_path, "w") as timelog:
-                self.timer.write_json(timelog)
+            _write_timer_json(self.pkg, self.timer, False)
 
         print_install_test_log(self.pkg)
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
@@ -2403,7 +2403,9 @@ class BuildProcessInstaller:
         src_target = os.path.join(pkg.spec.prefix, "share", pkg.name, "src")
         tty.debug("{0} Copying source to {1}".format(self.pre, src_target))
 
-        fs.install_tree(pkg.stage.source_path, src_target)
+        fs.install_tree(
+            pkg.stage.source_path, src_target, allow_broken_symlinks=(sys.platform != "win32")
+        )
 
     def _real_install(self) -> None:
         import spack.builder

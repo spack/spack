@@ -104,6 +104,14 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         "cluster", default=False, description="Build with cluster support: scalapack, blacs, etc"
     )
     variant(
+        "mpi_family",
+        default="none",
+        values=("none", "mpich", "openmpi"),
+        description="MPI family",
+        multi=False,
+    )
+
+    variant(
         "threads",
         default="none",
         description="Multithreading support",
@@ -184,16 +192,25 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if self.spec.satisfies("+cluster"):
             if any(
                 self.spec.satisfies(m)
-                for m in ["^intel-oneapi-mpi", "^intel-mpi", "^mpich", "^cray-mpich"]
+                for m in [
+                    "^intel-oneapi-mpi",
+                    "^intel-mpi",
+                    "^mpich",
+                    "^cray-mpich",
+                    "mpi_family=mpich",
+                ]
             ):
                 libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
-            elif self.spec.satisfies("^openmpi"):
+            elif any(
+                self.spec.satisfies(m) for m in ["^openmpi", "^hpcx-mpi", "mpi_family=openmpi"]
+            ):
                 libs.append(self._xlp64_lib("libmkl_blacs_openmpi"))
             else:
                 raise RuntimeError(
                     (
-                        "intel-oneapi-mpi +cluster requires one of "
-                        "^intel-oneapi-mpi, ^intel-mpi, ^mpich, or ^openmpi"
+                        "intel-oneapi-mkl +cluster requires one of ^intel-oneapi-mpi, "
+                        "^intel-mpi, ^mpich, ^cray-mpich, mpi_family=mpich, ^openmpi, "
+                        "^hpcx-mpi, or mpi_family=openmpi"
                     )
                 )
 
@@ -203,9 +220,14 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         resolved_libs = find_libraries(libs, lib_path, shared=shared)
         # Add MPI libraries for cluster support. If MPI is not in the
         # spec, then MKL is externally installed and application must
-        # link with MPI libaries
-        if self.spec.satisfies("+cluster ^mpi"):
-            resolved_libs = resolved_libs + self.spec["mpi"].libs
+        # link with MPI libaries. If MPI is in spec, but there are no
+        # libraries, then the package (e.g. hpcx-mpi) relies on the
+        # compiler wrapper to add the libraries.
+        try:
+            if self.spec.satisfies("+cluster ^mpi"):
+                resolved_libs = resolved_libs + self.spec["mpi"].libs
+        except spack.error.NoLibrariesError:
+            pass
         return resolved_libs
 
     def _xlp64_lib(self, lib):

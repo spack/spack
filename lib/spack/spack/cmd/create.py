@@ -822,7 +822,7 @@ def get_versions(args, name):
     if args.url is not None and args.template != "bundle" and valid_url:
         # Find available versions
         try:
-            url_dict = spack.util.web.find_versions_of_archive(args.url)
+            url_dict = spack.url.find_versions_of_archive(args.url)
         except UndetectableVersionError:
             # Use fake versions
             tty.warn("Couldn't detect version in: {0}".format(args.url))
@@ -915,11 +915,11 @@ def get_repository(args, name):
             )
     else:
         if spec.namespace:
-            repo = spack.repo.path.get_repo(spec.namespace, None)
+            repo = spack.repo.PATH.get_repo(spec.namespace, None)
             if not repo:
                 tty.die("Unknown namespace: '{0}'".format(spec.namespace))
         else:
-            repo = spack.repo.path.first_repo()
+            repo = spack.repo.PATH.first_repo()
 
     # Set the namespace on the spec if it's not there already
     if not spec.namespace:

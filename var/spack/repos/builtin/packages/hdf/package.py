@@ -35,7 +35,7 @@ class Hdf(AutotoolsPackage):
     variant("shared", default=False, description="Enable shared library")
     variant("pic", default=True, description="Produce position-independent code")
 
-    depends_on("zlib@1.1.4:")
+    depends_on("zlib-api")
     depends_on("jpeg")
     depends_on("szip", when="+szip")
     depends_on("rpc", when="+external-xdr")
@@ -158,7 +158,7 @@ class Hdf(AutotoolsPackage):
         config_args = [
             "--enable-production",
             "--enable-static",
-            "--with-zlib=%s" % self.spec["zlib"].prefix,
+            "--with-zlib=%s" % self.spec["zlib-api"].prefix,
             "--with-jpeg=%s" % self.spec["jpeg"].prefix,
         ]
 
@@ -196,6 +196,10 @@ class Hdf(AutotoolsPackage):
             make("check", parallel=False)
 
     extra_install_tests = join_path("hdf", "util", "testfiles")
+
+    # Filter h4cc compiler wrapper to substitute the Spack compiler
+    # wrappers with the path of the underlying compilers.
+    filter_compiler_wrappers("h4cc", relative_root="bin")
 
     @property
     def cached_tests_work_dir(self):

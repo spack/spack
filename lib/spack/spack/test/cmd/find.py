@@ -332,7 +332,7 @@ def test_find_command_basic_usage(database):
     assert "mpileaks" in output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="envirnment is not yet supported on windows")
+@pytest.mark.not_on_windows("envirnment is not yet supported on windows")
 @pytest.mark.regression("9875")
 def test_find_prefix_in_env(
     mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config

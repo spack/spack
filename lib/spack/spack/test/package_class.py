@@ -17,6 +17,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.deptypes as dt
 import spack.install_test
 import spack.package_base
 import spack.repo
@@ -48,7 +49,7 @@ def mpileaks_possible_deps(mock_packages, mpi_names):
 
 
 def test_possible_dependencies(mock_packages, mpileaks_possible_deps):
-    pkg_cls = spack.repo.path.get_pkg_class("mpileaks")
+    pkg_cls = spack.repo.PATH.get_pkg_class("mpileaks")
     expanded_possible_deps = pkg_cls.possible_dependencies(expand_virtuals=True)
     assert mpileaks_possible_deps == expanded_possible_deps
     assert {
@@ -62,14 +63,14 @@ def test_possible_dependencies(mock_packages, mpileaks_possible_deps):
 
 
 def test_possible_direct_dependencies(mock_packages, mpileaks_possible_deps):
-    pkg_cls = spack.repo.path.get_pkg_class("mpileaks")
+    pkg_cls = spack.repo.PATH.get_pkg_class("mpileaks")
     deps = pkg_cls.possible_dependencies(transitive=False, expand_virtuals=False)
     assert {"callpath": set(), "mpi": set(), "mpileaks": {"callpath", "mpi"}} == deps
 
 
 def test_possible_dependencies_virtual(mock_packages, mpi_names):
     expected = dict(
-        (name, set(spack.repo.path.get_pkg_class(name).dependencies)) for name in mpi_names
+        (name, set(spack.repo.PATH.get_pkg_class(name).dependencies)) for name in mpi_names
     )
 
     # only one mock MPI has a dependency
@@ -79,29 +80,29 @@ def test_possible_dependencies_virtual(mock_packages, mpi_names):
 
 
 def test_possible_dependencies_missing(mock_packages):
-    pkg_cls = spack.repo.path.get_pkg_class("missing-dependency")
+    pkg_cls = spack.repo.PATH.get_pkg_class("missing-dependency")
     missing = {}
     pkg_cls.possible_dependencies(transitive=True, missing=missing)
     assert {"this-is-a-missing-dependency"} == missing["missing-dependency"]
 
 
 def test_possible_dependencies_with_deptypes(mock_packages):
-    dtbuild1 = spack.repo.path.get_pkg_class("dtbuild1")
+    dtbuild1 = spack.repo.PATH.get_pkg_class("dtbuild1")
 
     assert {
         "dtbuild1": {"dtrun2", "dtlink2"},
         "dtlink2": set(),
         "dtrun2": set(),
-    } == dtbuild1.possible_dependencies(deptype=("link", "run"))
+    } == dtbuild1.possible_dependencies(depflag=dt.LINK | dt.RUN)
 
     assert {
         "dtbuild1": {"dtbuild2", "dtlink2"},
         "dtbuild2": set(),
         "dtlink2": set(),
-    } == dtbuild1.possible_dependencies(deptype=("build"))
+    } == dtbuild1.possible_dependencies(depflag=dt.BUILD)
 
     assert {"dtbuild1": {"dtlink2"}, "dtlink2": set()} == dtbuild1.possible_dependencies(
-        deptype=("link")
+        depflag=dt.LINK
     )
 
 
