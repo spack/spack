@@ -57,7 +57,6 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake", type="run")
 
     depends_on("mpi", when="+mpi")
-    depends_on("intel-oneapi-mpi", when="+mpi +sycl")
     depends_on("intel-oneapi-mkl threads=openmp", when="+sycl")
     depends_on("blas")
     depends_on("blaspp ~cuda", when="~cuda")
