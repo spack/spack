@@ -57,7 +57,7 @@ spack:
   - raja
   # - superlu-dist  # undefined reference due to --no-allow-shlib-undefine
 
-  mirrors: { "mirror": "s3://spack-binaries-cray/develop/e4s-cray-sles" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-cray-sles-cce" }
 
   cdash:
     build-group: E4S Cray SLES
