@@ -42,12 +42,14 @@ class PyLibensemble(PythonPackage):
     version("0.1.0", sha256="0b27c59ae80f7af8b1bee92fcf2eb6c9a8fd3494bf2eb6b3ea17a7c03d3726bb")
 
     variant("mpi", default=True, description="Install with MPI")  # Optional communications method
-    variant("scipy", default=False, description="Install with scipy")  # For built-in generators
-    variant("petsc4py", default=False, description="Install with petsc4py")  # For built-in gen
-    variant("nlopt", default=False, description="Install with nlopt")  # For built-in gen
-    variant("mpmath", default=False, description="Install with mpmath")  # For built-in gen
-    variant("deap", default=False, description="Install with DEAP")  # For built-in gen
-    variant("tasmanian", default=False, description="Install with tasmanian")  # For built-in gen
+
+    # The following variants are for optional built-in generators
+    variant("scipy", default=False, description="Install with scipy")
+    variant("petsc4py", default=False, description="Install with petsc4py")
+    variant("nlopt", default=False, description="Install with nlopt")
+    variant("mpmath", default=False, description="Install with mpmath")
+    variant("deap", default=False, description="Install with DEAP")
+    variant("tasmanian", default=False, description="Install with tasmanian")
 
     depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-psutil@5.9.4:", when="@0.7.1:", type=("build", "run"))
