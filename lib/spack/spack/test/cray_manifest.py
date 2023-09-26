@@ -23,35 +23,28 @@ import spack.spec
 import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
 
-example_x_json_str = """\
-{
-  "name": "packagex",
-  "hash": "hash-of-x",
-  "prefix": "/path/to/packagex-install/",
-  "version": "1.0",
-  "arch": {
-    "platform": "linux",
-    "platform_os": "centos8",
-    "target": {
-      "name": "haswell"
+@pytest.fixture
+def _raw_json_x(_common_arch):
+    return {
+        "name": "packagex",
+        "hash": "hash-of-x",
+        "prefix": "/path/to/packagex-install/",
+        "version": "1.0",
+        "arch": _common_arch.spec_json(),
+        "compiler": {
+            "name": "gcc",
+            "version": "10.2.0.cray"
+        },
+        "dependencies": {
+            "packagey": {
+                "hash": "hash-of-y",
+                "type": ["link"]
+            }
+        },
+        "parameters": {
+            "precision": ["double", "float"]
+        }
     }
-  },
-  "compiler": {
-    "name": "gcc",
-    "version": "10.2.0.cray"
-  },
-  "dependencies": {
-    "packagey": {
-      "hash": "hash-of-y",
-      "type": ["link"]
-    }
-  },
-  "parameters": {
-    "precision": ["double", "float"]
-  }
-}
-"""
-
 
 example_compiler_entry = """\
 {
@@ -104,8 +97,11 @@ class JsonArchEntry:
         self.os = os
         self.target = target
 
-    def to_dict(self):
+    def spec_json(self):
         return {"platform": self.platform, "platform_os": self.os, "target": {"name": self.target}}
+
+    def compiler_json(self):
+        return {"platform": self.platform, "os": self.os, "target": {"name": self.target}}
 
 
 class JsonCompilerEntry:
@@ -137,34 +133,43 @@ class JsonCompilerEntry:
         """
         return {"name": self.name, "version": self.version}
 
+@pytest.fixture
+def _common_arch(test_platform):
+    return JsonArchEntry(
+        platform=test_platform.name,
+        os=test_platform.front_os,
+        target=test_platform.target("fe").name
+    )
 
-_common_arch = JsonArchEntry(platform="linux", os="centos8", target="haswell").to_dict()
+@pytest.fixture
+def _common_compiler(_common_arch):
+    # Intended to match example_compiler_entry above
+    return JsonCompilerEntry(
+        name="gcc",
+        version="10.2.0.cray",
+        arch=_common_arch.compiler_json(),
+        executables={
+            "cc": "/path/to/compiler/cc",
+            "cxx": "/path/to/compiler/cxx",
+            "fc": "/path/to/compiler/fc",
+        },
+    )
 
-# Intended to match example_compiler_entry above
-_common_compiler = JsonCompilerEntry(
-    name="gcc",
-    version="10.2.0.cray",
-    arch={"os": "centos8", "target": "x86_64"},
-    executables={
-        "cc": "/path/to/compiler/cc",
-        "cxx": "/path/to/compiler/cxx",
-        "fc": "/path/to/compiler/fc",
-    },
-)
-
-_other_compiler = JsonCompilerEntry(
-    name="clang",
-    version="3.0.0",
-    arch={"os": "centos8", "target": "x86_64"},
-    executables={
-        "cc": "/path/to/compiler/clang",
-        "cxx": "/path/to/compiler/clang++",
-        "fc": "/path/to/compiler/flang",
-    },
-)
+@pytest.fixture
+def _other_compiler(_common_arch):
+    return JsonCompilerEntry(
+        name="clang",
+        version="3.0.0",
+        arch=_common_arch.compiler_json(),
+        executables={
+            "cc": "/path/to/compiler/clang",
+            "cxx": "/path/to/compiler/clang++",
+            "fc": "/path/to/compiler/flang",
+        },
+    )
 
 
-def test_compatibility():
+def test_manifest_compatibility(_common_arch, _common_compiler, _raw_json_x):
     """Make sure that JsonSpecEntry outputs the expected JSON structure
     by comparing it with JSON parsed from an example string. This
     ensures that the testing objects like JsonSpecEntry produce the
@@ -175,7 +180,7 @@ def test_compatibility():
         hash="hash-of-y",
         prefix="/path/to/packagey-install/",
         version="1.0",
-        arch=_common_arch,
+        arch=_common_arch.spec_json(),
         compiler=_common_compiler.spec_json(),
         dependencies={},
         parameters={},
@@ -186,15 +191,14 @@ def test_compatibility():
         hash="hash-of-x",
         prefix="/path/to/packagex-install/",
         version="1.0",
-        arch=_common_arch,
+        arch=_common_arch.spec_json(),
         compiler=_common_compiler.spec_json(),
         dependencies=dict([y.as_dependency(deptypes=["link"])]),
         parameters={"precision": ["double", "float"]},
     )
 
     x_from_entry = x.to_dict()
-    x_from_str = json.loads(example_x_json_str)
-    assert x_from_entry == x_from_str
+    assert x_from_entry == _raw_json_x
 
 
 def test_compiler_from_entry():
@@ -335,9 +339,6 @@ def create_manifest_content():
     }
 
 
-@pytest.mark.only_original(
-    "The ASP-based concretizer is currently picky about OS matching and will fail."
-)
 def test_read_cray_manifest(tmpdir, mutable_config, mock_packages, mutable_database):
     """Check that (a) we can read the cray manifest and add it to the Spack
     Database and (b) we can concretize specs based on that.
