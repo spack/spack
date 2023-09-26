@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import sys
 
 import llnl.util.tty as tty
@@ -28,7 +26,7 @@ def setup_parser(subparser):
     output.add_argument(
         "--safe-only",
         action="store_true",
-        help="[deprecated] only list safe versions " "of the package",
+        help="[deprecated] only list safe versions of the package",
     )
     output.add_argument(
         "-r", "--remote", action="store_true", help="only list remote versions of the package"
@@ -37,17 +35,14 @@ def setup_parser(subparser):
         "-n",
         "--new",
         action="store_true",
-        help="only list remote versions newer than " "the latest checksummed version",
+        help="only list remote versions newer than the latest checksummed version",
     )
-    subparser.add_argument(
-        "-c", "--concurrency", default=32, type=int, help="number of concurrent requests"
-    )
-    arguments.add_common_arguments(subparser, ["package"])
+    arguments.add_common_arguments(subparser, ["package", "jobs"])
 
 
 def versions(parser, args):
     spec = spack.spec.Spec(args.package)
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
 
     safe_versions = pkg.versions
@@ -70,7 +65,7 @@ def versions(parser, args):
         if args.safe:
             return
 
-    fetched_versions = pkg.fetch_remote_versions(args.concurrency)
+    fetched_versions = pkg.fetch_remote_versions(args.jobs)
 
     if args.new:
         if sys.stdout.isatty():

@@ -105,6 +105,7 @@ class Dealii(CMakePackage, CudaPackage):
     # (NB: only if tbb is removed in 9.3, as planned!!!)
     variant("threads", default=True, description="Compile with multi-threading via TBB")
     variant("trilinos", default=True, description="Compile with Trilinos (only with MPI)")
+    variant("platform-introspection", default=True, description="Enable platform introspection")
 
     # Required dependencies: Light version
     depends_on("blas")
@@ -151,7 +152,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on(Boost.with_default_variants)
     depends_on("lapack")
     depends_on("suite-sparse")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Optional dependencies: Configuration
     depends_on("cuda@8:", when="+cuda")
@@ -360,9 +361,7 @@ class Dealii(CMakePackage, CudaPackage):
         )
 
     # Optional dependencies:
-    conflicts(
-        "+adol-c", when="^netcdf", msg="Symbol clash between the ADOL-C library and " "Netcdf."
-    )
+    conflicts("+adol-c", when="+netcdf", msg="Symbol clash between the ADOL-C library and Netcdf.")
     conflicts(
         "+adol-c",
         when="^trilinos+chaco",
@@ -413,7 +412,7 @@ class Dealii(CMakePackage, CudaPackage):
                 self.define("LAPACK_INCLUDE_DIRS", ";".join(lapack_blas_headers.directories)),
                 self.define("LAPACK_LIBRARIES", lapack_blas_libs.joined(";")),
                 self.define("UMFPACK_DIR", spec["suite-sparse"].prefix),
-                self.define("ZLIB_DIR", spec["zlib"].prefix),
+                self.define("ZLIB_DIR", spec["zlib-api"].prefix),
                 self.define("DEAL_II_ALLOW_BUNDLED", False),
             ]
         )
@@ -634,6 +633,12 @@ class Dealii(CMakePackage, CudaPackage):
         # and user code is built.
         # See https://github.com/dealii/dealii/issues/9164
         options.append(self.define("DEAL_II_CXX_FLAGS", os.environ["SPACK_TARGET_ARGS"]))
+
+        # platform introspection - needs to be disabled in some environments
+        if "+platform-introspection" in spec:
+            options.append(self.define("DEAL_II_ALLOW_PLATFORM_INTROSPECTION", True))
+        else:
+            options.append(self.define("DEAL_II_ALLOW_PLATFORM_INTROSPECTION", False))
 
         return options
 

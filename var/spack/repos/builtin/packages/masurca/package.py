@@ -24,7 +24,7 @@ class Masurca(Package):
 
     depends_on("perl", type=("build", "run"))
     depends_on(Boost.with_default_variants)
-    depends_on("zlib")
+    depends_on("zlib-api")
     patch("arm.patch", when="target=aarch64:")
 
     def patch(self):

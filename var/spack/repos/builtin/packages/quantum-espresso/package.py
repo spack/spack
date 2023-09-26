@@ -18,11 +18,12 @@ class QuantumEspresso(CMakePackage, Package):
     url = "https://gitlab.com/QEF/q-e/-/archive/qe-6.6/q-e-qe-6.6.tar.gz"
     git = "https://gitlab.com/QEF/q-e.git"
 
-    maintainers("ye-luo", "danielecesarini", "bellenlau")
+    maintainers("ye-luo", "bellenlau", "tgorni")
 
     build_system(conditional("cmake", when="@6.8:"), "generic", default="cmake")
 
     version("develop", branch="develop")
+    version("7.2", sha256="b348a4a7348b66a73545d9ca317a2645755c98d343c1cfe8def475ad030808c0")
     version("7.1", sha256="d56dea096635808843bd5a9be2dee3d1f60407c01dbeeda03f8256a3bcfc4eb6")
     version("7.0", sha256="85beceb1aaa1678a49e774c085866d4612d9d64108e0ac49b23152c8622880ee")
     version("6.8", sha256="654855c69864de7ece5ef2f2c0dea2d32698fe51192a8646b1555b0c57e033b2")
@@ -310,7 +311,7 @@ class QuantumEspresso(CMakePackage, Package):
     # 6.4
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.diff"
     patch_checksum = "ef08f5089951be902f0854a4dbddaa7b01f08924cdb27decfade6bef0e2b8994"
-    patch(patch_url, sha256=patch_checksum, when="@6.4:6.4.0+qmcpack")
+    patch(patch_url, sha256=patch_checksum, when="@=6.4+qmcpack")
     # 6.3
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff"
     patch_checksum = "2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13"
@@ -346,14 +347,14 @@ class QuantumEspresso(CMakePackage, Package):
     patch(
         "https://gitlab.com/QEF/q-e/commit/0796e1b7c55c9361ecb6515a0979280e78865e36.diff",
         sha256="bc8c5b8523156cee002d97dab42a5976dffae20605da485a427b902a236d7e6b",
-        when="+patch@6.3:6.3.0",
+        when="+patch@=6.3",
     )
 
     # QE 6.3 `make install` broken and a patch must be applied
     patch(
         "https://gitlab.com/QEF/q-e/commit/88e6558646dbbcfcafa5f3fa758217f6062ab91c.diff",
         sha256="b776890d008e16cca28c31299c62f47de0ba606b900b17cbc27c041f45e564ca",
-        when="+patch@6.3:6.3.0",
+        when="+patch@=6.3",
     )
 
     # QE 6.4.1 patch to work around configure issues that only appear in the
@@ -601,8 +602,8 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
         if spec.variants["hdf5"].value != "none":
             if spec.satisfies("@6.1.0:6.4.0") or (spec.satisfies("@6.4.1") and "+qmcpack" in spec):
                 make_inc = join_path(self.pkg.stage.source_path, "make.inc")
-                zlib_libs = spec["zlib"].prefix.lib + " -lz"
-                filter_file(zlib_libs, format(spec["zlib"].libs.ld_flags), make_inc)
+                zlib_libs = spec["zlib-api"].prefix.lib + " -lz"
+                filter_file(zlib_libs, format(spec["zlib-api"].libs.ld_flags), make_inc)
 
         # QE 6.8 and later has parallel builds fixed
         if spec.satisfies("@:6.7"):

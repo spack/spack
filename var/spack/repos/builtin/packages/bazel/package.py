@@ -479,13 +479,14 @@ class Bazel(Package):
     # https://blog.bazel.build/2021/05/21/bazel-4-1.html
     conflicts("platform=darwin target=aarch64:", when="@:4.0")
 
-    # patches for compiling bazel-4.1:4 with gcc-11
+    # patches for compiling various older bazels which had ICWYU
+    # violations revealed by (but not unique to) GCC 11 header changes.
     # these are derived from
     # https://gitlab.alpinelinux.org/alpine/aports/-/merge_requests/29084/
-    patch("gcc11_1.patch", when="@0.3.2:4%gcc@11:")
-    patch("gcc11_2.patch", when="@0.3.2:4%gcc@11:")
-    patch("gcc11_3.patch", when="@0.3:4%gcc@11:")
-    patch("gcc11_4.patch", when="@4.1:4%gcc@11:")
+    patch("gcc11_1.patch", when="@0.3.2:4")
+    patch("gcc11_2.patch", when="@0.3.2:4")
+    patch("gcc11_3.patch", when="@0.3:4")
+    patch("gcc11_4.patch", when="@4.1:4")
 
     # bazel-4.0.0 does not compile with gcc-11
     # newer versions of grpc and abseil dependencies are needed but are not in
@@ -519,14 +520,7 @@ class Bazel(Package):
             # Spack's logs don't handle colored output well
             "--color=no --host_javabase=@local_jdk//:jdk"
             # Enable verbose output for failures
-            " --verbose_failures"
-            # Ask bazel to explain what it's up to
-            # Needs a filename as argument
-            " --explain=explainlogfile.txt"
-            # Increase verbosity of explanation,
-            " --verbose_explanations"
-            # Show (formatted) subcommands being executed
-            " --subcommands=pretty_print" " --jobs={0}".format(make_jobs),
+            " --verbose_failures --jobs={0}".format(make_jobs),
         )
 
     @run_before("install")

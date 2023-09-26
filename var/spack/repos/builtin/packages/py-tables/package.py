@@ -45,7 +45,7 @@ class PyTables(PythonPackage):
     # Versions prior to 3.3 must build with the internal blosc due to a lock
     # problem in a multithreaded environment.
     depends_on("c-blosc@1.4.1:", when="@3.3.0:")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("bzip2", when="+bzip2")
     depends_on("lzo", when="+lzo")
 

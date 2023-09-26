@@ -24,6 +24,10 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("WeiqunZhang", "asalmgren", "etpalmer63")
 
     version("develop", branch="development")
+    version("23.09", sha256="1a539c2628041b17ad910afd9270332060251c8e346b1482764fdb87a4f25053")
+    version("23.08", sha256="a83b7249d65ad8b6ac1881377e5f814b6db8ed8410ea5562b8ae9d4ed1f37c29")
+    version("23.07", sha256="4edb991da51bcaad040f852e42c82834d8605301aa7eeb01cd1512d389a58d90")
+    version("23.06", sha256="3bddcb07cce3e65e06cac35005c30820d311ce47ae54b46e4af333fa272b236b")
     version("23.05", sha256="a4bf5ad5322e706b9fae46ff52043e2cca5ddba81479647816251e9ab21c0027")
     version("23.04", sha256="b070949611abd2156208e675e40e5e73ed405bf83e3b1e8ba70fbb451a9e7dd7")
     version("23.03", sha256="e17c721b1aba4f66e467723f61b59e56c02cf1b72cab5a2680b13ff6e79ef903")
@@ -72,7 +76,22 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     version("18.09.1", sha256="a065ee4d1d98324b6c492ae20ea63ba12a4a4e23432bf5b3fe9788d44aa4398e")
 
     # Config options
-    variant("dimensions", default="3", description="Dimensionality", values=("1", "2", "3"))
+    variant(
+        "dimensions",
+        default="3",
+        values=("1", "2", "3"),
+        multi=False,
+        description="Dimensionality",
+        when="@:23.05",
+    )
+    variant(
+        "dimensions",
+        default="1,2,3",
+        values=("1", "2", "3"),
+        multi=True,
+        description="Dimensionality",
+        when="@23.06:",
+    )
     variant("shared", default=False, description="Build shared library")
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=False, description="Build with OpenMP support")
@@ -135,12 +154,12 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.22:", type="build", when="+sycl")
     depends_on("hdf5@1.10.4: +mpi", when="+hdf5")
     depends_on("rocrand", type="build", when="+rocm")
+    depends_on("hiprand", type="build", when="+rocm")
     depends_on("rocprim", type="build", when="@21.05: +rocm")
     depends_on("hypre@2.18.2:", type="link", when="@:21.02 +hypre")
     depends_on("hypre@2.19.0:", type="link", when="@21.03: ~cuda +hypre")
     depends_on("hypre@2.20.0:", type="link", when="@21.03: +cuda +hypre")
     depends_on("petsc", type="link", when="+petsc")
-    depends_on("intel-oneapi-compilers@2023.0.0:", type="build", when="@23.01: +sycl")
     depends_on("intel-oneapi-mkl", type=("build", "link"), when="+sycl")
 
     # these versions of gcc have lambda function issues
@@ -230,6 +249,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     #
     @when("@20.12:,develop")
     def cmake_args(self):
+        if self.spec.satisfies("@23.01: +sycl") and not self.spec.satisfies("%oneapi@2023.0.0:"):
+            raise InstallError("amrex +sycl requires %oneapi@2023.0.0:")
         args = [
             "-DUSE_XSDK_DEFAULTS=ON",
             self.define_from_variant("AMReX_SPACEDIM", "dimensions"),
@@ -314,43 +335,20 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
-    # TODO: Replace this method and its 'get' use for cmake path with
-    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
-    #   tests can access build dependencies through self.spec['cmake'].
-    def cmake_bin(self, set=True):
-        """(Hack) Set/get cmake dependency path."""
-        filepath = join_path(self.install_test_root, "cmake_bin_path.txt")
-        if set:
-            with open(filepath, "w") as out_file:
-                cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-                out_file.write("{0}\n".format(cmake_bin))
-        else:
-            with open(filepath, "r") as in_file:
-                return in_file.read().strip()
-
     @run_after("build")
-    def setup_smoke_test(self):
-        """Skip setup smoke tests for AMReX versions less than 21.12."""
+    def setup_standalone_test(self):
+        """Setup stand-alonetests for AMReX versions from 21.12 on."""
         if self.spec.satisfies("@:21.11"):
             return
 
         self.cache_extra_test_sources(["Tests"])
 
-        # TODO: Remove once self.spec['cmake'] is available here
-        self.cmake_bin(set=True)
-
-    def test(self):
-        """Skip smoke tests for AMReX versions less than 21.12."""
+    def test_run_install_test(self):
+        """build and run AmrCore test"""
         if self.spec.satisfies("@:21.11"):
-            print("SKIPPED: Stand-alone tests not supported for this version of AMReX.")
-            return
+            raise SkipTest("Test is not supported for versions @:21.11")
 
-        """Perform smoke tests on installed package."""
-        # TODO: Remove/replace once self.spec['cmake'] is available here
-        cmake_bin = self.cmake_bin(set=False)
-
-        args = []
-        args.append("-S./cache/amrex/Tests/SpackSmokeTest")
+        args = ["-S{0}".format(join_path(".", "cache", "amrex", "Tests", "SpackSmokeTest"))]
         args.append("-DAMReX_ROOT=" + self.prefix)
         if "+mpi" in self.spec:
             args.append("-DMPI_C_COMPILER=" + self.spec["mpi"].mpicc)
@@ -360,15 +358,15 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DCMAKE_CUDA_COMPILER=" + join_path(self.spec["cuda"].prefix.bin, "nvcc"))
 
         args.extend(self.cmake_args())
-        self.run_test(cmake_bin, args, purpose="Configure with CMake")
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        cmake(*args)
 
-        self.run_test("make", [], purpose="Compile")
+        make = which("make")
+        make()
 
-        self.run_test(
-            "install_test",
-            ["./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs-ci"],
-            ["finalized"],
-            installed=False,
-            purpose="AMReX Stand-Alone Smoke Test -- AmrCore",
-            skip_missing=False,
+        install_test = which("install_test")
+        inputs_path = join_path(
+            ".", "cache", "amrex", "Tests", "Amr", "Advection_AmrCore", "Exec", "inputs-ci"
         )
+        out = install_test(inputs_path, output=str.split, error=str.split)
+        assert "finalized" in out

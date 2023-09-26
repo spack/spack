@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import email.message
 import os
-import sys
+import pickle
+import urllib.request
 
 import pytest
 
@@ -13,6 +15,8 @@ import llnl.util.tty as tty
 import spack.config
 import spack.mirror
 import spack.paths
+import spack.url
+import spack.util.path
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
@@ -34,7 +38,6 @@ page_4 = _create_url("4.html")
 root_with_fragment = _create_url("index_with_fragment.html")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "depth,expected_found,expected_not_found,expected_text",
     [
@@ -95,41 +98,36 @@ def test_spider(depth, expected_found, expected_not_found, expected_text):
 def test_spider_no_response(monkeypatch):
     # Mock the absence of a response
     monkeypatch.setattr(spack.util.web, "read_from_url", lambda x, y: (None, None, None))
-    pages, links = spack.util.web.spider(root, depth=0)
+    pages, links, _, _ = spack.util.web._spider(root, collect_nested=False, _visited=set())
     assert not pages and not links
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_versions_of_archive_0():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=0)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=0)
     assert Version("0.0.0") in versions
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_versions_of_archive_1():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=1)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=1)
     assert Version("0.0.0") in versions
     assert Version("1.0.0") in versions
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_versions_of_archive_2():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=2)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=2)
     assert Version("0.0.0") in versions
     assert Version("1.0.0") in versions
     assert Version("2.0.0") in versions
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_exotic_versions_of_archive_2():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=2)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=2)
     # up for grabs to make this better.
     assert Version("2.0.0b2") in versions
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_versions_of_archive_3():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=3)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=3)
     assert Version("0.0.0") in versions
     assert Version("1.0.0") in versions
     assert Version("2.0.0") in versions
@@ -137,19 +135,15 @@ def test_find_versions_of_archive_3():
     assert Version("4.5") in versions
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_exotic_versions_of_archive_3():
-    versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=3)
+    versions = spack.url.find_versions_of_archive(root_tarball, root, list_depth=3)
     assert Version("2.0.0b2") in versions
     assert Version("3.0a1") in versions
     assert Version("4.5-rc5") in versions
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_versions_of_archive_with_fragment():
-    versions = spack.util.web.find_versions_of_archive(
-        root_tarball, root_with_fragment, list_depth=0
-    )
+    versions = spack.url.find_versions_of_archive(root_tarball, root_with_fragment, list_depth=0)
     assert Version("5.0.0") in versions
 
 
@@ -206,7 +200,6 @@ def test_etag_parser():
     assert spack.util.web.parse_etag("abc def") is None
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_list_url(tmpdir):
     testpath = str(tmpdir)
     testpath_url = url_util.path_to_file_url(testpath)
@@ -232,12 +225,12 @@ def test_list_url(tmpdir):
     assert list_url(True) == ["dir/another-file.txt", "file-0.txt", "file-1.txt", "file-2.txt"]
 
 
-class MockPages(object):
+class MockPages:
     def search(self, *args, **kwargs):
         return [{"Key": "keyone"}, {"Key": "keytwo"}, {"Key": "keythree"}]
 
 
-class MockPaginator(object):
+class MockPaginator:
     def paginate(self, *args, **kwargs):
         return MockPages()
 
@@ -250,7 +243,7 @@ class MockClientError(Exception):
         }
 
 
-class MockS3Client(object):
+class MockS3Client:
     def get_paginator(self, *args, **kwargs):
         return MockPaginator()
 
@@ -277,7 +270,7 @@ class MockS3Client(object):
 
 
 def test_gather_s3_information(monkeypatch, capfd):
-    mirror = spack.mirror.Mirror.from_dict(
+    mirror = spack.mirror.Mirror(
         {
             "fetch": {
                 "access_token": "AAAAAAA",
@@ -317,7 +310,7 @@ def test_remove_s3_url(monkeypatch, capfd):
     def get_s3_session(url, method="fetch"):
         return MockS3Client()
 
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+    monkeypatch.setattr(spack.util.web, "get_s3_session", get_s3_session)
 
     current_debug_level = tty.debug_level()
     tty.set_debug(1)
@@ -348,3 +341,25 @@ def test_s3_url_exists(monkeypatch, capfd):
 def test_s3_url_parsing():
     assert spack.util.s3._parse_s3_endpoint_url("example.com") == "https://example.com"
     assert spack.util.s3._parse_s3_endpoint_url("http://example.com") == "http://example.com"
+
+
+def test_detailed_http_error_pickle(tmpdir):
+    tmpdir.join("response").write("response")
+
+    headers = email.message.Message()
+    headers.add_header("Content-Type", "text/plain")
+
+    # Use a temporary file object as a response body
+    with open(str(tmpdir.join("response")), "rb") as f:
+        error = spack.util.web.DetailedHTTPError(
+            urllib.request.Request("http://example.com"), 404, "Not Found", headers, f
+        )
+
+        deserialized = pickle.loads(pickle.dumps(error))
+
+    assert isinstance(deserialized, spack.util.web.DetailedHTTPError)
+    assert deserialized.code == 404
+    assert deserialized.filename == "http://example.com"
+    assert deserialized.reason == "Not Found"
+    assert str(deserialized.info()) == str(headers)
+    assert str(deserialized) == str(error)
