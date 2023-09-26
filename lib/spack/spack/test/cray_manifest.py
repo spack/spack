@@ -247,7 +247,7 @@ def test_generate_specs_from_manifest(generate_openmpi_entries):
     assert openmpi_spec["hwloc"]
 
 
-def test_translate_cray_platform_to_linux(monkeypatch):
+def test_translate_cray_platform_to_linux(monkeypatch, _common_compiler):
     """Manifests might list specs on newer Cray platforms as being "cray",
     but Spack identifies such platforms as "linux". Make sure we
     automaticaly transform these entries.
@@ -259,13 +259,13 @@ def test_translate_cray_platform_to_linux(monkeypatch):
 
     monkeypatch.setattr(spack.platforms, "host", the_host_is_linux)
 
-    cray_arch = JsonArchEntry(platform="cray", os="rhel8", target="x86_64").to_dict()
+    cray_arch = JsonArchEntry(platform="cray", os="rhel8", target="x86_64")
     spec_json = JsonSpecEntry(
         name="cray-mpich",
         hash="craympichfakehashaaa",
         prefix="/path/to/cray-mpich/",
         version="1.0.0",
-        arch=cray_arch,
+        arch=cray_arch.spec_json(),
         compiler=_common_compiler.spec_json(),
         dependencies={},
         parameters={},
@@ -356,9 +356,6 @@ def test_read_cray_manifest(tmpdir, mutable_config, mock_packages, mutable_datab
         assert concretized_specs[0]["hwloc"].dag_hash() == "hwlocfakehashaaa"
 
 
-@pytest.mark.only_original(
-    "The ASP-based concretizer is currently picky about OS matching and will fail."
-)
 def test_read_cray_manifest_twice_no_compiler_duplicates(
     tmpdir, mutable_config, mock_packages, mutable_database, manifest_content
 ):
