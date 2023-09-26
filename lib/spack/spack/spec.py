@@ -740,7 +740,7 @@ class DependencySpec:
         self.parent = parent
         self.spec = spec
         self.depflag = depflag
-        self.virtuals = virtuals
+        self.virtuals = tuple(sorted(set(virtuals)))
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
         """Update the current dependency types"""
@@ -2924,8 +2924,9 @@ class Spec:
         if self._concrete:
             return
 
+        allow_deprecated = spack.config.get("config:deprecated", False)
         solver = spack.solver.asp.Solver()
-        result = solver.solve([self], tests=tests)
+        result = solver.solve([self], tests=tests, allow_deprecated=allow_deprecated)
         result.raise_if_unsat()
 
         # take the best answer
