@@ -79,14 +79,18 @@ class Microarchitecture:
         self.features = features
         self.compilers = compilers
         self.generation = generation
+        # Cache the ancestor computation
+        self._ancestors = None
 
     @property
     def ancestors(self):
         """All the ancestors of this microarchitecture."""
-        value = self.parents[:]
-        for parent in self.parents:
-            value.extend(a for a in parent.ancestors if a not in value)
-        return value
+        if self._ancestors is None:
+            value = self.parents[:]
+            for parent in self.parents:
+                value.extend(a for a in parent.ancestors if a not in value)
+            self._ancestors = value
+        return self._ancestors
 
     def _to_set(self):
         """Returns a set of the nodes in this microarchitecture DAG."""

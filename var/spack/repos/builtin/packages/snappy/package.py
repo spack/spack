@@ -24,6 +24,21 @@ class Snappy(CMakePackage):
 
     patch("link_gtest.patch", when="@:1.1.8")
 
+    # Version 1.1.9 makes use of an assembler feature that is not necessarily available when the
+    # __GNUC__ preprocessor macro is defined. Version 1.1.10 switched to the correct macro
+    # __GCC_ASM_FLAG_OUTPUTS__, which we also do for the version 1.1.9 by applying the patch from
+    # the upstream repo (see the commit message of the patch for more details).
+    patch(
+        "https://github.com/google/snappy/commit/8dd58a519f79f0742d4c68fbccb2aed2ddb651e8.patch?full_index=1",
+        sha256="debcdf182c046a30e9afea99ebbff280dd1fbb203e89abce6a05d3d17c587768",
+        when="@1.1.9",
+    )
+
+    # nvhpc@:22.3 does not know flag '-fno-rtti'
+    # nvhpc@:22.7 fails to compile snappy.cc: line 126: error: excessive recursion at instantiation
+    #   of class "snappy::<unnamed>::make_index_sequence<
+    conflicts("@1.1.9:", when="%nvhpc@:22.7")
+
     def cmake_args(self):
         return [
             self.define("CMAKE_INSTALL_LIBDIR", self.prefix.lib),

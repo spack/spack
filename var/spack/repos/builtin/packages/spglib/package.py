@@ -18,6 +18,7 @@ class Spglib(CMakePackage):
     # patch by Krishnendu Ghosh
     patch("fix_cpp.patch", when="@:1.10.3")
 
+    version("2.1.0", sha256="31bca273a1bc54e1cff4058eebe7c0a35d5f9b489579e84667d8e005c73dcc13")
     version("2.0.2", sha256="10e44a35099a0a5d0fc6ee0cdb39d472c23cb98b1f5167c0e2b08f6069f3db1e")
     version("2.0.1", sha256="d7407c0d67174a0c5e41a82ed62948c43fcaf1b5529f97238d7fadd1123ffe22")
     version("2.0.0", sha256="426c4004e84fdb732d86aa5fcada5257ca8bc7a6915c06ced27565176c16ee96")
