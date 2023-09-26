@@ -108,7 +108,7 @@ def _common_arch(test_platform):
 def _common_compiler(_common_arch):
     return JsonCompilerEntry(
         name="gcc",
-        version="10.2.0.cray",
+        version="10.2.0.2112",
         arch=_common_arch,
         executables={
             "cc": "/path/to/compiler/cc",
@@ -140,7 +140,7 @@ def _raw_json_x(_common_arch):
         "prefix": "/path/to/packagex-install/",
         "version": "1.0",
         "arch": _common_arch.spec_json(),
-        "compiler": {"name": "gcc", "version": "10.2.0.cray"},
+        "compiler": {"name": "gcc", "version": "10.2.0.2112"},
         "dependencies": {"packagey": {"hash": "hash-of-y", "type": ["link"]}},
         "parameters": {"precision": ["double", "float"]},
     }
@@ -401,7 +401,7 @@ def test_read_cray_manifest_twice_no_compiler_duplicates(
 
         compilers = spack.compilers.all_compilers()
         filtered = list(
-            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc@=10.2.0.cray")
+            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc@=10.2.0.2112")
         )
         assert len(filtered) == 1
 
