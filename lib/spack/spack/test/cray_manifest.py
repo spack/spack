@@ -275,10 +275,11 @@ def test_translate_cray_platform_to_linux(monkeypatch, _common_compiler):
     assert spec.architecture.platform == "linux"
 
 
-def test_translate_compiler_name():
+def test_translate_compiler_name(_common_arch):
     nvidia_compiler = JsonCompilerEntry(
         name="nvidia",
         version="19.1",
+        arch=_common_arch,
         executables={"cc": "/path/to/compiler/nvc", "cxx": "/path/to/compiler/nvc++"},
     )
 
@@ -290,7 +291,7 @@ def test_translate_compiler_name():
         hash="hwlocfakehashaaa",
         prefix="/path/to/hwloc-install/",
         version="2.0.3",
-        arch=_common_arch,
+        arch=_common_arch.spec_json(),
         compiler=nvidia_compiler.spec_json(),
         dependencies={},
         parameters={},
@@ -300,7 +301,7 @@ def test_translate_compiler_name():
     assert spec.compiler.name == "nvhpc"
 
 
-def test_failed_translate_compiler_name():
+def test_failed_translate_compiler_name(_common_arch):
     unknown_compiler = JsonCompilerEntry(name="unknown", version="1.0")
 
     with pytest.raises(spack.compilers.UnknownCompilerError):
@@ -311,7 +312,7 @@ def test_failed_translate_compiler_name():
         hash="hash-of-y",
         prefix="/path/to/packagey-install/",
         version="1.0",
-        arch=_common_arch,
+        arch=_common_arch.spec_json(),
         compiler=unknown_compiler.spec_json(),
         dependencies={},
         parameters={},
