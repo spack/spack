@@ -54,8 +54,6 @@ spack:
             +trilinoscouplings +zoltan]
       - one_of: [gotype=long_long, gotype=all]
       - one_of: [~ml ~muelu ~zoltan2 ~teko, +ml +muelu +zoltan2 +teko]
-      - one_of: [+superlu-dist, ~superlu-dist]
-      - one_of: [+shylu, ~shylu]
     xz:
       variants: +pic
     mesa:
