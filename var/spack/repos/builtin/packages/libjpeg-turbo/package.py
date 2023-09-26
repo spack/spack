@@ -84,7 +84,7 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
 
     @property
     def libs(self):
-        shared = "+shared" in self.spec
+        shared = self.spec.satisfies("libs=shared")
         return find_libraries("libjpeg*", root=self.prefix, shared=shared, recursive=True)
 
 
