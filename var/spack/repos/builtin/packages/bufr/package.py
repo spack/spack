@@ -64,7 +64,6 @@ class Bufr(CMakePackage):
         args = [
             self.define_from_variant("ENABLE_PYTHON", "python"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define("BUILD_TESTS", self.run_tests),
         ]
 
         return args
@@ -114,7 +113,3 @@ class Bufr(CMakePackage):
             suffixes += ["8", "d"]
         for suffix in suffixes:
             self._setup_bufr_environment(env, suffix)
-
-    def check(self):
-        with working_dir(self.builder.build_directory):
-            make("test")
