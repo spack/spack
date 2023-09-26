@@ -168,6 +168,16 @@ class Qgis(CMakePackage):
     patch("pyqt5_3165x.patch", when="@3.16.5:3.21 ^qt@5")
     patch("pyqt5_322x.patch", when="@3.22: ^qt@5")
 
+
+    @run_before('cmake')
+    def fix_pyqt5_cmake(self):
+        cmfile = FileFilter(join_path('cmake','FindPyQt5.cmake'))
+        # cmake might be using forward slashes only, hence hardcode '/' as opposed to using join_path
+        pyqtpath = self.spec['py-pyqt5'].prefix + '/' + self.spec["python"].package.platlib + '/PyQt5'
+        cmfile.filter('SET(PYQT5_MOD_DIR "${Python_SITEARCH}/PyQt5")', 'SET(PYQT5_MOD_DIR "'+pyqtpath+'")', string=True)
+        cmfile.filter('SET(PYQT5_SIP_DIR "${Python_SITEARCH}/PyQt5/bindings")', 'SET(PYQT5_SIP_DIR "'+pyqtpath+'/bindings")', string=True)
+
+
     def cmake_args(self):
         spec = self.spec
         args = []
