@@ -527,7 +527,7 @@ def copy_buildcache_file(src_url, dest_url, local_path=None):
             temp_stage.create()
             temp_stage.fetch()
             web_util.push_to_url(local_path, dest_url, keep_original=True)
-        except web_util.FetchError as e:
+        except spack.error.FetchError as e:
             # Expected, since we have to try all the possible extensions
             tty.debug("no such file: {0}".format(src_url))
             tty.debug(e)

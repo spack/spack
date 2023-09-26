@@ -16,6 +16,7 @@ class Scorep(AutotoolsPackage):
     url = "https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.1/scorep-7.1.tar.gz"
     maintainers("wrwilliams")
 
+    version("8.1", sha256="3a40b481fce610871ddf6bdfb88a6d06b9e5eb38c6080faac6d5e44990060a37")
     version("8.0", sha256="4c0f34f20999f92ebe6ca1ff706d0846b8ce6cd537ffbedb49dfaef0faa66311")
     version("7.1", sha256="98dea497982001fb82da3429ca55669b2917a0858c71abe2cfe7cd113381f1f7")
     version("7.0", sha256="68f24a68eb6f94eaecf500e17448f566031946deab74f2cba072ee8368af0996")
@@ -139,6 +140,12 @@ class Scorep(AutotoolsPackage):
     # https://github.com/spack/spack/issues/1609
     conflicts("platform=darwin")
 
+    def find_libpath(self, libname, root):
+        libs = find_libraries(libname, root, shared=True, recursive=True)
+        if len(libs.directories) == 0:
+            return None
+        return libs.directories[0]
+
     def configure_args(self):
         spec = self.spec
 
@@ -168,7 +175,9 @@ class Scorep(AutotoolsPackage):
         if "+unwind" in spec:
             config_args.append("--with-libunwind=%s" % spec["libunwind"].prefix)
         if "+cuda" in spec:
-            config_args.append("--with-libcuda=%s" % spec["cuda"].prefix)
+            config_args.append("--with-libcudart=%s" % spec["cuda"].prefix)
+            cuda_driver_path = self.find_libpath("libcuda", spec["cuda"].prefix)
+            config_args.append("--with-libcuda-lib=%s" % cuda_driver_path)
         if "+hip" in spec:
             config_args.append("--with-rocm=%s" % spec["hip"].prefix)
 

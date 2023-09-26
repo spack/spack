@@ -49,6 +49,8 @@ class Bcl2fastq2(Package):
     # After finding the libxslt bits, cmake still needs to wire in the
     # libexslt bits.
     patch("cxxConfigure-cmake.patch")
+    # -msse2 isn't valid for arm
+    patch("cxxConfigure-aarch64.patch", when="target=aarch64:")
 
     root_cmakelists_dir = "src"
 
