@@ -54,8 +54,8 @@ class Velvet(MakefilePackage):
             makefile.filter("-m64", "")
         maxkmerlength = self.spec.variants["maxkmerlength"].value
         categories = self.spec.variants["categories"].value
-        makefile.filter("^MAXKMERLENGTH\s*=\s*.*", f"MAXKMERLENGTH = {maxkmerlength}")
-        makefile.filter("^CATEGORIES\s*=\s*.*", f"CATEGORIES = {categories}")
+        makefile.filter(r"^MAXKMERLENGTH\s*=\s*.*", f"MAXKMERLENGTH = {maxkmerlength}")
+        makefile.filter(r"^CATEGORIES\s*=\s*.*", f"CATEGORIES = {categories}")
         if "+bigassembly" in self.spec:
             makefile.filter("^ifdef BIGASSEMBLY", "BIGASSEMBLY=1\nifdef BIGASSEMBLY")
         if "+vbigassembly" in self.spec:
