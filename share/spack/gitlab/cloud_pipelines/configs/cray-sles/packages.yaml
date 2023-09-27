@@ -1,4 +1,35 @@
 packages:
+  # SLES DEFAULTS
+  all:
+    providers:
+      blas: [cray-libsci]
+      lapack: [cray-libsci]
+      mpi: [cray-mpich]
+      tbb: [intel-tbb]
+      scalapack: [netlib-scalapack]
+    target:: [zen4]
+    variants: +mpi
+
+  # VARIANT PREFERENCES/REQUIREMENTS
+  binutils:
+    variants: +ld +gold +headers +libiberty ~nls
+  hdf5:
+    variants: +fortran +hl +shared
+  libunwind:
+    variants: +pic +xz
+  ncurses:
+    require: "@6.3 +termlib"
+  openblas:
+    require: "@0.3.20"
+    variants: threads=openmp
+  xz:
+    variants: +pic
+  elfutils:
+    variants: +bzip2 ~nls +xz
+    require: "%gcc"
+  unzip:
+    require: "%gcc"
+
   # EXTERNALS
   cray-mpich:
     buildable: false

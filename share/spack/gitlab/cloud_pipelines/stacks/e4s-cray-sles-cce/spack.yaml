@@ -5,40 +5,14 @@ spack:
   view: false
 
   packages:
+    # CCE-SPECIFIC PREFERENCES/REQUIREMENTS
     all:
-      require: '%cce'
-      providers:
-        blas: [cray-libsci]
-        lapack: [cray-libsci]
-        mpi: [cray-mpich]
-        tbb: [intel-tbb]
-        scalapack: [netlib-scalapack]
-      target: [zen4]
-      variants: +mpi
-
-    binutils:
-      variants: +ld +gold +headers +libiberty ~nls
-    hdf5:
-      variants: +fortran +hl +shared
-    libunwind:
-      variants: +pic +xz
-    ncurses:
-      require: '@6.3 +termlib'
-    openblas:
-      require: '@0.3.20'
-      variants: threads=openmp
-    xz:
-      variants: +pic
-    elfutils:
-      variants: +bzip2 ~nls +xz
-      require: '%gcc'
-    unzip:
-      require: '%gcc'
+      require: "%cce"
 
   specs:
   - adios2
   - amrex
-  # - butterflypack  #  LDFLAGS: KeyError: 'CRAYLIBS_X86_64-suse-linux'
+  # - butterflypack  #  LDFLAGS: KeyError: "CRAYLIBS_X86_64-suse-linux"
   - conduit
   - flux-core
   - h5bench

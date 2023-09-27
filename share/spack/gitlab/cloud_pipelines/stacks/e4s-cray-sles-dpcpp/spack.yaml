@@ -5,35 +5,9 @@ spack:
   view: false
 
   packages:
+    # DPCPP-SPECIFIC PREFERENCES/REQUIREMENTS
     all:
-      require: '%dpcpp'
-      providers:
-        blas: [cray-libsci]
-        lapack: [cray-libsci]
-        mpi: [cray-mpich]
-        tbb: [intel-tbb]
-        scalapack: [netlib-scalapack]
-      target: [zen4]
-      variants: +mpi
-
-    binutils:
-      variants: +ld +gold +headers +libiberty ~nls
-    hdf5:
-      variants: +fortran +hl +shared
-    libunwind:
-      variants: +pic +xz
-    ncurses:
-      require: '@6.3 +termlib'
-    openblas:
-      require: '@0.3.20'
-      variants: threads=openmp
-    xz:
-      variants: +pic
-    elfutils:
-      variants: +bzip2 ~nls +xz
-      require: '%gcc'
-    unzip:
-      require: '%gcc'
+      require: "%dpcpp"
 
   # Only mfem successfully installed in environment equivalent at command line
   specs:
