@@ -111,6 +111,7 @@ class Qgis(CMakePackage):
     depends_on("proj@4.4.0:")
     depends_on("proj@4.9.3:", when="@3.8.2:")
     depends_on("proj@7.2:", when="@3.28:")
+    depends_on("proj@:8", when="@3.28") # build fails with proj@9
     depends_on("py-psycopg2", type=("build", "run"))  # TODO: is build dependency necessary?
     depends_on("py-pyqt4", when="@2")
     depends_on("py-pyqt5@5.3:", when="@3")
