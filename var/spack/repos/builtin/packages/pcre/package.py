@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.build_systems.autotools
+import spack.build_systems.cmake
 from spack.package import *
 
 
-class Pcre(AutotoolsPackage):
+class Pcre(AutotoolsPackage, CMakePackage):
     """The PCRE package contains Perl Compatible Regular Expression
     libraries. These are useful for implementing regular expression
     pattern matching using the same syntax and semantics as Perl 5."""
@@ -26,6 +28,8 @@ class Pcre(AutotoolsPackage):
     maintainers("drkennetz")
     patch("intel.patch", when="@8.38")
 
+    build_system("autotools", "cmake", default="autotools")
+
     variant("jit", default=False, description="Enable JIT support.")
 
     variant("multibyte", default=True, description="Enable support for 16 and 32 bit characters.")
@@ -36,6 +40,8 @@ class Pcre(AutotoolsPackage):
         description="Enable support for UTF-8/16/32, " "incompatible with EBCDIC.",
     )
 
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
 
@@ -49,5 +55,23 @@ class Pcre(AutotoolsPackage):
         if "+utf" in self.spec:
             args.append("--enable-utf")
             args.append("--enable-unicode-properties")
+
+        return args
+
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        args = []
+
+        if "+jit" in self.spec:
+            args.append("-DPCRE_SUPPORT_JIT:BOOL=ON")
+
+        if "+multibyte" in self.spec:
+            args.append("-DPCRE_BUILD_PCRE16:BOOL=ON")
+            args.append("-DPCRE_BUILD_PCRE32:BOOL=ON")
+
+        if "+utf" in self.spec:
+            args.append("-DPCRE_SUPPORT_UTF:BOOL=ON")
+            args.append("-DPCRE_SUPPORT_UNICODE_PROPERTIES:BOOL=ON")
 
         return args
