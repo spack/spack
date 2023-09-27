@@ -4505,10 +4505,9 @@ class Spec:
         if extraction_tuple:
             root, format_string = extraction_tuple
 
-        # If we want to think of a string like "a/b/c" as a path (with 3 subdirs)
-        # on Windows, we cannot use pathlib (since "/" is not a path separator
-        # on Windows). Therefore, the path components are derived by splitting on
-        # both separators, on all operating systems.
+        # The path components are derived by splitting on both separators, on all
+        # operating systems. Use `split` instead of pathlib since the input
+        # format string is not necessarily a valid path.
         any_sep = r"[/\\]"
         components = re.split(any_sep, format_string)
         formatted_components = [fs.polite_filename(self.format(x)) for x in components]
