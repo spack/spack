@@ -27,6 +27,7 @@ class Qgis(CMakePackage):
     version("3.22.16", sha256="dbd1f8a639291bb2492eea61e4ef96079d7b27d3dfa538dab8cd98f31429254a")
     version("3.22.0", sha256="cf0c169863f332aab67d8c4943e14b73a564f0254bf54015f5826c6427e6785b")
     version("3.18.2", sha256="1913e4d5596bbc8b7d143f3defb18bf376f750a71f334f69d76af5deca7ecc5d")
+    version("3.16.16", sha256="ccd2f404534fcb00b5e17863375462090c9575e68b32ce50b2e7e925d1e01a49")
     version("3.16.12", sha256="65e9634b5c885c98f3555cf77bc2e3fae5e19279aa17e3f6626ff5d7455fd2b9")
     version("3.16.5", sha256="525f469ad6e40dd7a8f09ebab5eb6a2dffc45939b99b7d937750cc04ed78d61c")
     version("3.14.16", sha256="c9915c2e577f1812a2b35b678b123c58407e07824d73e5ec0dda13db7ca75c04")
@@ -221,7 +222,7 @@ class Qgis(CMakePackage):
                 "-DLIBZIP_INCLUDE_DIR=" + self.spec["libzip"].prefix.include,
                 "-DLIBZIP_CONF_INCLUDE_DIR=" + self.spec["libzip"].prefix.lib.libzip.include,
                 "-DGDAL_CONFIG_PREFER_PATH=" + self.spec["gdal"].prefix.bin,
-                "-DGDAL_LIBRARY=" + self.spec["gdal"].prefix + "/lib64/libgdal.so",
+                "-DGDAL_CONFIG=" + join_path(self.spec["gdal"].prefix.bin,"gdal-config"),
                 "-DGEOS_CONFIG_PREFER_PATH=" + self.spec["geos"].prefix.bin,
                 "-DGSL_CONFIG_PREFER_PATH=" + self.spec["gsl"].prefix.bin,
                 "-DPOSTGRES_CONFIG_PREFER_PATH=" + self.spec["postgresql"].prefix.bin,
