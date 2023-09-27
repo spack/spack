@@ -93,9 +93,9 @@ class Damaris(CMakePackage):
             args.extend(["-DENABLE_PYTHON:BOOL=ON"])
             args.extend(["-DENABLE_PYTHONMOD:BOOL=ON"])
             args.extend(["-DPYTHON_MODULE_INSTALL_PATH:PATH=%s/lib/python%s/site-packages" % 
-                           (self.prefix, self.spec["python"].version.up_to(2).dotted)])
+                          (self.prefix, self.spec["python"].version.up_to(2).dotted)])
 
         if self.spec.variants["visit"].value:
             args.extend(["-DENABLE_VISIT:BOOL=ON"])
-            args.extend(["-DVisIt_ROOT:PATH=%s" % self.prefix])
+            args.extend(["-DVisIt_ROOT:PATH=%s" % self.spec["visit"].prefix])
         return args
