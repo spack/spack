@@ -842,21 +842,6 @@ deprecated-ci-build:
   tags: [ "cray-sles-zen4", "public" ]
   extends: [ ".generate-cray" ]
 
-.generate-cray-sles-amd:
-  tags: [ "cray-sles-zen4", "public" ]
-  extends: [ ".generate-cray" ]
-
-.generate-cray-sles-cray:
-  tags: [ "cray-sles-zen4", "public" ]
-  extends: [ ".generate-cray" ]
-
-.generate-cray-sles-intel:
-  tags: [ "cray-sles-zen4", "public" ]
-  extends: [ ".generate-cray" ]
-
-.generate-cray-sles-nvidia:
-  tags: [ "cray-sles-zen4", "public" ]
-  extends: [ ".generate-cray" ]
 
 #######################################
 # E4S - Cray RHEL
@@ -901,3 +886,135 @@ e4s-cray-rhel-build:
 #   needs:
 #     - artifacts: True
 #       job: e4s-cray-sles-generate
+
+#######################################
+# E4S - Cray SLES - cce
+#######################################
+.e4s-cray-sles-cce:
+  extends: [ ".cray_sles_zen4" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-cray-sles-cce
+
+e4s-cray-sles-cce-generate:
+  extends: [ ".generate-cray-sles", ".e4s-cray-sles-cce" ]
+
+e4s-cray-sles-cce-build:
+  extends: [ ".build", ".e4s-cray-sles-cce" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-sles-cce-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-sles-cce-generate
+
+#######################################
+# E4S - Cray SLES - dpcpp
+#######################################
+.e4s-cray-sles-dpcpp:
+  extends: [ ".cray_sles_zen4" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-cray-sles-dpcpp
+
+e4s-cray-sles-dpcpp-generate:
+  extends: [ ".generate-cray-sles", ".e4s-cray-sles-dpcpp" ]
+
+e4s-cray-sles-dpcpp-build:
+  extends: [ ".build", ".e4s-cray-sles-dpcpp" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-sles-dpcpp-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-sles-dpcpp-generate
+
+#######################################
+# E4S - Cray SLES - intel
+#######################################
+.e4s-cray-sles-intel:
+  extends: [ ".cray_sles_zen4" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-cray-sles-intel
+
+e4s-cray-sles-intel-generate:
+  extends: [ ".generate-cray-sles", ".e4s-cray-sles-intel" ]
+
+e4s-cray-sles-intel-build:
+  extends: [ ".build", ".e4s-cray-sles-intel" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-sles-intel-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-sles-intel-generate
+
+#######################################
+# E4S - Cray SLES - nvhpc
+#######################################
+.e4s-cray-sles-nvhpc:
+  extends: [ ".cray_sles_zen4" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-cray-sles-nvhpc
+
+e4s-cray-sles-nvhpc-generate:
+  extends: [ ".generate-cray-sles", ".e4s-cray-sles-nvhpc" ]
+
+e4s-cray-sles-nvhpc-build:
+  extends: [ ".build", ".e4s-cray-sles-nvhpc" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-sles-nvhpc-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-sles-nvhpc-generate
+
+#######################################
+# E4S - Cray SLES - oneapi
+#######################################
+.e4s-cray-sles-oneapi:
+  extends: [ ".cray_sles_zen4" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-cray-sles-oneapi
+
+e4s-cray-sles-oneapi-generate:
+  extends: [ ".generate-cray-sles", ".e4s-cray-sles-oneapi" ]
+
+e4s-cray-sles-oneapi-build:
+  extends: [ ".build", ".e4s-cray-sles-oneapi" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-sles-oneapi-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-sles-oneapi-generate
+
+#######################################
+# E4S - Cray SLES - rocmcc
+#######################################
+.e4s-cray-sles-rocmcc:
+  extends: [ ".cray_sles_zen4" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-cray-sles-rocmcc
+
+e4s-cray-sles-rocmcc-generate:
+  extends: [ ".generate-cray-sles", ".e4s-cray-sles-rocmcc" ]
+
+e4s-cray-sles-rocmcc-build:
+  extends: [ ".build", ".e4s-cray-sles-rocmcc" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-sles-rocmcc-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-sles-rocmcc-generate
