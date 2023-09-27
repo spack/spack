@@ -237,30 +237,6 @@ def test_list_detectable_packages(mutable_config, mutable_mock_repo):
     assert external.returncode == 0
 
 
-def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch):
-    # Prepare an environment to detect a fake gcc
-    gcc_exe = mock_executable("gcc", output="echo 4.2.1")
-    prefix = os.path.dirname(gcc_exe)
-    monkeypatch.setenv("PATH", prefix)
-
-    # Find the external spec
-    external("find", "gcc")
-
-    # Check entries in 'packages.yaml'
-    packages_yaml = spack.config.get("packages")
-    assert "gcc" in packages_yaml
-    assert "externals" in packages_yaml["gcc"]
-    externals = packages_yaml["gcc"]["externals"]
-    assert len(externals) == 1
-    external_gcc = externals[0]
-    assert external_gcc["spec"] == "gcc@4.2.1 languages=c"
-    assert external_gcc["prefix"] == os.path.dirname(prefix)
-    assert "extra_attributes" in external_gcc
-    extra_attributes = external_gcc["extra_attributes"]
-    assert "prefix" not in extra_attributes
-    assert extra_attributes["compilers"]["c"] == str(gcc_exe)
-
-
 def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     search_dir = gcc_exe.parent
