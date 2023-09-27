@@ -6,11 +6,13 @@
 import os
 import re
 
+import spack.build_systems.cmake
+import spack.build_systems.makefile
 from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
 
-class Openblas(MakefilePackage):
+class Openblas(CMakePackage, MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = "https://www.openblas.net"
@@ -19,7 +21,7 @@ class Openblas(MakefilePackage):
     )
     git = "https://github.com/OpenMathLib/OpenBLAS.git"
 
-    libraries = ["libopenblas"]
+    libraries = ["libopenblas", "openblas"]
 
     version("develop", branch="develop")
     version("0.3.24", sha256="ceadc5065da97bd92404cac7254da66cc6eb192679cf1002098688978d4d5132")
@@ -90,6 +92,9 @@ class Openblas(MakefilePackage):
     provides("lapack")
     provides("lapack@3.9.1:", when="@0.3.15:")
     provides("lapack@3.7.0", when="@0.2.20")
+
+    # https://github.com/xianyi/OpenBLAS/pull/2519/files
+    patch("ifort-msvc.patch", when="%msvc")
 
     # https://github.com/OpenMathLib/OpenBLAS/pull/3712
     patch("cce.patch", when="@0.3.20 %cce")
@@ -213,6 +218,8 @@ class Openblas(MakefilePackage):
 
     depends_on("perl", type="build")
 
+    build_system("makefile", "cmake", default="makefile")
+
     def flag_handler(self, name, flags):
         spec = self.spec
         iflags = []
@@ -242,13 +249,37 @@ class Openblas(MakefilePackage):
         # require both.
         # As of 08/2022 (0.3.21), we can build purely with a C compiler using
         # a f2c translated LAPACK version
-        #   https://github.com/OpenMathLib/OpenBLAS/releases/tag/v0.3.21
+        #   https://github.com/xianyi/OpenBLAS/releases/tag/v0.3.21
         if self.compiler.fc is None and "~fortran" not in self.spec:
             raise InstallError(
                 self.compiler.cc
                 + " has no Fortran compiler added in spack. Add it or use openblas~fortran!"
             )
 
+    @property
+    def headers(self):
+        # The only public headers for cblas and lapacke in
+        # openblas are cblas.h and lapacke.h. The remaining headers are private
+        # headers either included in one of these two headers, or included in
+        # one of the source files implementing functions declared in these
+        # headers.
+        return find_headers(["cblas", "lapacke"], self.prefix.include)
+
+    @property
+    def libs(self):
+        spec = self.spec
+
+        # Look for openblas{symbol_suffix}
+        name = ["libopenblas", "openblas"]
+        search_shared = bool(spec.variants["shared"].value)
+        suffix = spec.variants["symbol_suffix"].value
+        if suffix != "none":
+            name += suffix
+
+        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
+
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     @staticmethod
     def _read_targets(target_file):
         """Parse a list of available targets from the OpenBLAS/TargetList.txt
@@ -304,7 +335,7 @@ class Openblas(MakefilePackage):
                 if microarch.name in available_targets:
                     break
 
-        if self.version >= Version("0.3"):
+        if self.spec.version >= Version("0.3"):
             # 'ARCH' argument causes build errors in older OpenBLAS
             # see https://github.com/spack/spack/issues/15385
             arch_name = microarch.family.name
@@ -379,9 +410,9 @@ class Openblas(MakefilePackage):
 
         if "~shared" in self.spec:
             if "+pic" in self.spec:
-                make_defs.append("CFLAGS={0}".format(self.compiler.cc_pic_flag))
+                make_defs.append("CFLAGS={0}".format(self.pkg.compiler.cc_pic_flag))
                 if "~fortran" not in self.spec:
-                    make_defs.append("FFLAGS={0}".format(self.compiler.f77_pic_flag))
+                    make_defs.append("FFLAGS={0}".format(self.pkg.compiler.f77_pic_flag))
             make_defs += ["NO_SHARED=1"]
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies("@0.2.16"):
@@ -443,28 +474,6 @@ class Openblas(MakefilePackage):
         return make_defs
 
     @property
-    def headers(self):
-        # As in netlib-lapack, the only public headers for cblas and lapacke in
-        # openblas are cblas.h and lapacke.h. The remaining headers are private
-        # headers either included in one of these two headers, or included in
-        # one of the source files implementing functions declared in these
-        # headers.
-        return find_headers(["cblas", "lapacke"], self.prefix.include)
-
-    @property
-    def libs(self):
-        spec = self.spec
-
-        # Look for openblas{symbol_suffix}
-        name = "libopenblas"
-        search_shared = bool(spec.variants["shared"].value)
-        suffix = spec.variants["symbol_suffix"].value
-        if suffix != "none":
-            name += suffix
-
-        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
-
-    @property
     def build_targets(self):
         return ["-s"] + self.make_defs + ["all"]
 
@@ -499,3 +508,28 @@ class Openblas(MakefilePackage):
 
         output = compile_c_and_execute(source_file, [include_flags], link_flags.split())
         compare_output_file(output, blessed_file)
+
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        cmake_defs = [self.define("TARGET", "GENERIC")]
+        if self.spec.satisfies("platform=windows"):
+            cmake_defs += [
+                self.define("DYNAMIC_ARCH", "OFF"),
+                self.define("BUILD_WITHOUT_LAPACK", "ON"),
+            ]
+
+        if "~fortran" in self.spec:
+            cmake_defs += [self.define("NOFORTRAN", "ON")]
+
+        if "+shared" in self.spec:
+            cmake_defs += [self.define("BUILD_SHARED_LIBS", "ON")]
+
+        if self.spec.satisfies("threads=openmp"):
+            cmake_defs += [self.define("USE_OPENMP", "ON"), self.define("USE_THREAD", "ON")]
+        elif self.spec.satisfies("threads=pthreads"):
+            cmake_defs += [self.define("USE_OPENMP", "OFF"), self.define("USE_THREAD", "ON")]
+        else:
+            cmake_defs += [self.define("USE_OPENMP", "OFF"), self.define("USE_THREAD", "OFF")]
+
+        return cmake_defs
