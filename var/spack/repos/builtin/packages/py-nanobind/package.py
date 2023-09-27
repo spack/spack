@@ -24,6 +24,15 @@ class PyNanobind(PythonPackage):
 
     version("master", branch="master", submodules=True)
     version(
+        "1.5.2", tag="v1.5.2", commit="b0e24d5b0ab0d518317d6b263a257ae72d4d29a2", submodules=True
+    )
+    version(
+        "1.5.1", tag="v1.5.1", commit="ec6168d06dbf2ab94c31858223bd1d7617222706", submodules=True
+    )
+    version(
+        "1.5.0", tag="v1.5.0", commit="e85a51049db500383808aaa4a77306ff37d96131", submodules=True
+    )
+    version(
         "1.4.0", tag="v1.4.0", commit="05cba0ef85ba2bb68aa115af4b74c30aa2aa7bec", submodules=True
     )
     version(
