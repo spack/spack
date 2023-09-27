@@ -50,15 +50,15 @@ class Velvet(MakefilePackage):
         makefile.filter('^MAXKMERLENGTH\s*=\s*.*', f'MAXKMERLENGTH = {maxkmerlength}')
         makefile.filter('^CATEGORIES\s*=\s*.*', f'CATEGORIES = {categories}')
         if "+bigassembly" in self.spec:
-            makefile.filter('^ifdef BIGASSEMBLY', f'BIGASSEMBLY=1\nifdef BIGASSEMBLY')
+            makefile.filter('^ifdef BIGASSEMBLY', 'BIGASSEMBLY=1\nifdef BIGASSEMBLY')
         if "+vbigassembly" in self.spec:
-            makefile.filter('^ifdef VBIGASSEMBLY', f'VBIGASSEMBLY=1\nifdef VBIGASSEMBLY')
+            makefile.filter('^ifdef VBIGASSEMBLY', 'VBIGASSEMBLY=1\nifdef VBIGASSEMBLY')
         if "+longsequences" in self.spec:
-            makefile.filter('^ifdef LONGSEQUENCES', f'LONGSEQUENCES=1\nifdef LONGSEQUENCES')
+            makefile.filter('^ifdef LONGSEQUENCES', 'LONGSEQUENCES=1\nifdef LONGSEQUENCES')
         if "+openmp" in self.spec:
-            makefile.filter('^ifdef OPENMP', f'OPENMP=1\nifdef OPENMP')
+            makefile.filter('^ifdef OPENMP', 'OPENMP=1\nifdef OPENMP')
         if "+single_cov_cat" in self.spec:
-            makefile.filter('^ifdef SINGLE_COV_CAT', f'SINGLE_COV_CAT=1\nifdef SINGLE_COV_CAT')
+            makefile.filter('^ifdef SINGLE_COV_CAT', 'SINGLE_COV_CAT=1\nifdef SINGLE_COV_CAT')
 
 
     def install(self, spec, prefix):
