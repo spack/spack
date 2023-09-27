@@ -32,4 +32,3 @@ class PyDipy(PythonPackage):
     depends_on("py-h5py@2.5.0:", type=("build", "run"))
     depends_on("py-packaging@19.0:", type=("build", "run"))
     depends_on("py-tqdm@4.30.0:", type=("build", "run"))
-
