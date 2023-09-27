@@ -30,9 +30,14 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     executables = ["openssl"]
 
-    version("3.1.2", sha256="a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539")
-    version("3.0.10", sha256="1761d4f5b13a1028b9b6f3d4b8e17feb0cedc9370f6afe61d7193d2cdce83323")
+    version("3.1.3", sha256="f0316a2ebd89e7f2352976445458689f80302093788c466692fb2a188b2eacf6")
+    version("3.0.11", sha256="b3425d3bb4a2218d0697eb41f7fc0cdede016ed19ca49d168b78e8d947887f55")
 
+    version(
+        "3.1.2",
+        sha256="a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539",
+        deprecated=True,
+    )
     version(
         "3.1.1",
         sha256="b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674",
@@ -41,6 +46,11 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     version(
         "3.1.0",
         sha256="aaa925ad9828745c4cad9d9efeb273deca820f2cdcf2c3ac7d7c1212b7c497b4",
+        deprecated=True,
+    )
+    version(
+        "3.0.10",
+        sha256="1761d4f5b13a1028b9b6f3d4b8e17feb0cedc9370f6afe61d7193d2cdce83323",
         deprecated=True,
     )
     version(
@@ -81,6 +91,11 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     version(
         "3.0.0",
         sha256="59eedfcb46c25214c9bd37ed6078297b4df01d012267fe9e9eee31f61bc70536",
+        deprecated=True,
+    )
+    version(
+        "1.1.1w",
+        sha256="cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8",
         deprecated=True,
     )
     version(
