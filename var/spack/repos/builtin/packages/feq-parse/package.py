@@ -22,5 +22,5 @@ class FeqParse(CMakePackage):
     version("1.0.2", sha256="1cd1db7562908ea16fc65dc5268b654405d0b3d9dcfe11f409949c431b48a3e8")
 
     depends_on("cmake@3.0.2:", type="build")
-    
+ 
     parallel = False
