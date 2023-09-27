@@ -75,7 +75,7 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
     is_linux = sys.platform.startswith("linux")
     variant("shared", default=True, description="Build shared libraries")
     variant("adiak", default=True, description="Enable Adiak support")
-    variant("mpi", default=True, description="Enable MPI wrappers")
+    variant("mpi", default=True, description="Enable MPI support")
     # libunwind has some issues on Mac
     variant(
         "libunwind", default=sys.platform != "darwin", description="Enable stack unwind support"
@@ -133,7 +133,7 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+fortran" in spec:
             entries.append(cmake_cache_option("WITH_FORTRAN", True))
 
-        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", True))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
         entries.append(cmake_cache_option("BUILD_TESTING", "+tests" in spec))
         entries.append(cmake_cache_option("BUILD_DOCS", False))
         entries.append(cmake_cache_path("PYTHON_EXECUTABLE", spec["python"].command.path))
@@ -155,6 +155,14 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("WITH_ROCTRACER", True))
             entries.append(cmake_cache_option("WITH_ROCTX", True))
             # entries.append(cmake_cache_option("ROCM_ROOT_DIR", "/usr/"))
+
+        return entries
+
+    def initconfig_mpi_entries(self):
+        spec = self.spec
+        entries = super(Caliper, self).initconfig_mpi_entries()
+
+        entries.append(cmake_cache_option("WITH_MPI", "+mpi" in spec))
 
         return entries
 
