@@ -4,10 +4,6 @@ spack:
 
   view: false
 
-  concretizer:
-    reuse: false
-    unify: false
-
   packages:
     all:
       require: '%oneapi'
