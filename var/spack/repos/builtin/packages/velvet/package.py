@@ -7,10 +7,11 @@ from spack.package import *
 
 
 def is_positive_int(x):
-    if isinstance(x, int) and x>0:
+    if x.isdigit() and int(x)>0:
         return True
     else:
         return False
+
 
 class Velvet(MakefilePackage):
     """Velvet is a de novo genomic assembler specially designed for short read
@@ -21,7 +22,7 @@ class Velvet(MakefilePackage):
 
     version("1.2.10", sha256="884dd488c2d12f1f89cdc530a266af5d3106965f21ab9149e8cb5c633c977640")
 
-    variant("maxkmerlength", default=31,
+    variant("maxkmerlength", default='31',
             description="Longest kmer size you can use in an analysis",
             values=is_positive_int)
 
