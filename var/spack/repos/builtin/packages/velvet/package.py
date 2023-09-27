@@ -7,7 +7,7 @@ from spack.package import *
 
 
 def is_positive_int(x):
-    if x.isdigit() and int(x)>0:
+    if x.isdigit() and int(x) > 0:
         return True
     else:
         return False
@@ -59,7 +59,6 @@ class Velvet(MakefilePackage):
             makefile.filter('^ifdef OPENMP', 'OPENMP=1\nifdef OPENMP')
         if "+single_cov_cat" in self.spec:
             makefile.filter('^ifdef SINGLE_COV_CAT', 'SINGLE_COV_CAT=1\nifdef SINGLE_COV_CAT')
-
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
