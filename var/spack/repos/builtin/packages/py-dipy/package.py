@@ -19,6 +19,7 @@ class PyDipy(PythonPackage):
     homepage = "https://dipy.org/"
     pypi = "dipy/dipy-1.4.1.tar.gz"
 
+    version("1.7.0", sha256="59bb647128aae7793215c813bb8ea35dae260ac9f0d938c724064f0af5a05cc3")
     version("1.4.1", sha256="b4bf830feae751f3f985d54cb71031fc35cea612838320f1f74246692b8a3cc0")
 
     depends_on("python@3.6:", type=("build", "run"))
@@ -30,3 +31,6 @@ class PyDipy(PythonPackage):
     depends_on("py-h5py@2.5.0:", type=("build", "run"))
     depends_on("py-packaging@19.0:", type=("build", "run"))
     depends_on("py-tqdm@4.30.0:", type=("build", "run"))
+
+    conflicts( "^python@3.10:", when="@1.4:",
+            msg="python@3.10 compatibility only added in py-dipy@1.5.0")
