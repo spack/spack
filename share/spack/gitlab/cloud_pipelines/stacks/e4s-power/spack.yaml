@@ -60,7 +60,7 @@ spack:
   - butterflypack
   - cabana
   - caliper
-  - chai ~benchmarks ~tests
+  - chai
   - charliecloud
   - conduit
   - datatransferkit
@@ -149,7 +149,7 @@ spack:
   - arborx +cuda ^kokkos +wrapper
   - cabana +cuda ^kokkos +wrapper +cuda_lambda +cuda
   - caliper +cuda
-  - chai ~benchmarks ~tests +cuda ^umpire ~shared
+  - chai +cuda ^umpire ~shared
   - ecp-data-vis-sdk +cuda cuda_arch=70 +adios2 +hdf5 ~paraview +vtkm +zfp # +paraview fails:  FAILED: VTK/Filters/Statistics/CMakeFiles/FiltersStatistics-objects.dir/vtkPCAStatistics.cxx.o; /tmp/ccjmJhb6.s: Assembler messages: /tmp/ccjmJhb6.s:260012: Error: invalid machine `power10'
   - flecsi +cuda
   - flux-core +cuda
