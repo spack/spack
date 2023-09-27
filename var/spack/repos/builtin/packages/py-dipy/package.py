@@ -32,5 +32,6 @@ class PyDipy(PythonPackage):
     depends_on("py-packaging@19.0:", type=("build", "run"))
     depends_on("py-tqdm@4.30.0:", type=("build", "run"))
 
-    conflicts("^python@3.10:", when="@1.4:",
-                msg="python@3.10 compatibility only added in py-dipy@1.5.0")
+    conflicts(
+       "^python@3.10:", when="@1.4:", msg="python@3.10 compatibility only added in py-dipy@1.5.0"
+    )
