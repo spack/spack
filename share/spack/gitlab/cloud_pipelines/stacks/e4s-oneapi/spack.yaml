@@ -233,7 +233,6 @@ spack:
   # --
   # - ginkgo +oneapi                    # InstallError: Ginkgo's oneAPI backend requires theDPC++ compiler as main CXX compiler.
   # - hpctoolkit +level_zero            # intel-tbb: icpx: error: unknown argument: '-flifetime-dse=1'
-  # - slate +sycl +mpi                  # requires intel-oneapi-mpi, can't use mpich as is required in this stack
   # - sundials +sycl cxxstd=17          # sundials: include/sunmemory/sunmemory_sycl.h:20:10: fatal error: 'CL/sycl.hpp' file not found
   # - tau +mpi +opencl +level_zero ~pdt # builds ok in container, but needs libdrm, will update container
 
