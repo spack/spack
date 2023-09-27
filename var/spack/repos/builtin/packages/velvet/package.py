@@ -22,22 +22,29 @@ class Velvet(MakefilePackage):
 
     version("1.2.10", sha256="884dd488c2d12f1f89cdc530a266af5d3106965f21ab9149e8cb5c633c977640")
 
-    variant("categories", default='2',
-            description="Number of channels which can be handled independently",
-            values=is_positive_int)
-    variant("maxkmerlength", default='31',
-            description="Longest kmer size you can use in an analysis",
-            values=is_positive_int)
-    variant("bigassembly", default=False,
-            description="Allow assemblies with more than 2^31 reads")
-    variant("vbigassembly", default=False,
-            description="Allow unsigned 64-bit array index values (also enables bigassembly)")
-    variant("longsequences", default=False,
-            description="Allow assembling contigs longer than 32kb")
-    variant("openmp", default=False,
-            description="Enable multithreading")
-    variant("single_cov_cat", default=False,
-            description="Per-library coverage")
+    variant(
+        "categories",
+        default="2",
+        description="Number of channels which can be handled independently",
+        values=is_positive_int,
+    )
+    variant(
+        "maxkmerlength",
+        default="31",
+        description="Longest kmer size you can use in an analysis",
+        values=is_positive_int,
+    )
+    variant("bigassembly", default=False, description="Allow assemblies with more than 2^31 reads")
+    variant(
+        "vbigassembly",
+        default=False,
+        description="Allow unsigned 64-bit array index values (also enables bigassembly)",
+    )
+    variant(
+        "longsequences", default=False, description="Allow assembling contigs longer than 32kb"
+    )
+    variant("openmp", default=False, description="Enable multithreading")
+    variant("single_cov_cat", default=False, description="Per-library coverage")
 
     depends_on("zlib-api")
 
@@ -47,18 +54,18 @@ class Velvet(MakefilePackage):
             makefile.filter("-m64", "")
         maxkmerlength = self.spec.variants["maxkmerlength"].value
         categories = self.spec.variants["categories"].value
-        makefile.filter('^MAXKMERLENGTH\s*=\s*.*', f'MAXKMERLENGTH = {maxkmerlength}')
-        makefile.filter('^CATEGORIES\s*=\s*.*', f'CATEGORIES = {categories}')
+        makefile.filter("^MAXKMERLENGTH\s*=\s*.*", f"MAXKMERLENGTH = {maxkmerlength}")
+        makefile.filter("^CATEGORIES\s*=\s*.*", f"CATEGORIES = {categories}")
         if "+bigassembly" in self.spec:
-            makefile.filter('^ifdef BIGASSEMBLY', 'BIGASSEMBLY=1\nifdef BIGASSEMBLY')
+            makefile.filter("^ifdef BIGASSEMBLY", "BIGASSEMBLY=1\nifdef BIGASSEMBLY")
         if "+vbigassembly" in self.spec:
-            makefile.filter('^ifdef VBIGASSEMBLY', 'VBIGASSEMBLY=1\nifdef VBIGASSEMBLY')
+            makefile.filter("^ifdef VBIGASSEMBLY", "VBIGASSEMBLY=1\nifdef VBIGASSEMBLY")
         if "+longsequences" in self.spec:
-            makefile.filter('^ifdef LONGSEQUENCES', 'LONGSEQUENCES=1\nifdef LONGSEQUENCES')
+            makefile.filter("^ifdef LONGSEQUENCES", "LONGSEQUENCES=1\nifdef LONGSEQUENCES")
         if "+openmp" in self.spec:
-            makefile.filter('^ifdef OPENMP', 'OPENMP=1\nifdef OPENMP')
+            makefile.filter("^ifdef OPENMP", "OPENMP=1\nifdef OPENMP")
         if "+single_cov_cat" in self.spec:
-            makefile.filter('^ifdef SINGLE_COV_CAT', 'SINGLE_COV_CAT=1\nifdef SINGLE_COV_CAT')
+            makefile.filter("^ifdef SINGLE_COV_CAT", "SINGLE_COV_CAT=1\nifdef SINGLE_COV_CAT")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
