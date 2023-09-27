@@ -168,24 +168,32 @@ class Qgis(CMakePackage):
     patch("pyqt5_3165x.patch", when="@3.16.5:3.21 ^qt@5")
     patch("pyqt5_322x.patch", when="@3.22: ^qt@5")
 
-
-    @run_before('cmake')
+    @run_before("cmake")
     def fix_pyqt5_cmake(self):
-        cmfile = FileFilter(join_path('cmake','FindPyQt5.cmake'))
+        cmfile = FileFilter(join_path("cmake", "FindPyQt5.cmake"))
         # cmake might be using forward slashes only, hence hardcode '/' as opposed to using join_path
-        pyqtpath = self.spec['py-pyqt5'].prefix + '/' + self.spec["python"].package.platlib + '/PyQt5'
-        cmfile.filter('SET(PYQT5_MOD_DIR "${Python_SITEARCH}/PyQt5")', 'SET(PYQT5_MOD_DIR "'+pyqtpath+'")', string=True)
-        cmfile.filter('SET(PYQT5_SIP_DIR "${Python_SITEARCH}/PyQt5/bindings")', 'SET(PYQT5_SIP_DIR "'+pyqtpath+'/bindings")', string=True)
-
-    @run_before('build')
-    def fix_qsci_sip(self):
-        pyqtx='PyQt5'
-        sip_inc_dir = join_path(
-            self.spec['qscintilla'].prefix, self.spec["python"].package.platlib, pyqtx, "bindings"
+        pyqtpath = (
+            self.spec["py-pyqt5"].prefix + "/" + self.spec["python"].package.platlib + "/PyQt5"
         )
-        with open(join_path("python","gui","pyproject.toml.in"), "a") as tomlfile:
-            tomlfile.write(f'\n[tool.sip.project]\nsip-include-dirs = ["{sip_inc_dir}"]\n')
+        cmfile.filter(
+            'SET(PYQT5_MOD_DIR "${Python_SITEARCH}/PyQt5")',
+            'SET(PYQT5_MOD_DIR "' + pyqtpath + '")',
+            string=True,
+        )
+        cmfile.filter(
+            'SET(PYQT5_SIP_DIR "${Python_SITEARCH}/PyQt5/bindings")',
+            'SET(PYQT5_SIP_DIR "' + pyqtpath + '/bindings")',
+            string=True,
+        )
 
+    @run_before("build")
+    def fix_qsci_sip(self):
+        pyqtx = "PyQt5"
+        sip_inc_dir = join_path(
+            self.spec["qscintilla"].prefix, self.spec["python"].package.platlib, pyqtx, "bindings"
+        )
+        with open(join_path("python", "gui", "pyproject.toml.in"), "a") as tomlfile:
+            tomlfile.write(f'\n[tool.sip.project]\nsip-include-dirs = ["{sip_inc_dir}"]\n')
 
     def cmake_args(self):
         spec = self.spec
@@ -206,7 +214,7 @@ class Qgis(CMakePackage):
                 "-DLIBZIP_INCLUDE_DIR=" + self.spec["libzip"].prefix.include,
                 "-DLIBZIP_CONF_INCLUDE_DIR=" + self.spec["libzip"].prefix.lib.libzip.include,
                 "-DGDAL_CONFIG_PREFER_PATH=" + self.spec["gdal"].prefix.bin,
-                "-DGDAL_LIBRARY=" + self.spec["gdal"].prefix+'/lib64/libgdal.so',
+                "-DGDAL_LIBRARY=" + self.spec["gdal"].prefix + "/lib64/libgdal.so",
                 "-DGEOS_CONFIG_PREFER_PATH=" + self.spec["geos"].prefix.bin,
                 "-DGSL_CONFIG_PREFER_PATH=" + self.spec["gsl"].prefix.bin,
                 "-DPOSTGRES_CONFIG_PREFER_PATH=" + self.spec["postgresql"].prefix.bin,
