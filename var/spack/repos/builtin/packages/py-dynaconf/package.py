@@ -15,3 +15,4 @@ class PyDynaconf(PythonPackage):
     version("3.2.2", sha256="2f98ec85a2b8edb767b3ed0f82c6d605d30af116ce4622932a719ba70ff152fc")
 
     depends_on("python@3.8:", type=("build", "run"))
+    depends_on("py-setuptools@38.6.0:", type="build")
