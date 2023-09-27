@@ -128,6 +128,10 @@ class Ffmpeg(AutotoolsPackage):
         headers.directories = [self.prefix.include]
         return headers
 
+    @when("@:6.0 %apple-clang@15:")
+    def setup_build_environment(self, env):
+        env.append_flags("LDFLAGS", "-Wl,-ld_classic")
+
     def enable_or_disable_meta(self, variant, options):
         switch = "enable" if "+{0}".format(variant) in self.spec else "disable"
         return ["--{0}-{1}".format(switch, option) for option in options]
