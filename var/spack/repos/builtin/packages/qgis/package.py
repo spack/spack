@@ -165,10 +165,10 @@ class Qgis(CMakePackage):
     depends_on("qt@:4", when="@2")
 
     patch("pyqt5.patch", when="@:3.14 ^qt@5")
-    patch("pyqt5_3165x.patch", when="@3.16.5:3.21 ^qt@5")
-    patch("pyqt5_322x.patch", when="@3.22: ^qt@5")
+    patch("pyqt5_3165x.patch", when="@3.16.5:3.21 ^qt@5 ^py-sip@4")
+    patch("pyqt5_322x.patch", when="@3.22: ^qt@5 ^py-sip@4")
 
-    @run_before("cmake")
+    @run_before("cmake", when="^py-pyqt5")
     def fix_pyqt5_cmake(self):
         cmfile = FileFilter(join_path("cmake", "FindPyQt5.cmake"))
         # cmake might be using forward slashes only, hence hardcode '/' as opposed to using join_path
@@ -188,7 +188,11 @@ class Qgis(CMakePackage):
 
     @run_before("build")
     def fix_qsci_sip(self):
-        pyqtx = "PyQt5"
+        if "^py-pyqt5" in self.spec:
+            pyqtx = "PyQt5"
+        elif "^py-pyqt6" in self.spec:
+            pyqtx = "PyQt6"
+
         sip_inc_dir = join_path(
             self.spec["qscintilla"].prefix, self.spec["python"].package.platlib, pyqtx, "bindings"
         )
