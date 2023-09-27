@@ -33,8 +33,6 @@ spack:
     paraview:
       # Don't build GUI support or GLX rendering for HPC/container deployments
       require: "@5.11 ~qt+osmesa"
-    python:
-      version: [3.8.13]
     trilinos:
       require:
       - one_of: [+amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext +ifpack
@@ -155,7 +153,7 @@ spack:
   - variorum
   - veloc
   - wannier90
-  - xyce +mpi +shared +pymi +pymi_static_tpls ^trilinos~shylu
+  - xyce +mpi +shared +pymi +pymi_static_tpls ^trilinos +shylu
 
   # CUDA
   - amrex +cuda

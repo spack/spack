@@ -18,12 +18,12 @@ class Sw4(MakefilePackage):
 
     version("master", branch="master")
     version("developer", branch="developer")
-    version("3.0-beta2", tag="v3.0-beta2", commit="3ee429b91d05f9c5f43f4e2c97f4d67863060340")
+    version("3.0", tag="v3.0", commit="13e6d431976f7fc49124c997bf87353aa7afd35e")
 
     variant("openmp", default=True, description="build with OpenMP")
     variant("hdf5", default=True, description="build with HDF5")
     variant("proj", default=True, description="build with proj")
-    variant("zfp", default=True, description="build with ZFP")
+    variant("zfp", default=False, description="build with ZFP")
     variant("fftw", default=True, description="build with FFTW")
 
     depends_on("mpi")

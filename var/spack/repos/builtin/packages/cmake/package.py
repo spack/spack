@@ -238,6 +238,7 @@ class Cmake(Package):
         depends_on("libuv@1.10.0:1.10", when="@3.11.0:3.11")
         depends_on("libuv@1.10.0:", when="@3.12.0:")
         depends_on("rhash", when="@3.8.0:")
+        depends_on("jsoncpp", when="@3.2:")
 
     depends_on("ncurses", when="+ncurses")
 
@@ -354,12 +355,8 @@ class Cmake(Package):
                 # Build and link to the Spack-installed third-party libraries
                 args.append("--system-libs")
 
-                if spec.satisfies("@3.2:"):
-                    # jsoncpp requires CMake to build
-                    # use CMake-provided library to avoid circular dependency
-                    args.append("--no-system-jsoncpp")
+                # cppdap is a CMake package, avoid circular dependency
                 if spec.satisfies("@3.27:"):
-                    # cppdap depends on jsoncpp in CMake.
                     args.append("--no-system-cppdap")
 
             # Whatever +/~ownlibs, use system curl.
