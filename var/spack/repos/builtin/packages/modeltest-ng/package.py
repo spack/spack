@@ -24,8 +24,10 @@ class ModeltestNg(CMakePackage):
     depends_on("bison", type="build")
     depends_on("flex", type="build")
     depends_on("openmpi", when="+mpi")
-   # 40217: ICE by gcc-toolset-12-gcc-12.2.1-7.4.el8.aarch64 of Rocky Linux 8.8:
-   conflicts("%gcc@12.2.1", when="target=aarch64:")
+
+    # 40217: ICE by gcc-toolset-12-gcc-12.2.1-7.4.el8.aarch64 of Rocky Linux 8.8:
+    conflicts("%gcc@12.2.0:12.2", when="target=aarch64:", msg="ICE with gcc@12.2 on aarch64")
+
     requires(
         "@20220721:", when="target=aarch64:", msg="Support for aarch64 was added after 20220721."
     )
