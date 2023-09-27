@@ -166,7 +166,7 @@ class Zoltan(AutotoolsPackage):
         if config_cflags:
             config_args.append("--with-cflags={0}".format(" ".join(config_cflags)))
         if config_cxxflags:
-            config_args.append("--with-cxxflags={0}".format(" ".join(config_cflags)))
+            config_args.append("--with-cxxflags={0}".format(" ".join(config_cxxflags)))
         if config_fcflags:
             config_args.append("--with-fcflags={0}".format(" ".join(config_fcflags)))
         if config_ldflags:
