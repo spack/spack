@@ -112,7 +112,7 @@ class Qgis(CMakePackage):
     depends_on("proj@4.4.0:")
     depends_on("proj@4.9.3:", when="@3.8.2:")
     depends_on("proj@7.2:", when="@3.28:")
-    depends_on("proj@:8", when="@3.28") # build fails with proj@9
+    depends_on("proj@:8", when="@3.28")  # build fails with proj@9
     depends_on("py-psycopg2", type=("build", "run"))  # TODO: is build dependency necessary?
     depends_on("py-pyqt4", when="@2")
     depends_on("py-pyqt5@5.3:", when="@3")
@@ -175,7 +175,8 @@ class Qgis(CMakePackage):
     @run_before("cmake", when="^py-pyqt5")
     def fix_pyqt5_cmake(self):
         cmfile = FileFilter(join_path("cmake", "FindPyQt5.cmake"))
-        # cmake might be using forward slashes only, hence hardcode '/' as opposed to using join_path
+        # cmake might be using forward slashes only, hence
+        # hardcode '/' as opposed to using join_path
         pyqtpath = (
             self.spec["py-pyqt5"].prefix + "/" + self.spec["python"].package.platlib + "/PyQt5"
         )
@@ -222,7 +223,7 @@ class Qgis(CMakePackage):
                 "-DLIBZIP_INCLUDE_DIR=" + self.spec["libzip"].prefix.include,
                 "-DLIBZIP_CONF_INCLUDE_DIR=" + self.spec["libzip"].prefix.lib.libzip.include,
                 "-DGDAL_CONFIG_PREFER_PATH=" + self.spec["gdal"].prefix.bin,
-                "-DGDAL_CONFIG=" + join_path(self.spec["gdal"].prefix.bin,"gdal-config"),
+                "-DGDAL_CONFIG=" + join_path(self.spec["gdal"].prefix.bin, "gdal-config"),
                 "-DGEOS_CONFIG_PREFER_PATH=" + self.spec["geos"].prefix.bin,
                 "-DGSL_CONFIG_PREFER_PATH=" + self.spec["gsl"].prefix.bin,
                 "-DPOSTGRES_CONFIG_PREFER_PATH=" + self.spec["postgresql"].prefix.bin,
