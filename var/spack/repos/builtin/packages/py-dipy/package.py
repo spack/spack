@@ -23,6 +23,7 @@ class PyDipy(PythonPackage):
     version("1.4.1", sha256="b4bf830feae751f3f985d54cb71031fc35cea612838320f1f74246692b8a3cc0")
 
     depends_on("python@3.6:", type=("build", "run"))
+    depends_on("python@:3.9", type=("build", "run"), when="@:1.4")
     depends_on("py-setuptools", type="build")
     depends_on("py-cython@0.29:", type=("build"))
     depends_on("py-numpy@1.12.0:", type=("build", "run"))
@@ -32,6 +33,3 @@ class PyDipy(PythonPackage):
     depends_on("py-packaging@19.0:", type=("build", "run"))
     depends_on("py-tqdm@4.30.0:", type=("build", "run"))
 
-    conflicts(
-       "^python@3.10:", when="@1.4:", msg="python@3.10 compatibility only added in py-dipy@1.5.0"
-    )
