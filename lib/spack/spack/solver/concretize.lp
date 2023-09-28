@@ -19,30 +19,30 @@
 { attr("virtual_node", node(0..X-1, Package)) } :- max_dupes(Package, X), virtual(Package).
 
 % Integrity constraints on DAG nodes
-:- attr("root", PackageNode), not attr("node", PackageNode).
-:- attr("version", PackageNode), not attr("node", PackageNode).
-:- attr("node_version_satisfies", PackageNode), not attr("node", PackageNode).
-:- attr("hash", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_platform", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_os", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_target", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_compiler_version", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode).
-:- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("node_flag_source", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("no_flags", PackageNode, _), not attr("node", PackageNode).
-:- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode).
-:- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
-:- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
-:- attr("node_flag_source", ParentNode, _, _), not attr("node", ParentNode).
-:- attr("node_flag_source", _, _, ChildNode), not attr("node", ChildNode).
+error(100, "e5") :- attr("root", PackageNode), not attr("node", PackageNode).
+error(100, "e6") :- attr("version", PackageNode), not attr("node", PackageNode).
+error(100, "e7") :- attr("node_version_satisfies", PackageNode), not attr("node", PackageNode).
+error(100, "e7") :- attr("hash", PackageNode, _), not attr("node", PackageNode).
+error(100, "e8") :- attr("node_platform", PackageNode, _), not attr("node", PackageNode).
+error(100, "e9") :- attr("node_os", PackageNode, _), not attr("node", PackageNode).
+error(100, "e10") :- attr("node_target", PackageNode, _), not attr("node", PackageNode).
+error(100, "e11") :- attr("node_compiler_version", PackageNode, _, _), not attr("node", PackageNode).
+error(100, "e12") :- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
+error(100, "e13") :- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode).
+error(100, "e14") :- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode).
+error(100, "e15") :- attr("node_flag_source", PackageNode, _, _), not attr("node", PackageNode).
+error(100, "e16") :- attr("no_flags", PackageNode, _), not attr("node", PackageNode).
+error(100, "e17") :- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode).
+error(100, "e18") :- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
+error(100, "e19") :- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
+error(100, "e20") :- attr("node_flag_source", ParentNode, _, _), not attr("node", ParentNode).
+error(100, "e21") :- attr("node_flag_source", _, _, ChildNode), not attr("node", ChildNode).
 
-:- attr("virtual_node", VirtualNode), not provider(_, VirtualNode).
-:- provider(_, VirtualNode), not attr("virtual_node", VirtualNode).
-:- provider(PackageNode, _), not attr("node", PackageNode).
+error(100, "e1") :- attr("virtual_node", VirtualNode), not provider(_, VirtualNode).
+error(100, "e2") :- provider(_, VirtualNode), not attr("virtual_node", VirtualNode).
+error(100, "e3") :- provider(PackageNode, _), not attr("node", PackageNode).
 
-:- attr("root", node(ID, PackageNode)), ID > min_dupe_id.
+error(100, "e4") :- attr("root", node(ID, PackageNode)), ID > min_dupe_id.
 
 % Nodes in the "root" unification set cannot depend on non-root nodes if the dependency is "link" or "run"
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "link"), ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)).
@@ -513,6 +513,8 @@ attr("virtual_root", VirtualNode) :- attr("root", PackageNode), provider(Package
 
 1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }
   :- virtual_condition_holds(_, Virtual).
+
+% attr("virtual_node", node(0, "virtual-w")):- virtual_condition_holds(_, "virtual-w").
 
 % The provider is selected among the nodes for which the virtual condition holds
 1 { provider(PackageNode, node(X, Virtual)) :

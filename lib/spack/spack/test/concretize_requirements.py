@@ -503,7 +503,7 @@ packages:
   y:
     require: cflags="-g"
   virtual-w:
-    require: cflags="-O1"
+    require: w cflags="-O1"
 """
     update_packages_config(conf_str)
 
