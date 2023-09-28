@@ -26,4 +26,4 @@ class Xv(CMakePackage):
     depends_on("libjpeg")
     depends_on("libpng")
     depends_on("libtiff")
-    depends_on("libX11")
+    depends_on("libx11")
