@@ -8,6 +8,8 @@ spack:
     # NVHPC-SPECIFIC PREFERENCES/REQUIREMENTS
     all:
       require: "%nvhpc"
+    cmake:
+      variants: ~ownlibs
 
   specs:
   - adios2
