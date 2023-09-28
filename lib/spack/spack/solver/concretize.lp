@@ -511,10 +511,9 @@ attr("root", PackageNode) :- attr("virtual_root", VirtualNode), provider(Package
 
 attr("virtual_root", VirtualNode) :- attr("root", PackageNode), provider(PackageNode, VirtualNode).
 
+% This is required for require_cflags to pass with `require: w cflags="-O1"`
 1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }
   :- virtual_condition_holds(_, Virtual).
-
-% attr("virtual_node", node(0, "virtual-w")):- virtual_condition_holds(_, "virtual-w").
 
 % The provider is selected among the nodes for which the virtual condition holds
 1 { provider(PackageNode, node(X, Virtual)) :
