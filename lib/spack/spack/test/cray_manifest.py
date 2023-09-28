@@ -478,9 +478,6 @@ def directory_with_manifest(tmpdir, manifest_content):
     yield str(tmpdir)
 
 
-external = SpackCommand("external")
-
-
 def test_find_external_nonempty_default_manifest_dir(
     mutable_database, mutable_mock_repo, tmpdir, monkeypatch, directory_with_manifest
 ):
@@ -489,6 +486,8 @@ def test_find_external_nonempty_default_manifest_dir(
     """
     monkeypatch.setenv("PATH", "")
     monkeypatch.setattr(spack.cray_manifest, "default_path", str(directory_with_manifest))
-    external("find")
+    spack.cmd.external._collect_and_consume_cray_manifest_files(
+        ignore_default_dir=False
+    )
     specs = spack.store.STORE.db.query("hwloc")
     assert any(x.dag_hash() == "hwlocfakehashaaa" for x in specs)
