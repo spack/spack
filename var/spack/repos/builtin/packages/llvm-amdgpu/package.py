@@ -163,6 +163,11 @@ class LlvmAmdgpu(CMakePackage):
     # Below patch is to look in the old path.
     patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:")
     patch("patch-llvm-5.5.0.patch", when="@5.5:")
+
+    # i1 muls can sometimes happen after SCEV.
+    # They resulted in ISel failures because we were missing the patterns for them.
+    # This fix is targeting 6.1 rocm release.
+    # Need patch until https://github.com/llvm/llvm-project/pull/67291 is merged.
     patch("001-Add-i1-mul-patterns.patch", when="@5.6:")
 
     conflicts("^cmake@3.19.0")

@@ -117,7 +117,7 @@ class RocmValidationSuite(CMakePackage):
     )
     patch(
         "007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.6.patch",
-        when="@5.6",
+        when="@5.6:",
     )
 
     depends_on("cmake@3.5:", type="build")
