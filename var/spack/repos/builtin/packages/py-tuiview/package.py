@@ -12,7 +12,9 @@ class PyTuiview(PythonPackage):
     """
 
     homepage = "https://github.com/ubarsc/tuiview"
-    url = "https://github.com/ubarsc/tuiview/releases/download/tuiview-1.2.13/TuiView-1.2.13.tar.gz"
+    url = (
+		"https://github.com/ubarsc/tuiview/releases/download/tuiview-1.2.13/TuiView-1.2.13.tar.gz"
+	)
 
     version("1.2.13", sha256="48c8d4175c324f70941dc49c5a119882c9d501bd20bc13c76bc2455dee5236a5")
     version("1.2.12", sha256="3f0c1673f2f861db01726f3d7f6f1dde4a42ec57894a79b89457c398768dd25f")
