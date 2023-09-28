@@ -778,7 +778,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # work around a failure in ./configure: https://github.com/open-mpi/ompi/issues/11935
     # instead of the issue's patch, this has the advantage that it also works with @4.0
-    @when("@:6.0 %apple-clang@15:")
+    @when("@:4.1.5 %apple-clang@15:")
     def setup_build_environment(self, env):
         env.append_flags("LDFLAGS", "-Wl,-ld_classic")
 
