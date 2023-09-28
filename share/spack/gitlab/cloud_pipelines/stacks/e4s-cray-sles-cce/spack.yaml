@@ -14,7 +14,6 @@ spack:
   - amrex
   # - butterflypack  #  LDFLAGS: KeyError: "CRAYLIBS_X86_64-suse-linux"
   - conduit
-  - flux-core
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
@@ -26,6 +25,10 @@ spack:
   # - mfem   # undefined reference due to --no-allow-shlib-undefine
   - raja
   # - superlu-dist  # undefined reference due to --no-allow-shlib-undefine
+  #
+  # FAILURES related to py-pip: could not find platform dependent library
+  #  ... No module named 'zlib'
+  #- flux-core
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s-cray-sles-cce" }
 
