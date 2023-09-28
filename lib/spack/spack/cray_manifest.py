@@ -80,7 +80,7 @@ def compiler_from_entry(entry: dict, manifest_path: str):
 
     compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
     spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-    paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
+    path_list = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
 
     if missing_paths:
         warnings.warn(
@@ -91,7 +91,7 @@ def compiler_from_entry(entry: dict, manifest_path: str):
             + "\nPlease report this issue"
         )
 
-    return compiler_cls(spec, operating_system, target, paths)
+    return compiler_cls(spec, operating_system, target, path_list)
 
 
 def spec_from_entry(entry):

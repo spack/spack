@@ -22,7 +22,6 @@ import spack.cray_manifest as cray_manifest
 import spack.spec
 import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
-from spack.main import SpackCommand
 
 
 class JsonSpecEntry:
@@ -486,8 +485,6 @@ def test_find_external_nonempty_default_manifest_dir(
     """
     monkeypatch.setenv("PATH", "")
     monkeypatch.setattr(spack.cray_manifest, "default_path", str(directory_with_manifest))
-    spack.cmd.external._collect_and_consume_cray_manifest_files(
-        ignore_default_dir=False
-    )
+    spack.cmd.external._collect_and_consume_cray_manifest_files(ignore_default_dir=False)
     specs = spack.store.STORE.db.query("hwloc")
     assert any(x.dag_hash() == "hwlocfakehashaaa" for x in specs)
