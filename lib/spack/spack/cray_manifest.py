@@ -49,7 +49,7 @@ def translated_compiler_name(manifest_compiler_name):
         )
 
 
-def compiler_from_entry(entry, manifest_path):
+def compiler_from_entry(entry: dict, manifest_path: str):
     # Note that manifest_path is only passed here to compose a
     # useful warning message when paths appear to be missing.
     compiler_name = translated_compiler_name(entry["name"])
