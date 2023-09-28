@@ -11,6 +11,7 @@ import sys
 from textwrap import dedent
 from typing import List, Match, Tuple
 
+import llnl.string
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
 from llnl.util.lang import attr_setdefault, index_by
@@ -29,7 +30,6 @@ import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.string
 
 # cmd has a submodule called "list" so preserve the python list module
 python_list = list
@@ -516,7 +516,7 @@ def print_how_many_pkgs(specs, pkg_type=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % spack.util.string.plural(len(specs), pkg_type + " package"))
+    tty.msg("%s" % llnl.string.plural(len(specs), pkg_type + " package"))
 
 
 def spack_is_git_repo():
