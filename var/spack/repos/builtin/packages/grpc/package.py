@@ -25,6 +25,7 @@ class Grpc(CMakePackage):
     version("1.37.0", sha256="c2dc8e876ea12052d6dd16704492fd8921df8c6d38c70c4708da332cf116df22")
     version("1.36.4", sha256="8eb9d86649c4d4a7df790226df28f081b97a62bf12c5c5fe9b5d31a29cd6541a")
     version("1.36.3", sha256="bb6de0544adddd54662ba1c314eff974e84c955c39204a4a2b733ccd990354b7")
+    version("1.35.0", sha256="27dd2fc5c9809ddcde8eb6fa1fa278a3486566dfc28335fca13eb8df8bd3b958")
     version("1.33.1", sha256="58eaee5c0f1bd0b92ebe1fa0606ec8f14798500620e7444726afcaf65041cb63")
     version("1.32.0", sha256="f880ebeb2ccf0e47721526c10dd97469200e40b5f101a0d9774eb69efa0bd07a")
     version("1.31.0", sha256="1236514199d3deb111a6dd7f6092f67617cd2b147f7eda7adbafccea95de7381")

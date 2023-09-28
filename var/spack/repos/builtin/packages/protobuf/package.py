@@ -36,6 +36,7 @@ class Protobuf(CMakePackage):
     version("3.17.3", sha256="c6003e1d2e7fefa78a3039f19f383b4f3a61e81be8c19356f85b6461998ad3db")
     version("3.17.0", sha256="eaba1dd133ac5167e8b08bc3268b2d33c6e9f2dcb14ec0f97f3d3eed9b395863")
     version("3.16.0", sha256="7892a35d979304a404400a101c46ce90e85ec9e2a766a86041bb361f626247f5")
+    version("3.15.8", sha256="0cbdc9adda01f6d2facc65a22a2be5cecefbefe5a09e5382ee8879b522c04441")
     version("3.15.7", sha256="efdd6b932a2c0a88a90c4c80f88e4b2e1bf031e7514dbb5a5db5d0bf4f295504")
     version("3.15.5", sha256="bc3dbf1f09dba1b2eb3f2f70352ee97b9049066c9040ce0c9b67fb3294e91e4b")
     version("3.15.4", sha256="07f8a02afc14a657f727ed89a8ec5627b9ecc47116d60acaabaa1da233bd2e8f")
@@ -79,6 +80,15 @@ class Protobuf(CMakePackage):
         default="Release",
         description="The build type to build",
         values=("Debug", "Release", "RelWithDebInfo"),
+    )
+
+    variant(
+        "cxxstd",
+        default="14",
+        values=("14", "17", "20", "23"),
+        multi=False,
+        sticky=True,
+        description="C++ standard",
     )
 
     depends_on("abseil-cpp@20230125.3:", when="@3.22.5:")
@@ -128,8 +138,18 @@ class Protobuf(CMakePackage):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("protobuf_BUILD_TESTS", False),
+            self.define("protobuf_BUILD_SHARED_LIBS", True),
+            self.define("CMAKE_INSTALL_LIBDIR", "lib"),
             self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
+            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
         ]
+
+        if not self.spec.satisfies("cxxstd=14") and self.compiler.name == "clang":
+            args.extend( [
+                "-DCMAKE_CXX_FLAGS=-std=c++{0} -D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES=1".format(
+                    self.spec.variants["cxxstd"].value,
+                ),
+             ] )
 
         if self.spec.satisfies("@3.22:"):
             cxxstd = self.spec["abseil-cpp"].variants["cxxstd"].value

@@ -137,6 +137,7 @@ class Mysql(CMakePackage):
 
     patch("fix-no-server-5.5.patch", level=1, when="@5.5.0:5.5")
     patch("old_ssl_fix.patch", when="@8.0.29")
+    patch("missing_include.patch",  when="@8:")
 
     @property
     def command(self):
@@ -158,6 +159,9 @@ class Mysql(CMakePackage):
         if "+client_only" in self.spec:
             options.append("-DWITHOUT_SERVER:BOOL=ON")
         options.append("-DWITH_EDITLINE=system")
+        options.append("-DWITH_LZ4=system")
+        options.append("-DWITH_ZLIB=system")
+        options.append("-DWITH_ZSTD=system")
         options.append("-Dlibedit_INCLUDE_DIR={0}".format(spec["libedit"].prefix.include))
         options.append("-Dlibedit_LIBRARY={0}".format(spec["libedit"].libs.directories[0]))
         return options
