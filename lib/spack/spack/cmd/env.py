@@ -9,6 +9,7 @@ import shutil
 import sys
 import tempfile
 
+import llnl.string as string
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -28,7 +29,6 @@ import spack.environment.shell
 import spack.schema.env
 import spack.spec
 import spack.tengine
-import spack.util.string as string
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
