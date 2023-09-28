@@ -15,7 +15,7 @@ class PyRios(PythonPackage):
     """
 
     homepage = "https://www.rioshome.org/en/latest/"
-    url = "https://github.com/ubarsc/rios/releases/download/rios-1.4.16/rios-1.4.16.tar.gz.sha256"
+    url = "https://github.com/ubarsc/rios/releases/download/rios-1.4.16/rios-1.4.16.tar.gz"
 
     version("1.4.16", sha256="2f553d85ff4ff26bfda2a8c6bd3d9dcce5ace847f7d9bd2f072c8943f3758ded")
     version("1.4.15", sha256="71670508dbffcd8f5d24fbb25e6a2b7e1d23b5e899ddc78c90d403bd65981cf4")
