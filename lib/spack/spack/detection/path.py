@@ -256,7 +256,7 @@ class Finder:
 
 
 class ExecutablesFinder(Finder):
-    def default_path_hints() -> List[str]:
+    def default_path_hints(self) -> List[str]:
         return spack.util.environment.get_path("PATH")
 
     def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
