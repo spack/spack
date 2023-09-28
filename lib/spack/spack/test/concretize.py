@@ -474,7 +474,7 @@ class TestConcretize:
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_propagate_mutivalue_variant(self):
+    def test_concretize_propagate_multivalue_variant(self):
         """Test that multivalue variants are propagating the specified value(s)
         to their dependecies. The dependencies should not have the default value"""
         spec = Spec("multivalue-variant foo==baz")
