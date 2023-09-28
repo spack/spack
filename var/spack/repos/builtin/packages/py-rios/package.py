@@ -28,5 +28,5 @@ class PyRios(PythonPackage):
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("gdal+python", type=("build", "run"), when="@:1.4.15")
-    depends_on("gdal+python+py-cloudpickle", type=("build", "run"), when="@1.4.16:")
+    depends_on("gdal+python", type=("build", "run"))
+    depends_on("py-cloudpickle", type=("build", "run"), when="@1.4.16:")
