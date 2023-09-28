@@ -512,8 +512,9 @@ attr("root", PackageNode) :- attr("virtual_root", VirtualNode), provider(Package
 attr("virtual_root", VirtualNode) :- attr("root", PackageNode), provider(PackageNode, VirtualNode).
 
 % This is required for require_cflags to pass with `require: w cflags="-O1"`
-1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }
-  :- virtual_condition_holds(_, Virtual).
+1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) } :-
+  virtual_condition_holds(node(ProviderID, Provider), Virtual),
+  attr("node", node(ProviderID, Provider)).
 
 % The provider is selected among the nodes for which the virtual condition holds
 1 { provider(PackageNode, node(X, Virtual)) :
@@ -707,10 +708,6 @@ requirement_group_satisfied(node(ID, Package), X) :-
   pkg_fact(Package, condition_effect(ConditionID, EffectID)),
   imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue),
   provider(node(SubPackageID, SubPackage), node(PackageID, Package)).
-
-%1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) } :- 
-%  virtual_condition_holds(node(ProviderID, Provider), Virtual),
-%  attr("node", node(ProviderID, Provider)).
 
 { attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
   requirement_group_member(Y, A1, X),
