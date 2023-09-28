@@ -21,7 +21,9 @@ class Spdk(AutotoolsPackage):
     maintainers("hyoklee")
 
     version("master", branch="master", submodules=True)
-    version("23.01", tag="v23.01", submodules=True)
+    version(
+        "23.01", tag="v23.01", commit="10edc60aa8b5f1b04d6496fea976dec75e276a95", submodules=True
+    )
 
     variant("crypto", default=False, description="Build vbdev crypto module")
     variant("dpdk", default=False, description="Build with dpdk")

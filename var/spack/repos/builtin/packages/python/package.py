@@ -32,7 +32,7 @@ class Python(Package):
     list_depth = 1
     tags = ["windows"]
 
-    maintainers("adamjstewart", "skosukhin", "scheibelp", "pradyunsg")
+    maintainers("adamjstewart", "skosukhin", "scheibelp")
 
     phases = ["configure", "build", "install"]
 
@@ -45,11 +45,7 @@ class Python(Package):
     version("3.11.2", sha256="2411c74bda5bbcfcddaf4531f66d1adc73f247f529aee981b029513aefdbf849")
     version("3.11.1", sha256="baed518e26b337d4d8105679caf68c5c32630d702614fc174e98cb95c46bdfa4")
     version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
-    version(
-        "3.10.12",
-        sha256="a43cd383f3999a6f4a7db2062b2fc9594fefa73e175b3aedafa295a51a7bb65c",
-        preferred=True,
-    )
+    version("3.10.12", sha256="a43cd383f3999a6f4a7db2062b2fc9594fefa73e175b3aedafa295a51a7bb65c")
     version("3.10.11", sha256="f3db31b668efa983508bd67b5712898aa4247899a346f2eb745734699ccd3859")
     version("3.10.10", sha256="fba64559dde21ebdc953e4565e731573bb61159de8e4d4cedee70fb1196f610d")
     version("3.10.9", sha256="4ccd7e46c8898f4c7862910a1703aa0e63525913a519abb2f55e26220a914d88")
@@ -249,7 +245,7 @@ class Python(Package):
         depends_on("sqlite@3.7.15:", when="@3.10:+sqlite3")
         depends_on("gdbm", when="+dbm")  # alternatively ndbm or berkeley-db
         depends_on("libnsl", when="+nis")
-        depends_on("zlib@1.1.3:", when="+zlib")
+        depends_on("zlib-api", when="+zlib")
         depends_on("bzip2", when="+bz2")
         depends_on("xz libs=shared", when="+lzma")
         depends_on("expat", when="+pyexpat")
@@ -286,8 +282,8 @@ class Python(Package):
     patch("tkinter-3.10.patch", when="@3.10.0:3.10 ~tkinter")
     patch("tkinter-3.11.patch", when="@3.11.0:3.11 ~tkinter")
 
-    # Ensure that distutils chooses correct compiler option for RPATH on cray:
-    patch("cray-rpath-3.1.patch", when="@3 platform=cray")
+    # Ensure that distutils chooses correct compiler option for RPATH:
+    patch("rpath-non-gcc.patch", when="@:3.11")
 
     # Ensure that distutils chooses correct compiler option for RPATH on fj:
     patch("fj-rpath-3.1.patch", when="@:3.9.7,3.10.0 %fj")
@@ -308,7 +304,7 @@ class Python(Package):
     conflicts("%nvhpc")
 
     # https://bugs.python.org/issue45405
-    conflicts("@:3.7.2,3.8.0:3.8.12,3.9.0:3.9.10,3.10.0:3.10.2", when="%apple-clang@13:")
+    conflicts("@:3.7.12,3.8.0:3.8.12,3.9.0:3.9.7,3.10.0", when="%apple-clang@13:")
 
     # See https://github.com/python/cpython/issues/106424
     # datetime.now(timezone.utc) segfaults
@@ -434,6 +430,11 @@ class Python(Package):
         if spec.satisfies("@3.10.0 arch=linux-rhel8-a64fx"):
             if spec.satisfies("%gcc") or spec.satisfies("%fj"):
                 env.unset("LC_ALL")
+
+        # https://github.com/python/cpython/issues/87275
+        if spec.satisfies("@:3.9.5 +optimizations %apple-clang"):
+            xcrun = Executable("/usr/bin/xcrun")
+            env.set("LLVM_AR", xcrun("-find", "ar", output=str).strip())
 
     def flag_handler(self, name, flags):
         # python 3.8 requires -fwrapv when compiled with intel
@@ -878,6 +879,9 @@ print(json.dumps(config))
                 "INCLUDEPY": self.prefix.include.join("python{}").format(version),
                 "LIBDEST": self.prefix.lib.join("python{}").format(version),
                 "LIBDIR": self.prefix.lib,
+                "LIBPL": self.prefix.lib.join("python{0}")
+                .join("config-{0}-{1}")
+                .format(version, sys.platform),
                 "LDLIBRARY": "{}python{}.{}".format(lib_prefix, version, dso_suffix),
                 "LIBRARY": "{}python{}.{}".format(lib_prefix, version, stat_suffix),
                 "LDSHARED": "cc",
@@ -947,6 +951,10 @@ print(json.dumps(config))
         # in either lib or lib64, so we need to ask Python where its LIBDIR is.
         libdir = self.config_vars["LIBDIR"]
 
+        # Debian and derivatives use a triplet subdir under /usr/lib, LIBPL can be used
+        # to get the Python library directory
+        libpldir = self.config_vars["LIBPL"]
+
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
         frameworkprefix = self.config_vars["PYTHONFRAMEWORKPREFIX"]
@@ -962,7 +970,14 @@ print(json.dumps(config))
         win_bin_dir = self.config_vars["BINDIR"]
         win_root_dir = self.config_vars["prefix"]
 
-        directories = [libdir, frameworkprefix, macos_developerdir, win_bin_dir, win_root_dir]
+        directories = [
+            libdir,
+            libpldir,
+            frameworkprefix,
+            macos_developerdir,
+            win_bin_dir,
+            win_root_dir,
+        ]
 
         # The Python shipped with Xcode command line tools isn't in any of these locations
         for subdir in ["lib", "lib64"]:
@@ -1021,8 +1036,8 @@ print(json.dumps(config))
                 return lib
 
         raise spack.error.NoLibrariesError(
-            "Unable to find {} libraries with the following names:".format(self.name),
-            "\n".join(candidates),
+            "Unable to find {} libraries with the following names:\n\n* ".format(self.name)
+            + "\n* ".join(candidates)
         )
 
     @property
@@ -1047,8 +1062,8 @@ print(json.dumps(config))
                 break
         else:
             raise spack.error.NoHeadersError(
-                "Unable to locate {} headers in any of these locations:".format(self.name),
-                "\n".join(candidates),
+                "Unable to locate {} headers in any of these locations:\n\n* ".format(self.name)
+                + "\n* ".join(candidates)
             )
 
         headers.directories = [os.path.dirname(config_h)]

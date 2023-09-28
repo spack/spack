@@ -43,9 +43,9 @@ class Eigen(CMakePackage):
 
     # there is a bug in 3.3.8 that provokes a compile error in dependent packages, see https://gitlab.com/libeigen/eigen/-/issues/2011
     patch(
-        "https://gitlab.com/libeigen/eigen/-/commit/6d822a1052fc665f06dc51b4729f6a38e0da0546.diff",
+        "https://gitlab.com/libeigen/eigen/-/commit/ef3cc72cb65e2d500459c178c63e349bacfa834f.diff",
         when="@3.3.8",
-        sha256="62590e9b33a8f72b608a72b87147a306e7cb20766ea53c6b8e0a183fa6cb7635",
+        sha256="b8877a84c4338f08ab8a6bb8b274c768e93d36ac05b733b078745198919a74bf",
     )
 
     # there is a bug in 3.3.4 that provokes a compile error with the xl compiler

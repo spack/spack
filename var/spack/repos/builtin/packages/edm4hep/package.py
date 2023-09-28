@@ -124,6 +124,10 @@ class Edm4hep(CMakePackage):
         args.append(self.define("BUILD_TESTING", self.run_tests))
         return args
 
+    def setup_run_environment(self, env):
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["edm4hep"].libs.directories[0])
+        env.prepend_path("PYTHONPATH", self.prefix.python)
+
     def url_for_version(self, version):
         """Translate version numbers to ilcsoft conventions.
         in spack, the convention is: 0.1 (or 0.1.0) 0.1.1, 0.2, 0.2.1 ...

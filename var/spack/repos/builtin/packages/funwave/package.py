@@ -24,9 +24,9 @@ class Funwave(MakefilePackage):
 
     maintainers("stevenrbrandt", "fengyanshi")
 
-    version("3.2", tag="v3.2")
-    version("3.1", tag="v3.1")
-    version("3.0", tag="v3.0")
+    version("3.2", tag="v3.2", commit="6e57952d1cef1bb6c0930f07387ed41694bd604b")
+    version("3.1", tag="v3.1", commit="d99502f9288380e0c823f7cc619c6c7c1897f2b9")
+    version("3.0", tag="v3.0", commit="b569dfe08ab379d7ec375c71304ff95bd6f5ddb6")
 
     depends_on("mpi")
 

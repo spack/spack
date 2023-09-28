@@ -18,7 +18,7 @@ class Amrvis(MakefilePackage):
 
     maintainers("etpalmer63")
 
-    version("main", tag="main")
+    version("main", branch="main")
 
     variant(
         "dims",

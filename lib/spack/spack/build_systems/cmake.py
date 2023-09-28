@@ -248,7 +248,8 @@ class CMakeBuilder(BaseBuilder):
     @staticmethod
     def std_args(pkg, generator=None):
         """Computes the standard cmake arguments for a generic package"""
-        generator = generator or "Unix Makefiles"
+        default_generator = "Ninja" if sys.platform == "win32" else "Unix Makefiles"
+        generator = generator or default_generator
         valid_primary_generators = ["Unix Makefiles", "Ninja"]
         primary_generator = _extract_primary_generator(generator)
         if primary_generator not in valid_primary_generators:
@@ -273,7 +274,6 @@ class CMakeBuilder(BaseBuilder):
             generator,
             define("CMAKE_INSTALL_PREFIX", pathlib.Path(pkg.prefix).as_posix()),
             define("CMAKE_BUILD_TYPE", build_type),
-            define("BUILD_TESTING", pkg.run_tests),
         ]
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
@@ -450,7 +450,6 @@ class CMakeBuilder(BaseBuilder):
 
             * CMAKE_INSTALL_PREFIX
             * CMAKE_BUILD_TYPE
-            * BUILD_TESTING
 
         which will be set automatically.
         """

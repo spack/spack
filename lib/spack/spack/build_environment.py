@@ -43,6 +43,7 @@ import types
 from typing import List, Tuple
 
 import llnl.util.tty as tty
+from llnl.string import plural
 from llnl.util.filesystem import join_path
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
@@ -68,7 +69,7 @@ import spack.util.pattern
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
-from spack.util.cpus import cpus_available
+from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import (
     SYSTEM_DIRS,
     EnvironmentModifications,
@@ -82,7 +83,6 @@ from spack.util.environment import (
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.module_cmd import load_module, module, path_from_modules
-from spack.util.string import plural
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -535,39 +535,6 @@ def set_wrapper_variables(pkg, env):
     env.set(SPACK_LINK_DIRS, ":".join(link_dirs))
     env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs))
     env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
-
-
-def determine_number_of_jobs(
-    parallel=False, command_line=None, config_default=None, max_cpus=None
-):
-    """
-    Packages that require sequential builds need 1 job. Otherwise we use the
-    number of jobs set on the command line. If not set, then we use the config
-    defaults (which is usually set through the builtin config scope), but we
-    cap to the number of CPUs available to avoid oversubscription.
-
-    Parameters:
-        parallel (bool or None): true when package supports parallel builds
-        command_line (int or None): command line override
-        config_default (int or None): config default number of jobs
-        max_cpus (int or None): maximum number of CPUs available. When None, this
-            value is automatically determined.
-    """
-    if not parallel:
-        return 1
-
-    if command_line is None and "command_line" in spack.config.scopes():
-        command_line = spack.config.get("config:build_jobs", scope="command_line")
-
-    if command_line is not None:
-        return command_line
-
-    max_cpus = max_cpus or cpus_available()
-
-    # in some rare cases _builtin config may not be set, so default to max 16
-    config_default = config_default or spack.config.get("config:build_jobs", 16)
-
-    return min(max_cpus, config_default)
 
 
 def set_module_variables_for_package(pkg):
@@ -1027,7 +994,7 @@ def get_cmake_prefix_path(pkg):
 
 
 def _setup_pkg_and_run(
-    serialized_pkg, function, kwargs, child_pipe, input_multiprocess_fd, jsfd1, jsfd2
+    serialized_pkg, function, kwargs, write_pipe, input_multiprocess_fd, jsfd1, jsfd2
 ):
     context = kwargs.get("context", "build")
 
@@ -1048,12 +1015,12 @@ def _setup_pkg_and_run(
                 pkg, dirty=kwargs.get("dirty", False), context=context
             )
         return_value = function(pkg, kwargs)
-        child_pipe.send(return_value)
+        write_pipe.send(return_value)
 
     except StopPhase as e:
         # Do not create a full ChildError from this, it's not an error
         # it's a control statement.
-        child_pipe.send(e)
+        write_pipe.send(e)
     except BaseException:
         # catch ANYTHING that goes wrong in the child process
         exc_type, exc, tb = sys.exc_info()
@@ -1102,10 +1069,10 @@ def _setup_pkg_and_run(
             context,
             package_context,
         )
-        child_pipe.send(ce)
+        write_pipe.send(ce)
 
     finally:
-        child_pipe.close()
+        write_pipe.close()
         if input_multiprocess_fd is not None:
             input_multiprocess_fd.close()
 
@@ -1149,7 +1116,7 @@ def start_build_process(pkg, function, kwargs):
     For more information on `multiprocessing` child process creation
     mechanisms, see https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
     """
-    parent_pipe, child_pipe = multiprocessing.Pipe()
+    read_pipe, write_pipe = multiprocessing.Pipe(duplex=False)
     input_multiprocess_fd = None
     jobserver_fd1 = None
     jobserver_fd2 = None
@@ -1174,7 +1141,7 @@ def start_build_process(pkg, function, kwargs):
                 serialized_pkg,
                 function,
                 kwargs,
-                child_pipe,
+                write_pipe,
                 input_multiprocess_fd,
                 jobserver_fd1,
                 jobserver_fd2,
@@ -1182,6 +1149,12 @@ def start_build_process(pkg, function, kwargs):
         )
 
         p.start()
+
+        # We close the writable end of the pipe now to be sure that p is the
+        # only process which owns a handle for it. This ensures that when p
+        # closes its handle for the writable end, read_pipe.recv() will
+        # promptly report the readable end as being ready.
+        write_pipe.close()
 
     except InstallError as e:
         e.pkg = pkg
@@ -1192,7 +1165,16 @@ def start_build_process(pkg, function, kwargs):
         if input_multiprocess_fd is not None:
             input_multiprocess_fd.close()
 
-    child_result = parent_pipe.recv()
+    def exitcode_msg(p):
+        typ = "exit" if p.exitcode >= 0 else "signal"
+        return f"{typ} {abs(p.exitcode)}"
+
+    try:
+        child_result = read_pipe.recv()
+    except EOFError:
+        p.join()
+        raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(p)})")
+
     p.join()
 
     # If returns a StopPhase, raise it
@@ -1211,6 +1193,10 @@ def start_build_process(pkg, function, kwargs):
         # see spack.main.SpackCommand.
         child_result.print_context()
         raise child_result
+
+    # Fallback. Usually caught beforehand in EOFError above.
+    if p.exitcode != 0:
+        raise InstallError(f"The process failed unexpectedly ({exitcode_msg(p)})")
 
     return child_result
 
@@ -1256,9 +1242,8 @@ def get_package_context(traceback, context=3):
             func = getattr(obj, tb.tb_frame.f_code.co_name, "")
             if func:
                 typename, *_ = func.__qualname__.partition(".")
-
-            if isinstance(obj, CONTEXT_BASES) and typename not in basenames:
-                break
+                if isinstance(obj, CONTEXT_BASES) and typename not in basenames:
+                    break
     else:
         return None
 

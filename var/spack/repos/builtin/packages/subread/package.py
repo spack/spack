@@ -14,6 +14,7 @@ class Subread(MakefilePackage):
 
     homepage = "https://subread.sourceforge.net/"
     url = "https://sourceforge.net/projects/subread/files/subread-1.5.2/subread-1.5.2-source.tar.gz/download"
+    maintainers("snehring")
 
     version("2.0.6", sha256="f0fdda6b98634d2946028948c220253e10a0f27c7fa5f24913b65b3ac6cbb045")
     version("2.0.4", sha256="c54b37ed83b34318d8f119b5c02fb9d0a65c811195bcc9e1745df6daf74ca2db")
@@ -24,19 +25,18 @@ class Subread(MakefilePackage):
     version("1.6.0", sha256="31251ec4c134e3965d25ca3097890fb37e2c7a4163f6234515534fd325b1002a")
     version("1.5.2", sha256="a8c5f0e09ed3a105f01866517a89084c7302ff70c90ef8714aeaa2eab181a0aa")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def build(self, spec, prefix):
         plat = sys.platform
         with working_dir("src"):
             if plat.startswith("linux"):
                 filter_file("CC_EXEC = gcc", "CC_EXEC = {0}".format(spack_cc), "Makefile.Linux")
-                if spec.target.family == "aarch64":
-                    filter_file("-mtune=core2", "", "Makefile.Linux")
-                    if spec.satisfies("@1.6.2:2.0.0"):
-                        filter_file("-mtune=core2", "", "longread-one/Makefile")
-                    elif spec.satisfies("@1.6.0"):
-                        filter_file("-mtune=core2", "", "longread-mapping/Makefile")
+                filter_file("-mtune=core2", "", "Makefile.Linux")
+                if spec.satisfies("@1.6.2:"):
+                    filter_file("-mtune=core2", "", "longread-one/Makefile")
+                if spec.satisfies("@1.6.0"):
+                    filter_file("-mtune=core2", "", "longread-mapping/Makefile")
                 make("-f", "Makefile.Linux")
             elif plat.startswith("darwin"):
                 make("-f", "Makefile.MacOS")

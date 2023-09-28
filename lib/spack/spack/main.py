@@ -29,7 +29,6 @@ import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
 
-import spack
 import spack.cmd
 import spack.config
 import spack.debug
@@ -51,7 +50,7 @@ from spack.error import SpackError
 stat_names = pstats.Stats.sort_arg_dict_default
 
 #: top-level aliases for Spack commands
-aliases = {"rm": "remove"}
+aliases = {"concretise": "concretize", "containerise": "containerize", "rm": "remove"}
 
 #: help levels in order of detail (i.e., number of commands shown)
 levels = ["short", "long"]
@@ -607,10 +606,10 @@ def setup_main_options(args):
 
         key = syaml.syaml_str("repos")
         key.override = True
-        spack.config.config.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
+        spack.config.CONFIG.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
             [(key, [spack.paths.mock_packages_path])]
         )
-        spack.repo.path = spack.repo.create(spack.config.config)
+        spack.repo.PATH = spack.repo.create(spack.config.CONFIG)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
@@ -721,7 +720,7 @@ class SpackCommand:
 
             out = io.StringIO()
             try:
-                with spack.debug.log_output(out):
+                with spack.debug.log_output(out, echo=True):
                     self.returncode = _invoke_command(self.command, self.parser, args, unknown)
 
             except SystemExit as e:
@@ -780,7 +779,7 @@ def _profile_wrapper(command, parser, args, unknown_args):
         pr.disable()
 
         # print out profile stats.
-        stats = pstats.Stats(pr)
+        stats = pstats.Stats(pr, stream=sys.stderr)
         stats.sort_stats(*sortby)
         stats.print_stats(nlines)
 
@@ -935,7 +934,7 @@ def _main(argv=None):
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:
-        spack.config.command_line_scopes = args.config_scopes
+        spack.config.COMMAND_LINE_SCOPES = args.config_scopes
 
     # ensure options on spack command come before everything
     setup_main_options(args)
