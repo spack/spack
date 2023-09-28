@@ -509,6 +509,11 @@ attr("virtual_node", VirtualNode) :- attr("virtual_root", VirtualNode).
 % then the provider is the root package.
 attr("root", PackageNode) :- attr("virtual_root", VirtualNode), provider(PackageNode, VirtualNode).
 
+attr("virtual_root", VirtualNode) :- attr("root", PackageNode), provider(PackageNode, VirtualNode).
+
+1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }
+  :- virtual_condition_holds(_, Virtual).
+
 % The provider is selected among the nodes for which the virtual condition holds
 1 { provider(PackageNode, node(X, Virtual)) :
     attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual) } 1
