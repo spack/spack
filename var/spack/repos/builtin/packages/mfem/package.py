@@ -49,8 +49,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # other version.
     version("develop", branch="master")
 
-    # TODO: when v4.6 is released, replace the branch below with the proper link
-    version("4.6.0", branch="master")
+    version(
+        "4.6.0",
+        sha256="5fa9465b5bec56bfb777a4d2826fba48d85fbace4aed8b64a2fd4059bf075b15",
+        url="https://bit.ly/mfem-4-6",
+        extension="tar.gz",
+    )
 
     version(
         "4.5.2",
