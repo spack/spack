@@ -647,8 +647,7 @@ class BuildManifestVisitor(BaseDirectoryVisitor):
     directories."""
 
     def __init__(self):
-        # Save unique identifiers of files to avoid
-        # relocating hardlink files for each path.
+        # Save unique identifiers of hardlinks to avoid relocating them multiple times
         self.visited = set()
 
         # Lists of files we will check
