@@ -131,6 +131,9 @@ def _group_by_prefix(paths: Set[str]) -> Dict[str, Set[str]]:
 class Finder:
     """Inspects the file-system looking for packages. Guesses places where to look using PATH."""
 
+    def default_path_hints(self) -> List[str]:
+        return []
+
     def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
         """Returns the list of patterns used to match candidate files.
 
@@ -245,7 +248,7 @@ class Finder:
         if not patterns:
             return []
         if initial_guess is None:
-            initial_guess = spack.util.environment.get_path("PATH")
+            initial_guess = self.default_path_hints()
             initial_guess.extend(common_windows_package_paths(pkg_cls))
         candidates = self.candidate_files(patterns=patterns, paths=initial_guess)
         result = self.detect_specs(pkg=pkg_cls, paths=candidates)
@@ -253,6 +256,9 @@ class Finder:
 
 
 class ExecutablesFinder(Finder):
+    def default_path_hints() -> List[str]:
+        return spack.util.environment.get_path("PATH")
+
     def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
         result = []
         if hasattr(pkg, "executables") and hasattr(pkg, "platform_executables"):
