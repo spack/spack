@@ -709,12 +709,12 @@ requirement_group_satisfied(node(ID, Package), X) :-
   imposed_constraint(EffectID, "node_flag_set", Virtual, FlagType, FlagValue),
   provider(node(ProviderID, Provider), node(VirtualID, Virtual)).
 
-{ attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
-  requirement_group_member(Y, A1, X),
-  activate_requirement(node(NodeID1, A1), X),
-  pkg_fact(A1, condition_effect(Y, Z)),
-  imposed_constraint(Z,"node_flag_source", A1, A2, A3),
-  imposed_packages(NodeID2, A3).
+{ attr("node_flag_source", node(NodeID1, Package1), FlagType, node(NodeID2, Package2)) } :-
+  requirement_group_member(ConditionID, Package1, RequirementID),
+  activate_requirement(node(NodeID1, Package1), RequirementID),
+  pkg_fact(Package1, condition_effect(ConditionID, EffectID)),
+  imposed_constraint(EffectID, "node_flag_source", Package1, FlagType, Package2),
+  imposed_packages(NodeID2, Package2).
 
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
