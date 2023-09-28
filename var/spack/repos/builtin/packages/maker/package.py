@@ -83,6 +83,7 @@ class Maker(Package):
             perl("Build", "install")
 
         install_tree("lib", join_path(prefix, "perl", "lib"))
+        install_tree(join_path("src", "bin"), prefix.bin)
 
         # Remove scripts that do not work. The 'mpi_evaluator' and
         # 'mpi_iprscan' scripts depend on a custom perl module that is not
