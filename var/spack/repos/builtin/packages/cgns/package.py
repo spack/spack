@@ -99,12 +99,7 @@ class Cgns(CMakePackage):
                 ]
             )
             if "+fortran" in spec:
-                options.extend(
-                    [
-                        "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
-                    ]
-                )
-
+                options.extend(["-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc])
 
         if "+hdf5" in spec:
             options.extend(
