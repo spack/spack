@@ -20,6 +20,8 @@ class Velvet(MakefilePackage):
     homepage = "https://www.ebi.ac.uk/~zerbino/velvet/"
     url = "https://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.10.tgz"
 
+    maintainers("snehring")
+
     version("1.2.10", sha256="884dd488c2d12f1f89cdc530a266af5d3106965f21ab9149e8cb5c633c977640")
 
     variant(
