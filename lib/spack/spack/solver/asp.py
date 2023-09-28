@@ -1229,7 +1229,6 @@ class SpackSolverSetup:
         )
 
     def pkg_rules(self, pkg, tests, variant_maps):
-        print(f"pkg type: {type(pkg)}")
         pkg = packagize(pkg)
 
         # versions
