@@ -25,7 +25,7 @@ class Maker(Package):
     minimal bioinformatics expertise and computer resources.
 
     Note: MAKER requires registration. Fill out the form at
-    http://yandell.topaz.genetics.utah.edu/cgi-bin/maker_license.cgi to get a
+    http://weatherby.genetics.utah.edu/cgi-bin/registration/maker_license.cgi to get a
     download link. Spack will search your current directory for the download
     file. Alternatively, add this file to a mirror so that Spack can find it.
     For instructions on how to set up a mirror, see
