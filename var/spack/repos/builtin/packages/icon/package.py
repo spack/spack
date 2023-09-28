@@ -18,7 +18,6 @@ class Icon(AutotoolsPackage, CudaPackage):
 
     maintainers("dominichofer")
 
-    version("develop", submodules=True)
     version("2.6.6", tag="icon-2.6.6", submodules=True)
 
     # The variants' default follow those of ICON as described in
