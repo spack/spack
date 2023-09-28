@@ -57,11 +57,6 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     version("2.6.1", sha256="6be7639ccad715d25eef560ce9d1637ef206fb9a162714f6ab8167fc0d971cae")
     version("2.5", sha256="16d3ac4e86eed75d85d80f1f214a6bd58d27f13590966b5ad0cc181df85a3493")
 
-    # Spack commit 29aa7117f42f758bc537e03e4bedf66ced0accfa has older versions
-    # of glibc, but they are removed, because glibc < 2.17 links against
-    # libgcc_s and libgcc_eh, see glibc commit "Avoid use of libgcc_s and
-    # libgcc_eh when building glibc." 95f5a9a866695da4e038aa4e6ccbbfd5d9cf63b7
-
     # Fix for newer GCC, related to -fno-common
     patch("locs.patch", when="@2.23:2.25")
     patch("locs-2.22.patch", when="@:2.22")
@@ -75,6 +70,13 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     # rpc/types.h include issue, should be from local version, not system.
     patch("fb21f89.patch", when="@:2.16")
 
+    # Avoid linking libgcc_eh
+    patch("95f5a9a-stub.patch", when="@:2.16")
+    patch("95f5a9a-2.16.patch", when="@2.16")
+    patch("95f5a9a-2.15.patch", when="@2.14:2.15")
+    patch("95f5a9a-2.13.patch", when="@2.12:2.13")
+    patch("95f5a9a-2.11.patch", when="@:2.11")
+
     # Use init_array (modified commit 4a531bb to unconditionally define
     # NO_CTORS_DTORS_SECTIONS)
     patch("4a531bb.patch", when="@:2.12")
@@ -84,6 +86,14 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
     # linker flag output regex
     patch("7c8a673.patch", when="@:2.9")
+
+    # Use AT_RANDOM provided by the kernel instead of /dev/urandom;
+    # recent gcc + binutils have issues with the inline assembly in
+    # the fallback code, so better to use the kernel-provided value.
+    patch("965cb60.patch", when="@2.8:2.9")
+    patch("965cb60-2.7.patch", when="@2.7")
+    patch("965cb60-2.6.patch", when="@2.6")
+    patch("965cb60-2.5.patch", when="@2.5")
 
     # include_next <limits.h> not working
     patch("67fbfa5.patch", when="@:2.7")
@@ -95,6 +105,12 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
             # for some reason CPPFLAGS -U_FORTIFY_SOURCE is not enough, it has to be CFLAGS
             env.append_flags("CPPFLAGS", "-U_FORTIFY_SOURCE")
             env.append_flags("CFLAGS", "-O2 -g -fno-stack-protector -U_FORTIFY_SOURCE")
+        if self.spec.satisfies("@:2.9"):
+            # missing defines in elf.h after 965cb60.patch
+            env.append_flags("CFLAGS", "-DAT_BASE_PLATFORM=24 -DAT_RANDOM=25")
+        if self.spec.satisfies("@:2.6"):
+            # change of defaults in gcc 10
+            env.append_flags("CFLAGS", "-fcommon")
         if self.spec.satisfies("@2.5"):
             env.append_flags("CFLAGS", "-fgnu89-inline")
 
