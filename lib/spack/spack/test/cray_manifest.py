@@ -197,7 +197,11 @@ def test_compiler_from_entry():
 }
 """
     )
-    compiler_from_entry(compiler_data, "/example/file")
+    compiler = compiler_from_entry(compiler_data, "/example/file")
+    assert compiler.cc == "/path/to/compiler/cc"
+    assert compiler.cxx == "/path/to/compiler/cxx"
+    assert compiler.fc == "/path/to/compiler/fc"
+    assert compiler.operating_system == "centos8"
 
 
 @pytest.fixture
