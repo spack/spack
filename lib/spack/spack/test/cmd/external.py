@@ -28,16 +28,6 @@ def executables_found(monkeypatch):
     return _factory
 
 
-@pytest.fixture(autouse=True)
-def limit_search_to_path(monkeypatch):
-    """Pytest fixture that prevents the use of default search paths on Windows during testing"""
-
-    def _mock_windows_search_paths(pkg=None):
-        return []
-
-    monkeypatch.setattr(spack.detection.path.Finder, "path_hints", _mock_windows_search_paths)
-
-
 def define_plat_exe(exe):
     if sys.platform == "win32":
         exe += ".bat"
