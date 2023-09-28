@@ -43,6 +43,7 @@ import types
 from typing import List, Tuple
 
 import llnl.util.tty as tty
+from llnl.string import plural
 from llnl.util.filesystem import join_path
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
@@ -82,7 +83,6 @@ from spack.util.environment import (
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.module_cmd import load_module, module, path_from_modules
-from spack.util.string import plural
 
 #
 # This can be set by the user to globally disable parallel builds.

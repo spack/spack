@@ -14,6 +14,7 @@ import sys
 import tempfile
 from typing import Callable, Dict, Iterable, Optional
 
+import llnl.string
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -37,7 +38,6 @@ import spack.spec
 import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
-import spack.util.string
 import spack.util.url as url_util
 from spack.util.crypto import bit_length, prefix_bits
 
@@ -897,7 +897,7 @@ def get_checksums_for_versions(
     num_ver = len(sorted_versions)
 
     tty.msg(
-        f"Found {spack.util.string.plural(num_ver, 'version')} of {package_name}:",
+        f"Found {llnl.string.plural(num_ver, 'version')} of {package_name}:",
         "",
         *llnl.util.lang.elide_list(
             ["{0:{1}}  {2}".format(str(v), max_len, url_by_version[v]) for v in sorted_versions]
