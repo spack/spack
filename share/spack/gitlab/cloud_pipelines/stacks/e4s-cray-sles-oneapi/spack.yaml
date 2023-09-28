@@ -10,22 +10,34 @@ spack:
       require: "%oneapi"
 
   specs:
-  - adios2
   - amrex
-  - butterflypack
   - conduit
-  - flux-core
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
   - hdf5-vol-log
-  - hypre
   - kokkos
   - kokkos-kernels
   - legion
-  - mfem
   - raja
-  - superlu-dist
+  #
+  # FAILURES (likely) related to cray-libsci.blas_libs: KeyError: 'oneapi':
+  #- butterflypack   # due to arpack-ng having the error
+  #- hypre
+  #- superlu-dist
+  #
+  # FAILURES (likely) related to krb5, including:
+  #   getdate.y:178:5: error: unknown type name 'time_t'
+  #- mfem
+  #
+  # FAILURES (likely) related to mgard, including:
+  #   mgard.tpp: error: non-constant-expression cannot be narrowed from type
+  #            'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
+  #- adios2
+  #
+  # FAILURES related to py-pip: could not find platform dependent library
+  #  ... No module named 'zlib'
+  #- flux-core
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s-cray-sles-oneapi" }
 
