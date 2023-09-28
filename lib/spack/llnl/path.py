@@ -6,8 +6,7 @@
 import functools
 import sys
 from typing import List, Optional
-
-from .url import is_url
+from urllib.parse import urlparse
 
 
 class Path:
@@ -57,9 +56,16 @@ def path_to_os_path(*parameters: str) -> List[str]:
     """Takes an arbitrary number of positional parameters, converts each argument of type
     string to use a normalized filepath separator, and returns a list of all values.
     """
+
+    def _is_url(path_or_url: str) -> bool:
+        if "\\" in path_or_url:
+            return False
+        url_tuple = urlparse(path_or_url)
+        return bool(url_tuple.scheme) and len(url_tuple.scheme) > 1
+
     result = []
     for item in parameters:
-        if isinstance(item, str) and not is_url(item):
+        if isinstance(item, str) and not _is_url(item):
             item = convert_to_platform_path(item)
         result.append(item)
     return result

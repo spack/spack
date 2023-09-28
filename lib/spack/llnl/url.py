@@ -7,7 +7,7 @@ import itertools
 import os.path
 import re
 from typing import Optional, Set, Tuple
-from urllib.parse import urlparse, urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit
 
 # Archive extensions allowed in Spack
 PREFIX_EXTENSIONS = ("tar", "TAR")
@@ -457,11 +457,3 @@ def determine_url_file_extension(path: str) -> str:
 
     prefix, ext, suffix = split_url_extension(path)
     return ext
-
-
-def is_url(path_or_url: str) -> bool:
-    """Returns true if the input is a URL, False otherwise"""
-    if "\\" in path_or_url:
-        return False
-    url_tuple = urlparse(path_or_url)
-    return bool(url_tuple.scheme) and len(url_tuple.scheme) > 1
