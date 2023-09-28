@@ -26,6 +26,7 @@ import types
 import uuid
 from typing import Any, Dict, List, Union
 
+import llnl.path
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -387,7 +388,7 @@ class FastPackageChecker(collections.abc.Mapping):
 
             # Warn about invalid names that look like packages.
             if not nm.valid_module_name(pkg_name):
-                if not pkg_name.startswith("."):
+                if not pkg_name.startswith(".") and pkg_name != "repo.yaml":
                     tty.warn(
                         'Skipping package at {0}. "{1}" is not '
                         "a valid Spack module name.".format(pkg_dir, pkg_name)
@@ -563,7 +564,7 @@ class RepoIndex:
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
         if sys.platform == "win32":
-            self.packages_path = spack.util.path.convert_to_posix_path(self.packages_path)
+            self.packages_path = llnl.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers: Dict[str, Indexer] = {}

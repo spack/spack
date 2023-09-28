@@ -18,11 +18,36 @@ class AwsSdkCpp(CMakePackage):
     homepage = "https://github.com/aws/aws-sdk-cpp"
     git = "https://github.com/aws/aws-sdk-cpp.git"
 
-    version("1.11.144", tag="1.11.144", submodules=True)
-    version("1.10.57", tag="1.10.57", submodules=True)
-    version("1.10.32", tag="1.10.32", submodules=True)
-    version("1.9.379", tag="1.9.379", submodules=True)
-    version("1.9.247", tag="1.9.247", submodules=True)
+    version(
+        "1.11.144",
+        tag="1.11.144",
+        commit="498339d47146f8e3ee9ae0fad3fcda5acbaea1e6",
+        submodules=True,
+    )
+    version(
+        "1.10.57",
+        tag="1.10.57",
+        commit="777e0dd4b90eda8bf65bc4b5fce2f90febdbd2b8",
+        submodules=True,
+    )
+    version(
+        "1.10.32",
+        tag="1.10.32",
+        commit="40594bc05a3f68fe14f2f1a54c5c3e6752b1e290",
+        submodules=True,
+    )
+    version(
+        "1.9.379",
+        tag="1.9.379",
+        commit="94d02db44730b0a5cef98ce33deedf43f5333700",
+        submodules=True,
+    )
+    version(
+        "1.9.247",
+        tag="1.9.247",
+        commit="4bf33aa0172704eb5fc1da8086686670711bd801",
+        submodules=True,
+    )
 
     depends_on("cmake@3.1:", type="build")
     depends_on("zlib-api")
@@ -36,4 +61,8 @@ class AwsSdkCpp(CMakePackage):
     )
 
     def cmake_args(self):
-        return [self.define("BUILD_ONLY", ("s3", "transfer"))]
+        return [
+            self.define("BUILD_ONLY", ("s3", "transfer")),
+            self.define("ENABLE_TESTING", False),
+            self.define("AUTORUN_UNIT_TESTS", False),
+        ]

@@ -16,15 +16,17 @@ import llnl.util.lang
 import spack.compilers
 import spack.concretize
 import spack.config
+import spack.deptypes as dt
 import spack.detection
 import spack.error
 import spack.hash_types as ht
 import spack.platforms
 import spack.repo
+import spack.solver.asp
 import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import CompilerSpec, Spec
-from spack.version import ver
+from spack.version import Version, ver
 
 
 def check_spec(abstract, concrete):
@@ -234,13 +236,13 @@ class TestConcretize:
         # Check parent's perspective of child
         to_dependencies = spec.edges_to_dependencies(name="cmake")
         assert len(to_dependencies) == 1
-        assert set(to_dependencies[0].deptypes) == set(["build"])
+        assert to_dependencies[0].depflag == dt.BUILD
 
         # Check child's perspective of parent
         cmake = spec["cmake"]
         from_dependents = cmake.edges_from_dependents(name="cmake-client")
         assert len(from_dependents) == 1
-        assert set(from_dependents[0].deptypes) == set(["build"])
+        assert from_dependents[0].depflag == dt.BUILD
 
     def test_concretize_preferred_version(self):
         spec = check_concretize("python")
@@ -1354,15 +1356,15 @@ class TestConcretize:
         [
             # Version 1.1.0 is deprecated and should not be selected, unless we
             # explicitly asked for that
-            ("deprecated-versions", ["deprecated-versions@1.0.0"]),
-            ("deprecated-versions@1.1.0", ["deprecated-versions@1.1.0"]),
+            ("deprecated-versions", "deprecated-versions@1.0.0"),
+            ("deprecated-versions@=1.1.0", "deprecated-versions@1.1.0"),
         ],
     )
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_deprecated_versions_not_selected(self, spec_str, expected):
-        s = Spec(spec_str).concretized()
-        for abstract_spec in expected:
-            assert abstract_spec in s
+        with spack.config.override("config:deprecated", True):
+            s = Spec(spec_str).concretized()
+            s.satisfies(expected)
 
     @pytest.mark.regression("24196")
     def test_version_badness_more_important_than_default_mv_variants(self):
@@ -1598,8 +1600,6 @@ class TestConcretize:
     )
     @pytest.mark.only_clingo("Original concretizer cannot concretize in rounds")
     def test_best_effort_coconcretize(self, specs, expected):
-        import spack.solver.asp
-
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver()
         solver.reuse = False
@@ -1643,8 +1643,6 @@ class TestConcretize:
     @pytest.mark.only_clingo("Original concretizer cannot concretize in rounds")
     def test_best_effort_coconcretize_preferences(self, specs, expected_spec, occurances):
         """Test package preferences during coconcretization."""
-        import spack.solver.asp
-
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver()
         solver.reuse = False
@@ -1660,8 +1658,6 @@ class TestConcretize:
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_coconcretize_reuse_and_virtuals(self):
-        import spack.solver.asp
-
         reusable_specs = []
         for s in ["mpileaks ^mpich", "zmpi"]:
             reusable_specs.extend(Spec(s).concretized().traverse(root=True))
@@ -1682,8 +1678,6 @@ class TestConcretize:
         # For this bug to be triggered we need a reusable dependency
         # that is not optimal in terms of optimization scores.
         # We pick an old version of "b"
-        import spack.solver.asp
-
         reusable_specs = [Spec("non-existing-conditional-dep@1.0").concretized()]
         root_spec = Spec("non-existing-conditional-dep@2.0")
 
@@ -1699,8 +1693,6 @@ class TestConcretize:
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_version_weight_and_provenance(self):
         """Test package preferences during coconcretization."""
-        import spack.solver.asp
-
         reusable_specs = [Spec(spec_str).concretized() for spec_str in ("b@0.9", "b@1.0")]
         root_spec = Spec("a foobar=bar")
 
@@ -1732,8 +1724,6 @@ class TestConcretize:
     @pytest.mark.regression("31169")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_not_reusing_incompatible_os_or_compiler(self):
-        import spack.solver.asp
-
         root_spec = Spec("b")
         s = root_spec.concretized()
         wrong_compiler, wrong_os = s.copy(), s.copy()
@@ -1954,7 +1944,7 @@ class TestConcretize:
         def find_fake_python(classes, path_hints):
             return {"python": [spack.detection.DetectedPackage(python_spec, prefix=path_hints[0])]}
 
-        monkeypatch.setattr(spack.detection, "by_executable", find_fake_python)
+        monkeypatch.setattr(spack.detection, "by_path", find_fake_python)
         external_conf = {
             "py-extension1": {
                 "buildable": False,
@@ -2099,6 +2089,29 @@ class TestConcretize:
         edges = spec.edges_to_dependencies(name="callpath")
         assert len(edges) == 1 and edges[0].virtuals == ()
 
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    @pytest.mark.db
+    @pytest.mark.parametrize(
+        "spec_str,mpi_name",
+        [("mpileaks", "mpich"), ("mpileaks ^mpich2", "mpich2"), ("mpileaks ^zmpi", "zmpi")],
+    )
+    def test_virtuals_are_reconstructed_on_reuse(self, spec_str, mpi_name, database):
+        """Tests that when we reuse a spec, virtual on edges are reconstructed correctly"""
+        with spack.config.override("concretizer:reuse", True):
+            spec = Spec(spec_str).concretized()
+            assert spec.installed
+            mpi_edges = spec.edges_to_dependencies(mpi_name)
+            assert len(mpi_edges) == 1
+            assert "mpi" in mpi_edges[0].virtuals
+
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_dont_define_new_version_from_input_if_checksum_required(self, working_env):
+        os.environ["SPACK_CONCRETIZER_REQUIRE_CHECKSUM"] = "yes"
+        with pytest.raises(spack.error.UnsatisfiableSpecError):
+            # normally spack concretizes to @=3.0 if it's not defined in package.py, except
+            # when checksums are required
+            Spec("a@=3.0").concretized()
+
 
 @pytest.fixture()
 def duplicates_test_repository():
@@ -2193,3 +2206,39 @@ class TestConcretizeSeparately:
         s = Spec("cycle-b").concretized()
         assert s["cycle-a"].satisfies("~cycle")
         assert s["cycle-b"].satisfies("+cycle")
+
+
+@pytest.mark.parametrize(
+    "v_str,v_opts,checksummed",
+    [
+        ("1.2.3", {"sha256": f"{1:064x}"}, True),
+        # it's not about the version being "infinite",
+        # but whether it has a digest
+        ("develop", {"sha256": f"{1:064x}"}, True),
+        # other hash types
+        ("1.2.3", {"checksum": f"{1:064x}"}, True),
+        ("1.2.3", {"md5": f"{1:032x}"}, True),
+        ("1.2.3", {"sha1": f"{1:040x}"}, True),
+        ("1.2.3", {"sha224": f"{1:056x}"}, True),
+        ("1.2.3", {"sha384": f"{1:096x}"}, True),
+        ("1.2.3", {"sha512": f"{1:0128x}"}, True),
+        # no digest key
+        ("1.2.3", {"bogus": f"{1:064x}"}, False),
+        # git version with full commit sha
+        ("1.2.3", {"commit": f"{1:040x}"}, True),
+        (f"{1:040x}=1.2.3", {}, True),
+        # git version with short commit sha
+        ("1.2.3", {"commit": f"{1:07x}"}, False),
+        (f"{1:07x}=1.2.3", {}, False),
+        # git tag is a moving target
+        ("1.2.3", {"tag": "v1.2.3"}, False),
+        ("1.2.3", {"tag": "v1.2.3", "commit": f"{1:07x}"}, False),
+        # git branch is a moving target
+        ("1.2.3", {"branch": "releases/1.2"}, False),
+        # git ref is a moving target
+        ("git.branch=1.2.3", {}, False),
+    ],
+)
+def test_drop_moving_targets(v_str, v_opts, checksummed):
+    v = Version(v_str)
+    assert spack.solver.asp._is_checksummed_version((v, v_opts)) == checksummed

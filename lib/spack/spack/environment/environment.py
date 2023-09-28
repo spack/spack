@@ -28,6 +28,7 @@ from llnl.util.symlink import symlink
 import spack.compilers
 import spack.concretize
 import spack.config
+import spack.deptypes as dt
 import spack.error
 import spack.fetch_strategy
 import spack.hash_types as ht
@@ -403,7 +404,7 @@ def _write_yaml(data, str_or_file):
 
 def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
-    valid_variables = spack.util.environment.get_host_environment()
+    valid_variables = spack.spec.get_host_environment()
     valid_variables.update({"re": re, "env": os.environ})
     return eval(string, valid_variables)
 
@@ -1395,7 +1396,10 @@ class Environment:
 
         result_by_user_spec = {}
         solver = spack.solver.asp.Solver()
-        for result in solver.solve_in_rounds(specs_to_concretize, tests=tests):
+        allow_deprecated = spack.config.get("config:deprecated", False)
+        for result in solver.solve_in_rounds(
+            specs_to_concretize, tests=tests, allow_deprecated=allow_deprecated
+        ):
             result_by_user_spec.update(result.specs_by_input)
 
         result = []
@@ -1504,7 +1508,7 @@ class Environment:
         start = time.time()
         max_processes = min(
             len(arguments),  # Number of specs
-            spack.config.get("config:build_jobs"),  # Cap on build jobs
+            spack.util.cpus.determine_number_of_jobs(parallel=True),
         )
 
         # TODO: revisit this print as soon as darwin is parallel too
@@ -1536,13 +1540,13 @@ class Environment:
             for h in self.specs_by_hash:
                 current_spec, computed_spec = self.specs_by_hash[h], by_hash[h]
                 for node in computed_spec.traverse():
-                    test_edges = node.edges_to_dependencies(deptype="test")
+                    test_edges = node.edges_to_dependencies(depflag=dt.TEST)
                     for current_edge in test_edges:
                         test_dependency = current_edge.spec
                         if test_dependency in current_spec[node.name]:
                             continue
                         current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), deptypes="test", virtuals=current_edge.virtuals
+                            test_dependency.copy(), depflag=dt.TEST, virtuals=current_edge.virtuals
                         )
 
         results = [
@@ -2058,7 +2062,7 @@ class Environment:
         # If multiple root specs match, it is assumed that the abstract
         # spec will most-succinctly summarize the difference between them
         # (and the user can enter one of these to disambiguate)
-        fmt_str = "{hash:7}  " + spack.spec.default_format
+        fmt_str = "{hash:7}  " + spack.spec.DEFAULT_FORMAT
         color = clr.get_color_when()
         match_strings = [
             f"Root spec {abstract.format(color=color)}\n  {concrete.format(fmt_str, color=color)}"
@@ -2190,7 +2194,7 @@ class Environment:
             name, data = reader.name_and_data(node_dict)
             for _, dep_hash, deptypes, _, virtuals in reader.dependencies_from_node_dict(data):
                 specs_by_hash[lockfile_key]._add_dependency(
-                    specs_by_hash[dep_hash], deptypes=deptypes, virtuals=virtuals
+                    specs_by_hash[dep_hash], depflag=dt.canonicalize(deptypes), virtuals=virtuals
                 )
 
         # Traverse the root specs one at a time in the order they appear.
@@ -2366,7 +2370,7 @@ def display_specs(concretized_specs):
     def _tree_to_display(spec):
         return spec.tree(
             recurse_dependencies=True,
-            format=spack.spec.display_format,
+            format=spack.spec.DISPLAY_FORMAT,
             status_fn=spack.spec.Spec.install_status,
             hashlen=7,
             hashes=True,
@@ -2664,6 +2668,26 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.yaml_content = with_defaults_added
         self.changed = False
 
+    def _all_matches(self, user_spec: str) -> List[str]:
+        """Maps the input string to the first equivalent user spec in the manifest,
+        and returns it.
+
+        Args:
+            user_spec: user spec to be found
+
+        Raises:
+            ValueError: if no equivalent match is found
+        """
+        result = []
+        for yaml_spec_str in self.pristine_configuration["specs"]:
+            if Spec(yaml_spec_str) == Spec(user_spec):
+                result.append(yaml_spec_str)
+
+        if not result:
+            raise ValueError(f"cannot find a spec equivalent to {user_spec}")
+
+        return result
+
     def add_user_spec(self, user_spec: str) -> None:
         """Appends the user spec passed as input to the list of root specs.
 
@@ -2684,8 +2708,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: when the user spec is not in the list
         """
         try:
-            self.pristine_configuration["specs"].remove(user_spec)
-            self.configuration["specs"].remove(user_spec)
+            for key in self._all_matches(user_spec):
+                self.pristine_configuration["specs"].remove(key)
+                self.configuration["specs"].remove(key)
         except ValueError as e:
             msg = f"cannot remove {user_spec} from {self}, no such spec exists"
             raise SpackEnvironmentError(msg) from e

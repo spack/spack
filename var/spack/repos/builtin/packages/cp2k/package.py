@@ -20,11 +20,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     periodic, material, crystal, and biological systems
     """
 
-    build_system(
-        conditional("cmake", when="@master:"),
-        conditional("makefile", when="@:2023.1"),
-        default="makefile",
-    )
+    build_system(conditional("cmake", when="@2023.2:"), "makefile", default="makefile")
 
     homepage = "https://www.cp2k.org"
     url = "https://github.com/cp2k/cp2k/releases/download/v3.0.0/cp2k-3.0.tar.bz2"
@@ -41,10 +37,26 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     version("8.2", sha256="2e24768720efed1a5a4a58e83e2aca502cd8b95544c21695eb0de71ed652f20a")
     version("8.1", sha256="7f37aead120730234a60b2989d0547ae5e5498d93b1e9b5eb548c041ee8e7772")
     version("7.1", sha256="ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb")
-    version("6.1", sha256="af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b")
-    version("5.1", sha256="e23613b593354fa82e0b8410e17d94c607a0b8c6d9b5d843528403ab09904412")
-    version("4.1", sha256="4a3e4a101d8a35ebd80a9e9ecb02697fb8256364f1eccdbe4e5a85d31fe21343")
-    version("3.0", sha256="1acfacef643141045b7cbade7006f9b7538476d861eeecd9658c9e468dc61151")
+    version(
+        "6.1",
+        sha256="af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b",
+        deprecated=True,
+    )
+    version(
+        "5.1",
+        sha256="e23613b593354fa82e0b8410e17d94c607a0b8c6d9b5d843528403ab09904412",
+        deprecated=True,
+    )
+    version(
+        "4.1",
+        sha256="4a3e4a101d8a35ebd80a9e9ecb02697fb8256364f1eccdbe4e5a85d31fe21343",
+        deprecated=True,
+    )
+    version(
+        "3.0",
+        sha256="1acfacef643141045b7cbade7006f9b7538476d861eeecd9658c9e468dc61151",
+        deprecated=True,
+    )
     version("master", branch="master", submodules="True")
 
     variant("mpi", default=True, description="Enable MPI support")
@@ -195,7 +207,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     with when("+cosma"):
         depends_on("cosma+scalapack")
         depends_on("cosma@2.5.1:", when="@9:")
-        depends_on("cosma@2.6.3:", when="@master:")
+        depends_on("cosma@2.6.3:", when="@2023.2:")
         depends_on("cosma+cuda", when="+cuda")
         depends_on("cosma+rocm", when="+rocm")
         conflicts("~mpi")
@@ -231,14 +243,13 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("sirius+rocm", when="+rocm")
         depends_on("sirius+openmp", when="+openmp")
         depends_on("sirius~openmp", when="~openmp")
-        depends_on("sirius@:6", when="@:7")
         depends_on("sirius@7.0.0:7.0", when="@8:8.2")
         depends_on("sirius@7.2", when="@8.3:8.9")
         depends_on("sirius@7.3:", when="@9.1")
-        depends_on("sirius@7.4:", when="@master")
+        depends_on("sirius@7.4:", when="@2023.2")
         conflicts("~mpi", msg="SIRIUS requires MPI")
-        # sirius support was introduced in 7+
-        conflicts("@:6")
+        # sirius support was introduced in 7, but effectively usable starting from CP2K 9
+        conflicts("@:8")
 
     with when("+libvori"):
         depends_on("libvori@201219:", when="@8.1")
@@ -271,6 +282,10 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     conflicts("%apple-clang")
     conflicts("%clang")
     conflicts("%nag")
+    conflicts(
+        "%aocc@:3.2",
+        msg="Please use AOCC 4.0+ that better support modern Fortran features CP2K requires",
+    )
 
     conflicts("~openmp", when="@8:", msg="Building without OpenMP is not supported in CP2K 8+")
 
@@ -316,7 +331,32 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         sha256="3617abb877812c4b933f601438c70f95e21c6161bea177277b1d4125fd1c0bf9",
         when="@8.2",
     )
-    patch("posix_c_source.patch", when="%aocc")
+
+    # Patch for compilers with stricter C99 checks
+    patch("posix_c_source.patch", when="@7.1%aocc@4.0:")
+    patch("posix_c_source.patch", when="@7.1%gcc@13:")
+
+    # Fix missing variable in OpenMP private clause
+    patch(
+        "https://github.com/cp2k/cp2k/commit/be86bd7f6cd6af7d68f8957dcdb67e7c3d586741.patch?full_index=1",
+        sha256="1bb5a8e80603684a743e7821d24d41b31b60ccbb7d4257df1d2da53a3630e5bf",
+        when="@2022.1:2022.2",
+    )
+
+    # Avoid using NULL() as subroutine argument as doing so breaks some versions of AOCC compiler
+    # These patches backport 2023.x fixes to previous versions
+    patch("backport_avoid_null_2022.x.patch", when="@2022.1:2022.2 %aocc@:4.0")
+    patch("backport_avoid_null_9.1.patch", when="@9.1 %aocc@:4.0")
+
+    # Patch for an undefined constant due to incompatible changes in ELPA
+    @when("@9.1:2022.2 +elpa")
+    def patch(self):
+        if self.spec["elpa"].satisfies("@2022.05.001:"):
+            filter_file(
+                r"ELPA_2STAGE_REAL_INTEL_GPU",
+                "ELPA_2STAGE_REAL_INTEL_GPU_SYCL",
+                "src/fm/cp_fm_elpa.F",
+            )
 
     def url_for_version(self, version):
         url = "https://github.com/cp2k/cp2k/releases/download/v{0}/cp2k-{0}.tar.bz2"
@@ -361,7 +401,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             "nvhpc": ["-fast"],
             "cce": ["-O2"],
             "xl": ["-O3"],
-            "aocc": ["-O1"],
+            "aocc": ["-O2"],
         }
 
         dflags = ["-DNDEBUG"]
@@ -410,6 +450,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             fcflags += [
                 "-fallow-argument-mismatch"
             ]  # https://github.com/pmodels/mpich/issues/4300
+        if spec.satisfies("@7.1%gcc@13:"):
+            fcflags.append("-fallow-argument-mismatch")
 
         if "+openmp" in spec:
             cflags.append(self.compiler.openmp_flag)
@@ -850,8 +892,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
-    """Use the new cmake build system to build cp2k. It is the default when
-    building the master branch of cp2k."""
+    """Use the new CMake build system to build CP2K."""
 
     def cmake_args(self):
         spec = self.spec
