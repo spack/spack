@@ -30,6 +30,7 @@ class PyImportlibMetadata(PythonPackage):
     version("0.18", sha256="cb6ee23b46173539939964df59d3d72c3e0c1b5d54b84f1d8a7e912fe43612db")
 
     depends_on("python@3.8:", when="@6.8.0:", type=("build", "run"))
+    # lowerbound needed as spack itself supports python 3.6 (can be dropped in spack 0.21) 
     depends_on("python@3.7:", when="@4.9.0:", type=("build", "run"))
     depends_on("py-setuptools@56:", when="@4.6.4:", type="build")
     depends_on("py-setuptools", type="build")
