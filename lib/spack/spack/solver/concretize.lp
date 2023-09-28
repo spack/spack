@@ -696,18 +696,18 @@ requirement_group_satisfied(node(ID, Package), X) :-
 % flags if their only source is from a requirement. This is overly-specific
 % and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
 
-{ attr("node_flag", node(ID, SubPackage), FlagType, FlagValue) } :-
-  requirement_group_member(ConditionID, SubPackage, RequirementID),
-  activate_requirement(node(ID, SubPackage), RequirementID),
-  pkg_fact(SubPackage, condition_effect(ConditionID, EffectID)),
-  imposed_constraint(EffectID, "node_flag_set", SubPackage, FlagType, FlagValue).
-
-{ attr("node_flag", node(SubPackageID, SubPackage), FlagType, FlagValue) } :-
+{ attr("node_flag", node(ID, Package), FlagType, FlagValue) } :-
   requirement_group_member(ConditionID, Package, RequirementID),
-  activate_requirement(node(PackageID, Package), RequirementID),
+  activate_requirement(node(ID, Package), RequirementID),
   pkg_fact(Package, condition_effect(ConditionID, EffectID)),
-  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue),
-  provider(node(SubPackageID, SubPackage), node(PackageID, Package)).
+  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue).
+
+{ attr("node_flag", node(ProviderID, Provider), FlagType, FlagValue) } :-
+  requirement_group_member(ConditionID, Virtual, RequirementID),
+  activate_requirement(node(VirtualID, Virtual), RequirementID),
+  pkg_fact(Virtual, condition_effect(ConditionID, EffectID)),
+  imposed_constraint(EffectID, "node_flag_set", Virtual, FlagType, FlagValue),
+  provider(node(ProviderID, Provider), node(VirtualID, Virtual)).
 
 { attr("node_flag_source", node(NodeID1, A1), A2, node(NodeID2, A3)) } :-
   requirement_group_member(Y, A1, X),
