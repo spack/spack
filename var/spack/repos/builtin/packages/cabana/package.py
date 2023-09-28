@@ -117,6 +117,13 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
                 cbn_option = "Cabana_{0}_{1}".format(cname, var)
                 options.append(self.define_from_variant(cbn_option, var.lower()))
 
+        # Only enable user-requested options.
+        for var in require:
+            enabled_var = "+{0}".format(var.lower())
+            if enabled_var not in self.spec:
+                cbn_disable = "CMAKE_DISABLE_FIND_PACKAGE_{0}".format(var)
+                options.append(self.define(cbn_disable, "ON"))
+
         # Use hipcc for HIP.
         if "+rocm" in self.spec:
             options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
