@@ -22,6 +22,8 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
     sourceforge_mirror_path = "lzmautils/files/xz-5.2.5.tar.bz2"
     list_url = "https://tukaani.org/xz/old.html"
 
+    maintainers("AlexanderRichert-NOAA")
+
     executables = [r"^xz$"]
 
     version("5.4.1", sha256="dd172acb53867a68012f94c17389401b2f274a1aa5ae8f84cbfb8b7e383ea8d3")
@@ -61,7 +63,12 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
 
     @property
     def libs(self):
-        return find_libraries(["liblzma"], root=self.prefix, recursive=True)
+        return find_libraries(
+            ["liblzma"],
+            root=self.prefix,
+            recursive=True,
+            shared=self.spec.satisfies("libs=shared"),
+        )
 
     @classmethod
     def determine_version(cls, exe):
@@ -111,18 +118,26 @@ class MSBuildBuilder(MSBuildBuilder):
 
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
-            # Ensure we have libs directory
             mkdirp(prefix.lib)
+            mkdirp(prefix.bin)
             libs_to_find = []
-            if "libs=shared" in self.pkg.spec:
-                libs_to_find.extend(["*.dll", "*.lib"])
-            else:
+            dlls_to_find = []
+            if self.pkg.spec.satisfies("libs=shared"):
+                dlls_to_find.append("*.dll")
+            if self.pkg.spec.satisfies("libs=static"):
                 libs_to_find.append("*.lib")
             for lib in libs_to_find:
                 libs_to_install = glob.glob(
                     os.path.join(self.build_directory, "**", lib), recursive=True
                 )
-                for library in libs_to_install:
-                    install(library, prefix.lib)
+                for lib_to_install in libs_to_install:
+                    install(lib_to_install, prefix.lib)
+            for dll in dlls_to_find:
+                dlls_to_install = glob.glob(
+                    os.path.join(self.build_directory, "**", dll), recursive=True
+                )
+                for dll_to_install in dlls_to_install:
+                    install(dll_to_install, prefix.bin)
+
         with working_dir(pkg.stage.source_path):
             install_tree(os.path.join("src", "liblzma", "api"), prefix.include)

@@ -63,6 +63,13 @@ class FftwBase(AutotoolsPackage):
 
         return find_libraries(libraries, root=self.prefix, recursive=True)
 
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%clang@15:"):
+                flags.append("-Wno-error=int-conversion")
+
+        return flags, None, None
+
     def patch(self):
         # If fftw/config.h exists in the source tree, it will take precedence
         # over the copy in build dir.  As only the latter has proper config

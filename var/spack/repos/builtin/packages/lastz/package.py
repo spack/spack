@@ -11,6 +11,8 @@ class Lastz(MakefilePackage):
 
     homepage = "https://lastz.github.io/lastz"
     url = "https://github.com/lastz/lastz/archive/1.04.00.tar.gz"
+
+    version("1.04.22", sha256="4c829603ba4aed7ddf64255b528cd88850e4557382fca29580d3576c25c5054a")
     version("1.04.15", sha256="46a5cfb1fd41911a36fce5d3a2721ebfec9146952943b302e78b0dfffddd77f8")
     version("1.04.03", sha256="c58ed8e37c4b0e82492b3a2b3e12447a3c40286fb8358906d19f10b0a713e9f4")
     version("1.04.00", sha256="a4c2c7a77430387e96dbc9f5bdc75874334c672be90f5720956c0f211abf9f5a")

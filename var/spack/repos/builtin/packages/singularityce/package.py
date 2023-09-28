@@ -53,7 +53,7 @@ class SingularityBase(MakefilePackage):
     # Unpack the tarball as usual, then move the src dir into
     # its home within GOPATH.
     def do_stage(self, mirror_only=False):
-        super(SingularityBase, self).do_stage(mirror_only)
+        super().do_stage(mirror_only)
         if not os.path.exists(self.singularity_gopath_dir):
             # Move the expanded source to its destination
             tty.debug(
@@ -79,14 +79,14 @@ class SingularityBase(MakefilePackage):
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
-            confstring = "./mconfig --prefix=%s" % prefix
-            confstring += " " + " ".join(self.config_options)
+            _config_options = ["--prefix=%s" % prefix]
+            _config_options += self.config_options
             if "~suid" in spec:
-                confstring += " --without-suid"
+                _config_options += ["--without-suid"]
             if "~network" in spec:
-                confstring += " --without-network"
-            configure = Executable(confstring)
-            configure()
+                _config_options += ["--without-network"]
+            configure = Executable("./mconfig")
+            configure(*_config_options)
 
     # Set these for use by MakefilePackage's default build/install methods.
     build_targets = ["-C", "builddir", "parallel=False"]
@@ -190,7 +190,7 @@ class Singularityce(SingularityBase):
     See package definition or `spack-build-out.txt` build log for details,
     e.g.
 
-    tail -15 $(spack location -i singularity)/.spack/spack-build-out.txt
+    tail -15 $(spack location -i singularityce)/.spack/spack-build-out.txt
     """
 
     homepage = "https://sylabs.io/singularity/"
@@ -200,6 +200,7 @@ class Singularityce(SingularityBase):
     maintainers("alalazo")
     version("master", branch="master")
 
+    version("3.11.3", sha256="a77ede063fd115f85f98f82d2e30459b5565db7d098665497bcd684bf8edaec9")
     version("3.10.3", sha256="f87d8e212ce209c5212d6faf253b97a24b5d0b6e6b17b5e58b316cdda27a332f")
     version("3.10.2", sha256="b4f279856ea4bf28a1f34f89320c02b545d6e57d4143679920e1ac4267f540e1")
     version("3.10.1", sha256="e3af12edc0260bc3a3a481459a3a4457de9235025e6b37288da80e3cdc011a7a")

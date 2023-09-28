@@ -101,7 +101,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     )
 
     # Tagged development version used by the laghos package:
-    version("3.4.1-laghos-v2.0", tag="laghos-v2.0")
+    version(
+        "3.4.1-laghos-v2.0", tag="laghos-v2.0", commit="4cb8d2cbc19aac5528df650b4a41c54158d1d2c2"
+    )
 
     version(
         "3.4.0",
@@ -118,7 +120,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     )
 
     # Tagged development version used by the laghos package:
-    version("3.3.1-laghos-v1.0", tag="laghos-v1.0")
+    version(
+        "3.3.1-laghos-v1.0", tag="laghos-v1.0", commit="e1f466e6bf80d5f8449b9e1585c414bad4704195"
+    )
 
     version(
         "3.3",
@@ -334,7 +338,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("mpfr", when="+mpfr")
     depends_on("netcdf-c@4.1.3:", when="+netcdf")
     depends_on("unwind", when="+libunwind")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("gnutls", when="+gnutls")
     depends_on("conduit@0.3.1:,master:", when="+conduit")
     depends_on("conduit+mpi", when="+conduit+mpi")
@@ -537,7 +541,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 mfem_mpiexec = "jsrun"
                 mfem_mpiexec_np = "-p"
         elif "FLUX_EXEC_PATH" in os.environ:
-            mfem_mpiexec = "flux mini run"
+            mfem_mpiexec = "flux run"
+            mfem_mpiexec_np = "-n"
+        elif "PBS_JOBID" in os.environ:
+            mfem_mpiexec = "mpiexec"
             mfem_mpiexec_np = "-n"
 
         metis5_str = "NO"
@@ -849,11 +856,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if "+zlib" in spec:
             if "@:3.3.2" in spec:
-                options += ["ZLIB_DIR=%s" % spec["zlib"].prefix]
+                options += ["ZLIB_DIR=%s" % spec["zlib-api"].prefix]
             else:
                 options += [
-                    "ZLIB_OPT=-I%s" % spec["zlib"].prefix.include,
-                    "ZLIB_LIB=%s" % ld_flags_from_library_list(spec["zlib"].libs),
+                    "ZLIB_OPT=-I%s" % spec["zlib-api"].prefix.include,
+                    "ZLIB_LIB=%s" % ld_flags_from_library_list(spec["zlib-api"].libs),
                 ]
 
         if "+mpfr" in spec:
@@ -1025,12 +1032,28 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if "+hiop" in spec:
             hiop = spec["hiop"]
+            hiop_hdrs = hiop.headers
             hiop_libs = hiop.libs
+            hiop_hdrs += spec["lapack"].headers + spec["blas"].headers
             hiop_libs += spec["lapack"].libs + spec["blas"].libs
-            if "^magma" in hiop:
-                hiop_libs += hiop["magma"].libs
+            hiop_opt_libs = ["magma", "umpire"]
+            for opt_lib in hiop_opt_libs:
+                if "^" + opt_lib in hiop:
+                    hiop_hdrs += hiop[opt_lib].headers
+                    hiop_libs += hiop[opt_lib].libs
+            # raja's libs property does not work
+            if "^raja" in hiop:
+                raja = hiop["raja"]
+                hiop_hdrs += raja.headers
+                hiop_libs += find_libraries(
+                    "libRAJA", raja.prefix, shared=("+shared" in raja), recursive=True
+                )
+                if raja.satisfies("^camp"):
+                    camp = raja["camp"]
+                    hiop_hdrs += camp.headers
+                    hiop_libs += find_optional_library("libcamp", camp.prefix)
             options += [
-                "HIOP_OPT=-I%s" % hiop.prefix.include,
+                "HIOP_OPT=%s" % hiop_hdrs.cpp_flags,
                 "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
             ]
 
@@ -1097,30 +1120,22 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         make("examples/clean", parallel=False)
         self.cache_extra_test_sources([self.examples_src_dir, self.examples_data_dir])
 
-    def test(self):
-        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
-
+    def test_ex10(self):
+        """build and run ex10(p)"""
         # MFEM has many examples to serve as a suitable smoke check. ex10
         # was chosen arbitrarily among the examples that work both with
         # MPI and without it
-        test_exe = "ex10p" if ("+mpi" in self.spec) else "ex10"
-        self.run_test(
-            "make",
-            ["CONFIG_MK={0}/share/mfem/config.mk".format(self.prefix), test_exe, "parallel=False"],
-            purpose="test: building {0}".format(test_exe),
-            skip_missing=False,
-            work_dir=test_dir,
-        )
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
-        self.run_test(
-            "./{0}".format(test_exe),
-            ["--mesh", "../{0}/beam-quad.mesh".format(self.examples_data_dir)],
-            [],
-            installed=False,
-            purpose="test: running {0}".format(test_exe),
-            skip_missing=False,
-            work_dir=test_dir,
-        )
+        mesh = join_path("..", self.examples_data_dir, "beam-quad.mesh")
+        test_exe = "ex10p" if ("+mpi" in self.spec) else "ex10"
+
+        with working_dir(test_dir):
+            make = which("make")
+            make(f"CONFIG_MK={self.config_mk}", test_exe, "parallel=False")
+
+            ex10 = which(test_exe)
+            ex10("--mesh", mesh)
 
     # this patch is only needed for mfem 4.1, where a few
     # released files include byte order marks

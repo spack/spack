@@ -80,50 +80,6 @@ _versions = {
         "RHEL-7": ("7b2239b2ce5315e1be14dbd8fe15aff2d3b07968d64b5c80c8ab57140b6a17a8"),
         "AmazonLinux-2": ("a2e0f176df627c50f851924ac57994f582f63b0f3d42ad0b65c915ea04dc0467"),
     },
-    "23.04_gcc-12.2": {
-        "RHEL-7": ("e159f84f14d885aa5e47ca17c16ef3d95128f834a655827bf6b48fcf8d6ec459"),
-        "RHEL-8": ("6ac1974ec9bd814d3a4eecf330cefd67cf2c878f026a8b04bc2928368948671a"),
-        "RHEL-9": ("71fc8ac9e48ec531b24d5641481070daa8561a5c0373dfbd8915847c8b45641c"),
-        "SLES-15": ("b26a22123294c161519dce398869626e6a793ce94b76648cce46b0111d17d215"),
-        "Ubuntu-20.04": ("c410e1aebb1465f8ae7b264fa74f847137e3c1d9f28c1a9332bf69c59b6f9eec"),
-        "Ubuntu-22.04": ("9f9179336d14ea253462701c96c13d0b01b7c8a09a3fb987c0b22ad647598410"),
-        "AmazonLinux-2": ("3ef5556d7ac5a269af432eb24ed25d2504bcd0070f8b899231f2a45cea6f1a1d"),
-        "AmazonLinux-2023": ("037c70ffdcbdf152ddcb7a4f9e1e1acb7c6cd7ea7337966a2b101e684493653d"),
-    },
-    "23.04_gcc-11.3": {
-        "RHEL-7": ("75f53d160c2254db38f670e86b5381b6d4d778cb0325bfc6fed772c1a8f4c7d7"),
-        "RHEL-8": ("3d10bd5d3b82a2affcea94fdb235eb046c622abf82306682aabdf3abd9e8fc4e"),
-        "RHEL-9": ("df3a7c3571af2e6c3e071cf88afdc3352cd32428c22859d833e68afb3d39b4de"),
-        "SLES-15": ("6dda1320be97d4e5bd2f192b8c6743a6975aab17499554d5506506a620f27e04"),
-        "Ubuntu-20.04": ("57cc91b3b43fd663f827f5a2f3e2b3bddf76ea0f80d95e227a95d961fae64b5d"),
-        "Ubuntu-22.04": ("aa56ea09ded38e17bf26ea449b5d45fb112b0feb34a5408c629fe030011c83a4"),
-        "AmazonLinux-2": ("26494f69237eaf123356b41265f6531d8049dd7aa04898e7b3cd3e8d67d2f25a"),
-        "AmazonLinux-2023": ("30a1a7d14b567c2e68b11cf40890d09899d4cb5fdc3605b9a0c271867ff0f4b9"),
-    },
-    "23.04_gcc-10.2": {
-        "RHEL-7": ("08bb8a78dc27989e044f5154744355699e2896d60ae8838b0e6ce4318a9462ab"),
-        "RHEL-8": ("29415b6d6bce9176aa372ac794769541775573f8302e801a4bf5cdfad5b07851"),
-        "SLES-15": ("aa3ea267a4d02a9c01fa9ef9fd5ac9e0b8687bac8b19047b52ea57ca587ee838"),
-        "Ubuntu-20.04": ("d68a66d85e4cd7e99b66308fe563a623b902e49cb01a2ba0342f575beb192a55"),
-        "AmazonLinux-2": ("a9eded299ea08ba32c91b6e99e1fe24240fcbee0a60696d1dba6d20b2bb39d5c"),
-    },
-    "23.04_gcc-9.3": {
-        "RHEL-7": ("0550fafeecfd8a23500f8fdd3cddf49ed574ae274894f2ca7935a69618dbd418"),
-        "RHEL-8": ("d041b3b8ffd4752f0180999bdfc3c6764659097f0b042482bc1058d4c9a504cb"),
-        "SLES-15": ("dcf8107423dc54068765a3e5f39bfed18df1c9662743f93c785554d0a223a727"),
-        "Ubuntu-20.04": ("577dc2ceb34f1e0aaf3e28953ed406de02e3e245eeafd7f9d6666866509fb1a1"),
-        "AmazonLinux-2": ("50df0ee6067c2d3b888545beaa34936bb3b8a8736d52535badf2ab48acc866e2"),
-    },
-    "23.04_gcc-8.2": {
-        "RHEL-7": ("a579d3790c60ff05952cf4f778089843555413686037ab8b743c2756df8c4070"),
-        "RHEL-8": ("6c90eb65cdd472a16eaebbcd7455840048814ced5986f31a0daaf10f9a2d33fd"),
-        "SLES-15": ("9c3a8323f47db78128751ae74fb3dea11b6237d8433aae0c6e2c8e7951c3ea00"),
-        "AmazonLinux-2": ("02819c958976530e6363d629c5b6d5097892eef5ee4904e27b25e18f52e08c17"),
-    },
-    "23.04_gcc-7.5": {
-        "RHEL-7": ("2141340617d9a053ed03f9da5b1a787bc96bf065eceee3bf350184a4d3fd8a44"),
-        "AmazonLinux-2": ("27dfc5f52e6c44a84d99b6d0841e526ea9ff5878262094760c3c82a6863eceb4"),
-    },
     "22.1_gcc-11.2": {
         "RHEL-7": ("9ce7858525109cca8f4e1d533113b6410d55f10cc4db16c4742562da87a32f2b"),
         "RHEL-8": ("24f9f4496e41c2314d4ace25b6e3d63127bd586ff7bdd8a732471cbc65a8023e"),
@@ -254,7 +210,7 @@ class ArmplGcc(Package):
     high-performance computing applications on Arm processors."""
 
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries"
-    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/22-1/ubuntu-20/arm-performance-libraries_22.1_Ubuntu-20.04_gcc-11.2.tar"
+    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/23-04-1/ubuntu-22/arm-performance-libraries_23.04.1_Ubuntu-22.04_gcc-12.2.tar"
 
     maintainers("annop-w")
 
@@ -275,13 +231,6 @@ class ArmplGcc(Package):
     conflicts("%gcc@:8", when="@23.04.1_gcc-9.3")
     conflicts("%gcc@:7", when="@23.04.1_gcc-8.2")
     conflicts("%gcc@:6", when="@23.04.1_gcc-7.5")
-
-    conflicts("%gcc@:11", when="@23.04_gcc-12.2")
-    conflicts("%gcc@:10", when="@23.04_gcc-11.3")
-    conflicts("%gcc@:9", when="@23.04_gcc-10.2")
-    conflicts("%gcc@:8", when="@23.04_gcc-9.3")
-    conflicts("%gcc@:7", when="@23.04_gcc-8.2")
-    conflicts("%gcc@:6", when="@23.04_gcc-7.5")
 
     conflicts("%gcc@:10", when="@22.1_gcc-11.2")
     conflicts("%gcc@:9", when="@22.1_gcc-10.2")
