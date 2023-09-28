@@ -6,6 +6,7 @@
 import json
 import os
 import traceback
+import warnings
 
 import jsonschema
 import jsonschema.exceptions
@@ -82,7 +83,7 @@ def compiler_from_entry(entry, manifest_path):
     paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
 
     if missing_paths:
-        tty.warn(
+        warnings.warn(
             "Manifest entry refers to nonexistent paths:\n\t"
             + "\n\t".join(missing_paths)
             + f"\nfor {str(spec)}"
@@ -228,7 +229,7 @@ def read(path, apply_updates):
             try:
                 spack.compilers.add_compilers_to_config([compiler], init_config=False)
             except Exception:
-                tty.warn(
+                warnings.warn(
                     f"Could not add compiler {str(compiler.spec)}: "
                     f"\n\tfrom manifest: {path}"
                     "\nPlease reexecute with 'spack -d' and include the stack trace"
