@@ -820,6 +820,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             "PKGINCLUDEDIR",
         ]:
             env.unset("OPAL_%s" % suffix)
+        if self.spec.satisfies("@:4.1.5 %apple-clang@15:"):
+            env.append_flags("LDFLAGS", "-Wl,-ld_classic")
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, "mpicc")
