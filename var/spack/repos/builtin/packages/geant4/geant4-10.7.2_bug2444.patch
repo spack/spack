@@ -1,0 +1,22 @@
+diff --git a/source/persistency/ascii/src/G4tgrEvaluator.cc b/source/persistency/ascii/src/G4tgrEvaluator.cc
+index 3e0e7de7a..d702b384f 100644
+--- a/source/persistency/ascii/src/G4tgrEvaluator.cc
++++ b/source/persistency/ascii/src/G4tgrEvaluator.cc
+@@ -70,7 +70,7 @@ G4double ftanh(G4double arg) { return std::tanh(arg); }
+ // G4double fasinh( G4double arg ){  return std::asinh(arg); }
+ // G4double facosh( G4double arg ){  return std::acosh(arg); }
+ // G4double fatanh( G4double arg ){  return std::atanh(arg); }
+-G4double fsqrt(G4double arg) { return std::sqrt(arg); }
++G4double fltsqrt(G4double arg) { return std::sqrt(arg); }
+ G4double fexp(G4double arg) { return std::exp(arg); }
+ G4double flog(G4double arg) { return std::log(arg); }
+ G4double flog10(G4double arg) { return std::log10(arg); }
+@@ -92,7 +92,7 @@ void G4tgrEvaluator::AddCommonFunctions()
+   //  setFunction("asinh", (*fasinh));
+   //  setFunction("acosh", (*facosh));
+   //  setFunction("atanh", (*fatanh));
+-  setFunction("sqrt", (*fsqrt));
++  setFunction("sqrt", (*fltsqrt));
+   setFunction("exp", (*fexp));
+   setFunction("log", (*flog));
+   setFunction("log10", (*flog10));
