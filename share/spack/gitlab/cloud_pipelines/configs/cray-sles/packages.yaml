@@ -42,14 +42,11 @@ packages:
       prefix: /opt/cray/pe/mpich/8.1.25/ofi/gnu/9.1/
       modules:
       - cray-mpich/8.1.25
-    - spec: cray-mpich@8.1.25 %intel
-      prefix: /opt/cray/pe/mpich/8.1.25/ofi/intel/19.0/
-      modules:
-      - cray-mpich/8.1.25
     - spec: cray-mpich@8.1.25 %nvhpc
       prefix: /opt/cray/pe/mpich/8.1.25/ofi/nvidia/20.7/
       modules:
       - cray-mpich/8.1.25
+    # TBD: Keep this given corresponding cray-libsci issue w/ oneapi?
     - spec: cray-mpich@8.1.25 %oneapi
       prefix: /opt/cray/pe/mpich/8.1.25/ofi/intel/19.0/
       modules:
@@ -67,10 +64,6 @@ packages:
       - cray-libsci/23.02.1.1
     - spec: cray-libsci@23.02.1.1 %gcc
       prefix: /opt/cray/pe/libsci/23.02.1.1/gnu/9.1/x86_64/
-      modules:
-      - cray-libsci/23.02.1.1
-    - spec: cray-libsci@23.02.1.1 %intel
-      prefix: /opt/cray/pe/libsci/23.02.1.1/intel/2022.2/x86_64/
       modules:
       - cray-libsci/23.02.1.1
     - spec: cray-libsci@23.02.1.1 %nvhpc
