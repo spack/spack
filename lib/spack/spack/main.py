@@ -702,7 +702,7 @@ class SpackCommand:
 
         if self.subprocess:
             p = sp.Popen(
-                [spack.paths.spack_script, self.command_name] + prepend + list(argv),
+                [spack.paths.spack_script] + prepend + [self.command_name] + list(argv),
                 stdout=sp.PIPE,
                 stderr=sp.STDOUT,
             )
