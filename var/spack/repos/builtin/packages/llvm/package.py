@@ -127,8 +127,12 @@ class Llvm(CMakePackage, CudaPackage):
         "or as a project (with the compiler in use)",
     )
 
-    variant("libomptarget", default=True, description="Build the OpenMP offloading library")
-    conflicts("+libomptarget", when="~clang")
+    variant(
+        "libomptarget",
+        default=True,
+        description="Build the OpenMP offloading library",
+        when="+clang",
+    )
     for _p in ["darwin", "windows"]:
         conflicts("+libomptarget", when="platform={0}".format(_p))
     del _p
@@ -137,8 +141,8 @@ class Llvm(CMakePackage, CudaPackage):
         "libomptarget_debug",
         default=False,
         description="Allow debug output with the environment variable LIBOMPTARGET_DEBUG=1",
+        when="+libomptarget",
     )
-    conflicts("+libomptarget_debug", when="~libomptarget")
 
     variant(
         "compiler-rt",
@@ -222,7 +226,7 @@ class Llvm(CMakePackage, CudaPackage):
         description="Enable code-signing on macOS",
     )
     variant("python", default=False, description="Install python bindings")
-    variant("lua", default=True, description="Enable lua scripting inside lldb")
+    variant("lua", default=True, description="Enable lua scripting inside lldb", when="@11: +lldb")
     variant("version_suffix", default="none", description="Add a symbol suffix")
     variant(
         "shlib_symbol_version",
@@ -230,11 +234,9 @@ class Llvm(CMakePackage, CudaPackage):
         description="Add shared library symbol version",
         when="@13:",
     )
-    variant("z3", default=False, description="Use Z3 for the clang static analyzer")
-    conflicts("+z3", when="@:7")
-    conflicts("+z3", when="~clang")
-    conflicts("+lua", when="@:10")
-    conflicts("+lua", when="~lldb")
+    variant(
+        "z3", default=False, description="Use Z3 for the clang static analyzer", when="@8: +clang"
+    )
 
     variant(
         "zstd",
