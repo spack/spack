@@ -188,13 +188,20 @@ if NOT "%_sp_args%"=="%_sp_args:--help=%" (
 goto :end_switch
 
 :case_load
+if not defined _sp_args (
+   python "%spack%" load --help
+   exit /B 0
+)
+
 :: If args contain --sh, --csh, or -h/--help: just execute.
 if defined _sp_args (
-    if NOT "%_sp_args%"=="%_sp_args:--help=%" (
+    if "%sp_args%"=="%_sp_args:--help=%" (
         goto :default_case
-    ) else if NOT "%_sp_args%"=="%_sp_args:-h=%" (
+    ) else if "%_sp_args%"=="%_sp_args: -h=%" (
         goto :default_case
-    ) else if NOT "%_sp_args%"=="%_sp_args:--bat=%" (
+    ) else if "%_sp_args%"=="%_sp_args:--bat=%" (
+        goto :default_case
+    ) else if "%_sp_args%"=="%_sp_args:--list=%" (
         goto :default_case
     )
 )
@@ -203,9 +210,6 @@ for /f "tokens=* USEBACKQ" %%I in (
     `python "%spack%" %_sp_flags% %_sp_subcommand% --bat %_sp_args%`) do %%I
 
 goto :end_switch
-
-:case_unload
-goto :case_load
 
 :default_case
 python "%spack%" %_sp_flags% %_sp_subcommand% %_sp_args%
