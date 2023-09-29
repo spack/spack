@@ -669,6 +669,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             # https://github.com/pytorch/pytorch/issues/60332
             # env.set("USE_SYSTEM_XNNPACK", "ON")
 
+    def setup_run_environment(self, env):
+        # The cmake_prefix_paths property from below doesn't end up in the run
+        # environment that one gets with spack load py-torch
+        env.prepend_path("CMAKE_PREFIX_PATH", self.cmake_prefix_paths[0])
+        # Similarly the libraries do not live at their "standard location"
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["py-torch"].libs.directories[0])
+
     @run_before("install")
     def build_amd(self):
         if "+rocm" in self.spec:
