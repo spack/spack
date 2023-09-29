@@ -15,7 +15,6 @@ import subprocess
 import sys
 import tempfile
 from datetime import date
-from urllib.parse import urlparse
 
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
@@ -98,29 +97,8 @@ SPACK_MAX_INSTALL_PATH_LENGTH = 300
 SPACK_PATH_PADDING_CHARS = "__spack_path_placeholder__"
 
 
-def is_path_url(path):
-    if "\\" in path:
-        return False
-    url_tuple = urlparse(path)
-    return bool(url_tuple.scheme) and len(url_tuple.scheme) > 1
-
-
 def win_exe_ext():
     return ".exe"
-
-
-def path_to_os_path(*pths):
-    """
-    Takes an arbitrary number of positional parameters
-    converts each arguemnt of type string to use a normalized
-    filepath separator, and returns a list of all values
-    """
-    ret_pths = []
-    for pth in pths:
-        if isinstance(pth, str) and not is_path_url(pth):
-            pth = convert_to_platform_path(pth)
-        ret_pths.append(pth)
-    return ret_pths
 
 
 def sanitize_filename(filename: str) -> str:
@@ -145,42 +123,6 @@ def sanitize_filename(filename: str) -> str:
     return re.sub(r'[\x00-\x1F\x7F"*/:<>?\\|]', "_", filename)
 
 
-def system_path_filter(_func=None, arg_slice=None):
-    """
-    Filters function arguments to account for platform path separators.
-    Optional slicing range can be specified to select specific arguments
-
-    This decorator takes all (or a slice) of a method's positional arguments
-    and normalizes usage of filepath separators on a per platform basis.
-
-    Note: **kwargs, urls, and any type that is not a string are ignored
-    so in such cases where path normalization is required, that should be
-    handled by calling path_to_os_path directly as needed.
-
-    Parameters:
-        arg_slice (slice): a slice object specifying the slice of arguments
-            in the decorated method over which filepath separators are
-            normalized
-    """
-    from functools import wraps
-
-    def holder_func(func):
-        @wraps(func)
-        def path_filter_caller(*args, **kwargs):
-            args = list(args)
-            if arg_slice:
-                args[arg_slice] = path_to_os_path(*args[arg_slice])
-            else:
-                args = path_to_os_path(*args)
-            return func(*args, **kwargs)
-
-        return path_filter_caller
-
-    if _func:
-        return holder_func(_func)
-    return holder_func
-
-
 @memoized
 def get_system_path_max():
     # Choose a conservative default
@@ -200,54 +142,6 @@ def get_system_path_max():
             )
 
     return sys_max_path_length
-
-
-class Path:
-    """
-    Describes the filepath separator types
-    in an enum style
-    with a helper attribute
-    exposing the path type of
-    the current platform.
-    """
-
-    unix = 0
-    windows = 1
-    platform_path = windows if sys.platform == "win32" else unix
-
-
-def format_os_path(path, mode=Path.unix):
-    """
-    Format path to use consistent, platform specific
-    separators. Absolute paths are converted between
-    drive letters and a prepended '/' as per platform
-    requirement.
-
-    Parameters:
-        path (str): the path to be normalized, must be a string
-            or expose the replace method.
-        mode (Path): the path filesperator style to normalize the
-            passed path to. Default is unix style, i.e. '/'
-    """
-    if not path:
-        return path
-    if mode == Path.windows:
-        path = path.replace("/", "\\")
-    else:
-        path = path.replace("\\", "/")
-    return path
-
-
-def convert_to_posix_path(path):
-    return format_os_path(path, mode=Path.unix)
-
-
-def convert_to_windows_path(path):
-    return format_os_path(path, mode=Path.windows)
-
-
-def convert_to_platform_path(path):
-    return format_os_path(path, mode=Path.platform_path)
 
 
 def substitute_config_variables(path):
