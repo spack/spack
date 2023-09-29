@@ -916,50 +916,6 @@ e4s-cray-sles-cce-build:
       job: e4s-cray-sles-cce-generate
 
 #######################################
-# E4S - Cray SLES - dpcpp
-#######################################
-.e4s-cray-sles-dpcpp:
-  extends: [ ".cray_sles_zen4" ]
-  variables:
-    SPACK_CI_STACK_NAME: e4s-cray-sles-dpcpp
-
-e4s-cray-sles-dpcpp-generate:
-  extends: [ ".generate-cray-sles", ".e4s-cray-sles-dpcpp" ]
-
-e4s-cray-sles-dpcpp-build:
-  extends: [ ".build", ".e4s-cray-sles-dpcpp" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-cray-sles-dpcpp-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-cray-sles-dpcpp-generate
-
-#######################################
-# E4S - Cray SLES - intel
-#######################################
-.e4s-cray-sles-intel:
-  extends: [ ".cray_sles_zen4" ]
-  variables:
-    SPACK_CI_STACK_NAME: e4s-cray-sles-intel
-
-e4s-cray-sles-intel-generate:
-  extends: [ ".generate-cray-sles", ".e4s-cray-sles-intel" ]
-
-e4s-cray-sles-intel-build:
-  extends: [ ".build", ".e4s-cray-sles-intel" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-cray-sles-intel-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-cray-sles-intel-generate
-
-#######################################
 # E4S - Cray SLES - nvhpc
 #######################################
 .e4s-cray-sles-nvhpc:
