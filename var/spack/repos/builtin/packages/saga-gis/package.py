@@ -5,7 +5,7 @@
 from spack.package import *
 
 
-class SagaGis(AutotoolsPackage, SourceforgePackage):
+class SagaGis(AutotoolsPackage, SourceforgePackage, CMakePackage):
     """
     SAGA is a GIS for Automated Geoscientific Analyses and has been designed
     for an easy and effective implementation of spatial algorithms. It offers
@@ -13,11 +13,20 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     easily approachable user interface with many visualisation options
     """
 
+    build_system(
+        conditional("autotools", when="@:8.2"), conditional("cmake", when="@8.3:"), default="cmake"
+    )
+
     homepage = "http://saga-gis.org/"
     sourceforge_mirror_path = "SAGA%20-%205.0.0/saga-5.0.0.tar.gz"
     git = "git://git.code.sf.net/p/saga-gis/code"
 
+    maintainers("jsquar")
+
     version("develop", branch="master")
+    version("9.1.0", tag="saga-9.1.0")
+    version("9.0.3", tag="saga-9.0.3")
+    version("8.5.1", tag="saga-8.5.1")
     version("7.4.0", branch="release-7.4.0")
     version("7.3.0", branch="release-7.3.0")
     version("7.1.1", branch="release-7.1.1")
@@ -38,57 +47,64 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     version("2.3.0", branch="release-2-3-0", deprecated=True)
 
     variant("gui", default=True, description="Build GUI and interactive SAGA tools")
-    variant("odbc", default=True, description="Build with ODBC support")
-
-    # FIXME Saga-gis configure file disables triangle even if
-    # --enable-triangle flag is used
-    # variant('triangle', default=True,   description='Build with triangle.c
-
-    # non free for commercial use otherwise use qhull')
+    # non free for commercial use
     variant(
-        "libfire", default=True, description="Build with libfire (non free for commercial usage)"
+        "libfire",
+        default=True,
+        description="Build tool using BEHAVE fire modeling system (non free for commercial usage)",
     )
+
     variant("openmp", default=True, description="Build with OpenMP enabled")
-    variant("python", default=False, description="Build Python extension")
+    # triangle non free for commercial use
+    variant(
+        "convex_lib",
+        default="triangle",
+        values=["qhull", "triangle"],
+        multi=False,
+        when="@:8",
+        description=(
+            "Implementation of convex hull algorithms "
+            "(triangle is only free for non-commercial usage"
+        ),
+    )
+    variant("python", default=True, description="Build Python extension")
+    variant("postgresql", default=True, description="Build tools using PostgreSQL")
+    variant("opencv", default=True, description="Build tools using OpenCV")
 
-    variant("postgresql", default=False, description="Build with PostgreSQL library")
-    variant("opencv", default=False, description="Build with libraries using OpenCV")
+    variant("haru", default=True, description="Enable PDF creation using Haru")
+    variant("vigra", default=True, description="Build tools using VIGRA")
+    variant("curl", default=True, description="Enable https support in webservices")
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
-    depends_on("libsm", type="link")
+    depends_on("autoconf", type="build", when="@7.4.0 build_system=autotools")
+    depends_on("automake", type="build", when="@7.4.0 build_system=autotools")
+    depends_on("libtool", type="build", when="@7.4.0 build_system=autotools")
+    # avoid deprecation warning of distutils, which makes configure fail https://peps.python.org/pep-0632/
+    depends_on("python@:3.9", type=["build", "run"], when="build_system=autotools +python")
+    depends_on("python", type=["build", "run"], when="+python")
 
-    depends_on("libharu")
     depends_on("wxwidgets")
-    depends_on("postgresql", when="+postgresql")
-    depends_on("unixodbc", when="+odbc")
-
     # SAGA-GIS requires projects.h from proj
     depends_on("proj")
     # https://sourceforge.net/p/saga-gis/bugs/271/
     depends_on("proj@:5", when="@:7.3")
-
+    depends_on("gdal+hdf5+netcdf")
+    depends_on("gdal@2.3:2.4+grib+hdf5+netcdf", when="@:7.2")
+    depends_on("libgeotiff@:1.4", when="@:7.2")
+    depends_on("libgeotiff")
+    depends_on("unixodbc")
+    depends_on("libharu", when="+haru")
+    depends_on("postgresql")
     # Saga-Gis depends on legacy opencv API removed in opencv 4.x
     depends_on("opencv@:3.4.6+jpeg+video+objdetect+ml+openmp+photo", when="+opencv")
     depends_on("jpeg", when="+opencv")
-    # Set hl variant due to similar issue #7145
-    depends_on("hdf5+hl")
-
-    # write support for grib2 is available since 2.3.0 (https://gdal.org/drivers/raster/grib.html)
-    depends_on("gdal@2.3:+grib+hdf5+netcdf")
-
-    depends_on("gdal@2.3:2.4+grib+hdf5+netcdf", when="@:7.2")
-    depends_on("libgeotiff@:1.4", when="@:7.2")
-
-    # FIXME Saga-Gis uses a wrong include path
-    # depends_on('qhull', when='~triangle')
-
+    depends_on("vigra", when="+vigra")
+    depends_on("hdf5")
     depends_on("swig", type="build", when="+python")
+
     extends("python", when="+python")
 
     configure_directory = "saga-gis"
+    root_cmakelists_dir = "saga-gis"
 
     def patch(self):
         if "+opencv" in self.spec:
@@ -99,20 +115,28 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
 
             filter_file(r"/usr(/include/opencv)", r"{0}\1".format(opencv_dir), opencv_makefile)
 
+    def cmake_args(self):
+        args = []
+        args += [self.define_from_variant("WITH_FIRE_SPREADING", "libfire")]
+        args += [self.define_from_variant("WITH_GUI", "gui")]
+        args += [self.define_from_variant("WITH_PYTHON", "python")]
+        args += [self.define_from_variant("WITH_TOOLS_POSTGRES", "postgresql")]
+        args += [self.define_from_variant("WITH_TOOLS_VIGRA", "vigra")]
+
+        # avoid to use newer system installation of python
+        # https://gitlab.kitware.com/cmake/cmake/-/issues/21186
+        args += [self.define("CMAKE_POLICY_DEFAULT_CMP0094", "NEW")]
+        return args
+
     def configure_args(self):
         args = []
         args += self.enable_or_disable("gui")
-        args += self.enable_or_disable("odbc")
-        # FIXME Saga-gis configure file disables triangle even if
-        # --enable-triangle flag is used
-        # args += self.enable_or_disable('triangle')
-        # FIXME SAGA-GIS uses a wrong include path
-        # if '~triangle' in self.spec:
-        #    args.append('--disable-triangle')
         args += self.enable_or_disable("libfire")
         args += self.enable_or_disable("openmp")
         args += self.enable_or_disable("python")
         args += self.with_or_without("postgresql")
+        if "convex_lib" in self.spec and self.spec["convex_lib"] == "qhull":
+            args += ["--disable-triangle"]
 
         return args
 
