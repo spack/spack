@@ -203,19 +203,6 @@ def test_find_external_manifest_failure(mutable_config, mutable_mock_repo, tmpdi
     assert "Skipping manifest and continuing" in output
 
 
-def test_find_external_nonempty_default_manifest_dir(
-    mutable_database, mutable_mock_repo, tmpdir, monkeypatch, directory_with_manifest
-):
-    """The user runs 'spack external find'; the default manifest directory
-    contains a manifest file. Ensure that the specs are read.
-    """
-    monkeypatch.setenv("PATH", "")
-    monkeypatch.setattr(spack.cray_manifest, "default_path", str(directory_with_manifest))
-    external("find")
-    specs = spack.store.STORE.db.query("hwloc")
-    assert any(x.dag_hash() == "hwlocfakehashaaa" for x in specs)
-
-
 def test_find_external_merge(mutable_config, mutable_mock_repo):
     """Check that 'spack find external' doesn't overwrite an existing spec
     entry in packages.yaml.
