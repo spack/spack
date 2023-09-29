@@ -11,8 +11,9 @@ class PySpython(PythonPackage):
     """The Python API for working with Singularity containers."""
 
     homepage = "https://github.com/singularityhub/singularity-cli"
-    pypi = "spython/spython-0.2.14.tar.gz"
+    pypi = "spython/spython-0.3.0.tar.gz"
 
+    version("0.3.0", sha256="1bbadb18829aaf18e68bcdb9850e6e8c1e1be9066fbd4b71e1fff88f7d80b76f")
     version("0.2.14", sha256="49e22fbbdebe456b27ca17d30061489db8e0f95e62be3623267a23b85e3ce0f0")
 
     variant(
@@ -28,4 +29,4 @@ class PySpython(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-semver@2.8.1:", type=("build", "run"))
+    depends_on("py-semver@2.8.1:", when="@:0.2.14", type=("build", "run"))
