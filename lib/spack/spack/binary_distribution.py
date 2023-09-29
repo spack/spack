@@ -34,6 +34,7 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
+import spack.error
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -646,8 +647,7 @@ class BuildManifestVisitor(BaseDirectoryVisitor):
     directories."""
 
     def __init__(self):
-        # Save unique identifiers of files to avoid
-        # relocating hardlink files for each path.
+        # Save unique identifiers of hardlinks to avoid relocating them multiple times
         self.visited = set()
 
         # Lists of files we will check
@@ -656,6 +656,8 @@ class BuildManifestVisitor(BaseDirectoryVisitor):
 
     def seen_before(self, root, rel_path):
         stat_result = os.lstat(os.path.join(root, rel_path))
+        if stat_result.st_nlink == 1:
+            return False
         identifier = (stat_result.st_dev, stat_result.st_ino)
         if identifier in self.visited:
             return True
@@ -1417,7 +1419,7 @@ def try_fetch(url_to_fetch):
 
     try:
         stage.fetch()
-    except web_util.FetchError:
+    except spack.error.FetchError:
         stage.destroy()
         return None
 
@@ -1580,9 +1582,10 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         for rel_path in buildinfo[key]:
             stat_result = os.lstat(os.path.join(root, rel_path))
             identifier = (stat_result.st_dev, stat_result.st_ino)
-            if identifier in visited:
-                continue
-            visited.add(identifier)
+            if stat_result.st_nlink > 1:
+                if identifier in visited:
+                    continue
+                visited.add(identifier)
             new_list.append(rel_path)
         buildinfo[key] = new_list
 
@@ -2144,7 +2147,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
                 if not os.path.exists(stage.save_filename):
                     try:
                         stage.fetch()
-                    except web_util.FetchError:
+                    except spack.error.FetchError:
                         continue
 
             tty.debug("Found key {0}".format(fingerprint))
@@ -2296,7 +2299,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
             try:
                 stage.fetch()
                 break
-            except web_util.FetchError as e:
+            except spack.error.FetchError as e:
                 tty.debug(e)
         else:
             if fail_if_missing:

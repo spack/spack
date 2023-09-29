@@ -30,7 +30,6 @@ import llnl.util.tty.colify
 import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
 
-import spack
 import spack.cmd
 import spack.config
 import spack.environment as ev
@@ -716,7 +715,7 @@ class SpackCommand:
 
             out = io.StringIO()
             try:
-                with log_output(out):
+                with log_output(out, echo=True):
                     self.returncode = _invoke_command(self.command, self.parser, args, unknown)
 
             except SystemExit as e:
@@ -775,7 +774,7 @@ def _profile_wrapper(command, parser, args, unknown_args):
         pr.disable()
 
         # print out profile stats.
-        stats = pstats.Stats(pr)
+        stats = pstats.Stats(pr, stream=sys.stderr)
         stats.sort_stats(*sortby)
         stats.print_stats(nlines)
 

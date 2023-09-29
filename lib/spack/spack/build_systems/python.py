@@ -16,6 +16,7 @@ import llnl.util.tty as tty
 
 import spack.builder
 import spack.config
+import spack.deptypes as dt
 import spack.detection
 import spack.multimethod
 import spack.package_base
@@ -226,7 +227,48 @@ class PythonExtension(spack.package_base.PackageBase):
 
                     python.external_path = self.spec.external_path
                     python._mark_concrete()
-            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"), virtuals=())
+            self.spec.add_dependency_edge(python, depflag=dt.BUILD | dt.LINK | dt.RUN, virtuals=())
+
+    def get_external_python_for_prefix(self):
+        """
+        For an external package that extends python, find the most likely spec for the python
+        it depends on.
+
+        First search: an "installed" external that shares a prefix with this package
+        Second search: a configured external that shares a prefix with this package
+        Third search: search this prefix for a python package
+
+        Returns:
+          spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
+        """
+        python_externals_installed = [
+            s for s in spack.store.STORE.db.query("python") if s.prefix == self.spec.external_path
+        ]
+        if python_externals_installed:
+            return python_externals_installed[0]
+
+        python_external_config = spack.config.get("packages:python:externals", [])
+        python_externals_configured = [
+            spack.spec.parse_with_version_concrete(item["spec"])
+            for item in python_external_config
+            if item["prefix"] == self.spec.external_path
+        ]
+        if python_externals_configured:
+            return python_externals_configured[0]
+
+        python_externals_detection = spack.detection.by_path(
+            ["python"], path_hints=[self.spec.external_path]
+        )
+
+        python_externals_detected = [
+            d.spec
+            for d in python_externals_detection.get("python", [])
+            if d.prefix == self.spec.external_path
+        ]
+        if python_externals_detected:
+            return python_externals_detected[0]
+
+        raise StopIteration("No external python could be detected for %s to depend on" % self.spec)
 
 
 class PythonPackage(PythonExtension):
@@ -273,54 +315,16 @@ class PythonPackage(PythonExtension):
             name = cls.pypi.split("/")[0]
             return "https://pypi.org/simple/" + name + "/"
 
-    def get_external_python_for_prefix(self):
-        """
-        For an external package that extends python, find the most likely spec for the python
-        it depends on.
-
-        First search: an "installed" external that shares a prefix with this package
-        Second search: a configured external that shares a prefix with this package
-        Third search: search this prefix for a python package
-
-        Returns:
-          spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
-        """
-        python_externals_installed = [
-            s for s in spack.store.STORE.db.query("python") if s.prefix == self.spec.external_path
-        ]
-        if python_externals_installed:
-            return python_externals_installed[0]
-
-        python_external_config = spack.config.get("packages:python:externals", [])
-        python_externals_configured = [
-            spack.spec.parse_with_version_concrete(item["spec"])
-            for item in python_external_config
-            if item["prefix"] == self.spec.external_path
-        ]
-        if python_externals_configured:
-            return python_externals_configured[0]
-
-        python_externals_detection = spack.detection.by_path(
-            ["python"], path_hints=[self.spec.external_path]
-        )
-
-        python_externals_detected = [
-            d.spec
-            for d in python_externals_detection.get("python", [])
-            if d.prefix == self.spec.external_path
-        ]
-        if python_externals_detected:
-            return python_externals_detected[0]
-
-        raise StopIteration("No external python could be detected for %s to depend on" % self.spec)
-
     @property
     def headers(self):
         """Discover header files in platlib."""
 
+        # Remove py- prefix in package name
+        name = self.spec.name[3:]
+
         # Headers may be in either location
-        include = self.prefix.join(self.spec["python"].package.include)
-        platlib = self.prefix.join(self.spec["python"].package.platlib)
+        include = self.prefix.join(self.spec["python"].package.include).join(name)
+        platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
         headers = fs.find_all_headers(include) + fs.find_all_headers(platlib)
 
         if headers:
@@ -334,13 +338,14 @@ class PythonPackage(PythonExtension):
         """Discover libraries in platlib."""
 
         # Remove py- prefix in package name
-        library = "lib" + self.spec.name[3:].replace("-", "?")
-        root = self.prefix.join(self.spec["python"].package.platlib)
+        name = self.spec.name[3:]
 
-        for shared in [True, False]:
-            libs = fs.find_libraries(library, root, shared=shared, recursive=True)
-            if libs:
-                return libs
+        root = self.prefix.join(self.spec["python"].package.platlib).join(name)
+
+        libs = fs.find_all_libraries(root, recursive=True)
+
+        if libs:
+            return libs
 
         msg = "Unable to recursively locate {} libraries in {}"
         raise NoLibrariesError(msg.format(self.spec.name, root))
