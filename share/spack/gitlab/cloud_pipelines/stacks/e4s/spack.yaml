@@ -69,6 +69,8 @@ spack:
   - conduit
   - datatransferkit
   - dealii
+  - drishti
+  - dxt-explorer
   - dyninst
   - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp ^hdf5@1.14
   - exaworks
