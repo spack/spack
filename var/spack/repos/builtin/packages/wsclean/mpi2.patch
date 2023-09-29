@@ -1,0 +1,21 @@
+--- a/distributed/mpibig.h	2022-05-30 10:53:37.000000000 +0800
++++ b/distributed/mpibig.h	2022-05-30 11:05:47.000000000 +0800
+@@ -11,7 +11,7 @@
+  * use the type MPI_Byte.
+  * @returns MPI_SUCCESS when successful.
+  */
+-int MPI_Send_Big(unsigned char* buf, size_t count, int dest, int tag,
++int MPI_Send_Big(unsigned char* buf, std::size_t count, int dest, int tag,
+                  MPI_Comm comm);
+
+ /** Receives a big message.
+@@ -20,7 +20,7 @@ int MPI_Send_Big(unsigned char* buf, siz
+  * MPI_Send_Big().
+  * @returns MPI_SUCCESS when successful.
+  */
+-int MPI_Recv_Big(unsigned char* buf, size_t count, int source, int tag,
++int MPI_Recv_Big(unsigned char* buf, std::size_t count, int source, int tag,
+                  MPI_Comm comm, MPI_Status* status);
+
+ #endif
+
