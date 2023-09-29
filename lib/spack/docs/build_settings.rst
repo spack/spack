@@ -267,6 +267,8 @@ to enable reuse for a single installation, and you can use:
 to do a fresh install if ``reuse`` is enabled by default.
 ``reuse: true`` is the default.
 
+.. _selection-of-the-target-microarchitectures
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Selection of the target microarchitectures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

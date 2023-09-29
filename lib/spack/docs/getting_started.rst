@@ -457,6 +457,29 @@ specification. The operations available to modify the environment are ``set``, `
          prepend_path: # Similar for append|remove_path
            LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 
+Finally, if you intend to compile for a different target, you need to adjust the
+concretizer setting as documented in :ref:`<selection-of-the-target-microarchitectures>`,
+then add the appropriate compiler specification as needed.
+For example, to set up an ``aarch64`` cross-compiler on an ``x86_64`` host:
+
+.. code-block:: yaml
+
+   compilers:
+   - compiler:
+       spec: gcc@9.4.0
+       paths:
+         cc: /usr/bin/aarch64-linux-gnu-gcc-9
+         cxx: /usr/bin/aarch64-linux-gnu-g++-9
+         f77: /usr/bin/aarch64-linux-gnu-gfortran-9
+         fc: /usr/bin/aarch64-linux-gnu-gfortran-9
+       flags: {}
+       operating_system: ubuntu20.04
+       target: aarch64
+       modules: []
+       environment: {}
+       extra_rpaths: []
+
+.. _build-your-own-compiler:
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Build Your Own Compiler
