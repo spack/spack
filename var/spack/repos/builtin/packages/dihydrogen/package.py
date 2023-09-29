@@ -74,9 +74,11 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("aluminum +rocm +rccl", when="+al +rocm")
     depends_on("aluminum +ht", when="+al +distconv")
 
+    depends_on("nvshmem", when="+nvshmem")
+
     for arch in CudaPackage.cuda_arch_values:
         depends_on("aluminum cuda_arch=%s" % arch, when="+al +cuda cuda_arch=%s" % arch)
-        depends_on("nvshmem cuda_arch=%s" % arch, when="+nvshmem +cuda cuda_arch=%s" % arch)
+        depends_on("nvshmem@2.6: cuda_arch=%s +gpu_initiated_support +ibrc" % arch, when="+nvshmem +cuda cuda_arch=%s" % arch)
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
