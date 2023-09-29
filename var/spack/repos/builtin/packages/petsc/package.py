@@ -342,10 +342,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # * petsc-3.15 and newer (without docs)
     def url_for_version(self, version):
         if self.spec.satisfies("@3.13.0:3.14.6"):
-            return (
-                "http://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-lite-{0}.tar.gz".format(
-                    version
-                )
+            return "http://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-lite-{0}.tar.gz".format(
+                version
             )
         else:
             return "http://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-{0}.tar.gz".format(
