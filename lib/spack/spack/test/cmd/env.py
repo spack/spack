@@ -16,6 +16,7 @@ import llnl.util.filesystem as fs
 import llnl.util.link_tree
 
 import spack.cmd.env
+import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.environment.depfile as depfile
@@ -26,6 +27,7 @@ import spack.modules
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.solver.asp
 import spack.util.spack_json as sjson
 from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
@@ -2758,6 +2760,51 @@ def test_virtual_spec_concretize_together(tmpdir):
     e.concretize()
 
     assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
+
+
+@pytest.mark.parametrize(
+    "unify,method_to_fail",
+    [
+        (True, (spack.concretize, "concretize_specs_together")),
+        ("when_possible", (spack.solver.asp.Solver, "solve_in_rounds")),
+        # An earlier failure so that we test the case where the internal state
+        # has been changed, but the pointer to the internal variables has not change.
+        # This effectively tests that we are properly copying by value not by
+        # reference for the transactional concretization
+        (True, (spack.environment.Environment, "_get_specs_to_concretize")),
+    ],
+)
+def test_concretize_transactional(unify, method_to_fail, monkeypatch):
+    e = ev.create("test")
+    e.unify = unify
+
+    e.add("mpi")
+    e.add("zlib")
+    e.concretize()
+
+    # remove one spec and add another to ensure we test with changes before
+    # and after the environment is cleared during concretization
+    e.remove("zlib")
+    e.add("libelf")
+
+    def fail(*args, **kwargs):
+        raise Exception("Test failures")
+
+    location, method = method_to_fail
+    monkeypatch.setattr(location, method, fail)
+
+    first_user_specs = e.concretized_user_specs[:]
+    first_order = e.concretized_order[:]
+    first_hash_dict = e.specs_by_hash.copy()
+
+    try:
+        e.concretize()
+    except Exception:
+        pass
+
+    assert e.concretized_user_specs == first_user_specs
+    assert e.concretized_order == first_order
+    assert e.specs_by_hash == first_hash_dict
 
 
 def test_query_develop_specs():
