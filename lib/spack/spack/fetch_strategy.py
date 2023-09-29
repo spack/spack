@@ -734,7 +734,11 @@ class GitFetchStrategy(VCSFetchStrategy):
     @property
     def git(self):
         if not self._git:
-            self._git = spack.util.git.git()
+            try:
+                self._git = spack.util.git.git(required=True)
+            except CommandNotFoundError as exc:
+                tty.error(str(exc))
+                raise
 
             # Disable advice for a quieter fetch
             # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt
