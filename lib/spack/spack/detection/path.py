@@ -249,9 +249,11 @@ class Finder:
             return []
         if initial_guess is None:
             initial_guess = self.default_path_hints()
-            initial_guess.extend(common_windows_package_paths(pkg_cls))
+            # initial_guess.extend(common_windows_package_paths(pkg_cls))
         candidates = self.candidate_files(patterns=patterns, paths=initial_guess)
         result = self.detect_specs(pkg=pkg_cls, paths=candidates)
+        print(result)
+        raise RuntimeError
         return result
 
 
