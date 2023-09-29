@@ -14,6 +14,7 @@ class PyFzTdRecipe(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/fz-td-recipe.git"
 
     version("develop", branch="master")
+    version("0.1.2", tag="fz-td-recipe-v0.1.2")
     version("0.1.1", tag="fz-td-recipe-v0.1.1")
     version("0.1.0", tag="fz-td-recipe-v0.1.0")
 
@@ -21,3 +22,4 @@ class PyFzTdRecipe(PythonPackage):
 
     depends_on("py-lxml", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"), when="@0.1.2:")
