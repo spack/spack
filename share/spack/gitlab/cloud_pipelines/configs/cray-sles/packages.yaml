@@ -38,10 +38,6 @@ packages:
       prefix: /opt/cray/pe/mpich/8.1.25/ofi/cray/10.0/
       modules:
       - cray-mpich/8.1.25
-    - spec: cray-mpich@8.1.25 %dpcpp
-      prefix: /opt/cray/pe/mpich/8.1.25/ofi/intel/19.0/
-      modules:
-      - cray-mpich/8.1.25
     - spec: cray-mpich@8.1.25 %gcc
       prefix: /opt/cray/pe/mpich/8.1.25/ofi/gnu/9.1/
       modules:
@@ -66,30 +62,27 @@ packages:
     buildable: false
     externals:
     - spec: cray-libsci@23.02.1.1 %cce
-      prefix: /opt/cray/pe/libsci/23.02.1.1/CRAY/9.0/x86_64/
-      modules:
-      - cray-libsci/23.02.1.1
-    - spec: cray-libsci@23.02.1.1 %dpcpp
-      prefix: /opt/cray/pe/libsci/23.02.1.1/INTEL/2022.2/x86_64/
+      prefix: /opt/cray/pe/libsci/23.02.1.1/cray/9.0/x86_64/
       modules:
       - cray-libsci/23.02.1.1
     - spec: cray-libsci@23.02.1.1 %gcc
-      prefix: /opt/cray/pe/libsci/23.02.1.1/GNU/9.1/x86_64/
+      prefix: /opt/cray/pe/libsci/23.02.1.1/gnu/9.1/x86_64/
       modules:
       - cray-libsci/23.02.1.1
     - spec: cray-libsci@23.02.1.1 %intel
-      prefix: /opt/cray/pe/libsci/23.02.1.1/INTEL/2022.2/x86_64/
+      prefix: /opt/cray/pe/libsci/23.02.1.1/intel/2022.2/x86_64/
       modules:
       - cray-libsci/23.02.1.1
     - spec: cray-libsci@23.02.1.1 %nvhpc
-      prefix: /opt/cray/pe/libsci/23.02.1.1/NVIDIA/20.7/x86_64/
+      prefix: /opt/cray/pe/libsci/23.02.1.1/nvidia/20.7/x86_64/
       modules:
       - cray-libsci/23.02.1.1
-    - spec: cray-libsci@23.02.1.1 %oneapi
-      prefix: /opt/cray/pe/libsci/23.02.1.1/INTEL/2022.2/x86_64/
-      modules:
-      - cray-libsci/23.02.1.1
+    # KeyError: 'oneapi' in cray-libsci/package.py's blas_libs (2023 Sep)
+    #- spec: cray-libsci@23.02.1.1 %oneapi
+    #  prefix: /opt/cray/pe/libsci/23.02.1.1/intel/2022.2/x86_64/
+    #  modules:
+    #  - cray-libsci/23.02.1.1
     - spec: cray-libsci@23.02.1.1 %rocmcc
-      prefix: /opt/cray/pe/libsci/23.02.1.1/AMD/4.0/x86_64/
+      prefix: /opt/cray/pe/libsci/23.02.1.1/amd/4.0/x86_64/
       modules:
       - cray-libsci/23.02.1.1

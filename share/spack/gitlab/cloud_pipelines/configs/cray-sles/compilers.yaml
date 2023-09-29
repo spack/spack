@@ -13,19 +13,6 @@ compilers:
     environment: {}
     extra_rpaths: []
 - compiler:
-    spec: dpcpp@=2023.1.0
-    paths:
-      cc: /opt/intel/oneapi/compiler/latest/linux/bin/icx
-      cxx: /opt/intel/oneapi/compiler/latest/linux/bin/dpcpp
-      f77: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
-      fc: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
-    flags: {}
-    operating_system: sle_hpc15
-    target: x86_64
-    modules: [PrgEnv-intel]
-    environment: {}
-    extra_rpaths: []
-- compiler:
     spec: gcc@=10.3.0
     paths:
       cc: /opt/cray/pe/gcc/10.3.0/bin/gcc
