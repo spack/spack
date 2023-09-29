@@ -112,7 +112,9 @@ def load(parser, args):
         if "dependencies" in args.things_to_load:
             include_roots = "package" in args.things_to_load
             specs = [
-                dep for spec in specs for dep in spec.traverse(root=include_roots, order="post")
+                dep
+                for spec in specs
+                for dep in spec.traverse(root=include_roots, order="post", deptype=("run"))
             ]
 
         env_mod = spack.util.environment.EnvironmentModifications()
