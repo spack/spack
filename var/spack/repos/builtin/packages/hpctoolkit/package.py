@@ -28,7 +28,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     version("develop", branch="develop")
     version("2023.08.stable", branch="release/2023.08")
-    version("2023.08.1", tag="2023.08.1")
+    version("2023.08.1", tag="2023.08.1", commit="753a72affd584a5e72fe153d1e8c47a394a3886e")
     version("2023.03.stable", branch="release/2023.03")
     version("2023.03.01", commit="9e0daf2ad169f6c7f6c60408475b3c2f71baebbf")
     version("2022.10.01", commit="e8a5cc87e8f5ddfd14338459a4106f8e0d162c83")
