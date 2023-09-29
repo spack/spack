@@ -17,8 +17,8 @@ class PyPspamm(PythonPackage):
 
     version("develop", branch="master")
 
-    variant("numpy", default=False, description="installs numpy")
-    variant("scipy", default=False, description="installs scipy")
+    variant("numpy", default=True, description="installs numpy")
+    variant("scipy", default=True, description="installs scipy")
 
     depends_on("py-numpy", when="+numpy")
     depends_on("py-scipy", when="+scipy")
