@@ -33,8 +33,3 @@ class LibpressioTthresh(CMakePackage):
         else:
             args.append("-DBUILD_TESTING=OFF")
         return args
-
-    @run_after("build")
-    @on_package_attributes(run_tests=True)
-    def test(self):
-        make("test")

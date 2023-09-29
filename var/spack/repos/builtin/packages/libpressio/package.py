@@ -14,6 +14,8 @@ class Libpressio(CMakePackage, CudaPackage):
     url = "https://github.com/robertu94/libpressio/archive/0.31.1.tar.gz"
     git = "https://github.com/robertu94/libpressio"
 
+    test_requires_compiler = True
+
     tags = ["e4s"]
     maintainers("robertu94")
 
@@ -361,30 +363,29 @@ class Libpressio(CMakePackage, CudaPackage):
             env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
 
     @run_after("build")
-    @on_package_attributes(run_tests=True)
-    def build_test(self):
-        make("test")
-
-    @run_after("build")
     def install_docs(self):
         if "+docs" in self.spec:
+            make = which("make")
             with working_dir(self.build_directory):
                 make("docs")
 
     @run_after("install")
     def copy_test_sources(self):
-        if self.version < Version("0.88.3"):
+        if self.spec.satisfies("@:0.88.2"):
             return
+
         srcs = [
             join_path("test", "smoke_test", "smoke_test.cc"),
             join_path("test", "smoke_test", "CMakeLists.txt"),
         ]
         self.cache_extra_test_sources(srcs)
 
-    def test(self):
-        if self.version < Version("0.88.3"):
-            return
+    def test_smoke_tests(self):
+        """build, run, and check output of smoke tests"""
+        if self.spec.satisfies("@:0.88.2"):
+            raise SkipTest("Stand-alone tests require v0.88.3 on")
 
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
         args = self.cmake_args()
         args.append(
             "-S{}".format(join_path(self.test_suite.current_test_cache_dir, "test", "smoke_test"))
@@ -392,11 +393,13 @@ class Libpressio(CMakePackage, CudaPackage):
         args.append(
             "-DCMAKE_PREFIX_PATH={};{}".format(self.spec["libstdcompat"].prefix, self.prefix)
         )
+        # cmake configuration
+        cmake(*args)
 
-        self.run_test("cmake", args, purpose="cmake configuration works")
+        # cmake build
+        cmake("--build", ".")
 
-        # this works for cmake@3.14: which is required for this package
-        args = ["--build", "."]
-        self.run_test("cmake", args, purpose="cmake builds works")
-
-        self.run_test("./pressio_smoke_tests", expected="all passed")
+        # run and check output of smoke tests
+        exe = which("pressio_smoke_tests")
+        out = exe(output=str.split, error=str.split)
+        assert "all passed" in out
