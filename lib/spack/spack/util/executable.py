@@ -11,6 +11,8 @@ from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 
+from spack.util.environment import EnvironmentModifications
+
 __all__ = ["Executable", "which", "ProcessError"]
 
 
@@ -25,7 +27,6 @@ class Executable:
         self.exe = [file_path]
 
         self.default_env = {}
-        from spack.util.environment import EnvironmentModifications  # no cycle
 
         self.default_envmod = EnvironmentModifications()
         self.returncode = None
@@ -150,8 +151,6 @@ class Executable:
         env = os.environ.copy() if env_arg is None else {}
         self.default_envmod.apply_modifications(env)
         env.update(self.default_env)
-
-        from spack.util.environment import EnvironmentModifications  # no cycle
 
         # Apply env argument
         if isinstance(env_arg, EnvironmentModifications):
