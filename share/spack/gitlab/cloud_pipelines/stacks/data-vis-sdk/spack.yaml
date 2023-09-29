@@ -46,7 +46,7 @@ spack:
   - sdk_base_spec:
     - matrix:
       - - ecp-data-vis-sdk +ascent +adios2 +cinema +darshan +faodel +hdf5 +pnetcdf
-          +sensei +sz +unifyfs +veloc +vtkm +zfp
+          +sensei +sz +unifyfs +veloc +vtkm +zfp ^umpire@2022.03.1
       - - ~cuda ~rocm
         # Current testing of GPU supported configurations
         # is provided in the E4S stack
