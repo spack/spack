@@ -17,6 +17,7 @@ class PyPandas(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("2.1.1", sha256="fecb198dc389429be557cde50a2d46da8434a17fe37d7d41ff102e3987fd947b")
     version("2.1.0", sha256="62c24c7fc59e42b775ce0679cfa7b14a5f9bfb7643cfbe708c960699e05fb918")
     version("2.0.3", sha256="c02f372a88e0d17f36d3093a644c73cfc1788e876a7c4bcb4020a77512e2043c")
     version("2.0.2", sha256="dd5476b6c3fe410ee95926873f377b856dbc4e81a9c605a0dc05aaccc6a7c6c6")
@@ -65,7 +66,8 @@ class PyPandas(PythonPackage):
 
     # Required dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#python-version-support
-    depends_on("python@3.9:3.11", when="@2.1:", type=("build", "run"))
+    depends_on("python@3.9:3.12", when="@2.1.1:", type=("build", "run"))
+    depends_on("python@3.9:3.11", when="@2.1.0", type=("build", "run"))
     depends_on("python@3.8:3.11", when="@1.5:2.0", type=("build", "run"))
     depends_on("python@3.8:3.10", when="@1.4", type=("build", "run"))
     depends_on("python@:3.10", when="@1.3.3:1.3", type=("build", "run"))
@@ -75,7 +77,8 @@ class PyPandas(PythonPackage):
 
     # pyproject.toml
     depends_on("py-meson-python@0.13.1", when="@2.1:", type="build")
-    depends_on("meson@1.0.1", when="@2.1:", type="build")
+    depends_on("meson@1.2.1", when="@2.1.1:", type="build")
+    depends_on("meson@1.0.1", when="@2.1.0", type="build")
     depends_on("py-cython@0.29.33:2", when="@2:", type="build")
     depends_on("py-cython@0.29.32:2", when="@1.4.4:", type="build")
     depends_on("py-cython@0.29.30:2", when="@1.4.3:", type="build")

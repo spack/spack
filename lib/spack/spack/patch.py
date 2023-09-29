@@ -11,6 +11,7 @@ import sys
 
 import llnl.util.filesystem
 import llnl.util.lang
+from llnl.url import allowed_archive
 
 import spack
 import spack.error
@@ -19,7 +20,6 @@ import spack.mirror
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
-from spack.util.compression import allowed_archive
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
 
@@ -76,7 +76,7 @@ class Patch:
         self.level = level
         self.working_dir = working_dir
 
-    def apply(self, stage: spack.stage.Stage):
+    def apply(self, stage: "spack.stage.Stage"):
         """Apply a patch to source in a stage.
 
         Arguments:
@@ -190,7 +190,7 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
-    def apply(self, stage: spack.stage.Stage):
+    def apply(self, stage: "spack.stage.Stage"):
         assert self.stage.expanded, "Stage must be expanded before applying patches"
 
         # Get the patch file.

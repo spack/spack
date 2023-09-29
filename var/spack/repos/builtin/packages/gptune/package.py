@@ -49,7 +49,6 @@ class Gptune(CMakePackage):
     depends_on("py-ytopt-autotune@1.1.0", type=("build", "run"))
     depends_on("py-filelock", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
-    depends_on("py-cython", type=("build", "run"))
     depends_on("py-pyaml", type=("build", "run"))
     depends_on("py-statsmodels@0.13.0:", type=("build", "run"))
     depends_on("py-mpi4py@3.0.3:", type=("build", "run"))
