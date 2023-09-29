@@ -1389,7 +1389,7 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     assert spack.store.STORE.db.get_record(pkg).explicit == is_explicit
 
 
-def test_overwrite_install_does_install_build_deps(install_mockery, mock_fetch, monkeypatch):
+def test_overwrite_install_does_install_build_deps(install_mockery, mock_fetch):
     """When overwrite installing something from sources, build deps should be installed."""
     s = spack.spec.Spec("dtrun3").concretized()
     create_installer([(s, {})]).install()
