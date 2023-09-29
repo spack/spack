@@ -117,7 +117,10 @@ def ipython_interpreter(args):
 def python_interpreter(args):
     """A python interpreter is the default interpreter"""
     # Fake a main python shell by setting __name__ to __main__.
-    console = code.InteractiveConsole({"__name__": "__main__", "spack": spack})
+    locals = {"__name__": "__main__", "spack": spack}
+    if args.python_args:
+        locals["__file__"] = os.path.abspath(args.python_args[0])
+    console = code.InteractiveConsole(locals)
     if "PYTHONSTARTUP" in os.environ:
         startup_file = os.environ["PYTHONSTARTUP"]
         if os.path.isfile(startup_file):
@@ -130,7 +133,10 @@ def python_interpreter(args):
     elif args.python_args:
         propagate_exceptions_from(console)
         sys.argv = args.python_args
-        with open(args.python_args[0]) as file:
+        # Prepend the current directory at the head of the path
+        script_filename = args.python_args[0]
+        sys.path.insert(0, os.path.abspath(os.path.dirname(script_filename)))
+        with open(script_filename) as file:
             console.runsource(file.read(), args.python_args[0], "exec")
     else:
         # Provides readline support, allowing user to use arrow keys
