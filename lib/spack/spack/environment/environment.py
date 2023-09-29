@@ -26,7 +26,6 @@ from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import symlink
 
 import spack.compilers
-import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -46,7 +45,6 @@ import spack.util.cpus
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
-import spack.util.parallel
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -64,6 +62,9 @@ from spack.variant import UnknownVariantError
 #: environment variable used to indicate the active environment
 spack_env_var = "SPACK_ENV"
 
+
+import spack.concretize
+import spack.util.parallel
 
 #: currently activated environment
 _active_environment: Optional["Environment"] = None
