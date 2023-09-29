@@ -3,6 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import subprocess
+
+import llnl.util.tty as tty
+
 from spack.package import *
 
 
@@ -14,25 +18,47 @@ class Libcatalyst(CMakePackage):
     git = "https://gitlab.kitware.com/paraview/catalyst.git"
     url = "https://gitlab.kitware.com/api/v4/projects/paraview%2Fcatalyst/packages/generic/catalyst/v2.0.0/catalyst-v2.0.0.tar.gz"
 
-    maintainers("mathstuf")
-
-    version("2.0.0-rc3", sha256="8862bd0a4d0be2176b4272f9affda1ea4e5092087acbb99a2fe2621c33834e05")
-
-    # master as of 2021-05-12
-    version("0.20210512", commit="8456ccd6015142b5a7705f79471361d4f5644fa7")
+    maintainers("mathstuf", "ayenpure")
+    version("master", branch="master")
+    version("2.0.0-rc4", sha256="cb491e4ccd344156cc2494f65b9f38885598c16d12e1016c36e2ee0bc3640863")
 
     variant("mpi", default=False, description="Enable MPI support")
+    variant("conduit", default=False, description="Use external Conduit for Catalyst")
 
     depends_on("mpi", when="+mpi")
-
-    # TODO: catalyst doesn't support an external conduit
-    # depends_on('conduit')
+    depends_on("conduit", when="+conduit")
 
     def cmake_args(self):
         """Populate cmake arguments for libcatalyst."""
         args = [
             "-DCATALYST_BUILD_TESTING=OFF",
             self.define_from_variant("CATALYST_USE_MPI", "mpi"),
+            self.define_from_variant("CATALYST_WITH_EXTERNAL_CONDUIT", "conduit"),
         ]
 
         return args
+
+    def setup_run_environment(self, env):
+        spec = self.spec
+        if spec.satisfies("+conduit"):
+            env.prepend_path("CMAKE_PREFIX_PATH", spec["conduit"].prefix)
+
+    @on_package_attributes(run_tests=True)
+    @run_after("install")
+    def build_test(self):
+        testdir = "smoke_test_build"
+        cmakeExampleDir = join_path(self.stage.source_path, "examples")
+        cmake_args = [
+            cmakeExampleDir,
+            "-DBUILD_SHARED_LIBS=ON",
+            self.define("CMAKE_PREFIX_PATH", self.prefix),
+        ]
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+
+        with working_dir(testdir, create=True):
+            cmake(*cmake_args)
+            cmake(*(["--build", "."]))
+            tty.info("Running Catalyst test")
+
+            res = subprocess.run(["adaptor0/adaptor0_test", "catalyst"])
+            assert res.returncode == 0
