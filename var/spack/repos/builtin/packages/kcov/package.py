@@ -27,9 +27,13 @@ class Kcov(CMakePackage):
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/kcov.rb
         return ["-DSPECIFY_RPATH=ON"]
 
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def test_install(self):
+    def test_kcov_help(self):
+        """run installed kcov help"""
         # The help message exits with an exit code of 1
         kcov = Executable(self.prefix.bin.kcov)
         kcov("-h", ignore_errors=1)
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        self.test_kcov_help()
