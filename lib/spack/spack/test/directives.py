@@ -104,15 +104,13 @@ def test_duplicate_exact_range_license():
     package.licenses = {spack.directives.make_when_spec("+foo"): "Apache-2.0"}
     package.name = "test_package"
 
-    license_directive = spack.directives.license("MIT", "+foo")
-
     msg = (
         r"test_package is specified as being licensed as MIT when \+foo, but it is also "
         r"specified as being licensed under Apache-2.0 when \+foo, which conflict."
     )
 
     with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
-        license_directive(package)
+        spack.directives._execute_license(package, "MIT", "+foo")
 
 
 def test_overlapping_duplicate_licenses():
@@ -120,15 +118,13 @@ def test_overlapping_duplicate_licenses():
     package.licenses = {spack.directives.make_when_spec("+foo"): "Apache-2.0"}
     package.name = "test_package"
 
-    license_directive = spack.directives.license("MIT", "+bar")
-
     msg = (
         r"test_package is specified as being licensed as MIT when \+bar, but it is also "
         r"specified as being licensed under Apache-2.0 when \+foo, which conflict."
     )
 
     with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
-        license_directive(package)
+        spack.directives._execute_license(package, "MIT", "+bar")
 
 
 def test_version_type_validation():
