@@ -6196,7 +6196,100 @@ follows:
                "foo-package@{0}".format(version_str)
            )
 
-.. _package-lifecycle:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Add detection tests to packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To ensure that software is detected correctly for multiple configurations
+and on different systems users can write a ``detection_test.yaml`` file and
+put it in the package directory alongside the ``package.py`` file.
+This YAML file contains enough information for Spack to mock an environment
+and try to check if the detection logic yields the results that are expected.
+
+As a general rule, attributes at the top-level of ``detection_test.yaml``
+represent search mechanisms and they each map to a list of tests that should confirm
+the validity of the package's detection logic.
+
+The detection tests can be run with the following command:
+
+.. code-block:: console
+
+   $ spack audit externals
+
+Errors that have been detected are reported to screen.
+
+""""""""""""""""""""""""""
+Tests for PATH inspections
+""""""""""""""""""""""""""
+
+Detection tests insisting on ``PATH`` inspections are listed under
+the ``paths`` attribute:
+
+.. code-block:: yaml
+
+   paths:
+   - layout:
+     - executables:
+       - "bin/clang-3.9"
+       - "bin/clang++-3.9"
+       script: |
+         echo "clang version 3.9.1-19ubuntu1 (tags/RELEASE_391/rc2)"
+         echo "Target: x86_64-pc-linux-gnu"
+         echo "Thread model: posix"
+         echo "InstalledDir: /usr/bin"
+     results:
+     - spec: 'llvm@3.9.1 +clang~lld~lldb'
+
+Each test is performed by first creating a temporary directory structure as
+specified in the corresponding ``layout`` and by then running
+package detection and checking that the outcome matches the expected
+``results``. The exact details on how to specify both the ``layout`` and the
+``results`` are reported in the table below:
+
+.. list-table:: Test based on PATH inspections
+   :header-rows: 1
+
+   * - Option Name
+     - Description
+     - Allowed Values
+     - Required Field
+   * - ``layout``
+     - Specifies the filesystem tree used for the test
+     - List of objects
+     - Yes
+   * - ``layout:[0]:executables``
+     - Relative paths for the mock executables to be created
+     - List of strings
+     - Yes
+   * - ``layout:[0]:script``
+     - Mock logic for the executable
+     - Any valid shell script
+     - Yes
+   * - ``results``
+     - List of expected results
+     - List of objects (empty if no result is expected)
+     - Yes
+   * - ``results:[0]:spec``
+     - A spec that is expected from detection
+     - Any valid spec
+     - Yes
+
+"""""""""""""""""""""""""""""""
+Reuse tests from other packages
+"""""""""""""""""""""""""""""""
+
+When using a custom repository, it is possible to customize a package that already exists in ``builtin``
+and reuse its external tests. To do so, just write a ``detection_tests.yaml`` alongside the customized
+``package.py`` with an ``includes`` attribute. For instance the ``detection_tests.yaml`` for
+``myrepo.llvm`` might look like:
+
+.. code-block:: yaml
+
+   includes:
+   - "builtin.llvm"
+
+This YAML file instructs Spack to run the detection tests defined in ``builtin.llvm`` in addition to
+those locally defined in the file.
 
 -----------------------------
 Style guidelines for packages

@@ -120,8 +120,9 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
     "names,tags,exclude,expected",
     [
         # find --all
-        (None, ["detectable"], [], ["find-externals1"]),
+        (None, ["detectable"], [], ["builtin.mock.find-externals1"]),
         # find --all --exclude find-externals1
+        (None, ["detectable"], ["builtin.mock.find-externals1"], []),
         (None, ["detectable"], ["find-externals1"], []),
         # find cmake (and cmake is not detectable)
         (["cmake"], ["detectable"], [], []),
