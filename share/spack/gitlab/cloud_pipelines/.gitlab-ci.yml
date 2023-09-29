@@ -333,7 +333,7 @@ gpu-tests-build:
 
 e4s-oneapi-generate:
   extends: [ ".e4s-oneapi", ".generate-x86_64"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2023.07.21
+  image: ecpe4s/ubuntu20.04-runner-amd64-oneapi-2023.2.1:2023.08.01
 
 e4s-oneapi-build:
   extends: [ ".e4s-oneapi", ".build" ]
