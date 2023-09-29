@@ -14,7 +14,7 @@ spack:
 
   definitions:
   - radiuss:
-    - ascent
+    - ascent ^umpire@2022.03.1
     - blt
     - caliper
     - camp
