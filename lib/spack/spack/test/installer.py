@@ -1386,6 +1386,30 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     assert spack.store.db.get_record(pkg).explicit == is_explicit
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows breaks overwrite install due to prefix normalization inconsistencies",
+)
+def test_overwrite_install_does_install_build_deps(install_mockery, mock_fetch):
+    """When overwrite installing something from sources, build deps should be installed."""
+    s = spack.spec.Spec("dtrun3").concretized()
+    create_installer([(s, {})]).install()
+
+    # Verify there is a pure build dep
+    edge = s.edges_to_dependencies(name="dtbuild3").pop()
+    assert edge.deptypes == ("build",)
+    build_dep = edge.spec
+
+    # Uninstall the build dep
+    build_dep.package.do_uninstall()
+
+    # Overwrite install the root dtrun3
+    create_installer([(s, {"overwrite": [s.dag_hash()]})]).install()
+
+    # Verify that the build dep was also installed.
+    assert build_dep.installed
+
+
 @pytest.mark.parametrize("run_tests", [True, False])
 def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, run_tests):
     """Confirm printing of install log skipped if not run/no failures."""
