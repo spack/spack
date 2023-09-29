@@ -21,6 +21,12 @@ class Mariadb(CMakePackage):
     homepage = "https://mariadb.org/about/"
     url = "http://ftp.hosteurope.de/mirror/archive.mariadb.org/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
 
+    # ftp.hosteurope.de returns 403 for this specific version, so using different mirror
+    version(
+        "11.0.2",
+        sha256="3c71576cad0ea416882270e383f94cc89693b7fbcce1fa4f306fe3e931e464ae",
+        url="https://mirror.wtnet.de/mariadb/mariadb-11.0.2/source/mariadb-11.0.2.tar.gz",
+    )
     version("10.8.2", sha256="14e0f7f8817a41bbcb5ebdd2345a9bd44035fde7db45c028b6d4c35887ae956c")
     version("10.4.12", sha256="fef1e1d38aa253dd8a51006bd15aad184912fce31c446bb69434fcde735aa208")
     version("10.4.8", sha256="10cc2c3bdb76733c9c6fd1e3c6c860d8b4282c85926da7d472d2a0e00fffca9b")
@@ -61,8 +67,11 @@ class Mariadb(CMakePackage):
     depends_on("openssl")
     depends_on("openssl@:1.0", when="@:10.1")
     depends_on("krb5")
+    depends_on("pcre2")
+    depends_on("fmt")
 
     conflicts("%gcc@9.1.0:", when="@:5.5")
+    conflicts("%gcc@13:", when="@:10.11.2")
 
     # patch needed for cmake-3.20
     patch(
