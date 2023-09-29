@@ -276,11 +276,13 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", "+omptask" in spec))
 
-        entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
+        # C++14
+        if spec.satisfies("@0.14.0:"):
+            entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
 
-        if "+desul" in spec:
-            if "+cuda" in spec:
-                entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
+            if "+desul" in spec:
+                if "+cuda" in spec:
+                    entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
 
         entries.append(
             cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)
