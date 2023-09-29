@@ -89,7 +89,7 @@ class PyShapely(PythonPackage):
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def test_install(self):
+    def ensure_pytest(self):
         # https://shapely.readthedocs.io/en/latest/installation.html#testing-shapely
         if self.version >= Version("2"):
             with working_dir("spack-test", create=True):
