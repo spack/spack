@@ -140,8 +140,6 @@ class Ascent(CMakePackage, CudaPackage):
     # patch for finding RAJA more reliably
     # https://github.com/Alpine-DAV/ascent/pull/1123
     patch("ascent-find-raja-pr1123.patch", when="@0.9.0")
-    # patch to avoid collisions between BLT Targets
-    patch("ascent-do-not-find-camp-if-umpire-found.patch", when="@0.9.2: ^umpire@2022.10.0:")
 
     ##########################################################################
     # package dependencies
