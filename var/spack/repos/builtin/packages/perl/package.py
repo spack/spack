@@ -294,6 +294,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             "-Dprefix={0}".format(prefix),
             "-Dlocincpth=" + self.spec["gdbm"].prefix.include,
             "-Dloclibpth=" + self.spec["gdbm"].prefix.lib,
+            "-Dcc=" + spack_cc,
         ]
 
         # Extensions are installed into their private tree via
@@ -348,6 +349,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         else:
             make()
 
+    # The non-filtered config files will need to be used for dependents. This
+    # will have to be inserted in the @INC search space.
+    @property
+    def spack_config(self):
+        return join_path(prefix, "lib", self.version, "spack")
+
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def build_test(self):
@@ -401,25 +408,25 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 maker()
                 maker("install")
 
-    def _setup_dependent_env(self, env, dependent_spec, deptype):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
         any other perl extensions it depends on,
         assuming they were installed with INSTALL_BASE defined."""
-        perl_lib_dirs = []
-        for d in dependent_spec.traverse(deptype=deptype):
+        perl_lib_dirs = [self.spack_config]
+        for d in dependent_spec.traverse(deptype=("build", "run", "test")):
             if d.package.extends(self.spec):
                 perl_lib_dirs.append(d.prefix.lib.perl5)
         if perl_lib_dirs:
             perl_lib_path = ":".join(perl_lib_dirs)
-            env.prepend_path("PERL5LIB", perl_lib_path)
+            env.set("PERL5LIB", perl_lib_path)
         if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptype=("build", "run", "test"))
-
     def setup_dependent_run_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptype=("run",))
+        if dependent_spec.package.extends(self.spec):
+            env.prepend_path("PERL5LIB", join_path(dependent_spec.prefix.lib.perl5))
+        if sys.platform == "win32":
+            env.append_path("PATH", self.prefix.bin)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
@@ -480,6 +487,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             "-MModule::Loaded", "-MConfig", "-e", "print is_loaded(Config)", output=str
         )
 
+        # Make a copy of config_dot_pm
+        mkdir(self.spack_config)
+        copy(config_dot_pm, self.spack_config)
+
         with self.make_briefly_writable(config_dot_pm):
             match = "cc *=>.*"
             substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
@@ -488,6 +499,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # And the path Config_heavy.pl
         d = os.path.dirname(config_dot_pm)
         config_heavy = join_path(d, "Config_heavy.pl")
+        # copy config_heavy
+        copy(config_heavy, self.spack_config)
 
         with self.make_briefly_writable(config_heavy):
             match = "^cc=.*"
