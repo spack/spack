@@ -1,0 +1,199 @@
+spack:
+  view: false
+  concretizer:
+    unify: true
+    reuse: true
+
+  config:
+    concretizer: clingo
+    install_tree:
+      root: /home/software/dev-tools
+      padded_length: 512
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  packages:
+    all:
+      compiler:
+        - gcc@7.5.0
+      providers:
+        blas:
+          - openblas
+        mpi:
+          - mpich
+      target:
+        - x86_64
+    binutils:
+      variants: +ld +gold
+      version:
+        - 2.36.1
+
+  definitions:
+
+  - default_specs:
+    # editors
+    - emacs #+native would be nice
+    - vim+python~lua+perl+cscope features=huge # lua must be off for luajit below
+    - neovim~no_luajit
+    - py-pynvim
+    - py-neovim-remote
+
+    # language support
+    - universal-ctags
+    # - global # currently broken
+    - cscope
+
+    ## c/c++
+    ### clangd, clang-format, lldb etc.
+    - llvm+llvm_dylib+link_llvm_dylib+gold build_type=MinSizeRel
+    - gdb+python+source-highlight+gold+tui
+    ### styling and lints
+    - astyle
+    - cppcheck
+    - uncrustify
+
+    ## fortran
+    - py-fortran-language-server
+    - py-fprettify
+
+    ## rust
+    - rust+rls+rustfmt+analysis+clippy
+
+    ## python
+    - py-mypy
+    - py-flake8
+    - py-isort
+    - py-black
+    - py-pytest
+    - py-poetry
+    - py-flit
+    - py-pip
+    - py-yapf
+    - py-ipython
+
+    ## go
+    - go
+
+    ### there's no package for
+    # - py-pipx
+    # - py-pyright
+    # - py-pylsp
+    # - shfmt
+    # - <language servers other than clangd>
+    # - gopls
+    ###
+    # terminal utilities
+    - tmux
+    ## shells
+    - fish+docs
+    - zsh
+
+    # source control and repo management
+    - gh
+    - hub
+    - git
+    - git-lfs
+    - mercurial
+    - subversion
+
+    # paging and diffing
+    - wiggle
+    - bat
+    ### missing
+    # - delta
+    # - wdiff
+    ### end missing
+
+    # build support
+    - gmake
+    - ninja
+    - cmake
+    - meson
+    - ccache
+    - distcc
+    - bear
+
+    # test and benchmark
+    - gperftools
+    - jemalloc
+    - valgrind
+    - hyperfine
+
+    # text and file/directory search
+    - ripgrep
+    - fd-find
+    - fzf
+    - dust
+    - ncdu
+    - tree
+
+    # text tools
+    - jq
+    - py-yq
+
+  - arch:
+    - '%gcc target=x86_64'
+
+
+  specs:
+
+  - matrix:
+    - - $default_specs
+    - - $arch
+
+  mirrors: { "mirror": "s3://spack-binaries/develop/dev-tools" }
+
+  gitlab-ci:
+
+    script:
+      - uname -a || true
+      - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+      - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz' -o gmake.tar.gz
+      - printf 'fef1f59e56d2d11e6d700ba22d3444b6e583c663d6883fd0a4f63ab8bd280f0f gmake.tar.gz' | sha256sum --check --strict --quiet
+      - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - spack arch
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+      - spack --color=always --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+
+    match_behavior: first
+    mappings:
+      - match:
+        - llvm
+        - rust
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+          tags: ["spack", "public", "huge", "x86_64"]
+      - match: ['os=ubuntu18.04']
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+          tags: ["spack", "public", "large", "x86_64"]
+
+    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+
+    service-job-attributes:
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+      tags: ["spack", "public", "medium", "x86_64"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+
+  cdash:
+    build-group: Development Tools
+    url: https://cdash.spack.io
+    project: Spack binary cache
+    site: Cloud Gitlab Infrastructure

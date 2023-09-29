@@ -395,6 +395,75 @@ build_systems-build:
       job: build_systems-generate
 
 #########################################
+# Development tools stack
+#########################################
+.dev-tools:
+  variables:
+    SPACK_CI_STACK_NAME: dev-tools
+
+dev-tools-pr-generate:
+  extends: [ ".dev-tools", ".pr-generate"]
+
+dev-tools-protected-generate:
+  extends: [ ".dev-tools", ".protected-generate"]
+
+dev-tools-pr-build:
+  extends: [ ".dev-tools", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: dev-tools-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: dev-tools-pr-generate
+
+dev-tools-protected-build:
+  extends: [ ".dev-tools", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: dev-tools-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: dev-tools-protected-generate
+
+ # aarch64
+
+.dev-tools-aarch64:
+  variables:
+    SPACK_CI_STACK_NAME: dev-tools-aarch64
+
+dev-tools-aarch64-pr-generate:
+  extends: [ ".dev-tools-aarch64", ".pr-generate"]
+
+dev-tools-aarch64-protected-generate:
+  extends: [ ".dev-tools-aarch64", ".protected-generate"]
+
+dev-tools-aarch64-pr-build:
+  extends: [ ".dev-tools-aarch64", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: dev-tools-aarch64-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: dev-tools-aarch64-pr-generate
+
+dev-tools-aarch64-protected-build:
+  extends: [ ".dev-tools-aarch64", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: dev-tools-aarch64-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: dev-tools-aarch64-protected-generate
+
+#########################################
 # RADIUSS
 #########################################
 .radiuss:

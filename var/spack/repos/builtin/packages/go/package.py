@@ -95,6 +95,7 @@ class Go(Package):
         return match.group(1) if match else None
 
     def setup_build_environment(self, env):
+        env.set("GOROOT", None)
         env.set("GOROOT_FINAL", self.spec.prefix)
         # We need to set CC/CXX_FOR_TARGET, otherwise cgo will use the
         # internal Spack wrappers and fail.
