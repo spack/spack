@@ -11,6 +11,7 @@ class PyCython(PythonPackage):
 
     homepage = "https://github.com/cython/cython"
     pypi = "cython/Cython-0.29.21.tar.gz"
+    tags = ["build-tools"]
 
     version("3.0.0", sha256="350b18f9673e63101dbbfcf774ee2f57c20ac4636d255741d76ca79016b1bd82")
     version(
@@ -56,6 +57,7 @@ class PyCython(PythonPackage):
 
     # Backports CYTHON_FORCE_REGEN environment variable
     patch("5307.patch", when="@0.29:0.29.33")
+    patch("5712.patch", when="@0.29")
 
     @property
     def command(self):
