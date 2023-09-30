@@ -122,7 +122,7 @@ class Geant4(CMakePackage):
             if isinstance(v, _ConditionalVariantValues):
                 for c in v:
                     yield (c.value, c.when)
-           else:
+            else:
                 yield (v, "")
 
     for _std, _when in std_when(_cxxstd_values):
