@@ -133,6 +133,7 @@ VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
 VARIANT_COLOR = "@B"  #: color for highlighting variants
 HASH_COLOR = "@K"  #: color for highlighting package hashes
+NONDEFAULT_COLOR = "@*R"  #: color for highlighting non-defaults in spec output
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
@@ -1334,6 +1335,10 @@ class Spec:
         # is deployed "as built."
         # Build spec should be the actual build spec unless marked dirty.
         self._build_spec = None
+
+        # Optimization weight information from the solver for coloring non-defaults in
+        # spec formatting output.
+        self._weights = {}
 
         if isinstance(spec_like, str):
             spack.parser.parse_one_or_raise(spec_like, self)
@@ -3996,6 +4001,7 @@ class Spec:
         self.compiler_flags.spec = self
         self.variants = other.variants.copy()
         self._build_spec = other._build_spec
+        self._weights = other._weights.copy()
 
         # FIXME: we manage _patches_in_order_of_appearance specially here
         # to keep it from leaking out of spec.py, but we should figure
@@ -4249,7 +4255,13 @@ class Spec:
 
         yield deps
 
-    def format(self, format_string=DEFAULT_FORMAT, **kwargs):
+    def format(
+        self,
+        format_string: str = DEFAULT_FORMAT,
+        color: bool = False,
+        nondefaults: bool = False,
+        transform: Optional[Callable] = None,
+    ):
         r"""Prints out particular pieces of a spec, depending on what is
         in the format string.
 
@@ -4321,16 +4333,15 @@ class Spec:
 
         """
         ensure_modern_format_string(format_string)
-        enable_color = kwargs.get("color", False)
-        transform = kwargs.get("transform", {})
+        transform = transform if transform is not None else {}
 
         out = io.StringIO()
 
-        def write(s, color=None):
-            escaped = clr.cescape(s)
-            if color is not None:
-                escaped = f"{color}{escaped}@."
-            clr.cwrite(escaped, stream=out, color=enable_color)
+        def write(string, cformat=None):
+            escaped = clr.cescape(string)
+            if cformat is not None:
+                escaped = f"{cformat}{escaped}@."
+            clr.cwrite(escaped, stream=out, color=color)
 
         def write_attribute(spec, attribute):
             attribute = attribute.lower()
@@ -4426,18 +4437,39 @@ class Spec:
                         return
 
             # Set color codes for various attributes
-            color = None
+            def nondefault_or_color(color, *weights):
+                """Spec attributes are nondefault relevant weights are present and nonzero."""
+                if nondefaults and any(self._weights.get(w) for w in weights):
+                    return NONDEFAULT_COLOR
+                else:
+                    return color
+
+            attr_color = None
             if "variants" in parts:
-                color = VARIANT_COLOR
+                write(sig)
+                for variant, boolean in current.ordered_variants():
+                    attr_color = nondefault_or_color(
+                        VARIANT_COLOR,
+                        f"variant_not_default({variant.name})",
+                        f"variant_default_not_used({variant.name})",
+                    )
+                    if not boolean:
+                        write(" ")
+
+                    write(morph(spec, str(variant)), attr_color)
+                return
+            elif "name" == parts[0]:
+                attr_color = nondefault_or_color(None, "provider_weight")
             elif "architecture" in parts:
-                color = ARCHITECTURE_COLOR
+                # TODO: handle arch parts independently
+                attr_color = nondefault_or_color(ARCHITECTURE_COLOR, "node_target_weight")
             elif "compiler" in parts or "compiler_flags" in parts:
-                color = COMPILER_COLOR
+                attr_color = nondefault_or_color(COMPILER_COLOR, "node_compiler_weight")
             elif "version" in parts or "versions" in parts:
-                color = VERSION_COLOR
+                attr_color = nondefault_or_color(VERSION_COLOR, "version_weight")
 
             # Finally, write the output
-            write(sig + morph(spec, str(current)), color)
+            write(sig + morph(spec, str(current)), attr_color)
 
         attribute = ""
         in_attribute = False
@@ -4582,6 +4614,7 @@ class Spec:
         recurse_dependencies: bool = True,
         status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
+        nondefaults: bool = False,
     ) -> str:
         """Prints out this spec and its dependencies, tree-formatted
         with indentation.
@@ -4605,6 +4638,7 @@ class Spec:
                 installation status
             prefix: optional callable that takes a node as an argument and return its
                 installation prefix
+            nondefaults: highlight non-default values in output
         """
         out = ""
 
@@ -4653,7 +4687,7 @@ class Spec:
             out += "    " * d
             if d > 0:
                 out += "^"
-            out += node.format(format, color=color) + "\n"
+            out += node.format(format, color=color, nondefaults=nondefaults) + "\n"
 
             # Check if we wanted just the first line
             if not recurse_dependencies:

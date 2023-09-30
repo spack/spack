@@ -405,6 +405,17 @@ def no_install_status():
 
 
 @arg
+def debug_nondefaults():
+    return Args(
+        "-d",
+        "--debug-nondefaults",
+        action="store_true",
+        default=False,
+        help="show non-default decisions in red",
+    )
+
+
+@arg
 def no_checksum():
     return Args(
         "-n",

@@ -45,7 +45,9 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ["long", "very_long", "namespaces"])
 
     install_status_group = subparser.add_mutually_exclusive_group()
-    arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+    arguments.add_common_arguments(
+        install_status_group, ["install_status", "no_install_status", "debug_nondefaults"]
+    )
 
     subparser.add_argument(
         "-y",
@@ -145,6 +147,7 @@ def solve(parser, args):
         "show_types": args.types,
         "status_fn": install_status_fn if args.install_status else None,
         "hashes": args.long or args.very_long,
+        "nondefaults": args.debug_nondefaults,
     }
 
     # process output options
