@@ -116,22 +116,24 @@ class Geant4(CMakePackage):
         depends_on("vecgeom@0.5.2", when="@10.4.0:10.4")
         depends_on("vecgeom@0.3rc", when="@10.3.0:10.3")
 
-    for _cxxstd in _cxxstd_values:
-        for _v in (
-            _cxxstd
-            if isinstance(_cxxstd, _ConditionalVariantValues)
-            else [Value(_cxxstd, when="")]
-        ):
-            (std, when) = (_v.value, _v.when)
+    @staticmethod
+    def std_when(values):
+        for v in values:
+            if isinstance(v, _ConditionalVariantValues):
+                for c in v:
+                    yield (c.value, c.when)
+           else:
+                yield (v, "")
 
-            depends_on(f"clhep cxxstd={std}", when=f"{when} cxxstd={std}")
-            depends_on(f"vecgeom cxxstd={std}", when=f"{when} +vecgeom cxxstd={std}")
+    for _std, _when in std_when(_cxxstd_values):
+        depends_on(f"clhep cxxstd={_std}", when=f"{_when} cxxstd={_std}")
+        depends_on(f"vecgeom cxxstd={_std}", when=f"{_when} +vecgeom cxxstd={_std}")
 
-            # Spack only supports Xerces-c 3 and above, so no version req
-            depends_on(f"xerces-c netaccessor=curl cxxstd={std}", when=f"{when} cxxstd={std}")
+        # Spack only supports Xerces-c 3 and above, so no version req
+        depends_on(f"xerces-c netaccessor=curl cxxstd={_std}", when=f"{_when} cxxstd={_std}")
 
-            # Boost.python, conflict handled earlier
-            depends_on(f"boost@1.70: +python cxxstd={std}", when=f"{when} +python cxxstd={std}")
+        # Boost.python, conflict handled earlier
+        depends_on(f"boost@1.70: +python cxxstd={_std}", when=f"{_when} +python cxxstd={_std}")
 
     # Visualization driver dependencies
     depends_on("gl", when="+opengl")
