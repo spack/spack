@@ -116,7 +116,6 @@ class Geant4(CMakePackage):
         depends_on("vecgeom@0.5.2", when="@10.4.0:10.4")
         depends_on("vecgeom@0.3rc", when="@10.3.0:10.3")
 
-    @staticmethod
     def std_when(values):
         for v in values:
             if isinstance(v, _ConditionalVariantValues):
