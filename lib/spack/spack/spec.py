@@ -123,45 +123,32 @@ __all__ = [
 
 
 SPEC_FORMAT_RE = re.compile(
+    r"(?:"
     r"(?<!\\){"  # non-escaped open brace {
     r"(?:"  # one of
-    r"([%@/]|arch=)?"  # optional sigil (to print sigil in color)
+    r"([%@/]|arch=)"  # optional sigil (to print sigil in color)
     r"|"  # or
-    r"(?:^([^}]+)\.)?"  # optional ^depname. (to get attr from dependency)
-    r")"  # end one of
-    r"([^}]*)"  # attribute to format
-    r"(?<!\\)}"  # non-escaped close brace }
+    r"(?:\^([^(?<!\\)}]+)\.)"  # optional ^depname. (to get attr from dependency)
+    r")?"  # end one of
+    r"([^(?<!\\)}]*)"  # attribute to format
+    r"((?<!\\)})?"  # non-escaped close brace }, or missing closed brace if not present
+    r"|"
+    r"(})"  # mismatched close brace
+    r")"
 )
 
 #: Valid pattern for an identifier in Spack
 
 IDENTIFIER_RE = r"\w[\w-]*"
 
+# Coloring of specs when using color output. Fields are printed with
+# different colors to enhance readability.
+# See llnl.util.tty.color for descriptions of the color codes.
 COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
-ENABLED_VARIANT_COLOR = "@B"  #: color for highlighting enabled variants
-DISABLED_VARIANT_COLOR = "r"  #: color for highlighting disabled varaints
-DEPENDENCY_COLOR = "@."  #: color for highlighting dependencies
+VARIANT_COLOR = "@B"  #: color for highlighting variants
 HASH_COLOR = "@K"  #: color for highlighting package hashes
-
-#: This map determines the coloring of specs when using color output.
-#: We make the fields different colors to enhance readability.
-#: See llnl.util.tty.color for descriptions of the color codes.
-COLOR_FORMATS = {
-    "%": COMPILER_COLOR,
-    "@": VERSION_COLOR,
-    "=": ARCHITECTURE_COLOR,
-    "+": ENABLED_VARIANT_COLOR,
-    "~": DISABLED_VARIANT_COLOR,
-    "^": DEPENDENCY_COLOR,
-    "#": HASH_COLOR,
-}
-
-#: Regex used for splitting by spec field separators.
-#: These need to be escaped to avoid metacharacters in
-#: ``COLOR_FORMATS.keys()``.
-_SEPARATORS = "[\\%s]" % "\\".join(COLOR_FORMATS.keys())
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
@@ -203,26 +190,6 @@ class InstallStatus(enum.Enum):
     external = "@g{[e]}  "
     absent = "@K{ - }  "
     missing = "@r{[-]}  "
-
-
-def colorize_spec(spec):
-    """Returns a spec colorized according to the colors specified in
-    COLOR_FORMATS."""
-
-    class insert_color:
-        def __init__(self):
-            self.last = None
-
-        def __call__(self, match):
-            # ignore compiler versions (color same as compiler)
-            sep = match.group(0)
-            if self.last == "%" and sep == "@":
-                return clr.cescape(sep)
-            self.last = sep
-
-            return "%s%s" % (COLOR_FORMATS[sep], clr.cescape(sep))
-
-    return clr.colorize(re.sub(_SEPARATORS, insert_color(), str(spec)) + "@.")
 
 
 # regexes used in spec formatting
@@ -4311,9 +4278,6 @@ class Spec:
 
         yield deps
 
-    def colorized(self):
-        return colorize_spec(self)
-
     def format(self, format_string=DEFAULT_FORMAT, **kwargs):
         r"""Prints out particular pieces of a spec, depending on what is
         in the format string.
@@ -4386,17 +4350,22 @@ class Spec:
 
         """
         ensure_modern_format_string(format_string)
-        color = kwargs.get("color", False)
+        enable_color = kwargs.get("color", False)
         transform = kwargs.get("transform", {})
 
-        def safe_color(s, c=None):
-            f = clr.cescape(s)
-            if c is not None:
-                f = f"{COLOR_FORMATS[c]}{f}@."
-            return clr.colorize(f, color=color)
+        def safe_color(s, color=None):
+            escaped = clr.cescape(s)
+            if color is not None:
+                escaped = f"{color}{escaped}@."
+            return clr.colorize(escaped, color=enable_color)
 
         def write_attribute(match_object):
-            sig, dep, attribute = match_object.groups()
+            sig, dep, attribute, close_brace, unmatched_close_brace = match_object.groups()
+            if unmatched_close_brace:
+                raise SpecFormatStringError(f"Unmatched close brace: '{format_string}'")
+            elif not close_brace:
+                raise SpecFormatStringError(f"Missing close brace: '{format_string}'")
+
             attribute = attribute.lower()
 
             if sig == "arch=":
@@ -4404,6 +4373,7 @@ class Spec:
             elif not sig:
                 sig = ""
 
+            # print(match_object.groups())
             current = self if dep is None else self[dep]
 
             if attribute == "":
@@ -4432,12 +4402,11 @@ class Spec:
             elif attribute == "spack_install":
                 return morph(self, spack.store.STORE.layout.root)
             elif SHORT_HASH_FMT_RE.match(attribute):
-                col = "#"
                 if ":" in attribute:
                     _, length = attribute.split(":")
-                    return safe_color(sig + morph(self, current.dag_hash(int(length))), col)
+                    return safe_color(sig + morph(self, current.dag_hash(int(length))), HASH_COLOR)
                 else:
-                    return safe_color(sig + morph(self, current.dag_hash()), col)
+                    return safe_color(sig + morph(self, current.dag_hash()), HASH_COLOR)
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
@@ -4480,18 +4449,18 @@ class Spec:
                         return
 
             # Set color codes for various attributes
-            col = None
+            color = None
             if "variants" in parts:
-                col = "+"
+                color = VARIANT_COLOR
             elif "architecture" in parts:
-                col = "="
+                color = ARCHITECTURE_COLOR
             elif "compiler" in parts or "compiler_flags" in parts:
-                col = "%"
+                color = COMPILER_COLOR
             elif "version" in parts or "versions" in parts:
-                col = "@"
+                color = VERSION_COLOR
 
             # return colored output
-            return safe_color(sig + morph(self, str(current)), col)
+            return safe_color(sig + morph(self, str(current)), color)
 
         return SPEC_FORMAT_RE.sub(write_attribute, format_string).strip()
 
