@@ -5,7 +5,7 @@
 
 
 from spack.package import *
-from spack.variant import Value, _ConditionalVariantValues
+from spack.variant import _ConditionalVariantValues
 
 
 class Vecgeom(CMakePackage, CudaPackage):
@@ -173,16 +173,18 @@ class Vecgeom(CMakePackage, CudaPackage):
         when="@1.1.18 +cuda ^cuda@:11.4",
     )
 
-    for _cxxstd in _cxxstd_values:
-        for _v in (
-            _cxxstd
-            if isinstance(_cxxstd, _ConditionalVariantValues)
-            else [Value(_cxxstd, when="")]
-        ):
-            (std, when) = (_v.value, _v.when)
-            depends_on(f"geant4 cxxstd={std}", when=f"{when} +geant4 cxxstd={std}")
-            depends_on(f"root cxxstd={std}", when=f"{when} +root cxxstd={std}")
-            depends_on(f"xerces-c cxxstd={std}", when=f"{when} +gdml cxxstd={std}")
+    def std_when(values):
+        for v in values:
+            if isinstance(v, _ConditionalVariantValues):
+                for c in v:
+                    yield (c.value, c.when)
+            else:
+                yield (v, "")
+
+    for _std, _when in std_when(_cxxstd_values):
+        depends_on(f"geant4 cxxstd={_std}", when=f"{_when} +geant4 cxxstd={_std}")
+        depends_on(f"root cxxstd={_std}", when=f"{_when} +root cxxstd={_std}")
+        depends_on(f"xerces-c cxxstd={_std}", when=f"{_when} +gdml cxxstd={_std}")
 
     def cmake_args(self):
         spec = self.spec
