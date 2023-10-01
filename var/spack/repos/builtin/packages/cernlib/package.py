@@ -17,7 +17,7 @@ class Cernlib(CMakePackage):
     version(
         "2022.11.08.0-free",
         sha256="733d148415ef78012ff81f21922d3bf641be7514b0242348dd0200cf1b003e46",
-    )            
+    )
     version(
         "2023.08.14.0-free",
         sha256="7006475d9c38254cb94ce75e556a319fea3b3155087780ea522003103771474e",
