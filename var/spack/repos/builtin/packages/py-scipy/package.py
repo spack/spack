@@ -140,7 +140,7 @@ class PyScipy(PythonPackage):
     # https://github.com/mesonbuild/meson/pull/10909#issuecomment-1282241479
     # Intel OneAPI ifx claims to support -fvisibility, but this does not work.
     # Meson adds this flag for all Python extensions which include Fortran code.
-    conflicts("%oneapi", when="@1.9:")
+    conflicts("%oneapi@:2023.0", when="@1.9:")
 
     # https://github.com/scipy/scipy/issues/12860
     patch(
