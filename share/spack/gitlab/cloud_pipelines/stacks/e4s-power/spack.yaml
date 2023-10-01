@@ -89,7 +89,7 @@ spack:
   - drishti
   - dxt-explorer
   - dyninst
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 ~paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # +paraview fails due to rkcommon: tasking/detail/tasking_system_init.cpp:24: /usr/lib/gcc/powerpc64le-linux-gnu/11/include/xmmintrin.h:54:2: error: #error "Please read comment above.  Use -DNO_WARN_X86_INTRINSICS to disable this error." # cairo@1.16.0 with padded 256: build fails
+  # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 ~paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +visit: libext, libxkbfile, libxrender, libxt, silo (https://github.com/spack/spack/issues/39538), cairo
   - exaworks
   - flecsi
   - flit
@@ -115,7 +115,6 @@ spack:
   - lbann
   - legion
   - libnrm
-  - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp
   - libquo
   - libunwind
   - loki
@@ -187,13 +186,14 @@ spack:
   - sz
   - unifyfs
   - veloc
-  - visit                                   # silo: https://github.com/spack/spack/issues/39538
+  # - visit                                 # libext, libxkbfile, libxrender, libxt, silo (https://github.com/spack/spack/issues/39538), cairo
   - vtk-m
   - zfp
   # -- 
   # - archer                                # part of llvm +omp_tsan
   # - dealii                                # fltk: https://github.com/spack/spack/issues/38791
   # - geopm                                 # geopm: https://github.com/spack/spack/issues/38798
+  # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs: gcc: error: unrecognized command line option '-mno-sse2'; did you mean '-mno-isel'? gcc: error: unrecognized command line option '-mno-avx2'
   # - phist +mpi                            # ghost@develop: gcc-9: error: unrecognized command line option '-march=native'; did you mean '-mcpu=native'?
   # - variorum                              # variorum: https://github.com/spack/spack/issues/38786
 
@@ -212,7 +212,7 @@ spack:
   - arborx +cuda cuda_arch=70 ^kokkos +wrapper
   - caliper +cuda cuda_arch=70
   - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire ~shared
-  - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp ~paraview +cuda cuda_arch=70 # +ascent fails because fides: fidesrapidjson/reader.h:1446:171: error: expected class-name before '{' token; +paraview fails due to rkcommon: tasking/detail/tasking_system_init.cpp:24: /usr/lib/gcc/powerpc64le-linux-gnu/11/include/xmmintrin.h:54:2: error: #error "Please read comment above.  Use -DNO_WARN_X86_INTRINSICS to disable this error."
+  - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp ~paraview +cuda cuda_arch=70
   - flecsi +cuda cuda_arch=70
   - ginkgo +cuda cuda_arch=70
   - heffte +cuda cuda_arch=70
@@ -236,7 +236,7 @@ spack:
   - umpire ~shared +cuda cuda_arch=70
   # INCLUDED IN ECP DAV CUDA
   - adios2 +cuda cuda_arch=70
-  - ascent +cuda cuda_arch=70               # ascent: https://github.com/spack/spack/issues/38045
+  # - ascent +cuda cuda_arch=70             # ascent: https://github.com/spack/spack/issues/38045
   - paraview +cuda cuda_arch=70
   - vtk-m +cuda cuda_arch=70
   - zfp +cuda cuda_arch=70
