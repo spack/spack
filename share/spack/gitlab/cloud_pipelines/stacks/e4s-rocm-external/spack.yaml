@@ -291,7 +291,7 @@ spack:
   # - hdf5-vol-log
   # - libcatalyst
   - paraview +rocm amdgpu_target=gfx908
-  # - vtk-m ~openmp +rocm amdgpu_target=gfx908  # failed vtk-m: vtkm/Atomic.h:334:46: error: no member named 'memory_order_relaxed' in namespace 'Kokkos::Impl'; did you mean '__memory_order_relaxed'?
+  # - vtk-m ~openmp +rocm amdgpu_target=gfx908  # vtk-m: https://github.com/spack/spack/issues/40268
   # --
   # - lbann ~cuda +rocm amdgpu_target=gfx908    # aluminum: https://github.com/spack/spack/issues/38807
   # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
@@ -330,7 +330,7 @@ spack:
   # - hdf5-vol-log
   # - libcatalyst
   - paraview +rocm amdgpu_target=gfx90a
-  # - vtk-m ~openmp +rocm amdgpu_target=gfx90a  # failed vtk-m: vtkm/Atomic.h:334:46: error: no member named 'memory_order_relaxed' in namespace 'Kokkos::Impl'; did you mean '__memory_order_relaxed'?
+  # - vtk-m ~openmp +rocm amdgpu_target=gfx90a  # vtk-m: https://github.com/spack/spack/issues/40268
   # --
   # - lbann ~cuda +rocm amdgpu_target=gfx90a    # aluminum: https://github.com/spack/spack/issues/38807
   # - papi +rocm amdgpu_target=gfx90a           # papi: https://github.com/spack/spack/issues/27898

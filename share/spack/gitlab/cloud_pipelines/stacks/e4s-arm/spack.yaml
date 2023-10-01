@@ -187,7 +187,7 @@ spack:
   - sz
   - unifyfs
   - veloc
-  - visit                         # failed silo: https://github.com/spack/spack/issues/39538
+  - visit                           # silo: https://github.com/spack/spack/issues/39538
   - vtk-m
   - zfp 
   # --
@@ -322,7 +322,7 @@ spack:
   - umpire ~shared +cuda cuda_arch=90
   # INCLUDED IN ECP DAV CUDA
   - adios2 +cuda cuda_arch=90
-  - paraview +cuda cuda_arch=90     # failed paraview: InstallError: Incompatible cuda_arch=90
+  - paraview +cuda cuda_arch=90     # paraview: InstallError: Incompatible cuda_arch=90
   - vtk-m +cuda cuda_arch=90
   - zfp +cuda cuda_arch=90
   # --

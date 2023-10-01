@@ -187,13 +187,13 @@ spack:
   - sz
   - unifyfs
   - veloc
-  - visit                                 # failed silo: https://github.com/spack/spack/issues/39538
+  - visit                                   # silo: https://github.com/spack/spack/issues/39538
   - vtk-m
   - zfp
   # -- 
   # - archer                                # part of llvm +omp_tsan
   # - dealii                                # fltk: https://github.com/spack/spack/issues/38791
-  # - geopm                                 #  geopm: https://github.com/spack/spack/issues/38798
+  # - geopm                                 # geopm: https://github.com/spack/spack/issues/38798
   # - phist +mpi                            # ghost@develop: gcc-9: error: unrecognized command line option '-march=native'; did you mean '-mcpu=native'?
   # - variorum                              # variorum: https://github.com/spack/spack/issues/38786
 
@@ -236,7 +236,7 @@ spack:
   - umpire ~shared +cuda cuda_arch=70
   # INCLUDED IN ECP DAV CUDA
   - adios2 +cuda cuda_arch=70
-  - ascent +cuda cuda_arch=70               # failed ascent: https://github.com/spack/spack/issues/38045
+  - ascent +cuda cuda_arch=70               # ascent: https://github.com/spack/spack/issues/38045
   - paraview +cuda cuda_arch=70
   - vtk-m +cuda cuda_arch=70
   - zfp +cuda cuda_arch=70

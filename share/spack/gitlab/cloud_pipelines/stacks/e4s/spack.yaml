@@ -194,7 +194,7 @@ spack:
   - sz
   - unifyfs
   - veloc
-  - visit                             # failed silo: https://github.com/spack/spack/issues/39538
+  # - visit                           # silo: https://github.com/spack/spack/issues/39538
   - vtk-m
   - zfp
   # --
@@ -208,7 +208,7 @@ spack:
   - papi +cuda
   - tau +mpi +cuda
   # --
-  # - legion +cuda                      # legion: needs NVIDIA driver
+  # - legion +cuda                    # legion: needs NVIDIA driver
 
   # CUDA 80
   - amrex +cuda cuda_arch=80
@@ -245,7 +245,7 @@ spack:
   - umpire ~shared +cuda cuda_arch=80
   # INCLUDED IN ECP DAV CUDA
   # - adios2 +cuda cuda_arch=80
-  # - ascent +cuda cuda_arch=80       # failed ascent: https://github.com/spack/spack/issues/38045
+  # - ascent +cuda cuda_arch=80       # ascent: https://github.com/spack/spack/issues/38045
   # - paraview +cuda cuda_arch=80
   # - vtk-m +cuda cuda_arch=80
   # - zfp +cuda cuda_arch=80
@@ -285,8 +285,8 @@ spack:
   - umpire ~shared +cuda cuda_arch=90
   # INCLUDED IN ECP DAV CUDA
   - adios2 +cuda cuda_arch=90
-  # - ascent +cuda cuda_arch=90       # failed ascent: https://github.com/spack/spack/issues/38045
-  # - paraview +cuda cuda_arch=90     # failed paraview: InstallError: Incompatible cuda_arch=90
+  # - ascent +cuda cuda_arch=90       # ascent: https://github.com/spack/spack/issues/38045
+  # - paraview +cuda cuda_arch=90     # paraview: InstallError: Incompatible cuda_arch=90
   - vtk-m +cuda cuda_arch=90
   - zfp +cuda cuda_arch=90
   # --
@@ -338,7 +338,7 @@ spack:
   # - hdf5-vol-log
   # - libcatalyst
   - paraview +rocm amdgpu_target=gfx908
-  # - vtk-m ~openmp +rocm amdgpu_target=gfx908    # failed vtk-m: vtkm/Atomic.h:334:46: error: no member named 'memory_order_relaxed' in namespace 'Kokkos::Impl'; did you mean '__memory_order_relaxed'?
+  # - vtk-m ~openmp +rocm amdgpu_target=gfx908  # vtk-m: https://github.com/spack/spack/issues/40268
   # --
   # - lbann ~cuda +rocm amdgpu_target=gfx908    # aluminum: https://github.com/spack/spack/issues/38807
   # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
@@ -377,7 +377,7 @@ spack:
   # - hdf5-vol-log
   # - libcatalyst
   - paraview +rocm amdgpu_target=gfx90a
-  # - vtk-m ~openmp +rocm amdgpu_target=gfx90a  # failed vtk-m: vtkm/Atomic.h:334:46: error: no member named 'memory_order_relaxed' in namespace 'Kokkos::Impl'; did you mean '__memory_order_relaxed'?
+  # - vtk-m ~openmp +rocm amdgpu_target=gfx90a  # vtk-m: https://github.com/spack/spack/issues/40268
   # --
   # - lbann ~cuda +rocm amdgpu_target=gfx90a    # aluminum: https://github.com/spack/spack/issues/38807
   # - papi +rocm amdgpu_target=gfx90a           # papi: https://github.com/spack/spack/issues/27898
