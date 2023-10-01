@@ -208,7 +208,7 @@ spack:
   # CUDA 75  
   - amrex +cuda cuda_arch=75
   - arborx +cuda cuda_arch=75 ^kokkos +wrapper
-  - cabana +cuda cuda_arch=75
+  - cabana +cuda cuda_arch=75 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=75
   - caliper +cuda cuda_arch=75
   - chai ~benchmarks ~tests +cuda cuda_arch=75 ^umpire ~shared
   - dealii +cuda cuda_arch=75
@@ -253,7 +253,7 @@ spack:
   # CUDA 80
   - amrex +cuda cuda_arch=80
   - arborx +cuda cuda_arch=80 ^kokkos +wrapper
-  - cabana +cuda cuda_arch=80  
+  - cabana +cuda cuda_arch=80 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=80
   - caliper +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire ~shared
   - dealii +cuda cuda_arch=80
@@ -298,7 +298,7 @@ spack:
   # CUDA 90
   - amrex +cuda cuda_arch=90
   - arborx +cuda cuda_arch=90 ^kokkos +wrapper
-  - cabana +cuda cuda_arch=90
+  - cabana +cuda cuda_arch=90  ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=90
   - caliper +cuda cuda_arch=90
   - chai ~benchmarks ~tests +cuda cuda_arch=90 ^umpire ~shared
   - flecsi +cuda cuda_arch=90
