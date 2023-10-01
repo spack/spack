@@ -52,9 +52,6 @@ class Rivet(AutotoolsPackage):
 
     depends_on("hepmc", when="hepmc=2")
     depends_on("hepmc3", when="hepmc=3")
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
     depends_on("fastjet")
     depends_on("fastjet@3.4.0:", when="@3.1.7:")
     depends_on("fjcontrib")
