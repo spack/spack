@@ -306,7 +306,7 @@ e4s-build:
 .e4s-arm:
   extends: [ ".linux_aarch64" ]
   variables:
-    SPACK_CI_STACK_NAME: e4s
+    SPACK_CI_STACK_NAME: e4s-arm
 
 e4s-arm-generate:
   extends: [ ".e4s-arm", ".generate-aarch64" ]
