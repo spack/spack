@@ -1,0 +1,38 @@
+paths:
+  # Ubuntu 18.04, system compilers without Fortran
+  - layout:
+      - executables:
+        - "bin/gcc"
+        - "bin/g++"
+        script: "echo 7.5.0"
+    results:
+      - spec: "gcc@7.5.0 languages=c,c++"
+  # Mock a version < 7 of GCC that requires -dumpversion and
+  # errors with -dumpfullversion
+  - layout:
+      - executables:
+        - "bin/gcc-5"
+        - "bin/g++-5"
+        - "bin/gfortran-5"
+        script: |
+          if [[ "$1" == "-dumpversion" ]] ; then
+            echo "5.5.0"
+          else
+            echo "gcc-5: fatal error: no input files"
+            echo "compilation terminated."
+            exit 1
+          fi
+    results:
+      - spec: "gcc@5.5.0 languages=c,c++,fortran"
+  # Multiple compilers present at the same time
+  - layout:
+      - executables:
+        - "bin/x86_64-linux-gnu-gcc-6"
+        script: 'echo 6.5.0'
+      - executables:
+        - "bin/x86_64-linux-gnu-gcc-10"
+        - "bin/x86_64-linux-gnu-g++-10"
+        script: "echo 10.1.0"
+    results:
+      - spec: "gcc@6.5.0 languages=c"
+      - spec: "gcc@10.1.0 languages=c,c++"

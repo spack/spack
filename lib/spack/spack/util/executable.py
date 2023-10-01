@@ -100,6 +100,8 @@ class Executable:
                 an exception even if ``fail_on_error`` is set to ``True``
             ignore_quotes (bool): If False, warn users that quotes are not needed
                 as Spack does not use a shell. Defaults to False.
+            timeout (int or float): The number of seconds to wait before killing
+                the child process
             input: Where to read stdin from
             output: Where to send stdout
             error: Where to send stderr
@@ -120,6 +122,29 @@ class Executable:
         By default, the subprocess inherits the parent's file descriptors.
 
         """
+
+        def process_cmd_output(out, err):
+            result = None
+            if output in (str, str.split) or error in (str, str.split):
+                result = ""
+                if output in (str, str.split):
+                    if sys.platform == "win32":
+                        outstr = str(out.decode("ISO-8859-1"))
+                    else:
+                        outstr = str(out.decode("utf-8"))
+                    result += outstr
+                    if output is str.split:
+                        sys.stdout.write(outstr)
+                if error in (str, str.split):
+                    if sys.platform == "win32":
+                        errstr = str(err.decode("ISO-8859-1"))
+                    else:
+                        errstr = str(err.decode("utf-8"))
+                    result += errstr
+                    if error is str.split:
+                        sys.stderr.write(errstr)
+            return result
+
         # Environment
         env_arg = kwargs.get("env", None)
 
@@ -150,6 +175,7 @@ class Executable:
         fail_on_error = kwargs.pop("fail_on_error", True)
         ignore_errors = kwargs.pop("ignore_errors", ())
         ignore_quotes = kwargs.pop("ignore_quotes", False)
+        timeout = kwargs.pop("timeout", None)
 
         # If they just want to ignore one error code, make it a tuple.
         if isinstance(ignore_errors, int):
@@ -196,28 +222,9 @@ class Executable:
             proc = subprocess.Popen(
                 cmd, stdin=istream, stderr=estream, stdout=ostream, env=env, close_fds=False
             )
-            out, err = proc.communicate()
+            out, err = proc.communicate(timeout=timeout)
 
-            result = None
-            if output in (str, str.split) or error in (str, str.split):
-                result = ""
-                if output in (str, str.split):
-                    if sys.platform == "win32":
-                        outstr = str(out.decode("ISO-8859-1"))
-                    else:
-                        outstr = str(out.decode("utf-8"))
-                    result += outstr
-                    if output is str.split:
-                        sys.stdout.write(outstr)
-                if error in (str, str.split):
-                    if sys.platform == "win32":
-                        errstr = str(err.decode("ISO-8859-1"))
-                    else:
-                        errstr = str(err.decode("utf-8"))
-                    result += errstr
-                    if error is str.split:
-                        sys.stderr.write(errstr)
-
+            result = process_cmd_output(out, err)
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
                 long_msg = cmd_line_string
@@ -246,6 +253,18 @@ class Executable:
                     "\nExit status %d when invoking command: %s"
                     % (proc.returncode, cmd_line_string),
                 )
+        except subprocess.TimeoutExpired as te:
+            proc.kill()
+            out, err = proc.communicate()
+            result = process_cmd_output(out, err)
+            long_msg = cmd_line_string + f"\n{result}"
+            if fail_on_error:
+                raise ProcessTimeoutError(
+                    f"\nProcess timed out after {timeout}s"
+                    f"We expected the following command to run quickly but\
+it did not, please report this as an issue: {long_msg}",
+                    long_message=long_msg,
+                ) from te
 
         finally:
             if close_ostream:
@@ -342,6 +361,11 @@ def which(*args, **kwargs):
 
 class ProcessError(spack.error.SpackError):
     """ProcessErrors are raised when Executables exit with an error code."""
+
+
+class ProcessTimeoutError(ProcessError):
+    """ProcessTimeoutErrors are raised when Executable calls with a
+    specified timeout exceed that time"""
 
 
 class CommandNotFoundError(spack.error.SpackError):
