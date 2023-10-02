@@ -20,6 +20,8 @@ class Libxkbcommon(MesonPackage, AutotoolsPackage):
         conditional("meson", when="@0.9:"), conditional("autotools", when="@:0.8"), default="meson"
     )
 
+    version("1.5.0", sha256="560f11c4bbbca10f495f3ef7d3a6aa4ca62b4f8fb0b52e7d459d18a26e46e017")
+    version("1.4.1", sha256="943c07a1e2198026d8102b17270a1f406e4d3d6bbc4ae105b9e1b82d7d136b39")
     version("1.4.0", sha256="106cec5263f9100a7e79b5f7220f889bc78e7d7ffc55d2b6fdb1efefb8024031")
     version(
         "0.8.2",
@@ -39,6 +41,9 @@ class Libxkbcommon(MesonPackage, AutotoolsPackage):
 
     variant("wayland", default=False, description="Enable Wayland support")
 
+    depends_on("meson@0.41:", type="build", when="@0.9:")
+    depends_on("meson@0.49:", type="build", when="@1.0:")
+    depends_on("meson@0.51:", type="build", when="@1.5:")
     depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("bison", type="build")
     depends_on("util-macros")
