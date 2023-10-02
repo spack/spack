@@ -13,20 +13,45 @@ packages:
   # VARIANT PREFERENCES/REQUIREMENTS
   binutils:
     variants: +ld +gold +headers +libiberty ~nls
+  boost:
+    variants: +python +filesystem +iostreams +system
+  cuda:
+    version: [11.7.0]
+  elfutils:
+    require: "%gcc"
+    variants: +bzip2 ~nls +xz
   hdf5:
     variants: +fortran +hl +shared
+  libfabric:
+    variants: fabrics=sockets,tcp,udp,rxm
   libunwind:
     variants: +pic +xz
+  mesa:
+    version: [21.3.8]
+  mpich:
+    variants: ~wrapperrpath
   ncurses:
-    require: "@6.3 +termlib"
+    require: +termlib
   openblas:
     require: "@0.3.20"
     variants: threads=openmp
-  xz:
-    variants: +pic
-  elfutils:
-    variants: +bzip2 ~nls +xz
+  python:
+    version: [3.8.13]
+  sed:
     require: "%gcc"
+  tbb:
+    require: "intel-tbb"
+  trilinos:
+    require:
+    - one_of: [+amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext +ifpack
+          +intrepid +intrepid2 +isorropia +kokkos +minitensor +nox +piro +phalanx
+          +rol +rythmos +sacado +stk +shards +stratimikos +tempus +tpetra
+          +trilinoscouplings +zoltan]
+    - one_of: [gotype=long_long, gotype=all]
+    - one_of: [~ml ~muelu ~zoltan2 ~teko, +ml +muelu +zoltan2 +teko]
+  xz:
+    require: "%gcc"
+    variants: +pic
   unzip:
     require: "%gcc"
 
