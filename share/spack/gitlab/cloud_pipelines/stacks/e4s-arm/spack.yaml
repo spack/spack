@@ -116,7 +116,6 @@ spack:
   - lbann
   - legion
   - libnrm
-  - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp
   - libquo
   - libunwind
   - loki
@@ -191,8 +190,9 @@ spack:
   - vtk-m
   - zfp 
   # --
+  # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs@0.7.3: gcc: error: unrecognized command-line option '-mno-sse2'
   # - archer                        # part of llvm +omp_tsan
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp  # openimagedenoise: https://github.com/spack/spack/issues/39531
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp  # +visit: ?
   # - geopm                         # geopm: https://github.com/spack/spack/issues/38795
   # - variorum                      # variorum: https://github.com/spack/spack/issues/38786
 
@@ -322,7 +322,7 @@ spack:
   - umpire ~shared +cuda cuda_arch=90
   # INCLUDED IN ECP DAV CUDA
   - adios2 +cuda cuda_arch=90
-  - paraview +cuda cuda_arch=90     # paraview: InstallError: Incompatible cuda_arch=90
+  # - paraview +cuda cuda_arch=90   # paraview: InstallError: Incompatible cuda_arch=90
   - vtk-m +cuda cuda_arch=90
   - zfp +cuda cuda_arch=90
   # --
