@@ -30,9 +30,6 @@ spack:
   - $optimized_configs
   - $optimized_libs
 
-
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-pcluster-neoverse_n1" }
-
   ci:
     pipeline-gen:
     - build-job:
