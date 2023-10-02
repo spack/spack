@@ -87,6 +87,7 @@ class Cgns(CMakePackage):
                 self.define_from_variant("CGNS_ENABLE_LEGACY", "legacy"),
                 self.define_from_variant("CGNS_ENABLE_MEM_DEBUG", "mem_debug"),
                 self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+                self.define_from_variant("CGNS_ENABLE_64BIT", "int64"),
             ]
         )
 
@@ -95,11 +96,10 @@ class Cgns(CMakePackage):
                 [
                     "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
                     "-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx,
-                    "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
                 ]
             )
-
-        options.append(self.define_from_variant("CGNS_ENABLE_64BIT", "int64"))
+            if "+fortran" in spec:
+                options.append(self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
 
         if "+hdf5" in spec:
             options.extend(
