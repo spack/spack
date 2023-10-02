@@ -211,7 +211,6 @@ spack:
   - cabana +cuda cuda_arch=75 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=75
   - caliper +cuda cuda_arch=75
   - chai ~benchmarks ~tests +cuda cuda_arch=75 ^umpire ~shared
-  - dealii +cuda cuda_arch=75
   - flecsi +cuda cuda_arch=75
   - ginkgo +cuda cuda_arch=75
   - heffte +cuda cuda_arch=75
@@ -242,6 +241,7 @@ spack:
   # - ascent +cuda cuda_arch=75     # ascent: https://github.com/spack/spack/issues/38045
   # - axom +cuda cuda_arch=75       # axom: https://github.com/spack/spack/issues/29520
   # - cusz +cuda cuda_arch=75       # cusz: https://github.com/spack/spack/issues/38787
+  # - dealii +cuda cuda_arch=75     # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=75  # embree: https://github.com/spack/spack/issues/39534
   # - lammps +cuda cuda_arch=75     # lammps: needs NVIDIA driver
   # - lbann +cuda cuda_arch=75      # lbann: https://github.com/spack/spack/issues/38788
@@ -256,7 +256,6 @@ spack:
   - cabana +cuda cuda_arch=80 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=80
   - caliper +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire ~shared
-  - dealii +cuda cuda_arch=80
   - flecsi +cuda cuda_arch=80
   - ginkgo +cuda cuda_arch=80
   - heffte +cuda cuda_arch=80
@@ -287,6 +286,7 @@ spack:
   # - ascent +cuda cuda_arch=80     # ascent: https://github.com/spack/spack/issues/38045
   # - axom +cuda cuda_arch=80       # axom: https://github.com/spack/spack/issues/29520
   # - cusz +cuda cuda_arch=80       # cusz: https://github.com/spack/spack/issues/38787
+  # - dealii +cuda cuda_arch=80     # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=80 # embree: https://github.com/spack/spack/issues/39534
   # - lammps +cuda cuda_arch=80     # lammps: needs NVIDIA driver
   # - lbann +cuda cuda_arch=80      # lbann: https://github.com/spack/spack/issues/38788
