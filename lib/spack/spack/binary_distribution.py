@@ -216,11 +216,11 @@ class BinaryCacheIndex:
                 with self._index_file_cache.read_transaction(cache_key):
                     db._read_from_file(cache_path)
             except spack_db.InvalidDatabaseVersionError as e:
-                msg = (
+                tty.warn(
                     f"you need a newer Spack version to read the buildcache index for the "
                     f"following mirror: '{mirror_url}'. {e.database_version_message}"
                 )
-                raise BuildcacheIndexError(msg) from e
+                return
 
             spec_list = db.query_local(installed=False, in_buildcache=True)
 
