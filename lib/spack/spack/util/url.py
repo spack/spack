@@ -14,7 +14,9 @@ import sys
 import urllib.parse
 import urllib.request
 
-from spack.util.path import convert_to_posix_path, sanitize_filename
+from llnl.path import convert_to_posix_path
+
+from spack.util.path import sanitize_filename
 
 
 def validate_scheme(scheme):

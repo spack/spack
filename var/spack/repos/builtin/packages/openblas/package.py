@@ -274,7 +274,7 @@ class Openblas(CMakePackage, MakefilePackage):
         search_shared = bool(spec.variants["shared"].value)
         suffix = spec.variants["symbol_suffix"].value
         if suffix != "none":
-            name += suffix
+            name = [x + suffix for x in name]
 
         return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
 
