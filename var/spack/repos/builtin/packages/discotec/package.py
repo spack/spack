@@ -32,6 +32,7 @@ class Discotec(CMakePackage):
     depends_on("glpk")
     depends_on("highfive+mpi+boost+ipo", when="+hdf5")
     depends_on("mpi")
+    depends_on("selalib", when="+selalib")
     depends_on("vtk", when="+vtk")
 
     def cmake_args(self):
@@ -46,5 +47,7 @@ class Discotec(CMakePackage):
             self.define_from_variant("DISCOTEC_USE_VTK", "vtk"),
             self.define_from_variant("DISCOTEC_WITH_SELALIB", "selalib"),
         ]
+        if "+selalib" in self.spec:
+            args.append(self.define("SELALIB_DIR", self.spec["selalib"].prefix.cmake))
 
         return args
