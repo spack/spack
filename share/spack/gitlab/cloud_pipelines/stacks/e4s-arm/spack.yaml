@@ -89,7 +89,6 @@ spack:
   - charliecloud
   - conduit
   - datatransferkit
-  - dealii
   - dyninst
   - exaworks
   - flecsi
@@ -190,6 +189,7 @@ spack:
   - vtk-m
   - zfp 
   # --
+  # - dealii                        # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs@0.7.3: gcc: error: unrecognized command-line option '-mno-sse2'
   # - archer                        # part of llvm +omp_tsan
   - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp  # +visit: ?
@@ -227,7 +227,6 @@ spack:
   - petsc +cuda cuda_arch=75
   - raja +cuda cuda_arch=75
   - slate +cuda cuda_arch=75
-  - slepc +cuda cuda_arch=75
   - strumpack ~slate +cuda cuda_arch=75
   - sundials +cuda cuda_arch=75
   - superlu-dist +cuda cuda_arch=75
@@ -248,6 +247,7 @@ spack:
   # - lbann +cuda cuda_arch=75      # lbann: https://github.com/spack/spack/issues/38788
   # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=75 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787 
   # - py-torch +cuda cuda_arch=75   # skipped, installed by other means
+  # - slepc +cuda cuda_arch=75      # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - upcxx +cuda cuda_arch=75      # upcxx: needs NVIDIA driver
 
   # CUDA 80
@@ -272,7 +272,6 @@ spack:
   - petsc +cuda cuda_arch=80
   - raja +cuda cuda_arch=80
   - slate +cuda cuda_arch=80
-  - slepc +cuda cuda_arch=80
   - strumpack ~slate +cuda cuda_arch=80
   - sundials +cuda cuda_arch=80
   - superlu-dist +cuda cuda_arch=80
@@ -293,6 +292,7 @@ spack:
   # - lbann +cuda cuda_arch=80      # lbann: https://github.com/spack/spack/issues/38788
   # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=80 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787 
   # - py-torch +cuda cuda_arch=80   # skipped, installed by other means
+  # - slepc +cuda cuda_arch=80      # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - upcxx +cuda cuda_arch=80      # upcxx: needs NVIDIA driver
 
   # CUDA 90
@@ -314,7 +314,6 @@ spack:
   - petsc +cuda cuda_arch=90
   - raja +cuda cuda_arch=90
   - slate +cuda cuda_arch=90
-  - slepc +cuda cuda_arch=90
   - strumpack ~slate +cuda cuda_arch=90
   - sundials +cuda cuda_arch=90
   - superlu-dist +cuda cuda_arch=90
@@ -337,6 +336,7 @@ spack:
   # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=90 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787 
   # - omega-h +cuda cuda_arch=90    # omega-h: https://github.com/spack/spack/issues/39535
   # - py-torch +cuda cuda_arch=90   # skipped, installed by other means
+  # - slepc +cuda cuda_arch=90      # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - tasmanian +cuda cuda_arch=90  # tasmanian: conflicts with cuda@12
   # - upcxx +cuda cuda_arch=90      # upcxx: needs NVIDIA driver
 
