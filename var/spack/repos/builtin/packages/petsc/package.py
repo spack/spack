@@ -14,7 +14,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     """
 
     homepage = "https://petsc.org"
-    url = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.15.0.tar.gz"
+    url = "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-3.20.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers("balay", "barrysmith", "jedbrown")
 
@@ -22,6 +22,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.20.0", sha256="c152ccb12cb2353369d27a65470d4044a0c67e0b69814368249976f5bb232bd4")
+    version("3.19.6", sha256="6045e379464e91bb2ef776f22a08a1bc1ff5796ffd6825f15270159cbb2464ae")
+    version("3.19.5", sha256="511aa78cad36db2dfd298acf35e9f7afd2ecc1f089da5b0b5682507a31a5d6b2")
     version("3.19.4", sha256="7c941b71be52c3b764214e492df60109d12f97f7d854c97a44df0c4d958b3906")
     version("3.19.3", sha256="008239c016b869693ec8e81368a0b7638462e667d07f7d50ed5f9b75ccc58d17")
     version("3.19.2", sha256="114f363f779bb16839b25c0e70f8b0ae0d947d50e72f7c6cddcb11b001079b16")
@@ -339,13 +342,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # * petsc-3.15 and newer (without docs)
     def url_for_version(self, version):
         if self.spec.satisfies("@3.13.0:3.14.6"):
-            return (
-                "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-{0}.tar.gz".format(
-                    version
-                )
+            return "http://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-lite-{0}.tar.gz".format(
+                version
             )
         else:
-            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-{0}.tar.gz".format(
+            return "http://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-{0}.tar.gz".format(
                 version
             )
 

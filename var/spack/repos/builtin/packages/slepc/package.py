@@ -22,6 +22,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("main", branch="main")
+    version("3.20.0", sha256="780c50260a9bc9b72776cb920774800c73832370938f1d48c2ea5c66d31b7380")
     version("3.19.2", sha256="ca7ed906795971fbe35f08ee251a26b86a4442a18609b878cba00835c9d62034")
     version("3.19.1", sha256="280737e9ef762d7f0079ad3ad29913215c799ebf124651c723c1972f71fbc0db")
     version("3.19.0", sha256="724f6610a2e38b1be7586fd494fe350b58f5aee1ca734bd85e783aa9d3daa8de")
@@ -63,15 +64,8 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on("petsc@main", when="@main")
-    depends_on("petsc@3.19.0:3.19", when="@3.19.0:3.19")
-    depends_on("petsc@3.18.0:3.18", when="@3.18.0:3.18")
-    depends_on("petsc@3.17.0:3.17", when="@3.17.0:3.17")
-    depends_on("petsc@3.16.0:3.16", when="@3.16.0:3.16")
-    depends_on("petsc@3.15.0:3.15", when="@3.15.0:3.15")
-    depends_on("petsc@3.14.0:3.14", when="@3.14.0:3.14")
-    depends_on("petsc@3.13.0:3.13", when="@3.13.0:3.13")
-    depends_on("petsc@3.12.0:3.12", when="@3.12.0:3.12")
-    depends_on("petsc@3.11.0:3.11", when="@3.11.0:3.11")
+    for ver in ["3.20", "3.19", "3.18", "3.17", "3.16", "3.15", "3.14", "3.13", "3.12", "3.11"]:
+        depends_on(f"petsc@{ver}", when=f"@{ver}")
     depends_on("petsc+cuda", when="+cuda")
     depends_on("arpack-ng~mpi", when="+arpack^petsc~mpi~int64")
     depends_on("arpack-ng+mpi", when="+arpack^petsc+mpi~int64")
