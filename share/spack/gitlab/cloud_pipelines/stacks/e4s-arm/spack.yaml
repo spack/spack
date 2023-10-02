@@ -186,7 +186,7 @@ spack:
   - sz
   - unifyfs
   - veloc
-  - visit                           # silo: https://github.com/spack/spack/issues/39538
+  # - visit                         # silo: https://github.com/spack/spack/issues/39538
   - vtk-m
   - zfp 
   # --
