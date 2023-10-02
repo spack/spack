@@ -124,7 +124,7 @@ def emulate_env_utility(cmd_name, context: Context, args):
             ),
         )
 
-    build_environment.setup_package(spec.package, args.dirty, context)
+    build_environment.setup_package(spec.package, args.dirty, context, safe_windows=False)
 
     if args.dump:
         # Dump a source-able environment to a text file.

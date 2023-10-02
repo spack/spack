@@ -730,7 +730,7 @@ def load_external_modules(pkg):
             load_module(external_module)
 
 
-def setup_package(pkg, dirty, context: Context = Context.BUILD):
+def setup_package(pkg, dirty, context: Context = Context.BUILD, safe_windows=True):
     """Execute all environment setup routines."""
     if context not in (Context.BUILD, Context.TEST):
         raise ValueError(f"'context' must be Context.BUILD or Context.TEST - got {context}")
@@ -743,7 +743,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     # Keep track of env changes from packages separately, since we want to
     # issue warnings when packages make "suspicious" modifications.
     env_base = EnvironmentModifications() if dirty else clean_environment()
-    env_mods = EnvironmentModifications()
+    env_mods = EnvironmentModifications(safe_windows=safe_windows)
 
     # setup compilers for build contexts
     need_compiler = context == Context.BUILD or (
