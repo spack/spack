@@ -17,7 +17,6 @@ class Falco(AutotoolsPackage):
     variant("htslib", default=False)
 
     depends_on("zlib-ng")
-    # depends_on("openmpi")
     depends_on("htslib", when="+htslib")
 
     def configure_args(self):
