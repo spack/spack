@@ -454,6 +454,10 @@ class Unparser:
             self.fill("@")
             self.dispatch(deco)
         self.fill("class " + node.name)
+        if getattr(node, "type_params", False):
+            self.write("[")
+            interleave(lambda: self.write(", "), self.dispatch, node.type_params)
+            self.write("]")
         with self.delimit_if("(", ")", condition=node.bases or node.keywords):
             comma = False
             for e in node.bases:
@@ -499,6 +503,10 @@ class Unparser:
             self.dispatch(deco)
         def_str = fill_suffix + " " + node.name
         self.fill(def_str)
+        if getattr(node, "type_params", False):
+            self.write("[")
+            interleave(lambda: self.write(", "), self.dispatch, node.type_params)
+            self.write("]")
         with self.delimit("(", ")"):
             self.dispatch(node.args)
         if getattr(node, "returns", False):
@@ -1249,3 +1257,23 @@ class Unparser:
         with self.require_parens(_Precedence.BOR, node):
             self.set_precedence(pnext(_Precedence.BOR), *node.patterns)
             interleave(lambda: self.write(" | "), self.dispatch, node.patterns)
+
+    def visit_TypeAlias(self, node):
+        self.fill("type ")
+        self.dispatch(node.name)
+        self.write(" = ")
+        self.dispatch(node.value)
+
+    def visit_TypeVar(self, node):
+        self.write(node.name)
+        if node.bound:
+            self.write(": ")
+            self.dispatch(node.bound)
+
+    def visit_TypeVarTuple(self, node):
+        self.write("*")
+        self.write(node.name)
+
+    def visit_ParamSpec(self, node):
+        self.write("**")
+        self.write(node.name)
