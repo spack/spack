@@ -1183,7 +1183,8 @@ def tarfile_of_spec_prefix(tar: tarfile.TarFile, prefix: str) -> None:
     Args:
         tar: tarfile object to add files to
         prefix: absolute install prefix of spec"""
-    assert os.path.isabs(prefix) and os.path.isdir(prefix)
+    if not os.path.isabs(prefix) or not os.path.isdir(prefix):
+        raise ValueError(f"prefix '{prefix}' must be an absolute path to a directory")
     hardlink_to_tarinfo_name: Dict[Tuple[int, int], str] = dict()
     stat_key = lambda stat: (stat.st_dev, stat.st_ino)
 
