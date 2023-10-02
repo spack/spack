@@ -231,6 +231,7 @@ spack:
   - cabana +sycl ^kokkos +sycl +openmp cxxstd=17 +tests +examples
   - kokkos +sycl +openmp cxxstd=17 +tests +examples
   - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +tests +examples
+  - slate +sycl
   # --
   # - ginkgo +oneapi                    # InstallError: Ginkgo's oneAPI backend requires theDPC++ compiler as main CXX compiler.
   # - hpctoolkit +level_zero            # intel-tbb: icpx: error: unknown argument: '-flifetime-dse=1'
