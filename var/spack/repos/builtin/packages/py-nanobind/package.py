@@ -20,7 +20,7 @@ class PyNanobind(PythonPackage):
     url = "https://github.com/wjakob/nanobind/archive/refs/tags/v1.2.0.tar.gz"
     git = "https://github.com/wjakob/nanobind.git"
 
-    maintainers("ma595")
+    maintainers("chrisrichardson", "garth-wells", "ma595")
 
     version("master", branch="master", submodules=True)
     version(
