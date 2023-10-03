@@ -32,6 +32,7 @@ class AprUtil(AutotoolsPackage):
     depends_on("postgresql", when="+pgsql")
     depends_on("sqlite", when="+sqlite")
     depends_on("unixodbc", when="+odbc")
+    depends_on("pkg-config", when="+crypto ^openssl~shared")
 
     @property
     def libs(self):
@@ -85,10 +86,12 @@ class AprUtil(AutotoolsPackage):
         else:
             args.append("--without-odbc")
 
-        if "+crypto" in spec:
-            if spec["openssl"].satisfies("~shared"):
-                zlibs = self.spec["zlib"].libs
-                args.append("LIBS={0} {1}".format(zlibs.ld_flags, zlibs.link_flags))
+        if spec.satisfies("+crypto ^openssl~shared"):
+            # Need pkg-config to get zlib and -ldl flags
+            # (see https://dev.apr.apache.narkive.com/pNnO9F1S/configure-bug-openssl)
+            pkgconf = which("pkg-config")
+            ssl_libs = pkgconf("--libs", "--static", "openssl", output=str)
+            args.append(f"LIBS={ssl_libs}")
 
         return args
 
