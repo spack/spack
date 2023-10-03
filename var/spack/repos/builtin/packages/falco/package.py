@@ -9,7 +9,7 @@ from spack.package import *
 class Falco(AutotoolsPackage):
     """A C++ drop-in replacement of FastQC to assess the quality of sequence read data"""
 
-    homepage = "https://falco.readthedocs.io/"
+    homepage = "https://github.com/smithlabcode/falco"
     url = "https://github.com/smithlabcode/falco/releases/download/v1.2.1/falco-1.2.1.tar.gz"
 
     version("1.2.1", sha256="33de8aafac45c7aea055ed7ab837d0a39d12dcf782816cea8a6c648acb911057")
