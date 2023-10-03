@@ -112,6 +112,7 @@ class Aocc(Compiler):
         match = re.search(r"AOCC_(\d+)[._](\d+)[._](\d+)", output)
         if match:
             return ".".join(match.groups())
+        return "unknown"
 
     @classmethod
     def fc_version(cls, fortran_compiler):
