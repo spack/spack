@@ -21,6 +21,6 @@ class Falco(AutotoolsPackage):
     depends_on("htslib", when="+htslib")
 
     def configure_args(self):
-       if self.spec.satisfies("+htslib"):
-           return ["--enable-htslib"]
-       return []
+        if self.spec.satisfies("+htslib"):
+            return ["--enable-htslib"]
+        return []
