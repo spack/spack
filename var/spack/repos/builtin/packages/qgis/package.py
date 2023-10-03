@@ -19,10 +19,11 @@ class Qgis(CMakePackage):
 
     # Prefer latest long term release
     version(
-        "3.28.10",
-        sha256="cff867e97909bbc2facce6343770dcb1b61fc6e4855f57783e30bf63d51c5218",
+        "3.28.11",
+        sha256="c5eb703893c7f98de051c45d677c4a34b40f986db51782a4930ddefad4e193b4",
         preferred=True,
     )
+    version("3.28.10", sha256="cff867e97909bbc2facce6343770dcb1b61fc6e4855f57783e30bf63d51c5218")
     version("3.28.3", sha256="a09124f46465a520f6d735306ba3954c339b84aa396d6f52b476b82edcc4fe0e")
     version("3.22.16", sha256="dbd1f8a639291bb2492eea61e4ef96079d7b27d3dfa538dab8cd98f31429254a")
     version("3.22.0", sha256="cf0c169863f332aab67d8c4943e14b73a564f0254bf54015f5826c6427e6785b")
@@ -175,10 +176,8 @@ class Qgis(CMakePackage):
     @run_before("cmake", when="^py-pyqt5")
     def fix_pyqt5_cmake(self):
         cmfile = FileFilter(join_path("cmake", "FindPyQt5.cmake"))
-        # cmake might be using forward slashes only, hence
-        # hardcode '/' as opposed to using join_path
         pyqtpath = (
-            self.spec["py-pyqt5"].prefix + "/" + self.spec["python"].package.platlib + "/PyQt5"
+            join_path(self.spec["py-pyqt5"].prefix, self.spec["python"].package.platlib, "PyQt5")
         )
         cmfile.filter(
             'SET(PYQT5_MOD_DIR "${Python_SITEARCH}/PyQt5")',
