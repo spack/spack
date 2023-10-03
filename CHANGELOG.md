@@ -1,3 +1,24 @@
+# v0.20.2 (2023-10-03)
+
+## Features in this release
+
+Spack now supports Python 3.12 (#40155)
+
+## Bugfixes
+
+- Improve escaping in Tcl module files (#38375)
+- Make repo cache work on repositories with zero mtime (#39214)
+- Ignore errors for newer, incompatible buildcache version (#40279)
+- Print an error when git is required, but missing (#40254)
+- Ensure missing build dependencies get installed when using `spack install --overwrite` (#40252)
+- Fix an issue where Spack freezes when the build process unexpectedly exits (#39015)
+- Fix a bug where installation failures cause an unrelated `NameError` to be thrown (#39017)
+- Fix an issue where Spack package versions would be incorrectly derived from git tags (#39414)
+- Fix a bug triggered when file locking fails internally (#39188)
+- Prevent "spack external find" to error out when a directory cannot be accessed (#38755)
+- Fix multiple performance regressions in environments (#38771)
+- Add more ignored modules to `pyproject.toml` for `mypy` (#38769)
+
 # v0.20.1 (2023-07-10)
 
 ## Spack Bugfixes
