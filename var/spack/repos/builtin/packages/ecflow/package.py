@@ -62,6 +62,7 @@ class Ecflow(CMakePackage):
     )
 
     depends_on("openssl@1:", when="@5:")
+    depends_on("pkgconfig", when="+ssl ^openssl ~shared")
     depends_on("qt@5:", when="+ui")
     # Requirement to use the Python3_EXECUTABLE variable
     depends_on("cmake@3.16:", type="build")
@@ -95,9 +96,8 @@ class Ecflow(CMakePackage):
         ]
 
         if spec.satisfies("+ssl ^openssl ~shared"):
-            ssl_libs = [os.path.join(spec["openssl"].prefix.lib, "libcrypto.a")]
-            ssl_libs.extend(spec["zlib"].libs)
-            args.append(self.define("OPENSSL_CRYPTO_LIBRARY", ";".join(ssl_libs)))
+            ssllibs = ";".join(spec["openssl"].libs + spec["zlib"].libs)
+            args.append(self.define("OPENSSL_CRYPTO_LIBRARY", ssllibs))
 
         return args
 
@@ -111,5 +111,12 @@ class Ecflow(CMakePackage):
 
     @when("+ssl ^openssl~shared")
     def patch(self):
+        pkgconf = which("pkg-config")
+        liblist_l = pkgconf("--libs-only-l", "--static", "openssl", output=str).split()
+        liblist = " ".join([ll.replace("-l", "") for ll in liblist_l])
         for sdir in ["Client", "Server"]:
-            filter_file("(target_link_libraries.*pthread)", r"\1 ssl crypto z", os.path.join(sdir, "CMakeLists.txt"))
+            filter_file(
+                "(target_link_libraries.*pthread)",
+                f"\\1 {liblist}",
+                os.path.join(sdir, "CMakeLists.txt"),
+            )
