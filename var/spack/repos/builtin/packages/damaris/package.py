@@ -53,8 +53,9 @@ class Damaris(CMakePackage):
     depends_on("mpi")
     depends_on("cmake@3.18.0:", type=("build"))
     depends_on("boost+thread+log+filesystem+date_time+system" "@1.67:")
-    depends_on("boost+thread+log+filesystem+date_time+system+python+numpy" 
-               "@1.67:", when="+python")
+    depends_on(
+        "boost+thread+log+filesystem+date_time+system+python+numpy" "@1.67:", when="+python"
+    )
     depends_on("py-mpi4py", when="+python", type=("build", "run"))
     depends_on("hdf5@1.8.20:", when="+hdf5")
     depends_on("paraview+python+mpi+development_files", when="+catalyst")
@@ -92,8 +93,12 @@ class Damaris(CMakePackage):
         if self.spec.variants["python"].value:
             args.extend(["-DENABLE_PYTHON:BOOL=ON"])
             args.extend(["-DENABLE_PYTHONMOD:BOOL=ON"])
-            args.extend(["-DPYTHON_MODULE_INSTALL_PATH:PATH=%s/lib/python%s/site-packages" %
-                        (self.prefix, self.spec["python"].version.up_to(2).dotted)])
+            args.extend(
+                [
+                    "-DPYTHON_MODULE_INSTALL_PATH:PATH=%s/lib/python%s/site-packages"
+                    % (self.prefix, self.spec["python"].version.up_to(2).dotted)
+                ]
+            )
 
         if self.spec.variants["visit"].value:
             args.extend(["-DENABLE_VISIT:BOOL=ON"])
