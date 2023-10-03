@@ -14,8 +14,9 @@ class PyMlDtypes(PythonPackage):
     pypi = "ml_dtypes/ml_dtypes-0.3.1.tar.gz"
 
     version("0.3.1", sha256="60778f99194b4c4f36ba42da200b35ef851ce4d4af698aaf70f5b91fe70fc611")
+    version("0.2.0", sha256="6488eb642acaaf08d8020f6de0a38acee7ac324c1e6e92ee0c0fea42422cb797")
 
-    depends_on("python@3.9:", type=("build", "link", "run"))
+    depends_on("python@3.9:", when="@0.3:", type=("build", "link", "run"))
     depends_on("py-numpy@1.21:", type=("build", "link", "run"))
     # Build dependencies are overconstrained, older versions work just fine
     depends_on("py-pybind11", type=("build", "link"))
