@@ -232,9 +232,13 @@ class PyNumpy(PythonPackage):
 
         if spec["blas"].name == "cray-libsci":
             blas = "libsci"
+            if spec.satisfies("^cray-libsci+mpi"):
+                blas += "_mpi"
 
         if spec["lapack"].name == "cray-libsci":
             lapack = "libsci"
+            if spec.satisfies("^cray-libsci+mpi"):
+                lapack += "_mpi"
 
         if "armpl" in blas:
             if "_mp" in blas:
