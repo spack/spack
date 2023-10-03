@@ -928,16 +928,13 @@ class Llvm(CMakePackage, CudaPackage):
 
         # Semicolon seperated list of runtimes to enable
         if runtimes:
+            # The older versions are not careful enough with the order of the runtimes.
+            # Instead of applying
+            # https://github.com/llvm/llvm-project/commit/06400a0142af8297b5d39b8f34a7c59db6f9910c,
+            # which might be incompatible with the version that we install,
+            # we sort the runtimes here according to the same order as
+            # in the aforementioned commit:
             if self.spec.satisfies("@:14"):
-                # The older versions are not
-                # careful enough with the order of
-                # the runtimes.
-                # Instead of
-                # applying
-                # https://github.com/llvm/llvm-project/commit/06400a0142af8297b5d39b8f34a7c59db6f9910c,
-                # which might be incompatible with the version that we install,
-                # we sort the runtimes here according to the same order as
-                # in the aforementioned commit:
                 runtimes_order = [
                     "libc",
                     "libunwind",
