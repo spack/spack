@@ -23,10 +23,13 @@ class PyRios(PythonPackage):
     version("1.4.13", sha256="9f99f41f20ce769101e61bc8347aa96718e6e5ac37ccb47cb3e555dc4ca83427")
     version("1.4.12", sha256="6d897488ce1ca77e470483472998afcb2eb3bb3307f392a924b85f88a16d73eb")
     version("1.4.11", sha256="b7ae5311f987b32f1afe1fabc16f25586de8d15c17a69405d1950aeada7b748e")
-    version("1.4.10", sha256="7f11b54eb1f2ec551d7fc01c039b60bf2c67f0c2fc5b2946f8d986d6a9bc7063")
+    version("1.4.10", sha256="6324acccc6018f9e06c40370bc366dc459890e8c09d26e0ebd245f6fd46dad71")
+
+    variant("parallel", default=True, description="Enables the parallel processing module")
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("gdal+python", type=("build", "run"))
-    depends_on("py-cloudpickle", type=("build", "run"), when="@1.4.16:")
+    if "+parallel" in self.spec:
+        depends_on("py-cloudpickle", type=("build", "run"), when="@1.4.16:")
