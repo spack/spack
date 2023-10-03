@@ -632,7 +632,7 @@ def test_env_view_external_prefix(tmp_path, mutable_database, mock_packages):
     manifest_dir.mkdir(parents=True, exist_ok=False)
     manifest_file = manifest_dir / ev.manifest_name
     manifest_file.write_text(
-        """
+        """\
 spack:
   specs:
   - a

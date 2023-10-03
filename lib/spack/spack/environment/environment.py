@@ -819,9 +819,13 @@ class Environment:
             else:
                 self.spec_lists[name] = user_specs
 
+    def _clear_speclists(self):
+        """Wipe the spec lists clean and initialize 'specs'."""
+        self.spec_lists = {user_speclist_name: SpecList()}
+
     def _construct_state_from_manifest(self):
         """Read manifest file and set up user specs."""
-        self.spec_lists = collections.OrderedDict()
+        self._clear_speclists()
 
         definitions = spack.config.get("definitions", [])
         for item in definitions:
@@ -875,7 +879,7 @@ class Environment:
                 yaml, and need to be maintained when re-reading an existing
                 environment.
         """
-        self.spec_lists = {user_speclist_name: SpecList()}  # specs from yaml
+        self._clear_speclists()
         self.dev_specs = {}  # dev-build specs from yaml
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []  # roots of last concretize, in order
