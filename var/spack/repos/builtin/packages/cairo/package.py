@@ -89,10 +89,12 @@ class Cairo(AutotoolsPackage):
         args.extend(self.enable_or_disable("shared"))
         args.extend(self.with_or_without("pic"))
 
-        if self.spec.satisfies("+ft"):
-            if self.spec["freetype"].satisfies("~shared"):
-                args.append("LDFLAGS=%s" % self.spec["bzip2"].libs.search_flags)
-                args.append("LIBS=%s" % self.spec["bzip2"].libs.link_flags)
+        if self.spec.satisfies("+ft ^freetype~shared"):
+            pkgconf = which("pkg-config")
+            ldflags = pkgconf("--libs-only-L", "--static", "freetype2", output=str)
+            libs = pkgconf("--libs-only-l", "--static", "freetype2", output=str)
+            args.append(f"LDFLAGS={ldflags}")
+            args.append(f"LIBS={libs}")
 
         return args
 
