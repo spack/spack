@@ -12,9 +12,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     provide a very general set of infrastructure design patterns that can
     be specialized and extended to suit the needs of a broad variety of
     solver and data requirements. Current support includes multi-dimensional
-    mesh topology, mesh geometry, and mesh adjacency information,
-    n-dimensional hashed-tree data structures, graph partitioning
-    interfaces,and dependency closures.
+    mesh topology, mesh geometry, and mesh adjacency information.
     """
 
     homepage = "http://flecsi.org/"
@@ -63,7 +61,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
     )
     variant("shared", default=True, description="Build shared libraries")
-    variant("flog", default=False, description="Enable flog testing")
+    variant("flog", default=False, description="Enable logging support")
     variant("graphviz", default=False, description="Enable GraphViz Support")
     variant("doc", default=False, description="Enable documentation")
     variant("hdf5", default=True, description="Enable HDF5 Support")
@@ -139,7 +137,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("legion+cuda", when="backend=legion +cuda @2.0:")
     depends_on("legion+rocm", when="backend=legion +rocm @2.0:")
     depends_on("hdf5@1.10.7:", when="backend=legion +hdf5 @2.0:")
-    depends_on("hpx@1.8.1: cxxstd=17 malloc=system", when="backend=hpx @2.0:")
+    depends_on("hpx@1.9.1: cxxstd=17 malloc=system", when="backend=hpx @2.0:")
     depends_on("mpi", when="@2.0:")
     depends_on("mpich@3.4.1:", when="@2.0: ^mpich")
     depends_on("openmpi@4.1.0:", when="@2.0: ^openmpi")
@@ -207,6 +205,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
             if "+rocm" in self.spec:
                 options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
                 options.append(self.define("CMAKE_C_COMPILER", self.spec["hip"].hipcc))
+            elif "+kokkos" in self.spec:
+                options.append(self.define("CMAKE_CXX_COMPILER", self.spec["kokkos"].kokkos_cxx))
         else:
             # kept for supporing version prior to 2.2
             options = [

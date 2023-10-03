@@ -16,6 +16,7 @@ class PySlepc4py(PythonPackage):
     maintainers("joseeroman", "balay")
 
     version("main", branch="main")
+    version("3.20.0", sha256="56cbea1f56746136e5a934bf4a481e566f35e475cb950c0a5bce7d5c3cc7690a")
     version("3.19.2", sha256="da8b6a7aaaf5e4497b896b2e478c42dd9de4fb31da93eb294181bea3bb60c767")
     version("3.19.1", sha256="68303f4acef8efc0542ab288a19159d0e6cdf313726f573e0bea2edb3d2c9595")
     version("3.19.0", sha256="ae84d33cce259c1d6ff64308b2f819d1c0f7b018e048f9049ec6d5be15614ba5")
@@ -46,25 +47,13 @@ class PySlepc4py(PythonPackage):
 
     depends_on("py-petsc4py", type=("build", "run"))
     depends_on("py-petsc4py@main", when="@main", type=("build", "run"))
-    depends_on("py-petsc4py@3.19.0:3.19", when="@3.19.0:3.19", type=("build", "run"))
-    depends_on("py-petsc4py@3.18.0:3.18", when="@3.18.0:3.18", type=("build", "run"))
-    depends_on("py-petsc4py@3.17.0:3.17", when="@3.17.0:3.17", type=("build", "run"))
-    depends_on("py-petsc4py@3.16.0:3.16", when="@3.16.0:3.16", type=("build", "run"))
-    depends_on("py-petsc4py@3.15.0:3.15", when="@3.15.0:3.15", type=("build", "run"))
-    depends_on("py-petsc4py@3.13.0:3.13", when="@3.13.0:3.13", type=("build", "run"))
-    depends_on("py-petsc4py@3.12.0:3.12", when="@3.12.0:3.12", type=("build", "run"))
-    depends_on("py-petsc4py@3.11.0:3.11", when="@3.11.0:3.11", type=("build", "run"))
+    for ver in ["3.20", "3.19", "3.18", "3.17", "3.16", "3.15", "3.13", "3.12", "3.11"]:
+        depends_on(f"py-petsc4py@{ver}", when=f"@{ver}", type=("build", "run"))
 
     depends_on("slepc")
     depends_on("slepc@main", when="@main")
-    depends_on("slepc@3.19.0:3.19", when="@3.19.0:3.19")
-    depends_on("slepc@3.18.0:3.18", when="@3.18.0:3.18")
-    depends_on("slepc@3.17.0:3.17", when="@3.17.0:3.17")
-    depends_on("slepc@3.16.0:3.16", when="@3.16.0:3.16")
-    depends_on("slepc@3.15.0:3.15", when="@3.15.0:3.15")
-    depends_on("slepc@3.13.0:3.13", when="@3.13.0:3.13")
-    depends_on("slepc@3.12.0:3.12", when="@3.12.0:3.12")
-    depends_on("slepc@3.11.0:3.11", when="@3.11.0:3.11")
+    for ver in ["3.20", "3.19", "3.18", "3.17", "3.16", "3.15", "3.13", "3.12", "3.11"]:
+        depends_on(f"slepc@{ver}", when=f"@{ver}")
 
     @property
     def build_directory(self):

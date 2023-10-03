@@ -10,12 +10,17 @@ class PyPetsc4py(PythonPackage):
     """This package provides Python bindings for the PETSc package."""
 
     homepage = "https://gitlab.com/petsc/petsc4py"
-    url = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc4py-3.15.0.tar.gz"
+    url = (
+        "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc4py-3.20.0.tar.gz"
+    )
     git = "https://gitlab.com/petsc/petsc.git"
 
     maintainers("balay")
 
     version("main", branch="main")
+    version("3.20.0", sha256="c2461eef3977ae5c214ad252520adbb92ec3a31d00e79391dd92535077bbf03e")
+    version("3.19.6", sha256="bd7891b651eb83504c744e70706818cf63ecbabee3206c1fed7c3013873802b9")
+    version("3.19.5", sha256="e059fdb8b23936c3182c9226924029dbdc8f1f72a623be0fe8c2caf8646c7a45")
     version("3.19.4", sha256="5621ddee63d0c631d2e8fed2d5d9763b183ad164c227dde8d3abcdb6c35c5ffb")
     version("3.19.3", sha256="dcbadebf0c4fe78b4dc13b8cd910577b9cacf65636ea980523e61d95c6959e5b")
     version("3.19.2", sha256="5f207eb95f87ddafa32229681a95af61912871cd7fbd38780bc63019dad3e7b8")
@@ -67,16 +72,10 @@ class PyPetsc4py(PythonPackage):
     depends_on("petsc+mpi", when="+mpi")
     depends_on("petsc~mpi", when="~mpi")
     depends_on("petsc@main", when="@main")
-    depends_on("petsc@3.19.0:3.19", when="@3.19.0:3.19")
-    depends_on("petsc@3.18.0:3.18", when="@3.18.0:3.18")
-    depends_on("petsc@3.17.0:3.17", when="@3.17.0:3.17")
-    depends_on("petsc@3.16.0:3.16", when="@3.16.0:3.16")
-    depends_on("petsc@3.15.0:3.15", when="@3.15.0:3.15")
+    for ver in ["3.20", "3.19", "3.18", "3.17", "3.16", "3.15", "3.13", "3.12", "3.11"]:
+        depends_on(f"petsc@{ver}", when=f"@{ver}")
     depends_on("petsc@3.14.2:3.14", when="@3.14.1:3.14")
     depends_on("petsc@3.14.0:3.14.1", when="@3.14.0")
-    depends_on("petsc@3.13.0:3.13", when="@3.13.0:3.13")
-    depends_on("petsc@3.12.0:3.12", when="@3.12.0:3.12")
-    depends_on("petsc@3.11.0:3.11", when="@3.11.0:3.11")
 
     @property
     def build_directory(self):
