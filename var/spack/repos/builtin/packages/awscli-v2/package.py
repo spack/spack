@@ -26,7 +26,7 @@ class AwscliV2(AutotoolsPackage):
     depends_on("py-ruamel-yaml-clib@0.2:0.2.7")
     depends_on("py-prompt-toolkit@3.0.24:3.0.38")
     depends_on("py-distro@1.5:1.8")
-    depends_on("awscrt@0.16.4:0.16.17")
+    depends_on("awscrt@0.16.4:0.16.16")
     depends_on("py-python-dateutil@2.1:2")
     depends_on("py-jmespath@0.7.1:1.0")
     depends_on("py-urllib3@1.25.4:1.26")
