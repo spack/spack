@@ -18,7 +18,7 @@ class PyCylcFlow(PythonPackage):
     version("8.1.4", sha256="d1835ac18f6f24f3115c56b2bc821185484e834a86b12fd0033ff7e4dc3c1f63")
 
     depends_on("py-setuptools@49:66", type="build")
-    depends_on("py-aiofiles@0.7", type=("build", "run"))
+    depends_on("py-aiofiles@0.7", when="@:8.1", type=("build", "run"))
     depends_on("py-ansimarkup@1.0.0:", type=("build", "run"))
     depends_on("py-async-timeout@3.0.0:", type=("build", "run"))
     depends_on("py-colorama@0.4:1", type=("build", "run"))
