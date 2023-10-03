@@ -14,6 +14,7 @@ class PyConnectomeManipulator(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/conn/structural/connectome_manipulator.git"
 
     version("develop", branch="main")
+    version("0.0.9", tag="connectome-manipulator-v0.0.9")
     version("0.0.8", tag="connectome-manipulator-v0.0.8")
     version("0.0.6", tag="connectome-manipulator-v0.0.6")
     version("0.0.4", tag="connectome-manipulator-v0.0.4")
