@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Awscrt(PythonPackage):
+class PyAwscrt(PythonPackage):
     """Python 3 bindings for the AWS Common Runtime."""
 
     homepage = "https://docs.aws.amazon.com/sdkref/latest/guide/common-runtime.html"
@@ -16,5 +16,4 @@ class Awscrt(PythonPackage):
 
     version("0.16.16", sha256="13075df2c1d7942fe22327b6483274517ee0f6ae765c4e6b6ae9ef5b4c43a827")
 
-    depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type=("build"))
