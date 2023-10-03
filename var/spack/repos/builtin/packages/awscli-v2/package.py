@@ -23,7 +23,7 @@ class AwscliV2(AutotoolsPackage):
     depends_on("py-docutils@0.10:0.19")
     depends_on("py-cryptography@3.3.2:40.0.1")
     depends_on("py-ruamel-yaml@0.15:0.17.21")
-    depends_on("py-ruamel-yaml-clib@0.2:0.2.6")
+    depends_on("py-ruamel-yaml-clib@0.2:0.2.7")
     depends_on("py-prompt-toolkit@3.0.24:3.0.38")
     depends_on("py-distro@1.5:1.8")
     depends_on("awscrt@0.16.4:0.16.17")
