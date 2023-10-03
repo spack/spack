@@ -16,11 +16,11 @@ class Falco(AutotoolsPackage):
 
     variant("htslib", default=False)
 
+    depends_on("gmake", type="build")
     depends_on("zlib-ng")
     depends_on("htslib", when="+htslib")
 
     def configure_args(self):
-        args = ["--disable-dependency-tracking"]
-        if self.spec.satisfies("+htslib"):
-            args.append("--enable-hts")
-        return args
+       if self.spec.satisfies("+htslib"):
+           return ["--enable-htslib"]
+       return []
