@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+from os import chmod
 
 from spack.package import *
 
@@ -19,6 +20,8 @@ class HdfEos2(AutotoolsPackage):
     # This is just a template.  See version_list and url_for_version below
     # Template for url_for_version. 0 is sha256 checksum, 1 is filename
     url = "https://git.earthdata.nasa.gov/rest/git-lfs/storage/DAS/hdfeos/{0}?response-content-disposition=attachment%3B%20filename%3D%22{1}%22%3B%20filename*%3Dutf-8%27%27{1}"
+
+    maintainers("climbfuji")
 
     # Crazy URL scheme, differing with each version, and including the
     # sha256 checksum in the URL.  Yuck
@@ -54,6 +57,11 @@ class HdfEos2(AutotoolsPackage):
 
     # Build dependencies
     depends_on("hdf")
+    # Because hdf always depends on zlib and jpeg in spack, the tests below in configure_args
+    # (if "jpeg" in self.spec:) always returns true and hdf-eos2 wants zlib and jpeg, too.
+    depends_on("zlib-api")
+    depends_on("jpeg")
+    depends_on("szip", when="^hdf +szip")
 
     # The standard Makefile.am, etc. add a --single_module flag to LDFLAGS
     # to pass to the linker.
@@ -75,6 +83,20 @@ class HdfEos2(AutotoolsPackage):
                 "version/checksum not found in version_list".format(version)
             )
 
+    # spack patches the configure file unless autoconf is run,
+    # and this fails because configure has the wrong permissions (644)
+    @run_before("configure")
+    def fix_permissions(self):
+        if not self.force_autoreconf:
+            chmod(join_path(self.stage.source_path, "configure"), 0o755)
+
+    def flag_handler(self, name, flags):
+        if self.spec.compiler.name == "apple-clang":
+            if name == "cflags":
+                flags.append("-Wno-error=implicit-function-declaration")
+
+        return flags, None, None
+
     def configure_args(self):
         extra_args = []
 
@@ -83,6 +105,7 @@ class HdfEos2(AutotoolsPackage):
 
         # We always build PIC code
         extra_args.append("--with-pic")
+        extra_args.append("--enable-install_include")
 
         # Set shared/static appropriately
         extra_args.extend(self.enable_or_disable("shared"))
@@ -92,8 +115,8 @@ class HdfEos2(AutotoolsPackage):
         extra_args.append("--with-hdf4={0}".format(self.spec["hdf"].prefix))
         if "jpeg" in self.spec:
             extra_args.append("--with-jpeg={0}".format(self.spec["jpeg"].prefix))
-        if "libszip" in self.spec:
-            extra_args.append("--with-szlib={0}".format(self.spec["libszip"].prefix))
+        if "szip" in self.spec:
+            extra_args.append("--with-szlib={0}".format(self.spec["szip"].prefix))
         if "zlib" in self.spec:
             extra_args.append("--with-zlib={0}".format(self.spec["zlib-api"].prefix))
 
