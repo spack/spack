@@ -10,18 +10,7 @@ from spack.package import *
 
 
 class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
-    """An Open Source Machine Learning Framework for Everyone.
-
-    TensorFlow is an end-to-end open source platform for machine learning. It has a
-    comprehensive, flexible ecosystem of tools, libraries, and community resources that
-    lets researchers push the state-of-the-art in ML and developers easily build and
-    deploy ML-powered applications.
-
-    TensorFlow was originally developed by researchers and engineers working on the
-    Google Brain team within Google's Machine Intelligence Research organization to
-    conduct machine learning and deep neural networks research. The system is general
-    enough to be applicable in a wide variety of other domains, as well.
-    """
+    """TensorFlow is an open source machine learning framework for everyone."""
 
     homepage = "https://www.tensorflow.org"
     url = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
@@ -29,6 +18,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     maintainers("adamjstewart", "aweits")
     import_modules = ["tensorflow"]
 
+    version("2.14.0", sha256="ce357fd0728f0d1b0831d1653f475591662ec5bca736a94ff789e6b1944df19f")
+    version("2.13.1", sha256="89c07aebd4f41fbe0d08cc88aef00305542134f2f16d3b62918dc3c1182f33e2")
     version("2.13.0", sha256="e58c939079588623e6fa1d054aec2f90f95018266e0a970fd353a5244f5173dc")
     version("2.12.1", sha256="6bc4600cc0b88e9e40f1800096f5bddbbd3b6e5527a030dea631b87f2ae46b5b")
     version("2.12.0", sha256="c030cb1905bff1d2446615992aad8d8d85cbe90c4fb625cee458c63bf466bc8e")
@@ -157,16 +148,16 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     extends("python")
 
     # Python support based on wheel availability
-    depends_on("python@3.8:3.11", when="@2.12:", type=("build", "run"))
-    depends_on("python@3.7:3.10", when="@2.8:2.11", type=("build", "run"))
-    depends_on("python@3.7:3.9", when="@2.7", type=("build", "run"))
-    depends_on("python@3.6:3.9", when="@2.5:2.6", type=("build", "run"))
-    depends_on("python@3.6:3.8", when="@2.4", type=("build", "run"))
-    depends_on("python@3.5:3.8", when="@2.2:2.3", type=("build", "run"))
-    depends_on("python@2.7,3.5:3.7", when="@:2.1", type=("build", "run"))
+    depends_on("python@3.9:3.11", when="@2.14:", type=("build", "run"))
+    depends_on("python@3.8:3.11", when="@2.12:2.13", type=("build", "run"))
+    depends_on("python@:3.10", when="@2.8:2.11", type=("build", "run"))
+    depends_on("python@:3.9", when="@2.5:2.7", type=("build", "run"))
+    depends_on("python@:3.8", when="@2.2:2.4", type=("build", "run"))
+    depends_on("python@:3.7", when="@:2.1", type=("build", "run"))
 
     # See .bazelversion
-    depends_on("bazel@5.3.0", type="build", when="@2.11:")
+    depends_on("bazel@6.1.0", type="build", when="@2.14:")
+    depends_on("bazel@5.3.0", type="build", when="@2.11:2.13")
     depends_on("bazel@5.1.1", type="build", when="@2.10")
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
     depends_on("bazel@4.2.2:5.99.0", type="build", when="@2.9")
@@ -203,13 +194,15 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-astunparse@1.6:", type=("build", "run"), when="@2.7:")
     depends_on("py-astunparse@1.6.3:1.6", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-astunparse@1.6.3", type=("build", "run"), when="@2.2:2.3")
-    depends_on("py-flatbuffers@23.1.21:", type=("build", "run"), when="@2.13:")
+    depends_on("py-flatbuffers@23.5.26:", type=("build", "run"), when="@2.14:")
+    depends_on("py-flatbuffers@23.1.21:", type=("build", "run"), when="@2.13")
     depends_on("py-flatbuffers@2:", type=("build", "run"), when="@2.10:2.12")
     depends_on("py-flatbuffers@1.12:1", type=("build", "run"), when="@2.9")
     depends_on("py-flatbuffers@1.12:", type=("build", "run"), when="@2.8")
     depends_on("py-flatbuffers@1.12:2", type=("build", "run"), when="@2.7")
     depends_on("py-flatbuffers@1.12", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-gast@0.2.1:0.4.0", type=("build", "run"), when="@2.9:")
+    depends_on("py-gast@0.2.1:0.4,0.5.3:", type=("build", "run"), when="@2.14:")
+    depends_on("py-gast@0.2.1:0.4.0", type=("build", "run"), when="@2.9:2.13")
     depends_on("py-gast@0.2.1:", type=("build", "run"), when="@2.8")
     depends_on("py-gast@0.2.1:0.4", type=("build", "run"), when="@2.7")
     depends_on("py-gast@0.4.0", type=("build", "run"), when="@2.5:2.6")
@@ -232,6 +225,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("hdf5~mpi", type="build", when="@1.15.5,2.0.4,2.1.3:~mpi")
     depends_on("py-libclang@13:", type=("build", "run"), when="@2.9:")
     depends_on("py-libclang@9.0.1:", type=("build", "run"), when="@2.7:2.8")
+    depends_on("py-ml-dtypes@0.2.0", type=("build", "run"), when="@2.14:")
+    depends_on("py-numpy@1.23.5:", type=("build", "run"), when="@2.14:")
     depends_on("py-numpy@1.22:1.24.3", type=("build", "run"), when="@2.13:")
     depends_on("py-numpy@1.22:1.23", type=("build", "run"), when="@2.12")
     depends_on("py-numpy@1.20:", type=("build", "run"), when="@2.8:2.11")
@@ -269,32 +264,17 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-six@1.10:", type=("build", "run"), when="@:2.0")
     depends_on("py-termcolor@1.1:", type=("build", "run"), when="@1.6:2.3,2.7:")
     depends_on("py-termcolor@1.1", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-typing-extensions@3.6.6:4.5", type=("build", "run"), when="@2.13:")
-    depends_on("py-typing-extensions@3.6.6:", type=("build", "run"), when="@2.7:2.12")
+    depends_on("py-typing-extensions@3.6.6:", type=("build", "run"), when="@2.7:2.12,2.14:")
+    depends_on("py-typing-extensions@3.6.6:4.5", type=("build", "run"), when="@2.13")
     depends_on("py-typing-extensions@3.7.4:3.7", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-wrapt@1.11:", type=("build", "run"), when="@2.13:")
-    depends_on("py-wrapt@1.11:1.14", type=("build", "run"), when="@2.12")
-    depends_on("py-wrapt@1.11:", type=("build", "run"), when="@2.7:2.11")
+    depends_on("py-wrapt@1.11:1.14", type=("build", "run"), when="@2.12,2.14:")
+    depends_on("py-wrapt@1.11:", type=("build", "run"), when="@2.7:2.11,2.13")
     depends_on("py-wrapt@1.12.1:1.12", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-wrapt@1.11.1:", type=("build", "run"), when="@1.12.1,1.14:2.3")
+
     # TODO: add packages for these dependencies
     # depends_on('py-tensorflow-io-gcs-filesystem@0.23.1:', type=('build', 'run'), when='@2.8:')
     # depends_on('py-tensorflow-io-gcs-filesystem@0.21:', type=('build', 'run'), when='@2.7')
-    with when("+rocm"):
-        depends_on("hip")
-        depends_on("rocrand")
-        depends_on("rocblas")
-        depends_on("rocfft")
-        depends_on("hipfft")
-        depends_on("rccl", when="+nccl")
-        depends_on("hipsparse")
-        depends_on("hipcub")
-        depends_on("rocsolver")
-        depends_on("rocprim")
-        depends_on("miopen-hip")
-        depends_on("llvm-amdgpu")
-        depends_on("hsa-rocr-dev")
-        depends_on("rocminfo")
 
     if sys.byteorder == "little":
         # Only builds correctly on little-endian machines
@@ -304,7 +284,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         depends_on("py-grpcio@1.32", type=("build", "run"), when="@2.4")
         depends_on("py-grpcio@1.8.6:", type=("build", "run"), when="@1.6:2.3")
 
-    for minor_ver in range(5, 14):
+    for minor_ver in range(5, 15):
         depends_on(
             "py-tensorboard@2.{}".format(minor_ver),
             type=("build", "run"),
@@ -355,6 +335,22 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("mpi", when="+mpi")
     # depends_on('android-ndk@10:18', when='+android')
     # depends_on('android-sdk', when='+android')
+
+    with when("+rocm"):
+        depends_on("hip")
+        depends_on("rocrand")
+        depends_on("rocblas")
+        depends_on("rocfft")
+        depends_on("hipfft")
+        depends_on("rccl", when="+nccl")
+        depends_on("hipsparse")
+        depends_on("hipcub")
+        depends_on("rocsolver")
+        depends_on("rocprim")
+        depends_on("miopen-hip")
+        depends_on("llvm-amdgpu")
+        depends_on("hsa-rocr-dev")
+        depends_on("rocminfo")
 
     # Check configure and configure.py to see when these variants are supported
     conflicts("+mkl", when="@:1.0")
