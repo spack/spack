@@ -76,7 +76,7 @@ class Patch:
         self.level = level
         self.working_dir = working_dir
 
-    def apply(self, stage: spack.stage.Stage):
+    def apply(self, stage: "spack.stage.Stage"):
         """Apply a patch to source in a stage.
 
         Arguments:
@@ -190,7 +190,7 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
-    def apply(self, stage: spack.stage.Stage):
+    def apply(self, stage: "spack.stage.Stage"):
         assert self.stage.expanded, "Stage must be expanded before applying patches"
 
         # Get the patch file.
