@@ -116,6 +116,6 @@ class Bufr(CMakePackage):
             self._setup_bufr_environment(env, suffix)
 
     def check(self):
-        if self.spec.satisfies("@:12.0.1 ~python"):
+        if self.spec.satisfies("~python"):
             with working_dir(self.builder.build_directory):
                 make("test")
