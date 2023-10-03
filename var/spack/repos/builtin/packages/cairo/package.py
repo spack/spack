@@ -40,7 +40,7 @@ class Cairo(AutotoolsPackage):
     variant("png", default=False, description="Enable cairo's PNG functions feature")
     variant("svg", default=False, description="Enable cairo's SVN functions feature")
     variant("shared", default=True, description="Build shared libraries")
-    variant("pic", default=False, description="Enable position-independent code (PIC)")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
 
     depends_on("libx11", when="+X")
     depends_on("libxext", when="+X")
