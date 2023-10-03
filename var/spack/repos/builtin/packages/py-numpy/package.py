@@ -231,10 +231,10 @@ class PyNumpy(PythonPackage):
             blas = "blis"
 
         if spec["blas"].name == "cray-libsci":
-            blas = "cray-libsci"
+            blas = "libsci"
 
         if spec["lapack"].name == "cray-libsci":
-            lapack = "cray-libsci"
+            lapack = "libsci"
 
         if "armpl" in blas:
             if "_mp" in blas:
