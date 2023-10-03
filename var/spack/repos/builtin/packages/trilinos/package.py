@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import sys
 
 from spack.build_environment import dso_suffix
@@ -366,6 +367,18 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+stokhos", when="%xl")
     conflicts("+stokhos", when="%xl_r")
 
+    # Current Windows support, only have serial static builds
+    conflicts(
+        "+shared",
+        when="platform=windows",
+        msg="Only static builds are supported on Windows currently.",
+    )
+    conflicts(
+        "+mpi",
+        when="platform=windows",
+        msg="Only serial builds are supported on Windows currently.",
+    )
+
     # ###################### Dependencies ##########################
 
     # External Kokkos
@@ -393,7 +406,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cgns", when="+exodus")
     depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
-    depends_on("hypre~internal-superlu~int64", when="+hypre")
+    for plat in ["cray", "darwin", "linux"]:
+        depends_on("hypre~internal-superlu~int64", when="+hypre platform=%s" % plat)
+    depends_on("hypre-cmake~int64", when="+hypre platform=windows")
     depends_on("kokkos-nvcc-wrapper", when="+wrapper")
     depends_on("lapack")
     # depends_on('perl', type=('build',)) # TriBITS finds but doesn't use...
@@ -811,7 +826,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
                     define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
                     define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
-                    define("MPI_BASE_DIR", spec["mpi"].prefix),
+                    define("MPI_BASE_DIR", str(pathlib.PurePosixPath(spec["mpi"].prefix))),
                 ]
             )
 

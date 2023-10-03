@@ -689,9 +689,12 @@ class Qt(Package):
                 # Errors on bluetooth even when bluetooth is disabled...
                 # at least on apple-clang%12
                 config_args.extend(["-skip", "connectivity"])
-        elif version < Version("5.15") and "+gui" in spec:
+        elif "+gui" in spec:
             # Linux-only QT5 dependencies
-            config_args.append("-system-xcb")
+            if version < Version("5.9.9"):
+                config_args.append("-system-xcb")
+            else:
+                config_args.append("-xcb")
             if "+opengl" in spec:
                 config_args.append("-I{0}/include".format(spec["libx11"].prefix))
                 config_args.append("-I{0}/include".format(spec["xproto"].prefix))
