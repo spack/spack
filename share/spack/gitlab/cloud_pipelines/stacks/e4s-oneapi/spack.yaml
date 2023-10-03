@@ -1,22 +1,51 @@
 spack:
-
   view: false
 
   concretizer:
     reuse: false
     unify: false
 
+  compilers:
+  - compiler:
+      spec: oneapi@2023.2.1
+      paths:
+        cc: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx
+        cxx: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx
+        f77: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/ifx
+        fc: /opt/intel/oneapi/compiler/2023.2.1/linux/bin/ifx
+      flags: {}
+      operating_system: ubuntu20.04
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: gcc@=11.4.0
+      paths:
+        cc: /usr/bin/gcc
+        cxx: /usr/bin/g++
+        f77: /usr/bin/gfortran
+        fc: /usr/bin/gfortran
+      flags: {}
+      operating_system: ubuntu20.04
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+
   packages:
     all:
-      require: '%oneapi'
+      require: '%oneapi target=x86_64_v3'
       providers:
         blas: [openblas]
         mpi: [mpich]
         tbb: [intel-tbb]
-      target: [x86_64]
       variants: +mpi
     elfutils:
       variants: +bzip2 ~nls +xz
+    hdf5:
+      require: "%gcc"
+      variants: +fortran +hl +shared
     libfabric:
       variants: fabrics=sockets,tcp,udp,rxm
     libunwind:
@@ -34,15 +63,12 @@ spack:
       variants: +pic
     mesa:
       version: [21.3.8]
-    hdf5:
-      require: "%gcc"
-      variants: +fortran +hl +shared
     mpi:
-      require: "mpich"
+      require: 'mpich@4:'
     mpich:
-      require: '@4.1.1 ~wrapperrpath ~hwloc'
+      require: '~wrapperrpath ~hwloc'
     py-cryptography:
-      require: '@38.0'
+      require: '@38.0.1'
     unzip:
       require: '%gcc'
     binutils:
@@ -60,40 +86,12 @@ spack:
       require: '%gcc'
     openssh:
       require: '%gcc'
-    bison:
-      require: '%gcc'
     libffi:
       require: "@3.4.4"
     dyninst:
       require: "%gcc"
-
-  compilers:
-  - compiler:
-      spec: oneapi@2023.2.0
-      paths:
-        cc: /opt/intel/oneapi/compiler/2023.2.0/linux/bin/icx
-        cxx: /opt/intel/oneapi/compiler/2023.2.0/linux/bin/icpx
-        f77: /opt/intel/oneapi/compiler/2023.2.0/linux/bin/ifx
-        fc: /opt/intel/oneapi/compiler/2023.2.0/linux/bin/ifx
-      flags: {}
-      operating_system: ubuntu20.04
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
-  - compiler:
-      spec: gcc@11.4.0
-      paths:
-        cc: /usr/bin/gcc
-        cxx: /usr/bin/g++
-        f77: /usr/bin/gfortran
-        fc: /usr/bin/gfortran
-      flags: {}
-      operating_system: ubuntu20.04
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
+    bison:
+      require: '%gcc'
 
   specs:
   # CPU
@@ -101,7 +99,6 @@ spack:
   - aml
   - amrex
   - arborx
-  - archer
   - argobots
   - axom
   - bolt
@@ -121,11 +118,14 @@ spack:
   - flux-core
   - fortrilinos
   - gasnet
+  - ginkgo
   - globalarrays
   - gmp
   - gotcha
+  - gptune ~mpispawn
   - h5bench
   - hdf5-vol-async
+  - hdf5-vol-cache
   - hdf5-vol-log
   - heffte +fftw
   - hpx networking=mpi
@@ -136,21 +136,21 @@ spack:
   - lbann
   - legion
   - libnrm 
+  - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp
   - libquo
   - libunwind
   - loki
   - mercury
   - metall
   - mfem
-  - mgard +serial +openmp +timing +unstructured ~cuda
   - mpark-variant
   - mpifileutils ~xattr
   - nccmp
   - nco
   - netlib-scalapack
+  - nrm
   - omega-h
   - openmpi
-  - openpmd-api
   - papi
   - papyrus
   - parsec ~cuda
@@ -160,14 +160,18 @@ spack:
   - plasma
   - plumed
   - precice
+  - pruners-ninja
   - pumi
   - py-h5py
+  - py-jupyterhub
   - py-libensemble
   - py-petsc4py
+  - py-warpx
   - qthreads scheduler=distrib
   - quantum-espresso
   - raja
   - rempi
+  - scr
   - slate ~cuda
   - slepc
   - stc
@@ -175,54 +179,46 @@ spack:
   - sundials
   - superlu
   - superlu-dist
-  - swig@4.0.2-fortran
   - sz3
   - tasmanian
-  - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+  - tau +mpi +python
+  - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
   - turbine
   - umap
   - umpire
   - variorum
   - wannier90
+  - xyce +mpi +shared +pymi +pymi_static_tpls
   # INCLUDED IN ECP DAV CPU
-  # - adios2
-  # - ascent
-  # - darshan-runtime
-  # - darshan-util
-  # - faodel
-  # - hdf5
-  # - libcatalyst
-  # - parallel-netcdf
-  # - paraview
-  # - py-cinemasci
-  # - sz
-  # - unifyfs
-  # - veloc
-  # - visit
-  # - vtk-m ~openmp # https://github.com/spack/spack/issues/31830
-  # - zfp
+  - adios2                # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
+  - ascent
+  - darshan-runtime
+  - darshan-util
+  - faodel
+  - hdf5
+  - libcatalyst
+  - parallel-netcdf
+  # - paraview            # paraview: VTK/ThirdParty/cgns/vtkcgns/src/adfh/ADFH.c:2002:23: error: incompatible function pointer types passing 'herr_t (hid_t, const char *, const H5L_info1_t *, void *)' (aka 'int (long, const char *, const H5L_info1_t *, void *)') to parameter of type 'H5L_iterate2_t' (aka 'int (*)(long, const char *,const H5L_info2_t *, void *)') [-Wincompatible-function-pointer-types]
+  - py-cinemasci
+  - sz
+  - unifyfs
+  - veloc
+  # - visit               # silo: https://github.com/spack/spack/issues/39538
+  - vtk-m ~openmp         # https://github.com/spack/spack/issues/31830
+  - zfp
   # --
-  # - alquimia          # pflotran: pflotran/hdf5_aux.F90(5): error #7013: This module file was not generated by any release of this compiler.   [HDF5]
-  # - dealii            # intel-tbb: icpx: error: unknown argument: '-flifetime-dse=1'
-  # - dxt-explorer      # r: https://github.com/spack/spack/issues/40257
-  # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # sz: hdf5-filter/H5Z-SZ/src/H5Z_SZ.c:24:9: error: call to undeclared function 'gettimeofday'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-  # - geopm             # geopm: In file included from src/ProfileTable.cpp:34: ./src/ProfileTable.hpp:79:45: error: no type named 'string' in namespace 'std'
-  # - ginkgo            # ginkgo: icpx: error: clang frontend command failed with exit code 139 (use -v to see invocation)
-  # - gptune ~mpispawn  # py-scipy: for_main.c:(.text+0x19): undefined reference to `MAIN__'
-  # - hdf5-vol-cache    # /H5VLcache_ext.c:580:9: error: incompatible function pointer types initializing 'herr_t (*)(const void *, uint64_t *)' (aka 'int (*)(const void *, unsigned long *)') with an expression of type 'herr_t (const void *, unsigned int *)' (aka 'int (const void *, unsigned int *)') [-Wincompatible-function-pointer-types]
-  # - hpctoolkit        # intel-tbb: icpx: error: unknown argument: '-flifetime-dse=1'
-  # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs: c-blosc/internal-complibs/zlib-1.2.8/gzread.c:30:15: error: call to undeclared function 'read'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-  # - nrm               # py-scipy: for_main.c:(.text+0x19): undefined reference to `MAIN__'
-  # - openfoam          # adios2: patch failed
-  # - pruners-ninja     # pruners-ninja: ninja_test_pingpong.c:79:5: error: call to undeclared library function 'memset' with type 'void *(void *, int, unsigned long)'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-  # - py-jupyterhub     # py-ruamel-yaml-clib: setuptools/dist.py:287: SetuptoolsDeprecationWarning: The namespace_packages parameter is deprecated, consider using implicit namespaces instead (PEP 420). See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
-  # - py-warpx ^warpx dims=2 # py-scipy: for_main.c:(.text+0x19): undefined reference to `MAIN__'
-  # - py-warpx ^warpx dims=3 # py-scipy: for_main.c:(.text+0x19): undefined reference to `MAIN__'
-  # - py-warpx ^warpx dims=rz # py-scipy: for_main.c:(.text+0x19): undefined reference to `MAIN__'  
-  # - scr               # libyogrt: configure: error: slurm is not in specified location!
-  # - tau +mpi +python  # tau: x86_64/lib/Makefile.tau-icpx-papi-mpi-pthread-python-pdt: No such file or directory
-  # - upcxx             # upcxx: /opt/intel/oneapi/mpi/2021.9.0//libfabric/bin/fi_info: error while loading shared libraries: libfabric.so.1: cannot open shared object file: No such file or directory
-  # - xyce +mpi +shared +pymi +pymi_static_tpls ^trilinos~shylu # cmake/tps.cmake:220 (message): Unable to compile against Trilinos.  It is possible Trilinos was not properly configured, or the environment has changed since Trilinos was installed.  See the CMake log files for more information.
+  # - alquimia            # pflotran: https://github.com/spack/spack/issues/39474
+  # - archer              # subsumed under llvm +libomp_tsan
+  # - dealii              # dealii: https://github.com/spack/spack/issues/39482
+  # - dxt-explorer        # r: https://github.com/spack/spack/issues/40257
+  # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # embree: CMake Error at CMakeLists.txt:215 (MESSAGE): Unsupported compiler: IntelLLVM; qt: qtbase/src/corelib/global/qendian.h:333:54: error: incomplete type 'std::numeric_limits' used in nested name specifier
+  # - geopm               # geopm issue: https://github.com/spack/spack/issues/38795
+  # - hpctoolkit          # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
+  # - mgard +serial +openmp +timing +unstructured ~cuda # mgard: mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
+  # - openfoam            # cgal: https://github.com/spack/spack/issues/39481
+  # - openpmd-api         # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
+  # - swig@4.0.2-fortran  # ?
+  # - upcxx               # upcxx: /opt/intel/oneapi/mpi/2021.10.0//libfabric/bin/fi_info: error while loading shared libraries: libfabric.so.1: cannot open shared object file: No such file or directory
 
   # GPU
   - aml +ze
@@ -231,27 +227,21 @@ spack:
   - cabana +sycl ^kokkos +sycl +openmp cxxstd=17 +tests +examples
   - kokkos +sycl +openmp cxxstd=17 +tests +examples
   - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +tests +examples
+  - tau +mpi +opencl +level_zero ~pdt   # tau: requires libdrm.so to be installed
   - slate +sycl
   # --
   # - ginkgo +oneapi                    # InstallError: Ginkgo's oneAPI backend requires theDPC++ compiler as main CXX compiler.
-  # - hpctoolkit +level_zero            # intel-tbb: icpx: error: unknown argument: '-flifetime-dse=1'
+  # - hpctoolkit +level_zero            # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
   # - sundials +sycl cxxstd=17          # sundials: include/sunmemory/sunmemory_sycl.h:20:10: fatal error: 'CL/sycl.hpp' file not found
-  # - tau +mpi +opencl +level_zero ~pdt # builds ok in container, but needs libdrm, will update container
 
-  # Not necessarily E4S, but useful for E4S packages
   - py-scipy
-
-  # SKIPPED
-  # - nvhpc
-  # - dyninst  # only %gcc
-
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s-oneapi" }
 
   ci:
     pipeline-gen:
     - build-job:
-        image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2023.07.21
+        image: ecpe4s/ubuntu20.04-runner-amd64-oneapi-2023.2.1:2023.08.01
 
   cdash:
     build-group: E4S OneAPI
