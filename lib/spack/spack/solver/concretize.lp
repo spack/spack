@@ -196,6 +196,13 @@ attr("deprecated", node(ID, Package), Version) :-
      attr("version", node(ID, Package), Version),
      pkg_fact(Package, deprecated_version(Version)).
 
+error(100, "Package '{0}' needs the deprecated version '{1}', and this is not allowed", Package, Version)
+  :- deprecated_versions_not_allowed(),
+     attr("version", node(ID, Package), Version),
+     not external(node(ID, Package)),
+     not concrete(node(ID, Package)),
+     pkg_fact(Package, deprecated_version(Version)).
+
 possible_version_weight(node(ID, Package), Weight)
  :- attr("version", node(ID, Package), Version),
     pkg_fact(Package, version_declared(Version, Weight)).
@@ -252,6 +259,7 @@ attr("node_version_satisfies", node(ID, Package), Constraint)
      pkg_fact(Package, version_satisfies(Constraint, Version)).
 
 #defined version_satisfies/3.
+#defined deprecated_versions_not_allowed/0.
 #defined deprecated_version/2.
 
 %-----------------------------------------------------------------------------
@@ -1358,6 +1366,16 @@ opt_criterion(75, "requirement weight").
 #minimize {
     Weight@75+Priority,PackageNode,Group
     : requirement_weight(PackageNode, Group, Weight),
+      build_priority(PackageNode, Priority)
+}.
+
+% Minimize the number of deprecated versions being used
+opt_criterion(73, "deprecated versions used").
+#minimize{ 0@273: #true }.
+#minimize{ 0@73: #true }.
+#minimize{
+    1@73+Priority,PackageNode
+    : attr("deprecated", PackageNode, _),
       build_priority(PackageNode, Priority)
 }.
 
