@@ -861,7 +861,7 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
         f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
 
     with pytest.raises(spack.config.ConfigError, match="missing include path"):
-        e = ev.Environment(tmpdir.strpath)
+        ev.Environment(tmpdir.strpath)
 
 
 def test_env_with_included_config_scope(mutable_mock_env_path, packages_file):
