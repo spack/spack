@@ -23,7 +23,7 @@ import urllib.request
 import warnings
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import List, NamedTuple, Optional, Union
+from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 from urllib.error import HTTPError, URLError
 
 import llnl.util.filesystem as fsys
@@ -625,8 +625,7 @@ def buildinfo_file_name(prefix):
     """
     Filename of the binary package meta-data file
     """
-    name = os.path.join(prefix, ".spack/binary_distribution")
-    return name
+    return os.path.join(prefix, ".spack/binary_distribution")
 
 
 def read_buildinfo_file(prefix):
@@ -1158,57 +1157,99 @@ def gzip_compressed_tarfile(path):
         yield tar
 
 
-def deterministic_tarinfo(tarinfo: tarfile.TarInfo):
-    # We only add files, symlinks, hardlinks, and directories
-    # No character devices, block devices and FIFOs should ever enter a tarball.
-    if tarinfo.isdev():
-        return None
-
-    # For distribution, it makes no sense to user/group data; since (a) they don't exist
-    # on other machines, and (b) they lead to surprises as `tar x` run as root will change
-    # ownership if it can. We want to extract as the current user. By setting owner to root,
-    # root will extract as root, and non-privileged user will extract as themselves.
-    tarinfo.uid = 0
-    tarinfo.gid = 0
-    tarinfo.uname = ""
-    tarinfo.gname = ""
-
-    # Reset mtime to epoch time, our prefixes are not truly immutable, so files may get
-    # touched; as long as the content does not change, this ensures we get stable tarballs.
-    tarinfo.mtime = 0
-
-    # Normalize mode
-    if tarinfo.isfile() or tarinfo.islnk():
-        # If user can execute, use 0o755; else 0o644
-        # This is to avoid potentially unsafe world writable & exeutable files that may get
-        # extracted when Python or tar is run with privileges
-        tarinfo.mode = 0o644 if tarinfo.mode & 0o100 == 0 else 0o755
-    else:  # symbolic link and directories
-        tarinfo.mode = 0o755
-
-    return tarinfo
+def _tarinfo_name(p: str):
+    return p.lstrip("/")
 
 
-def tar_add_metadata(tar: tarfile.TarFile, path: str, data: dict):
-    # Serialize buildinfo for the tarball
-    bstring = syaml.dump(data, default_flow_style=True).encode("utf-8")
-    tarinfo = tarfile.TarInfo(name=path)
-    tarinfo.size = len(bstring)
-    tar.addfile(deterministic_tarinfo(tarinfo), io.BytesIO(bstring))
+def tarfile_of_spec_prefix(tar: tarfile.TarFile, prefix: str) -> None:
+    """Create a tarfile of an install prefix of a spec. Skips existing buildinfo file.
+    Only adds regular files, symlinks and dirs. Skips devices, fifos. Preserves hardlinks.
+    Normalizes permissions like git. Tar entries are added in depth-first pre-order, with
+    dir entries partitioned by file | dir, and sorted alphabetically, for reproducibility.
+    Partitioning ensures only one dir is in memory at a time, and sorting improves compression.
+
+    Args:
+        tar: tarfile object to add files to
+        prefix: absolute install prefix of spec"""
+    if not os.path.isabs(prefix) or not os.path.isdir(prefix):
+        raise ValueError(f"prefix '{prefix}' must be an absolute path to a directory")
+    hardlink_to_tarinfo_name: Dict[Tuple[int, int], str] = dict()
+    stat_key = lambda stat: (stat.st_dev, stat.st_ino)
+
+    try:  # skip buildinfo file if it exists
+        files_to_skip = [stat_key(os.lstat(buildinfo_file_name(prefix)))]
+    except OSError:
+        files_to_skip = []
+
+    dir_stack = [prefix]
+    while dir_stack:
+        dir = dir_stack.pop()
+
+        # Add the dir before its contents
+        dir_info = tarfile.TarInfo(_tarinfo_name(dir))
+        dir_info.type = tarfile.DIRTYPE
+        dir_info.mode = 0o755
+        tar.addfile(dir_info)
+
+        # Sort by name: reproducible & improves compression
+        with os.scandir(dir) as it:
+            entries = sorted(it, key=lambda entry: entry.name)
+
+        new_dirs = []
+        for entry in entries:
+            if entry.is_dir(follow_symlinks=False):
+                new_dirs.append(entry.path)
+                continue
+
+            file_info = tarfile.TarInfo(_tarinfo_name(entry.path))
+
+            s = entry.stat(follow_symlinks=False)
+
+            # Skip existing binary distribution files.
+            id = stat_key(s)
+            if id in files_to_skip:
+                continue
+
+            # Normalize the mode
+            file_info.mode = 0o644 if s.st_mode & 0o100 == 0 else 0o755
+
+            if entry.is_symlink():
+                file_info.type = tarfile.SYMTYPE
+                file_info.linkname = os.readlink(entry.path)
+                tar.addfile(file_info)
+
+            elif entry.is_file(follow_symlinks=False):
+                # Deduplicate hardlinks
+                if s.st_nlink > 1:
+                    if id in hardlink_to_tarinfo_name:
+                        file_info.type = tarfile.LNKTYPE
+                        file_info.linkname = hardlink_to_tarinfo_name[id]
+                        tar.addfile(file_info)
+                        continue
+                    hardlink_to_tarinfo_name[id] = file_info.name
+
+                # If file not yet seen, copy it.
+                file_info.type = tarfile.REGTYPE
+                file_info.size = s.st_size
+
+                with open(entry.path, "rb") as f:
+                    tar.addfile(file_info, f)
+
+        dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
 
 
-def deterministic_tarinfo_without_buildinfo(tarinfo: tarfile.TarInfo):
-    """Skip buildinfo file when creating a tarball, and normalize other tarinfo fields."""
-    if tarinfo.name.endswith("/.spack/binary_distribution"):
-        return None
-
-    return deterministic_tarinfo(tarinfo)
-
-
-def _do_create_tarball(tarfile_path: str, binaries_dir: str, pkg_dir: str, buildinfo: dict):
+def _do_create_tarball(tarfile_path: str, binaries_dir: str, buildinfo: dict):
     with gzip_compressed_tarfile(tarfile_path) as tar:
-        tar.add(name=binaries_dir, arcname=pkg_dir, filter=deterministic_tarinfo_without_buildinfo)
-        tar_add_metadata(tar, buildinfo_file_name(pkg_dir), buildinfo)
+        # Tarball the install prefix
+        tarfile_of_spec_prefix(tar, binaries_dir)
+
+        # Serialize buildinfo for the tarball
+        bstring = syaml.dump(buildinfo, default_flow_style=True).encode("utf-8")
+        tarinfo = tarfile.TarInfo(name=_tarinfo_name(buildinfo_file_name(binaries_dir)))
+        tarinfo.type = tarfile.REGTYPE
+        tarinfo.size = len(bstring)
+        tarinfo.mode = 0o644
+        tar.addfile(tarinfo, io.BytesIO(bstring))
 
 
 class PushOptions(NamedTuple):
@@ -1280,14 +1321,12 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     ):
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
-    pkg_dir = os.path.basename(spec.prefix.rstrip(os.path.sep))
-
     binaries_dir = spec.prefix
 
     # create info for later relocation and create tar
     buildinfo = get_buildinfo_dict(spec)
 
-    _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
+    _do_create_tarball(tarfile_path, binaries_dir, buildinfo)
 
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
