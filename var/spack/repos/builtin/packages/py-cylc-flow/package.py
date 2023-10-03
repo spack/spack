@@ -25,7 +25,7 @@ class PyCylcFlow(PythonPackage):
     depends_on("py-graphene@2.1:2", type=("build", "run"))
     depends_on("py-jinja2@3.0", type=("build", "run"))
     depends_on("py-metomi-isodatetime@3.0", type=("build", "run"))
-    depends_on("py-protobuf@4.21.2:,:4.21", type=("build", "run"))
+    depends_on("py-protobuf@4.21.2:4.21", type=("build", "run"))
     depends_on("py-psutil@5.6.0:", type=("build", "run"))
     depends_on("py-pyzmq@22", type=("build", "run"))
     depends_on("py-setuptools@49:66,68:", type=("build", "run"))
