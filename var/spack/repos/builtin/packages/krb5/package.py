@@ -35,6 +35,7 @@ class Krb5(AutotoolsPackage):
     depends_on("openssl")
     depends_on("gettext")
     depends_on("findutils", type="build")
+    depends_on("pkgconfig", type="build", when="^openssl~shared")
 
     variant(
         "shared", default=True, description="install shared libraries if True, static if false"
@@ -81,7 +82,9 @@ class Krb5(AutotoolsPackage):
             args.append("CFLAGS=-fcommon")
 
         if self.spec["openssl"].satisfies("~shared"):
-            args.append("LDFLAGS=-L%s -lz" % self.spec["zlib"].prefix.lib)
+            pkgconf = which("pkg-config")
+            ssllibs = pkgconf("--static", "--libs", "openssl", output=str)
+            args.append(f"LDFLAGS={ssllibs}")
 
         return args
 
