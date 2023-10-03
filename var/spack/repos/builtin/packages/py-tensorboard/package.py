@@ -16,8 +16,16 @@ class PyTensorboard(PythonPackage):
 
     maintainers("aweits")
 
-    version("2.14.1", sha256="3db108fb58f023b6439880e177743c5f1e703e9eeb5fb7d597871f949f85fd58", expand=False)
-    version("2.14.0", sha256="3667f9745d99280836ad673022362c840f60ed8fefd5a3e30bf071f5a8fd0017", expand=False)
+    version(
+        "2.14.1",
+        sha256="3db108fb58f023b6439880e177743c5f1e703e9eeb5fb7d597871f949f85fd58",
+        expand=False,
+    )
+    version(
+        "2.14.0",
+        sha256="3667f9745d99280836ad673022362c840f60ed8fefd5a3e30bf071f5a8fd0017",
+        expand=False,
+    )
     version(
         "2.13.0",
         sha256="ab69961ebddbddc83f5fa2ff9233572bdad5b883778c35e4fe94bf1798bd8481",
