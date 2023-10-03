@@ -13,6 +13,7 @@ class PyTables(PythonPackage):
     homepage = "https://www.pytables.org/"
     pypi = "tables/tables-3.6.1.tar.gz"
 
+    version("3.8.0", sha256="34f3fa2366ce20b18f1df573a77c1d27306ce1f2a41d9f9eff621b5192ea8788")
     version("3.7.0", sha256="e92a887ad6f2a983e564a69902de4a7645c30069fc01abd353ec5da255c5e1fe")
     version("3.6.1", sha256="49a972b8a7c27a8a173aeb05f67acb45fe608b64cd8e9fa667c0962a60b71b49")
     version("3.6.0", sha256="db3488214864fb313a611fca68bf1c9019afe4e7877be54d0e61c84416603d4d")
@@ -25,26 +26,35 @@ class PyTables(PythonPackage):
     variant("bzip2", default=False, description="Support for bzip2 compression")
     variant("lzo", default=False, description="Support for lzo compression")
 
-    # requirements.txt
-    depends_on("python@3.6:", when="@3.7.0:", type=("build", "run"))
-    depends_on("python@3.5:", when="@3.6.1:", type=("build", "run"))
-    depends_on("python@3.4:", when="@3.6.0:", type=("build", "run"))
-    depends_on("python@2.6:", type=("build", "run"))
+    # pyproject.toml
+    depends_on("py-setuptools@42:", when="@3.7:", type="build")
+    depends_on("py-setuptools", type="build")
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools@42.0:", when="@3.7.0:", type=("build", "run"))
+    # setup.py
+    depends_on("python@3.8:", when="@3.8:", type=("build", "run"))
+
+    # requirements.txt
+    depends_on("py-cython@0.29.21:", when="@3.7:", type=("build", "run"))
     depends_on("py-cython@0.21:", type="build")
-    depends_on("py-cython@0.29.21:", when="@3.7.0:", type="build")
+    depends_on("py-numpy@1.19:", when="@3.8:", type=("build", "run"))
     depends_on("py-numpy@1.9.3:", type=("build", "run"))
     depends_on("py-numexpr@2.6.2:", type=("build", "run"))
-    depends_on("py-six@1.9.0:", when="@:3.5", type=("build", "run"))
-    depends_on("py-packaging", when="@3.7.0:", type=("build", "run"))
+    depends_on("py-blosc2@2.0", type=("build", "run"))
+    depends_on("py-packaging", when="@3.7:", type=("build", "run"))
+    depends_on("py-py-cpuinfo", when="@3.8:", type=("build", "run"))
+
     # tables/req_versions.py
-    depends_on("hdf5@1.8.4:1.8", when="@:3.3")
     depends_on("hdf5@1.8.4:", when="@3.4.0:")
+    depends_on("hdf5@1.8.4:1.8", when="@:3.3")
+
+    # Historical dependencies
+    depends_on("py-six@1.9:", when="@:3.5", type=("build", "run"))
+
+    # tables/req_versions.py
     # Versions prior to 3.3 must build with the internal blosc due to a lock
     # problem in a multithreaded environment.
-    depends_on("c-blosc@1.4.1:", when="@3.3.0:")
+    depends_on("c-blosc@1.11.1:", when="@3.8:")
+    depends_on("c-blosc@1.4.1:", when="@3.3:")
     depends_on("zlib-api", when="+zlib")
     depends_on("bzip2", when="+bzip2")
     depends_on("lzo", when="+lzo")
