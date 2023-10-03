@@ -20,6 +20,7 @@ import spack.compilers
 import spack.concretize
 import spack.config
 import spack.database
+import spack.deptypes as dt
 import spack.installer as inst
 import spack.package_base
 import spack.package_prefs as prefs
@@ -1386,6 +1387,26 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     s.external_path = "/usr"
     create_installer([(s, explicit_args)]).install()
     assert spack.store.STORE.db.get_record(pkg).explicit == is_explicit
+
+
+def test_overwrite_install_does_install_build_deps(install_mockery, mock_fetch):
+    """When overwrite installing something from sources, build deps should be installed."""
+    s = spack.spec.Spec("dtrun3").concretized()
+    create_installer([(s, {})]).install()
+
+    # Verify there is a pure build dep
+    edge = s.edges_to_dependencies(name="dtbuild3").pop()
+    assert edge.depflag == dt.BUILD
+    build_dep = edge.spec
+
+    # Uninstall the build dep
+    build_dep.package.do_uninstall()
+
+    # Overwrite install the root dtrun3
+    create_installer([(s, {"overwrite": [s.dag_hash()]})]).install()
+
+    # Verify that the build dep was also installed.
+    assert build_dep.installed
 
 
 @pytest.mark.parametrize("run_tests", [True, False])

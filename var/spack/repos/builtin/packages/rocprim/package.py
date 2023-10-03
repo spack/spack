@@ -16,6 +16,8 @@ class Rocprim(CMakePackage):
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
 
+    version("5.6.1", sha256="e9ec1b0039c07cf3096653a04224fe5fe755afc6ba000f6838b3a8bc84df27de")
+    version("5.6.0", sha256="360d6ece3c4a3c289dd88043432026fb989e982ae4d05230d8cdc858bcd50466")
     version("5.5.1", sha256="63cdc682afb39efd18f097faf695ce64c851c4a550a8ad96fa89d694451b6a42")
     version("5.5.0", sha256="968d9059f93d3f0f8a602f7b989e54e36cff2f9136486b6869e4534a5bf8c7d9")
     version("5.4.3", sha256="7be6314a46195912d3203e7e59cb8880a46ed7c1fd221e92fadedd20532e0e48")
@@ -138,6 +140,8 @@ class Rocprim(CMakePackage):
         "5.4.3",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
+        "5.6.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
