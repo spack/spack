@@ -14,11 +14,11 @@ class Falco(AutotoolsPackage):
 
     version("1.2.1", sha256="33de8aafac45c7aea055ed7ab837d0a39d12dcf782816cea8a6c648acb911057")
 
-    variant("htslib", default=False)
+    variant("htslib", default=False, description="Add support for BAM files")
 
     depends_on("gmake", type="build")
     depends_on("zlib-ng")
-    depends_on("htslib", when="+htslib", description="Add support for BAM files")
+    depends_on("htslib", when="+htslib")
 
     def configure_args(self):
         if self.spec.satisfies("+htslib"):
