@@ -50,6 +50,9 @@ JOB_RETRY_CONDITIONS = ["always"]
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
+JOB_NAME_FORMAT = (
+    "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{arch=architecture}"
+)
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -69,48 +72,23 @@ class TemporaryDirectory:
         return False
 
 
-def get_job_name(spec, osarch, build_group):
-    """Given the necessary parts, format the gitlab job name
+def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
+    """Given a spec and possibly a build group, return the job name. If the
+    resulting name is longer than 255 characters, it will be truncated.
 
     Arguments:
         spec (spack.spec.Spec): Spec job will build
-        osarch: Architecture TODO: (this is a spack.spec.ArchSpec,
-            but sphinx doesn't recognize the type and fails).
         build_group (str): Name of build group this job belongs to (a CDash
         notion)
 
     Returns: The job name
     """
-    item_idx = 0
-    format_str = ""
-    format_args = []
-
-    format_str += "{{{0}}}".format(item_idx)
-    format_args.append(spec.name)
-    item_idx += 1
-
-    format_str += "/{{{0}}}".format(item_idx)
-    format_args.append(spec.dag_hash(7))
-    item_idx += 1
-
-    format_str += " {{{0}}}".format(item_idx)
-    format_args.append(spec.version)
-    item_idx += 1
-
-    format_str += " {{{0}}}".format(item_idx)
-    format_args.append(spec.compiler)
-    item_idx += 1
-
-    format_str += " {{{0}}}".format(item_idx)
-    format_args.append(osarch)
-    item_idx += 1
+    job_name = spec.format(JOB_NAME_FORMAT)
 
     if build_group:
-        format_str += " {{{0}}}".format(item_idx)
-        format_args.append(build_group)
-        item_idx += 1
+        job_name = "{0} {1}".format(job_name, build_group)
 
-    return format_str.format(*format_args)
+    return job_name[:255]
 
 
 def _remove_reserved_tags(tags):
@@ -337,7 +315,7 @@ def _spec_matches(spec, match_string):
 
 
 def _format_job_needs(
-    dep_jobs, osname, build_group, prune_dag, rebuild_decisions, enable_artifacts_buildcache
+    dep_jobs, build_group, prune_dag, rebuild_decisions, enable_artifacts_buildcache
 ):
     needs_list = []
     for dep_job in dep_jobs:
@@ -347,7 +325,7 @@ def _format_job_needs(
         if not prune_dag or rebuild:
             needs_list.append(
                 {
-                    "job": get_job_name(dep_job, dep_job.architecture, build_group),
+                    "job": get_job_name(dep_job, build_group),
                     "artifacts": enable_artifacts_buildcache,
                 }
             )
@@ -1023,8 +1001,7 @@ def generate_gitlab_ci_yaml(
             if "after_script" in job_object:
                 job_object["after_script"] = _unpack_script(job_object["after_script"])
 
-            osname = str(release_spec.architecture)
-            job_name = get_job_name(release_spec, osname, build_group)
+            job_name = get_job_name(release_spec, build_group)
 
             job_vars = job_object.setdefault("variables", {})
             job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
@@ -1051,7 +1028,6 @@ def generate_gitlab_ci_yaml(
                 job_object["needs"].extend(
                     _format_job_needs(
                         dep_jobs,
-                        osname,
                         build_group,
                         prune_dag,
                         rebuild_decisions,

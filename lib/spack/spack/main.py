@@ -774,7 +774,7 @@ def _profile_wrapper(command, parser, args, unknown_args):
         pr.disable()
 
         # print out profile stats.
-        stats = pstats.Stats(pr)
+        stats = pstats.Stats(pr, stream=sys.stderr)
         stats.sort_stats(*sortby)
         stats.print_stats(nlines)
 
