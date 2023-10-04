@@ -149,6 +149,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         description="Use Profile Guided Optimization",
         when="+bootstrap %gcc",
     )
+    variant(
+        "program_suffix",
+        default="none",
+        description="A suffix to append to the generated executables.",
+    )
 
     depends_on("flex", type="build", when="@master")
 
@@ -856,6 +861,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             if spec.satisfies("@12:"):
                 options.append("GDC={0}".format(self.detect_gdc()))
 
+        program_suffix = spec.variants["program_suffix"].value
+        if program_suffix != "none":
+            options.append(f"--program-suffix={program_suffix}")
+
         return options
 
     # run configure/make/make(install) for the nvptx-none target
@@ -1109,3 +1118,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         ),
                     ),
                 )
+
+    @property
+    def command(self):
+        """Returns the name of the main compiler executable.
+
+        If the program_suffix variant was specified, append the suffix to the
+        ``gcc`` string.
+        """
+        spec = self.spec
+        program_suffix = spec.variants.get("program_suffix")
+        suffix = program_suffix.value if program_suffix and program_suffix.value != "none" else ""
+        return Executable(spec.prefix.bin.join(f"gcc{suffix}"))
