@@ -159,6 +159,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     # https://github.com/spack/spack/issues/37416
     conflicts("^rocprim@5.3.0:5.3.2", when="+rocm")
+    # petsc 3.20 has workaround for breaking change in hipsparseSpSV_solve api,
+    # but it seems to misdetect hipsparse@5.6.1 as 5.6.0, so the workaround
+    # only makes things worse
+    conflicts("^hipsparse@5.6", when="+rocm @3.20.0")
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts("^intel-mkl", when="@3.8.0")
