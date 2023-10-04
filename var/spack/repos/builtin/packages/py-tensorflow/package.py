@@ -376,7 +376,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts(
         "+cuda",
         when="+rocm",
-        msg="CUDA / ROCm are mututally exclusive. At most 1 GPU platform can be configured"
+        msg="CUDA / ROCm are mututally exclusive. At most 1 GPU platform can be configured",
     )
     conflicts("+cuda", when="platform=darwin", msg="There is no GPU support for macOS")
     conflicts(
