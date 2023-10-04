@@ -157,12 +157,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("kokkos", default=False, description="Activates support for kokkos and kokkos-kernels")
     variant("fortran", default=True, description="Activates fortran support")
 
-    # https://github.com/spack/spack/issues/37416
-    conflicts("^rocprim@5.3.0:5.3.2", when="+rocm")
-    # petsc 3.20 has workaround for breaking change in hipsparseSpSV_solve api,
-    # but it seems to misdetect hipsparse@5.6.1 as 5.6.0, so the workaround
-    # only makes things worse
-    conflicts("^hipsparse@5.6", when="+rocm @3.20.0")
+    with when("+rocm"):
+        # https://github.com/spack/spack/issues/37416
+        conflicts("^rocprim@5.3.0:5.3.2")
+        # hipsparse@5.6.0 broke hipsparseSpSV_solve() API, reverted in 5.6.1.
+        conflicts("^hipsparse@5.6.0", when="@:3.19")
+        # broken workaround in petsc to deal with breaking change in hipsparse@5.6.0
+        conflicts("^hipsparse@5.6.1", when="@3.20.0")
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts("^intel-mkl", when="@3.8.0")
@@ -219,15 +220,18 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
     depends_on("hip", when="+rocm")
-    depends_on("hipblas", when="+rocm")
-    depends_on("hipsparse", when="+rocm")
-    depends_on("hipsolver", when="+rocm")
-    depends_on("rocsparse", when="+rocm")
-    depends_on("rocsolver", when="+rocm")
-    depends_on("rocblas", when="+rocm")
-    depends_on("rocrand", when="+rocm")
-    depends_on("rocthrust", when="+rocm")
-    depends_on("rocprim", when="+rocm")
+
+    with when("+rocm"):
+        depends_on("hipblas")
+        depends_on("hipsparse")
+        depends_on("hipsparse@:5.6", when="@:3.19")
+        depends_on("hipsolver")
+        depends_on("rocsparse")
+        depends_on("rocsolver")
+        depends_on("rocblas")
+        depends_on("rocrand")
+        depends_on("rocthrust")
+        depends_on("rocprim")
 
     # Build dependencies
     depends_on("python@2.6:2.8,3.4:3.8", when="@:3.13", type="build")
