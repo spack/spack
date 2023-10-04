@@ -371,7 +371,13 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("+gdr", when="@:1.3")
     conflicts("+verbs", when="@:1.1")
     conflicts("+ngraph", when="@:1.10")
+    conflicts("+opencl", when="platform=windows")
     conflicts("+computecpp", when="~opencl")
+    conflicts(
+        "+cuda",
+        when="+rocm",
+        msg="CUDA / ROCm are mututally exclusive. At most 1 GPU platform can be configured"
+    )
     conflicts("+cuda", when="platform=darwin", msg="There is no GPU support for macOS")
     conflicts(
         "cuda_arch=none",
@@ -418,6 +424,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts(
         "+nccl", when="platform=cray", msg="Currently NCCL is only supported on Linux platform"
     )
+    conflicts("+mpi", when="platform=windows")
     conflicts("+mpi", when="@:1.2")
     conflicts("+android", when="@:1.4")
     conflicts("+ios", when="@:1.12.0,1.12.2:1.13")
@@ -688,6 +695,12 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             env.set("TF_CUDA_COMPUTE_CAPABILITIES", capabilities)
         else:
             env.set("TF_NEED_CUDA", "0")
+
+        # Do you want to use Clang to build TensorFlow?
+        if "%clang" in spec:
+            env.set("TF_NEED_CLANG", "1")
+        else:
+            env.set("TF_NEED_CLANG", "0")
 
         # Do you wish to download a fresh release of clang? (Experimental)
         env.set("TF_DOWNLOAD_CLANG", "0")
