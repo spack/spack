@@ -81,7 +81,8 @@ spack:
   - axom
   - bolt
   - boost
-  - bricks ~cuda
+  # bricks needs work: no releases, faulty vectorization detection, -march=native ...
+  # - bricks ~cuda
   - butterflypack
   - cabana
   - caliper
