@@ -304,8 +304,8 @@ class SpecParser:
         dependency = SpecNodeParser(self.ctx).parse()
         if dependency is None:
             msg = (
-                "this dependency sigil needs to be followed by a package name "
-                "or a node attribute (version, variant, etc.)"
+                "the dependency sigil and any optional edge attributes must be followed by a "
+                "package name or a node attribute (version, variant, etc.)"
             )
             raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
         if root_spec.concrete:
