@@ -47,7 +47,6 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     conflicts(
         "+python", when="+ipopt+rocm", msg="Python bindings require -fPIC with Ipopt for rocm."
     )
-    variant("tests", default=True, description="Enable/Disable Testing")
     variant("logging", default=False, description="Enable/Disable spdlog based logging")
 
     # Solver options
@@ -179,10 +178,11 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         args.extend(
             [
                 self.define("EXAGO_ENABLE_GPU", "+cuda" in spec or "+rocm" in spec),
+                self.define("PETSC_DIR", spec["petsc"].prefix),
+                self.define("EXAGO_RUN_TESTS", self.run_tests),
+                self.define("LAPACK_LIBRARIES", spec["lapack"].libs + spec["blas"].libs),
                 self.define_from_variant("EXAGO_ENABLE_CUDA", "cuda"),
                 self.define_from_variant("EXAGO_ENABLE_HIP", "rocm"),
-                self.define("PETSC_DIR", spec["petsc"].prefix),
-                self.define_from_variant("EXAGO_RUN_TESTS", "tests"),
                 self.define_from_variant("EXAGO_ENABLE_LOGGING", "logging"),
                 self.define_from_variant("EXAGO_ENABLE_MPI", "mpi"),
                 self.define_from_variant("EXAGO_ENABLE_RAJA", "raja"),
@@ -190,7 +190,6 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("EXAGO_ENABLE_IPOPT", "ipopt"),
                 self.define_from_variant("EXAGO_ENABLE_PYTHON", "python"),
                 self.define_from_variant("EXAGO_ENABLE_LOGGING", "logging"),
-                self.define("LAPACK_LIBRARIES", spec["lapack"].libs + spec["blas"].libs),
             ]
         )
 
