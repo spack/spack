@@ -230,7 +230,7 @@ spack:
       buildable: false
       externals:
       - spec: hipsolver@5.4.3
-        prefix: /opt/rocm-5.4.3 
+        prefix: /opt/rocm-5.4.3
     rocsolver:
       buildable: false
       externals:
@@ -340,7 +340,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: "ecpe4s/ubuntu20.04-runner-amd64-gcc-11.4-rocm5.4.3:2023.08.01"
+        image: "ghcr.io/spack/ubuntu20.04-runner-amd64-gcc-11.4-rocm5.4.3:2023.08.01"
 
   cdash:
     build-group: E4S ROCm External

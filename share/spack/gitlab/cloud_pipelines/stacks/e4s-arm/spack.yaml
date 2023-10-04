@@ -81,7 +81,6 @@ spack:
   - axom
   - bolt
   - boost
-  - bricks ~cuda
   - butterflypack
   - cabana
   - caliper
@@ -90,6 +89,7 @@ spack:
   - conduit
   - datatransferkit
   - dyninst
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp  # +visit: ?
   - exaworks
   - flecsi
   - flit
@@ -187,25 +187,25 @@ spack:
   - veloc
   # - visit                         # silo: https://github.com/spack/spack/issues/39538
   - vtk-m
-  - zfp 
+  - zfp
   # --
-  # - dealii                        # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
-  # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs@0.7.3: gcc: error: unrecognized command-line option '-mno-sse2'
   # - archer                        # part of llvm +omp_tsan
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp  # +visit: ?
+  # - bricks ~cuda                  # not respecting target=aarch64?
+  # - dealii                        # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - geopm                         # geopm: https://github.com/spack/spack/issues/38795
+  # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs@0.7.3: gcc: error: unrecognized command-line option '-mno-sse2'
   # - variorum                      # variorum: https://github.com/spack/spack/issues/38786
 
   # CUDA NOARCH
-  - bricks +cuda
   - flux-core +cuda
   - hpctoolkit +cuda
   - papi +cuda
   - tau +mpi +cuda
   # --
-  # - legion +cuda                    # legion: needs NVIDIA driver
+  # - bricks +cuda                  # not respecting target=aarch64?
+  # - legion +cuda                  # legion: needs NVIDIA driver
 
-  # CUDA 75  
+  # CUDA 75
   - amrex +cuda cuda_arch=75
   - arborx +cuda cuda_arch=75 ^kokkos +wrapper
   - cabana +cuda cuda_arch=75 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=75
@@ -245,7 +245,7 @@ spack:
   # - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=75  # embree: https://github.com/spack/spack/issues/39534
   # - lammps +cuda cuda_arch=75     # lammps: needs NVIDIA driver
   # - lbann +cuda cuda_arch=75      # lbann: https://github.com/spack/spack/issues/38788
-  # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=75 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787 
+  # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=75 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787
   # - py-torch +cuda cuda_arch=75   # skipped, installed by other means
   # - slepc +cuda cuda_arch=75      # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - upcxx +cuda cuda_arch=75      # upcxx: needs NVIDIA driver
@@ -290,7 +290,7 @@ spack:
   # - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=80 # embree: https://github.com/spack/spack/issues/39534
   # - lammps +cuda cuda_arch=80     # lammps: needs NVIDIA driver
   # - lbann +cuda cuda_arch=80      # lbann: https://github.com/spack/spack/issues/38788
-  # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=80 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787 
+  # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=80 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787
   # - py-torch +cuda cuda_arch=80   # skipped, installed by other means
   # - slepc +cuda cuda_arch=80      # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - upcxx +cuda cuda_arch=80      # upcxx: needs NVIDIA driver
@@ -333,7 +333,7 @@ spack:
   # - hypre +cuda cuda_arch=90      # concretizer: hypre +cuda requires cuda@:11, but cuda_arch=90 requires cuda@12:
   # - lammps +cuda cuda_arch=90     # lammps: needs NVIDIA driver
   # - lbann +cuda cuda_arch=90      # concretizer: Cannot select a single "version" for package "lbann"
-  # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=90 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787 
+  # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=90 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787
   # - omega-h +cuda cuda_arch=90    # omega-h: https://github.com/spack/spack/issues/39535
   # - py-torch +cuda cuda_arch=90   # skipped, installed by other means
   # - slepc +cuda cuda_arch=90      # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
@@ -345,7 +345,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: "ecpe4s/ubuntu20.04-runner-arm64-gcc-11.4:2023.08.01"
+        image: "ghcr.io/spack/ubuntu20.04-runner-arm64-gcc-11.4:2023.08.01"
 
   cdash:
     build-group: E4S ARM
