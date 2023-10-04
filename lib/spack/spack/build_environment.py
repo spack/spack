@@ -739,6 +739,9 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     need_compiler = context == Context.BUILD or (
         context == Context.TEST and pkg.test_requires_compiler
     )
+    if need_compiler:
+        set_compiler_environment_variables(pkg, env_mods)
+        set_wrapper_variables(pkg, env_mods)
 
     tty.debug("setup_package: grabbing modifications from dependencies")
     env_mods.extend(modifications_from_dag(pkg.spec, context=context, custom_mods_only=False))
@@ -789,11 +792,6 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     implicit_rpaths = pkg.compiler.implicit_rpaths()
     if implicit_rpaths:
         env_mods.set("SPACK_COMPILER_IMPLICIT_RPATHS", ":".join(implicit_rpaths))
-
-    # Make sure the Spack compiler wrapper comes first in the path.
-    if need_compiler:
-        set_compiler_environment_variables(pkg, env_mods)
-        set_wrapper_variables(pkg, env_mods)
 
     # Make sure nothing's strange about the Spack environment.
     validate(env_mods, tty.warn)
