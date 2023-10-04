@@ -137,7 +137,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("nox", default=False, description="Compile with NOX")
     variant("panzer", default=False, description="Compile with Panzer")
     variant("piro", default=False, description="Compile with Piro")
-    variant("pytrilinos2", default=True, description="Compile with PyTrilinos2")
+    variant("pytrilinos2", default=False, description="Compile with PyTrilinos2")
     variant("phalanx", default=False, description="Compile with Phalanx")
     variant("rol", default=False, description="Compile with ROL")
     variant("rythmos", default=False, description="Compile with Rythmos")
@@ -172,7 +172,18 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # External package options
     variant("dtk", default=False, description="Enable DataTransferKit (deprecated)")
     variant("mesquite", default=False, description="Enable Mesquite (deprecated)") 
+    variant("pytrilinos2", default=False, description="Enable PyTrilinos2)") 
     variant("scorec", default=False, description="Enable SCOREC")
+    
+    resource(
+        name="pytrilinos2",
+        git="https://github.com/kliegeois/Trilinos.git",
+        # tag="pytrilinos2-develop-multiple-files",
+        commit="4e62383e05f4a9320e6e6e970b6d36c4c8a87cb1",
+        placement="pyTrilinos2",
+        submodules=True,
+        when="+pytrilinos2",
+    )
 
     resource(
         name="dtk",
@@ -684,6 +695,21 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 [
                     define("Trilinos_EXTRA_REPOSITORIES", "DataTransferKit"),
                     define_trilinos_enable("DataTransferKit", True),
+                ]
+            )
+
+        if "+pytrilinos2" in spec:
+            options.append(define_from_variant("PyTrilinos2_BINDER_FLAGSP", "openmp"))
+            options.extend(
+                [
+                    # define("Trilinos_EXTRA_REPOSITORIES", "DataTransferKit"),
+                    define_trilinos_enable("Trilinos_ENABLE_PyTrilinos2", True),
+                    define("PyTrilinos2_BINDER_EXECUTABLE", "which binder"),
+                    # define_trilinos_enable("PyTrilinos2_BINDER_FLAGS", "-fopenmp"),
+                    define("PyTrilinos2_BINDER_NUM_FILES", 77),
+                    define("PyTrilinos2_ENABLE_TESTS", True),
+                    define("PyTrilinos2_ENABLE_Update_Binder", False),
+                    define("PyTrilinos2_BINDER_USE_ONE_FILE", False),
                 ]
             )
 
