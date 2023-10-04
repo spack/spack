@@ -81,7 +81,6 @@ spack:
   - axom
   - bolt
   - boost
-  - bricks ~cuda
   - butterflypack
   - cabana
   - caliper
@@ -90,6 +89,7 @@ spack:
   - conduit
   - datatransferkit
   - dyninst
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp  # +visit: ?
   - exaworks
   - flecsi
   - flit
@@ -189,21 +189,21 @@ spack:
   - vtk-m
   - zfp 
   # --
-  # - dealii                        # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
-  # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs@0.7.3: gcc: error: unrecognized command-line option '-mno-sse2'
   # - archer                        # part of llvm +omp_tsan
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp  # +visit: ?
+  # - bricks ~cuda                  # not respecting target=aarch64?
+  # - dealii                        # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - geopm                         # geopm: https://github.com/spack/spack/issues/38795
+  # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs@0.7.3: gcc: error: unrecognized command-line option '-mno-sse2'
   # - variorum                      # variorum: https://github.com/spack/spack/issues/38786
 
   # CUDA NOARCH
-  - bricks +cuda
   - flux-core +cuda
   - hpctoolkit +cuda
   - papi +cuda
   - tau +mpi +cuda
   # --
-  # - legion +cuda                    # legion: needs NVIDIA driver
+  # - bricks +cuda                  # not respecting target=aarch64?
+  # - legion +cuda                  # legion: needs NVIDIA driver
 
   # CUDA 75  
   - amrex +cuda cuda_arch=75
