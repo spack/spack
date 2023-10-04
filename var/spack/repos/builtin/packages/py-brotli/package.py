@@ -14,6 +14,4 @@ class PyBrotli(PythonPackage):
 
     version("1.1.0", sha256="81de08ac11bcb85841e440c13611c00b67d3bf82698314928d0b676362546724")
 
-    # Based on wheel availability on PyPI
-    depends_on("python@:3.12", type=("build", "run"))
     depends_on("py-setuptools", type="build")
