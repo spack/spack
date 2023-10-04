@@ -679,7 +679,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_trilinos_enable("Phalanx"),
                 define_trilinos_enable("PyTrilinos", "python"),
                 define_trilinos_enable("PyTrilinos2"),
-		        define_trilinos_enable("ROL"),
+                define_trilinos_enable("ROL"),
                 define_trilinos_enable("Rythmos"),
                 define_trilinos_enable("Sacado"),
                 define_trilinos_enable("SCOREC"),
