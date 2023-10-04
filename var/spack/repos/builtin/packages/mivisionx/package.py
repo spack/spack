@@ -25,6 +25,8 @@ class Mivisionx(CMakePackage):
         url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version("5.6.1", sha256="b2ff95c1488e244f379482631dae4f9ab92d94a513d180e03607aa1e184b5b0a")
+    version("5.6.0", sha256="34c184e202b1a6da2398b66e33c384d5bafd8f8291089c18539715c5cb73eb1f")
     version("5.5.1", sha256="e8209f87a57c4222003a936240e7152bbfa496862113358f29d4c3e80d4cdf56")
     version("5.5.0", sha256="af266550ecccad80f08954f23e47e8264eb338b0928a5314bd6efca349fc5a14")
     version("5.4.3", sha256="4da82974962a70c326ce2427c664517b1efdff436efe222e6bc28817c222a082")
@@ -116,6 +118,8 @@ class Mivisionx(CMakePackage):
     variant("hip", default=True, description="Use HIP as backend")
     variant("add_tests", default=False, description="add tests and samples folder")
     patch("0001-add-half-include-path.patch", when="@5.5:")
+
+    conflicts("+opencl", when="@5.6.0:")
 
     def patch(self):
         if self.spec.satisfies("@4.2.0"):
@@ -343,14 +347,17 @@ class Mivisionx(CMakePackage):
             "5.4.3",
             "5.5.0",
             "5.5.1",
+            "5.6.0",
+            "5.6.1",
         ]:
             depends_on("miopen-hip@" + ver, when="@" + ver)
-        for ver in ["5.3.3", "5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
+        for ver in ["5.3.3", "5.4.0", "5.4.3", "5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
             depends_on("migraphx@" + ver, when="@" + ver)
             depends_on("hip@" + ver, when="@" + ver)
 
-    for ver in ["5.5.0", "5.5.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on("python@3.5:", type="build")
 
     def setup_run_environment(self, env):
         env.set("MIVISIONX_MODEL_COMPILER_PATH", self.spec.prefix.libexec.mivisionx.model_compiler)

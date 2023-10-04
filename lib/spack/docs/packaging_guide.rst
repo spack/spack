@@ -363,6 +363,42 @@ one of these::
 If Spack finds none of these variables set, it will look for ``vim``, ``vi``, ``emacs``,
 ``nano``, and ``notepad``, in that order.
 
+^^^^^^^^^^^^^^^^^
+Bundling software
+^^^^^^^^^^^^^^^^^
+
+If you have a collection of software expected to work well together with
+no source code of its own, you can create a :ref:`BundlePackage <bundlepackage>`.
+Examples where bundle packages can be useful include defining suites of
+applications (e.g, `EcpProxyApps
+<https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/ecp-proxy-apps/package.py>`_), commonly used libraries
+(e.g., `AmdAocl <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/amd-aocl/package.py>`_),
+and software development kits (e.g., `EcpDataVisSdk <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/ecp-data-vis-sdk/package.py>`_).
+
+These versioned packages primarily consist of dependencies on the associated
+software packages. They can include :ref:`variants <variants>` to ensure
+common build options are consistently applied to dependencies. Known build
+failures, such as not building on a platform or when certain compilers or
+variants are used, can be flagged with :ref:`conflicts <packaging_conflicts>`.
+Build requirements, such as only building with specific compilers, can similarly
+be flagged with :ref:`requires <packaging_conflicts>`.
+
+The ``spack create --template bundle`` command will create a skeleton
+``BundlePackage`` ``package.py`` for you:
+
+.. code-block:: console
+
+   $ spack create --template bundle --name coolsdk
+
+Now you can fill in the basic package documentation, version(s), and software
+package dependencies along with any other relevant customizations.
+
+.. note::
+
+   Remember that bundle packages have no software of their own so there
+   is nothing to download.
+
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-downloadable software
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -610,7 +646,16 @@ add a line like this in the package class:
        version("8.2.0", md5="1c9f62f0778697a09d36121ead88e08e")
        version("8.1.2", md5="d47dd09ed7ae6e7fd6f9a816d7f5fdf6")
 
-Versions should be listed in descending order, from newest to oldest.
+.. note::
+
+   By convention, we list versions in descending order, from newest to oldest.
+
+.. note::
+
+   :ref:`Bundle packages  <bundlepackage>` do not have source code so
+   there is nothing to fetch. Consequently, their version directives
+   consist solely of the version name (e.g., ``version("202309")``).
+
 
 ^^^^^^^^^^^^^
 Date Versions
@@ -2678,7 +2723,7 @@ Conflicts and requirements
 --------------------------
 
 Sometimes packages have known bugs, or limitations, that would prevent them
-to build e.g. against other dependencies or with certain compilers. Spack
+from building e.g. against other dependencies or with certain compilers. Spack
 makes it possible to express such constraints with the ``conflicts`` directive.
 
 Adding the following to a package:
@@ -5246,8 +5291,8 @@ Saving build-time files
     We highly recommend re-using build-time test sources and pared down
     input files for testing installed software. These files are easier
     to keep synchronized with software capabilities since they reside
-    within the software's repository. 
-    
+    within the software's repository.
+
     If that is not possible, you can add test-related files to the package
     repository (see :ref:`adding custom files <cache_custom_files>`). It
     will be important to maintain them so they work across listed or supported
@@ -5268,7 +5313,7 @@ where each argument has the following meaning:
 * ``pkg`` is an instance of the package for the spec under test.
 
 * ``srcs`` is a string *or* a list of strings corresponding to the
-  paths of subdirectories and or files needed for stand-alone testing. 
+  paths of subdirectories and or files needed for stand-alone testing.
 
 The paths must be relative to the staged source directory. Contents of
 subdirectories and files are copied to a special test cache subdirectory
@@ -5411,7 +5456,7 @@ Reading expected output from a file
 
 The helper function ``get_escaped_text_output`` is available for packages
 to retrieve and properly format the text from a file that contains the
-expected output from running an executable that may contain special 
+expected output from running an executable that may contain special
 characters.
 
 The signature for ``get_escaped_text_output`` is:
@@ -5458,7 +5503,7 @@ source code, the path would be obtained as shown below.
            db_filename = test_cache_dir.join("packages.db")
 
 Alternatively, if the file was copied to the ``share/tests`` subdirectory
-as part of the installation process, the test could access the path as 
+as part of the installation process, the test could access the path as
 follows:
 
 .. code-block:: python
@@ -5555,7 +5600,7 @@ Inheriting stand-alone tests
 Stand-alone tests defined in parent (.e.g., :ref:`build-systems`) and
 virtual (e.g., :ref:`virtual-dependencies`) packages are executed by
 packages that inherit from or provide interface implementations for those
-packages, respectively. 
+packages, respectively.
 
 The table below summarizes the stand-alone tests that will be executed along
 with those implemented in the package itself.
@@ -5625,7 +5670,7 @@ for ``openmpi``:
    SKIPPED: test_version_oshcc: oshcc is not installed
    ...
    ==> [2023-03-10-16:04:02.215227] Completed testing
-   ==> [2023-03-10-16:04:02.215597] 
+   ==> [2023-03-10-16:04:02.215597]
    ======================== SUMMARY: openmpi-4.1.4-ubmrigj ========================
    Openmpi::test_bin_mpirun .. PASSED
    Openmpi::test_bin_ompi_info .. PASSED
@@ -6151,7 +6196,100 @@ follows:
                "foo-package@{0}".format(version_str)
            )
 
-.. _package-lifecycle:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Add detection tests to packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To ensure that software is detected correctly for multiple configurations
+and on different systems users can write a ``detection_test.yaml`` file and
+put it in the package directory alongside the ``package.py`` file.
+This YAML file contains enough information for Spack to mock an environment
+and try to check if the detection logic yields the results that are expected.
+
+As a general rule, attributes at the top-level of ``detection_test.yaml``
+represent search mechanisms and they each map to a list of tests that should confirm
+the validity of the package's detection logic.
+
+The detection tests can be run with the following command:
+
+.. code-block:: console
+
+   $ spack audit externals
+
+Errors that have been detected are reported to screen.
+
+""""""""""""""""""""""""""
+Tests for PATH inspections
+""""""""""""""""""""""""""
+
+Detection tests insisting on ``PATH`` inspections are listed under
+the ``paths`` attribute:
+
+.. code-block:: yaml
+
+   paths:
+   - layout:
+     - executables:
+       - "bin/clang-3.9"
+       - "bin/clang++-3.9"
+       script: |
+         echo "clang version 3.9.1-19ubuntu1 (tags/RELEASE_391/rc2)"
+         echo "Target: x86_64-pc-linux-gnu"
+         echo "Thread model: posix"
+         echo "InstalledDir: /usr/bin"
+     results:
+     - spec: 'llvm@3.9.1 +clang~lld~lldb'
+
+Each test is performed by first creating a temporary directory structure as
+specified in the corresponding ``layout`` and by then running
+package detection and checking that the outcome matches the expected
+``results``. The exact details on how to specify both the ``layout`` and the
+``results`` are reported in the table below:
+
+.. list-table:: Test based on PATH inspections
+   :header-rows: 1
+
+   * - Option Name
+     - Description
+     - Allowed Values
+     - Required Field
+   * - ``layout``
+     - Specifies the filesystem tree used for the test
+     - List of objects
+     - Yes
+   * - ``layout:[0]:executables``
+     - Relative paths for the mock executables to be created
+     - List of strings
+     - Yes
+   * - ``layout:[0]:script``
+     - Mock logic for the executable
+     - Any valid shell script
+     - Yes
+   * - ``results``
+     - List of expected results
+     - List of objects (empty if no result is expected)
+     - Yes
+   * - ``results:[0]:spec``
+     - A spec that is expected from detection
+     - Any valid spec
+     - Yes
+
+"""""""""""""""""""""""""""""""
+Reuse tests from other packages
+"""""""""""""""""""""""""""""""
+
+When using a custom repository, it is possible to customize a package that already exists in ``builtin``
+and reuse its external tests. To do so, just write a ``detection_tests.yaml`` alongside the customized
+``package.py`` with an ``includes`` attribute. For instance the ``detection_tests.yaml`` for
+``myrepo.llvm`` might look like:
+
+.. code-block:: yaml
+
+   includes:
+   - "builtin.llvm"
+
+This YAML file instructs Spack to run the detection tests defined in ``builtin.llvm`` in addition to
+those locally defined in the file.
 
 -----------------------------
 Style guidelines for packages
