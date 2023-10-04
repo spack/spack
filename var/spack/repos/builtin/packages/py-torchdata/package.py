@@ -36,7 +36,7 @@ class PyTorchdata(PythonPackage):
     depends_on("ninja", when="@0.4:", type="build")
 
     # https://github.com/pytorch/data#version-compatibility
-    depends_on("py-torch@master", when="@main", type=("build", "run"))
+    depends_on("py-torch@main", when="@main", type=("build", "run"))
     depends_on("py-torch@2.0.1", when="@0.6.1", type=("build", "run"))
     depends_on("py-torch@2.0.0", when="@0.6.0", type=("build", "run"))
     depends_on("py-torch@1.13.1", when="@0.5.1", type=("build", "run"))
