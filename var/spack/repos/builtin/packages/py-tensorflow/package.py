@@ -795,14 +795,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
                 "tensorflow/workspace.bzl",
             )
 
-            # starting with tensorflow 1.3, tensorboard becomes a dependency
-            # -> remove from list of required packages
-            filter_file(
-                r"'tensorflow-tensorboard",
-                r"#'tensorflow-tensorboard",
-                "tensorflow/tools/pip_package/setup.py",
-            )
-
         if spec.satisfies("@1.5.0: ~gcp"):
             # google cloud support seems to be installed on default, leading
             # to boringssl error manually set the flag to false to avoid
@@ -814,15 +806,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
                 ".tf_configure.bazelrc",
             )
 
-        if spec.satisfies("@1.6.0:2.1"):
-            # tensorboard name changed
-            # there are no corresponding versions of these in spack
-            filter_file(
-                r"(^\s*)'tensorboard (>=|~=)",
-                r"\1#'tensorboard \2",
-                "tensorflow/tools/pip_package/setup.py",
-            )
-
         if spec.satisfies("@1.8.0: ~opencl"):
             # 1.8.0 and 1.9.0 aborts with numpy import error during python_api
             # generation somehow the wrong PYTHONPATH is used...
@@ -831,64 +814,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             with open(".tf_configure.bazelrc", mode="a") as f:
                 f.write("build --distinct_host_configuration=false\n")
                 f.write('build --action_env PYTHONPATH="{0}"\n'.format(env["PYTHONPATH"]))
-
-        if spec.satisfies("@1.13.1:"):
-            # tensorflow_estimator is an API for tensorflow
-            # tensorflow-estimator imports tensorflow during build, so
-            # tensorflow has to be set up first
-            filter_file(
-                r"(^\s*)'tensorflow_estimator (>=|~=)",
-                r"\1#'tensorflow_estimator \2",
-                "tensorflow/tools/pip_package/setup.py",
-            )
-
-        if spec.satisfies("@2.5"):
-            filter_file(
-                r"(^\s*)'keras-nightly (>=|~=)",
-                r"\1#'keras-nightly \2",
-                "tensorflow/tools/pip_package/setup.py",
-            )
-
-        if spec.satisfies("@2.6:"):
-            filter_file(
-                r"(^\s*)'keras (>=|~=)", r"\1#'keras \2", "tensorflow/tools/pip_package/setup.py"
-            )
-
-        if spec.satisfies("@2.6"):
-            filter_file(
-                r"(^\s*)'clang (>=|~=)", r"\1#'clang \2", "tensorflow/tools/pip_package/setup.py"
-            )
-
-        # TODO: add support for tensorflow-io-gcs-filesystem
-        if spec.satisfies("@2.7:"):
-            filter_file(
-                r"(^\s*)'tensorflow-io-gcs-filesystem (>=|~=)",
-                r"\1#'tensorflow-io-gcs-filesystem \2",
-                "tensorflow/tools/pip_package/setup.py",
-            )
-
-        if spec.satisfies("@2.0.0:"):
-            # now it depends on the nightly versions...
-            filter_file(
-                r"REQUIRED_PACKAGES\[i\] = 'tb-nightly (>=|~=)",
-                r"pass #REQUIRED_PACKAGES[i] = 'tb-nightly \1",
-                "tensorflow/tools/pip_package/setup.py",
-            )
-            filter_file(
-                r"REQUIRED_PACKAGES\[i\] = 'tensorflow-estimator-2.0-preview",
-                r"pass #REQUIRED_PACKAGES[i] = 'tensorflow-estimator-2.0-preview",
-                "tensorflow/tools/pip_package/setup.py",
-            )
-            filter_file(
-                r"REQUIRED_PACKAGES\[i\] = 'tf-estimator-nightly (>=|~=)",
-                r"pass #REQUIRED_PACKAGES[i] = 'tf-estimator-nightly \1",
-                "tensorflow/tools/pip_package/setup.py",
-            )
-            filter_file(
-                r"REQUIRED_PACKAGES\[i\] = 'keras-nightly (>=|~=)",
-                r"pass #REQUIRED_PACKAGES[i] = 'keras-nightly \1",
-                "tensorflow/tools/pip_package/setup.py",
-            )
 
         if spec.satisfies("@1.13.1 +nccl"):
             filter_file(
