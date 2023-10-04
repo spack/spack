@@ -19,6 +19,8 @@ class PyZipp(PythonPackage):
     version("0.5.1", sha256="ca943a7e809cc12257001ccfb99e3563da9af99d52f261725e96dfe0f9275bc3")
 
     depends_on("python@3.8:", when="@3.16:", type=("build", "run"))
+    # needed for spack bootstrap as spack itself supports python 3.6
+    depends_on("python@3.7:", when="@3.8.1:", type=("build", "run"))
     depends_on("py-setuptools@56:", when="@3.5.1:", type="build")
     depends_on("py-setuptools@34.4:", when="@0.3.3:", type="build")
     depends_on("py-setuptools-scm@3.4.1: +toml", when="@2.0.1:", type="build")
