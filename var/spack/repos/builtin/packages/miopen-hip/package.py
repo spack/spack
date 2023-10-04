@@ -216,6 +216,7 @@ class MiopenHip(CMakePackage):
         if self.spec.satisfies("@5.5.1:"):
             args.append(self.define("MIOPEN_USE_COMPOSABLEKERNEL", "ON"))
             args.append(self.define("MIOPEN_ENABLE_AI_KERNEL_TUNING", "OFF"))
+            args.append(self.define("MIOPEN_USE_MLIR", "OFF"))
         args.append(
             "-DNLOHMANN_JSON_INCLUDE={0}".format(self.spec["nlohmann-json"].prefix.include)
         )
