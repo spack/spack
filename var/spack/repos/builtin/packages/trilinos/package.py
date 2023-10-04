@@ -148,6 +148,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("stratimikos", default=False, description="Compile with Stratimikos")
     variant("teko", default=False, description="Compile with Teko")
     variant("tempus", default=False, description="Compile with Tempus")
+    variant("test", default=False, description="Enable testing")
     variant("thyra", default=False, description="Compile with Thyra")
     variant("tpetra", default=True, description="Compile with Tpetra")
     variant("trilinoscouplings", default=False, description="Compile with TrilinosCouplings")
@@ -615,6 +616,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 ),
             ]
         )
+
+        if "+test" in spec:
+            options.append(define_trilinos_enable("TESTS", True))
+            options.append(define("BUILD_TESTING", True))
+        else:
+            options.append(define_trilinos_enable("TESTS", False))
 
         if spec.version >= Version("13"):
             options.append(define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
