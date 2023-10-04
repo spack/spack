@@ -678,7 +678,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_trilinos_enable("Piro"),
                 define_trilinos_enable("Phalanx"),
                 define_trilinos_enable("PyTrilinos", "python"),
-		        define_trilinos_enable("PyTrilinos2"),
+                define_trilinos_enable("PyTrilinos2"),
 		        define_trilinos_enable("ROL"),
                 define_trilinos_enable("Rythmos"),
                 define_trilinos_enable("Sacado"),
@@ -712,21 +712,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 [
                     define("Trilinos_EXTRA_REPOSITORIES", "DataTransferKit"),
                     define_trilinos_enable("DataTransferKit", True),
-                ]
-            )
-
-        if "+pytrilinos2" in spec:
-            options.append(define_from_variant("PyTrilinos2_BINDER_FLAGSP", "openmp"))
-            options.extend(
-                [
-                    # define("Trilinos_EXTRA_REPOSITORIES", "DataTransferKit"),
-                    define_trilinos_enable("Trilinos_ENABLE_PyTrilinos2", True),
-                    define("PyTrilinos2_BINDER_EXECUTABLE", "which binder"),
-                    # define_trilinos_enable("PyTrilinos2_BINDER_FLAGS", "-fopenmp"),
-                    define("PyTrilinos2_BINDER_NUM_FILES", 77),
-                    define("PyTrilinos2_ENABLE_TESTS", True),
-                    define("PyTrilinos2_ENABLE_Update_Binder", False),
-                    define("PyTrilinos2_BINDER_USE_ONE_FILE", False),
                 ]
             )
 
