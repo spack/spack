@@ -404,7 +404,7 @@ def _write_yaml(data, str_or_file):
 
 def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
-    valid_variables = spack.util.environment.get_host_environment()
+    valid_variables = spack.spec.get_host_environment()
     valid_variables.update({"re": re, "env": os.environ})
     return eval(string, valid_variables)
 
@@ -1396,7 +1396,10 @@ class Environment:
 
         result_by_user_spec = {}
         solver = spack.solver.asp.Solver()
-        for result in solver.solve_in_rounds(specs_to_concretize, tests=tests):
+        allow_deprecated = spack.config.get("config:deprecated", False)
+        for result in solver.solve_in_rounds(
+            specs_to_concretize, tests=tests, allow_deprecated=allow_deprecated
+        ):
             result_by_user_spec.update(result.specs_by_input)
 
         result = []

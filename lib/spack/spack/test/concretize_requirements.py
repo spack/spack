@@ -543,21 +543,37 @@ packages:
             assert not s2.satisfies("@2.5 %gcc")
 
 
-def test_requirements_are_higher_priority_than_deprecation(concretize_scope, test_repo):
-    """Test that users can override a deprecated version with a requirement."""
-    # @2.3 is a deprecated versions. Ensure that any_of picks both constraints,
+@pytest.mark.parametrize(
+    "allow_deprecated,expected,not_expected",
+    [(True, ["@=2.3", "%gcc"], []), (False, ["%gcc"], ["@=2.3"])],
+)
+def test_requirements_and_deprecated_versions(
+    allow_deprecated, expected, not_expected, concretize_scope, test_repo
+):
+    """Tests the expected behavior of requirements and deprecated versions.
+
+    If deprecated versions are not allowed, concretization should just pick
+    the other requirement.
+
+    If deprecated versions are allowed, both requirements are honored.
+    """
+    # 2.3 is a deprecated versions. Ensure that any_of picks both constraints,
     # since they are possible
     conf_str = """\
 packages:
   y:
     require:
-    - any_of: ["@2.3", "%gcc"]
+    - any_of: ["@=2.3", "%gcc"]
 """
     update_packages_config(conf_str)
 
-    s1 = Spec("y").concretized()
-    assert s1.satisfies("@2.3")
-    assert s1.satisfies("%gcc")
+    with spack.config.override("config:deprecated", allow_deprecated):
+        s1 = Spec("y").concretized()
+        for constrain in expected:
+            assert s1.satisfies(constrain)
+
+        for constrain in not_expected:
+            assert not s1.satisfies(constrain)
 
 
 @pytest.mark.parametrize("spec_str,requirement_str", [("x", "%gcc"), ("x", "%clang")])

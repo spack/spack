@@ -5,6 +5,7 @@
 import argparse
 import errno
 import os
+import re
 import sys
 from typing import List, Optional
 
@@ -156,11 +157,20 @@ def packages_to_search_for(
 ):
     result = []
     for current_tag in tags:
-        result.extend(spack.repo.PATH.packages_with_tags(current_tag))
+        result.extend(spack.repo.PATH.packages_with_tags(current_tag, full=True))
+
     if names:
-        result = [x for x in result if x in names]
+        # Match both fully qualified and unqualified
+        parts = [rf"(^{x}$|[.]{x}$)" for x in names]
+        select_re = re.compile("|".join(parts))
+        result = [x for x in result if select_re.search(x)]
+
     if exclude:
-        result = [x for x in result if x not in exclude]
+        # Match both fully qualified and unqualified
+        parts = [rf"(^{x}$|[.]{x}$)" for x in exclude]
+        select_re = re.compile("|".join(parts))
+        result = [x for x in result if not select_re.search(x)]
+
     return result
 
 

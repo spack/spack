@@ -282,8 +282,8 @@ class Python(Package):
     patch("tkinter-3.10.patch", when="@3.10.0:3.10 ~tkinter")
     patch("tkinter-3.11.patch", when="@3.11.0:3.11 ~tkinter")
 
-    # Ensure that distutils chooses correct compiler option for RPATH on cray:
-    patch("cray-rpath-3.1.patch", when="@3 platform=cray")
+    # Ensure that distutils chooses correct compiler option for RPATH:
+    patch("rpath-non-gcc.patch", when="@:3.11")
 
     # Ensure that distutils chooses correct compiler option for RPATH on fj:
     patch("fj-rpath-3.1.patch", when="@:3.9.7,3.10.0 %fj")

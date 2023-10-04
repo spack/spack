@@ -120,8 +120,9 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
     "names,tags,exclude,expected",
     [
         # find --all
-        (None, ["detectable"], [], ["find-externals1"]),
+        (None, ["detectable"], [], ["builtin.mock.find-externals1"]),
         # find --all --exclude find-externals1
+        (None, ["detectable"], ["builtin.mock.find-externals1"], []),
         (None, ["detectable"], ["find-externals1"], []),
         # find cmake (and cmake is not detectable)
         (["cmake"], ["detectable"], [], []),
@@ -200,19 +201,6 @@ def test_find_external_manifest_failure(mutable_config, mutable_mock_repo, tmpdi
     monkeypatch.setenv("PATH", "")
     output = external("find")
     assert "Skipping manifest and continuing" in output
-
-
-def test_find_external_nonempty_default_manifest_dir(
-    mutable_database, mutable_mock_repo, tmpdir, monkeypatch, directory_with_manifest
-):
-    """The user runs 'spack external find'; the default manifest directory
-    contains a manifest file. Ensure that the specs are read.
-    """
-    monkeypatch.setenv("PATH", "")
-    monkeypatch.setattr(spack.cray_manifest, "default_path", str(directory_with_manifest))
-    external("find")
-    specs = spack.store.STORE.db.query("hwloc")
-    assert any(x.dag_hash() == "hwlocfakehashaaa" for x in specs)
 
 
 def test_find_external_merge(mutable_config, mutable_mock_repo):
