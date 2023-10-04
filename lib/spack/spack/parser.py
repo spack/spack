@@ -15,7 +15,7 @@ Here is the EBNF grammar for a spec::
                      filename
 
     node_options    = [@(version_list|version_pair)] [%compiler] { variant }
-    edge_properties = [[ { bool_variant | key_value } ]]
+    edge_properties = [ { bool_variant | key_value } ]
 
     hash          = / id
     filename      = (.|/|[a-zA-Z0-9-_]*/)([a-zA-Z0-9-_./]*)(.json|.yaml)
