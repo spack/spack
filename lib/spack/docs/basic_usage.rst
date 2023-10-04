@@ -1534,7 +1534,8 @@ There are packages that provide more than just one virtual dependency. When inte
 might want to utilize just a subset of what they could provide, and use other providers for virtuals they
 need.
 
-With Spack it is possible to bind virtual dependencies explicitly using the ``virtuals`` edge attribute:
+It is possible to be more explicit and tell Spack which dependency should provide which virtual, using a
+special syntax:
 
 .. code-block:: console
 

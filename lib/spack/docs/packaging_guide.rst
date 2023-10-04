@@ -2981,9 +2981,9 @@ Providing multiple virtuals simultaneously
 Packages can provide more than one virtual dependency. Sometimes, due to implementation details,
 there are subsets of those virtuals that need to be provided together by the same package.
 
-A well-known example is, for instance, ``openblas``, which provides both the ``lapack`` and ``blas`` API in a single library
-called ``libopenblas``. A package needing ``lapack`` and ``blas`` can either use ``openblas`` as a provider of both, or
-not use ``openblas`` at all.
+A well-known example is ``openblas``, which provides both the ``lapack`` and ``blas`` API in a single ``libopenblas``
+library. A package that needs ``lapack`` and ``blas`` must either use ``openblas`` to provide both, or not use
+``openblas`` at all. It cannot pick one or the other.
 
 To express this constraint in a package, the two virtual dependencies must be listed in the same ``provides`` directive:
 
@@ -2992,8 +2992,7 @@ To express this constraint in a package, the two virtual dependencies must be li
    provides('blas', 'lapack')
 
 This makes it impossible to select ``openblas`` as a provider for one of the two
-virtual dependencies and not for the other. Any request to do so results in an
-error message:
+virtual dependencies and not for the other. If you try to, Spack will report an error:
 
 .. code-block:: console
 
