@@ -1690,10 +1690,9 @@ class Environment:
                 "Loading the environment view will require reconcretization." % self.name
             )
 
-    def _env_modifications_for_view(self, view: ViewDescriptor, reverse: bool = False):
-        roots = [r for _, r in self.concretized_specs()]
+    def _env_modifications_for_view(self, view: ViewDescriptor, reverse: bool = False) -> spack.util.environment.EnvironmentModifications:
         try:
-            mods = uenv.environment_modifications_for_specs(*roots, view=view)
+            mods = uenv.environment_modifications_for_specs(*self.concrete_roots(), view=view)
         except Exception as e:
             # Failing to setup spec-specific changes shouldn't be a hard error.
             tty.warn(
@@ -1738,7 +1737,7 @@ class Environment:
             return env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(descriptor).reversed())
-        env_mod.extend(self._env_modifications_for_view(reverse=True))
+        env_mod.extend(self._env_modifications_for_view(descriptor, reverse=True))
 
         return env_mod
 
