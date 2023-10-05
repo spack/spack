@@ -363,7 +363,8 @@ class TestConcretize:
         spec = Spec("hypre cflags='-g' ^openblas")
         spec.concretize()
 
-        assert not spec.satisfies("^openblas cflags='-g'")
+        for dep in spec.traverse(root=False):
+            assert not dep.satisfies("cflags='-g'")
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
