@@ -521,10 +521,10 @@ spack:
         spec = Spec("splice-b++bar")
         spec.concretize()
 
-        assert spec.satisfies("^splice-a+bar")
-        assert spec.satisfies("^splice-z+bar")
-        assert not spec.satisfies("^splice-a+foo")
-        assert not spec.satisfies("^splice-z+foo")
+        assert spec.satisfies("+bar") and spec.satisfies("^splice-a+bar")
+        assert spec.satisfies("+bar") and spec.satisfies("^splice-z+bar")
+        assert spec.satisfies("+foo") and not spec.satisfies("^splice-a+foo")
+        assert spec.satisfies("+foo") and not spec.satisfies("^splice-z+foo")
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
