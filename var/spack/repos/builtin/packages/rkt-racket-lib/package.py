@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class RktRacketLib(RacketPackage):
-    """Stub package for packages which are currently part of core racket installation (but which may change in the future)."""
+    """Stub package for packages which are currently part of core
+    racket installation (but which may change in the future)."""
 
     git = "ssh://git@github.com/racket/racket.git"
 
