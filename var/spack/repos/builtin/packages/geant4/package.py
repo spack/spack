@@ -262,6 +262,11 @@ class Geant4(CMakePackage):
         if spec.version > Version("10.6.1"):
             options.append(self.define_from_variant("GEANT4_USE_PYTHON", "python"))
 
+        # CMAKE Bug with Geant4PackageCache
+        # https://bugzilla-geant4.kek.jp/show_bug.cgi?id=2556
+        if spec.version < Version("11.2.0") and self.spec["cmake"].version >= Version("3.27"):
+            options.append(self.define("GEANT4_INSTALL_PACKAGE_CACHE", "off"))
+
         return options
 
     @property
