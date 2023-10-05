@@ -183,8 +183,6 @@ SPECFILE_FORMAT_VERSION = 4
 PropagateValue = collections.namedtuple("PropagateValue", ["value", "propagate"])
 
 
-# InstallStatus is used to map install statuses to symbols for display
-# Options are artificially disjoint for dispay purposes
 class InstallStatus(enum.Enum):
     """Maps install statuses to symbols for display.
 
