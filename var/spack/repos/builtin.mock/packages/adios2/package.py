@@ -14,9 +14,7 @@ class Adios2(Package):
     homepage = "https://someplace.com"
     url = "https://anotherplace.com"
 
-    version(
-        "2.9.1",
-        sha256="ddfa32c14494250ee8a48ef1c97a1bf6442c15484bbbd4669228a0f90242f4f9")
+    version("2.9.1", sha256="ddfa32c14494250ee8a48ef1c97a1bf6442c15484bbbd4669228a0f90242f4f9")
 
     variant("shared", default=True, description="Build shared libraries")
     variant("bzip2", default=True, description="Enable BZip2 compression")
