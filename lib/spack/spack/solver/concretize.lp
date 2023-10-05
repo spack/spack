@@ -1207,19 +1207,19 @@ same_compiler(PackageNode, DependencyNode)
      compiler_id(CompilerID).
 
 % propagate flags when compiler match
-attr("node_flag_propagate", Package, FlagType, Flag, Source) :-
-  attr("node_flag_possible_prop", Package, FlagType, Flag, Source),
-  not attr("node_flag_set", Package, FlagType, _).
+attr("node_flag_propagate", PackageNode, FlagType, Flag, Source) :- % source is a node() attribute
+  attr("node_flag_possible_prop", PackageNode, FlagType, Flag, Source),
+  not attr("node_flag_set", PackageNode, FlagType, _).
 
-attr("node_flag_possible_prop", Package, FlagType, Flag, Source) :-
-  same_compiler(Parent, Package),
-  attr("node_flag_possible_prop", Parent, FlagType, _, Source),
+attr("node_flag_possible_prop", PackageNode, FlagType, Flag, Source) :- % source is a node() attribute
+  same_compiler(ParentNode, PackageNode),
+  attr("node_flag_possible_prop", ParentNode, FlagType, _, Source),
   attr("node_flag", Source, FlagType, Flag),
   flag_type(FlagType).
 
-error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
-  same_compiler(Source1, Package),
-  same_compiler(Source2, Package),
+error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, PackageNode, FlagType) :-
+  same_compiler(Source1, PackageNode),
+  same_compiler(Source2, PackageNode),
   attr("node_flag_propagate", _, FlagType, _, Source1),
   attr("node_flag_propagate", _, FlagType, _, Source2),
   Source1 < Source2.
