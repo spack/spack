@@ -103,6 +103,8 @@ class Whizard(AutotoolsPackage):
         # and seems incompatible with
         # filter_compiler_wrappers, thus the
         # actual compilers need to be used to build
+        if self.spec.satisfies("+lcio"):
+            env.set("LCIO", self.spec["lcio"].prefix)
         env.set("CC", self.compiler.cc)
         env.set("CXX", self.compiler.cxx)
         env.set("FC", self.compiler.fc)
