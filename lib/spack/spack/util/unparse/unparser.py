@@ -1150,6 +1150,10 @@ class Unparser:
     def visit_TypeAlias(self, node):
         self.fill("type ")
         self.dispatch(node.name)
+        if getattr(node, "type_params", False):
+            self.write("[")
+            interleave(lambda: self.write(", "), self.dispatch, node.type_params)
+            self.write("]")
         self.write(" = ")
         self.dispatch(node.value)
 
