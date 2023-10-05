@@ -350,9 +350,8 @@ class TestConcretize:
             spec.concretize()
             assert spec.satisfies("cflags=-O2")
 
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Optional compiler propagation isn't deprecated for original concretizer",
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
     )
     def test_concretize_compiler_flag_propagate(self):
         spec = Spec("hypre cflags=='-g' ^openblas")
@@ -467,6 +466,7 @@ class TestConcretize:
     def test_concretize_environment_propagated_disabled_variant(
         self, unify, tmpdir, mutable_mock_env_path
     ):
+    """Ensure that variants are propagated in a concrete environment"""
         path = tmpdir.join("spack.yaml")
 
         with tmpdir.as_cwd():
@@ -491,9 +491,8 @@ spack:
                     assert dep.satisfies("~shared")
                     assert dep.satisfies("^zlib ~shared")
 
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Optional compiler propagation isn't deprecated for original concretizer",
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
     )
     def test_concretize_propagate_disabled_variant(self):
         """Test a package variant value was passed from its parent."""
@@ -503,9 +502,8 @@ spack:
         assert spec.satisfies("^openblas~shared")
         assert spec.satisfies("^zlib~shared")
 
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Optional compiler propagation isn't deprecated for original concretizer",
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
     )
     def test_concretize_propagated_variant_is_not_passed_to_dependent(self):
         """Test a package variant value was passed from its parent."""
@@ -515,9 +513,8 @@ spack:
         assert spec.satisfies("^openblas+shared")
         assert spec.satisfies("^zlib~shared")
 
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Optional compiler propagation isn't deprecated for original concretizer",
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
     )
     def test_concretize_propagate_specified_variant(self):
         """Test that only the specified variant is propagated to the dependencies"""
