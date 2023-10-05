@@ -174,7 +174,7 @@ spack:
   - xyce +mpi +shared +pymi +pymi_static_tpls
   # INCLUDED IN ECP DAV CPU
   - adios2
-  - ascent
+  - ascent ^umpire@2022.10.0
   - darshan-runtime
   - darshan-util
   - faodel
