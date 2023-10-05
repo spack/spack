@@ -1328,7 +1328,7 @@ class SpackSolverSetup:
                         pkg.name, fn.variant_default_value_from_package_py(name, variant.default)
                     )
                 )
-            elif concrete_variant is None or not concrete_variant.propagate:
+            elif not concrete_variant or not concrete_variant.propagate:
                 spec_variant = variant.make_default()
                 defaults = spec_variant.value
                 for val in sorted(defaults):
