@@ -59,6 +59,7 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     variant("shared", default=True, description="Build shared library")
+    variant("sycl", default=False, description="Build support for the SYCL backend")
 
     # Match each LAPACK++ version to a specific BLAS++ version
     for lpp_ver, bpp_ver in _versions:
@@ -66,6 +67,8 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("blaspp ~cuda", when="~cuda")
     depends_on("blaspp +cuda", when="+cuda")
+    depends_on("blaspp ~sycl", when="~sycl")
+    depends_on("blaspp +sycl", when="+sycl")
     depends_on("blaspp ~rocm", when="~rocm")
     for val in ROCmPackage.amdgpu_targets:
         depends_on("blaspp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
@@ -74,8 +77,23 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("lapack")
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="+rocm")
+    depends_on("intel-oneapi-mkl threads=openmp", when="+sycl")
 
-    conflicts("+rocm", when="+cuda", msg="LAPACK++ can only support one GPU backend at a time")
+    backend_msg = "LAPACK++ supports only one GPU backend at a time"
+    conflicts("+rocm", when="+cuda", msg=backend_msg)
+    conflicts("+rocm", when="+sycl", msg=backend_msg)
+    conflicts("+cuda", when="+sycl", msg=backend_msg)
+    conflicts("+sycl", when="@:2023.06.00", msg="+sycl requires LAPACK++ version 2023.08.25")
+
+    # TODO: +sycl requires use of the intel-oneapi compiler, but we cannot express that directly.
+    #       For now, add conflicts for other compilers instead.
+    for __compiler in spack.compilers.supported_compilers():
+        if __compiler != "oneapi":
+            conflicts(
+                "%{0}".format(__compiler),
+                when="+sycl",
+                msg="lapackpp+sycl must be compiled with %oneapi",
+            )
 
     def cmake_args(self):
         spec = self.spec
@@ -86,6 +104,8 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
                 backend = "cuda"
             if "+rocm" in spec:
                 backend = "hip"
+            if "+sycl" in spec:
+                backend = "sycl"
 
         args = [
             "-DBUILD_SHARED_LIBS=%s" % ("+shared" in spec),

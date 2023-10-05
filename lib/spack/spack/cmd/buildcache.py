@@ -13,6 +13,7 @@ from typing import List
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
+from llnl.string import plural
 from llnl.util.lang import elide_list
 
 import spack.binary_distribution as bindist
@@ -32,7 +33,6 @@ import spack.util.web as web_util
 from spack.cmd import display_specs
 from spack.spec import Spec, save_dependency_specfiles
 from spack.stage import Stage
-from spack.util.string import plural
 
 description = "create, download and install binary packages"
 section = "packaging"
