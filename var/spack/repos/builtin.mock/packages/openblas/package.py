@@ -17,8 +17,6 @@ class Openblas(Package):
     version("0.2.14", md5="b1190f3d3471685f17cfd1ec1d252ac9")
     version("0.2.13", md5="b1190f3d3471685f17cfd1ec1d252ac9")
 
-    depends_on("zlib")
-
     variant("shared", default=True, description="Build shared libraries")
 
     # See #20019 for this conflict

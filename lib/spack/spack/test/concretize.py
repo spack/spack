@@ -466,7 +466,7 @@ class TestConcretize:
     def test_concretize_environment_propagated_disabled_variant(
         self, unify, tmpdir, mutable_mock_env_path
     ):
-    """Ensure that variants are propagated in a concrete environment"""
+        """Ensure that variants are propagated in a concrete environment"""
         path = tmpdir.join("spack.yaml")
 
         with tmpdir.as_cwd():
@@ -475,7 +475,7 @@ class TestConcretize:
                     """\
 spack:
   specs:
-    - hypre ~~shared ^openblas
+    - ascent ~~shared +adios2
 """
                 )
 
@@ -487,31 +487,31 @@ spack:
 
         for spec in test.specs_by_hash.values():
             for dep in spec.dependencies():
-                if dep.name == "openblas":
+                if dep.name == "adios2":
                     assert dep.satisfies("~shared")
-                    assert dep.satisfies("^zlib ~shared")
+                    assert dep.satisfies("^bzip2 ~shared")
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
     def test_concretize_propagate_disabled_variant(self):
         """Test a package variant value was passed from its parent."""
-        spec = Spec("hypre~~shared ^openblas")
+        spec = Spec("ascent~~shared +adios2")
         spec.concretize()
 
-        assert spec.satisfies("^openblas~shared")
-        assert spec.satisfies("^zlib~shared")
+        for dep in spec.traverse():
+            assert dep.satisfies("~shared")
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
     def test_concretize_propagated_variant_is_not_passed_to_dependent(self):
         """Test a package variant value was passed from its parent."""
-        spec = Spec("hypre~~shared ^openblas+shared")
+        spec = Spec("ascent~~shared +adios2 ^adios2+shared")
         spec.concretize()
 
-        assert spec.satisfies("^openblas+shared")
-        assert spec.satisfies("^zlib~shared")
+        assert spec.satisfies("^adios2+shared")
+        assert spec.satisfies("^bzip2~shared")
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
