@@ -26,6 +26,7 @@ class Dealii(CMakePackage, CudaPackage):
     generator("ninja")
 
     version("master", branch="master")
+    version("9.5.1", sha256="a818b535e6488d3aef7853311657c7b4fadc29a9abe91b7b202b131aad630f5e")
     version("9.5.0", sha256="a81f41565f0d3a22d491ee687957dd48053225da72e8d6d628d210358f4a0464")
     version("9.4.2", sha256="45a76cb400bfcff25cc2d9093d9a5c91545c8367985e6798811c5e9d2a6a6fd4")
     version("9.4.1", sha256="bfe5e4bf069159f93feb0f78529498bfee3da35baf5a9c6852aa59d7ea7c7a48")
@@ -84,7 +85,7 @@ class Dealii(CMakePackage, CudaPackage):
     variant("arborx", default=True, description="Compile with Arborx support")
     variant("arpack", default=True, description="Compile with Arpack and PArpack (only with MPI)")
     variant("adol-c", default=True, description="Compile with ADOL-C")
-    variant("cgal", default=True, when="@9.4:", description="Compile with CGAL")
+    variant("cgal", default=True, when="@9.4:~cuda", description="Compile with CGAL")
     variant("ginkgo", default=True, description="Compile with Ginkgo")
     variant("gmsh", default=True, description="Compile with GMSH")
     variant("gsl", default=True, description="Compile with GSL")
@@ -526,6 +527,9 @@ class Dealii(CMakePackage, CudaPackage):
                         self.define("CUDA_HOST_COMPILER", spec["mpi"].mpicxx),
                     ]
                 )
+            # Make sure we use the same compiler that kokkos uses
+            if "+kokkos" in spec:
+                options.extend([self.define("CMAKE_CXX_COMPILER", spec["kokkos"].kokkos_cxx)])
 
         # Python bindings
         if spec.satisfies("@8.5.0:"):
