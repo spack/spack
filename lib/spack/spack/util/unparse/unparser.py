@@ -398,21 +398,6 @@ class Unparser:
                 else:
                     comma = True
                 self.dispatch(e)
-            if sys.version_info[:2] < (3, 5):
-                if node.starargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.write("*")
-                    self.dispatch(node.starargs)
-                if node.kwargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.write("**")
-                    self.dispatch(node.kwargs)
         with self.block():
             self.dispatch(node.body)
 
