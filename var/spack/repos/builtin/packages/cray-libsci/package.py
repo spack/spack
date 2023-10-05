@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
+
 from spack.package import *
 from spack.util.module_cmd import get_path_args_from_module_line, module
 
@@ -37,6 +40,7 @@ class CrayLibsci(Package):
         "gcc": "GNU",
         "cce": "CRAY",
         "intel": "INTEL",
+        "oneapi": "INTEL",
         "clang": "ALLINEA",
         "aocc": "AOCC",
         "nvhpc": "NVIDIA",
@@ -49,11 +53,25 @@ class CrayLibsci(Package):
 
     @property
     def external_prefix(self):
+        libsci_compiler = self.spec.compiler.name
+
+        if libsci_compiler in self.canonical_names:
+            os.environ["PE_ENV"] = self.canonical_names[libsci_compiler]
+        else:
+            msg = "The compiler you are building with, "
+            msg += "'{0}', is not supported by cray-libsci."
+            raise InstallError(msg.format(libsci_compiler))
+
         libsci_module = module("show", self.modname).splitlines()
 
         for line in libsci_module:
             if "CRAY_LIBSCI_PREFIX_DIR" in line:
                 return get_path_args_from_module_line(line)[0]
+
+        msg = "The compiler you are building with, '{0}', "
+        msg += "is not provided by this install of cray-libsci."
+
+        raise InstallError(msg.format(libsci_compiler))
 
     @property
     def blas_libs(self):
