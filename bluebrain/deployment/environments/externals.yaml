@@ -36,6 +36,7 @@ spack:
           - ninja
           - node-js
           - nvhpc
+          - openjdk
           - pgi
           - python
           - singularityce
@@ -133,6 +134,7 @@ spack:
     # Leads to issues down the line, where it is preferred over intel-mkl
     # #providers
     - openblas
+    - openjdk@17  # HELP-17046
     - poppler
     - python
     - qhull
