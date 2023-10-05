@@ -913,7 +913,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         index_json_path,
         url_util.join(cache_prefix, "index.json"),
         keep_original=False,
-        extra_args={"ContentType": "application/json"},
+        extra_args={"ContentType": "application/json", "CacheControl": "no-cache"},
     )
 
     # Push the hash
@@ -921,7 +921,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         index_hash_path,
         url_util.join(cache_prefix, "index.json.hash"),
         keep_original=False,
-        extra_args={"ContentType": "text/plain"},
+        extra_args={"ContentType": "text/plain", "CacheControl": "no-cache"},
     )
 
 
