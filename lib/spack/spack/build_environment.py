@@ -410,19 +410,13 @@ def set_compiler_environment_variables(pkg, env):
 
 
 def set_wrapper_variables(pkg, env):
-    """Set environment variables used by the Spack compiler wrapper
-    (which have the prefix `SPACK_`) and also add the compiler wrappers
-    to PATH.
+    """Set environment variables used by the Spack compiler wrapper (which have the prefix
+    `SPACK_`) and also add the compiler wrappers to PATH.
 
-    This determines the injected -L/-I/-rpath options; each
-    of these specifies a search order and this function computes these
-    options in a manner that is intended to match the DAG traversal order
-    in `modifications_from_dag`: that method uses a post-order
-    traversal so that `PrependPath` actions from dependencies take lower
-    precedence; we use a post-order traversal here to match the visitation
-    order of `modifications_from_dag` (so we are visiting the
-    lowest priority packages first).
-    """
+    This determines the injected -L/-I/-rpath options; each of these specifies a search order and
+    this function computes these options in a manner that is intended to match the DAG traversal
+    order in `SetupContext`. TODO: this is not the case yet, we're using post order, SetupContext
+    is using topo order."""
     # Set environment variables if specified for
     # the given compiler
     compiler = pkg.compiler
@@ -730,6 +724,11 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     if context not in (Context.BUILD, Context.TEST):
         raise ValueError(f"'context' must be Context.BUILD or Context.TEST - got {context}")
 
+    # First populate the package.py's module with the relevant globals that could be used in any
+    # of the setup_* functions.
+    setup_context = SetupContext(pkg.spec, context=context)
+    setup_context.set_module_globals()
+
     # Keep track of env changes from packages separately, since we want to
     # issue warnings when packages make "suspicious" modifications.
     env_base = EnvironmentModifications() if dirty else clean_environment()
@@ -744,7 +743,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         set_wrapper_variables(pkg, env_mods)
 
     tty.debug("setup_package: grabbing modifications from dependencies")
-    env_mods.extend(modifications_from_dag(pkg.spec, context=context, custom_mods_only=False))
+    env_mods.extend(setup_context.get_env_modifications())
     tty.debug("setup_package: collected all modifications from dependencies")
 
     # architecture specific setup
@@ -847,7 +846,9 @@ BUILDTIME = 0b10000
 ADDED = 0b100000
 
 
-def effective_deptypes(*specs: spack.spec.Spec, context: Context = Context.BUILD):
+def effective_deptypes(
+    *specs: spack.spec.Spec, context: Context = Context.BUILD
+) -> List[Tuple[spack.spec.Spec, int]]:
     """Given a list of input specs and a context, return a list of tuples of
     all specs that contribute to (environment) modifications, together with
     a flag specifying in what way they do so. The list is ordered topologically
@@ -928,60 +929,97 @@ def effective_deptypes(*specs: spack.spec.Spec, context: Context = Context.BUILD
     return nodes_with_type
 
 
-def modifications_from_dag(
-    *specs: spack.spec.Spec, context: Context, custom_mods_only=True, set_package_py_globals=True
-):
-    """Returns the environment modifications that are required by the input specs and also
-    applies modifications to this spec's package at module scope, if need be.
+class SetupContext:
+    """This class encapsulates the logic to determine environment modifications, and is used as
+    well to set magic globals in modules of package.py."""
 
-    Environment modifications include:
+    def __init__(self, *specs: spack.spec.Spec, context: Context) -> None:
+        """Construct a ModificationsFromDag object.
+        Args:
+            specs: single root spec for build/test context, possibly more for run context
+            context: build, run, or test"""
+        if (context == Context.BUILD or context == Context.TEST) and not len(specs) == 1:
+            raise ValueError("Cannot setup build environment for multiple specs")
+        specs_with_type = effective_deptypes(*specs, context=context)
 
-    - Updating PATH for packages that are required at runtime
-    - Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
-      tools can find Spack-built dependencies (when context=build)
-    - Running custom package environment modifications (setup_run_environment,
-      setup_dependent_build_environment, setup_dependent_run_environment)
+        self.specs = specs
+        self.context = context
+        self.external: List[spack.spec.Spec]
+        self.nonexternal: List[spack.spec.Spec]
+        # Reverse so we go from leaf to root
+        self.nodes_in_subdag = set(id(s) for s, _ in specs_with_type)
 
-    The (partial) order imposed on the specs is externals first, then topological
-    from leaf to root. That way externals cannot contribute search paths that would shadow
-    Spack's prefixes, and dependents override variables set by dependencies.
+        # Split into non-external and extenal, maintaining topo order per group.
+        self.external, self.nonexternal = stable_partition(
+            reversed(specs_with_type), lambda t: t[0].external
+        )
+        self.should_be_runnable = BUILDTIME_DIRECT | RUNTIME_EXECUTABLE
+        self.should_setup_dependent_build_env = BUILDTIME | BUILDTIME_DIRECT
+        self.should_setup_run_env = RUNTIME | RUNTIME_EXECUTABLE
 
-    Args:
-        specs (list or spack.spec.Spec): specs that induce the dag
-        context (spack.context.Context): build, run, or test modifications
-        custom_mods_only (bool): if True returns only custom modifications, if False
-            returns custom and default modifications
-        set_package_py_globals (bool): whether or not to set the global variables in the
-            package.py files. Warning: never use this, as setup_run_environment and others
-            may depend on package.py globals.
-    """
-    if context == Context.BUILD and not len(specs) == 1:
-        raise ValueError("Cannot setup build environment for multiple specs")
+        if context == Context.RUN or context == Context.TEST:
+            self.should_setup_run_env |= ROOT
+            self.should_be_runnable |= ROOT
 
-    env = EnvironmentModifications()
+        # Everything that calls setup_run_environemnt and setup_dependent_* needs globals set.
+        self.should_populate_package_py_globals = (
+            self.should_setup_dependent_build_env | self.should_setup_run_env | ROOT
+        )
 
-    # Reverse so we go from leaf to root
-    specs_with_type = effective_deptypes(*specs, context=context)
+    def set_module_globals(self):
+        """Set the magic globals in modules of package.py files."""
+        for dspec, flag in chain(self.external, self.nonexternal):
+            pkg = dspec.package
 
-    nodes_in_subdag = set(id(s) for s, _ in specs_with_type)
+            if self.should_populate_package_py_globals & flag:
+                if self.context == Context.BUILD and (ROOT | BUILDTIME_DIRECT) & flag:
+                    set_module_variables_for_package(pkg, context=Context.BUILD)
+                else:
+                    set_module_variables_for_package(pkg, context=Context.RUN)
 
-    # Split into non-external and extenal, maintaining topo order per group.
-    external, nonexternal = stable_partition(reversed(specs_with_type), lambda t: t[0].external)
+            for spec in dspec.dependents():
+                if id(spec) not in self.nodes_in_subdag:
+                    continue
+                dependent_module = ModuleChangePropagator(spec.package)
+                pkg.setup_dependent_package(dependent_module, spec)
+                dependent_module.propagate_changes_to_mro()
 
-    should_be_runnable = BUILDTIME_DIRECT | RUNTIME_EXECUTABLE
-    should_setup_dependent_build_env = BUILDTIME | BUILDTIME_DIRECT
-    should_setup_run_env = RUNTIME | RUNTIME_EXECUTABLE
+    def get_env_modifications(self):
+        """Returns the environment variable modifications for the given input specs and context.
+        Environment modifications include:
+        - Updating PATH for packages that are required at runtime
+        - Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
+        tools can find Spack-built dependencies (when context=build)
+        - Running custom package environment modifications (setup_run_environment,
+        setup_dependent_build_environment, setup_dependent_run_environment)
 
-    if context == Context.RUN or context == Context.TEST:
-        should_setup_run_env |= ROOT
-        should_be_runnable |= ROOT
+        The (partial) order imposed on the specs is externals first, then topological
+        from leaf to root. That way externals cannot contribute search paths that would shadow
+        Spack's prefixes, and dependents override variables set by dependencies."""
+        env = EnvironmentModifications()
+        for dspec, flag in chain(self.external, self.nonexternal):
+            tty.debug(f"Adding env modifications for {dspec.name}")
+            pkg = dspec.package
 
-    # Everything that calls setup_run_environemnt and setup_dependent_* needs globals set.
-    should_populate_package_py_globals = (
-        should_setup_dependent_build_env | should_setup_run_env | ROOT
-    )
+            if self.should_setup_dependent_build_env & flag:
+                self._make_buildtime_detectable(dspec, env)
 
-    def make_buildtime_detectable(dep, env):
+                for spec in self.specs:
+                    builder = spack.builder.create(pkg)
+                    builder.setup_dependent_build_environment(env, spec)
+
+            if self.should_be_runnable & flag:
+                self._make_runnable(dspec, env)
+
+            if self.should_setup_run_env & flag:
+                # TODO: remove setup_dependent_run_environment...
+                for spec in dspec.dependents(deptype=dt.RUN):
+                    if id(spec) in self.nodes_in_subdag:
+                        pkg.setup_dependent_run_environment(env, spec)
+                pkg.setup_run_environment(env)
+        return env
+
+    def _make_buildtime_detectable(self, dep, env):
         if is_system_path(dep.prefix):
             return
 
@@ -991,7 +1029,7 @@ def modifications_from_dag(
             if os.path.isdir(pcdir):
                 env.prepend_path("PKG_CONFIG_PATH", pcdir)
 
-    def make_runnable(dep, env):
+    def _make_runnable(self, dep, env):
         if is_system_path(dep.prefix):
             return
 
@@ -999,50 +1037,6 @@ def modifications_from_dag(
             bin_dir = os.path.join(dep.prefix, d)
             if os.path.isdir(bin_dir):
                 env.prepend_path("PATH", bin_dir)
-
-    # First set props, since they may be used in environment modifications. In particular
-    # this allows setup_dependent_*_env to refer to dependent_spec.prop.
-    if set_package_py_globals:
-        for dspec, flag in chain(external, nonexternal):
-            pkg = dspec.package
-
-            if should_populate_package_py_globals & flag:
-                if context == Context.BUILD and (ROOT | BUILDTIME_DIRECT) & flag:
-                    set_module_variables_for_package(pkg, context=Context.BUILD)
-                else:
-                    set_module_variables_for_package(pkg, context=Context.RUN)
-
-            for spec in dspec.dependents():
-                if id(spec) not in nodes_in_subdag:
-                    continue
-                dependent_module = ModuleChangePropagator(spec.package)
-                pkg.setup_dependent_package(dependent_module, spec)
-                dependent_module.propagate_changes_to_mro()
-
-    # Then collect env changes.
-    for dspec, flag in chain(external, nonexternal):
-        tty.debug(f"Adding env modifications for {dspec.name}")
-        pkg = dspec.package
-
-        if should_setup_dependent_build_env & flag:
-            if not custom_mods_only:
-                make_buildtime_detectable(dspec, env)
-
-            for spec in specs:
-                builder = spack.builder.create(pkg)
-                builder.setup_dependent_build_environment(env, spec)
-
-        if not custom_mods_only and (should_be_runnable & flag):
-            make_runnable(dspec, env)
-
-        if should_setup_run_env & flag:
-            # TODO: remove setup_dependent_run_environment...
-            for spec in dspec.dependents(deptype=dt.RUN):
-                if id(spec) in nodes_in_subdag:
-                    pkg.setup_dependent_run_environment(env, spec)
-            pkg.setup_run_environment(env)
-
-    return env
 
 
 def get_cmake_prefix_path(pkg):

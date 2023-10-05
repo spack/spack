@@ -86,7 +86,7 @@ def projected_prefix(*specs: spack.spec.Spec, projection: Callable[[spack.spec.S
 
 
 def environment_modifications_for_specs(
-    *specs: spack.spec.Spec, view=None, set_package_py_globals=True
+    *specs: spack.spec.Spec, view=None, set_package_py_globals: bool = True
 ):
     """List of environment (shell) modifications to be processed for spec.
 
@@ -94,9 +94,9 @@ def environment_modifications_for_specs(
     the view.
 
     Args:
-        specs (spack.spec.Spec): spec(s) for which to list the environment modifications
+        specs: spec(s) for which to list the environment modifications
         view: view associated with the spec passed as first argument
-        set_package_py_globals (bool): whether or not to set the global variables in the
+        set_package_py_globals: whether or not to set the global variables in the
             package.py files (this may be problematic when using buildcaches that have
             been built on a different but compatible OS)
     """
@@ -117,12 +117,10 @@ def environment_modifications_for_specs(
             env.extend(static)
 
         # Dynamic environment changes (setup_run_environment etc)
-        dynamic = spack.build_environment.modifications_from_dag(
-            *specs,
-            context=Context.RUN,
-            set_package_py_globals=set_package_py_globals,
-            custom_mods_only=False,
-        )
+        setup_context = spack.build_environment.SetupContext(*specs, context=Context.RUN)
+        if set_package_py_globals:
+            setup_context.set_module_globals()
+        dynamic = setup_context.get_env_modifications()
         env.extend(dynamic)
 
     return env
