@@ -993,16 +993,10 @@ class Unparser:
                 self.write(", ")
             self.write("*")
             if node.vararg:
-                if hasattr(node.vararg, "arg"):
-                    self.write(node.vararg.arg)
-                    if node.vararg.annotation:
-                        self.write(": ")
-                        self.dispatch(node.vararg.annotation)
-                else:
-                    self.write(node.vararg)
-                    if getattr(node, "varargannotation", None):
-                        self.write(": ")
-                        self.dispatch(node.varargannotation)
+                self.write(node.vararg.arg)
+                if node.vararg.annotation:
+                    self.write(": ")
+                    self.dispatch(node.vararg.annotation)
 
         # keyword-only arguments
         if getattr(node, "kwonlyargs", False):
@@ -1022,16 +1016,10 @@ class Unparser:
                 first = False
             else:
                 self.write(", ")
-            if hasattr(node.kwarg, "arg"):
-                self.write("**" + node.kwarg.arg)
-                if node.kwarg.annotation:
-                    self.write(": ")
-                    self.dispatch(node.kwarg.annotation)
-            else:
-                self.write("**" + node.kwarg)
-                if getattr(node, "kwargannotation", None):
-                    self.write(": ")
-                    self.dispatch(node.kwargannotation)
+            self.write("**" + node.kwarg.arg)
+            if node.kwarg.annotation:
+                self.write(": ")
+                self.dispatch(node.kwarg.annotation)
 
     def visit_keyword(self, node):
         if node.arg is None:
