@@ -846,24 +846,24 @@ deprecated-ci-build:
 #######################################
 # E4S - Cray RHEL
 #######################################
-.e4s-cray-rhel:
-  extends: [ ".cray_rhel_zen4" ]
-  variables:
-    SPACK_CI_STACK_NAME: e4s-cray-rhel
+# .e4s-cray-rhel:
+#   extends: [ ".cray_rhel_zen4" ]
+#   variables:
+#     SPACK_CI_STACK_NAME: e4s-cray-rhel
 
-e4s-cray-rhel-generate:
-  extends: [ ".generate-cray-rhel", ".e4s-cray-rhel" ]
+# e4s-cray-rhel-generate:
+#   extends: [ ".generate-cray-rhel", ".e4s-cray-rhel" ]
 
-e4s-cray-rhel-build:
-  extends: [ ".build", ".e4s-cray-rhel" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-cray-rhel-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-cray-rhel-generate
+# e4s-cray-rhel-build:
+#   extends: [ ".build", ".e4s-cray-rhel" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: e4s-cray-rhel-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: e4s-cray-rhel-generate
 
 #######################################
 # E4S - Cray SLES
