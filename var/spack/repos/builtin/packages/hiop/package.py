@@ -19,7 +19,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/hiop"
     git = "https://github.com/LLNL/hiop.git"
-    maintainers("ryandanehy", "CameronRutherford", "pelesh")
+    maintainers("ryandanehy", "cameronrutherford", "pelesh")
 
     # Most recent tagged snapshot is the preferred version when profiling.
     version("1.0.0", commit="10b7d3ee0a15cb4949ccee8c905d447b9528794f", submodules=True)
