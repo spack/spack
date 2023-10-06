@@ -56,6 +56,8 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     depends_on("libunistring", when="+libunistring")
     # depends_on('cvs')
 
+    conflicts("+shared~pic")
+
     patch("test-verify-parallel-make-check.patch", when="@:0.19.8.1")
     patch("nvhpc-builtin.patch", when="@:0.21.0 %nvhpc")
     patch("nvhpc-export-symbols.patch", when="%nvhpc")
