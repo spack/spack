@@ -781,7 +781,6 @@ class ErrorHandler:
                 backend.add_rule([atom_id], [], choice=False)
 
             error_causation.load(str(errors_lp))
-            error_causation.load(str(display_lp))
             error_causation.ground([("base", []), ("error_messages", [])])
             _ = error_causation.solve(on_model=on_model)
 

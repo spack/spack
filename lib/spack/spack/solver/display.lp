@@ -23,20 +23,9 @@
 #show error/4.
 #show error/5.
 #show error/6.
-#show error/7.
-#show error/8.
-#show error/9.
 
-#defined error/7.
-#defined error/8.
-#defined error/9.
-
-% error cause information
-#show condition_cause/3.
+% for error causation
 #show condition_reason/2.
-
-#defined condition_cause/3.
-#defined condition_reason/2.
 
 % For error messages to use later
 #show pkg_fact/2.
@@ -55,4 +44,5 @@
 #show external_version/3.
 #show trigger_and_effect/3.
 #show unification_set/2.
+
 % debug

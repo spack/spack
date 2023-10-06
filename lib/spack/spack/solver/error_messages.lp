@@ -154,3 +154,42 @@ error(0, "Attempted to build package {0} which is not buildable and does not hav
      trigger_and_effect(Package, TID, EID),
      condition_requirement(TID, Name, A1, A2, A3, A4),
      not attr(Name, node(_, A1), A2, A3, A4).
+
+% variables to show
+#show error/2.
+#show error/3.
+#show error/4.
+#show error/5.
+#show error/6.
+#show error/7.
+#show error/8.
+#show error/9.
+
+#show condition_cause/3.
+#show condition_reason/2.
+
+% Define all variables used to avoid warnings at runtime when the model doesn't happen to have one
+#defined error/2.
+#defined error/3.
+#defined error/4.
+#defined error/5.
+#defined error/6.
+#defined attr/2.
+#defined attr/3.
+#defined attr/4.
+#defined attr/5.
+#defined pkg_fact/2.
+#defined imposed_constraint/3.
+#defined imposed_constraint/4.
+#defined imposed_constraint/5.
+#defined imposed_constraint/6.
+#defined condition_requirement/3.
+#defined condition_requirement/4.
+#defined condition_requirement/5.
+#defined condition_requirement/6.
+#defined condition_holds/2.
+#defined unification_set/2.
+#defined external/1.
+#defined trigger_and_effect/3.
+#defined build/1.
+#defined node_has_variant/2.
