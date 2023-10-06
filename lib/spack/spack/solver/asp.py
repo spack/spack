@@ -759,7 +759,6 @@ class ErrorHandler:
 
         parent_dir = pathlib.Path(__file__).parent
         errors_lp = parent_dir / "error_messages.lp"
-        display_lp = parent_dir / "display.lp"
 
         def on_model(model):
             self.full_model = model.symbols(shown=True, terms=True)
