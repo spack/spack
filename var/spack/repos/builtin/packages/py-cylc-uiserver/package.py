@@ -16,7 +16,6 @@ class PyCylcUiserver(PythonPackage):
 
     version("1.3.0", sha256="f3526e470c7ac2b61bf69e9b8d17fc7a513392219d28baed9b1166dcc7033d7a")
 
-    depends_on("python@3.7:3.9", type=("build", "run"))
     depends_on("py-wheel", type="build")
     depends_on("py-setuptools@40.9.0:", type="build")
     depends_on("py-cylc-flow@8.2", type=("build", "run"))
