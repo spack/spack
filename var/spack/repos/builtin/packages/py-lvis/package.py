@@ -30,5 +30,7 @@ class PyLvis(PythonPackage):
     depends_on("py-pycocotools", type=("build", "run"))
 
     def patch(self):
-        os.rename(join_path(self.stage.source_path, "lvis.egg-info", "requires.txt"),
-                  join_path(self.stage.source_path, "requirements.txt"))
+        os.rename(
+            join_path(self.stage.source_path, "lvis.egg-info", "requires.txt"),
+            join_path(self.stage.source_path, "requirements.txt"),
+        )
