@@ -781,18 +781,18 @@ class Environment:
         """Reinitialize the environment object."""
         self.clear(re_read=True)
         self.manifest = EnvironmentManifestFile(self.path)
-        self._read()
+        self._read(re_read=True)
 
-    def _read(self):
+    def _read(self, re_read=False):
         # If the manifest has included files, then some of the information
         # (e.g., definitions) MAY be in those files. So we need to ensure
         # the config is populated with any associated spec lists in order
         # to fully construct the manifest state.
         includes = self.manifest[TOP_LEVEL_KEY].get("include", [])
-        if includes:
+        if includes and not re_read:
             prepare_config_scope(self)
 
-        self._construct_state_from_manifest()
+        self._construct_state_from_manifest(re_read)
 
         if os.path.exists(self.lock_path):
             with open(self.lock_path) as f:
@@ -819,20 +819,15 @@ class Environment:
             else:
                 self.spec_lists[name] = user_specs
 
-    def _clear_speclists(self):
-        """Wipe the spec lists clean and initialize 'specs'."""
-        self.spec_lists = {user_speclist_name: SpecList()}
-
-    def _construct_state_from_manifest(self):
+    def _construct_state_from_manifest(self, re_read=False):
         """Read manifest file and set up user specs."""
-        self._clear_speclists()
+        self.spec_lists = collections.OrderedDict()
 
-        definitions = spack.config.get("definitions", [])
-        for item in definitions:
-            self._process_definition(item)
+        if not re_read:
+            for item in spack.config.get("definitions", []):
+                self._process_definition(item)
 
         env_configuration = self.manifest[TOP_LEVEL_KEY]
-        definitions = env_configuration.get("definitions", [])
         for item in env_configuration.get("definitions", []):
             self._process_definition(item)
 
@@ -879,7 +874,9 @@ class Environment:
                 yaml, and need to be maintained when re-reading an existing
                 environment.
         """
-        self._clear_speclists()
+        self.spec_lists = collections.OrderedDict()
+        self.spec_lists[user_speclist_name] = SpecList()
+
         self.dev_specs = {}  # dev-build specs from yaml
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []  # roots of last concretize, in order
@@ -1091,8 +1088,10 @@ class Environment:
             from_list = next(iter(self.spec_lists.keys()))
         index = list(self.spec_lists.keys()).index(from_list)
 
-        # spec_lists is an OrderedDict, all list entries after the modified
-        # list may refer to the modified list. Update stale references
+        # spec_lists is an OrderedDict to ensure lists read from the manifest
+        # are maintainted in order, hence, all list entries after the modified
+        # list may refer to the modified list requiring stale references to be
+        # updated.
         for i, (name, speclist) in enumerate(
             list(self.spec_lists.items())[index + 1 :], index + 1
         ):
@@ -1190,7 +1189,7 @@ class Environment:
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""
         err_msg_header = (
-            f"cannot remove {query_spec} from '{list_name}' definition "
+            f"Cannot remove '{query_spec}' from '{list_name}' definition "
             f"in {self.manifest.manifest_file}"
         )
         query_spec = Spec(query_spec)
@@ -1221,11 +1220,10 @@ class Environment:
                 list_to_change.remove(spec)
                 self.update_stale_references(list_name)
                 new_specs = set(self.user_specs)
-            except spack.spec_list.SpecListError:
+            except spack.spec_list.SpecListError as e:
                 # define new specs list
                 new_specs = set(self.user_specs)
-                msg = f"Spec '{spec}' is part of a spec matrix and "
-                msg += f"cannot be removed from list '{list_to_change}'."
+                msg = str(e)
                 if force:
                     msg += " It will be removed from the concrete specs."
                     # Mock new specs, so we can remove this spec from concrete spec lists
@@ -2086,7 +2084,7 @@ class Environment:
 
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be
-        removed on nexg concretize."""
+        removed on next concretize."""
         needed = set()
         for s, c in self.concretized_specs():
             if s in self.user_specs:
