@@ -763,20 +763,9 @@ class ErrorHandler:
         def on_model(model):
             self.full_model = model.symbols(shown=True, terms=True)
 
-        desymbolify = lambda a: a.string if a.type == clingo.SymbolType.String else a.number
         with error_causation.backend() as backend:
             for atom in self.model:
-                symbol = getattr(fn, atom.name)
-                for arg in atom.arguments:
-                    if arg.type == clingo.SymbolType.String:
-                        symbol = symbol(arg.string)
-                    elif arg.type == clingo.SymbolType.Number:
-                        symbol = symbol(arg.number)
-                    else:
-                        # It's a node
-                        args = getattr(fn, arg.name)(*[desymbolify(a) for a in arg.arguments])
-                        symbol = symbol(args)
-                atom_id = backend.add_atom(symbol.symbol())
+                atom_id = backend.add_atom(atom)
                 backend.add_rule([atom_id], [], choice=False)
 
             error_causation.load(str(errors_lp))
