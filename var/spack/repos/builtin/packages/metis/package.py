@@ -48,11 +48,11 @@ class Metis(CMakePackage, MakefilePackage):
         # Patches from petsc's branch of metis to correct gkrand behavior
         patch(
             "https://bitbucket.org/petsc/pkg-metis/commits/35497c90782a067954e9cd7c859da1e3b19514a7/raw",
-            sha256="777e6376aab853bcd94884b0c7c54655004cb05e045d2f962e547685ba8c826f",
+            sha256="20852adec8806d003a91a605cf622549ec013dff34c8ee430d89ac4afea847ba",
         )
         patch(
             "https://bitbucket.org/petsc/pkg-metis/commits/3240f52eb8ee5da1a96acd6e1edd2d2b0995bde9/raw",
-            sha256="e3ec936835fa1d3f12fbe09bbaf2dd7a2d3b932891481780be1e6c2aabd5e7f9",
+            sha256="b96cb5071053a7e8f03e2c6a37580856b87ccaa1d5bff205e9dafa0eea5a0eb7",
         )
 
     with when("build_system=makefile"):
