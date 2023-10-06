@@ -155,6 +155,18 @@ error(0, "Attempted to build package {0} which is not buildable and does not hav
      condition_requirement(TID, Name, A1, A2, A3, A4),
      not attr(Name, node(_, A1), A2, A3, A4).
 
+% error message with causes for conflicts
+error(0, Msg, startcauses, TriggerID, ConstraintID)
+  :- attr("node", node(ID, Package)),
+     pkg_fact(Package, conflict(TriggerID, ConstraintID, Msg)),
+     % node(ID1, TriggerPackage) is node(ID2, Package) in most, but not all, cases
+     condition_holds(TriggerID, node(ID1, TriggerPackage)),
+     condition_holds(ConstraintID, node(ID2, Package)),
+     unification_set(X, node(ID2, Package)),
+     unification_set(X, node(ID1, TriggerPackage)),
+     not external(node(ID, Package)),  % ignore conflicts for externals
+     not attr("hash", node(ID, Package), _).  % ignore conflicts for installed packages
+
 % variables to show
 #show error/2.
 #show error/3.

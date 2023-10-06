@@ -1180,7 +1180,7 @@ class SpackSolverSetup:
         default_msg = "{0}: '{1}' conflicts with '{2}'"
         no_constraint_msg = "{0}: conflicts with '{1}'"
         for trigger, constraints in pkg.conflicts.items():
-            trigger_msg = "conflict trigger %s" % str(trigger)
+            trigger_msg = "conflict is triggered when %s" % str(trigger)
             trigger_spec = spack.spec.Spec(trigger)
             trigger_id = self.condition(
                 trigger_spec, name=trigger_spec.name or pkg.name, msg=trigger_msg
@@ -1192,7 +1192,10 @@ class SpackSolverSetup:
                         conflict_msg = no_constraint_msg.format(pkg.name, trigger)
                     else:
                         conflict_msg = default_msg.format(pkg.name, trigger, constraint)
-                constraint_msg = "conflict constraint %s" % str(constraint)
+
+                constraint_msg = "conflict applies to spec %s" % str(
+                    spack.spec.Spec(pkg.name) if constraint == spack.spec.Spec() else constraint
+                )
                 constraint_id = self.condition(constraint, name=pkg.name, msg=constraint_msg)
                 self.gen.fact(
                     fn.pkg_fact(pkg.name, fn.conflict(trigger_id, constraint_id, conflict_msg))
