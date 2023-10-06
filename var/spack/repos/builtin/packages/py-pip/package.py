@@ -83,6 +83,8 @@ class PyPip(Package, PythonExtension):
         expand=False,
     )
 
+    variant("rebuild-me-plz", default=False, description="CI testing")
+
     extends("python")
     depends_on("python@3.7:", when="@22:", type=("build", "run"))
 
