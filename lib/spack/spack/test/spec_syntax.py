@@ -517,6 +517,16 @@ def specfile_for(default_mock_concretization):
             [Token(TokenType.VERSION, value="@:0.4"), Token(TokenType.COMPILER, value="% nvhpc")],
             "@:0.4%nvhpc",
         ),
+        # `a@1:` and `b` are separate specs, not a single `a@1:b`.
+        (
+            "a@1: b",
+            [
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="a"),
+                Token(TokenType.VERSION, value="@1:"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="b"),
+            ],
+            "a@1:",
+        )
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip):
