@@ -1604,13 +1604,20 @@ class Spec:
         try:
             dspec = next(dspec for dspec in orig if depflag == dspec.depflag)
         except StopIteration:
-            raise DuplicateDependencyError("Cannot depend on '%s' twice" % spec)
+            current_deps = ", ".join(
+                dt.flag_to_chars(x.depflag) + " " + x.spec.short_spec for x in orig
+            )
+            raise DuplicateDependencyError(
+                f"{self.short_spec} cannot depend on '{spec.short_spec}' multiple times.\n"
+                f"\tRequired: {dt.flag_to_chars(depflag)}\n"
+                f"\tDependency: {current_deps}"
+            )
 
         try:
             dspec.spec.constrain(spec)
         except spack.error.UnsatisfiableSpecError:
             raise DuplicateDependencyError(
-                "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
+                f"Cannot depend on incompatible specs '{dspec.spec}' and '{spec}'"
             )
 
     def add_dependency_edge(

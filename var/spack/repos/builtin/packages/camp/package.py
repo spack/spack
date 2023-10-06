@@ -53,7 +53,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cub", when="+cuda")
 
-    depends_on("blt")
+    depends_on("blt", type="build")
 
     conflicts("^blt@:0.3.6", when="+rocm")
 
