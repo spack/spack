@@ -44,5 +44,6 @@
 #show external_version/3.
 #show trigger_and_effect/3.
 #show unification_set/2.
+#show provider/2.
 
 % debug

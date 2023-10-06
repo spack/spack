@@ -86,6 +86,15 @@ error(0, "Cannot satisfy '{0}@{1}' and '{0}@{2}", Package, Constraint1, Constrai
      pkg_fact(Package, version_satisfies(Constraint1, Version)),
      not pkg_fact(Package, version_satisfies(Constraint2, Version)).
 
+% causation tracking error for no or multiple virtual providers
+error(0, "Cannot find a valid provider for virtual {0}", Virtual, startcauses, Cause)
+  :- attr("virtual_node", node(X, Virtual)),
+     not provider(_, node(X, Virtual)),
+     imposed_constraint(EID, "dependency_holds", Parent, Virtual, Type),
+     pkg_fact(TriggerPkg, condition_effect(Cause, EID)),
+     condition_holds(Cause, node(_, TriggerPkg)).
+
+
 % At most one variant value for single-valued variants
 error(0, "'{0}' required multiple values for single-valued variant '{1}'\n    Requested 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2, startcauses, Cause1, Cause2)
   :- attr("node", node(X, Package)),
