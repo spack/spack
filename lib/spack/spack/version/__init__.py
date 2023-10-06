@@ -16,6 +16,7 @@ if Version(x) <= Version(y).
 """
 
 from .common import (
+    EmptyRangeError,
     VersionChecksumError,
     VersionError,
     VersionLookupError,
@@ -54,5 +55,6 @@ __all__ = [
     "VersionError",
     "VersionChecksumError",
     "VersionLookupError",
+    "EmptyRangeError",
     "any_version",
 ]
