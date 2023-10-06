@@ -756,7 +756,6 @@ class ErrorHandler:
             return
 
         error_causation = clingo.Control()
-        driver = PyclingoDriver()
 
         parent_dir = pathlib.Path(__file__).parent
         errors_lp = parent_dir / "error_messages.lp"
@@ -765,15 +764,9 @@ class ErrorHandler:
         def on_model(model):
             self.full_model = model.symbols(shown=True, terms=True)
 
-        solve_kwargs = {
-            "on_model": on_model
-        }
-
-        names = set()
-
+        desymbolify = lambda a: a.string if a.type == clingo.SymbolType.String else a.number
         with error_causation.backend() as backend:
             for atom in self.model:
-                names.add(atom.name)
                 symbol = getattr(fn, atom.name)
                 for arg in atom.arguments:
                     if arg.type == clingo.SymbolType.String:
@@ -782,8 +775,7 @@ class ErrorHandler:
                         symbol = symbol(arg.number)
                     else:
                         # It's a node
-                        strip = lambda arg: arg.string if arg.type == clingo.SymbolType.String else arg.number
-                        args = getattr(fn, arg.name)(*[strip(a) for a in arg.arguments])
+                        args = getattr(fn, arg.name)(*[desymbolify(a) for a in arg.arguments])
                         symbol = symbol(args)
                 atom_id = backend.add_atom(symbol.symbol())
                 backend.add_rule([atom_id], [], choice=False)
@@ -791,7 +783,7 @@ class ErrorHandler:
             error_causation.load(str(errors_lp))
             error_causation.load(str(display_lp))
             error_causation.ground([("base", []), ("error_messages", [])])
-            full_result = error_causation.solve(on_model=on_model)
+            _ = error_causation.solve(on_model=on_model)
 
         # No choices so there will be only one model
         self.error_args = extract_args(self.full_model, "error")
