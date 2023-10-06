@@ -19,6 +19,5 @@ class Metal(CMakePackage):
 
     @run_after("install")
     def mv_binary(self):
-        mkdirp(self.prefix.bin)
         with working_dir(self.build_directory):
-            install("metal/metal", self.prefix.bin)
+            install_tree("bin", self.prefix.bin)
