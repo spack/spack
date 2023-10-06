@@ -39,9 +39,6 @@ EOF
     grep 'x-executable\|x-archive\|x-sharedlib' | \
     awk -F: '{print $1}' | xargs strip
 {% endif %}
-{% if extra_instructions.build %}
-{{ extra_instructions.build }}
-{% endif %}
 {% endblock build_stage %}
 {% if apps %}
 {% for application, help_text in apps.items() %}
@@ -80,9 +77,6 @@ Stage: final
 {% endif %}
   # Modify the environment without relying on sourcing shell specific files at startup
   cat {{ paths.environment }}/environment_modifications.sh >> $SINGULARITY_ENVIRONMENT
-{% if extra_instructions.final %}
-{{ extra_instructions.final }}
-{% endif %}
 {% endblock final_stage %}
 {% if runscript %}
 
