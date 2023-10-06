@@ -68,4 +68,3 @@ class G2(CMakePackage):
     def check(self):
         with working_dir(self.builder.build_directory):
             make("test")
-            
