@@ -1,13 +1,26 @@
-diff --git a/clang/include/clang/Driver/Options.td b/clang/include/clang/Driver/Options.td
-index bb4374b..36e7f7b 100644
---- a/clang/include/clang/Driver/Options.td
-+++ b/clang/include/clang/Driver/Options.td
-@@ -3739,7 +3739,7 @@ def mcode_object_version_EQ : Joined<["-"], "mcode-object-version=">, Group<m_Gr
-   Values<"none,2,3,4,5">,
-   NormalizedValuesScope<"TargetOptions">,
-   NormalizedValues<["COV_None", "COV_2", "COV_3", "COV_4", "COV_5"]>,
--  MarshallingInfoEnum<TargetOpts<"CodeObjectVersion">, "COV_5">;
-+  MarshallingInfoEnum<TargetOpts<"CodeObjectVersion">, "COV_4">;
+From 08e22edba5d9c24dfad6af082a503061702f8a50 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Fri, 6 Oct 2023 19:04:20 +0000
+Subject: [PATCH] The condition check is applicable only for standalone build
+
+---
+ rocm-device-libs/cmake/OCL.cmake | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/rocm-device-libs/cmake/OCL.cmake b/rocm-device-libs/cmake/OCL.cmake
+index 773c6f62e..862f14441 100644
+--- a/rocm-device-libs/cmake/OCL.cmake
++++ b/rocm-device-libs/cmake/OCL.cmake
+@@ -38,9 +38,7 @@ execute_process (
+   ERROR_QUIET
+ )
+ file(REMOVE ${CMAKE_BINARY_DIR}/tmp.cl)
+-if (NOT TEST_CODE_OBJECT_VERSION_NONE_RESULT)
+   set(CLANG_OCL_FLAGS ${CLANG_OCL_FLAGS} -Xclang -mcode-object-version=none)
+-endif()
  
- defm code_object_v3_legacy : SimpleMFlag<"code-object-v3",
-   "Legacy option to specify code object ABI V3",
+ set (BC_EXT .bc)
+ set (LIB_SUFFIX ".lib${BC_EXT}")
+-- 
+2.31.1
+
