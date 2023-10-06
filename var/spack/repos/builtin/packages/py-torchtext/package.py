@@ -35,8 +35,8 @@ class PyTorchtext(PythonPackage):
     version("0.5.0", tag="0.5.0", commit="0169cde2f1d446ae886ef0be07e9a673585ed256")
 
     # https://github.com/pytorch/text#installation
-    depends_on("python@3.8:3.11", when="@2:", type=("build", "link", "run"))
-    depends_on("python@:3.10", when="@0.13:1", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@0.15:", type=("build", "link", "run"))
+    depends_on("python@:3.10", when="@0.13:0.14", type=("build", "link", "run"))
     depends_on("python@:3.9", when="@0.8.1:0.12", type=("build", "link", "run"))
     depends_on("python@:3.8", when="@:0.8.0", type=("build", "link", "run"))
 
