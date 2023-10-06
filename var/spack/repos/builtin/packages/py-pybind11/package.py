@@ -63,10 +63,12 @@ class PyPybind11(CMakePackage, PythonExtension):
         depends_on("cmake@3.13:", type="build")
         depends_on("cmake@3.18:", type="build", when="@2.6.0:")
 
-    # compiler support
-    conflicts("%gcc@:4.7")
+    # https://github.com/pybind/pybind11/#supported-compilers
     conflicts("%clang@:3.2")
-    conflicts("%intel@:16")
+    conflicts("%apple-clang@:4")
+    conflicts("%gcc@:4.7")
+    conflicts("%msvc@:16")
+    conflicts("%intel@:17")
 
     # https://github.com/pybind/pybind11/pull/1995
     @when("@:2.4")
