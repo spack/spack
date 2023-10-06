@@ -7,6 +7,8 @@
 % This logic program adds detailed error messages to Spack's concretizer
 %=============================================================================
 
+#program error_messages.
+
 % Create a causal tree between trigger conditions by locating the effect conditions
 % that are triggers for another condition. Condition2 is caused by Condition1
 condition_cause(Condition2, Condition1, ID) :-

@@ -684,6 +684,7 @@ def extract_args(model, predicate_name):
 class ErrorHandler:
     def __init__(self, model):
         self.model = model
+        self.full_model = None
         self.error_args = extract_args(model, "error")
 
     def multiple_values_error(self, attribute, pkg):
@@ -706,8 +707,8 @@ class ErrorHandler:
         ]
 
     def get_cause_tree(self, cause):
-        conditions = dict(extract_args(self.model, "condition_reason"))
-        condition_causes = list(extract_args(self.model, "condition_cause"))
+        conditions = dict(extract_args(self.full_model, "condition_reason"))
+        condition_causes = list(extract_args(self.full_model, "condition_cause"))
         return self._get_cause_tree(cause, conditions, condition_causes, [])
 
     def handle_error(self, msg, *args):
@@ -754,6 +755,46 @@ class ErrorHandler:
         if not self.error_args:
             return
 
+        error_causation = clingo.Control()
+        driver = PyclingoDriver()
+
+        parent_dir = pathlib.Path(__file__).parent
+        errors_lp = parent_dir / "error_messages.lp"
+        display_lp = parent_dir / "display.lp"
+
+        def on_model(model):
+            self.full_model = model.symbols(shown=True, terms=True)
+
+        solve_kwargs = {
+            "on_model": on_model
+        }
+
+        names = set()
+
+        with error_causation.backend() as backend:
+            for atom in self.model:
+                names.add(atom.name)
+                symbol = getattr(fn, atom.name)
+                for arg in atom.arguments:
+                    if arg.type == clingo.SymbolType.String:
+                        symbol = symbol(arg.string)
+                    elif arg.type == clingo.SymbolType.Number:
+                        symbol = symbol(arg.number)
+                    else:
+                        # It's a node
+                        strip = lambda arg: arg.string if arg.type == clingo.SymbolType.String else arg.number
+                        args = getattr(fn, arg.name)(*[strip(a) for a in arg.arguments])
+                        symbol = symbol(args)
+                atom_id = backend.add_atom(symbol.symbol())
+                backend.add_rule([atom_id], [], choice=False)
+
+            error_causation.load(str(errors_lp))
+            error_causation.load(str(display_lp))
+            error_causation.ground([("base", []), ("error_messages", [])])
+            full_result = error_causation.solve(on_model=on_model)
+
+        # No choices so there will be only one model
+        self.error_args = extract_args(self.full_model, "error")
         errors = sorted(
             [(int(priority), msg, args) for priority, msg, *args in self.error_args], reverse=True
         )
@@ -893,8 +934,6 @@ class PyclingoDriver:
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
-        # TODO: make this only debug mode
-        self.control.load(os.path.join(parent_dir, "error_messages.lp"))
         timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
