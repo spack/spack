@@ -26,87 +26,33 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
     version("2.1.0", tag="v2.1.0", commit="7bcf7da3a268b435777fe87c7794c382f444e86d")
-    version(
-        "2.0.1", tag="v2.0.1", commit="e9ebda29d87ce0916ab08c06ab26fd3766a870e5"
-    )
-    version(
-        "2.0.0", tag="v2.0.0", commit="c263bd43e8e8502d4726643bc6fd046f0130ac0e"
-    )
-    version(
-        "1.13.1", tag="v1.13.1", commit="49444c3e546bf240bed24a101e747422d1f8a0ee"
-    )
-    version(
-        "1.13.0", tag="v1.13.0", commit="7c98e70d44abc7a1aead68b6ea6c8adc8c554db5"
-    )
-    version(
-        "1.12.1", tag="v1.12.1", commit="664058fa83f1d8eede5d66418abff6e20bd76ca8"
-    )
-    version(
-        "1.12.0", tag="v1.12.0", commit="67ece03c8cd632cce9523cd96efde6f2d1cc8121"
-    )
-    version(
-        "1.11.0", tag="v1.11.0", commit="bc2c6edaf163b1a1330e37a6e34caf8c553e4755"
-    )
-    version(
-        "1.10.2", tag="v1.10.2", commit="71f889c7d265b9636b93ede9d651c0a9c4bee191"
-    )
-    version(
-        "1.10.1", tag="v1.10.1", commit="302ee7bfb604ebef384602c56e3853efed262030"
-    )
-    version(
-        "1.10.0", tag="v1.10.0", commit="36449ea93134574c2a22b87baad3de0bf8d64d42"
-    )
-    version(
-        "1.9.1", tag="v1.9.1", commit="dfbd030854359207cb3040b864614affeace11ce"
-    )
-    version(
-        "1.9.0", tag="v1.9.0", commit="d69c22dd61a2f006dcfe1e3ea8468a3ecaf931aa"
-    )
-    version(
-        "1.8.2", tag="v1.8.2", commit="e0495a7aa104471d95dc85a1b8f6473fbcc427a8"
-    )
-    version(
-        "1.8.1", tag="v1.8.1", commit="56b43f4fec1f76953f15a627694d4bba34588969"
-    )
-    version(
-        "1.8.0", tag="v1.8.0", commit="37c1f4a7fef115d719104e871d0cf39434aa9d56"
-    )
-    version(
-        "1.7.1", tag="v1.7.1", commit="57bffc3a8e4fee0cce31e1ff1f662ccf7b16db57"
-    )
-    version(
-        "1.7.0", tag="v1.7.0", commit="e85d494707b835c12165976b8442af54b9afcb26"
-    )
-    version(
-        "1.6.0", tag="v1.6.0", commit="b31f58de6fa8bbda5353b3c77d9be4914399724d"
-    )
-    version(
-        "1.5.1", tag="v1.5.1", commit="3c31d73c875d9a4a6ea8a843b9a0d1b19fbe36f3"
-    )
-    version(
-        "1.5.0", tag="v1.5.0", commit="4ff3872a2099993bf7e8c588f7182f3df777205b"
-    )
-    version(
-        "1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948"
-    )
-    version(
-        "1.3.1", tag="v1.3.1", commit="ee77ccbb6da4e2efd83673e798acf7081bc03564"
-    )
-    version(
-        "1.3.0", tag="v1.3.0", commit="de394b672d0346f2f387a8bb1a1280d5d2eaf9cb"
-    )
-    version(
-        "1.2.0", tag="v1.2.0", commit="8554416a199c4cec01c60c7015d8301d2bb39b64"
-    )
-    version(
-        "1.1.0", tag="v1.1.0", commit="142c973f4179e768164cd578951489e89021b29c"
-    )
-    version(
-        "1.0.1", tag="v1.0.1", commit="83221655a8237ca80f9673dad06a98d34c43e546"
-    )
-    version(
-        "1.0.0", tag="v1.0.0", commit="db5d3131d16f57abd4f13d3f4b885d5f67bf6644"
-    )
+    version("2.0.1", tag="v2.0.1", commit="e9ebda29d87ce0916ab08c06ab26fd3766a870e5")
+    version("2.0.0", tag="v2.0.0", commit="c263bd43e8e8502d4726643bc6fd046f0130ac0e")
+    version("1.13.1", tag="v1.13.1", commit="49444c3e546bf240bed24a101e747422d1f8a0ee")
+    version("1.13.0", tag="v1.13.0", commit="7c98e70d44abc7a1aead68b6ea6c8adc8c554db5")
+    version("1.12.1", tag="v1.12.1", commit="664058fa83f1d8eede5d66418abff6e20bd76ca8")
+    version("1.12.0", tag="v1.12.0", commit="67ece03c8cd632cce9523cd96efde6f2d1cc8121")
+    version("1.11.0", tag="v1.11.0", commit="bc2c6edaf163b1a1330e37a6e34caf8c553e4755")
+    version("1.10.2", tag="v1.10.2", commit="71f889c7d265b9636b93ede9d651c0a9c4bee191")
+    version("1.10.1", tag="v1.10.1", commit="302ee7bfb604ebef384602c56e3853efed262030")
+    version("1.10.0", tag="v1.10.0", commit="36449ea93134574c2a22b87baad3de0bf8d64d42")
+    version("1.9.1", tag="v1.9.1", commit="dfbd030854359207cb3040b864614affeace11ce")
+    version("1.9.0", tag="v1.9.0", commit="d69c22dd61a2f006dcfe1e3ea8468a3ecaf931aa")
+    version("1.8.2", tag="v1.8.2", commit="e0495a7aa104471d95dc85a1b8f6473fbcc427a8")
+    version("1.8.1", tag="v1.8.1", commit="56b43f4fec1f76953f15a627694d4bba34588969")
+    version("1.8.0", tag="v1.8.0", commit="37c1f4a7fef115d719104e871d0cf39434aa9d56")
+    version("1.7.1", tag="v1.7.1", commit="57bffc3a8e4fee0cce31e1ff1f662ccf7b16db57")
+    version("1.7.0", tag="v1.7.0", commit="e85d494707b835c12165976b8442af54b9afcb26")
+    version("1.6.0", tag="v1.6.0", commit="b31f58de6fa8bbda5353b3c77d9be4914399724d")
+    version("1.5.1", tag="v1.5.1", commit="3c31d73c875d9a4a6ea8a843b9a0d1b19fbe36f3")
+    version("1.5.0", tag="v1.5.0", commit="4ff3872a2099993bf7e8c588f7182f3df777205b")
+    version("1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948")
+    version("1.3.1", tag="v1.3.1", commit="ee77ccbb6da4e2efd83673e798acf7081bc03564")
+    version("1.3.0", tag="v1.3.0", commit="de394b672d0346f2f387a8bb1a1280d5d2eaf9cb")
+    version("1.2.0", tag="v1.2.0", commit="8554416a199c4cec01c60c7015d8301d2bb39b64")
+    version("1.1.0", tag="v1.1.0", commit="142c973f4179e768164cd578951489e89021b29c")
+    version("1.0.1", tag="v1.0.1", commit="83221655a8237ca80f9673dad06a98d34c43e546")
+    version("1.0.0", tag="v1.0.0", commit="db5d3131d16f57abd4f13d3f4b885d5f67bf6644")
 
     is_darwin = sys.platform == "darwin"
 
