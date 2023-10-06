@@ -41,4 +41,4 @@ concretizer:
     # "none": allows a single node for any package in the DAG.
     # "minimal": allows the duplication of 'build-tools' nodes only (e.g. py-setuptools, cmake etc.)
     # "full" (experimental): allows separation of the entire build-tool stack (e.g. the entire "cmake" subDAG)
-    strategy: none
+    strategy: minimal

@@ -2121,12 +2121,9 @@ def duplicates_test_repository():
 
 
 @pytest.mark.usefixtures("mutable_config", "duplicates_test_repository")
+@pytest.mark.only_clingo("Not supported by the original concretizer")
 class TestConcretizeSeparately:
     @pytest.mark.parametrize("strategy", ["minimal", "full"])
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Not supported by the original concretizer",
-    )
     def test_two_gmake(self, strategy):
         """Tests that we can concretize a spec with nodes using the same build
         dependency pinned at different versions.
@@ -2151,10 +2148,6 @@ class TestConcretizeSeparately:
         assert len(pinned_gmake) == 1 and pinned_gmake[0].satisfies("@=3.0")
 
     @pytest.mark.parametrize("strategy", ["minimal", "full"])
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Not supported by the original concretizer",
-    )
     def test_two_setuptools(self, strategy):
         """Tests that we can concretize separate build dependencies, when we are dealing
         with extensions.
@@ -2191,10 +2184,6 @@ class TestConcretizeSeparately:
         gmake = s["python"].dependencies(name="gmake", deptype="build")
         assert len(gmake) == 1 and gmake[0].satisfies("@=3.0")
 
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Not supported by the original concretizer",
-    )
     def test_solution_without_cycles(self):
         """Tests that when we concretize a spec with cycles, a fallback kicks in to recompute
         a solution without cycles.
@@ -2206,6 +2195,21 @@ class TestConcretizeSeparately:
         s = Spec("cycle-b").concretized()
         assert s["cycle-a"].satisfies("~cycle")
         assert s["cycle-b"].satisfies("+cycle")
+
+    @pytest.mark.parametrize("strategy", ["minimal", "full"])
+    def test_pure_build_virtual_dependency(self, strategy):
+        """Tests that we can concretize a pure build virtual dependency, and ensures that
+        pure build virtual dependencies are accounted in the list of possible virtual
+        dependencies.
+
+        virtual-build@1.0
+        | [type=build, virtual=pkgconfig]
+        pkg-config@1.0
+        """
+        spack.config.CONFIG.set("concretizer:duplicates:strategy", strategy)
+
+        s = Spec("virtual-build").concretized()
+        assert s["pkgconfig"].name == "pkg-config"
 
 
 @pytest.mark.parametrize(
