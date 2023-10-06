@@ -62,6 +62,8 @@ class PyTables(PythonPackage):
     depends_on("bzip2", when="+bzip2")
     depends_on("lzo", when="+lzo")
 
+    conflicts("%apple-clang@15:", when="@:3.8")
+
     # Historical dependencies
     depends_on("py-six@1.9:", when="@:3.5", type=("build", "run"))
 
