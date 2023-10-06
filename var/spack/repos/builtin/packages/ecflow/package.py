@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
@@ -19,7 +21,7 @@ class Ecflow(CMakePackage):
     homepage = "https://confluence.ecmwf.int/display/ECFLOW/"
     url = "https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-4.11.1-Source.tar.gz"
 
-    maintainers("climbfuji")
+    maintainers("climbfuji", "AlexanderRichert-NOAA")
 
     # https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-5.8.3-Source.tar.gz?api=v2
     version("5.8.3", sha256="1d890008414017da578dbd5a95cb1b4d599f01d5a3bb3e0297fe94a87fbd81a6")
@@ -32,6 +34,7 @@ class Ecflow(CMakePackage):
         "static_boost", default=False, description="Use also static boost libraries when compiling"
     )
     variant("ui", default=False, description="Enable ecflow_ui")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     extends("python")
 
@@ -59,6 +62,7 @@ class Ecflow(CMakePackage):
     )
 
     depends_on("openssl@1:", when="@5:")
+    depends_on("pkgconfig", type="build", when="+ssl ^openssl ~shared")
     depends_on("qt@5:", when="+ui")
     # Requirement to use the Python3_EXECUTABLE variable
     depends_on("cmake@3.16:", type="build")
@@ -72,15 +76,47 @@ class Ecflow(CMakePackage):
             "Pyext/CMakeLists.txt",
         )
 
+    @when("+ssl ^openssl~shared")
+    def setup_build_environment(self, env):
+        env.set("LIBS", self.spec["zlib"].libs.search_flags)
+
     def cmake_args(self):
-        boost_lib = self.spec["boost"].prefix.lib
-        return [
+        spec = self.spec
+        boost_lib = spec["boost"].prefix.lib
+        args = [
             self.define("Boost_PYTHON_LIBRARY_RELEASE", boost_lib),
             self.define_from_variant("ENABLE_UI", "ui"),
             self.define_from_variant("ENABLE_GUI", "ui"),
             self.define_from_variant("ENABLE_SSL", "ssl"),
             # https://jira.ecmwf.int/browse/SUP-2641#comment-208943
             self.define_from_variant("ENABLE_STATIC_BOOST_LIBS", "static_boost"),
-            self.define("Python3_EXECUTABLE", self.spec["python"].package.command),
-            self.define("BOOST_ROOT", self.spec["boost"].prefix),
+            self.define("Python3_EXECUTABLE", spec["python"].package.command),
+            self.define("BOOST_ROOT", spec["boost"].prefix),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
+
+        if spec.satisfies("+ssl ^openssl ~shared"):
+            ssllibs = ";".join(spec["openssl"].libs + spec["zlib"].libs)
+            args.append(self.define("OPENSSL_CRYPTO_LIBRARY", ssllibs))
+
+        return args
+
+    # A recursive link in the ecflow source code causes the binary cache
+    # creation to fail. This file is only in the install tree if the
+    # --source option is set when installing the package, but force_remove
+    # acts like "rm -f" and won't abort if the file doesn't exist.
+    @run_after("install")
+    def remove_recursive_symlink_in_source_code(self):
+        force_remove(join_path(self.prefix, "share/ecflow/src/cereal/cereal"))
+
+    @when("+ssl ^openssl~shared")
+    def patch(self):
+        pkgconf = which("pkg-config")
+        liblist_l = pkgconf("--libs-only-l", "--static", "openssl", output=str).split()
+        liblist = " ".join([ll.replace("-l", "") for ll in liblist_l])
+        for sdir in ["Client", "Server"]:
+            filter_file(
+                "(target_link_libraries.*pthread)",
+                f"\\1 {liblist}",
+                os.path.join(sdir, "CMakeLists.txt"),
+            )
