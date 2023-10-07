@@ -493,6 +493,14 @@ def specfile_for(default_mock_concretization):
             "@1.2: develop=foo",
         ),
         (
+            "@1.2:develop   = foo",
+            [
+                Token(TokenType.VERSION, value="@1.2:"),
+                Token(TokenType.KEY_VALUE_PAIR, value="develop   = foo"),
+            ],
+            "@1.2: develop=foo",
+        ),
+        (
             "% intel @ 12.1:12.6 + debug",
             [
                 Token(TokenType.COMPILER_AND_VERSION, value="% intel @ 12.1:12.6"),
