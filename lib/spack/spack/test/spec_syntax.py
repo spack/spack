@@ -485,6 +485,31 @@ def specfile_for(default_mock_concretization):
             "a@1:",
         ),
         (
+            "@1.2:   develop   = foo",
+            [
+                Token(TokenType.VERSION, value="@1.2:"),
+                Token(TokenType.KEY_VALUE_PAIR, value="develop   = foo"),
+            ],
+            "@1.2: develop=foo",
+        ),
+        (
+            "% intel @ 12.1:12.6 + debug",
+            [
+                Token(TokenType.COMPILER_AND_VERSION, value="% intel @ 12.1:12.6"),
+                Token(TokenType.BOOL_VARIANT, value="+ debug"),
+            ],
+            "%intel@12.1:12.6+debug",
+        ),
+        (
+            "@ 12.1:12.6 + debug - qt_4",
+            [
+                Token(TokenType.VERSION, value="@ 12.1:12.6"),
+                Token(TokenType.BOOL_VARIANT, value="+ debug"),
+                Token(TokenType.BOOL_VARIANT, value="- qt_4"),
+            ],
+            "@12.1:12.6+debug~qt_4",
+        ),
+        (
             "@10.4.0:10,11.3.0:target=aarch64:",
             [
                 Token(TokenType.VERSION, value="@10.4.0:10,11.3.0:"),
