@@ -78,6 +78,7 @@ class Visit(CMakePackage):
     variant("osmesa", default=False, description="Use OSMesa for off-screen CPU rendering")
     variant("adios2", default=True, description="Enable ADIOS2 file format")
     variant("hdf5", default=True, description="Enable HDF5 file format")
+    variant("netcdf", default=True, description="Enable NetCDF file format")
     variant("silo", default=True, description="Enable Silo file format")
     variant("python", default=True, description="Enable Python support")
     variant("mpi", default=True, description="Enable parallel engine")
@@ -97,6 +98,9 @@ class Visit(CMakePackage):
 
     # Fix pthread and librt link errors
     patch("visit32-missing-link-libs.patch", when="@3.2")
+
+    # Fix const-correctness in VTK interface
+    patch("vtk-8.2-constcorrect.patch", when="@3.3.3 ^vtk@8.2.1a")
 
     # Exactly one of 'gui' or 'osmesa' has to be enabled
     conflicts("+gui", when="+osmesa")
@@ -129,7 +133,8 @@ class Visit(CMakePackage):
     depends_on("qwt+opengl", when="+gui")
 
     # python@3.8 doesn't work with VisIt.
-    depends_on("python@3.2:3.7,3.9:", when="+python")
+    depends_on("python@3.2:3.7,3.9:", when="@:3.2 +python")
+    depends_on("python@3.2:", when="@3.3: +python")
     extends("python", when="+python")
 
     # VisIt uses the hdf5 1.8 api
@@ -137,6 +142,11 @@ class Visit(CMakePackage):
     depends_on("hdf5@1.8:", when="+hdf5")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
     depends_on("hdf5~mpi", when="+hdf5~mpi")
+
+    # Enable netCDF library based on MPI variant and OLD C++ interface
+    depends_on("netcdf-c+mpi", when="+netcdf+mpi")
+    depends_on("netcdf-c~mpi", when="+netcdf~mpi")
+    depends_on("netcdf-cxx", when="+netcdf")
 
     # VisIt uses Silo's 'ghost zone' data structures, which are only available
     # in v4.10+ releases: https://wci.llnl.gov/simulation/computer-codes/silo/releases/release-notes-4.10
@@ -175,7 +185,7 @@ class Visit(CMakePackage):
     # vtk-m operations are performed.
     depends_on("vtk-m", patches=[patch("vtk-m_transport_tag_topology_field_in.patch")])
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     @when("@3:,develop")
     def patch(self):
@@ -184,6 +194,11 @@ class Visit(CMakePackage):
         # VTK's module flies (e.g. lib/cmake/vtk-8.1/Modules/vtktiff.cmake)
         for filename in find("src", "CMakeLists.txt"):
             filter_file(r"\bvtk(tiff|jpeg|png)", r"${vtk\1_LIBRARIES}", filename)
+
+        # NetCDF components are in separate directories using Spack, which is
+        # not what Visit's CMake logic expects
+        if "+netcdf" in self.spec:
+            filter_file(r"(set\(NETCDF_CXX_DIR)", r"#\1", "src/CMake/FindNetcdf.cmake")
 
     def flag_handler(self, name, flags):
         if name in ("cflags", "cxxflags"):
@@ -212,7 +227,7 @@ class Visit(CMakePackage):
             self.define("VTK_MAJOR_VERSION", spec["vtk"].version[0]),
             self.define("VTK_MINOR_VERSION", spec["vtk"].version[1]),
             self.define("VISIT_VTK_DIR", spec["vtk"].prefix),
-            self.define("VISIT_ZLIB_DIR", spec["zlib"].prefix),
+            self.define("VISIT_ZLIB_DIR", spec["zlib-api"].prefix),
             self.define("VISIT_JPEG_DIR", spec["jpeg"].prefix),
             self.define("VISIT_USE_GLEW", False),
             self.define("VISIT_CONFIG_SITE", "NONE"),
@@ -287,6 +302,14 @@ class Visit(CMakePackage):
             args.append(self.define("HDF5_DIR", spec["hdf5"].prefix))
             if "+mpi" in spec and "+mpi" in spec["hdf5"]:
                 args.append(self.define("VISIT_HDF5_MPI_DIR", spec["hdf5"].prefix))
+
+        if "+netcdf" in spec:
+            args.extend(
+                [
+                    self.define("NETCDF_DIR", spec["netcdf-c"].prefix),
+                    self.define("NETCDF_CXX_DIR", spec["netcdf-cxx"].prefix),
+                ]
+            )
 
         if "+silo" in spec:
             args.append(self.define("VISIT_SILO_DIR", spec["silo"].prefix))

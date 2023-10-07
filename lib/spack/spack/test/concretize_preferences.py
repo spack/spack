@@ -61,7 +61,7 @@ def assert_variant_values(spec, **variants):
 
 
 @pytest.mark.usefixtures("concretize_scope", "mock_packages")
-class TestConcretizePreferences(object):
+class TestConcretizePreferences:
     @pytest.mark.parametrize(
         "package_name,variant_value,expected_results",
         [
@@ -117,13 +117,9 @@ class TestConcretizePreferences(object):
         # etc.
         assert spec.compiler.satisfies(CompilerSpec(compiler_str))
 
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_preferred_target(self, mutable_mock_repo):
         """Test preferred targets are applied correctly"""
-        # FIXME: This test was a false negative, since the default and
-        # FIXME: the preferred target were the same
-        if spack.config.get("config:concretizer") == "original":
-            pytest.xfail("Known bug in the original concretizer")
-
         spec = concretize("mpich")
         default = str(spec.target)
         preferred = str(spec.target.family)
@@ -151,9 +147,8 @@ class TestConcretizePreferences(object):
         spec = concretize("mpileaks")
         assert spec.version == Version("2.2")
 
+    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
     def test_preferred_versions_mixed_version_types(self):
-        if spack.config.get("config:concretizer") == "original":
-            pytest.skip("This behavior is not enforced for the old concretizer")
         update_packages("mixedversions", "version", ["=2.0"])
         spec = concretize("mixedversions")
         assert spec.version == Version("2.0")
@@ -178,11 +173,11 @@ class TestConcretizePreferences(object):
             {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
         )
         spec = concretize("mpileaks")
-        assert spec.package.fetcher[0].url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
+        assert spec.package.fetcher.url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
 
         update_packages("mpileaks", "package_attributes", {})
         spec = concretize("mpileaks")
-        assert spec.package.fetcher[0].url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
+        assert spec.package.fetcher.url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
 
     def test_config_set_pkg_property_new(self, mutable_mock_repo):
         """Test that you can set arbitrary attributes on the Package class"""
@@ -230,24 +225,20 @@ mpileaks:
         spec.concretize()
         assert spec.version == Version("3.5.0")
 
+    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
     def test_preferred_undefined_raises(self):
         """Preference should not specify an undefined version"""
-        if spack.config.get("config:concretizer") == "original":
-            pytest.xfail("This behavior is not enforced for the old concretizer")
-
         update_packages("python", "version", ["3.5.0.1"])
         spec = Spec("python")
         with pytest.raises(spack.config.ConfigError):
             spec.concretize()
 
+    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
     def test_preferred_truncated(self):
         """Versions without "=" are treated as version ranges: if there is
         a satisfying version defined in the package.py, we should use that
         (don't define a new version).
         """
-        if spack.config.get("config:concretizer") == "original":
-            pytest.skip("This behavior is not enforced for the old concretizer")
-
         update_packages("python", "version", ["3.5"])
         spec = Spec("python")
         spec.concretize()

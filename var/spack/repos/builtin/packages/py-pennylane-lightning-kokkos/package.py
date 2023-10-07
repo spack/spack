@@ -13,19 +13,26 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     homepage = "https://docs.pennylane.ai/projects/lightning-kokkos"
     git = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos.git"
-    url = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.29.1.tar.gz"
+    url = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.32.0.tar.gz"
 
     maintainers("AmintorDusko", "vincentmr")
 
     version("main", branch="main")
+
+    version("0.32.0", sha256="06f19dfb1073387ef9ee30c38ea44884844a771373256b694a0e1ceb87195bb2")
+    version("0.31.0", sha256="fe10322fee0fa7df45cd3a81d6c229a79c7dfa7f20ff7d67c65c9a28f494dc89")
+    version("0.30.0", sha256="7c8f0e0431f8052993cd8033a316f53590c7bf5419445d0725e214b93cbc661b")
     version("0.29.1", sha256="f51ba7718defc7bb5064f690f381e04b2ec58cb09f22a171ae5f410860716e30")
+
+    depends_on("kokkos@:3.7.2", when="@:0.30", type=("run", "build"))
+    depends_on("kokkos@4:", when="@0.31:", type=("run", "build"))
 
     # kokkos backends
     backends = {
         "cuda": [False, "Whether to build CUDA backend"],
         "openmp": [False, "Whether to build OpenMP backend"],
         "openmptarget": [False, "Whether to build the OpenMPTarget backend"],
-        "pthread": [False, "Whether to build Pthread backend"],
+        "threads": [False, "Whether to build the C++ threads backend"],
         "rocm": [False, "Whether to build HIP backend"],
         "serial": [True, "Whether to build serial backend"],
         "sycl": [False, "Whether to build the SYCL backend"],
@@ -35,7 +42,6 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
         deflt_bool, descr = backends[backend]
         variant(backend.lower(), default=deflt_bool, description=descr)
         depends_on(f"kokkos+{backend.lower()}", when=f"+{backend.lower()}", type=("run", "build"))
-
     # CUDA
     for val in CudaPackage.cuda_arch_values:
         depends_on("kokkos cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
@@ -63,11 +69,15 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("ninja", type="build")
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-pybind11", type="build")
+    depends_on("py-pybind11", type="link")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
-    depends_on("py-pennylane@0.28:", type=("build", "run"))
-    depends_on("py-pennylane-lightning@0.28:~kokkos", type=("build", "run"))
+    depends_on("py-pennylane@0.28:", type=("build", "run"), when="@:0.30")
+    depends_on("py-pennylane@0.30:", type=("build", "run"), when="@0.31:")
+    # This requirement differs from `pennylane>=0.30` in `setup.py`,
+    # but the introduction of `StatePrep` demands `pennylane>=0.32`
+    depends_on("py-pennylane@0.32:", type=("build", "run"), when="@0.32:")
+    depends_on("py-pennylane-lightning~kokkos", type=("build", "run"), when="@:0.31")
 
     # variant defined dependencies
     depends_on("llvm-openmp", when="+openmp %apple-clang")

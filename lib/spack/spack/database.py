@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Spack's installation tracking database.
 
 The database serves two purposes:
@@ -19,14 +18,16 @@ as the authoritative database of packages in Spack.  This module
 provides a cache and a sanity checking mechanism for what is in the
 filesystem.
 """
-
 import contextlib
 import datetime
 import os
+import pathlib
 import socket
 import sys
 import time
-from typing import Dict
+from typing import Any, Callable, Dict, Generator, List, NamedTuple, Set, Type, Union
+
+import spack.deptypes as dt
 
 try:
     import uuid
@@ -36,14 +37,13 @@ except ImportError:
     _use_uuid = False
     pass
 
+from typing import Optional, Tuple
+
 import llnl.util.filesystem as fs
-import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack.hash_types as ht
-import spack.repo
 import spack.spec
-import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
@@ -54,17 +54,17 @@ from spack.util.crypto import bit_length
 # TODO: Provide an API automatically retyring a build after detecting and
 # TODO: clearing a failure.
 
-# DB goes in this directory underneath the root
-_db_dirname = ".spack-db"
+#: DB goes in this directory underneath the root
+_DB_DIRNAME = ".spack-db"
 
-# DB version.  This is stuck in the DB file to track changes in format.
-# Increment by one when the database format changes.
-# Versions before 5 were not integers.
-_db_version = vn.Version("6")
+#: DB version.  This is stuck in the DB file to track changes in format.
+#: Increment by one when the database format changes.
+#: Versions before 5 were not integers.
+_DB_VERSION = vn.Version("7")
 
-# For any version combinations here, skip reindex when upgrading.
-# Reindexing can take considerable time and is not always necessary.
-_skip_reindex = [
+#: For any version combinations here, skip reindex when upgrading.
+#: Reindexing can take considerable time and is not always necessary.
+_SKIP_REINDEX = [
     # reindexing takes a significant amount of time, and there's
     # no reason to do it from DB version 0.9.3 to version 5. The
     # only difference is that v5 can contain "deprecated_for"
@@ -72,28 +72,29 @@ _skip_reindex = [
     # version is saved to disk the first time the DB is written.
     (vn.Version("0.9.3"), vn.Version("5")),
     (vn.Version("5"), vn.Version("6")),
+    (vn.Version("6"), vn.Version("7")),
 ]
 
-# Default timeout for spack database locks in seconds or None (no timeout).
-# A balance needs to be struck between quick turnaround for parallel installs
-# (to avoid excess delays) and waiting long enough when the system is busy
-# (to ensure the database is updated).
-_db_lock_timeout = 120
+#: Default timeout for spack database locks in seconds or None (no timeout).
+#: A balance needs to be struck between quick turnaround for parallel installs
+#: (to avoid excess delays) and waiting long enough when the system is busy
+#: (to ensure the database is updated).
+_DEFAULT_DB_LOCK_TIMEOUT = 120
 
-# Default timeout for spack package locks in seconds or None (no timeout).
-# A balance needs to be struck between quick turnaround for parallel installs
-# (to avoid excess delays when performing a parallel installation) and waiting
-# long enough for the next possible spec to install (to avoid excessive
-# checking of the last high priority package) or holding on to a lock (to
-# ensure a failed install is properly tracked).
-_pkg_lock_timeout = None
+#: Default timeout for spack package locks in seconds or None (no timeout).
+#: A balance needs to be struck between quick turnaround for parallel installs
+#: (to avoid excess delays when performing a parallel installation) and waiting
+#: long enough for the next possible spec to install (to avoid excessive
+#: checking of the last high priority package) or holding on to a lock (to
+#: ensure a failed install is properly tracked).
+_DEFAULT_PKG_LOCK_TIMEOUT = None
 
-# Types of dependencies tracked by the database
-# We store by DAG hash, so we track the dependencies that the DAG hash includes.
-_tracked_deps = ht.dag_hash.deptype
+#: Types of dependencies tracked by the database
+#: We store by DAG hash, so we track the dependencies that the DAG hash includes.
+_TRACKED_DEPENDENCIES = ht.dag_hash.depflag
 
-# Default list of fields written for each install record
-default_install_record_fields = [
+#: Default list of fields written for each install record
+DEFAULT_INSTALL_RECORD_FIELDS = (
     "spec",
     "ref_count",
     "path",
@@ -101,15 +102,19 @@ default_install_record_fields = [
     "explicit",
     "installation_time",
     "deprecated_for",
-]
+)
 
 
-def reader(version):
-    reader_cls = {vn.Version("5"): spack.spec.SpecfileV1, vn.Version("6"): spack.spec.SpecfileV3}
+def reader(version: vn.StandardVersion) -> Type["spack.spec.SpecfileReaderBase"]:
+    reader_cls = {
+        vn.Version("5"): spack.spec.SpecfileV1,
+        vn.Version("6"): spack.spec.SpecfileV3,
+        vn.Version("7"): spack.spec.SpecfileV4,
+    }
     return reader_cls[version]
 
 
-def _now():
+def _now() -> float:
     """Returns the time since the epoch"""
     return time.time()
 
@@ -130,7 +135,7 @@ class InstallStatus(str):
     pass
 
 
-class InstallStatuses(object):
+class InstallStatuses:
     INSTALLED = InstallStatus("installed")
     DEPRECATED = InstallStatus("deprecated")
     MISSING = InstallStatus("missing")
@@ -139,25 +144,26 @@ class InstallStatuses(object):
     def canonicalize(cls, query_arg):
         if query_arg is True:
             return [cls.INSTALLED]
-        elif query_arg is False:
+        if query_arg is False:
             return [cls.MISSING]
-        elif query_arg is any:
+        if query_arg is any:
             return [cls.INSTALLED, cls.DEPRECATED, cls.MISSING]
-        elif isinstance(query_arg, InstallStatus):
+        if isinstance(query_arg, InstallStatus):
             return [query_arg]
-        else:
-            try:  # Try block catches if it is not an iterable at all
-                if any(type(x) != InstallStatus for x in query_arg):
-                    raise TypeError
-            except TypeError:
-                raise TypeError(
-                    "installation query must be `any`, boolean, "
-                    "InstallStatus, or iterable of InstallStatus"
-                )
-            return query_arg
+        try:
+            statuses = list(query_arg)
+            if all(isinstance(x, InstallStatus) for x in statuses):
+                return statuses
+        except TypeError:
+            pass
+
+        raise TypeError(
+            "installation query must be `any`, boolean, "
+            "InstallStatus, or iterable of InstallStatus"
+        )
 
 
-class InstallRecord(object):
+class InstallRecord:
     """A record represents one installation in the DB.
 
     The record keeps track of the spec for the installation, its
@@ -173,9 +179,9 @@ class InstallRecord(object):
     dependents left.
 
     Args:
-        spec (spack.spec.Spec): spec tracked by the install record
-        path (str): path where the spec has been installed
-        installed (bool): whether or not the spec is currently installed
+        spec: spec tracked by the install record
+        path: path where the spec has been installed
+        installed: whether or not the spec is currently installed
         ref_count (int): number of specs that depend on this one
         explicit (bool or None): whether or not this spec was explicitly
             installed, or pulled-in as a dependency of something else
@@ -184,14 +190,14 @@ class InstallRecord(object):
 
     def __init__(
         self,
-        spec,
-        path,
-        installed,
-        ref_count=0,
-        explicit=False,
-        installation_time=None,
-        deprecated_for=None,
-        in_buildcache=False,
+        spec: "spack.spec.Spec",
+        path: str,
+        installed: bool,
+        ref_count: int = 0,
+        explicit: bool = False,
+        installation_time: Optional[float] = None,
+        deprecated_for: Optional["spack.spec.Spec"] = None,
+        in_buildcache: bool = False,
         origin=None,
     ):
         self.spec = spec
@@ -213,7 +219,7 @@ class InstallRecord(object):
         else:
             return InstallStatuses.MISSING in installed
 
-    def to_dict(self, include_fields=default_install_record_fields):
+    def to_dict(self, include_fields=DEFAULT_INSTALL_RECORD_FIELDS):
         rec_dict = {}
 
         for field_name in include_fields:
@@ -248,12 +254,15 @@ class ForbiddenLockError(SpackError):
     """Raised when an upstream DB attempts to acquire a lock"""
 
 
-class ForbiddenLock(object):
-    def __getattribute__(self, name):
+class ForbiddenLock:
+    def __getattr__(self, name):
         raise ForbiddenLockError("Cannot access attribute '{0}' of lock".format(name))
 
+    def __reduce__(self):
+        return ForbiddenLock, tuple()
 
-_query_docstring = """
+
+_QUERY_DOCSTRING = """
 
         Args:
             query_spec: queries iterate through specs in the database and
@@ -302,75 +311,312 @@ _query_docstring = """
         """
 
 
-class Database(object):
+class LockConfiguration(NamedTuple):
+    """Data class to configure locks in Database objects
 
-    """Per-process lock objects for each install prefix."""
+    Args:
+        enable: whether to enable locks or not.
+        database_timeout: timeout for the database lock
+        package_timeout: timeout for the package lock
+    """
 
-    _prefix_locks: Dict[str, lk.Lock] = {}
+    enable: bool
+    database_timeout: Optional[int]
+    package_timeout: Optional[int]
 
-    """Per-process failure (lock) objects for each install prefix."""
-    _prefix_failures: Dict[str, lk.Lock] = {}
+
+#: Configure a database to avoid using locks
+NO_LOCK: LockConfiguration = LockConfiguration(
+    enable=False, database_timeout=None, package_timeout=None
+)
+
+
+#: Configure the database to use locks without a timeout
+NO_TIMEOUT: LockConfiguration = LockConfiguration(
+    enable=True, database_timeout=None, package_timeout=None
+)
+
+#: Default configuration for database locks
+DEFAULT_LOCK_CFG: LockConfiguration = LockConfiguration(
+    enable=True,
+    database_timeout=_DEFAULT_DB_LOCK_TIMEOUT,
+    package_timeout=_DEFAULT_PKG_LOCK_TIMEOUT,
+)
+
+
+def lock_configuration(configuration):
+    """Return a LockConfiguration from a spack.config.Configuration object."""
+    return LockConfiguration(
+        enable=configuration.get("config:locks", True),
+        database_timeout=configuration.get("config:db_lock_timeout"),
+        package_timeout=configuration.get("config:package_lock_timeout"),
+    )
+
+
+def prefix_lock_path(root_dir: Union[str, pathlib.Path]) -> pathlib.Path:
+    """Returns the path of the prefix lock file, given the root directory.
+
+    Args:
+        root_dir: root directory containing the database directory
+    """
+    return pathlib.Path(root_dir) / _DB_DIRNAME / "prefix_lock"
+
+
+def failures_lock_path(root_dir: Union[str, pathlib.Path]) -> pathlib.Path:
+    """Returns the path of the failures lock file, given the root directory.
+
+    Args:
+        root_dir: root directory containing the database directory
+    """
+    return pathlib.Path(root_dir) / _DB_DIRNAME / "prefix_failures"
+
+
+class SpecLocker:
+    """Manages acquiring and releasing read or write locks on concrete specs."""
+
+    def __init__(self, lock_path: Union[str, pathlib.Path], default_timeout: Optional[float]):
+        self.lock_path = pathlib.Path(lock_path)
+        self.default_timeout = default_timeout
+
+        # Maps (spec.dag_hash(), spec.name) to the corresponding lock object
+        self.locks: Dict[Tuple[str, str], lk.Lock] = {}
+
+    def lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
+        """Returns a lock on a concrete spec.
+
+        The lock is a byte range lock on the nth byte of a file.
+
+        The lock file is ``self.lock_path``.
+
+        n is the sys.maxsize-bit prefix of the DAG hash.  This makes likelihood of collision is
+        very low AND it gives us readers-writer lock semantics with just a single lockfile, so
+        no cleanup required.
+        """
+        assert spec.concrete, "cannot lock a non-concrete spec"
+        timeout = timeout or self.default_timeout
+        key = self._lock_key(spec)
+
+        if key not in self.locks:
+            self.locks[key] = self.raw_lock(spec, timeout=timeout)
+        else:
+            self.locks[key].default_timeout = timeout
+
+        return self.locks[key]
+
+    def raw_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
+        """Returns a raw lock for a Spec, but doesn't keep track of it."""
+        return lk.Lock(
+            str(self.lock_path),
+            start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+            length=1,
+            default_timeout=timeout,
+            desc=spec.name,
+        )
+
+    def has_lock(self, spec: "spack.spec.Spec") -> bool:
+        """Returns True if the spec is already managed by this spec locker"""
+        return self._lock_key(spec) in self.locks
+
+    def _lock_key(self, spec: "spack.spec.Spec") -> Tuple[str, str]:
+        return (spec.dag_hash(), spec.name)
+
+    @contextlib.contextmanager
+    def write_lock(self, spec: "spack.spec.Spec") -> Generator["SpecLocker", None, None]:
+        lock = self.lock(spec)
+        lock.acquire_write()
+
+        try:
+            yield self
+        except lk.LockError:
+            # This addresses the case where a nested lock attempt fails inside
+            # of this context manager
+            raise
+        except (Exception, KeyboardInterrupt):
+            lock.release_write()
+            raise
+        else:
+            lock.release_write()
+
+    def clear(self, spec: "spack.spec.Spec") -> Tuple[bool, Optional[lk.Lock]]:
+        key = self._lock_key(spec)
+        lock = self.locks.pop(key, None)
+        return bool(lock), lock
+
+    def clear_all(self, clear_fn: Optional[Callable[[lk.Lock], Any]] = None) -> None:
+        if clear_fn is not None:
+            for lock in self.locks.values():
+                clear_fn(lock)
+        self.locks.clear()
+
+
+class FailureTracker:
+    """Tracks installation failures.
+
+    Prefix failure marking takes the form of a byte range lock on the nth
+    byte of a file for coordinating between concurrent parallel build
+    processes and a persistent file, named with the full hash and
+    containing the spec, in a subdirectory of the database to enable
+    persistence across overlapping but separate related build processes.
+
+    The failure lock file lives alongside the install DB.
+
+    ``n`` is the sys.maxsize-bit prefix of the associated DAG hash to make
+    the likelihood of collision very low with no cleanup required.
+    """
+
+    def __init__(self, root_dir: Union[str, pathlib.Path], default_timeout: Optional[float]):
+        #: Ensure a persistent location for dealing with parallel installation
+        #: failures (e.g., across near-concurrent processes).
+        self.dir = pathlib.Path(root_dir) / _DB_DIRNAME / "failures"
+        self.dir.mkdir(parents=True, exist_ok=True)
+
+        self.locker = SpecLocker(failures_lock_path(root_dir), default_timeout=default_timeout)
+
+    def clear(self, spec: "spack.spec.Spec", force: bool = False) -> None:
+        """Removes any persistent and cached failure tracking for the spec.
+
+        see `mark()`.
+
+        Args:
+            spec: the spec whose failure indicators are being removed
+            force: True if the failure information should be cleared when a failure lock
+                exists for the file, or False if the failure should not be cleared (e.g.,
+                it may be associated with a concurrent build)
+        """
+        locked = self.lock_taken(spec)
+        if locked and not force:
+            tty.msg(f"Retaining failure marking for {spec.name} due to lock")
+            return
+
+        if locked:
+            tty.warn(f"Removing failure marking despite lock for {spec.name}")
+
+        succeeded, lock = self.locker.clear(spec)
+        if succeeded and lock is not None:
+            lock.release_write()
+
+        if self.persistent_mark(spec):
+            path = self._path(spec)
+            tty.debug(f"Removing failure marking for {spec.name}")
+            try:
+                path.unlink()
+            except OSError as err:
+                tty.warn(
+                    f"Unable to remove failure marking for {spec.name} ({str(path)}): {str(err)}"
+                )
+
+    def clear_all(self) -> None:
+        """Force remove install failure tracking files."""
+        tty.debug("Releasing prefix failure locks")
+        self.locker.clear_all(
+            clear_fn=lambda x: x.release_write() if x.is_write_locked() else True
+        )
+
+        tty.debug("Removing prefix failure tracking files")
+        try:
+            for fail_mark in os.listdir(str(self.dir)):
+                try:
+                    (self.dir / fail_mark).unlink()
+                except OSError as exc:
+                    tty.warn(f"Unable to remove failure marking file {fail_mark}: {str(exc)}")
+        except OSError as exc:
+            tty.warn(f"Unable to remove failure marking files: {str(exc)}")
+
+    def mark(self, spec: "spack.spec.Spec") -> lk.Lock:
+        """Marks a spec as failing to install.
+
+        Args:
+            spec: spec that failed to install
+        """
+        # Dump the spec to the failure file for (manual) debugging purposes
+        path = self._path(spec)
+        path.write_text(spec.to_json())
+
+        # Also ensure a failure lock is taken to prevent cleanup removal
+        # of failure status information during a concurrent parallel build.
+        if not self.locker.has_lock(spec):
+            try:
+                mark = self.locker.lock(spec)
+                mark.acquire_write()
+            except lk.LockTimeoutError:
+                # Unlikely that another process failed to install at the same
+                # time but log it anyway.
+                tty.debug(f"PID {os.getpid()} failed to mark install failure for {spec.name}")
+                tty.warn(f"Unable to mark {spec.name} as failed.")
+
+        return self.locker.lock(spec)
+
+    def has_failed(self, spec: "spack.spec.Spec") -> bool:
+        """Return True if the spec is marked as failed."""
+        # The failure was detected in this process.
+        if self.locker.has_lock(spec):
+            return True
+
+        # The failure was detected by a concurrent process (e.g., an srun),
+        # which is expected to be holding a write lock if that is the case.
+        if self.lock_taken(spec):
+            return True
+
+        # Determine if the spec may have been marked as failed by a separate
+        # spack build process running concurrently.
+        return self.persistent_mark(spec)
+
+    def lock_taken(self, spec: "spack.spec.Spec") -> bool:
+        """Return True if another process has a failure lock on the spec."""
+        check = self.locker.raw_lock(spec)
+        return check.is_write_locked()
+
+    def persistent_mark(self, spec: "spack.spec.Spec") -> bool:
+        """Determine if the spec has a persistent failure marking."""
+        return self._path(spec).exists()
+
+    def _path(self, spec: "spack.spec.Spec") -> pathlib.Path:
+        """Return the path to the spec's failure file, which may not exist."""
+        assert spec.concrete, "concrete spec required for failure path"
+        return self.dir / f"{spec.name}-{spec.dag_hash()}"
+
+
+class Database:
+    #: Fields written for each install record
+    record_fields: Tuple[str, ...] = DEFAULT_INSTALL_RECORD_FIELDS
 
     def __init__(
         self,
-        root,
-        db_dir=None,
-        upstream_dbs=None,
-        is_upstream=False,
-        enable_transaction_locking=True,
-        record_fields=default_install_record_fields,
-    ):
-        """Create a Database for Spack installations under ``root``.
+        root: str,
+        upstream_dbs: Optional[List["Database"]] = None,
+        is_upstream: bool = False,
+        lock_cfg: LockConfiguration = DEFAULT_LOCK_CFG,
+    ) -> None:
+        """Database for Spack installations.
 
-        A Database is a cache of Specs data from ``$prefix/spec.yaml``
-        files in Spack installation directories.
+        A Database is a cache of Specs data from ``$prefix/spec.yaml`` files
+        in Spack installation directories.
 
-        By default, Database files (data and lock files) are stored
-        under ``root/.spack-db``, which is created if it does not
-        exist.  This is the ``db_dir``.
+        Database files (data and lock files) are stored under ``root/.spack-db``, which is
+        created if it does not exist.  This is the "database directory".
 
-        The Database will attempt to read an ``index.json`` file in
-        ``db_dir``.  If that does not exist, it will create a database
-        when needed by scanning the entire Database root for ``spec.yaml``
-        files according to Spack's ``DirectoryLayout``.
+        The database will attempt to read an ``index.json`` file in the database directory.
+        If that does not exist, it will create a database when needed by scanning the entire
+        store root for ``spec.json`` files according to Spack's directory layout.
 
-        Caller may optionally provide a custom ``db_dir`` parameter
-        where data will be stored. This is intended to be used for
-        testing the Database class.
-
-        This class supports writing buildcache index files, in which case
-        certain fields are not needed in each install record, and no
-        transaction locking is required.  To use this feature, provide
-        ``enable_transaction_locking=False``, and specify a list of needed
-        fields in ``record_fields``.
+        Args:
+            root: root directory where to create the database directory.
+            upstream_dbs: upstream databases for this repository.
+            is_upstream: whether this repository is an upstream.
+            lock_cfg: configuration for the locks to be used by this repository.
+                Relevant only if the repository is not an upstream.
         """
         self.root = root
-
-        # If the db_dir is not provided, default to within the db root.
-        self._db_dir = db_dir or os.path.join(self.root, _db_dirname)
+        self.database_directory = os.path.join(self.root, _DB_DIRNAME)
 
         # Set up layout of database files within the db dir
-        self._index_path = os.path.join(self._db_dir, "index.json")
-        self._verifier_path = os.path.join(self._db_dir, "index_verifier")
-        self._lock_path = os.path.join(self._db_dir, "lock")
-
-        # This is for other classes to use to lock prefix directories.
-        self.prefix_lock_path = os.path.join(self._db_dir, "prefix_lock")
-
-        # Ensure a persistent location for dealing with parallel installation
-        # failures (e.g., across near-concurrent processes).
-        self._failure_dir = os.path.join(self._db_dir, "failures")
-
-        # Support special locks for handling parallel installation failures
-        # of a spec.
-        self.prefix_fail_path = os.path.join(self._db_dir, "prefix_failures")
+        self._index_path = os.path.join(self.database_directory, "index.json")
+        self._verifier_path = os.path.join(self.database_directory, "index_verifier")
+        self._lock_path = os.path.join(self.database_directory, "lock")
 
         # Create needed directories and files
-        if not is_upstream and not os.path.exists(self._db_dir):
-            fs.mkdirp(self._db_dir)
-
-        if not is_upstream and not os.path.exists(self._failure_dir):
-            fs.mkdirp(self._failure_dir)
+        if not is_upstream and not os.path.exists(self.database_directory):
+            fs.mkdirp(self.database_directory)
 
         self.is_upstream = is_upstream
         self.last_seen_verifier = ""
@@ -384,30 +630,25 @@ class Database(object):
         self._state_is_inconsistent = False
 
         # initialize rest of state.
-        self.db_lock_timeout = spack.config.get("config:db_lock_timeout") or _db_lock_timeout
-        self.package_lock_timeout = (
-            spack.config.get("config:package_lock_timeout") or _pkg_lock_timeout
-        )
+        self.db_lock_timeout = lock_cfg.database_timeout
         tty.debug("DATABASE LOCK TIMEOUT: {0}s".format(str(self.db_lock_timeout)))
-        timeout_format_str = (
-            "{0}s".format(str(self.package_lock_timeout))
-            if self.package_lock_timeout
-            else "No timeout"
-        )
-        tty.debug("PACKAGE LOCK TIMEOUT: {0}".format(str(timeout_format_str)))
 
+        self.lock: Union[ForbiddenLock, lk.Lock]
         if self.is_upstream:
             self.lock = ForbiddenLock()
         else:
             self.lock = lk.Lock(
-                self._lock_path, default_timeout=self.db_lock_timeout, desc="database"
+                self._lock_path,
+                default_timeout=self.db_lock_timeout,
+                desc="database",
+                enable=lock_cfg.enable,
             )
-        self._data = {}
+        self._data: Dict[str, InstallRecord] = {}
 
         # For every installed spec we keep track of its install prefix, so that
         # we can answer the simple query whether a given path is already taken
         # before installing a different spec.
-        self._installed_prefixes = set()
+        self._installed_prefixes: Set[str] = set()
 
         self.upstream_dbs = list(upstream_dbs) if upstream_dbs else []
 
@@ -419,14 +660,8 @@ class Database(object):
         # message)
         self._fail_when_missing_deps = False
 
-        if enable_transaction_locking:
-            self._write_transaction_impl = lk.WriteTransaction
-            self._read_transaction_impl = lk.ReadTransaction
-        else:
-            self._write_transaction_impl = lang.nullcontext
-            self._read_transaction_impl = lang.nullcontext
-
-        self._record_fields = record_fields
+        self._write_transaction_impl = lk.WriteTransaction
+        self._read_transaction_impl = lk.ReadTransaction
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
@@ -436,214 +671,6 @@ class Database(object):
         """Get a read lock context manager for use in a `with` block."""
         return self._read_transaction_impl(self.lock, acquire=self._read)
 
-    def _failed_spec_path(self, spec):
-        """Return the path to the spec's failure file, which may not exist."""
-        if not spec.concrete:
-            raise ValueError("Concrete spec required for failure path for {0}".format(spec.name))
-
-        return os.path.join(self._failure_dir, "{0}-{1}".format(spec.name, spec.dag_hash()))
-
-    def clear_all_failures(self):
-        """Force remove install failure tracking files."""
-        tty.debug("Releasing prefix failure locks")
-        for pkg_id in list(self._prefix_failures.keys()):
-            lock = self._prefix_failures.pop(pkg_id, None)
-            if lock:
-                lock.release_write()
-
-        # Remove all failure markings (aka files)
-        tty.debug("Removing prefix failure tracking files")
-        for fail_mark in os.listdir(self._failure_dir):
-            try:
-                os.remove(os.path.join(self._failure_dir, fail_mark))
-            except OSError as exc:
-                tty.warn(
-                    "Unable to remove failure marking file {0}: {1}".format(fail_mark, str(exc))
-                )
-
-    def clear_failure(self, spec, force=False):
-        """
-        Remove any persistent and cached failure tracking for the spec.
-
-        see `mark_failed()`.
-
-        Args:
-            spec (spack.spec.Spec): the spec whose failure indicators are being removed
-            force (bool): True if the failure information should be cleared
-                when a prefix failure lock exists for the file or False if
-                the failure should not be cleared (e.g., it may be
-                associated with a concurrent build)
-
-        """
-        failure_locked = self.prefix_failure_locked(spec)
-        if failure_locked and not force:
-            tty.msg("Retaining failure marking for {0} due to lock".format(spec.name))
-            return
-
-        if failure_locked:
-            tty.warn("Removing failure marking despite lock for {0}".format(spec.name))
-
-        lock = self._prefix_failures.pop(spec.prefix, None)
-        if lock:
-            lock.release_write()
-
-        if self.prefix_failure_marked(spec):
-            try:
-                path = self._failed_spec_path(spec)
-                tty.debug("Removing failure marking for {0}".format(spec.name))
-                os.remove(path)
-            except OSError as err:
-                tty.warn(
-                    "Unable to remove failure marking for {0} ({1}): {2}".format(
-                        spec.name, path, str(err)
-                    )
-                )
-
-    def mark_failed(self, spec):
-        """
-        Mark a spec as failing to install.
-
-        Prefix failure marking takes the form of a byte range lock on the nth
-        byte of a file for coordinating between concurrent parallel build
-        processes and a persistent file, named with the full hash and
-        containing the spec, in a subdirectory of the database to enable
-        persistence across overlapping but separate related build processes.
-
-        The failure lock file, ``spack.store.db.prefix_failures``, lives
-        alongside the install DB. ``n`` is the sys.maxsize-bit prefix of the
-        associated DAG hash to make the likelihood of collision very low with
-        no cleanup required.
-        """
-        # Dump the spec to the failure file for (manual) debugging purposes
-        path = self._failed_spec_path(spec)
-        with open(path, "w") as f:
-            spec.to_json(f)
-
-        # Also ensure a failure lock is taken to prevent cleanup removal
-        # of failure status information during a concurrent parallel build.
-        err = "Unable to mark {0.name} as failed."
-
-        prefix = spec.prefix
-        if prefix not in self._prefix_failures:
-            mark = lk.Lock(
-                self.prefix_fail_path,
-                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
-                length=1,
-                default_timeout=self.package_lock_timeout,
-                desc=spec.name,
-            )
-
-            try:
-                mark.acquire_write()
-            except lk.LockTimeoutError:
-                # Unlikely that another process failed to install at the same
-                # time but log it anyway.
-                tty.debug(
-                    "PID {0} failed to mark install failure for {1}".format(os.getpid(), spec.name)
-                )
-                tty.warn(err.format(spec))
-
-            # Whether we or another process marked it as a failure, track it
-            # as such locally.
-            self._prefix_failures[prefix] = mark
-
-        return self._prefix_failures[prefix]
-
-    def prefix_failed(self, spec):
-        """Return True if the prefix (installation) is marked as failed."""
-        # The failure was detected in this process.
-        if spec.prefix in self._prefix_failures:
-            return True
-
-        # The failure was detected by a concurrent process (e.g., an srun),
-        # which is expected to be holding a write lock if that is the case.
-        if self.prefix_failure_locked(spec):
-            return True
-
-        # Determine if the spec may have been marked as failed by a separate
-        # spack build process running concurrently.
-        return self.prefix_failure_marked(spec)
-
-    def prefix_failure_locked(self, spec):
-        """Return True if a process has a failure lock on the spec."""
-        check = lk.Lock(
-            self.prefix_fail_path,
-            start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
-            length=1,
-            default_timeout=self.package_lock_timeout,
-            desc=spec.name,
-        )
-
-        return check.is_write_locked()
-
-    def prefix_failure_marked(self, spec):
-        """Determine if the spec has a persistent failure marking."""
-        return os.path.exists(self._failed_spec_path(spec))
-
-    def prefix_lock(self, spec, timeout=None):
-        """Get a lock on a particular spec's installation directory.
-
-        NOTE: The installation directory **does not** need to exist.
-
-        Prefix lock is a byte range lock on the nth byte of a file.
-
-        The lock file is ``spack.store.db.prefix_lock`` -- the DB
-        tells us what to call it and it lives alongside the install DB.
-
-        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
-        likelihood of collision is very low AND it gives us
-        readers-writer lock semantics with just a single lockfile, so no
-        cleanup required.
-        """
-        timeout = timeout or self.package_lock_timeout
-        prefix = spec.prefix
-        if prefix not in self._prefix_locks:
-            self._prefix_locks[prefix] = lk.Lock(
-                self.prefix_lock_path,
-                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
-                length=1,
-                default_timeout=timeout,
-                desc=spec.name,
-            )
-        elif timeout != self._prefix_locks[prefix].default_timeout:
-            self._prefix_locks[prefix].default_timeout = timeout
-
-        return self._prefix_locks[prefix]
-
-    @contextlib.contextmanager
-    def prefix_read_lock(self, spec):
-        prefix_lock = self.prefix_lock(spec)
-        prefix_lock.acquire_read()
-
-        try:
-            yield self
-        except lk.LockError:
-            # This addresses the case where a nested lock attempt fails inside
-            # of this context manager
-            raise
-        except (Exception, KeyboardInterrupt):
-            prefix_lock.release_read()
-            raise
-        else:
-            prefix_lock.release_read()
-
-    @contextlib.contextmanager
-    def prefix_write_lock(self, spec):
-        prefix_lock = self.prefix_lock(spec)
-        prefix_lock.acquire_write()
-
-        try:
-            yield self
-        except lk.LockError:
-            # This addresses the case where a nested lock attempt fails inside
-            # of this context manager
-            raise
-        except (Exception, KeyboardInterrupt):
-            prefix_lock.release_write()
-            raise
-        else:
-            prefix_lock.release_write()
-
     def _write_to_file(self, stream):
         """Write out the database in JSON format to the stream passed
         as argument.
@@ -652,7 +679,7 @@ class Database(object):
         """
         # map from per-spec hash code to installation record.
         installs = dict(
-            (k, v.to_dict(include_fields=self._record_fields)) for k, v in self._data.items()
+            (k, v.to_dict(include_fields=self.record_fields)) for k, v in self._data.items()
         )
 
         # database includes installation list and version.
@@ -665,7 +692,7 @@ class Database(object):
             "database": {
                 # TODO: move this to a top-level _meta section if we ever
                 # TODO: bump the DB version to 7
-                "version": str(_db_version),
+                "version": str(_DB_VERSION),
                 # dictionary of installation records, keyed by DAG hash
                 "installs": installs,
             }
@@ -705,7 +732,9 @@ class Database(object):
             if hash_key in db._data:
                 return db
 
-    def query_by_spec_hash(self, hash_key, data=None):
+    def query_by_spec_hash(
+        self, hash_key: str, data: Optional[Dict[str, InstallRecord]] = None
+    ) -> Tuple[bool, Optional[InstallRecord]]:
         """Get a spec for hash, and whether it's installed upstream.
 
         Return:
@@ -743,7 +772,9 @@ class Database(object):
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _ in spec_reader.read_specfile_dep_specs(yaml_deps):
+            for dname, dhash, dtypes, _, virtuals in spec_reader.read_specfile_dep_specs(
+                yaml_deps
+            ):
                 # It is important that we always check upstream installations
                 # in the same order, and that we always check the local
                 # installation first: if a downstream Spack installs a package
@@ -766,7 +797,7 @@ class Database(object):
                     tty.warn(msg)
                     continue
 
-                spec._add_dependency(child, deptypes=dtypes)
+                spec._add_dependency(child, depflag=dt.canonicalize(dtypes), virtuals=virtuals)
 
     def _read_from_file(self, filename):
         """Fill database from file, do not maintain old data.
@@ -798,16 +829,16 @@ class Database(object):
 
         # TODO: better version checking semantics.
         version = vn.Version(db["version"])
-        if version > _db_version:
-            raise InvalidDatabaseVersionError(self, _db_version, version)
-        elif version < _db_version:
-            if not any(old == version and new == _db_version for old, new in _skip_reindex):
+        if version > _DB_VERSION:
+            raise InvalidDatabaseVersionError(self, _DB_VERSION, version)
+        elif version < _DB_VERSION:
+            if not any(old == version and new == _DB_VERSION for old, new in _SKIP_REINDEX):
                 tty.warn(
                     "Spack database version changed from %s to %s. Upgrading."
-                    % (version, _db_version)
+                    % (version, _DB_VERSION)
                 )
 
-                self.reindex(spack.store.layout)
+                self.reindex(spack.store.STORE.layout)
                 installs = dict(
                     (k, v.to_dict(include_fields=self._record_fields))
                     for k, v in self._data.items()
@@ -969,7 +1000,7 @@ class Database(object):
                 # applications.
                 tty.debug("RECONSTRUCTING FROM OLD DB: {0}".format(entry.spec))
                 try:
-                    layout = None if entry.spec.external else spack.store.layout
+                    layout = None if entry.spec.external else directory_layout
                     kwargs = {
                         "spec": entry.spec,
                         "directory_layout": layout,
@@ -995,7 +1026,7 @@ class Database(object):
         counts = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
-            for dep in rec.spec.dependencies(deptype=_tracked_deps):
+            for dep in rec.spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
@@ -1084,13 +1115,13 @@ class Database(object):
     ):
         """Add an install record for this spec to the database.
 
-        Assumes spec is installed in ``layout.path_for_spec(spec)``.
+        Assumes spec is installed in ``directory_layout.path_for_spec(spec)``.
 
         Also ensures dependencies are present and updated in the DB as
         either installed or missing.
 
         Args:
-            spec: spec to be added
+            spec (spack.spec.Spec): spec to be added
             directory_layout: layout of the spec installation
             explicit:
                 Possible values: True, False, any
@@ -1117,7 +1148,7 @@ class Database(object):
         # Retrieve optional arguments
         installation_time = installation_time or _now()
 
-        for edge in spec.edges_to_dependencies(deptype=_tracked_deps):
+        for edge in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
             if edge.spec.dag_hash() in self._data:
                 continue
             # allow missing build-only deps. This prevents excessive
@@ -1125,7 +1156,7 @@ class Database(object):
             # is missing a build dep; there's no need to install the
             # build dep's build dep first, and there's no need to warn
             # about it missing.
-            dep_allow_missing = allow_missing or edge.deptypes == ("build",)
+            dep_allow_missing = allow_missing or edge.depflag == dt.BUILD
             self._add(
                 edge.spec,
                 directory_layout,
@@ -1169,10 +1200,10 @@ class Database(object):
             self._data[key] = InstallRecord(new_spec, path, installed, ref_count=0, **extra_args)
 
             # Connect dependencies from the DB to the new copy.
-            for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
+            for dep in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                new_spec._add_dependency(record.spec, deptypes=dep.deptypes)
+                new_spec._add_dependency(record.spec, depflag=dep.depflag, virtuals=dep.virtuals)
                 if not upstream:
                     record.ref_count += 1
 
@@ -1209,7 +1240,7 @@ class Database(object):
             match = self.query_one(spec, **kwargs)
             if match:
                 return match.dag_hash()
-            raise KeyError("No such spec in database! %s" % spec)
+            raise NoSuchSpecError(spec)
         return key
 
     @_autospec
@@ -1232,7 +1263,7 @@ class Database(object):
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
 
-            for dep in spec.dependencies(deptype=_tracked_deps):
+            for dep in spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
                 self._decrement_ref_count(dep)
 
     def _increment_ref_count(self, spec):
@@ -1262,8 +1293,8 @@ class Database(object):
 
         # Remove any reference to this node from dependencies and
         # decrement the reference count
-        rec.spec.detach(deptype=_tracked_deps)
-        for dep in rec.spec.dependencies(deptype=_tracked_deps):
+        rec.spec.detach(deptype=_TRACKED_DEPENDENCIES)
+        for dep in rec.spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
             self._decrement_ref_count(dep)
 
         if rec.deprecated_for:
@@ -1342,7 +1373,13 @@ class Database(object):
             return self._deprecate(spec, deprecator)
 
     @_autospec
-    def installed_relatives(self, spec, direction="children", transitive=True, deptype="all"):
+    def installed_relatives(
+        self,
+        spec,
+        direction="children",
+        transitive=True,
+        deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
+    ):
         """Return installed specs related to this one."""
         if direction not in ("parents", "children"):
             raise ValueError("Invalid direction: %s" % direction)
@@ -1379,10 +1416,7 @@ class Database(object):
 
     @_autospec
     def installed_extensions_for(self, extendee_spec):
-        """
-        Return the specs of all packages that extend
-        the given spec
-        """
+        """Returns the specs of all packages that extend the given spec"""
         for spec in self.query():
             if spec.package.extends(extendee_spec):
                 yield spec.package
@@ -1409,7 +1443,7 @@ class Database(object):
         # nothing found
         return default
 
-    def get_by_hash_local(self, *args, **kwargs):
+    def get_by_hash_local(self, dag_hash, default=None, installed=any):
         """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
 
         Arguments:
@@ -1433,7 +1467,7 @@ class Database(object):
 
         """
         with self.read_transaction():
-            return self._get_by_hash_local(*args, **kwargs)
+            return self._get_by_hash_local(dag_hash, default=default, installed=installed)
 
     def get_by_hash(self, dag_hash, default=None, installed=any):
         """Look up a spec by DAG hash, or by a DAG hash prefix.
@@ -1519,7 +1553,7 @@ class Database(object):
             if explicit is not any and rec.explicit != explicit:
                 continue
 
-            if known is not any and spack.repo.path.exists(rec.spec.name) != known:
+            if known is not any and known(rec.spec.name):
                 continue
 
             if start_date or end_date:
@@ -1534,7 +1568,7 @@ class Database(object):
 
     if _query.__doc__ is None:
         _query.__doc__ = ""
-    _query.__doc__ += _query_docstring
+    _query.__doc__ += _QUERY_DOCSTRING
 
     def query_local(self, *args, **kwargs):
         """Query only the local Spack database.
@@ -1548,7 +1582,7 @@ class Database(object):
 
     if query_local.__doc__ is None:
         query_local.__doc__ = ""
-    query_local.__doc__ += _query_docstring
+    query_local.__doc__ += _QUERY_DOCSTRING
 
     def query(self, *args, **kwargs):
         """Query the Spack database including all upstream databases."""
@@ -1567,7 +1601,7 @@ class Database(object):
 
     if query.__doc__ is None:
         query.__doc__ = ""
-    query.__doc__ += _query_docstring
+    query.__doc__ += _QUERY_DOCSTRING
 
     def query_one(self, query_spec, known=any, installed=True):
         """Query for exactly one spec that matches the query spec.
@@ -1660,8 +1694,22 @@ class InvalidDatabaseVersionError(SpackError):
             f"you need a newer Spack version to read the DB in '{database.root}'. "
             f"{self.database_version_message}"
         )
-        super(InvalidDatabaseVersionError, self).__init__(msg)
+        super().__init__(msg)
 
     @property
     def database_version_message(self):
         return f"The expected DB version is '{self.expected}', but '{self.found}' was found."
+
+
+class NoSuchSpecError(KeyError):
+    """Raised when a spec is not found in the database."""
+
+    def __init__(self, spec):
+        self.spec = spec
+        super().__init__(spec)
+
+    def __str__(self):
+        # This exception is raised frequently, and almost always
+        # caught, so ensure we don't pay the cost of Spec.__str__
+        # unless the exception is actually printed.
+        return f"No such spec in database: {self.spec}"

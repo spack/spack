@@ -29,6 +29,9 @@ class Pumi(CMakePackage):
     # to the added instability.
     version("master", submodules=True, branch="master")
     version(
+        "2.2.8", submodules=True, commit="736bb87ccd8db51fc499a1b91e53717a88841b1f"
+    )  # tag 2.2.8
+    version(
         "2.2.7", submodules=True, commit="a295720d7b4828282484f2b78bac1f6504512de4"
     )  # tag 2.2.7
     version("2.2.6", commit="4dd330e960b1921ae0d8d4039b8de8680a20d993")  # tag 2.2.6
@@ -95,15 +98,15 @@ class Pumi(CMakePackage):
             args += ["-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc]
         if spec.satisfies("@2.2.3"):
             args += ["-DCMAKE_CXX_STANDARD=11"]
-        if self.spec.satisfies("simmodsuite=base"):
+        if self.spec.variants["simmodsuite"].value != "none":
             args.append("-DENABLE_SIMMETRIX=ON")
-        if self.spec.satisfies("simmodsuite=kernels") or self.spec.satisfies("simmodsuite=full"):
-            args.append("-DENABLE_SIMMETRIX=ON")
-            args.append("-DSIM_PARASOLID=ON")
-            args.append("-DSIM_ACIS=ON")
-            args.append("-DSIM_DISCRETE=ON")
-            mpi_id = spec["mpi"].name + spec["mpi"].version.string
+            mpi_id = spec["mpi"].name + spec["mpi"].version.up_to(1).string
             args.append("-DSIM_MPI=" + mpi_id)
+            if self.spec.variants["simmodsuite"].value in ["kernels", "full"]:
+                args.append("-DENABLE_SIMMETRIX=ON")
+                args.append("-DSIM_PARASOLID=ON")
+                args.append("-DSIM_ACIS=ON")
+                args.append("-DSIM_DISCRETE=ON")
         return args
 
     def test(self):

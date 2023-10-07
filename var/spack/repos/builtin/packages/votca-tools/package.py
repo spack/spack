@@ -87,7 +87,7 @@ class VotcaTools(CMakePackage):
     patch(
         "https://github.com/votca/tools/pull/229.patch?full_index=1",
         sha256="2a9ef179904d5057f36a5ce533c002d8f5880dc4b3eba569825f4a7e7f055eb1",
-        when="@1.6:1.6.0+mkl",
+        when="@=1.6+mkl",
     )
     # https://github.com/votca/tools/pull/361, fix build with newer glibc/gcc, fixed in stable and 2021.1
     patch(

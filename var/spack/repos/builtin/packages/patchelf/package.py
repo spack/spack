@@ -18,6 +18,7 @@ class Patchelf(AutotoolsPackage):
 
     maintainers("haampie")
 
+    version("0.18.0", sha256="64de10e4c6b8b8379db7e87f58030f336ea747c0515f381132e810dbf84a86e7")
     version("0.17.2", sha256="20427b718dd130e4b66d95072c2a2bd5e17232e20dad58c1bea9da81fae330e0")
     version("0.16.1", sha256="1a562ed28b16f8a00456b5f9ee573bb1af7c39c1beea01d94fc0c7b3256b0406")
     version("0.15.0", sha256="53a8d58ed4e060412b8fdcb6489562b3c62be6f65cee5af30eba60f4423bfa0f")
@@ -56,29 +57,20 @@ class Patchelf(AutotoolsPackage):
             )
         )
 
-    def test(self):
+    def test_version(self):
+        """ensure patchelf version match"""
         # Check patchelf in prefix and reports the correct version
-        reason = "test: ensuring patchelf version is {0}".format(self.spec.version)
-        self.run_test(
-            "patchelf",
-            options="--version",
-            expected=["patchelf %s" % self.spec.version],
-            installed=True,
-            purpose=reason,
-        )
+        patchelf = which(self.prefix.bin.patchelf)
+        out = patchelf("--version", output=str.split, error=str.split)
+        expected = f"patchelf {self.spec.version}"
+        assert expected in out, f"Expected '{expected}' in output"
 
-        # Check the rpath is changed
+    def test_rpath_change(self):
+        """ensure patchelf can change rpath"""
         currdir = os.getcwd()
         hello_file = self.test_suite.current_test_data_dir.join("hello")
-        self.run_test(
-            "patchelf",
-            ["--set-rpath", currdir, hello_file],
-            purpose="test: ensuring that patchelf can change rpath",
-        )
 
-        self.run_test(
-            "patchelf",
-            options=["--print-rpath", hello_file],
-            expected=[currdir],
-            purpose="test: ensuring that patchelf changed rpath",
-        )
+        patchelf = which(self.prefix.bin.patchelf)
+        patchelf("--set-rpath", currdir, hello_file)
+        out = patchelf("--print-rpath", hello_file, output=str.split, error=str.split)
+        assert currdir in out, f"Expected '{currdir}' in output"
