@@ -21,6 +21,20 @@ from spack.util.prefix import Prefix
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    "23.9": {
+        "Linux-aarch64": (
+            "dd32ae4233438adb71b2b4f8891f04802fdf90f67036ecf18bfde1b6043a03c3",
+            "https://developer.download.nvidia.com/hpc-sdk/23.9/nvhpc_2023_239_Linux_aarch64_cuda_multi.tar.gz",
+        ),
+        "Linux-ppc64le": (
+            "984d61695499db098fd32be8345c1f7d7c637ea3bdb29cef17aad656f16b000f",
+            "https://developer.download.nvidia.com/hpc-sdk/23.9/nvhpc_2023_239_Linux_ppc64le_cuda_multi.tar.gz",
+        ),
+        "Linux-x86_64": (
+            "ecf343ecad2398e21c8d7f24a580b2932348017dfd8ea38c1ef31b37114b2d4b",
+            "https://developer.download.nvidia.com/hpc-sdk/23.9/nvhpc_2023_239_Linux_x86_64_cuda_multi.tar.gz",
+        ),
+    },
     "23.7": {
         "Linux-aarch64": (
             "d3b9b674045e6e17156b298941be4e1e1e7dea6a3c1938f14ad653b180860ff2",
