@@ -24,8 +24,9 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     variant("openmp", default=False, description="Use OpenMP support from subpackages")
 
     # Dependencies for all Beatnik versions
-    depends_on("blt", type='build')
     depends_on("mpi")
+    depends_on("mpi +cuda", when="+cuda")
+    depends_on("mpi +rocm", when="+rocm")
 
     # Kokkos dependencies
     depends_on("kokkos @4:")
@@ -40,6 +41,7 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
 
     # Silo dependencies
     depends_on("silo @4.11:")
+    depends_on("silo @4.11.1:", when="%cce") #silo has trouble with modern cce compilers and hdf5
 
     # Heffte dependencies
     depends_on("heffte +fftw") # We make heffte explicit so we can propagate the right 
@@ -72,15 +74,18 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         args = []
 
+        # Use hipcc as the c compiler if we are compiling for rocm. Doing it this way
+        # keeps the wrapper insted of changeing CMAKE_CXX_COMPILER keeps the spack wrapper
+        # and the rpaths it sets for us from the underlying spec.
         if "+rocm" in self.spec:
-            args.append("-DCMAKE_CXX_COMPILER={0}".format(self.spec["hip"].hipcc))
+            env["SPACK_CXX"] = self.spec["hip"].hipcc
 
-            rocm_arch = self.spec.variants["amdgpu_target"].value
-            if "none" not in rocm_arch:
-                args.append("-DCMAKE_CXX_FLAGS={0}".format(self.hip_flags(rocm_arch)))
-
-            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
-            if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
-                args.append(self.define("__skip_rocmclang", "ON"))
-
+        # If we're building with cray mpich, we need to make sure we get the GTL library for 
+        # gpu-aware MPI, since cabana and beatnik require it
+        if self.spec.satisfies("+rocm ^cray-mpich"):
+            gtl_dir = join_path(self.spec["cray-mpich"].prefix, "..", "..", "..", "gtl", "lib")
+            args.append("-DCMAKE_EXE_LINKER_FLAGS=-Wl,-rpath={0} -L{0} -lmpi_gtl_hsa".format(gtl_dir))
+        elif self.spec.satisfies("+cuda ^cray-mpich"):
+            gtl_dir = join_path(self.spec["cray-mpich"].prefix, "..", "..", "..", "gtl", "lib")
+            args.append("-DCMAKE_EXE_LINKER_FLAGS=-Wl,-rpath={0} -L{0} -lmpi_gtl_cuda".format(gtl_dir))
         return args
