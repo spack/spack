@@ -35,7 +35,7 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos +wrapper", when="%gcc+cuda") # XXX figure out what other compilers need the wrapper
 
     # Cabana dependencies
-    depends_on("cabana @0.6.0 +cajita +heffte +silo +hdf5 +mpi")
+    depends_on("cabana @0.6.0 +grid +heffte +silo +hdf5 +mpi")
     depends_on("cabana +cuda", when="+cuda")
     depends_on("cabana +rocm", when="+rocm")
 
