@@ -96,7 +96,7 @@ VALUE = r"([a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
 QUOTED_VALUE = r"[\"']+([a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
 
 VERSION = r"=?([a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
-VERSION_RANGE = rf"(({VERSION})?:({VERSION})?)"
+VERSION_RANGE = rf"({VERSION}:{VERSION}(?!=)|:{VERSION}(?!=)|{VERSION}:|:)"
 VERSION_LIST = rf"({VERSION_RANGE}|{VERSION})(\s*[,]\s*({VERSION_RANGE}|{VERSION}))*"
 
 
