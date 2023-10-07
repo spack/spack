@@ -510,7 +510,7 @@ def specfile_for(default_mock_concretization):
             "@12.1:12.6+debug~qt_4",
         ),
         (
-            "@10.4.0:10,11.3.0:target=aarch64:",
+            "@10.4.0:10,11.3.0: target=aarch64:",
             [
                 Token(TokenType.VERSION, value="@10.4.0:10,11.3.0:"),
                 Token(TokenType.KEY_VALUE_PAIR, value="target=aarch64:"),
@@ -600,6 +600,8 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         ("y ^x@@1.2", "y ^x@@1.2\n   ^^^^^"),
         ("x@1.2::", "x@1.2::\n      ^"),
         ("x::", "x::\n ^^"),
+        # interpreted as range `@1:target`; space is required after the colon
+        ("@1:target=aarch64:", "\n         ^^^^^^^^^"),
     ],
 )
 def test_error_reporting(text, expected_in_error):
