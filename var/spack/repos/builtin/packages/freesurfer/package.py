@@ -46,6 +46,7 @@ class Freesurfer(Package):
         env.set("SUBJECTS_DIR", join_path(self.prefix, "subjects"))
         env.set("FUNCTIONALS_DIR", join_path(self.prefix, "sessions"))
         env.extend(EnvironmentModifications.from_sourcing_file(source_file))
+        env.append_path("PERL5LIB", join_path(self.prefix, "mni/share/perl5"))
 
     def install(self, spec, prefix):
         scripts = ["sources.csh", "SetUpFreeSurfer.csh"]
