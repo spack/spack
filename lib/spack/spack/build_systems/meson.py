@@ -10,7 +10,7 @@ import llnl.util.filesystem as fs
 
 import spack.builder
 import spack.package_base
-from spack.directives import build_system, depends_on, variant
+from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
 
 from ._checks import BaseBuilder, execute_build_time_tests
@@ -47,6 +47,13 @@ class MesonPackage(spack.package_base.PackageBase):
         variant("strip", default=False, description="Strip targets on install")
         depends_on("meson", type="build")
         depends_on("ninja", type="build")
+        # Python detection in meson requires distutils to be importable, but distutils no longer
+        # exists in Python 3.12. In Spack, we can't use setuptools as distutils replacement,
+        # because the distutils-precedence.pth startup file that setuptools ships with is not run
+        # when setuptools is in PYTHONPATH; it has to be in system site-packages. In a future meson
+        # release, the distutils requirement will be dropped, so this conflict can be relaxed.
+        # We have patches to make it work with meson 1.1 and above.
+        conflicts("^python@3.12:", when="^meson@:1.0")
 
     def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass the specified

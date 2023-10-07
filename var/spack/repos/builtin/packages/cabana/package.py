@@ -38,8 +38,9 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     variant("heffte", default=False, description="Build with heFFTe support")
     variant("hypre", default=False, description="Build with HYPRE support")
     variant("silo", default=False, description="Build with SILO support")
-    variant("hdf5", default=False, description="Buld with HDF5 support")
-    variant("cajita", default=False, description="Build Cajita subpackage")
+    variant("hdf5", default=False, description="Build with HDF5 support")
+    variant("cajita", default=False, description="Build Cajita subpackage (Grid in 0.6:)")
+    variant("grid", default=False, description="Build Grid subpackage")
     variant("testing", default=False, description="Build unit tests")
     variant("examples", default=False, description="Build tutorial examples")
     variant("performance_testing", default=False, description="Build performance tests")
@@ -48,7 +49,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.16:", type="build", when="@0.5.0:")
 
     depends_on("googletest", type="test", when="+testing")
-    _versions = {":0.2": "-legacy", "0.3:": "@3.1:", "0.4:": "@3.2:", "master": "@3.4:"}
+    _versions = {":0.2": "-legacy", "0.3:": "@3.1:", "0.4:": "@3.2:", "0.6:": "@3.7:"}
     for _version in _versions:
         _kk_version = _versions[_version]
         for _backend in _kokkos_backends:
@@ -88,10 +89,10 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hypre-cmake@2.22.0:", when="@0.4.0:+hypre")
     depends_on("hypre-cmake@2.22.1:", when="@0.5.0:+hypre")
     depends_on("heffte@2.0.0", when="@0.4.0+heffte")
-    depends_on("heffte@2.1.0", when="@0.5.0+heffte")
-    depends_on("heffte@2.3.0", when="@0.6.0:+heffte")
-    depends_on("silo +mpi", when="@0.5.0:+silo")
-    depends_on("hdf5 +mpi", when="@0.6.0:+hdf5")
+    depends_on("heffte@2.1.0", when="@0.5.0:+heffte")
+    depends_on("heffte@2.3.0:", when="@0.6.0:+heffte")
+    depends_on("silo", when="@0.5.0:+silo")
+    depends_on("hdf5", when="@0.6.0:+hdf5")
     depends_on("mpi", when="+mpi")
 
     # Cabana automatically builds HDF5 support with newer cmake versions
@@ -99,6 +100,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
 
     # Cajita support requires MPI
     conflicts("+cajita ~mpi")
+    conflicts("+grid ~mpi")
 
     # Conflict variants only available in newer versions of cabana
     conflicts("+rocm", when="@:0.2.0")
@@ -122,9 +124,24 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
         else:
             require += ["MPI"]
 
+        # Cajita was renamed Grid in 0.6
+        if self.spec.satisfies("@0.6.0:"):
+            enable += ["GRID"]
+
         for category, cname in zip([enable, require], ["ENABLE", "REQUIRE"]):
             for var in category:
                 cbn_option = "Cabana_{0}_{1}".format(cname, var)
                 options.append(self.define_from_variant(cbn_option, var.lower()))
+
+        # Only enable user-requested options.
+        for var in require:
+            enabled_var = "+{0}".format(var.lower())
+            if enabled_var not in self.spec:
+                cbn_disable = "CMAKE_DISABLE_FIND_PACKAGE_{0}".format(var)
+                options.append(self.define(cbn_disable, "ON"))
+
+        # Use hipcc for HIP.
+        if "+rocm" in self.spec:
+            options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
 
         return options
