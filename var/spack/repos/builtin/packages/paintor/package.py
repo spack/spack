@@ -20,7 +20,7 @@ class Paintor(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
-        makefile.filter("CC = g\+\+", "CC = {}".format(spack_cxx))
+        makefile.filter("CC = g\\+\\+", f"CC = {spack_cxx}")
         makefile.filter(
             r"(.*)-I/\$\(curr\)/eigen/Eigen(.*)",
             r"\1-I{}/eigen3/Eigen\2".format(spec["eigen"].prefix.include),
