@@ -94,7 +94,7 @@ class Pythia8(AutotoolsPackage):
     depends_on("openmpi", when="+openmpi")
     depends_on("mpich", when="+mpich")
     depends_on("hdf5", when="+hdf5")
-    depends_on("highfive@2.2", when="+hdf5")
+    depends_on("highfive@2.2:", when="+hdf5")
 
     extends("python", when="+python")
 
