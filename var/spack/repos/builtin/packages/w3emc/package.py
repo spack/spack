@@ -16,7 +16,7 @@ class W3emc(CMakePackage):
     url = "https://github.com/NOAA-EMC/NCEPLIBS-w3emc/archive/refs/tags/v2.9.0.tar.gz"
     git = "https://github.com/NOAA-EMC/NCEPLIBS-w3emc"
 
-    maintainers("t-brown", "AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
+    maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
     version("develop", branch="develop")
     version("2.11.0", sha256="53a03d03421c5da699b026ca220512ed494a531b83284693f66d2579d570c43b")
@@ -57,7 +57,7 @@ class W3emc(CMakePackage):
 
     def setup_run_environment(self, env):
         if self.spec.satisfies("@:2.9"):
-            suffixes = ["4", "d", "8"]
+            suffixes = ("4", "d", "8")
             shared = False
         else:
             suffixes = self.spec.variants["precision"].value
@@ -82,3 +82,7 @@ class W3emc(CMakePackage):
         ]
 
         return args
+
+    def check(self):
+        with working_dir(self.builder.build_directory):
+            make("test")
