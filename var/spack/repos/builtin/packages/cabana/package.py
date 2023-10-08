@@ -89,7 +89,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hypre-cmake@2.22.0:", when="@0.4.0:+hypre")
     depends_on("hypre-cmake@2.22.1:", when="@0.5.0:+hypre")
     depends_on("heffte@2.0.0", when="@0.4.0+heffte")
-    depends_on("heffte@2.1.0", when="@0.5.0:+heffte")
+    depends_on("heffte@2.1.0", when="@0.5.0+heffte")
     depends_on("heffte@2.3.0:", when="@0.6.0:+heffte")
     depends_on("silo", when="@0.5.0:+silo")
     depends_on("hdf5", when="@0.6.0:+hdf5")
