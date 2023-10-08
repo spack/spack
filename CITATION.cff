@@ -62,6 +62,8 @@ preferred-citation:
     city: "Austin"
     region: "Texas"
     country: "US"
+    date-start: 2015-11-15
+    date-end: 2015-11-20
   month: 11
   year: 2015
   identifiers:
