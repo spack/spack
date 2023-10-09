@@ -12,6 +12,7 @@ class Glog(Package):
     homepage = "https://github.com/google/glog"
     url = "https://github.com/google/glog/archive/v0.3.5.tar.gz"
 
+    version("0.6.0", sha256="8a83bf982f37bb70825df71a9709fa90ea9f4447fb3c099e1d720a439d88bad6")
     version("0.4.0", sha256="f28359aeba12f30d73d9e4711ef356dc842886968112162bc73002645139c39c")
     version("0.3.5", sha256="7580e408a2c0b5a89ca214739978ce6ff480b5e7d8d7698a2aa92fadc484d1e0")
     version(

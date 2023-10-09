@@ -125,7 +125,7 @@ class Amber(Package, CudaPackage):
     variant("x11", description="Build programs that require X11", default=False)
     variant("update", description="Update the sources prior compilation", default=False)
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2")
     depends_on("flex", type="build")
     depends_on("bison", type="build")
@@ -201,11 +201,7 @@ class Amber(Package, CudaPackage):
 
         # Base configuration
         conf = Executable("./configure")
-        base_args = [
-            "--skip-python",
-            "--with-netcdf",
-            self.spec["netcdf-fortran"].prefix,
-        ]
+        base_args = ["--skip-python", "--with-netcdf", self.spec["netcdf-fortran"].prefix]
         if self.spec.satisfies("~x11"):
             base_args += ["-noX11"]
 

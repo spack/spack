@@ -18,7 +18,7 @@ class Amrvis(MakefilePackage):
 
     maintainers("etpalmer63")
 
-    version("main", tag="main")
+    version("main", branch="main")
 
     variant(
         "dims",
@@ -71,10 +71,7 @@ class Amrvis(MakefilePackage):
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85440
         if self.spec.target.family not in ["x86_64", "ppc64le"]:
             comps = join_path("amrex", "Tools", "GNUMake", "comps")
-            maks = [
-                join_path(comps, "gnu.mak"),
-                join_path(comps, "llvm.mak"),
-            ]
+            maks = [join_path(comps, "gnu.mak"), join_path(comps, "llvm.mak")]
             for mak in maks:
                 filter_file("-lquadmath", "", mak)
 

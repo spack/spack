@@ -112,6 +112,7 @@ class Aocc(Compiler):
         match = re.search(r"AOCC_(\d+)[._](\d+)[._](\d+)", output)
         if match:
             return ".".join(match.groups())
+        return "unknown"
 
     @classmethod
     def fc_version(cls, fortran_compiler):
@@ -143,5 +144,5 @@ class Aocc(Compiler):
     def _handle_default_flag_addtions(self):
         # This is a known issue for AOCC 3.0 see:
         # https://developer.amd.com/wp-content/resources/AOCC-3.0-Install-Guide.pdf
-        if self.real_version == ver("3.0.0"):
+        if self.real_version.satisfies(ver("3.0.0")):
             return "-Wno-unused-command-line-argument " "-mllvm -eliminate-similar-expr=false"

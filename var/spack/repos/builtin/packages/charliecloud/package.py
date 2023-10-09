@@ -17,7 +17,27 @@ class Charliecloud(AutotoolsPackage):
     tags = ["e4s"]
 
     version("master", branch="master")
-    version("0.30", sha256="97d45b25c9f813d8bae79b16de49503a165bc94c05dd2166975154d9b6ac78e9")
+    version("0.34", sha256="034080c162949f4344ae1011cda026d4bb3ecd5cdb53135ac06d236f87e3b27d")
+    version(
+        "0.33",
+        deprecated=True,
+        sha256="ed2bd3589d1e5f7b33a1542c887d69856f6d7d57a6ec8ef5b8e9335eda48a045",
+    )
+    version(
+        "0.32",
+        deprecated=True,
+        sha256="47826b14966c400b250c35ff28a903f8e5b5e12d9e2a2b473e0f00f4e8393c47",
+    )
+    version(
+        "0.31",
+        deprecated=True,
+        sha256="7305c3d9010386c1b96fb95297feccb5c9d7ff82a3377d1d98eb8faef76bced9",
+    )
+    version(
+        "0.30",
+        deprecated=True,
+        sha256="97d45b25c9f813d8bae79b16de49503a165bc94c05dd2166975154d9b6ac78e9",
+    )
     version(
         "0.29",
         deprecated=True,
@@ -74,6 +94,7 @@ class Charliecloud(AutotoolsPackage):
         sha256="15ce63353afe1fc6bcc10979496a54fcd5628f997cb13c827c9fc7afb795bdc5",
     )
     variant("docs", default=False, description="Build man pages and html docs")
+    variant("squashfuse", default=False, description="Build with squashfuse support")
 
     # Autoconf.
     depends_on("m4", type="build")
@@ -102,6 +123,10 @@ class Charliecloud(AutotoolsPackage):
     # See https://github.com/spack/spack/pull/16049.
     conflicts("platform=darwin", msg="This package does not build on macOS")
 
+    # Squashfuse support
+    depends_on("squashfuse@0.1.105:", when="+squashfuse")
+    depends_on("squashfs", type="run", when="+squashfuse")
+
     def autoreconf(self, spec, prefix):
         which("bash")("autogen.sh")
 
@@ -116,5 +141,9 @@ class Charliecloud(AutotoolsPackage):
             args.append("--with-sphinx-build={0}".format(sphinx_bin.join("sphinx-build")))
         else:
             args.append("--disable-html")
+
+        if "+squashfuse" in self.spec:
+            squashfuse_prefix = "{0}".format(self.spec["squashfuse"].prefix)
+            args.append("--with-libsquashfuse={0}".format(squashfuse_prefix))
 
         return args

@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import argparse
 import sys
 
@@ -26,7 +24,6 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="compiler_command")
 
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
 
     # Find
     find_parser = sp.add_parser(
@@ -38,7 +35,7 @@ def setup_parser(subparser):
     find_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_modify_scope("compilers"),
         help="configuration scope to modify",
     )
@@ -52,8 +49,8 @@ def setup_parser(subparser):
     remove_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
-        default=spack.config.default_modify_scope("compilers"),
+        metavar=spack.config.SCOPES_METAVAR,
+        default=None,
         help="configuration scope to modify",
     )
 
@@ -62,7 +59,7 @@ def setup_parser(subparser):
     list_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_list_scope(),
         help="configuration scope to read from",
     )
@@ -73,7 +70,7 @@ def setup_parser(subparser):
     info_parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         default=spack.config.default_list_scope(),
         help="configuration scope to read from",
     )
@@ -95,10 +92,10 @@ def compiler_find(args):
         n = len(new_compilers)
         s = "s" if n > 1 else ""
 
-        config = spack.config.config
+        config = spack.config.CONFIG
         filename = config.get_config_filename(args.scope, "compilers")
         tty.msg("Added %d new compiler%s to %s" % (n, s, filename))
-        colify(reversed(sorted(c.spec for c in new_compilers)), indent=4)
+        colify(reversed(sorted(c.spec.display_str for c in new_compilers)), indent=4)
     else:
         tty.msg("Found no new compilers")
     tty.msg("Compilers are defined in the following files:")
@@ -106,19 +103,21 @@ def compiler_find(args):
 
 
 def compiler_remove(args):
-    cspec = spack.spec.CompilerSpec(args.compiler_spec)
-    compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
-    if not compilers:
-        tty.die("No compilers match spec %s" % cspec)
-    elif not args.all and len(compilers) > 1:
-        tty.error("Multiple compilers match spec %s. Choose one:" % cspec)
-        colify(reversed(sorted([c.spec for c in compilers])), indent=4)
+    compiler_spec = spack.spec.CompilerSpec(args.compiler_spec)
+    candidate_compilers = spack.compilers.compilers_for_spec(compiler_spec, scope=args.scope)
+
+    if not candidate_compilers:
+        tty.die("No compilers match spec %s" % compiler_spec)
+
+    if not args.all and len(candidate_compilers) > 1:
+        tty.error(f"Multiple compilers match spec {compiler_spec}. Choose one:")
+        colify(reversed(sorted([c.spec.display_str for c in candidate_compilers])), indent=4)
         tty.msg("Or, use `spack compiler remove -a` to remove all of them.")
         sys.exit(1)
 
-    for compiler in compilers:
-        spack.compilers.remove_compiler_from_config(compiler.spec, scope=args.scope)
-        tty.msg("Removed compiler %s" % compiler.spec)
+    for current_compiler in candidate_compilers:
+        spack.compilers.remove_compiler_from_config(current_compiler.spec, scope=args.scope)
+        tty.msg(f"{current_compiler.spec.display_str} has been removed")
 
 
 def compiler_info(args):
@@ -130,7 +129,7 @@ def compiler_info(args):
         tty.die("No compilers match spec %s" % cspec)
     else:
         for c in compilers:
-            print(str(c.spec) + ":")
+            print(c.spec.display_str + ":")
             print("\tpaths:")
             for cpath in ["cc", "cxx", "f77", "fc"]:
                 print("\t\t%s = %s" % (cpath, getattr(c, cpath, None)))
@@ -186,9 +185,9 @@ def compiler_list(args):
         os_str = os
         if target:
             os_str += "-%s" % target
-        cname = "%s{%s} %s" % (spack.spec.compiler_color, name, os_str)
+        cname = "%s{%s} %s" % (spack.spec.COMPILER_COLOR, name, os_str)
         tty.hline(colorize(cname), char="-")
-        colify(reversed(sorted(c.spec for c in compilers)))
+        colify(reversed(sorted(c.spec.display_str for c in compilers)))
 
 
 def compiler(parser, args):

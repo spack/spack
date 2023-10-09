@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
-import sys
 
 import pytest
+
+from llnl.util.filesystem import touch
 
 import spack.paths
 
@@ -63,32 +64,12 @@ def builder_test_repository():
         # Generate custom phases using a GenericBuilder
         (
             "custom-phases",
-            [
-                ("CONFIGURE_CALLED", "1"),
-                ("INSTALL_CALLED", "1"),
-                ("LAST_PHASE", "INSTALL"),
-            ],
+            [("CONFIGURE_CALLED", "1"), ("INSTALL_CALLED", "1"), ("LAST_PHASE", "INSTALL")],
         ),
         # Old-style package, with phase defined in base builder
-        (
-            "old-style-autotools@1.0",
-            [
-                ("AFTER_AUTORECONF_1_CALLED", "1"),
-            ],
-        ),
-        (
-            "old-style-autotools@2.0",
-            [
-                ("AFTER_AUTORECONF_2_CALLED", "1"),
-            ],
-        ),
-        (
-            "old-style-custom-phases",
-            [
-                ("AFTER_CONFIGURE_CALLED", "1"),
-                ("TEST_VALUE", "0"),
-            ],
-        ),
+        ("old-style-autotools@1.0", [("AFTER_AUTORECONF_1_CALLED", "1")]),
+        ("old-style-autotools@2.0", [("AFTER_AUTORECONF_2_CALLED", "1")]),
+        ("old-style-custom-phases", [("AFTER_CONFIGURE_CALLED", "1"), ("TEST_VALUE", "0")]),
     ],
 )
 @pytest.mark.usefixtures("builder_test_repository", "config")
@@ -124,10 +105,7 @@ def test_old_style_compatibility_with_super(spec_str, method_name, expected):
     assert value == expected
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="log_ouput cannot currently be used outside of subprocess on Windows",
-)
+@pytest.mark.not_on_windows("log_ouput cannot currently be used outside of subprocess on Windows")
 @pytest.mark.regression("33928")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 @pytest.mark.disable_clean_stage_check
@@ -145,6 +123,7 @@ def test_build_time_tests_are_executed_from_default_builder():
 @pytest.mark.regression("34518")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 def test_monkey_patching_wrapped_pkg():
+    """Confirm 'run_tests' is accessible through wrappers."""
     s = spack.spec.Spec("old-style-autotools").concretized()
     builder = spack.builder.create(s.package)
     assert s.package.run_tests is False
@@ -159,12 +138,29 @@ def test_monkey_patching_wrapped_pkg():
 @pytest.mark.regression("34440")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 def test_monkey_patching_test_log_file():
+    """Confirm 'test_log_file' is accessible through wrappers."""
     s = spack.spec.Spec("old-style-autotools").concretized()
     builder = spack.builder.create(s.package)
-    assert s.package.test_log_file is None
-    assert builder.pkg.test_log_file is None
-    assert builder.pkg_with_dispatcher.test_log_file is None
 
-    s.package.test_log_file = "/some/file"
-    assert builder.pkg.test_log_file == "/some/file"
-    assert builder.pkg_with_dispatcher.test_log_file == "/some/file"
+    s.package.tester.test_log_file = "/some/file"
+    assert builder.pkg.tester.test_log_file == "/some/file"
+    assert builder.pkg_with_dispatcher.tester.test_log_file == "/some/file"
+
+
+# Windows context manager's __exit__ fails with ValueError ("I/O operation
+# on closed file").
+@pytest.mark.not_on_windows("Does not run on windows")
+def test_install_time_test_callback(tmpdir, config, mock_packages, mock_stage):
+    """Confirm able to run stand-alone test as a post-install callback."""
+    s = spack.spec.Spec("py-test-callback").concretized()
+    builder = spack.builder.create(s.package)
+    builder.pkg.run_tests = True
+    s.package.tester.test_log_file = tmpdir.join("install_test.log")
+    touch(s.package.tester.test_log_file)
+
+    for phase_fn in builder:
+        phase_fn.execute()
+
+    with open(s.package.tester.test_log_file, "r") as f:
+        results = f.read().replace("\n", " ")
+        assert "PyTestCallback test" in results

@@ -17,6 +17,7 @@ class RMultcomp(RPackage):
 
     cran = "multcomp"
 
+    version("1.4-23", sha256="425154a58bd8f2dbaff5d16e97b03473cbc0d571b1c2e4dd66a13c6d20a8cde1")
     version("1.4-20", sha256="328be4fa4189bde4a7bc645d9ae5ea071ebe31ed658c8c48c4e45aa8e8c42cfc")
     version("1.4-19", sha256="f03473b1cfbc714cd85a0ee948e2ecdb23bcdccbe95e27237ee25e9c71e3e557")
     version("1.4-18", sha256="107a5e65cfff158b271d7386240dc8672d8cf45313f016e0ed83767faf7c2806")

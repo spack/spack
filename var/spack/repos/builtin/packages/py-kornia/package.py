@@ -12,6 +12,10 @@ class PyKornia(PythonPackage):
     homepage = "https://www.kornia.org/"
     pypi = "kornia/kornia-0.5.10.tar.gz"
 
+    version("0.7.0", sha256="72cba6a0965a15caf10a664647654412effb7c0b9afcf40e458bc005f976ffac")
+    version("0.6.12", sha256="e30bd3d830226f7a159dff1f7757c6200e8f27d1333f06e9d2f98bdb33ce18d3")
+    version("0.6.11", sha256="ba77198f2c2e4044c87e4503ff277aadbfc0db20495da5a5289663f380b4be32")
+    version("0.6.10", sha256="00b4e8990b5ccdc589e3ecc2613446623b0ffb2fe1db5598aac55513b4016903")
     version("0.6.9", sha256="b756bba0db8d47046417fa72271b2d648c570ec6f1d61e1805e6a36911f63bb9")
     version("0.6.8", sha256="0985e02453c0ab4f030e8d22a3a7554dab312ffa8f8a54ec872190e6f0b58c56")
     version("0.6.7", sha256="7ff57c931551a1a1465aaac1fa6842a2aad650f51a0f9bf6cf0b0f7d6e5fb59c")
@@ -23,9 +27,16 @@ class PyKornia(PythonPackage):
     version("0.6.1", sha256="f638fb3309f88666545866c162f510b6d485fd8f7131d5570d4e6c0d295fdcd6")
     version("0.5.10", sha256="428b4b934a2ba7360cc6cba051ed8fd96c2d0f66611fdca0834e82845f14f65d")
 
+    # pyproject.toml
+    depends_on("python@3.8:", when="@0.7:", type=("build", "run"))
+    depends_on("py-setuptools@61.2:", when="@0.6.11:", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", type="build")
+
+    # requirements/requirements.txt
     depends_on("py-packaging", when="@0.6:", type=("build", "run"))
     depends_on("py-torch@1.9.1:", when="@0.6.9:", type=("build", "run"))
     depends_on("py-torch@1.8.1:", when="@0.6:", type=("build", "run"))
     depends_on("py-torch@1.6.0:", type=("build", "run"))
+
+    # Historical dependencies
+    depends_on("py-pytest-runner", when="@:0.6.10", type="build")

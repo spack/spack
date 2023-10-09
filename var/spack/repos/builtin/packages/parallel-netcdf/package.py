@@ -115,12 +115,7 @@ class ParallelNetcdf(AutotoolsPackage):
         args += self.enable_or_disable("cxx")
         args += self.enable_or_disable("fortran")
 
-        flags = {
-            "CFLAGS": [],
-            "CXXFLAGS": [],
-            "FFLAGS": [],
-            "FCFLAGS": [],
-        }
+        flags = {"CFLAGS": [], "CXXFLAGS": [], "FFLAGS": [], "FCFLAGS": []}
 
         if "+pic" in self.spec:
             flags["CFLAGS"].append(self.compiler.cc_pic_flag)

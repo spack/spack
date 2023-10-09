@@ -152,9 +152,7 @@ def test_ordered_replacement():
 
     # Too short matching suffix, identical string length
     error_msg = "Cannot replace {!r} with {!r} in the C-string {!r}.".format(
-        b"pkg-gwixwaxlgczp6",
-        b"pkg-zkesfrzlgczp6",
-        b"pkg-gwixwaxlgczp6",
+        b"pkg-gwixwaxlgczp6", b"pkg-zkesfrzlgczp6", b"pkg-gwixwaxlgczp6"
     )
     with pytest.raises(relocate_text.CannotShrinkCString, match=error_msg):
         replace_and_expect(
@@ -169,9 +167,7 @@ def test_ordered_replacement():
     # at a distance where we cant keep a long enough suffix, and one where we can,
     # so we should expect failure when the first null is used.
     error_msg = "Cannot replace {!r} with {!r} in the C-string {!r}.".format(
-        b"pkg-abcdef",
-        b"pkg-xyzabc",
-        b"pkg-abcdef",
+        b"pkg-abcdef", b"pkg-xyzabc", b"pkg-abcdef"
     )
     with pytest.raises(relocate_text.CannotShrinkCString, match=error_msg):
         replace_and_expect(
@@ -231,11 +227,7 @@ def test_inplace_text_replacement():
         b"Install path: /replacement.",
     )
 
-    replace_and_expect(
-        [(b"/my/prefix", b"/replacement")],
-        b"#!/my/prefix",
-        b"#!/replacement",
-    )
+    replace_and_expect([(b"/my/prefix", b"/replacement")], b"#!/my/prefix", b"#!/replacement")
 
 
 def test_relocate_text_filters_redundant_entries():

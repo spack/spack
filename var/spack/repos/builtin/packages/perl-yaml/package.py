@@ -14,4 +14,5 @@ class PerlYaml(PerlPackage):
     homepage = "https://metacpan.org/pod/YAML"
     url = "https://cpan.metacpan.org/authors/id/T/TI/TINITA/YAML-1.27.tar.gz"
 
+    version("1.30", sha256="5030a6d6cbffaf12583050bf552aa800d4646ca9678c187add649227f57479cd")
     version("1.27", sha256="c992a1e820de0721b62b22521de92cdbf49edc306ab804c485b4b1ec25f682f9")

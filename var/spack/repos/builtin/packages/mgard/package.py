@@ -18,25 +18,39 @@ class Mgard(CMakePackage, CudaPackage):
 
     maintainers("robertu94")
 
+    tags = ["e4s"]
+
+    version("2023-03-31", commit="a8a04a86ff30f91d0b430a7c52960a12fa119589", preferred=True)
+    version("2023-01-10", commit="3808bd8889a0f8e6647fc0251a3189bc4dfc920f")
     version("2022-11-18", commit="72dd230ed1af88f62ed3c0f662e2387a6e587748")
     version("2021-11-12", commit="3c05c80a45a51bb6cc5fb5fffe7b1b16787d3366")
     version("2020-10-01", commit="b67a0ac963587f190e106cc3c0b30773a9455f7a")
 
-    variant("serial", when="@2022-11-18:", default=True)
-    variant("openmp", when="@2022-11-18:", default=True)
-    variant("timing", when="@2022-11-18:", default=False)
-    variant("unstructured", when="@2022-11-18:", default=False)
+    variant(
+        "serial",
+        when="@2022-11-18:",
+        default=True,
+        description="Enable the classic non-parallel implmementation",
+    )
+    variant("openmp", when="@2022-11-18:", default=True, description="Enable OpenMP support")
+    variant("timing", when="@2022-11-18:", default=False, description="Enable profile timings")
+    variant(
+        "unstructured",
+        when="@2022-11-18:",
+        default=False,
+        description="Enable experimental unstructured mesh support",
+    )
 
     depends_on("python", type=("build",), when="@2022-11-18:")
     depends_on("sed", type=("build",), when="@2022-11-18:")
-    depends_on("zlib")
-    depends_on("pkgconf", type=("build",), when="@2022-11-18:")
+    depends_on("zlib-api")
+    depends_on("pkgconfig", type=("build",), when="@2022-11-18:")
     depends_on("zstd")
-    depends_on("protobuf", when="@2022-11-18:")
+    depends_on("protobuf@:3.21.12", when="@2022-11-18:")
     depends_on("libarchive", when="@2021-11-12:")
     depends_on("tclap", when="@2021-11-12")
     depends_on("yaml-cpp", when="@2021-11-12:")
-    depends_on("cmake@3.19:")
+    depends_on("cmake@3.19:", type="build")
     depends_on("nvcomp@2.2.0:", when="@2022-11-18:+cuda")
     depends_on("nvcomp@2.0.2", when="@:2021-11-12+cuda")
     conflicts("cuda_arch=none", when="+cuda")
@@ -46,11 +60,14 @@ class Mgard(CMakePackage, CudaPackage):
     conflicts("%gcc@:7", when="@2022-11-18:", msg="requires std::optional and other c++17 things")
 
     def cmake_args(self):
+        spec = self.spec
         args = ["-DBUILD_TESTING=OFF"]
         args.append(self.define_from_variant("MGARD_ENABLE_CUDA", "cuda"))
-        if "+cuda" in self.spec:
-            cuda_arch = self.spec.variants["cuda_arch"].value
-            args.append("-DCUDA_ARCH_STRING={}".format(";".join(cuda_arch)))
+        if "+cuda" in spec:
+            cuda_arch_list = spec.variants["cuda_arch"].value
+            arch_str = ";".join(cuda_arch_list)
+            if cuda_arch_list[0] != "none":
+                args.append(self.define("CMAKE_CUDA_ARCHITECTURES", arch_str))
         if self.spec.satisfies("@:2021-11-12"):
             if "+cuda" in self.spec:
                 if "75" in cuda_arch:

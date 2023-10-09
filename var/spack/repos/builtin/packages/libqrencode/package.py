@@ -32,9 +32,7 @@ class Libqrencode(AutotoolsPackage):
         # We had to call for autoreconf as well:
         # https://stackoverflow.com/questions/3096989/libtool-version-mismatch-error
         # There appears $LIBTOOLIZE --force --automake --copy is not necessary
-        args = [
-            "autoreconf --force --install",
-        ]
+        args = ["autoreconf --force --install"]
         with open("autogen.sh", "a") as fh:
             fh.write("\n".join(args))
         # https://fukuchi.org/works/qrencode/

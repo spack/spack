@@ -28,7 +28,6 @@ class Simplemoc(MakefilePackage):
 
     @property
     def build_targets(self):
-
         targets = []
 
         cflags = "-std=gnu99"

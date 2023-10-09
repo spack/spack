@@ -27,10 +27,7 @@ class PpopenApplAmrFdm(MakefilePackage):
         mkdirp("bin")
         mkdirp("lib")
         mkdirp("include")
-        fflags = [
-            "-O3",
-            "-I.",
-        ]
+        fflags = ["-O3", "-I."]
         makefile_in = FileFilter("Makefile.in")
         makefile_in.filter("^PREFIX +=.*", "PREFIX = {0}".format(prefix))
         makefile_in.filter("^INCDIR +=.*", "INCDIR = {0}/include".format(self.build_directory))

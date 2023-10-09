@@ -15,11 +15,13 @@ class RStars(RPackage):
 
     cran = "stars"
 
+    version("0.6-1", sha256="1f78db3adab9ebbfc9d98c6cc592708d893b5d7fd7fd876af454042ef42204a7")
     version("0.5-6", sha256="e0413c95423635f7f7b2520813382e911257da8ace9b743da9fe3eab568a9461")
 
     depends_on("r@3.3.0:", type=("build", "run"))
     depends_on("r-abind", type=("build", "run"))
     depends_on("r-sf@1.0-8:", type=("build", "run"))
+    depends_on("r-sf@1.0-10:", type=("build", "run"), when="@0.6-1:")
     depends_on("r-classint@0.4-1:", type=("build", "run"))
     depends_on("r-lwgeom", type=("build", "run"))
     depends_on("r-rlang", type=("build", "run"))

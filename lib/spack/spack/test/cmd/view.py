@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
-import sys
 
 import pytest
 
@@ -16,7 +15,7 @@ extensions = SpackCommand("extensions")
 install = SpackCommand("install")
 view = SpackCommand("view")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def create_projection_file(tmpdir, projection):

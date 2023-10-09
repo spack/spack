@@ -3,14 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import argparse
 import fnmatch
 import os
 import re
 import shutil
 import sys
+from collections import Counter
 
 from llnl.util import lang, tty
 from llnl.util.tty import colify
@@ -33,44 +32,38 @@ def setup_parser(subparser):
 
     # Run
     run_parser = sp.add_parser(
-        "run",
-        description=test_run.__doc__,
-        help=spack.cmd.first_line(test_run.__doc__),
+        "run", description=test_run.__doc__, help=spack.cmd.first_line(test_run.__doc__)
     )
 
-    alias_help_msg = "Provide an alias for this test-suite"
-    alias_help_msg += " for subsequent access."
-    run_parser.add_argument("--alias", help=alias_help_msg)
+    run_parser.add_argument(
+        "--alias", help="provide an alias for this test-suite for subsequent access"
+    )
 
     run_parser.add_argument(
         "--fail-fast",
         action="store_true",
-        help="Stop tests for each package after the first failure.",
+        help="stop tests for each package after the first failure",
     )
     run_parser.add_argument(
-        "--fail-first", action="store_true", help="Stop after the first failed package."
+        "--fail-first", action="store_true", help="stop after the first failed package"
     )
     run_parser.add_argument(
-        "--externals", action="store_true", help="Test packages that are externally installed."
+        "--externals", action="store_true", help="test packages that are externally installed"
     )
     run_parser.add_argument(
         "-x",
         "--explicit",
         action="store_true",
-        help="Only test packages that are explicitly installed.",
+        help="only test packages that are explicitly installed",
     )
     run_parser.add_argument(
-        "--keep-stage", action="store_true", help="Keep testing directory for debugging"
+        "--keep-stage", action="store_true", help="keep testing directory for debugging"
     )
     arguments.add_common_arguments(run_parser, ["log_format"])
-    run_parser.add_argument(
-        "--log-file",
-        default=None,
-        help="filename for the log file. if not passed a default will be used",
-    )
+    run_parser.add_argument("--log-file", default=None, help="filename for the log file")
     arguments.add_cdash_args(run_parser, False)
     run_parser.add_argument(
-        "--help-cdash", action="store_true", help="Show usage instructions for CDash reporting"
+        "--help-cdash", action="store_true", help="show usage instructions for CDash reporting"
     )
 
     cd_group = run_parser.add_mutually_exclusive_group()
@@ -80,9 +73,7 @@ def setup_parser(subparser):
 
     # List
     list_parser = sp.add_parser(
-        "list",
-        description=test_list.__doc__,
-        help=spack.cmd.first_line(test_list.__doc__),
+        "list", description=test_list.__doc__, help=spack.cmd.first_line(test_list.__doc__)
     )
     list_parser.add_argument(
         "-a",
@@ -96,24 +87,20 @@ def setup_parser(subparser):
 
     # Find
     find_parser = sp.add_parser(
-        "find",
-        description=test_find.__doc__,
-        help=spack.cmd.first_line(test_find.__doc__),
+        "find", description=test_find.__doc__, help=spack.cmd.first_line(test_find.__doc__)
     )
     find_parser.add_argument(
         "filter",
         nargs=argparse.REMAINDER,
-        help="optional case-insensitive glob patterns to filter results.",
+        help="optional case-insensitive glob patterns to filter results",
     )
 
     # Status
     status_parser = sp.add_parser(
-        "status",
-        description=test_status.__doc__,
-        help=spack.cmd.first_line(test_status.__doc__),
+        "status", description=test_status.__doc__, help=spack.cmd.first_line(test_status.__doc__)
     )
     status_parser.add_argument(
-        "names", nargs=argparse.REMAINDER, help="Test suites for which to print status"
+        "names", nargs=argparse.REMAINDER, help="test suites for which to print status"
     )
 
     # Results
@@ -147,21 +134,19 @@ def setup_parser(subparser):
 
     # Remove
     remove_parser = sp.add_parser(
-        "remove",
-        description=test_remove.__doc__,
-        help=spack.cmd.first_line(test_remove.__doc__),
+        "remove", description=test_remove.__doc__, help=spack.cmd.first_line(test_remove.__doc__)
     )
     arguments.add_common_arguments(remove_parser, ["yes_to_all"])
     remove_parser.add_argument(
-        "names", nargs=argparse.REMAINDER, help="Test suites to remove from test stage"
+        "names", nargs=argparse.REMAINDER, help="test suites to remove from test stage"
     )
 
 
 def test_run(args):
-    """Run tests for the specified installed packages.
+    """run tests for the specified installed packages
 
-    If no specs are listed, run tests for all packages in the current
-    environment or all installed packages if there is no active environment.
+    if no specs are listed, run tests for all packages in the current
+    environment or all installed packages if there is no active environment
     """
     if args.alias:
         suites = spack.install_test.get_named_test_suites(args.alias)
@@ -189,11 +174,7 @@ def test_run(args):
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
     specs_to_test = []
     for spec in specs:
-        matching = spack.store.db.query_local(
-            spec,
-            hashes=hashes,
-            explicit=explicit,
-        )
+        matching = spack.store.STORE.db.query_local(spec, hashes=hashes, explicit=explicit)
         if spec and not matching:
             tty.warn("No {0}installed packages match spec {1}".format(explicit_str, spec))
             """
@@ -228,14 +209,7 @@ def test_run(args):
 
 
 def report_filename(args, test_suite):
-    if args.log_file:
-        if os.path.isabs(args.log_file):
-            return args.log_file
-        else:
-            log_dir = os.getcwd()
-            return os.path.join(log_dir, args.log_file)
-    else:
-        return os.path.join(os.getcwd(), "test-%s" % test_suite.name)
+    return os.path.abspath(args.log_file or "test-{}".format(test_suite.name))
 
 
 def create_reporter(args, specs_to_test, test_suite):
@@ -253,18 +227,17 @@ def create_reporter(args, specs_to_test, test_suite):
 
 
 def test_list(args):
-    """List installed packages with available tests."""
-    tagged = set(spack.repo.path.packages_with_tags(*args.tag)) if args.tag else set()
+    """list installed packages with available tests"""
+    tagged = set(spack.repo.PATH.packages_with_tags(*args.tag)) if args.tag else set()
 
     def has_test_and_tags(pkg_class):
-        return spack.package_base.has_test_method(pkg_class) and (
-            not args.tag or pkg_class.name in tagged
-        )
+        tests = spack.install_test.test_functions(pkg_class)
+        return len(tests) and (not args.tag or pkg_class.name in tagged)
 
     if args.list_all:
         report_packages = [
             pkg_class.name
-            for pkg_class in spack.repo.path.all_package_classes()
+            for pkg_class in spack.repo.PATH.all_package_classes()
             if has_test_and_tags(pkg_class)
         ]
 
@@ -279,17 +252,17 @@ def test_list(args):
     env = ev.active_environment()
     hashes = env.all_hashes() if env else None
 
-    specs = spack.store.db.query(hashes=hashes)
+    specs = spack.store.STORE.db.query(hashes=hashes)
     specs = list(filter(lambda s: has_test_and_tags(s.package_class), specs))
 
     spack.cmd.display_specs(specs, long=True)
 
 
 def test_find(args):  # TODO: merge with status (noargs)
-    """Find tests that are running or have available results.
+    """find tests that are running or have available results
 
-    Displays aliases for tests that have them, otherwise test suite content
-    hashes."""
+    displays aliases for tests that have them, otherwise test suite content hashes
+    """
     test_suites = spack.install_test.get_all_test_suites()
 
     # Filter tests by filter argument
@@ -325,7 +298,7 @@ def test_find(args):  # TODO: merge with status (noargs)
 
 
 def test_status(args):
-    """Get the current status for the specified Spack test suite(s)."""
+    """get the current status for the specified Spack test suite(s)"""
     if args.names:
         test_suites = []
         for name in args.names:
@@ -356,7 +329,7 @@ def _report_suite_results(test_suite, args, constraints):
         qspecs = spack.cmd.parse_specs(constraints)
         specs = {}
         for spec in qspecs:
-            for s in spack.store.db.query(spec, installed=True):
+            for s in spack.store.STORE.db.query(spec, installed=True):
                 specs[s.dag_hash()] = s
         specs = sorted(specs.values())
         test_specs = dict((test_suite.test_pkg_id(s), s) for s in test_suite.specs if s in specs)
@@ -379,18 +352,17 @@ def _report_suite_results(test_suite, args, constraints):
 
         tty.msg("test specs:")
 
-        failed, skipped, untested = 0, 0, 0
+        counts = Counter()
         for pkg_id in test_specs:
             if pkg_id in results:
                 status = results[pkg_id]
-                if status == "FAILED":
-                    failed += 1
-                elif status == "NO-TESTS":
-                    untested += 1
-                elif status == "SKIPPED":
-                    skipped += 1
+                # Backward-compatibility:  NO-TESTS => NO_TESTS
+                status = "NO_TESTS" if status == "NO-TESTS" else status
 
-                if args.failed and status != "FAILED":
+                status = spack.install_test.TestStatus[status]
+                counts[status] += 1
+
+                if args.failed and status != spack.install_test.TestStatus.FAILED:
                     continue
 
                 msg = "  {0} {1}".format(pkg_id, status)
@@ -402,7 +374,7 @@ def _report_suite_results(test_suite, args, constraints):
                             msg += "\n{0}".format("".join(f.readlines()))
                 tty.msg(msg)
 
-        spack.install_test.write_test_summary(failed, skipped, untested, len(test_specs))
+        spack.install_test.write_test_summary(counts)
     else:
         msg = "Test %s has no results.\n" % test_suite.name
         msg += "        Check if it is running with "
@@ -411,7 +383,7 @@ def _report_suite_results(test_suite, args, constraints):
 
 
 def test_results(args):
-    """Get the results from Spack test suite(s) (default all)."""
+    """get the results from Spack test suite(s) (default all)"""
     if args.names:
         try:
             sep_index = args.names.index("--")
@@ -438,12 +410,13 @@ def test_results(args):
 
 
 def test_remove(args):
-    """Remove results from Spack test suite(s) (default all).
+    """remove results from Spack test suite(s) (default all)
 
-    If no test suite is listed, remove results for all suites.
+    if no test suite is listed, remove results for all suites.
 
-    Removed tests can no longer be accessed for results or status, and will not
-    appear in `spack test list` results."""
+    removed tests can no longer be accessed for results or status, and will not
+    appear in `spack test list` results
+    """
     if args.names:
         test_suites = []
         for name in args.names:

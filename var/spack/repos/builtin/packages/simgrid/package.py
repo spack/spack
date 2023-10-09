@@ -133,7 +133,6 @@ class Simgrid(CMakePackage):
     )
 
     def setup_dependent_package(self, module, dep_spec):
-
         if self.spec.satisfies("+smpi"):
             self.spec.smpicc = join_path(self.prefix.bin, "smpicc")
             self.spec.smpicxx = join_path(self.prefix.bin, "smpicxx")
@@ -141,7 +140,6 @@ class Simgrid(CMakePackage):
             self.spec.smpif77 = join_path(self.prefix.bin, "smpiff")
 
     def cmake_args(self):
-
         spec = self.spec
         args = []
 

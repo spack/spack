@@ -20,6 +20,6 @@ class Aria2(AutotoolsPackage):
     depends_on("libxml2")
     depends_on("libssh2")
     depends_on("libgcrypt")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("c-ares")
     depends_on("sqlite")

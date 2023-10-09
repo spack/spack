@@ -16,6 +16,7 @@ class Openmolcas(CMakePackage):
     homepage = "https://gitlab.com/Molcas/OpenMolcas"
     url = "https://github.com/Molcas/OpenMolcas/archive/v19.11.tar.gz"
 
+    version("23.06", sha256="31727161c15ea588217c6511a3007792c74c35391849fa0296c2288d836cf951")
     version("21.02", sha256="d0b9731a011562ff4740c0e67e48d9af74bf2a266601a38b37640f72190519ca")
     version("19.11", sha256="8ebd1dcce98fc3f554f96e54e34f1e8ad566c601196ee68153763b6c0a04c7b9")
 

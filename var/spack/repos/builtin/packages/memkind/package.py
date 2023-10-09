@@ -42,6 +42,9 @@ class Memkind(AutotoolsPackage):
     # <https://github.com/memkind/memkind#jemalloc>.
     conflicts("jemalloc")
 
+    # https://github.com/spack/spack/issues/37292
+    parallel = False
+
     def patch(self):
         with open("VERSION", "w") as version_file:
             version_file.write("{0}\n".format(self.version))

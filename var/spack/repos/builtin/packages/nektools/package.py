@@ -37,8 +37,8 @@ class Nektools(Package):
     ]
 
     version("develop", branch="master")
-    version("19.0", "db129877a10ff568d49edc77cf65f9e732eecb1fce10edbd91ffc5ac10c41ad6")
-    version("17.0", "4d8d4793ce3c926c54e09a5a5968fa959fe0ba46bd2e6b8043e099528ee35a60")
+    version("19.0", sha256="db129877a10ff568d49edc77cf65f9e732eecb1fce10edbd91ffc5ac10c41ad6")
+    version("17.0", sha256="4d8d4793ce3c926c54e09a5a5968fa959fe0ba46bd2e6b8043e099528ee35a60")
 
     # Variant for MAXNEL, we need to read this from user
     variant(

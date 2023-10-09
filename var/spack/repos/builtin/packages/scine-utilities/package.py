@@ -16,8 +16,8 @@ class ScineUtilities(CMakePackage):
     git = "https://github.com/qcscine/utilities.git"
 
     version("master", branch="master")
-    version("6.0.0", "e4387d5562b7442a8e31e4dfc028bacfeb6d12e39f2d8aa6effc6db380863b4a")
-    version("5.0.0", "a304c89d9a196fe304f38610dea6b066d74590c0d434e4bd09a9796340700465")
+    version("6.0.0", sha256="e4387d5562b7442a8e31e4dfc028bacfeb6d12e39f2d8aa6effc6db380863b4a")
+    version("5.0.0", sha256="a304c89d9a196fe304f38610dea6b066d74590c0d434e4bd09a9796340700465")
 
     resource(
         name="dev",
@@ -67,7 +67,7 @@ class ScineUtilities(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("SCINE_BUILD_TESTS", self.run_tests),
-            self.define("SCINE_BUILD_PYTHON_BINDINGS", "+python" in self.spec),
+            self.define_from_variant("SCINE_BUILD_PYTHON_BINDINGS", "python"),
             self.define("SCINE_MARCH", ""),
             self.define("BOOST_ROOT", self.spec["boost"].prefix),
             self.define("BOOST_LIBRARY_DIR", self.spec["boost"].libs.directories[0]),

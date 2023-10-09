@@ -111,6 +111,6 @@ class Nix(AutotoolsPackage):
     @run_after("install")
     def installcheck_clean(self):
         if hasattr(self, "test_path") and self.test_path:
-            for (root, dirs, files) in os.walk(self.test_path, topdown=True):
+            for root, dirs, files in os.walk(self.test_path, topdown=True):
                 os.chmod(root, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
             remove_linked_tree(self.test_path)

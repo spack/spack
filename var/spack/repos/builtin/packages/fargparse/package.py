@@ -12,6 +12,7 @@ class Fargparse(CMakePackage):
 
     homepage = "https://github.com/Goddard-Fortran-Ecosystem/fArgParse"
     url = "https://github.com/Goddard-Fortran-Ecosystem/fArgParse/archive/refs/tags/v1.4.1.tar.gz"
+    list_url = "https://github.com/Goddard-Fortran-Ecosystem/fArgParse/tags"
     git = "https://github.com/Goddard-Fortran-Ecosystem/fArgParse.git"
 
     maintainers("mathomp4", "tclune")
@@ -19,6 +20,7 @@ class Fargparse(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("1.5.0", sha256="1c16ead5f1bacb9c2f33aab99a0889c68c1a1ece754ddc3fd340f10a0d5da2f7")
     version("1.4.2", sha256="2cd3f14845235407c6a4171ab4602499dade045e3f9b7dc75190f4a315ac8b44")
     version("1.4.1", sha256="8f9b92a80f05b0a8ab2dd5cd309ad165041c7fcdd589b96bf75c7dd889b9b584")
     version("1.3.1", sha256="65d168696762b53f9a34fac8a82527fb602372f47be05018ebb382ec27b52c6c")

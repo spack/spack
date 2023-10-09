@@ -15,6 +15,7 @@ class RRepr(RPackage):
 
     cran = "repr"
 
+    version("1.1.6", sha256="3d2e6c9b363c1ec4811688deff7fb22093cadc9e0a333930382093d93c16673f")
     version("1.1.4", sha256="6f799ca83e0940618dd8c22e62ffdce5ec11ba3366c5306ae58b55b53c097040")
     version("1.1.0", sha256="743fe018f9e3e54067a970bc38b6b8c0c0498b43f88d179ac4a959c2013a5f96")
     version("1.0.1", sha256="ecde22c17fd800e1ff5c2b2962689119aa486fba40fbc6f2c50e8d4cc61bc44b")

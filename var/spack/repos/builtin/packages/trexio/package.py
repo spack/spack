@@ -36,7 +36,6 @@ class Trexio(AutotoolsPackage):
     # Append -lhdf5_hl to LIBS when hdf5 variant is activated
     # or use --without-hdf5 option otherwise.
     def configure_args(self):
-
         config_args = []
         if "+hdf5" in self.spec:
             config_args.append("LIBS=-lhdf5_hl")

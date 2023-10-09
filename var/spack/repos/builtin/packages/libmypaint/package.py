@@ -25,6 +25,7 @@ class Libmypaint(AutotoolsPackage):
     variant("gegl", default=False, description="Enable GEGL based code in build")
     variant("introspection", default=True, description="Enable introspection for this build")
 
+    depends_on("intltool")
     depends_on("json-c")
     depends_on("perl@5.8.1:")
     depends_on("perl-xml-parser")
@@ -37,14 +38,11 @@ class Libmypaint(AutotoolsPackage):
         args = []
 
         if "+gegl" in self.spec:
-            args.extend("--enable-gegl=yes")
+            args.append("--enable-gegl=yes")
 
         if "+introspection" in self.spec:
             args.extend(
-                [
-                    "--enable-introspection=yes",
-                    "--with-glib={0}".format(self.spec["glib"].prefix),
-                ]
+                ["--enable-introspection=yes", "--with-glib={0}".format(self.spec["glib"].prefix)]
             )
 
         return args

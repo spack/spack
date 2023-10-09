@@ -3,13 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections
 import functools as ft
 import itertools
 import os
 import re
 import shutil
+import stat
 import sys
+from typing import Optional
 
 from llnl.util import tty
 from llnl.util.filesystem import (
@@ -20,6 +21,7 @@ from llnl.util.filesystem import (
 )
 from llnl.util.lang import index_by, match_predicate
 from llnl.util.link_tree import (
+    ConflictingSpecsError,
     DestinationMergeVisitor,
     LinkTree,
     MergeConflictSummary,
@@ -31,12 +33,14 @@ from llnl.util.tty.color import colorize
 
 import spack.config
 import spack.projections
+import spack.relocate
 import spack.schema.projections
 import spack.spec
 import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
+from spack.hooks import sbang
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -56,50 +60,47 @@ def view_hardlink(src, dst, **kwargs):
     os.link(src, dst)
 
 
-def view_copy(src, dst, view, spec=None):
+def view_copy(src: str, dst: str, view, spec: Optional[spack.spec.Spec] = None):
     """
     Copy a file from src to dst.
 
     Use spec and view to generate relocations
     """
-    shutil.copy2(src, dst)
-    if spec and not spec.external:
-        # Not metadata, we have to relocate it
+    shutil.copy2(src, dst, follow_symlinks=False)
 
-        # Get information on where to relocate from/to
+    # No need to relocate if no metadata or external.
+    if not spec or spec.external:
+        return
 
-        # This is vestigial code for the *old* location of sbang. Previously,
-        # sbang was a bash script, and it lived in the spack prefix. It is
-        # now a POSIX script that lives in the install prefix. Old packages
-        # will have the old sbang location in their shebangs.
-        # TODO: Not sure which one to use...
-        import spack.hooks.sbang as sbang
+    # Order of this dict is somewhat irrelevant
+    prefix_to_projection = {
+        s.prefix: view.get_projection_for_spec(s)
+        for s in spec.traverse(root=True, order="breadth")
+        if not s.external
+    }
 
-        # Break a package include cycle
-        import spack.relocate
+    src_stat = os.lstat(src)
 
-        orig_sbang = "#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)
-        new_sbang = sbang.sbang_shebang_line()
+    # TODO: change this into a bulk operation instead of a per-file operation
 
-        prefix_to_projection = collections.OrderedDict(
-            {spec.prefix: view.get_projection_for_spec(spec)}
-        )
+    if stat.S_ISLNK(src_stat.st_mode):
+        spack.relocate.relocate_links(links=[dst], prefix_to_prefix=prefix_to_projection)
+    elif spack.relocate.is_binary(dst):
+        spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
+    else:
+        prefix_to_projection[spack.store.STORE.layout.root] = view._root
 
-        for dep in spec.traverse():
-            if not dep.external:
-                prefix_to_projection[dep.prefix] = view.get_projection_for_spec(dep)
+        # This is vestigial code for the *old* location of sbang.
+        prefix_to_projection[
+            "#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)
+        ] = sbang.sbang_shebang_line()
 
-        if spack.relocate.is_binary(dst):
-            spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
-        else:
-            prefix_to_projection[spack.store.layout.root] = view._root
-            prefix_to_projection[orig_sbang] = new_sbang
-            spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
-        try:
-            stat = os.stat(src)
-            os.chown(dst, stat.st_uid, stat.st_gid)
-        except OSError:
-            tty.debug("Can't change the permissions for %s" % dst)
+        spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
+
+    try:
+        os.chown(dst, src_stat.st_uid, src_stat.st_gid)
+    except OSError:
+        tty.debug("Can't change the permissions for %s" % dst)
 
 
 def view_func_parser(parsed_name):
@@ -125,7 +126,7 @@ def inverse_view_func_parser(view_type):
     return link_name
 
 
-class FilesystemView(object):
+class FilesystemView:
     """
     Governs a filesystem view that is located at certain root-directory.
 
@@ -254,7 +255,7 @@ class YamlFilesystemView(FilesystemView):
     """
 
     def __init__(self, root, layout, **kwargs):
-        super(YamlFilesystemView, self).__init__(root, layout, **kwargs)
+        super().__init__(root, layout, **kwargs)
 
         # Super class gets projections from the kwargs
         # YAML specific to get projections from YAML file
@@ -378,7 +379,7 @@ class YamlFilesystemView(FilesystemView):
             # check if this spec owns a file of that name (through the
             # manifest in the metadata dir, which we have in the view).
             manifest_file = os.path.join(
-                self.get_path_meta_folder(spec), spack.store.layout.manifest_file_name
+                self.get_path_meta_folder(spec), spack.store.STORE.layout.manifest_file_name
             )
             try:
                 with open(manifest_file, "r") as f:
@@ -505,14 +506,16 @@ class YamlFilesystemView(FilesystemView):
     def get_all_specs(self):
         md_dirs = []
         for root, dirs, files in os.walk(self._root):
-            if spack.store.layout.metadata_dir in dirs:
-                md_dirs.append(os.path.join(root, spack.store.layout.metadata_dir))
+            if spack.store.STORE.layout.metadata_dir in dirs:
+                md_dirs.append(os.path.join(root, spack.store.STORE.layout.metadata_dir))
 
         specs = []
         for md_dir in md_dirs:
             if os.path.exists(md_dir):
                 for name_dir in os.listdir(md_dir):
-                    filename = os.path.join(md_dir, name_dir, spack.store.layout.spec_file_name)
+                    filename = os.path.join(
+                        md_dir, name_dir, spack.store.STORE.layout.spec_file_name
+                    )
                     spec = get_spec_from_file(filename)
                     if spec:
                         specs.append(spec)
@@ -530,18 +533,18 @@ class YamlFilesystemView(FilesystemView):
         "Get path to meta folder for either spec or spec name."
         return os.path.join(
             self.get_projection_for_spec(spec),
-            spack.store.layout.metadata_dir,
+            spack.store.STORE.layout.metadata_dir,
             getattr(spec, "name", spec),
         )
 
     def get_spec(self, spec):
         dotspack = self.get_path_meta_folder(spec)
-        filename = os.path.join(dotspack, spack.store.layout.spec_file_name)
+        filename = os.path.join(dotspack, spack.store.STORE.layout.spec_file_name)
 
         return get_spec_from_file(filename)
 
     def link_meta_folder(self, spec):
-        src = spack.store.layout.metadata_path(spec)
+        src = spack.store.STORE.layout.metadata_path(spec)
         tgt = self.get_path_meta_folder(spec)
 
         tree = LinkTree(src)
@@ -587,9 +590,9 @@ class YamlFilesystemView(FilesystemView):
                     print()
 
                 header = "%s{%s} / %s{%s}" % (
-                    spack.spec.architecture_color,
+                    spack.spec.ARCHITECTURE_COLOR,
                     architecture,
-                    spack.spec.compiler_color,
+                    spack.spec.COMPILER_COLOR,
                     compiler,
                 )
                 tty.hline(colorize(header), char="-")
@@ -636,7 +639,23 @@ class SimpleFilesystemView(FilesystemView):
     were added."""
 
     def __init__(self, root, layout, **kwargs):
-        super(SimpleFilesystemView, self).__init__(root, layout, **kwargs)
+        super().__init__(root, layout, **kwargs)
+
+    def _sanity_check_view_projection(self, specs):
+        """A very common issue is that we end up with two specs of the same
+        package, that project to the same prefix. We want to catch that as
+        early as possible and give a sensible error to the user. Here we use
+        the metadata dir (.spack) projection as a quick test to see whether
+        two specs in the view are going to clash. The metadata dir is used
+        because it's always added by Spack with identical files, so a
+        guaranteed clash that's easily verified."""
+        seen = dict()
+        for current_spec in specs:
+            metadata_dir = self.relative_metadata_dir_for_spec(current_spec)
+            conflicting_spec = seen.get(metadata_dir)
+            if conflicting_spec:
+                raise ConflictingSpecsError(current_spec, conflicting_spec)
+            seen[metadata_dir] = current_spec
 
     def add_specs(self, *specs, **kwargs):
         assert all((s.concrete for s in specs))
@@ -652,9 +671,11 @@ class SimpleFilesystemView(FilesystemView):
         if kwargs.get("exclude", None):
             specs = set(filter_exclude(specs, kwargs["exclude"]))
 
+        self._sanity_check_view_projection(specs)
+
         # Ignore spack meta data folder.
         def skip_list(file):
-            return os.path.basename(file) == spack.store.layout.metadata_dir
+            return os.path.basename(file) == spack.store.STORE.layout.metadata_dir
 
         visitor = SourceMergeVisitor(ignore=skip_list)
 
@@ -686,32 +707,49 @@ class SimpleFilesystemView(FilesystemView):
         for dst in visitor.directories:
             os.mkdir(os.path.join(self._root, dst))
 
-        # Then group the files to be linked by spec...
-        # For compatibility, we have to create a merge_map dict mapping
-        # full_src => full_dst
-        files_per_spec = itertools.groupby(visitor.files.items(), key=lambda item: item[1][0])
-
-        for (spec, (src_root, rel_paths)) in zip(specs, files_per_spec):
-            merge_map = dict()
-            for dst_rel, (_, src_rel) in rel_paths:
-                full_src = os.path.join(src_root, src_rel)
-                full_dst = os.path.join(self._root, dst_rel)
-                merge_map[full_src] = full_dst
+        # Link the files using a "merge map": full src => full dst
+        merge_map_per_prefix = self._source_merge_visitor_to_merge_map(visitor)
+        for spec in specs:
+            merge_map = merge_map_per_prefix.get(spec.package.view_source(), None)
+            if not merge_map:
+                # Not every spec may have files to contribute.
+                continue
             spec.package.add_files_to_view(self, merge_map, skip_if_exists=False)
 
         # Finally create the metadata dirs.
         self.link_metadata(specs)
 
+    def _source_merge_visitor_to_merge_map(self, visitor: SourceMergeVisitor):
+        # For compatibility with add_files_to_view, we have to create a
+        # merge_map of the form join(src_root, src_rel) => join(dst_root, dst_rel),
+        # but our visitor.files format is dst_rel => (src_root, src_rel).
+        # We exploit that visitor.files is an ordered dict, and files per source
+        # prefix are contiguous.
+        source_root = lambda item: item[1][0]
+        per_source = itertools.groupby(visitor.files.items(), key=source_root)
+        return {
+            src_root: {
+                os.path.join(src_root, src_rel): os.path.join(self._root, dst_rel)
+                for dst_rel, (_, src_rel) in group
+            }
+            for src_root, group in per_source
+        }
+
+    def relative_metadata_dir_for_spec(self, spec):
+        return os.path.join(
+            self.get_relative_projection_for_spec(spec),
+            spack.store.STORE.layout.metadata_dir,
+            spec.name,
+        )
+
     def link_metadata(self, specs):
         metadata_visitor = SourceMergeVisitor()
 
         for spec in specs:
-            src_prefix = os.path.join(spec.package.view_source(), spack.store.layout.metadata_dir)
-            proj = os.path.join(
-                self.get_relative_projection_for_spec(spec),
-                spack.store.layout.metadata_dir,
-                spec.name,
+            src_prefix = os.path.join(
+                spec.package.view_source(), spack.store.STORE.layout.metadata_dir
             )
+            proj = self.relative_metadata_dir_for_spec(spec)
             metadata_visitor.set_projection(proj)
             visit_directory_tree(src_prefix, metadata_visitor)
 

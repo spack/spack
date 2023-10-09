@@ -16,23 +16,17 @@ class Neovim(CMakePackage):
     maintainers("albestro", "trws")
 
     version("master", branch="master")
-    version("stable", tag="stable")
+    version("stable", tag="stable", commit="7d4bba7aa7a4a3444919ea7a3804094c290395ef")
+    version("0.9.1", sha256="8db17c2a1f4776dcda00e59489ea0d98ba82f7d1a8ea03281d640e58d8a3a00e")
+    version("0.9.0", sha256="39d79107c54d2f3babcad2cd157c399241c04f6e75e98c18e8afaf2bb5e82937")
+    version("0.8.3", sha256="adf45ff160e1d89f519b6114732eba03485ae469beb27919b0f7a4f6b44233c1")
     version("0.8.2", sha256="c516c8db73e1b12917a6b2e991b344d0914c057cef8266bce61a2100a28ffcc9")
     version("0.8.0", sha256="505e3dfb71e2f73495c737c034a416911c260c0ba9fd2092c6be296655be4d18")
     version("0.7.2", sha256="ccab8ca02a0c292de9ea14b39f84f90b635a69282de38a6b4ccc8565bc65d096")
     version("0.7.0", sha256="792a9c55d5d5f4a5148d475847267df309d65fb20f05523f21c1319ea8a6c7df")
-    version(
-        "0.6.1",
-        sha256="dd882c21a52e5999f656cae3f336b5fc702d52addd4d9b5cd3dc39cfff35e864",
-    )
-    version(
-        "0.6.0",
-        sha256="2cfd600cfa5bb57564cc22ffbbbcb2c91531053fc3de992df33656614384fa4c",
-    )
-    version(
-        "0.5.1",
-        sha256="aa449795e5cc69bdd2eeed7095f20b9c086c6ecfcde0ab62ab97a9d04243ec84",
-    )
+    version("0.6.1", sha256="dd882c21a52e5999f656cae3f336b5fc702d52addd4d9b5cd3dc39cfff35e864")
+    version("0.6.0", sha256="2cfd600cfa5bb57564cc22ffbbbcb2c91531053fc3de992df33656614384fa4c")
+    version("0.5.1", sha256="aa449795e5cc69bdd2eeed7095f20b9c086c6ecfcde0ab62ab97a9d04243ec84")
     version(
         "0.5.0",
         sha256="6bcfa5192c9460c946e853dbd1a0baf659df5de184436144147711d1bceedeee",
@@ -92,7 +86,7 @@ class Neovim(CMakePackage):
 
     # dependencies to allow regular lua to work
     depends_on("lua-ffi", when="^lua", type=("link", "run"))
-    depends_on("lua-bitlib", type="link", when="^lua")
+    depends_on("lua-bitlib", type=("link", "run"), when="^lua")
 
     # base dependencies
     depends_on("cmake@3.0:", type="build")
@@ -102,7 +96,7 @@ class Neovim(CMakePackage):
     depends_on("jemalloc", type="link", when="platform=linux")
     depends_on("lua-lpeg")
     depends_on("lua-mpack")
-    depends_on("libiconv", type="link")
+    depends_on("iconv", type="link")
     depends_on("libtermkey", type="link")
     depends_on("libuv", type="link")
     depends_on("libluv", type="link")
@@ -125,7 +119,7 @@ class Neovim(CMakePackage):
     with when("@0.6:"):
         depends_on("cmake@3.10:", type="build")
         depends_on("gperf@3.1:", type="link")
-        depends_on("libiconv@1.15:", type="link")
+        conflicts("^libiconv@:1.14")
         depends_on("libtermkey@0.22:", type="link")
         depends_on("libvterm@0.1.4:", type="link")
         depends_on("msgpack-c@3.0.0:", type="link")
@@ -136,11 +130,13 @@ class Neovim(CMakePackage):
         depends_on("tree-sitter@0.20.6:")
     with when("@0.8:"):
         depends_on("libvterm@0.3:", type="link")
+    with when("@0.9:"):
+        depends_on("tree-sitter@0.20.8:")
 
     # Support for `libvterm@0.2:` has been added in neovim@0.8.0
     # term: Add support for libvterm >= 0.2 (https://github.com/neovim/neovim/releases/tag/v0.8.0)
     # https://github.com/neovim/neovim/issues/16217#issuecomment-958590493
-    conflicts("libvterm@0.2:", when="@:0.7")
+    conflicts("^libvterm@0.2:", when="@:0.7")
 
     @when("^lua")
     def cmake_args(self):

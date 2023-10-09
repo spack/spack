@@ -28,7 +28,6 @@ class Ebms(MakefilePackage):
 
     @property
     def build_targets(self):
-
         targets = []
 
         cflags = "-g -O3 -std=gnu99"

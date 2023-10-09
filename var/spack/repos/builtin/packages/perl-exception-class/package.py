@@ -12,6 +12,7 @@ class PerlExceptionClass(PerlPackage):
     homepage = "https://metacpan.org/pod/Exception::Class"
     url = "http://search.cpan.org/CPAN/authors/id/D/DR/DROLSKY/Exception-Class-1.43.tar.gz"
 
+    version("1.45", sha256="5482a77ef027ca1f9f39e1f48c558356e954936fc8fbbdee6c811c512701b249")
     version("1.43", sha256="ff3b4b3f706e84aaa87ab0dee5cec6bd7a8fc9f72cf76d115212541fa0a13760")
 
     depends_on("perl-devel-stacktrace", type=("build", "run"))

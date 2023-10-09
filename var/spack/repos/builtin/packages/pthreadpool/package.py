@@ -20,11 +20,9 @@ class Pthreadpool(CMakePackage):
     version("2018-10-08", commit="13da0b4c21d17f94150713366420baaf1b5a46f4")  # py-torch@1.0:1.4
     version("2018-02-25", commit="2b06b31f6a315162348e1f3c24325eedaf6cc559")  # py-torch@:0.4
 
+    generator("ninja")
     depends_on("cmake@3.5:", type="build")
-    depends_on("ninja", type="build")
     depends_on("python", type="build")
-
-    generator = "Ninja"
 
     resource(
         name="fxdiv",

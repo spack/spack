@@ -114,9 +114,7 @@ schema = {
                     "prefix": {"type": "string", "minLength": 1},
                     "rpm": {"type": "string", "minLength": 1},
                     "hash": {"type": "string", "minLength": 1},
-                    "parameters": {
-                        "type": "object",
-                    },
+                    "parameters": {"type": "object"},
                 },
             },
         },

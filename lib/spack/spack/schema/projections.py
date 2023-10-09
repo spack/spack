@@ -12,12 +12,7 @@
 
 #: Properties for inclusion in other schemas
 properties = {
-    "projections": {
-        "type": "object",
-        "patternProperties": {
-            r"all|\w[\w-]*": {"type": "string"},
-        },
-    },
+    "projections": {"type": "object", "patternProperties": {r"all|\w[\w-]*": {"type": "string"}}}
 }
 
 

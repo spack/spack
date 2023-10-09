@@ -36,6 +36,7 @@ class Cpmd(MakefilePackage):
         else:
             fc = spack_fc
             cc = spack_cc
+            cp.filter(r"FFLAGS='([^']*)'", "FFLAGS='\\1 -fallow-argument-mismatch'")
 
         cp.filter("FC=.+", "FC='{0}'".format(fc))
         cp.filter("CC=.+", "CC='{0}'".format(cc))
@@ -71,7 +72,7 @@ class Cpmd(MakefilePackage):
     def install(self, spec, prefix):
         install_tree(".", prefix)
 
-    def test(self):
+    def test_cpmd(self):
         test_dir = self.test_suite.current_test_data_dir
         test_file = join_path(test_dir, "1-h2o-pbc-geoopt.inp")
         opts = []
@@ -83,9 +84,12 @@ class Cpmd(MakefilePackage):
             exe_name = "cpmd.x"
         opts.append(test_file)
         opts.append(test_dir)
+        cpmd = which(exe_name)
+        out = cpmd(*opts, output=str.split, error=str.split)
+
         expected = [
             "2       1        H        O              1.84444     0.97604",
             "3       1        H        O              1.84444     0.97604",
             "2   1   3         H     O     H              103.8663",
         ]
-        self.run_test(exe_name, options=opts, expected=expected)
+        check_outputs(expected, out)

@@ -20,6 +20,7 @@ class RRequire(RPackage):
 
     maintainers("dorton21")
 
+    version("0.3.0", sha256="de879999f71bd3009b58676673f26774119fa84d3d7fcc28d0b02f07d5c63968")
     version("0.1.4", sha256="1657dacff807ec8865892fce4d55cec9e31affafd90cb44ab59b704d29575a8c")
     version("0.1.2", sha256="c045c1cc69f6d6248306d88f6399699b9f86134a71b631e35b9101901593af1b")
     version("0.0.13", sha256="ad9cb167694abe70beadc972c2c25086f0ac8e7e5802bf9606c1868e01be2526")
@@ -29,6 +30,4 @@ class RRequire(RPackage):
     depends_on("r@3.6:", type=("build", "run"), when="@0.0.13:")
     depends_on("r@4.0:", type=("build", "run"), when="@0.1.2:")
     depends_on("r-data-table@1.10.4:", type=("build", "run"))
-    depends_on("r-remotes", type=("build", "run"))
-    depends_on("r-remotes", when="@:0.0.13")
-    depends_on("r-remotes", when="@:0.1.2")
+    depends_on("r-remotes", type=("build", "run"), when="@:0.0.13")

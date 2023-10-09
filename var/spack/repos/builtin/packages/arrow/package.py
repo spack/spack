@@ -15,6 +15,7 @@ class Arrow(CMakePackage, CudaPackage):
     homepage = "https://arrow.apache.org"
     url = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
 
+    version("10.0.1", sha256="28c3e0402bc1c3c1e047b6e26cedb8d1d89b2b9497d576af24b0b700eef11701")
     version("9.0.0", sha256="bb187b4b0af8dcc027fffed3700a7b891c9f76c9b63ad8925b4afb8257a2bb1b")
     version("8.0.0", sha256="19ece12de48e51ce4287d2dee00dc358fbc5ff02f41629d16076f77b8579e272")
     version("7.0.0", sha256="57e13c62f27b710e1de54fd30faed612aefa22aa41fa2c0c3bacd204dd18a8f3")
@@ -55,8 +56,9 @@ class Arrow(CMakePackage, CudaPackage):
     depends_on("utf8proc@2.7.0: +shared", when="+gandiva")
     depends_on("utf8proc@2.7.0: +shared", when="+python")
     depends_on("xsimd@8.1.0:", when="@9.0.0:")
-    depends_on("zlib+pic", when="+zlib @9:")
-    depends_on("zlib+pic", when="@:8")
+    depends_on("zlib-api", when="+zlib @9:")
+    depends_on("zlib-api", when="@:8")
+    conflicts("^zlib~pic")
     depends_on("zstd", when="+zstd @9:")
     depends_on("zstd", when="@:8")
 
@@ -146,14 +148,23 @@ class Arrow(CMakePackage, CudaPackage):
         args.append(self.define_from_variant("ARROW_WITH_ZLIB", "zlib"))
         args.append(self.define_from_variant("ARROW_WITH_ZSTD", "zstd"))
 
-        with when("@:8"):
-            dep_list = ("flatbuffers", "rapidjson", "zlib", "zstd")
+        if not self.spec.dependencies("re2"):
+            args.append(self.define("ARROW_WITH_RE2", False))
+        if not self.spec.dependencies("utf8proc"):
+            args.append(self.define("ARROW_WITH_UTF8PROC", False))
+
+        if self.spec.satisfies("@:8"):
+            args.extend(
+                [
+                    self.define("FLATBUFFERS_HOME", self.spec["flatbuffers"].prefix),
+                    self.define("RAPIDJSON_HOME", self.spec["rapidjson"].prefix),
+                    self.define("ZSTD_HOME", self.spec["zstd"].prefix),
+                    self.define("ZLIB_HOME", self.spec["zlib-api"].prefix),
+                    self.define("ZLIB_LIBRARIES", self.spec["zlib-api"].libs),
+                ]
+            )
 
             if self.spec.satisfies("+snappy"):
-                dep_list.append("snappy")
-
-            for dep in dep_list:
-                args.append("-D{0}_HOME={1}".format(dep.upper(), self.spec[dep].prefix))
-            args.append("-DZLIB_LIBRARIES={0}".format(self.spec["zlib"].libs))
+                args.append(self.define("SNAPPY_HOME", self.spec["snappy"].prefix))
 
         return args

@@ -16,6 +16,8 @@ class Xmodmap(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xmodmap"
     xorg_mirror_path = "app/xmodmap-1.0.9.tar.gz"
 
+    version("1.0.11", sha256="c4fac9df448b98ac5a1620f364e74ed5f7084baae0d09123700f34d4b63cb5d8")
+    version("1.0.10", sha256="d4e9dc4cb034d0d774d059498d05348869934c52b0f24b0f3913823090b88640")
     version("1.0.9", sha256="73427a996f0fcda2a2c7ac96cfc4edd5985aeb13b48053f55ae7f63a668fadef")
 
     depends_on("libx11")

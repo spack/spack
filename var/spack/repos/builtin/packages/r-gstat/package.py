@@ -17,6 +17,7 @@ class RGstat(RPackage):
 
     cran = "gstat"
 
+    version("2.1-1", sha256="48b205e65155effb6827fca062f2a409a0922241b7714cc6c8248f141b125d25")
     version("2.1-0", sha256="57a6eb46fa601f159ace1e56ebe8928d210a62d85552a4eb5a5ca4ada48f2d6f")
     version("2.0-9", sha256="122c032c2e15388496853597ebcb5664e76cda96b164e9917ee66d1c24fba4a6")
     version("2.0-8", sha256="57cb9e8235a39379a96af0a5651c82e02fdd608375917939948c3dbf170668e8")

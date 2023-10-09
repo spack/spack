@@ -11,6 +11,8 @@ from spack.package import *
 _versions = [
     # LAPACK++,     BLAS++
     ["master", "master"],
+    ["2023.08.25", "2023.08.25"],
+    ["2023.06.00", "2023.06.00"],
     ["2022.07.00", "2022.07.00"],
     ["2022.05.00", "2022.05.00"],
     ["2020.10.00", "2020.10.00"],
@@ -25,12 +27,18 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     by the Innovative Computing Laboratory at the University of Tennessee,
     Knoxville."""
 
-    homepage = "https://bitbucket.org/icl/lapackpp"
+    homepage = "https://github.com/icl-utk-edu/lapackpp"
     git = homepage
-    url = "https://bitbucket.org/icl/lapackpp/downloads/lapackpp-2020.09.00.tar.gz"
+    url = "https://github.com/icl-utk-edu/lapackpp/releases/download/v2023.01.00/lapackpp-2023.01.00.tar.gz"
     maintainers("teonnik", "Sely85", "G-Ragghianti", "mgates3")
 
     version("master", branch="master")
+    version(
+        "2023.08.25", sha256="9effdd616a4a183a9b37c2ad33c85ddd3d6071b183e8c35e02243fbaa7333d4d"
+    )
+    version(
+        "2023.06.00", sha256="93df8392c859071120e00239feb96a0e060c0bb5176ee3a4f03eb9777c4edead"
+    )
     version(
         "2022.07.00", sha256="11e59efcc7ea0764a2bfc0e0f7b1abf73cee2943c1df11a19601780641a9aa18"
     )
@@ -51,13 +59,16 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     variant("shared", default=True, description="Build shared library")
+    variant("sycl", default=False, description="Build support for the SYCL backend")
 
     # Match each LAPACK++ version to a specific BLAS++ version
-    for (lpp_ver, bpp_ver) in _versions:
+    for lpp_ver, bpp_ver in _versions:
         depends_on("blaspp@" + bpp_ver, when="@" + lpp_ver)
 
     depends_on("blaspp ~cuda", when="~cuda")
     depends_on("blaspp +cuda", when="+cuda")
+    depends_on("blaspp ~sycl", when="~sycl")
+    depends_on("blaspp +sycl", when="+sycl")
     depends_on("blaspp ~rocm", when="~rocm")
     for val in ROCmPackage.amdgpu_targets:
         depends_on("blaspp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
@@ -66,8 +77,23 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("lapack")
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="+rocm")
+    depends_on("intel-oneapi-mkl threads=openmp", when="+sycl")
 
-    conflicts("+rocm", when="+cuda", msg="LAPACK++ can only support one GPU backend at a time")
+    backend_msg = "LAPACK++ supports only one GPU backend at a time"
+    conflicts("+rocm", when="+cuda", msg=backend_msg)
+    conflicts("+rocm", when="+sycl", msg=backend_msg)
+    conflicts("+cuda", when="+sycl", msg=backend_msg)
+    conflicts("+sycl", when="@:2023.06.00", msg="+sycl requires LAPACK++ version 2023.08.25")
+
+    # TODO: +sycl requires use of the intel-oneapi compiler, but we cannot express that directly.
+    #       For now, add conflicts for other compilers instead.
+    for __compiler in spack.compilers.supported_compilers():
+        if __compiler != "oneapi":
+            conflicts(
+                "%{0}".format(__compiler),
+                when="+sycl",
+                msg="lapackpp+sycl must be compiled with %oneapi",
+            )
 
     def cmake_args(self):
         spec = self.spec
@@ -78,6 +104,8 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
                 backend = "cuda"
             if "+rocm" in spec:
                 backend = "hip"
+            if "+sycl" in spec:
+                backend = "sycl"
 
         args = [
             "-DBUILD_SHARED_LIBS=%s" % ("+shared" in spec),
@@ -93,8 +121,8 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
 
     def check(self):
         # If the tester fails to build, ensure that the check() fails.
-        if os.path.isfile(join_path(self.build_directory, "test", "tester")):
-            with working_dir(self.build_directory):
+        if os.path.isfile(join_path(self.builder.build_directory, "test", "tester")):
+            with working_dir(self.builder.build_directory):
                 make("check")
         else:
             raise Exception("The tester was not built!")

@@ -43,7 +43,7 @@ class EcpProxyApps(BundlePackage):
     depends_on("laghos@3.0", when="@3.0:")
 
     # Added with release 2.1
-    depends_on("amg@1.2", when="@2.1:")
+    depends_on("amg2013@1.2", when="@2.1:")
     depends_on("miniamr@1.4.3", when="@2.1")
 
     # Added with release 2.0
@@ -60,7 +60,7 @@ class EcpProxyApps(BundlePackage):
     depends_on("xsbench@18", when="@2.0:2.1")
 
     # Dependencies for version 2.0
-    depends_on("amg@1.1", when="@2.0")
+    depends_on("amg2013@1.1", when="@2.0")
     depends_on("miniamr@1.4.1", when="@2.0:2.1")
 
     # Added with release 1.1
@@ -70,7 +70,7 @@ class EcpProxyApps(BundlePackage):
     depends_on("swfft@1.0", when="@1.0:")
 
     # Dependencies for versions 1.0:1.1
-    depends_on("amg@1.0", when="@1.0:1.1")
+    depends_on("amg2013@1.0", when="@1.0:1.1")
     depends_on("candle-benchmarks@0.0", when="+candle @1.0:1.1")
     depends_on("laghos@1.0", when="@1.0:1.1")
     depends_on("macsio@1.0", when="@1.0:1.1")

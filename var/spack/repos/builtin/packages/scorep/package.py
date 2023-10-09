@@ -14,8 +14,9 @@ class Scorep(AutotoolsPackage):
 
     homepage = "https://www.vi-hps.org/projects/score-p"
     url = "https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.1/scorep-7.1.tar.gz"
-    maintainers = ["wrwilliams"]
+    maintainers("wrwilliams")
 
+    version("8.1", sha256="3a40b481fce610871ddf6bdfb88a6d06b9e5eb38c6080faac6d5e44990060a37")
     version("8.0", sha256="4c0f34f20999f92ebe6ca1ff706d0846b8ce6cd537ffbedb49dfaef0faa66311")
     version("7.1", sha256="98dea497982001fb82da3429ca55669b2917a0858c71abe2cfe7cd113381f1f7")
     version("7.0", sha256="68f24a68eb6f94eaecf500e17448f566031946deab74f2cba072ee8368af0996")
@@ -90,18 +91,20 @@ class Scorep(AutotoolsPackage):
     # two components of cube -- cubew and cubelib.
 
     # SCOREP 8
+    depends_on("binutils", type="link", when="@8:")
     depends_on("otf2@3:", when="@8:")
     depends_on("cubew@4.8:", when="@8:")
     depends_on("cubelib@4.8:", when="@8:")
+    # fall through to Score-P 7's OPARI2, no new release
     # SCOREP 7
-    depends_on("otf2@2.3:2.3.99", when="@7:")
-    depends_on("cubew@4.6:", when="@7:")
-    depends_on("cubelib@4.6:", when="@7:")
+    depends_on("otf2@2.3:2.3.99", when="@7.0:7")
+    depends_on("cubew@4.6:4.7.99", when="@7.0:7")
+    depends_on("cubelib@4.6:4.7.99", when="@7.0:7")
     depends_on("opari2@2.0.6:", when="@7:")
     # SCOREP 6
-    depends_on("otf2@2.2:", when="@6:")
+    depends_on("otf2@2.2:", when="@6.0:6")
     # SCOREP 4 and 5
-    depends_on("otf2@2.1:", when="@4:")
+    depends_on("otf2@2.1:", when="@4:5")
     depends_on("cubew@4.4:4.5", when="@4:6")
     depends_on("cubelib@4.4:4.5", when="@4:6")
     # SCOREP 3
@@ -137,6 +140,12 @@ class Scorep(AutotoolsPackage):
     # https://github.com/spack/spack/issues/1609
     conflicts("platform=darwin")
 
+    def find_libpath(self, libname, root):
+        libs = find_libraries(libname, root, shared=True, recursive=True)
+        if len(libs.directories) == 0:
+            return None
+        return libs.directories[0]
+
     def configure_args(self):
         spec = self.spec
 
@@ -166,7 +175,9 @@ class Scorep(AutotoolsPackage):
         if "+unwind" in spec:
             config_args.append("--with-libunwind=%s" % spec["libunwind"].prefix)
         if "+cuda" in spec:
-            config_args.append("--with-libcuda=%s" % spec["cuda"].prefix)
+            config_args.append("--with-libcudart=%s" % spec["cuda"].prefix)
+            cuda_driver_path = self.find_libpath("libcuda", spec["cuda"].prefix)
+            config_args.append("--with-libcuda-lib=%s" % cuda_driver_path)
         if "+hip" in spec:
             config_args.append("--with-rocm=%s" % spec["hip"].prefix)
 
@@ -184,6 +195,9 @@ class Scorep(AutotoolsPackage):
             config_args.append("--with-mpi=mpich3")
         elif spec.satisfies("^openmpi"):
             config_args.append("--with-mpi=openmpi")
+
+        if spec.satisfies("^binutils"):
+            config_args.append("--with-libbfd=%s" % spec["binutils"].prefix)
 
         config_args.extend(
             [

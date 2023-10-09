@@ -50,7 +50,6 @@ class Asagi(CMakePackage):
     conflicts("%gcc@5:", when="@:1.0.0")
 
     def cmake_args(self):
-
         link_type = self.spec.variants["link_type"].value
         spec = self.spec
         args = [

@@ -2,8 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import re
-import sys
+
 
 import pytest
 
@@ -21,10 +20,10 @@ install = spack.main.SpackCommand("install")
 #: Class of the writer tested in this module
 writer_cls = spack.modules.lmod.LmodModulefileWriter
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
-@pytest.fixture(params=["clang@12.0.0", "gcc@10.2.1"])
+@pytest.fixture(params=["clang@=12.0.0", "gcc@=10.2.1"])
 def compiler(request):
     return request.param
 
@@ -35,17 +34,28 @@ def compiler(request):
         ("mpich@3.0.1", []),
         ("openblas@0.2.15", ("blas",)),
         ("openblas-with-lapack@0.2.15", ("blas", "lapack")),
+        ("mpileaks@2.3", ("mpi",)),
+        ("mpileaks@2.1", []),
     ]
 )
 def provider(request):
     return request.param
 
 
-@pytest.mark.usefixtures(
-    "config",
-    "mock_packages",
-)
-class TestLmod(object):
+@pytest.mark.usefixtures("config", "mock_packages")
+class TestLmod:
+    @pytest.mark.regression("37788")
+    @pytest.mark.parametrize("modules_config", ["core_compilers", "core_compilers_at_equal"])
+    def test_layout_for_specs_compiled_with_core_compilers(
+        self, modules_config, module_configuration, factory
+    ):
+        """Tests that specs compiled with core compilers are in the 'Core' folder. Also tests that
+        we can use both ``compiler@version`` and ``compiler@=version`` to specify a core compiler.
+        """
+        module_configuration(modules_config)
+        module, spec = factory("libelf%clang@12.0.0")
+        assert "Core" in module.layout.available_path_parts
+
     def test_file_layout(self, compiler, provider, factory, module_configuration):
         """Tests the layout of files in the hierarchy is the one expected."""
         module_configuration("complex_hierarchy")
@@ -62,22 +72,30 @@ class TestLmod(object):
         # is transformed to r"Core" if the compiler is listed among core
         # compilers
         # Check that specs listed as core_specs are transformed to "Core"
-        if compiler == "clang@3.3" or spec_string == "mpich@3.0.1":
+        if compiler == "clang@=12.0.0" or spec_string == "mpich@3.0.1":
             assert "Core" in layout.available_path_parts
         else:
-            assert compiler.replace("@", "/") in layout.available_path_parts
+            assert compiler.replace("@=", "/") in layout.available_path_parts
 
         # Check that the provider part instead has always an hash even if
         # hash has been disallowed in the configuration file
         path_parts = layout.available_path_parts
         service_part = spec_string.replace("@", "/")
         service_part = "-".join([service_part, layout.spec.dag_hash(length=7)])
-        assert service_part in path_parts
+
+        if "mpileaks" in spec_string:
+            # It's a user, not a provider, so create the provider string
+            service_part = layout.spec["mpi"].format("{name}/{version}-{hash:7}")
+        else:
+            # Only relevant for providers, not users, of virtuals
+            assert service_part in path_parts
 
         # Check that multi-providers have repetitions in path parts
         repetitions = len([x for x in path_parts if service_part == x])
         if spec_string == "openblas-with-lapack@0.2.15":
             assert repetitions == 2
+        elif spec_string == "mpileaks@2.1":
+            assert repetitions == 0
         else:
             assert repetitions == 1
 
@@ -88,10 +106,10 @@ class TestLmod(object):
         provides = module.conf.provides
 
         assert "compiler" in provides
-        assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@3.0")
+        assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@=3.0")
 
     def test_simple_case(self, modulefile_content, module_configuration):
-        """Tests the generation of a simple TCL module file."""
+        """Tests the generation of a simple Lua module file."""
 
         module_configuration("autoload_direct")
         content = modulefile_content(mpich_spec_string)
@@ -117,12 +135,10 @@ class TestLmod(object):
 
         assert len([x for x in content if "depends_on(" in x]) == 5
 
-    # DEPRECATED: remove blacklist in v0.20
-    @pytest.mark.parametrize("config_name", ["alter_environment", "blacklist_environment"])
-    def test_alter_environment(self, modulefile_content, module_configuration, config_name):
+    def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
 
-        module_configuration(config_name)
+        module_configuration("alter_environment")
         content = modulefile_content("mpileaks platform=test target=x86_64")
 
         assert len([x for x in content if x.startswith('prepend_path("CMAKE_PREFIX_PATH"')]) == 0
@@ -131,27 +147,105 @@ class TestLmod(object):
 
         content = modulefile_content("libdwarf platform=test target=core2")
 
-        assert len([x for x in content if x.startswith('prepend-path("CMAKE_PREFIX_PATH"')]) == 0
+        assert len([x for x in content if x.startswith('prepend_path("CMAKE_PREFIX_PATH"')]) == 0
         assert len([x for x in content if 'setenv("FOO", "foo")' in x]) == 0
         assert len([x for x in content if 'unsetenv("BAR")' in x]) == 0
 
     def test_prepend_path_separator(self, modulefile_content, module_configuration):
-        """Tests modifications to run-time environment."""
+        """Tests that we can use custom delimiters to manipulate path lists."""
 
         module_configuration("module_path_separator")
         content = modulefile_content("module-path-separator")
 
-        for line in content:
-            if re.match(r'[a-z]+_path\("COLON"', line):
-                assert line.endswith('"foo", ":")')
-            elif re.match(r'[a-z]+_path\("SEMICOLON"', line):
-                assert line.endswith('"bar", ";")')
+        assert len([x for x in content if 'append_path("COLON", "foo", ":")' in x]) == 1
+        assert len([x for x in content if 'prepend_path("COLON", "foo", ":")' in x]) == 1
+        assert len([x for x in content if 'remove_path("COLON", "foo", ":")' in x]) == 1
+        assert len([x for x in content if 'append_path("SEMICOLON", "bar", ";")' in x]) == 1
+        assert len([x for x in content if 'prepend_path("SEMICOLON", "bar", ";")' in x]) == 1
+        assert len([x for x in content if 'remove_path("SEMICOLON", "bar", ";")' in x]) == 1
+        assert len([x for x in content if 'append_path("SPACE", "qux", " ")' in x]) == 1
+        assert len([x for x in content if 'remove_path("SPACE", "qux", " ")' in x]) == 1
 
-    @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
-    def test_exclude(self, modulefile_content, module_configuration, config_name):
+    @pytest.mark.regression("11355")
+    def test_manpath_setup(self, modulefile_content, module_configuration):
+        """Tests specific setup of MANPATH environment variable."""
+
+        module_configuration("autoload_direct")
+
+        # no manpath set by module
+        content = modulefile_content("mpileaks")
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 0
+
+        # manpath set by module with prepend_path
+        content = modulefile_content("module-manpath-prepend")
+        assert (
+            len([x for x in content if 'prepend_path("MANPATH", "/path/to/man", ":")' in x]) == 1
+        )
+        assert (
+            len([x for x in content if 'prepend_path("MANPATH", "/path/to/share/man", ":")' in x])
+            == 1
+        )
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 1
+
+        # manpath set by module with append_path
+        content = modulefile_content("module-manpath-append")
+        assert len([x for x in content if 'append_path("MANPATH", "/path/to/man", ":")' in x]) == 1
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 1
+
+        # manpath set by module with setenv
+        content = modulefile_content("module-manpath-setenv")
+        assert len([x for x in content if 'setenv("MANPATH", "/path/to/man")' in x]) == 1
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 0
+
+    @pytest.mark.regression("29578")
+    def test_setenv_raw_value(self, modulefile_content, module_configuration):
+        """Tests that we can set environment variable value without formatting it."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("module-setenv-raw")
+
+        assert len([x for x in content if 'setenv("FOO", "{{name}}, {name}, {{}}, {}")' in x]) == 1
+
+    def test_help_message(self, modulefile_content, module_configuration):
+        """Tests the generation of module help message."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("mpileaks target=core2")
+
+        help_msg = (
+            "help([[Name   : mpileaks]])"
+            "help([[Version: 2.3]])"
+            "help([[Target : core2]])"
+            "help()"
+            "help([[Mpileaks is a mock package that passes audits]])"
+        )
+        assert help_msg in "".join(content)
+
+        content = modulefile_content("libdwarf target=core2")
+
+        help_msg = (
+            "help([[Name   : libdwarf]])"
+            "help([[Version: 20130729]])"
+            "help([[Target : core2]])"
+            "depends_on("
+        )
+        assert help_msg in "".join(content)
+
+        content = modulefile_content("module-long-help target=core2")
+
+        help_msg = (
+            "help([[Name   : module-long-help]])"
+            "help([[Version: 1.0]])"
+            "help([[Target : core2]])"
+            "help()"
+            "help([[Package to test long description message generated in modulefile."
+            "Message too long is wrapped over multiple lines.]])"
+        )
+        assert help_msg in "".join(content)
+
+    def test_exclude(self, modulefile_content, module_configuration):
         """Tests excluding the generation of selected modules."""
-
-        module_configuration(config_name)
+        module_configuration("exclude")
         content = modulefile_content(mpileaks_spec_string)
 
         assert len([x for x in content if "depends_on(" in x]) == 1
@@ -207,6 +301,26 @@ class TestLmod(object):
         with pytest.raises(spack.modules.lmod.NonVirtualInHierarchyError):
             module.write()
 
+    def test_conflicts(self, modulefile_content, module_configuration):
+        """Tests adding conflicts to the module."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration("conflicts")
+        content = modulefile_content("mpileaks")
+
+        assert len([x for x in content if x.startswith("conflict")]) == 2
+        assert len([x for x in content if x == 'conflict("mpileaks")']) == 1
+        assert len([x for x in content if x == 'conflict("intel/14.0.1")']) == 1
+
+    def test_inconsistent_conflict_in_modules_yaml(self, modulefile_content, module_configuration):
+        """Tests inconsistent conflict definition in `modules.yaml`."""
+
+        # This configuration is inconsistent, check an error is raised
+        module_configuration("wrong_conflicts")
+        with pytest.raises(spack.modules.common.ModulesError):
+            modulefile_content("mpileaks")
+
     def test_override_template_in_package(self, modulefile_content, module_configuration):
         """Tests overriding a template from and attribute in the package."""
 
@@ -240,7 +354,7 @@ class TestLmod(object):
         module_configuration("missing_core_compilers")
 
         # Our mock paths must be detected as system paths
-        monkeypatch.setattr(spack.util.environment, "system_dirs", ["/path/to"])
+        monkeypatch.setattr(spack.util.environment, "SYSTEM_DIRS", ["/path/to"])
 
         # We don't want to really write into user configuration
         # when running tests
@@ -254,12 +368,7 @@ class TestLmod(object):
         assert writer.conf.core_compilers
 
     @pytest.mark.parametrize(
-        "spec_str",
-        [
-            "mpileaks target=nocona",
-            "mpileaks target=core2",
-            "mpileaks target=x86_64",
-        ],
+        "spec_str", ["mpileaks target=nocona", "mpileaks target=core2", "mpileaks target=x86_64"]
     )
     @pytest.mark.regression("13005")
     def test_only_generic_microarchitectures_in_root(
@@ -305,7 +414,7 @@ class TestLmod(object):
     def test_modules_relative_to_view(
         self, tmpdir, modulefile_content, module_configuration, install_mockery, mock_fetch
     ):
-        with ev.Environment(str(tmpdir), with_view=True) as e:
+        with ev.create_in_dir(str(tmpdir), with_view=True) as e:
             module_configuration("with_view")
             install("--add", "cmake")
 

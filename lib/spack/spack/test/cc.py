@@ -8,7 +8,6 @@ This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
 import os
-import sys
 
 import pytest
 
@@ -16,7 +15,7 @@ import spack.build_environment
 import spack.config
 import spack.spec
 from spack.paths import build_env_path
-from spack.util.environment import set_env, system_dirs
+from spack.util.environment import SYSTEM_DIRS, set_env
 from spack.util.executable import Executable, ProcessError
 
 #
@@ -145,7 +144,7 @@ common_compile_args = (
     + test_args_without_paths
 )
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.fixture(scope="function")
@@ -160,7 +159,7 @@ def wrapper_environment(working_env):
         SPACK_DEBUG_LOG_ID="foo-hashabc",
         SPACK_COMPILER_SPEC="gcc@4.4.7",
         SPACK_SHORT_SPEC="foo@1.2 arch=linux-rhel6-x86_64 /hashabc",
-        SPACK_SYSTEM_DIRS=":".join(system_dirs),
+        SPACK_SYSTEM_DIRS=":".join(SYSTEM_DIRS),
         SPACK_CC_RPATH_ARG="-Wl,-rpath,",
         SPACK_CXX_RPATH_ARG="-Wl,-rpath,",
         SPACK_F77_RPATH_ARG="-Wl,-rpath,",
@@ -173,7 +172,7 @@ def wrapper_environment(working_env):
         SPACK_DTAGS_TO_ADD="--disable-new-dtags",
         SPACK_DTAGS_TO_STRIP="--enable-new-dtags",
         SPACK_COMPILER_FLAGS_KEEP="",
-        SPACK_COMPILER_FLAGS_REPLACE="-Werror*",
+        SPACK_COMPILER_FLAGS_REPLACE="-Werror*|",
     ):
         yield
 
@@ -278,8 +277,8 @@ def test_ld_flags(wrapper_environment, wrapper_flags):
         ld,
         test_args,
         ["ld"]
-        + spack_ldflags
         + test_include_paths
+        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
         + test_library_paths
         + ["--disable-new-dtags"]
         + test_rpaths
@@ -293,10 +292,10 @@ def test_cpp_flags(wrapper_environment, wrapper_flags):
         cpp,
         test_args,
         ["cpp"]
-        + spack_cppflags
         + test_include_paths
         + test_library_paths
-        + test_args_without_paths,
+        + test_args_without_paths
+        + spack_cppflags,
     )
 
 
@@ -306,10 +305,14 @@ def test_cc_flags(wrapper_environment, wrapper_flags):
         test_args,
         [real_cc]
         + target_args
+        + test_include_paths
+        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
+        + test_library_paths
+        + ["-Wl,--disable-new-dtags"]
+        + test_wl_rpaths
+        + test_args_without_paths
         + spack_cppflags
         + spack_cflags
-        + spack_ldflags
-        + common_compile_args
         + spack_ldlibs,
     )
 
@@ -320,10 +323,13 @@ def test_cxx_flags(wrapper_environment, wrapper_flags):
         test_args,
         [real_cc]
         + target_args
+        + test_include_paths
+        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
+        + test_library_paths
+        + ["-Wl,--disable-new-dtags"]
+        + test_wl_rpaths
+        + test_args_without_paths
         + spack_cppflags
-        + spack_cxxflags
-        + spack_ldflags
-        + common_compile_args
         + spack_ldlibs,
     )
 
@@ -334,11 +340,90 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
         test_args,
         [real_cc]
         + target_args
+        + test_include_paths
+        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
+        + test_library_paths
+        + ["-Wl,--disable-new-dtags"]
+        + test_wl_rpaths
+        + test_args_without_paths
         + spack_fflags
         + spack_cppflags
-        + spack_ldflags
-        + common_compile_args
         + spack_ldlibs,
+    )
+
+
+def test_Wl_parsing(wrapper_environment):
+    check_args(
+        cc,
+        ["-Wl,-rpath,/a,--enable-new-dtags,-rpath=/b,--rpath", "-Wl,/c"],
+        [real_cc]
+        + target_args
+        + ["-Wl,--disable-new-dtags", "-Wl,-rpath,/a", "-Wl,-rpath,/b", "-Wl,-rpath,/c"],
+    )
+
+
+@pytest.mark.regression("37179")
+def test_Wl_parsing_with_missing_value(wrapper_environment):
+    check_args(
+        cc,
+        ["-Wl,-rpath=/a,-rpath=", "-Wl,--rpath="],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-Wl,-rpath,/a"],
+    )
+
+
+@pytest.mark.regression("37179")
+def test_Wl_parsing_NAG_is_ignored(wrapper_environment):
+    check_args(
+        fc,
+        ["-Wl,-Wl,,x,,y,,z"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-Wl,-Wl,,x,,y,,z"],
+    )
+
+
+def test_Xlinker_parsing(wrapper_environment):
+    # -Xlinker <x> ... -Xlinker <y> may have compiler flags inbetween, like -O3 in this
+    # example. Also check that a trailing -Xlinker (which is a compiler error) is not
+    # dropped or given an empty argument.
+    check_args(
+        cc,
+        [
+            "-Xlinker",
+            "-rpath",
+            "-O3",
+            "-Xlinker",
+            "/a",
+            "-Xlinker",
+            "--flag",
+            "-Xlinker",
+            "-rpath=/b",
+            "-Xlinker",
+        ],
+        [real_cc]
+        + target_args
+        + [
+            "-Wl,--disable-new-dtags",
+            "-Wl,-rpath,/a",
+            "-Wl,-rpath,/b",
+            "-O3",
+            "-Xlinker",
+            "--flag",
+            "-Xlinker",
+        ],
+    )
+
+
+def test_rpath_without_value(wrapper_environment):
+    # cc -Wl,-rpath without a value shouldn't drop -Wl,-rpath;
+    # same for -Xlinker
+    check_args(
+        cc,
+        ["-Wl,-rpath", "-O3", "-g"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-O3", "-g", "-Wl,-rpath"],
+    )
+    check_args(
+        cc,
+        ["-Xlinker", "-rpath", "-O3", "-g"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-O3", "-g", "-Xlinker", "-rpath"],
     )
 
 
@@ -514,7 +599,6 @@ def test_ccld_with_system_dirs(wrapper_environment):
         SPACK_RPATH_DIRS="xlib:ylib:zlib",
         SPACK_LINK_DIRS="xlib:ylib:zlib",
     ):
-
         sys_path_args = [
             "-I/usr/include",
             "-L/usr/local/lib",
@@ -551,7 +635,6 @@ def test_ccld_with_system_dirs_isystem(wrapper_environment):
         SPACK_RPATH_DIRS="xlib:ylib:zlib",
         SPACK_LINK_DIRS="xlib:ylib:zlib",
     ):
-
         sys_path_args = [
             "-isystem",
             "/usr/include",
@@ -717,15 +800,9 @@ def test_keep_and_replace(wrapper_environment):
     werror_specific = ["-Werror=meh"]
     werror = ["-Werror"]
     werror_all = werror_specific + werror
-    with set_env(
-        SPACK_COMPILER_FLAGS_KEEP="",
-        SPACK_COMPILER_FLAGS_REPLACE="-Werror*|",
-    ):
+    with set_env(SPACK_COMPILER_FLAGS_KEEP="", SPACK_COMPILER_FLAGS_REPLACE="-Werror*|"):
         check_args_contents(cc, test_args + werror_all, ["-Wl,--end-group"], werror_all)
-    with set_env(
-        SPACK_COMPILER_FLAGS_KEEP="-Werror=*",
-        SPACK_COMPILER_FLAGS_REPLACE="-Werror*|",
-    ):
+    with set_env(SPACK_COMPILER_FLAGS_KEEP="-Werror=*", SPACK_COMPILER_FLAGS_REPLACE="-Werror*|"):
         check_args_contents(cc, test_args + werror_all, werror_specific, werror)
     with set_env(
         SPACK_COMPILER_FLAGS_KEEP="-Werror=*",

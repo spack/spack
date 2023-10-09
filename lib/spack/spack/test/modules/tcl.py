@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
@@ -18,18 +17,18 @@ libdwarf_spec_string = "libdwarf target=x86_64"
 #: Class of the writer tested in this module
 writer_cls = spack.modules.tcl.TclModulefileWriter
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "mock_module_filename")
-class TestTcl(object):
+class TestTcl:
     def test_simple_case(self, modulefile_content, module_configuration):
-        """Tests the generation of a simple TCL module file."""
+        """Tests the generation of a simple Tcl module file."""
 
         module_configuration("autoload_direct")
         content = modulefile_content(mpich_spec_string)
 
-        assert 'module-whatis "mpich @3.0.4"' in content
+        assert "module-whatis {mpich @3.0.4}" in content
 
     def test_autoload_direct(self, modulefile_content, module_configuration):
         """Tests the automatic loading of direct dependencies."""
@@ -37,7 +36,11 @@ class TestTcl(object):
         module_configuration("autoload_direct")
         content = modulefile_content(mpileaks_spec_string)
 
-        assert len([x for x in content if "is-loaded" in x]) == 2
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # dtbuild1 has
@@ -47,7 +50,11 @@ class TestTcl(object):
         # Just make sure the 'build' dependency is not there
         content = modulefile_content("dtbuild1")
 
-        assert len([x for x in content if "is-loaded" in x]) == 2
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # The configuration file sets the verbose keyword to False
@@ -60,7 +67,11 @@ class TestTcl(object):
         module_configuration("autoload_all")
         content = modulefile_content(mpileaks_spec_string)
 
-        assert len([x for x in content if "is-loaded" in x]) == 5
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 5
         assert len([x for x in content if "module load " in x]) == 5
 
         # dtbuild1 has
@@ -70,12 +81,12 @@ class TestTcl(object):
         # Just make sure the 'build' dependency is not there
         content = modulefile_content("dtbuild1")
 
-        assert len([x for x in content if "is-loaded" in x]) == 2
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
-
-        # The configuration file sets the verbose keyword to True
-        messages = [x for x in content if 'puts stderr "Autoloading' in x]
-        assert len(messages) == 2
 
     def test_prerequisites_direct(self, modulefile_content, module_configuration):
         """Tests asking direct dependencies as prerequisites."""
@@ -93,38 +104,140 @@ class TestTcl(object):
 
         assert len([x for x in content if "prereq" in x]) == 5
 
-    # DEPRECATED: remove blacklist in v0.20
-    @pytest.mark.parametrize("config_name", ["alter_environment", "blacklist_environment"])
-    def test_alter_environment(self, modulefile_content, module_configuration, config_name):
+    def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
 
-        module_configuration(config_name)
+        module_configuration("alter_environment")
         content = modulefile_content("mpileaks platform=test target=x86_64")
 
         assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
-        assert len([x for x in content if 'setenv FOO "foo"' in x]) == 1
-        assert len([x for x in content if 'setenv OMPI_MCA_mpi_leave_pinned "1"' in x]) == 1
-        assert len([x for x in content if 'setenv OMPI_MCA_MPI_LEAVE_PINNED "1"' in x]) == 0
+        assert len([x for x in content if "setenv FOO {foo}" in x]) == 1
+        assert len([x for x in content if "setenv OMPI_MCA_mpi_leave_pinned {1}" in x]) == 1
+        assert len([x for x in content if "setenv OMPI_MCA_MPI_LEAVE_PINNED {1}" in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 1
         assert len([x for x in content if "setenv MPILEAKS_ROOT" in x]) == 1
 
         content = modulefile_content("libdwarf platform=test target=core2")
 
         assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
-        assert len([x for x in content if 'setenv FOO "foo"' in x]) == 0
+        assert len([x for x in content if "setenv FOO {foo}" in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
-        assert len([x for x in content if "is-loaded 'foo/bar'" in x]) == 1
+        assert len([x for x in content if "depends-on foo/bar" in x]) == 1
         assert len([x for x in content if "module load foo/bar" in x]) == 1
         assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1
 
-    @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
-    def test_exclude(self, modulefile_content, module_configuration, config_name):
+    def test_prepend_path_separator(self, modulefile_content, module_configuration):
+        """Tests that we can use custom delimiters to manipulate path lists."""
+
+        module_configuration("module_path_separator")
+        content = modulefile_content("module-path-separator")
+
+        assert len([x for x in content if "append-path --delim {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "prepend-path --delim {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "remove-path --delim {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "append-path --delim {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "prepend-path --delim {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "remove-path --delim {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "append-path --delim { } SPACE {qux}" in x]) == 1
+        assert len([x for x in content if "remove-path --delim { } SPACE {qux}" in x]) == 1
+
+    @pytest.mark.regression("11355")
+    def test_manpath_setup(self, modulefile_content, module_configuration):
+        """Tests specific setup of MANPATH environment variable."""
+
+        module_configuration("autoload_direct")
+
+        # no manpath set by module
+        content = modulefile_content("mpileaks")
+        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 0
+
+        # manpath set by module with prepend-path
+        content = modulefile_content("module-manpath-prepend")
+        assert (
+            len([x for x in content if "prepend-path --delim {:} MANPATH {/path/to/man}" in x])
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "prepend-path --delim {:} MANPATH {/path/to/share/man}" in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 1
+
+        # manpath set by module with append-path
+        content = modulefile_content("module-manpath-append")
+        assert (
+            len([x for x in content if "append-path --delim {:} MANPATH {/path/to/man}" in x]) == 1
+        )
+        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 1
+
+        # manpath set by module with setenv
+        content = modulefile_content("module-manpath-setenv")
+        assert len([x for x in content if "setenv MANPATH {/path/to/man}" in x]) == 1
+        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 0
+
+    @pytest.mark.regression("29578")
+    def test_setenv_raw_value(self, modulefile_content, module_configuration):
+        """Tests that we can set environment variable value without formatting it."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("module-setenv-raw")
+
+        assert len([x for x in content if "setenv FOO {{{name}}, {name}, {{}}, {}}" in x]) == 1
+
+    def test_help_message(self, modulefile_content, module_configuration):
+        """Tests the generation of module help message."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("mpileaks target=core2")
+
+        help_msg = (
+            "proc ModulesHelp { } {"
+            "    puts stderr {Name   : mpileaks}"
+            "    puts stderr {Version: 2.3}"
+            "    puts stderr {Target : core2}"
+            "    puts stderr {}"
+            "    puts stderr {Mpileaks is a mock package that passes audits}"
+            "}"
+        )
+        assert help_msg in "".join(content)
+
+        content = modulefile_content("libdwarf target=core2")
+
+        help_msg = (
+            "proc ModulesHelp { } {"
+            "    puts stderr {Name   : libdwarf}"
+            "    puts stderr {Version: 20130729}"
+            "    puts stderr {Target : core2}"
+            "}"
+        )
+        assert help_msg in "".join(content)
+
+        content = modulefile_content("module-long-help target=core2")
+
+        help_msg = (
+            "proc ModulesHelp { } {"
+            "    puts stderr {Name   : module-long-help}"
+            "    puts stderr {Version: 1.0}"
+            "    puts stderr {Target : core2}"
+            "    puts stderr {}"
+            "    puts stderr {Package to test long description message generated in modulefile.}"
+            "    puts stderr {Message too long is wrapped over multiple lines.}"
+            "}"
+        )
+        assert help_msg in "".join(content)
+
+    def test_exclude(self, modulefile_content, module_configuration):
         """Tests excluding the generation of selected modules."""
 
-        module_configuration(config_name)
+        module_configuration("exclude")
         content = modulefile_content("mpileaks ^zmpi")
 
-        assert len([x for x in content if "is-loaded" in x]) == 1
         assert len([x for x in content if "module load " in x]) == 1
 
         # Catch "Exception" to avoid using FileNotFoundError on Python 3
@@ -135,7 +248,6 @@ class TestTcl(object):
 
         content = modulefile_content("zmpi target=x86_64")
 
-        assert len([x for x in content if "is-loaded" in x]) == 1
         assert len([x for x in content if "module load " in x]) == 1
 
     def test_naming_scheme_compat(self, factory, module_configuration):
@@ -212,13 +324,15 @@ class TestTcl(object):
         assert len([x for x in content if x == "conflict mpileaks"]) == 1
         assert len([x for x in content if x == "conflict intel/14.0.1"]) == 1
 
+    def test_inconsistent_conflict_in_modules_yaml(self, modulefile_content, module_configuration):
+        """Tests inconsistent conflict definition in `modules.yaml`."""
+
         # This configuration is inconsistent, check an error is raised
         module_configuration("wrong_conflicts")
-        with pytest.raises(SystemExit):
+        with pytest.raises(spack.modules.common.ModulesError):
             modulefile_content("mpileaks")
 
     def test_module_index(self, module_configuration, factory, tmpdir_factory):
-
         module_configuration("suffix")
 
         w1, s1 = factory("mpileaks")
@@ -271,14 +385,14 @@ class TestTcl(object):
         content = modulefile_content("mpileaks")
 
         assert len([x for x in content if "setenv FOOBAR" in x]) == 1
-        assert len([x for x in content if 'setenv FOOBAR "mpileaks"' in x]) == 1
+        assert len([x for x in content if "setenv FOOBAR {mpileaks}" in x]) == 1
 
         spec = spack.spec.Spec("mpileaks")
         spec.concretize()
         content = modulefile_content(str(spec["callpath"]))
 
         assert len([x for x in content if "setenv FOOBAR" in x]) == 1
-        assert len([x for x in content if 'setenv FOOBAR "callpath"' in x]) == 1
+        assert len([x for x in content if "setenv FOOBAR {callpath}" in x]) == 1
 
     def test_override_config(self, module_configuration, factory):
         """Tests overriding some sections of the configuration file."""
@@ -319,16 +433,13 @@ class TestTcl(object):
 
         assert 'puts stderr "sentence from package"' in content
 
-        short_description = 'module-whatis "This package updates the context for TCL modulefiles."'
+        short_description = "module-whatis {This package updates the context for Tcl modulefiles.}"
         assert short_description in content
 
     @pytest.mark.regression("4400")
     @pytest.mark.db
-    @pytest.mark.parametrize("config_name", ["exclude_implicits", "blacklist_implicits"])
-    def test_exclude_implicits(
-        self, modulefile_content, module_configuration, database, config_name
-    ):
-        module_configuration(config_name)
+    def test_exclude_implicits(self, module_configuration, database):
+        module_configuration("exclude_implicits")
 
         # mpileaks has been installed explicitly when setting up
         # the tests database
@@ -344,6 +455,22 @@ class TestTcl(object):
             writer = writer_cls(item, "default")
             assert writer.conf.excluded
 
+    @pytest.mark.regression("12105")
+    def test_exclude_implicits_with_arg(self, module_configuration):
+        module_configuration("exclude_implicits")
+
+        # mpileaks is defined as explicit with explicit argument set on writer
+        mpileaks_spec = spack.spec.Spec("mpileaks")
+        mpileaks_spec.concretize()
+        writer = writer_cls(mpileaks_spec, "default", True)
+        assert not writer.conf.excluded
+
+        # callpath is defined as implicit with explicit argument set on writer
+        callpath_spec = spack.spec.Spec("callpath")
+        callpath_spec.concretize()
+        writer = writer_cls(callpath_spec, "default", False)
+        assert writer.conf.excluded
+
     @pytest.mark.regression("9624")
     @pytest.mark.db
     def test_autoload_with_constraints(self, modulefile_content, module_configuration, database):
@@ -353,11 +480,17 @@ class TestTcl(object):
 
         # Test the mpileaks that should have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich2")
-        assert len([x for x in content if "is-loaded" in x]) == 2
+        assert len([x for x in content if "depends-on " in x]) == 2
+        assert len([x for x in content if "module load " in x]) == 2
 
         # Test the mpileaks that should NOT have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich")
-        assert len([x for x in content if "is-loaded" in x]) == 0
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 0
+        )
+        assert len([x for x in content if "depends-on " in x]) == 0
+        assert len([x for x in content if "module load " in x]) == 0
 
     def test_modules_no_arch(self, factory, module_configuration):
         module_configuration("no_arch")

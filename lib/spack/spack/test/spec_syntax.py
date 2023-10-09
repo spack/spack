@@ -23,7 +23,7 @@ from spack.parser import (
 
 FAIL_ON_WINDOWS = pytest.mark.xfail(
     sys.platform == "win32",
-    raises=(SpecTokenizationError, spack.spec.NoSuchHashError),
+    raises=(SpecTokenizationError, spack.spec.InvalidHashError),
     reason="Unix style path on Windows",
 )
 
@@ -403,9 +403,7 @@ def specfile_for(default_mock_concretization):
         # Key value pairs with ":" and "," in the value
         (
             r"target=:broadwell,icelake",
-            [
-                Token(TokenType.KEY_VALUE_PAIR, value="target=:broadwell,icelake"),
-            ],
+            [Token(TokenType.KEY_VALUE_PAIR, value="target=:broadwell,icelake")],
             r"arch=None-None-:broadwell,icelake",
         ),
         # Hash pair version followed by a variant
@@ -480,13 +478,7 @@ def specfile_for(default_mock_concretization):
             [Token(TokenType.VERSION, value="@1.2 : 1.4 , 1.6")],
             "@1.2:1.4,1.6",
         ),
-        (
-            "@1.2 :   develop",
-            [
-                Token(TokenType.VERSION, value="@1.2 :   develop"),
-            ],
-            "@1.2:develop",
-        ),
+        ("@1.2 :   develop", [Token(TokenType.VERSION, value="@1.2 :   develop")], "@1.2:develop"),
         (
             "@1.2 :   develop   = foo",
             [
@@ -522,10 +514,7 @@ def specfile_for(default_mock_concretization):
         ),
         (
             "@:0.4 % nvhpc",
-            [
-                Token(TokenType.VERSION, value="@:0.4"),
-                Token(TokenType.COMPILER, value="% nvhpc"),
-            ],
+            [Token(TokenType.VERSION, value="@:0.4"), Token(TokenType.COMPILER, value="% nvhpc")],
             "@:0.4%nvhpc",
         ),
     ],
@@ -642,21 +631,34 @@ def test_spec_by_hash_tokens(text, tokens):
 
 
 @pytest.mark.db
-def test_spec_by_hash(database):
+def test_spec_by_hash(database, monkeypatch, config):
     mpileaks = database.query_one("mpileaks ^zmpi")
+    b = spack.spec.Spec("b").concretized()
+    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: [b])
 
     hash_str = f"/{mpileaks.dag_hash()}"
-    assert str(SpecParser(hash_str).next_spec()) == str(mpileaks)
+    parsed_spec = SpecParser(hash_str).next_spec()
+    parsed_spec.replace_hash()
+    assert parsed_spec == mpileaks
 
     short_hash_str = f"/{mpileaks.dag_hash()[:5]}"
-    assert str(SpecParser(short_hash_str).next_spec()) == str(mpileaks)
+    parsed_spec = SpecParser(short_hash_str).next_spec()
+    parsed_spec.replace_hash()
+    assert parsed_spec == mpileaks
 
     name_version_and_hash = f"{mpileaks.name}@{mpileaks.version} /{mpileaks.dag_hash()[:5]}"
-    assert str(SpecParser(name_version_and_hash).next_spec()) == str(mpileaks)
+    parsed_spec = SpecParser(name_version_and_hash).next_spec()
+    parsed_spec.replace_hash()
+    assert parsed_spec == mpileaks
+
+    b_hash = f"/{b.dag_hash()}"
+    parsed_spec = SpecParser(b_hash).next_spec()
+    parsed_spec.replace_hash()
+    assert parsed_spec == b
 
 
 @pytest.mark.db
-def test_dep_spec_by_hash(database):
+def test_dep_spec_by_hash(database, config):
     mpileaks_zmpi = database.query_one("mpileaks ^zmpi")
     zmpi = database.query_one("zmpi")
     fake = database.query_one("fake")
@@ -664,20 +666,25 @@ def test_dep_spec_by_hash(database):
     assert "fake" in mpileaks_zmpi
     assert "zmpi" in mpileaks_zmpi
 
-    mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()}").next_spec()
+    mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()} ^zmpi").next_spec()
+    mpileaks_hash_fake.replace_hash()
     assert "fake" in mpileaks_hash_fake
     assert mpileaks_hash_fake["fake"] == fake
+    assert "zmpi" in mpileaks_hash_fake
+    assert mpileaks_hash_fake["zmpi"] == spack.spec.Spec("zmpi")
 
     mpileaks_hash_zmpi = SpecParser(
         f"mpileaks %{mpileaks_zmpi.compiler} ^ /{zmpi.dag_hash()}"
     ).next_spec()
+    mpileaks_hash_zmpi.replace_hash()
     assert "zmpi" in mpileaks_hash_zmpi
     assert mpileaks_hash_zmpi["zmpi"] == zmpi
-    assert mpileaks_hash_zmpi.compiler == mpileaks_zmpi.compiler
+    assert mpileaks_zmpi.compiler.satisfies(mpileaks_hash_zmpi.compiler)
 
     mpileaks_hash_fake_and_zmpi = SpecParser(
         f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}"
     ).next_spec()
+    mpileaks_hash_fake_and_zmpi.replace_hash()
     assert "zmpi" in mpileaks_hash_fake_and_zmpi
     assert mpileaks_hash_fake_and_zmpi["zmpi"] == zmpi
 
@@ -686,7 +693,7 @@ def test_dep_spec_by_hash(database):
 
 
 @pytest.mark.db
-def test_multiple_specs_with_hash(database):
+def test_multiple_specs_with_hash(database, config):
     mpileaks_zmpi = database.query_one("mpileaks ^zmpi")
     callpath_mpich2 = database.query_one("callpath ^mpich2")
 
@@ -718,41 +725,62 @@ def test_multiple_specs_with_hash(database):
 
 
 @pytest.mark.db
-def test_ambiguous_hash(mutable_database, default_mock_concretization):
+def test_ambiguous_hash(mutable_database, default_mock_concretization, config):
+    """Test that abstract hash ambiguity is delayed until concretization.
+    In the past this ambiguity error would happen during parse time."""
+
+    # This is a very sketchy as manually setting hashes easily breaks invariants
     x1 = default_mock_concretization("a")
     x2 = x1.copy()
     x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    x1._process_hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     x2._hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    mutable_database.add(x1, spack.store.layout)
-    mutable_database.add(x2, spack.store.layout)
+    x2._process_hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+    assert x1 != x2  # doesn't hold when only the dag hash is modified.
+
+    mutable_database.add(x1, directory_layout=None)
+    mutable_database.add(x2, directory_layout=None)
 
     # ambiguity in first hash character
+    s1 = SpecParser("/x").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        SpecParser("/x").next_spec()
+        s1.lookup_hash()
 
     # ambiguity in first hash character AND spec name
+    s2 = SpecParser("a/x").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        SpecParser("a/x").next_spec()
+        s2.lookup_hash()
 
 
 @pytest.mark.db
-def test_invalid_hash(database):
+def test_invalid_hash(database, config):
     zmpi = database.query_one("zmpi")
     mpich = database.query_one("mpich")
 
     # name + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
-        SpecParser(f"zmpi /{mpich.dag_hash()}").next_spec()
+        parsed_spec = SpecParser(f"zmpi /{mpich.dag_hash()}").next_spec()
+        parsed_spec.replace_hash()
     with pytest.raises(spack.spec.InvalidHashError):
-        SpecParser(f"mpich /{zmpi.dag_hash()}").next_spec()
+        parsed_spec = SpecParser(f"mpich /{zmpi.dag_hash()}").next_spec()
+        parsed_spec.replace_hash()
 
     # name + dep + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
-        SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}").next_spec()
+        parsed_spec = SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}").next_spec()
+        parsed_spec.replace_hash()
+
+
+def test_invalid_hash_dep(database, config):
+    mpich = database.query_one("mpich")
+    hash = mpich.dag_hash()
+    with pytest.raises(spack.spec.InvalidHashError):
+        spack.spec.Spec(f"callpath ^zlib/{hash}").replace_hash()
 
 
 @pytest.mark.db
-def test_nonexistent_hash(database):
+def test_nonexistent_hash(database, config):
     """Ensure we get errors for non existent hashes."""
     specs = database.query()
 
@@ -761,26 +789,40 @@ def test_nonexistent_hash(database):
     hashes = [s._hash for s in specs]
     assert no_such_hash not in [h[: len(no_such_hash)] for h in hashes]
 
-    with pytest.raises(spack.spec.NoSuchHashError):
-        SpecParser(f"/{no_such_hash}").next_spec()
+    with pytest.raises(spack.spec.InvalidHashError):
+        parsed_spec = SpecParser(f"/{no_such_hash}").next_spec()
+        parsed_spec.replace_hash()
 
 
-@pytest.mark.db
 @pytest.mark.parametrize(
-    "query_str,text_fmt",
+    "spec1,spec2,constraint",
     [
-        ("mpileaks ^zmpi", r"/{hash}%{0.compiler}"),
-        ("callpath ^zmpi", r"callpath /{hash} ^libelf"),
-        ("dyninst", r'/{hash} cflags="-O3 -fPIC"'),
-        ("mpileaks ^mpich2", r"mpileaks/{hash} @{0.version}"),
+        ("zlib", "hdf5", None),
+        ("zlib+shared", "zlib~shared", "+shared"),
+        ("hdf5+mpi^zmpi", "hdf5~mpi", "^zmpi"),
+        ("hdf5+mpi^mpich+debug", "hdf5+mpi^mpich~debug", "^mpich+debug"),
     ],
 )
-def test_redundant_spec(query_str, text_fmt, database):
-    """Check that redundant spec constraints raise errors."""
-    spec = database.query_one(query_str)
-    text = text_fmt.format(spec, hash=spec.dag_hash())
-    with pytest.raises(spack.spec.RedundantSpecError):
-        SpecParser(text).next_spec()
+def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monkeypatch, config):
+    spec1_concrete = spack.spec.Spec(spec1).concretized()
+    spec2_concrete = spack.spec.Spec(spec2).concretized()
+
+    spec1_concrete._hash = "spec1"
+    spec2_concrete._hash = "spec2"
+
+    monkeypatch.setattr(
+        spack.binary_distribution,
+        "update_cache_and_get_specs",
+        lambda: [spec1_concrete, spec2_concrete],
+    )
+
+    # Ordering is tricky -- for constraints we want after, for names we want before
+    if not constraint:
+        spec = spack.spec.Spec(spec1 + "/spec")
+    else:
+        spec = spack.spec.Spec("/spec" + constraint)
+
+    assert spec.lookup_hash() == spec1_concrete
 
 
 @pytest.mark.parametrize(
@@ -847,74 +889,46 @@ def test_error_conditions(text, exc_cls):
     [
         # Specfile related errors
         pytest.param(
-            "/bogus/path/libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            "/bogus/path/libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
         ),
-        pytest.param(
-            "../../libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
-        ),
-        pytest.param(
-            "./libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
-        ),
+        pytest.param("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
+        pytest.param("./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
         pytest.param(
             "libfoo ^/bogus/path/libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
             marks=FAIL_ON_WINDOWS,
         ),
         pytest.param(
-            "libfoo ^../../libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            "libfoo ^../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
         ),
         pytest.param(
-            "libfoo ^./libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            "libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
         ),
         pytest.param(
             "/bogus/path/libdwarf.yamlfoobar",
-            spack.spec.SpecFilenameError,
+            spack.spec.NoSuchSpecFileError,
             marks=FAIL_ON_WINDOWS,
         ),
         pytest.param(
             "libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml",
-            spack.spec.SpecFilenameError,
+            spack.spec.NoSuchSpecFileError,
             marks=FAIL_ON_WINDOWS,
         ),
         pytest.param(
-            "c:\\bogus\\path\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
+            "c:\\bogus\\path\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
         ),
-        pytest.param(
-            "..\\..\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
-        ),
-        pytest.param(
-            ".\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
-        ),
+        pytest.param("..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX),
+        pytest.param(".\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX),
         pytest.param(
             "libfoo ^c:\\bogus\\path\\libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
             marks=FAIL_ON_UNIX,
         ),
         pytest.param(
-            "libfoo ^..\\..\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
+            "libfoo ^..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
         ),
         pytest.param(
-            "libfoo ^.\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
+            "libfoo ^.\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
         ),
         pytest.param(
             "c:\\bogus\\path\\libdwarf.yamlfoobar",
@@ -930,7 +944,7 @@ def test_error_conditions(text, exc_cls):
 )
 def test_specfile_error_conditions_windows(text, exc_cls):
     with pytest.raises(exc_cls):
-        SpecParser(text).next_spec()
+        SpecParser(text).all_specs()
 
 
 @pytest.mark.parametrize(
@@ -1081,18 +1095,44 @@ def test_compare_abstract_specs():
         assert a <= b or b < a
 
 
-def test_git_ref_spec_equivalences(mock_packages):
-    spec_hash_fmt = "develop-branch-version@git.{hash}=develop"
-    s1 = SpecParser(spec_hash_fmt.format(hash="a" * 40)).next_spec()
-    s2 = SpecParser(spec_hash_fmt.format(hash="b" * 40)).next_spec()
-    s3 = SpecParser("develop-branch-version@git.0.2.15=develop").next_spec()
-    s_no_git = SpecParser("develop-branch-version@develop").next_spec()
+@pytest.mark.parametrize(
+    "lhs_str,rhs_str,expected",
+    [
+        # Git shasum vs generic develop
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            "develop-branch-version@develop",
+            (True, True, False),
+        ),
+        # Two different shasums
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            f"develop-branch-version@git.{'b' * 40}=develop",
+            (False, False, False),
+        ),
+        # Git shasum vs. git tag
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            "develop-branch-version@git.0.2.15=develop",
+            (False, False, False),
+        ),
+        # Git tag vs. generic develop
+        (
+            "develop-branch-version@git.0.2.15=develop",
+            "develop-branch-version@develop",
+            (True, True, False),
+        ),
+    ],
+)
+def test_git_ref_spec_equivalences(mock_packages, lhs_str, rhs_str, expected):
+    lhs = SpecParser(lhs_str).next_spec()
+    rhs = SpecParser(rhs_str).next_spec()
+    intersect, lhs_sat_rhs, rhs_sat_lhs = expected
 
-    assert s1.satisfies(s_no_git)
-    assert s2.satisfies(s_no_git)
-    assert not s_no_git.satisfies(s1)
-    assert not s2.satisfies(s1)
-    assert not s3.satisfies(s1)
+    assert lhs.intersects(rhs) is intersect
+    assert rhs.intersects(lhs) is intersect
+    assert lhs.satisfies(rhs) is lhs_sat_rhs
+    assert rhs.satisfies(lhs) is rhs_sat_lhs
 
 
 @pytest.mark.regression("32471")

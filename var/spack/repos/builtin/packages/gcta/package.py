@@ -29,7 +29,7 @@ class Gcta(CMakePackage):
     depends_on("eigen@3.3.1", when="@1.91.2")
     depends_on("eigen@3.3.7:", when="@1.94.0beta:")
     depends_on("boost@1.79:", when="@1.94.0beta:")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("sqlite@3.3.1:", when="@1.94.0beta:")
     depends_on("zstd@1.4.4:", when="@1.94.0beta:")
     depends_on("spectra", when="@1.94.0beta:")
@@ -53,10 +53,7 @@ class Gcta(CMakePackage):
         if self.spec.satisfies("@1.94.0beta:"):
             spectra = self.spec["spectra"].prefix.include
             boost = self.spec["boost"].prefix.include
-            deps = [
-                self.define("SPECTRA_LIB", spectra),
-                self.define("BOOST_LIB", boost),
-            ]
+            deps = [self.define("SPECTRA_LIB", spectra), self.define("BOOST_LIB", boost)]
             args.extend(deps)
 
         if self.spec.satisfies("target=x86_64:"):

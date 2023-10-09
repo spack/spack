@@ -39,11 +39,9 @@ class Gpi2(AutotoolsPackage):
     variant("mpi", default=False, description="Enable MPI support")
     variant(
         "fabrics",
-        values=disjoint_sets(
-            ("auto",),
-            ("infiniband",),
-            ("ethernet",),
-        ).with_non_feature_values("auto", "none"),
+        values=disjoint_sets(("auto",), ("infiniband",), ("ethernet",)).with_non_feature_values(
+            "auto", "none"
+        ),
         description="List of fabrics that are enabled; "
         "'none' use GPI-2 default (infiniband), "
         "'infiniband' will use 'rdma-core' from Spack",

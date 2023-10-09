@@ -39,7 +39,4 @@ class Piranha(CMakePackage):
     depends_on("mpfr")  # Could also be built against mpir
 
     def cmake_args(self):
-        return [
-            self.define_from_variant("BUILD_PYRANHA", "python"),
-            "-DBUILD_TESTS:BOOL=ON",
-        ]
+        return [self.define_from_variant("BUILD_PYRANHA", "python"), "-DBUILD_TESTS:BOOL=ON"]

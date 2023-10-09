@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -11,33 +13,41 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     problems on parallel and distributed architectures, particularly targeted
     for exascale machines."""
 
-    homepage = "https://gitlab.pnnl.gov/exasgd/frameworks/exago"
-    git = "https://gitlab.pnnl.gov/exasgd/frameworks/exago.git"
-    maintainers("ryandanehy", "CameronRutherford", "pelesh")
+    homepage = "https://github.com/pnnl/ExaGO"
+    git = "https://github.com/pnnl/ExaGO.git"
+    maintainers("ryandanehy", "cameronrutherford", "pelesh")
 
+    version("1.5.1", commit="7abe482c8da0e247f9de4896f5982c4cacbecd78", submodules=True)
     version("1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True)
     version("1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True)
     version("1.4.0", commit="4f4c3fdb40b52ace2d6ba000e7f24b340ec8e886", submodules=True)
     version("1.3.0", commit="58b039d746a6eac8e84b0afc01354cd58caec485", submodules=True)
-    version("1.2.0", commit="255a214e", submodules=True)
-    version("1.1.2", commit="db3bb16e", submodules=True)
-    version("1.1.1", commit="0e0a3f27", submodules=True)
-    version("1.1.0", commit="dc8dd855", submodules=True)
-    version("1.0.0", commit="230d7df2")
-    version("0.99.2", commit="56961641")
-    version("0.99.1", commit="0ae426c7")
+    version("1.2.0", commit="255a214ec747b7bdde7a6d8151c083067b4d0907", submodules=True)
+    version("1.1.2", commit="db3bb16e19c09e01402071623258dae4d13e5133", submodules=True)
+    version("1.1.1", commit="0e0a3f27604876749d47c06ec71daaca4b270df9", submodules=True)
+    version("1.1.0", commit="dc8dd85544ff1b55a64a3cbbbdf12b8a0c6fdaf6", submodules=True)
+    version("1.0.0", commit="230d7df2f384f68b952a1ea03aad41431eaad283")
+    version("0.99.2", commit="56961641f50827b3aa4c14524f2f978dc48b9ce5")
+    version("0.99.1", commit="0ae426c76651ba5a9dbcaeb95f18d1b8ba961690")
     version("main", branch="main", submodules=True)
     version("develop", branch="develop", submodules=True)
-    version("5-18-2022-snapshot", tag="5-18-2022-snapshot", submodules=True)
+    version(
+        "5-18-2022-snapshot",
+        tag="5-18-2022-snapshot",
+        commit="3eb58335db71bb72341153a7867eb607402067ca",
+        submodules=True,
+    )
+    version("kpp2", tag="kpp2", commit="1da764d80a2db793f4c43ca50e50981f7ed3880a", submodules=True)
 
     # Progrmming model options
     variant("mpi", default=True, description="Enable/Disable MPI")
     variant("raja", default=False, description="Enable/Disable RAJA")
-    variant("python", default=True, description="Enable/Disable Python bindings")
-    conflicts("+python", when="@:1.3.0", msg="Python bindings require ExaGO 1.4")
+    variant("python", default=True, when="@1.4:", description="Enable/Disable Python bindings")
+    variant("logging", default=True, description="Enable/Disable spdlog based logging")
     conflicts(
         "+python", when="+ipopt+rocm", msg="Python bindings require -fPIC with Ipopt for rocm."
     )
+    variant("logging", default=False, description="Enable/Disable spdlog based logging")
 
     # Solver options
     variant("hiop", default=False, description="Enable/Disable HiOp")
@@ -47,13 +57,14 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         "~hiop~ipopt @:1.4",
         msg="ExaGO needs at least one solver enabled. PFLOW only mode is supported in 1.5+",
     )
-    # We will better support minimal builds with Python in future.
     # You can use Python with PFLOW if desired ~ipopt~hiop
     conflicts(
-        "~hiop~ipopt+python", msg="ExaGO Python wrapper requires at least one solver enabled."
+        "~hiop~ipopt+python @:1.5.0",
+        msg="ExaGO Python wrapper requires at least one solver enabled.",
     )
 
     # Dependencies
+    depends_on("python@3.6:", when="@1.3.0:+python")
     depends_on("py-pytest", type=("build", "run"), when="@1.5.0:+python")
     depends_on("py-mpi4py", when="@1.3.0:+mpi+python")
     depends_on("pkgconfig", type="build")
@@ -63,13 +74,6 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda", when="+cuda")
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
-
-    depends_on("umpire@6.0.0", when="@1.1.0: +raja")
-    depends_on("raja@0.14.0", when="@1.1.0: +raja")
-    depends_on("camp@0.2.3", when="@1.1.0: +raja")
-
-    # Some allocator code in Umpire only works with static libs
-    depends_on("umpire+cuda~shared", when="+raja+cuda")
 
     depends_on("cmake@3.18:", type="build")
 
@@ -108,18 +112,29 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     # ^ need to depend when both hpctoolkit and tau
 
     # HiOp dependency logic
-    depends_on("hiop+raja", when="+hiop+raja")
     depends_on("hiop@0.3.99:", when="@0.99:+hiop")
     depends_on("hiop@0.5.1:", when="@1.1.0:+hiop")
     depends_on("hiop@0.5.3:", when="@1.3.0:+hiop")
-    depends_on("hiop@0.7.0:0.7.1", when="@1.5.0:+hiop")
+    depends_on("hiop@0.7.0:", when="@1.5.0:+hiop")
 
     depends_on("hiop~mpi", when="+hiop~mpi")
     depends_on("hiop+mpi", when="+hiop+mpi")
 
+    # RAJA dependency logic
+    # ExaGO will support +raja~hiop in the future
+    depends_on("hiop+raja", when="+hiop+raja")
+    # This is duplicated from HiOp
+    # RAJA > 0.14 and Umpire > 6.0 require c++ std 14
+    # We are working on supporting newer Umpire/RAJA versions
+    depends_on("raja@0.14.0:0.14", when="@1.1.0:+raja")
+    depends_on("umpire@6.0.0:6", when="@1.1.0:+raja")
+    depends_on("camp@0.2.3:0.2", when="@1.1.0:+raja")
+    # This is no longer a requirement in RAJA > 0.14
+    depends_on("umpire+cuda~shared", when="+raja+cuda ^raja@:0.14")
+
     depends_on("petsc@3.13:3.14", when="@:1.2.99")
     depends_on("petsc@3.16.0:3.16", when="@1.3.0:1.4")
-    depends_on("petsc@3.18.0:3.18", when="@1.5.0:")
+    depends_on("petsc@3.18.0:3.19", when="@1.5.0:")
 
     depends_on("petsc~mpi", when="~mpi")
 
@@ -127,16 +142,15 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         cuda_dep = "+cuda cuda_arch={0}".format(arch)
         depends_on("hiop {0}".format(cuda_dep), when=cuda_dep)
         depends_on("raja {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
-
-        # For some versions of RAJA package, camp cuda variant does not get set
-        # correctly, so we must explicitly depend on it even though we don't use
-        # camp
+        depends_on("umpire {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
         depends_on("camp {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
 
     for arch in ROCmPackage.amdgpu_targets:
         rocm_dep = "+rocm amdgpu_target={0}".format(arch)
         depends_on("hiop {0}".format(rocm_dep), when=rocm_dep)
         depends_on("raja {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
+        depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
+        depends_on("camp {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
 
     flag_handler = build_system_flags
 
@@ -164,15 +178,18 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         args.extend(
             [
                 self.define("EXAGO_ENABLE_GPU", "+cuda" in spec or "+rocm" in spec),
+                self.define("PETSC_DIR", spec["petsc"].prefix),
+                self.define("EXAGO_RUN_TESTS", self.run_tests),
+                self.define("LAPACK_LIBRARIES", spec["lapack"].libs + spec["blas"].libs),
                 self.define_from_variant("EXAGO_ENABLE_CUDA", "cuda"),
                 self.define_from_variant("EXAGO_ENABLE_HIP", "rocm"),
-                self.define("PETSC_DIR", spec["petsc"].prefix),
-                self.define("EXAGO_RUN_TESTS", True),
+                self.define_from_variant("EXAGO_ENABLE_LOGGING", "logging"),
                 self.define_from_variant("EXAGO_ENABLE_MPI", "mpi"),
                 self.define_from_variant("EXAGO_ENABLE_RAJA", "raja"),
                 self.define_from_variant("EXAGO_ENABLE_HIOP", "hiop"),
                 self.define_from_variant("EXAGO_ENABLE_IPOPT", "ipopt"),
                 self.define_from_variant("EXAGO_ENABLE_PYTHON", "python"),
+                self.define_from_variant("EXAGO_ENABLE_LOGGING", "logging"),
             ]
         )
 

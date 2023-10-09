@@ -27,6 +27,7 @@ class PyPybind11(CMakePackage, PythonExtension):
     maintainers("ax3l")
 
     version("master", branch="master")
+    version("2.10.4", sha256="832e2f309c57da9c1e6d4542dedd34b24e4192ecb4d62f6f4866a737454c9970")
     version("2.10.1", sha256="111014b516b625083bef701df7880f78c2243835abdb263065b6b59b960b6bad")
     version("2.10.0", sha256="eacf582fa8f696227988d08cfc46121770823839fe9e301a20fbce67e7cd70ec")
     version("2.9.2", sha256="6bd528c4dbe2276635dc787b6b1f2e5316cf6b49ee3e150264e455a0d68d19c1")
@@ -59,7 +60,7 @@ class PyPybind11(CMakePackage, PythonExtension):
     extends("python")
 
     with when("build_system=cmake"):
-        depends_on("ninja", type="build")
+        generator("ninja")
         depends_on("cmake@3.13:", type="build")
         depends_on("cmake@3.18:", type="build", when="@2.6.0:")
 
@@ -88,7 +89,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         ]
 
     def install(self, pkg, spec, prefix):
-        super(CMakeBuilder, self).install(pkg, spec, prefix)
+        super().install(pkg, spec, prefix)
         python_builder = spack.build_systems.python.PythonPipBuilder(pkg)
         python_builder.install(pkg, spec, prefix)
 
@@ -104,9 +105,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             # test include helper points to right location
             python = self.spec["python"].command
             py_inc = python(
-                "-c",
-                "import pybind11 as py; print(py.get_include())",
-                output=str,
+                "-c", "import pybind11 as py; print(py.get_include())", output=str
             ).strip()
             for inc in [py_inc, self.prefix.include]:
                 inc_file = join_path(inc, "pybind11", "pybind11.h")

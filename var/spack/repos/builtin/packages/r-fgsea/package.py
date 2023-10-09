@@ -16,6 +16,7 @@ class RFgsea(RPackage):
 
     bioc = "fgsea"
 
+    version("1.26.0", commit="102b439e2208ae415dc19d3d1ac8936f9c5999f1")
     version("1.24.0", commit="ac74ccd935c15623b8584caa791835aec514144b")
     version("1.22.0", commit="e4e203aa64faa984e0406fed5d87a422d9df92f2")
     version("1.20.0", commit="b704f81687dc16afdaafc6d30108c62a067856b2")
@@ -34,6 +35,7 @@ class RFgsea(RPackage):
     depends_on("r-cowplot", type=("build", "run"), when="@1.24.0:")
     depends_on("r-fastmatch", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"), when="@1.6.0:")
+    depends_on("r-scales", type=("build", "run"), when="@1.26.0:")
     depends_on("r-bh", type=("build", "run"), when="@1.10.1:")
-    depends_on("r-gridextra", type=("build", "run"))
-    depends_on("r-gridextra", when="@:1.22.0")
+
+    depends_on("r-gridextra", type=("build", "run"), when="@:1.22.0")

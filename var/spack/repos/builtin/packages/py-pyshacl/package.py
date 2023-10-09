@@ -23,3 +23,7 @@ class PyPyshacl(PythonPackage):
     depends_on("py-owlrl@6.0.2:6", when="@0.20.0:", type=("build", "run"))
     depends_on("py-packaging@21.3:", when="@0.20.0:", type=("build", "run"))
     depends_on("py-prettytable@2.2.1:2", type=("build", "run"))
+
+    def patch(self):
+        if self.spec.satisfies("@0.17.2"):
+            filter_file("^5.2.3,<7", ">=5.2.3,<7", "pyproject.toml", string=True)

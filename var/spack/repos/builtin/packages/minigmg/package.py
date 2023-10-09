@@ -52,7 +52,6 @@ class Minigmg(Package):
     patch("inline_static.patch")
 
     def install(self, spec, prefix):
-
         cc = Executable(spec["mpi"].mpicc)
 
         args = []

@@ -16,7 +16,7 @@ class PyPulp(PythonPackage):
 
     maintainers("marcusboden")
 
-    version("2.6.0", "4b4f7e1e954453e1b233720be23aea2f10ff068a835ac10c090a93d8e2eb2e8d")
+    version("2.6.0", sha256="4b4f7e1e954453e1b233720be23aea2f10ff068a835ac10c090a93d8e2eb2e8d")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

@@ -40,7 +40,6 @@ class Dia(Package):
         )
 
     def install(self, spec, prefix):
-
         # configure, build, install:
         options = [
             "--prefix=%s" % prefix,

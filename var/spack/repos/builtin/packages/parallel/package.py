@@ -45,10 +45,5 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
         with working_dir("src"):
             match = "^#!/usr/bin/env perl|^#!/usr/bin/perl.*"
             substitute = "#!{perl}".format(perl=perl)
-            files = [
-                "parallel",
-                "niceload",
-                "parcat",
-                "sql",
-            ]
+            files = ["parallel", "niceload", "parcat", "sql"]
             filter_file(match, substitute, *files, **kwargs)

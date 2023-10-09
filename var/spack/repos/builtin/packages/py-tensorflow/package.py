@@ -6,7 +6,6 @@
 import sys
 import tempfile
 
-from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
@@ -30,6 +29,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     maintainers("adamjstewart", "aweits")
     import_modules = ["tensorflow"]
 
+    version("2.13.0", sha256="e58c939079588623e6fa1d054aec2f90f95018266e0a970fd353a5244f5173dc")
+    version("2.12.1", sha256="6bc4600cc0b88e9e40f1800096f5bddbbd3b6e5527a030dea631b87f2ae46b5b")
+    version("2.12.0", sha256="c030cb1905bff1d2446615992aad8d8d85cbe90c4fb625cee458c63bf466bc8e")
+    version("2.11.1", sha256="624ed1cc170cdcc19e8a15d8cdde989a9a1c6b0534c90b38a6b2f06fb2963e5f")
+    version("2.11.0", sha256="99c732b92b1b37fc243a559e02f9aef5671771e272758aa4aec7f34dc92dac48")
     version("2.10.1", sha256="622a92e22e6f3f4300ea43b3025a0b6122f1cc0e2d9233235e4c628c331a94a3")
     version("2.10.0", sha256="b5a1bb04c84b6fe1538377e5a1f649bb5d5f0b2e3625a3c526ff3a8af88633e8")
     version("2.9.3", sha256="59d09bd00eef6f07477eea2f50778582edd4b7b2850a396f1fd0c646b357a573")
@@ -126,13 +130,15 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     variant("aws", default=False, description="Build with Amazon AWS Platform support")
     variant("kafka", default=False, description="Build with Apache Kafka Platform support")
     variant("ignite", default=False, description="Build with Apache Ignite support")
-    variant("xla", default=False, description="Build with XLA JIT support")
+    variant("xla", default=sys.platform != "darwin", description="Build with XLA JIT support")
     variant("gdr", default=False, description="Build with GDR support")
     variant("verbs", default=False, description="Build with libverbs support")
     variant("ngraph", default=False, description="Build with Intel nGraph support")
     variant("opencl", default=False, description="Build with OpenCL SYCL support")
     variant("computecpp", default=False, description="Build with ComputeCPP support")
-    variant("tensorrt", default=False, description="Build with TensorRT support")
+    variant(
+        "tensorrt", default=False, description="Build with TensorRT support"
+    )  # TODO: enable when TensorRT in Spack
     variant("cuda", default=sys.platform != "darwin", description="Build with CUDA support")
     variant(
         "nccl", default=sys.platform.startswith("linux"), description="Enable NVIDIA NCCL support"
@@ -143,16 +149,25 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     variant("monolithic", default=False, description="Static monolithic build")
     variant("numa", default=False, description="Build with NUMA support")
     variant(
-        "dynamic_kernels", default=False, description="Build kernels into separate shared objects"
+        "dynamic_kernels",
+        default=sys.platform.startswith("linux"),
+        description="Build kernels into separate shared objects",
     )
 
     extends("python")
-    depends_on("python@3:", type=("build", "run"), when="@2.1:")
-    # https://github.com/tensorflow/tensorflow/issues/33374
-    depends_on("python@:3.7", type=("build", "run"), when="@:2.1")
+
+    # Python support based on wheel availability
+    depends_on("python@3.8:3.11", when="@2.12:", type=("build", "run"))
+    depends_on("python@3.7:3.10", when="@2.8:2.11", type=("build", "run"))
+    depends_on("python@3.7:3.9", when="@2.7", type=("build", "run"))
+    depends_on("python@3.6:3.9", when="@2.5:2.6", type=("build", "run"))
+    depends_on("python@3.6:3.8", when="@2.4", type=("build", "run"))
+    depends_on("python@3.5:3.8", when="@2.2:2.3", type=("build", "run"))
+    depends_on("python@2.7,3.5:3.7", when="@:2.1", type=("build", "run"))
 
     # See .bazelversion
-    depends_on("bazel@5.1.1", type="build", when="@2.10:")
+    depends_on("bazel@5.3.0", type="build", when="@2.11:")
+    depends_on("bazel@5.1.1", type="build", when="@2.10")
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
     depends_on("bazel@4.2.2:5.99.0", type="build", when="@2.9")
     depends_on("bazel@4.2.1:4.99.0", type="build", when="@2.8")
@@ -188,7 +203,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-astunparse@1.6:", type=("build", "run"), when="@2.7:")
     depends_on("py-astunparse@1.6.3:1.6", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-astunparse@1.6.3", type=("build", "run"), when="@2.2:2.3")
-    depends_on("py-flatbuffers@2:", type=("build", "run"), when="@2.10:")
+    depends_on("py-flatbuffers@23.1.21:", type=("build", "run"), when="@2.13:")
+    depends_on("py-flatbuffers@2:", type=("build", "run"), when="@2.10:2.12")
     depends_on("py-flatbuffers@1.12:1", type=("build", "run"), when="@2.9")
     depends_on("py-flatbuffers@1.12:", type=("build", "run"), when="@2.8")
     depends_on("py-flatbuffers@1.12:2", type=("build", "run"), when="@2.7")
@@ -214,16 +230,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-h5py~mpi", type=("build", "run"), when="@1.15.5,2.0.4,2.1.3:~mpi")
     depends_on("hdf5+mpi", type="build", when="@1.15.5,2.0.4,2.1.3:+mpi")
     depends_on("hdf5~mpi", type="build", when="@1.15.5,2.0.4,2.1.3:~mpi")
-    depends_on("py-keras-preprocessing@1.1.1:", type=("build", "run"), when="@2.7:")
-    depends_on("py-keras-preprocessing@1.1.2:1.1", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-keras-preprocessing@1.1.1:1.1", type=("build", "run"), when="@2.3")
-    depends_on("py-keras-preprocessing@1.1:", type=("build", "run"), when="@2.1.0,2.2")
-    depends_on("py-keras-preprocessing@1.1.0", type=("build", "run"), when="@2.1.1:2.1")
-    depends_on("py-keras-preprocessing@1.0.5:", type=("build", "run"), when="@1.12:2.0")
-    depends_on("py-keras-preprocessing@1.0.3:", type=("build", "run"), when="@1.11")
     depends_on("py-libclang@13:", type=("build", "run"), when="@2.9:")
     depends_on("py-libclang@9.0.1:", type=("build", "run"), when="@2.7:2.8")
-    depends_on("py-numpy@1.20:", type=("build", "run"), when="@2.8:")
+    depends_on("py-numpy@1.22:1.24.3", type=("build", "run"), when="@2.13:")
+    depends_on("py-numpy@1.22:1.23", type=("build", "run"), when="@2.12")
+    depends_on("py-numpy@1.20:", type=("build", "run"), when="@2.8:2.11")
     depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@2.7")
     depends_on("py-numpy@1.19.2:1.19", type=("build", "run"), when="@2.4:2.6")
     # https://github.com/tensorflow/tensorflow/issues/40688
@@ -238,7 +249,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-opt-einsum@2.3.2:", type=("build", "run"), when="@1.15:2.3,2.7:")
     depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-packaging", type=("build", "run"), when="@2.9:")
-    depends_on("py-protobuf@3.9.2:", type=("build", "run"), when="@2.3:")
+    depends_on("py-protobuf@3.20.3:4.20,4.21.6:4", type=("build", "run"), when="@2.12:")
+    depends_on("py-protobuf@3.9.2:", type=("build", "run"), when="@2.3:2.11")
     depends_on("py-protobuf@3.8.0:", type=("build", "run"), when="@2.1:2.2")
     depends_on("py-protobuf@3.6.1:", type=("build", "run"), when="@1.12:2.0")
     depends_on("py-protobuf@3.6.0:", type=("build", "run"), when="@1.10:1.11")
@@ -246,28 +258,28 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-protobuf@3.3.0:", type=("build", "run"), when="@1.3:1.4")
     depends_on("py-protobuf@3.2.0:", type=("build", "run"), when="@1.1:1.2")
     depends_on("py-protobuf@3.1.0:", type=("build", "run"), when="@:1.0")
-    depends_on("protobuf@:3.12", when="@:2.4")
-    depends_on("protobuf@:3.17")
     # https://github.com/protocolbuffers/protobuf/issues/10051
     # https://github.com/tensorflow/tensorflow/issues/56266
-    depends_on("py-protobuf@:3.19", type=("build", "run"))
-    depends_on("protobuf@:3.19", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("py-protobuf@:3.19", type=("build", "run"), when="@:2.11")
+    # Must be matching versions of py-protobuf and protobuf
+    conflicts("^py-protobuf~cpp")
+    depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six@1.12:", type=("build", "run"), when="@2.1:2.3,2.7:")
     depends_on("py-six@1.15", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-six@1.10:", type=("build", "run"), when="@:2.0")
     depends_on("py-termcolor@1.1:", type=("build", "run"), when="@1.6:2.3,2.7:")
     depends_on("py-termcolor@1.1", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-typing-extensions@3.6.6:", type=("build", "run"), when="@2.7:")
+    depends_on("py-typing-extensions@3.6.6:4.5", type=("build", "run"), when="@2.13:")
+    depends_on("py-typing-extensions@3.6.6:", type=("build", "run"), when="@2.7:2.12")
     depends_on("py-typing-extensions@3.7.4:3.7", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-wrapt@1.11:", type=("build", "run"), when="@2.7:")
+    depends_on("py-wrapt@1.11:", type=("build", "run"), when="@2.13:")
+    depends_on("py-wrapt@1.11:1.14", type=("build", "run"), when="@2.12")
+    depends_on("py-wrapt@1.11:", type=("build", "run"), when="@2.7:2.11")
     depends_on("py-wrapt@1.12.1:1.12", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-wrapt@1.11.1:", type=("build", "run"), when="@1.12.1,1.14:2.3")
-    # TODO: add package for this dependency
-    # depends_on('py-tensorflow-io-gcs-filesystem@0.23.1:',
-    #            type=('build', 'run'), when='@2.8:')
-    # depends_on('py-tensorflow-io-gcs-filesystem@0.21:',
-    #            type=('build', 'run'), when='@2.7')
+    # TODO: add packages for these dependencies
+    # depends_on('py-tensorflow-io-gcs-filesystem@0.23.1:', type=('build', 'run'), when='@2.8:')
+    # depends_on('py-tensorflow-io-gcs-filesystem@0.21:', type=('build', 'run'), when='@2.7')
     with when("+rocm"):
         depends_on("hip")
         depends_on("rocrand")
@@ -292,7 +304,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         depends_on("py-grpcio@1.32", type=("build", "run"), when="@2.4")
         depends_on("py-grpcio@1.8.6:", type=("build", "run"), when="@1.6:2.3")
 
-    for minor_ver in range(5, 11):
+    for minor_ver in range(5, 14):
         depends_on(
             "py-tensorboard@2.{}".format(minor_ver),
             type=("build", "run"),
@@ -303,12 +315,25 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # depends_on('py-tensorflow-estimator')  # circular dep
     # depends_on('py-keras')  # circular dep
 
+    # Undocumented dependencies
+    depends_on("py-requests", type=("build", "run"))
+    # https://github.com/tensorflow/tensorflow/issues/60179#issuecomment-1491238631
+    depends_on("coreutils", when="@2.13: platform=darwin", type="build")
+
     # No longer a dependency in latest versions
     depends_on("py-astor@0.6:", type=("build", "run"), when="@1.6:2.1")
     depends_on("py-backports-weakref@1.0rc1", type=("build", "run"), when="@1.2")
+    depends_on("py-jax@0.3.15:", type=("build", "run"), when="@2.12")
     depends_on("py-keras-applications@1.0.8:", type=("build", "run"), when="@1.15:2.1")
     depends_on("py-keras-applications@1.0.6:", type=("build", "run"), when="@1.12:1.14")
     depends_on("py-keras-applications@1.0.5:", type=("build", "run"), when="@1.11")
+    depends_on("py-keras-preprocessing@1.1.1:", type=("build", "run"), when="@2.7:2.10")
+    depends_on("py-keras-preprocessing@1.1.2:1.1", type=("build", "run"), when="@2.4:2.6")
+    depends_on("py-keras-preprocessing@1.1.1:1.1", type=("build", "run"), when="@2.3")
+    depends_on("py-keras-preprocessing@1.1:", type=("build", "run"), when="@2.1.0,2.2")
+    depends_on("py-keras-preprocessing@1.1.0", type=("build", "run"), when="@2.1.1:2.1")
+    depends_on("py-keras-preprocessing@1.0.5:", type=("build", "run"), when="@1.12:2.0")
+    depends_on("py-keras-preprocessing@1.0.3:", type=("build", "run"), when="@1.11")
     depends_on("py-scipy@1.4.1", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0")
     depends_on("py-wheel@0.32:0", type=("build", "run"), when="@2.7")
     depends_on("py-wheel@0.35:0", type=("build", "run"), when="@2.4:2.6")
@@ -411,6 +436,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("target=aarch64:", when="@:2.2")
     conflicts("~rocm", when="@2.7.4-rocm-enhanced")
     conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:")
+
+    # wheel 0.40 upgrades vendored packaging, trips over tensorflow-io-gcs-filesystem identifier
+    conflicts("^py-wheel@0.40:", when="@2.11:2.13")
+
+    # https://www.tensorflow.org/install/source#tested_build_configurations
+    conflicts("%gcc@:9.3.0", when="@2.9:")
+    conflicts("%gcc@:7.3.0", when="@1.15:")
+    conflicts("%gcc@:4.7")
 
     # zlib is vendored and downloaded directly from zlib.org (or mirrors), but
     # old downloads are removed from that site immediately after a new release.
@@ -604,10 +637,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             # Please specify which gcc nvcc should use as the host compiler
             env.set("GCC_HOST_COMPILER_PATH", spack_cc)
 
-            cuda_paths = [
-                spec["cuda"].prefix,
-                spec["cudnn"].prefix,
-            ]
+            cuda_paths = [spec["cuda"].prefix, spec["cudnn"].prefix]
 
             # Do you wish to build TensorFlow with TensorRT support?
             if "+tensorrt" in spec:
@@ -724,53 +754,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         #       stay at least also OSX compatible
         tmp_path = tempfile.mkdtemp(prefix="spack")
         env.set("TEST_TMPDIR", tmp_path)
-
-        env.set("TF_SYSTEM_LIBS", "com_google_protobuf")
-        if spec.satisfies("@:2.3"):
-            # NOTE: INCLUDEDIR is not just relevant to protobuf
-            # see third_party/systemlibs/jsoncpp.BUILD
-            env.set("INCLUDEDIR", spec["protobuf"].prefix.include)
-
-    def patch(self):
-        filter_file(
-            '"-U_FORTIFY_SOURCE",',
-            '"-U_FORTIFY_SOURCE", "-I%s",' % self.spec["protobuf"].prefix.include,
-            "third_party/gpus/crosstool/BUILD.rocm.tpl",
-        )
-        if self.spec.satisfies("@2.3.0:"):
-            filter_file(
-                "deps = protodeps + well_known_proto_libs(),",
-                "deps = protodeps,",
-                "tensorflow/core/platform/default/build_config.bzl",
-                string=True,
-            )
-        if self.spec.satisfies("@2.4.0:2.5"):
-            text = """
-def protobuf_deps():
-    pass
-"""
-            with open("third_party/systemlibs/protobuf_deps.bzl", "w") as f:
-                f.write(text)
-
-            if self.spec.satisfies("@2.5.0"):
-                file_to_patch = "tensorflow/workspace2.bzl"
-            else:
-                file_to_patch = "tensorflow/workspace.bzl"
-
-            filter_file(
-                '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",',
-                '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",\n'
-                '"//third_party/systemlibs:protobuf_deps.bzl": "protobuf_deps.bzl",',  # noqa: E501
-                file_to_patch,
-                string=True,
-            )
-
-        # Set protobuf path
-        filter_file(
-            r"(^build:linux --define=PROTOBUF_INCLUDE_PATH=).*",
-            r"\1{0}".format(self.spec["protobuf"].prefix.include),
-            ".bazelrc",
-        )
 
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
@@ -954,21 +937,11 @@ def protobuf_deps():
             "--config=opt",
             # Enable verbose output for failures
             "--verbose_failures",
-            # Show (formatted) subcommands being executed
-            "--subcommands=pretty_print",
-            # Ask bazel to explain what it's up to
-            # Needs a filename as argument
-            "--explain=explainlogfile.txt",
-            # Increase verbosity of explanation,
-            "--verbose_explanations",
         ]
 
         if spec.satisfies("^bazel@:3.5"):
             # removed in bazel 3.6
             args.append("--incompatible_no_support_tools_in_action_inputs=false")
-
-        if spec.satisfies("@2.9: platform=darwin"):
-            args.append("--macos_sdk_version={}".format(macos_version()))
 
         # See .bazelrc for when each config flag is supported
         if spec.satisfies("@1.12.1:"):

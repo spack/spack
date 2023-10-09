@@ -33,7 +33,8 @@ class Survey(CMakePackage):
     maintainers("jgalarowicz")
 
     version("master", branch="master")
-    version("1.0.7", branch="1.0.7")
+    version("1.0.8", branch="1.0.8")
+    version("1.0.7", tag="1.0.7")
     version("1.0.6", tag="1.0.6")
     version("1.0.5", tag="1.0.5")
     version("1.0.4", tag="1.0.4")
@@ -79,6 +80,7 @@ class Survey(CMakePackage):
     depends_on("py-matplotlib", type=("build", "run"), when="@1.0.3:")
     depends_on("py-more-itertools", type=("build", "run"), when="@1.0.4:")
     depends_on("py-versioneer", type=("build", "run"), when="@1.0.5:")
+    depends_on("py-filelock", type=("build", "run"), when="@1.0.7:")
 
     extends("python")
 

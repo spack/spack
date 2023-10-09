@@ -12,4 +12,5 @@ class PerlMathBigint(PerlPackage):
     homepage = "https://metacpan.org/pod/Math::BigInt"
     url = "https://cpan.metacpan.org/authors/id/P/PJ/PJACKLAM/Math-BigInt-1.999837.tar.gz"
 
+    version("1.999838", sha256="d3c2fb37d412ac8d126452caad5764f02193147261b59c56e652167c41d1e9d5")
     version("1.999837", sha256="038f9aad6318f20a84a7b1afe3087a1b02406c9988ce5919311a797f85a32962")

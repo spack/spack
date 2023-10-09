@@ -6,6 +6,7 @@
 import os
 import shutil
 import sys
+from platform import machine
 
 from spack.package import *
 
@@ -18,7 +19,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     homepage = "http://www.mfem.org"
     git = "https://github.com/mfem/mfem.git"
 
-    maintainers("v-dobrev", "tzanio", "acfisher", "goxberry", "markcmiller86")
+    maintainers("v-dobrev", "tzanio", "acfisher", "markcmiller86")
 
     test_requires_compiler = True
 
@@ -49,6 +50,20 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     version("develop", branch="master")
 
     version(
+        "4.6.0",
+        sha256="5fa9465b5bec56bfb777a4d2826fba48d85fbace4aed8b64a2fd4059bf075b15",
+        url="https://bit.ly/mfem-4-6",
+        extension="tar.gz",
+    )
+
+    version(
+        "4.5.2",
+        sha256="7003c908c8265810ff97cb37531521b3aed24959975833a01ea05adfdb36e0f7",
+        url="https://bit.ly/mfem-4-5-2",
+        extension="tar.gz",
+    )
+
+    version(
         "4.5.0",
         sha256="4f201bec02fc5460a902596697b6c1deb7b15ac57c71f615b2ab4a8eb65665f7",
         url="https://bit.ly/mfem-4-5",
@@ -71,14 +86,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     version(
         "4.2.0",
-        "4352a225b55948d2e73a5ee88cece0e88bdbe7ba6726a23d68b2736d3221a86d",
+        sha256="4352a225b55948d2e73a5ee88cece0e88bdbe7ba6726a23d68b2736d3221a86d",
         url="https://bit.ly/mfem-4-2",
         extension="tar.gz",
     )
 
     version(
         "4.1.0",
-        "4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d",
+        sha256="4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d",
         url="https://bit.ly/mfem-4-1",
         extension="tar.gz",
     )
@@ -88,13 +103,15 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     version(
         "4.0.0",
-        "df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727",
+        sha256="df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727",
         url="https://bit.ly/mfem-4-0",
         extension="tar.gz",
     )
 
     # Tagged development version used by the laghos package:
-    version("3.4.1-laghos-v2.0", tag="laghos-v2.0")
+    version(
+        "3.4.1-laghos-v2.0", tag="laghos-v2.0", commit="4cb8d2cbc19aac5528df650b4a41c54158d1d2c2"
+    )
 
     version(
         "3.4.0",
@@ -111,7 +128,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     )
 
     # Tagged development version used by the laghos package:
-    version("3.3.1-laghos-v1.0", tag="laghos-v1.0")
+    version(
+        "3.3.1-laghos-v1.0", tag="laghos-v1.0", commit="e1f466e6bf80d5f8449b9e1585c414bad4704195"
+    )
 
     version(
         "3.3",
@@ -275,6 +294,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "sundials@5.4.0:+cuda cuda_arch={0}".format(sm_),
             when="@4.2.0:+sundials+cuda cuda_arch={0}".format(sm_),
         )
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "sundials@5.7.0:+rocm amdgpu_target={0}".format(gfx),
+            when="@4.6.0:+sundials+rocm amdgpu_target={0}".format(gfx),
+        )
     depends_on("pumi", when="+pumi~shared")
     depends_on("pumi+shared", when="+pumi+shared")
     depends_on("pumi@2.2.3:2.2.5", when="@4.2.0:4.3.0+pumi")
@@ -285,6 +309,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("gslib@1.0.7:", when="@4.3.0:+gslib")
     depends_on("suite-sparse", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on(
+            "superlu-dist+cuda cuda_arch={0}".format(sm_),
+            when="+superlu-dist+cuda cuda_arch={0}".format(sm_),
+        )
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "superlu-dist+rocm amdgpu_target={0}".format(gfx),
+            when="+superlu-dist+rocm amdgpu_target={0}".format(gfx),
+        )
     depends_on("strumpack@3.0.0:", when="+strumpack~shared")
     depends_on("strumpack@3.0.0:+shared", when="+strumpack+shared")
     for sm_ in CudaPackage.cuda_arch_values:
@@ -327,7 +361,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("mpfr", when="+mpfr")
     depends_on("netcdf-c@4.1.3:", when="+netcdf")
     depends_on("unwind", when="+libunwind")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("gnutls", when="+gnutls")
     depends_on("conduit@0.3.1:,master:", when="+conduit")
     depends_on("conduit+mpi", when="+conduit+mpi")
@@ -335,8 +369,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("ginkgo@1.4.0:", when="+ginkgo")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
-            "ginkgo+cuda cuda_arch={0}".format(sm_),
-            when="+ginkgo+cuda cuda_arch={0}".format(sm_),
+            "ginkgo+cuda cuda_arch={0}".format(sm_), when="+ginkgo+cuda cuda_arch={0}".format(sm_)
         )
     for gfx in ROCmPackage.amdgpu_targets:
         depends_on(
@@ -347,8 +380,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("hiop@0.4.6:+mpi", when="+hiop+mpi")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
-            "hiop+cuda cuda_arch={0}".format(sm_),
-            when="+hiop+cuda cuda_arch={0}".format(sm_),
+            "hiop+cuda cuda_arch={0}".format(sm_), when="+hiop+cuda cuda_arch={0}".format(sm_)
         )
     for gfx in ROCmPackage.amdgpu_targets:
         depends_on(
@@ -374,7 +406,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("raja@0.7.0:0.9.0", when="@4.0.0+raja")
     depends_on("raja@0.10.0:0.12.1", when="@4.0.1:4.2.0+raja")
     depends_on("raja@0.13.0", when="@4.3.0+raja")
-    depends_on("raja@0.14.0:", when="@4.4.0:+raja")
+    depends_on("raja@0.14.0:2022.03", when="@4.4.0:4.5.0+raja")
+    depends_on("raja@2022.10.3:", when="@4.5.2:+raja")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "raja+cuda cuda_arch={0}".format(sm_), when="+raja+cuda cuda_arch={0}".format(sm_)
@@ -530,8 +563,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             else:
                 mfem_mpiexec = "jsrun"
                 mfem_mpiexec_np = "-p"
-        elif "FLUX_JOB_ID" in os.environ:
-            mfem_mpiexec = "flux mini run"
+        elif "FLUX_EXEC_PATH" in os.environ:
+            mfem_mpiexec = "flux run"
+            mfem_mpiexec_np = "-n"
+        elif "PBS_JOBID" in os.environ:
+            mfem_mpiexec = "mpiexec"
             mfem_mpiexec_np = "-n"
 
         metis5_str = "NO"
@@ -653,7 +689,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             all_hypre_libs = hypre.libs + hypre["lapack"].libs + hypre["blas"].libs
             hypre_gpu_libs = ""
             if "+cuda" in hypre:
-                hypre_gpu_libs = " -lcusparse -lcurand"
+                hypre_gpu_libs = " -lcusparse -lcurand -lcublas"
             elif "+rocm" in hypre:
                 hypre_rocm_libs = LibraryList([])
                 if "^rocsparse" in hypre:
@@ -843,11 +879,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if "+zlib" in spec:
             if "@:3.3.2" in spec:
-                options += ["ZLIB_DIR=%s" % spec["zlib"].prefix]
+                options += ["ZLIB_DIR=%s" % spec["zlib-api"].prefix]
             else:
                 options += [
-                    "ZLIB_OPT=-I%s" % spec["zlib"].prefix.include,
-                    "ZLIB_LIB=%s" % ld_flags_from_library_list(spec["zlib"].libs),
+                    "ZLIB_OPT=-I%s" % spec["zlib-api"].prefix.include,
+                    "ZLIB_LIB=%s" % ld_flags_from_library_list(spec["zlib-api"].libs),
                 ]
 
         if "+mpfr" in spec:
@@ -908,7 +944,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     options += ["HIP_DIR=%s" % hipsparse["rocsparse"].prefix]
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
-                craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+                craylibs_path = env["CRAYLIBS_" + machine().upper()]
                 craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
                 hip_libs += find_libraries(craylibs, craylibs_path)
             if hip_libs:
@@ -1019,12 +1055,28 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if "+hiop" in spec:
             hiop = spec["hiop"]
+            hiop_hdrs = hiop.headers
             hiop_libs = hiop.libs
+            hiop_hdrs += spec["lapack"].headers + spec["blas"].headers
             hiop_libs += spec["lapack"].libs + spec["blas"].libs
-            if "^magma" in hiop:
-                hiop_libs += hiop["magma"].libs
+            hiop_opt_libs = ["magma", "umpire"]
+            for opt_lib in hiop_opt_libs:
+                if "^" + opt_lib in hiop:
+                    hiop_hdrs += hiop[opt_lib].headers
+                    hiop_libs += hiop[opt_lib].libs
+            # raja's libs property does not work
+            if "^raja" in hiop:
+                raja = hiop["raja"]
+                hiop_hdrs += raja.headers
+                hiop_libs += find_libraries(
+                    "libRAJA", raja.prefix, shared=("+shared" in raja), recursive=True
+                )
+                if raja.satisfies("^camp"):
+                    camp = raja["camp"]
+                    hiop_hdrs += camp.headers
+                    hiop_libs += find_optional_library("libcamp", camp.prefix)
             options += [
-                "HIOP_OPT=-I%s" % hiop.prefix.include,
+                "HIOP_OPT=%s" % hiop_hdrs.cpp_flags,
                 "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
             ]
 
@@ -1091,30 +1143,22 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         make("examples/clean", parallel=False)
         self.cache_extra_test_sources([self.examples_src_dir, self.examples_data_dir])
 
-    def test(self):
-        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
-
+    def test_ex10(self):
+        """build and run ex10(p)"""
         # MFEM has many examples to serve as a suitable smoke check. ex10
         # was chosen arbitrarily among the examples that work both with
         # MPI and without it
-        test_exe = "ex10p" if ("+mpi" in self.spec) else "ex10"
-        self.run_test(
-            "make",
-            ["CONFIG_MK={0}/share/mfem/config.mk".format(self.prefix), test_exe, "parallel=False"],
-            purpose="test: building {0}".format(test_exe),
-            skip_missing=False,
-            work_dir=test_dir,
-        )
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
-        self.run_test(
-            "./{0}".format(test_exe),
-            ["--mesh", "../{0}/beam-quad.mesh".format(self.examples_data_dir)],
-            [],
-            installed=False,
-            purpose="test: running {0}".format(test_exe),
-            skip_missing=False,
-            work_dir=test_dir,
-        )
+        mesh = join_path("..", self.examples_data_dir, "beam-quad.mesh")
+        test_exe = "ex10p" if ("+mpi" in self.spec) else "ex10"
+
+        with working_dir(test_dir):
+            make = which("make")
+            make(f"CONFIG_MK={self.config_mk}", test_exe, "parallel=False")
+
+            ex10 = which(test_exe)
+            ex10("--mesh", mesh)
 
     # this patch is only needed for mfem 4.1, where a few
     # released files include byte order marks

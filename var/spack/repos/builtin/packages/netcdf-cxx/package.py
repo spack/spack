@@ -37,9 +37,6 @@ class NetcdfCxx(AutotoolsPackage):
             args.append("CPPFLAGS=-DUSE_NETCDF4")
         # Add these to LDFLAGS explicitly, so the linker doesn't accidentally
         # use system versions
-        ldflags = [
-            self.spec["netcdf-c"].libs.search_flags,
-            self.spec["hdf5"].libs.search_flags,
-        ]
+        ldflags = [self.spec["netcdf-c"].libs.search_flags, self.spec["hdf5"].libs.search_flags]
         args.append("LDFLAGS=" + " ".join(ldflags))
         return args

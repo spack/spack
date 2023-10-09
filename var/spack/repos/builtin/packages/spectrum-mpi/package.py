@@ -62,7 +62,7 @@ class SpectrumMpi(BundlePackage):
             siblings = os.listdir(dirname)
             compilers_found = {}
             for compiler_suite in compiler_suites.values():
-                for (compiler_class, compiler_name) in compiler_suite.items():
+                for compiler_class, compiler_name in compiler_suite.items():
                     if compiler_name in siblings:
                         # Get the real name of the compiler
                         full_exe = os.path.join(dirname, compiler_name)

@@ -18,6 +18,7 @@ class Rgb(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/rgb"
     xorg_mirror_path = "app/rgb-1.0.6.tar.gz"
 
+    version("1.1.0", sha256="77142e3d6f06cfbfbe440e29596765259988a22db40b1e706e14b8ba4c962aa5")
     version("1.0.6", sha256="cb998035e08b9f58ad3150cab60461c3225bdd075238cffc665e24da40718933")
 
     depends_on("xorg-server")

@@ -46,6 +46,7 @@ class Mgis(CMakePackage):
     variant("c", default=True, description="Enables c bindings")
     variant("fortran", default=True, description="Enables fortran bindings")
     variant("python", default=True, description="Enables python bindings")
+    variant("static", default=False, description="Enables static libraries")
     variant(
         "build_type",
         default="Release",
@@ -85,7 +86,6 @@ class Mgis(CMakePackage):
                 self._if_ninja_target_execute("check")
 
     def cmake_args(self):
-
         args = []
 
         args.append("-DUSE_EXTERNAL_COMPILER_FLAGS=ON")
@@ -104,5 +104,8 @@ class Mgis(CMakePackage):
             args.append("-DPython_ADDITIONAL_VERSIONS={0}".format(python.version.up_to(2)))
             # adding path to boost
             args.append("-DBOOST_ROOT={0}".format(self.spec["boost"].prefix))
+
+        if "+static" in self.spec:
+            args.append("-Denable-static=ON")
 
         return args

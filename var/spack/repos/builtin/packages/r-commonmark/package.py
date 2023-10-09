@@ -18,6 +18,7 @@ class RCommonmark(RPackage):
 
     cran = "commonmark"
 
+    version("1.9.0", sha256="6dd01a5a26c8d436486abf69c2f6ad0f8dd1c811f575c31983aeb4dbd376548f")
     version("1.8.1", sha256="96adcb093de3d2e48811af402da70e7222a313b97f1e979e0cbe84dd59bd5cbe")
     version("1.8.0", sha256="7d07e72937b1cf158e69f183722bf79dbb91b8967a9dd29f4fa145500c2be668")
     version("1.7", sha256="d14a767a3ea9778d6165f44f980dd257423ca6043926e3cd8f664f7171f89108")

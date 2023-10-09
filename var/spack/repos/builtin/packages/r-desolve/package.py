@@ -23,6 +23,7 @@ class RDesolve(RPackage):
 
     cran = "deSolve"
 
+    version("1.35", sha256="96f17f497713754f84ff56c3538c6d05b9f5229f9a2a32aafec7d7cdc721d488")
     version("1.34", sha256="2254305f44dde22ac685fef4c60e29a0608af0197c803107365d1d80b75c9f21")
     version("1.33", sha256="71de979e05ce7e472308ac5218e97efe976051364ba579b10940dc1fe4c8b684")
     version("1.32", sha256="74670f16eaafddd044a3ac1813acd5d164aed3f862b87aa1ac275b600e27d9ad")

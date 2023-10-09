@@ -20,6 +20,7 @@ class Dyninst(CMakePackage):
     tags = ["e4s"]
 
     version("master", branch="master")
+    version("12.3.0", sha256="956b0378d2badb765a7e677c0b66c0b8b8cacca7631222bfe7a27b369abf7dd4")
     version("12.2.1", sha256="c304af3c6191e92acd27350fd9b7b02899767a0e38abb3a08a378abe01d1ef01")
     version("12.2.0", sha256="84c37efc1b220110af03f8fbb6ab295628b445c873b5115db91b64443e445a5d")
     version("12.1.0", sha256="c71c0caed12b0b65bbbd09896d0b25dde3b9062b5b2eb8426c86baa50e7af2fb")
@@ -31,11 +32,21 @@ class Dyninst(CMakePackage):
     version("10.2.0", sha256="4212b93bef4563c7de7dce4258e899bcde52315a571087e87fde9f8040123b43")
     version("10.1.0", sha256="4a121d70c1bb020408a7a697d74602e18250c3c85800f230566fcccd593c0129")
     version("10.0.0", sha256="542fccf5c57c4fe784b1a9a9e3db01d40b16ad04e7174dc6f7eb23440485ba06")
-    version("9.3.2", tag="v9.3.2", deprecated=True)
-    version("9.3.0", tag="v9.3.0", deprecated=True)
-    version("9.2.0", tag="v9.2.0", deprecated=True)
-    version("9.1.0", tag="v9.1.0", deprecated=True)
-    version("8.2.1", tag="v8.2.1", deprecated=True)
+    version(
+        "9.3.2", tag="v9.3.2", commit="5d2ddacb273682daa014ae22f17f3575e05b411e", deprecated=True
+    )
+    version(
+        "9.3.0", tag="v9.3.0", commit="9b8e9c1f16d4616b827d2d36955604a8e3fb915c", deprecated=True
+    )
+    version(
+        "9.2.0", tag="v9.2.0", commit="3a6ad66df7294417cf61618acdcfcc0fecccb045", deprecated=True
+    )
+    version(
+        "9.1.0", tag="v9.1.0", commit="df6d090061bae7ff2ba5a6bd57bb2ecbf538ef7a", deprecated=True
+    )
+    version(
+        "8.2.1", tag="v8.2.1", commit="939afcbad1a8273636a3686a31b51dae4f1f0c11", deprecated=True
+    )
 
     variant(
         "openmp",
@@ -53,6 +64,7 @@ class Dyninst(CMakePackage):
     depends_on("boost@1.61.0:" + boost_libs, when="@10.1.0:")
     depends_on("boost@1.61.0:1.69" + boost_libs, when="@:10.0")
     depends_on("boost@1.67.0:" + boost_libs, when="@11.0.0:")
+    depends_on("boost@1.70.0:" + boost_libs, when="@12:")
 
     depends_on("libiberty+pic")
 
@@ -71,8 +83,9 @@ class Dyninst(CMakePackage):
 
     # findtbb.cmake in the dynist repo does not work with recent tbb
     # package layout. Need to use tbb provided config instead.
-    conflicts("intel-tbb@2021.1:")
-    conflicts("intel-oneapi-tbb@2021.1:")
+    conflicts("^intel-tbb@2021.1:")
+    conflicts("^intel-oneapi-tbb@2021.1:")
+    conflicts("^intel-parallel-studio", when="@12.0.0:")
     depends_on("tbb@2018.6.0:", when="@10.0.0:")
 
     depends_on("cmake@3.4.0:", type="build", when="@10.1.0:")
@@ -84,18 +97,10 @@ class Dyninst(CMakePackage):
     patch("v9.3.2-auto.patch", when="@9.3.2 %gcc@:4.7")
     patch("tribool.patch", when="@9.3.0:10.0.0 ^boost@1.69:")
 
+    requires("%gcc", msg="dyninst builds only with GCC")
+
     # No Mac support (including apple-clang)
     conflicts("platform=darwin", msg="macOS is not supported")
-
-    # We currently only build with gcc
-    conflicts("%clang")
-    conflicts("%arm")
-    conflicts("%cce")
-    conflicts("%fj")
-    conflicts("%intel")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
 
     # Version 11.0 requires a C++11-compliant ABI
     conflicts("%gcc@:5", when="@11.0.0:")
@@ -188,3 +193,12 @@ class Dyninst(CMakePackage):
                 args.append("-DENABLE_STATIC_LIBS=NO")
 
         return args
+
+    def test_ptls(self):
+        """Run parseThat on /bin/ls to rewrite with basic instrumentation"""
+        parseThat = which(self.prefix.bin.parseThat)
+        os.environ["DYNINSTAPI_RT_LIB"] = join_path(self.prefix.lib, "libdyninstAPI_RT.so")
+        parseThat(
+            "--binary-edit={0:s}".format(join_path(self.test_suite.stage, "ls.rewritten")),
+            "/bin/ls",
+        )

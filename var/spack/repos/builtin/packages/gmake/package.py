@@ -6,7 +6,6 @@
 import os
 import re
 
-from spack.build_environment import MakeExecutable, determine_number_of_jobs
 from spack.package import *
 
 
@@ -19,6 +18,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
     maintainers("haampie")
 
     # Stable releases
+    version("4.4.1", sha256="dd16fb1d67bfab79a72f5e8390735c49e3e8e70b4945a15ab1f81ddb78658fb3")
     version("4.4", sha256="581f4d4e872da74b3941c874215898a7d35802f03732bdccee1d4a7979105d18")
     version("4.3", sha256="e05fdde47c5f7ca45cb697e973894ff4f5d79e13b750ed57d7b66d8defc78e19")
     version("4.2.1", sha256="e40b8f018c1da64edd1cc9a6fce5fa63b2e707e404e20cad91fbae337c98a5b7")
@@ -55,7 +55,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     tags = ["build-tools"]
 
-    executables = ["^g?make$"]
+    executables = ["^make$"]
 
     @classmethod
     def determine_version(cls, exe):
@@ -71,7 +71,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
-            Executable(os.path.join(os.curdir, "build.sh"))()
+            Executable(os.path.join(self.stage.source_path, "build.sh"))()
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
@@ -82,7 +82,4 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
     def setup_dependent_package(self, module, dspec):
         module.make = MakeExecutable(
             self.spec.prefix.bin.make, determine_number_of_jobs(parallel=dspec.package.parallel)
-        )
-        module.gmake = MakeExecutable(
-            self.spec.prefix.bin.gmake, determine_number_of_jobs(parallel=dspec.package.parallel)
         )

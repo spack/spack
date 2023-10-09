@@ -9,7 +9,7 @@ import sys
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
-from spack.util.environment import filter_system_paths
+from spack.util.environment import filter_system_paths, is_system_path
 
 
 class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
@@ -30,6 +30,11 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     maintainers("adamjstewart")
 
+    version("3.7.2", sha256="40c0068591d2c711c699bbb734319398485ab169116ac28005d8302f80b923ad")
+    version("3.7.1", sha256="9297948f0a8ba9e6369cd50e87c7e2442eda95336b94d2b92ef1829d260b9a06")
+    version("3.7.0", sha256="af4b26a6b6b3509ae9ccf1fcc5104f7fe015ef2110f5ba13220816398365adce")
+    version("3.6.4", sha256="889894cfff348c04ac65b462f629d03efc53ea56cf04de7662fbe81a364e3df1")
+    version("3.6.3", sha256="3cccbed883b1fb99b913966aa3a650ad930e7c3afc714f5823f9754176ee49ea")
     version("3.6.2", sha256="35f40d2e08061b342513cdcddc2b997b3814ef8254514f0ef1e8bc7aa56cf681")
     version("3.6.1", sha256="68f1c03547ff7152289789db7f67ee634167c9b7bfec4872b88406b236f9c230")
     version("3.6.0", sha256="f7afa4aa8d32d0799e011a9f573c6a67e9471f78e70d3d0d0b45b45c8c0c1a94")
@@ -202,7 +207,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         when="@2.1:",
         description="Used for linear interpolation of gdal_grid",
     )
-    variant("rasdaman", default=False, description="Required for Rasdaman driver")
+    variant("rasdaman", default=False, when="@:3.6", description="Required for Rasdaman driver")
     variant(
         "rasterlite2", default=False, when="@2.2:", description="Required for RasterLite2 driver"
     )
@@ -230,14 +235,12 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     # Build system
     build_system(
-        conditional("cmake", when="@3.5:"),
-        conditional("autotools", when="@:3.5"),
-        default="cmake",
+        conditional("cmake", when="@3.5:"), conditional("autotools", when="@:3.5"), default="cmake"
     )
 
     with when("build_system=cmake"):
+        generator("ninja")
         depends_on("cmake@3.9:", type="build")
-        depends_on("ninja", type="build")
 
     with when("build_system=autotools"):
         depends_on("gmake", type="build")
@@ -248,7 +251,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("proj@:6", when="@2.5:2")
     depends_on("proj@:5", when="@2.4")
     depends_on("proj@:4", when="@:2.3")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libtiff@4:", when="@3:")
     depends_on("libtiff@3.6.0:")  # 3.9.0+ needed to pass testsuite
     depends_on("libgeotiff@1.5:", when="@3:")
@@ -287,7 +290,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("libheif@1.1:", when="+heif")
     depends_on("hdf", when="+hdf4")
     depends_on("hdf5+cxx", when="+hdf5")
-    depends_on("hdf5@:1.12", when="@:3.4.1 +hdf5")
+    depends_on("hdf5@:1.13", when="@:3.5 +hdf5")
+    depends_on("hdf5@:1.12", when="@:3.4 +hdf5")
     depends_on("hadoop", when="+hdfs")
     depends_on("iconv", when="+iconv")
     # depends_on('idb', when='+idb')
@@ -365,6 +369,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("python@3.6:", type=("build", "link", "run"), when="@3.3:+python")
     depends_on("python@2.0:", type=("build", "link", "run"), when="@3.2:+python")
     depends_on("python", type=("build", "link", "run"), when="+python")
+    # Uses distutils
+    depends_on("python@:3.11", type=("build", "link", "run"), when="@:3.4+python")
     # swig/python/setup.py
     depends_on("py-setuptools@:57", type="build", when="@:3.2+python")  # needs 2to3
     depends_on("py-setuptools", type="build", when="+python")
@@ -380,6 +386,9 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("swig", type="build", when="+perl")
     depends_on("php", type=("build", "link", "run"), when="+php")
     depends_on("swig", type="build", when="+php")
+
+    # https://gdal.org/development/rfc/rfc88_googletest.html
+    depends_on("googletest@1.10:", type="test")
 
     # https://trac.osgeo.org/gdal/wiki/SupportedCompilers
     msg = "GDAL requires C++11 support"
@@ -464,8 +473,6 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
 
 class CMakeBuilder(CMakeBuilder):
-    generator = "Ninja"
-
     def cmake_args(self):
         # https://gdal.org/build_hints.html
         args = [
@@ -477,6 +484,10 @@ class CMakeBuilder(CMakeBuilder):
             self.define("GDAL_USE_JSONC", True),
             self.define("GDAL_USE_TIFF", True),
             self.define("GDAL_USE_ZLIB", True),
+            # zlib-ng + deflate64 doesn't compile (heavily relies on zlib)
+            # but since zlib-ng is faster than zlib, it deflate shouldn't
+            # be necessary.
+            self.define("ENABLE_DEFLATE64", "zlib-ng" not in self.spec),
             # Optional dependencies
             self.define_from_variant("GDAL_USE_ARMADILLO", "armadillo"),
             self.define_from_variant("GDAL_USE_ARROW", "arrow"),
@@ -600,7 +611,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
             "--with-geotiff={}".format(self.spec["libgeotiff"].prefix),
             "--with-libjson-c={}".format(self.spec["json-c"].prefix),
             "--with-libtiff={}".format(self.spec["libtiff"].prefix),
-            "--with-libz={}".format(self.spec["zlib"].prefix),
+            "--with-libz={}".format(self.spec["zlib-api"].prefix),
             # Optional dependencies
             self.with_or_without("armadillo", package="armadillo"),
             self.with_or_without("blosc", package="c-blosc"),
@@ -629,7 +640,6 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("hdf4", package="hdf"),
             self.with_or_without("hdf5", package="hdf5"),
             self.with_or_without("hdfs", package="hadoop"),
-            self.with_or_without("libiconv-prefix", variant="iconv", package="iconv"),
             self.with_or_without("idb", package="idb"),
             self.with_or_without("ingres", package="ingres"),
             self.with_or_without("jasper", package="jasper"),
@@ -683,6 +693,11 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("perl"),
             self.with_or_without("php"),
         ]
+        if "+iconv" in self.spec:
+            if self.spec["iconv"].name == "libc":
+                args.append("--without-libiconv-prefix")
+            elif not is_system_path(self.spec["iconv"].prefix):
+                args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         # Renamed or modified flags
         if self.spec.satisfies("@3:"):

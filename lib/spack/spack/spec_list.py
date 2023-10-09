@@ -3,13 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
+from typing import List
 
 import spack.variant
 from spack.error import SpackError
 from spack.spec import Spec
 
 
-class SpecList(object):
+class SpecList:
     def __init__(self, name="specs", yaml_list=None, reference=None):
         # Normalize input arguments
         yaml_list = yaml_list or []
@@ -59,7 +60,7 @@ class SpecList(object):
         return self._constraints
 
     @property
-    def specs(self):
+    def specs(self) -> List[Spec]:
         if self._specs is None:
             specs = []
             # This could be slightly faster done directly from yaml_list,
@@ -96,8 +97,10 @@ class SpecList(object):
             msg += "Either %s is not in %s or %s is " % (spec, self.name, spec)
             msg += "expanded from a matrix and cannot be removed directly."
             raise SpecListError(msg)
-        assert len(remove) == 1
-        self.yaml_list.remove(remove[0])
+
+        # Remove may contain more than one string representation of the same spec
+        for item in remove:
+            self.yaml_list.remove(item)
 
         # invalidate cache variables when we change the list
         self._expanded_list = None
@@ -167,6 +170,9 @@ class SpecList(object):
     def __getitem__(self, key):
         return self.specs[key]
 
+    def __iter__(self):
+        return iter(self.specs)
+
 
 def _expand_matrix_constraints(matrix_config):
     # recurse so we can handle nested matrices
@@ -193,7 +199,9 @@ def _expand_matrix_constraints(matrix_config):
     for combo in itertools.product(*expanded_rows):
         # Construct a combined spec to test against excludes
         flat_combo = [constraint for constraint_list in combo for constraint in constraint_list]
-        flat_combo = [Spec(x) for x in flat_combo]
+
+        # Resolve abstract hashes so we can exclude by their concrete properties
+        flat_combo = [Spec(x).lookup_hash() for x in flat_combo]
 
         test_spec = flat_combo[0].copy()
         for constraint in flat_combo[1:]:

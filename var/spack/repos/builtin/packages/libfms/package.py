@@ -17,7 +17,7 @@ class Libfms(CMakePackage):
     maintainers("v-dobrev", "tzanio", "cwsmith")
 
     version("develop", branch="master")
-    version("0.2.0", tag="v0.2")
+    version("0.2.0", tag="v0.2", commit="a66cb96711cc404c411f1bf07ca8db09b6f894eb")
 
     variant("conduit", default=True, description="Build with Conduit I/O support")
     variant("shared", default=True, description="Build shared libraries")
@@ -27,11 +27,7 @@ class Libfms(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.extend(
-            [
-                self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            ]
-        )
+        args.extend([self.define_from_variant("BUILD_SHARED_LIBS", "shared")])
         if "+conduit" in self.spec:
             args.extend([self.define("CONDUIT_DIR", self.spec["conduit"].prefix)])
 

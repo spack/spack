@@ -19,6 +19,7 @@ class RSeurat(RPackage):
 
     cran = "Seurat"
 
+    version("4.3.0", sha256="7ebacb3b86f74279de60b597f9a6e728f0668719811b0dca3425d21762fff97c")
     version("4.2.1", sha256="410238b6ca147451b43800a6e49c132fa5f6aacfe6b93b39a1e4d61257a9e35e")
     version("4.2.0", sha256="22a3d22a9ba255c4db5b37339b183fdfb91e2d37a8b8d58a9ff45b1bc414ebef")
     version("4.1.1", sha256="201aa96919b32378fc4cb67557188214c1242dcbae50cadd7d12c86666af8ace")
@@ -53,8 +54,7 @@ class RSeurat(RPackage):
     depends_on("r-lmtest", type=("build", "run"), when="@2.3.0:")
     depends_on("r-mass", type=("build", "run"))
     depends_on("r-matrix@1.2-14:", type=("build", "run"))
-    depends_on("r-matrix@1.5.0:", type=("build", "run"), when="@4.2.0:")
-    depends_on("r-matrix@1.5-0:", type=("build", "run"), when="@4.2.1:")
+    depends_on("r-matrix@1.5-0:", type=("build", "run"), when="@4.2.0:")
     depends_on("r-matrixstats", type=("build", "run"), when="@3.2.3:")
     depends_on("r-miniui", type=("build", "run"), when="@3.2.3:")
     depends_on("r-patchwork", type=("build", "run"), when="@3.2.3:")
@@ -62,6 +62,7 @@ class RSeurat(RPackage):
     depends_on("r-plotly", type=("build", "run"))
     depends_on("r-plotly@4.9.0:", type=("build", "run"), when="@3.2.3:")
     depends_on("r-png", type=("build", "run"), when="@2.3.0:")
+    depends_on("r-progressr", type=("build", "run"), when="@4.3.0:")
     depends_on("r-rann", type=("build", "run"), when="@2.3.0:")
     depends_on("r-rcolorbrewer", type=("build", "run"))
     depends_on("r-rcpp@0.11.0:", type=("build", "run"))
@@ -126,5 +127,4 @@ class RSeurat(RPackage):
     depends_on("r-rsvd", type=("build", "run"), when="@3.0.0:3.2.3")
     depends_on("r-spatstat@:1.64-1", type=("build", "run"), when="@3.2.3")
     depends_on("java", when="@:2.3.0")
-    depends_on("r-spatstat-core", type=("build", "run"), when="@4.1.0:")
-    depends_on("r-spatstat-core", when="@:4.2.0")
+    depends_on("r-spatstat-core", type=("build", "run"), when="@4.1.0:4.2.0")

@@ -11,6 +11,7 @@ import re
 import shutil
 import sys
 from contextlib import contextmanager
+from pathlib import Path
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -21,7 +22,6 @@ import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
 
-is_windows = sys.platform == "win32"
 # Note: Posixpath is used here as opposed to
 # os.path.join due to spack.spec.Spec.format
 # requiring forward slash path seperators at this stage
@@ -38,7 +38,7 @@ def _check_concrete(spec):
         raise ValueError("Specs passed to a DirectoryLayout must be concrete!")
 
 
-class DirectoryLayout(object):
+class DirectoryLayout:
     """A directory layout is used to associate unique paths with specs.
     Different installations are going to want different layouts for their
     install, and they can use this to customize the nesting structure of
@@ -105,7 +105,7 @@ class DirectoryLayout(object):
 
         projection = spack.projections.get_projection(self.projections, spec)
         path = spec.format(projection)
-        return path
+        return str(Path(path))
 
     def write_spec(self, spec, path):
         """Write a spec out to a file."""
@@ -120,10 +120,8 @@ class DirectoryLayout(object):
         versioning. We use it in the case that an analysis later needs to
         easily access this information.
         """
-        from spack.util.environment import get_host_environment_metadata
-
         env_file = self.env_metadata_path(spec)
-        environ = get_host_environment_metadata()
+        environ = spack.spec.get_host_environment_metadata()
         with open(env_file, "w") as fd:
             sjson.dump(environ, fd)
 
@@ -326,7 +324,7 @@ class DirectoryLayout(object):
         if spec.external:
             return spec.external_path
         if self.check_upstream:
-            upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+            upstream, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
             if upstream:
                 raise SpackError(
                     "Internal error: attempted to call path_for_spec on"
@@ -346,7 +344,7 @@ class DirectoryLayout(object):
 
         # Windows readonly files cannot be removed by Python
         # directly, change permissions before attempting to remove
-        if is_windows:
+        if sys.platform == "win32":
             kwargs = {
                 "ignore_errors": False,
                 "onerror": fs.readonly_file_handler(ignore_errors=False),
@@ -389,14 +387,14 @@ class DirectoryLayoutError(SpackError):
     """Superclass for directory layout errors."""
 
     def __init__(self, message, long_msg=None):
-        super(DirectoryLayoutError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class RemoveFailedError(DirectoryLayoutError):
     """Raised when a DirectoryLayout cannot remove an install prefix."""
 
     def __init__(self, installed_spec, prefix, error):
-        super(RemoveFailedError, self).__init__(
+        super().__init__(
             "Could not remove prefix %s for %s : %s" % (prefix, installed_spec.short_spec, error)
         )
         self.cause = error
@@ -406,7 +404,7 @@ class InconsistentInstallDirectoryError(DirectoryLayoutError):
     """Raised when a package seems to be installed to the wrong place."""
 
     def __init__(self, message, long_msg=None):
-        super(InconsistentInstallDirectoryError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class SpecReadError(DirectoryLayoutError):
@@ -417,7 +415,7 @@ class InvalidDirectoryLayoutParametersError(DirectoryLayoutError):
     """Raised when a invalid directory layout parameters are supplied"""
 
     def __init__(self, message, long_msg=None):
-        super(InvalidDirectoryLayoutParametersError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class InvalidExtensionSpecError(DirectoryLayoutError):
@@ -428,16 +426,14 @@ class ExtensionAlreadyInstalledError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
 
     def __init__(self, spec, ext_spec):
-        super(ExtensionAlreadyInstalledError, self).__init__(
-            "%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec)
-        )
+        super().__init__("%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec))
 
 
 class ExtensionConflictError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
 
     def __init__(self, spec, ext_spec, conflict):
-        super(ExtensionConflictError, self).__init__(
+        super().__init__(
             "%s cannot be installed in %s because it conflicts with %s"
             % (ext_spec.short_spec, spec.short_spec, conflict.short_spec)
         )

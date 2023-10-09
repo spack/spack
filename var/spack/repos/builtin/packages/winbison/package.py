@@ -37,13 +37,6 @@ class Winbison(CMakePackage):
     build_directory = "spack-build"
     cmake_dir = os.path.join(build_directory, "CMakeBuild")
 
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)

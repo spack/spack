@@ -22,9 +22,7 @@ class PyPykokkosBase(CMakePackage, PythonExtension):
     version("0.0.3", commit="4fe4421ac624ba2efe1eee265153e690622a18a5", submodules=False)
 
     variant(
-        "layouts",
-        default=True,
-        description="Build Kokkos View/DynRankView with layout variants",
+        "layouts", default=True, description="Build Kokkos View/DynRankView with layout variants"
     )
     variant(
         "memory_traits",

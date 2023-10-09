@@ -13,6 +13,7 @@ import spack.config
 import spack.database
 import spack.environment as ev
 import spack.main
+import spack.schema.config
 import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
@@ -23,7 +24,7 @@ env = spack.main.SpackCommand("env")
 
 def _create_config(scope=None, data={}, section="packages"):
     scope = scope or spack.config.default_modify_scope()
-    cfg_file = spack.config.config.get_config_filename(scope, section)
+    cfg_file = spack.config.CONFIG.get_config_filename(scope, section)
     with open(cfg_file, "w") as f:
         syaml.dump(data, stream=f)
     return cfg_file
@@ -33,10 +34,7 @@ def _create_config(scope=None, data={}, section="packages"):
 def config_yaml_v015(mutable_config):
     """Create a packages.yaml in the old format"""
     old_data = {
-        "config": {
-            "install_tree": "/fake/path",
-            "install_path_scheme": "{name}-{version}",
-        }
+        "config": {"install_tree": "/fake/path", "install_path_scheme": "{name}-{version}"}
     }
     return functools.partial(_create_config, data=old_data, section="config")
 
@@ -82,8 +80,8 @@ def test_config_edit(mutable_config, working_env):
     """Ensure `spack config edit` edits the right paths."""
 
     dms = spack.config.default_modify_scope("compilers")
-    dms_path = spack.config.config.scopes[dms].path
-    user_path = spack.config.config.scopes["user"].path
+    dms_path = spack.config.CONFIG.scopes[dms].path
+    user_path = spack.config.CONFIG.scopes["user"].path
 
     comp_path = os.path.join(dms_path, "compilers.yaml")
     repos_path = os.path.join(user_path, "repos.yaml")
@@ -93,17 +91,10 @@ def test_config_edit(mutable_config, working_env):
 
 
 def test_config_get_gets_spack_yaml(mutable_mock_env_path):
-    env = ev.create("test")
-
     config("get", fail_on_error=False)
     assert config.returncode == 1
 
-    with env:
-        config("get", fail_on_error=False)
-        assert config.returncode == 1
-
-        env.write()
-
+    with ev.create("test") as env:
         assert "mpileaks" not in config("get")
 
         env.add("mpileaks")
@@ -232,7 +223,6 @@ def test_config_add_update_dict(mutable_empty_config):
 
 
 def test_config_with_c_argument(mutable_empty_config):
-
     # I don't know how to add a spack argument to a Spack Command, so we test this way
     config_file = "config:install_root:root:/path/to/config.yaml"
     parser = spack.main.make_argument_parser()
@@ -493,7 +483,7 @@ def test_config_add_to_env_preserve_comments(mutable_empty_config, mutable_mock_
 spack:  # comment
   # comment
   specs:  # comment
-    - foo  # comment
+  - foo  # comment
   # comment
   view: true  # comment
   packages:  # comment
@@ -554,7 +544,7 @@ def test_config_update_not_needed(mutable_config):
 def test_config_update_can_handle_comments(mutable_config):
     # Create an outdated config file with comments
     scope = spack.config.default_modify_scope()
-    cfg_file = spack.config.config.get_config_filename(scope, "config")
+    cfg_file = spack.config.CONFIG.get_config_filename(scope, "config")
     with open(cfg_file, mode="w") as f:
         f.write(
             """
@@ -584,7 +574,7 @@ config:
 @pytest.mark.regression("18050")
 def test_config_update_works_for_empty_paths(mutable_config):
     scope = spack.config.default_modify_scope()
-    cfg_file = spack.config.config.get_config_filename(scope, "config")
+    cfg_file = spack.config.CONFIG.get_config_filename(scope, "config")
     with open(cfg_file, mode="w") as f:
         f.write(
             """
@@ -633,22 +623,45 @@ def test_config_prefer_upstream(
 
     downstream_db_root = str(tmpdir_factory.mktemp("mock_downstream_db_root"))
     db_for_test = spack.database.Database(downstream_db_root, upstream_dbs=[prepared_db])
-    monkeypatch.setattr(spack.store, "db", db_for_test)
+    monkeypatch.setattr(spack.store.STORE, "db", db_for_test)
 
     output = config("prefer-upstream")
     scope = spack.config.default_modify_scope("packages")
-    cfg_file = spack.config.config.get_config_filename(scope, "packages")
+    cfg_file = spack.config.CONFIG.get_config_filename(scope, "packages")
     packages = syaml.load(open(cfg_file))["packages"]
 
     # Make sure only the non-default variants are set.
     assert packages["boost"] == {
-        "compiler": ["gcc@10.2.1"],
+        "compiler": ["gcc@=10.2.1"],
         "variants": "+debug +graph",
         "version": ["1.63.0"],
     }
-    assert packages["dependency-install"] == {"compiler": ["gcc@10.2.1"], "version": ["2.0"]}
+    assert packages["dependency-install"] == {"compiler": ["gcc@=10.2.1"], "version": ["2.0"]}
     # Ensure that neither variant gets listed for hdf5, since they conflict
-    assert packages["hdf5"] == {"compiler": ["gcc@10.2.1"], "version": ["2.3"]}
+    assert packages["hdf5"] == {"compiler": ["gcc@=10.2.1"], "version": ["2.3"]}
 
     # Make sure a message about the conflicting hdf5's was given.
     assert "- hdf5" in output
+
+
+def test_environment_config_update(tmpdir, mutable_config, monkeypatch):
+    with open(tmpdir.join("spack.yaml"), "w") as f:
+        f.write(
+            """\
+spack:
+  config:
+    ccache: true
+"""
+        )
+
+    def update_config(data):
+        data["ccache"] = False
+        return True
+
+    monkeypatch.setattr(spack.schema.config, "update", update_config)
+
+    with ev.Environment(str(tmpdir)):
+        config("update", "-y", "config")
+
+    with ev.Environment(str(tmpdir)) as e:
+        assert not e.manifest.pristine_yaml_content["spack"]["config"]["ccache"]

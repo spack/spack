@@ -13,6 +13,7 @@ class Rinetd(AutotoolsPackage):
     homepage = "https://github.com/samhocevar/rinetd"
     url = "https://github.com/samhocevar/rinetd/archive/v0.70.tar.gz"
 
+    version("0.73", sha256="62d3e5800299bb3940aea847ffd7662722deb5d4b85625fcfe8f7ebbc0424c80")
     version("0.70", sha256="e69538e9d1fdc1ba5cc24733a52c571568e9cad0876c09144aa1eaa71e13fba5")
     version("0.63", sha256="1f0e8cda524b8f4811a876e69e16d11f12c33a63d00b55c66e2129f87444000c")
 

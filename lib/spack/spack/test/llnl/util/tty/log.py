@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import contextlib
 import multiprocessing
 import os
@@ -31,7 +29,7 @@ except ImportError:
     pass
 
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @contextlib.contextmanager
@@ -450,10 +448,7 @@ def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
 @pytest.mark.skipif(not termios, reason="requires termios support")
 @pytest.mark.parametrize(
     "test_fn,termios_on_or_off",
-    [
-        (mock_shell_v_v, lang.nullcontext),
-        (mock_shell_v_v_no_termios, no_termios),
-    ],
+    [(mock_shell_v_v, lang.nullcontext), (mock_shell_v_v_no_termios, no_termios)],
 )
 @pytest.mark.xfail(reason="Fails almost consistently when run with coverage and xdist")
 def test_foreground_background_output(test_fn, capfd, termios_on_or_off, tmpdir):

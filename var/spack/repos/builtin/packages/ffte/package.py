@@ -32,12 +32,7 @@ class Ffte(Package):
 
     depends_on("mpi", when="+mpi")
 
-    conflicts("%cce", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%clang", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%gcc", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%llvm", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%nag", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%intel", when="+cuda", msg="Must use NVHPC compiler")
+    requires("%nvhpc", when="+cuda", msg="ffte+cuda must use NVHPC compiler")
 
     def edit(self, spec, prefix):
         "No make-file, must create one from scratch."
@@ -70,10 +65,7 @@ class Ffte(Package):
             else:
                 lbnm = "libfftempi.a"
 
-            for spc, vrf, rs, ip in (
-                ("+vector", vf, "v", 2),
-                ("+cuda", cuf, "cu", 3),
-            ):
+            for spc, vrf, rs, ip in (("+vector", vf, "v", 2), ("+cuda", cuf, "cu", 3)):
                 if spc in spec:
                     for f in vrf:  # replace with variant versions
                         orgf = f[:ip].replace(rs, "") + f[ip:]

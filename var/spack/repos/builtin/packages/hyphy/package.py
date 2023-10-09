@@ -12,9 +12,12 @@ class Hyphy(CMakePackage):
     homepage = "https://www.hyphy.org/"
     url = "https://github.com/veg/hyphy/archive/2.3.14.tar.gz"
 
+    version("2.5.51hf", sha256="403a5d07a4e7e67d3d8136fa83649713ad28223a2519e5fba3aa82697a03375f")
     version("2.3.14", sha256="9e6c817cb649986e3fe944bcaf88be3533e7e62968b9a486c719e951e5ed1cf6")
 
-    depends_on("cmake@3.0:", type="build")
+    depends_on("openmpi", type="build", when="@2.4:")
+    depends_on("cmake@3.12:", type="build", when="@2.4:")
+    depends_on("cmake@3.0:", type="build", when="@:2.3")
     depends_on("curl")
 
     conflicts("%gcc@:4.8")

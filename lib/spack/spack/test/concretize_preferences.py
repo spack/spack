@@ -13,7 +13,7 @@ import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
 from spack.config import ConfigError
-from spack.spec import Spec
+from spack.spec import CompilerSpec, Spec
 from spack.version import Version
 
 
@@ -61,7 +61,7 @@ def assert_variant_values(spec, **variants):
 
 
 @pytest.mark.usefixtures("concretize_scope", "mock_packages")
-class TestConcretizePreferences(object):
+class TestConcretizePreferences:
     @pytest.mark.parametrize(
         "package_name,variant_value,expected_results",
         [
@@ -109,18 +109,17 @@ class TestConcretizePreferences(object):
     )
     def test_preferred_compilers(self, compiler_str, spec_str):
         """Test preferred compilers are applied correctly"""
-        spec = spack.spec.Spec(spec_str)
+        spec = Spec(spec_str)
         update_packages(spec.name, "compiler", [compiler_str])
         spec.concretize()
-        assert spec.compiler == spack.spec.CompilerSpec(compiler_str)
+        # note: lhs has concrete compiler version, rhs still abstract.
+        # Could be made more strict by checking for equality with `gcc@=4.5.0`
+        # etc.
+        assert spec.compiler.satisfies(CompilerSpec(compiler_str))
 
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_preferred_target(self, mutable_mock_repo):
         """Test preferred targets are applied correctly"""
-        # FIXME: This test was a false negative, since the default and
-        # FIXME: the preferred target were the same
-        if spack.config.get("config:concretizer") == "original":
-            pytest.xfail("Known bug in the original concretizer")
-
         spec = concretize("mpich")
         default = str(spec.target)
         preferred = str(spec.target.family)
@@ -148,8 +147,9 @@ class TestConcretizePreferences(object):
         spec = concretize("mpileaks")
         assert spec.version == Version("2.2")
 
+    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
     def test_preferred_versions_mixed_version_types(self):
-        update_packages("mixedversions", "version", ["2.0"])
+        update_packages("mixedversions", "version", ["=2.0"])
         spec = concretize("mixedversions")
         assert spec.version == Version("2.0")
 
@@ -173,11 +173,11 @@ class TestConcretizePreferences(object):
             {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
         )
         spec = concretize("mpileaks")
-        assert spec.package.fetcher[0].url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
+        assert spec.package.fetcher.url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
 
         update_packages("mpileaks", "package_attributes", {})
         spec = concretize("mpileaks")
-        assert spec.package.fetcher[0].url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
+        assert spec.package.fetcher.url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
 
     def test_config_set_pkg_property_new(self, mutable_mock_repo):
         """Test that you can set arbitrary attributes on the Package class"""
@@ -224,6 +224,25 @@ mpileaks:
         spec = Spec("python")
         spec.concretize()
         assert spec.version == Version("3.5.0")
+
+    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
+    def test_preferred_undefined_raises(self):
+        """Preference should not specify an undefined version"""
+        update_packages("python", "version", ["3.5.0.1"])
+        spec = Spec("python")
+        with pytest.raises(spack.config.ConfigError):
+            spec.concretize()
+
+    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
+    def test_preferred_truncated(self):
+        """Versions without "=" are treated as version ranges: if there is
+        a satisfying version defined in the package.py, we should use that
+        (don't define a new version).
+        """
+        update_packages("python", "version", ["3.5"])
+        spec = Spec("python")
+        spec.concretize()
+        assert spec.satisfies("@3.5.1")
 
     def test_develop(self):
         """Test concretization with develop-like versions"""
@@ -277,6 +296,7 @@ mpich:
 
         The specific code for parsing the module is tested elsewhere.
         This just tests that the preference is accounted for"""
+
         # make sure this doesn't give us an external first.
         def mock_module(cmd, module):
             return "prepend-path PATH /dummy/path"

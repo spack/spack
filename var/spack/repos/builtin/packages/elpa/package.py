@@ -23,8 +23,15 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
 
     version(
+        "2023.05.001", sha256="ec64be5d6522810d601a3b8e6a31720e3c3eb4af33a434d8a64570d76e6462b6"
+    )
+    version(
+        "2022.11.001", sha256="75db3ac146f9a6a1598e3418ddcab2be2f40a30ef9ec4c00a3b5d3808c99c430"
+    )
+    version(
         "2022.11.001.rc2",
         sha256="13d67e7d69894c631b48e4fcac905b51c4e41554c7eb4731e98c4e205f0fab9f",
+        deprecated=True,
     )
     version(
         "2021.11.001", sha256="fb361da6c59946661b73e51538d419028f763d7cb9dacf9d8cd5c9cd3fb7802f"
@@ -178,6 +185,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if "+autotune" in self.spec:
             options.append("--enable-autotune-redistribute-matrix")
+            # --enable-autotune-redistribute-matrix requires --enable-scalapack-tests as well
+            options.append("--enable-scalapack-tests")
 
         options.append("--disable-silent-rules")
         options.append("--without-threading-support-check-during-build")

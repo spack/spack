@@ -13,6 +13,7 @@ class PerlSubQuote(PerlPackage):
     homepage = "https://metacpan.org/pod/Sub::Quote"
     url = "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Sub-Quote-2.006006.tar.gz"
 
+    version("2.006008", sha256="94bebd500af55762e83ea2f2bc594d87af828072370c7110c60c238a800d15b2")
     version("2.006006", sha256="6e4e2af42388fa6d2609e0e82417de7cc6be47223f576592c656c73c7524d89d")
 
     depends_on("perl-scalar-list-utils", type=("build", "run"))

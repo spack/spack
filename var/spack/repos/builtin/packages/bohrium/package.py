@@ -95,7 +95,7 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on("py-pip", type="build", when="+python")
     depends_on("py-wheel", type="build", when="+python")
 
-    depends_on("zlib", when="+proxy")
+    depends_on("zlib-api", when="+proxy")
 
     depends_on("libsigsegv")
 
@@ -143,10 +143,7 @@ class Bohrium(CMakePackage, CudaPackage):
         #
         # Vector engines
         #
-        args += [
-            "-DVE_OPENCL=" + str("+opencl" in spec),
-            "-DVE_CUDA=" + str("+cuda" in spec),
-        ]
+        args += ["-DVE_OPENCL=" + str("+opencl" in spec), "-DVE_CUDA=" + str("+cuda" in spec)]
 
         if "+openmp" in spec:
             args += [

@@ -15,6 +15,7 @@ class RIgraph(RPackage):
 
     cran = "igraph"
 
+    version("1.4.2", sha256="7d5300adb1a25a6470cada8630e35ef416181147ab624d5a0a8d3552048c4ae5")
     version("1.3.5", sha256="9e615d67b6b5b57dfa54ec2bbc8c29da8f7c3fe82af1e35ab27273b1035b9bd4")
     version("1.3.1", sha256="505a2ba7c417ceaf869240cc1c9a5f3fbd75f8d9dfcfe048df1326c6ec41144e")
     version("1.2.11", sha256="1c8b715eb61e6e7d9082858673929f8e84dc832c0a2a7aba7811511bbd2000de")
@@ -24,10 +25,13 @@ class RIgraph(RPackage):
     version("1.1.2", sha256="89b16b41bc77949ea208419e52a18b78b5d418c7fedc52cd47d06a51a6e746ec")
     version("1.0.1", sha256="dc64ed09b8b5f8d66ed4936cde3491974d6bc5178dd259b6eab7ef3936aa5602")
 
+    depends_on("r@3.0.2:", type=("build", "run"), when="@1.4.2:")
+
     depends_on("r-magrittr", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-pkgconfig@2.0.0:", type=("build", "run"))
     depends_on("r-rlang", type=("build", "run"), when="@1.3.5:")
+    depends_on("r-cpp11@0.2.0:", type=("build", "run"), when="@1.4.2:")
     depends_on("gmp")
     depends_on("gmp@4.38:", when="@1.2.11:")
     depends_on("libxml2")

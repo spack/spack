@@ -15,6 +15,7 @@ class Bubblewrap(AutotoolsPackage):
     )
     maintainers("haampie")
 
+    version("0.8.0", sha256="957ad1149db9033db88e988b12bcebe349a445e1efc8a9b59ad2939a113d333a")
     version("0.7.0", sha256="764ab7100bd037ea53d440d362e099d7a425966bc62d1f00ab26b8fbb882a9dc")
     version("0.6.2", sha256="8a0ec802d1b3e956c5bb0a40a81c9ce0b055a31bf30a8efa547433603b8af20b")
     version("0.6.1", sha256="9609c7dc162bc68abc29abfab566934fdca37520a15ed01b675adcf3a4303282")
@@ -26,11 +27,7 @@ class Bubblewrap(AutotoolsPackage):
     version("0.3.1", sha256="deca6b608c54df4be0669b8bb6d254858924588e9f86e116eb04656a3b6d4bf8")
 
     def configure_args(self):
-        return [
-            "--disable-sudo",
-            "--disable-man",
-            "--without-bash-completion-dir",
-        ]
+        return ["--disable-sudo", "--disable-man", "--without-bash-completion-dir"]
 
     depends_on("pkgconfig", type="build")
     depends_on("libcap")

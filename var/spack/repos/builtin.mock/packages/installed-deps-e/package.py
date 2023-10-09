@@ -19,6 +19,6 @@ class InstalledDepsE(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/e-1.0.tar.gz"
 
-    version("1", "0123456789abcdef0123456789abcdef")
-    version("2", "abcdef0123456789abcdef0123456789")
-    version("3", "def0123456789abcdef0123456789abc")
+    version("1", md5="0123456789abcdef0123456789abcdef")
+    version("2", md5="abcdef0123456789abcdef0123456789")
+    version("3", md5="def0123456789abcdef0123456789abc")

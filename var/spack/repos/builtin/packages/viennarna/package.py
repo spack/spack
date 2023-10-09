@@ -35,7 +35,6 @@ class Viennarna(AutotoolsPackage):
         return url.format(version.up_to(2).underscored, version)
 
     def configure_args(self):
-
         args = self.enable_or_disable("sse")
         args += self.with_or_without("python")
         args += self.with_or_without("perl")

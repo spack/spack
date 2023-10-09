@@ -17,7 +17,7 @@ class Eagle(MakefilePackage):
     version("1.1.2", sha256="afe967560d1f8fdbd0caf4b93b5f2a86830e9e4d399fee4a526140431343045e")
 
     depends_on("curl")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("lzma")
     depends_on("htslib")
 
@@ -43,11 +43,7 @@ class Eagle(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
 
-        bins = [
-            "eagle",
-            "eagle-rc",
-            "eagle-nm",
-        ]
+        bins = ["eagle", "eagle-rc", "eagle-nm"]
 
         for b in bins:
             install(b, prefix.bin)

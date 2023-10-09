@@ -17,6 +17,14 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    version("0.19.0", sha256="f45cc16e4e50cbb183ed743bdc8b775d49776ee33c13ea39a650f4230a5744cb")
+    version("0.18.0", sha256="f34890e0594eeca6ac57f2b988d0807b502782817e53a7f7043c3f921b08c99f")
+    version("0.17.0", sha256="717429fc1bc986d62cbec190a69939e91608122d09d54bda1b028871c9ca9ad4")
+    version("0.16.0", sha256="59f2baec91cc9bf71ca96d21d0da1ec0092bf59da106efa51789089e0d7adcbb")
+    version("0.15.1", sha256="b68b87cf956ad1448f5c2327a72ba4d9fb339ecabeabb0a87b8ea819457e293b")
+    version("0.15.0", sha256="4ecd5b64bd8067283a161e1aeacfbab7658d89fe1504b788fd3236298fe66b00")
+    version("0.14.0", sha256="c0fc10a3c2c24bccbdc292c22a3373a2ad579583ee9d8bd31aaf1755e49958a4")
+    version("0.13.0", sha256="67e0843141fb711787e71171a7a669c9cdb9587e4afd851ee2b0339a62b9a254")
     version("0.12.0", sha256="daa1422eb73d6a897ce7b8ff8022e09e7b0fec83d92728ed941a92e57dec5da3")
     version("0.11.0", sha256="3c3d94ca1a3960884bad7272bb9434d61723f4047ebdb097fcf522c6301c3fda")
     version("0.10.0", sha256="3b443b8f0f75b9a558accbaef0334a113a71b0205770e6c7ff02ea2d7c6aca5b")
@@ -31,10 +39,10 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     version("0.1.0", sha256="aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327")
     version("main", branch="main")
 
-    generator = "Ninja"
+    generator("ninja")
 
     map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
-    cxxstds = ("17", "20")
+    cxxstds = ("17", "20", "23")
     variant(
         "cxxstd",
         default="17",
@@ -64,15 +72,14 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     variant("apex", default=False, description="Enable APEX support", when="@0.2:")
     variant("tracy", default=False, description="Enable Tracy support", when="@0.7:")
     variant(
-        "p2300",
+        "stdexec",
         default=False,
-        description="Use P2300 reference implementation for sender/receiver functionality",
+        description="Use stdexec for sender/receiver functionality",
         when="@0.9:",
     )
 
     # Build dependencies
     depends_on("git", type="build")
-    depends_on("ninja", type="build")
     depends_on("cmake@3.18:", type="build")
     depends_on("cmake@3.22:", when="@0.8:", type="build")
 
@@ -81,11 +88,15 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # Pika is requiring the std::filesystem support starting from version 0.2.0
     conflicts("%gcc@:8", when="@0.2:")
     conflicts("%clang@:8", when="@0.2:")
-    conflicts("+p2300", when="cxxstd=17")
+    conflicts("+stdexec", when="cxxstd=17")
+    conflicts("cxxstd=23", when="^cmake@:3.20.2")
 
     # Other dependencies
     depends_on("boost@1.71:")
     depends_on("fmt@9:", when="@0.11:")
+    # https://github.com/pika-org/pika/issues/686
+    conflicts("^fmt@10:", when="@:0.15 +cuda")
+    conflicts("^fmt@10:", when="@:0.15 +rocm")
     depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
@@ -98,11 +109,11 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hip@5.2:", when="@0.8: +rocm")
     depends_on("hipblas", when="@:0.8 +rocm")
     depends_on("mpi", when="+mpi")
-    depends_on("stdexec", when="+p2300")
+    depends_on("stdexec", when="+stdexec")
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
-    conflicts("tracy-client@0.9:", when="@:0.9")
+    conflicts("^tracy-client@0.9:", when="@:0.9")
     depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
     depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
 
@@ -143,6 +154,11 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # Patches
     patch("transform_mpi_includes.patch", when="@0.3.0 +mpi")
     patch("mimalloc_no_version_requirement.patch", when="@:0.5 malloc=mimalloc")
+    patch("generic_context_allocate_guard_0_13_14.patch", when="@0.13:0.14 platform=darwin")
+    patch("generic_context_allocate_guard_0_10_12.patch", when="@0.10:0.12 platform=darwin")
+    patch("posix_stack_non_executable_0_13.patch", when="@0.13 platform=darwin")
+    patch("posix_stack_non_executable_0_6_0_12.patch", when="@0.6:0.12 platform=darwin")
+    patch("posix_stack_non_executable_0_1_0_5.patch", when="@:0.5 platform=darwin")
 
     # Fix missing template instantiation on macOS
     patch(
@@ -171,17 +187,23 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
-            self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "p2300"),
             self.define("BOOST_ROOT", spec["boost"].prefix),
             self.define("HWLOC_ROOT", spec["hwloc"].prefix),
         ]
 
+        if spec.satisfies("@0.14:"):
+            args.append(self.define_from_variant("PIKA_WITH_STDEXEC", "stdexec"))
+        else:
+            args.append(
+                self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "stdexec")
+            )
+
         # HIP support requires compiling with hipcc for < 0.8.0
-        if self.spec.satisfies("@:0.7 +rocm"):
-            args += [self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc)]
-            if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
-                args += [self.define("__skip_rocmclang", True)]
-        if self.spec.satisfies("@0.8: +rocm"):
+        if spec.satisfies("@:0.7 +rocm"):
+            args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+            if spec.satisfies("^cmake@3.21.0:3.21.2"):
+                args.append(self.define("__skip_rocmclang", True))
+        if spec.satisfies("@0.8: +rocm"):
             rocm_archs = spec.variants["amdgpu_target"].value
             if "none" not in rocm_archs:
                 rocm_archs = ";".join(rocm_archs)

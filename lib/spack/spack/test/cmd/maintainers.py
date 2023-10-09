@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import re
 
 import pytest
@@ -14,7 +12,13 @@ import spack.repo
 
 maintainers = spack.main.SpackCommand("maintainers")
 
-MAINTAINED_PACKAGES = ["maintainers-1", "maintainers-2", "maintainers-3", "py-extension1"]
+MAINTAINED_PACKAGES = [
+    "maintainers-1",
+    "maintainers-2",
+    "maintainers-3",
+    "py-extension1",
+    "py-extension2",
+]
 
 
 def split(output):
@@ -50,18 +54,15 @@ def test_all(mock_packages, capfd):
         "user3",
         "py-extension1:",
         "adamjstewart,",
-        "pradyunsg,",
         "user1,",
         "user2",
+        "py-extension2:",
+        "adamjstewart",
     ]
 
     with capfd.disabled():
         out = split(maintainers("--all", "maintainers-1"))
-    assert out == [
-        "maintainers-1:",
-        "user1,",
-        "user2",
-    ]
+    assert out == ["maintainers-1:", "user1,", "user2"]
 
 
 def test_all_by_user(mock_packages, capfd):
@@ -69,9 +70,8 @@ def test_all_by_user(mock_packages, capfd):
         out = split(maintainers("--all", "--by-user"))
     assert out == [
         "adamjstewart:",
-        "py-extension1",
-        "pradyunsg:",
-        "py-extension1",
+        "py-extension1,",
+        "py-extension2",
         "user0:",
         "maintainers-3",
         "user1:",

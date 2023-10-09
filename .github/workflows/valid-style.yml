@@ -18,15 +18,15 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
-    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236
       with:
         python-version: '3.11'
         cache: 'pip'
     - name: Install Python Packages
       run: |
-        pip install --upgrade pip
-        pip install --upgrade vermin
+        pip install --upgrade pip setuptools
+        pip install -r .github/workflows/style/requirements.txt
     - name: vermin (Spack's Core)
       run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
@@ -35,16 +35,17 @@ jobs:
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236
       with:
         python-version: '3.11'
         cache: 'pip'
     - name: Install Python packages
       run: |
-        python3 -m pip install --upgrade pip six setuptools types-six black==22.12.0 mypy isort clingo flake8
+        pip install --upgrade pip setuptools
+        pip install -r .github/workflows/style/requirements.txt
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
@@ -58,3 +59,30 @@ jobs:
     with:
       with_coverage: ${{ inputs.with_coverage }}
       python_version: '3.11'
+  # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8
+  bootstrap-dev-rhel8:
+    runs-on: ubuntu-latest
+    container: registry.access.redhat.com/ubi8/ubi
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf install -y \
+              bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
+              make patch tcl unzip which xz
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git config --global --add safe.directory /__w/spack/spack
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+          useradd spack-test
+          chown -R spack-test .
+      - name: Bootstrap Spack development environment
+        shell: runuser -u spack-test -- bash {0}
+        run: |
+          source share/spack/setup-env.sh
+          spack debug report
+          spack -d bootstrap now --dev
+          spack style -t black
+          spack unit-test -V
