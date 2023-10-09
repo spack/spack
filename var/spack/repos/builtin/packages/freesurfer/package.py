@@ -33,6 +33,7 @@ class Freesurfer(Package):
     depends_on("qt")
     depends_on("tcsh")
     depends_on("bc")
+    depends_on("perl")
 
     def url_for_version(self, version):
         return "https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/{0}/freesurfer-linux-centos7_x86_64-{1}.tar.gz".format(
@@ -45,16 +46,19 @@ class Freesurfer(Package):
         env.set("FREESURFER_HOME", self.prefix)
         env.set("SUBJECTS_DIR", join_path(self.prefix, "subjects"))
         env.set("FUNCTIONALS_DIR", join_path(self.prefix, "sessions"))
-        env.extend(EnvironmentModifications.from_sourcing_file(source_file))
         env.append_path("PERL5LIB", join_path(self.prefix, "mni/share/perl5"))
+        env.append_path("PATH", join_path(self.prefix, "mni/bin"))
+        env.extend(EnvironmentModifications.from_sourcing_file(source_file))
 
     def install(self, spec, prefix):
         scripts = ["sources.csh", "SetUpFreeSurfer.csh"]
         scripts.extend(glob.glob("bin/*"))
         scripts.extend(glob.glob("subjects/**/*", recursive=True))
         scripts.extend(glob.glob("fsfast/bin/*", recursive=True))
+        scripts.extend(glob.glob("mni/bin/*", recursive=True))
         for s in scripts:
             if os.path.isfile(s):
-                filter_file(r"(\/usr\/local)?\/bin\/tcsh", "/usr/bin/env -S tcsh", s)
-                filter_file(r"(\/usr\/local)?\/bin\/csh", "/usr/bin/env -S csh", s)
+                filter_file(r"(\/usr)?(\/local?)\/bin\/tcsh", "/usr/bin/env -S tcsh", s)
+                filter_file(r"(\/usr)?(\/local?)\/bin\/csh", "/usr/bin/env -S csh", s)
+                filter_file(r"(\/usr)?(\/local)?\/bin\/perl", "/usr/bin/env -S perl", s)
         install_tree(".", prefix)
