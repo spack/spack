@@ -73,19 +73,12 @@ IS_WINDOWS = sys.platform == "win32"
 #: Valid name for specs and variants. Here we are not using
 #: the previous "w[\w.-]*" since that would match most
 #: characters that can be part of a word in any language
-<<<<<<< HEAD
-IDENTIFIER = r"([a-zA-Z_0-9][a-zA-Z_0-9\-]*)"
-DOTTED_IDENTIFIER = rf"({IDENTIFIER}(\.{IDENTIFIER})+)"
-GIT_HASH = r"([A-Fa-f0-9]{40})"
-#: Git refs include branch names, and can contain "." and "/"
-GIT_REF = r"([a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
-GIT_VERSION_PATTERN = rf"((git\.({GIT_REF}))|({GIT_HASH}))"
-=======
 IDENTIFIER = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9\-]*)"
 DOTTED_IDENTIFIER = rf"(?:{IDENTIFIER}(?:\.{IDENTIFIER})+)"
 GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
-GIT_VERSION = rf"(?:(?:git\.(?:{DOTTED_IDENTIFIER}|{IDENTIFIER}))|(?:{GIT_HASH}))"
->>>>>>> develop
+#: Git refs include branch names, and can contain "." and "/"
+GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
+GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
 
 NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
