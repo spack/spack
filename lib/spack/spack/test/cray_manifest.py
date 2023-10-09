@@ -23,53 +23,6 @@ import spack.spec
 import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
 
-example_x_json_str = """\
-{
-  "name": "packagex",
-  "hash": "hash-of-x",
-  "prefix": "/path/to/packagex-install/",
-  "version": "1.0",
-  "arch": {
-    "platform": "linux",
-    "platform_os": "centos8",
-    "target": {
-      "name": "haswell"
-    }
-  },
-  "compiler": {
-    "name": "gcc",
-    "version": "10.2.0.cray"
-  },
-  "dependencies": {
-    "packagey": {
-      "hash": "hash-of-y",
-      "type": ["link"]
-    }
-  },
-  "parameters": {
-    "precision": ["double", "float"]
-  }
-}
-"""
-
-
-example_compiler_entry = """\
-{
-  "name": "gcc",
-  "prefix": "/path/to/compiler/",
-  "version": "7.5.0",
-  "arch": {
-    "os": "centos8",
-    "target": "x86_64"
-  },
-  "executables": {
-    "cc": "/path/to/compiler/cc",
-    "cxx": "/path/to/compiler/cxx",
-    "fc": "/path/to/compiler/fc"
-  }
-}
-"""
-
 
 class JsonSpecEntry:
     def __init__(self, name, hash, prefix, version, arch, compiler, dependencies, parameters):
@@ -104,8 +57,11 @@ class JsonArchEntry:
         self.os = os
         self.target = target
 
-    def to_dict(self):
+    def spec_json(self):
         return {"platform": self.platform, "platform_os": self.os, "target": {"name": self.target}}
+
+    def compiler_json(self):
+        return {"os": self.os, "target": self.target}
 
 
 class JsonCompilerEntry:
@@ -113,7 +69,7 @@ class JsonCompilerEntry:
         self.name = name
         self.version = version
         if not arch:
-            arch = {"os": "centos8", "target": "x86_64"}
+            arch = JsonArchEntry("anyplatform", "anyos", "anytarget")
         if not executables:
             executables = {
                 "cc": "/path/to/compiler/cc",
@@ -127,7 +83,7 @@ class JsonCompilerEntry:
         return {
             "name": self.name,
             "version": self.version,
-            "arch": self.arch,
+            "arch": self.arch.compiler_json(),
             "executables": self.executables,
         }
 
@@ -138,22 +94,58 @@ class JsonCompilerEntry:
         return {"name": self.name, "version": self.version}
 
 
-_common_arch = JsonArchEntry(platform="linux", os="centos8", target="haswell").to_dict()
-
-# Intended to match example_compiler_entry above
-_common_compiler = JsonCompilerEntry(
-    name="gcc",
-    version="10.2.0.cray",
-    arch={"os": "centos8", "target": "x86_64"},
-    executables={
-        "cc": "/path/to/compiler/cc",
-        "cxx": "/path/to/compiler/cxx",
-        "fc": "/path/to/compiler/fc",
-    },
-)
+@pytest.fixture
+def _common_arch(test_platform):
+    return JsonArchEntry(
+        platform=test_platform.name,
+        os=test_platform.front_os,
+        target=test_platform.target("fe").name,
+    )
 
 
-def test_compatibility():
+@pytest.fixture
+def _common_compiler(_common_arch):
+    return JsonCompilerEntry(
+        name="gcc",
+        version="10.2.0.2112",
+        arch=_common_arch,
+        executables={
+            "cc": "/path/to/compiler/cc",
+            "cxx": "/path/to/compiler/cxx",
+            "fc": "/path/to/compiler/fc",
+        },
+    )
+
+
+@pytest.fixture
+def _other_compiler(_common_arch):
+    return JsonCompilerEntry(
+        name="clang",
+        version="3.0.0",
+        arch=_common_arch,
+        executables={
+            "cc": "/path/to/compiler/clang",
+            "cxx": "/path/to/compiler/clang++",
+            "fc": "/path/to/compiler/flang",
+        },
+    )
+
+
+@pytest.fixture
+def _raw_json_x(_common_arch):
+    return {
+        "name": "packagex",
+        "hash": "hash-of-x",
+        "prefix": "/path/to/packagex-install/",
+        "version": "1.0",
+        "arch": _common_arch.spec_json(),
+        "compiler": {"name": "gcc", "version": "10.2.0.2112"},
+        "dependencies": {"packagey": {"hash": "hash-of-y", "type": ["link"]}},
+        "parameters": {"precision": ["double", "float"]},
+    }
+
+
+def test_manifest_compatibility(_common_arch, _common_compiler, _raw_json_x):
     """Make sure that JsonSpecEntry outputs the expected JSON structure
     by comparing it with JSON parsed from an example string. This
     ensures that the testing objects like JsonSpecEntry produce the
@@ -164,7 +156,7 @@ def test_compatibility():
         hash="hash-of-y",
         prefix="/path/to/packagey-install/",
         version="1.0",
-        arch=_common_arch,
+        arch=_common_arch.spec_json(),
         compiler=_common_compiler.spec_json(),
         dependencies={},
         parameters={},
@@ -175,23 +167,44 @@ def test_compatibility():
         hash="hash-of-x",
         prefix="/path/to/packagex-install/",
         version="1.0",
-        arch=_common_arch,
+        arch=_common_arch.spec_json(),
         compiler=_common_compiler.spec_json(),
         dependencies=dict([y.as_dependency(deptypes=["link"])]),
         parameters={"precision": ["double", "float"]},
     )
 
     x_from_entry = x.to_dict()
-    x_from_str = json.loads(example_x_json_str)
-    assert x_from_entry == x_from_str
+    assert x_from_entry == _raw_json_x
 
 
 def test_compiler_from_entry():
-    compiler_data = json.loads(example_compiler_entry)
-    compiler_from_entry(compiler_data)
+    compiler_data = json.loads(
+        """\
+{
+  "name": "gcc",
+  "prefix": "/path/to/compiler/",
+  "version": "7.5.0",
+  "arch": {
+    "os": "centos8",
+    "target": "x86_64"
+  },
+  "executables": {
+    "cc": "/path/to/compiler/cc",
+    "cxx": "/path/to/compiler/cxx",
+    "fc": "/path/to/compiler/fc"
+  }
+}
+"""
+    )
+    compiler = compiler_from_entry(compiler_data, "/example/file")
+    assert compiler.cc == "/path/to/compiler/cc"
+    assert compiler.cxx == "/path/to/compiler/cxx"
+    assert compiler.fc == "/path/to/compiler/fc"
+    assert compiler.operating_system == "centos8"
 
 
-def generate_openmpi_entries():
+@pytest.fixture
+def generate_openmpi_entries(_common_arch, _common_compiler):
     """Generate two example JSON entries that refer to an OpenMPI
     installation and a hwloc dependency.
     """
@@ -202,7 +215,7 @@ def generate_openmpi_entries():
         hash="hwlocfakehashaaa",
         prefix="/path/to/hwloc-install/",
         version="2.0.3",
-        arch=_common_arch,
+        arch=_common_arch.spec_json(),
         compiler=_common_compiler.spec_json(),
         dependencies={},
         parameters={},
@@ -216,26 +229,25 @@ def generate_openmpi_entries():
         hash="openmpifakehasha",
         prefix="/path/to/openmpi-install/",
         version="4.1.0",
-        arch=_common_arch,
+        arch=_common_arch.spec_json(),
         compiler=_common_compiler.spec_json(),
         dependencies=dict([hwloc.as_dependency(deptypes=["link"])]),
         parameters={"internal-hwloc": False, "fabrics": ["psm"], "missing_variant": True},
     )
 
-    return [openmpi, hwloc]
+    return list(x.to_dict() for x in [openmpi, hwloc])
 
 
-def test_generate_specs_from_manifest():
+def test_generate_specs_from_manifest(generate_openmpi_entries):
     """Given JSON entries, check that we can form a set of Specs
     including dependency references.
     """
-    entries = list(x.to_dict() for x in generate_openmpi_entries())
-    specs = entries_to_specs(entries)
+    specs = entries_to_specs(generate_openmpi_entries)
     (openmpi_spec,) = list(x for x in specs.values() if x.name == "openmpi")
     assert openmpi_spec["hwloc"]
 
 
-def test_translate_cray_platform_to_linux(monkeypatch):
+def test_translate_cray_platform_to_linux(monkeypatch, _common_compiler):
     """Manifests might list specs on newer Cray platforms as being "cray",
     but Spack identifies such platforms as "linux". Make sure we
     automaticaly transform these entries.
@@ -247,13 +259,13 @@ def test_translate_cray_platform_to_linux(monkeypatch):
 
     monkeypatch.setattr(spack.platforms, "host", the_host_is_linux)
 
-    cray_arch = JsonArchEntry(platform="cray", os="rhel8", target="x86_64").to_dict()
+    cray_arch = JsonArchEntry(platform="cray", os="rhel8", target="x86_64")
     spec_json = JsonSpecEntry(
         name="cray-mpich",
         hash="craympichfakehashaaa",
         prefix="/path/to/cray-mpich/",
         version="1.0.0",
-        arch=cray_arch,
+        arch=cray_arch.spec_json(),
         compiler=_common_compiler.spec_json(),
         dependencies={},
         parameters={},
@@ -263,14 +275,15 @@ def test_translate_cray_platform_to_linux(monkeypatch):
     assert spec.architecture.platform == "linux"
 
 
-def test_translate_compiler_name():
+def test_translate_compiler_name(_common_arch):
     nvidia_compiler = JsonCompilerEntry(
         name="nvidia",
         version="19.1",
+        arch=_common_arch,
         executables={"cc": "/path/to/compiler/nvc", "cxx": "/path/to/compiler/nvc++"},
     )
 
-    compiler = compiler_from_entry(nvidia_compiler.compiler_json())
+    compiler = compiler_from_entry(nvidia_compiler.compiler_json(), "/example/file")
     assert compiler.name == "nvhpc"
 
     spec_json = JsonSpecEntry(
@@ -278,7 +291,7 @@ def test_translate_compiler_name():
         hash="hwlocfakehashaaa",
         prefix="/path/to/hwloc-install/",
         version="2.0.3",
-        arch=_common_arch,
+        arch=_common_arch.spec_json(),
         compiler=nvidia_compiler.spec_json(),
         dependencies={},
         parameters={},
@@ -288,18 +301,18 @@ def test_translate_compiler_name():
     assert spec.compiler.name == "nvhpc"
 
 
-def test_failed_translate_compiler_name():
+def test_failed_translate_compiler_name(_common_arch):
     unknown_compiler = JsonCompilerEntry(name="unknown", version="1.0")
 
     with pytest.raises(spack.compilers.UnknownCompilerError):
-        compiler_from_entry(unknown_compiler.compiler_json())
+        compiler_from_entry(unknown_compiler.compiler_json(), "/example/file")
 
     spec_json = JsonSpecEntry(
         name="packagey",
         hash="hash-of-y",
         prefix="/path/to/packagey-install/",
         version="1.0",
-        arch=_common_arch,
+        arch=_common_arch.spec_json(),
         compiler=unknown_compiler.spec_json(),
         dependencies={},
         parameters={},
@@ -309,7 +322,8 @@ def test_failed_translate_compiler_name():
         entries_to_specs([spec_json])
 
 
-def create_manifest_content():
+@pytest.fixture
+def manifest_content(generate_openmpi_entries, _common_compiler, _other_compiler):
     return {
         # Note: the cray_manifest module doesn't use the _meta section right
         # now, but it is anticipated to be useful
@@ -319,43 +333,70 @@ def create_manifest_content():
             "schema-version": "1.3",
             "cpe-version": "22.06",
         },
-        "specs": list(x.to_dict() for x in generate_openmpi_entries()),
-        "compilers": [_common_compiler.compiler_json()],
+        "specs": generate_openmpi_entries,
+        "compilers": [_common_compiler.compiler_json(), _other_compiler.compiler_json()],
     }
 
 
-@pytest.mark.only_original(
-    "The ASP-based concretizer is currently picky about OS matching and will fail."
-)
-def test_read_cray_manifest(tmpdir, mutable_config, mock_packages, mutable_database):
+def test_read_cray_manifest(
+    tmpdir, mutable_config, mock_packages, mutable_database, manifest_content
+):
     """Check that (a) we can read the cray manifest and add it to the Spack
     Database and (b) we can concretize specs based on that.
     """
     with tmpdir.as_cwd():
         test_db_fname = "external-db.json"
         with open(test_db_fname, "w") as db_file:
-            json.dump(create_manifest_content(), db_file)
+            json.dump(manifest_content, db_file)
         cray_manifest.read(test_db_fname, True)
         query_specs = spack.store.STORE.db.query("openmpi")
         assert any(x.dag_hash() == "openmpifakehasha" for x in query_specs)
 
         concretized_specs = spack.cmd.parse_specs(
-            "depends-on-openmpi %gcc@4.5.0 arch=test-redhat6-x86_64" " ^/openmpifakehasha".split(),
-            concretize=True,
+            "depends-on-openmpi ^/openmpifakehasha".split(), concretize=True
         )
         assert concretized_specs[0]["hwloc"].dag_hash() == "hwlocfakehashaaa"
 
 
-@pytest.mark.only_original(
-    "The ASP-based concretizer is currently picky about OS matching and will fail."
-)
+def test_read_cray_manifest_add_compiler_failure(
+    tmpdir, mutable_config, mock_packages, mutable_database, manifest_content, monkeypatch
+):
+    """Check that cray manifest can be read even if some compilers cannot
+    be added.
+    """
+    orig_add_compilers_to_config = spack.compilers.add_compilers_to_config
+
+    class fail_for_clang:
+        def __init__(self):
+            self.called_with_clang = False
+
+        def __call__(self, compilers, **kwargs):
+            if any(x.name == "clang" for x in compilers):
+                self.called_with_clang = True
+                raise Exception()
+            return orig_add_compilers_to_config(compilers, **kwargs)
+
+    checker = fail_for_clang()
+    monkeypatch.setattr(spack.compilers, "add_compilers_to_config", checker)
+
+    with tmpdir.as_cwd():
+        test_db_fname = "external-db.json"
+        with open(test_db_fname, "w") as db_file:
+            json.dump(manifest_content, db_file)
+        cray_manifest.read(test_db_fname, True)
+        query_specs = spack.store.STORE.db.query("openmpi")
+        assert any(x.dag_hash() == "openmpifakehasha" for x in query_specs)
+
+    assert checker.called_with_clang
+
+
 def test_read_cray_manifest_twice_no_compiler_duplicates(
-    tmpdir, mutable_config, mock_packages, mutable_database
+    tmpdir, mutable_config, mock_packages, mutable_database, manifest_content
 ):
     with tmpdir.as_cwd():
         test_db_fname = "external-db.json"
         with open(test_db_fname, "w") as db_file:
-            json.dump(create_manifest_content(), db_file)
+            json.dump(manifest_content, db_file)
 
         # Read the manifest twice
         cray_manifest.read(test_db_fname, True)
@@ -363,7 +404,7 @@ def test_read_cray_manifest_twice_no_compiler_duplicates(
 
         compilers = spack.compilers.all_compilers()
         filtered = list(
-            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc@=10.2.0.cray")
+            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc@=10.2.0.2112")
         )
         assert len(filtered) == 1
 
@@ -423,3 +464,27 @@ def test_convert_validation_error(tmpdir, mutable_config, mock_packages, mutable
     with pytest.raises(cray_manifest.ManifestValidationError) as e:
         cray_manifest.read(invalid_schema_path, True)
     str(e)
+
+
+@pytest.fixture
+def directory_with_manifest(tmpdir, manifest_content):
+    """Create a manifest file in a directory. Used by 'spack external'."""
+    with tmpdir.as_cwd():
+        test_db_fname = "external-db.json"
+        with open(test_db_fname, "w") as db_file:
+            json.dump(manifest_content, db_file)
+
+    yield str(tmpdir)
+
+
+def test_find_external_nonempty_default_manifest_dir(
+    mutable_database, mutable_mock_repo, tmpdir, monkeypatch, directory_with_manifest
+):
+    """The user runs 'spack external find'; the default manifest directory
+    contains a manifest file. Ensure that the specs are read.
+    """
+    monkeypatch.setenv("PATH", "")
+    monkeypatch.setattr(spack.cray_manifest, "default_path", str(directory_with_manifest))
+    spack.cmd.external._collect_and_consume_cray_manifest_files(ignore_default_dir=False)
+    specs = spack.store.STORE.db.query("hwloc")
+    assert any(x.dag_hash() == "hwlocfakehashaaa" for x in specs)

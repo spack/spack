@@ -36,6 +36,7 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.error
 import spack.package_base
 import spack.package_prefs
 import spack.paths
@@ -52,7 +53,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
-from spack.util.web import FetchError
 
 
 def ensure_configuration_fixture_run_before(request):
@@ -472,7 +472,7 @@ class MockCache:
 
 class MockCacheFetcher:
     def fetch(self):
-        raise FetchError("Mock cache always fails for tests")
+        raise spack.error.FetchError("Mock cache always fails for tests")
 
     def __str__(self):
         return "[mock fetch cache]"
@@ -1712,17 +1712,6 @@ def brand_new_binary_cache():
     spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
         spack.binary_distribution._binary_index
     )
-
-
-@pytest.fixture
-def directory_with_manifest(tmpdir):
-    """Create a manifest file in a directory. Used by 'spack external'."""
-    with tmpdir.as_cwd():
-        test_db_fname = "external-db.json"
-        with open(test_db_fname, "w") as db_file:
-            json.dump(spack.test.cray_manifest.create_manifest_content(), db_file)
-
-    yield str(tmpdir)
 
 
 @pytest.fixture()

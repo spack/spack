@@ -33,6 +33,8 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     variant("tar", default=True, description="Enable tar support")
     variant("bzip2", default=True, description="Enable bzip2 support")
     variant("xz", default=True, description="Enable xz support")
+    variant("shared", default=True, description="Build shared libraries")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
 
     # Optional variants
     variant("libunistring", default=False, description="Use libunistring")
@@ -53,6 +55,8 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     # depends_on('libcroco@0.6.1:')
     depends_on("libunistring", when="+libunistring")
     # depends_on('cvs')
+
+    conflicts("+shared~pic")
 
     patch("test-verify-parallel-make-check.patch", when="@:0.19.8.1")
     patch("nvhpc-builtin.patch", when="@:0.21.0 %nvhpc")
@@ -87,6 +91,8 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
             "--without-cvs",
         ]
 
+        config_args.extend(self.enable_or_disable("shared"))
+
         if self.spec["iconv"].name == "libc":
             config_args.append("--without-libiconv-prefix")
         elif not is_system_path(self.spec["iconv"].prefix):
@@ -115,12 +121,16 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.append("--with-included-libunistring")
 
+        config_args.extend(self.with_or_without("pic"))
+
         return config_args
 
     @property
     def libs(self):
-        return find_libraries(
+        libs = find_libraries(
             ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", "libintl"],
             root=self.prefix,
             recursive=True,
+            shared=self.spec.variants["shared"].value,
         )
+        return libs
