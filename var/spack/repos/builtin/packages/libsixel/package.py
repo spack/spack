@@ -8,7 +8,8 @@ from spack.package import *
 
 class Libsixel(MesonPackage):
     """
-    This package provides encoder/decoder implementation for DEC SIXEL graphics, and some converter programs.
+    This package provides encoder/decoder implementation for DEC SIXEL graphics,
+    and some converter programs like img2sixel.
     """
 
     homepage = "https://github.com/libsixel/libsixel"
