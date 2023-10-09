@@ -14,6 +14,7 @@ class Silo(AutotoolsPackage):
     homepage = "https://wci.llnl.gov/simulation/computer-codes/silo"
     git = "https://github.com/LLNL/Silo.git"
     url = "https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2.tgz"
+    maintainers("patrickb314")
 
     version(
         "4.11.1",
