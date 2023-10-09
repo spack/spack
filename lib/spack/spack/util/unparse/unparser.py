@@ -270,16 +270,6 @@ class Unparser:
             self.write(", ")
             self.dispatch(node.msg)
 
-    def visit_Exec(self, node):
-        self.fill("exec ")
-        self.dispatch(node.body)
-        if node.globals:
-            self.write(" in ")
-            self.dispatch(node.globals)
-        if node.locals:
-            self.write(", ")
-            self.dispatch(node.locals)
-
     def visit_Global(self, node):
         self.fill("global ")
         interleave(lambda: self.write(", "), self.write, node.names)
@@ -338,31 +328,6 @@ class Unparser:
             with self.block():
                 self.dispatch(node.finalbody)
 
-    def visit_TryExcept(self, node):
-        self.fill("try")
-        with self.block():
-            self.dispatch(node.body)
-
-        for ex in node.handlers:
-            self.dispatch(ex)
-        if node.orelse:
-            self.fill("else")
-            with self.block():
-                self.dispatch(node.orelse)
-
-    def visit_TryFinally(self, node):
-        if len(node.body) == 1 and isinstance(node.body[0], ast.TryExcept):
-            # try-except-finally
-            self.dispatch(node.body)
-        else:
-            self.fill("try")
-            with self.block():
-                self.dispatch(node.body)
-
-        self.fill("finally")
-        with self.block():
-            self.dispatch(node.finalbody)
-
     def visit_ExceptHandler(self, node):
         self.fill("except")
         if node.type:
@@ -398,21 +363,6 @@ class Unparser:
                 else:
                     comma = True
                 self.dispatch(e)
-            if sys.version_info[:2] < (3, 5):
-                if node.starargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.write("*")
-                    self.dispatch(node.starargs)
-                if node.kwargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.write("**")
-                    self.dispatch(node.kwargs)
         with self.block():
             self.dispatch(node.body)
 
@@ -647,11 +597,6 @@ class Unparser:
 
     def visit_NameConstant(self, node):
         self.write(repr(node.value))
-
-    def visit_Repr(self, node):
-        self.write("`")
-        self.dispatch(node.value)
-        self.write("`")
 
     def _write_constant(self, value):
         if isinstance(value, (float, complex)):
