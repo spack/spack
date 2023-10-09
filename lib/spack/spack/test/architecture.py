@@ -213,7 +213,7 @@ def test_concretize_target_ranges(root_target_range, dep_target_range, result, m
     with spack.concretize.disable_compiler_existence_check():
         spec.concretize()
 
-    assert str(spec).count("arch=test-debian6-%s" % result) == 2
+    assert str(spec).count("arch=test-debian6-%s" % result) == len(list(spec.traverse()))
 
 
 @pytest.mark.parametrize(
