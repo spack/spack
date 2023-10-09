@@ -22,10 +22,18 @@ class Xgboost(CMakePackage, CudaPackage):
     maintainers("adamjstewart")
 
     version("master", branch="master", submodules=True)
-    version("1.6.2", tag="v1.6.2", submodules=True)
-    version("1.6.1", tag="v1.6.1", submodules=True)
-    version("1.5.2", tag="v1.5.2", submodules=True)
-    version("1.3.3", tag="v1.3.3", submodules=True)
+    version(
+        "1.6.2", tag="v1.6.2", commit="b9934246faa9a25e10a12339685dfbe56d56f70b", submodules=True
+    )
+    version(
+        "1.6.1", tag="v1.6.1", commit="5d92a7d936fc3fad4c7ecb6031c3c1c7da882a14", submodules=True
+    )
+    version(
+        "1.5.2", tag="v1.5.2", commit="742c19f3ecf2135b4e008a4f4a10b59add8b1045", submodules=True
+    )
+    version(
+        "1.3.3", tag="v1.3.3", commit="000292ce6d99ed658f6f9aebabc6e9b330696e7e", submodules=True
+    )
 
     variant("nccl", default=False, description="Build with NCCL to enable distributed GPU support")
     variant("openmp", default=True, description="Build with OpenMP support")

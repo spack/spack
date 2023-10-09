@@ -15,6 +15,7 @@ class Libbson(Package):
 
     maintainers("michaelkuhn")
 
+    version("1.23.4", sha256="209406c91fcf7c63aa633179a0a6b1b36ba237fb77e0470fd81f7299a408e334")
     version("1.23.3", sha256="c8f951d4f965d455f37ae2e10b72914736fc0f25c4ffc14afc3cbadd1a574ef6")
     version("1.23.2", sha256="123c358827eea07cd76a31c40281bb1c81b6744f6587c96d0cf217be8b1234e3")
     version("1.21.0", sha256="840ff79480070f98870743fbb332e2c10dd021b6b9c952d08010efdda4d70ee4")

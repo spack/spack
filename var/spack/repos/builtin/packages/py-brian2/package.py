@@ -22,6 +22,9 @@ class PyBrian2(PythonPackage):
     depends_on("python@2.7:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@2.4:")
     depends_on("python@3.7:", type=("build", "run"), when="@2.5:")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
+
     depends_on("py-numpy@1.10:", type=("build", "run"))
     depends_on("py-numpy@1.15:", type=("build", "run"), when="@2.4:")
     depends_on("py-numpy@1.17:", type=("build", "run"), when="@2.5:")

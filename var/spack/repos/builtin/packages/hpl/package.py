@@ -115,6 +115,14 @@ class Hpl(AutotoolsPackage):
         ):
             config.append("LDFLAGS={0}".format(self.spec["blas"].libs.ld_flags))
 
+        if "%aocc" in self.spec:
+            amd_ldflags = " "
+            if "%aocc@3:" in self.spec:
+                amd_ldflags += "-lamdlibm -lm "
+            if "%aocc@4:" in self.spec:
+                amd_ldflags += "-lamdalloc "
+            config.append("LDFLAGS=" + amd_ldflags)
+
         return config
 
     @when("@:2.2")

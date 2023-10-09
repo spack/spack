@@ -13,6 +13,7 @@ class PyFlask(PythonPackage):
     pypi = "Flask/Flask-1.1.1.tar.gz"
     git = "https://github.com/pallets/flask.git"
 
+    version("2.3.2", sha256="8c2f9abd47a9e8df7f0c3f091ce9497d011dc3b31effcf4c85a6e2b50f4114ef")
     version("2.2.2", sha256="642c450d19c4ad482f96729bd2a8f6d32554aa1e231f4f6b4e7e5264b16cca2b")
     version("2.0.2", sha256="7b2fb8e934ddd50731893bdcdb00fc8c0315916f9fcd50d22c7cc1a95ab634e2")
     version("1.1.2", sha256="4efa1ae2d7c9865af48986de8aeb8504bf32c7f3d6fdc9353d34b21f4b127060")
@@ -22,19 +23,22 @@ class PyFlask(PythonPackage):
     version("0.12.1", sha256="9dce4b6bfbb5b062181d3f7da8f727ff70c1156cbb4024351eafd426deb5fb88")
     version("0.11.1", sha256="b4713f2bfb9ebc2966b8a49903ae0d3984781d5c878591cf2f7b484d28756b0e")
 
-    depends_on("python@3.7:", when="@2.1:", type=("build", "run"))
-    depends_on("python@3.6:", when="@2:", type=("build", "run"))
-    depends_on("python@2.7:2,3.5:", type=("build", "run"))
+    depends_on("python@3.8:", when="@2.3:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
 
+    depends_on("py-werkzeug@2.3.3:", when="@2.3.2:", type=("build", "run"))
     depends_on("py-werkzeug@2.2.2:", when="@2.2.2:", type=("build", "run"))
     depends_on("py-werkzeug@2:", when="@2:", type=("build", "run"))
     depends_on("py-werkzeug@0.15:", type=("build", "run"))
+    depends_on("py-jinja2@3.1.2:", when="@3:", type=("build", "run"))
     depends_on("py-jinja2@3:", when="@2:", type=("build", "run"))
     depends_on("py-jinja2@2.10.1:", type=("build", "run"))
+    depends_on("py-itsdangerous@2.1.2:", when="@3:", type=("build", "run"))
     depends_on("py-itsdangerous@2:", when="@2:", type=("build", "run"))
     depends_on("py-itsdangerous@0.24:", type=("build", "run"))
+    depends_on("py-click@8.1.3:", when="@3:", type=("build", "run"))
     depends_on("py-click@8:", when="@2.1:", type=("build", "run"))
     depends_on("py-click@7.1.2:", when="@2:", type=("build", "run"))
     depends_on("py-click@5.1:", type=("build", "run"))
+    depends_on("py-blinker@1.6.2:", when="@2.3:", type=("build", "run"))
     depends_on("py-importlib-metadata@3.6:", when="@2.1: ^python@:3.9", type=("build", "run"))

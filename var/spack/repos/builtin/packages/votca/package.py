@@ -20,7 +20,6 @@ class Votca(CMakePackage):
     maintainers("junghans")
 
     version("master", branch="master")
-    version("stable", branch="stable")
     version("2022.1", sha256="358119b2645fe60f88ca621aed508c49fb61f88d29d3e3fa24b5b831ed4a66ec")
     version("2022", sha256="7991137098ff4511f4ca2c6f1b6c45f53d92d9f84e5c0d0e32fbc31768f73a83")
 
@@ -29,6 +28,7 @@ class Votca(CMakePackage):
         "new-gmx", default=False, description="Build against gromacs>2019 - no tabulated kernels"
     )
     variant("xtp", default=True, description="Build xtp parts of votca")
+
     conflicts("votca-tools")
     conflicts("votca-csg")
     conflicts("votca-xtp")

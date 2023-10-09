@@ -91,14 +91,17 @@ class Tk(AutotoolsPackage, SourceforgePackage):
         with working_dir(self.prefix.bin):
             symlink("wish{0}".format(self.version.up_to(2)), "wish")
 
-    def test(self):
-        self.run_test(self.spec["tk"].command.path, ["-h"], purpose="test wish command")
+    def test_tk_help(self):
+        """run tk help"""
+        tk = self.spec["tk"].command
+        tk("-h")
 
+    def test_tk_load(self):
+        """check that tk can be loaded"""
         test_data_dir = self.test_suite.current_test_data_dir
         test_file = test_data_dir.join("test.tcl")
-        self.run_test(
-            self.spec["tcl"].command.path, test_file, purpose="test that tk can be loaded"
-        )
+        tcl = self.spec["tcl"].command
+        tcl(test_file)
 
     @property
     def command(self):

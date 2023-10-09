@@ -34,7 +34,7 @@ class PyFenicsUfl(PythonPackage):
     version(
         "2017.1.0.post1", sha256="82c8170f44c2392c7e60aa86495df22cc209af50735af8115dc35aeda4b0ca96"
     )
-    version("2016.2.0", tag="ufl-2016.2.0")
+    version("2016.2.0", tag="ufl-2016.2.0", commit="962d56f65821fb9c50ca4a5a858882c472243431")
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@58:", type=("build", "run"), when="@2022.1.0:")

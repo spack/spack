@@ -14,8 +14,6 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
-from __future__ import print_function
-
 import functools
 import platform
 import tempfile
@@ -30,6 +28,7 @@ import llnl.util.tty as tty
 
 import spack.abi
 import spack.compilers
+import spack.config
 import spack.environment
 import spack.error
 import spack.platforms
@@ -39,7 +38,6 @@ import spack.target
 import spack.tengine
 import spack.util.path
 import spack.variant as vt
-from spack.config import config
 from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
 from spack.version import ClosedOpenRange, VersionList, ver
 
@@ -50,7 +48,7 @@ _abi: Union[spack.abi.ABI, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
 
 
 @functools.total_ordering
-class reverse_order(object):
+class reverse_order:
     """Helper for creating key functions.
 
     This is a wrapper that inverts the sense of the natural
@@ -67,7 +65,7 @@ class reverse_order(object):
         return other.value < self.value
 
 
-class Concretizer(object):
+class Concretizer:
     """You can subclass this class to override some of the default
     concretization strategies, or you can override all of them.
     """
@@ -78,7 +76,7 @@ class Concretizer(object):
 
     def __init__(self, abstract_spec=None):
         if Concretizer.check_for_compiler_existence is None:
-            Concretizer.check_for_compiler_existence = not config.get(
+            Concretizer.check_for_compiler_existence = not spack.config.get(
                 "config:install_missing_compilers", False
             )
         self.abstract_spec = abstract_spec
@@ -115,7 +113,7 @@ class Concretizer(object):
         pref_key = lambda spec: 0  # no-op pref key
 
         if spec.virtual:
-            candidates = spack.repo.path.providers_for(spec)
+            candidates = spack.repo.PATH.providers_for(spec)
             if not candidates:
                 raise spack.error.UnsatisfiableProviderSpecError(candidates[0], spec)
 
@@ -746,8 +744,11 @@ def concretize_specs_together(*abstract_specs, **kwargs):
 def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
 
+    allow_deprecated = spack.config.get("config:deprecated", False)
     solver = spack.solver.asp.Solver()
-    result = solver.solve(abstract_specs, tests=kwargs.get("tests", False))
+    result = solver.solve(
+        abstract_specs, tests=kwargs.get("tests", False), allow_deprecated=allow_deprecated
+    )
     result.raise_if_unsat()
     return [s.copy() for s in result.specs]
 
@@ -794,9 +795,7 @@ class NoCompilersForArchError(spack.error.SpackError):
             " operating systems and targets:\n\t" + "\n\t".join(available_os_target_strs)
         )
 
-        super(NoCompilersForArchError, self).__init__(
-            err_msg, "Run 'spack compiler find' to add compilers."
-        )
+        super().__init__(err_msg, "Run 'spack compiler find' to add compilers.")
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):
@@ -808,7 +807,7 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
         if arch:
             err_msg += " for operating system {0} and target {1}.".format(arch.os, arch.target)
 
-        super(UnavailableCompilerVersionError, self).__init__(
+        super().__init__(
             err_msg,
             "Run 'spack compiler find' to add compilers or "
             "'spack compilers' to see which compilers are already recognized"
@@ -821,7 +820,7 @@ class NoValidVersionError(spack.error.SpackError):
     particular spec."""
 
     def __init__(self, spec):
-        super(NoValidVersionError, self).__init__(
+        super().__init__(
             "There are no valid versions for %s that match '%s'" % (spec.name, spec.versions)
         )
 
@@ -832,7 +831,7 @@ class InsufficientArchitectureInfoError(spack.error.SpackError):
     system"""
 
     def __init__(self, spec, archs):
-        super(InsufficientArchitectureInfoError, self).__init__(
+        super().__init__(
             "Cannot determine necessary architecture information for '%s': %s"
             % (spec.name, str(archs))
         )
@@ -848,4 +847,4 @@ class NoBuildError(spack.error.SpecError):
             "The spec\n    '%s'\n    is configured as not buildable, "
             "and no matching external installs were found"
         )
-        super(NoBuildError, self).__init__(msg % spec)
+        super().__init__(msg % spec)

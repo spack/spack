@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 from spack.build_systems import autotools, nmake
 from spack.package import *
 
@@ -19,6 +16,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     homepage = "http://xmlsoft.org"
     url = "https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.13.tar.xz"
     list_url = "https://gitlab.gnome.org/GNOME/libxml2/-/releases"
+
+    maintainers("AlexanderRichert-NOAA")
 
     def url_for_version(self, version):
         if version >= Version("2.9.13"):
@@ -41,12 +40,16 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     version("2.7.8", sha256="cda23bc9ebd26474ca8f3d67e7d1c4a1f1e7106364b690d822e009fdc3c417ec")
 
     variant("python", default=False, description="Enable Python support")
+    variant("shared", default=True, description="Build shared library")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
+
+    conflicts("~pic+shared")
 
     depends_on("pkgconfig@0.9.0:", type="build", when="build_system=autotools")
     # conditional on non Windows, but rather than specify for each platform
     # specify for non Windows builder, which has equivalent effect
     depends_on("iconv", when="build_system=autotools")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("xz")
 
     # avoid cycle dependency for concretizer
@@ -77,6 +80,12 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     )
     build_system(conditional("nmake", when="platform=windows"), "autotools", default="autotools")
 
+    def flag_handler(self, name, flags):
+        if name == "cflags" and self.spec.satisfies("+pic"):
+            flags.append(self.compiler.cc_pic_flag)
+            flags.append("-DPIC")
+        return (flags, None, None)
+
     @property
     def command(self):
         return Executable(self.prefix.bin.join("xml2-config"))
@@ -101,44 +110,94 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             )
             filter_file("-Wno-long-long -Wno-format-extra-args", "", "configure")
 
-    def test(self):
-        """Perform smoke tests on the installed package"""
-        # Start with what we already have post-install
-        tty.msg("test: Performing simple import test")
-        self.builder.import_module_test()
+    def test_import(self):
+        """import module test"""
+        if "+python" not in self.spec:
+            raise SkipTest("Package must be built with +python")
+
+        with working_dir("spack-test", create=True):
+            python("-c", "import libxml2")
+
+    def test_xmlcatalog(self):
+        """check minimal creation output"""
+        path = self.prefix.bin.xmlcatalog
+        if not os.path.exists(path):
+            raise SkipTest("xmlcatalog is not installed")
+
+        xmlcatalog = which(path)
+        out = xmlcatalog("--create", output=str.split, error=str.split)
+
+        expected = [r"<catalog xmlns", r'catalog"/>']
+        check_outputs(expected, out)
+
+    def test_xml2_config(self):
+        """check version output"""
+        path = join_path(self.prefix.bin, "xml2-config")
+        if not os.path.exists(path):
+            raise SkipTest("xml2-config is not installed")
+
+        xml2_config = which(path)
+        out = xml2_config("--version", output=str.split, error=str.split)
+        assert str(self.spec.version) in out
+
+    def test_xmllint(self):
+        """run xmllint generation and validation checks"""
+        path = self.prefix.bin.xmllint
+        if not os.path.exists(path):
+            raise SkipTest("xmllint is not installed")
+
+        test_filename = "test.xml"
+        xmllint = which(path)
+
+        with test_part(self, "test_xmllint_auto", purpose="generate {0}".format(test_filename)):
+            xmllint("--auto", "-o", test_filename)
+
+        with test_part(
+            self,
+            "test_xmllint_validate_no_dtd",
+            purpose="validate {0} without a DTD".format(test_filename),
+        ):
+            out = xmllint(
+                "--postvalid",
+                test_filename,
+                output=str.split,
+                error=str.split,
+                fail_on_error=False,
+            )
+
+            expected = [r"validity error", r"no DTD found", r"does not validate"]
+            check_outputs(expected, out)
 
         data_dir = self.test_suite.current_test_data_dir
-
-        # Now run defined tests based on expected executables
         dtd_path = data_dir.join("info.dtd")
-        test_filename = "test.xml"
-        exec_checks = {
-            "xml2-config": [("--version", [str(self.spec.version)], 0)],
-            "xmllint": [
-                (["--auto", "-o", test_filename], [], 0),
-                (
-                    ["--postvalid", test_filename],
-                    ["validity error", "no DTD found", "does not validate"],
-                    3,
-                ),
-                (
-                    ["--dtdvalid", dtd_path, test_filename],
-                    ["validity error", "does not follow the DTD"],
-                    3,
-                ),
-                (["--dtdvalid", dtd_path, data_dir.join("info.xml")], [], 0),
-            ],
-            "xmlcatalog": [("--create", ["<catalog xmlns", 'catalog"/>'], 0)],
-        }
-        for exe in exec_checks:
-            for options, expected, status in exec_checks[exe]:
-                self.run_test(exe, options, expected, status)
 
-        # Perform some cleanup
-        fs.force_remove(test_filename)
+        with test_part(
+            self,
+            "test_xmllint_validate_with_dtd",
+            purpose="validate {0} with a DTD".format(test_filename),
+        ):
+            out = xmllint(
+                "--dtdvalid",
+                dtd_path,
+                test_filename,
+                output=str.split,
+                error=str.split,
+                fail_on_error=False,
+            )
+
+            expected = [r"validity error", r"does not follow the DTD"]
+            check_outputs(expected, out)
+
+        test_filename = data_dir.join("info.xml")
+        with test_part(
+            self,
+            "test_xmllint_validate_works",
+            purpose="validate {0} with a DTD".format(test_filename),
+        ):
+            xmllint("--dtdvalid", dtd_path, data_dir.join("info.xml"))
 
 
-class RunAfter(object):
+class RunAfter:
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def import_module_test(self):
@@ -166,6 +225,10 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
         else:
             args.append("--without-python")
 
+        args.extend(self.enable_or_disable("shared"))
+        # PIC setting is taken care of above by self.flag_handler()
+        args.append("--without-pic")
+
         return args
 
 
@@ -188,8 +251,9 @@ class NMakeBuilder(nmake.NMakeBuilder, RunAfter):
                 "iconv=no",
                 "zlib=yes",
                 "lzma=yes",
-                "lib=%s" % ";".join((spec["zlib"].prefix.lib, spec["xz"].prefix.lib)),
-                "include=%s" % ";".join((spec["zlib"].prefix.include, spec["xz"].prefix.include)),
+                "lib=%s" % ";".join((spec["zlib-api"].prefix.lib, spec["xz"].prefix.lib)),
+                "include=%s"
+                % ";".join((spec["zlib-api"].prefix.include, spec["xz"].prefix.include)),
             ]
             if "+python" in spec:
                 opts.append("python=yes")

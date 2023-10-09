@@ -15,8 +15,8 @@ class Ratel(MakefilePackage, CudaPackage, ROCmPackage):
     maintainers("jedbrown", "jeremylt")
 
     version("develop", branch="main")
-    version("0.2.1", tag="v0.2.1")
-    version("0.1.2", tag="v0.1.2")
+    version("0.2.1", tag="v0.2.1", commit="043b61696a2407205fdfd898681467d1a7ff59e0")
+    version("0.1.2", tag="v0.1.2", commit="94ad630bf897d231af7a94bf08257f6067258aae")
 
     # development version
     depends_on("libceed@develop", when="@develop")

@@ -33,12 +33,8 @@ class Dust(Package):
         print("stdout received fromm dust is '{}".format(output))
         assert "Dust " in output
 
-    def test(self):
-        """Run this smoke test when requested explicitly"""
-
-        dustpath = join_path(self.spec["dust"].prefix.bin, "dust")
-        options = ["--version"]
-        purpose = "Check dust can execute (with option '--version')"
-        expected = ["Dust "]
-
-        self.run_test(dustpath, options=options, expected=expected, status=[0], purpose=purpose)
+    def test_run(self):
+        """check dust can execute (with option '--version')"""
+        dust = which(self.prefix.bin.dust)
+        out = dust("--version", output=str.split, error=str.split)
+        assert "Dust " in out

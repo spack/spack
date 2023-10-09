@@ -16,21 +16,51 @@ class PyTorchtext(PythonPackage):
     maintainers("adamjstewart")
 
     version("main", branch="main", submodules=True)
-    version("0.15.2", tag="v0.15.2", submodules=True)
-    version("0.15.1", tag="v0.15.1", submodules=True)
-    version("0.14.1", tag="v0.14.1", submodules=True)
-    version("0.14.0", tag="v0.14.0", submodules=True)
-    version("0.13.1", tag="v0.13.1", submodules=True)
-    version("0.13.0", tag="v0.13.0", submodules=True)
-    version("0.12.0", tag="v0.12.0", submodules=True)
-    version("0.11.2", tag="v0.11.2", submodules=True)
-    version("0.11.1", tag="v0.11.1", submodules=True)
-    version("0.10.1", tag="v0.10.1", submodules=True)
-    version("0.10.0", tag="v0.10.0", submodules=True)
-    version("0.9.2", tag="v0.9.2", submodules=True)
-    version("0.8.1", tag="v0.8.1", submodules=True)
-    version("0.6.0", tag="0.6.0", submodules=True)
-    version("0.5.0", tag="0.5.0", submodules=True)
+    version(
+        "0.15.2", tag="v0.15.2", commit="4571036cf66c539e50625218aeb99a288d79f3e1", submodules=True
+    )
+    version(
+        "0.15.1", tag="v0.15.1", commit="c696895e524c61fd2b8b26916dd006411c5f3ba5", submodules=True
+    )
+    version(
+        "0.14.1", tag="v0.14.1", commit="e1e969d4947bb3dd01ea927af2f8ac9a2d778c39", submodules=True
+    )
+    version(
+        "0.14.0", tag="v0.14.0", commit="e2b27f9b06ca71d55c2fcf6d47c60866ee936f40", submodules=True
+    )
+    version(
+        "0.13.1", tag="v0.13.1", commit="330201f1132dcd0981180c19bc6843a19d310ff0", submodules=True
+    )
+    version(
+        "0.13.0", tag="v0.13.0", commit="35298c43f3ce908fe06c177ecbd8ef1503a1292b", submodules=True
+    )
+    version(
+        "0.12.0", tag="v0.12.0", commit="d7a34d6ae0f4e36a52777854d0163b9e85f1576b", submodules=True
+    )
+    version(
+        "0.11.2", tag="v0.11.2", commit="92f4d158d8cbe9136896befa2d4234ea8b8e2795", submodules=True
+    )
+    version(
+        "0.11.1", tag="v0.11.1", commit="5c65ec05d7c1eba5b0ea2d7ee170ccf977d9674f", submodules=True
+    )
+    version(
+        "0.10.1", tag="v0.10.1", commit="0d670e03c1eee7e30e032bb96df4c12b785a15ff", submodules=True
+    )
+    version(
+        "0.10.0", tag="v0.10.0", commit="4da1de36247aa06622088e78508e0e38a4392e38", submodules=True
+    )
+    version(
+        "0.9.2", tag="v0.9.2", commit="22e5ee7548a85190eee78e8ed6c8911ec2c53035", submodules=True
+    )
+    version(
+        "0.8.1", tag="v0.8.1", commit="0f911ec35ab020983efbf36b8c14415651e98618", submodules=True
+    )
+    version(
+        "0.6.0", tag="0.6.0", commit="3a54c7f52584f201c17ca7489b52b812152612dc", submodules=True
+    )
+    version(
+        "0.5.0", tag="0.5.0", commit="0169cde2f1d446ae886ef0be07e9a673585ed256", submodules=True
+    )
 
     # https://github.com/pytorch/text#installation
     depends_on("python@3.8:3.11", when="@2:", type=("build", "link", "run"))

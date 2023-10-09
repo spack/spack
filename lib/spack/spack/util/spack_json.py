@@ -11,7 +11,7 @@ import spack.error
 
 __all__ = ["load", "dump", "SpackJSONError"]
 
-_json_dump_args = {"indent": 2, "separators": (",", ": ")}
+_json_dump_args = {"indent": None, "separators": (",", ":")}
 
 
 def load(stream: Any) -> Dict:
@@ -33,4 +33,4 @@ class SpackJSONError(spack.error.SpackError):
     """Raised when there are issues with JSON parsing."""
 
     def __init__(self, msg: str, json_error: BaseException):
-        super(SpackJSONError, self).__init__(msg, str(json_error))
+        super().__init__(msg, str(json_error))

@@ -66,7 +66,9 @@ class WinWdk(Package):
         expand=False,
     )
 
-    variant("plat", values=("x64", "x86", "arm", "arm64"), default="x64")
+    variant(
+        "plat", values=("x64", "x86", "arm", "arm64"), default="x64", description="Toolchain arch"
+    )
 
     # need one to one dep on SDK per https://github.com/MicrosoftDocs/windows-driver-docs/issues/1550
     # additionally, the WDK needs to be paired with a version of the Windows SDK

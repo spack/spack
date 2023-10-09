@@ -161,56 +161,59 @@ class Gromacs(CMakePackage, CudaPackage):
     conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
     conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
     conflicts(
-        "intel-oneapi-mkl@:2021.2",
+        "^intel-oneapi-mkl@:2021.2",
         when="@2023:",
         msg="GROMACS requires oneMKL 2021.3 or later since version 2023",
     )
 
     depends_on("mpi", when="+mpi")
 
-    # Plumed 2.8.2 needs Gromacs 2022.5 2021.7, 2020.7, 2019.6
-    # Plumed 2.8.1 needs Gromacs 2022.3 2021.6, 2020.7, 2019.6
-    # Plumed 2.8.0 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.6 needs Gromacs        2021.5, 2020.6, 2019.6
-    # Plumed 2.7.5 needs Gromacs        2021.5, 2020.6, 2019.6
-    # Plumed 2.7.4 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.3 needs Gromacs        2021.4, 2020.6, 2019.6
-    # Plumed 2.7.2 needs Gromacs        2021,   2020.6, 2019.6
-    # Plumed 2.7.1 needs Gromacs        2021,   2020.5, 2019.6
-    # Plumed 2.7.0 needs Gromacs                2020.4, 2019.6
-    # Plumed 2.6.6 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.5 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.4 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.3 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.2 needs Gromacs                2020.4, 2019.6, 2018.8
-    # Plumed 2.6.1 needs Gromacs                2020.2, 2019.6, 2018.8
-    # Plumed 2.6.0 needs Gromacs                        2019.4, 2018.8
-    # Plumed 2.5.7 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.6 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.5 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.4 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.3 needs Gromacs                        2019.4, 2018.8, 2016.6
-    # Plumed 2.5.2 needs Gromacs                        2019.2, 2018.6, 2016.6
-    # Plumed 2.5.1 needs Gromacs                                2018.6, 2016.6
-    # Plumed 2.5.0 needs Gromacs                                2018.4, 2016.5
+    # Plumed 2.9.0 needs Gromacs 2023,  2022.5, 2021.7, 2020.7
+    # Plumed 2.8.3 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
+    # Plumed 2.8.2 needs Gromacs        2022.5, 2021.7, 2020.7, 2019.6
+    # Plumed 2.8.1 needs Gromacs        2022.3, 2021.6, 2020.7, 2019.6
+    # Plumed 2.8.0 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.6 needs Gromacs                2021.5, 2020.6, 2019.6
+    # Plumed 2.7.5 needs Gromacs                2021.5, 2020.6, 2019.6
+    # Plumed 2.7.4 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.3 needs Gromacs                2021.4, 2020.6, 2019.6
+    # Plumed 2.7.2 needs Gromacs                2021,   2020.6, 2019.6
+    # Plumed 2.7.1 needs Gromacs                2021,   2020.5, 2019.6
+    # Plumed 2.7.0 needs Gromacs                        2020.4, 2019.6
+    # Plumed 2.6.6 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.5 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.4 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.3 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.2 needs Gromacs                        2020.4, 2019.6, 2018.8
+    # Plumed 2.6.1 needs Gromacs                        2020.2, 2019.6, 2018.8
+    # Plumed 2.6.0 needs Gromacs                                2019.4, 2018.8
+    # Plumed 2.5.7 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.6 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.5 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.4 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.3 needs Gromacs                                2019.4, 2018.8, 2016.6
+    # Plumed 2.5.2 needs Gromacs                                2019.2, 2018.6, 2016.6
+    # Plumed 2.5.1 needs Gromacs                                        2018.6, 2016.6
+    # Plumed 2.5.0 needs Gromacs                                        2018.4, 2016.5
 
     # Above dependencies can be verified, and new versions added, by going to
-    # https://github.com/plumed/plumed2/tree/v2.7.1/patches
+    # https://github.com/plumed/plumed2/tree/v2.9.0/patches
     # and switching tags.
     plumed_patches = {
-        "2022.5": "2.8.2",
+        "2023": "2.9.0",
+        "2022.5": "2.8.2:2.9.0",
         "2022.3": "2.8.1",
-        "2021.7": "2.8.2",
+        "2021.7": "2.8.2:2.9.0",
         "2021.6": "2.8.1",
         "2021.5": "2.7.5:2.7.6",
         "2021.4": "2.7.3:2.8.0",
         "2021": "2.7.1:2.7.2",
-        "2020.7": "2.8.1:2.8.2",
+        "2020.7": "2.8.1:2.9.0",
         "2020.6": "2.7.2:2.8.0",
         "2020.5": "2.7.1",
         "2020.4": "2.6.2:2.7.0",
         "2020.2": "2.6.1",
-        "2019.6": "2.6.1:2.8.2",
+        "2019.6": "2.6.1:2.8.3",
         "2019.4": "2.5.3:2.6.0",
         "2019.2": "2.5.2",
         "2018.8": "2.5.3:2.6",
@@ -232,6 +235,13 @@ class Gromacs(CMakePackage, CudaPackage):
         for gmx_ver, plumed_vers in plumed_patches.items():
             depends_on("plumed@{0}".format(plumed_vers), when="@{0}+plumed".format(gmx_ver))
 
+    variant(
+        "intel_provided_gcc",
+        default=False,
+        description="Use this if Intel compiler is installed through spack."
+        + "The g++ location is written to icp{c,x}.cfg",
+    )
+
     depends_on("fftw-api@3")
     depends_on("cmake@2.8.8:3", type="build")
     depends_on("cmake@3.4.3:3", type="build", when="@2018:")
@@ -244,7 +254,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("sycl", when="+sycl")
     depends_on("lapack", when="+lapack")
     depends_on("blas", when="+blas")
-    depends_on("gcc", when="%oneapi")
+    depends_on("gcc", when="%oneapi ~intel_provided_gcc")
+    depends_on("gcc", when="%intel ~intel_provided_gcc")
 
     depends_on("hwloc@1.0:1", when="+hwloc@2016:2018")
     depends_on("hwloc", when="+hwloc@2019:")
@@ -254,8 +265,22 @@ class Gromacs(CMakePackage, CudaPackage):
 
     depends_on("nvhpc", when="+cufftmp")
 
+    requires(
+        "%intel",
+        "%oneapi",
+        policy="one_of",
+        when="+intel_provided_gcc",
+        msg="Only attempt to find gcc libs for Intel compiler if Intel compiler is used.",
+    )
+
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
+    # 2021.2 will always try to build tests (see https://gromacs.bioexcel.eu/t/compilation-failure-for-gromacs-2021-1-and-2021-2-with-cmake-3-20-2/2129)
+    patch(
+        "https://gitlab.com/gromacs/gromacs/-/commit/10262892e11a87fda0f59e633c89ed5ab1100509.diff",
+        sha256="2c30d00404b76421c13866cc42afa5e63276f7926c862838751b158df8727b1b",
+        when="@2021.1:2021.2",
+    )
 
     filter_compiler_wrappers(
         "*.cmake", relative_root=os.path.join("share", "cmake", "gromacs_mpi")
@@ -431,8 +456,16 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if self.spec.satisfies("@2020:"):
             options.append("-DGMX_INSTALL_LEGACY_API=ON")
 
-        if self.spec.satisfies("%oneapi"):
-            options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
+        if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
+            # If intel-oneapi-compilers was installed through spack the gcc is added to the
+            # configuration file.
+            if self.spec.satisfies("+intel_provided_gcc") and os.path.exists(
+                ".".join([os.environ["SPACK_CXX"], "cfg"])
+            ):
+                with open(".".join([os.environ["SPACK_CXX"], "cfg"]), "r") as f:
+                    options.append("-DCMAKE_CXX_FLAGS={}".format(f.read()))
+            else:
+                options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
 
         if "+double" in self.spec:
             options.append("-DGMX_DOUBLE:BOOL=ON")

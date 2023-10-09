@@ -39,13 +39,32 @@ class Go(Package):
 
     maintainers("alecbcs")
 
-    version("1.20.4", sha256="9f34ace128764b7a3a4b238b805856cc1b2184304df9e5690825b0710f4202d6")
-    version("1.20.3", sha256="e447b498cde50215c4f7619e5124b0fc4e25fb5d16ea47271c47f278e7aa763a")
-
-    version("1.19.9", sha256="131190a4697a70c5b1d232df5d3f55a3f9ec0e78e40516196ffb3f09ae6a5744")
-    version("1.19.8", sha256="1d7a67929dccafeaf8a29e55985bc2b789e0499cb1a17100039f084e3238da2f")
+    version("1.20.6", sha256="62ee5bc6fb55b8bae8f705e0cb8df86d6453626b4ecf93279e2867092e0b7f70")
+    version("1.19.11", sha256="e25c9ab72d811142b7f41ff6da5165fec2d1be5feec3ef2c66bc0bdecb431489")
 
     # Deprecated Versions
+    # https://nvd.nist.gov/vuln/detail/CVE-2023-29405
+    version(
+        "1.20.4",
+        sha256="9f34ace128764b7a3a4b238b805856cc1b2184304df9e5690825b0710f4202d6",
+        deprecated=True,
+    )
+    version(
+        "1.20.3",
+        sha256="e447b498cde50215c4f7619e5124b0fc4e25fb5d16ea47271c47f278e7aa763a",
+        deprecated=True,
+    )
+    version(
+        "1.19.9",
+        sha256="131190a4697a70c5b1d232df5d3f55a3f9ec0e78e40516196ffb3f09ae6a5744",
+        deprecated=True,
+    )
+    version(
+        "1.19.8",
+        sha256="1d7a67929dccafeaf8a29e55985bc2b789e0499cb1a17100039f084e3238da2f",
+        deprecated=True,
+    )
+
     # https://nvd.nist.gov/vuln/detail/CVE-2023-24538
     version(
         "1.20.2",
@@ -55,47 +74,6 @@ class Go(Package):
     version(
         "1.19.7",
         sha256="775bdf285ceaba940da8a2fe20122500efd7a0b65dbcee85247854a8d7402633",
-        deprecated=True,
-    )
-
-    # https://nvd.nist.gov/vuln/detail/CVE-2023-24532
-    version(
-        "1.20.1",
-        sha256="b5c1a3af52c385a6d1c76aed5361cf26459023980d0320de7658bae3915831a2",
-        deprecated=True,
-    )
-    # https://nvd.nist.gov/vuln/detail/CVE-2022-41723
-    version(
-        "1.20",
-        sha256="3a29ff0421beaf6329292b8a46311c9fbf06c800077ceddef5fb7f8d5b1ace33",
-        deprecated=True,
-    )
-    # https://nvd.nist.gov/vuln/detail/CVE-2022-41725
-    version(
-        "1.19.6",
-        sha256="d7f0013f82e6d7f862cc6cb5c8cdb48eef5f2e239b35baa97e2f1a7466043767",
-        deprecated=True,
-    )
-    # https://nvd.nist.gov/vuln/detail/CVE-2022-41725
-    version(
-        "1.19.5",
-        sha256="8e486e8e85a281fc5ce3f0bedc5b9d2dbf6276d7db0b25d3ec034f313da0375f",
-        deprecated=True,
-    )
-    version(
-        "1.19.4",
-        sha256="eda74db4ac494800a3e66ee784e495bfbb9b8e535df924a8b01b1a8028b7f368",
-        deprecated=True,
-    )
-    # https://nvd.nist.gov/vuln/detail/CVE-2022-41724
-    version(
-        "1.18.10",
-        sha256="9cedcca58845df0c9474ae00274c44a95c9dfaefb132fc59921c28c7c106f8e6",
-        deprecated=True,
-    )
-    version(
-        "1.18.9",
-        sha256="fbe7f09b96aca3db6faeaf180da8bb632868ec049731e355ff61695197c0e3ea",
         deprecated=True,
     )
 

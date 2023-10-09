@@ -17,11 +17,17 @@ class PyPyopenssl(PythonPackage):
     homepage = "https://pyopenssl.org/"
     pypi = "pyOpenSSL/pyOpenSSL-19.0.0.tar.gz"
 
+    version("23.2.0", sha256="276f931f55a452e7dea69c7173e984eb2a4407ce413c918aa34b55f82f9b8bac")
     version("22.1.0", sha256="7a83b7b272dd595222d672f5ce29aa030f1fb837630ef229f62e72e395ce8968")
     version("19.0.0", sha256="aeca66338f6de19d1aa46ed634c3b9ae519a64b458f8468aec688e7e3c20f200")
 
     depends_on("py-setuptools", type="build")
+
+    depends_on("py-cryptography@38:41", when="@23.2:", type=("build", "run"))
+    depends_on("py-cryptography@38", when="@22", type=("build", "run"))
     depends_on("py-cryptography@2.3:", type=("build", "run"))
-    depends_on("py-cryptography@38", when="@22:", type=("build", "run"))
-    depends_on("python@3.6:", when="@22:", type=("build", "run"))
+
+    conflicts("^py-cryptography@40:40.0.1", when="@23.2:")
+
+    # Historical dependencies
     depends_on("py-six@1.5.2:", when="@:19", type=("build", "run"))

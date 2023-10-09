@@ -120,6 +120,11 @@ class Clingo(CMakePackage):
         else:
             args += ["-DCLINGO_BUILD_WITH_PYTHON=OFF"]
 
+        # Use LTO also for non-Intel compilers please. This can be removed when they
+        # bump cmake_minimum_required to VERSION 3.9.
+        if "+ipo" in self.spec:
+            args.append("-DCMAKE_POLICY_DEFAULT_CMP0069=NEW")
+
         return args
 
     def win_add_library_dependent(self):

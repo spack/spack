@@ -34,10 +34,15 @@ class PyCharm4py(PythonPackage):
     # Builds its own charm++, so no charmpp dependency
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
     depends_on("py-cython", type="build")
     depends_on("py-cffi@1.7:", type="build")
     depends_on("py-numpy@1.10.0:", type=("build", "run"))
     depends_on("py-greenlet", type=("build", "run"))
+
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
     depends_on("cuda")
     depends_on("mpi", when="+mpi")
 

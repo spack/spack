@@ -30,9 +30,12 @@ class Beast2(Package):
     version("2.5.2", sha256="2feb2281b4f7cf8f7de1a62de50f52a8678ed0767fc72f2322e77dde9b8cd45f")
     version("2.4.6", sha256="84029c5680cc22f95bef644824130090f5f12d3d7f48d45cb4efc8e1d6b75e93")
 
+    variant("beagle", default=True, description="Build with libbeagle support")
+
     depends_on("java")
     depends_on("java@17:", when="@2.7.0:")
     depends_on("javafx", when="@2.7.0:")
+    depends_on("libbeagle", type="run", when="+beagle")
 
     def patch(self):
         # handle javafx stuff

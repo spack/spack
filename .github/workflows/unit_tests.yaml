@@ -47,10 +47,10 @@ jobs:
           on_develop: false
 
     steps:
-    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@bd6b4b6205c4dbad673328db7b31b7fab9e241c0 # @v2
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -94,10 +94,10 @@ jobs:
   shell:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@bd6b4b6205c4dbad673328db7b31b7fab9e241c0 # @v2
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -133,7 +133,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -152,10 +152,10 @@ jobs:
   clingo-cffi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@bd6b4b6205c4dbad673328db7b31b7fab9e241c0 # @v2
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -165,6 +165,7 @@ jobs:
     - name: Install Python packages
       run: |
           pip install --upgrade pip setuptools pytest coverage[toml] pytest-cov clingo pytest-xdist
+          pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -186,10 +187,10 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps:
-    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@bd6b4b6205c4dbad673328db7b31b7fab9e241c0 # @v2
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages

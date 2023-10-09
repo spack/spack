@@ -47,9 +47,26 @@ class PyJaxlib(PythonPackage, CudaPackage):
     depends_on("py-absl-py", when="@:0.3", type=("build", "run"))
     depends_on("py-flatbuffers@1.12:2", when="@0.1", type=("build", "run"))
 
+    conflicts(
+        "cuda_arch=none",
+        when="+cuda",
+        msg="Must specify CUDA compute capabilities of your GPU, see "
+        "https://developer.nvidia.com/cuda-gpus",
+    )
+
     def patch(self):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
         self.buildtmp = tempfile.mkdtemp(prefix="spack")
+        filter_file(
+            "build --spawn_strategy=standalone",
+            f"""
+# Limit CPU workers to spack jobs instead of using all HOST_CPUS.
+build --spawn_strategy=standalone
+build --local_cpu_resources={make_jobs}
+""".strip(),
+            ".bazelrc",
+            string=True,
+        )
         filter_file(
             'f"--output_path={output_path}",',
             'f"--output_path={output_path}",'

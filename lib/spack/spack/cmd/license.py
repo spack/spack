@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import os
 import re
 from collections import defaultdict
@@ -102,7 +100,7 @@ license_line_regexes = [
 ]
 
 
-class LicenseError(object):
+class LicenseError:
     def __init__(self):
         self.error_counts = defaultdict(int)
 

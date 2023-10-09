@@ -12,8 +12,9 @@ class Libvori(CMakePackage):
     homepage = "https://brehm-research.de/voronoi.php"
     url = "https://www.cp2k.org/static/downloads/libvori-201217.tar.gz"
 
-    maintainers("dev-zero")
+    maintainers("dev-zero", "mtaillefumier")
 
+    version("220621", sha256="1cfa98c564814bddacf1c0e7f11582137d758668f6307e6eb392c72317984c14")
     version("210412", sha256="331886aea9d093d8c44b95a07fab13d47f101b1f94a0640d7d670eb722bf90ac")
     version("201229", sha256="da0afb292c94f8de2aaebfd0b692d15ffd86083cb8a48478b07ca93823decc06")
     version("201224", sha256="16f6c49eaa17ea23868925dbaae2eca71bdacbe50418c97d6c55e05728038f31")

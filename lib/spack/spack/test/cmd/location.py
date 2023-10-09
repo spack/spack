@@ -5,7 +5,6 @@
 
 import os
 import shutil
-import sys
 
 import pytest
 
@@ -19,7 +18,7 @@ from spack.main import SpackCommand, SpackCommandError
 # Everything here uses (or can use) the mock config and database.
 pytestmark = [
     pytest.mark.usefixtures("config", "database"),
-    pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
+    pytest.mark.not_on_windows("does not run on windows"),
 ]
 # location prints out "locations of packages and spack directories"
 location = SpackCommand("location")
@@ -97,7 +96,7 @@ def test_location_with_active_env(mutable_mock_env_path):
         assert location("--env").strip() == e.path
 
 
-def test_location_env_flag_interference(mutable_mock_env_path, tmpdir):
+def test_location_env_flag_interference(mutable_mock_env_path):
     """
     Tests that specifying an active environment using `spack -e x location ...`
     does not interfere with the location command flags.

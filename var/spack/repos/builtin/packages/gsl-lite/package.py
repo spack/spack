@@ -26,13 +26,27 @@ class GslLite(CMakePackage):
     version("0.36.0", sha256="c052cc4547b33cedee6f000393a7005915c45c6c06b35518d203db117f75c71c")
     version("0.34.0", sha256="a7d5b2672b78704ca03df9ef65bc274d8f8cacad3ca950365eef9e25b50324c5")
 
-    variant("tests", default=False)
-    variant("cuda_tests", default=False)
-    variant("examples", default=False)
-    variant("static_analysis_demos", default=False)
-    variant("cmake_export_package_registry", default=False)
-    variant("compat_header", default=False)
-    variant("legacy_headers", default=False)
+    variant("tests", default=False, description="Build and perform gsl-lite tests")
+    variant("cuda_tests", default=False, description="Build and perform gsl-lite CUDA tests")
+    variant("examples", default=False, description="Build gsl-lite examples")
+    variant(
+        "static_analysis_demos",
+        default=False,
+        description="Build and perform gsl-lite static analysis demos",
+    )
+    variant(
+        "cmake_export_package_registry",
+        default=False,
+        description="Export build directory to CMake user package registry",
+    )
+    variant(
+        "compat_header", default=False, description="Install MS-GSL compatibility header <gsl/gsl>"
+    )
+    variant(
+        "legacy_headers",
+        default=False,
+        description="Install legacy headers <gsl.h>, <gsl.hpp>, <gsl/gsl-lite.h>",
+    )
 
     def cmake_args(self):
         args = [

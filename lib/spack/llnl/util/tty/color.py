@@ -59,8 +59,6 @@ The console can be reset later to plain text with '@.'.
 
 To output an @, use '@@'.  To output a } inside braces, use '}}'.
 """
-from __future__ import unicode_literals
-
 import re
 import sys
 from contextlib import contextmanager
@@ -70,7 +68,7 @@ class ColorParseError(Exception):
     """Raised when a color format fails to parse."""
 
     def __init__(self, message):
-        super(ColorParseError, self).__init__(message)
+        super().__init__(message)
 
 
 # Text styles for ansi codes
@@ -205,7 +203,7 @@ def color_when(value):
     set_color_when(old_value)
 
 
-class match_to_ansi(object):
+class match_to_ansi:
     def __init__(self, color=True, enclose=False):
         self.color = _color_when_value(color)
         self.enclose = enclose
@@ -321,7 +319,7 @@ def cescape(string):
     return string
 
 
-class ColorStream(object):
+class ColorStream:
     def __init__(self, stream, color=None):
         self._stream = stream
         self._color = color

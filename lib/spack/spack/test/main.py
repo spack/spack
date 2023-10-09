@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
@@ -14,8 +13,8 @@ import spack.util.executable as exe
 import spack.util.git
 from spack.main import get_version, main
 
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32", reason="Test functionality supported but tests are failing on Win"
+pytestmark = pytest.mark.not_on_windows(
+    "Test functionality supported but tests are failing on Win"
 )
 
 

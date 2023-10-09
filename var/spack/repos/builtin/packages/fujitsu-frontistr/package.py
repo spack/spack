@@ -32,7 +32,7 @@ class FujitsuFrontistr(FrontistrBase):
 
     def cmake_args(self):
         define = self.define
-        args = super(FujitsuFrontistr, self).cmake_args()
+        args = super().cmake_args()
         if self.spec.satisfies("%fj"):
             args.extend(
                 [

@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test basic behavior of compilers in Spack"""
 import os
-import shutil
-import sys
 from copy import copy
 
 import pytest
@@ -23,7 +21,7 @@ from spack.util.executable import ProcessError
 @pytest.fixture()
 def make_args_for_version(monkeypatch):
     def _factory(version, path="/usr/bin/gcc"):
-        class MockOs(object):
+        class MockOs:
             pass
 
         compiler_name = "gcc"
@@ -125,7 +123,7 @@ default_compiler_entry = {
 # Fake up a mock compiler where everything is defaulted.
 class MockCompiler(Compiler):
     def __init__(self):
-        super(MockCompiler, self).__init__(
+        super().__init__(
             cspec="badcompiler@1.0.0",
             operating_system=default_compiler_entry["operating_system"],
             target=None,
@@ -142,7 +140,7 @@ class MockCompiler(Compiler):
         # Mock os.path.isdir so the link paths don't have to exist
         old_isdir = os.path.isdir
         os.path.isdir = lambda x: True
-        ret = super(MockCompiler, self)._get_compiler_link_paths(paths)
+        ret = super()._get_compiler_link_paths(paths)
         os.path.isdir = old_isdir
         return ret
 
@@ -193,7 +191,7 @@ def call_compiler(exe, *args, **kwargs):
     return no_flag_output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "exe,flagname",
     [
@@ -249,7 +247,7 @@ def test_get_compiler_link_paths_no_verbose_flag():
     assert dirs == []
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.enable_compiler_link_paths
 def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join("gcc"))
@@ -694,7 +692,7 @@ def test_raising_if_compiler_target_is_over_specific(config):
             spack.compilers.get_compilers(cfg, spack.spec.CompilerSpec("gcc@9.0.1"), arch_spec)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_compiler_get_real_version(working_env, monkeypatch, tmpdir):
     # Test variables
     test_version = "2.2.2"
@@ -797,9 +795,7 @@ fi
         assert "SPACK_TEST_CMP_ON" not in os.environ
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Bash scripting unsupported on Windows (for now)"
-)
+@pytest.mark.not_on_windows("Bash scripting unsupported on Windows (for now)")
 def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
     # Create compiler
     gcc = str(tmpdir.join("gcc"))
@@ -830,119 +826,6 @@ echo "4.4.4"
     compiler = compilers[0]
     flag = compiler.cxx11_flag
     assert flag == "-std=c++0x"
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Apple Clang and XCode unsupported on Windows")
-def test_apple_clang_setup_environment(mock_executable, monkeypatch):
-    """Test a code path that is taken only if the package uses
-    Xcode on MacOS.
-    """
-
-    class MockPackage(object):
-        use_xcode = False
-
-    apple_clang_cls = spack.compilers.class_for_compiler_name("apple-clang")
-    compiler = apple_clang_cls(
-        spack.spec.CompilerSpec("apple-clang@=11.0.0"),
-        "catalina",
-        "x86_64",
-        ["/usr/bin/clang", "/usr/bin/clang++", None, None],
-    )
-    env = spack.util.environment.EnvironmentModifications()
-    # Check a package that doesn't use xcode and ensure we don't add changes
-    # to the environment
-    pkg = MockPackage()
-    compiler.setup_custom_environment(pkg, env)
-    assert not env
-
-    # Prepare mock executables to fake the Xcode environment
-    xcrun = mock_executable(
-        "xcrun",
-        """
-if [[ "$2" == "clang" ]] ; then
-  echo "/Library/Developer/CommandLineTools/usr/bin/clang"
-fi
-if [[ "$2" == "clang++" ]] ; then
-  echo "/Library/Developer/CommandLineTools/usr/bin/clang++"
-fi
-""",
-    )
-    mock_executable(
-        "xcode-select",
-        """
-echo "/Library/Developer"
-""",
-    )
-    bin_dir = os.path.dirname(xcrun)
-    monkeypatch.setenv("PATH", bin_dir, prepend=os.pathsep)
-
-    def noop(*args, **kwargs):
-        pass
-
-    real_listdir = os.listdir
-
-    def _listdir(path):
-        if not os.path.exists(path):
-            return []
-        return real_listdir(path)
-
-    # Set a few operations to noop
-    monkeypatch.setattr(shutil, "copytree", noop)
-    monkeypatch.setattr(os, "unlink", noop)
-    monkeypatch.setattr(os, "symlink", noop)
-    monkeypatch.setattr(os, "listdir", _listdir)
-
-    # Qt is so far the only package that uses this code path, change
-    # introduced in https://github.com/spack/spack/pull/1832
-    pkg.use_xcode = True
-    compiler.setup_custom_environment(pkg, env)
-    assert len(env) == 3
-    assert env.env_modifications[0].name == "SPACK_CC"
-    assert env.env_modifications[1].name == "SPACK_CXX"
-    assert env.env_modifications[2].name == "DEVELOPER_DIR"
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
-@pytest.mark.parametrize("xcode_select_output", ["", "/Library/Developer/CommandLineTools"])
-def test_xcode_not_available(xcode_select_output, mock_executable, monkeypatch):
-    # Prepare mock executables to fake the Xcode environment
-    xcrun = mock_executable(
-        "xcrun",
-        """
-    if [[ "$2" == "clang" ]] ; then
-      echo "/Library/Developer/CommandLineTools/usr/bin/clang"
-    fi
-    if [[ "$2" == "clang++" ]] ; then
-      echo "/Library/Developer/CommandLineTools/usr/bin/clang++"
-    fi
-    """,
-    )
-    mock_executable(
-        "xcode-select",
-        """
-    echo "{0}"
-    """.format(
-            xcode_select_output
-        ),
-    )
-    bin_dir = os.path.dirname(xcrun)
-    monkeypatch.setenv("PATH", bin_dir, prepend=os.pathsep)
-    # Prepare compiler
-    apple_clang_cls = spack.compilers.class_for_compiler_name("apple-clang")
-    compiler = apple_clang_cls(
-        spack.spec.CompilerSpec("apple-clang@11.0.0"),
-        "catalina",
-        "x86_64",
-        ["/usr/bin/clang", "/usr/bin/clang++", None, None],
-    )
-    env = spack.util.environment.EnvironmentModifications()
-
-    class MockPackage(object):
-        use_xcode = True
-
-    pkg = MockPackage()
-    with pytest.raises(OSError):
-        compiler.setup_custom_environment(pkg, env)
 
 
 @pytest.mark.enable_compiler_verification

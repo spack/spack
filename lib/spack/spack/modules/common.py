@@ -33,14 +33,13 @@ import copy
 import datetime
 import inspect
 import os.path
-import pathlib
 import re
-import warnings
+import string
 from typing import Optional
 
 import llnl.util.filesystem
 import llnl.util.tty as tty
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, memoized
 
 import spack.build_environment
 import spack.config
@@ -170,16 +169,14 @@ def merge_config_rules(configuration, spec):
     Returns:
         dict: actions to be taken on the spec passed as an argument
     """
-    # Construct a dictionary with the actions we need to perform on the spec passed as a parameter
-    spec_configuration = {}
     # The keyword 'all' is always evaluated first, all the others are
     # evaluated in order of appearance in the module file
-    spec_configuration.update(copy.deepcopy(configuration.get("all", {})))
+    spec_configuration = copy.deepcopy(configuration.get("all", {}))
     for constraint, action in configuration.items():
         if spec.satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
                 spec_configuration = {}
-            update_dictionary_extending_lists(spec_configuration, action)
+            update_dictionary_extending_lists(spec_configuration, copy.deepcopy(action))
 
     # Transform keywords for dependencies or prerequisites into a list of spec
 
@@ -250,7 +247,7 @@ def generate_module_index(root, modules, overwrite=False):
 def _generate_upstream_module_index():
     module_indices = read_module_indices()
 
-    return UpstreamModuleIndex(spack.store.db, module_indices)
+    return UpstreamModuleIndex(spack.store.STORE.db, module_indices)
 
 
 upstream_module_index = llnl.util.lang.Singleton(_generate_upstream_module_index)
@@ -296,7 +293,7 @@ def read_module_indices():
     return module_indices
 
 
-class UpstreamModuleIndex(object):
+class UpstreamModuleIndex:
     """This is responsible for taking the individual module indices of all
     upstream Spack installations and locating the module for a given spec
     based on which upstream install it is located in."""
@@ -355,7 +352,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
     try:
         upstream = spec.installed_upstream
     except spack.repo.UnknownPackageError:
-        upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+        upstream, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
     if upstream:
         module = spack.modules.common.upstream_module_index.upstream_module(spec, module_type)
         if not module:
@@ -390,7 +387,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             return writer.layout.use_name
 
 
-class BaseConfiguration(object):
+class BaseConfiguration:
     """Manipulates the information needed to generate a module file to make
     querying easier. It needs to be sub-classed for specific module types.
     """
@@ -473,6 +470,11 @@ class BaseConfiguration(object):
         return None
 
     @property
+    def conflicts(self):
+        """Conflicts for this module file"""
+        return self.conf.get("conflict", [])
+
+    @property
     def excluded(self):
         """Returns True if the module has been excluded, False otherwise."""
 
@@ -553,7 +555,7 @@ class BaseConfiguration(object):
         return self.conf.get("verbose")
 
 
-class BaseFileLayout(object):
+class BaseFileLayout:
     """Provides information on the layout of module files. Needs to be
     sub-classed for specific module types.
     """
@@ -673,7 +675,14 @@ class BaseContext(tengine.Context):
         # the configure option section
         return None
 
+    def modification_needs_formatting(self, modification):
+        """Returns True if environment modification entry needs to be formatted."""
+        return (
+            not isinstance(modification, (spack.util.environment.SetEnv)) or not modification.raw
+        )
+
     @tengine.context_property
+    @memoized
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed by inspecting the spec prefix
@@ -735,14 +744,58 @@ class BaseContext(tengine.Context):
             _check_tokens_are_valid(x.name, message=msg)
             # Transform them
             x.name = spec.format(x.name, transform=transform)
-            try:
-                # Not every command has a value
-                x.value = spec.format(x.value)
-            except AttributeError:
-                pass
+            if self.modification_needs_formatting(x):
+                try:
+                    # Not every command has a value
+                    x.value = spec.format(x.value)
+                except AttributeError:
+                    pass
             x.name = str(x.name).replace("-", "_")
 
         return [(type(x).__name__, x) for x in env if x.name not in exclude]
+
+    @tengine.context_property
+    def has_manpath_modifications(self):
+        """True if MANPATH environment variable is modified."""
+        for modification_type, cmd in self.environment_modifications:
+            if not isinstance(
+                cmd, (spack.util.environment.PrependPath, spack.util.environment.AppendPath)
+            ):
+                continue
+            if cmd.name == "MANPATH":
+                return True
+        else:
+            return False
+
+    @tengine.context_property
+    def conflicts(self):
+        """List of conflicts for the module file."""
+        fmts = []
+        projection = proj.get_projection(self.conf.projections, self.spec)
+        for item in self.conf.conflicts:
+            self._verify_conflict_naming_consistency_or_raise(item, projection)
+            item = self.spec.format(item)
+            fmts.append(item)
+        return fmts
+
+    def _verify_conflict_naming_consistency_or_raise(self, item, projection):
+        f = string.Formatter()
+        errors = []
+        if len([x for x in f.parse(item)]) > 1:
+            for naming_dir, conflict_dir in zip(projection.split("/"), item.split("/")):
+                if naming_dir != conflict_dir:
+                    errors.extend(
+                        [
+                            f"spec={self.spec.cshort_spec}",
+                            f"conflict_scheme={item}",
+                            f"naming_scheme={projection}",
+                        ]
+                    )
+        if errors:
+            raise ModulesError(
+                message="conflict scheme does not match naming scheme",
+                long_message="\n    ".join(errors),
+            )
 
     @tengine.context_property
     def autoload(self):
@@ -765,44 +818,7 @@ class BaseContext(tengine.Context):
         return self.conf.verbose
 
 
-def ensure_modules_are_enabled_or_warn():
-    """Ensures that, if a custom configuration file is found with custom configuration for the
-    default tcl module set, then tcl module file generation is enabled. Otherwise, a warning
-    is emitted.
-    """
-
-    # TODO (v0.21 - Remove this function)
-    # Check if TCL module generation is enabled, return early if it is
-    enabled = spack.config.get("modules:default:enable", [])
-    if "tcl" in enabled:
-        return
-
-    # Check if we have custom TCL module sections
-    for scope in spack.config.config.file_scopes:
-        # Skip default configuration
-        if scope.name.startswith("default"):
-            continue
-
-        data = spack.config.get("modules:default:tcl", scope=scope.name)
-        if data:
-            config_file = pathlib.Path(scope.path)
-            if not scope.name.startswith("env"):
-                config_file = config_file / "modules.yaml"
-            break
-    else:
-        return
-
-    # If we are here we have a custom "modules" section in "config_file"
-    msg = (
-        f"detected custom TCL modules configuration in {config_file}, while TCL module file "
-        f"generation for the default module set is disabled. "
-        f"In Spack v0.20 module file generation has been disabled by default. To enable "
-        f"it run:\n\n\t$ spack config add 'modules:default:enable:[tcl]'\n"
-    )
-    warnings.warn(msg)
-
-
-class BaseModuleFileWriter(object):
+class BaseModuleFileWriter:
     def __init__(self, spec, module_set_name, explicit=None):
         self.spec = spec
 

@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Dbus(Package):
+class Dbus(AutotoolsPackage):
     """D-Bus is a message bus system, a simple way for applications to
     talk to one another. D-Bus supplies both a system daemon (for
     events such new hardware device printer queue ) and a
@@ -28,19 +28,23 @@ class Dbus(Package):
     version("1.8.4", sha256="3ef63dc8d0111042071ee7f7bafa0650c6ce2d7be957ef0b7ec269495a651ff8")
     version("1.8.2", sha256="5689f7411165adc953f37974e276a3028db94447c76e8dd92efe910c6d3bae08")
 
+    variant("xml_docs", default=False, description="Build XML documentation")
+
     depends_on("pkgconfig", type="build")
     depends_on("docbook-xml", type="build")
     depends_on("docbook-xsl", type="build")
     depends_on("expat")
     depends_on("glib")
     depends_on("libsm")
-    depends_on("xmlto")
+    depends_on("xmlto", when="+xml_docs", type="build")
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--disable-systemd", "--disable-launchd")
-        make()
-        make("install")
+    def configure_args(self):
+        args = ["--disable-systemd", "--disable-launchd"]
+        args += self.enable_or_disable("xml-docs", variant="xml_docs")
+        return args
 
+    @run_after("install")
+    def generate_uuid(self):
         # dbus needs a machine id generated after install
-        dbus_uuidgen = Executable(join_path(prefix.bin, "dbus-uuidgen"))
+        dbus_uuidgen = Executable(self.prefix.bin.join("dbus-uuidgen"))
         dbus_uuidgen("--ensure")
