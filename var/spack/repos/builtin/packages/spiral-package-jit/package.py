@@ -11,7 +11,7 @@ class SpiralPackageJit(Package):
     Compilation (RTC)."""
 
     homepage = "https://spiralgen.com"
-    url = "https://github.com/spiral-software/spiral-package-jit/archive/refs/tags/1.0.2.tar.gz"
+    url = "https://github.com/spiral-software/spiral-package-jit/archive/refs/tags/1.0.3.tar.gz"
     git = "https://github.com/spiral-software/spiral-package-jit.git"
 
     maintainers("spiralgen")
@@ -21,6 +21,7 @@ class SpiralPackageJit(Package):
 
     version("develop", branch="develop")
     version("main", branch="main")
+    version("1.0.3", sha256="97ff0d7d46ed4e53b1971ca279a30b27f0d9b328c70585d4cc0c56dfe6701894")
     version("1.0.2", sha256="d7fac0493ac406a8b1874491223c3a9a1c6727ea1aa39de7ef4694c59aac9d26")
     version("1.0.1", sha256="acf22db04e705276f06642d7f2ebf161f6c347f93bb1bdd6e3ddcfc4b7be5707")
 
