@@ -24,7 +24,7 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import llnl.path
 import llnl.util.filesystem as fs
@@ -745,10 +745,18 @@ class RepoPath:
         for name in self.all_package_names():
             yield self.package_path(name)
 
-    def packages_with_tags(self, *tags):
+    def packages_with_tags(self, *tags, full=False):
+        """Returns a list of packages matching any of the tags in input.
+
+        Args:
+            full: if True the package names in the output are fully-qualified
+        """
         r = set()
         for repo in self.repos:
-            r |= set(repo.packages_with_tags(*tags))
+            current = repo.packages_with_tags(*tags)
+            if full:
+                current = [f"{repo.namespace}.{x}" for x in current]
+            r |= set(current)
         return sorted(r)
 
     def all_package_classes(self):
@@ -1124,7 +1132,8 @@ class Repo:
     def dirname_for_package_name(self, pkg_name):
         """Get the directory name for a particular package.  This is the
         directory that contains its package.py file."""
-        return os.path.join(self.packages_path, pkg_name)
+        _, unqualified_name = self.partition_package_name(pkg_name)
+        return os.path.join(self.packages_path, unqualified_name)
 
     def filename_for_package_name(self, pkg_name):
         """Get the filename for the module we should load for a particular
@@ -1222,15 +1231,10 @@ class Repo:
         package. Then extracts the package class from the module
         according to Spack's naming convention.
         """
-        namespace, _, pkg_name = pkg_name.rpartition(".")
-        if namespace and (namespace != self.namespace):
-            raise InvalidNamespaceError(
-                "Invalid namespace for %s repo: %s" % (self.namespace, namespace)
-            )
-
+        namespace, pkg_name = self.partition_package_name(pkg_name)
         class_name = nm.mod_to_class(pkg_name)
+        fullname = f"{self.full_namespace}.{pkg_name}"
 
-        fullname = "{0}.{1}".format(self.full_namespace, pkg_name)
         try:
             module = importlib.import_module(fullname)
         except ImportError:
@@ -1241,7 +1245,7 @@ class Repo:
 
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):
-            tty.die("%s.%s is not a class" % (pkg_name, class_name))
+            tty.die(f"{pkg_name}.{class_name} is not a class")
 
         new_cfg_settings = (
             spack.config.get("packages").get(pkg_name, {}).get("package_attributes", {})
@@ -1280,6 +1284,15 @@ class Repo:
 
         return cls
 
+    def partition_package_name(self, pkg_name: str) -> Tuple[str, str]:
+        namespace, pkg_name = partition_package_name(pkg_name)
+        if namespace and (namespace != self.namespace):
+            raise InvalidNamespaceError(
+                f"Invalid namespace for the '{self.namespace}' repo: {namespace}"
+            )
+
+        return namespace, pkg_name
+
     def __str__(self):
         return "[Repo '%s' at '%s']" % (self.namespace, self.root)
 
@@ -1291,6 +1304,20 @@ class Repo:
 
 
 RepoType = Union[Repo, RepoPath]
+
+
+def partition_package_name(pkg_name: str) -> Tuple[str, str]:
+    """Given a package name that might be fully-qualified, returns the namespace part,
+    if present and the unqualified package name.
+
+    If the package name is unqualified, the namespace is an empty string.
+
+    Args:
+        pkg_name: a package name, either unqualified like "llvl", or
+            fully-qualified, like "builtin.llvm"
+    """
+    namespace, _, pkg_name = pkg_name.rpartition(".")
+    return namespace, pkg_name
 
 
 def create_repo(root, namespace=None, subdir=packages_dir_name):

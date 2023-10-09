@@ -40,11 +40,18 @@ class Python(Package):
     install_targets = ["install"]
     build_targets: List[str] = []
 
+    version("3.12.0", sha256="51412956d24a1ef7c97f1cb5f70e185c13e3de1f50d131c0aac6338080687afb")
+    version(
+        "3.11.5",
+        sha256="a12a0a013a30b846c786c010f2c19dd36b7298d888f7c4bd1581d90ce18b5e58",
+        preferred=True,
+    )
     version("3.11.4", sha256="85c37a265e5c9dd9f75b35f954e31fbfc10383162417285e30ad25cc073a0d63")
     version("3.11.3", sha256="1a79f3df32265d9e6625f1a0b31c28eb1594df911403d11f3320ee1da1b3e048")
     version("3.11.2", sha256="2411c74bda5bbcfcddaf4531f66d1adc73f247f529aee981b029513aefdbf849")
     version("3.11.1", sha256="baed518e26b337d4d8105679caf68c5c32630d702614fc174e98cb95c46bdfa4")
     version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
+    version("3.10.13", sha256="698ec55234c1363bd813b460ed53b0f108877c7a133d48bde9a50a1eb57b7e65")
     version("3.10.12", sha256="a43cd383f3999a6f4a7db2062b2fc9594fefa73e175b3aedafa295a51a7bb65c")
     version("3.10.11", sha256="f3db31b668efa983508bd67b5712898aa4247899a346f2eb745734699ccd3859")
     version("3.10.10", sha256="fba64559dde21ebdc953e4565e731573bb61159de8e4d4cedee70fb1196f610d")
@@ -58,6 +65,7 @@ class Python(Package):
     version("3.10.2", sha256="3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97")
     version("3.10.1", sha256="b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3")
     version("3.10.0", sha256="c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758")
+    version("3.9.18", sha256="504ce8cfd59addc04c22f590377c6be454ae7406cb1ebf6f5a350149225a9354")
     version("3.9.17", sha256="8ead58f669f7e19d777c3556b62fae29a81d7f06a7122ff9bc57f7dd82d7e014")
     version("3.9.16", sha256="1ad539e9dbd2b42df714b69726e0693bc6b9d2d2c8e91c2e43204026605140c5")
     version("3.9.15", sha256="48d1ccb29d5fbaf1fb8f912271d09f7450e426d4dfe95978ef6aaada70ece4d8")
@@ -76,6 +84,7 @@ class Python(Package):
     version("3.9.2", sha256="7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519")
     version("3.9.1", sha256="29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117")
     version("3.9.0", sha256="df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8")
+    version("3.8.18", sha256="7c5df68bab1be81a52dea0cc2e2705ea00553b67107a301188383d7b57320b16")
     version("3.8.17", sha256="def428fa6cf61b66bcde72e3d9f7d07d33b2e4226f04f9d6fce8384c055113ae")
     version("3.8.16", sha256="71ca9d935637ed2feb59e90a368361dc91eca472a90acb1d344a2e8178ccaf10")
     version("3.8.15", sha256="924d46999df82aa2eaa1de5ca51d6800ffb56b4bf52486a28f40634e3362abc4")
@@ -272,7 +281,7 @@ class Python(Package):
     patch("python-3.7.2-distutils-C++.patch", when="@3.7.2")
     patch("python-3.7.3-distutils-C++.patch", when="@3.7.3")
     patch("python-3.7.4+-distutils-C++.patch", when="@3.7.4:3.10")
-    patch("python-3.7.4+-distutils-C++-testsuite.patch", when="@3.7.4:")
+    patch("python-3.7.4+-distutils-C++-testsuite.patch", when="@3.7.4:3.11")
     patch("python-3.11-distutils-C++.patch", when="@3.11.0:3.11")
     patch("cpython-windows-externals.patch", when="@:3.9.6 platform=windows")
     patch("tkinter-3.7.patch", when="@3.7 platform=darwin")
@@ -287,7 +296,7 @@ class Python(Package):
 
     # Ensure that distutils chooses correct compiler option for RPATH on fj:
     patch("fj-rpath-3.1.patch", when="@:3.9.7,3.10.0 %fj")
-    patch("fj-rpath-3.9.patch", when="@3.9.8:3.9,3.10.1: %fj")
+    patch("fj-rpath-3.9.patch", when="@3.9.8:3.9,3.10.1:3.11 %fj")
 
     # Fixes build with the Intel compilers
     # https://github.com/python/cpython/pull/16717
