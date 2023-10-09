@@ -5,8 +5,9 @@
 
 from spack.package import *
 
+
 class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
-    """Fluid interface model solver and benchmark to test global communication strategies based on Pandya and Shkoller's Z-Model formulation."""
+    """Fluid interface model solver and benchmark based on Pandya and Shkoller's Z-Model formulation."""
 
     homepage = "https://github.com/CUP-ECS/beatnik"
     git = "https://github.com/CUP-ECS/beatnik.git"
@@ -32,7 +33,7 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos @4:")
     depends_on("kokkos +cuda +cuda_lambda +cuda_constexpr", when="+cuda")
     depends_on("kokkos +rocm", when="+rocm")
-    depends_on("kokkos +wrapper", when="%gcc+cuda") # XXX figure out what other compilers need the wrapper
+    depends_on("kokkos +wrapper", when="%gcc+cuda")
 
     # Cabana dependencies
     depends_on("cabana @0.6.0 +grid +heffte +silo +hdf5 +mpi")
@@ -41,13 +42,11 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
 
     # Silo dependencies
     depends_on("silo @4.11:")
-    depends_on("silo @4.11.1:", when="%cce") #silo has trouble with modern cce compilers and hdf5
+    depends_on("silo @4.11.1:", when="%cce")  # Eariler silo versions have trouble cce
 
-    # Heffte dependencies
-    depends_on("heffte +fftw") # We make heffte explicit so we can propagate the right 
-                               # cuda/rocm flags to it. Cabana currently may not. We also
-                               # always require FFTW so that there's a host backend even
-                               # when we're compiling for GPUs
+    # Heffte dependencies - We always require FFTW so that there's a host 
+    # backend even when we're compiling for GPUs
+    depends_on("heffte +fftw") 
     depends_on("heffte +cuda", when="+cuda")
     depends_on("heffte +rocm", when="+rocm")
 
@@ -55,10 +54,9 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("mpich ~cuda", when="+cuda")
     conflicts("mpich ~rocm", when="+rocm")
     conflicts("openmpi ~cuda", when="+cuda")
-    conflicts("^intel-mpi") # Heffte won't build with intel MPI because of needed C++ MPI support
+    conflicts("^intel-mpi")  # Heffte won't build with intel MPI because of needed C++ MPI support
 
-    # Propagate CUDA and AMD GPU targets to cabana, which now propagates them to kokkos and heffte
-    # submodules that need them
+    # Propagate CUDA and AMD GPU targets to cabana
     for cuda_arch in CudaPackage.cuda_arch_values:
         depends_on(
             "cabana cuda_arch=%s" % cuda_arch,
