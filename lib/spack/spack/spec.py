@@ -4944,11 +4944,11 @@ class SpecfileReaderBase:
                     spec.compiler_flags.add_flag(name, val, False)
             else:
                 if isinstance(values, PropagateValue):
-                    spec.variants[name] = vt.AbstractVariant.from_node_dict(
+                    spec.variants[name] = vt.MultiValuedVariant.from_node_dict(
                         name, values.value, values.propagate
                     )
                 else:
-                    spec.variants[name] = vt.AbstractVariant.from_node_dict(name, values)
+                    spec.variants[name] = vt.MultiValuedVariant.from_node_dict(name, values)
 
         spec.external_path = None
         spec.external_modules = None

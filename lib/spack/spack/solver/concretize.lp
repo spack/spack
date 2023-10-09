@@ -757,7 +757,7 @@ node_has_variant(node(ID, Package), Variant) :-
 attr("variant_possible_prop", PackageNode, Variant, Value, Source) :-
   attr("node", PackageNode),
   depends_on(ParentNode, PackageNode),
-  attr("variant_value", node(ID, Source), Variant, Value),
+  attr("variant_value", node(_, Source), Variant, Value),
   attr("variant_possible_prop", ParentNode, Variant, _, Source).
 
 attr("variant_propagate", PackageNode, Variant, Value, Source) :-
