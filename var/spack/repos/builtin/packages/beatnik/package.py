@@ -58,14 +58,11 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
 
     # Propagate CUDA and AMD GPU targets to cabana
     for cuda_arch in CudaPackage.cuda_arch_values:
-        depends_on( 
-            "cabana cuda_arch=%s" % cuda_arch, 
-            when="+cuda cuda_arch=%s" % cuda_arch
-        )
+        depends_on( "cabana cuda_arch=%s" % cuda_arch, when="+cuda cuda_arch=%s" % cuda_arch)
     for amdgpu_value in ROCmPackage.amdgpu_targets:
         depends_on(
-            "cabana +rocm amdgpu_target=%s" % amdgpu_value, 
-            when="+rocm amdgpu_target=%s" % amdgpu_value
+            "cabana +rocm amdgpu_target=%s" % amdgpu_value,
+            when="+rocm amdgpu_target=%s" % amdgpu_value,
         )
 
     # CMake specific build functions
