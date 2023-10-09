@@ -55,5 +55,6 @@ class Highfive(CMakePackage):
             "-DHIGHFIVE_PARALLEL_HDF5:Bool={0}".format("+mpi" in self.spec),
             "-DHIGHFIVE_UNIT_TESTS:Bool=false",
             "-DHIGHFIVE_EXAMPLES:Bool=false",
+            "-DHDF5_ROOT:String={0}".format(self.spec["hdf5"].prefix),
         ]
         return args

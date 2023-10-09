@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import os
 
 from spack.package import *
 
@@ -143,6 +144,12 @@ class Rust(Package):
         flags.append(f"--tools={','.join(tools)}")
 
         configure(*flags)
+
+    def setup_build_environment(self, env):
+        env.set(
+            "CARGO_HOME",
+            os.path.join(os.path.dirname(self.stage.path), ".cargo")
+        )
 
     def build(self, spec, prefix):
         python("./x.py", "build")

@@ -29,6 +29,7 @@ class Root(CMakePackage):
     # ###################### Versions ##########################
 
     # Master branch
+
     version("master", branch="master")
 
     # Development version (when more recent than production).
