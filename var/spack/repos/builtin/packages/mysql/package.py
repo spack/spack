@@ -139,6 +139,7 @@ class Mysql(CMakePackage):
     patch("old_ssl_fix.patch", when="@8.0.29")
     patch("missing_include.patch",  when="@8:")
 
+
     def patch(self):
         filter_file(
            r"IF\(NOT BOOST_MINOR_VERSION EQUAL",

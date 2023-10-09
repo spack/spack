@@ -1,0 +1,10 @@
+--- spack-src/sql-common/sql_string.cc.orig	2023-08-16 10:51:41.625803528 -0500
++++ spack-src/sql-common/sql_string.cc	2023-08-16 10:54:02.919158871 -0500
+@@ -23,6 +23,7 @@
+ #include "sql_string.h"
+ 
+ #include <algorithm>
++#include <limits>
+ 
+ #include "my_dbug.h"
+ #include "my_macros.h"

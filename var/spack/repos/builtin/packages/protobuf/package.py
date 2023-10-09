@@ -82,6 +82,15 @@ class Protobuf(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
+    variant(
+        "cxxstd",
+        default="14",
+        values=("14", "17", "20", "23"),
+        multi=False,
+        sticky=True,
+        description="C++ standard",
+    )
+
     depends_on("abseil-cpp@20230125.3:", when="@3.22.5:")
     # https://github.com/protocolbuffers/protobuf/issues/11828#issuecomment-1433557509
     depends_on("abseil-cpp@20230125:", when="@3.22:")
@@ -129,10 +138,20 @@ class Protobuf(CMakePackage):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("protobuf_BUILD_TESTS", False),
+            self.define("protobuf_BUILD_SHARED_LIBS", True),
+            self.define("CMAKE_INSTALL_LIBDIR", "lib"),
             self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
+            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
             self.define("protobuf_BUILD_SHARED_LIBS", True),
             self.define("CMAKE_INSTALL_LIBDIR", "lib"),
         ]
+
+        if not self.spec.satisfies("cxxstd=14") and self.compiler.name == "clang":
+            args.extend( [
+                "-DCMAKE_CXX_FLAGS=-std=c++{0} -D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES=1".format(
+                    self.spec.variants["cxxstd"].value,
+                ),
+             ] )
 
         if self.spec.satisfies("@3.22:"):
             cxxstd = self.spec["abseil-cpp"].variants["cxxstd"].value
