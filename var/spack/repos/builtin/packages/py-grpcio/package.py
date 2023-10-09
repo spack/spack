@@ -12,6 +12,8 @@ class PyGrpcio(PythonPackage):
     homepage = "https://grpc.io/"
     pypi = "grpcio/grpcio-1.32.0.tar.gz"
 
+    version("1.59.0", sha256="acf70a63cf09dd494000007b798aff88a436e1c03b394995ce450be437b8e54f")
+    version("1.58.0", sha256="532410c51ccd851b706d1fbc00a87be0f5312bd6f8e5dbf89d4e99c7f79d7499")
     version("1.52.0", sha256="a5d4a83d29fc39af429c10b9b326c174fec49b73398e4a966a1f2a4f30aa4fdb")
     version("1.48.1", sha256="660217eccd2943bf23ea9a36e2a292024305aec04bf747fbcff1f5032b83610e")
     version("1.43.0", sha256="735d9a437c262ab039d02defddcb9f8f545d7009ae61c0114e19dda3843febe5")
@@ -55,8 +57,9 @@ class PyGrpcio(PythonPackage):
 
         for dep in self.spec.dependencies(deptype="link"):
             query = self.spec[dep.name]
-            env.prepend_path("LIBRARY_PATH", query.libs.directories[0])
-            env.prepend_path("CPATH", query.headers.directories[0])
+            if query.libs.directories:
+                env.prepend_path("LIBRARY_PATH", query.libs.directories[0])
+                env.prepend_path("CPATH", query.headers.directories[0])
 
     def patch(self):
         filter_file("-std=gnu99", "", "setup.py")

@@ -142,6 +142,8 @@ class Protobuf(CMakePackage):
             self.define("CMAKE_INSTALL_LIBDIR", "lib"),
             self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
             self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+            self.define("protobuf_BUILD_SHARED_LIBS", True),
+            self.define("CMAKE_INSTALL_LIBDIR", "lib"),
         ]
 
         if not self.spec.satisfies("cxxstd=14") and self.compiler.name == "clang":
@@ -160,6 +162,12 @@ class Protobuf(CMakePackage):
                 ]
             )
 
+            if not cxxstd == 14 and self.compiler.name == "clang":
+                args.extend( [
+                    "-DCMAKE_CXX_FLAGS=-std=c++{0} -D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES=1".format(cxxstd),
+                  ]
+                )
+ 
         if self.spec.satisfies("platform=darwin"):
             args.append(self.define("CMAKE_MACOSX_RPATH", True))
 
