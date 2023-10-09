@@ -12,8 +12,12 @@ class Libzmq(AutotoolsPackage):
     """The ZMQ networking/concurrency library and core API"""
 
     homepage = "https://zguide.zeromq.org/"
-    url = "https://github.com/zeromq/libzmq/releases/download/v4.3.5/zeromq-4.3.5.tar.gz"
     git = "https://github.com/zeromq/libzmq.git"
+
+    def url_for_version(self, ver):
+        if ver <= Version("4.1.4"):
+            return f"http://download.zeromq.org/zeromq-{ver}.tar.gz"
+        return f"https://github.com/zeromq/libzmq/releases/download/v{ver}/zeromq-{ver}.tar.gz"
 
     maintainers("dennisklein")
 
@@ -90,12 +94,6 @@ class Libzmq(AutotoolsPackage):
         when="@4.3.3:4.3.4",
     )
 
-    def url_for_version(self, version):
-        if version <= Version("4.1.4"):
-            url = "http://download.zeromq.org/zeromq-{0}.tar.gz"
-        else:
-            url = "https://github.com/zeromq/libzmq/releases/download/v{0}/zeromq-{0}.tar.gz"
-        return url.format(version)
 
     @when("@master")
     def autoreconf(self, spec, prefix):
