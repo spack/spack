@@ -195,7 +195,8 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
             )
             options.append(f"-Damd_comgr_DIR={self.spec['comgr'].prefix.lib.cmake.amd_comgr}")
             options.append(
-                f"-Dhsa-runtime64_DIR={join_path(self.spec['hsa-rocr-dev'].prefix.lib.cmake, 'hsa-runtime64')}"
+                "-Dhsa-runtime64_DIR=" +
+                join_path(self.spec['hsa-rocr-dev'].prefix.lib.cmake, 'hsa-runtime64')
             )
             options.append(f"-DHSA_HEADER={self.spec['hsa-rocr-dev'].prefix.include}")
             options.append(f"-DCMAKE_INCLUDE_PATH={self.spec['hsa-rocr-dev'].prefix.include.hsa}")
