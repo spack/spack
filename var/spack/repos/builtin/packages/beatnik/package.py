@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
-    """Fluid interface model solver and benchmark based on Pandya and Shkoller's Z-Model formulation."""
+    """Fluid interface model solver based on Pandya and Shkoller's Z-Model formulation."""
 
     homepage = "https://github.com/CUP-ECS/beatnik"
     git = "https://github.com/CUP-ECS/beatnik.git"
@@ -44,9 +44,9 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("silo @4.11:")
     depends_on("silo @4.11.1:", when="%cce")  # Eariler silo versions have trouble cce
 
-    # Heffte dependencies - We always require FFTW so that there's a host 
+    # Heffte dependencies - We always require FFTW so that there's a host
     # backend even when we're compiling for GPUs
-    depends_on("heffte +fftw") 
+    depends_on("heffte +fftw")
     depends_on("heffte +cuda", when="+cuda")
     depends_on("heffte +rocm", when="+rocm")
 
@@ -58,15 +58,11 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
 
     # Propagate CUDA and AMD GPU targets to cabana
     for cuda_arch in CudaPackage.cuda_arch_values:
-        depends_on(
-            "cabana cuda_arch=%s" % cuda_arch,
-            when="+cuda cuda_arch=%s" % cuda_arch,
-        )
+        depends_on( "cabana cuda_arch=%s" % cuda_arch, 
+                    when="+cuda cuda_arch=%s" % cuda_arch)
     for amdgpu_value in ROCmPackage.amdgpu_targets:
-        depends_on(
-            "cabana +rocm amdgpu_target=%s" % amdgpu_value,
-            when="+rocm amdgpu_target=%s" % amdgpu_value,
-        )
+        depends_on( "cabana +rocm amdgpu_target=%s" % amdgpu_value, 
+                    when="+rocm amdgpu_target=%s" % amdgpu_value)
 
     # CMake specific build functions
     def cmake_args(self):
@@ -78,12 +74,16 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in self.spec:
             env["SPACK_CXX"] = self.spec["hip"].hipcc
 
-        # If we're building with cray mpich, we need to make sure we get the GTL library for 
+        # If we're building with cray mpich, we need to make sure we get the GTL library for
         # gpu-aware MPI, since cabana and beatnik require it
         if self.spec.satisfies("+rocm ^cray-mpich"):
             gtl_dir = join_path(self.spec["cray-mpich"].prefix, "..", "..", "..", "gtl", "lib")
-            args.append("-DCMAKE_EXE_LINKER_FLAGS=-Wl,-rpath={0} -L{0} -lmpi_gtl_hsa".format(gtl_dir))
+            args.append(
+                "-DCMAKE_EXE_LINKER_FLAGS=-Wl,-rpath={0} -L{0} -lmpi_gtl_hsa".format(gtl_dir)
+            )
         elif self.spec.satisfies("+cuda ^cray-mpich"):
             gtl_dir = join_path(self.spec["cray-mpich"].prefix, "..", "..", "..", "gtl", "lib")
-            args.append("-DCMAKE_EXE_LINKER_FLAGS=-Wl,-rpath={0} -L{0} -lmpi_gtl_cuda".format(gtl_dir))
+            args.append(
+                "-DCMAKE_EXE_LINKER_FLAGS=-Wl,-rpath={0} -L{0} -lmpi_gtl_cuda".format(gtl_dir)
+            )
         return args
