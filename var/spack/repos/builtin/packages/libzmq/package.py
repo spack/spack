@@ -12,12 +12,13 @@ class Libzmq(AutotoolsPackage):
     """The ZMQ networking/concurrency library and core API"""
 
     homepage = "https://zguide.zeromq.org/"
-    url = "https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz"
+    url = "https://github.com/zeromq/libzmq/releases/download/v4.3.5/zeromq-4.3.5.tar.gz"
     git = "https://github.com/zeromq/libzmq.git"
 
     maintainers("dennisklein")
 
     version("master", branch="master")
+    version("4.3.5", sha256="6653ef5910f17954861fe72332e68b03ca6e4d9c7160eb3a8de5a5a913bfab43")
     version("4.3.4", sha256="c593001a89f5a85dd2ddf564805deb860e02471171b3f204944857336295c3e5")
     version("4.3.3", sha256="9d9285db37ae942ed0780c016da87060497877af45094ff9e1a1ca736e3875a2")
     version("4.3.2", sha256="ebd7b5c830d6428956b67a0454a7f8cbed1de74b3b01e5c33c5378e22740f763")
