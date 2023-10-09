@@ -10,11 +10,14 @@ class PyWheel(Package, PythonExtension):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
-    url = (
-        "https://files.pythonhosted.org/packages/py2.py3/w/wheel/wheel-0.34.2-py2.py3-none-any.whl"
-    )
+    url = "https://files.pythonhosted.org/packages/py3/w/wheel/wheel-0.41.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/wheel/"
 
+    version(
+        "0.41.2",
+        sha256="75909db2664838d015e3d9139004ee16711748a52c8f336b52882266540215d8",
+        expand=False,
+    )
     version(
         "0.37.1",
         sha256="4bdcd7d840138086126cd09254dc6195fb4fc6f01c050a1d7236f2630db1d22a",
@@ -73,10 +76,16 @@ class PyWheel(Package, PythonExtension):
 
     extends("python")
     depends_on("python +ctypes", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@0.34:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@0.30:", type=("build", "run"))
-    depends_on("python@2.6:2.8,3.2:", type=("build", "run"))
+    depends_on("python@3.7:", when="@0.38:", type=("build", "run"))
     depends_on("py-pip", type="build")
+
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/{0}/w/wheel/wheel-{1}-{0}-none-any.whl"
+        if version >= Version("0.38"):
+            python = "py3"
+        else:
+            python = "py2.py3"
+        return url.format(python, version)
 
     def install(self, spec, prefix):
         # To build wheel from source, you need setuptools and wheel already installed.
