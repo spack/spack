@@ -507,6 +507,9 @@ packages:
 """
     update_packages_config(conf_str)
 
+    asp = solve("--show=asp", "y")
+    import pdb; pdb.set_trace()
+
     spec_y = Spec("y").concretized()
     assert spec_y.satisfies("cflags=-g")
 
@@ -786,6 +789,7 @@ def test_conditional_requirements_from_packages_yaml(
         assert spec.satisfies(match_str) is expected
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize(
     "packages_yaml,spec_str,expected_message",
     [

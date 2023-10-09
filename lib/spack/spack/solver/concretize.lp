@@ -699,11 +699,11 @@ requirement_group_satisfied(node(ID, Package), X) :-
 % None of the following 3 are needed for `virtual-w:require: w cflags="-O1"`
 % (1) and (3) are needed for `y:require: cflags="-g"`
 
-{ attr("node_flag", node(ID, Package), FlagType, FlagValue) } :-
-  requirement_group_member(ConditionID, Package, RequirementID),
-  activate_requirement(node(ID, Package), RequirementID),
-  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
-  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue).
+%{ attr("node_flag", node(ID, Package), FlagType, FlagValue) } :-
+%  requirement_group_member(ConditionID, Package, RequirementID),
+%  activate_requirement(node(ID, Package), RequirementID),
+%  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+%  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue).
 
 %{ attr("node_flag", node(ProviderID, Provider), FlagType, FlagValue) } :-
 %  requirement_group_member(ConditionID, Virtual, RequirementID),
@@ -712,12 +712,12 @@ requirement_group_satisfied(node(ID, Package), X) :-
 %  imposed_constraint(EffectID, "node_flag_set", Virtual, FlagType, FlagValue),
 %  provider(node(ProviderID, Provider), node(VirtualID, Virtual)).
 
-{ attr("node_flag_source", node(NodeID1, Package1), FlagType, node(NodeID2, Package2)) } :-
-  requirement_group_member(ConditionID, Package1, RequirementID),
-  activate_requirement(node(NodeID1, Package1), RequirementID),
-  pkg_fact(Package1, condition_effect(ConditionID, EffectID)),
-  imposed_constraint(EffectID, "node_flag_source", Package1, FlagType, Package2),
-  imposed_packages(NodeID2, Package2).
+%{ attr("node_flag_source", node(NodeID1, Package1), FlagType, node(NodeID2, Package2)) } :-
+%  requirement_group_member(ConditionID, Package1, RequirementID),
+%  activate_requirement(node(NodeID1, Package1), RequirementID),
+%  pkg_fact(Package1, condition_effect(ConditionID, EffectID)),
+%  imposed_constraint(EffectID, "node_flag_source", Package1, FlagType, Package2),
+%  imposed_packages(NodeID2, Package2).
 
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {

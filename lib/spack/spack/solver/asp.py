@@ -1539,6 +1539,9 @@ class SpackSolverSetup:
         Args:
             rules: rules for which we want facts to be emitted
         """
+
+        req_counter = 10000
+
         for requirement_grp_id, rule in enumerate(rules):
             virtual = rule.kind == RequirementKind.VIRTUAL
 
@@ -1571,27 +1574,26 @@ class SpackSolverSetup:
                 self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
             self.gen.newline()
 
+            #if main_requirement_condition != spack.spec.Spec():
+            #    when_spec = main_requirement_condition
+            #else:
+            #    when_spec = spack.spec.Spec(pkg_name)
+
             for spec_str in requirement_grp:
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
                 spec.attach_git_version_lookup()
 
-                when_spec = spec
-                if virtual:
-                    when_spec = spack.spec.Spec(pkg_name)
-
                 try:
-                    member_id = self.condition(
-                        required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=virtual
+                    member_id = req_counter
+                    req_counter += 1
+                    #import pdb; pdb.set_trace()
+                    self.impose(
+                        member_id, imposed_spec=spec, name=pkg_name, node=True
                     )
                 except Exception as e:
-                    # Do not raise if the rule comes from the 'all' subsection, since usability
-                    # would be impaired. If a rule does not apply for a specific package, just
-                    # discard it.
-                    if rule.kind != RequirementKind.DEFAULT:
-                        raise RuntimeError("cannot emit requirements for the solver") from e
-                    continue
+                   raise
 
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
                 self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
