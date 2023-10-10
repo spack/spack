@@ -37,41 +37,35 @@ class Libzmq(AutotoolsPackage):
     version("4.0.6", sha256="28a2a9c9b77014c39087a498942449df18bb9885cdb63334833525a1d19f2894")
     version("4.0.5", sha256="3bc93c5f67370341428364ce007d448f4bb58a0eaabd0a60697d8086bc43342b")
 
+    variant("docs", default=False, description="Build documentation")
+    variant("drafts", default=False, description="Build and install draft classes and methods")
+    variant(
+        "libbsd",
+        when="@4.3.3:",
+        default=(sys.platform != "darwin"),
+        description="Use strlcpy from libbsd (will use own implementation if false)",
+    )
     variant(
         "libsodium",
         default=True,
         description="Build with message encryption support via libsodium",
     )
-
-    variant("drafts", default=False, description="Build and install draft classes and methods")
-
-    variant("docs", default=False, description="Build documentation")
-
-    variant(
-        "libbsd",
-        when="@4.3.3:",
-        default=(sys.platform != "darwin"),
-        description="Use strlcpy from libbsd " + "(will use own implementation if false)",
-    )
-
     variant("libunwind", default=False, description="Build with libunwind support")
 
-    depends_on("libsodium", when="+libsodium")
-    depends_on("libsodium@:1.0.3", when="+libsodium@:4.1.2")
+    conflicts("%gcc@8:", when="@:4.2.2")
+    conflicts("%gcc@11:", when="@:4.3.2")
 
     depends_on("autoconf", type="build", when="@master")
     depends_on("automake", type="build", when="@master")
     depends_on("libtool", type="build", when="@master")
-    depends_on("pkgconfig", type="build")
     depends_on("docbook-xml", type="build", when="+docs")
     depends_on("docbook-xsl", type="build", when="+docs")
+    depends_on("pkgconfig", type="build")
 
     depends_on("libbsd", when="+libbsd")
-
+    depends_on("libsodium", when="+libsodium")
+    depends_on("libsodium@:1.0.3", when="@:4.1.2 +libsodium")
     depends_on("libunwind", when="+libunwind")
-
-    conflicts("%gcc@8:", when="@:4.2.2")
-    conflicts("%gcc@11:", when="@:4.3.2")
 
     # Fix aggressive compiler warning false positive
     patch(
@@ -79,14 +73,12 @@ class Libzmq(AutotoolsPackage):
         sha256="310b8aa57a8ea77b7ac74debb3bf928cbafdef5e7ca35beaac5d9c61c7edd239",
         when="@4.3.3:4.3.4",
     )
-
     # Fix build issues with gcc-12
     patch(
         "https://github.com/zeromq/libzmq/pull/4334.patch?full_index=1",
         sha256="edca864cba914481a5c97d2e975ba64ca1d2fbfc0044e9a78c48f1f7b2bedb6f",
         when="@4.3.4",
     )
-
     # Fix static assertion failure with gcc-13
     patch(
         "https://github.com/zeromq/libzmq/commit/438d5d88392baffa6c2c5e0737d9de19d6686f0d.patch?full_index=1",
@@ -94,26 +86,22 @@ class Libzmq(AutotoolsPackage):
         when="@4.3.3:4.3.4",
     )
 
-
     @when("@master")
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash("./autogen.sh")
 
     def configure_args(self):
-        config_args = []
-
-        config_args.extend(self.with_or_without("docs"))
-        config_args.extend(self.enable_or_disable("drafts"))
-        config_args.extend(self.enable_or_disable("libbsd"))
-        config_args.extend(self.with_or_without("libsodium"))
-        config_args.extend(self.enable_or_disable("libunwind"))
+        args = self.with_or_without("docs")
+        args += self.enable_or_disable("drafts")
+        args += self.enable_or_disable("libbsd")
+        args += self.with_or_without("libsodium")
+        args += self.enable_or_disable("libunwind")
         # the package won't compile with newer compilers because warnings
         # are converted to errors. Hence, disable such conversion.
-        # this option was only added in version 4.2.3.
         if self.spec.version >= Version("4.2.3"):
-            config_args.append("--disable-Werror")
-        if "clang" in self.compiler.cc:
-            config_args.append("CFLAGS=-Wno-gnu")
-            config_args.append("CXXFLAGS=-Wno-gnu")
-        return config_args
+            args.append("--disable-Werror")
+        if self.spec.compiler.name == "clang":
+            args.append("CFLAGS=-Wno-gnu")
+            args.append("CXXFLAGS=-Wno-gnu")
+        return args
