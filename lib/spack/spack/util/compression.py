@@ -69,6 +69,8 @@ def _system_untar(archive_file, remove_archive_file=False):
         archive_file = archive_file_no_ext + "-input"
         shutil.move(archive_file_no_ext, archive_file)
     tar = which("tar", required=True)
+    if os.geteuid() == 0:
+        tar.add_default_arg('--no-same-owner')
     tar.add_default_arg("-oxf")
     tar(archive_file)
     if remove_archive_file:
