@@ -56,8 +56,18 @@ class Proj(CMakePackage, AutotoolsPackage):
 
     variant("tiff", default=True, description="Enable TIFF support")
     variant("curl", default=True, description="Enable curl support")
-    variant("shared", default=True, description="Enable shared libraries", when="build_system=autotools")
-    variant("pic", default=False, description="Enable position-independent code (PIC)", when="build_system=autotools")
+    variant(
+        "shared",
+        default=True,
+        description="Enable shared libraries",
+        when="build_system=autotools",
+    )
+    variant(
+        "pic",
+        default=False,
+        description="Enable position-independent code (PIC)",
+        when="build_system=autotools",
+    )
 
     # https://github.com/OSGeo/PROJ#distribution-files-and-format
     # https://github.com/OSGeo/PROJ-data
