@@ -931,7 +931,7 @@ def interactive_version_filter(
                 for v in sorted_and_filtered:
                     f.write(f"{str(v):{max_len}}  {url_dict[v]}\n")
 
-            editor([tmpfile], exec_fn=executable)
+            editor(tmpfile, exec_fn=executable)
 
             with open(tmpfile, "r") as f:
                 url_dict.clear()
