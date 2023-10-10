@@ -2410,35 +2410,67 @@ spack:
         assert viewdir not in shell
 
 
+@pytest.mark.parametrize("include", [True, False, "split"])
 def test_stack_view_multiple_views(
-    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery
+    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery, include
 ):
-    filename = str(tmpdir.join("spack.yaml"))
-    default_viewdir = str(tmpdir.join("default-view"))
-    combin_viewdir = str(tmpdir.join("combinatorial-view"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
-spack:
+    def write_file(filename, content):
+        with open(filename, "w") as f:
+            f.write(content)
+
+    # Write the view configuration and or manifest file
+    view_filename = tmpdir.join("view.yaml")
+    base_content = """\
   definitions:
     - packages: [mpileaks, cmake]
-    - compilers: ['%%gcc', '%%clang']
+    - compilers: ['%gcc', '%clang']
   specs:
     - matrix:
         - [$packages]
         - [$compilers]
+"""
 
-  view:
-    default:
-      root: %s
-      select: ['%%gcc']
-    combinatorial:
-      root: %s
-      exclude: [callpath %%gcc]
-      projections:
-        'all': '{name}/{version}-{compiler.name}'"""
-            % (default_viewdir, combin_viewdir)
-        )
+    include_content = f"  include:\n    - {view_filename}\n"
+    view_line = "  view:\n"
+
+    comb_dir = str(tmpdir.join("combinatorial-view"))
+    comb_view = """\
+{0}combinatorial:
+{0}  root: {1}
+{0}  exclude: [callpath%gcc]
+{0}  projections:
+"""
+    projection = "    'all': '{name}/{version}-{compiler.name}'"
+
+    default_dir = str(tmpdir.join("default-view"))
+    default_view = """\
+{0}default:
+{0}  root: {1}
+{0}  select: ['%gcc']
+"""
+
+    content = "spack:\n"
+    indent = "  "
+    if include is True:
+        view = "view:\n" + default_view.format(indent, default_dir)
+        view += comb_view.format(indent, comb_dir) + indent + projection
+        write_file(view_filename, view)
+        content += include_content + base_content
+    elif include == "split":
+        view = "view:\n" + default_view.format(indent, default_dir)
+        write_file(view_filename, view)
+        content += include_content + base_content + view_line
+        indent += "  "
+        content += comb_view.format(indent, comb_dir) + indent + projection
+    else:
+        indent += "  "
+        content += base_content + view_line
+        content += default_view.format(indent, default_dir)
+        content += comb_view.format(indent, comb_dir) + indent + projection
+
+    filename = tmpdir.join(ev.manifest_name)
+    write_file(filename, content)
+
     with tmpdir.as_cwd():
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
@@ -2446,22 +2478,17 @@ spack:
 
         shell = env("activate", "--sh", "test")
         assert "PATH" in shell
-        assert os.path.join(default_viewdir, "bin") in shell
+        assert os.path.join(default_dir, "bin") in shell
 
         test = ev.read("test")
         for spec in test._get_environment_specs():
+            spec_dir = os.path.join(
+                comb_dir, spec.name, "%s-%s" % (spec.version, spec.compiler.name)
+            )
             if not spec.satisfies("callpath%gcc"):
-                assert os.path.exists(
-                    os.path.join(
-                        combin_viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name)
-                    )
-                )
+                assert os.path.exists(spec_dir)
             else:
-                assert not os.path.exists(
-                    os.path.join(
-                        combin_viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name)
-                    )
-                )
+                assert not os.path.exists(spec_dir)
 
 
 def test_env_activate_sh_prints_shell_output(tmpdir, mock_stage, mock_fetch, install_mockery):
@@ -3557,3 +3584,86 @@ def test_environment_created_from_lockfile_has_view(mock_packages, tmpdir):
     # Make sure the view was created
     with ev.Environment(env_b) as e:
         assert os.path.isdir(e.view_path_default)
+
+
+@pytest.mark.parametrize("include,enable", [(True, True), (True, False), (False, False)])
+def test_env_include_bool_view(tmp_path, mutable_mock_env_path, include, enable):
+    """Check processing when include a view configuration with bool value and
+    when the view is explicitly disabled (since doesn't appear to be tested
+    elsewhere)."""
+    view = f"view: {str(enable).lower()}"
+    if include:
+        view_yaml = tmp_path / "view.yaml"
+        with open(view_yaml, "w") as f:
+            f.write(view)
+        add_include = f"  include:\n  - {view_yaml}"
+        add_view = ""
+    else:
+        add_include = ""
+        add_view = f"  {view}"
+
+    spack_yaml = tmp_path / ev.manifest_name
+    contents = """\
+spack:
+%s
+  specs:
+  - mpileaks
+  packages:
+    mpileaks:
+      compiler: [gcc]
+%s
+""" % (
+        add_include,
+        add_view,
+    )
+
+    # create environment with some structure
+    with open(spack_yaml, "w") as f:
+        f.write(contents)
+    env("create", "test", str(spack_yaml))
+
+    # concretize
+    with ev.read("test") as e:
+        concretize()
+
+    expected = 1 if enable else 0
+    assert len(e.views) == expected
+
+    if enable:
+        assert os.path.exists(e.view_path_default)
+    else:
+        assert not os.path.exists(e.view_path_default)
+
+
+def test_env_include_path_view(tmp_path, mutable_mock_env_path):
+    """Check processing when include a view configuration with bool value and
+    when the view is explicitly disabled (since doesn't appear to be tested
+    elsewhere)."""
+    view_path = tmp_path / "custom-view"
+    view_yaml = tmp_path / "view.yaml"
+    with open(view_yaml, "w") as f:
+        f.write(f"view: {view_path}")
+
+    spack_yaml = tmp_path / ev.manifest_name
+    contents = f"""\
+spack:
+  include:
+  - {view_yaml}
+  specs:
+  - mpileaks
+  packages:
+    mpileaks:
+      compiler: [gcc]
+"""
+
+    # create environment with some structure
+    with open(spack_yaml, "w") as f:
+        f.write(contents)
+    env("create", "test", str(spack_yaml))
+
+    # concretize
+    with ev.read("test") as e:
+        concretize()
+
+    assert not os.path.exists(e.view_path_default), "Default view path should not exist"
+    assert os.path.exists(view_path)

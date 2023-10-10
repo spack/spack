@@ -825,6 +825,18 @@ class Environment:
             else:
                 self.spec_lists[name] = user_specs
 
+    def _process_view(self, enable_view):
+        """Process the view option, which can be boolean, string (path or name),
+        or None."""
+        if enable_view is True or enable_view is None:
+            self.views[default_view_name] = ViewDescriptor(self.path, self.view_path_default)
+        elif isinstance(enable_view, str):
+            self.views[default_view_name] = ViewDescriptor(self.path, enable_view)
+        elif enable_view:
+            path = self.path
+            for name, values in enable_view.items():
+                self.views[name] = ViewDescriptor.from_dict(path, values)
+
     def _construct_state_from_manifest(self, re_read=False):
         """Read manifest file and set up user specs."""
         self.spec_lists = collections.OrderedDict()
@@ -843,20 +855,20 @@ class Environment:
         )
         self.spec_lists[user_speclist_name] = user_specs
 
-        enable_view = env_configuration.get("view")
-        # enable_view can be boolean, string, or None
-        if enable_view is True or enable_view is None:
-            self.views = {default_view_name: ViewDescriptor(self.path, self.view_path_default)}
-        elif isinstance(enable_view, str):
-            self.views = {default_view_name: ViewDescriptor(self.path, enable_view)}
-        elif enable_view:
-            path = self.path
-            self.views = dict(
-                (name, ViewDescriptor.from_dict(path, values))
-                for name, values in enable_view.items()
-            )
-        else:
-            self.views = {}
+        # Process views configured from an include and or the environment.
+        # Only create a default view if none provided in either place.
+        #
+        self.views = {}
+        enabled_views = []
+        config_view = spack.config.get("view")
+        if config_view != dict():
+            enabled_views.append(config_view)
+
+        env_view = env_configuration.get("view")
+        if env_view != config_view and not (env_view is None and len(enabled_views) > 0):
+            enabled_views.append(env_view)
+        for view in enabled_views:
+            self._process_view(view)
 
         # Retrieve dev-build packages:
         self.dev_specs = copy.deepcopy(env_configuration.get("develop", {}))

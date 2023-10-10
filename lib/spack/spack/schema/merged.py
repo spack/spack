@@ -23,6 +23,7 @@ import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
 import spack.schema.upstreams
+import spack.schema.view
 
 #: Properties for inclusion in other schemas
 properties = union_dicts(
@@ -39,6 +40,7 @@ properties = union_dicts(
     spack.schema.packages.properties,
     spack.schema.repos.properties,
     spack.schema.upstreams.properties,
+    spack.schema.view.properties,
 )
 
 

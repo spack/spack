@@ -53,38 +53,7 @@ schema = {
                         },
                     },
                     "specs": spack.schema.spec_list_schema,
-                    "view": {
-                        "anyOf": [
-                            {"type": "boolean"},
-                            {"type": "string"},
-                            {
-                                "type": "object",
-                                "patternProperties": {
-                                    r"\w+": {
-                                        "required": ["root"],
-                                        "additionalProperties": False,
-                                        "properties": {
-                                            "root": {"type": "string"},
-                                            "link": {
-                                                "type": "string",
-                                                "pattern": "(roots|all|run)",
-                                            },
-                                            "link_type": {"type": "string"},
-                                            "select": {
-                                                "type": "array",
-                                                "items": {"type": "string"},
-                                            },
-                                            "exclude": {
-                                                "type": "array",
-                                                "items": {"type": "string"},
-                                            },
-                                            "projections": projections_scheme,
-                                        },
-                                    }
-                                },
-                            },
-                        ]
-                    },
+                    "view": spack.schema.view.schema,
                 },
             ),
         }

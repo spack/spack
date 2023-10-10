@@ -70,6 +70,7 @@ SECTION_SCHEMAS = {
     "compilers": spack.schema.compilers.schema,
     "concretizer": spack.schema.concretizer.schema,
     "definitions": spack.schema.definitions.schema,
+    "view": spack.schema.view.schema,
     "mirrors": spack.schema.mirrors.schema,
     "repos": spack.schema.repos.schema,
     "packages": spack.schema.packages.schema,
