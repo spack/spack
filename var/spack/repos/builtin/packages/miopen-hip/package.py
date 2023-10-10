@@ -160,6 +160,7 @@ class MiopenHip(CMakePackage):
         depends_on("nlohmann-json", type="link")
         depends_on("composable-kernel@" + ver, when="@" + ver)
     for ver in ["5.4.0", "5.4.3", "5.5.0"]:
+        depends_on("nlohmann-json", type="link")
         depends_on("rocmlir@" + ver, when="@" + ver)
 
     def setup_build_environment(self, env):
