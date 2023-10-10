@@ -755,6 +755,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "--disable-nls",
         ]
 
+        # Re-use the GNU target triplet defined in the existing gcc
+        exisitng_gcc = Executable("gcc")
+        triplet = exisitng_gcc("-###", error=str).partition("Target: ")[2].split("\n")[0]
+        if triplet:
+            options.append("--build={}".format(triplet))
+            options.append("--target={}".format(triplet))
+
         # Avoid excessive realpath/stat calls for every system header
         # by making -fno-canonical-system-headers the default.
         if self.version >= Version("4.8.0"):
