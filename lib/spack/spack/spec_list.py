@@ -192,8 +192,12 @@ def _expand_matrix_constraints(matrix_config):
                 new_row.append([r])
         expanded_rows.append(new_row)
 
+    # TODO someday: allow matrices inside `broadcast`
+    broadcast_rows = matrix_config.get("broadcast", [])
     excludes = matrix_config.get("exclude", [])  # only compute once
     sigil = matrix_config.get("sigil", "")
+
+    broadcast_constraints = list(itertools.product(*broadcast_rows))
 
     results = []
     for combo in itertools.product(*expanded_rows):
@@ -203,30 +207,49 @@ def _expand_matrix_constraints(matrix_config):
         # Resolve abstract hashes so we can exclude by their concrete properties
         flat_combo = [Spec(x).lookup_hash() for x in flat_combo]
 
-        test_spec = flat_combo[0].copy()
-        for constraint in flat_combo[1:]:
-            test_spec.constrain(constraint)
+        # If no broadcast, this is [(,)].
+        # It will run once, as required, and apply no constraints
+        for broadcast_combo in broadcast_constraints:
+            final_combo = [_apply_broadcast(spec.copy(), broadcast_combo) for spec in flat_combo]
 
-        # Abstract variants don't have normal satisfaction semantics
-        # Convert all variants to concrete types.
-        # This method is best effort, so all existing variants will be
-        # converted before any error is raised.
-        # Catch exceptions because we want to be able to operate on
-        # abstract specs without needing package information
-        try:
-            spack.variant.substitute_abstract_variants(test_spec)
-        except spack.variant.UnknownVariantError:
-            pass
-        if any(test_spec.satisfies(x) for x in excludes):
-            continue
+            # Check whether final spec is excluded
+            # requires constructing a spec from constraints
+            test_spec = final_combo[0].copy()
+            for constraint in final_combo[1:]:
+                test_spec.constrain(constraint)
 
-        if sigil:
-            flat_combo[0] = Spec(sigil + str(flat_combo[0]))
+            # Abstract variants don't have normal satisfaction semantics
+            # Convert all variants to concrete types.
+            # This method is best effort, so all existing variants will be
+            # converted before any error is raised.
+            # Catch exceptions because we want to be able to operate on
+            # abstract specs without needing package information
+            try:
+                spack.variant.substitute_abstract_variants(test_spec)
+            except spack.variant.UnknownVariantError:
+                pass
 
-        # Add to list of constraints
-        results.append(flat_combo)
+            # actual exclusion check is here
+            if any(test_spec.satisfies(e) for e in excludes):
+                continue
+
+            # Apply sigil if applicable
+            if sigil:
+                final_combo[0] = Spec(sigil + str(final_combo[0]))
+
+            # Add to list of constraints
+            results.append(final_combo)
 
     return results
+
+
+def _apply_broadcast(spec, constraints):
+    if constraints:
+        for node in spec.traverse():
+            if node.name:
+                for constraint in constraints:
+                    node.constrain(constraint)
+    return spec
 
 
 def _sigilify(item, sigil):
