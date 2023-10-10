@@ -13,6 +13,7 @@ class PyArchiveAdvisor(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/hpc/archive-advisor.git"
 
     version("develop", branch="main")
+    version("0.0.6", tag="0.0.6")
     version("0.0.4", tag="0.0.4")
     version("0.0.3", tag="0.0.3")
     version("0.0.2", tag="0.0.2")
