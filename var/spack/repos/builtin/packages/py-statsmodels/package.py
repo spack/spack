@@ -47,7 +47,7 @@ class PyStatsmodels(PythonPackage):
     depends_on("py-cython@0.29.22:2", when="@0.13:", type="build")
     depends_on("py-cython@0.29.14:2", when="@0.12:", type="build")
     depends_on("py-cython@0.29:2", type="build")
-    depends_on("py-setuptools-scm+toml@7", when="@0.13.3:", type="build")
+    depends_on("py-setuptools-scm+toml@7.0", when="@0.13.3:", type="build")
 
     # patsy@0.5.1 works around a Python change
     #    https://github.com/statsmodels/statsmodels/issues/5343 and
