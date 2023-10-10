@@ -74,7 +74,7 @@ class Variant:
 
             self.single_value_validator = isa_type
 
-        if callable(values):
+        elif callable(values):
             # If 'values' is a callable, assume it is a single value
             # validator and reset the values to be explicit during debug
             self.single_value_validator = values
