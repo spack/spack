@@ -24,6 +24,8 @@ spack:
       variants: +pic +xz
     openblas:
       variants: threads=openmp
+    paraview:
+      require: "~qt+osmesa~raytracing"  # embree: https://github.com/spack/spack/issues/39534
     trilinos:
       variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
         +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
@@ -39,6 +41,8 @@ spack:
       require: '~wrapperrpath ~hwloc'
     ncurses:
       require: '@6.3 +termlib'
+    mesa:
+      require: "~glx+osmesa+llvm"
     tbb:
       require: intel-tbb
     boost:
@@ -49,6 +53,8 @@ spack:
         cxxstd=17 visibility=global
     libffi:
       require: "@3.4.4"
+    visit:
+      require: "+osmesa~gui"
     vtk-m:
       require: "+examples"
     cuda:
@@ -89,7 +95,7 @@ spack:
   - conduit
   - datatransferkit
   - dyninst
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp  # +visit: ?
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp
   - exaworks
   - flecsi
   - flit
@@ -173,21 +179,21 @@ spack:
   - wannier90
   - xyce +mpi +shared +pymi +pymi_static_tpls
   # INCLUDED IN ECP DAV CPU
-  - adios2
-  - darshan-runtime
-  - darshan-util
-  - faodel
-  - hdf5
-  - libcatalyst
-  - parallel-netcdf
-  - paraview
-  - py-cinemasci
-  - sz
-  - unifyfs
-  - veloc
+  # - adios2
+  # - darshan-runtime
+  # - darshan-util
+  # - faodel
+  # - hdf5
+  # - libcatalyst
+  # - parallel-netcdf
+  # - paraview
+  # - py-cinemasci
+  # - sz
+  # - unifyfs
+  # - veloc
   # - visit                         # silo: https://github.com/spack/spack/issues/39538
-  - vtk-m
-  - zfp
+  # - vtk-m
+  # - zfp
   # --
   # - archer                        # part of llvm +omp_tsan
   # - bricks ~cuda                  # not respecting target=aarch64?
@@ -232,17 +238,17 @@ spack:
   - tasmanian +cuda cuda_arch=75
   - trilinos +cuda cuda_arch=75
   - umpire ~shared +cuda cuda_arch=75
+  - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=75
   # INCLUDED IN ECP DAV CUDA
-  - adios2 +cuda cuda_arch=75
-  - paraview +cuda cuda_arch=75
-  - vtk-m +cuda cuda_arch=75
-  - zfp +cuda cuda_arch=75
+  # - adios2 +cuda cuda_arch=75
+  # - paraview +cuda cuda_arch=75
+  # - vtk-m +cuda cuda_arch=75
+  # - zfp +cuda cuda_arch=75
   # --
   # - ascent +cuda cuda_arch=75     # ascent: https://github.com/spack/spack/issues/38045
   # - axom +cuda cuda_arch=75       # axom: https://github.com/spack/spack/issues/29520
   # - cusz +cuda cuda_arch=75       # cusz: https://github.com/spack/spack/issues/38787
   # - dealii +cuda cuda_arch=75     # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
-  # - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=75  # embree: https://github.com/spack/spack/issues/39534
   # - lammps +cuda cuda_arch=75     # lammps: needs NVIDIA driver
   # - lbann +cuda cuda_arch=75      # lbann: https://github.com/spack/spack/issues/38788
   # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=75 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787
@@ -277,11 +283,12 @@ spack:
   - tasmanian +cuda cuda_arch=80
   - trilinos +cuda cuda_arch=80
   - umpire ~shared +cuda cuda_arch=80
+  - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=80
   # INCLUDED IN ECP DAV CUDA
-  - adios2 +cuda cuda_arch=80
-  - paraview +cuda cuda_arch=80
-  - vtk-m +cuda cuda_arch=80
-  - zfp +cuda cuda_arch=80
+  # - adios2 +cuda cuda_arch=80
+  # - paraview +cuda cuda_arch=80
+  # - vtk-m +cuda cuda_arch=80
+  # - zfp +cuda cuda_arch=80
   # --
   # - ascent +cuda cuda_arch=80     # ascent: https://github.com/spack/spack/issues/38045
   # - axom +cuda cuda_arch=80       # axom: https://github.com/spack/spack/issues/29520
@@ -319,11 +326,12 @@ spack:
   - superlu-dist +cuda cuda_arch=90
   - trilinos +cuda cuda_arch=90
   - umpire ~shared +cuda cuda_arch=90
+  - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=90
   # INCLUDED IN ECP DAV CUDA
-  - adios2 +cuda cuda_arch=90
+  # - adios2 +cuda cuda_arch=90
   # - paraview +cuda cuda_arch=90   # paraview: InstallError: Incompatible cuda_arch=90
-  - vtk-m +cuda cuda_arch=90
-  - zfp +cuda cuda_arch=90
+  # - vtk-m +cuda cuda_arch=90
+  # - zfp +cuda cuda_arch=90
   # --
   # - ascent +cuda cuda_arch=90     # ascent: https://github.com/spack/spack/issues/38045
   # - axom +cuda cuda_arch=90       # axom: https://github.com/spack/spack/issues/29520
