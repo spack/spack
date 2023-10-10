@@ -289,6 +289,9 @@ class LlvmAmdgpu(CMakePackage):
             args.append(self.define("GCC_INSTALL_PREFIX", self.compiler.prefix))
         if self.spec.satisfies("@5.4.3:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+        if self.spec.satisfies("@5.5.0:"):
+            args.append("-DCLANG_DEFAULT_RTLIB=compiler-rt")
+            args.append("-DCLANG_DEFAULT_UNWINDLIB=libgcc")
         return args
 
     @run_after("install")
