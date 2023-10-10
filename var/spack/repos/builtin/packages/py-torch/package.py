@@ -11,11 +11,11 @@ from spack.package import *
 
 
 class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
-    """Tensors and Dynamic neural networks in Python
-    with strong GPU acceleration."""
+    """Tensors and Dynamic neural networks in Python with strong GPU acceleration."""
 
     homepage = "https://pytorch.org/"
     git = "https://github.com/pytorch/pytorch.git"
+    submodules = True
 
     maintainers("adamjstewart")
 
@@ -23,89 +23,36 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # core libraries to ensure that the package was successfully installed.
     import_modules = ["torch", "torch.autograd", "torch.nn", "torch.utils"]
 
-    version("main", branch="main", submodules=True)
-    version("master", branch="main", submodules=True, deprecated=True)
-    version(
-        "2.0.1", tag="v2.0.1", commit="e9ebda29d87ce0916ab08c06ab26fd3766a870e5", submodules=True
-    )
-    version(
-        "2.0.0", tag="v2.0.0", commit="c263bd43e8e8502d4726643bc6fd046f0130ac0e", submodules=True
-    )
-    version(
-        "1.13.1", tag="v1.13.1", commit="49444c3e546bf240bed24a101e747422d1f8a0ee", submodules=True
-    )
-    version(
-        "1.13.0", tag="v1.13.0", commit="7c98e70d44abc7a1aead68b6ea6c8adc8c554db5", submodules=True
-    )
-    version(
-        "1.12.1", tag="v1.12.1", commit="664058fa83f1d8eede5d66418abff6e20bd76ca8", submodules=True
-    )
-    version(
-        "1.12.0", tag="v1.12.0", commit="67ece03c8cd632cce9523cd96efde6f2d1cc8121", submodules=True
-    )
-    version(
-        "1.11.0", tag="v1.11.0", commit="bc2c6edaf163b1a1330e37a6e34caf8c553e4755", submodules=True
-    )
-    version(
-        "1.10.2", tag="v1.10.2", commit="71f889c7d265b9636b93ede9d651c0a9c4bee191", submodules=True
-    )
-    version(
-        "1.10.1", tag="v1.10.1", commit="302ee7bfb604ebef384602c56e3853efed262030", submodules=True
-    )
-    version(
-        "1.10.0", tag="v1.10.0", commit="36449ea93134574c2a22b87baad3de0bf8d64d42", submodules=True
-    )
-    version(
-        "1.9.1", tag="v1.9.1", commit="dfbd030854359207cb3040b864614affeace11ce", submodules=True
-    )
-    version(
-        "1.9.0", tag="v1.9.0", commit="d69c22dd61a2f006dcfe1e3ea8468a3ecaf931aa", submodules=True
-    )
-    version(
-        "1.8.2", tag="v1.8.2", commit="e0495a7aa104471d95dc85a1b8f6473fbcc427a8", submodules=True
-    )
-    version(
-        "1.8.1", tag="v1.8.1", commit="56b43f4fec1f76953f15a627694d4bba34588969", submodules=True
-    )
-    version(
-        "1.8.0", tag="v1.8.0", commit="37c1f4a7fef115d719104e871d0cf39434aa9d56", submodules=True
-    )
-    version(
-        "1.7.1", tag="v1.7.1", commit="57bffc3a8e4fee0cce31e1ff1f662ccf7b16db57", submodules=True
-    )
-    version(
-        "1.7.0", tag="v1.7.0", commit="e85d494707b835c12165976b8442af54b9afcb26", submodules=True
-    )
-    version(
-        "1.6.0", tag="v1.6.0", commit="b31f58de6fa8bbda5353b3c77d9be4914399724d", submodules=True
-    )
-    version(
-        "1.5.1", tag="v1.5.1", commit="3c31d73c875d9a4a6ea8a843b9a0d1b19fbe36f3", submodules=True
-    )
-    version(
-        "1.5.0", tag="v1.5.0", commit="4ff3872a2099993bf7e8c588f7182f3df777205b", submodules=True
-    )
-    version(
-        "1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948", submodules=True
-    )
-    version(
-        "1.3.1", tag="v1.3.1", commit="ee77ccbb6da4e2efd83673e798acf7081bc03564", submodules=True
-    )
-    version(
-        "1.3.0", tag="v1.3.0", commit="de394b672d0346f2f387a8bb1a1280d5d2eaf9cb", submodules=True
-    )
-    version(
-        "1.2.0", tag="v1.2.0", commit="8554416a199c4cec01c60c7015d8301d2bb39b64", submodules=True
-    )
-    version(
-        "1.1.0", tag="v1.1.0", commit="142c973f4179e768164cd578951489e89021b29c", submodules=True
-    )
-    version(
-        "1.0.1", tag="v1.0.1", commit="83221655a8237ca80f9673dad06a98d34c43e546", submodules=True
-    )
-    version(
-        "1.0.0", tag="v1.0.0", commit="db5d3131d16f57abd4f13d3f4b885d5f67bf6644", submodules=True
-    )
+    version("main", branch="main")
+    version("master", branch="main", deprecated=True)
+    version("2.1.0", tag="v2.1.0", commit="7bcf7da3a268b435777fe87c7794c382f444e86d")
+    version("2.0.1", tag="v2.0.1", commit="e9ebda29d87ce0916ab08c06ab26fd3766a870e5")
+    version("2.0.0", tag="v2.0.0", commit="c263bd43e8e8502d4726643bc6fd046f0130ac0e")
+    version("1.13.1", tag="v1.13.1", commit="49444c3e546bf240bed24a101e747422d1f8a0ee")
+    version("1.13.0", tag="v1.13.0", commit="7c98e70d44abc7a1aead68b6ea6c8adc8c554db5")
+    version("1.12.1", tag="v1.12.1", commit="664058fa83f1d8eede5d66418abff6e20bd76ca8")
+    version("1.12.0", tag="v1.12.0", commit="67ece03c8cd632cce9523cd96efde6f2d1cc8121")
+    version("1.11.0", tag="v1.11.0", commit="bc2c6edaf163b1a1330e37a6e34caf8c553e4755")
+    version("1.10.2", tag="v1.10.2", commit="71f889c7d265b9636b93ede9d651c0a9c4bee191")
+    version("1.10.1", tag="v1.10.1", commit="302ee7bfb604ebef384602c56e3853efed262030")
+    version("1.10.0", tag="v1.10.0", commit="36449ea93134574c2a22b87baad3de0bf8d64d42")
+    version("1.9.1", tag="v1.9.1", commit="dfbd030854359207cb3040b864614affeace11ce")
+    version("1.9.0", tag="v1.9.0", commit="d69c22dd61a2f006dcfe1e3ea8468a3ecaf931aa")
+    version("1.8.2", tag="v1.8.2", commit="e0495a7aa104471d95dc85a1b8f6473fbcc427a8")
+    version("1.8.1", tag="v1.8.1", commit="56b43f4fec1f76953f15a627694d4bba34588969")
+    version("1.8.0", tag="v1.8.0", commit="37c1f4a7fef115d719104e871d0cf39434aa9d56")
+    version("1.7.1", tag="v1.7.1", commit="57bffc3a8e4fee0cce31e1ff1f662ccf7b16db57")
+    version("1.7.0", tag="v1.7.0", commit="e85d494707b835c12165976b8442af54b9afcb26")
+    version("1.6.0", tag="v1.6.0", commit="b31f58de6fa8bbda5353b3c77d9be4914399724d")
+    version("1.5.1", tag="v1.5.1", commit="3c31d73c875d9a4a6ea8a843b9a0d1b19fbe36f3")
+    version("1.5.0", tag="v1.5.0", commit="4ff3872a2099993bf7e8c588f7182f3df777205b")
+    version("1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948")
+    version("1.3.1", tag="v1.3.1", commit="ee77ccbb6da4e2efd83673e798acf7081bc03564")
+    version("1.3.0", tag="v1.3.0", commit="de394b672d0346f2f387a8bb1a1280d5d2eaf9cb")
+    version("1.2.0", tag="v1.2.0", commit="8554416a199c4cec01c60c7015d8301d2bb39b64")
+    version("1.1.0", tag="v1.1.0", commit="142c973f4179e768164cd578951489e89021b29c")
+    version("1.0.1", tag="v1.0.1", commit="83221655a8237ca80f9673dad06a98d34c43e546")
+    version("1.0.0", tag="v1.0.0", commit="db5d3131d16f57abd4f13d3f4b885d5f67bf6644")
 
     is_darwin = sys.platform == "darwin"
 
@@ -191,12 +138,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # See python_min_version in setup.py
     # Upper bounds come from wheel availability on PyPI
     depends_on("python@3.8:3.11", when="@2:", type=("build", "link", "run"))
-    depends_on("python@3.7:3.10", when="@1.11:1", type=("build", "link", "run"))
-    depends_on("python@3.6.2:3.9", when="@1.7.1:1.10", type=("build", "link", "run"))
-    depends_on("python@3.6.1:3.8", when="@1.6:1.7.0", type=("build", "link", "run"))
-    depends_on("python@3.5:3.8", when="@1.5", type=("build", "link", "run"))
-    depends_on("python@2.7:2,3.5:3.8", when="@1.4", type=("build", "link", "run"))
-    depends_on("python@2.7:2,3.5:3.7", when="@:1.3", type=("build", "link", "run"))
+    depends_on("python@:3.10", when="@1.11:1", type=("build", "link", "run"))
+    depends_on("python@:3.9", when="@1.7.1:1.10", type=("build", "link", "run"))
+    depends_on("python@:3.8", when="@1.4:1.7.0", type=("build", "link", "run"))
+    depends_on("python@:3.7", when="@:1.3", type=("build", "link", "run"))
 
     # CMakelists.txt
     depends_on("cmake@3.18:", when="@2:", type="build")
@@ -221,6 +166,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-sympy", when="@2:", type=("build", "run"))
     depends_on("py-networkx", when="@2:", type=("build", "run"))
     depends_on("py-jinja2", when="@2:", type=("build", "run"))
+    depends_on("py-fsspec", when="@2.1:", type=("build", "run"))
 
     # Undocumented dependencies
     depends_on("py-tqdm", type="run")
@@ -228,7 +174,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("lapack")
 
     # third_party
-    depends_on("py-pybind11@2.10.1", when="@2:", type=("build", "link", "run"))
+    depends_on("py-pybind11@2.11.0", when="@2.1:", type=("build", "link", "run"))
+    depends_on("py-pybind11@2.10.1", when="@2.0", type=("build", "link", "run"))
     depends_on("py-pybind11@2.10.0", when="@1.13:1", type=("build", "link", "run"))
     depends_on("py-pybind11@2.6.2", when="@1.8:1.12", type=("build", "link", "run"))
     depends_on("py-pybind11@2.3.0", when="@1.1:1.7", type=("build", "link", "run"))
@@ -243,7 +190,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("protobuf@:3", type=("build", "run"))
     depends_on("eigen")
     # https://github.com/pytorch/pytorch/issues/60329
-    # depends_on("cpuinfo@2022-08-19", when="@1.13:")
+    # depends_on("cpuinfo@2023-01-13", when="@2.1:")
+    # depends_on("cpuinfo@2022-08-19", when="@1.13:2.0")
     # depends_on("cpuinfo@2020-12-17", when="@1.8:1.12")
     # depends_on("cpuinfo@2020-06-11", when="@1.6:1.7")
     # https://github.com/shibatch/sleef/issues/427
@@ -300,14 +248,16 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # depends_on("xnnpack@2020-03-23", when="@1.6:1.7+xnnpack")
     depends_on("mpi", when="+mpi")
     # https://github.com/pytorch/pytorch/issues/60270
-    # depends_on("gloo@2023-01-17", when="@2:+gloo")
+    # depends_on("gloo@2023-05-19", when="@2.1:+gloo")
+    # depends_on("gloo@2023-01-17", when="@2.0+gloo")
     # depends_on("gloo@2022-05-18", when="@1.13:1+gloo")
     # depends_on("gloo@2021-05-21", when="@1.10:1.12+gloo")
     # depends_on("gloo@2021-05-04", when="@1.9+gloo")
     # depends_on("gloo@2020-09-18", when="@1.7:1.8+gloo")
     # depends_on("gloo@2020-03-17", when="@1.6+gloo")
     # https://github.com/pytorch/pytorch/issues/60331
-    # depends_on("onnx@1.13.1", when="@2:+onnx_ml")
+    # depends_on("onnx@1.14.1", when="@2.1:+onnx_ml")
+    # depends_on("onnx@1.13.1", when="@2.0+onnx_ml")
     # depends_on("onnx@1.12.0", when="@1.13:1+onnx_ml")
     # depends_on("onnx@1.11.0", when="@1.12+onnx_ml")
     # depends_on("onnx@1.10.1_2021-10-08", when="@1.11+onnx_ml")
@@ -420,7 +370,22 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         sha256="a54db63640b90e5833cc1099c0935572f5297d2d8625f62f01ac1fda79ed4569",
         when="@1.13 arch=ppc64le:",
     )
-    conflicts("arch=ppc64le:", when="@:1.9,2:")
+    patch(
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.9.0/pytorch-2.0/recipe/0309-fallback-to-cpu_kernel-with-VSX.patch",
+        sha256="27f41c8d6cb61e69e761be62f03dc1ce023cbca34926e3ba559996821a7ce726",
+        when="@2.0 arch=ppc64le:",
+    )
+    patch(
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.9.0/pytorch-2.0/recipe/0310-PR100149.patch",
+        sha256="1adbd38a9cc1611f1caaa325614695f4349d9ffd236332e0d8f0de5a3880f4dd",
+        when="@2.0 arch=ppc64le:",
+    )
+    patch(
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.10.0/pytorch-2.0/recipe/0311-PR104956.patch",
+        sha256="be27c906924a21be198a3ea6c459739a1daa8b8b89045af339dafa4cd6f90d6c",
+        when="@2.0 arch=ppc64le:",
+    )
+    conflicts("arch=ppc64le:", when="@:1.9")
 
     # Cherry-pick a patch to allow earlier versions of PyTorch to work with CUDA 11.4
     patch(
