@@ -165,10 +165,6 @@ default:
   extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "aarch64"]
 
-.generate-neoverse_n1:
-  extends: [ ".generate-base" ]
-  tags: ["spack", "public", "medium", "aarch64", "graviton2"]
-
 .generate-neoverse_v1:
   extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "aarch64", "graviton3"]
@@ -307,29 +303,6 @@ e4s-build:
   needs:
     - artifacts: True
       job: e4s-generate
-
-########################################
-# E4S Neoverse N1 pipeline
-########################################
-.e4s-neoverse_n1:
-  extends: [ ".linux_neoverse_n1" ]
-  variables:
-    SPACK_CI_STACK_NAME: e4s-neoverse_n1
-
-e4s-neoverse_n1-generate:
-  extends: [ ".e4s-neoverse_n1", ".generate-neoverse_n1" ]
-  image: ghcr.io/spack/ubuntu20.04-runner-arm64-gcc-11.4:2023.08.01
-
-e4s-neoverse_n1-build:
-  extends: [ ".e4s-neoverse_n1", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-neoverse_n1-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-neoverse_n1-generate
 
 ########################################
 # E4S Neoverse V1 pipeline
