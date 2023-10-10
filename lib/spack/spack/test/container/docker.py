@@ -143,7 +143,7 @@ def test_error_message_invalid_os(minimal_configuration):
 
 
 @pytest.mark.regression("34629,18030")
-def test_not_stripping_all_symbols(minimal_configuration):
+def test_not_stripping_all_symbols_minimal(minimal_configuration):
     """Tests that we are not stripping all symbols, so that libraries can still be
     used for linking.
     """

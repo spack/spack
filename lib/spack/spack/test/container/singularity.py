@@ -43,7 +43,7 @@ def test_singularity_specific_properties(properties, expected, singularity_confi
 
 
 @pytest.mark.regression("34629,18030")
-def test_not_stripping_all_symbols(singularity_configuration):
+def test_not_stripping_all_symbols_singularity(singularity_configuration):
     """Tests that we are not stripping all symbols, so that libraries can still be
     used for linking.
     """
