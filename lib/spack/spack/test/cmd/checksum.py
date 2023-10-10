@@ -155,7 +155,7 @@ def test_checksum_interactive_ask_each():
 def test_checksum_interactive_quit_from_ask_each():
     # Enter ask each mode, select the second item, then quit from submenu, then checksum, which
     # should still include the last item at which ask each stopped.
-    input = input_from_commands("a", "n", "y", "q", "c")
+    input = input_from_commands("a", "n", "y", None, "c")
     assert interactive_version_filter(
         {
             Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
