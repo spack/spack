@@ -13,6 +13,7 @@ class Spark(BuiltinSpark):
     version("3.1.3", sha256="2411de04bec186b8651b27a5f16e4b511103c3c1e3f20fbb98b1f8804e61b77f")
 
     depends_on("hadoop@3.3:", when="@3.2:+hadoop", type=("build", "run"))
+    depends_on("java@:11", type=("build", "run"))
 
     def url_for_version(self, version):
         hadoop_version = "hadoop3.2"
