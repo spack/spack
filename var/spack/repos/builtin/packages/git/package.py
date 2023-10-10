@@ -253,8 +253,6 @@ class Git(AutotoolsPackage):
                     extlib_bits.append(spec["gettext"].libs.search_flags)
                 extlib_bits.append("-lintl")
                 env.append_flags("EXTLIBS", " ".join(extlib_bits))
-            if not is_system_path(spec["gettext"].prefix):
-                env.append_flags("CFLAGS", spec["gettext"].headers.include_flags)
 
         if not self.spec["curl"].satisfies("libs=shared"):
             curlconfig = which(os.path.join(self.spec["curl"].prefix.bin, "curl-config"))
