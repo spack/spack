@@ -27,6 +27,7 @@ from llnl.util.filesystem import (
     partition_path,
     remove_linked_tree,
 )
+from llnl.util.tty.color import colorize
 
 import spack.caches
 import spack.config
@@ -35,11 +36,14 @@ import spack.fetch_strategy as fs
 import spack.mirror
 import spack.paths
 import spack.spec
+import spack.stage
 import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 from spack.util.crypto import bit_length, prefix_bits
+from spack.util.editor import editor, executable
+from spack.version import StandardVersion, VersionList
 
 # The well-known stage source subdirectory name.
 _source_path_subdir = "spack-src"
@@ -860,11 +864,149 @@ def purge():
                     os.remove(stage_path)
 
 
+def interactive_version_filter(
+    url_dict: Dict[StandardVersion, str],
+    known_versions: Iterable[StandardVersion] = (),
+    *,
+    input: Callable[..., str] = input,
+) -> Optional[Dict[StandardVersion, str]]:
+    """Interactively filter the list of spidered versions.
+
+    Args:
+        url_dict: Dictionary of versions to URLs
+        known_versions: Versions that can be skipped because they are already known
+
+    Returns:
+        Filtered dictionary of versions to URLs or None if the user wants to quit
+    """
+    # Find length of longest string in the list for padding
+    sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
+    version_filter = VersionList([":"])
+    max_len = max(len(str(v)) for v in sorted_and_filtered)
+
+    while True:
+        num_ver = len(sorted_and_filtered)
+        num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
+
+        has_filter = version_filter != VersionList([":"])
+        extra_msg = f"Filtering by {version_filter}." if has_filter else ""
+
+        tty.msg(
+            f"Selected {llnl.string.plural(num_ver, 'version')}, "
+            f"{llnl.string.plural(num_new, 'version')} are new. {extra_msg}",
+            *llnl.util.lang.elide_list(
+                [f"{str(v):{max_len}}  {url_dict[v]}" for v in sorted_and_filtered]
+            ),
+        )
+        print()
+
+        tty.msg(
+            colorize(
+                "@*w{Commands}. "
+                "1: @*b{c}hecksum, "
+                "2: @*b{o}pen editor, "
+                "3: @*b{f}ilter, "
+                "4: @*b{a}sk each, "
+                "5: @*b{n}ew only, "
+                "6: @*b{r}estart, "
+                "7: @*b{q}uit"
+            )
+        )
+        print()
+        try:
+            command = input("What now> ")
+        except EOFError:
+            print()
+            command = "q"
+
+        if command in ("1", "c"):
+            break
+        elif command in ("2", "o"):
+            # Open a file with <version> <url> lines in an editor, let the user edit it,
+            # and parse again.
+            tmpfile = os.path.join(spack.stage.get_stage_root(), "versions.txt")
+
+            with open(tmpfile, "w") as f:
+                f.write("# Edit this file to change the versions and urls to fetch\n")
+                for v in sorted_and_filtered:
+                    f.write(f"{str(v):{max_len}}  {url_dict[v]}\n")
+
+            editor([tmpfile], exec_fn=executable)
+
+            with open(tmpfile, "r") as f:
+                url_dict.clear()
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    try:
+                        version, url = line.split(None, 1)
+                    except ValueError:
+                        tty.warn(f"Couldn't parse: {line}")
+                        continue
+                    try:
+                        url_dict[StandardVersion.from_string(version)] = url
+                    except ValueError:
+                        tty.warn(f"Invalid version: {version}")
+                        continue
+                sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
+
+            os.unlink(tmpfile)
+        elif command in ("3", "f"):
+            try:
+                filter_spec = input("Filter> ")
+            except EOFError:
+                print()
+                continue
+            # Don't be too strict, allow a leading @ if people like that
+            if filter_spec[0] == "@":
+                filter_spec = filter_spec[1:]
+            try:
+                version_filter.intersect(VersionList([filter_spec]))
+            except ValueError:
+                tty.warn(f"Invalid version specifier: {filter_spec}")
+                continue
+            # Apply filter
+            sorted_and_filtered = [v for v in sorted_and_filtered if v.satisfies(version_filter)]
+        elif command in ("4", "a"):
+            i = 0
+            while i < len(sorted_and_filtered):
+                v = sorted_and_filtered[i]
+                try:
+                    if input(f"  {str(v):{max_len}}  {url_dict[v]} [Y/n]? ").lower() in (
+                        "n",
+                        "no",
+                    ):
+                        del sorted_and_filtered[i]
+                    else:
+                        i += 1
+                except EOFError:
+                    # If ^D, don't fully exit, but go back to the command prompt, now with possibly
+                    # fewer versions
+                    print()
+                    break
+            else:
+                # Went over each version, so go to checksumming
+                break
+        elif command in ("5", "n"):
+            sorted_and_filtered = [v for v in sorted_and_filtered if v not in known_versions]
+        elif command in ("6", "r"):
+            sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
+            version_filter = VersionList([":"])
+        elif command in ("7", "q"):
+            try:
+                if input("Really quit [y/N]? ").lower() in ("y", "yes"):
+                    return None
+            except EOFError:
+                print()
+                return None
+    return {v: url_dict[v] for v in sorted_and_filtered}
+
+
 def get_checksums_for_versions(
     url_by_version: Dict[str, str],
     package_name: str,
     *,
-    batch: bool = False,
     first_stage_function: Optional[Callable[[Stage, str], None]] = None,
     keep_stage: bool = False,
     concurrency: Optional[int] = None,
@@ -890,32 +1032,7 @@ def get_checksums_for_versions(
     Returns:
         A dictionary mapping each version to the corresponding checksum
     """
-    sorted_versions = sorted(url_by_version.keys(), reverse=True)
-
-    # Find length of longest string in the list for padding
-    max_len = max(len(str(v)) for v in sorted_versions)
-    num_ver = len(sorted_versions)
-
-    tty.msg(
-        f"Found {llnl.string.plural(num_ver, 'version')} of {package_name}:",
-        "",
-        *llnl.util.lang.elide_list(
-            ["{0:{1}}  {2}".format(str(v), max_len, url_by_version[v]) for v in sorted_versions]
-        ),
-    )
-    print()
-
-    if batch:
-        archives_to_fetch = len(sorted_versions)
-    else:
-        archives_to_fetch = tty.get_number(
-            "How many would you like to checksum?", default=1, abort="q"
-        )
-
-    if not archives_to_fetch:
-        tty.die("Aborted.")
-
-    versions = sorted_versions[:archives_to_fetch]
+    versions = sorted(url_by_version.keys(), reverse=True)
     search_arguments = [(url_by_version[v], v) for v in versions]
 
     version_hashes, errors = {}, []

@@ -7,6 +7,7 @@ import argparse
 import re
 import sys
 
+import llnl.string
 import llnl.util.lang
 from llnl.util import tty
 
@@ -130,16 +131,24 @@ def checksum(parser, args):
 
     if not url_dict:
         tty.die(f"Could not find any remote versions for {pkg.name}")
+    elif len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
+        filtered_url_dict = spack.stage.interactive_version_filter(url_dict, pkg.versions)
+        if filtered_url_dict is None:
+            exit(0)
+        url_dict = filtered_url_dict
+    else:
+        tty.info(f"Found {llnl.string.plural(len(url_dict), 'version')} of {pkg.name}")
 
-    # print an empty line to create a new output section block
-    print()
+    # TODO: fix inconsistencies with discovered URL and computed pkg.all_urls_for_version
+    # for version, url in url_dict.items():
+    #     possible_urls = pkg.all_urls_for_version(version)
+    #     if url not in pkg.all_urls_for_version(version):
+    #         tty.warn(
+    #             f"Detected version {version} with URL {url}, which is different from the package file: {possible_urls}"
+    #         )
 
     version_hashes = spack.stage.get_checksums_for_versions(
-        url_dict,
-        pkg.name,
-        keep_stage=args.keep_stage,
-        batch=(args.batch or len(versions) > 0 or len(url_dict) == 1),
-        fetch_options=pkg.fetch_options,
+        url_dict, pkg.name, keep_stage=args.keep_stage, fetch_options=pkg.fetch_options
     )
 
     if args.verify:
