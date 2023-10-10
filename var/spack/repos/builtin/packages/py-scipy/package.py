@@ -105,11 +105,10 @@ class PyScipy(PythonPackage):
     depends_on("py-numpy@1.19.5:1.26", when="@1.10", type=("build", "link", "run"))
     depends_on("py-numpy@1.18.5:1.25", when="@1.9", type=("build", "link", "run"))
     depends_on("py-numpy@1.17.3:1.24", when="@1.8", type=("build", "link", "run"))
-    depends_on("py-numpy@1.16.5:1.22", when="@1.6.2:1.7", type=("build", "link", "run"))
-    depends_on("py-numpy@1.16.5:", when="@1.6:1.6.1", type=("build", "link", "run"))
-    depends_on("py-numpy@1.14.5:", when="@1.5.0:1.5", type=("build", "link", "run"))
-    depends_on("py-numpy@1.13.3:", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("py-numpy@1.8.2:", when="@:1.2", type=("build", "link", "run"))
+    depends_on("py-numpy@1.16.5:1.22", when="@1.6:1.7", type=("build", "link", "run"))
+    depends_on("py-numpy@1.14.5:1.21", when="@1.5", type=("build", "link", "run"))
+    depends_on("py-numpy@1.13.3:1.21", when="@1.3:1.4", type=("build", "link", "run"))
+    depends_on("py-numpy@1.8.2:1.20", when="@:1.2", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")
 
     # Required to use --config-settings
