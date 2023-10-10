@@ -7,6 +7,7 @@ import errno
 import getpass
 import glob
 import hashlib
+import io
 import os
 import shutil
 import stat
@@ -883,6 +884,7 @@ def interactive_version_filter(
     sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
     version_filter = VersionList([":"])
     max_len = max(len(str(v)) for v in sorted_and_filtered)
+    orig_url_dict = url_dict  # only copy when using editor to modify
 
     while True:
         num_ver = len(sorted_and_filtered)
@@ -914,7 +916,7 @@ def interactive_version_filter(
         )
         print()
         try:
-            command = input("What now> ")
+            command = input("What now> ").strip().lower()
         except EOFError:
             print()
             command = "q"
@@ -922,21 +924,35 @@ def interactive_version_filter(
         if command in ("1", "c"):
             break
         elif command in ("2", "o"):
-            # Open a file with <version> <url> lines in an editor, let the user edit it,
-            # and parse again.
-            tmpfile = os.path.join(spack.stage.get_stage_root(), "versions.txt")
+            # Create a temporary file in the stage dir with lines of the form
+            # <version> <url>
+            # which the user can modify. Once the editor is closed, the file is
+            # read back in and the versions to url dict is updated.
 
-            with open(tmpfile, "w") as f:
-                f.write("# Edit this file to change the versions and urls to fetch\n")
-                for v in sorted_and_filtered:
-                    f.write(f"{str(v):{max_len}}  {url_dict[v]}\n")
+            # Create a temporary file by hashing its contents.
+            buffer = io.StringIO()
+            buffer.write("# Edit this file to change the versions and urls to fetch\n")
+            for v in sorted_and_filtered:
+                buffer.write(f"{str(v):{max_len}}  {url_dict[v]}\n")
+            data = buffer.getvalue().encode("utf-8")
 
-            editor(tmpfile, exec_fn=executable)
+            short_hash = hashlib.sha1(data).hexdigest()[:7]
+            filename = f"{spack.stage.stage_prefix}versions-{short_hash}.txt"
+            filepath = os.path.join(spack.stage.get_stage_root(), filename)
 
-            with open(tmpfile, "r") as f:
-                url_dict.clear()
+            # Write contents
+            with open(filepath, "wb") as f:
+                f.write(data)
+
+            # Open editor
+            editor(filepath, exec_fn=executable)
+
+            # Read back in
+            with open(filepath, "r") as f:
+                orig_url_dict, url_dict = url_dict, {}
                 for line in f:
                     line = line.strip()
+                    # Skip empty lines and comments
                     if not line or line.startswith("#"):
                         continue
                     try:
@@ -951,16 +967,14 @@ def interactive_version_filter(
                         continue
                 sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
 
-            os.unlink(tmpfile)
+            os.unlink(filepath)
         elif command in ("3", "f"):
             try:
-                filter_spec = input("Filter> ")
+                # Allow a leading @ version specifier
+                filter_spec = input("Filter> ").strip().lstrip("@")
             except EOFError:
                 print()
                 continue
-            # Don't be too strict, allow a leading @ if people like that
-            if filter_spec[0] == "@":
-                filter_spec = filter_spec[1:]
             try:
                 version_filter.intersect(VersionList([filter_spec]))
             except ValueError:
@@ -973,29 +987,28 @@ def interactive_version_filter(
             while i < len(sorted_and_filtered):
                 v = sorted_and_filtered[i]
                 try:
-                    if input(f"  {str(v):{max_len}}  {url_dict[v]} [Y/n]? ").lower() in (
-                        "n",
-                        "no",
-                    ):
-                        del sorted_and_filtered[i]
-                    else:
-                        i += 1
+                    answer = input(f"  {str(v):{max_len}}  {url_dict[v]} [Y/n]? ").strip().lower()
                 except EOFError:
                     # If ^D, don't fully exit, but go back to the command prompt, now with possibly
                     # fewer versions
                     print()
                     break
+                if answer in ("n", "no"):
+                    del sorted_and_filtered[i]
+                elif answer in ("y", "yes", ""):
+                    i += 1
             else:
                 # Went over each version, so go to checksumming
                 break
         elif command in ("5", "n"):
             sorted_and_filtered = [v for v in sorted_and_filtered if v not in known_versions]
         elif command in ("6", "r"):
+            url_dict = orig_url_dict
             sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
             version_filter = VersionList([":"])
         elif command in ("7", "q"):
             try:
-                if input("Really quit [y/N]? ").lower() in ("y", "yes"):
+                if input("Really quit [y/N]? ").strip().lower() in ("y", "yes"):
                     return None
             except EOFError:
                 print()
