@@ -50,6 +50,7 @@ import spack.build_environment
 import spack.compilers
 import spack.config
 import spack.database
+import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.mirror
@@ -88,6 +89,16 @@ STATUS_DEQUEUED = "dequeued"
 #: Build status indicating task has been removed (to maintain priority
 #: queue invariants).
 STATUS_REMOVED = "removed"
+
+
+def _write_timer_json(pkg, timer, cache):
+    extra_attributes = {"name": pkg.name, "cache": cache, "hash": pkg.spec.dag_hash()}
+    try:
+        with open(pkg.times_log_path, "w") as timelog:
+            timer.write_json(timelog, extra_attributes=extra_attributes)
+    except Exception as e:
+        tty.debug(str(e))
+        return
 
 
 class InstallAction:
@@ -303,7 +314,7 @@ def _packages_needed_to_bootstrap_compiler(
     # mark compiler as depended-on by the packages that use it
     for pkg in pkgs:
         dep._dependents.add(
-            spack.spec.DependencySpec(pkg.spec, dep, deptypes=("build",), virtuals=())
+            spack.spec.DependencySpec(pkg.spec, dep, depflag=dt.BUILD, virtuals=())
         )
     packages = [(s.package, False) for s in dep.traverse(order="post", root=False)]
 
@@ -399,6 +410,8 @@ def _install_from_cache(
         return False
     t.stop()
     tty.debug("Successfully extracted {0} from binary cache".format(pkg_id))
+
+    _write_timer_json(pkg, t, True)
     _print_timer(pre=_log_prefix(pkg.name), pkg_id=pkg_id, timer=t)
     _print_installed_pkg(pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec, explicit)
@@ -481,7 +494,7 @@ def _process_binary_cache_tarball(
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(
-            pkg.spec, download_result, unsigned=unsigned, force=False
+            pkg.spec, download_result, unsigned=unsigned, force=False, timer=timer
         )
 
         pkg.installed_from_binary_cache = True
@@ -776,10 +789,9 @@ class BuildRequest:
         # Save off dependency package ids for quick checks since traversals
         # are not able to return full dependents for all packages across
         # environment specs.
-        deptypes = self.get_deptypes(self.pkg)
         self.dependencies = set(
             package_id(d.package)
-            for d in self.pkg.spec.dependencies(deptype=deptypes)
+            for d in self.pkg.spec.dependencies(deptype=self.get_depflags(self.pkg))
             if package_id(d.package) != self.pkg_id
         )
 
@@ -818,7 +830,7 @@ class BuildRequest:
         ]:
             _ = self.install_args.setdefault(arg, default)
 
-    def get_deptypes(self, pkg: "spack.package_base.PackageBase") -> Tuple[str, ...]:
+    def get_depflags(self, pkg: "spack.package_base.PackageBase") -> int:
         """Determine the required dependency types for the associated package.
 
         Args:
@@ -827,7 +839,7 @@ class BuildRequest:
         Returns:
             tuple: required dependency type(s) for the package
         """
-        deptypes = ["link", "run"]
+        depflag = dt.LINK | dt.RUN
         include_build_deps = self.install_args.get("include_build_deps")
 
         if self.pkg_id == package_id(pkg):
@@ -839,10 +851,10 @@ class BuildRequest:
         # is False, or if build depdencies are explicitly called for
         # by include_build_deps.
         if include_build_deps or not (cache_only or pkg.spec.installed):
-            deptypes.append("build")
+            depflag |= dt.BUILD
         if self.run_tests(pkg):
-            deptypes.append("test")
-        return tuple(sorted(deptypes))
+            depflag |= dt.TEST
+        return depflag
 
     def has_dependency(self, dep_id) -> bool:
         """Returns ``True`` if the package id represents a known dependency
@@ -875,9 +887,8 @@ class BuildRequest:
             spec = self.spec
         if visited is None:
             visited = set()
-        deptype = self.get_deptypes(spec.package)
 
-        for dep in spec.dependencies(deptype=deptype):
+        for dep in spec.dependencies(deptype=self.get_depflags(spec.package)):
             hash = dep.dag_hash()
             if hash in visited:
                 continue
@@ -961,10 +972,9 @@ class BuildTask:
         # Be consistent wrt use of dependents and dependencies.  That is,
         # if use traverse for transitive dependencies, then must remove
         # transitive dependents on failure.
-        deptypes = self.request.get_deptypes(self.pkg)
         self.dependencies = set(
             package_id(d.package)
-            for d in self.pkg.spec.dependencies(deptype=deptypes)
+            for d in self.pkg.spec.dependencies(deptype=self.request.get_depflags(self.pkg))
             if package_id(d.package) != self.pkg_id
         )
 
@@ -2093,7 +2103,6 @@ class PackageInstaller:
                 # another process has a write lock so must be (un)installing
                 # the spec (or that process is hung).
                 ltype, lock = self._ensure_locked("read", pkg)
-
             # Requeue the spec if we cannot get at least a read lock so we
             # can check the status presumably established by another process
             # -- failed, installed, or uninstalled -- on the next pass.
@@ -2373,8 +2382,7 @@ class BuildProcessInstaller:
 
             # Stop the timer and save results
             self.timer.stop()
-            with open(self.pkg.times_log_path, "w") as timelog:
-                self.timer.write_json(timelog)
+            _write_timer_json(self.pkg, self.timer, False)
 
         print_install_test_log(self.pkg)
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)

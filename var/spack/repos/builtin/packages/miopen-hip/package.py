@@ -154,8 +154,11 @@ class MiopenHip(CMakePackage):
         depends_on("mlirmiopen@" + ver, when="@" + ver)
 
     for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
-        depends_on("rocmlir@" + ver, when="@" + ver)
         depends_on("nlohmann-json", type="link")
+    for ver in ["5.4.0", "5.4.3", "5.5.0"]:
+        depends_on("rocmlir@" + ver, when="@" + ver)
+    for ver in ["5.5.1"]:
+        depends_on("composable-kernel@" + ver, when="@" + ver)
 
     def setup_build_environment(self, env):
         if "@3.9.0:" in self.spec:
@@ -200,11 +203,13 @@ class MiopenHip(CMakePackage):
         if self.spec.satisfies("@5.1.0:5.3"):
             mlir_inc = spec["mlirmiopen"].prefix.include
             args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(mlir_inc)))
-        # TODO: need to turn on composable-kernel to on at a later date
-        # requires a new recipe for composable-kernel
         if self.spec.satisfies("@5.4.0:"):
-            args.append(self.define("MIOPEN_USE_COMPOSABLEKERNEL", "OFF"))
             args.append(
                 "-DNLOHMANN_JSON_INCLUDE={0}".format(self.spec["nlohmann-json"].prefix.include)
             )
+        if self.spec.satisfies("@5.4.0:5.5.0"):
+            args.append(self.define("MIOPEN_USE_COMPOSABLEKERNEL", "OFF"))
+        if self.spec.satisfies("@5.5.1:"):
+            args.append(self.define("MIOPEN_USE_COMPOSABLEKERNEL", "ON"))
+            args.append(self.define("MIOPEN_USE_MLIR", "OFF"))
         return args

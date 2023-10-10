@@ -188,6 +188,13 @@ class Dd4hep(CMakePackage):
     )
     conflicts("~ddrec+dddetectors", msg="Need to enable +ddrec to build +dddetectors.")
 
+    @property
+    def libs(self):
+        # We need to override libs here, because we don't build a libdd4hep so
+        # the default discovery fails. All libraries that are built by DD4hep
+        # start with libDD
+        return find_libraries("libDD*", root=self.prefix, shared=True, recursive=True)
+
     def cmake_args(self):
         spec = self.spec
         cxxstd = spec["root"].variants["cxxstd"].value
@@ -246,7 +253,7 @@ class Dd4hep(CMakePackage):
         env.set("DD4HEP", self.prefix.examples)
         env.set("DD4hep_DIR", self.prefix)
         env.set("DD4hep_ROOT", self.prefix)
-        env.prepend_path("LD_LIBRARY_PATH", self.spec["dd4hep"].libs.directories[0])
+        env.prepend_path("LD_LIBRARY_PATH", self.libs.directories[0])
 
     def url_for_version(self, version):
         # dd4hep releases are dashes and padded with a leading zero

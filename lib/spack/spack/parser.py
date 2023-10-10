@@ -288,7 +288,7 @@ class SpecParser:
                     )
                     raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
 
-                root_spec._add_dependency(dependency, deptypes=(), virtuals=())
+                root_spec._add_dependency(dependency, depflag=0, virtuals=())
 
             else:
                 break

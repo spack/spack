@@ -20,6 +20,7 @@ import traceback
 import urllib.parse
 from typing import Optional, Union
 
+import llnl.url
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
@@ -29,7 +30,6 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.mirror
 import spack.spec
-import spack.url as url
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -375,7 +375,7 @@ def _determine_extension(fetcher):
     if isinstance(fetcher, fs.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
-            ext = url.determine_url_file_extension(fetcher.url)
+            ext = llnl.url.determine_url_file_extension(fetcher.url)
 
             if ext:
                 # Remove any leading dots

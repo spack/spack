@@ -241,6 +241,7 @@ class PyScipy(PythonPackage):
             "-Cbuilddir=build",
             "--no-isolation",
             "--skip-dependency-check",
+            "-Ccompile-args=-j%s" % make_jobs,
             ".",
         ]
         python(*args)

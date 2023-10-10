@@ -6,7 +6,6 @@
 import os
 import re
 
-from spack.build_environment import MakeExecutable, determine_number_of_jobs
 from spack.package import *
 
 

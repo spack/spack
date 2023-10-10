@@ -39,10 +39,17 @@ def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
         version_arg (str): the argument used to extract version information
     """
     compiler = spack.util.executable.Executable(compiler_path)
+    compiler_invocation_args = {
+        "output": str,
+        "error": str,
+        "ignore_errors": ignore_errors,
+        "timeout": 120,
+        "fail_on_error": True,
+    }
     if version_arg:
-        output = compiler(version_arg, output=str, error=str, ignore_errors=ignore_errors)
+        output = compiler(version_arg, **compiler_invocation_args)
     else:
-        output = compiler(output=str, error=str, ignore_errors=ignore_errors)
+        output = compiler(**compiler_invocation_args)
     return output
 
 
@@ -228,6 +235,9 @@ class Compiler:
     # These libraries are anticipated to be required by all executables built
     # by any compiler
     _all_compiler_rpath_libraries = ["libc", "libc++", "libstdc++"]
+
+    #: Platform matcher for Platform objects supported by compiler
+    is_supported_on_platform = lambda x: True
 
     # Default flags used by a compiler to set an rpath
     @property
@@ -594,8 +604,6 @@ class Compiler:
         compiler_names = getattr(cls, "{0}_names".format(language))
         prefixes = [""] + cls.prefixes
         suffixes = [""]
-        # Windows compilers generally have an extension of some sort
-        # as do most files on Windows, handle that case here
         if sys.platform == "win32":
             ext = r"\.(?:exe|bat)"
             cls_suf = [suf + ext for suf in cls.suffixes]

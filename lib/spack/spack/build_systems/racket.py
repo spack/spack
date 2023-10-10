@@ -10,9 +10,10 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack.builder
-from spack.build_environment import SPACK_NO_PARALLEL_MAKE, determine_number_of_jobs
+from spack.build_environment import SPACK_NO_PARALLEL_MAKE
 from spack.directives import build_system, extends, maintainers
 from spack.package_base import PackageBase
+from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import env_flag
 from spack.util.executable import Executable, ProcessError
 
@@ -92,7 +93,7 @@ class RacketBuilder(spack.builder.Builder):
                 "--copy",
                 "-i",
                 "-j",
-                str(determine_number_of_jobs(parallel)),
+                str(determine_number_of_jobs(parallel=parallel)),
                 "--",
                 os.getcwd(),
             ]

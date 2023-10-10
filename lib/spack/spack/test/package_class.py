@@ -17,6 +17,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.deptypes as dt
 import spack.install_test
 import spack.package_base
 import spack.repo
@@ -92,16 +93,16 @@ def test_possible_dependencies_with_deptypes(mock_packages):
         "dtbuild1": {"dtrun2", "dtlink2"},
         "dtlink2": set(),
         "dtrun2": set(),
-    } == dtbuild1.possible_dependencies(deptype=("link", "run"))
+    } == dtbuild1.possible_dependencies(depflag=dt.LINK | dt.RUN)
 
     assert {
         "dtbuild1": {"dtbuild2", "dtlink2"},
         "dtbuild2": set(),
         "dtlink2": set(),
-    } == dtbuild1.possible_dependencies(deptype=("build"))
+    } == dtbuild1.possible_dependencies(depflag=dt.BUILD)
 
     assert {"dtbuild1": {"dtlink2"}, "dtlink2": set()} == dtbuild1.possible_dependencies(
-        deptype=("link")
+        depflag=dt.LINK
     )
 
 

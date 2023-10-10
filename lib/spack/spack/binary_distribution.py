@@ -34,6 +34,7 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
+import spack.error
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -48,6 +49,7 @@ import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
@@ -1416,7 +1418,7 @@ def try_fetch(url_to_fetch):
 
     try:
         stage.fetch()
-    except web_util.FetchError:
+    except spack.error.FetchError:
         stage.destroy()
         return None
 
@@ -1798,10 +1800,11 @@ def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
                 m.linkname = m.linkname[result.end() :]
 
 
-def extract_tarball(spec, download_result, unsigned=False, force=False):
+def extract_tarball(spec, download_result, unsigned=False, force=False, timer=timer.NULL_TIMER):
     """
     extract binary tarball for given package into install area
     """
+    timer.start("extract")
     if os.path.exists(spec.prefix):
         if force:
             shutil.rmtree(spec.prefix)
@@ -1881,7 +1884,9 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
 
     os.remove(tarfile_path)
     os.remove(specfile_path)
+    timer.stop("extract")
 
+    timer.start("relocate")
     try:
         relocate_package(spec)
     except Exception as e:
@@ -1902,6 +1907,7 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
         if os.path.exists(filename):
             os.remove(filename)
         _delete_staged_downloads(download_result)
+    timer.stop("relocate")
 
 
 def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
@@ -2139,7 +2145,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
                 if not os.path.exists(stage.save_filename):
                     try:
                         stage.fetch()
-                    except web_util.FetchError:
+                    except spack.error.FetchError:
                         continue
 
             tty.debug("Found key {0}".format(fingerprint))
@@ -2291,7 +2297,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
             try:
                 stage.fetch()
                 break
-            except web_util.FetchError as e:
+            except spack.error.FetchError as e:
                 tty.debug(e)
         else:
             if fail_if_missing:

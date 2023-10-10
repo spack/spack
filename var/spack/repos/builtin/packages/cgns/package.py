@@ -46,6 +46,7 @@ class Cgns(CMakePackage):
     variant("legacy", default=False, description="Enable legacy options")
     variant("mem_debug", default=False, description="Enable memory debugging option")
     variant("tools", default=False, description="Enable CGNS tools")
+    variant("pic", default=False, description="Produce position-independent code")
 
     depends_on("cmake@3.12:", when="@4.3:", type="build")
     depends_on("cmake@3.8:", when="@4.2:", type="build")
@@ -61,6 +62,8 @@ class Cgns(CMakePackage):
     depends_on("glu", when="+tools")
     depends_on("libxmu", when="+tools")
     depends_on("libsm", when="+tools")
+
+    conflicts("~pic", when="+fortran", msg="+pic required when +fortran")
 
     # patch for error undefined reference to `matherr, see
     # https://bugs.gentoo.org/662210
@@ -83,6 +86,7 @@ class Cgns(CMakePackage):
                 self.define_from_variant("CGNS_ENABLE_BASE_SCOPE", "base_scope"),
                 self.define_from_variant("CGNS_ENABLE_LEGACY", "legacy"),
                 self.define_from_variant("CGNS_ENABLE_MEM_DEBUG", "mem_debug"),
+                self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             ]
         )
 

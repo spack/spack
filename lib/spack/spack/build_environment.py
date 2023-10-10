@@ -68,7 +68,7 @@ import spack.util.pattern
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
-from spack.util.cpus import cpus_available
+from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import (
     SYSTEM_DIRS,
     EnvironmentModifications,
@@ -535,39 +535,6 @@ def set_wrapper_variables(pkg, env):
     env.set(SPACK_LINK_DIRS, ":".join(link_dirs))
     env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs))
     env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
-
-
-def determine_number_of_jobs(
-    parallel=False, command_line=None, config_default=None, max_cpus=None
-):
-    """
-    Packages that require sequential builds need 1 job. Otherwise we use the
-    number of jobs set on the command line. If not set, then we use the config
-    defaults (which is usually set through the builtin config scope), but we
-    cap to the number of CPUs available to avoid oversubscription.
-
-    Parameters:
-        parallel (bool or None): true when package supports parallel builds
-        command_line (int or None): command line override
-        config_default (int or None): config default number of jobs
-        max_cpus (int or None): maximum number of CPUs available. When None, this
-            value is automatically determined.
-    """
-    if not parallel:
-        return 1
-
-    if command_line is None and "command_line" in spack.config.scopes():
-        command_line = spack.config.get("config:build_jobs", scope="command_line")
-
-    if command_line is not None:
-        return command_line
-
-    max_cpus = max_cpus or cpus_available()
-
-    # in some rare cases _builtin config may not be set, so default to max 16
-    config_default = config_default or spack.config.get("config:build_jobs", 16)
-
-    return min(max_cpus, config_default)
 
 
 def set_module_variables_for_package(pkg):

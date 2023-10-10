@@ -31,6 +31,7 @@ import shutil
 import urllib.parse
 from typing import List, Optional
 
+import llnl.url
 import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -46,7 +47,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
 import spack.version.git_ref_lookup
-from spack.util.compression import decompressor_for, extension_from_path
+from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
 
@@ -400,7 +401,7 @@ class URLFetchStrategy(FetchStrategy):
 
             try:
                 web_util.check_curl_code(curl.returncode)
-            except web_util.FetchError as err:
+            except spack.error.FetchError as err:
                 raise spack.fetch_strategy.FailedDownloadError(url, str(err))
 
         self._check_headers(headers)
@@ -441,7 +442,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # TODO: replace this by mime check.
         if not self.extension:
-            self.extension = spack.url.determine_url_file_extension(self.url)
+            self.extension = llnl.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
             tty.debug("Source already staged to %s" % self.stage.source_path)
@@ -570,7 +571,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, **kwargs):
-        assert extension_from_path(destination) == "tar.gz"
+        assert llnl.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
 
         tar = which("tar", required=True)
@@ -1289,7 +1290,7 @@ class S3FetchStrategy(URLFetchStrategy):
 
         parsed_url = urllib.parse.urlparse(self.url)
         if parsed_url.scheme != "s3":
-            raise web_util.FetchError("S3FetchStrategy can only fetch from s3:// urls.")
+            raise spack.error.FetchError("S3FetchStrategy can only fetch from s3:// urls.")
 
         tty.debug("Fetching {0}".format(self.url))
 
@@ -1336,7 +1337,7 @@ class GCSFetchStrategy(URLFetchStrategy):
 
         parsed_url = urllib.parse.urlparse(self.url)
         if parsed_url.scheme != "gs":
-            raise web_util.FetchError("GCSFetchStrategy can only fetch from gs:// urls.")
+            raise spack.error.FetchError("GCSFetchStrategy can only fetch from gs:// urls.")
 
         tty.debug("Fetching {0}".format(self.url))
 
@@ -1430,7 +1431,7 @@ def from_kwargs(**kwargs):
             on attribute names (e.g., ``git``, ``hg``, etc.)
 
     Raises:
-        spack.util.web.FetchError: If no ``fetch_strategy`` matches the args.
+        spack.error.FetchError: If no ``fetch_strategy`` matches the args.
     """
     for fetcher in all_strategies:
         if fetcher.matches(kwargs):
@@ -1537,7 +1538,7 @@ def for_package_version(pkg, version=None):
     # if it's a commit, we must use a GitFetchStrategy
     if isinstance(version, spack.version.GitVersion):
         if not hasattr(pkg, "git"):
-            raise web_util.FetchError(
+            raise spack.error.FetchError(
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
         # Populate the version with comparisons to other commits
@@ -1687,11 +1688,11 @@ class FsCache:
         shutil.rmtree(self.root, ignore_errors=True)
 
 
-class NoCacheError(web_util.FetchError):
+class NoCacheError(spack.error.FetchError):
     """Raised when there is no cached archive for a package."""
 
 
-class FailedDownloadError(web_util.FetchError):
+class FailedDownloadError(spack.error.FetchError):
     """Raised when a download fails."""
 
     def __init__(self, url, msg=""):
@@ -1699,23 +1700,23 @@ class FailedDownloadError(web_util.FetchError):
         self.url = url
 
 
-class NoArchiveFileError(web_util.FetchError):
+class NoArchiveFileError(spack.error.FetchError):
     """Raised when an archive file is expected but none exists."""
 
 
-class NoDigestError(web_util.FetchError):
+class NoDigestError(spack.error.FetchError):
     """Raised after attempt to checksum when URL has no digest."""
 
 
-class ExtrapolationError(web_util.FetchError):
+class ExtrapolationError(spack.error.FetchError):
     """Raised when we can't extrapolate a version for a package."""
 
 
-class FetcherConflict(web_util.FetchError):
+class FetcherConflict(spack.error.FetchError):
     """Raised for packages with invalid fetch attributes."""
 
 
-class InvalidArgsError(web_util.FetchError):
+class InvalidArgsError(spack.error.FetchError):
     """Raised when a version can't be deduced from a set of arguments."""
 
     def __init__(self, pkg=None, version=None, **args):
@@ -1728,11 +1729,11 @@ class InvalidArgsError(web_util.FetchError):
         super().__init__(msg, long_msg)
 
 
-class ChecksumError(web_util.FetchError):
+class ChecksumError(spack.error.FetchError):
     """Raised when archive fails to checksum."""
 
 
-class NoStageError(web_util.FetchError):
+class NoStageError(spack.error.FetchError):
     """Raised when fetch operations are called before set_stage()."""
 
     def __init__(self, method):

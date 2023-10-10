@@ -42,45 +42,36 @@ def define_plat_exe(exe):
     return exe
 
 
-def test_find_external_single_package(mock_executable, executables_found, _platform_executables):
-    pkgs_to_check = [spack.repo.PATH.get_pkg_class("cmake")]
+@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
+def test_find_external_single_package(mock_executable):
     cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
-    executables_found({str(cmake_path): define_plat_exe("cmake")})
+    search_dir = cmake_path.parent.parent
 
-    pkg_to_entries = spack.detection.by_executable(pkgs_to_check)
+    specs_by_package = spack.detection.by_path(["cmake"], path_hints=[str(search_dir)])
 
-    pkg, entries = next(iter(pkg_to_entries.items()))
-    single_entry = next(iter(entries))
+    assert len(specs_by_package) == 1 and "cmake" in specs_by_package
+    detected_spec = specs_by_package["cmake"]
+    assert len(detected_spec) == 1 and detected_spec[0].spec == Spec("cmake@1.foo")
 
-    assert single_entry.spec == Spec("cmake@1.foo")
 
-
-def test_find_external_two_instances_same_package(
-    mock_executable, executables_found, _platform_executables
-):
-    pkgs_to_check = [spack.repo.PATH.get_pkg_class("cmake")]
-
+def test_find_external_two_instances_same_package(mock_executable, _platform_executables):
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
     # we need to avoid that for proper regex.
-    cmake_path1 = mock_executable(
-        "cmake", output="echo cmake version 1.foo", subdir=("base1", "bin")
-    )
-    cmake_path2 = mock_executable(
-        "cmake", output="echo cmake version 3.17.2", subdir=("base2", "bin")
-    )
-    cmake_exe = define_plat_exe("cmake")
-    executables_found({str(cmake_path1): cmake_exe, str(cmake_path2): cmake_exe})
+    cmake1 = mock_executable("cmake", output="echo cmake version 1.foo", subdir=("base1", "bin"))
+    cmake2 = mock_executable("cmake", output="echo cmake version 3.17.2", subdir=("base2", "bin"))
+    search_paths = [str(cmake1.parent.parent), str(cmake2.parent.parent)]
 
-    pkg_to_entries = spack.detection.by_executable(pkgs_to_check)
+    finder = spack.detection.path.ExecutablesFinder()
+    detected_specs = finder.find(pkg_name="cmake", initial_guess=search_paths)
 
-    pkg, entries = next(iter(pkg_to_entries.items()))
-    spec_to_path = dict((e.spec, e.prefix) for e in entries)
+    assert len(detected_specs) == 2
+    spec_to_path = {e.spec: e.prefix for e in detected_specs}
     assert spec_to_path[Spec("cmake@1.foo")] == (
-        spack.detection.executable_prefix(os.path.dirname(cmake_path1))
+        spack.detection.executable_prefix(str(cmake1.parent))
     )
     assert spec_to_path[Spec("cmake@3.17.2")] == (
-        spack.detection.executable_prefix(os.path.dirname(cmake_path2))
+        spack.detection.executable_prefix(str(cmake2.parent))
     )
 
 
@@ -112,23 +103,6 @@ def test_get_executables(working_env, mock_executable):
 external = SpackCommand("external")
 
 
-def test_find_external_cmd(mutable_config, working_env, mock_executable, _platform_executables):
-    """Test invoking 'spack external find' with additional package arguments,
-    which restricts the set of packages that Spack looks for.
-    """
-    cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
-    prefix = os.path.dirname(os.path.dirname(cmake_path1))
-
-    os.environ["PATH"] = os.pathsep.join([os.path.dirname(cmake_path1)])
-    external("find", "cmake")
-
-    pkgs_cfg = spack.config.get("packages")
-    cmake_cfg = pkgs_cfg["cmake"]
-    cmake_externals = cmake_cfg["externals"]
-
-    assert {"spec": "cmake@1.foo", "prefix": prefix} in cmake_externals
-
-
 def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_executable):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as
@@ -138,50 +112,29 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
     os.environ["PATH"] = os.pathsep.join([os.path.dirname(cmake_path1)])
     external("find", "--not-buildable", "cmake")
     pkgs_cfg = spack.config.get("packages")
+    assert "cmake" in pkgs_cfg
     assert not pkgs_cfg["cmake"]["buildable"]
 
 
-def test_find_external_cmd_full_repo(
-    mutable_config, working_env, mock_executable, mutable_mock_repo, _platform_executables
-):
-    """Test invoking 'spack external find' with no additional arguments, which
-    iterates through each package in the repository.
-    """
-    exe_path1 = mock_executable("find-externals1-exe", output="echo find-externals1 version 1.foo")
-    prefix = os.path.dirname(os.path.dirname(exe_path1))
-    os.environ["PATH"] = os.pathsep.join([os.path.dirname(exe_path1)])
-    external("find", "--all")
-
-    pkgs_cfg = spack.config.get("packages")
-    pkg_cfg = pkgs_cfg["find-externals1"]
-    pkg_externals = pkg_cfg["externals"]
-
-    assert {"spec": "find-externals1@1.foo", "prefix": prefix} in pkg_externals
-
-
-def test_find_external_cmd_exclude(
-    mutable_config, working_env, mock_executable, mutable_mock_repo, _platform_executables
-):
-    """Test invoking 'spack external find --all --exclude', to ensure arbitary
-    external packages can be ignored.
-    """
-    exe_path1 = mock_executable("find-externals1-exe", output="echo find-externals1 version 1.foo")
-    os.environ["PATH"] = os.pathsep.join([os.path.dirname(exe_path1)])
-    external("find", "--all", "--exclude=find-externals1")
-
-    pkgs_cfg = spack.config.get("packages")
-
-    assert "find-externals1" not in pkgs_cfg.keys()
+@pytest.mark.parametrize(
+    "names,tags,exclude,expected",
+    [
+        # find --all
+        (None, ["detectable"], [], ["find-externals1"]),
+        # find --all --exclude find-externals1
+        (None, ["detectable"], ["find-externals1"], []),
+        # find cmake (and cmake is not detectable)
+        (["cmake"], ["detectable"], [], []),
+    ],
+)
+def test_package_selection(names, tags, exclude, expected, mutable_mock_repo):
+    """Tests various cases of selecting packages"""
+    # In the mock repo we only have 'find-externals1' that is detectable
+    result = spack.cmd.external.packages_to_search_for(names=names, tags=tags, exclude=exclude)
+    assert set(result) == set(expected)
 
 
-def test_find_external_no_manifest(
-    mutable_config,
-    working_env,
-    mock_executable,
-    mutable_mock_repo,
-    _platform_executables,
-    monkeypatch,
-):
+def test_find_external_no_manifest(mutable_config, working_env, mutable_mock_repo, monkeypatch):
     """The user runs 'spack external find'; the default path for storing
     manifest files does not exist. Ensure that the command does not
     fail.
@@ -194,13 +147,7 @@ def test_find_external_no_manifest(
 
 
 def test_find_external_empty_default_manifest_dir(
-    mutable_config,
-    working_env,
-    mock_executable,
-    mutable_mock_repo,
-    _platform_executables,
-    tmpdir,
-    monkeypatch,
+    mutable_config, working_env, mutable_mock_repo, tmpdir, monkeypatch
 ):
     """The user runs 'spack external find'; the default path for storing
     manifest files exists but is empty. Ensure that the command does not
@@ -215,13 +162,7 @@ def test_find_external_empty_default_manifest_dir(
 @pytest.mark.not_on_windows("Can't chmod on Windows")
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_find_external_manifest_with_bad_permissions(
-    mutable_config,
-    working_env,
-    mock_executable,
-    mutable_mock_repo,
-    _platform_executables,
-    tmpdir,
-    monkeypatch,
+    mutable_config, working_env, mutable_mock_repo, tmpdir, monkeypatch
 ):
     """The user runs 'spack external find'; the default path for storing
     manifest files exists but with insufficient permissions. Check that
@@ -262,12 +203,7 @@ def test_find_external_manifest_failure(mutable_config, mutable_mock_repo, tmpdi
 
 
 def test_find_external_nonempty_default_manifest_dir(
-    mutable_database,
-    mutable_mock_repo,
-    _platform_executables,
-    tmpdir,
-    monkeypatch,
-    directory_with_manifest,
+    mutable_database, mutable_mock_repo, tmpdir, monkeypatch, directory_with_manifest
 ):
     """The user runs 'spack external find'; the default manifest directory
     contains a manifest file. Ensure that the specs are read.
@@ -312,6 +248,7 @@ def test_list_detectable_packages(mutable_config, mutable_mock_repo):
     assert external.returncode == 0
 
 
+@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
 def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _platform_executables):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
@@ -337,11 +274,8 @@ def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _pla
 
 
 def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platform_executables):
-    # Prepare an environment to detect a fake gcc that
-    # override its external prefix
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
-    prefix = os.path.dirname(gcc_exe)
-    monkeypatch.setenv("PATH", prefix)
+    search_dir = gcc_exe.parent
 
     @classmethod
     def _determine_variants(cls, exes, version_str):
@@ -350,18 +284,17 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     gcc_cls = spack.repo.PATH.get_pkg_class("gcc")
     monkeypatch.setattr(gcc_cls, "determine_variants", _determine_variants)
 
-    # Find the external spec
-    external("find", "gcc")
+    finder = spack.detection.path.ExecutablesFinder()
+    detected_specs = finder.find(pkg_name="gcc", initial_guess=[str(search_dir)])
 
-    # Check entries in 'packages.yaml'
-    packages_yaml = spack.config.get("packages")
-    assert "gcc" in packages_yaml
-    assert "externals" in packages_yaml["gcc"]
-    externals = packages_yaml["gcc"]["externals"]
-    assert len(externals) == 1
-    assert externals[0]["prefix"] == os.path.sep + os.path.join("opt", "gcc", "bin")
+    assert len(detected_specs) == 1
+
+    gcc = detected_specs[0].spec
+    assert gcc.name == "gcc"
+    assert gcc.external_path == os.path.sep + os.path.join("opt", "gcc", "bin")
 
 
+@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
 def test_new_entries_are_reported_correctly(
     mock_executable, mutable_config, monkeypatch, _platform_executables
 ):

@@ -55,6 +55,12 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     version("2.8", sha256="a5b91339355a7bbafc5f44b524556f7f25de83dd56f2c00ef9240dabd6865663")
     version("2.7", sha256="f5ef515cb70f8d4cfcee0b3aac05b73def60d897bdb7a71f4356782febfe415a")
     version("2.6.1", sha256="6be7639ccad715d25eef560ce9d1637ef206fb9a162714f6ab8167fc0d971cae")
+    version("2.5", sha256="16d3ac4e86eed75d85d80f1f214a6bd58d27f13590966b5ad0cc181df85a3493")
+
+    # Spack commit 29aa7117f42f758bc537e03e4bedf66ced0accfa has older versions
+    # of glibc, but they are removed, because glibc < 2.17 links against
+    # libgcc_s and libgcc_eh, see glibc commit "Avoid use of libgcc_s and
+    # libgcc_eh when building glibc." 95f5a9a866695da4e038aa4e6ccbbfd5d9cf63b7
 
     # Fix for newer GCC, related to -fno-common
     patch("locs.patch", when="@2.23:2.25")
@@ -79,6 +85,19 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     # linker flag output regex
     patch("7c8a673.patch", when="@:2.9")
 
+    # include_next <limits.h> not working
+    patch("67fbfa5.patch", when="@:2.7")
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("@:2.21"):
+            env.append_flags("LDFLAGS", "-no-pie")
+        if self.spec.satisfies("@:2.16"):
+            # for some reason CPPFLAGS -U_FORTIFY_SOURCE is not enough, it has to be CFLAGS
+            env.append_flags("CPPFLAGS", "-U_FORTIFY_SOURCE")
+            env.append_flags("CFLAGS", "-O2 -g -fno-stack-protector -U_FORTIFY_SOURCE")
+        if self.spec.satisfies("@2.5"):
+            env.append_flags("CFLAGS", "-fgnu89-inline")
+
     def patch(self):
         # Support gmake >= 4
         filter_file(
@@ -98,6 +117,12 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
         # Support gcc >= 10
         filter_file(
+            "4.[3-9].* | 4.[1-9][0-9].* | [5-9].* )",
+            "4.[3-9].* | 4.[1-9][0-9].* | [5-9].* | [1-9][0-9]*)",
+            "configure",
+            string=True,
+        )
+        filter_file(
             "4.[4-9].* | 4.[1-9][0-9].* | [5-9].* )",
             "4.[4-9].* | 4.[1-9][0-9].* | [5-9].* | [1-9][0-9]*)",
             "configure",
@@ -116,6 +141,16 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("texinfo", type="build")
     depends_on("gettext", type="build")
     depends_on("perl", type="build")
+    depends_on("gawk", type="build")
+    depends_on("sed", type="build")
+    depends_on("gmake", type="build")
+
+    # See 2d7ed98add14f75041499ac189696c9bd3d757fe
+    depends_on("gmake@:4.3", type="build", when="@:2.36")
+
+    # From 2.29: generates locale/C-translit.h
+    # before that it's a test dependency.
+    depends_on("python@3.4:", type="build", when="@2.29:")
 
     depends_on("linux-headers")
 
@@ -128,6 +163,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
         return [
             "--enable-kernel=4.4.1",
             "--with-headers={}".format(self.spec["linux-headers"].prefix.include),
+            "--without-selinux",
         ]
 
     def build(self, spec, prefix):

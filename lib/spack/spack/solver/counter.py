@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
-from typing import List, Set, Tuple
+from typing import List, Set
 
-import spack.dependency
+import spack.deptypes as dt
 import spack.package_base
+import spack.repo
 
 PossibleDependencies = Set[str]
 
@@ -23,11 +24,11 @@ class Counter:
     def __init__(self, specs: List["spack.spec.Spec"], tests: bool) -> None:
         self.specs = specs
 
-        self.link_run_types: Tuple[str, ...] = ("link", "run", "test")
-        self.all_types: Tuple[str, ...] = spack.dependency.all_deptypes
+        self.link_run_types: dt.DepFlag = dt.LINK | dt.RUN | dt.TEST
+        self.all_types: dt.DepFlag = dt.ALL
         if not tests:
-            self.link_run_types = ("link", "run")
-            self.all_types = ("link", "run", "build")
+            self.link_run_types = dt.LINK | dt.RUN
+            self.all_types = dt.LINK | dt.RUN | dt.BUILD
 
         self._possible_dependencies: PossibleDependencies = set()
         self._possible_virtuals: Set[str] = set(x.name for x in specs if x.virtual)
@@ -59,7 +60,7 @@ class Counter:
 class NoDuplicatesCounter(Counter):
     def _compute_cache_values(self):
         result = spack.package_base.possible_dependencies(
-            *self.specs, virtuals=self._possible_virtuals, deptype=self.all_types
+            *self.specs, virtuals=self._possible_virtuals, depflag=self.all_types
         )
         self._possible_dependencies = set(result)
 
@@ -89,17 +90,17 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
     def _compute_cache_values(self):
         self._link_run = set(
             spack.package_base.possible_dependencies(
-                *self.specs, virtuals=self._possible_virtuals, deptype=self.link_run_types
+                *self.specs, virtuals=self._possible_virtuals, depflag=self.link_run_types
             )
         )
         self._link_run_virtuals.update(self._possible_virtuals)
         for x in self._link_run:
-            current = spack.repo.PATH.get_pkg_class(x).dependencies_of_type("build")
+            current = spack.repo.PATH.get_pkg_class(x).dependencies_of_type(dt.BUILD)
             self._direct_build.update(current)
 
         self._total_build = set(
             spack.package_base.possible_dependencies(
-                *self._direct_build, virtuals=self._possible_virtuals, deptype=self.all_types
+                *self._direct_build, virtuals=self._possible_virtuals, depflag=self.all_types
             )
         )
         self._possible_dependencies = set(self._link_run) | set(self._total_build)
