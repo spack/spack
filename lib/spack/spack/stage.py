@@ -888,14 +888,18 @@ def interactive_version_filter(
 
     while True:
         num_ver = len(sorted_and_filtered)
-        num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
 
         has_filter = version_filter != VersionList([":"])
-        extra_msg = f"Filtering by {version_filter}." if has_filter else ""
+
+        header = [f"Selected {llnl.string.plural(num_ver, 'version')}"]
+        if known_versions:
+            num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
+            header.append(f"{llnl.string.plural(num_new, 'version')} are new")
+        if has_filter:
+            header.append(f"Filtering by {version_filter}")
 
         tty.msg(
-            f"Selected {llnl.string.plural(num_ver, 'version')}, "
-            f"{llnl.string.plural(num_new, 'version')} are new. {extra_msg}",
+            ". ".join(header) + ".",
             *llnl.util.lang.elide_list(
                 [f"{str(v):{max_len}}  {url_dict[v]}" for v in sorted_and_filtered]
             ),
@@ -904,7 +908,7 @@ def interactive_version_filter(
 
         tty.msg(
             colorize(
-                "@*w{Commands}. "
+                "@w{Commands}. "
                 "1: @*b{c}hecksum, "
                 "2: @*b{o}pen editor, "
                 "3: @*b{f}ilter, "
