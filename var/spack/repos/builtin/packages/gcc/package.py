@@ -757,7 +757,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Re-use the GNU target triplet defined in the existing gcc
         existing_gcc = Executable("gcc")
-        triplet = exisitng_gcc("-###", error=str).partition("Target: ")[2].split("\n")[0]
+        triplet = existing_gcc("-###", error=str).partition("Target: ")[2].split("\n")[0]
         if triplet:
             options.append("--build={}".format(triplet))
             options.append("--target={}".format(triplet))
