@@ -1226,9 +1226,7 @@ class PackageInstaller:
         for i, tup in enumerate(self.build_pq):
             key, task = tup
             if task.pkg_id == pkgid:
-                tty.debug(
-                    f"Modifying task for {pkgid} to treat it as a compiler", level=2
-                )
+                tty.debug(f"Modifying task for {pkgid} to treat it as a compiler", level=2)
                 setattr(task, attr, value)
                 self.build_pq[i] = (key, task)
 
@@ -1949,9 +1947,7 @@ class PackageInstaller:
                 dep_task = self.build_tasks[dep_id]
                 self._push_task(dep_task.next_attempt(self.installed))
             else:
-                tty.debug(
-                    f"{dep_id} has no build task to update for {pkg_id}'s success"
-                )
+                tty.debug(f"{dep_id} has no build task to update for {pkg_id}'s success")
 
     def _init_queue(self) -> None:
         """Initialize the build queue from the list of build requests."""
@@ -2051,9 +2047,7 @@ class PackageInstaller:
                 )
                 left = [dep_id for dep_id in task.uninstalled_deps if dep_id not in self.installed]
                 if not left:
-                    tty.warn(
-                        f"{pkg_id} does NOT actually have any uninstalled deps left"
-                    )
+                    tty.warn(f"{pkg_id} does NOT actually have any uninstalled deps left")
                 dep_str = "dependencies" if task.priority > 1 else "dependency"
 
                 # Hook to indicate task failure, but without an exception
