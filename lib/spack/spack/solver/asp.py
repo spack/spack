@@ -1553,20 +1553,22 @@ class SpackSolverSetup:
                 continue
 
             # Write explicitly if a requirement is conditional or not
-            if main_requirement_condition != spack.spec.Spec():
-                msg = f"condition to activate requirement {requirement_grp_id}"
-                try:
-                    main_condition_id = self.condition(
-                        main_requirement_condition, name=pkg_name, msg=msg
-                    )
-                except Exception as e:
-                    if rule.kind != RequirementKind.DEFAULT:
-                        raise RuntimeError("cannot emit requirements for the solver") from e
-                    continue
+            if main_requirement_condition == spack.spec.Spec():
+                main_requirement_condition = spack.spec.Spec(pkg_name)
 
-                self.gen.fact(
-                    fn.requirement_conditional(pkg_name, requirement_grp_id, main_condition_id)
+            msg = f"condition to activate requirement {requirement_grp_id}"
+            try:
+                main_condition_id = self.condition(
+                    main_requirement_condition, name=pkg_name, msg=msg
                 )
+            except Exception as e:
+                if rule.kind != RequirementKind.DEFAULT:
+                    raise RuntimeError("cannot emit requirements for the solver") from e
+                continue
+
+            self.gen.fact(
+                fn.requirement_conditional(pkg_name, requirement_grp_id, main_condition_id)
+            )
 
             self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
             self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
@@ -1586,9 +1588,11 @@ class SpackSolverSetup:
                 spec.attach_git_version_lookup()
 
                 try:
-                    member_id = req_counter
-                    req_counter += 1
+                    #member_id = req_counter
+                    #req_counter += 1
                     #import pdb; pdb.set_trace()
+                    member_id = self.condition(required_spec=spec)
+
                     self.impose(
                         member_id, imposed_spec=spec, name=pkg_name, node=True
                     )
