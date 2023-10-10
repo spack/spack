@@ -16,6 +16,7 @@ class PyLibsonata(PythonPackage):
     submodules = True
 
     version("develop", branch="master", get_full_repo=True)
+    version("0.1.24", sha256="6ec161e3be670025ba3bb5b4f1d1996a1947f094a176a7bcecb466fb3917c58e")
     version("0.1.23", sha256="815aac5bdaa5d025b5f3558ac4d3acb9ebcb070594109af4c0844f47ec701c1d")
     version("0.1.22", sha256="4adbb32ed2fac5d3c74bde03a5e2adb319724d324318a2a7dc2ef3c30f817b2c")
     version("0.1.21", sha256="5b280d82cb21a745d9cdb736c00446e0209494c21d2d17a2c878fabf23a08b68")
