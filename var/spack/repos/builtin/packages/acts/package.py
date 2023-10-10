@@ -320,8 +320,12 @@ class Acts(CMakePackage, CudaPackage):
     for _cxxstd in _cxxstd_values:
         if isinstance(_cxxstd, _ConditionalVariantValues):
             for _v in _cxxstd:
+                depends_on(
+                    f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^geant4"
+                )
                 depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^root")
         else:
+            depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^geant4")
             depends_on(f"root cxxstd={_cxxstd}", when=f"cxxstd={_cxxstd} ^root")
 
     # ACTS has been using C++17 for a while, which precludes use of old GCC

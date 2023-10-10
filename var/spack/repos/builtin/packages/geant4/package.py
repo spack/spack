@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.variant import _ConditionalVariantValues
 
 
 class Geant4(CMakePackage):
@@ -43,16 +44,18 @@ class Geant4(CMakePackage):
     version("10.4.0", sha256="e919b9b0a88476e00c0b18ab65d40e6a714b55ee4778f66bac32a5396c22aa74")
     version("10.3.3", sha256="bcd36a453da44de9368d1d61b0144031a58e4b43a6d2d875e19085f2700a89d8")
 
-    _cxxstd_values = ("11", "14", "17")
+    _cxxstd_values = (
+        conditional("11", "14", when="@:10"),
+        conditional("17", when="@10.4.1:"),
+        conditional("20", when="@10.7.0:"),
+    )
     variant(
         "cxxstd",
-        default=_cxxstd_values[0],
+        default="11",
         values=_cxxstd_values,
         multi=False,
         description="Use the specified C++ standard when building.",
     )
-    conflicts("cxxstd=11", when="@11:", msg="geant4@11: only supports cxxstd=17")
-    conflicts("cxxstd=14", when="@11:", msg="geant4@11: only supports cxxstd=17")
 
     variant("threads", default=True, description="Build with multithreading")
     variant("vecgeom", default=False, description="Enable vecgeom support")
@@ -97,30 +100,39 @@ class Geant4(CMakePackage):
     depends_on("python@3:", when="+python")
     extends("python", when="+python")
 
-    for std in _cxxstd_values:
-        # CLHEP version requirements to be reviewed
-        depends_on("clhep@2.4.6.0: cxxstd=" + std, when="@11.1: cxxstd=" + std)
+    # CLHEP version requirements to be reviewed
+    depends_on("clhep@2.4.6.0:", when="@11.1:")
+    depends_on("clhep@2.4.5.1:", when="@11.0.0:")
+    depends_on("clhep@2.4.4.0:", when="@10.7.0:")
+    depends_on("clhep@2.3.3.0:", when="@10.3.3:10.6")
 
-        depends_on("clhep@2.4.5.1: cxxstd=" + std, when="@11.0.0: cxxstd=" + std)
+    # Vecgeom specific versions for each Geant4 version
+    with when("+vecgeom"):
+        depends_on("vecgeom@1.2.0:", when="@11.1:")
+        depends_on("vecgeom@1.1.18:1.1", when="@11.0.0:11.0")
+        depends_on("vecgeom@1.1.8:1.1", when="@10.7.0:10.7")
+        depends_on("vecgeom@1.1.5", when="@10.6.0:10.6")
+        depends_on("vecgeom@1.1.0", when="@10.5.0:10.5")
+        depends_on("vecgeom@0.5.2", when="@10.4.0:10.4")
+        depends_on("vecgeom@0.3rc", when="@10.3.0:10.3")
 
-        depends_on("clhep@2.4.4.0: cxxstd=" + std, when="@10.7.0: cxxstd=" + std)
+    def std_when(values):
+        for v in values:
+            if isinstance(v, _ConditionalVariantValues):
+                for c in v:
+                    yield (c.value, c.when)
+            else:
+                yield (v, "")
 
-        depends_on("clhep@2.3.3.0: cxxstd=" + std, when="@10.3.3:10.6 cxxstd=" + std)
+    for _std, _when in std_when(_cxxstd_values):
+        depends_on(f"clhep cxxstd={_std}", when=f"{_when} cxxstd={_std}")
+        depends_on(f"vecgeom cxxstd={_std}", when=f"{_when} +vecgeom cxxstd={_std}")
 
         # Spack only supports Xerces-c 3 and above, so no version req
-        depends_on("xerces-c netaccessor=curl cxxstd=" + std, when="cxxstd=" + std)
-
-        # Vecgeom specific versions for each Geant4 version
-        depends_on("vecgeom@1.2.0: cxxstd=" + std, when="@11.1: +vecgeom cxxstd=" + std)
-        depends_on("vecgeom@1.1.18:1.1 cxxstd=" + std, when="@11.0.0:11.0 +vecgeom cxxstd=" + std)
-        depends_on("vecgeom@1.1.8:1.1 cxxstd=" + std, when="@10.7.0:10.7 +vecgeom cxxstd=" + std)
-        depends_on("vecgeom@1.1.5 cxxstd=" + std, when="@10.6.0:10.6 +vecgeom cxxstd=" + std)
-        depends_on("vecgeom@1.1.0 cxxstd=" + std, when="@10.5.0:10.5 +vecgeom cxxstd=" + std)
-        depends_on("vecgeom@0.5.2 cxxstd=" + std, when="@10.4.0:10.4 +vecgeom cxxstd=" + std)
-        depends_on("vecgeom@0.3rc cxxstd=" + std, when="@10.3.0:10.3 +vecgeom cxxstd=" + std)
+        depends_on(f"xerces-c netaccessor=curl cxxstd={_std}", when=f"{_when} cxxstd={_std}")
 
         # Boost.python, conflict handled earlier
-        depends_on("boost@1.70: +python cxxstd=" + std, when="+python cxxstd=" + std)
+        depends_on(f"boost@1.70: +python cxxstd={_std}", when=f"{_when} +python cxxstd={_std}")
 
     # Visualization driver dependencies
     depends_on("gl", when="+opengl")

@@ -17,6 +17,8 @@ class ComposableKernel(CMakePackage):
     maintainers("srekolam", "afzpatel")
 
     version("master", branch="develop")
+    version("5.6.1", commit="f5ec04f091fa5c48c67d7bacec36a414d0be06a5")
+    version("5.6.0", commit="f0fd02634c2f8f8c70f5a0ab2a8c84db5e36eeca")
     version("5.5.1", commit="ac9e01e2cc3721be24619807adc444e1f59a9d25")
     version("5.5.0", commit="8b76b832420a3d69708401de6607a033163edcce")
     version("5.4.3", commit="bb3d9546f186e39cefedc3e7f01d88924ba20168")
@@ -40,7 +42,7 @@ class ComposableKernel(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("cmake@3.16:", type="build")
 
-    for ver in ["master", "5.5.1", "5.5.0", "5.4.3", "5.4.0"]:
+    for ver in ["master", "5.6.1", "5.6.0", "5.5.1", "5.5.0", "5.4.3", "5.4.0"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocm-cmake@" + ver, when="@" + ver, type="build")

@@ -2595,6 +2595,7 @@ class SpecBuilder:
                 r"^node_compiler$",
                 r"^package_hash$",
                 r"^root$",
+                r"^variant_default_value_from_cli$",
                 r"^virtual_node$",
                 r"^virtual_root$",
             ]
