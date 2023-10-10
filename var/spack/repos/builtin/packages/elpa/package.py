@@ -132,8 +132,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
             options.append("--enable-generic")
 
         if self.compiler.name == "gcc":
-            gcc_options = []
-            gfortran_options = ["-ffree-line-length-none"]
+            gcc_options = ["-O3"]
+            gfortran_options = ["-O3", "-ffree-line-length-none"]
 
             space_separator = " "
             options.extend(
