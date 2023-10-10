@@ -228,7 +228,9 @@ class BuildcacheBootstrapper(Bootstrapper):
                 if not abstract_spec.intersects(candidate_spec):
                     continue
 
-                if python_spec is not None and python_spec not in abstract_spec:
+                if python_spec is not None and not abstract_spec.intersects(
+                    spack.spec.Spec(f"^{python_spec}")
+                ):
                     continue
 
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
