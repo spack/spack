@@ -885,42 +885,47 @@ def interactive_version_filter(
     version_filter = VersionList([":"])
     max_len = max(len(str(v)) for v in sorted_and_filtered)
     orig_url_dict = url_dict  # only copy when using editor to modify
-
+    print_header = True
+    VERSION_COLOR = spack.spec.VERSION_COLOR
     while True:
-        has_filter = version_filter != VersionList([":"])
-        header = []
-        if len(sorted_and_filtered) == len(url_dict):
-            header.append(f"Selected {llnl.string.plural(len(sorted_and_filtered), 'version')}")
-        else:
-            header.append(f"Selected {len(sorted_and_filtered)} of {len(url_dict)} versions")
-        if known_versions:
-            num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
-            header.append(f"{llnl.string.plural(num_new, 'new version')}")
-        if has_filter:
-            header.append(colorize(f"Filtered by {spack.spec.VERSION_COLOR}{version_filter}@."))
+        if print_header:
+            has_filter = version_filter != VersionList([":"])
+            header = []
+            if len(sorted_and_filtered) == len(url_dict):
+                header.append(
+                    f"Selected {llnl.string.plural(len(sorted_and_filtered), 'version')}"
+                )
+            else:
+                header.append(f"Selected {len(sorted_and_filtered)} of {len(url_dict)} versions")
+            if known_versions:
+                num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
+                header.append(f"{llnl.string.plural(num_new, 'new version')}")
+            if has_filter:
+                header.append(colorize(f"Filtered by {VERSION_COLOR}{version_filter}@."))
 
-        version_with_url = [
-            colorize(f"{spack.spec.VERSION_COLOR}{str(v):{max_len}}@.  ") + url_dict[v]
-            for v in sorted_and_filtered
-        ]
-        tty.msg(". ".join(header), *llnl.util.lang.elide_list(version_with_url))
-        print()
+            version_with_url = [
+                colorize(f"{VERSION_COLOR}{str(v):{max_len}}@.  ") + url_dict[v]
+                for v in sorted_and_filtered
+            ]
+            tty.msg(". ".join(header), *llnl.util.lang.elide_list(version_with_url))
+            print()
+
+        print_header = True
 
         tty.msg(
             colorize(
-                "@w{Commands}. "
-                "1: @*b{c}hecksum, "
-                "2: @*b{o}pen editor, "
-                "3: @*b{f}ilter, "
-                "4: @*b{a}sk each, "
-                "5: @*b{n}ew only, "
-                "6: @*b{r}estart, "
-                "7: @*b{q}uit"
+                "@w{commands:} "
+                "@*w{1} @*b{c}hecksum, "
+                "@*w{2} @*b{o}pen editor, "
+                "@*w{3} @*b{f}ilter, "
+                "@*w{4} @*b{a}sk each, "
+                "@*w{5} @*b{n}ew only, "
+                "@*w{6} @*b{r}estart, "
+                "@*w{7} @*b{q}uit"
             )
         )
-        print()
         try:
-            command = input("What now> ").strip().lower()
+            command = input(colorize("@*g{command>} ")).strip().lower()
         except EOFError:
             print()
             command = "q"
@@ -973,9 +978,16 @@ def interactive_version_filter(
 
             os.unlink(filepath)
         elif command in ("3", "f"):
+            tty.msg(
+                colorize(
+                    f"Examples filters: {VERSION_COLOR}1.2@. "
+                    f"or {VERSION_COLOR}1.1:1.3@. "
+                    f"or {VERSION_COLOR}=1.2, 1.2.2:@."
+                )
+            )
             try:
                 # Allow a leading @ version specifier
-                filter_spec = input("Filter> ").strip().lstrip("@")
+                filter_spec = input(colorize("@*g{filter>} ")).strip().lstrip("@")
             except EOFError:
                 print()
                 continue
@@ -1017,6 +1029,10 @@ def interactive_version_filter(
             except EOFError:
                 print()
                 return None
+        else:
+            tty.warn(f"Ignoring invalid command: {command}")
+            print_header = False
+            continue
     return {v: url_dict[v] for v in sorted_and_filtered}
 
 
