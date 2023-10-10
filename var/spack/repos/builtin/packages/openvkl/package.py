@@ -41,7 +41,7 @@ class Openvkl(CMakePackage):
     def cmake_args(self):
         args = [
             # otherwise, openvkl 1.3.2 tries to install its headers into /openvkl
-            self.define("CMAKE_INSTALL_INCLUDEDIR", "{0}/include".format(self.spec.prefix)),
+            self.define("CMAKE_INSTALL_INCLUDEDIR", f"{self.spec.prefix}/include"),
             self.define("BUILD_BENCHMARKS", False),
             self.define("BUILD_EXAMPLES", False),
             self.define("BUILD_TESTING", False),
