@@ -887,23 +887,23 @@ def interactive_version_filter(
     orig_url_dict = url_dict  # only copy when using editor to modify
 
     while True:
-        num_ver = len(sorted_and_filtered)
-
         has_filter = version_filter != VersionList([":"])
-
-        header = [f"Selected {llnl.string.plural(num_ver, 'version')}"]
+        header = []
+        if len(sorted_and_filtered) == len(url_dict):
+            header.append(f"Selected {llnl.string.plural(len(sorted_and_filtered), 'version')}")
+        else:
+            header.append(f"Selected {len(sorted_and_filtered)} of {len(url_dict)} versions")
         if known_versions:
             num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
-            header.append(f"{llnl.string.plural(num_new, 'version')} are new")
+            header.append(f"{llnl.string.plural(num_new, 'new version')}")
         if has_filter:
-            header.append(f"Filtering by {version_filter}")
+            header.append(colorize(f"Filtered by {spack.spec.VERSION_COLOR}{version_filter}@."))
 
-        tty.msg(
-            ". ".join(header) + ".",
-            *llnl.util.lang.elide_list(
-                [f"{str(v):{max_len}}  {url_dict[v]}" for v in sorted_and_filtered]
-            ),
-        )
+        version_with_url = [
+            colorize(f"{spack.spec.VERSION_COLOR}{str(v):{max_len}}@.  ") + url_dict[v]
+            for v in sorted_and_filtered
+        ]
+        tty.msg(". ".join(header), *llnl.util.lang.elide_list(version_with_url))
         print()
 
         tty.msg(
