@@ -429,7 +429,7 @@ def check_fn(args):
     specs = spack.cmd.parse_specs(args.spec or args.spec_file)
 
     if specs:
-        specs = _matching_specs([specs, specs])
+        specs = _matching_specs(specs)
     else:
         specs = spack.cmd.require_active_env("buildcache check").all_specs()
 
