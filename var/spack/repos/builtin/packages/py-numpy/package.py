@@ -399,6 +399,12 @@ class PyNumpy(PythonPackage):
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write("include_dirs = {0}\n".format(lapack_header_dirs))
 
+    @when("@1.26:")
+    def setup_build_environment(self, env):
+        # https://github.com/scipy/scipy/issues/19357
+        if self.spec.satisfies("%apple-clang@15:"):
+            env.append_flags("LDFLAGS", "-Wl,-ld_classic")
+
     @when("@:1.25")
     def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
