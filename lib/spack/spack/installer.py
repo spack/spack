@@ -949,8 +949,7 @@ class BuildTask:
         # queue.
         if status == STATUS_REMOVED:
             raise InstallError(
-                f"Cannot create a build task for {self.pkg_id} with status '{status}'",
-                pkg=pkg
+                f"Cannot create a build task for {self.pkg_id} with status '{status}'", pkg=pkg
             )
 
         self.status = status
@@ -1504,9 +1503,7 @@ class PackageInstaller:
                 op = "acquire"
                 lock = spack.store.STORE.prefix_locker.lock(pkg.spec, timeout)
                 if timeout != lock.default_timeout:
-                    tty.warn(
-                        f"Expected prefix lock timeout {timeout}, not {lock.default_timeout}",
-                    )
+                    tty.warn(f"Expected prefix lock timeout {timeout}, not {lock.default_timeout}")
                 if lock_type == "read":
                     lock.acquire_read()
                 else:
@@ -2036,8 +2033,7 @@ class PackageInstaller:
             if task.priority != 0:
                 term_status.clear()
                 tty.error(
-                    f"Detected uninstalled dependencies for {pkg_id}: "
-                    f"{task.uninstalled_deps}"
+                    f"Detected uninstalled dependencies for {pkg_id}: " f"{task.uninstalled_deps}"
                 )
                 left = [dep_id for dep_id in task.uninstalled_deps if dep_id not in self.installed]
                 if not left:
@@ -2174,8 +2170,7 @@ class PackageInstaller:
                 # The build has been terminated with a Ctrl-C so terminate
                 # regardless of the number of remaining specs.
                 tty.error(
-                    f"Failed to install {pkg.name} due to "
-                    f"{exc.__class__.__name__}: {str(exc)}"
+                    f"Failed to install {pkg.name} due to " f"{exc.__class__.__name__}: {str(exc)}"
                 )
                 spack.hooks.on_install_cancel(task.request.pkg.spec)
                 raise
