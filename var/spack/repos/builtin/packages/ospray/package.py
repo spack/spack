@@ -40,6 +40,7 @@ class Ospray(CMakePackage):
     depends_on("rkcommon@1.11:", when="@2.11:")
     depends_on("embree@3.12: +ispc")
     depends_on("embree@3.13.1:", when="@2.7.0:")
+    depends_on("embree@:3", when="@:2.10")
     depends_on("embree@4:", when="@2.11:")
     with when("+volumes"):
         depends_on("openvkl@0.13.0:")
