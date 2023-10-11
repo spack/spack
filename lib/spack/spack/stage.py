@@ -870,7 +870,7 @@ def interactive_version_filter(
     url_dict: Dict[StandardVersion, str],
     known_versions: Iterable[StandardVersion] = (),
     *,
-    url_changes: Set[StandardVersion] = frozenset(),
+    url_changes: Set[StandardVersion] = set(),
     input: Callable[..., str] = input,
 ) -> Optional[Dict[StandardVersion, str]]:
     """Interactively filter the list of spidered versions.
