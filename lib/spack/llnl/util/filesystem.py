@@ -28,7 +28,8 @@ from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import islink, readlink, resolve_link_target_relative_to_the_link, symlink
 
 from spack.util.executable import Executable, which
-from spack.util.path import path_to_os_path, system_path_filter
+
+from ..path import path_to_os_path, system_path_filter
 
 if sys.platform != "win32":
     import grp
@@ -336,8 +337,7 @@ def filter_file(
 
     if string:
         regex = re.escape(regex)
-    filenames = path_to_os_path(*filenames)
-    for filename in filenames:
+    for filename in path_to_os_path(*filenames):
         msg = 'FILTER FILE: {0} [replacing "{1}"]'
         tty.debug(msg.format(filename, regex))
 

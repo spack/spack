@@ -102,6 +102,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     # VTK-m uses the default Kokkos backend
     depends_on("kokkos", when="+kokkos")
+    depends_on("kokkos@3.7:3.9", when="@2.0 +kokkos")
     # VTK-m native CUDA and Kokkos CUDA backends are not compatible
     depends_on("kokkos ~cuda", when="+kokkos +cuda +cuda_native")
     depends_on("kokkos +cuda", when="+kokkos +cuda ~cuda_native")

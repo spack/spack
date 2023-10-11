@@ -508,6 +508,7 @@ complete -c spack -n '__fish_spack_using_command arch' -s b -l backend -d 'print
 # spack audit
 set -g __fish_spack_optspecs_spack_audit h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 audit' -f -a configs -d 'audit configuration files'
+complete -c spack -n '__fish_spack_using_command_pos 0 audit' -f -a externals -d 'check external detection in packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 audit' -f -a packages-https -d 'check https in packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 audit' -f -a packages -d 'audit package recipes'
 complete -c spack -n '__fish_spack_using_command_pos 0 audit' -f -a list -d 'list available checks and exits'
@@ -518,6 +519,14 @@ complete -c spack -n '__fish_spack_using_command audit' -s h -l help -d 'show th
 set -g __fish_spack_optspecs_spack_audit_configs h/help
 complete -c spack -n '__fish_spack_using_command audit configs' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command audit configs' -s h -l help -d 'show this help message and exit'
+
+# spack audit externals
+set -g __fish_spack_optspecs_spack_audit_externals h/help list
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 audit externals' -f -a '(__fish_spack_packages)'
+complete -c spack -n '__fish_spack_using_command audit externals' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command audit externals' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command audit externals' -l list -f -a list_externals
+complete -c spack -n '__fish_spack_using_command audit externals' -l list -d 'if passed, list which packages have detection tests'
 
 # spack audit packages-https
 set -g __fish_spack_optspecs_spack_audit_packages_https h/help all

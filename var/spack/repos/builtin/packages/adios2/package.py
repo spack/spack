@@ -130,6 +130,7 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("libzmq", when="+dataman")
     depends_on("dataspaces@1.8.0:", when="+dataspaces")
 
+    depends_on("hdf5@:1.12", when="@:2.8 +hdf5")
     depends_on("hdf5~mpi", when="+hdf5~mpi")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
 

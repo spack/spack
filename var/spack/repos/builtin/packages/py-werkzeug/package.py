@@ -10,9 +10,11 @@ class PyWerkzeug(PythonPackage):
     """The Swiss Army knife of Python web development"""
 
     homepage = "https://palletsprojects.com/p/werkzeug"
-    pypi = "Werkzeug/Werkzeug-0.16.0.tar.gz"
+    pypi = "werkzeug/werkzeug-3.0.0.tar.gz"
     git = "https://github.com/pallets/werkzeug.git"
 
+    version("3.0.0", sha256="3ffff4dcc32db52ef3cc94dff3000a3c2846890f3a5a51800a27b909c5e770f0")
+    version("2.3.7", sha256="2b8c0e447b4b9dbcc85dd97b6eeb4dcbaf6c8b6c3be0bd654e25553e0a2157d8")
     version("2.3.4", sha256="1d5a58e0377d1fe39d061a5de4469e414e78ccb1e1e59c0f5ad6fa1c36c52b76")
     version("2.2.2", sha256="7ea2d48322cc7c0f8b3a215ed73eabd7b5d75d0b50e31ab006286ccff9e00b8f")
     version("2.0.2", sha256="aa2bb6fc8dee8d6c504c0ac1e7f5f7dc5810a9903e793b6f715a9f015bdadb9a")
@@ -29,5 +31,16 @@ class PyWerkzeug(PythonPackage):
     version("0.11.11", sha256="e72c46bc14405cba7a26bd2ce28df734471bc9016bc8b4cb69466c2c14c2f7e5")
 
     depends_on("python@3.8:", when="@2.3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("py-flit-core@:3", when="@2.3.7:", type="build")
     depends_on("py-markupsafe@2.1.1:", when="@2.2:", type=("build", "run"))
+
+    # Historical dependencies
+    depends_on("py-setuptools", when="@:2.3.6", type="build")
+
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/source/w/werkzeug/{0}-{1}.tar.gz"
+        if version >= Version("2.3.7"):
+            letter = "werkzeug"
+        else:
+            letter = "Werkzeug"
+        return url.format(letter, version)
