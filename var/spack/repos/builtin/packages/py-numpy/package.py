@@ -256,7 +256,7 @@ class PyNumpy(PythonPackage):
         return {
             "compile-args": f"-j{make_jobs}",
             "setup-args": {
-                # http://scipy.github.io/devdocs/building/blas_lapack.html
+                # https://scipy.github.io/devdocs/building/blas_lapack.html
                 "-Dblas": blas,
                 "-Dlapack": lapack,
                 # https://numpy.org/doc/stable/reference/simd/build-options.html
@@ -272,8 +272,8 @@ class PyNumpy(PythonPackage):
         """Write a site.cfg file to configure BLAS/LAPACK."""
         spec = self.spec
 
-        # https://numpy.org/devdocs/user/building.html
-        # https://github.com/numpy/numpy/blob/master/site.cfg.example
+        # https://numpy.org/doc/1.25/user/building.html
+        # https://github.com/numpy/numpy/blob/v1.25.2/site.cfg.example
         def write_library_dirs(f, dirs):
             f.write("library_dirs = {0}\n".format(dirs))
             if not (
@@ -404,8 +404,8 @@ class PyNumpy(PythonPackage):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
         spec = self.spec
         # https://github.com/numpy/numpy/pull/13132
-        # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
-        # https://numpy.org/devdocs/user/building.html#blas
+        # https://numpy.org/doc/1.25/user/building.html#accelerated-blas-lapack-libraries
+        # https://numpy.org/doc/1.25/user/building.html#blas
         if (
             spec["blas"].name == "intel-mkl"
             or spec["blas"].name == "intel-parallel-studio"
@@ -425,7 +425,7 @@ class PyNumpy(PythonPackage):
 
         env.set("NPY_BLAS_ORDER", blas)
 
-        # https://numpy.org/devdocs/user/building.html#lapack
+        # https://numpy.org/doc/1.25/user/building.html#lapack
         if (
             spec["lapack"].name == "intel-mkl"
             or spec["lapack"].name == "intel-parallel-studio"
