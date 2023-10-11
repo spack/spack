@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
         concretizer: ['clingo']
         on_develop:
         - ${{ github.ref == 'refs/heads/develop' }}
@@ -42,6 +42,10 @@ jobs:
           concretizer: 'clingo'
           on_develop: false
         - python-version: '3.10'
+          os: ubuntu-latest
+          concretizer: 'clingo'
+          on_develop: false
+        - python-version: '3.11'
           os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
@@ -185,7 +189,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.11"]
     steps:
     - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
       with:
