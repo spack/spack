@@ -13,7 +13,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Callable, Dict, Iterable, Optional
+from typing import Callable, Dict, Iterable, Optional, Set
 
 import llnl.string
 import llnl.util.lang
@@ -870,6 +870,7 @@ def interactive_version_filter(
     url_dict: Dict[StandardVersion, str],
     known_versions: Iterable[StandardVersion] = (),
     *,
+    url_changes: Set[StandardVersion] = frozenset(),
     input: Callable[..., str] = input,
 ) -> Optional[Dict[StandardVersion, str]]:
     """Interactively filter the list of spidered versions.
@@ -907,7 +908,10 @@ def interactive_version_filter(
                 header.append(colorize(f"Filtered by {VERSION_COLOR}{version_filter}@."))
 
             version_with_url = [
-                colorize(f"{VERSION_COLOR}{str(v):{max_len}}@.  ") + url_dict[v]
+                colorize(
+                    f"{VERSION_COLOR}{str(v):{max_len}}@.  {url_dict[v]}"
+                    f"{'  @K{# NOTE: change of URL}' if v in url_changes else ''}"
+                )
                 for v in sorted_and_filtered
             ]
             tty.msg(". ".join(header), *llnl.util.lang.elide_list(version_with_url))

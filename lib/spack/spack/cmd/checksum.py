@@ -148,17 +148,12 @@ def checksum(parser, args):
             else:
                 url_changed_for_version.add(version)
 
-    if url_changed_for_version:
-        for v in url_changed_for_version:
-            tty.warn(
-                f"URL for version {v} may have changed "
-                f"from {', '.join(pkg.all_urls_for_version(v))} to {url_dict[v]}"
-            )
-
     if not url_dict:
         tty.die(f"Could not find any remote versions for {pkg.name}")
     elif len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
-        filtered_url_dict = spack.stage.interactive_version_filter(url_dict, pkg.versions)
+        filtered_url_dict = spack.stage.interactive_version_filter(
+            url_dict, pkg.versions, url_changes=url_changed_for_version
+        )
         if filtered_url_dict is None:
             exit(0)
         url_dict = filtered_url_dict
