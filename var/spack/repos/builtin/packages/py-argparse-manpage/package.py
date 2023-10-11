@@ -22,4 +22,3 @@ class PyArgparseManpage(PythonPackage):
     depends_on("py-tomli", when="^python@:3.10", type=("build", "run"))
 
     depends_on("py-setuptools", when="+setuptools", type=("build", "run"))
-
