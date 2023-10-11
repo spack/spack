@@ -24,9 +24,7 @@ class _3proxy(MakefilePackage):
     depends_on("m4", type="build")
 
     def build(self, spec, prefix):
-        make("-f", "Makefile.{0}".format(platform.system()))
+        make("-f", f"Makefile.{platform.system()}")
 
     def install(self, spec, prefix):
-        make(
-            "-f", "Makefile.{0}".format(platform.system()), "prefix={0}".format(prefix), "install"
-        )
+        make("-f", f"Makefile.{platform.system()}", f"prefix={prefix}", "install")
