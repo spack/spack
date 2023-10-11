@@ -14,6 +14,7 @@ class Botan(MakefilePackage):
 
     maintainers("aumuell")
 
+    version("3.2.0", sha256="049c847835fcf6ef3a9e206b33de05dd38999c325e247482772a5598d9e5ece3")
     version("3.1.1", sha256="30c84fe919936a98fef5331f246c62aa2c0e4d2085b2d4511207f6a20afa3a6b")
     version("3.1.0", sha256="4e18e755a8bbc6bf96fac916fbf072ecd06740c72a72017c27162e4c0b4725fe")
     version("3.0.0", sha256="5da552e00fa1c047a90c22eb5f0247ec27e7432b68b78e10a7ce0955269ccad7")
