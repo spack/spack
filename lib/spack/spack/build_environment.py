@@ -536,7 +536,7 @@ def set_wrapper_variables(pkg, env):
     env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
 
 
-def set_module_variables_for_package(pkg, context: Context = Context.BUILD):
+def set_module_globals_for_package(pkg, context: Context = Context.BUILD):
     """Populate the Python module of a package with some useful global names.
     This makes things easier for package writers.
     """
@@ -974,10 +974,10 @@ class SetupContext:
 
             if self.should_populate_package_py_globals & flag:
                 if self.context == Context.BUILD and self.needs_build_context & flag:
-                    set_module_variables_for_package(pkg, context=Context.BUILD)
+                    set_module_globals_for_package(pkg, context=Context.BUILD)
                 else:
                     # This includes runtime dependencies, also runtime deps of direct build deps.
-                    set_module_variables_for_package(pkg, context=Context.RUN)
+                    set_module_globals_for_package(pkg, context=Context.RUN)
 
             for spec in dspec.dependents():
                 # Note: some specs have dependents that are unreachable from the root, so avoid
