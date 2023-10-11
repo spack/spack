@@ -162,7 +162,7 @@ class PyNumpy(PythonPackage):
         "when building with MSVC",
     )
 
-    # version 1.21.0 runs into an infinit loop during printing
+    # version 1.21.0 runs into an infinite loop during printing
     # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
     conflicts("%gcc@11:", when="@1.21.0")
 
@@ -266,6 +266,8 @@ class PyNumpy(PythonPackage):
             },
         }
 
+    @when("@:1.25")
+    @run_before("install")
     def blas_lapack_site_cfg(self) -> None:
         """Write a site.cfg file to configure BLAS/LAPACK."""
         spec = self.spec
@@ -400,7 +402,6 @@ class PyNumpy(PythonPackage):
     @when("@:1.25")
     def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
-        self.blas_lapack_site_cfg()
         spec = self.spec
         # https://github.com/numpy/numpy/pull/13132
         # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
