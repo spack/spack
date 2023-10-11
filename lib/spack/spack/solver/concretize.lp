@@ -674,16 +674,32 @@ activate_requirement(node(ID, Package), X) :-
   requirement_conditional(Package, X, Y).
 
 requirement_group_satisfied(node(ID, Package), X) :-
-  1 { condition_holds(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } 1,
+  1 { requirement_condition_satisfied(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } 1,
   requirement_policy(Package, X, "one_of"),
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X).
+
+requirement_condition_satisfied(Y, node(VirtualID, Virtual)) :-
+  condition_holds(Y, node(ProviderID, Provider)),
+  requirement_group_member(Y, Virtual, X),
+  provider(node(ProviderID, Provider), node(VirtualID, Virtual)).
+
+requirement_condition_satisfied(Y, node(ID, Package)) :-
+  condition_holds(Y, node(ID, Package)),
+  requirement_group_member(Y, Package, X).
 
 { impose(EffectID, node(ID, Package)) } :-
   pkg_fact(Package, condition_effect(Y, EffectID)),
   requirement_group_member(Y, Package, X),
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X).
+
+{ impose(EffectID, node(ProviderID, Provider)) } :-
+  pkg_fact(Provider, condition_effect(Y, EffectID)),
+  provider(node(ProviderID, Provider), node(VirtualID, Virtual)),
+  requirement_group_member(Y, Virtual, X),
+  activate_requirement(node(VirtualID, Virtual), X),
+  requirement_group(Virtual, X).
 
 requirement_weight(node(ID, Package), Group, W) :-
   condition_holds(Y, node(ID, Package)),
