@@ -3672,7 +3672,7 @@ class Spec:
             return spec_like
         return Spec(spec_like)
 
-    def intersects(self, other: "Spec", deps: bool = True) -> bool:
+    def intersects(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if there exists at least one concrete spec that matches both
         self and other, otherwise False.
 
@@ -3795,7 +3795,7 @@ class Spec:
 
         return True
 
-    def satisfies(self, other: "Spec", deps: bool = True) -> bool:
+    def satisfies(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
