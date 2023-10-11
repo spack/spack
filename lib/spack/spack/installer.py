@@ -2522,12 +2522,9 @@ class OverwriteInstall:
         except fs.CouldNotRestoreDirectoryBackup as e:
             self.database.remove(self.task.pkg.spec)
             tty.error(
-                "Recovery of install dir of {0} failed due to "
-                "{1}: {2}. The spec is now uninstalled.".format(
-                    self.task.pkg.name,
-                    e.outer_exception.__class__.__name__,
-                    str(e.outer_exception),
-                )
+                f"Recovery of install dir of {self.task.pkg.name} failed due to "
+                f"{e.outer_exception.__class__.__name__}: {str(e.outer_exception)}. "
+                "The spec is now uninstalled."
             )
 
             # Unwrap the actual installation exception.
