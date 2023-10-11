@@ -28,6 +28,7 @@ from llnl.util.filesystem import (
     partition_path,
     remove_linked_tree,
 )
+from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
 import spack.caches
@@ -914,18 +915,18 @@ def interactive_version_filter(
 
         print_header = True
 
-        tty.msg(
-            colorize(
-                "@w{commands:} "
-                "@*w{1} @*b{c}hecksum, "
-                "@*w{2} @*b{o}pen editor, "
-                "@*w{3} @*b{f}ilter, "
-                "@*w{4} @*b{a}sk each, "
-                "@*w{5} @*b{n}ew only, "
-                "@*w{6} @*b{r}estart, "
-                "@*w{7} @*b{q}uit"
-            )
+        print("commands:")
+        commands = (
+            "@*w{1} @*b{[c]}hecksum",
+            "@*w{2} @*b{[o]}pen editor",
+            "@*w{3} @*b{[f]}ilter",
+            "@*w{4} @*b{[a]}sk each",
+            "@*w{5} @*b{[n]}ew only",
+            "@*w{6} @*b{[r]}estart",
+            "@*w{7} @*b{[q]}uit",
         )
+        colify(list(map(colorize, commands)), indent=2)
+
         try:
             command = input(colorize("@*g{command>} ")).strip().lower()
         except EOFError:
