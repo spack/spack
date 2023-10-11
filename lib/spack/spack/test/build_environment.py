@@ -439,10 +439,10 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     # b (parallel =True)
     s = default_mock_concretization("a foobar=bar")
 
-    spack.build_environment.set_module_globals_for_package(s.package)
+    spack.build_environment.set_package_py_globals(s.package)
     assert s["a"].package.module.make_jobs == 1
 
-    spack.build_environment.set_module_globals_for_package(s["b"].package)
+    spack.build_environment.set_package_py_globals(s["b"].package)
     assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
         parallel=s["b"].package.parallel
     )

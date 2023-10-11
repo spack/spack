@@ -119,7 +119,7 @@ def environment_modifications_for_specs(
         # Dynamic environment changes (setup_run_environment etc)
         setup_context = spack.build_environment.SetupContext(*specs, context=Context.RUN)
         if set_package_py_globals:
-            setup_context.set_module_globals()
+            setup_context.set_all_package_py_globals()
         dynamic = setup_context.get_env_modifications()
         env.extend(dynamic)
 

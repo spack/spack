@@ -536,7 +536,7 @@ def set_wrapper_variables(pkg, env):
     env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
 
 
-def set_module_globals_for_package(pkg, context: Context = Context.BUILD):
+def set_package_py_globals(pkg, context: Context = Context.BUILD):
     """Populate the Python module of a package with some useful global names.
     This makes things easier for package writers.
     """
@@ -728,7 +728,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     # First populate the package.py's module with the relevant globals that could be used in any
     # of the setup_* functions.
     setup_context = SetupContext(pkg.spec, context=context)
-    setup_context.set_module_globals()
+    setup_context.set_all_package_py_globals()
 
     # Keep track of env changes from packages separately, since we want to
     # issue warnings when packages make "suspicious" modifications.
@@ -967,17 +967,17 @@ class SetupContext:
         # In a build context, the root and direct build deps need build-specific globals set.
         self.needs_build_context = UseMode.ROOT | UseMode.BUILDTIME_DIRECT
 
-    def set_module_globals(self):
+    def set_all_package_py_globals(self):
         """Set the globals in modules of package.py files."""
         for dspec, flag in chain(self.external, self.nonexternal):
             pkg = dspec.package
 
             if self.should_populate_package_py_globals & flag:
                 if self.context == Context.BUILD and self.needs_build_context & flag:
-                    set_module_globals_for_package(pkg, context=Context.BUILD)
+                    set_package_py_globals(pkg, context=Context.BUILD)
                 else:
                     # This includes runtime dependencies, also runtime deps of direct build deps.
-                    set_module_globals_for_package(pkg, context=Context.RUN)
+                    set_package_py_globals(pkg, context=Context.RUN)
 
             for spec in dspec.dependents():
                 # Note: some specs have dependents that are unreachable from the root, so avoid
