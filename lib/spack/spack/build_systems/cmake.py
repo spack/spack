@@ -143,9 +143,9 @@ class CMakePackage(spack.package_base.PackageBase):
         if flags["ldflags"]:
             ldflags = " ".join(flags["ldflags"])
             # cmake has separate linker arguments for types of builds.
-            self.cmake_flag_args.append("-DCMAKE_EXE_LINKER_FLAGS={0}".format(ldflags))
-            self.cmake_flag_args.append("-DCMAKE_MODULE_LINKER_FLAGS={0}".format(ldflags))
-            self.cmake_flag_args.append("-DCMAKE_SHARED_LINKER_FLAGS={0}".format(ldflags))
+            self.cmake_flag_args.append(f"-DCMAKE_EXE_LINKER_FLAGS={ldflags}")
+            self.cmake_flag_args.append(f"-DCMAKE_MODULE_LINKER_FLAGS={ldflags}")
+            self.cmake_flag_args.append(f"-DCMAKE_SHARED_LINKER_FLAGS={ldflags}")
 
         # CMake has libs options separated by language. Apply ours to each.
         if flags["ldlibs"]:
