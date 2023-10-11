@@ -225,9 +225,8 @@ def _handle_external_and_upstream(pkg: "spack.package_base.PackageBase", explici
 
     if pkg.spec.installed_upstream:
         tty.verbose(
-            "{0} is installed in an upstream Spack instance at {1}".format(
-                package_id(pkg), pkg.spec.prefix
-            )
+            f"{package_id(pkg)} is installed in an upstream Spack instance at "
+            f"{pkg.spec.prefix}"
         )
         _print_installed_pkg(pkg.prefix)
 
@@ -430,7 +429,7 @@ def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: b
     """
     assert pkg.spec.external, "Expected to post-install/register an external package."
 
-    pre = "{s.name}@{s.version} :".format(s=pkg.spec)
+    pre = f"{pkg.spec.name}@{pkg.spec.version} :"
     spec = pkg.spec
 
     if spec.external_modules:
@@ -949,8 +948,10 @@ class BuildTask:
         # ensure priority queue invariants when tasks are "removed" from the
         # queue.
         if status == STATUS_REMOVED:
-            msg = "Cannot create a build task for {0} with status '{1}'"
-            raise InstallError(msg.format(self.pkg_id, status), pkg=pkg)
+            raise InstallError(
+                f"Cannot create a build task for {self.pkg_id} with status '{status}'",
+                pkg=pkg
+            )
 
         self.status = status
 
@@ -1070,9 +1071,8 @@ class BuildTask:
         for pkg_id in now_installed:
             self.uninstalled_deps.remove(pkg_id)
             tty.debug(
-                "{0}: Removed {1} from uninstalled deps list: {2}".format(
-                    self.pkg_id, pkg_id, self.uninstalled_deps
-                ),
+                f"{self.pkg_id}: Removed {pkg_id} from uninstalled deps list: "
+                f"{self.uninstalled_deps}",
                 level=2,
             )
 
@@ -1355,8 +1355,8 @@ class PackageInstaller:
             if spack.store.STORE.db.is_occupied_install_prefix(task.pkg.spec.prefix):
                 raise InstallError(
                     f"Install prefix collision for {task.pkg_id}",
-                    long_msg="Prefix directory {0} already used by another "
-                    "installed spec.".format(task.pkg.spec.prefix),
+                    long_msg=f"Prefix directory {task.pkg.spec.prefix} already "
+                    "used by another installed spec.",
                     pkg=task.pkg,
                 )
 
@@ -1411,9 +1411,8 @@ class PackageInstaller:
         lock = self.failed.get(pkg_id, None)
         if lock is not None:
             err = "{0} exception when removing failure tracking for {1}: {2}"
-            msg = "Removing failure mark on {0}"
             try:
-                tty.verbose(msg.format(pkg_id))
+                tty.verbose(f"Removing failure mark on {pkg_id}")
                 lock.release_write()
             except Exception as exc:
                 tty.warn(err.format(exc.__class__.__name__, pkg_id, str(exc)))
@@ -1506,9 +1505,7 @@ class PackageInstaller:
                 lock = spack.store.STORE.prefix_locker.lock(pkg.spec, timeout)
                 if timeout != lock.default_timeout:
                     tty.warn(
-                        "Expected prefix lock timeout {0}, not {1}".format(
-                            timeout, lock.default_timeout
-                        )
+                        f"Expected prefix lock timeout {timeout}, not {lock.default_timeout}",
                     )
                 if lock_type == "read":
                     lock.acquire_read()
@@ -1830,10 +1827,8 @@ class PackageInstaller:
         """
         if task.status not in [STATUS_INSTALLED, STATUS_INSTALLING]:
             tty.debug(
-                "{0} {1}".format(
-                    install_msg(task.pkg_id, self.pid, install_status),
-                    "in progress by another process",
-                )
+                f"{install_msg(task.pkg_id, self.pid, install_status)} "
+                "in progress by another process"
             )
 
         new_task = task.next_attempt(self.installed)
@@ -2041,9 +2036,8 @@ class PackageInstaller:
             if task.priority != 0:
                 term_status.clear()
                 tty.error(
-                    "Detected uninstalled dependencies for {0}: {1}".format(
-                        pkg_id, task.uninstalled_deps
-                    )
+                    f"Detected uninstalled dependencies for {pkg_id}: "
+                    f"{task.uninstalled_deps}"
                 )
                 left = [dep_id for dep_id in task.uninstalled_deps if dep_id not in self.installed]
                 if not left:
@@ -2054,9 +2048,8 @@ class PackageInstaller:
                 spack.hooks.on_install_failure(task.request.pkg.spec)
 
                 raise InstallError(
-                    "Cannot proceed with {0}: {1} uninstalled {2}: {3}".format(
-                        pkg_id, task.priority, dep_str, ",".join(task.uninstalled_deps)
-                    ),
+                    f"Cannot proceed with {pkg_id}: {task.priority} uninstalled "
+                    f"{dep_str}: {','.join(task.uninstalled_deps)}",
                     pkg=pkg,
                 )
 
@@ -2180,8 +2173,10 @@ class PackageInstaller:
             except KeyboardInterrupt as exc:
                 # The build has been terminated with a Ctrl-C so terminate
                 # regardless of the number of remaining specs.
-                err = "Failed to install {0} due to {1}: {2}"
-                tty.error(err.format(pkg.name, exc.__class__.__name__, str(exc)))
+                tty.error(
+                    f"Failed to install {pkg.name} due to "
+                    f"{exc.__class__.__name__}: {str(exc)}"
+                )
                 spack.hooks.on_install_cancel(task.request.pkg.spec)
                 raise
 
@@ -2190,9 +2185,10 @@ class PackageInstaller:
                     raise
 
                 # Checking hash on downloaded binary failed.
-                err = "Failed to install {0} from binary cache due to {1}:"
-                err += " Requeueing to install from source."
-                tty.error(err.format(pkg.name, str(exc)))
+                tty.error(
+                    f"Failed to install {pkg.name} from binary cache due "
+                    f"to {str(exc)}: Requeueing to install from source."
+                )
                 # this overrides a full method, which is ugly.
                 task.use_cache = False  # type: ignore[misc]
                 self._requeue_task(task, install_status)
@@ -2210,9 +2206,8 @@ class PackageInstaller:
                     # lower levels -- skip printing if already printed.
                     # TODO: sort out this and SpackError.print_context()
                     tty.error(
-                        "Failed to install {0} due to {1}: {2}".format(
-                            pkg.name, exc.__class__.__name__, str(exc)
-                        )
+                        f"Failed to install {pkg.name} due to "
+                        f"{exc.__class__.__name__}: {str(exc)}"
                     )
                 # Terminate if requested to do so on the first failure.
                 if self.fail_fast:
@@ -2265,7 +2260,7 @@ class PackageInstaller:
                 ids = [pkg_id for _, pkg_id, _ in failed_explicits]
                 tty.debug(
                     "Associating installation failure with first failed "
-                    "explicit package ({0}) from {1}".format(ids[0], ", ".join(ids))
+                    f"explicit package ({ids[0]}) from {', '.join(ids)}"
                 )
 
             elif len(missing) > 0:
@@ -2273,7 +2268,7 @@ class PackageInstaller:
                 ids = [pkg_id for _, pkg_id in missing]
                 tty.debug(
                     "Associating installation failure with first "
-                    "missing package ({0}) from {1}".format(ids[0], ", ".join(ids))
+                    f"missing package ({ids[0]}) from {', '.join(ids)}"
                 )
 
             raise InstallError(
@@ -2458,8 +2453,7 @@ class BuildProcessInstaller:
                         with logger.force_echo():
                             inner_debug_level = tty.debug_level()
                             tty.set_debug(debug_level)
-                            msg = "{0} Executing phase: '{1}'"
-                            tty.msg(msg.format(self.pre, phase_fn.name))
+                            tty.msg(f"{self.pre} Executing phase: '{phase_fn.name}'")
                             tty.set_debug(inner_debug_level)
 
                         # Catch any errors to report to logging
