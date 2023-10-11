@@ -756,11 +756,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         ]
 
         # Re-use the GNU target triplet defined in the existing gcc
-        existing_gcc = Executable("gcc")
-        triplet = existing_gcc("-###", error=str).partition("Target: ")[2].split("\n")[0]
-        if triplet:
-            options.append("--build={}".format(triplet))
-            options.append("--target={}".format(triplet))
+        if spec.satisfies("%gcc"):
+            gcc = Executable(self.compiler.cc)
+            triplet = gcc("-###", error=str).partition("Target: ")[2].split("\n")[0]
+            if triplet:
+                options.append("--host={}".format(triplet))
+                options.append("--build={}".format(triplet))
+                options.append("--target={}".format(triplet))
 
         # Avoid excessive realpath/stat calls for every system header
         # by making -fno-canonical-system-headers the default.
