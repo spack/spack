@@ -961,7 +961,7 @@ class SetupContext:
             self.should_setup_run_env |= UseMode.ROOT
 
         # Everything that calls setup_run_environment and setup_dependent_* needs globals set.
-        self.should_populate_package_py_globals = (
+        self.should_set_package_py_globals = (
             self.should_setup_dependent_build_env | self.should_setup_run_env | UseMode.ROOT
         )
         # In a build context, the root and direct build deps need build-specific globals set.
@@ -972,7 +972,7 @@ class SetupContext:
         for dspec, flag in chain(self.external, self.nonexternal):
             pkg = dspec.package
 
-            if self.should_populate_package_py_globals & flag:
+            if self.should_set_package_py_globals & flag:
                 if self.context == Context.BUILD and self.needs_build_context & flag:
                     set_package_py_globals(pkg, context=Context.BUILD)
                 else:
