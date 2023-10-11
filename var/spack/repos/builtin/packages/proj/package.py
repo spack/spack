@@ -166,7 +166,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
         args.extend(self.enable_or_disable("shared"))
         args.extend(self.with_or_without("pic"))
 
-        if self.spec["libtiff"].satisfies("+jpeg~shared"):
+        if self.spec.satisfies("^libtiff+jpeg~shared"):
             args.append("LDFLAGS=%s" % self.spec["jpeg"].libs.ld_flags)
             args.append("LIBS=%s" % self.spec["jpeg"].libs.link_flags)
 
