@@ -145,6 +145,13 @@
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3"
           }
         ],
+        "intel": [
+          {
+            "versions": "16.0:",
+            "name": "corei7",
+            "flags": "-march={name} -mtune=generic -mpopcnt"
+          }
+        ],
         "oneapi": [
           {
             "versions": "2021.2.0:",
@@ -215,6 +222,13 @@
             "versions": "8.0:",
             "name": "x86-64",
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave"
+          }
+        ],
+        "intel": [
+          {
+            "versions": "16.0:",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name} -fma -mf16c"
           }
         ],
         "oneapi": [
@@ -299,6 +313,13 @@
             "name": "x86-64",
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave -mavx512f -mavx512bw -mavx512cd -mavx512dq -mavx512vl"
           }
+        ],
+        "intel": [
+            {
+            "versions": "16.0:",
+            "name": "skylake-avx512",
+            "flags": "-march={name} -mtune={name}"
+            }
         ],
         "oneapi": [
           {
@@ -1412,6 +1433,92 @@
         ]
       }
     },
+    "sapphirerapids": {
+      "from": [
+        "icelake"
+      ],
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt",
+        "avx512f",
+        "avx512vl",
+        "avx512bw",
+        "avx512dq",
+        "avx512cd",
+        "avx512vbmi",
+        "avx512ifma",
+        "sha_ni",
+        "clwb",
+        "rdpid",
+        "gfni",
+        "avx512_vbmi2",
+        "avx512_vpopcntdq",
+        "avx512_bitalg",
+        "avx512_vnni",
+        "vpclmulqdq",
+        "vaes",
+        "avx512_bf16",
+        "cldemote",
+        "movdir64b",
+        "movdiri",
+        "pdcm",
+        "serialize",
+        "waitpkg"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "11.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "intel": [
+          {
+            "versions": "2021.2:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": "2021.2:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+              "versions": "2021.2:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
     "k10": {
       "from": ["x86_64"],
       "vendor": "AuthenticAMD",
@@ -2065,8 +2172,6 @@
         "pku",
         "gfni",
         "flush_l1d",
-        "erms",
-        "avic",
         "avx512f",
         "avx512dq",
         "avx512ifma",
@@ -2083,12 +2188,12 @@
       "compilers": {
         "gcc": [
           {
-            "versions": "10.3:13.0",
+            "versions": "10.3:12.2",
             "name": "znver3",
             "flags": "-march={name} -mtune={name} -mavx512f -mavx512dq -mavx512ifma -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg"
           },
           {
-            "versions": "13.1:",
+            "versions": "12.3:",
             "name": "znver4",
             "flags": "-march={name} -mtune={name}"
           }

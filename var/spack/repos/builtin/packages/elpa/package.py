@@ -185,6 +185,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if "+autotune" in self.spec:
             options.append("--enable-autotune-redistribute-matrix")
+            # --enable-autotune-redistribute-matrix requires --enable-scalapack-tests as well
+            options.append("--enable-scalapack-tests")
 
         options.append("--disable-silent-rules")
         options.append("--without-threading-support-check-during-build")

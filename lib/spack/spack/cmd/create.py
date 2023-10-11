@@ -822,7 +822,7 @@ def get_versions(args, name):
     if args.url is not None and args.template != "bundle" and valid_url:
         # Find available versions
         try:
-            url_dict = spack.util.web.find_versions_of_archive(args.url)
+            url_dict = spack.url.find_versions_of_archive(args.url)
         except UndetectableVersionError:
             # Use fake versions
             tty.warn("Couldn't detect version in: {0}".format(args.url))

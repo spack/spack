@@ -275,6 +275,12 @@ class Gromacs(CMakePackage, CudaPackage):
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
+    # 2021.2 will always try to build tests (see https://gromacs.bioexcel.eu/t/compilation-failure-for-gromacs-2021-1-and-2021-2-with-cmake-3-20-2/2129)
+    patch(
+        "https://gitlab.com/gromacs/gromacs/-/commit/10262892e11a87fda0f59e633c89ed5ab1100509.diff",
+        sha256="2c30d00404b76421c13866cc42afa5e63276f7926c862838751b158df8727b1b",
+        when="@2021.1:2021.2",
+    )
 
     filter_compiler_wrappers(
         "*.cmake", relative_root=os.path.join("share", "cmake", "gromacs_mpi")

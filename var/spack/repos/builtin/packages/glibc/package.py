@@ -55,6 +55,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     version("2.8", sha256="a5b91339355a7bbafc5f44b524556f7f25de83dd56f2c00ef9240dabd6865663")
     version("2.7", sha256="f5ef515cb70f8d4cfcee0b3aac05b73def60d897bdb7a71f4356782febfe415a")
     version("2.6.1", sha256="6be7639ccad715d25eef560ce9d1637ef206fb9a162714f6ab8167fc0d971cae")
+    version("2.5", sha256="16d3ac4e86eed75d85d80f1f214a6bd58d27f13590966b5ad0cc181df85a3493")
 
     # Fix for newer GCC, related to -fno-common
     patch("locs.patch", when="@2.23:2.25")
@@ -69,6 +70,13 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     # rpc/types.h include issue, should be from local version, not system.
     patch("fb21f89.patch", when="@:2.16")
 
+    # Avoid linking libgcc_eh
+    patch("95f5a9a-stub.patch", when="@:2.16")
+    patch("95f5a9a-2.16.patch", when="@2.16")
+    patch("95f5a9a-2.15.patch", when="@2.14:2.15")
+    patch("95f5a9a-2.13.patch", when="@2.12:2.13")
+    patch("95f5a9a-2.11.patch", when="@:2.11")
+
     # Use init_array (modified commit 4a531bb to unconditionally define
     # NO_CTORS_DTORS_SECTIONS)
     patch("4a531bb.patch", when="@:2.12")
@@ -78,6 +86,33 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
     # linker flag output regex
     patch("7c8a673.patch", when="@:2.9")
+
+    # Use AT_RANDOM provided by the kernel instead of /dev/urandom;
+    # recent gcc + binutils have issues with the inline assembly in
+    # the fallback code, so better to use the kernel-provided value.
+    patch("965cb60.patch", when="@2.8:2.9")
+    patch("965cb60-2.7.patch", when="@2.7")
+    patch("965cb60-2.6.patch", when="@2.6")
+    patch("965cb60-2.5.patch", when="@2.5")
+
+    # include_next <limits.h> not working
+    patch("67fbfa5.patch", when="@:2.7")
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("@:2.21"):
+            env.append_flags("LDFLAGS", "-no-pie")
+        if self.spec.satisfies("@:2.16"):
+            # for some reason CPPFLAGS -U_FORTIFY_SOURCE is not enough, it has to be CFLAGS
+            env.append_flags("CPPFLAGS", "-U_FORTIFY_SOURCE")
+            env.append_flags("CFLAGS", "-O2 -g -fno-stack-protector -U_FORTIFY_SOURCE")
+        if self.spec.satisfies("@:2.9"):
+            # missing defines in elf.h after 965cb60.patch
+            env.append_flags("CFLAGS", "-DAT_BASE_PLATFORM=24 -DAT_RANDOM=25")
+        if self.spec.satisfies("@:2.6"):
+            # change of defaults in gcc 10
+            env.append_flags("CFLAGS", "-fcommon")
+        if self.spec.satisfies("@2.5"):
+            env.append_flags("CFLAGS", "-fgnu89-inline")
 
     def patch(self):
         # Support gmake >= 4
@@ -98,6 +133,12 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
         # Support gcc >= 10
         filter_file(
+            "4.[3-9].* | 4.[1-9][0-9].* | [5-9].* )",
+            "4.[3-9].* | 4.[1-9][0-9].* | [5-9].* | [1-9][0-9]*)",
+            "configure",
+            string=True,
+        )
+        filter_file(
             "4.[4-9].* | 4.[1-9][0-9].* | [5-9].* )",
             "4.[4-9].* | 4.[1-9][0-9].* | [5-9].* | [1-9][0-9]*)",
             "configure",
@@ -116,6 +157,16 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("texinfo", type="build")
     depends_on("gettext", type="build")
     depends_on("perl", type="build")
+    depends_on("gawk", type="build")
+    depends_on("sed", type="build")
+    depends_on("gmake", type="build")
+
+    # See 2d7ed98add14f75041499ac189696c9bd3d757fe
+    depends_on("gmake@:4.3", type="build", when="@:2.36")
+
+    # From 2.29: generates locale/C-translit.h
+    # before that it's a test dependency.
+    depends_on("python@3.4:", type="build", when="@2.29:")
 
     depends_on("linux-headers")
 
@@ -128,6 +179,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
         return [
             "--enable-kernel=4.4.1",
             "--with-headers={}".format(self.spec["linux-headers"].prefix.include),
+            "--without-selinux",
         ]
 
     def build(self, spec, prefix):

@@ -367,8 +367,10 @@ _spack_get_alias() {
 # If all commands in COMPREPLY alias to the same thing, set COMPREPLY to
 # just the real command, not the aliases.
 _spack_compress_aliases() {
-    # if there's only one thing, don't bother compressing aliases; complete the alias
-    if [ "${#COMPREPLY[@]}" == "1" ]; then
+    # If there are zero or one completions, don't do anything
+    # If this isn't the first argument, bail because aliases currently only apply
+    # to top-level commands.
+    if [ "${#COMPREPLY[@]}" -le "1" ] || [ "$COMP_CWORD" != "1" ]; then
         return
     fi
 
@@ -421,12 +423,21 @@ _spack_audit() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="configs packages-https packages list"
+        SPACK_COMPREPLY="configs externals packages-https packages list"
     fi
 }
 
 _spack_audit_configs() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_audit_externals() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --list"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_audit_packages_https() {
@@ -670,7 +681,7 @@ _spack_change() {
 _spack_checksum() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred -a --add-to-package --verify"
+        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred -a --add-to-package --verify -j --jobs"
     else
         _all_packages
     fi
@@ -1119,7 +1130,7 @@ _spack_external() {
 _spack_external_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --not-buildable --exclude -p --path --scope --all -t --tag"
+        SPACK_COMPREPLY="-h --help --not-buildable --exclude -p --path --scope --all -t --tag -j --jobs"
     else
         _all_packages
     fi
@@ -1970,7 +1981,7 @@ _spack_verify() {
 _spack_versions() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --safe --safe-only -r --remote -n --new -c --concurrency"
+        SPACK_COMPREPLY="-h --help -s --safe --safe-only -r --remote -n --new -j --jobs"
     else
         _all_packages
     fi

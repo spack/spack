@@ -69,6 +69,7 @@ default:
 .base-job:
   variables:
     SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
       # Pipelines on develop only rebuild what is missing from the mirror
@@ -79,6 +80,7 @@ default:
         SPACK_REQUIRE_SIGNING: "True"
         AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+        OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
     - if: $CI_COMMIT_REF_NAME =~ /^releases\/v.*/
       # Pipelines on release branches always rebuild everything
       when: always
@@ -90,6 +92,7 @@ default:
         SPACK_REQUIRE_SIGNING: "True"
         AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+        OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
     - if: $CI_COMMIT_TAG =~ /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/ || $CI_COMMIT_TAG =~ /^v.*/
       # Pipelines on tags (release or dev snapshots) only copy binaries from one mirror to another
       when: always
@@ -99,6 +102,7 @@ default:
         SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
         AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+        OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
     - if: $CI_COMMIT_REF_NAME =~ /^pr[\d]+_.*$/
       # Pipelines on PR branches rebuild only what's missing, and do extra pruning
       when: always
@@ -109,6 +113,7 @@ default:
         SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
         AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
+        OIDC_TOKEN_AUDIENCE: "pr_binary_mirror"
 
 .generate-common:
   stage: generate
@@ -159,6 +164,10 @@ default:
 .generate-aarch64:
   extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "aarch64"]
+
+.generate-neoverse_v1:
+  extends: [ ".generate-base" ]
+  tags: ["spack", "public", "medium", "aarch64", "graviton3"]
 
 .generate-deprecated:
   extends: [ ".base-job" ]
@@ -225,6 +234,9 @@ protected-publish:
     - curl -fLsS https://spack.github.io/keys/spack-public-binary-key.pub -o /tmp/spack-public-binary-key.pub
     - aws s3 cp /tmp/spack-public-binary-key.pub "${SPACK_COPY_BUILDCACHE}/build_cache/_pgp/spack-public-binary-key.pub"
     - spack buildcache update-index --keys "${SPACK_COPY_BUILDCACHE}"
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: "protected_binary_mirror"
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
@@ -279,7 +291,7 @@ protected-publish:
 
 e4s-generate:
   extends: [ ".e4s", ".generate-x86_64"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+  image: ghcr.io/spack/ubuntu20.04-runner-amd64-gcc-11.4:2023.08.01
 
 e4s-build:
   extends: [ ".e4s", ".build" ]
@@ -293,6 +305,52 @@ e4s-build:
       job: e4s-generate
 
 ########################################
+# E4S Neoverse V1 pipeline
+########################################
+.e4s-neoverse_v1:
+  extends: [ ".linux_neoverse_v1" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-neoverse_v1
+
+e4s-neoverse_v1-generate:
+  extends: [ ".e4s-neoverse_v1", ".generate-neoverse_v1" ]
+  image: ghcr.io/spack/ubuntu20.04-runner-arm64-gcc-11.4:2023.08.01
+
+e4s-neoverse_v1-build:
+  extends: [ ".e4s-neoverse_v1", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-neoverse_v1-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-neoverse_v1-generate
+
+########################################
+# E4S ROCm External pipeline
+########################################
+.e4s-rocm-external:
+  extends: [ ".linux_x86_64_v3" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-rocm-external
+
+e4s-rocm-external-generate:
+  extends: [ ".e4s-rocm-external", ".generate-x86_64"]
+  image: ghcr.io/spack/ubuntu20.04-runner-amd64-gcc-11.4-rocm5.4.3:2023.08.01
+
+e4s-rocm-external-build:
+  extends: [ ".e4s-rocm-external", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-rocm-external-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-rocm-external-generate
+
+########################################
 # GPU Testing Pipeline
 ########################################
 .gpu-tests:
@@ -302,7 +360,7 @@ e4s-build:
 
 gpu-tests-generate:
   extends: [ ".gpu-tests", ".generate-x86_64"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+  image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
 
 gpu-tests-build:
   extends: [ ".gpu-tests", ".build" ]
@@ -325,7 +383,7 @@ gpu-tests-build:
 
 e4s-oneapi-generate:
   extends: [ ".e4s-oneapi", ".generate-x86_64"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2023.07.21
+  image: ghcr.io/spack/ubuntu20.04-runner-amd64-oneapi-2023.2.1:2023.08.01
 
 e4s-oneapi-build:
   extends: [ ".e4s-oneapi", ".build" ]
@@ -342,7 +400,7 @@ e4s-oneapi-build:
 # E4S on Power
 ########################################
 .e4s-power-generate-tags-and-image:
-  image: { "name": "ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/ubuntu20.04-runner-ppc64-gcc-11.4:2023.08.01", "entrypoint": [""] }
   tags: ["spack", "public", "large", "ppc64le"]
 
 .e4s-power:
@@ -472,7 +530,7 @@ radiuss-aws-aarch64-build:
 
 data-vis-sdk-generate:
   extends: [ ".data-vis-sdk", ".generate-x86_64"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+  image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
 
 data-vis-sdk-build:
   extends: [ ".data-vis-sdk", ".build" ]
@@ -569,7 +627,7 @@ tutorial-build:
 
 ml-linux-x86_64-cpu-generate:
   extends: [ ".generate-x86_64", .ml-linux-x86_64-cpu, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2023-07-01
 
 ml-linux-x86_64-cpu-build:
   extends: [ ".build", ".ml-linux-x86_64-cpu" ]
@@ -592,7 +650,7 @@ ml-linux-x86_64-cpu-build:
 
 ml-linux-x86_64-cuda-generate:
   extends: [ ".generate-x86_64", .ml-linux-x86_64-cuda, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2023-07-01
 
 ml-linux-x86_64-cuda-build:
   extends: [ ".build", ".ml-linux-x86_64-cuda"  ]
@@ -615,7 +673,7 @@ ml-linux-x86_64-cuda-build:
 
 ml-linux-x86_64-rocm-generate:
   extends: [ ".generate-x86_64", .ml-linux-x86_64-rocm, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2023-07-01
 
 ml-linux-x86_64-rocm-build:
   extends: [ ".build", ".ml-linux-x86_64-rocm" ]
@@ -773,30 +831,8 @@ deprecated-ci-build:
 #       job: aws-pcluster-generate-neoverse_v1
 
 # Cray definitions
-.base-cray-job:
-  variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-cray/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
-    AWS_ACCESS_KEY_ID: ${CRAY_MIRRORS_AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${CRAY_MIRRORS_AWS_SECRET_ACCESS_KEY}
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "develop"
-      # Pipelines on develop only rebuild what is missing from the mirror
-      when: always
-      variables:
-        SPACK_PIPELINE_TYPE: "spack_protected_branch"
-        SPACK_REQUIRE_SIGNING: "True"
-    - if: $CI_COMMIT_REF_NAME =~ /^pr[\d]+_.*$/
-      # Pipelines on PR branches rebuild only what's missing, and do extra pruning
-      when: always
-      variables:
-        SPACK_PIPELINE_TYPE: "spack_pull_request"
-        SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-cray/prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
-        SPACK_PRUNE_UNTOUCHED: "True"
-        SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
-
 .generate-cray:
-  extends: [ ".generate-common", ".base-cray-job" ]
-  stage: generate
+  extends: [ ".generate-common", ".base-job" ]
   before_script:
     - echo $PATH
     - module avail
@@ -811,11 +847,6 @@ deprecated-ci-build:
   extends: [ ".generate-cray" ]
 
 
-.build-cray:
-  extends: [ ".base-cray-job" ]
-  stage: build
-
-
 #######################################
 # E4S - Cray RHEL
 #######################################
@@ -828,7 +859,7 @@ e4s-cray-rhel-generate:
   extends: [ ".generate-cray-rhel", ".e4s-cray-rhel" ]
 
 e4s-cray-rhel-build:
-  extends: [ ".build-cray", ".e4s-cray-rhel" ]
+  extends: [ ".build", ".e4s-cray-rhel" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -846,16 +877,16 @@ e4s-cray-rhel-build:
   variables:
     SPACK_CI_STACK_NAME: e4s-cray-sles
 
-e4s-cray-sles-generate:
-  extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
+# e4s-cray-sles-generate:
+#   extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
 
-e4s-cray-sles-build:
-  extends: [ ".build-cray", ".e4s-cray-sles" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-cray-sles-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-cray-sles-generate
+# e4s-cray-sles-build:
+#   extends: [ ".build", ".e4s-cray-sles" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: e4s-cray-sles-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: e4s-cray-sles-generate

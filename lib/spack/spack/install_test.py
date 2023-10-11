@@ -17,6 +17,7 @@ from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.string import plural
 from llnl.util.lang import nullcontext
 from llnl.util.tty.color import colorize
 
@@ -26,7 +27,6 @@ import spack.util.spack_json as sjson
 from spack.installer import InstallError
 from spack.spec import Spec
 from spack.util.prefix import Prefix
-from spack.util.string import plural
 
 #: Stand-alone test failure info type
 TestFailureType = Tuple[BaseException, str]

@@ -11,6 +11,7 @@ from spack.error import SpecError, UnsatisfiableSpecError
 from spack.spec import (
     ArchSpec,
     CompilerSpec,
+    DependencySpec,
     Spec,
     SpecFormatSigilError,
     SpecFormatStringError,
@@ -971,7 +972,7 @@ class TestSpecSemantics:
     def test_satisfies_dependencies_ordered(self):
         d = Spec("zmpi ^fake")
         s = Spec("mpileaks")
-        s._add_dependency(d, deptypes=(), virtuals=())
+        s._add_dependency(d, depflag=0, virtuals=())
         assert s.satisfies("mpileaks ^zmpi ^fake")
 
     @pytest.mark.parametrize("transitive", [True, False])
@@ -1120,7 +1121,7 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
 
     # add it to an abstract spec as a dependency
     top = Spec("dt-diamond")
-    top.add_dependency_edge(bottom, deptypes=(), virtuals=())
+    top.add_dependency_edge(bottom, depflag=0, virtuals=())
 
     # concretize with the already-concrete dependency
     top.concretize()
@@ -1326,3 +1327,15 @@ def test_abstract_hash_intersects_and_satisfies(default_mock_concretization):
     # disjoint concretization space
     assert_disjoint(abstract_none, concrete)
     assert_disjoint(abstract_none, abstract_5)
+
+
+def test_edge_equality_does_not_depend_on_virtual_order():
+    """Tests that two edges that are constructed with just a different order of the virtuals in
+    the input parameters are equal to each other.
+    """
+    parent, child = Spec("parent"), Spec("child")
+    edge1 = DependencySpec(parent, child, depflag=0, virtuals=("mpi", "lapack"))
+    edge2 = DependencySpec(parent, child, depflag=0, virtuals=("lapack", "mpi"))
+    assert edge1 == edge2
+    assert tuple(sorted(edge1.virtuals)) == edge1.virtuals
+    assert tuple(sorted(edge2.virtuals)) == edge1.virtuals

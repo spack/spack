@@ -11,6 +11,7 @@ import sys
 
 import llnl.util.filesystem
 import llnl.util.lang
+from llnl.url import allowed_archive
 
 import spack
 import spack.error
@@ -19,7 +20,6 @@ import spack.mirror
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
-from spack.util.compression import allowed_archive
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
 
@@ -76,7 +76,7 @@ class Patch:
         self.level = level
         self.working_dir = working_dir
 
-    def apply(self, stage: spack.stage.Stage):
+    def apply(self, stage: "spack.stage.Stage"):
         """Apply a patch to source in a stage.
 
         Arguments:
@@ -190,7 +190,7 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
-    def apply(self, stage: spack.stage.Stage):
+    def apply(self, stage: "spack.stage.Stage"):
         assert self.stage.expanded, "Stage must be expanded before applying patches"
 
         # Get the patch file.
@@ -312,21 +312,19 @@ class PatchCache:
     def to_json(self, stream):
         sjson.dump({"patches": self.index}, stream)
 
-    def patch_for_package(self, sha256, pkg):
+    def patch_for_package(self, sha256: str, pkg):
         """Look up a patch in the index and build a patch object for it.
 
         Arguments:
-            sha256 (str): sha256 hash to look up
+            sha256: sha256 hash to look up
             pkg (spack.package_base.PackageBase): Package object to get patch for.
 
         We build patch objects lazily because building them requires that
-        we have information about the package's location in its repo.
-
-        """
+        we have information about the package's location in its repo."""
         sha_index = self.index.get(sha256)
         if not sha_index:
-            raise NoSuchPatchError(
-                "Couldn't find patch for package %s with sha256: %s" % (pkg.fullname, sha256)
+            raise PatchLookupError(
+                f"Couldn't find patch for package {pkg.fullname} with sha256: {sha256}"
             )
 
         # Find patches for this class or any class it inherits from
@@ -335,8 +333,8 @@ class PatchCache:
             if patch_dict:
                 break
         else:
-            raise NoSuchPatchError(
-                "Couldn't find patch for package %s with sha256: %s" % (pkg.fullname, sha256)
+            raise PatchLookupError(
+                f"Couldn't find patch for package {pkg.fullname} with sha256: {sha256}"
             )
 
         # add the sha256 back (we take it out on write to save space,
@@ -403,6 +401,10 @@ class PatchCache:
 
 class NoSuchPatchError(spack.error.SpackError):
     """Raised when a patch file doesn't exist."""
+
+
+class PatchLookupError(NoSuchPatchError):
+    """Raised when a patch file cannot be located from sha256."""
 
 
 class PatchDirectiveError(spack.error.SpackError):
