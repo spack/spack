@@ -15,4 +15,4 @@ class PySimpy(PythonPackage):
     version("4.0.2", sha256="6d8adc0229df6b02fb7e26dcd1338703b4f4f63f167a5ac2a7213cb80aba4484")
 
     depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@3.4:", type="build")
+    depends_on("py-setuptools-scm@3.4:+toml", type="build")
