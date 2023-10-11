@@ -21,4 +21,4 @@ class Abduco(MakefilePackage):
     version("0.4", sha256="bda3729df116ce41f9a087188d71d934da2693ffb1ebcf33b803055eb478bcbb")
 
     def install(self, spec, prefix):
-        make("PREFIX={0}".format(prefix), "install")
+        make(f"PREFIX={prefix}", "install")
