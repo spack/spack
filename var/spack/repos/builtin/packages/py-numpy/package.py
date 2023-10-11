@@ -266,8 +266,6 @@ class PyNumpy(PythonPackage):
             },
         }
 
-    @when("@:1.25")
-    @run_before("install")
     def blas_lapack_site_cfg(self) -> None:
         """Write a site.cfg file to configure BLAS/LAPACK."""
         spec = self.spec
@@ -398,6 +396,11 @@ class PyNumpy(PythonPackage):
                     f.write("libraries = {0}\n".format(lapack_lib_names))
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write("include_dirs = {0}\n".format(lapack_header_dirs))
+
+    @when("@:1.25")
+    @run_before("install")
+    def set_blas_lapack(self):
+        self.blas_lapack_site_cfg()
 
     @when("@1.26:")
     def setup_build_environment(self, env):

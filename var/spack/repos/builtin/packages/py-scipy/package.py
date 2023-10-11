@@ -209,7 +209,7 @@ class PyScipy(PythonPackage):
 
     @when("@:1.8")
     @run_before("install")
-    def blas_lapack_site_cfg(self):
+    def set_blas_lapack(self):
         self.spec["py-numpy"].package.blas_lapack_site_cfg()
 
     @run_after("install")
