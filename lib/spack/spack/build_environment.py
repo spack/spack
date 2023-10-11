@@ -41,6 +41,7 @@ import sys
 import traceback
 import types
 from collections import defaultdict
+from enum import Flag, auto
 from itertools import chain
 from typing import List, Tuple
 
@@ -827,28 +828,29 @@ class EnvironmentVisitor:
         return traverse.sort_edges(spec.edges_to_dependencies(depflag=depflag))
 
 
-#: Entrypoint spec (a spec to be built; an env root, etc)
-ROOT = 0b1
+class UseMode(Flag):
+    #: Entrypoint spec (a spec to be built; an env root, etc)
+    ROOT = auto()
 
-#: A spec used at runtime, but no executables in PATH
-RUNTIME = 0b10
+    #: A spec used at runtime, but no executables in PATH
+    RUNTIME = auto()
 
-#: A spec used at runtime, with executables in PATH
-RUNTIME_EXECUTABLE = 0b100
+    #: A spec used at runtime, with executables in PATH
+    RUNTIME_EXECUTABLE = auto()
 
-#: A spec that's a direct build or test dep
-BUILDTIME_DIRECT = 0b1000
+    #: A spec that's a direct build or test dep
+    BUILDTIME_DIRECT = auto()
 
-#: A spec that should be visible in search paths in a build env.
-BUILDTIME = 0b10000
+    #: A spec that should be visible in search paths in a build env.
+    BUILDTIME = auto()
 
-#: Flag is set when the (node, mode) is finalized
-ADDED = 0b100000
+    #: Flag is set when the (node, mode) is finalized
+    ADDED = auto()
 
 
 def effective_deptypes(
     *specs: spack.spec.Spec, context: Context = Context.BUILD
-) -> List[Tuple[spack.spec.Spec, int]]:
+) -> List[Tuple[spack.spec.Spec, UseMode]]:
     """Given a list of input specs and a context, return a list of tuples of
     all specs that contribute to (environment) modifications, together with
     a flag specifying in what way they do so. The list is ordered topologically
@@ -863,75 +865,72 @@ def effective_deptypes(
     traverse.traverse_depth_first_with_visitor(traverse.with_artificial_edges(specs), visitor)
 
     # Dictionary with "no mode" as default value, so it's easy to write modes[x] |= flag.
-    modes = defaultdict(lambda: 0)
+    use_modes = defaultdict(lambda: UseMode(0))
     nodes_with_type = []
 
     for edge in visitor.edges:
-        key = edge.spec
+        parent, child, depflag = edge.parent, edge.spec, edge.depflag
 
         # Mark the starting point
-        if edge.parent is None:
-            modes[key] = ROOT
+        if parent is None:
+            use_modes[child] = UseMode.ROOT
             continue
 
-        mode = modes[edge.parent]
+        parent_mode = use_modes[parent]
 
         # Nothing to propagate.
-        if not mode:
+        if not parent_mode:
             continue
 
-        deptypes = edge.depflag
-
         # Dependending on the context, include particular deps from the root.
-        if ROOT & mode:
+        if UseMode.ROOT & parent_mode:
             if context == Context.BUILD:
-                if (dt.BUILD | dt.TEST) & deptypes:
-                    modes[key] |= BUILDTIME_DIRECT
-                if dt.LINK & deptypes:
-                    modes[key] |= BUILDTIME
+                if (dt.BUILD | dt.TEST) & depflag:
+                    use_modes[child] |= UseMode.BUILDTIME_DIRECT
+                if dt.LINK & depflag:
+                    use_modes[child] |= UseMode.BUILDTIME
 
             elif context == Context.TEST:
-                if (dt.RUN | dt.TEST) & deptypes:
-                    modes[key] |= RUNTIME_EXECUTABLE
-                elif dt.LINK & deptypes:
-                    modes[key] |= RUNTIME
+                if (dt.RUN | dt.TEST) & depflag:
+                    use_modes[child] |= UseMode.RUNTIME_EXECUTABLE
+                elif dt.LINK & depflag:
+                    use_modes[child] |= UseMode.RUNTIME
 
             elif context == Context.RUN:
-                if dt.RUN & deptypes:
-                    modes[key] |= RUNTIME_EXECUTABLE
-                elif dt.LINK & deptypes:
-                    modes[key] |= RUNTIME
+                if dt.RUN & depflag:
+                    use_modes[child] |= UseMode.RUNTIME_EXECUTABLE
+                elif dt.LINK & depflag:
+                    use_modes[child] |= UseMode.RUNTIME
 
         # Propagate RUNTIME and RUNTIME_EXECUTABLE through link and run deps.
-        if (RUNTIME | RUNTIME_EXECUTABLE | BUILDTIME_DIRECT) & mode:
-            if dt.LINK & deptypes:
-                modes[key] |= RUNTIME
-            if dt.RUN & deptypes:
-                modes[key] |= RUNTIME_EXECUTABLE
+        if (UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE | UseMode.BUILDTIME_DIRECT) & parent_mode:
+            if dt.LINK & depflag:
+                use_modes[child] |= UseMode.RUNTIME
+            if dt.RUN & depflag:
+                use_modes[child] |= UseMode.RUNTIME_EXECUTABLE
 
         # Propagate BUILDTIME through link deps.
-        if BUILDTIME & mode:
-            if dt.LINK & deptypes:
-                modes[key] |= BUILDTIME
+        if UseMode.BUILDTIME & parent_mode:
+            if dt.LINK & depflag:
+                use_modes[child] |= UseMode.BUILDTIME
 
         # Finalize the spec; the invariant is that all in-edges are processed
-        # before out-edges, meaning that edge.parent is done.
-        if not (ADDED & mode):
-            modes[edge.parent] |= ADDED
-            nodes_with_type.append((edge.parent, mode))
+        # before out-edges, meaning that parent is done.
+        if not (UseMode.ADDED & parent_mode):
+            use_modes[parent] |= UseMode.ADDED
+            nodes_with_type.append((parent, parent_mode))
 
-    # Attach the leaf nodes, since we only added nodes
-    # with out-edges. Can this be improved?
-    for spec, mode in modes.items():
-        if mode and not (ADDED & mode):
-            nodes_with_type.append((spec, mode))
+    # Attach the leaf nodes, since we only added nodes with out-edges.
+    for spec, parent_mode in use_modes.items():
+        if parent_mode and not (UseMode.ADDED & parent_mode):
+            nodes_with_type.append((spec, parent_mode))
 
     return nodes_with_type
 
 
 class SetupContext:
     """This class encapsulates the logic to determine environment modifications, and is used as
-    well to set magic globals in modules of package.py."""
+    well to set globals in modules of package.py."""
 
     def __init__(self, *specs: spack.spec.Spec, context: Context) -> None:
         """Construct a ModificationsFromDag object.
@@ -949,35 +948,40 @@ class SetupContext:
         # Reverse so we go from leaf to root
         self.nodes_in_subdag = set(id(s) for s, _ in specs_with_type)
 
-        # Split into non-external and extenal, maintaining topo order per group.
+        # Split into non-external and external, maintaining topo order per group.
         self.external, self.nonexternal = stable_partition(
             reversed(specs_with_type), lambda t: t[0].external
         )
-        self.should_be_runnable = BUILDTIME_DIRECT | RUNTIME_EXECUTABLE
-        self.should_setup_dependent_build_env = BUILDTIME | BUILDTIME_DIRECT
-        self.should_setup_run_env = RUNTIME | RUNTIME_EXECUTABLE
+        self.should_be_runnable = UseMode.BUILDTIME_DIRECT | UseMode.RUNTIME_EXECUTABLE
+        self.should_setup_run_env = UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE
+        self.should_setup_dependent_build_env = UseMode.BUILDTIME | UseMode.BUILDTIME_DIRECT
 
         if context == Context.RUN or context == Context.TEST:
-            self.should_setup_run_env |= ROOT
-            self.should_be_runnable |= ROOT
+            self.should_be_runnable |= UseMode.ROOT
+            self.should_setup_run_env |= UseMode.ROOT
 
-        # Everything that calls setup_run_environemnt and setup_dependent_* needs globals set.
+        # Everything that calls setup_run_environment and setup_dependent_* needs globals set.
         self.should_populate_package_py_globals = (
-            self.should_setup_dependent_build_env | self.should_setup_run_env | ROOT
+            self.should_setup_dependent_build_env | self.should_setup_run_env | UseMode.ROOT
         )
+        # In a build context, the root and direct build deps need build-specific globals set.
+        self.needs_build_context = UseMode.ROOT | UseMode.BUILDTIME_DIRECT
 
     def set_module_globals(self):
-        """Set the magic globals in modules of package.py files."""
+        """Set the globals in modules of package.py files."""
         for dspec, flag in chain(self.external, self.nonexternal):
             pkg = dspec.package
 
             if self.should_populate_package_py_globals & flag:
-                if self.context == Context.BUILD and (ROOT | BUILDTIME_DIRECT) & flag:
+                if self.context == Context.BUILD and self.needs_build_context & flag:
                     set_module_variables_for_package(pkg, context=Context.BUILD)
                 else:
+                    # This includes runtime dependencies, also runtime deps of direct build deps.
                     set_module_variables_for_package(pkg, context=Context.RUN)
 
             for spec in dspec.dependents():
+                # Note: some specs have dependents that are unreachable from the root, so avoid
+                # setting globals for those.
                 if id(spec) not in self.nodes_in_subdag:
                     continue
                 dependent_module = ModuleChangePropagator(spec.package)
@@ -1019,7 +1023,7 @@ class SetupContext:
                 pkg.setup_run_environment(env)
         return env
 
-    def _make_buildtime_detectable(self, dep, env):
+    def _make_buildtime_detectable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
         if is_system_path(dep.prefix):
             return
 
@@ -1029,7 +1033,7 @@ class SetupContext:
             if os.path.isdir(pcdir):
                 env.prepend_path("PKG_CONFIG_PATH", pcdir)
 
-    def _make_runnable(self, dep, env):
+    def _make_runnable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
         if is_system_path(dep.prefix):
             return
 

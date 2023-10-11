@@ -12,12 +12,12 @@ import pytest
 from llnl.path import Path, convert_to_platform_path
 from llnl.util.filesystem import HeaderList, LibraryList
 
-import spack.build_environment as build_env
+import spack.build_environment
 import spack.config
 import spack.package_base
 import spack.spec
 import spack.util.spack_yaml as syaml
-from spack.build_environment import _static_to_shared_library, dso_suffix
+from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
 from spack.context import Context
 from spack.paths import build_env_path
 from spack.util.cpus import determine_number_of_jobs
@@ -115,8 +115,8 @@ def mock_module_cmd(monkeypatch):
                 return self.fn(*args, **kwargs)
 
     mock_module_cmd = Logger()
-    monkeypatch.setattr(build_env, "module", mock_module_cmd)
-    monkeypatch.setattr(build_env, "_on_cray", lambda: (True, None))
+    monkeypatch.setattr(spack.build_environment, "module", mock_module_cmd)
+    monkeypatch.setattr(spack.build_environment, "_on_cray", lambda: (True, None))
     return mock_module_cmd
 
 
@@ -165,10 +165,10 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
         os.environ["CC"] = "NOT_THIS_PLEASE"
         os.environ["ANOTHER_VAR"] = "THIS_IS_SET"
 
-    monkeypatch.setattr(build_env, "load_module", _set_wrong_cc)
+    monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
     monkeypatch.setattr(pkg.compiler, "modules", ["some_module"])
 
-    build_env.setup_package(pkg, False)
+    spack.build_environment.setup_package(pkg, False)
 
     assert os.environ["CC"] != "NOT_THIS_PLEASE"
     assert os.environ["ANOTHER_VAR"] == "THIS_IS_SET"
@@ -274,7 +274,7 @@ def test_compiler_config_modifications(
     pkg = spack.spec.Spec("cmake").concretized().package
     monkeypatch.setattr(pkg.compiler, "environment", modifications)
     # Trigger the modifications
-    build_env.setup_package(pkg, False)
+    spack.build_environment.setup_package(pkg, False)
 
     # Check they were applied
     for name, value in expected.items():
@@ -296,10 +296,10 @@ def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch, wor
     def _set_wrong_cc(x):
         os.environ["PATH"] = module_path + os.pathsep + os.environ["PATH"]
 
-    monkeypatch.setattr(build_env, "load_module", _set_wrong_cc)
+    monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
     monkeypatch.setattr(pkg.compiler, "modules", ["some_module"])
 
-    build_env.setup_package(pkg, False)
+    spack.build_environment.setup_package(pkg, False)
 
     spack_path = os.path.join(spack.paths.prefix, os.path.join("lib", "spack", "env"))
 
@@ -313,7 +313,7 @@ def test_package_inheritance_module_setup(config, mock_packages, working_env):
     s.concretize()
     pkg = s.package
 
-    build_env.setup_package(pkg, False)
+    spack.build_environment.setup_package(pkg, False)
 
     os.environ["TEST_MODULE_VAR"] = "failed"
 
@@ -362,7 +362,7 @@ def test_wrapper_variables(
     try:
         pkg = root.package
         env_mods = EnvironmentModifications()
-        build_env.set_wrapper_variables(pkg, env_mods)
+        spack.build_environment.set_wrapper_variables(pkg, env_mods)
 
         env_mods.apply_modifications()
 
@@ -418,7 +418,7 @@ dt-diamond-left:
     monkeypatch.setattr(os.path, "isdir", _trust_me_its_a_dir)
 
     env_mods = EnvironmentModifications()
-    build_env.set_wrapper_variables(top.package, env_mods)
+    spack.build_environment.set_wrapper_variables(top.package, env_mods)
 
     env_mods.apply_modifications()
     link_dir_var = os.environ["SPACK_LINK_DIRS"]
@@ -439,11 +439,11 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     # b (parallel =True)
     s = default_mock_concretization("a foobar=bar")
 
-    build_env.set_module_variables_for_package(s.package)
+    spack.build_environment.set_module_variables_for_package(s.package)
     assert s["a"].package.module.make_jobs == 1
 
-    build_env.set_module_variables_for_package(s["b"].package)
-    assert s["b"].package.module.make_jobs == build_env.determine_number_of_jobs(
+    spack.build_environment.set_module_variables_for_package(s["b"].package)
+    assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
         parallel=s["b"].package.parallel
     )
 
@@ -463,7 +463,7 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
 
     env = EnvironmentModifications()
     with spack.config.override("config:shared_linking", {"type": config_setting, "bind": False}):
-        build_env.set_compiler_environment_variables(pkg, env)
+        spack.build_environment.set_compiler_environment_variables(pkg, env)
         modifications = env.group_by_name()
         assert "SPACK_DTAGS_TO_STRIP" in modifications
         assert "SPACK_DTAGS_TO_ADD" in modifications
@@ -544,11 +544,11 @@ def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_mo
 
     # If called with "dirty" we don't unload modules, so no calls to the
     # `module` function on Cray
-    build_env.setup_package(s.package, dirty=True)
+    spack.build_environment.setup_package(s.package, dirty=True)
     assert not mock_module_cmd.calls
 
     # If called without "dirty" we unload modules on Cray
-    build_env.setup_package(s.package, dirty=False)
+    spack.build_environment.setup_package(s.package, dirty=False)
     assert mock_module_cmd.calls
     assert any(("unload", "cray-libsci") == item[0] for item in mock_module_cmd.calls)
     assert any(("unload", "cray-mpich") == item[0] for item in mock_module_cmd.calls)
@@ -557,13 +557,13 @@ def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_mo
 class TestModuleMonkeyPatcher:
     def test_getting_attributes(self, default_mock_concretization):
         s = default_mock_concretization("libelf")
-        module_wrapper = build_env.ModuleChangePropagator(s.package)
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
         assert module_wrapper.Libelf == s.package.module.Libelf
 
     def test_setting_attributes(self, default_mock_concretization):
         s = default_mock_concretization("libelf")
         module = s.package.module
-        module_wrapper = build_env.ModuleChangePropagator(s.package)
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
 
         # Setting an attribute has an immediate effect
         module_wrapper.SOME_ATTRIBUTE = 1
@@ -596,16 +596,18 @@ def test_effective_deptype_build_environment(default_mock_concretization):
     #  [b   ]              ^dtbuild3@1.0    # <- children too
 
     expected_flags = {
-        "dttop": build_env.ROOT,
-        "dtbuild1": build_env.BUILDTIME_DIRECT,
-        "dtlink1": build_env.BUILDTIME_DIRECT | build_env.BUILDTIME,
-        "dtlink3": build_env.BUILDTIME | build_env.RUNTIME,
-        "dtlink4": build_env.BUILDTIME | build_env.RUNTIME,
-        "dtrun2": build_env.RUNTIME | build_env.RUNTIME_EXECUTABLE,
-        "dtlink2": build_env.RUNTIME,
+        "dttop": UseMode.ROOT,
+        "dtbuild1": UseMode.BUILDTIME_DIRECT,
+        "dtlink1": UseMode.BUILDTIME_DIRECT | UseMode.BUILDTIME,
+        "dtlink3": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtlink4": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtrun2": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
+        "dtlink2": UseMode.RUNTIME,
     }
 
-    for spec, effective_type in build_env.effective_deptypes(s, context=Context.BUILD):
+    for spec, effective_type in spack.build_environment.effective_deptypes(
+        s, context=Context.BUILD
+    ):
         assert effective_type & expected_flags.pop(spec.name) == effective_type
     assert not expected_flags, f"Missing {expected_flags.keys()} from effective_deptypes"
 
@@ -628,15 +630,15 @@ def test_effective_deptype_run_environment(default_mock_concretization):
     #  [b   ]              ^dtbuild3@1.0    # <- indirect build-only dep is pruned
 
     expected_flags = {
-        "dttop": build_env.ROOT,
-        "dtlink1": build_env.RUNTIME,
-        "dtlink3": build_env.BUILDTIME | build_env.RUNTIME,
-        "dtlink4": build_env.BUILDTIME | build_env.RUNTIME,
-        "dtrun1": build_env.RUNTIME | build_env.RUNTIME_EXECUTABLE,
-        "dtlink5": build_env.RUNTIME,
-        "dtrun3": build_env.RUNTIME | build_env.RUNTIME_EXECUTABLE,
+        "dttop": UseMode.ROOT,
+        "dtlink1": UseMode.RUNTIME,
+        "dtlink3": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtlink4": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtrun1": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
+        "dtlink5": UseMode.RUNTIME,
+        "dtrun3": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
     }
 
-    for spec, effective_type in build_env.effective_deptypes(s, context=Context.RUN):
+    for spec, effective_type in spack.build_environment.effective_deptypes(s, context=Context.RUN):
         assert effective_type & expected_flags.pop(spec.name) == effective_type
     assert not expected_flags, f"Missing {expected_flags.keys()} from effective_deptypes"
