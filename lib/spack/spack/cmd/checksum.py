@@ -16,6 +16,7 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.crypto
+import spack.util.web as web_util
 from spack.cmd.common import arguments
 from spack.package_base import PackageBase, deprecated_version, preferred_version
 from spack.util.editor import editor
@@ -129,6 +130,31 @@ def checksum(parser, args):
             remote_versions = pkg.fetch_remote_versions(args.jobs)
         url_dict = remote_versions
 
+    # A spidered URL can differ from the package.py *computed* URL, pointing to different tarballs.
+    # For example, GitHub release pages sometimes have multiple tarballs with different shasum:
+    # - releases/download/1.0/<pkg>-1.0.tar.gz (uploaded tarball)
+    # - archive/refs/tags/1.0.tar.gz           (generated tarball)
+    # We wanna ensure that `spack checksum` and `spack install` ultimately use the same URL, so
+    # here we check whether the crawled and computed URLs disagree, and if so, prioritize the
+    # former if that URL exists (just sending a HEAD request that is).
+    url_changed_for_version = set()
+    for version, url in url_dict.items():
+        possible_urls = pkg.all_urls_for_version(version)
+        if url not in possible_urls:
+            for possible_url in possible_urls:
+                if web_util.url_exists(possible_url):
+                    url_dict[version] = possible_url
+                    break
+            else:
+                url_changed_for_version.add(version)
+
+    if url_changed_for_version:
+        for v in url_changed_for_version:
+            tty.warn(
+                f"URL for version {v} may have changed "
+                f"from {', '.join(pkg.all_urls_for_version(v))} to {url_dict[v]}"
+            )
+
     if not url_dict:
         tty.die(f"Could not find any remote versions for {pkg.name}")
     elif len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
@@ -138,14 +164,6 @@ def checksum(parser, args):
         url_dict = filtered_url_dict
     else:
         tty.info(f"Found {llnl.string.plural(len(url_dict), 'version')} of {pkg.name}")
-
-    # TODO: fix inconsistencies with discovered URL and computed pkg.all_urls_for_version
-    # for version, url in url_dict.items():
-    #     possible_urls = pkg.all_urls_for_version(version)
-    #     if url not in pkg.all_urls_for_version(version):
-    #         tty.warn(
-    #             f"Detected version {version} with URL {url}, which is different from the package file: {possible_urls}"
-    #         )
 
     version_hashes = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage, fetch_options=pkg.fetch_options
