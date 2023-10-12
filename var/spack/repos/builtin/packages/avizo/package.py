@@ -67,11 +67,7 @@ class Avizo(Package):
     def install(self, spec, prefix):
         ver = self.version.joined
         sh = which("sh")
-        sh(
-            f"Avizo-{ver}-Linux64-gcc{self.gcc_ver[self.version.string]}.bin",
-            "--noexec",
-            "--keep",
-        )
+        sh(f"Avizo-{ver}-Linux64-gcc{self.gcc_ver[self.version.string]}.bin", "--noexec", "--keep")
 
         with working_dir("Avizo"):
             avizo_tar = tarfile.open(

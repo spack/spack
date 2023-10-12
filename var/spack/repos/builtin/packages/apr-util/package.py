@@ -71,13 +71,9 @@ class AprUtil(AutotoolsPackage):
 
         if "+sqlite" in spec:
             if spec.satisfies("^sqlite@3.0:3"):
-                args.extend(
-                    [f"--with-sqlite3={spec['sqlite'].prefix}", "--without-sqlite2"]
-                )
+                args.extend([f"--with-sqlite3={spec['sqlite'].prefix}", "--without-sqlite2"])
             elif spec.satisfies("^sqlite@2.0:2"):
-                args.extend(
-                    [f"--with-sqlite2={spec['sqlite'].prefix}", "--without-sqlite3"]
-                )
+                args.extend([f"--with-sqlite2={spec['sqlite'].prefix}", "--without-sqlite3"])
         else:
             args.extend(["--without-sqlite2", "--without-sqlite3"])
 

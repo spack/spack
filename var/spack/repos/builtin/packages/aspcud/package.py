@@ -31,8 +31,5 @@ class Aspcud(CMakePackage):
         spec = self.spec
         gringo_path = join_path(spec["clingo"].prefix.bin, "gringo")
         clasp_path = join_path(spec["clingo"].prefix.bin, "clasp")
-        args = [
-            f"-DASPCUD_GRINGO_PATH={gringo_path}",
-            f"-DASPCUD_CLASP_PATH={clasp_path}",
-        ]
+        args = [f"-DASPCUD_GRINGO_PATH={gringo_path}", f"-DASPCUD_CLASP_PATH={clasp_path}"]
         return args

@@ -116,13 +116,11 @@ class Augustus(MakefilePackage):
             makefile.filter("/usr/include/bamtools", f"{bamtools}/include/bamtools")
             if "bamtools@2.5:" in spec:
                 makefile.filter(
-                    "LIBS = -lbamtools -lz",
-                    f"LIBS = {bamtools}/lib64/libbamtools.a -lz",
+                    "LIBS = -lbamtools -lz", f"LIBS = {bamtools}/lib64/libbamtools.a -lz"
                 )
             if "bamtools@:2.4" in spec:
                 makefile.filter(
-                    "LIBS = -lbamtools -lz",
-                    f"LIBS = {bamtools}/lib/bamtools/libbamtools.a -lz",
+                    "LIBS = -lbamtools -lz", f"LIBS = {bamtools}/lib/bamtools/libbamtools.a -lz"
                 )
 
         if self.version < Version("3.4.0"):

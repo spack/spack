@@ -101,11 +101,7 @@ class Abinit(AutotoolsPackage):
     # TODO: The logic here can be reversed with the new concretizer. Instead of
     # using `conflicts`, `depends_on` could be used instead.
     for fftw in ["amdfftw", "cray-fftw", "fujitsu-fftw", "fftw"]:
-        conflicts(
-            "+openmp",
-            when=f"^{fftw}~openmp",
-            msg=f"Need to request {fftw} +openmp",
-        )
+        conflicts("+openmp", when=f"^{fftw}~openmp", msg=f"Need to request {fftw} +openmp")
 
     mkl_message = "Need to set dependent variant to threads=openmp"
     conflicts("+openmp", when="^intel-mkl threads=none", msg=mkl_message)
@@ -284,10 +280,7 @@ class Abinit(AutotoolsPackage):
             )
         else:
             options.extend(
-                [
-                    f"--with-netcdf={netcdfc.prefix}",
-                    f"--with-netcdf-fortran={netcdff.prefix}",
-                ]
+                [f"--with-netcdf={netcdfc.prefix}", f"--with-netcdf-fortran={netcdff.prefix}"]
             )
 
         if self.spec.satisfies("%fj"):
