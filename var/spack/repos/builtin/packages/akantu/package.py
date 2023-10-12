@@ -65,8 +65,8 @@ class Akantu(CMakePackage):
             "-DAKANTU_HEAT_TRANSFER:BOOL=ON",
             "-DAKANTU_SOLID_MECHANICS:BOOL=ON",
             "-DAKANTU_STRUCTURAL_MECHANICS:BOOL=OFF",
-            "-DAKANTU_PARALLEL:BOOL={0}".format("ON" if spec.satisfies("+mpi") else "OFF"),
-            "-DAKANTU_PYTHON_INTERFACE:BOOL={0}".format(
+            f"-DAKANTU_PARALLEL:BOOL={'ON' if spec.satisfies('+mpi') else 'OFF'}",
+            "-DAKANTU_PYTHON_INTERFACE:BOOL={}".format(
                 "ON" if spec.satisfies("+python") else "OFF"
             ),
         ]
@@ -84,14 +84,14 @@ class Akantu(CMakePackage):
         solvers = []
         if spec.satisfies("external_solvers=mumps"):
             solvers.append("Mumps")
-            args.append("-DMUMPS_DIR:PATH=${0}".format(spec["mumps"].prefix))
+            args.append(f"-DMUMPS_DIR:PATH=${spec['mumps'].prefix}")
         if spec.satisfies("external_solvers=petsc"):
             solvers.append("PETSc")
 
         if len(solvers) > 0:
             args.extend(
                 [
-                    "-DAKANTU_IMPLICIT_SOLVER:STRING={0}".format("+".join(solvers)),
+                    f"-DAKANTU_IMPLICIT_SOLVER:STRING={'+'.join(solvers)}",
                     "-DAKANTU_IMPLICIT:BOOL=ON",
                 ]
             )
