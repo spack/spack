@@ -274,7 +274,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         multiarch_dir = gcc("-print-multiarch", output=str).strip()
         triplet = gcc("-###", error=str).partition("Target: ")[2].split("\n")[0]
         if multiarch_dir and multiarch_dir != triplet:
-            classic_flags.append("-isystem/usr/include/"+ multiarch_dir)
+            classic_flags.append("-isystem/usr/include/" + multiarch_dir)
 
         # Older versions trigger -Wunused-command-line-argument warnings whenever
         # linker flags are passed in preprocessor (-E) or compilation mode (-c).
