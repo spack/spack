@@ -55,3 +55,6 @@ class Garfieldpp(CMakePackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("GARFIELD_INSTALL", self.prefix)
         env.set("HEED_DATABASE", self.prefix.share.Heed.database)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.set("HEED_DATABASE", self.prefix.share.Heed.database)
