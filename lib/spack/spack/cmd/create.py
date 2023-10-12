@@ -17,6 +17,7 @@ from spack.spec import Spec
 from spack.url import UndetectableNameError, UndetectableVersionError, parse_name, parse_version
 from spack.util.editor import editor
 from spack.util.executable import ProcessError, which
+from spack.util.format import get_version_lines
 from spack.util.naming import mod_to_class, simplify_name, valid_fully_qualified_module_name
 
 description = "create a new package file"
@@ -325,6 +326,7 @@ class PythonPackageTemplate(PackageTemplate):
     # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
     # exists, use setuptools.
     # depends_on("py-setuptools", type="build")
+    # depends_on("py-hatchling", type="build")
     # depends_on("py-flit-core", type="build")
     # depends_on("py-poetry-core", type="build")
 
@@ -332,17 +334,11 @@ class PythonPackageTemplate(PackageTemplate):
     # depends_on("py-foo", type=("build", "run"))"""
 
     body_def = """\
-    def global_options(self, spec, prefix):
-        # FIXME: Add options to pass to setup.py
+    def config_settings(self, spec, prefix):
+        # FIXME: Add configuration settings to be passed to the build backend
         # FIXME: If not needed, delete this function
-        options = []
-        return options
-
-    def install_options(self, spec, prefix):
-        # FIXME: Add options to pass to setup.py install
-        # FIXME: If not needed, delete this function
-        options = []
-        return options"""
+        settings = {}
+        return settings"""
 
     def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
@@ -612,7 +608,7 @@ def setup_parser(subparser):
         "--template",
         metavar="TEMPLATE",
         choices=sorted(templates.keys()),
-        help="build system template to use. options: %(choices)s",
+        help="build system template to use\n\noptions: %(choices)s",
     )
     subparser.add_argument(
         "-r", "--repo", help="path to a repository where the package should be created"
@@ -620,7 +616,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         "-N",
         "--namespace",
-        help="specify a namespace for the package. must be the namespace of "
+        help="specify a namespace for the package\n\nmust be the namespace of "
         "a repository registered with Spack",
     )
     subparser.add_argument(
@@ -826,7 +822,7 @@ def get_versions(args, name):
     if args.url is not None and args.template != "bundle" and valid_url:
         # Find available versions
         try:
-            url_dict = spack.util.web.find_versions_of_archive(args.url)
+            url_dict = spack.url.find_versions_of_archive(args.url)
         except UndetectableVersionError:
             # Use fake versions
             tty.warn("Couldn't detect version in: {0}".format(args.url))
@@ -837,13 +833,15 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        versions = spack.stage.get_checksums_for_versions(
+        version_hashes = spack.stage.get_checksums_for_versions(
             url_dict,
             name,
             first_stage_function=guesser,
             keep_stage=args.keep_stage,
             batch=(args.batch or len(url_dict) == 1),
         )
+
+        versions = get_version_lines(version_hashes, url_dict)
     else:
         versions = unhashed_versions
 
@@ -878,7 +876,7 @@ def get_build_system(template, url, guesser):
         # Use whatever build system the guesser detected
         selected_template = guesser.build_system
         if selected_template == "generic":
-            tty.warn("Unable to detect a build system. " "Using a generic package template.")
+            tty.warn("Unable to detect a build system. Using a generic package template.")
         else:
             msg = "This package looks like it uses the {0} build system"
             tty.msg(msg.format(selected_template))
@@ -917,11 +915,11 @@ def get_repository(args, name):
             )
     else:
         if spec.namespace:
-            repo = spack.repo.path.get_repo(spec.namespace, None)
+            repo = spack.repo.PATH.get_repo(spec.namespace, None)
             if not repo:
                 tty.die("Unknown namespace: '{0}'".format(spec.namespace))
         else:
-            repo = spack.repo.path.first_repo()
+            repo = spack.repo.PATH.first_repo()
 
     # Set the namespace on the spec if it's not there already
     if not spec.namespace:

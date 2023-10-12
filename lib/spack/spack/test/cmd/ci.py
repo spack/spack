@@ -7,7 +7,6 @@ import filecmp
 import json
 import os
 import shutil
-import sys
 
 import jsonschema
 import pytest
@@ -41,10 +40,7 @@ install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
 
-pytestmark = [
-    pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
-    pytest.mark.maybeslow,
-]
+pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.maybeslow]
 
 
 @pytest.fixture()
@@ -215,6 +211,10 @@ spack:
         with open(outputfile) as f:
             contents = f.read()
             yaml_contents = syaml.load(contents)
+            assert "workflow" in yaml_contents
+            assert "rules" in yaml_contents["workflow"]
+            assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
+
             assert "stages" in yaml_contents
             assert len(yaml_contents["stages"]) == 5
             assert yaml_contents["stages"][0] == "stage-0"
@@ -856,6 +856,43 @@ def test_ci_rebuild(
         env_cmd("deactivate")
 
 
+def test_ci_require_signing(
+    tmpdir, working_env, mutable_mock_env_path, mock_gnupghome, ci_base_environment
+):
+    spack_yaml_contents = """
+spack:
+ specs:
+   - archive-files
+ mirrors:
+   test-mirror: file:///no-such-mirror
+ ci:
+   pipeline-gen:
+   - submapping:
+     - match:
+         - archive-files
+       build-job:
+         tags:
+           - donotcare
+         image: donotcare
+"""
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(spack_yaml_contents)
+
+    with tmpdir.as_cwd():
+        env_cmd("activate", "--without-view", "--sh", "-d", ".")
+
+        # Run without the variable to make sure we don't accidentally require signing
+        output = ci_cmd("rebuild", output=str, fail_on_error=False)
+        assert "spack must have exactly one signing key" not in output
+
+        # Now run with the variable to make sure it works
+        os.environ.update({"SPACK_REQUIRE_SIGNING": "True"})
+        output = ci_cmd("rebuild", output=str, fail_on_error=False)
+
+        assert "spack must have exactly one signing key" in output
+
+
 def test_ci_nothing_to_rebuild(
     tmpdir,
     working_env,
@@ -895,7 +932,7 @@ spack:
     )
 
     install_cmd("archive-files")
-    buildcache_cmd("push", "-a", "-f", "-u", mirror_url, "archive-files")
+    buildcache_cmd("push", "-f", "-u", mirror_url, "archive-files")
 
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -1102,15 +1139,18 @@ spack:
             with open(outputfile_pruned) as f:
                 contents = f.read()
                 yaml_contents = syaml.load(contents)
-                assert "no-specs-to-rebuild" in yaml_contents
                 # Make sure there are no other spec jobs or rebuild-index
-                assert len(yaml_contents.keys()) == 1
+                assert set(yaml_contents.keys()) == {"no-specs-to-rebuild", "workflow"}
+
                 the_elt = yaml_contents["no-specs-to-rebuild"]
                 assert "tags" in the_elt
                 assert "nonbuildtag" in the_elt["tags"]
                 assert "image" in the_elt
                 assert the_elt["image"] == "basicimage"
                 assert the_elt["custom_attribute"] == "custom!"
+
+                assert "rules" in yaml_contents["workflow"]
+                assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
 
             outputfile_not_pruned = str(tmpdir.join("unpruned_pipeline.yml"))
             ci_cmd("generate", "--no-prune-dag", "--output-file", outputfile_not_pruned)
@@ -1458,7 +1498,7 @@ spack:
                 ypfd.write(spec_json)
 
             install_cmd("--add", "--keep-stage", "-f", json_path)
-            buildcache_cmd("push", "-u", "-a", "-f", mirror_url, "callpath")
+            buildcache_cmd("push", "-u", "-f", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
             buildcache_path = os.path.join(mirror_dir.strpath, "build_cache")
@@ -1950,8 +1990,7 @@ spack:
 
             ci_cmd("generate", "--output-file", pipeline_path, "--artifacts-root", artifacts_root)
 
-            target_name = spack.platforms.test.Test.default
-            job_name = ci.get_job_name(job_spec, "test-debian6-%s" % target_name, None)
+            job_name = ci.get_job_name(job_spec)
 
             repro_file = os.path.join(working_dir.strpath, "repro.json")
             repro_details = {
@@ -1985,10 +2024,10 @@ spack:
         working_dir.strpath,
         output=str,
     )
-    expect_out = "docker run --rm --name spack_reproducer -v {0}:{0}:Z -ti {1}".format(
-        os.path.realpath(working_dir.strpath), image_name
-    )
-
+    # Make sure the script was generated
+    assert os.path.exists(os.path.join(os.path.realpath(working_dir.strpath), "start.sh"))
+    # Make sure we tell the suer where it is when not in interactive mode
+    expect_out = "$ {0}/start.sh".format(os.path.realpath(working_dir.strpath))
     assert expect_out in rep_out
 
 

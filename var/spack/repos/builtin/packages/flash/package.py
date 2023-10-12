@@ -16,7 +16,7 @@ class Flash(MakefilePackage):
 
     version("1.2.11", sha256="685ca6f7fedda07434d8ee03c536f4763385671c4509c5bb48beb3055fd236ac")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

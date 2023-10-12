@@ -69,6 +69,12 @@ setenv("LMOD_{{ name|upper() }}_VERSION", "{{ version_part }}")
 depends_on("{{ module }}")
 {% endfor %}
 {% endblock %}
+{#  #}
+{% block conflict %}
+{% for name in conflicts %}
+conflict("{{ name }}")
+{% endfor %}
+{% endblock %}
 
 {% block environment %}
 {% for command_name, cmd in environment_modifications %}

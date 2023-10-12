@@ -70,9 +70,9 @@ class R(AutotoolsPackage):
     depends_on("blas", when="+external-lapack")
     depends_on("lapack", when="+external-lapack")
     depends_on("bzip2")
-    # R didn't anticipate the celebratory
-    # non-breaking major version bump of curl 8.
-    depends_on("curl+libidn2@:7")
+    depends_on("curl+libidn2")
+    # R didn't anticipate the celebratory non-breaking major version bump of curl 8.
+    depends_on("curl@:7", when="@:4.2")
     depends_on("icu4c")
     depends_on("java")
     depends_on("ncurses")
@@ -81,7 +81,8 @@ class R(AutotoolsPackage):
     depends_on("readline")
     depends_on("xz")
     depends_on("which", type=("build", "run"))
-    depends_on("zlib@1.2.5:")
+    depends_on("zlib-api")
+    depends_on("zlib@1.2.5:", when="^zlib")
     depends_on("texinfo", type="build")
     depends_on("cairo+X+gobject+pdf", when="+X")
     depends_on("pango+X", when="+X")
@@ -101,6 +102,8 @@ class R(AutotoolsPackage):
     # Until the Fujitsu compiler resolves this problem,
     # temporary fix to lower the optimization level.
     patch("change_optflags_tmp.patch", when="%fj@4.1.0")
+
+    build_directory = "spack-build"
 
     # R custom URL version
     def url_for_version(self, version):

@@ -12,10 +12,10 @@ class Semiprof(CMakePackage):
     homepage = "https://github.com/bcumming/semiprof"
     url = "https://github.com/bcumming/semiprof/archive/refs/tags/v0.1.tar.gz"
 
-    maintainers = ["simonpintarelli"]
+    maintainers("simonpintarelli")
 
-    variant("examples", default=False)
-    variant("shared", default=True)
+    variant("examples", default=False, description="Enable examples")
+    variant("shared", default=True, description="Build shared libraries")
 
     version("0.1", sha256="4fb3823c65a4f5dfbe05e8cbe1911dfd25cd7740597f82c7b3a84472de26f0dc")
 

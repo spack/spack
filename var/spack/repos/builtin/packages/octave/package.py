@@ -52,28 +52,28 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     patch("patch_4.2.1_inline.diff", when="@4.2.1")
 
     # Variants
-    variant("readline", default=True)
-    variant("bz2", default=True)
-    variant("arpack", default=False)
-    variant("curl", default=False)
-    variant("fftw", default=False)
-    variant("fltk", default=False)
-    variant("fontconfig", default=False)
-    variant("freetype", default=False)
-    variant("glpk", default=False)
-    variant("gl2ps", default=False)
-    variant("gnuplot", default=False)
-    variant("magick", default=False)
-    variant("hdf5", default=False)
-    variant("jdk", default=False)
-    variant("llvm", default=False)
-    variant("opengl", default=False)
-    variant("qhull", default=False)
-    variant("qrupdate", default=False)
-    variant("qscintilla", default=False)
-    variant("qt", default=False)
-    variant("suitesparse", default=False)
-    variant("zlib", default=False)
+    variant("readline", default=True, description="Use readline")
+    variant("bz2", default=True, description="Use bzip2")
+    variant("arpack", default=False, description="Use arpack")
+    variant("curl", default=False, description="Use curl")
+    variant("fftw", default=False, description="Use FFTW3")
+    variant("fltk", default=False, description="Use FLTK")
+    variant("fontconfig", default=False, description="Use fontconfig")
+    variant("freetype", default=False, description="Use freetype")
+    variant("glpk", default=False, description="Use GLPK")
+    variant("gl2ps", default=False, description="Use GL2PS")
+    variant("gnuplot", default=False, description="Use gnuplot")
+    variant("magick", default=False, description="Use magick")
+    variant("hdf5", default=False, description="Use HDF5")
+    variant("jdk", default=False, description="Use JDK")
+    variant("llvm", default=False, description="Use LLVM")
+    variant("opengl", default=False, description="Use OpenGL")
+    variant("qhull", default=False, description="Use qhull")
+    variant("qrupdate", default=False, description="Use qrupdate")
+    variant("qscintilla", default=False, description="Use QScintill")
+    variant("qt", default=False, description="Use Qt")
+    variant("suitesparse", default=False, description="Use SuiteSparse")
+    variant("zlib", default=False, description="Use zlib")
 
     # Required dependencies
     depends_on("blas")
@@ -109,7 +109,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on("qscintilla", when="+qscintilla")
     depends_on("qt+opengl", when="+qt")
     depends_on("suite-sparse", when="+suitesparse")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     def patch(self):
         # Filter mkoctfile.in.cc to use underlying compilers and not
@@ -339,8 +339,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         if "+zlib" in spec:
             config_args.extend(
                 [
-                    "--with-z-includedir=%s" % spec["zlib"].prefix.include,
-                    "--with-z-libdir=%s" % spec["zlib"].prefix.lib,
+                    "--with-z-includedir=%s" % spec["zlib-api"].prefix.include,
+                    "--with-z-libdir=%s" % spec["zlib-api"].prefix.lib,
                 ]
             )
         else:

@@ -26,6 +26,7 @@ class Wps(Package):
     variant(
         "build_type",
         default="serial",
+        description="Build type",
         values=("serial", "serial_NO_GRIB2", "dmpar", "dmpar_NO_GRIB2"),
     )
 

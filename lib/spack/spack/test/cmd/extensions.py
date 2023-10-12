@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
@@ -23,7 +22,7 @@ def python_database(mock_packages, mutable_database):
     yield
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="All Fetchers Failed")
+@pytest.mark.not_on_windows("All Fetchers Failed")
 @pytest.mark.db
 def test_extensions(mock_packages, python_database, config, capsys):
     ext2 = Spec("py-extension2").concretized()

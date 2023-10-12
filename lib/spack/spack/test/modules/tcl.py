@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
@@ -18,7 +17,7 @@ libdwarf_spec_string = "libdwarf target=x86_64"
 #: Class of the writer tested in this module
 writer_cls = spack.modules.tcl.TclModulefileWriter
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "mock_module_filename")
@@ -29,7 +28,7 @@ class TestTcl:
         module_configuration("autoload_direct")
         content = modulefile_content(mpich_spec_string)
 
-        assert 'module-whatis "mpich @3.0.4"' in content
+        assert "module-whatis {mpich @3.0.4}" in content
 
     def test_autoload_direct(self, modulefile_content, module_configuration):
         """Tests the automatic loading of direct dependencies."""
@@ -112,16 +111,16 @@ class TestTcl:
         content = modulefile_content("mpileaks platform=test target=x86_64")
 
         assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
-        assert len([x for x in content if 'setenv FOO "foo"' in x]) == 1
-        assert len([x for x in content if 'setenv OMPI_MCA_mpi_leave_pinned "1"' in x]) == 1
-        assert len([x for x in content if 'setenv OMPI_MCA_MPI_LEAVE_PINNED "1"' in x]) == 0
+        assert len([x for x in content if "setenv FOO {foo}" in x]) == 1
+        assert len([x for x in content if "setenv OMPI_MCA_mpi_leave_pinned {1}" in x]) == 1
+        assert len([x for x in content if "setenv OMPI_MCA_MPI_LEAVE_PINNED {1}" in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 1
         assert len([x for x in content if "setenv MPILEAKS_ROOT" in x]) == 1
 
         content = modulefile_content("libdwarf platform=test target=core2")
 
         assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
-        assert len([x for x in content if 'setenv FOO "foo"' in x]) == 0
+        assert len([x for x in content if "setenv FOO {foo}" in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
         assert len([x for x in content if "depends-on foo/bar" in x]) == 1
         assert len([x for x in content if "module load foo/bar" in x]) == 1
@@ -133,14 +132,14 @@ class TestTcl:
         module_configuration("module_path_separator")
         content = modulefile_content("module-path-separator")
 
-        assert len([x for x in content if 'append-path --delim ":" COLON "foo"' in x]) == 1
-        assert len([x for x in content if 'prepend-path --delim ":" COLON "foo"' in x]) == 1
-        assert len([x for x in content if 'remove-path --delim ":" COLON "foo"' in x]) == 1
-        assert len([x for x in content if 'append-path --delim ";" SEMICOLON "bar"' in x]) == 1
-        assert len([x for x in content if 'prepend-path --delim ";" SEMICOLON "bar"' in x]) == 1
-        assert len([x for x in content if 'remove-path --delim ";" SEMICOLON "bar"' in x]) == 1
-        assert len([x for x in content if 'append-path --delim " " SPACE "qux"' in x]) == 1
-        assert len([x for x in content if 'remove-path --delim " " SPACE "qux"' in x]) == 1
+        assert len([x for x in content if "append-path --delim {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "prepend-path --delim {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "remove-path --delim {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "append-path --delim {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "prepend-path --delim {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "remove-path --delim {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "append-path --delim { } SPACE {qux}" in x]) == 1
+        assert len([x for x in content if "remove-path --delim { } SPACE {qux}" in x]) == 1
 
     @pytest.mark.regression("11355")
     def test_manpath_setup(self, modulefile_content, module_configuration):
@@ -150,12 +149,12 @@ class TestTcl:
 
         # no manpath set by module
         content = modulefile_content("mpileaks")
-        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 0
+        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 0
 
         # manpath set by module with prepend-path
         content = modulefile_content("module-manpath-prepend")
         assert (
-            len([x for x in content if 'prepend-path --delim ":" MANPATH "/path/to/man"' in x])
+            len([x for x in content if "prepend-path --delim {:} MANPATH {/path/to/man}" in x])
             == 1
         )
         assert (
@@ -163,24 +162,24 @@ class TestTcl:
                 [
                     x
                     for x in content
-                    if 'prepend-path --delim ":" MANPATH "/path/to/share/man"' in x
+                    if "prepend-path --delim {:} MANPATH {/path/to/share/man}" in x
                 ]
             )
             == 1
         )
-        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 1
+        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 1
 
         # manpath set by module with append-path
         content = modulefile_content("module-manpath-append")
         assert (
-            len([x for x in content if 'append-path --delim ":" MANPATH "/path/to/man"' in x]) == 1
+            len([x for x in content if "append-path --delim {:} MANPATH {/path/to/man}" in x]) == 1
         )
-        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 1
+        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 1
 
         # manpath set by module with setenv
         content = modulefile_content("module-manpath-setenv")
-        assert len([x for x in content if 'setenv MANPATH "/path/to/man"' in x]) == 1
-        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 0
+        assert len([x for x in content if "setenv MANPATH {/path/to/man}" in x]) == 1
+        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 0
 
     @pytest.mark.regression("29578")
     def test_setenv_raw_value(self, modulefile_content, module_configuration):
@@ -189,7 +188,7 @@ class TestTcl:
         module_configuration("autoload_direct")
         content = modulefile_content("module-setenv-raw")
 
-        assert len([x for x in content if 'setenv FOO "{{name}}, {name}, {{}}, {}"' in x]) == 1
+        assert len([x for x in content if "setenv FOO {{{name}}, {name}, {{}}, {}}" in x]) == 1
 
     def test_help_message(self, modulefile_content, module_configuration):
         """Tests the generation of module help message."""
@@ -199,11 +198,11 @@ class TestTcl:
 
         help_msg = (
             "proc ModulesHelp { } {"
-            '    puts stderr "Name   : mpileaks"'
-            '    puts stderr "Version: 2.3"'
-            '    puts stderr "Target : core2"'
-            '    puts stderr ""'
-            '    puts stderr "Mpileaks is a mock package that passes audits"'
+            "    puts stderr {Name   : mpileaks}"
+            "    puts stderr {Version: 2.3}"
+            "    puts stderr {Target : core2}"
+            "    puts stderr {}"
+            "    puts stderr {Mpileaks is a mock package that passes audits}"
             "}"
         )
         assert help_msg in "".join(content)
@@ -212,9 +211,23 @@ class TestTcl:
 
         help_msg = (
             "proc ModulesHelp { } {"
-            '    puts stderr "Name   : libdwarf"'
-            '    puts stderr "Version: 20130729"'
-            '    puts stderr "Target : core2"'
+            "    puts stderr {Name   : libdwarf}"
+            "    puts stderr {Version: 20130729}"
+            "    puts stderr {Target : core2}"
+            "}"
+        )
+        assert help_msg in "".join(content)
+
+        content = modulefile_content("module-long-help target=core2")
+
+        help_msg = (
+            "proc ModulesHelp { } {"
+            "    puts stderr {Name   : module-long-help}"
+            "    puts stderr {Version: 1.0}"
+            "    puts stderr {Target : core2}"
+            "    puts stderr {}"
+            "    puts stderr {Package to test long description message generated in modulefile.}"
+            "    puts stderr {Message too long is wrapped over multiple lines.}"
             "}"
         )
         assert help_msg in "".join(content)
@@ -311,9 +324,12 @@ class TestTcl:
         assert len([x for x in content if x == "conflict mpileaks"]) == 1
         assert len([x for x in content if x == "conflict intel/14.0.1"]) == 1
 
+    def test_inconsistent_conflict_in_modules_yaml(self, modulefile_content, module_configuration):
+        """Tests inconsistent conflict definition in `modules.yaml`."""
+
         # This configuration is inconsistent, check an error is raised
         module_configuration("wrong_conflicts")
-        with pytest.raises(SystemExit):
+        with pytest.raises(spack.modules.common.ModulesError):
             modulefile_content("mpileaks")
 
     def test_module_index(self, module_configuration, factory, tmpdir_factory):
@@ -369,14 +385,14 @@ class TestTcl:
         content = modulefile_content("mpileaks")
 
         assert len([x for x in content if "setenv FOOBAR" in x]) == 1
-        assert len([x for x in content if 'setenv FOOBAR "mpileaks"' in x]) == 1
+        assert len([x for x in content if "setenv FOOBAR {mpileaks}" in x]) == 1
 
         spec = spack.spec.Spec("mpileaks")
         spec.concretize()
         content = modulefile_content(str(spec["callpath"]))
 
         assert len([x for x in content if "setenv FOOBAR" in x]) == 1
-        assert len([x for x in content if 'setenv FOOBAR "callpath"' in x]) == 1
+        assert len([x for x in content if "setenv FOOBAR {callpath}" in x]) == 1
 
     def test_override_config(self, module_configuration, factory):
         """Tests overriding some sections of the configuration file."""
@@ -417,7 +433,7 @@ class TestTcl:
 
         assert 'puts stderr "sentence from package"' in content
 
-        short_description = 'module-whatis "This package updates the context for Tcl modulefiles."'
+        short_description = "module-whatis {This package updates the context for Tcl modulefiles.}"
         assert short_description in content
 
     @pytest.mark.regression("4400")

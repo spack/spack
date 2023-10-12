@@ -10,11 +10,12 @@ throughout Spack and should bring in a minimal number of external
 dependencies.
 """
 import os
+from pathlib import PurePath
 
 import llnl.util.filesystem
 
 #: This file lives in $prefix/lib/spack/spack/__file__
-prefix = llnl.util.filesystem.ancestor(__file__, 4)
+prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
 
 #: synonym for prefix
 spack_root = prefix
@@ -88,7 +89,7 @@ def _get_user_cache_path():
     return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep)
 
 
-user_cache_path = _get_user_cache_path()
+user_cache_path = str(PurePath(_get_user_cache_path()))
 
 #: junit, cdash, etc. reports about builds
 reports_path = os.path.join(user_cache_path, "reports")

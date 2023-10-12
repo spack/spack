@@ -12,6 +12,8 @@ class PyJupyterPackaging(PythonPackage):
     homepage = "https://github.com/jupyter/jupyter-packaging"
     pypi = "jupyter_packaging/jupyter_packaging-0.10.4.tar.gz"
 
+    tags = ["build-tools"]
+
     version("0.12.0", sha256="b27455d60adc93a7baa2e0b8f386be81b932bb4e3c0116046df9ed230cd3faac")
     version("0.11.1", sha256="6f5c7eeea98f7f3c8fb41d565a94bf59791768a93f93148b3c2dfb7ebade8eec")
     version("0.10.6", sha256="a8a2c90bf2e0cae83be63ccb0b7035032a1589f268cc08b1d479e37ce50fc940")

@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -18,7 +17,7 @@ dev_build = SpackCommand("dev-build")
 install = SpackCommand("install")
 env = SpackCommand("env")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
@@ -72,7 +71,7 @@ def test_dev_build_until(tmpdir, mock_packages, install_mockery):
             assert f.read() == spec.package.replacement_string
 
     assert not os.path.exists(spec.prefix)
-    assert not spack.store.db.query(spec, installed=True)
+    assert not spack.store.STORE.db.query(spec, installed=True)
 
 
 def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
@@ -91,7 +90,7 @@ def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
             assert f.read() == spec.package.replacement_string
 
     assert os.path.exists(spec.prefix)
-    assert spack.store.db.query(spec, installed=True)
+    assert spack.store.STORE.db.query(spec, installed=True)
     assert os.path.exists(str(tmpdir))
 
 
@@ -266,7 +265,7 @@ def test_dev_build_multiple(
     # root and dependency if they wanted a dev build for both.
     leaf_dir = tmpdir.mkdir("leaf")
     leaf_spec = spack.spec.Spec("dev-build-test-install@=1.0.0")  # non-existing version
-    leaf_pkg_cls = spack.repo.path.get_pkg_class(leaf_spec.name)
+    leaf_pkg_cls = spack.repo.PATH.get_pkg_class(leaf_spec.name)
     with leaf_dir.as_cwd():
         with open(leaf_pkg_cls.filename, "w") as f:
             f.write(leaf_pkg_cls.original_string)
@@ -275,7 +274,7 @@ def test_dev_build_multiple(
     # don't concretize outside environment -- dev info will be wrong
     root_dir = tmpdir.mkdir("root")
     root_spec = spack.spec.Spec("dev-build-test-dependent@0.0.0")
-    root_pkg_cls = spack.repo.path.get_pkg_class(root_spec.name)
+    root_pkg_cls = spack.repo.PATH.get_pkg_class(root_spec.name)
     with root_dir.as_cwd():
         with open(root_pkg_cls.filename, "w") as f:
             f.write(root_pkg_cls.original_string)
@@ -329,7 +328,7 @@ def test_dev_build_env_dependency(
     dep_spec = spack.spec.Spec("dev-build-test-install")
 
     with build_dir.as_cwd():
-        dep_pkg_cls = spack.repo.path.get_pkg_class(dep_spec.name)
+        dep_pkg_cls = spack.repo.PATH.get_pkg_class(dep_spec.name)
         with open(dep_pkg_cls.filename, "w") as f:
             f.write(dep_pkg_cls.original_string)
 

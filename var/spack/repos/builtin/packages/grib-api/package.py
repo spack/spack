@@ -129,7 +129,7 @@ class GribApi(CMakePackage):
             args.append("-DOPENJPEG_PATH=" + self.spec["openjpeg"].prefix)
 
         if "+png" in self.spec:
-            args.extend(["-DENABLE_PNG=ON", "-DZLIB_ROOT=" + self.spec["zlib"].prefix])
+            args.extend(["-DENABLE_PNG=ON", "-DZLIB_ROOT=" + self.spec["zlib-api"].prefix])
         else:
             args.append("-DENABLE_PNG=OFF")
 

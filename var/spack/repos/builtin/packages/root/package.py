@@ -34,6 +34,7 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version("6.28.06", sha256="af3b673b9aca393a5c9ae1bf86eab2672aaf1841b658c5c6e7a30ab93c586533")
     version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
     version("6.28.02", sha256="6643c07710e68972b00227c68b20b1016fec16f3fba5f44a571fa1ce5bb42faa")
     version("6.28.00", sha256="afa1c5c06d0915411cb9492e474ea9ab12b09961a358e7e559013ed63b5d8084")
@@ -157,7 +158,7 @@ class Root(CMakePackage):
         default=False,
         description="Enable support for TMultilayerPerceptron " "classes' federation",
     )
-    variant("mysql", default=False)
+    variant("mysql", default=False, description="Enable support for MySQL databases")
     variant("opengl", default=True, description="Enable OpenGL support")
     variant("oracle", default=False, description="Enable support for Oracle databases")
     variant("postgres", default=False, description="Enable postgres support")
@@ -223,7 +224,7 @@ class Root(CMakePackage):
     depends_on("pcre")
     depends_on("xxhash", when="@6.13.02:")  # See cmake_args, below.
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd", when="@6.20:")
 
     # X-Graphics
@@ -277,11 +278,13 @@ class Root(CMakePackage):
     depends_on("sqlite", when="+sqlite")
     depends_on("tbb", when="+tbb")
     # See: https://github.com/root-project/root/issues/6933
-    conflicts("^intel-tbb@2021.1:", when="@:6.22", msg="Please use an older intel-tbb version")
+    conflicts(
+        "^intel-tbb@2021.1:", when="@:6.22", msg="Please use an older intel-tbb version for ROOT"
+    )
     conflicts(
         "^intel-oneapi-tbb@2021.1:",
         when="@:6.22",
-        msg="Please use an older intel-tbb/intel-oneapi-tbb version",
+        msg="Please use an older intel-tbb/intel-oneapi-tbb version for ROOT",
     )
     # depends_on('intel-tbb@:2021.0', when='@:6.22 ^intel-tbb')
     depends_on("unuran", when="+unuran")
@@ -311,20 +314,22 @@ class Root(CMakePackage):
 
     # Incompatible variants
     if sys.platform != "darwin":
-        conflicts("+opengl", when="~x", msg="OpenGL requires X")
-    conflicts("+math", when="~gsl", msg="Math requires GSL")
-    conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
-    conflicts("+tmva", when="~mlp", msg="TVMA requires MLP")
+        conflicts("+opengl", when="~x", msg="root+opengl requires X")
+    conflicts("+math", when="~gsl", msg="root+math requires GSL")
+    conflicts("+tmva", when="~gsl", msg="root+tmva requires GSL")
+    conflicts("+tmva", when="~mlp", msg="root+tmva requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
     conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root requires at least C++14")
-    conflicts("cxxstd=20", when="@:6.28.02", msg="C++20 support requires at least version 6.28.04")
+    conflicts(
+        "cxxstd=20", when="@:6.28.02", msg="C++20 support requires root version at least 6.28.04"
+    )
 
     # See https://github.com/root-project/root/issues/11128
-    conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in 6.26.08")
+    conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in root 6.26.08")
 
     # See https://github.com/root-project/root/issues/11714
     if sys.platform == "darwin" and macos_version() >= Version("13"):
-        conflicts("@:6.26.09", msg="macOS 13 support was added in 6.26.10")
+        conflicts("@:6.26.09", msg="macOS 13 support was added in root 6.26.10")
 
     # ROOT <6.14 is incompatible with Python >=3.7, which is the minimum supported by spack
     conflicts("+python", when="@:6.13", msg="Spack wants python >=3.7, too new for ROOT <6.14")
@@ -629,7 +634,7 @@ class Root(CMakePackage):
 
         # With that done, let's go fixing those deps
         if spec.satisfies("@:6.12"):
-            add_include_path("zlib")
+            add_include_path("zlib-api")
         if "+x" in spec:
             if spec.satisfies("@:6.08") or spec.satisfies("@6.22:"):
                 add_include_path("xextproto")

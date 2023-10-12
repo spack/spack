@@ -140,11 +140,22 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("onednn", default=False, description="Support for OneDNN")
     variant("onnx", default=False, description="Support for exporting models into ONNX format")
     variant("nvshmem", default=False, description="Support for NVSHMEM")
-    variant("python", default=True, description="Support for Python extensions (e.g. Data Reader)")
-    variant("pfe", default=True, description="Python Frontend for generating and launching models")
+    variant(
+        "python",
+        default=True,
+        sticky=True,
+        description="Support for Python extensions (e.g. Data Reader)",
+    )
+    variant(
+        "pfe",
+        default=True,
+        sticky=True,
+        description="Python Frontend for generating and launching models",
+    )
     variant("boost", default=False, description="Enable callbacks that use Boost libraries")
     variant("asan", default=False, description="Build with support for address-sanitizer")
     variant("unit_tests", default=False, description="Support for unit testing")
+    variant("caliper", default=False, description="Support for instrumentation with caliper")
 
     # LBANN benefits from high performance linkers, but passing these in as command
     # line options forces the linker flags to unnecessarily propagate to all
@@ -257,6 +268,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("hwloc@1.11.0:1.11", when="@0.95:0.101 +hwloc")
     depends_on("hwloc +cuda +nvml", when="+cuda")
     depends_on("hwloc@2.3.0:", when="+rocm")
+    depends_on("hiptt", when="+rocm")
 
     depends_on("half", when="+half")
 
@@ -299,7 +311,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-protobuf+cpp@3.10.0:", type=("build", "run"), when="@:0.90,0.99: +pfe")
 
     depends_on("protobuf+shared@3.10.0:", when="@:0.90,0.99:")
-    depends_on("zlib", when="protobuf@3.11.0:")
+    depends_on("zlib-api", when="protobuf@3.11.0:")
 
     # using cereal@1.3.1 and above requires changing the
     # find_package call to lowercase, so stick with :1.3.0
@@ -315,6 +327,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("spdlog", when="@:0.90,0.102:")
     depends_on("zstr")
+
+    depends_on("caliper+adiak+mpi", when="+caliper")
 
     generator("ninja")
 
@@ -334,9 +348,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     @property
     def cache_name(self):
         hostname = socket.gethostname()
-        if "SYS_TYPE" in env:
-            # Get a hostname that has no node identifier
-            hostname = hostname.rstrip("1234567890")
+        # Get a hostname that has no node identifier
+        hostname = hostname.rstrip("1234567890")
         return "LBANN_{0}_{1}-{2}-{3}@{4}.cmake".format(
             hostname,
             self.spec.version,
@@ -363,6 +376,17 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+gold" in spec:
             entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-fuse-ld=gold"))
             entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", "-fuse-ld=gold"))
+
+        # Set the generator in the cached config
+        if self.spec.satisfies("generator=make"):
+            entries.append(cmake_cache_string("CMAKE_GENERATOR", "Unix Makefiles"))
+        if self.spec.satisfies("generator=ninja"):
+            entries.append(cmake_cache_string("CMAKE_GENERATOR", "Ninja"))
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin)
+                )
+            )
 
         return entries
 
@@ -411,6 +435,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             ("LBANN_WITH_ALUMINUM", "al"),
             ("LBANN_WITH_ADDRESS_SANITIZER", "asan"),
             ("LBANN_WITH_BOOST", "boost"),
+            ("LBANN_WITH_CALIPER", "caliper"),
             ("LBANN_WITH_CONDUIT", "conduit"),
             ("LBANN_WITH_NVSHMEM", "nvshmem"),
             ("LBANN_WITH_FFT", "fft"),

@@ -42,7 +42,7 @@ class Rocksdb(MakefilePackage):
     depends_on("gflags")
     depends_on("lz4", when="+lz4")
     depends_on("snappy", when="+snappy")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("zstd", when="+zstd")
     depends_on("tbb", when="+tbb")
 
@@ -67,8 +67,8 @@ class Rocksdb(MakefilePackage):
             cflags.append("-Wno-error=redundant-move")
 
         if "+zlib" in self.spec:
-            cflags.append("-I" + self.spec["zlib"].prefix.include)
-            ldflags.append(self.spec["zlib"].libs.ld_flags)
+            cflags.append("-I" + self.spec["zlib-api"].prefix.include)
+            ldflags.append(self.spec["zlib-api"].libs.ld_flags)
         else:
             env["ROCKSDB_DISABLE_ZLIB"] = "YES"
 

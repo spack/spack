@@ -26,11 +26,25 @@ class Curl(NMakePackage, AutotoolsPackage):
 
     maintainers("alecbcs")
 
-    version("8.1.2", sha256="b54974d32fd610acace92e3df1f643144015ac65847f0a041fdc17db6f43f243")
-    version("8.0.1", sha256="9b6b1e96b748d04b968786b6bdf407aa5c75ab53a3d37c1c8c81cdb736555ccf")
-    version("7.88.1", sha256="8224b45cce12abde039c12dc0711b7ea85b104b9ad534d6e4c5b4e188a61c907")
+    version("8.4.0", sha256="e5250581a9c032b1b6ed3cf2f9c114c811fc41881069e9892d115cc73f9e88c6")
 
     # Deprecated versions due to CVEs
+    # CVE-2023-38545
+    version(
+        "8.1.2",
+        sha256="b54974d32fd610acace92e3df1f643144015ac65847f0a041fdc17db6f43f243",
+        deprecated=True,
+    )
+    version(
+        "8.0.1",
+        sha256="9b6b1e96b748d04b968786b6bdf407aa5c75ab53a3d37c1c8c81cdb736555ccf",
+        deprecated=True,
+    )
+    version(
+        "7.88.1",
+        sha256="8224b45cce12abde039c12dc0711b7ea85b104b9ad534d6e4c5b4e188a61c907",
+        deprecated=True,
+    )
     # https://nvd.nist.gov/vuln/detail/CVE-2022-43551
     version(
         "7.87.0",
@@ -252,7 +266,7 @@ class Curl(NMakePackage, AutotoolsPackage):
         ),
         multi=True,
     )
-    variant("nghttp2", default=False, description="build nghttp2 library (requires C++11)")
+    variant("nghttp2", default=True, description="build nghttp2 library (requires C++11)")
     variant("libssh2", default=False, description="enable libssh2 support")
     variant("libssh", default=False, description="enable libssh support", when="@7.58:")
     variant("gssapi", default=False, description="enable Kerberos support")
@@ -286,7 +300,7 @@ class Curl(NMakePackage, AutotoolsPackage):
         depends_on("openssl@:1", when="@:7.76")
 
     depends_on("libidn2", when="+libidn2")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("nghttp2", when="+nghttp2")
     depends_on("libssh2", when="+libssh2")
     depends_on("libssh", when="+libssh")
@@ -336,7 +350,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         spec = self.spec
 
         args = [
-            "--with-zlib=" + spec["zlib"].prefix,
+            "--with-zlib=" + spec["zlib-api"].prefix,
             # Prevent unintentional linking against system libraries: we could
             # add variants for these in the future
             "--without-brotli",
@@ -425,7 +439,7 @@ class NMakeBuilder(NMakeBuilder):
         mode = "dll" if "libs=dll" in self.spec else "static"
         args.append("mode=%s" % mode)
         args.append("WITH_ZLIB=%s" % mode)
-        args.append("ZLIB_PATH=%s" % self.spec["zlib"].prefix)
+        args.append("ZLIB_PATH=%s" % self.spec["zlib-api"].prefix)
         if "+libssh" in self.spec:
             args.append("WITH_SSH=%s" % mode)
         if "+libssh2" in self.spec:

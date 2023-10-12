@@ -7,13 +7,9 @@
 non-hierarchical modules.
 """
 import posixpath
-import string
 from typing import Any, Dict
 
-import llnl.util.tty as tty
-
 import spack.config
-import spack.projections as proj
 import spack.tengine as tengine
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
@@ -56,11 +52,6 @@ def make_context(spec, module_set_name, explicit):
 class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
 
-    @property
-    def conflicts(self):
-        """Conflicts for this module file"""
-        return self.conf.get("conflict", [])
-
 
 class TclFileLayout(BaseFileLayout):
     """File layout for tcl module files."""
@@ -73,29 +64,6 @@ class TclContext(BaseContext):
     def prerequisites(self):
         """List of modules that needs to be loaded automatically."""
         return self._create_module_list_of("specs_to_prereq")
-
-    @tengine.context_property
-    def conflicts(self):
-        """List of conflicts for the tcl module file."""
-        fmts = []
-        projection = proj.get_projection(self.conf.projections, self.spec)
-        f = string.Formatter()
-        for item in self.conf.conflicts:
-            if len([x for x in f.parse(item)]) > 1:
-                for naming_dir, conflict_dir in zip(projection.split("/"), item.split("/")):
-                    if naming_dir != conflict_dir:
-                        message = "conflict scheme does not match naming "
-                        message += "scheme [{spec}]\n\n"
-                        message += 'naming scheme   : "{nformat}"\n'
-                        message += 'conflict scheme : "{cformat}"\n\n'
-                        message += "** You may want to check your "
-                        message += "`modules.yaml` configuration file **\n"
-                        tty.error(message.format(spec=self.spec, nformat=projection, cformat=item))
-                        raise SystemExit("Module generation aborted.")
-                item = self.spec.format(item)
-            fmts.append(item)
-        # Substitute spec tokens if present
-        return [self.spec.format(x) for x in fmts]
 
 
 class TclModulefileWriter(BaseModuleFileWriter):

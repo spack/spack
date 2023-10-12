@@ -33,9 +33,8 @@ import copy
 import datetime
 import inspect
 import os.path
-import pathlib
 import re
-import warnings
+import string
 from typing import Optional
 
 import llnl.util.filesystem
@@ -177,7 +176,7 @@ def merge_config_rules(configuration, spec):
         if spec.satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
                 spec_configuration = {}
-            update_dictionary_extending_lists(spec_configuration, action)
+            update_dictionary_extending_lists(spec_configuration, copy.deepcopy(action))
 
     # Transform keywords for dependencies or prerequisites into a list of spec
 
@@ -248,7 +247,7 @@ def generate_module_index(root, modules, overwrite=False):
 def _generate_upstream_module_index():
     module_indices = read_module_indices()
 
-    return UpstreamModuleIndex(spack.store.db, module_indices)
+    return UpstreamModuleIndex(spack.store.STORE.db, module_indices)
 
 
 upstream_module_index = llnl.util.lang.Singleton(_generate_upstream_module_index)
@@ -353,7 +352,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
     try:
         upstream = spec.installed_upstream
     except spack.repo.UnknownPackageError:
-        upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+        upstream, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
     if upstream:
         module = spack.modules.common.upstream_module_index.upstream_module(spec, module_type)
         if not module:
@@ -469,6 +468,11 @@ class BaseConfiguration:
         if hash_length != 0:
             return self.spec.dag_hash(length=hash_length)
         return None
+
+    @property
+    def conflicts(self):
+        """Conflicts for this module file"""
+        return self.conf.get("conflict", [])
 
     @property
     def excluded(self):
@@ -764,6 +768,36 @@ class BaseContext(tengine.Context):
             return False
 
     @tengine.context_property
+    def conflicts(self):
+        """List of conflicts for the module file."""
+        fmts = []
+        projection = proj.get_projection(self.conf.projections, self.spec)
+        for item in self.conf.conflicts:
+            self._verify_conflict_naming_consistency_or_raise(item, projection)
+            item = self.spec.format(item)
+            fmts.append(item)
+        return fmts
+
+    def _verify_conflict_naming_consistency_or_raise(self, item, projection):
+        f = string.Formatter()
+        errors = []
+        if len([x for x in f.parse(item)]) > 1:
+            for naming_dir, conflict_dir in zip(projection.split("/"), item.split("/")):
+                if naming_dir != conflict_dir:
+                    errors.extend(
+                        [
+                            f"spec={self.spec.cshort_spec}",
+                            f"conflict_scheme={item}",
+                            f"naming_scheme={projection}",
+                        ]
+                    )
+        if errors:
+            raise ModulesError(
+                message="conflict scheme does not match naming scheme",
+                long_message="\n    ".join(errors),
+            )
+
+    @tengine.context_property
     def autoload(self):
         """List of modules that needs to be loaded automatically."""
         # From 'autoload' configuration option
@@ -782,43 +816,6 @@ class BaseContext(tengine.Context):
     def verbose(self):
         """Verbosity level."""
         return self.conf.verbose
-
-
-def ensure_modules_are_enabled_or_warn():
-    """Ensures that, if a custom configuration file is found with custom configuration for the
-    default tcl module set, then tcl module file generation is enabled. Otherwise, a warning
-    is emitted.
-    """
-
-    # TODO (v0.21 - Remove this function)
-    # Check if TCL module generation is enabled, return early if it is
-    enabled = spack.config.get("modules:default:enable", [])
-    if "tcl" in enabled:
-        return
-
-    # Check if we have custom TCL module sections
-    for scope in spack.config.config.file_scopes:
-        # Skip default configuration
-        if scope.name.startswith("default"):
-            continue
-
-        data = spack.config.get("modules:default:tcl", scope=scope.name)
-        if data:
-            config_file = pathlib.Path(scope.path)
-            if not scope.name.startswith("env"):
-                config_file = config_file / "modules.yaml"
-            break
-    else:
-        return
-
-    # If we are here we have a custom "modules" section in "config_file"
-    msg = (
-        f"detected custom TCL modules configuration in {config_file}, while TCL module file "
-        f"generation for the default module set is disabled. "
-        f"In Spack v0.20 module file generation has been disabled by default. To enable "
-        f"it run:\n\n\t$ spack config add 'modules:default:enable:[tcl]'\n"
-    )
-    warnings.warn(msg)
 
 
 class BaseModuleFileWriter:

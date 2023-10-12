@@ -26,6 +26,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     )
 
     version(
+        "2023.2.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/adb8a02c-4ee7-4882-97d6-a524150da358/l_onemkl_p_2023.2.0.49497_offline.sh",
+        sha256="4a0d93da85a94d92e0ad35dc0fc3b3ab7f040bd55ad374c4d5ec81a57a2b872b",
+        expand=False,
+    )
+    version(
         "2023.1.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/cd17b7fe-500e-4305-a89b-bd5b42bfd9f8/l_onemkl_p_2023.1.0.46342_offline.sh",
         sha256="cc28c94cab23c185520b93c5a04f3979d8da6b4c90cee8c0681dd89819d76167",
@@ -97,6 +103,14 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     variant(
         "cluster", default=False, description="Build with cluster support: scalapack, blacs, etc"
     )
+    variant(
+        "mpi_family",
+        default="none",
+        values=("none", "mpich", "openmpi"),
+        description="MPI family",
+        multi=False,
+    )
+
     variant(
         "threads",
         default="none",
@@ -178,16 +192,25 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if self.spec.satisfies("+cluster"):
             if any(
                 self.spec.satisfies(m)
-                for m in ["^intel-oneapi-mpi", "^intel-mpi", "^mpich", "^cray-mpich"]
+                for m in [
+                    "^intel-oneapi-mpi",
+                    "^intel-mpi",
+                    "^mpich",
+                    "^cray-mpich",
+                    "mpi_family=mpich",
+                ]
             ):
                 libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
-            elif self.spec.satisfies("^openmpi"):
+            elif any(
+                self.spec.satisfies(m) for m in ["^openmpi", "^hpcx-mpi", "mpi_family=openmpi"]
+            ):
                 libs.append(self._xlp64_lib("libmkl_blacs_openmpi"))
             else:
                 raise RuntimeError(
                     (
-                        "intel-oneapi-mpi +cluster requires one of "
-                        "^intel-oneapi-mpi, ^intel-mpi, ^mpich, or ^openmpi"
+                        "intel-oneapi-mkl +cluster requires one of ^intel-oneapi-mpi, "
+                        "^intel-mpi, ^mpich, ^cray-mpich, mpi_family=mpich, ^openmpi, "
+                        "^hpcx-mpi, or mpi_family=openmpi"
                     )
                 )
 
@@ -197,9 +220,14 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         resolved_libs = find_libraries(libs, lib_path, shared=shared)
         # Add MPI libraries for cluster support. If MPI is not in the
         # spec, then MKL is externally installed and application must
-        # link with MPI libaries
-        if self.spec.satisfies("+cluster ^mpi"):
-            resolved_libs = resolved_libs + self.spec["mpi"].libs
+        # link with MPI libaries. If MPI is in spec, but there are no
+        # libraries, then the package (e.g. hpcx-mpi) relies on the
+        # compiler wrapper to add the libraries.
+        try:
+            if self.spec.satisfies("+cluster ^mpi"):
+                resolved_libs = resolved_libs + self.spec["mpi"].libs
+        except spack.error.NoLibrariesError:
+            pass
         return resolved_libs
 
     def _xlp64_lib(self, lib):

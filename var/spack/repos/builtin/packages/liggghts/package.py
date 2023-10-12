@@ -27,7 +27,7 @@ class Liggghts(MakefilePackage):
     depends_on("vtk@6.1.0:8.2.0")
     depends_on("mpi", when="+mpi")
     depends_on("jpeg", when="+jpeg")
-    depends_on("zlib", when="+gzip")
+    depends_on("zlib-api", when="+gzip")
 
     build_directory = "src"
     build_targets = ["auto"]

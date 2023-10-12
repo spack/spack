@@ -63,7 +63,7 @@ class Itk(CMakePackage):
     depends_on("libpng")
     depends_on("libtiff")
     depends_on("mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def cmake_args(self):
         use_mkl = "^mkl" in self.spec

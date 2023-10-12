@@ -48,9 +48,6 @@ os.environ["PATH"] += "%s%s" % (os.pathsep, os.path.abspath("_spack_root/bin"))
 os.environ["COLIFY_SIZE"] = "25x120"
 os.environ["COLUMNS"] = "120"
 
-# Generate full package list if needed
-subprocess.call(["spack", "list", "--format=html", "--update=package_list.html"])
-
 # Generate a command index if an update is needed
 subprocess.call(
     [
@@ -214,6 +211,8 @@ nitpick_ignore = [
     # Spack classes that intersphinx is unable to resolve
     ("py:class", "spack.version.StandardVersion"),
     ("py:class", "spack.spec.DependencySpec"),
+    ("py:class", "spack.spec.InstallStatus"),
+    ("py:class", "spack.spec.SpecfileReaderBase"),
     ("py:class", "spack.install_test.Pb"),
 ]
 

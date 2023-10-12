@@ -16,6 +16,7 @@ class QtShadertools(QtPackage):
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
 
+    version("6.5.2", sha256="2b14cf982753f19cf48a4780bc7d96d8fc0ad3ed1049ae5d3292fc5fc1fd6aef")
     version("6.5.1", sha256="642bf97498d54b4471bf4cc227709c6b676dbd520765f82b0749a2b4ef833d25")
     version("6.5.0", sha256="ef2c71fac111a837914b7dc2b46c26579ea50b05fbd60022d430da88bdb211cb")
     version("6.4.3", sha256="a018883e889540ab828db0b0b49a3c5d810dd7283bb84abf43d1622daf474f7d")
