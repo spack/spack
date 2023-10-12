@@ -8,7 +8,8 @@ from spack.package import *
 
 
 class Fpocket(MakefilePackage):
-    """The fpocket suite of programs is a very fast open source protein pocket detection algorithm based on Voronoi tessellation."""
+    """The fpocket suite of programs is a very fast open source 
+    protein pocket detection algorithm based on Voronoi tessellation."""
 
     homepage = "https://github.com/Discngine/fpocket"
     url = "https://github.com/Discngine/fpocket/archive/refs/tags/4.1.tar.gz"
