@@ -139,11 +139,7 @@ class Abinit(AutotoolsPackage):
 
         if "+wannier90" in spec:
             if "@:8" in spec:
-                oapp(
-                    "--with-wannier90-libs=-L{}".format(
-                        spec["wannier90"].prefix.lib + " -lwannier -lm"
-                    )
-                )
+                oapp(f"--with-wannier90-libs=-L{spec['wannier90'].prefix.lib} -lwannier -lm")
                 oapp(f"--with-wannier90-incs=-I{spec['wannier90'].prefix.modules}")
                 oapp(f"--with-wannier90-bins={spec['wannier90'].prefix.bin}")
                 oapp("--enable-connectors")

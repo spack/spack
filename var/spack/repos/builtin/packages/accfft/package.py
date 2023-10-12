@@ -32,10 +32,10 @@ class Accfft(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            f"-DFFTW_ROOT={spec['fftw'].prefix}",
-            "-DFFTW_USE_STATIC_LIBS=false",
-            f"-DBUILD_GPU={'true' if '+cuda' in spec else 'false'}",
-            f"-DBUILD_SHARED={'true' if '+shared' in spec else 'false'}",
+            self.define("FFTW_ROOT", spec["fftw"].prefix),
+            self.define("FFTW_USE_STATIC_LIBS", "false"),
+            self.define("BUILD_GPU", str(spec.satisfies("+cuda")).lower()),
+            self.define("BUILD_SHARED", str(spec.satisfies("+shared")).lower()),
         ]
 
         if "+cuda" in spec:

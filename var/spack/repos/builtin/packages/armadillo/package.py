@@ -66,14 +66,14 @@ class Armadillo(CMakePackage):
 
         return [
             # ARPACK support
-            f"-DARPACK_LIBRARY={spec['arpack-ng'].libs.joined(';')}",
+            self.define("ARPACK_LIBRARY", spec["arpack-ng"].libs.joined(";")),
             # BLAS support
-            f"-DBLAS_LIBRARY={spec['blas'].libs.joined(';')}",
+            self.define("BLAS_LIBRARY", spec["blas"].libs.joined(";")),
             # LAPACK support
-            f"-DLAPACK_LIBRARY={spec['lapack'].libs.joined(';')}",
+            self.define("LAPACK_LIBRARY", spec["lapack"].libs.joined(";")),
             # SuperLU support
-            f"-DSuperLU_INCLUDE_DIR={spec['superlu'].prefix.include}",
-            f"-DSuperLU_LIBRARY={spec['superlu'].libs.joined(';')}",
+            self.define("SuperLU_INCLUDE_DIR", spec["superlu"].prefix.include),
+            self.define("SuperLU_LIBRARY", spec["superlu"].libs.joined(";")),
             # HDF5 support
-            f"-DDETECT_HDF5={'ON' if '+hdf5' in spec else 'OFF'}",
+            self.define("DETECT_HDF5", "ON" if spec.satisfies("+hdf5") else "OFF"),
         ]

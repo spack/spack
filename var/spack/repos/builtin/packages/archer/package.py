@@ -38,9 +38,9 @@ class Archer(CMakePackage):
 
     def cmake_args(self):
         return [
-            "-DCMAKE_C_COMPILER=clang",
-            "-DCMAKE_CXX_COMPILER=clang++",
-            f"-DOMP_PREFIX:PATH={self.spec['llvm-openmp-ompt'].prefix}",
+            self.define("CMAKE_C_COMPILER", "clang"),
+            self.define("CMAKE_CXX_COMPILER", "clang++"),
+            self.define("OMP_PREFIX:PATH", self.spec["llvm-openmp-ompt"].prefix),
         ]
 
     @run_after("install")
