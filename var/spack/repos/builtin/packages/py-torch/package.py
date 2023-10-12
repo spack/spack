@@ -634,6 +634,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             # https://github.com/pytorch/pytorch/issues/60332
             # env.set("USE_SYSTEM_XNNPACK", "ON")
 
+        # https://github.com/pytorch/pytorch/issues/111086
+        if self.spec.satisfies("%apple-clang@15:"):
+            env.append_flags("LDFLAGS", "-Wl,-ld_classic")
+
     @run_before("install")
     def build_amd(self):
         if "+rocm" in self.spec:
