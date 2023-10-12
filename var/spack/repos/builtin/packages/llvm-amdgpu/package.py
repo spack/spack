@@ -172,7 +172,7 @@ class LlvmAmdgpu(CMakePackage):
     # They resulted in ISel failures because we were missing the patterns for them.
     # This fix is targeting 6.1 rocm release.
     # Need patch until https://github.com/llvm/llvm-project/pull/67291 is merged.
-    patch("001-Add-i1-mul-patterns.patch", when="@5.6:")
+    patch("001-Add-i1-mul-patterns.patch", when="@5.6")
 
     conflicts("^cmake@3.19.0")
 
