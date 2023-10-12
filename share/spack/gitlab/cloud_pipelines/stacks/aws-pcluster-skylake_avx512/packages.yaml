@@ -41,7 +41,7 @@ packages:
     variants: ~atomics ~cuda ~cxx ~cxx_exceptions ~internal-hwloc ~java +legacylaunchers ~lustre ~memchecker +pmi +romio ~singularity +vt +wrapper-rpath fabrics=ofi schedulers=slurm
   palace:
     require:
-      - one_of: ["palace ^fmt@9.1.0"]
+      - one_of: ["palace %oneapi ^fmt@9.1.0"]
   pmix:
     require: ["pmix@3"]
   py-devito:
