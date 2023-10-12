@@ -10,6 +10,7 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack.builder
+import spack.config
 from spack.build_environment import SPACK_NO_PARALLEL_MAKE
 from spack.directives import build_system, extends, maintainers
 from spack.package_base import PackageBase
@@ -93,7 +94,7 @@ class RacketBuilder(spack.builder.Builder):
                 "--copy",
                 "-i",
                 "-j",
-                str(determine_number_of_jobs(parallel=parallel)),
+                str(determine_number_of_jobs(parallel=parallel, config=spack.config.CONFIG)),
                 "--",
                 os.getcwd(),
             ]

@@ -137,7 +137,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             "-C",
             str(self.environment_root()),
             "-j",
-            str(spack.util.cpus.determine_number_of_jobs(parallel=True)),
+            str(spack.util.cpus.determine_number_of_jobs(parallel=True, config=spack.config.CONFIG)),
             **kwargs,
         )
 
