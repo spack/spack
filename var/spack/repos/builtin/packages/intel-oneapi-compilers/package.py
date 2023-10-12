@@ -267,6 +267,15 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         classic_flags = ["-gcc-name={}".format(self.compiler.cc)]
         classic_flags.append("-gxx-name={}".format(self.compiler.cxx))
 
+        # `self.compiler.cc` is gcc, so we can assume `-print-multiarch` is a valid option. It is
+        # necessary to explicitly add this directory in cases where the triplet reported by
+        # `gcc -### 2>&1 | grep Target:` does not equal multiarch dir /usr/include/<triplet>.
+        gcc = Executable(self.compiler.cc)
+        multiarch_dir = gcc("-print-multiarch", output=str).strip()
+        triplet = gcc("-###", error=str).partition("Target: ")[2].split("\n")[0]
+        if multiarch_dir and multiarch_dir != triplet:
+            classic_flags.append("-isystem/usr/include/"+ multiarch_dir)
+
         # Older versions trigger -Wunused-command-line-argument warnings whenever
         # linker flags are passed in preprocessor (-E) or compilation mode (-c).
         # The cfg flags are treated as command line flags apparently. Newer versions
