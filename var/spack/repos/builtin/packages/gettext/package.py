@@ -19,6 +19,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
     executables = [r"^gettext$"]
 
+    version("0.22.3", sha256="b838228b3f8823a6c1eddf07297197c4db13f7e1b173b9ef93f3f945a63080b6")
     version("0.21.1", sha256="50dbc8f39797950aa2c98e939947c527e5ac9ebd2c1b99dd7b06ba33a6767ae6")
     version("0.21", sha256="d20fcbb537e02dcf1383197ba05bd0734ef7bf5db06bdb241eb69b7d16b73192")
     version("0.20.2", sha256="b22b818e644c37f6e3d1643a1943c32c3a9bff726d601e53047d2682019ceaba")
@@ -127,10 +128,12 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def libs(self):
+        # Do not fail if the installed gettext did not yet have the shared variant:
+        shared_variant = self.spec.variants.get("shared")
         libs = find_libraries(
             ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", "libintl"],
             root=self.prefix,
             recursive=True,
-            shared=self.spec.variants["shared"].value,
+            shared=True if not shared_variant else shared_variant.value,
         )
         return libs
