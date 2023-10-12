@@ -11,6 +11,7 @@ class Cubew(AutotoolsPackage):
 
     homepage = "https://www.scalasca.org/software/cube-4.x/download.html"
     url = "https://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubew-4.4.tar.gz"
+    maintainers=("swat-jsc", "wrwilliams")
 
     version("4.8.2", sha256="4f3bcf0622c2429b8972b5eb3f14d79ec89b8161e3c1cc5862ceda417d7975d2")
     version("4.8", sha256="73c7f9e9681ee45d71943b66c01cfe675b426e4816e751ed2e0b670563ca4cf3")
