@@ -4,11 +4,12 @@ spack:
   definitions:
 
   - optimized_configs:
-    # - gromacs
+    - gromacs
     # - lammps
     # - mpas-model
     # - openfoam
-    - palace
+    # Spack cannot read cflags="", re-enable when https://github.com/spack/spack/issues/39671 is fixed
+    # - palace
     # - py-devito
     # - quantum-espresso
     # - wrf
