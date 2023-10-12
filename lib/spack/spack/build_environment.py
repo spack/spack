@@ -943,8 +943,8 @@ class SetupContext:
 
         self.specs = specs
         self.context = context
-        self.external: List[spack.spec.Spec]
-        self.nonexternal: List[spack.spec.Spec]
+        self.external: List[Tuple[spack.spec.Spec, UseMode]]
+        self.nonexternal: List[Tuple[spack.spec.Spec, UseMode]]
         # Reverse so we go from leaf to root
         self.nodes_in_subdag = set(id(s) for s, _ in specs_with_type)
 
