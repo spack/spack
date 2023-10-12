@@ -31,13 +31,13 @@ class Boxlib(CMakePackage):
 
         options.extend(
             [
-                "-DBL_SPACEDIM=%d" % int(spec.variants["dims"].value),
-                "-DBL_USE_PARTICLES=1",
-                "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON",
-                "-DENABLE_FBASELIB=ON",
-                f"-DCMAKE_C_COMPILER={spec['mpi'].mpicc}",
-                f"-DCMAKE_CXX_COMPILER={spec['mpi'].mpicxx}",
-                f"-DCMAKE_Fortran_COMPILER={spec['mpi'].mpifc}",
+                self.define("BL_SPACEDIM", int(spec.variants["dims"].value)),
+                self.define("BL_USE_PARTILES", 1),
+                self.define("CMAKE_POSITION_INDEPENDENT_CODE:BOOL", "ON"),
+                self.define("ENABLE_FBASELIB", "ON"),
+                self.define("CMAKE_C_COMPILER", spec["mpi"].pmicc),
+                self.define("CMAKE_CXX_COMPILER", spec["mpi".mpicxx]),
+                self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
             ]
         )
 

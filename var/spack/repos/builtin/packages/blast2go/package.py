@@ -24,8 +24,7 @@ class Blast2go(Package):
     depends_on("java", type="build")
 
     def url_for_version(self, version):
-        fname = f"Blast2GO_unix_{version.underscored}.zip"
-        return f"http://resources.biobam.com/software/blast2go/nico/{fname}"
+        return f"http://resources.biobam.com/software/blast2go/nico/Blast2GO_unix_{version.underscored}.zip"
 
     def install(self, spec, prefix):
         # blast2go install script prompts for the following:

@@ -520,7 +520,7 @@ class Bazel(Package):
             # Spack's logs don't handle colored output well
             "--color=no --host_javabase=@local_jdk//:jdk"
             # Enable verbose output for failures
-            " --verbose_failures --jobs={}".format(make_jobs),
+            f" --verbose_failures --jobs={make_jobs}",
         )
 
     @run_before("install")
