@@ -18,7 +18,6 @@ from typing import Callable, List
 
 import llnl.util.tty as tty
 
-import spack.config
 import spack.util.executable
 
 #: editors to try if VISUAL and EDITOR are not set
@@ -61,7 +60,8 @@ def executable(exe: str, args: List[str]) -> int:
     return cmd.returncode
 
 
-def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> bool:
+def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv,
+           debug: bool = False) -> bool:
     """Invoke the user's editor.
 
     This will try to execute the following, in order:
@@ -100,7 +100,7 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
             return exec_fn(exe, args) == 0
 
         except (OSError, spack.util.executable.ProcessError) as e:
-            if spack.config.get("config:debug"):
+            if debug:
                 raise
 
             # Show variable we were trying to use, if it's from one

@@ -11,6 +11,7 @@ import urllib.parse
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
+import spack.config
 import spack.repo
 import spack.stage
 import spack.util.web
@@ -986,4 +987,4 @@ def create(parser, args):
 
     # Optionally open up the new package file in your $EDITOR
     if not args.skip_editor:
-        editor(pkg_path)
+        editor(pkg_path, debug=spack.config.get('config:debug'))

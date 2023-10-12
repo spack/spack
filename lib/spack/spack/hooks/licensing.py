@@ -9,6 +9,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 from llnl.util.symlink import symlink
 
+import spack.config
 import spack.util.editor as ed
 
 
@@ -39,7 +40,7 @@ def set_up_license(pkg):
             write_license_file(pkg, license_path)
 
             # use spack.util.executable so the editor does not hang on return here
-            ed.editor(license_path, exec_fn=ed.executable)
+            ed.editor(license_path, exec_fn=ed.executable, debug=spack.config.get('config:debug'))
         else:
             # Use already existing license file
             tty.msg("Found already existing license %s" % license_path)

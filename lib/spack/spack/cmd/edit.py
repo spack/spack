@@ -9,6 +9,7 @@ import os
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.config
 import spack.paths
 import spack.repo
 from spack.spec import Spec
@@ -45,7 +46,7 @@ def edit_package(name, repo_path, namespace):
     else:
         raise spack.repo.UnknownPackageError(spec.name)
 
-    editor(path)
+    editor(path, debug=spack.config.get('config:debug'))
 
 
 def setup_parser(subparser):

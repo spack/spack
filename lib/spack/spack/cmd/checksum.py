@@ -11,6 +11,7 @@ import llnl.util.lang
 from llnl.util import tty
 
 import spack.cmd
+import spack.config
 import spack.repo
 import spack.spec
 import spack.stage
@@ -275,4 +276,4 @@ def add_versions_to_package(pkg: PackageBase, version_lines: str):
         tty.msg(f"Open {filename} to review the additions.")
 
     if sys.stdout.isatty():
-        editor(filename)
+        editor(filename, debug=spack.config.get('config:debug'))

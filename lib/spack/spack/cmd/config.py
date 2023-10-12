@@ -180,7 +180,7 @@ def config_edit(args):
     if args.print_file:
         print(config_file)
     else:
-        editor(config_file)
+        editor(config_file, debug=spack.config.get('config:debug'))
 
 
 def config_list(args):
