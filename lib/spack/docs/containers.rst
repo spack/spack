@@ -212,18 +212,12 @@ under the ``container`` attribute of environments:
          final:
          - libgomp
 
-       # Extra instructions
-       extra_instructions:
-         final: |
-           RUN echo 'export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][gromacs]\[$(tput setaf 2)\]\u\[$(tput sgr0)\]:\w $ "' >> ~/.bashrc
-
        # Labels for the image
        labels:
          app: "gromacs"
          mpi: "mpich"
 
-A detailed description of the options available can be found in the
-:ref:`container_config_options` section.
+A detailed description of the options available can be found in the :ref:`container_config_options` section.
 
 -------------------
 Setting Base Images
