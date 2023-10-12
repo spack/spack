@@ -8,13 +8,17 @@ from spack.package import *
 
 
 class Fpocket(MakefilePackage):
-    """The fpocket suite of programs is a very fast open source 
+    """The fpocket suite of programs is a very fast open source
     protein pocket detection algorithm based on Voronoi tessellation."""
 
     homepage = "https://github.com/Discngine/fpocket"
     url = "https://github.com/Discngine/fpocket/archive/refs/tags/4.1.tar.gz"
 
-    version('4.1', '1a2af2d3f2df42de67301996db3b93c7eaff0375f866443c0468dcf4b1750688', extension='tar.gz')
+    version(
+        "4.1",
+        "1a2af2d3f2df42de67301996db3b93c7eaff0375f866443c0468dcf4b1750688",
+        extension="tar.gz",
+    )
 
     depends_on("netcdf-c")
     depends_on("netcdf-cxx")
