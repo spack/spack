@@ -485,7 +485,7 @@ after a given stage of the build. Let's consider as an example the following str
 
 containing both the custom template extension and the environment manifest file. To use a custom
 template, the environment must register the directory containing it, and declare its use under the
-``container`` configuration:
+``container`` configuration.  A user must also activate the environment or specify ``-e </opt/environment>`` when calling containerize.
 
 .. code-block:: yaml
    :emphasize-lines: 7-8,12
