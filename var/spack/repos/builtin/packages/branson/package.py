@@ -42,9 +42,9 @@ class Branson(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
-        args.append(self.define("CMAKE_C_COMPILER", spec['mpi'].mpicc))
-        args.append(self.define("CMAKE_CXX_COMPILER", spec['mpi'].mpicxx))
-        args.append(self.define("CMAKE_Fortran_COMPILER", spec['mpi'].mpifc))
+        args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
+        args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
+        args.append(self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
         return args
 
     def install(self, spec, prefix):
