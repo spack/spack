@@ -139,8 +139,8 @@ class Gromacs(CMakePackage, CudaPackage):
         msg="GMX_RELAXED_DOUBLE_PRECISION option removed for GROMACS 2021.",
     )
     variant("hwloc", default=True, description="Use the hwloc portable hardware locality library")
-    variant("lapack", default=False, description="Enables an external LAPACK library")
-    variant("blas", default=False, description="Enables an external BLAS library")
+    variant("lapack", default=True, description="Enables an external LAPACK library")
+    variant("blas", default=True, description="Enables an external BLAS library")
     variant("cycle_subcounters", default=False, description="Enables cycle subcounters")
 
     variant("cp2k", default=False, description="CP2K QM/MM interface integration")
