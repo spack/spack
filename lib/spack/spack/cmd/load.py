@@ -112,7 +112,7 @@ def load(parser, args):
 
     if args.things_to_load != "package,dependencies":
         tty.warn(
-            "The `--only` flag in spack load is deprecated and will be removed in Spack v0.21.0"
+            "The `--only` flag in spack load is deprecated and will be removed in Spack v0.22"
         )
 
     with spack.store.STORE.db.read_transaction():
