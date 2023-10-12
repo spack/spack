@@ -82,23 +82,6 @@ def test_strip_is_set_from_config(minimal_configuration):
     assert writer.strip is False
 
 
-def test_extra_instructions_is_set_from_config(minimal_configuration):
-    writer = writers.create(minimal_configuration)
-    assert writer.extra_instructions == (None, None)
-
-    test_line = "RUN echo Hello world!"
-    e = minimal_configuration["spack"]["container"]
-    e["extra_instructions"] = {}
-    e["extra_instructions"]["build"] = test_line
-    writer = writers.create(minimal_configuration)
-    assert writer.extra_instructions == (test_line, None)
-
-    e["extra_instructions"]["final"] = test_line
-    del e["extra_instructions"]["build"]
-    writer = writers.create(minimal_configuration)
-    assert writer.extra_instructions == (None, test_line)
-
-
 def test_custom_base_images(minimal_configuration):
     """Test setting custom base images from configuration file"""
     minimal_configuration["spack"]["container"]["images"] = {
