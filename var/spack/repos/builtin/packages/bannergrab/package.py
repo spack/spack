@@ -20,4 +20,4 @@ class Bannergrab(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.man1)
-        make("BINPATH={0}".format(prefix.bin), "MANPATH={0}/".format(prefix), "install")
+        make(f"BINPATH={prefix.bin}", f"MANPATH={prefix}/", "install")

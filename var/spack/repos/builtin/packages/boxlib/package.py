@@ -35,9 +35,9 @@ class Boxlib(CMakePackage):
                 "-DBL_USE_PARTICLES=1",
                 "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON",
                 "-DENABLE_FBASELIB=ON",
-                "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
-                "-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx,
-                "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
+                f"-DCMAKE_C_COMPILER={spec['mpi'].mpicc}",
+                f"-DCMAKE_CXX_COMPILER={spec['mpi'].mpicxx}",
+                f"-DCMAKE_Fortran_COMPILER={spec['mpi'].mpifc}",
             ]
         )
 

@@ -20,4 +20,4 @@ class Beakerlib(MakefilePackage):
     version("1.18.1", sha256="65e6f81f17fd87f9db783d0b7a7216387a337f4692d3d9e1c40ef427d977c3d5")
 
     def install(self, spec, prefix):
-        make("DESTDIR={0}".format(prefix), "PKGDOCDIR=", "install")
+        make(f"DESTDIR={prefix}", "PKGDOCDIR=", "install")

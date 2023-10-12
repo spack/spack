@@ -59,7 +59,7 @@ class Braker(Package):
     def filter_sbang(self):
         with working_dir(self.prefix.bin):
             pattern = "^#!.*/usr/bin/env perl"
-            repl = "#!{0}".format(self.spec["perl"].command.path)
+            repl = f"#!{self.spec['perl'].command.path}"
             files = glob.iglob("*.pl")
             for file in files:
                 filter_file(pattern, repl, *files, backup=False)

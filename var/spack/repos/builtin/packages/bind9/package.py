@@ -25,6 +25,6 @@ class Bind9(AutotoolsPackage):
         args = [
             "--without-python",
             "--disable-linux-caps",
-            "--with-openssl={0}".format(self.spec["openssl"].prefix),
+            f"--with-openssl={self.spec['openssl'].prefix}",
         ]
         return args

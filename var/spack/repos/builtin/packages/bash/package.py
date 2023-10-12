@@ -154,11 +154,9 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
     for verstr, num, checksum in patches:
         ver = Version(verstr)
         patch(
-            "https://ftpmirror.gnu.org/bash/bash-{0}-patches/bash{1}-{2}".format(
-                ver, ver.joined, num
-            ),
+            f"https://ftpmirror.gnu.org/bash/bash-{ver}-patches/bash{ver.joined}-{num}",
             level=0,
-            when="@{0}".format(ver),
+            when=f"@{ver}",
             sha256=checksum,
         )
 
@@ -188,7 +186,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
         if spec["iconv"].name == "libc":
             args.append("--without-libiconv-prefix")
         elif not is_system_path(spec["iconv"].prefix):
-            args.append("--with-libiconv-prefix={0}".format(spec["iconv"].prefix))
+            args.append(f"--with-libiconv-prefix={spec['iconv'].prefix}")
         return args
 
     def check(self):

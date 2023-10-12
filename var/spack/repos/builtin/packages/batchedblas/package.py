@@ -30,8 +30,8 @@ class Batchedblas(MakefilePackage):
         elif spec.satisfies("%fj"):
             CCFLAGS.extend(["-std=gnu11", "-Kfast,ocl", "-Nclang"])
         makefile_src = FileFilter("bblas_src/Makefile")
-        makefile_src.filter(r"^\s*CCFLAG\s*=.*", "CCFLAG = %s" % " ".join(CCFLAGS))
-        makefile_src.filter(r"^\s*BLAS\s*=.*", "BLAS = %s" % " ".join(BLAS))
+        makefile_src.filter(r"^\s*CCFLAG\s*=.*", f"CCFLAG = {' '.join(CCFLAGS)}")
+        makefile_src.filter(r"^\s*BLAS\s*=.*", f"BLAS = {' '.join(BLAS)}")
 
     def install(self, spec, prefix):
         mkdirp(prefix.lib)

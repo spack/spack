@@ -28,4 +28,4 @@ class Bmake(Package):
         sh = which("sh")
         sh("boot-strap", "op=configure")
         sh("boot-strap", "op=build")
-        sh("boot-strap", "--prefix={0}".format(prefix), "op=install")
+        sh("boot-strap", f"--prefix={prefix}", "op=install")

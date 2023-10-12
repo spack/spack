@@ -26,11 +26,6 @@ class Bliss(Package):
     def install(self, spec, prefix):
         filter_file("__DATE__", " __DATE__ ", "bliss.cc")
         # The Makefile isn't portable; use our own instead
-        makeargs = [
-            "-f",
-            "Makefile.spack",
-            "PREFIX=%s" % prefix,
-            "GMP_PREFIX=%s" % spec["gmp"].prefix,
-        ]
+        makeargs = ["-f", "Makefile.spack", f"PREFIX={prefix}", f"GMP_PREFIX={spec['gmp'].prefix}"]
         make(*makeargs)
         make("install", *makeargs)

@@ -48,13 +48,13 @@ class Bowtie2(MakefilePackage):
 
         match = "^#!/usr/bin/env perl"
         perl = spec["perl"].command
-        substitute = "#!{perl}".format(perl=perl)
+        substitute = f"#!{perl}"
         files = ["bowtie2"]
         filter_file(match, substitute, *files, **kwargs)
 
         match = "^#!/usr/bin/env python.*"
         python = spec["python"].command
-        substitute = "#!{python}".format(python=python)
+        substitute = f"#!{python}"
         files = ["bowtie2-build", "bowtie2-inspect"]
         filter_file(match, substitute, *files, **kwargs)
 
@@ -63,13 +63,13 @@ class Bowtie2(MakefilePackage):
         ):
             match = "-Ithird_party/simde"
             simdepath = spec["simde"].prefix.include
-            substitute = "-I{simdepath}".format(simdepath=simdepath)
+            substitute = f"-I{simdepath}"
             files = ["Makefile"]
             filter_file(match, substitute, *files, **kwargs)
 
     @property
     def build_targets(self):
-        make_arg = ["PREFIX={0}".format(self.prefix)]
+        make_arg = [f"PREFIX={self.prefix}"]
         if self.spec.satisfies("target=aarch64:"):
             make_arg.append("POPCNT_CAPABILITY=0")
         return make_arg
@@ -77,6 +77,6 @@ class Bowtie2(MakefilePackage):
     @property
     def install_targets(self):
         if self.spec.satisfies("@:2.3.9"):
-            return ["prefix={0}".format(self.prefix), "install"]
+            return [f"prefix={self.prefix}", "install"]
         else:
-            return ["PREFIX={0}".format(self.prefix), "install"]
+            return [f"PREFIX={self.prefix}", "install"]

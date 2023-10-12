@@ -24,4 +24,4 @@ class Bdii(MakefilePackage):
     depends_on("openldap", type="run")
 
     def install(self, spec, prefix):
-        make("prefix={0}".format(prefix), "install")
+        make(f"prefix={prefix}", "install")

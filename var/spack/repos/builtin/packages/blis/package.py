@@ -50,7 +50,7 @@ class BlisBase(MakefilePackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = ["--enable-threading={0}".format(spec.variants["threads"].value)]
+        config_args = [f"--enable-threading={spec.variants['threads'].value}"]
 
         if "+cblas" in spec:
             config_args.append("--enable-cblas")
@@ -77,7 +77,7 @@ class BlisBase(MakefilePackage):
     def edit(self, spec, prefix):
         # To ensure auto should always be the last argument for base and derived class
         config_args = self.configure_args() + ["auto"]
-        configure("--prefix={0}".format(prefix), *config_args)
+        configure(f"--prefix={prefix}", *config_args)
 
     @run_after("install")
     def darwin_fix(self):

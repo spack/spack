@@ -30,7 +30,7 @@ class BigdftAtlab(AutotoolsPackage):
     depends_on("openbabel", when="+openbabel")
 
     for vers in ["1.9.0", "1.9.1", "1.9.2", "develop"]:
-        depends_on("bigdft-futile@{0}".format(vers), when="@{0}".format(vers))
+        depends_on(f"bigdft-futile@{vers}", when=f"@{vers}")
 
     configure_directory = "atlab"
 
@@ -46,20 +46,20 @@ class BigdftAtlab(AutotoolsPackage):
             fcflags.append("-fallow-argument-mismatch")
 
         args = [
-            "FCFLAGS=%s" % " ".join(fcflags),
-            "--with-futile-libs=%s" % spec["bigdft-futile"].libs.ld_flags,
-            "--with-futile-incs=%s" % spec["bigdft-futile"].headers.include_flags + "/futile",
-            "--with-moduledir=%s" % prefix.include,
-            "--prefix=%s" % prefix,
+            f"FCFLAGS={' '.join(fcflags)}",
+            f"--with-futile-libs={spec['bigdft-futile'].libs.ld_flags}",
+            f"--with-futile-incs={spec['bigdft-futile'].headers.include_flags}" + "/futile",
+            f"--with-moduledir={prefix.include}",
+            f"--prefix={prefix}",
             "--without-etsf-io",
         ]
 
         if "+mpi" in spec:
-            args.append("CC=%s" % spec["mpi"].mpicc)
-            args.append("CXX=%s" % spec["mpi"].mpicxx)
-            args.append("FC=%s" % spec["mpi"].mpifc)
-            args.append("F90=%s" % spec["mpi"].mpifc)
-            args.append("F77=%s" % spec["mpi"].mpif77)
+            args.append(f"CC={spec['mpi'].mpicc}")
+            args.append(f"CXX={spec['mpi'].mpicxx}")
+            args.append(f"FC={spec['mpi'].mpifc}")
+            args.append(f"F90={spec['mpi'].mpifc}")
+            args.append(f"F77={spec['mpi'].mpif77}")
         else:
             args.append("--disable-mpi")
 
@@ -70,8 +70,8 @@ class BigdftAtlab(AutotoolsPackage):
 
         if "+openbabel" in spec:
             args.append("--enable-openbabel")
-            args.append("--with-openbabel-libs=%s" % spec["openbabel"].prefix.lib)
-            args.append("--with-openbabel-incs=%s" % spec["openbabel"].prefix.include)
+            args.append(f"--with-openbabel-libs={spec['openbabel'].prefix.lib}")
+            args.append(f"--with-openbabel-incs={spec['openbabel'].prefix.include}")
 
         return args
 

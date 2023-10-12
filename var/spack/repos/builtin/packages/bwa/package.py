@@ -37,15 +37,13 @@ class Bwa(Package):
         if platform.machine() == "aarch64":
             sse2neon_inc_path = spec["sse2neon"].prefix.include
             filter_file(
-                r"^INCLUDES=",
-                "INCLUDES=-I%s -I%s" % (zlib_inc_path, sse2neon_inc_path),
-                "Makefile",
+                r"^INCLUDES=", f"INCLUDES=-I{zlib_inc_path} -I{sse2neon_inc_path}", "Makefile"
             )
         else:
-            filter_file(r"^INCLUDES=", "INCLUDES=-I%s" % zlib_inc_path, "Makefile")
-        filter_file(r"^LIBS=", "LIBS=-L%s " % spec["zlib-api"].prefix.lib, "Makefile")
+            filter_file(r"^INCLUDES=", f"INCLUDES=-I{zlib_inc_path}", "Makefile")
+        filter_file(r"^LIBS=", f"LIBS=-L{spec['zlib-api'].prefix.lib} ", "Makefile")
         # use spack C compiler
-        filter_file("^CC=.*", "CC={0}".format(spack_cc), "Makefile")
+        filter_file("^CC=.*", f"CC={spack_cc}", "Makefile")
         # fix gcc 10+ errors
         if self.spec.satisfies("%gcc@10:"):
             filter_file(

@@ -29,5 +29,5 @@ class Bamtools(CMakePackage):
         args = []
         rpath = self.rpath
         rpath.append(os.path.join(self.prefix.lib, "bamtools"))
-        args.append("-DCMAKE_INSTALL_RPATH=%s" % ":".join(rpath))
+        args.append(f"-DCMAKE_INSTALL_RPATH={':'.join(rpath)}")
         return args

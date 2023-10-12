@@ -27,7 +27,7 @@ class Biobambam2(AutotoolsPackage):
     test_src_dir = "test"
 
     def configure_args(self):
-        args = ["--with-libmaus2={0}".format(self.spec["libmaus2"].prefix)]
+        args = [f"--with-libmaus2={self.spec['libmaus2'].prefix}"]
         return args
 
     @run_after("install")

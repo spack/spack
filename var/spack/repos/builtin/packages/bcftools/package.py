@@ -72,7 +72,7 @@ class Bcftools(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        args.append("--with-htslib={0}".format(self.spec["htslib"].prefix))
+        args.append(f"--with-htslib={self.spec['htslib'].prefix}")
         args.extend(self.enable_or_disable("libgsl"))
 
         if self.spec.satisfies("@1.8:"):
@@ -84,8 +84,8 @@ class Bcftools(AutotoolsPackage):
     def set_make_options(self):
         options = []
 
-        options.append("prefix={0}".format(self.prefix))
-        options.append("HTSDIR={0}".format(self.spec["htslib"].prefix))
+        options.append(f"prefix={self.prefix}")
+        options.append(f"HTSDIR={self.spec['htslib'].prefix}")
 
         if "+libgsl" in self.spec:
             options.append("USE_GPL=1")

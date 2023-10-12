@@ -32,7 +32,7 @@ class Blktrace(MakefilePackage):
         makefiles = ["Makefile", "btreplay/Makefile", "btt/Makefile", "iowatcher/Makefile"]
         for m in makefiles:
             makefile = FileFilter(m)
-            makefile.filter("CC.*=.*", "CC = {0}".format(spack_cc))
+            makefile.filter("CC.*=.*", f"CC = {spack_cc}")
 
     def install(self, spec, prefix):
         install_tree(".", prefix)

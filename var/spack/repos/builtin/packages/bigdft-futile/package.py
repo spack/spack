@@ -46,18 +46,18 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
         linalg = [spec["blas"].libs.ld_flags, spec["lapack"].libs.ld_flags]
 
         python_version = spec["python"].version.up_to(2)
-        pyyaml = join_path(spec["py-pyyaml"].prefix.lib, "python{0}".format(python_version))
+        pyyaml = join_path(spec["py-pyyaml"].prefix.lib, f"python{python_version}")
 
         openmp_flag = []
         if "+openmp" in spec:
             openmp_flag.append(self.compiler.openmp_flag)
 
         args = [
-            "FCFLAGS=%s" % " ".join(openmp_flag),
-            "--with-ext-linalg=%s" % " ".join(linalg),
-            "--with-yaml-path=%s" % spec["libyaml"].prefix,
-            "--with-pyyaml-path=%s" % pyyaml,
-            "--prefix=%s" % prefix,
+            f"FCFLAGS={' '.join(openmp_flag)}",
+            f"--with-ext-linalg={' '.join(linalg)}",
+            f"--with-yaml-path={spec['libyaml'].prefix}",
+            f"--with-pyyaml-path={pyyaml}",
+            f"--prefix={prefix}",
         ]
 
         if "+openmp" in spec:
@@ -66,19 +66,19 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
             args.append("--without-openmp")
 
         if "+mpi" in spec:
-            args.append("CC=%s" % spec["mpi"].mpicc)
-            args.append("CXX=%s" % spec["mpi"].mpicxx)
-            args.append("FC=%s" % spec["mpi"].mpifc)
-            args.append("F90=%s" % spec["mpi"].mpifc)
-            args.append("F77=%s" % spec["mpi"].mpif77)
+            args.append(f"CC={spec['mpi'].mpicc}")
+            args.append(f"CXX={spec['mpi'].mpicxx}")
+            args.append(f"FC={spec['mpi'].mpifc}")
+            args.append(f"F90={spec['mpi'].mpifc}")
+            args.append(f"F77={spec['mpi'].mpif77}")
         else:
             args.append("--disable-mpi")
 
         if "+cuda" in spec:
             args.append("--enable-opencl")
-            args.append("--with-ocl-path=%s" % spec["cuda"].prefix)
+            args.append(f"--with-ocl-path={spec['cuda'].prefix}")
             args.append("--enable-cuda-gpu")
-            args.append("--with-cuda-path=%s" % spec["cuda"].prefix)
+            args.append(f"--with-cuda-path={spec['cuda'].prefix}")
 
         return args
 

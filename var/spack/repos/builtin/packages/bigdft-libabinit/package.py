@@ -34,7 +34,7 @@ class BigdftLibabinit(AutotoolsPackage):
     depends_on("libxc@:4.3.4", when="@1.9.1:")
 
     for vers in ["1.9.0", "1.9.1", "1.9.2", "develop"]:
-        depends_on("bigdft-futile@{0}".format(vers), when="@{0}".format(vers))
+        depends_on(f"bigdft-futile@{vers}", when=f"@{vers}")
 
     configure_directory = "libABINIT"
 
@@ -47,22 +47,22 @@ class BigdftLibabinit(AutotoolsPackage):
             fcflags.append("-fallow-argument-mismatch")
 
         args = [
-            "FCFLAGS=%s" % " ".join(fcflags),
+            f"FCFLAGS={' '.join(fcflags)}",
             "--with-libxc-libs=%s %s"
             % (spec["libxc"].libs.ld_flags, spec["libxc"].libs.ld_flags + "f90"),
-            "--with-libxc-incs=%s" % spec["libxc"].headers.include_flags,
-            "--with-futile-libs=%s" % spec["bigdft-futile"].libs.ld_flags,
-            "--with-futile-incs=%s" % spec["bigdft-futile"].headers.include_flags,
-            "--with-moduledir=%s" % prefix.include,
-            "--prefix=%s" % prefix,
+            f"--with-libxc-incs={spec['libxc'].headers.include_flags}",
+            f"--with-futile-libs={spec['bigdft-futile'].libs.ld_flags}",
+            f"--with-futile-incs={spec['bigdft-futile'].headers.include_flags}",
+            f"--with-moduledir={prefix.include}",
+            f"--prefix={prefix}",
         ]
 
         if "+mpi" in spec:
-            args.append("CC=%s" % spec["mpi"].mpicc)
-            args.append("CXX=%s" % spec["mpi"].mpicxx)
-            args.append("FC=%s" % spec["mpi"].mpifc)
-            args.append("F90=%s" % spec["mpi"].mpifc)
-            args.append("F77=%s" % spec["mpi"].mpif77)
+            args.append(f"CC={spec['mpi'].mpicc}")
+            args.append(f"CXX={spec['mpi'].mpicxx}")
+            args.append(f"FC={spec['mpi'].mpifc}")
+            args.append(f"F90={spec['mpi'].mpifc}")
+            args.append(f"F77={spec['mpi'].mpif77}")
         else:
             args.append("--disable-mpi")
 

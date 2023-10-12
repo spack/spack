@@ -44,8 +44,8 @@ class BdwGc(AutotoolsPackage):
 
         config_args = [
             "--enable-static",
-            "--with-libatomic-ops={0}".format("yes" if "+libatomic-ops" in spec else "no"),
-            "--enable-threads={0}".format(spec.variants["threads"].value),
+            f"--with-libatomic-ops={'yes' if '+libatomic-ops' in spec else 'no'}",
+            f"--enable-threads={spec.variants['threads'].value}",
         ]
 
         return config_args

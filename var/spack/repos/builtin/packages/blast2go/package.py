@@ -16,18 +16,16 @@ class Blast2go(Package):
 
     version("5.2.5", sha256="c37aeda25f96ac0553b52da6b5af3167d50671ddbfb3b39bcb11afe5d0643891")
 
-    for t in set(
-        [str(x.family) for x in archspec.cpu.TARGETS.values() if str(x.family) != "x86_64"]
-    ):
-        conflicts("target={0}:".format(t), msg="blast2go is available x86_64 only")
+    for t in {str(x.family) for x in archspec.cpu.TARGETS.values() if str(x.family) != "x86_64"}:
+        conflicts(f"target={t}:", msg="blast2go is available x86_64 only")
 
     depends_on("bash", type="build")
     depends_on("blast-plus", type="run")
     depends_on("java", type="build")
 
     def url_for_version(self, version):
-        fname = "Blast2GO_unix_{0}.zip".format(version.underscored)
-        return "http://resources.biobam.com/software/blast2go/nico/%s" % fname
+        fname = f"Blast2GO_unix_{version.underscored}.zip"
+        return f"http://resources.biobam.com/software/blast2go/nico/{fname}"
 
     def install(self, spec, prefix):
         # blast2go install script prompts for the following:
@@ -44,6 +42,6 @@ class Blast2go(Package):
         with open(config_input_file, "w") as f:
             f.writelines(config_input_data)
 
-        with open(config_input_file, "r") as f:
+        with open(config_input_file) as f:
             bash = which("bash")
-            bash("Blast2GO_unix_%s.sh" % self.version.underscored, input=f)
+            bash(f"Blast2GO_unix_{self.version.underscored}.sh", input=f)

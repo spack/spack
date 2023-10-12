@@ -31,6 +31,6 @@ class Bib2xhtml(Package):
         install("bib2xhtml", prefix.bin)
         filter_file(
             r"#!/usr/bin/perl",
-            "#!/usr/bin/env BSTINPUTS=%s perl" % bst_include,
+            f"#!/usr/bin/env BSTINPUTS={bst_include} perl",
             join_path(prefix.bin, "bib2xhtml"),
         )

@@ -32,4 +32,4 @@ class Bedtools2(Package):
     patch("bedtools-gcc13.patch", level=1, when="@2.27:%gcc@13:")
 
     def install(self, spec, prefix):
-        make("prefix=%s" % prefix, "install")
+        make(f"prefix={prefix}", "install")

@@ -109,8 +109,8 @@ class Bcl2fastq2(Package):
         bash = which("bash")
         bash(
             "src/configure",
-            "--prefix={0}".format(prefix),
-            "--with-cmake={0}".format(join_path(spec["cmake"].prefix.bin, "cmake")),
+            f"--prefix={prefix}",
+            f"--with-cmake={join_path(spec['cmake'].prefix.bin, 'cmake')}",
         )
         make()
         make("install")
