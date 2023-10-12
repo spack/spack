@@ -74,6 +74,7 @@ import spack.dependency as dp
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
+import spack.patch
 import spack.paths
 import spack.platforms
 import spack.provider_index
@@ -3671,7 +3672,7 @@ class Spec:
             return spec_like
         return Spec(spec_like)
 
-    def intersects(self, other: "Spec", deps: bool = True) -> bool:
+    def intersects(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if there exists at least one concrete spec that matches both
         self and other, otherwise False.
 
@@ -3794,7 +3795,7 @@ class Spec:
 
         return True
 
-    def satisfies(self, other: "Spec", deps: bool = True) -> bool:
+    def satisfies(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
@@ -3906,7 +3907,15 @@ class Spec:
                 for sha256 in self.variants["patches"]._patches_in_order_of_appearance:
                     index = spack.repo.PATH.patch_index
                     pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
-                    patch = index.patch_for_package(sha256, pkg_cls)
+                    try:
+                        patch = index.patch_for_package(sha256, pkg_cls)
+                    except spack.patch.PatchLookupError as e:
+                        raise spack.error.SpecError(
+                            f"{e}. This usually means the patch was modified or removed. "
+                            "To fix this, either reconcretize or use the original package "
+                            "repository"
+                        ) from e
+
                     self._patches.append(patch)
 
         return self._patches
