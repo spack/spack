@@ -11,7 +11,7 @@ from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 
-import spack.error
+import spack.util.error
 
 __all__ = ["Executable", "which", "ProcessError"]
 
@@ -362,7 +362,10 @@ def which(*args, **kwargs):
     return Executable(exe) if exe else None
 
 
-class ProcessError(spack.error.SpackError):
+class EditorError(spack.util.error.UtilityError):
+    """Base error for all errors from the executable utility"""
+
+class ProcessError(EditorError):
     """ProcessErrors are raised when Executables exit with an error code."""
 
 
@@ -371,5 +374,5 @@ class ProcessTimeoutError(ProcessError):
     specified timeout exceed that time"""
 
 
-class CommandNotFoundError(spack.error.SpackError):
+class CommandNotFoundError(EditorError):
     """Raised when ``which()`` can't find a required executable."""
