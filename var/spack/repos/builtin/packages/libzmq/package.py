@@ -115,7 +115,7 @@ class Libzmq(AutotoolsPackage):
             config_args.append("--disable-Werror")
 
         if "+libsodium" in self.spec:
-            config_args.append("--with-libsodium=" + self.spec["libsodium"].prefix)
+            config_args.append("--with-libsodium")
         if "~docs" in self.spec:
             config_args.append("--without-docs")
         if "clang" in self.compiler.cc:
