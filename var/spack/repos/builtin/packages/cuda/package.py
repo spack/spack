@@ -593,6 +593,7 @@ class Cuda(Package):
 
     def setup_run_environment(self, env):
         env.set("CUDA_HOME", self.prefix)
+        env.set("NVHPC_CUDA_HOME", self.prefix)
 
     def install(self, spec, prefix):
         if os.path.exists("/tmp/cuda-installer.log"):
