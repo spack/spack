@@ -58,7 +58,6 @@ import pathlib
 import platform
 import re
 import socket
-import sys
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -4467,7 +4466,7 @@ class Spec:
         format_string_as_path = pathlib.PurePath(format_string)
         if format_string_as_path.is_absolute():
             output_path_components = [format_string_as_path.parts[0]]
-            input_path_components = format_string_as_path.parts[1:]
+            input_path_components = list(format_string_as_path.parts[1:])
         else:
             output_path_components = []
             input_path_components = list(format_string_as_path.parts)
