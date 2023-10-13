@@ -1052,7 +1052,8 @@ def _check_spec_format_path(spec_str, format_str, expected, path_ctor=None):
             r"\\hostname\sharename\{name}\{version}",
             r"\\hostname\sharename\zlib\git.foo_bar",
         ),
-        # This path is malformed
+        # Windows doesn't attribute any significance to a leading
+        # "/" so it is discarded
         ("zlib@git.foo/bar", r"/installroot/{name}/{version}", r"installroot\zlib\git.foo_bar"),
     ],
 )
