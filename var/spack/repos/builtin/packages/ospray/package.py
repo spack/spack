@@ -16,6 +16,8 @@ class Ospray(CMakePackage):
 
     # maintainers("aumuell")
 
+    version("2.12.0", sha256="268b16952b2dd44da2a1e40d2065c960bc2442dd09b63ace8b65d3408f596301")
+    version("2.11.0", sha256="55974e650d9b78989ee55adb81cffd8c6e39ce5d3cf0a3b3198c522bf36f6e81")
     version("2.10.0", sha256="bd478284f48d2cb775fc41a2855a9d9f5ea16c861abda0f8dc94e02ea7189cb8")
     version("2.9.0", sha256="0145e09c3618fb8152a32d5f5cff819eb065d90975ee4e35400d2db9eb9f6398")
     version("2.8.0", sha256="2dabc75446a0e2e970952d325f930853a51a9b4d1868c8135f05552a4ae04d39")
@@ -27,21 +29,35 @@ class Ospray(CMakePackage):
     variant("denoiser", default=True, description="Enable denoiser image operation")
     variant("glm", default=False, description="Build ospray_cpp GLM tests/tutorial")
     variant("mpi", default=True, description="Enable MPI support")
+    variant("volumes", default=True, description="Enable volumetric rendering with Open VKL")
+
+    conflicts("~volumes", when="@:2.10")
 
     depends_on("rkcommon@1.5:")
     depends_on("rkcommon@1.7:1.9", when="@2.7.0:2.8")
     depends_on("rkcommon@1.9", when="@2.9.0")
     depends_on("rkcommon@1.10:", when="@2.10.0:")
+    depends_on("rkcommon@1.11:", when="@2.11:")
     depends_on("embree@3.12: +ispc")
     depends_on("embree@3.13.1:", when="@2.7.0:")
-    depends_on("openvkl@0.13.0:")
-    depends_on("openvkl@1.0.1:", when="@2.7.0:")
-    depends_on("openvkl@1.2.0:", when="@2.9.0:")
-    depends_on("openvkl@1.3.0:", when="@2.10.0:")
-    depends_on("openimagedenoise@1.2.3:", when="+denoiser")
+    depends_on("embree@:3", when="@:2.10")
+    depends_on("embree@4:", when="@2.11:")
+    with when("+volumes"):
+        depends_on("openvkl@0.13.0:")
+        depends_on("openvkl@1.0.1:", when="@2.7.0:")
+        depends_on("openvkl@1.2.0:", when="@2.9.0:")
+        depends_on("openvkl@1.3.0:", when="@2.10.0:")
+        depends_on("openvkl@1.3.2:", when="@2.11:")
+    with when("+denoiser"):
+        depends_on("openimagedenoise@1.2.3:")
+        depends_on("openimagedenoise@1.3:", when="@2.5:")
+        depends_on("openimagedenoise@:1", when="@:2.11")
+        depends_on("openimagedenoise@2:", when="@2.12:")
     depends_on("ispc@1.14.1:", type=("build"))
     depends_on("ispc@1.16.0:", when="@2.7.0:", type=("build"))
     depends_on("ispc@1.18.0:", when="@2.10.0:", type=("build"))
+    depends_on("ispc@1.19.0:", when="@2.11.0:", type=("build"))
+    depends_on("ispc@1.20.0:", when="@2.12.0:", type=("build"))
     depends_on("tbb")
 
     depends_on("mpi", when="+mpi")
@@ -57,6 +73,10 @@ class Ospray(CMakePackage):
             self.define("OSPRAY_ISPC_DIRECTORY", self.spec["ispc"].prefix.bin),
             self.define_from_variant("OSPRAY_APPS_ENABLE_GLM", "glm"),
         ]
+
+        # support for volumetric data
+        if self.spec.satisfies("@2.11:"):
+            args.append(self.define_from_variant("OSPRAY_ENABLE_VOLUMES", "volumes"))
 
         # Apps
         enable_apps_arg = "" if self.spec.satisfies("@2.9:") else "ENABLE_"
