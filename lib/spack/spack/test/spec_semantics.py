@@ -1054,7 +1054,11 @@ def _check_spec_format_path(spec_str, format_str, expected, path_ctor=None):
     ],
 )
 def test_spec_format_path_windows(spec_str, format_str, expected):
-    _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PureWindowsPath)
+    try:
+        _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PureWindowsPath)
+    except:
+        import pdb; pdb.set_trace()
+        _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PureWindowsPath)
 
 
 @pytest.mark.parametrize(
