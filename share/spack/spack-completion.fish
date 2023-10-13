@@ -382,6 +382,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a edit -d 'open pac
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a env -d 'manage virtual environments'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a extensions -d 'list extensions for package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a external -d 'manage external packages in Spack configuration'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a extract -d 'extract/decompress archive in place'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a fetch -d 'fetch archives for packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a find -d 'list and search installed packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a gc -d 'remove specs that are now no longer needed'
@@ -1635,6 +1636,12 @@ complete -c spack -n '__fish_spack_using_command external read-cray-manifest' -l
 complete -c spack -n '__fish_spack_using_command external read-cray-manifest' -l dry-run -d 'don\'t modify DB with files that are read'
 complete -c spack -n '__fish_spack_using_command external read-cray-manifest' -l fail-on-error -f -a fail_on_error
 complete -c spack -n '__fish_spack_using_command external read-cray-manifest' -l fail-on-error -d 'if a manifest file cannot be parsed, fail and report the full stack trace'
+
+# spack extract
+set -g __fish_spack_optspecs_spack_extract h/help
+
+complete -c spack -n '__fish_spack_using_command extract' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command extract' -s h -l help -d 'show this help message and exit'
 
 # spack fetch
 set -g __fish_spack_optspecs_spack_fetch h/help n/no-checksum deprecated m/missing D/dependencies
