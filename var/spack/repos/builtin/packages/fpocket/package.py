@@ -3,23 +3,27 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 from spack.package import *
 
 
 class Fpocket(MakefilePackage):
-    """fpocket is a very fast open source protein pocket detection algorithm
-    based on Voronoi tessellation."""
+    """The fpocket suite of programs is a very fast open source
+    protein pocket detection algorithm based on Voronoi tessellation."""
 
     homepage = "https://github.com/Discngine/fpocket"
-    version("master", branch="master", git="https://github.com/Discngine/fpocket.git")
+    url = "https://github.com/Discngine/fpocket/archive/refs/tags/4.1.tar.gz"
+
+    version("4.1", "1a2af2d3f2df42de67301996db3b93c7eaff0375f866443c0468dcf4b1750688")
 
     depends_on("netcdf-c")
+    depends_on("netcdf-cxx")
 
     def setup_build_environment(self, env):
         if self.compiler.name == "gcc":
             env.set("CXX", "g++")
 
-    def edit(self):
+    def edit(self, spec, prefix):
         makefile = FileFilter("makefile")
-        makefile.filter("BINDIR .*", "BINDIR = %s/bin" % self.prefix)
-        makefile.filter("MANDIR .*", "MANDIR = %s/man/man8" % self.prefix)
+        makefile.filter("BINDIR .*", f"BINDIR = {prefix}/bin")
+        makefile.filter("MANDIR .*", f"MANDIR = {prefix}/man/man8")
