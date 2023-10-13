@@ -1050,10 +1050,11 @@ def _check_spec_format_path(spec_str, format_str, expected):
             r"C:\installroot\zlib\git.foo_bar",
         ),
         ("zlib@git.foo/bar", r"\\installroot\{name}\{version}", r"\\installroot\zlib\git.foo_bar"),
-        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", None),
+        # This path is malformed
+        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", r"installroot\zlib\git.foo_bar"),
     ],
 )
-def test_spec_format_path_abs_windows(spec_str, format_str, expected):
+def test_spec_format_path_windows(spec_str, format_str, expected):
     _check_spec_format_path(spec_str, format_str, expected)
 
 
@@ -1061,13 +1062,18 @@ def test_spec_format_path_abs_windows(spec_str, format_str, expected):
 @pytest.mark.parametrize(
     "spec_str,format_str,expected",
     [
-        ("zlib@git.foo/bar", r"C:\\installroot\{name}\{version}", None),
-        ("zlib@git.foo/bar", r"\\installroot\{name}\{version}", None),
         ("zlib@git.foo/bar", r"/installroot/{name}/{version}", "/installroot/zlib/git.foo_bar"),
-        ("zlib@git.foo/bar", r"//installroot/{name}/{version}", "/installroot/zlib/git.foo_bar"),
+        ("zlib@git.foo/bar", r"//installroot/{name}/{version}", "//installroot/zlib/git.foo_bar"),
+        # This is likely unintentional on Linux. Spec.format treats "\" as an
+        # escape character, so is effectively discarded (unless directly
+        # following another "\")
+        ("zlib@git.foo/bar", r"C:\\installroot\package-{name}-{version}", r"C__installrootpackage-zlib-git.foo_bar"),
+        # "\" is not a POSIX separator, and Spec.format treats "\{" as a literal
+        # which means that the resulting format string is invalid
+        ("zlib@git.foo/bar", r"package\{name}\{version}", None),
     ],
 )
-def test_spec_format_path_abs_posix(spec_str, format_str, expected):
+def test_spec_format_path_posix(spec_str, format_str, expected):
     _check_spec_format_path(spec_str, format_str, expected)
 
 

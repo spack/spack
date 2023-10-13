@@ -4457,11 +4457,6 @@ class Spec:
         the resulting string would only have two directories (i.e. that if under
         normal circumstances that `str(Spec.version)` would contain a path
         separator, it would not in this case).
-
-        Note that POSIX or Windows-style paths can be supplied on either POSIX or
-        Windows, and both "/" and "\" are treated as path separators (as a side
-        effect, "invalid" paths which mix these will be converted to OS-appropriate
-        paths with consistent separators).
         """
         format_component_with_sep = r"\{[^}]*[/\\][^}]*}"
         if re.search(format_component_with_sep, format_string):
@@ -4469,18 +4464,16 @@ class Spec:
                 f"Invalid path format string: cannot contain {{/...}}\n\t{format_string}"
             )
 
-        root = ""
-        extraction_tuple = _extract_root(format_string)
-        if extraction_tuple:
-            root, format_string = extraction_tuple
-
-        # The path components are derived by splitting on both separators, on all
-        # operating systems. Use `split` instead of pathlib since the input
-        # format string is not necessarily a valid path.
-        any_sep = r"[/\\]"
-        components = re.split(any_sep, format_string)
-        formatted_components = [fs.polite_filename(self.format(x)) for x in components]
-        return str(pathlib.Path(root + os.sep.join(formatted_components)))
+        format_string_as_path = pathlib.PurePath(format_string)
+        if format_string_as_path.is_absolute():
+            output_path_components = [format_string_as_path.parts[0]]
+            input_path_components = format_string_as_path.parts[1:]
+        else:
+            output_path_components = []
+            input_path_components = list(format_string_as_path.parts)
+        output_path_components += [fs.polite_filename(self.format(x)) for x in input_path_components]
+        reconstructed_path = pathlib.Path(*output_path_components)
+        return str(reconstructed_path)
 
     def __str__(self):
         sorted_nodes = [self] + sorted(
