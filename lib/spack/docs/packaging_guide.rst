@@ -3686,11 +3686,11 @@ Additional build instructions are split into separate builder classes:
        def configure_args(self):
            return self.with_or_without("my-feature", variant="my_feature")
 
-When you run ``spack install example +feature build_sytem=cmake``, Spack will
+In this example, ``spack install example +feature build_sytem=cmake``  will
 pick the ``CMakeBuilder`` and invoke ``cmake -DMY_FEATURE:BOOL=ON``.
 
-On the other hand, ``spack install example +feature build_system=autotools`` will
-pick the ``AutotoolsBuilder`` and invoke ``./configure --with-my-feature``.
+Similarly, ``spack install example +feature build_system=autotools`` will pick
+the  ``AutotoolsBuilder`` and invoke ``./configure --with-my-feature``.
 
 Dependencies are always specified in the package class. When some dependencies
 depend on the choice of the build system, it is possible to use when conditions as 
