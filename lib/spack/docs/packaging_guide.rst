@@ -3590,7 +3590,8 @@ regardless of the build system. The arguments for the phase are:
 The arguments ``spec`` and ``prefix`` are passed only for convenience, as they always
 correspond to ``self.spec`` and ``self.spec.prefix`` respectively.
 
-If the ``package.py`` encodes builders explicitly, the signature for a phase changes slightly:
+If the ``package.py`` has build instructions in a separate
+:ref:`builder class <multiple_build_systems>`, the signature for a phase changes slightly:
 
 .. code-block:: python
 
