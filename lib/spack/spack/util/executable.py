@@ -114,10 +114,10 @@ class Executable:
           output and error will be written to pipes and returned as a string.
           If both ``output`` and ``error`` are set to ``str``, then one string
           is returned containing output concatenated with error. Not valid
-          for ``input``
+          for ``input``.
         * ``str.split``, as in the ``split`` method of the Python string type.
           Behaves the same as ``str``, except that value is also written to
-          ``stdout`` or ``stderr``.
+          ``stdout`` or ``stderr``. Not valid for ``input``.
 
         By default, the subprocess inherits the parent's file descriptors.
 
@@ -185,8 +185,8 @@ class Executable:
         output = kwargs.pop("output", None)
         error = kwargs.pop("error", None)
 
-        if input is str:
-            raise ValueError("Cannot use `str` as input stream.")
+        if input is str or input is str.split:
+            raise ValueError("Cannot use `str` or `str.split` as input stream.")
 
         def streamify(arg, mode):
             if isinstance(arg, str):
