@@ -93,6 +93,52 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     version("4.6.4", sha256="35af16afa0b67af9b8eb15cafb76d2bc5f568540552522f5dc2c88dd45d977e8")
     version("4.5.4", sha256="eef3f0456db8c3d992cbb51d5d32558190bc14f3bc19383dd93acc27acc6befc")
 
+    # Newlib version table
+    newlib_shasum = {
+        "3.0.0.20180831": "3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b",
+        "3.3.0": "58dd9e3eaedf519360d92d84205c3deef0b3fc286685d1c562e245914ef72c66",
+        "4.1.0": "f296e372f51324224d387cc116dc37a6bd397198756746f93a2b02e9a5d40154",
+        "4.2.0.20211231": "c3a0e8b63bc3bef1aeee4ca3906b53b3b86c8d139867607369cb2915ffc54435",
+        "4.3.0.20230120": "83a62a99af59e38eb9b0c58ed092ee24d700fff43a22c03e433955113ef35150",
+    }
+
+    # AMDGCN build requires LLVM utilities
+    amdgcn_llvm_src_ver = {
+        "@10.1.0": "9.0.1",
+        "@10.2.0": "9.0.1",
+        "@10.3.0": "9.0.1",
+        "@10.4.0": "9.0.1",
+        "@10.5.0": "9.0.1",
+        "@11.1.0": "9.0.1",
+        "@11.2.0": "9.0.1",
+        "@11.3.0": "9.0.1",
+        "@11.4.0": "9.0.1",
+        "@12.1.0": "13.0.1",
+        "@12.2.0": "13.0.1",
+        "@12.3.0": "13.0.1",
+        "@13.1.0": "13.0.1",
+        "@13.2.0": "13.0.1",
+    }
+
+    # AMDGCN build requires a Newlib version contemporaneous with GCC
+    amdgcn_newlib_ver = {
+        "@10.1.0": "3.3.0",  # GCC: 2020-05-07, Newlib: 2020-01-22
+        "@10.2.0": "3.3.0",  # GCC: 2020-07-23, Newlib: 2020-01-22
+        "@10.3.0": "4.1.0",  # GCC: 2021-04-08, Newlib: 2020-12-18
+        "@10.4.0": "4.2.0.20211231",  # GCC: 2022-06-28, Newlib: 2021-12-31
+        "@10.5.0": "4.3.0.20230120",  # GCC: 2023-07-26, Newlib: 2023-01-20
+        "@11.1.0": "4.1.0",  # GCC: 2021-04-27, Newlib: 2020-12-18
+        "@11.2.0": "4.1.0",  # GCC: 2021-07-28, Newlib: 2020-12-18
+        "@11.3.0": "4.2.0.20211231",  # GCC: 2022-04-21, Newlib: 2021-12-31
+        "@11.4.0": "4.3.0.20230120",  # GCC: 2023-05-29, Newlib: 2023-01-20
+        "@12.1.0": "4.2.0.20211231",  # GCC: 2022-05-06, Newlib: 2021-12-31
+        "@12.2.0": "4.2.0.20211231",  # GCC: 2022-08-19, Newlib: 2021-12-31
+        "@12.3.0": "4.3.0.20230120",  # GCC: 2023-05-08, Newlib: 2023-01-20
+        "@13.1.0": "4.3.0.20230120",  # GCC: 2023-04-26, Newlib: 2023-01-20
+        "@13.2.0": "4.3.0.20230120",  # GCC: 2023-07-27, Newlib: 2023-01-20
+        "@develop": "4.3.0.20230120",  # Newest version of Newlib
+    }
+
     # We specifically do not add 'all' variant here because:
     # (i) Ada, D, Go, Jit, and Objective-C++ are not default languages.
     # In that respect, the name 'all' is rather misleading.
@@ -299,15 +345,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 msg="'gcc@12: languages=d' requires '%gcc@9:' with the D language support",
             )
 
-    # Newlib version table
-    newlib_shasum = {
-        "3.0.0.20180831": "3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b",
-        "3.3.0": "58dd9e3eaedf519360d92d84205c3deef0b3fc286685d1c562e245914ef72c66",
-        "4.1.0": "f296e372f51324224d387cc116dc37a6bd397198756746f93a2b02e9a5d40154",
-        "4.2.0.20211231": "c3a0e8b63bc3bef1aeee4ca3906b53b3b86c8d139867607369cb2915ffc54435",
-        "4.3.0.20230120": "83a62a99af59e38eb9b0c58ed092ee24d700fff43a22c03e433955113ef35150",
-    }
-
     # GPU offload backend supported by limited languages
     with when("+nvptx") or when("+amdgcn"):
         conflicts("languages=ada")
@@ -321,10 +358,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     with when("+nvptx"):
         depends_on("cuda")
-        newlib_ver = "3.0.0.20180831"
+        nvptx_newlib_ver = "3.0.0.20180831"
         resource(
             name="newlib",
-            url="ftp://sourceware.org/pub/newlib/newlib-{0}.tar.gz".format(newlib_ver),
+            url="ftp://sourceware.org/pub/newlib/newlib-{0}.tar.gz".format(nvptx_newlib_ver),
             sha256=newlib_shasum[newlib_ver],
             destination="newlibsource",
             fetch_options=timeout,
@@ -343,42 +380,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         conflicts("+bootstrap")
 
     with when("+amdgcn"):
-        # AMDGCN build requires LLVM utilities
-        llvm_src_ver = {
-            "@10.1.0": "9.0.1",
-            "@10.2.0": "9.0.1",
-            "@10.3.0": "9.0.1",
-            "@10.4.0": "9.0.1",
-            "@11.1.0": "9.0.1",
-            "@11.2.0": "9.0.1",
-            "@11.3.0": "9.0.1",
-            "@12.1.0": "13.0.1",
-            "@12.2.0": "13.0.1",
-            "@12.3.0": "13.0.1",
-            "@13.1.0": "13.0.1",
-        }
-        for k, v in llvm_src_ver.items():
+        # Set up LLVM versions
+        for k, v in amdgcn_llvm_src_ver.items():
             depends_on(
                 f"llvm@{v} ~clang +lld ~gold ~llvm_dylib ~polly targets=amdgpu",
-                type="build",
+                type=("build", "link"),
                 when=k,
             )
-        # The Newlib version needs to be contemporaenous with GCC
-        newlib_ver = {
-            "@10.1.0": "3.3.0",  # GCC: 2020-05-07, Newlib: 2020-01-22
-            "@10.2.0": "3.3.0",  # GCC: 2020-07-23, Newlib: 2020-01-22
-            "@10.3.0": "4.1.0",  # GCC: 2021-04-08, Newlib: 2020-12-18
-            "@10.4.0": "4.2.0.20211231",  # GCC: 2022-06-28, Newlib: 2021-12-31
-            "@11.1.0": "4.1.0",  # GCC: 2021-04-27, Newlib: 2020-12-18
-            "@11.2.0": "4.1.0",  # GCC: 2021-07-28, Newlib: 2020-12-18
-            "@11.3.0": "4.2.0.20211231",  # GCC: 2022-04-21, Newlib: 2021-12-31
-            "@12.1.0": "4.2.0.20211231",  # GCC: 2022-05-06, Newlib: 2021-12-31
-            "@12.2.0": "4.2.0.20211231",  # GCC: 2022-08-19, Newlib: 2021-12-31
-            "@12.3.0": "4.3.0.20230120",  # GCC: 2023-05-08, Newlib: 2023-01-20
-            "@13.1.0": "4.3.0.20230120",  # GCC: 2023-04-26, Newlib: 2023-01-20
-            "@develop": "4.3.0.20230120",  # Newest version of Newlib
-        }
-        for k, v in newlib_ver.items():
+        # Set up Newlib versions
+        for k, v in amdgcn_newlib_ver.items():
             with when(k):
                 resource(
                     name="newlib",
