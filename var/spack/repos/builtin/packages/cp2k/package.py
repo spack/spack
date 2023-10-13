@@ -427,9 +427,13 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         ldflags = []
         libs = []
 
-        # CP2K Makefile doesn't set C standard, but the source code uses
-        # C99-style for-loops with inline definition of iterating variable.
-        cflags.append(self.compiler.c99_flag)
+        # CP2K Makefile doesn't set C standard
+        if spec.satisfies("@2023.2:"):
+            # Use of DBL_DECIMAL_DIG
+            cflags.append(self.compiler.c11_flag)
+        else:
+            # C99-style for-loops with inline definition of iterating variable.
+            cflags.append(self.compiler.c99_flag)
 
         if "%intel" in spec:
             cflags.append("-fp-model precise")
