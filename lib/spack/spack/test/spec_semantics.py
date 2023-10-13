@@ -1048,17 +1048,13 @@ def _check_spec_format_path(spec_str, format_str, expected, path_ctor=None):
             r"C:\\installroot\{name}\{version}",
             r"C:\installroot\zlib\git.foo_bar",
         ),
-        ("zlib@git.foo/bar", r"\\installroot\{name}\{version}", r"\\installroot\zlib\git.foo_bar"),
+        ("zlib@git.foo/bar", r"\\hostname\sharename\{name}\{version}", r"\\hostname\sharename\zlib\git.foo_bar"),
         # This path is malformed
         ("zlib@git.foo/bar", r"/installroot/{name}/{version}", r"installroot\zlib\git.foo_bar"),
     ],
 )
 def test_spec_format_path_windows(spec_str, format_str, expected):
-    try:
-        _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PureWindowsPath)
-    except:
-        import pdb; pdb.set_trace()
-        _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PureWindowsPath)
+    _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PureWindowsPath)
 
 
 @pytest.mark.parametrize(
