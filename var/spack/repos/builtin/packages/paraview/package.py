@@ -225,8 +225,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("protobuf@3.4:3.18", when="@:5.10%xl")
     depends_on("protobuf@3.4:3.18", when="@:5.10%xl_r")
     # protobuf requires newer abseil-cpp, which in turn requires C++14,
-    # but paraview uses C++11 by default
-    depends_on("protobuf@3.4:3.21", when="@:5.11")
+    # but paraview uses C++11 by default. Use for 5.11+ until ParaView updates
+    # its C++ standard level.
+    depends_on("protobuf@3.4:3.21", when="@5.11:")
     depends_on("libxml2")
     depends_on("lz4")
     depends_on("xz")
