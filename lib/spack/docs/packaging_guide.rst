@@ -3670,8 +3670,9 @@ a directive:
        build_system("cmake", "autotools", default="cmake")
 
 In this case the software can be built with both ``autotools`` and ``cmake``. Since the package
-supports multiple build systems, it is necessary to declare which one is the default. The ``package.py``
-will likely contain some overriding of default builder methods:
+supports multiple build systems, it is necessary to declare which one is the default.
+
+Additional build instructions are split into separate builder classes:
 
 .. code-block:: python
 
@@ -3685,10 +3686,11 @@ will likely contain some overriding of default builder methods:
        def configure_args(self):
            return self.with_or_without("my-feature", variant="my_feature")
 
-This way, ``spack install example +feature build_sytem=cmake`` will build using
-``cmake`` and run it with the ``-DMY_FEATURE:BOOL=ON`` define. Alternatively,
-when you run ``spack install example +feature build_system=autotools``, Spack will
-run the configure script with ``./configure --without-my-feature``.
+When you run ``spack install example +feature build_sytem=cmake``, Spack will
+pick the ``CMakeBuilder`` and invoke ``cmake -DMY_FEATURE:BOOL=ON``.
+
+On the other hand, ``spack install example +feature build_system=autotools`` will
+pick the ``AutotoolsBuilder`` and invoke ``./configure --with-my-feature``.
 
 Dependencies are always specified in the package class. When some dependencies
 depend on the choice of the build system, it is possible to use when conditions as 
