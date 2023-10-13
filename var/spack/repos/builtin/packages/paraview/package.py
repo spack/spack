@@ -427,6 +427,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("VISIT_BUILD_READER_Silo", "visitbridge"),
         ]
 
+        if spec.satisfies("@5.12:"):
+            cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_fast_float:BOOL=OFF")
+            cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_token:BOOL=OFF")
+
         if spec.satisfies("@5.11:"):
             cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF")
 
