@@ -921,13 +921,13 @@ def interactive_version_filter(
 
         print("commands:")
         commands = (
-            "@*w{1} @*b{[c]}hecksum",
-            "@*w{2} @*b{[o]}pen editor",
-            "@*w{3} @*b{[f]}ilter",
-            "@*w{4} @*b{[a]}sk each",
-            "@*w{5} @*b{[n]}ew only",
-            "@*w{6} @*b{[r]}estart",
-            "@*w{7} @*b{[q]}uit",
+            "@*b{[c]}hecksum",
+            "@*b{[o]}pen editor",
+            "@*b{[f]}ilter",
+            "@*b{[a]}sk each",
+            "@*b{[n]}ew only",
+            "@*b{[r]}estart",
+            "@*b{[q]}uit",
         )
         colify(list(map(colorize, commands)), indent=2)
 
@@ -937,9 +937,9 @@ def interactive_version_filter(
             print()
             command = "q"
 
-        if command in ("1", "c"):
+        if command == "c":
             break
-        elif command in ("2", "o"):
+        elif command == "o":
             # Create a temporary file in the stage dir with lines of the form
             # <version> <url>
             # which the user can modify. Once the editor is closed, the file is
@@ -984,7 +984,7 @@ def interactive_version_filter(
                 sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
 
             os.unlink(filepath)
-        elif command in ("3", "f"):
+        elif command == "f":
             tty.msg(
                 colorize(
                     f"Examples filters: {VERSION_COLOR}1.2@. "
@@ -1005,7 +1005,7 @@ def interactive_version_filter(
                 continue
             # Apply filter
             sorted_and_filtered = [v for v in sorted_and_filtered if v.satisfies(version_filter)]
-        elif command in ("4", "a"):
+        elif command == "a":
             i = 0
             while i < len(sorted_and_filtered):
                 v = sorted_and_filtered[i]
@@ -1023,13 +1023,13 @@ def interactive_version_filter(
             else:
                 # Went over each version, so go to checksumming
                 break
-        elif command in ("5", "n"):
+        elif command == "n":
             sorted_and_filtered = [v for v in sorted_and_filtered if v not in known_versions]
-        elif command in ("6", "r"):
+        elif command == "r":
             url_dict = orig_url_dict
             sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
             version_filter = VersionList([":"])
-        elif command in ("7", "q"):
+        elif command == "q":
             try:
                 if input("Really quit [y/N]? ").strip().lower() in ("y", "yes"):
                     return None
