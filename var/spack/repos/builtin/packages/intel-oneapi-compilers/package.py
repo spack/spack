@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import re
-
 import spack.compilers
 from spack.build_environment import dso_suffix
 from spack.package import *
