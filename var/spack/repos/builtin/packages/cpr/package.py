@@ -21,13 +21,11 @@ class Cpr(CMakePackage):
     depends_on("git", when="build")
 
     def cmake_args(self):
-        if self.version < Version("1.10"):
-            _force = "_FORCE"
-        else:
-            _force = ""
-        args = [
+        _force = "_FORCE" if self.spec.satisfies("@:1.9") else ""
+        
+        return [
             self.define("CPR_USE_SYSTEM_GTEST", True),
             self.define(f"CPR{_force}_USE_SYSTEM_CURL", True),
             self.define("CPR_ENABLE_SSL", True),
         ]
-        return args
+
