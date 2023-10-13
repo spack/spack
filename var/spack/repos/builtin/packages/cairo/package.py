@@ -63,6 +63,7 @@ class Cairo(AutotoolsPackage):
 
     conflicts("+png", when="platform=darwin")
     conflicts("+svg", when="platform=darwin")
+    conflicts("+shared~pic")
 
     # patch from https://gitlab.freedesktop.org/cairo/cairo/issues/346
     patch("fontconfig.patch", when="@1.16.0:1.17.2")
