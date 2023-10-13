@@ -4445,7 +4445,12 @@ class Spec:
         kwargs.setdefault("color", None)
         return self.format(*args, **kwargs)
 
-    def format_path(self, format_string: str, _path_ctor: pathlib.PurePath=None) -> str:
+    def format_path(
+        # self, format_string: str, _path_ctor: Optional[pathlib.PurePath] = None
+        self,
+        format_string: str,
+        _path_ctor: Optional[Callable[[Any], pathlib.PurePath]] = None,
+    ) -> str:
         """Given a `format_string` that is intended as a path, generate a string
         like from `Spec.format`, but eliminate extra path separators introduced by
         formatting of Spec properties.

@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pathlib
-import sys
 
 import pytest
 
@@ -1048,7 +1047,11 @@ def _check_spec_format_path(spec_str, format_str, expected, path_ctor=None):
             r"C:\\installroot\{name}\{version}",
             r"C:\installroot\zlib\git.foo_bar",
         ),
-        ("zlib@git.foo/bar", r"\\hostname\sharename\{name}\{version}", r"\\hostname\sharename\zlib\git.foo_bar"),
+        (
+            "zlib@git.foo/bar",
+            r"\\hostname\sharename\{name}\{version}",
+            r"\\hostname\sharename\zlib\git.foo_bar",
+        ),
         # This path is malformed
         ("zlib@git.foo/bar", r"/installroot/{name}/{version}", r"installroot\zlib\git.foo_bar"),
     ],
