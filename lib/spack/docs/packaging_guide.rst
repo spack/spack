@@ -3694,7 +3694,7 @@ the  ``AutotoolsBuilder`` and invoke ``./configure --with-my-feature``.
 
 Dependencies are always specified in the package class. When some dependencies
 depend on the choice of the build system, it is possible to use when conditions as 
-shown below:
+usual:
 
 .. code-block:: python
 
