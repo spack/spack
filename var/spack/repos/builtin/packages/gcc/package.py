@@ -362,7 +362,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         resource(
             name="newlib",
             url="ftp://sourceware.org/pub/newlib/newlib-{0}.tar.gz".format(nvptx_newlib_ver),
-            sha256=newlib_shasum[newlib_ver],
+            sha256=newlib_shasum[nvptx_newlib_ver],
             destination="newlibsource",
             fetch_options=timeout,
         )
