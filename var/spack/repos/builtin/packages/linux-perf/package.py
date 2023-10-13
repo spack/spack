@@ -157,9 +157,11 @@ class LinuxPerf(Package):
             args.append("NO_LIBZSTD=1")
 
         if "+libtraceevent" in spec:
-            pass
+            if version < Version("6.2"):
+                args.append("LIBTRACEEVENT_DYNAMIC=1")
         else:
-            args.append("NO_LIBTRACEEVENT=1")
+            if version >= Version("6.2"):
+                args.append("NO_LIBTRACEEVENT=1")
 
         with working_dir("tools/perf"):
             make(
