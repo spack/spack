@@ -4445,7 +4445,7 @@ class Spec:
         kwargs.setdefault("color", None)
         return self.format(*args, **kwargs)
 
-    def format_path(self, format_string: str) -> str:
+    def format_path(self, format_string: str, _path_ctor: pathlib.PurePath=None) -> str:
         """Given a `format_string` that is intended as a path, generate a string
         like from `Spec.format`, but eliminate extra path separators introduced by
         formatting of Spec properties.
@@ -4463,7 +4463,8 @@ class Spec:
                 f"Invalid path format string: cannot contain {{/...}}\n\t{format_string}"
             )
 
-        format_string_as_path = pathlib.PurePath(format_string)
+        path_ctor = _path_ctor or pathlib.PurePath
+        format_string_as_path = path_ctor(format_string)
         if format_string_as_path.is_absolute():
             output_path_components = [format_string_as_path.parts[0]]
             input_path_components = list(format_string_as_path.parts[1:])
@@ -4473,7 +4474,7 @@ class Spec:
         output_path_components += [
             fs.polite_filename(self.format(x)) for x in input_path_components
         ]
-        return str(pathlib.Path(*output_path_components))
+        return str(path_ctor(*output_path_components))
 
     def __str__(self):
         sorted_nodes = [self] + sorted(

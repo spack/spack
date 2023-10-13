@@ -1030,17 +1030,16 @@ def test_spec_format_path(spec_str, format_str, expected):
     _check_spec_format_path(spec_str, format_str, expected)
 
 
-def _check_spec_format_path(spec_str, format_str, expected):
+def _check_spec_format_path(spec_str, format_str, expected, path_ctor=None):
     spec = Spec(spec_str)
     if not expected:
         with pytest.raises((spack.spec.SpecFormatPathError, spack.spec.SpecFormatStringError)):
-            spec.format_path(format_str)
+            spec.format_path(format_str, _path_ctor=path_ctor)
     else:
-        formatted = spec.format_path(format_str)
+        formatted = spec.format_path(format_str, _path_ctor=path_ctor)
         assert formatted == expected
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Check behavior specific to Windows")
 @pytest.mark.parametrize(
     "spec_str,format_str,expected",
     [
@@ -1055,10 +1054,9 @@ def _check_spec_format_path(spec_str, format_str, expected):
     ],
 )
 def test_spec_format_path_windows(spec_str, format_str, expected):
-    _check_spec_format_path(spec_str, format_str, expected)
+    _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PureWindowsPath)
 
 
-@pytest.mark.not_on_windows("Check behavior specific to POSIX")
 @pytest.mark.parametrize(
     "spec_str,format_str,expected",
     [
@@ -1078,7 +1076,7 @@ def test_spec_format_path_windows(spec_str, format_str, expected):
     ],
 )
 def test_spec_format_path_posix(spec_str, format_str, expected):
-    _check_spec_format_path(spec_str, format_str, expected)
+    _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PurePosixPath)
 
 
 @pytest.mark.regression("3887")
