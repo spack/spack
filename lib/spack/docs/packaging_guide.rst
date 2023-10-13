@@ -3643,9 +3643,9 @@ This way, ``spack install example +feature build_sytem=cmake`` will build using
 when you run ``spack install example +feature build_system=autotools``, Spack will
 run the configure script with ``./configure --without-my-feature``.
 
-Dependencies are always specified in the package class, because they are usually common to
-all build systems. Build dependencies however can depend on the choice of build system, which
-can be dealt with by using when conditions:
+Dependencies are always specified in the package class. When some dependencies
+depend on the choice of the build system, it is possible to use when conditions as 
+shown below:
 
 .. code-block:: python
 
