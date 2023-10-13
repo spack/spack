@@ -58,7 +58,7 @@ class Itk(CMakePackage):
     depends_on("expat")
     depends_on("fftw-api")
     depends_on("googletest")
-    depends_on("hdf5+cxx+hl~mpi")
+    depends_on("hdf5+cxx+hl")
     depends_on("jpeg")
     depends_on("libpng")
     depends_on("libtiff")
