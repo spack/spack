@@ -14,12 +14,12 @@ import pickle
 import re
 import shutil
 import sys
+import weakref
 from functools import wraps
 from typing import Any, Callable, Dict, List, MutableMapping, Optional, Tuple, Union
-import weakref
 
 from llnl.path import path_to_os_path, system_path_filter
-from llnl.util import tty, symlink, filesystem
+from llnl.util import filesystem, symlink, tty
 from llnl.util.lang import dedupe
 
 from .executable import Executable, which
@@ -116,15 +116,19 @@ def env_var_length_check(name: str, value: str) -> bool:
     return False
 
 
-def fail_on_long_env_var(name: str) ->None:
-    tty.die(f"Attempting to add to env variable: {name}\n\
+def fail_on_long_env_var(name: str) -> None:
+    tty.die(
+        f"Attempting to add to env variable: {name}\n\
 This operation will exceed the safe env variable length limit of 8192 characters\n\
-Spack will not be amending {name}")
+Spack will not be amending {name}"
+    )
 
 
 def warn_on_long_env_vars(name: str, value: str) -> None:
-    tty.warn(f"Attempting to add to env variable: {name}\n\
-{name} is {len(value)} characters. Safe limit is 8191")
+    tty.warn(
+        f"Attempting to add to env variable: {name}\n\
+{name} is {len(value)} characters. Safe limit is 8191"
+    )
 
 
 def is_system_path(path: Path) -> bool:
@@ -346,6 +350,7 @@ class WindowsPathModifierMixin:
     mirror the contents of the original value.
     Functional impact of env path variable modification is unchanged
     """
+
     @property
     def value(self):
         return self._value
@@ -366,15 +371,20 @@ class WindowsPathModifierMeta(type):
             def wrap(self, *args, **kwargs):
                 self._env_view.create_filesystem_view()
                 return func(self, *args, **kwargs)
+
             return wrap
+
         if sys.platform == "win32":
             attrs["execute"] = wrapper(attrs["execute"])
         return super().__new__(cls, clsname, bases, attrs)
 
 
-class SafeNameValueModifier(WindowsPathModifierMixin, NameValueModifier, metaclass=WindowsPathModifierMeta):
+class SafeNameValueModifier(
+    WindowsPathModifierMixin, NameValueModifier, metaclass=WindowsPathModifierMeta
+):
     """NameValueModifier with added protections to prevent env variable smashing on Windows
     A no-op on all other platforms"""
+
     def __init__(self, name, value, *args, safe_windows=True, **kwargs):
         self.safe_windows = safe_windows
         self.name = name
@@ -497,7 +507,10 @@ class EnvironmentModifications:
     """Keeps track of requests to modify the current environment."""
 
     def __init__(
-        self, other: Optional["EnvironmentModifications"] = None, traced: Union[None, bool] = None, safe_windows: bool = True
+        self,
+        other: Optional["EnvironmentModifications"] = None,
+        traced: Union[None, bool] = None,
+        safe_windows: bool = True,
     ):
         """Initializes a new instance, copying commands from 'other'
         if it is not None.
@@ -605,7 +618,13 @@ class EnvironmentModifications:
             elements: ordered list paths
             separator: separator for the paths (default: os.pathsep)
         """
-        item = SetPath(name, elements, separator=separator, trace=self._trace(), safe_windows=self.safe_windows)
+        item = SetPath(
+            name,
+            elements,
+            separator=separator,
+            trace=self._trace(),
+            safe_windows=self.safe_windows,
+        )
         self.env_modifications.append(item)
 
     @system_env_normalize
@@ -617,7 +636,9 @@ class EnvironmentModifications:
             path: path to be appended
             separator: separator for the paths (default: os.pathsep)
         """
-        item = AppendPath(name, path, separator=separator, trace=self._trace(), safe_windows=self.safe_windows)
+        item = AppendPath(
+            name, path, separator=separator, trace=self._trace(), safe_windows=self.safe_windows
+        )
         self.env_modifications.append(item)
 
     @system_env_normalize
@@ -629,7 +650,9 @@ class EnvironmentModifications:
             path: path to be prepended
             separator: separator for the paths (default: os.pathsep)
         """
-        item = PrependPath(name, path, separator=separator, trace=self._trace(), safe_windows=self.safe_windows)
+        item = PrependPath(
+            name, path, separator=separator, trace=self._trace(), safe_windows=self.safe_windows
+        )
         self.env_modifications.append(item)
 
     @system_env_normalize
@@ -1212,7 +1235,7 @@ def sanitize(
 
 
 class WindowsEnvViewManager:
-    def __init__(self, root: str=None):
+    def __init__(self, root: str = None):
         self.root = pathlib.Path(root) if root else self._establish_shortest_root()
         self.current = "a"
         self._store = collections.defaultdict(str)
@@ -1234,8 +1257,9 @@ class WindowsEnvViewManager:
             curr = ord(c[-1])
             over = curr // 122
             if over:
-                return (inc(c[:-1]) if len(c[:-1]) else 'a') + 'a'
+                return (inc(c[:-1]) if len(c[:-1]) else "a") + "a"
             return c[:-1] + chr(curr + 1)
+
         current_value = self._store[value]
         if current_value:
             return current_value
@@ -1248,25 +1272,24 @@ class WindowsEnvViewManager:
         shutil.rmtree(str(self.root))
 
 
-
 win_env_view_manager = WindowsEnvViewManager()
 
 
 class WindowsEnvView:
     def __init__(self, name, root, *path_additions, enabled=True):
         """
-            Args:
-                name (str): the env variable whose value is to be abtracted
-                root (str): root at which to create env view
-                path_additions (List[str]): directories that would
-                    normally be added to an env path variable.
-                    Entires in list should be directories that
-                    would typically be added to a path env var
-                    Contents of root of the directory will be added
-                    to a "view" into that directory with a shortened
-                    path to reduce length of env variables
-                enabled (bool): default is True, toggled whether or not
-                    this class is a no-op
+        Args:
+            name (str): the env variable whose value is to be abtracted
+            root (str): root at which to create env view
+            path_additions (List[str]): directories that would
+                normally be added to an env path variable.
+                Entires in list should be directories that
+                would typically be added to a path env var
+                Contents of root of the directory will be added
+                to a "view" into that directory with a shortened
+                path to reduce length of env variables
+            enabled (bool): default is True, toggled whether or not
+                this class is a no-op
         """
         self.enabled = enabled
         self.name = name

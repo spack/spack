@@ -2446,7 +2446,7 @@ def find_all_libraries(root, recursive=False):
     )
 
 
-def find_executables(name: str, root: str, recursive: bool=False) -> Optional[List[str]]:
+def find_executables(name: str, root: str, recursive: bool = False) -> Optional[List[str]]:
     """Search root for executable with name
 
     Args:
@@ -2461,12 +2461,17 @@ def find_executables(name: str, root: str, recursive: bool=False) -> Optional[Li
     if sys.platfrom == "win32":
         suffixes = list(map(str.lower, os.environ["PATHEXT"].split(";")))
     search_space = [f"{name}.{suf}" for suf in suffixes]
-    return list(filter(lambda x: True if sys.platform == "win32" else True if is_exe(x) else False,  find(root, search_space, recursive)))
+    return list(
+        filter(
+            lambda x: True if sys.platform == "win32" else True if is_exe(x) else False,
+            find(root, search_space, recursive),
+        )
+    )
 
 
-def find_all_executables(root: str, recursive: bool =False) -> Optional[List[str]]:
+def find_all_executables(root: str, recursive: bool = False) -> Optional[List[str]]:
     """Convenience function to detect all executables under a given root
-        Same as find_executables with a glob for all names"""
+    Same as find_executables with a glob for all names"""
     return find_executables("*", root, recursive)
 
 

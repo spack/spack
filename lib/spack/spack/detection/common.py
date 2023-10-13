@@ -21,8 +21,8 @@ import re
 import sys
 from typing import Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
-import llnl.util.tty
 import llnl.util.filesystem
+import llnl.util.tty
 
 import spack.config
 import spack.operating_systems.windows_os as winOs

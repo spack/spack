@@ -185,7 +185,7 @@ def test_escape_double_quotes_in_shell_modifications():
 def test_windows_safe_env_paths(monkeypatch, tmp_path):
     monkeypatch.setenv("PATH", "")
     safe_env_mods = envutil.EnvironmentModifications()
-    too_big_str = "a" * 150 # 1 char over Windows cmd cli length limit
+    too_big_str = "a" * 150  # 1 char over Windows cmd cli length limit
     too_big_dir = tmp_path / too_big_str
     too_big_dir.mkdir()
     safe_env_mods.append_path("PATH", too_big_dir)
