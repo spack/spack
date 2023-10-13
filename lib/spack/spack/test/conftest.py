@@ -1074,7 +1074,7 @@ def mock_gnupghome(monkeypatch):
     # This comes up because tmp paths on macOS are already long-ish, and
     # pytest makes them longer.
     try:
-        spack.util.gpg.init()
+        spack.util.gpg.init(gpg_path=spack.paths.gpg_path)
     except spack.util.gpg.SpackGPGError:
         if not spack.util.gpg.GPG:
             pytest.skip("This test requires gpg")

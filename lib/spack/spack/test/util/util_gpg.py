@@ -7,12 +7,13 @@ import os
 
 import pytest
 
+import spack.paths
 import spack.util.gpg
 
 
 @pytest.fixture()
 def has_socket_dir():
-    spack.util.gpg.init()
+    spack.util.gpg.init(gpg_path=spack.paths.gpg_path)
     return bool(spack.util.gpg.SOCKET_DIR)
 
 
