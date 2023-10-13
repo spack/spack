@@ -4471,7 +4471,9 @@ class Spec:
         else:
             output_path_components = []
             input_path_components = list(format_string_as_path.parts)
-        output_path_components += [fs.polite_filename(self.format(x)) for x in input_path_components]
+        output_path_components += [
+            fs.polite_filename(self.format(x)) for x in input_path_components
+        ]
         reconstructed_path = pathlib.Path(*output_path_components)
         return str(reconstructed_path)
 

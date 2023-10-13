@@ -1067,7 +1067,11 @@ def test_spec_format_path_windows(spec_str, format_str, expected):
         # This is likely unintentional on Linux. Spec.format treats "\" as an
         # escape character, so is effectively discarded (unless directly
         # following another "\")
-        ("zlib@git.foo/bar", r"C:\\installroot\package-{name}-{version}", r"C__installrootpackage-zlib-git.foo_bar"),
+        (
+            "zlib@git.foo/bar",
+            r"C:\\installroot\package-{name}-{version}",
+            r"C__installrootpackage-zlib-git.foo_bar",
+        ),
         # "\" is not a POSIX separator, and Spec.format treats "\{" as a literal
         # "{", which means that the resulting format string is invalid
         ("zlib@git.foo/bar", r"package\{name}\{version}", None),
