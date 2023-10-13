@@ -116,6 +116,11 @@ class Catch2(CMakePackage):
         description="C++ standard",
     )
 
+    def patch(self):
+        filter_file(r'#include <vector>', '#include <vector>\n#include <cstdint>', 'src/catch2/internal/catch_string_manip.hpp')
+        filter_file(r'#include <vector>', '#include <vector>\n#include <cstdint>', 'src/catch2/internal/catch_xmlwriter.hpp')
+        filter_file(r'#include <vector>', '#include <vector>\n#include <cstdint>', 'src/catch2/catch_test_case_info.hpp')
+
     def cmake_args(self):
         spec = self.spec
         args = []
