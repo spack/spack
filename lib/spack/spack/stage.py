@@ -922,7 +922,7 @@ def interactive_version_filter(
         print("commands:")
         commands = (
             "@*b{[c]}hecksum",
-            "@*b{[o]}pen editor",
+            "@*b{[e]}dit",
             "@*b{[f]}ilter",
             "@*b{[a]}sk each",
             "@*b{[n]}ew only",
@@ -939,7 +939,7 @@ def interactive_version_filter(
 
         if command == "c":
             break
-        elif command == "o":
+        elif command == "e":
             # Create a temporary file in the stage dir with lines of the form
             # <version> <url>
             # which the user can modify. Once the editor is closed, the file is
