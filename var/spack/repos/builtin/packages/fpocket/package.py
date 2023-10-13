@@ -28,8 +28,8 @@ class Fpocket(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter("makefile")
-        makefile.filter("BINDIR .*", "BINDIR = %s/bin" % prefix)
-        makefile.filter("MANDIR .*", "MANDIR = %s/man/man8" % prefix)
+        makefile.filter("BINDIR .*", f"BINDIR = {prefix}/bin")
+        makefile.filter("MANDIR .*", f"MANDIR = {prefix}/man/man8")
 
     def install(self, spec, prefix):
         make()
