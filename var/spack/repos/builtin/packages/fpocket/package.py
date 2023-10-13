@@ -17,7 +17,6 @@ class Fpocket(MakefilePackage):
     version(
         "4.1",
         "1a2af2d3f2df42de67301996db3b93c7eaff0375f866443c0468dcf4b1750688",
-        extension="tar.gz",
     )
 
     depends_on("netcdf-c")
