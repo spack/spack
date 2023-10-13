@@ -66,8 +66,7 @@ class Akantu(CMakePackage):
             "-DAKANTU_SOLID_MECHANICS:BOOL=ON",
             "-DAKANTU_STRUCTURAL_MECHANICS:BOOL=OFF",
             f"-DAKANTU_PARALLEL:BOOL={'ON' if spec.satisfies('+mpi') else 'OFF'}",
-            f"-DAKANTU_PYTHON_INTERFACE:BOOL={'ON' if spec.satisfies('+python') else 'OFF'}"
-            ),
+            f"-DAKANTU_PYTHON_INTERFACE:BOOL={'ON' if spec.satisfies('+python') else 'OFF'}",
         ]
 
         if spec.satisfies("@:3.0"):
