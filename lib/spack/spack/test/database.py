@@ -454,7 +454,7 @@ def test_005_db_exists(database):
 def test_010_all_install_sanity(database):
     """Ensure that the install layout reflects what we think it does."""
     all_specs = spack.store.STORE.layout.all_specs()
-    assert len(all_specs) == 15
+    assert len(all_specs) == 16
 
     # Query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies("mpileaks")]
@@ -571,7 +571,7 @@ def test_050_basic_query(database):
     """Ensure querying database is consistent with what is installed."""
     # query everything
     total_specs = len(spack.store.STORE.db.query())
-    assert total_specs == 17
+    assert total_specs == 18
 
     # query specs with multiple configurations
     mpileaks_specs = database.query("mpileaks")

@@ -78,7 +78,7 @@ def test_recursive_uninstall(mutable_database):
     uninstall("-y", "-a", "--dependents", "callpath")
 
     all_specs = spack.store.STORE.layout.all_specs()
-    assert len(all_specs) == 9
+    assert len(all_specs) == 10
     # query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies("mpileaks")]
     callpath_specs = [s for s in all_specs if s.satisfies("callpath")]
@@ -91,7 +91,7 @@ def test_recursive_uninstall(mutable_database):
 
 @pytest.mark.db
 @pytest.mark.regression("3690")
-@pytest.mark.parametrize("constraint,expected_number_of_specs", [("dyninst", 8), ("libelf", 6)])
+@pytest.mark.parametrize("constraint,expected_number_of_specs", [("dyninst", 9), ("libelf", 7)])
 def test_uninstall_spec_with_multiple_roots(
     constraint, expected_number_of_specs, mutable_database
 ):
@@ -102,7 +102,7 @@ def test_uninstall_spec_with_multiple_roots(
 
 
 @pytest.mark.db
-@pytest.mark.parametrize("constraint,expected_number_of_specs", [("dyninst", 14), ("libelf", 14)])
+@pytest.mark.parametrize("constraint,expected_number_of_specs", [("dyninst", 15), ("libelf", 15)])
 def test_force_uninstall_spec_with_ref_count_not_zero(
     constraint, expected_number_of_specs, mutable_database
 ):
@@ -173,7 +173,7 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
 
     all_specs, mpileaks_specs, callpath_specs, mpi_specs = db_specs()
     total_specs = len(all_specs)
-    assert total_specs == 14
+    assert total_specs == 15
     assert len(mpileaks_specs) == 3
     assert len(callpath_specs) == 2
     assert len(mpi_specs) == 3

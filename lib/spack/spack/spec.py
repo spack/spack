@@ -2195,12 +2195,14 @@ class Spec:
         spec_dict = syaml.syaml_dict([("spec", inner_dict)])
         return spec_dict
 
-    def node_dict_with_hashes(self, hash=ht.dag_hash):
+    def node_dict_with_hashes(self, hash=ht.dag_hash, tests=None):
         """Returns a node_dict of this spec with the dag hash added.  If this
         spec is concrete, the full hash is added as well.  If 'build' is in
         the hash_type, the build hash is also added."""
         node = self.to_node_dict(hash)
         node[ht.dag_hash.name] = self.dag_hash()
+        if tests is not None and hasattr(self, "tests") and self.tests:
+            node["tests"] = self.tests
 
         # dag_hash is lazily computed -- but if we write a spec out, we want it
         # to be included. This is effectively the last chance we get to compute

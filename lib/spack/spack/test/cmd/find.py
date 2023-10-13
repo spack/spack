@@ -372,3 +372,10 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
     with test_environment:
         output = find()
     assert "zlib%gcc@12.1.0" in output
+
+
+@pytest.mark.db
+def test_find_json_tests(mutable_database):
+    output = find("--json", "--tests", "simple-standalone-test")
+    tests = json.loads(output)[0]["tests"]
+    assert all([name.startswith("SimpleStandaloneTest.test_") for name in tests])
