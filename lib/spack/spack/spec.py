@@ -4445,7 +4445,7 @@ class Spec:
         kwargs.setdefault("color", None)
         return self.format(*args, **kwargs)
 
-    def format_path(self, format_string: str):
+    def format_path(self, format_string: str) -> str:
         """Given a `format_string` that is intended as a path, generate a string
         like from `Spec.format`, but eliminate extra path separators introduced by
         formatting of Spec properties.
@@ -4473,8 +4473,7 @@ class Spec:
         output_path_components += [
             fs.polite_filename(self.format(x)) for x in input_path_components
         ]
-        reconstructed_path = pathlib.Path(*output_path_components)
-        return str(reconstructed_path)
+        return str(pathlib.Path(*output_path_components))
 
     def __str__(self):
         sorted_nodes = [self] + sorted(
