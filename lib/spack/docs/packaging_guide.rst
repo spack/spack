@@ -3600,6 +3600,52 @@ If the ``package.py`` encodes builders explicitly, the signature for a phase cha
 
 In this case the package is passed as the second argument, and ``self`` is the builder instance.
 
+^^^^^^^^^^^^^^^^^^
+Mixin base classes
+^^^^^^^^^^^^^^^^^^
+
+Besides build systems, there are other cases where common metadata and behavior can be extracted
+and reused by many packages. For instance, packages that depend on ``Cuda`` or ``Rocm``, share
+common dependencies and constraints. To factor these attributes into a single place, Spack provides
+a few mixin classes in the ``spack.build_systems`` module:
+
++---------------------------------------------------------------+----------------------------------+
+|     **API docs**                                              |           **Description**        |
++===============================================================+==================================+
+| :class:`~spack.build_systems.cuda.CudaPackage`                | A helper class for packages that |
+|                                                               | use CUDA                         |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.rocm.ROCmPackage`                | A helper class for packages that |
+|                                                               | use ROCm                         |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.gnu.GNUMirrorPackage`            | A helper class for GNU packages  |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.python.PythonExtension`          | A helper class for Python        |
+|                                                               | extensions                       |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.sourceforge.SourceforgePackage`  | A helper class for packages      |
+|                                                               | from sourceforge.org             |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.sourceware.SourcewarePackage`    | A helper class for packages      |
+|                                                               | from sourceware.org              |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.xorg.XorgPackage`                | A helper class for x.org         |
+|                                                               | packages                         |
++---------------------------------------------------------------+----------------------------------+
+
+These classes should be used by adding them to the inheritance tree of the package that needs them,
+for instance:
+
+.. code-block:: python
+
+   class Cp2k(MakefilePackage, CudaPackage):
+       """CP2K is a quantum chemistry and solid state physics software package
+       that can perform atomistic simulations of solid state, liquid, molecular,
+       periodic, material, crystal, and biological systems
+       """
+
+In the example above ``Cp2k`` inherits all the conflicts and variants that ``CudaPackage`` defines.
+
 .. _multiple_build_systems:
 
 ----------------------
@@ -3697,51 +3743,6 @@ of the build system in the dependent:
 
        depends_on("example build_system=cmake")
 
-^^^^^^^^^^^^^^^^^^
-Mixin base classes
-^^^^^^^^^^^^^^^^^^
-
-Besides build systems, there are other cases where common metadata and behavior can be extracted
-and reused by many packages. For instance, packages that depend on ``Cuda`` or ``Rocm``, share
-common dependencies and constraints. To factor these attributes into a single place, Spack provides
-a few mixin classes in the ``spack.build_systems`` module:
-
-+---------------------------------------------------------------+----------------------------------+
-|     **API docs**                                              |           **Description**        |
-+===============================================================+==================================+
-| :class:`~spack.build_systems.cuda.CudaPackage`                | A helper class for packages that |
-|                                                               | use CUDA                         |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.rocm.ROCmPackage`                | A helper class for packages that |
-|                                                               | use ROCm                         |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.gnu.GNUMirrorPackage`            | A helper class for GNU packages  |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.python.PythonExtension`          | A helper class for Python        |
-|                                                               | extensions                       |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.sourceforge.SourceforgePackage`  | A helper class for packages      |
-|                                                               | from sourceforge.org             |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.sourceware.SourcewarePackage`    | A helper class for packages      |
-|                                                               | from sourceware.org              |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.xorg.XorgPackage`                | A helper class for x.org         |
-|                                                               | packages                         |
-+---------------------------------------------------------------+----------------------------------+
-
-These classes should be used by adding them to the inheritance tree of the package that needs them,
-for instance:
-
-.. code-block:: python
-
-   class Cp2k(MakefilePackage, CudaPackage):
-       """CP2K is a quantum chemistry and solid state physics software package
-       that can perform atomistic simulations of solid state, liquid, molecular,
-       periodic, material, crystal, and biological systems
-       """
-
-In the example above ``Cp2k`` inherits all the conflicts and variants that ``CudaPackage`` defines.
 
 .. _install-environment:
 
