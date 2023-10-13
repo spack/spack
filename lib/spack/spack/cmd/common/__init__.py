@@ -35,6 +35,9 @@ def shell_init_instructions(cmd, equivalent):
         color.colorize("@*c{For fish:}"),
         "  source %s/setup-env.fish" % spack.paths.share_path,
         "",
+        color.colorize("@*c{For rc:}"),
+        "  source %s/setup-env.rc" % spack.paths.share_path,
+        "",
         color.colorize("@*c{For Windows batch:}"),
         "  %s\\spack_cmd.bat" % spack.paths.bin_path,
         "",
@@ -52,6 +55,7 @@ def shell_init_instructions(cmd, equivalent):
             equivalent.format(sh_arg="--sh  ") + "  # bash/zsh/sh",
             equivalent.format(sh_arg="--csh ") + "  # csh/tcsh",
             equivalent.format(sh_arg="--fish") + "  # fish",
+            equivalent.format(sh_arg="--rc") + "  # rc",
             equivalent.format(sh_arg="--bat ") + "  # batch",
             equivalent.format(sh_arg="--pwsh") + "  # powershell",
         ]

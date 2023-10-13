@@ -44,6 +44,18 @@ def activate_header(env, shell, prompt=None):
         # TODO: prompt
     elif shell == "pwsh":
         cmds += "$Env:SPACK_ENV='%s'\n" % env.path
+    elif shell == "rc":
+        if "color" in os.getenv("TERM", "") and prompt:
+            prompt = colorize("@G{%s}" % prompt, color=True, enclose=True)
+
+        cmds += "SPACK_ENV=%s;\n" % env.path
+        cmds += "fn despacktivate { spack env deactivate };\n"
+        if prompt:
+            cmds += "if(~ $#SPACK_OLD_PS1 0) {\n"
+            cmds += "    if(~ $#PS1 0) PS1='%%%%';\n"
+            cmds += "    SPACK_OLD_PS1=$PS1;\n"
+            cmds += "};\n"
+            cmds += "PS1='%s '$PS1;\n" % prompt
     else:
         if "color" in os.getenv("TERM", "") and prompt:
             prompt = colorize("@G{%s}" % prompt, color=True, enclose=True)
@@ -83,6 +95,16 @@ def deactivate_header(shell):
         # TODO: prompt
     elif shell == "pwsh":
         cmds += "Set-Item -Path Env:SPACK_ENV\n"
+    elif shell == "rc":
+        cmds += "if(! ~ $#SPACK_ENV 0) SPACK_ENV=();\n"
+        cmds += "despacktivate >/dev/null >[2=1] && fn despacktivate;\n"
+        cmds += "if(! ~ $#SPACK_OLD_PS1 0) {\n"
+        cmds += "    PS1=$SPACK_OLD_PS1;\n"
+        cmds += "    if(~ $SPACK_OLD_PS1 '%%%%') {\n"
+        cmds += "        PS1=();\n"
+        cmds += "    };\n"
+        cmds += "    SPACK_OLD_PS1=();\n"
+        cmds += "};\n"
     else:
         cmds += "if [ ! -z ${SPACK_ENV+x} ]; then\n"
         cmds += "unset SPACK_ENV; export SPACK_ENV;\n"

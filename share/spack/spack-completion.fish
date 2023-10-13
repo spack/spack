@@ -1427,7 +1427,7 @@ complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -d 'show this help message and exit'
 
 # spack env activate
-set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view V/without-view p/prompt temp d/dir=
+set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish rc bat pwsh v/with-view V/without-view p/prompt temp d/dir=
 complete -c spack -n '__fish_spack_using_command_pos 0 env activate' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -d 'show this help message and exit'
@@ -1437,6 +1437,8 @@ complete -c spack -n '__fish_spack_using_command env activate' -l csh -f -a shel
 complete -c spack -n '__fish_spack_using_command env activate' -l csh -d 'print csh commands to activate the environment'
 complete -c spack -n '__fish_spack_using_command env activate' -l fish -f -a shell
 complete -c spack -n '__fish_spack_using_command env activate' -l fish -d 'print fish commands to activate the environment'
+complete -c spack -n '__fish_spack_using_command env activate' -l rc -f -a shell
+complete -c spack -n '__fish_spack_using_command env activate' -l rc -d 'print rc commands to activate the environment'
 complete -c spack -n '__fish_spack_using_command env activate' -l bat -f -a shell
 complete -c spack -n '__fish_spack_using_command env activate' -l bat -d 'print bat commands to activate the environment'
 complete -c spack -n '__fish_spack_using_command env activate' -l pwsh -f -a shell
@@ -1453,7 +1455,7 @@ complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -r -f
 complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -r -d 'activate the environment in this directory'
 
 # spack env deactivate
-set -g __fish_spack_optspecs_spack_env_deactivate h/help sh csh fish bat pwsh
+set -g __fish_spack_optspecs_spack_env_deactivate h/help sh csh fish rc bat pwsh
 complete -c spack -n '__fish_spack_using_command env deactivate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env deactivate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command env deactivate' -l sh -f -a shell
@@ -1462,6 +1464,8 @@ complete -c spack -n '__fish_spack_using_command env deactivate' -l csh -f -a sh
 complete -c spack -n '__fish_spack_using_command env deactivate' -l csh -d 'print csh commands to deactivate the environment'
 complete -c spack -n '__fish_spack_using_command env deactivate' -l fish -f -a shell
 complete -c spack -n '__fish_spack_using_command env deactivate' -l fish -d 'print fish commands to activate the environment'
+complete -c spack -n '__fish_spack_using_command env deactivate' -l rc -f -a shell
+complete -c spack -n '__fish_spack_using_command env deactivate' -l rc -d 'print rc commands to activate the environment'
 complete -c spack -n '__fish_spack_using_command env deactivate' -l bat -f -a shell
 complete -c spack -n '__fish_spack_using_command env deactivate' -l bat -d 'print bat commands to activate the environment'
 complete -c spack -n '__fish_spack_using_command env deactivate' -l pwsh -f -a shell
@@ -1987,7 +1991,7 @@ complete -c spack -n '__fish_spack_using_command list' -l update -r -f -a update
 complete -c spack -n '__fish_spack_using_command list' -l update -r -d 'write output to the specified file, if any package is newer'
 
 # spack load
-set -g __fish_spack_optspecs_spack_load h/help sh csh fish bat pwsh first only= list
+set -g __fish_spack_optspecs_spack_load h/help sh csh fish rc bat pwsh first only= list
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 load' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command load' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command load' -s h -l help -d 'show this help message and exit'
@@ -1997,6 +2001,8 @@ complete -c spack -n '__fish_spack_using_command load' -l csh -f -a shell
 complete -c spack -n '__fish_spack_using_command load' -l csh -d 'print csh commands to load the package'
 complete -c spack -n '__fish_spack_using_command load' -l fish -f -a shell
 complete -c spack -n '__fish_spack_using_command load' -l fish -d 'print fish commands to load the package'
+complete -c spack -n '__fish_spack_using_command load' -l rc -f -a shell
+complete -c spack -n '__fish_spack_using_command load' -l rc -d 'print rc commands to load the package'
 complete -c spack -n '__fish_spack_using_command load' -l bat -f -a shell
 complete -c spack -n '__fish_spack_using_command load' -l bat -d 'print bat commands to load the package'
 complete -c spack -n '__fish_spack_using_command load' -l pwsh -f -a shell

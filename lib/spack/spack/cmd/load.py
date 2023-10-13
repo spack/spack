@@ -46,6 +46,13 @@ def setup_parser(subparser):
         help="print fish commands to load the package",
     )
     shells.add_argument(
+        "--rc",
+        action="store_const",
+        dest="shell",
+        const="rc",
+        help="print rc commands to load the package",
+    )
+    shells.add_argument(
         "--bat",
         action="store_const",
         dest="shell",

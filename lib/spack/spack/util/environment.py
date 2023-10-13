@@ -41,6 +41,7 @@ _SHELL_SET_STRINGS = {
     "sh": "export {0}={1};\n",
     "csh": "setenv {0} {1};\n",
     "fish": "set -gx {0} {1};\n",
+    "rc": "{0}={1};\n",
     "bat": 'set "{0}={1}"\n',
     "pwsh": "$Env:{0}='{1}'\n",
 }
@@ -50,6 +51,7 @@ _SHELL_UNSET_STRINGS = {
     "sh": "unset {0};\n",
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
+    "rc": "{0}=();\n",
     "bat": 'set "{0}="\n',
     "pwsh": "Set-Item -Path Env:{0}\n",
 }
@@ -64,13 +66,15 @@ ModificationList = List[Union["NameModifier", "NameValueModifier"]]
 _find_unsafe = re.compile(r"[^\w@%+=:,./-]", re.ASCII).search
 
 
-def double_quote_escape(s):
+def double_quote_escape(s, shell="sh"):
     """Return a shell-escaped version of the string *s*.
 
     This is similar to how shlex.quote works, but it escapes with double quotes
     instead of single quotes, to allow environment variable expansion within
     quoted strings.
     """
+    if shell == "rc":
+        return "'" + s.replace("'", "''") + "'"
     if not s:
         return '""'
     if _find_unsafe(s) is None:
@@ -682,7 +686,7 @@ class EnvironmentModifications:
                     cmds += _SHELL_UNSET_STRINGS[shell].format(name)
                 else:
                     if sys.platform != "win32":
-                        new_env_name = double_quote_escape(new_env[name])
+                        new_env_name = double_quote_escape(new_env[name], shell)
                     else:
                         new_env_name = new_env[name]
                     cmd = _SHELL_SET_STRINGS[shell].format(name, new_env_name)

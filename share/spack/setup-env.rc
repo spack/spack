@@ -1,0 +1,331 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+########################################################################
+#
+# This file is part of Spack and sets up the spack environment for rc,
+# This includes environment modules and lmod support,
+# and it also puts spack in your path. The script also checks that at least
+# module support exists, and provides suggestions if it doesn't. Source
+# it like this:
+#
+#    . /path/to/spack/share/spack/setup-env.rc
+#
+########################################################################
+# This is a wrapper around the spack command that forwards calls to
+# 'spack load' and 'spack unload' to shell functions.  This in turn
+# allows them to be used to invoke environment modules functions.
+#
+# 'spack load' is smarter than just 'load' because it converts its
+# arguments into a unique Spack spec that is then passed to module
+# commands.  This allows the user to use packages without knowing all
+# their installation details.
+#
+# e.g., rather than requiring a full spec for libelf, the user can type:
+#
+#     spack load libelf
+#
+# This will first find the available libelf module file and use a
+# matching one.  If there are two versions of libelf, the user would
+# need to be more specific, e.g.:
+#
+#     spack load libelf@0.8.13
+#
+# This is very similar to how regular spack commands work and it
+# avoids the need to come up with a user-friendly naming scheme for
+# spack module files.
+########################################################################
+
+# prevent infinite recursion when spack shells out (e.g., on cray for modules)
+if(~ $_sp_initializing true) {
+    echo 'Error: recursive call to spack/share/setup-env.rc' >[1=2]
+    exit 1
+}
+_sp_initializing=true
+_sp_shell_args = (--rc --sh --csh --fish)
+
+fn _spack_shell_wrapper {
+    # Store LD_LIBRARY_PATH variables from spack shell function
+    # This is necessary because MacOS System Integrity Protection clears
+    # variables that affect dyld on process start.
+    for(var in LD_LIBRARY_PATH DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH) {
+        ! ~ $#$var 0 && SPACK_$var = $$var
+    }
+
+    # accumulate flags meant for the main spack command
+    #     while $1 is set (while there are arguments)
+    #       and $1 starts with '-' (and the arguments are flags)
+    # (Note the loop condition is unreadable in bash)
+    _sp_flags=()
+    while(~ $*(1) -*) {
+        _sp_flags = ($_sp_flags $*(1))
+        shift
+	}
+
+    # h and V flags don't require further output parsing.
+    #if(~ h $_sp_flags || ~ V $_sp_flags) {
+    #    command spack $_sp_flags $*
+    #} if not # there's an imposter rc with no 'if not'
+
+	# set the subcommand if there is one (if $1 is set)
+	_sp_subcommand=$*(1)
+	~ $#_sp_subcommand 1 && shift
+
+	# Filter out use and unuse.  For any other commands, just run the
+    # command.
+    switch($_sp_subcommand) {
+        case cd
+            _sp_arg=()
+            if(! ~ $#* 0) {
+                _sp_arg=$*(1)
+                shift
+            }
+            if(~ $_sp_arg -h --help) {
+                command spack cd -h
+            }
+            if(!~ $_sp_arg -h --help) {
+                LOC=`{spack location $_sp_arg $*}
+                if([ -d $LOC]) {
+                    cd $LOC
+                }
+                if(! [ -d $LOC]) {
+                    return 1
+                }
+            }
+        case env
+            _sp_arg=()
+            if(! ~ $#* 0) {
+                _sp_arg=$*(1)
+                shift
+            }
+
+            if(~ $_sp_arg -h --help) {
+                command spack env -h
+            } # if not # there's an imposter rc with no 'if not'
+            if(! ~ $_sp_arg -h --help) {
+				_sp_do_eval = true
+				# args contain --sh, --csh, or -h/--help: don't eval
+				~ $* ($_sp_shell_args -h --help) && _sp_do_eval = false
+
+                switch($_sp_arg) {
+                    case activate
+                        # Get --sh, --csh, or -h/--help arguments.
+                        # No extra rewriting needed because rc
+                        # understands lists and does not re-expand variables.
+                        if(~ $_sp_do_eval false) {
+                            command spack env activate $*
+                        }
+						# if not
+						if(! ~ $_sp_do_eval false) {
+                            stdout=`{command spack $_sp_flags env activate --rc $*} && eval $stdout
+                        }
+                    case deactivate
+                        if(~ $_sp_do_eval false) {
+                            command spack env deactivate $*
+						}
+						# if not
+                        if(! ~ $_sp_do_eval false) {
+							if(! ~ $#* 0) {
+								# Any other arguments are an error
+								command spack env deactivate -h
+							}
+							# if not
+							if(~ $#* 0) {
+								# No args: source the output of the command.
+								stdout=`{command spack $_sp_flags env deactivate --rc} && eval $stdout
+							}
+                        }
+                    case *
+                        command spack env $_sp_arg $*
+                }
+            }
+        case load unload
+            _sp_do_eval = true
+            for(arg in $_sp_shell_args -h --help --list) {
+                # Args contain --sh, --csh, or -h/--help: just execute.
+				~ $arg $* && _sp_do_eval = false
+			}
+			if(~ $_sp_do_eval true) {
+                stdout=`{command spack $_sp_flags $_sp_subcommand --rc $*} \
+					&& eval $stdout
+			}
+			# if not
+			if(! ~ $_sp_do_eval true) {
+                command spack $_sp_flags $_sp_subcommand $*
+            }
+        case *
+            command spack $_sp_flags $_sp_subcommand $*
+	}
+}
+
+########################################################################
+# Prepends directories to path, if they exist.
+#      pathadd /path/to/dir            # add to PATH
+# or   pathadd OTHERPATH /path/to/dir  # add to OTHERPATH
+########################################################################
+fn _spack_pathadd {
+    # If no variable name is supplied, just append to PATH
+    # otherwise append to that variable.
+    _pa_varname=PATH
+    _pa_new_path=$*(1)
+    if([ -n $*(2) ]) {
+        _pa_varname=$*(1)
+        _pa_new_path=$*(2)
+    }
+
+    # Do the actual prepending here.
+    _pa_oldvalue=$$_pa_varname
+
+    _pa_canonical=:$_pa_oldvalue:
+    if([ -d $_pa_new_path ] && \
+       ! ~ $_pa_canonical *:$_pa_new_path:*) {
+        if(~ $#_pa_oldvalue 0)
+            $_pa_varname=$_pa_new_path
+        if(! ~ $#_pa_oldvalue 0)
+            $_pa_varname=$_pa_new_path:$_pa_oldvalue
+    }
+}
+
+
+# Determine which shell is being used
+fn _spack_determine_shell {
+    if([ -f /proc/$pid/exe ]) {
+        # If procfs is present this seems a more reliable
+        # way to detect the current shell
+        _sp_exe=`{readlink /proc/$pid/exe}
+        # Shell may contain number, like zsh5 instead of zsh
+        basename $_sp_exe | tr -d '0123456789'
+    }
+    if(! [ -f /proc/$pid/exe ]) {
+		echo rc
+	}
+    #PS_FORMAT= ps -p $pid | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
+}
+_sp_shell=`{_spack_determine_shell}
+
+fn spacktivate { spack env activate }
+
+#
+# Figure out where this file is.
+#
+# Try to read the /proc filesystem (works on linux without lsof)
+# In dash, the sourced file is the last one opened (and it's kept open)
+_sp_source_file_fd=`{ls /proc/$pid/fd >[2]/dev/null | sort -n | tail -1}
+if(! _sp_source_file=`{readlink /proc/$pid/fd/$_sp_source_file_fd}) {
+	# Last resort: try lsof. This works in dash on macos -- same reason.
+	# macos has lsof installed by default; some linux containers don't.
+	_sp_lsof_output=`{lsof -p $pid -Fn0 | tail -1}
+	_sp_source_file=`{echo $_sp_lsof_output | sed -e 's/^*n//'}
+}
+
+#
+# Find root directory and add bin to path.
+#
+# We send cd output to /dev/null to avoid because a lot of users set up
+# their shell so that cd prints things out to the tty.
+_sp_share_dir=`{cd `{dirname $_sp_source_file} > /dev/null && pwd}
+_sp_prefix=`{cd `{dirname `{dirname $_sp_share_dir}} > /dev/null && pwd}
+
+if([ -x $_sp_prefix/bin/spack ]) {
+    SPACK_ROOT=`{_sp_prefix}
+}
+# if not
+if(! [ -x $_sp_prefix/bin/spack ]) {
+    # If the shell couldn't find the sourced script, fall back to
+    # whatever the user set SPACK_ROOT to.
+    if([ -n $SPACK_ROOT ]) {
+        _sp_prefix=$SPACK_ROOT
+        _sp_share_dir=$_sp_prefix/share/spack
+    }
+
+    # If SPACK_ROOT didn't work, fail.
+    if(! [ -x $_sp_prefix/bin/spack ]) {
+        echo '==> Error: SPACK_ROOT must point to spack''s prefix when using' $_sp_shell
+        echo 'Run this with the correct prefix before sourcing setup-env.rc:'
+        echo '    SPACK_ROOT=</path/to/spack>'
+        return 1
+    }
+}
+_spack_pathadd PATH $_sp_prefix/bin
+
+#
+# Check whether a function of the given name is defined.
+# Note: does not bother escaping quotes in $*(1)
+# (which requires a call to sed).
+#
+fn _spack_fn_exists {
+    ~ `{rc -c 'whatis ''' ^ $*(1) ^ '''' >[2]/dev/null} 'fn '*
+}
+
+# Define the spack shell function with some informative no-ops, so when users
+# run `which spack`, they see the path to spack and where the function is from.
+eval 'fn spack {
+    echo this is a shell function from: '$_sp_share_dir/setup-env.rc' >/dev/null
+    echo the real spack script is here: '$_sp_prefix/bin/spack' >/dev/null
+    _spack_shell_wrapper $*
+}'
+
+# functions are already exported
+
+# Identify and lock the python interpreter
+if(! command -v $SPACK_PYTHON >/dev/null) {
+    # unset if not found
+    SPACK_PYTHON=()
+}
+for(cmd in python3 python python2) {
+    if(~ $#SPACK_PYTHON 0 && command -v $cmd >/dev/null) {
+        SPACK_PYTHON=`{command -v $cmd}
+    }
+}
+
+if(~ $#SPACK_SKIP_MODULES 0) {
+    need_module = no
+    _spack_fn_exists use || _spack_fn_exists module || need_module = yes
+
+    #
+    # make available environment-modules
+    #
+    if(~ $need_module yes) {
+        eval `{spack --print-shell-vars rc,modules}
+
+        # _sp_module_prefix is set by spack --print-sh-vars
+        if( ! ~ $_sp_module_prefix not_installed) {
+            # activate it!
+            # environment-modules@4: has a bin directory inside its prefix
+            _sp_module_bin=$_sp_module_prefix/bin
+            if(! [ -d $_sp_module_bin ]) {
+                # environment-modules@3 has a nested bin directory
+                _sp_module_bin=$_sp_module_prefix/Modules/bin
+            }
+
+            # _sp_module_bin and _sp_shell are evaluated here; the quoted
+            # eval statement and $* are deferred.
+			# The extra ''-s put '-s around $_sp_module_bin, in case
+		    # it contained spaces.
+            eval 'fn module { eval `{'''$_sp_module_bin'''/modulecmd '''$_sp_shell''' $*} }'
+            _spack_pathadd PATH $_sp_module_bin
+        }
+    }
+	# if not
+	if(! ~ $need_module yes) {
+        eval `{command spack --print-shell-vars rc} || return
+    }
+
+    #
+    # set module system roots
+    #
+    fn _sp_multi_pathadd {
+        for(pth in `{echo $*(2) | sed -e 's/:/ /g'}) {
+            for(systype in `{echo $_sp_compatible_sys_types | sed -e 's/:/ /g'}) {
+                _spack_pathadd $*(1) $pth/$systype
+            }
+        }
+    }
+    _sp_multi_pathadd MODULEPATH $_sp_tcl_roots
+}
+
+# done: unset sentinel variable as we're no longer initializing
+_sp_initializing=false
