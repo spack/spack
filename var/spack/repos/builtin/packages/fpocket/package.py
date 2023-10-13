@@ -27,7 +27,3 @@ class Fpocket(MakefilePackage):
         makefile = FileFilter("makefile")
         makefile.filter("BINDIR .*", f"BINDIR = {prefix}/bin")
         makefile.filter("MANDIR .*", f"MANDIR = {prefix}/man/man8")
-
-    def install(self, spec, prefix):
-        make()
-        make("install")
