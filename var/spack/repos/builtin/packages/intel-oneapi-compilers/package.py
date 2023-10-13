@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import re
+
 import spack.compilers
 from spack.build_environment import dso_suffix
 from spack.package import *
@@ -273,8 +276,22 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         gcc = Executable(self.compiler.cc)
         multiarch_dir = gcc("-print-multiarch", output=str).strip()
         triplet = gcc("-###", error=str).partition("Target: ")[2].split("\n")[0]
-        if multiarch_dir and multiarch_dir != triplet:
-            classic_flags.append("-isystem/usr/include/" + multiarch_dir)
+
+        # /usr/include does not exists on all OSs. `gcc` defines the include prefix by looking for
+        # `crti.o`: https://github.com/gcc-mirror/gcc/blob/master/gcc/Makefile.in#L634
+        # To reproduce this we use a python implementation of
+        # ``dirname $(readlink -f $(echo | gcc -### -xc - 2>&1 | xargs -n1 | grep 'crti\.o'))``
+        gcc_output= ""
+        for gcc_output in gcc("-###", "-xc", "/dev/null", error=str).split(" "):
+            if "crti.o" in gcc_output:
+                break
+        if gcc_output:
+            incdir=re.sub("lib.*/", "include/", os.path.dirname(os.path.realpath(gcc_output)))
+        else:
+            incdir = ""
+
+        if multiarch_dir and multiarch_dir != triplet and multiarch_dir in incdir:
+            classic_flags.append("-isystem" + incdir)
 
         # Older versions trigger -Wunused-command-line-argument warnings whenever
         # linker flags are passed in preprocessor (-E) or compilation mode (-c).
