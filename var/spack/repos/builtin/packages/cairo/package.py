@@ -39,6 +39,8 @@ class Cairo(AutotoolsPackage):
     variant("fc", default=False, description="Enable cairo's Fontconfig font backend feature")
     variant("png", default=False, description="Enable cairo's PNG functions feature")
     variant("svg", default=False, description="Enable cairo's SVN functions feature")
+    variant("shared", default=True, description="Build shared libraries")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
 
     depends_on("libx11", when="+X")
     depends_on("libxext", when="+X")
@@ -61,6 +63,7 @@ class Cairo(AutotoolsPackage):
 
     conflicts("+png", when="platform=darwin")
     conflicts("+svg", when="platform=darwin")
+    conflicts("+shared~pic")
 
     # patch from https://gitlab.freedesktop.org/cairo/cairo/issues/346
     patch("fontconfig.patch", when="@1.16.0:1.17.2")
@@ -84,6 +87,15 @@ class Cairo(AutotoolsPackage):
         args.extend(self.enable_or_disable("gobject"))
         args.extend(self.enable_or_disable("ft"))
         args.extend(self.enable_or_disable("fc"))
+        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
+
+        if self.spec.satisfies("+ft ^freetype~shared"):
+            pkgconf = which("pkg-config")
+            ldflags = pkgconf("--libs-only-L", "--static", "freetype2", output=str)
+            libs = pkgconf("--libs-only-l", "--static", "freetype2", output=str)
+            args.append(f"LDFLAGS={ldflags}")
+            args.append(f"LIBS={libs}")
 
         return args
 
