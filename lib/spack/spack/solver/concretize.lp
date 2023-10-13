@@ -923,7 +923,8 @@ pkg_fact(Package, variant_single_value("dev_path"))
 %-----------------------------------------------------------------------------
 
 % if no platform is set, fall back to the default
-:- attr("node_platform", _, Platform), not allowed_platform(Platform).
+error(100, "platform '{0}' is not allowed on the current host", Platform)
+  :- attr("node_platform", _, Platform), not allowed_platform(Platform).
 
 attr("node_platform", PackageNode, Platform)
  :- attr("node", PackageNode),
