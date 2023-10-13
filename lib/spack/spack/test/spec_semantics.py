@@ -1033,7 +1033,7 @@ def test_spec_format_path(spec_str, format_str, expected):
 def _check_spec_format_path(spec_str, format_str, expected):
     spec = Spec(spec_str)
     if not expected:
-        with pytest.raises(spack.spec.SpecFormatPathError):
+        with pytest.raises((spack.spec.SpecFormatPathError, spack.spec.SpecFormatStringError)):
             spec.format_path(format_str)
     else:
         formatted = spec.format_path(format_str)
@@ -1069,7 +1069,7 @@ def test_spec_format_path_windows(spec_str, format_str, expected):
         # following another "\")
         ("zlib@git.foo/bar", r"C:\\installroot\package-{name}-{version}", r"C__installrootpackage-zlib-git.foo_bar"),
         # "\" is not a POSIX separator, and Spec.format treats "\{" as a literal
-        # which means that the resulting format string is invalid
+        # "{", which means that the resulting format string is invalid
         ("zlib@git.foo/bar", r"package\{name}\{version}", None),
     ],
 )

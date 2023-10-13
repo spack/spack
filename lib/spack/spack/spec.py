@@ -4821,63 +4821,6 @@ class Spec:
                 v.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(self.fullname))
 
 
-def _extract_root(format_string):
-    """
-    Split an input string into a root and a relative path.
-
-    On POSIX systems (Mac, Linux) this will fail if an absolute path like
-    "C:\\" is provided, since this looks like an absolute path on Windows.
-    Likewise, Windows network drives are prohibited.
-
-    On Windows, paths like "/root" are assumed to be a mistake and likewise
-    raise an exception.
-
-    Returns:
-        If the path is absolute, this returns a tuple where the first element
-        is the extracted root, and the second is the format string with the
-        root removed.
-    """
-    checks = [
-        (r"^([a-zA-Z]:[/\\])", "drive", ["windows"]),
-        (r"^(\\\\)", "device", ["windows"]),
-        (r"^(//)", "device_or_root", ["windows", "posix"]),
-        (r"^([/\\])", "posixroot", ["posix"]),
-    ]
-
-    for pattern, root_type, supported_on in checks:
-        match = re.match(pattern, format_string)
-        if match:
-            break
-
-    if not match:
-        # Not an absolute path on Windows or otherwise
-        return
-
-    we_are_on = "posix" if sys.platform != "win32" else "windows"
-    if we_are_on not in supported_on:
-        raise SpecFormatPathError(
-            "Incompatible absolute path for current system ({0}): {1}".format(
-                sys.platform, format_string
-            )
-        )
-
-    any_sep = r"[/\\]"
-    if root_type == "drive":
-        drive = match.group(1)
-        return drive, format_string[len(drive) :].lstrip(any_sep)
-    elif root_type == "device":
-        return "//", format_string.lstrip(any_sep)
-    elif root_type == "posixroot":
-        return "/", format_string.lstrip(any_sep)
-    elif root_type == "device_or_root":
-        if we_are_on == "posix":
-            return "/", format_string.lstrip(any_sep)
-        else:
-            return "//", format_string.lstrip(any_sep)
-    else:
-        raise ValueError("Internal function bug")
-
-
 def parse_with_version_concrete(string: str, compiler: bool = False):
     """Same as Spec(string), but interprets @x as @=x"""
     s: Union[CompilerSpec, Spec] = CompilerSpec(string) if compiler else Spec(string)
