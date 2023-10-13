@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 from spack.package import *
@@ -69,12 +70,12 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        # On CentOS and Ubuntu, the OS package texinfo installs "info",
-        # which satisfies spack external find, but "makeinfo" comes from
-        # texi2html and may not be installed (and vice versa).
-        info = which("info")
-        makeinfo = which("makeinfo")
-        if info is None or makeinfo is None:
+        # On CentOS and Ubuntu, the OS package info installs "info",
+        # which satisfies spack external find, but "makeinfo" comes
+        # from texinfo and may not be installed (and vice versa).
+        (texinfo_path, info_exe) = os.path.split(exe)
+        makeinfo_exe = os.path.join(texinfo_path, "makeinfo")
+        if not os.path.exists(makeinfo_exe):
             return None
         output = Executable(exe)("--version", output=str, error=str)
         match = re.search(r"info \(GNU texinfo\)\s+(\S+)", output)
