@@ -7,12 +7,11 @@ from spack.package import *
 
 
 class PyLightning(PythonPackage):
-    """Use Lightning Apps to build everything from production-ready,
-    multi-cloud ML systems to simple research demos.
-    """
+    """The Deep Learning framework to train, deploy, and ship AI products Lightning fast."""
 
     homepage = "https://github.com/Lightning-AI/lightning"
     pypi = "lightning/lightning-2.0.0.tar.gz"
+    skip_modules = ["lightning.app", "lightning.data", "lightning.store"]
 
     maintainers("adamjstewart")
 
@@ -51,7 +50,9 @@ class PyLightning(PythonPackage):
     depends_on("py-torchmetrics@0.7:1", when="@:2.0.8", type=("build", "run"))
     depends_on("py-tqdm@4.57:5", type=("build", "run"))
     depends_on("py-typing-extensions@4:5", type=("build", "run"))
-    depends_on("py-pytorch-lightning", when="@2:", type=("build", "run"))
+
+    # Only an alias, not actually used by the library
+    # depends_on("py-pytorch-lightning", when="@2:", type=("build", "run"))
 
     # Historical requirements
     with when("@:2.0"):
