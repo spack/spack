@@ -281,12 +281,12 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # `crti.o`: https://github.com/gcc-mirror/gcc/blob/master/gcc/Makefile.in#L634
         # To reproduce this we use a python implementation of
         # ``dirname $(readlink -f $(echo | gcc -### -xc - 2>&1 | xargs -n1 | grep 'crti\.o'))``
-        gcc_output= ""
+        gcc_output = ""
         for gcc_output in gcc("-###", "-xc", "/dev/null", error=str).split(" "):
             if "crti.o" in gcc_output:
                 break
         if gcc_output:
-            incdir=re.sub("lib.*/", "include/", os.path.dirname(os.path.realpath(gcc_output)))
+            incdir = re.sub("lib.*/", "include/", os.path.dirname(os.path.realpath(gcc_output)))
         else:
             incdir = ""
 
