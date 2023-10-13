@@ -12,9 +12,11 @@ class PyMlDtypes(PythonPackage):
 
     homepage = "https://github.com/jax-ml/ml_dtypes"
     pypi = "ml_dtypes/ml_dtypes-0.3.1.tar.gz"
+    git = "https://github.com/jax-ml/ml_dtypes.git"
+    submodules = True
 
-    version("0.3.1", sha256="60778f99194b4c4f36ba42da200b35ef851ce4d4af698aaf70f5b91fe70fc611")
-    version("0.2.0", sha256="6488eb642acaaf08d8020f6de0a38acee7ac324c1e6e92ee0c0fea42422cb797")
+    version("0.3.1", tag="v0.3.1", commit="bbeedd470ecac727c42e97648c0f27bfc312af30")
+    version("0.2.0", tag="v0.2.0", commit="5b9fc9ad978757654843f4a8d899715dbea30e88")
 
     depends_on("python@3.9:", when="@0.3:", type=("build", "link", "run"))
     depends_on("py-numpy@1.21:", type=("build", "link", "run"))
