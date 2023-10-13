@@ -647,7 +647,7 @@ def find_versions_of_archive(
     list_urls |= additional_list_urls
 
     # Grab some web pages to scrape.
-    pages, links = spack.util.web.spider(list_urls, depth=list_depth, concurrency=concurrency)
+    _, links = spack.util.web.spider(list_urls, depth=list_depth, concurrency=concurrency)
 
     # Scrape them for archive URLs
     regexes = []

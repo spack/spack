@@ -7,12 +7,13 @@ import errno
 import getpass
 import glob
 import hashlib
+import io
 import os
 import shutil
 import stat
 import sys
 import tempfile
-from typing import Callable, Dict, Iterable, Optional
+from typing import Callable, Dict, Iterable, Optional, Set
 
 import llnl.string
 import llnl.util.lang
@@ -27,6 +28,8 @@ from llnl.util.filesystem import (
     partition_path,
     remove_linked_tree,
 )
+from llnl.util.tty.colify import colify
+from llnl.util.tty.color import colorize
 
 import spack.caches
 import spack.config
@@ -35,11 +38,14 @@ import spack.fetch_strategy as fs
 import spack.mirror
 import spack.paths
 import spack.spec
+import spack.stage
 import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 from spack.util.crypto import bit_length, prefix_bits
+from spack.util.editor import editor, executable
+from spack.version import StandardVersion, VersionList
 
 # The well-known stage source subdirectory name.
 _source_path_subdir = "spack-src"
@@ -860,11 +866,187 @@ def purge():
                     os.remove(stage_path)
 
 
+def interactive_version_filter(
+    url_dict: Dict[StandardVersion, str],
+    known_versions: Iterable[StandardVersion] = (),
+    *,
+    url_changes: Set[StandardVersion] = set(),
+    input: Callable[..., str] = input,
+) -> Optional[Dict[StandardVersion, str]]:
+    """Interactively filter the list of spidered versions.
+
+    Args:
+        url_dict: Dictionary of versions to URLs
+        known_versions: Versions that can be skipped because they are already known
+
+    Returns:
+        Filtered dictionary of versions to URLs or None if the user wants to quit
+    """
+    # Find length of longest string in the list for padding
+    sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
+    version_filter = VersionList([":"])
+    max_len = max(len(str(v)) for v in sorted_and_filtered)
+    orig_url_dict = url_dict  # only copy when using editor to modify
+    print_header = True
+    VERSION_COLOR = spack.spec.VERSION_COLOR
+    while True:
+        if print_header:
+            has_filter = version_filter != VersionList([":"])
+            header = []
+            if len(sorted_and_filtered) == len(orig_url_dict):
+                header.append(
+                    f"Selected {llnl.string.plural(len(sorted_and_filtered), 'version')}"
+                )
+            else:
+                header.append(
+                    f"Selected {len(sorted_and_filtered)} of {len(orig_url_dict)} versions"
+                )
+            if known_versions:
+                num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
+                header.append(f"{llnl.string.plural(num_new, 'new version')}")
+            if has_filter:
+                header.append(colorize(f"Filtered by {VERSION_COLOR}{version_filter}@."))
+
+            version_with_url = [
+                colorize(
+                    f"{VERSION_COLOR}{str(v):{max_len}}@.  {url_dict[v]}"
+                    f"{'  @K{# NOTE: change of URL}' if v in url_changes else ''}"
+                )
+                for v in sorted_and_filtered
+            ]
+            tty.msg(". ".join(header), *llnl.util.lang.elide_list(version_with_url))
+            print()
+
+        print_header = True
+
+        print("commands:")
+        commands = (
+            "@*b{[c]}hecksum",
+            "@*b{[e]}dit",
+            "@*b{[f]}ilter",
+            "@*b{[a]}sk each",
+            "@*b{[n]}ew only",
+            "@*b{[r]}estart",
+            "@*b{[q]}uit",
+        )
+        colify(list(map(colorize, commands)), indent=2)
+
+        try:
+            command = input(colorize("@*g{command>} ")).strip().lower()
+        except EOFError:
+            print()
+            command = "q"
+
+        if command == "c":
+            break
+        elif command == "e":
+            # Create a temporary file in the stage dir with lines of the form
+            # <version> <url>
+            # which the user can modify. Once the editor is closed, the file is
+            # read back in and the versions to url dict is updated.
+
+            # Create a temporary file by hashing its contents.
+            buffer = io.StringIO()
+            buffer.write("# Edit this file to change the versions and urls to fetch\n")
+            for v in sorted_and_filtered:
+                buffer.write(f"{str(v):{max_len}}  {url_dict[v]}\n")
+            data = buffer.getvalue().encode("utf-8")
+
+            short_hash = hashlib.sha1(data).hexdigest()[:7]
+            filename = f"{spack.stage.stage_prefix}versions-{short_hash}.txt"
+            filepath = os.path.join(spack.stage.get_stage_root(), filename)
+
+            # Write contents
+            with open(filepath, "wb") as f:
+                f.write(data)
+
+            # Open editor
+            editor(filepath, exec_fn=executable)
+
+            # Read back in
+            with open(filepath, "r") as f:
+                orig_url_dict, url_dict = url_dict, {}
+                for line in f:
+                    line = line.strip()
+                    # Skip empty lines and comments
+                    if not line or line.startswith("#"):
+                        continue
+                    try:
+                        version, url = line.split(None, 1)
+                    except ValueError:
+                        tty.warn(f"Couldn't parse: {line}")
+                        continue
+                    try:
+                        url_dict[StandardVersion.from_string(version)] = url
+                    except ValueError:
+                        tty.warn(f"Invalid version: {version}")
+                        continue
+                sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
+
+            os.unlink(filepath)
+        elif command == "f":
+            tty.msg(
+                colorize(
+                    f"Examples filters: {VERSION_COLOR}1.2@. "
+                    f"or {VERSION_COLOR}1.1:1.3@. "
+                    f"or {VERSION_COLOR}=1.2, 1.2.2:@."
+                )
+            )
+            try:
+                # Allow a leading @ version specifier
+                filter_spec = input(colorize("@*g{filter>} ")).strip().lstrip("@")
+            except EOFError:
+                print()
+                continue
+            try:
+                version_filter.intersect(VersionList([filter_spec]))
+            except ValueError:
+                tty.warn(f"Invalid version specifier: {filter_spec}")
+                continue
+            # Apply filter
+            sorted_and_filtered = [v for v in sorted_and_filtered if v.satisfies(version_filter)]
+        elif command == "a":
+            i = 0
+            while i < len(sorted_and_filtered):
+                v = sorted_and_filtered[i]
+                try:
+                    answer = input(f"  {str(v):{max_len}}  {url_dict[v]} [Y/n]? ").strip().lower()
+                except EOFError:
+                    # If ^D, don't fully exit, but go back to the command prompt, now with possibly
+                    # fewer versions
+                    print()
+                    break
+                if answer in ("n", "no"):
+                    del sorted_and_filtered[i]
+                elif answer in ("y", "yes", ""):
+                    i += 1
+            else:
+                # Went over each version, so go to checksumming
+                break
+        elif command == "n":
+            sorted_and_filtered = [v for v in sorted_and_filtered if v not in known_versions]
+        elif command == "r":
+            url_dict = orig_url_dict
+            sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
+            version_filter = VersionList([":"])
+        elif command == "q":
+            try:
+                if input("Really quit [y/N]? ").strip().lower() in ("y", "yes"):
+                    return None
+            except EOFError:
+                print()
+                return None
+        else:
+            tty.warn(f"Ignoring invalid command: {command}")
+            print_header = False
+            continue
+    return {v: url_dict[v] for v in sorted_and_filtered}
+
+
 def get_checksums_for_versions(
     url_by_version: Dict[str, str],
     package_name: str,
     *,
-    batch: bool = False,
     first_stage_function: Optional[Callable[[Stage, str], None]] = None,
     keep_stage: bool = False,
     concurrency: Optional[int] = None,
@@ -890,32 +1072,7 @@ def get_checksums_for_versions(
     Returns:
         A dictionary mapping each version to the corresponding checksum
     """
-    sorted_versions = sorted(url_by_version.keys(), reverse=True)
-
-    # Find length of longest string in the list for padding
-    max_len = max(len(str(v)) for v in sorted_versions)
-    num_ver = len(sorted_versions)
-
-    tty.msg(
-        f"Found {llnl.string.plural(num_ver, 'version')} of {package_name}:",
-        "",
-        *llnl.util.lang.elide_list(
-            ["{0:{1}}  {2}".format(str(v), max_len, url_by_version[v]) for v in sorted_versions]
-        ),
-    )
-    print()
-
-    if batch:
-        archives_to_fetch = len(sorted_versions)
-    else:
-        archives_to_fetch = tty.get_number(
-            "How many would you like to checksum?", default=1, abort="q"
-        )
-
-    if not archives_to_fetch:
-        tty.die("Aborted.")
-
-    versions = sorted_versions[:archives_to_fetch]
+    versions = sorted(url_by_version.keys(), reverse=True)
     search_arguments = [(url_by_version[v], v) for v in versions]
 
     version_hashes, errors = {}, []

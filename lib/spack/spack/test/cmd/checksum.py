@@ -7,12 +7,12 @@ import argparse
 
 import pytest
 
-import llnl.util.tty as tty
-
 import spack.cmd.checksum
 import spack.repo
 import spack.spec
 from spack.main import SpackCommand
+from spack.stage import interactive_version_filter
+from spack.version import Version
 
 spack_checksum = SpackCommand("checksum")
 
@@ -56,18 +56,134 @@ def test_checksum(arguments, expected, mock_packages, mock_clone_repo, mock_stag
         assert "version(" in output
 
 
-@pytest.mark.not_on_windows("Not supported on Windows (yet)")
-def test_checksum_interactive(mock_packages, mock_fetch, mock_stage, monkeypatch):
-    # TODO: mock_fetch doesn't actually work with stage, working around with ignoring
-    # fail_on_error for now
-    def _get_number(*args, **kwargs):
-        return 1
+def input_from_commands(*commands):
+    """Create a function that returns the next command from a list of inputs for interactive spack
+    checksum. If None is encountered, this is equivalent to EOF / ^D."""
+    commands = iter(commands)
 
-    monkeypatch.setattr(tty, "get_number", _get_number)
+    def _input(prompt):
+        cmd = next(commands)
+        if cmd is None:
+            raise EOFError
+        assert isinstance(cmd, str)
+        return cmd
 
-    output = spack_checksum("preferred-test", fail_on_error=False)
-    assert "version of preferred-test" in output
-    assert "version(" in output
+    return _input
+
+
+def test_checksum_interactive_filter():
+    # Filter effectively by 1:1.0, then checksum.
+    input = input_from_commands("f", "@1:", "f", "@:1.0", "c")
+    assert interactive_version_filter(
+        {
+            Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
+            Version("1.0.1"): "https://www.example.com/pkg-1.0.1.tar.gz",
+            Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+            Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
+        },
+        input=input,
+    ) == {
+        Version("1.0.1"): "https://www.example.com/pkg-1.0.1.tar.gz",
+        Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+    }
+
+
+def test_checksum_interactive_return_from_filter_prompt():
+    # Enter and then exit filter subcommand.
+    input = input_from_commands("f", None, "c")
+    assert interactive_version_filter(
+        {
+            Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
+            Version("1.0.1"): "https://www.example.com/pkg-1.0.1.tar.gz",
+            Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+            Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
+        },
+        input=input,
+    ) == {
+        Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
+        Version("1.0.1"): "https://www.example.com/pkg-1.0.1.tar.gz",
+        Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+        Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
+    }
+
+
+def test_checksum_interactive_quit_returns_none():
+    # Quit after filtering something out (y to confirm quit)
+    input = input_from_commands("f", "@1:", "q", "y")
+    assert (
+        interactive_version_filter(
+            {
+                Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
+                Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+                Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
+            },
+            input=input,
+        )
+        is None
+    )
+
+
+def test_checksum_interactive_reset_resets():
+    # Filter 1:, then reset, then filter :0, should just given 0.9 (it was filtered out
+    # before reset)
+    input = input_from_commands("f", "@1:", "r", "f", ":0", "c")
+    assert interactive_version_filter(
+        {
+            Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
+            Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+            Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
+        },
+        input=input,
+    ) == {Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz"}
+
+
+def test_checksum_interactive_ask_each():
+    # Ask each should run on the filtered list. First select 1.x, then select only the second
+    # entry, which is 1.0.1.
+    input = input_from_commands("f", "@1:", "a", "n", "y", "n")
+    assert interactive_version_filter(
+        {
+            Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
+            Version("1.0.1"): "https://www.example.com/pkg-1.0.1.tar.gz",
+            Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+            Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
+        },
+        input=input,
+    ) == {Version("1.0.1"): "https://www.example.com/pkg-1.0.1.tar.gz"}
+
+
+def test_checksum_interactive_quit_from_ask_each():
+    # Enter ask each mode, select the second item, then quit from submenu, then checksum, which
+    # should still include the last item at which ask each stopped.
+    input = input_from_commands("a", "n", "y", None, "c")
+    assert interactive_version_filter(
+        {
+            Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
+            Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+            Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
+        },
+        input=input,
+    ) == {
+        Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+        Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
+    }
+
+
+def test_checksum_interactive_new_only():
+    # The 1.0 version is known already, and should be dropped on `n`.
+    input = input_from_commands("n", "c")
+    assert interactive_version_filter(
+        {
+            Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
+            Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+            Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
+        },
+        known_versions=[Version("1.0")],
+        input=input,
+    ) == {
+        Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
+        Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
+    }
 
 
 def test_checksum_versions(mock_packages, mock_clone_repo, mock_fetch, mock_stage):
