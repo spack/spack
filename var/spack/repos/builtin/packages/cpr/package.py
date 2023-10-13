@@ -22,10 +22,9 @@ class Cpr(CMakePackage):
 
     def cmake_args(self):
         _force = "_FORCE" if self.spec.satisfies("@:1.9") else ""
-        
+
         return [
             self.define("CPR_USE_SYSTEM_GTEST", True),
             self.define(f"CPR{_force}_USE_SYSTEM_CURL", True),
             self.define("CPR_ENABLE_SSL", True),
         ]
-
