@@ -26,11 +26,25 @@ class Curl(NMakePackage, AutotoolsPackage):
 
     maintainers("alecbcs")
 
-    version("8.1.2", sha256="b54974d32fd610acace92e3df1f643144015ac65847f0a041fdc17db6f43f243")
-    version("8.0.1", sha256="9b6b1e96b748d04b968786b6bdf407aa5c75ab53a3d37c1c8c81cdb736555ccf")
-    version("7.88.1", sha256="8224b45cce12abde039c12dc0711b7ea85b104b9ad534d6e4c5b4e188a61c907")
+    version("8.4.0", sha256="e5250581a9c032b1b6ed3cf2f9c114c811fc41881069e9892d115cc73f9e88c6")
 
     # Deprecated versions due to CVEs
+    # CVE-2023-38545
+    version(
+        "8.1.2",
+        sha256="b54974d32fd610acace92e3df1f643144015ac65847f0a041fdc17db6f43f243",
+        deprecated=True,
+    )
+    version(
+        "8.0.1",
+        sha256="9b6b1e96b748d04b968786b6bdf407aa5c75ab53a3d37c1c8c81cdb736555ccf",
+        deprecated=True,
+    )
+    version(
+        "7.88.1",
+        sha256="8224b45cce12abde039c12dc0711b7ea85b104b9ad534d6e4c5b4e188a61c907",
+        deprecated=True,
+    )
     # https://nvd.nist.gov/vuln/detail/CVE-2022-43551
     version(
         "7.87.0",

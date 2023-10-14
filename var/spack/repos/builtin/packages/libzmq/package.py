@@ -105,19 +105,16 @@ class Libzmq(AutotoolsPackage):
     def configure_args(self):
         config_args = []
 
+        config_args.extend(self.with_or_without("docs"))
         config_args.extend(self.enable_or_disable("drafts"))
         config_args.extend(self.enable_or_disable("libbsd"))
+        config_args.extend(self.with_or_without("libsodium"))
         config_args.extend(self.enable_or_disable("libunwind"))
         # the package won't compile with newer compilers because warnings
         # are converted to errors. Hence, disable such conversion.
         # this option was only added in version 4.2.3.
         if self.spec.version >= Version("4.2.3"):
             config_args.append("--disable-Werror")
-
-        if "+libsodium" in self.spec:
-            config_args.append("--with-libsodium=" + self.spec["libsodium"].prefix)
-        if "~docs" in self.spec:
-            config_args.append("--without-docs")
         if "clang" in self.compiler.cc:
             config_args.append("CFLAGS=-Wno-gnu")
             config_args.append("CXXFLAGS=-Wno-gnu")

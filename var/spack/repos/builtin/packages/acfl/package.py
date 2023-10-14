@@ -185,8 +185,7 @@ def get_acfl_prefix(spec):
         )
     else:
         return join_path(
-            spec.prefix,
-            "arm-linux-compiler-{0}_{1}".format(spec.version, get_os(spec.version.string)),
+            spec.prefix, f"arm-linux-compiler-{spec.version}_{get_os(spec.version.string)}"
         )
 
 
@@ -238,7 +237,7 @@ class Acfl(Package):
     # Run the installer with the desired install directory
     def install(self, spec, prefix):
         exe = Executable(
-            "./arm-compiler-for-linux_{0}_{1}.sh".format(spec.version, get_os(spec.version.string))
+            f"./arm-compiler-for-linux_{spec.version}_{get_os(spec.version.string)}.sh"
         )
         exe("--accept", "--force", "--install-to", prefix)
 
