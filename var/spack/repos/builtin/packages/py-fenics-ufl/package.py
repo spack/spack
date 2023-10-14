@@ -43,3 +43,11 @@ class PyFenicsUfl(PythonPackage):
     depends_on("py-setuptools@58:", when="@2022.1.0:", type=("build", "run") )
     depends_on("py-setuptools@40:", when="@2016.2.0:2021.1.0", type=("build", "run"))
     depends_on("py-numpy@1.21:", type=("build", "run"))
+
+    depends_on("py-pytest", type="test")
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        with working_dir("test"):
+            Executable("py.test")()
