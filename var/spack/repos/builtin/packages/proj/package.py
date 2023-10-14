@@ -56,6 +56,8 @@ class Proj(CMakePackage, AutotoolsPackage):
 
     variant("tiff", default=True, description="Enable TIFF support")
     variant("curl", default=True, description="Enable curl support")
+    variant("shared", default=True, description="Enable shared libraries")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     # https://github.com/OSGeo/PROJ#distribution-files-and-format
     # https://github.com/OSGeo/PROJ-data
@@ -130,6 +132,8 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         args = [
             self.define_from_variant("ENABLE_TIFF", "tiff"),
             self.define_from_variant("ENABLE_CURL", "curl"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
         if self.spec.satisfies("@6:") and self.pkg.run_tests:
             args.append(self.define("USE_EXTERNAL_GTEST", True))
@@ -144,14 +148,18 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
             args.append("--with-external-gtest")
 
         if self.spec.satisfies("@7:"):
-            if "+tiff" in self.spec:
-                args.append("--enable-tiff")
-            else:
-                args.append("--disable-tiff")
+            args.extend(self.enable_or_disable("tiff"))
 
             if "+curl" in self.spec:
                 args.append("--with-curl=" + self.spec["curl"].prefix.bin.join("curl-config"))
             else:
                 args.append("--without-curl")
+
+        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
+
+        if self.spec.satisfies("^libtiff+jpeg~shared"):
+            args.append("LDFLAGS=%s" % self.spec["jpeg"].libs.ld_flags)
+            args.append("LIBS=%s" % self.spec["jpeg"].libs.link_flags)
 
         return args
