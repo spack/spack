@@ -1037,9 +1037,20 @@ def interactive_version_filter(
                 print()
                 return None
         else:
-            tty.warn(f"Ignoring invalid command: {command}")
-            print_header = False
-            continue
+            # Last restort: filter the top N versions
+            try:
+                n = int(command)
+                invalid_command = n < 1
+            except ValueError:
+                invalid_command = True
+
+            if invalid_command:
+                tty.warn(f"Ignoring invalid command: {command}")
+                print_header = False
+                continue
+
+            sorted_and_filtered = sorted_and_filtered[:n]
+
     return {v: url_dict[v] for v in sorted_and_filtered}
 
 

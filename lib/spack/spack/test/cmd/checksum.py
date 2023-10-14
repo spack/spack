@@ -186,6 +186,22 @@ def test_checksum_interactive_new_only():
     }
 
 
+def test_checksum_interactive_top_n():
+    """Test integers select top n versions"""
+    input = input_from_commands("2", "c")
+    assert interactive_version_filter(
+        {
+            Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
+            Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+            Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
+        },
+        input=input,
+    ) == {
+        Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
+        Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
+    }
+
+
 def test_checksum_versions(mock_packages, mock_clone_repo, mock_fetch, mock_stage):
     pkg_cls = spack.repo.PATH.get_pkg_class("zlib")
     versions = [str(v) for v in pkg_cls.versions]
