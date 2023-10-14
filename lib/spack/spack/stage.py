@@ -932,7 +932,7 @@ def interactive_version_filter(
         colify(list(map(colorize, commands)), indent=2)
 
         try:
-            command = input(colorize("@*g{command>} ")).strip().lower()
+            command = input(colorize("@*g{top # or command>} ")).strip().lower()
         except EOFError:
             print()
             command = "q"
