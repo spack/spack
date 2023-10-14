@@ -14,6 +14,7 @@ class MongoCDriver(Package):
 
     maintainers("michaelkuhn")
 
+    version("1.24.4", sha256="2f4a3e8943bfe3b8672c2053f88cf74acc8494dc98a45445f727901eee141544")
     version("1.23.3", sha256="c8f951d4f965d455f37ae2e10b72914736fc0f25c4ffc14afc3cbadd1a574ef6")
     version("1.21.0", sha256="840ff79480070f98870743fbb332e2c10dd021b6b9c952d08010efdda4d70ee4")
     version("1.17.6", sha256="8644deec7ae585e8d12566978f2017181e883f303a028b5b3ccb83c91248b150")
@@ -52,14 +53,15 @@ class MongoCDriver(Package):
     depends_on("pkgconfig", type="build")
 
     # When updating mongo-c-driver, libbson has to be kept in sync.
-    depends_on("libbson@1.23.0:1.23", when="@1.23")
-    depends_on("libbson@1.21.0:1.21", when="@1.21")
-    depends_on("libbson@1.17.0:1.17", when="@1.17")
-    depends_on("libbson@1.16.0:1.16", when="@1.16")
-    depends_on("libbson@1.9.0:1.9", when="@1.9")
-    depends_on("libbson@1.8.0:1.8", when="@1.8")
-    depends_on("libbson@1.7.0:1.7", when="@1.7")
-    depends_on("libbson@1.6.0:1.6", when="@1.6")
+    depends_on("libbson@1.24", when="@1.24")
+    depends_on("libbson@1.23", when="@1.23")
+    depends_on("libbson@1.21", when="@1.21")
+    depends_on("libbson@1.17", when="@1.17")
+    depends_on("libbson@1.16", when="@1.16")
+    depends_on("libbson@1.9", when="@1.9")
+    depends_on("libbson@1.8", when="@1.8")
+    depends_on("libbson@1.7", when="@1.7")
+    depends_on("libbson@1.6", when="@1.6")
 
     depends_on("openssl", when="+ssl")
     depends_on("snappy", when="+snappy")
@@ -69,7 +71,12 @@ class MongoCDriver(Package):
     def cmake_args(self):
         spec = self.spec
 
-        args = ["-DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF", "-DENABLE_BSON=SYSTEM"]
+        args = ["-DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF"]
+
+        if spec.satisfies("@1.24:"):
+            args.append("-DUSE_SYSTEM_LIBBSON=ON")
+        else:
+            args.append("-DENABLE_BSON=SYSTEM")
 
         if "+ssl" in spec:
             args.append("-DENABLE_SSL=OPENSSL")
