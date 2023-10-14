@@ -154,7 +154,7 @@ def checksum(parser, args):
         filtered_url_dict = spack.stage.interactive_version_filter(
             url_dict, pkg.versions, url_changes=url_changed_for_version
         )
-        if filtered_url_dict is None:
+        if not filtered_url_dict:
             exit(0)
         url_dict = filtered_url_dict
     else:
