@@ -1070,7 +1070,7 @@ def test_spec_format_path_windows(spec_str, format_str, expected):
         # path separator for POSIX, so this is treated as a single path
         # component (containing literal "\" characters); secondly,
         # Spec.format treats "\" as an escape character, so is
-        # effectively discarded (unless directly following another "\")
+        # discarded (unless directly following another "\")
         (
             "zlib@git.foo/bar",
             r"C:\\installroot\package-{name}-{version}",
