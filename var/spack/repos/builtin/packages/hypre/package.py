@@ -107,6 +107,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("rocthrust", when="+rocm")
     depends_on("rocrand", when="+rocm")
     depends_on("rocprim", when="+rocm")
+    depends_on("hipblas", when="+rocm +superlu-dist")
     depends_on("umpire", when="+umpire")
     depends_on("caliper", when="+caliper")
 
@@ -258,6 +259,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if "+rocm" in spec:
             rocm_pkgs = ["rocsparse", "rocthrust", "rocprim", "rocrand"]
+            if "+superlu-dist" in spec:
+                rocm_pkgs.append("hipblas")
             rocm_inc = ""
             for pkg in rocm_pkgs:
                 if "^" + pkg in spec:
