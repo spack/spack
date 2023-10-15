@@ -84,6 +84,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocfft@5.2.3:", when="@develop+rocm", type=("build", "run"))
     depends_on("magma@2.5.3:", when="+cuda+magma", type=("build", "run"))
     depends_on("magma+rocm@2.6.1:", when="+magma+rocm @2.1:", type=("build", "run"))
+    depends_on("rocblas@3.8:", when="+magma+rocm", type=("build", "run"))
+    depends_on("rocsparse@3.8:", when="+magma+rocm", type=("build", "run"))
     depends_on("hipblas@3.8:", when="+magma+rocm", type=("build", "run"))
     depends_on("hipsparse@3.8:", when="+magma+rocm", type=("build", "run"))
 
