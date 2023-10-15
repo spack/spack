@@ -206,7 +206,8 @@ spack:
   # - hpctoolkit +level_zero            # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
   # - sundials +sycl cxxstd=17          # sundials: include/sunmemory/sunmemory_sycl.h:20:10: fatal error: 'CL/sycl.hpp' file not found
 
-  - py-scipy
+  # Python 3.9+ doesn't support OneAPI 2022.2.1-2023, and old Python requires old numpy requires old scipy, which doesn't build with OneAPI 2023
+  # - py-scipy
 
   ci:
     pipeline-gen:
