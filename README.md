@@ -7,6 +7,7 @@
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Slack](https://slack.spack.io/badge.svg)](https://slack.spack.io)
+[![Matrix](https://img.shields.io/matrix/spack-space%3Amatrix.org?label=Matrix)](https://matrix.to/#/#spack-space:matrix.org)
 
 Spack is a multi-platform package manager that builds and installs
 multiple versions and configurations of software. It works on Linux,
@@ -62,6 +63,7 @@ Resources:
 
 * **Slack workspace**: [spackpm.slack.com](https://spackpm.slack.com).
   To get an invitation, visit [slack.spack.io](https://slack.spack.io).
+* **Matrix space**: [#spack-space:matrix.org](https://matrix.to/#/#spack-space:matrix.org).
 * [**Github Discussions**](https://github.com/spack/spack/discussions): not just for discussions, also Q&A.
 * **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
 * **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
