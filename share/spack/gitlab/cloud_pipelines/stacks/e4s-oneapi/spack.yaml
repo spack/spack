@@ -41,6 +41,8 @@ spack:
       require: '~wrapperrpath ~hwloc'
     py-cryptography:
       require: '@38.0.1'
+    py-scipy:
+      require: '@1.9:'
     unzip:
       require: '%gcc'
     binutils:
