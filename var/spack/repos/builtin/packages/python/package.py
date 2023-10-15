@@ -318,7 +318,7 @@ class Python(Package):
 
     # See https://github.com/python/cpython/issues/106424
     # datetime.now(timezone.utc) segfaults
-    conflicts("@3.9:", when="%oneapi@2022.2.1:")
+    conflicts("@3.9:", when="%oneapi@2022.2.1:2023")
 
     # Used to cache various attributes that are expensive to compute
     _config_vars: Dict[str, Dict[str, str]] = {}
