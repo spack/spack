@@ -32,8 +32,8 @@ class PyFenicsBasix(PythonPackage):
     depends_on("python@3.8:", when="@0.7.0:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-numpy@1.21:", type=("build", "run"))
-    depends_on("py-pybind11@2.9.1:", when="@:0.6.0", type="build")
-    depends_on("py-nanobind@1.5.1:", when="@0.7.0:", type="build")
+    depends_on("py-pybind11@2.9.1:", when="@:0.7", type="build")
+    depends_on("py-nanobind@1.5.1:", when="@0.8:", type="build")
 
     depends_on("xtensor@0.23.10:", type="build", when="@:0.4")
 
