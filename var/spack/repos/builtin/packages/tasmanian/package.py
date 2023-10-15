@@ -88,6 +88,9 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+magma", when="~cuda~rocm")  # currently MAGMA only works with CUDA
     conflicts("+cuda", when="+rocm")  # can pick CUDA or ROCm, not both
 
+    # patching a bug in the interpretation of the C++ standard
+    patch("tas80_clang17.patch", when="@8.0")
+
     def setup_build_environment(self, env):
         # needed for the hipcc compiler
         if "+rocm" in self.spec:
