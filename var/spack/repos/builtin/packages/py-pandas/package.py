@@ -17,7 +17,7 @@ class PyPandas(PythonPackage):
 
     maintainers("adamjstewart")
 
-    variant("excel", when="@1.5:", default=False, description="Build with support for Excel (py-openpyxl)")
+    variant("excel", when="@1.4:", default=False, description="Build with support for Excel")
 
     version("2.1.1", sha256="fecb198dc389429be557cde50a2d46da8434a17fe37d7d41ff102e3987fd947b")
     version("2.1.0", sha256="62c24c7fc59e42b775ce0679cfa7b14a5f9bfb7643cfbe708c960699e05fb918")
