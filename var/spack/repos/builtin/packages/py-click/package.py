@@ -25,6 +25,8 @@ class PyClick(PythonPackage):
     )
     version("6.6", sha256="cc6a19da8ebff6e7074f731447ef7e112bd23adf3de5c597cf9989f2fd8defe9")
 
+    # Needed to ensure that Spack can bootstrap black with Python 3.6
+    depends_on("python@3.7:", when="@8.1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-importlib-metadata", when="@8: ^python@:3.7", type=("build", "run"))
