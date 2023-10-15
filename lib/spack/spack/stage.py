@@ -893,7 +893,9 @@ def interactive_version_filter(
         if print_header:
             has_filter = version_filter != VersionList([":"])
             header = []
-            if len(sorted_and_filtered) == len(orig_url_dict):
+            if not sorted_and_filtered:
+                header.append("No versions selected")
+            elif len(sorted_and_filtered) == len(orig_url_dict):
                 header.append(
                     f"Selected {llnl.string.plural(len(sorted_and_filtered), 'version')}"
                 )
@@ -901,7 +903,7 @@ def interactive_version_filter(
                 header.append(
                     f"Selected {len(sorted_and_filtered)} of {len(orig_url_dict)} versions"
                 )
-            if known_versions:
+            if sorted_and_filtered and known_versions:
                 num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
                 header.append(f"{llnl.string.plural(num_new, 'new version')}")
             if has_filter:
