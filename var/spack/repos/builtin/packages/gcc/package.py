@@ -1156,11 +1156,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Do the same thing for offload-enabled builds
         if self.spec.satisfies("+amdgcn") or self.spec.satisfies("+amdgcn"):
-            libgomp_dir = []
+            libgomp_dir = ""
             for dir in ["lib", "lib64"]:
                 libdir = join_path(self.prefix, dir)
                 if glob.glob(join_path(libdir, "libgomp." + dso_suffix)):
-                    libgomp_dir.append(libdir)
+                    libgomp_dir = libdir
             if not libgomp_dir:
                 # Cannot find libgomp
                 tty.warn("libgomp library not found in lib/lib64")
