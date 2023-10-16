@@ -18,6 +18,7 @@ class Libfuse(MesonPackage):
 
     keep_werror = "all"
 
+    version("3.16.2", sha256="1bc306be1a1f4f6c8965fbdd79c9ccca021fdc4b277d501483a711cbd7dbcd6c")
     version("3.11.0", sha256="25a00226d2d449c15b2f08467d6d5ebbb2a428260c4ab773721c32adbc6da072")
     version("3.10.5", sha256="e73f75e58da59a0e333d337c105093c496c0fd7356ef3a5a540f560697c9c4e6")
     version("3.10.4", sha256="bfcb2520fd83db29e9fefd57d3abd5285f38ad484739aeee8e03fbec9b2d984a")
@@ -67,7 +68,7 @@ class Libfuse(MesonPackage):
     conflicts("platform=darwin", msg="libfuse does not support OS-X, use macfuse instead")
 
     # Drops the install script which does system configuration
-    patch("0001-Do-not-run-install-script.patch", when="@3: ~system_install")
+    patch("0001-Do-not-run-install-script.patch", when="@3:3.11 ~system_install")
     patch(
         "https://src.fedoraproject.org/rpms/fuse3/raw/0519b7bf17c4dd1b31ee704d49f8ed94aa5ba6ab/f/fuse3-gcc11.patch",
         sha256="3ad6719d2393b46615b5787e71778917a7a6aaa189ba3c3e0fc16d110a8414ec",
@@ -117,6 +118,9 @@ class Libfuse(MesonPackage):
         if "~system_install" in self.spec:
             # Fix meson's setup if meson does not have the host system's udev package:
             args.append("-Dudevrulesdir={0}".format(self.prefix.etc.rules.d))
+
+            if self.spec.satisfies("@3.12:"):
+                args.append("-Dinitscriptdir=")
         else:
             # Likewise, but with +system_install, it may install to /lib/udev/rules.d:
             args.append("-Dudevrulesdir={0}".format("/lib/udev/rules.d"))

@@ -468,6 +468,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # upstream.
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
     patch("mfem-4.5.patch", when="@4.5.0")
+    patch("mfem-4.6.patch", when="@4.6.0")
 
     phases = ["configure", "build", "install"]
 
