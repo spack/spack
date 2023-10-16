@@ -242,26 +242,6 @@ class Llvm(CMakePackage, CudaPackage):
         when="@15:",
         description="Enable zstd support for static analyzer / lld",
     )
-    variant(
-        "projects",
-        description="Additional LLVM projects to build",
-        values=(
-            "all",
-            "none",
-            "clang",
-            "clang-tools-extra",
-            "cross-project-tests",
-            "libc",
-            "libclc",
-            "lld",
-            "lldb",
-            "openmp",
-            "polly",
-            "pstl",
-        ),
-        default="none",
-        multi=True,
-    )
 
     provides("libllvm@16", when="@16.0.0:16")
     provides("libllvm@15", when="@15.0.0:15")
@@ -942,16 +922,6 @@ class Llvm(CMakePackage, CudaPackage):
         # https://github.com/llvm/llvm-project/issues/57037
         if self.spec.satisfies("@15.0.0: platform=darwin"):
             cmake_args.append(define("BUILTINS_CMAKE_ARGS", "-DCOMPILER_RT_ENABLE_IOS=OFF"))
-
-        # Add extra projects
-        extra_projects = spec.variants["projects"].value
-        if "all" in extra_projects:
-            projects = ["all"]
-        else:
-            if extra_projects[0] != "none":
-                for project in extra_projects:
-                    if project not in projects:
-                        projects.append(project)
 
         # Semicolon seperated list of projects to enable
         cmake_args.append(define("LLVM_ENABLE_PROJECTS", projects))
