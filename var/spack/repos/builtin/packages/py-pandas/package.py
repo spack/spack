@@ -143,6 +143,7 @@ class PyPandas(PythonPackage):
     depends_on("py-pyxlsb@1.0.6:", type=("run"), when="@1.4: +excel")
     depends_on("py-pyxlsb@1.0.8:", type=("run"), when="@1.5: +excel")
     depends_on("py-pyxlsb@1.0.9:", type=("run"), when="@2.1: +excel")
+    depends_on("py-odfpy@1.4.1:", type=("run"), when="@2.0: +excel")
 
     # Historical dependencies
     depends_on("py-setuptools@61:", when="@2.0", type="build")
