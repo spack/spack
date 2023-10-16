@@ -106,7 +106,6 @@ def env_activate_setup_parser(subparser):
         "--without-view",
         "-V",
         action="store_true",
-        dest="without_view",
         help="do not set runtime environment variables for any view",
     )
 

@@ -2403,12 +2403,12 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     )
 
 
-def test_env_activate_custom_view(tmpdir, install_mockery, mock_fetch):
+def test_env_activate_custom_view(tmp_path: pathlib.Path, mock_packages):
     """Check that an environment can be activated with a non-default view."""
-    filename = str(tmpdir.join("spack.yaml"))
-    default_dir = str(tmpdir.join("defaultdir"))
-    nondefaultdir = str(tmpdir.join("nondefaultdir"))
-    with open(filename, "w") as f:
+    env_template = tmp_path / "spack.yaml"
+    default_dir = tmp_path / "defaultdir"
+    nondefaultdir = tmp_path / "nondefaultdir"
+    with open(env_template, "w") as f:
         f.write(
             f"""\
 spack:
@@ -2419,10 +2419,9 @@ spack:
     nondefault:
       root: {nondefaultdir}"""
         )
-    with tmpdir.as_cwd():
-        env("create", "test", "./spack.yaml")
-        shell = env("activate", "--sh", "--with-view", "nondefault", "test")
-        assert os.path.join(nondefaultdir, "bin") in shell
+    env("create", "test", str(env_template))
+    shell = env("activate", "--sh", "--with-view", "nondefault", "test")
+    assert os.path.join(nondefaultdir, "bin") in shell
 
 
 def test_concretize_user_specs_together():
