@@ -12,6 +12,7 @@ class PyFuro(PythonPackage):
     homepage = "https://github.com/pradyunsg/furo"
     pypi = "furo/furo-2023.5.20.tar.gz"
 
+    version("2023.9.10", sha256="5707530a476d2a63b8cad83b4f961f3739a69f4b058bcf38a03a39fa537195b2")
     version("2023.5.20", sha256="40e09fa17c6f4b22419d122e933089226dcdb59747b5b6c79363089827dea16f")
 
     depends_on("py-sphinx-theme-builder@0.2.0a10:", type="build")
