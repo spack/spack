@@ -16,7 +16,7 @@ class PyDcm2bids(PythonPackage):
     version("3.1.0", sha256="53a8a177d556df897e19d72bd517fdae0245927a8938bb9fbbd51f9f33f54f84")
     version("2.1.9", sha256="d962bd0a7f1ed200ecb699e8ddb29ff58f09ab2f850a7f37511b79c62189f715")
 
-    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("python@3.8:", when="@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-packaging@23.1:", when="@3:", type=("build", "run"))
