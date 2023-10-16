@@ -19,6 +19,7 @@ class PyFenicsUfl(PythonPackage):
     maintainers("chrisrichardson", "garth-wells", "jhale")
 
     version("main", branch="main")
+    version("2023.2.0", sha256="d1d3209e8ebd4bd70513c26890f51823bac90edc956233c47bd8e686e064436e")
     version(
         "2023.1.1.post0", sha256="9e6e87f1447635029cec42604f62a76bba84899beb4b8822af10389d1f93a9b6"
     )
@@ -36,7 +37,17 @@ class PyFenicsUfl(PythonPackage):
     )
     version("2016.2.0", tag="ufl-2016.2.0", commit="962d56f65821fb9c50ca4a5a858882c472243431")
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools@58:", type=("build", "run"), when="@2022.1.0:")
-    depends_on("py-setuptools@40:", type=("build", "run"))
-    depends_on("py-numpy@1.21:", type=("build", "run"))
+    depends_on("python@3.8:", when="@2023.2.0:", type=("build", "run"))
+
+    depends_on("py-setuptools@62:", when="@2023.2.0:", type="build")
+    depends_on("py-setuptools@58:", when="@2022.1.0:2023.1.1.post0", type="build")
+    depends_on("py-setuptools@40:", when="@2016.2.0:2021.1.0", type="build")
+    depends_on("py-numpy", type=("build", "run"))
+
+    depends_on("py-pytest", type="test")
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        with working_dir("test"):
+            Executable("py.test")()
