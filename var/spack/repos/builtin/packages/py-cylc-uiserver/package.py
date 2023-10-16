@@ -28,4 +28,5 @@ class PyCylcUiserver(PythonPackage):
     depends_on("py-tornado@6.1.0:", type=("build", "run"))
     depends_on("py-traitlets@5.2.1:", type=("build", "run"))
     depends_on("py-pyzmq", type=("build", "run"))
+    depends_on("py-graphql-core", type=("build", "run"))
     depends_on("py-rx@:1", type=("build", "run"))
