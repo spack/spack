@@ -87,6 +87,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("double", default=True, description="Switches between single and double precision")
     variant("complex", default=False, description="Build with complex numbers")
     variant("debug", default=False, description="Compile in debug mode")
+    variant("sycl", default=False, description="Enable sycl build")
 
     variant("metis", default=True, description="Activates support for metis and parmetis")
     variant(
@@ -338,6 +339,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             when="+kokkos +rocm amdgpu_target=%s" % rocm_arch,
         )
 
+    conflicts("~kokkos", when="+sycl", msg="+sycl requires +kokkos")
+    depends_on("kokkos+sycl", when="+sycl +kokkos")
+
     phases = ["configure", "build", "install"]
 
     # Using the following tarballs
@@ -433,6 +437,16 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             options.append("--with-x=1")
         else:
             options.append("--with-x=0")
+
+        if "+sycl" in spec:
+            sycl_compatible_compilers = ["icpx"]
+            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
+                raise InstallError("PETSc's SYCL GPU Backend requires oneAPI CXX (icpx) compiler.")
+            options.append("--with-sycl=1")
+            options.append("--with-syclc=" + self.compiler.cxx)
+            options.append("SYCLPPFLAGS=-Wno-tautological-constant-compare")
+        else:
+            options.append("--with-sycl=0")
 
         if "trilinos" in spec:
             if spec.satisfies("^trilinos+boost"):
