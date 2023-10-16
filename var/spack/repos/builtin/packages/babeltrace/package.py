@@ -21,6 +21,7 @@ class Babeltrace(AutotoolsPackage):
 
     depends_on("c", type="build")  # generated
 
+    depends_on("pkgconfig", type="build")
     depends_on("glib@2.22:", type=("build", "link"))
     depends_on("uuid")
     depends_on("popt")
