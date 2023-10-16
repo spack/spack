@@ -39,7 +39,8 @@ class Datatransferkit(CMakePackage):
     depends_on("trilinos+intrepid2+shards~dtk")
     depends_on("trilinos+openmp", when="+openmp")
     depends_on("trilinos+stratimikos+belos", when="@master")
-    depends_on("trilinos@13:", when="@3.1-rc2:")
+    depends_on("trilinos@13:13.4.1", when="@3.1-rc2:3.1-rc3")
+    depends_on("trilinos@14:", when="@3.1.0:")
 
     def cmake_args(self):
         spec = self.spec
