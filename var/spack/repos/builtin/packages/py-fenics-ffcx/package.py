@@ -26,6 +26,7 @@ class PyFenicsFfcx(PythonPackage):
     depends_on("py-setuptools@62:", when="@0.7:", type="build")
     depends_on("py-setuptools@58:", when="@0.4.2:0.6", type="build")
 
+    # CFFI is required at runtime for JIT support
     depends_on("py-cffi", type=("build", "run"))
     depends_on("py-numpy@1.21:", type=("build", "run"))
 
