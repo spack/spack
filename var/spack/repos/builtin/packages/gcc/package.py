@@ -1167,7 +1167,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 return
 
             libgomp_spec_file = join_path(libgomp_dir, "libgomp.spec")
-            copy(libgomp_spec_file, join_path(libgomp_spec_file, ".orig"))
+            copy(libgomp_spec_file, libgomp_spec_file + ".orig")
             with open(libgomp_spec_file, "r+") as f:
                 lines = f.readlines()
                 f.seek(0)
