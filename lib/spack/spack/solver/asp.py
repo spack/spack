@@ -1005,14 +1005,15 @@ class ReusableSpecsByHash(collections.abc.Mapping):
         if dag_hash in self.data:
             return False
 
-        # Unify objects in the container
-        for edge in reversed(spack.traverse.traverse_edges_topo([spec], direction="children")):
-            current_node = edge.spec
+        # Unify objects in the container. The current implementation needs children
+        # nodes to be visited before parents (so DFS post-order is fine).
+        for current_node in traverse.traverse_nodes([spec], order="post", direction="children"):
             current_hash = current_node.dag_hash()
 
             if current_hash in self.data:
                 continue
 
+            # Add the node and reconstruct dependencies
             self.data[current_hash] = current_node.copy(deps=False)
             container_node = self.data[current_hash]
             for edge_under_reconstruction in current_node.edges_to_dependencies():
