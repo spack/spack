@@ -279,9 +279,12 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             common_flags + llvm_flags, self.component_prefix.linux.bin, ["icx", "icpx"]
         )
         self.write_config_file(
+            common_flags + classic_flags, self.component_prefix.linux.bin, ["ifx"]
+        )
+        self.write_config_file(
             common_flags + classic_flags,
             self.component_prefix.linux.bin.intel64,
-            ["icc", "icpc", "ifort", "ifx"],
+            ["icc", "icpc", "ifort"],
         )
 
     def _ld_library_path(self):
