@@ -919,7 +919,7 @@ def interactive_version_filter(
 
         print_header = True
 
-        print("commands:")
+        tty.info(colorize("Enter @*{number} of versions to take, or use a @*{command}:"))
         commands = (
             "@*b{[c]}hecksum",
             "@*b{[e]}dit",
@@ -929,10 +929,10 @@ def interactive_version_filter(
             "@*b{[r]}estart",
             "@*b{[q]}uit",
         )
-        colify(list(map(colorize, commands)), indent=2)
+        colify(list(map(colorize, commands)), indent=4)
 
         try:
-            command = input(colorize("@*g{top # or command>} ")).strip().lower()
+            command = input(colorize("@*g{action>} ")).strip().lower()
         except EOFError:
             print()
             command = "q"
