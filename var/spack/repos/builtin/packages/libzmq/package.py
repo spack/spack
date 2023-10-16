@@ -119,11 +119,11 @@ class Libzmq(AutotoolsPackage):
     conflicts("%gcc@8:", when="@:4.2.2")
     conflicts("%gcc@11:", when="@:4.3.2")
 
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("libtool", type="build", when="@master")
-    depends_on("docbook-xml", type="build", when="+docs")
-    depends_on("docbook-xsl", type="build", when="+docs")
+    with when("@master"):
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("libtool", type="build")
+        depends_on("ruby-asciidoctor", type="build", when="+docs")
     depends_on("pkgconfig", type="build")
 
     depends_on("libbsd", when="+libbsd")
