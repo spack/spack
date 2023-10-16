@@ -91,6 +91,10 @@ class LinuxPerf(Package):
         # that specific ARCH
         env.unset("ARCH")
 
+    @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, "tools/perf/FEATURE-DUMP")]
+
     def install(self, spec, prefix):
         # TODO:
         # - GTK2=
