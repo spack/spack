@@ -208,6 +208,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     patch("revert-3.18.0-ver-format-for-dealii.patch", when="@3.18.0")
 
     depends_on("diffutils", type="build")
+    # not listed as a "build" dependency - so that slepc build gets the same dependency
+    depends_on("gmake")
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
