@@ -26,7 +26,8 @@ class PyFenicsBasix(PythonPackage):
     depends_on("fenics-basix@0.5.1", type=("build", "run"), when="@0.5.1")
     depends_on("fenics-basix@0.4.2", type=("build", "run"), when="@0.4.2")
 
-    depends_on("cmake@3.19:", type="build")
+    # See python/CMakeLists.txt
+    depends_on("cmake@3.16:", type="build")
 
     # See python/pyproject.toml
     depends_on("python@3.8:", when="@0.7.0:", type=("build", "run"))
