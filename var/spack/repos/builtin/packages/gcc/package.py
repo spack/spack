@@ -1156,7 +1156,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Do the same thing for offload-enabled builds
         if self.spec.satisfies("+amdgcn") or self.spec.satisfies("+amdgcn"):
-
             libgomp_dir = []
             for dir in ["lib", "lib64"]:
                 libdir = join_path(self.prefix, dir)
@@ -1174,7 +1173,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 f.seek(0)
                 for line in lines:
                     if line.startswith("*link_gomp:"):
-                        f.write(line.strip('\n') + " %(link_libgomp_rpath)\n")
+                        f.write(line.strip("\n") + " %(link_libgomp_rpath)\n")
                     else:
                         f.write(line)
                 f.write("*link_libgomp_rpath:\n")
