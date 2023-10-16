@@ -77,7 +77,8 @@ def environment_modifications_for_spec(spec, view=None, set_package_py_globals=T
     """
     spec = spec.copy()
     if view and not spec.external:
-        spec.prefix = prefix.Prefix(view.get_projection_for_spec(spec))
+        for node in spec.traverse():
+            node.prefix = prefix.Prefix(view.get_projection_for_spec(node))
 
     # generic environment modifications determined by inspecting the spec
     # prefix
