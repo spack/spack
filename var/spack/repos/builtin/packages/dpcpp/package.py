@@ -57,8 +57,7 @@ class Dpcpp(CMakePackage):
         description="Add external projects to build. Add as a comma seperated list.",
     )
 
-    depends_on("cmake@3.16.2:", type="build")
-    depends_on("ninja@1.10.0:", type="build")
+    depends_on("cmake@3.14:", type="build")
 
     depends_on("cuda@10.2.0:", when="+cuda")
 
