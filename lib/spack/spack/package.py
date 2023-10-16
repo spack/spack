@@ -67,7 +67,7 @@ from spack.build_systems.sourceware import SourcewarePackage
 from spack.build_systems.waf import WafPackage
 from spack.build_systems.xorg import XorgPackage
 from spack.builder import run_after, run_before
-from spack.dependency import all_deptypes
+from spack.deptypes import ALL_TYPES as all_deptypes
 from spack.directives import *
 from spack.install_test import (
     SkipTest,

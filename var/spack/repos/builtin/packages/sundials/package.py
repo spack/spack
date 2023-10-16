@@ -27,7 +27,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version("develop", branch="develop")
-    version("6.6.1", sha256="5162b0e6d19d7b14078a21441e0795cf38d1d883973be35901e018f9bb30c543")
+    version("6.6.1", sha256="21f71e4aef95b18f954c8bbdc90b62877443950533d595c68051ab768b76984b")
     version("6.6.0", sha256="f90029b8da846c8faff5530fd1fa4847079188d040554f55c1d5d1e04743d29d")
     version("6.5.1", sha256="4252303805171e4dbdd19a01e52c1dcfe0dafc599c3cfedb0a5c2ffb045a8a75")
     version("6.5.0", sha256="4e0b998dff292a2617e179609b539b511eb80836f5faacf800e688a886288502")

@@ -138,7 +138,7 @@ class Phist(CMakePackage):
     conflicts("^trilinos@14:", when="@:1.11.2")
     # Build error with cray-libsci because they define macro 'I', workaround in phist-1.11.2
     conflicts("^cray-libsci", when="@:1.11.1")
-    # phist@1.11.2 got rid of some deprecated python code
+    # phist@1.11.2 got rid of some deprecated python code + a patch below
     conflicts("^python@3.11:", when="@:1.11.1")
     # The builtin kernels switched from the 'mpi' to the 'mpi_f08' module in
     # phist 1.9.6, which causes compile-time errors with mpich and older
@@ -155,6 +155,8 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
+    # remove 'rU' file mode in a python script
+    patch("remove_rU_mode_in_python_script.patch", when="@:1.12.0 +fortran ^python@3.11:")
     # Avoid trying to compile some SSE code if SSE is not available
     # This patch will be part of phist 1.11.3 and greater and only affects
     # the 'builtin' kernel_lib.

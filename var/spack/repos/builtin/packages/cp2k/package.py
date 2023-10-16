@@ -282,6 +282,10 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     conflicts("%apple-clang")
     conflicts("%clang")
     conflicts("%nag")
+    conflicts(
+        "%aocc@:3.2",
+        msg="Please use AOCC 4.0+ that better support modern Fortran features CP2K requires",
+    )
 
     conflicts("~openmp", when="@8:", msg="Building without OpenMP is not supported in CP2K 8+")
 
@@ -327,7 +331,32 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         sha256="3617abb877812c4b933f601438c70f95e21c6161bea177277b1d4125fd1c0bf9",
         when="@8.2",
     )
-    patch("posix_c_source.patch", when="%aocc")
+
+    # Patch for compilers with stricter C99 checks
+    patch("posix_c_source.patch", when="@7.1%aocc@4.0:")
+    patch("posix_c_source.patch", when="@7.1%gcc@13:")
+
+    # Fix missing variable in OpenMP private clause
+    patch(
+        "https://github.com/cp2k/cp2k/commit/be86bd7f6cd6af7d68f8957dcdb67e7c3d586741.patch?full_index=1",
+        sha256="1bb5a8e80603684a743e7821d24d41b31b60ccbb7d4257df1d2da53a3630e5bf",
+        when="@2022.1:2022.2",
+    )
+
+    # Avoid using NULL() as subroutine argument as doing so breaks some versions of AOCC compiler
+    # These patches backport 2023.x fixes to previous versions
+    patch("backport_avoid_null_2022.x.patch", when="@2022.1:2022.2 %aocc@:4.0")
+    patch("backport_avoid_null_9.1.patch", when="@9.1 %aocc@:4.0")
+
+    # Patch for an undefined constant due to incompatible changes in ELPA
+    @when("@9.1:2022.2 +elpa")
+    def patch(self):
+        if self.spec["elpa"].satisfies("@2022.05.001:"):
+            filter_file(
+                r"ELPA_2STAGE_REAL_INTEL_GPU",
+                "ELPA_2STAGE_REAL_INTEL_GPU_SYCL",
+                "src/fm/cp_fm_elpa.F",
+            )
 
     def url_for_version(self, version):
         url = "https://github.com/cp2k/cp2k/releases/download/v{0}/cp2k-{0}.tar.bz2"
@@ -372,7 +401,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             "nvhpc": ["-fast"],
             "cce": ["-O2"],
             "xl": ["-O3"],
-            "aocc": ["-O1"],
+            "aocc": ["-O2"],
         }
 
         dflags = ["-DNDEBUG"]
@@ -421,6 +450,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             fcflags += [
                 "-fallow-argument-mismatch"
             ]  # https://github.com/pmodels/mpich/issues/4300
+        if spec.satisfies("@7.1%gcc@13:"):
+            fcflags.append("-fallow-argument-mismatch")
 
         if "+openmp" in spec:
             cflags.append(self.compiler.openmp_flag)

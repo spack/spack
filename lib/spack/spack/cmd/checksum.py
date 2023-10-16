@@ -7,6 +7,7 @@ import argparse
 import re
 import sys
 
+import llnl.string
 import llnl.util.lang
 from llnl.util import tty
 
@@ -15,6 +16,7 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.crypto
+import spack.util.web as web_util
 from spack.cmd.common import arguments
 from spack.package_base import PackageBase, deprecated_version, preferred_version
 from spack.util.editor import editor
@@ -66,7 +68,7 @@ def setup_parser(subparser):
     modes_parser.add_argument(
         "--verify", action="store_true", default=False, help="verify known package checksums"
     )
-    arguments.add_common_arguments(subparser, ["package"])
+    arguments.add_common_arguments(subparser, ["package", "jobs"])
     subparser.add_argument(
         "versions", nargs=argparse.REMAINDER, help="versions to generate checksums for"
     )
@@ -96,7 +98,7 @@ def checksum(parser, args):
 
     # Add latest version if requested
     if args.latest:
-        remote_versions = pkg.fetch_remote_versions()
+        remote_versions = pkg.fetch_remote_versions(args.jobs)
         if len(remote_versions) > 0:
             latest_version = sorted(remote_versions.keys(), reverse=True)[0]
             versions.append(latest_version)
@@ -119,27 +121,47 @@ def checksum(parser, args):
         # if we get here, it's because no valid url was provided by the package
         # do expensive fallback to try to recover
         if remote_versions is None:
-            remote_versions = pkg.fetch_remote_versions()
+            remote_versions = pkg.fetch_remote_versions(args.jobs)
         if version in remote_versions:
             url_dict[version] = remote_versions[version]
 
     if len(versions) <= 0:
         if remote_versions is None:
-            remote_versions = pkg.fetch_remote_versions()
+            remote_versions = pkg.fetch_remote_versions(args.jobs)
         url_dict = remote_versions
+
+    # A spidered URL can differ from the package.py *computed* URL, pointing to different tarballs.
+    # For example, GitHub release pages sometimes have multiple tarballs with different shasum:
+    # - releases/download/1.0/<pkg>-1.0.tar.gz (uploaded tarball)
+    # - archive/refs/tags/1.0.tar.gz           (generated tarball)
+    # We wanna ensure that `spack checksum` and `spack install` ultimately use the same URL, so
+    # here we check whether the crawled and computed URLs disagree, and if so, prioritize the
+    # former if that URL exists (just sending a HEAD request that is).
+    url_changed_for_version = set()
+    for version, url in url_dict.items():
+        possible_urls = pkg.all_urls_for_version(version)
+        if url not in possible_urls:
+            for possible_url in possible_urls:
+                if web_util.url_exists(possible_url):
+                    url_dict[version] = possible_url
+                    break
+            else:
+                url_changed_for_version.add(version)
 
     if not url_dict:
         tty.die(f"Could not find any remote versions for {pkg.name}")
-
-    # print an empty line to create a new output section block
-    print()
+    elif len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
+        filtered_url_dict = spack.stage.interactive_version_filter(
+            url_dict, pkg.versions, url_changes=url_changed_for_version
+        )
+        if not filtered_url_dict:
+            exit(0)
+        url_dict = filtered_url_dict
+    else:
+        tty.info(f"Found {llnl.string.plural(len(url_dict), 'version')} of {pkg.name}")
 
     version_hashes = spack.stage.get_checksums_for_versions(
-        url_dict,
-        pkg.name,
-        keep_stage=args.keep_stage,
-        batch=(args.batch or len(versions) > 0 or len(url_dict) == 1),
-        fetch_options=pkg.fetch_options,
+        url_dict, pkg.name, keep_stage=args.keep_stage, fetch_options=pkg.fetch_options
     )
 
     if args.verify:
@@ -239,7 +261,7 @@ def add_versions_to_package(pkg: PackageBase, version_lines: str):
                 parsed_version = Version(contents_version.group(1))
 
                 if parsed_version < new_versions[0][0]:
-                    split_contents[i:i] = [new_versions.pop(0)[1], " # FIX ME", "\n"]
+                    split_contents[i:i] = [new_versions.pop(0)[1], " # FIXME", "\n"]
                     num_versions_added += 1
 
                 elif parsed_version == new_versions[0][0]:

@@ -52,7 +52,8 @@ class Mesa(MesonPackage):
     depends_on("cmake", type="build")
     depends_on("flex", type="build")
     depends_on("gettext", type="build")
-    depends_on("python@3:", type="build")
+    # Upperbound on 3.11 because distutils is used for checking py-mako
+    depends_on("python@3:3.11", type="build")
     depends_on("py-mako@0.8.0:", type="build")
     depends_on("unwind")
     depends_on("expat")

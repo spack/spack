@@ -13,6 +13,7 @@ from typing import List
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
+from llnl.string import plural
 from llnl.util.lang import elide_list
 
 import spack.binary_distribution as bindist
@@ -32,7 +33,6 @@ import spack.util.web as web_util
 from spack.cmd import display_specs
 from spack.spec import Spec, save_dependency_specfiles
 from spack.stage import Stage
-from spack.util.string import plural
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -268,7 +268,7 @@ def _matching_specs(specs: List[Spec]) -> List[Spec]:
     return [spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=any) for s in specs]
 
 
-def push_fn(args):
+def push_fn(args: argparse.Namespace):
     """create a binary package and push it to a mirror"""
     if args.spec_file:
         tty.warn(
@@ -414,7 +414,7 @@ def preview_fn(args):
     )
 
 
-def check_fn(args):
+def check_fn(args: argparse.Namespace):
     """check specs against remote binary mirror(s) to see if any need to be rebuilt
 
     this command uses the process exit code to indicate its result, specifically, if the
@@ -429,7 +429,7 @@ def check_fn(args):
     specs = spack.cmd.parse_specs(args.spec or args.spec_file)
 
     if specs:
-        specs = _matching_specs(specs, specs)
+        specs = _matching_specs(specs)
     else:
         specs = spack.cmd.require_active_env("buildcache check").all_specs()
 
@@ -527,7 +527,7 @@ def copy_buildcache_file(src_url, dest_url, local_path=None):
             temp_stage.create()
             temp_stage.fetch()
             web_util.push_to_url(local_path, dest_url, keep_original=True)
-        except web_util.FetchError as e:
+        except spack.error.FetchError as e:
             # Expected, since we have to try all the possible extensions
             tty.debug("no such file: {0}".format(src_url))
             tty.debug(e)

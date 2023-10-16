@@ -423,12 +423,21 @@ _spack_audit() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="configs packages-https packages list"
+        SPACK_COMPREPLY="configs externals packages-https packages list"
     fi
 }
 
 _spack_audit_configs() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_audit_externals() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --list"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_audit_packages_https() {
@@ -672,7 +681,7 @@ _spack_change() {
 _spack_checksum() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred -a --add-to-package --verify"
+        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred -a --add-to-package --verify -j --jobs"
     else
         _all_packages
     fi
@@ -1972,7 +1981,7 @@ _spack_verify() {
 _spack_versions() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --safe --safe-only -r --remote -n --new -c --concurrency"
+        SPACK_COMPREPLY="-h --help -s --safe --safe-only -r --remote -n --new -j --jobs"
     else
         _all_packages
     fi

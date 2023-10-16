@@ -17,6 +17,7 @@ from llnl.util.filesystem import working_dir
 import spack.package_base
 import spack.spec
 from spack.version import (
+    EmptyRangeError,
     GitVersion,
     StandardVersion,
     Version,
@@ -695,9 +696,9 @@ def test_version_range_nonempty():
 
 
 def test_empty_version_range_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(EmptyRangeError, match="2:1.0 is an empty range"):
         assert VersionRange("2", "1.0")
-    with pytest.raises(ValueError):
+    with pytest.raises(EmptyRangeError, match="2:1.0 is an empty range"):
         assert ver("2:1.0")
 
 
