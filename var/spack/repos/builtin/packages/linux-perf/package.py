@@ -54,7 +54,7 @@ class LinuxPerf(Package):
     depends_on("elfutils +debuginfod", when="+debuginfod")
     depends_on("libunwind components=ptrace")
     depends_on("libiberty")
-    depends_on("binutils", type=("build", "run"))
+    depends_on("binutils", type=("build", "link", "run"))
     depends_on("zlib")
 
     depends_on("libtraceevent", when="+libtraceevent")
