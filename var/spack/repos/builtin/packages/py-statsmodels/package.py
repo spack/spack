@@ -29,8 +29,6 @@ class PyStatsmodels(PythonPackage):
     depends_on("python@3.8:", when="@0.14:", type=("build", "link", "run"))
     depends_on("python", type=("build", "link", "run"))
 
-    # according to https://www.statsmodels.org/dev/install.html earlier versions
-    # might work.
     depends_on("py-setuptools@59.2:", when="@0.13.3:", type="build")
     depends_on("py-setuptools@0.6c5:", type="build")
 
