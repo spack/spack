@@ -20,3 +20,10 @@ class Rlwrap(AutotoolsPackage):
     version("0.43", sha256="8e86d0b7882d9b8a73d229897a90edc207b1ae7fa0899dca8ee01c31a93feb2f")
 
     depends_on("readline@4.2:")
+
+    def url_for_version(self, version):
+        if version < Version("0.46.1"):
+            return super().url_for_version(version)
+        # The latest release (0.46.1) removed the "v" prefix.
+        url_fmt = "https://github.com/hanslub42/rlwrap/releases/download/{0}/rlwrap-{0}.tar.gz"
+        return url_fmt.format(version)
