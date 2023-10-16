@@ -119,7 +119,7 @@ class Adios(AutotoolsPackage):
 
     def with_or_without_hdf5(self, activated):
         if activated:
-            return "--with-phdf5={0}".format(self.spec["hdf5"].prefix)
+            return f"--with-phdf5={self.spec['hdf5'].prefix}"
 
         return "--without-phdf5"
 
@@ -134,7 +134,7 @@ class Adios(AutotoolsPackage):
 
         extra_args = [
             # required, otherwise building its python bindings will fail
-            "CFLAGS={0}".format(self.compiler.cc_pic_flag)
+            f"CFLAGS={self.compiler.cc_pic_flag}"
         ]
 
         extra_args += self.enable_or_disable("shared")
@@ -148,7 +148,7 @@ class Adios(AutotoolsPackage):
         extra_args += self.with_or_without("infiniband")
 
         if "+zlib" in spec:
-            extra_args.append("--with-zlib={0}".format(spec["zlib-api"].prefix))
+            extra_args.append(f"--with-zlib={spec['zlib-api'].prefix}")
         else:
             extra_args.append("--without-zlib")
 

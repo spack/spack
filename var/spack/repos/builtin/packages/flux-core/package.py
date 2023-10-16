@@ -125,7 +125,7 @@ class FluxCore(AutotoolsPackage):
     conflicts("platform=darwin", msg="flux-core does not support MacOS based platforms.")
     conflicts("platform=windows", msg="flux-core does not support Windows based platforms.")
 
-    depends_on("libarchive", when="@0.38.0:")
+    depends_on("libarchive+iconv", when="@0.38.0:")
     depends_on("ncurses@6.2:", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
     depends_on("czmq@3.0.1:")
@@ -141,6 +141,8 @@ class FluxCore(AutotoolsPackage):
     # `link` dependency on python due to Flux's `pymod` module
     depends_on("python@3.6:", when="@0.17:", type=("build", "link", "run"))
     depends_on("python@2.7:", type=("build", "link", "run"))
+    # Use of distutils in configure script dropped in v0.55
+    depends_on("python@:3.11", when="@:0.54", type=("build", "link", "run"))
     depends_on("py-cffi@1.1:", type=("build", "run"))
     depends_on("py-six@1.9:", when="@:0.24", type=("build", "run"))
     depends_on("py-pyyaml@3.10:", type=("build", "run"))

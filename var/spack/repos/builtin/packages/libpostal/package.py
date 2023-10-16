@@ -28,7 +28,7 @@ class Libpostal(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
     depends_on("curl", type="build")
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
 
     def autoreconf(self, spec, prefix):
         which("sh")("bootstrap.sh")

@@ -57,6 +57,7 @@ class PyCython(PythonPackage):
 
     # Backports CYTHON_FORCE_REGEN environment variable
     patch("5307.patch", when="@0.29:0.29.33")
+    patch("5712.patch", when="@0.29")
 
     @property
     def command(self):

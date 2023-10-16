@@ -16,6 +16,8 @@ class Damaris(CMakePackage):
     maintainers("jcbowden")
 
     version("master", branch="master")
+    version("1.9.2", tag="v1.9.2")
+    version("1.9.1", tag="v1.9.1")
     version("1.9.0", tag="v1.9.0")
     version("1.8.2", tag="v1.8.2")
     version("1.8.1", tag="v1.8.1")
@@ -44,13 +46,14 @@ class Damaris(CMakePackage):
         default=False,
         description="Enables building of Python enabled Damaris library using Boost::python",
     )
+    extends("python", when="+python")
 
     depends_on("xsd")
     depends_on("xerces-c")
     depends_on("mpi")
     depends_on("cmake@3.18.0:", type=("build"))
-    depends_on("boost+thread+log+filesystem+date_time" "@1.67:")
-    depends_on("boost+thread+log+filesystem+date_time+python+numpy" "@1.67:", when="+python")
+    depends_on("boost@1.67:+thread+log+filesystem+date_time+system")
+    depends_on("boost+python", when="+python")
     depends_on("py-mpi4py", when="+python", type=("build", "run"))
     depends_on("hdf5@1.8.20:", when="+hdf5")
     depends_on("paraview+python+mpi+development_files", when="+catalyst")
@@ -87,6 +90,8 @@ class Damaris(CMakePackage):
 
         if self.spec.variants["python"].value:
             args.extend(["-DENABLE_PYTHON:BOOL=ON"])
+            args.extend(["-DENABLE_PYTHONMOD:BOOL=ON"])
+            args.append(self.define("PYTHON_MODULE_INSTALL_PATH", python_platlib))
 
         if self.spec.variants["visit"].value:
             args.extend(["-DENABLE_VISIT:BOOL=ON"])
