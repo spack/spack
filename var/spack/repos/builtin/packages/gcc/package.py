@@ -1086,6 +1086,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
         the compiler used to build the executable.
+        For an offload-enabled build, libgomp will also be rpath-ed.
 
         .. caution::
 
@@ -1098,13 +1099,16 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         Structure the specs file so that users can define a custom spec file
         to suppress the spack-linked rpaths to facilitate rpath adjustment
         for relocatable binaries. The custom spec file
-        :file:`{norpath}.spec` will have a single
-        line followed by two blanks lines::
+        :file:`{norpath}.spec` will have the following lines::
 
             *link_libgcc_rpath:
 
 
+            *link_libgomp_rpath:
 
+
+
+        Note that two blank lines are needed after each non-blank line.
         It can be passed to the GCC linker using the argument
         ``--specs=norpath.spec`` to disable the automatic rpath and restore
         the behavior of ``LD_RUN_PATH``."""
@@ -1149,6 +1153,34 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             out.write("\n")
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))
+
+        # Do the same thing for offload-enabled builds
+        if self.spec.satisfies("+amdgcn") or self.spec.satisfies("+amdgcn"):
+
+            libgomp_dir = []
+            for dir in ["lib", "lib64"]:
+                libdir = join_path(self.prefix, dir)
+                if glob.glob(join_path(libdir, "libgomp." + dso_suffix)):
+                    libgomp_dir.append(libdir)
+            if not libgomp_dir:
+                # Cannot find libgomp
+                tty.warn("libgomp library not found in lib/lib64")
+                return
+
+            libgomp_spec_file = join_path(libgomp_dir, "libgomp.spec")
+            copy(libgomp_spec_file, join_path(libgomp_spec_file, ".orig"))
+            with open(libgomp_spec_file, "r+") as f:
+                lines = f.readlines()
+                f.seek(0)
+                for line in lines:
+                    if line.startswith("*link_gomp:"):
+                        f.write(line.strip('\n') + " %(link_libgomp_rpath)\n")
+                    else:
+                        f.write(line)
+                f.write("*link_libgomp_rpath:\n")
+                f.write("-rpath " + libgomp_dir + "\n")
+            set_install_permissions(libgomp_spec_file)
+            tty.info(f"Wrote new libgomp spec file to {libgomp_spec_file}")
 
     def setup_run_environment(self, env):
         # Search prefix directory for possibly modified compiler names
