@@ -276,12 +276,12 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             llvm_flags.append("-Wno-unused-command-line-argument")
 
         self.write_config_file(
-            common_flags + llvm_flags, self.component_prefix.linux.bin, ["icx", "icpx", "ifx"]
+            common_flags + llvm_flags, self.component_prefix.linux.bin, ["icx", "icpx"]
         )
         self.write_config_file(
             common_flags + classic_flags,
             self.component_prefix.linux.bin.intel64,
-            ["icc", "icpc", "ifort"],
+            ["icc", "icpc", "ifort", "ifx"],
         )
 
     def _ld_library_path(self):
