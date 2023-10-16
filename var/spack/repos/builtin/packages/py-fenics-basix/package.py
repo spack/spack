@@ -28,6 +28,7 @@ class PyFenicsBasix(PythonPackage):
 
     depends_on("cmake@3.19:", type="build")
 
+    # See python/pyproject.toml
     depends_on("python@3.8:", when="@0.7.0:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-numpy@1.21:", type=("build", "run"))
