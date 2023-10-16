@@ -54,7 +54,7 @@ class PyPyside2(PythonPackage):
     depends_on("cmake@3.1:", type="build")
     # libclang versioning from sources/shiboken2/doc/gettingstarted.rst
     depends_on("llvm@6", type="build", when="@5.12:5.13")
-    depends_on("llvm@10", type="build", when="@5.15")
+    depends_on("llvm@10:", type="build", when="@5.15")
     depends_on("py-setuptools", type="build")
     depends_on("py-packaging", type="build")
     depends_on("py-wheel", type="build")
@@ -68,6 +68,21 @@ class PyPyside2(PythonPackage):
     depends_on("libxml2@2.6.32:", when="+doc", type="build")
     depends_on("libxslt@1.1.19:", when="+doc", type="build")
     depends_on("py-sphinx", when="+doc", type="build")
+
+    def patch(self):
+        filter_file(
+            r"\=\${shiboken_include_dirs}",
+            ':'.join([
+                r"=${shiboken_include_dirs}",
+                self.spec["qt"]["glx"]["libglx"].prefix.include,
+                self.spec["qt"]["libxcb"].prefix.include
+            ]),
+            "sources/pyside2/cmake/Macros/PySideModules.cmake"
+        )
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("^llvm@11:"):
+            env.set('LLVM_INSTALL_DIR', self.spec['llvm'].prefix)
 
     def install_options(self, spec, prefix):
         args = [
