@@ -162,7 +162,7 @@ class HsaRocrDev(CMakePackage):
 
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways
     patch("0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch", when="@3.5.0")
-    patch("0002-Remove-explicit-RPATH-again.patch", when="@3.7.0:5.5")
+    patch("0002-Remove-explicit-RPATH-again.patch", when="@3.7.0:5.6")
 
     root_cmakelists_dir = "src"
 

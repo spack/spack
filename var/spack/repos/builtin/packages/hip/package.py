@@ -715,11 +715,10 @@ class Hip(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         if self.spec.satisfies("@:5.1.0"):
             return
-        else:
-            if "@:5.5" in self.spec:
-                self.test_src_dir = "samples"
-            else:
-                self.test_src_dir = "hip-tests/samples"
+        elif self.spec.satisfies("@5.1:5.5"):
+            self.test_src_dir = "samples"
+        elif self.spec.satisfies("@5.6:"):
+            self.test_src_dir = "hip-tests/samples"
         self.cache_extra_test_sources([self.test_src_dir])
 
     def test_samples(self):
