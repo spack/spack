@@ -906,14 +906,14 @@ complete -c spack -n '__fish_spack_using_command checksum' -s h -l help -f -a he
 complete -c spack -n '__fish_spack_using_command checksum' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command checksum' -l keep-stage -f -a keep_stage
 complete -c spack -n '__fish_spack_using_command checksum' -l keep-stage -d 'don\'t clean up staging area when command completes'
-complete -c spack -n '__fish_spack_using_command checksum' -s b -l batch -f -a batch
-complete -c spack -n '__fish_spack_using_command checksum' -s b -l batch -d 'don\'t ask which versions to checksum'
-complete -c spack -n '__fish_spack_using_command checksum' -s l -l latest -f -a latest
-complete -c spack -n '__fish_spack_using_command checksum' -s l -l latest -d 'checksum the latest available version'
-complete -c spack -n '__fish_spack_using_command checksum' -s p -l preferred -f -a preferred
-complete -c spack -n '__fish_spack_using_command checksum' -s p -l preferred -d 'checksum the known Spack preferred version'
-complete -c spack -n '__fish_spack_using_command checksum' -s a -l add-to-package -f -a add_to_package
-complete -c spack -n '__fish_spack_using_command checksum' -s a -l add-to-package -d 'add new versions to package'
+complete -c spack -n '__fish_spack_using_command checksum' -l batch -s b -f -a batch
+complete -c spack -n '__fish_spack_using_command checksum' -l batch -s b -d 'don\'t ask which versions to checksum'
+complete -c spack -n '__fish_spack_using_command checksum' -l latest -s l -f -a latest
+complete -c spack -n '__fish_spack_using_command checksum' -l latest -s l -d 'checksum the latest available version'
+complete -c spack -n '__fish_spack_using_command checksum' -l preferred -s p -f -a preferred
+complete -c spack -n '__fish_spack_using_command checksum' -l preferred -s p -d 'checksum the known Spack preferred version'
+complete -c spack -n '__fish_spack_using_command checksum' -l add-to-package -s a -f -a add_to_package
+complete -c spack -n '__fish_spack_using_command checksum' -l add-to-package -s a -d 'add new versions to package'
 complete -c spack -n '__fish_spack_using_command checksum' -l verify -f -a verify
 complete -c spack -n '__fish_spack_using_command checksum' -l verify -d 'verify known package checksums'
 complete -c spack -n '__fish_spack_using_command checksum' -s j -l jobs -r -f -a jobs
