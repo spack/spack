@@ -43,8 +43,9 @@ class PyFenicsFfcx(PythonPackage):
     depends_on("py-fenics-basix@0.4.2", type=("build", "run"), when="@0.4.2")
 
     depends_on("py-pytest", type="test")
+    depends_on("py-sympy", type="test")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_build(self):
         with working_dir("test"):
-            Executable("py.test")()
+            Executable("pytest")()
