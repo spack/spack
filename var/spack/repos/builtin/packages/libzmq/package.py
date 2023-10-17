@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import re
 import sys
 
 from spack.package import *
@@ -20,6 +22,7 @@ class Libzmq(AutotoolsPackage):
         return f"https://github.com/zeromq/libzmq/releases/download/v{ver}/zeromq-{ver}.tar.gz"
 
     maintainers("dennisklein")
+    test_requires_compiler = True
 
     version("master", branch="master")
     version("4.3.5", sha256="6653ef5910f17954861fe72332e68b03ca6e4d9c7160eb3a8de5a5a913bfab43")
@@ -169,3 +172,67 @@ class Libzmq(AutotoolsPackage):
             args.append("CFLAGS=-Wno-gnu")
             args.append("CXXFLAGS=-Wno-gnu")
         return args
+
+    @run_after("configure")
+    @on_package_attributes(run_tests=True)
+    def check_configure(self):
+        """sanity checks to avoid mistakes like in https://github.com/spack/spack/issues/40455"""
+        config_log = open("config.log", "r").read()
+        macros = []
+        if self.spec.satisfies("+drafts"):
+            macros.append("#define ZMQ_BUILD_DRAFT_API 1")
+        if self.spec.satisfies("+libbsd"):
+            macros.append("#define ZMQ_HAVE_LIBBSD 1")
+        if self.spec.satisfies("+libsodium"):
+            macros.append("#define ZMQ_USE_LIBSODIUM 1")
+        if self.spec.satisfies("+libunwind"):
+            macros.append("#define HAVE_LIBUNWIND 1")
+        # https://github.com/zeromq/libzmq/commit/ff47aeb791e134a78bc386e12eea67618e0bf2f7
+        # Since 4.3.5 the curve feature is only available via libsodium backend
+        if not self.spec.satisfies("@4.3.5:~libsodium"):
+            macros.append("#define ZMQ_HAVE_CURVE 1")
+        for macro in macros:
+            if not re.search(macro, config_log):
+                raise RuntimeError(f"Expected '{macro}' in config.log")
+
+    sanity_check_is_file = [
+        join_path("include", "zmq.h"),
+        join_path("lib", "libzmq.so"),
+        join_path("lib", "pkgconfig", "libzmq.pc"),
+    ]
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def check_presence_of_files(self):
+        """check presence of important (conditional) files"""
+        if self.spec.satisfies("+docs"):
+            assert os.path.exists(join_path(self.prefix.share.man.man7, "zmq.7"))
+
+    def _compiled_executable(self, source_code):
+        """compile the given C source code as executable"""
+        exe = f"test_{abs(hash(source_code)):08x}"
+        source_file = f"{exe}.c"
+        open(source_file, "w").write(source_code)
+        Executable(self.compiler.cc)(
+            f"-L{self.prefix.lib}", "-lzmq", f"-I{self.prefix.include}", source_file, "-o", exe
+        )
+        return which(exe)
+
+    def test_basic_usage(self):
+        """check basic functionality by printing the ZMQ version using the library"""
+        out = self._compiled_executable(
+            r"""
+#include <stdio.h>
+#include <stdlib.h>
+#include <zmq.h>
+
+int main() {
+    int major, minor, patch;
+    zmq_version(&major, &minor, &patch);
+    printf("%d.%d.%d", major, minor, patch);
+    return EXIT_SUCCESS;
+}
+            """.strip()
+        )(output=str.split, error=str.split)
+        if not self.spec.satisfies("@master"):
+            check_outputs(str(self.version), out)
