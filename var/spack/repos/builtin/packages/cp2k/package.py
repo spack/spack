@@ -103,6 +103,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     )
     variant("pytorch", default=False, description="Enable libtorch support")
     variant("quip", default=False, description="Enable quip support")
+    variant("mpi_f08", default=False, description="Use MPI F08 module")
 
     variant(
         "enable_regtests",
@@ -947,6 +948,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("CP2K_USE_VORI", "libvori"),
             self.define_from_variant("CP2K_USE_SPLA", "spla"),
             self.define_from_variant("CP2K_USE_QUIP", "quip"),
+            self.define_from_variant("CP2K_USE_MPI_F08", "mpi_f08"),
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though
