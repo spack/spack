@@ -64,6 +64,8 @@ from spack.variant import UnknownVariantError
 #: environment variable used to indicate the active environment
 spack_env_var = "SPACK_ENV"
 
+#: environment variable used to indicate the active environment view
+spack_env_view_var = "SPACK_ENV_VIEW"
 
 #: currently activated environment
 _active_environment: Optional["Environment"] = None
@@ -1595,15 +1597,13 @@ class Environment:
 
     @property
     def default_view(self):
-        if not self.views:
-            raise SpackEnvironmentError("{0} does not have a view enabled".format(self.name))
-
-        if default_view_name not in self.views:
-            raise SpackEnvironmentError(
-                "{0} does not have a default view enabled".format(self.name)
-            )
+        if not self.has_view(default_view_name):
+            raise SpackEnvironmentError(f"{self.name} does not have a default view enabled")
 
         return self.views[default_view_name]
+
+    def has_view(self, view_name: str) -> bool:
+        return view_name in self.views
 
     def update_default_view(self, path_or_bool: Union[str, bool]) -> None:
         """Updates the path of the default view.
@@ -1690,14 +1690,14 @@ class Environment:
                 "Loading the environment view will require reconcretization." % self.name
             )
 
-    def _env_modifications_for_default_view(self, reverse=False):
+    def _env_modifications_for_view(self, view: ViewDescriptor, reverse: bool = False):
         all_mods = spack.util.environment.EnvironmentModifications()
 
         visited = set()
 
         errors = []
         for root_spec in self.concrete_roots():
-            if root_spec in self.default_view and root_spec.installed and root_spec.package:
+            if root_spec in view and root_spec.installed and root_spec.package:
                 for spec in root_spec.traverse(deptype="run", root=True):
                     if spec.name in visited:
                         # It is expected that only one instance of the package
@@ -1714,7 +1714,7 @@ class Environment:
                         visited.add(spec.name)
 
                     try:
-                        mods = uenv.environment_modifications_for_spec(spec, self.default_view)
+                        mods = uenv.environment_modifications_for_spec(spec, view)
                     except Exception as e:
                         msg = "couldn't get environment settings for %s" % spec.format(
                             "{name}@{version} /{hash:7}"
@@ -1726,22 +1726,22 @@ class Environment:
 
         return all_mods, errors
 
-    def add_default_view_to_env(self, env_mod):
-        """
-        Collect the environment modifications to activate an environment using the
-        default view. Removes duplicate paths.
+    def add_view_to_env(
+        self, env_mod: spack.util.environment.EnvironmentModifications, view: str
+    ) -> spack.util.environment.EnvironmentModifications:
+        """Collect the environment modifications to activate an environment using the provided
+        view. Removes duplicate paths.
 
         Args:
-            env_mod (spack.util.environment.EnvironmentModifications): the environment
-                modifications object that is modified.
-        """
-        if default_view_name not in self.views:
-            # No default view to add to shell
+            env_mod: the environment modifications object that is modified.
+            view: the name of the view to activate."""
+        descriptor = self.views.get(view)
+        if not descriptor:
             return env_mod
 
-        env_mod.extend(uenv.unconditional_environment_modifications(self.default_view))
+        env_mod.extend(uenv.unconditional_environment_modifications(descriptor))
 
-        mods, errors = self._env_modifications_for_default_view()
+        mods, errors = self._env_modifications_for_view(descriptor)
         env_mod.extend(mods)
         if errors:
             for err in errors:
@@ -1753,22 +1753,22 @@ class Environment:
 
         return env_mod
 
-    def rm_default_view_from_env(self, env_mod):
-        """
-        Collect the environment modifications to deactivate an environment using the
-        default view. Reverses the action of ``add_default_view_to_env``.
+    def rm_view_from_env(
+        self, env_mod: spack.util.environment.EnvironmentModifications, view: str
+    ) -> spack.util.environment.EnvironmentModifications:
+        """Collect the environment modifications to deactivate an environment using the provided
+        view. Reverses the action of ``add_view_to_env``.
 
         Args:
-            env_mod (spack.util.environment.EnvironmentModifications): the environment
-                modifications object that is modified.
-        """
-        if default_view_name not in self.views:
-            # No default view to add to shell
+            env_mod: the environment modifications object that is modified.
+            view: the name of the view to deactivate."""
+        descriptor = self.views.get(view)
+        if not descriptor:
             return env_mod
 
-        env_mod.extend(uenv.unconditional_environment_modifications(self.default_view).reversed())
+        env_mod.extend(uenv.unconditional_environment_modifications(descriptor).reversed())
 
-        mods, _ = self._env_modifications_for_default_view(reverse=True)
+        mods, _ = self._env_modifications_for_view(descriptor, reverse=True)
         env_mod.extend(mods)
 
         return env_mod

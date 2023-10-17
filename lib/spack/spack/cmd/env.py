@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 import tempfile
+from typing import Optional
 
 import llnl.string as string
 import llnl.util.filesystem as fs
@@ -96,22 +97,16 @@ def env_activate_setup_parser(subparser):
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
-        "-v",
         "--with-view",
-        action="store_const",
-        dest="with_view",
-        const=True,
-        default=True,
-        help="update PATH, etc., with associated view",
+        "-v",
+        metavar="name",
+        help="set runtime environment variables for specific view",
     )
     view_options.add_argument(
-        "-V",
         "--without-view",
-        action="store_const",
-        dest="with_view",
-        const=False,
-        default=True,
-        help="do not update PATH, etc., with associated view",
+        "-V",
+        action="store_true",
+        help="do not set runtime environment variables for any view",
     )
 
     subparser.add_argument(
@@ -197,10 +192,20 @@ def env_activate(args):
 
     # Activate new environment
     active_env = ev.Environment(env_path)
+
+    # Check if runtime environment variables are requested, and if so, for what view.
+    view: Optional[str] = None
+    if args.with_view:
+        view = args.with_view
+        if not active_env.has_view(view):
+            tty.die(f"The environment does not have a view named '{view}'")
+    elif not args.without_view and active_env.has_view(ev.default_view_name):
+        view = ev.default_view_name
+
     cmds += spack.environment.shell.activate_header(
-        env=active_env, shell=args.shell, prompt=env_prompt if args.prompt else None
+        env=active_env, shell=args.shell, prompt=env_prompt if args.prompt else None, view=view
     )
-    env_mods.extend(spack.environment.shell.activate(env=active_env, add_view=args.with_view))
+    env_mods.extend(spack.environment.shell.activate(env=active_env, view=view))
     cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 
