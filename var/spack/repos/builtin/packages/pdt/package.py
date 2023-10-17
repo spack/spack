@@ -54,12 +54,12 @@ class Pdt(AutotoolsPackage):
             options.append("-pgCC")
         elif self.compiler.name == "gcc":
             options.append("-GNU")
-        elif self.compiler.name == "clang":
+        elif self.compiler.name == "clang" or self.compiler.name == "apple-clang":
             options.append("-clang")
         elif self.compiler.name == "cce":
             options.append("-CC")
         else:
-            raise InstallError("Unknown/unsupported compiler family")
+            raise InstallError("Unknown/unsupported compiler family: " + self.compiler.name)
 
         if "+pic" in spec:
             options.append("-useropt=" + self.compiler.cxx_pic_flag)
