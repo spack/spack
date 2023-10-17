@@ -189,7 +189,7 @@ class CachedCMakeBuilder(CMakeBuilder):
 
         # Check for slurm
         using_slurm = False
-        slurm_checks = ["+slurm", "schedulers=slurm", "process_managers=slurm"]
+        slurm_checks = ["+slurm", "schedulers=slurm", "process_managers=slurm", "cray-mpich"]
         if any(spec["mpi"].satisfies(variant) for variant in slurm_checks):
             using_slurm = True
 
