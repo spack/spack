@@ -675,6 +675,25 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
     assert str(spec_branch.version) == "git.1.x=1.2"
 
 
+def test_git_branch_with_slash():
+    class MockLookup(object):
+        def get(self, ref):
+            assert ref == "feature/bar"
+            return "1.2", 0
+
+    v = spack.version.from_string("git.feature/bar")
+    assert isinstance(v, GitVersion)
+    v.attach_lookup(MockLookup())
+
+    # Create a version range
+    test_number_version = spack.version.from_string("1.2")
+    v.satisfies(test_number_version)
+
+    serialized = VersionList([v]).to_dict()
+    v_deserialized = VersionList.from_dict(serialized)
+    assert v_deserialized[0].ref == "feature/bar"
+
+
 @pytest.mark.parametrize(
     "string,git",
     [
