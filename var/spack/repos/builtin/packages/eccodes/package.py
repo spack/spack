@@ -320,7 +320,7 @@ class Eccodes(CMakePackage):
             self.define("ENABLE_JPG_LIBJASPER", jp2k == "jasper"),
             self.define("ENABLE_JPG_LIBOPENJPEG", jp2k == "openjpeg"),
             self.define_from_variant("ENABLE_PNG", "png"),
-            self.define("ENABLE_AEC", "aec" if "+aec" in self.spec else "OFF"),
+            self.define_from_variant("ENABLE_AEC", "aec"),
             self.define_from_variant("ENABLE_ECCODES_THREADS", "pthreads"),
             self.define_from_variant("ENABLE_ECCODES_OMP_THREADS", "openmp"),
             self.define_from_variant("ENABLE_MEMFS", "memfs"),
