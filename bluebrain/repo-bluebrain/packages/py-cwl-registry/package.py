@@ -10,12 +10,12 @@ class PyCwlRegistry(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/cwl-registry.git"
 
     version("develop", branch="main")
-    version("0.4.4", tag="cwl-registry-v0.4.4")
+    version("0.4.6", tag="cwl-registry-v0.4.6")
     version("0.3.14", tag="cwl-registry-v0.3.14")
     version("0.3.12", tag="cwl-registry-v0.3.12")
     version("0.3.10", tag="cwl-registry-v0.3.10")
 
-    depends_on("python@3.9:", type=("build", "run"))
+    depends_on("python@3.10:", type=("build", "run"))
 
     depends_on("py-setuptools", type=("build", "run"))
 
@@ -31,7 +31,7 @@ class PyCwlRegistry(PythonPackage):
     depends_on("py-nexusforge@0.8.1:", type=("build", "run"))
     depends_on("py-bba-data-push@1.0.4:", type=("build", "run"))
     depends_on("py-cwl-luigi@0.3.1:", type=("build", "run"))
-    depends_on("py-entity-management@1.2.26:", type=("build", "run"))
+    depends_on("py-entity-management@1.2.28:", type=("build", "run"))
     depends_on("py-fz-td-recipe", type=("build", "run"))
     depends_on("py-pydantic", type=("build", "run"))
     depends_on("py-morphio", type=("build", "run"))
