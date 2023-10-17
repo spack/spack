@@ -265,7 +265,7 @@ class LlvmAmdgpu(CMakePackage):
     resource(
         name="comgr",
         placement="comgr",
-        git= "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git",
+        git="https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git",
         branch="amd-stg-open",
         when="@master",
     )
