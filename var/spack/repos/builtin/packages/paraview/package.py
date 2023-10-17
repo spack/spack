@@ -609,10 +609,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+tbb" in spec:
             cmake_args.append("-DVTK_SMP_IMPLEMENTATION_TYPE=TBB")
-            
+
         if "+nvindex" in spec:
             cmake_args.append("-DPARAVIEW_PLUGIN_ENABLE_pvNVIDIAIndeX:BOOL=ON")
-        
+
         # Hide git from Paraview so it will not use `git describe`
         # to find its own version number
         if spec.satisfies("@5.4.0:5.4.1"):
