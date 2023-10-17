@@ -1173,11 +1173,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 f.seek(0)
                 for line in lines:
                     if line.startswith("*link_gomp:"):
-                        f.write(line.strip("\n") + " %(link_libgomp_rpath)\n")
+                        f.write(line.strip("\n") + " %(link_libgomp_rpath)\n\n")
                     else:
                         f.write(line)
                 f.write("*link_libgomp_rpath:\n")
-                f.write("-rpath " + libgomp_dir + "\n")
+                f.write("-rpath " + libgomp_dir + "\n\n")
             set_install_permissions(libgomp_spec_file)
             tty.info(f"Wrote new libgomp spec file to {libgomp_spec_file}")
 
