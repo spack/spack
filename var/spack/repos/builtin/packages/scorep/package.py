@@ -97,8 +97,8 @@ class Scorep(AutotoolsPackage):
     depends_on("otf2@3:", when="@8:")
     depends_on("cubew@4.8.2:", when="@8.3:")
     depends_on("cubelib@4.8.2:", when="@8.3:")
-    depends_on("cubew@4.8:", when="@8:8.1")
-    depends_on("cubelib@4.8:", when="@8:8.1")
+    depends_on("cubew@4.8:", when="@8:8.2")
+    depends_on("cubelib@4.8:", when="@8:8.2")
     # fall through to Score-P 7's OPARI2, no new release
     # SCOREP 7
     depends_on("otf2@2.3:2.3.99", when="@7.0:7")
