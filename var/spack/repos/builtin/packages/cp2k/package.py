@@ -103,6 +103,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     )
     variant("pytorch", default=False, description="Enable libtorch support")
     variant("quip", default=False, description="Enable quip support")
+    variant("mpi_f08", default=False, description="Use MPI F08 module")
 
     variant(
         "enable_regtests",
@@ -203,6 +204,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("mpi@2:")
         depends_on("mpi@3:", when="@2023.1:")
         depends_on("scalapack")
+        depends_on("mpich+fortran", when="^mpich")
+
+        conflicts("~mpi_f08", when="^mpich@4.1:")
 
     with when("+cosma"):
         depends_on("cosma+scalapack")
@@ -277,6 +281,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("dbcsr+openmp", when="+openmp")
         depends_on("dbcsr+cuda", when="+cuda")
         depends_on("dbcsr+rocm", when="+rocm")
+        conflicts("+mpi_f08", when="@:2023.2")
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts("%apple-clang")
@@ -539,6 +544,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             libs.extend(scalapack)
             libs.extend(mpi)
             libs.extend(self.compiler.stdcxx_libs)
+
+            if "+mpi_f08" in spec:
+                cppflags.append("-D__MPI_F08")
 
             if "wannier90" in spec:
                 cppflags.append("-D__WANNIER90")
@@ -947,6 +955,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("CP2K_USE_VORI", "libvori"),
             self.define_from_variant("CP2K_USE_SPLA", "spla"),
             self.define_from_variant("CP2K_USE_QUIP", "quip"),
+            self.define_from_variant("CP2K_USE_MPI_F08", "mpi_f08"),
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though
