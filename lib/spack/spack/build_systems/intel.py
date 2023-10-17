@@ -715,7 +715,10 @@ class IntelPackage(Package):
     def _gcc_executable(self):
         """Return GCC executable"""
         # Match the available gcc, as it's done in tbbvars.sh.
-        gcc_name = "gcc"
+        if isinstance(self.compiler, spack.compiler.Gcc):
+            gcc_name = self.compiler.cc
+        else:
+            gcc_name = "gcc"
         # but first check if -gcc-name is specified in cflags
         for flag in self.spec.compiler_flags["cflags"]:
             if flag.startswith("-gcc-name="):
