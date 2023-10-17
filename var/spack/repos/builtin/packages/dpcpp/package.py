@@ -75,14 +75,16 @@ class Dpcpp(CMakePackage):
     build_targets = ["deploy-sycl-toolchain"]
 
     def cmake_args(self):
+        spec = self.spec
+        
         llvm_external_projects = "sycl;llvm-spirv;opencl;xpti;xptifw"
         libclc_amd_target_names = ";amdgcn--amdhsa"
         libclc_nvidia_target_names = ";nvptx64--nvidiacl"
 
-        if self.spec.platform != "darwin":
+        if spec.platform != "darwin":
             llvm_external_projects += ";libdevice"
 
-        if "+fusion" in self.spec:
+        if "+fusion" in spec:
             llvm_external_projects += ";sycl-fusion"
 
         sycl_dir = os.path.join(self.stage.source_path, "sycl")
@@ -96,18 +98,18 @@ class Dpcpp(CMakePackage):
         libclc_gen_remangled_variants = "OFF"
         sycl_build_pi_hip_platform = self.spec.variants["hip-platform"].value
         sycl_enabled_plugins = "opencl"
-        llvm_targets_to_build = get_llvm_targets_to_build(self.spec.target.family)
+        llvm_targets_to_build = get_llvm_targets_to_build(spec.target.family)
 
-        if self.spec.platform != "darwin":
+        if spec.platform != "darwin":
             sycl_enabled_plugins += ";level_zero"
 
         is_cuda = "+cuda" in self.spec
         is_hip = "+hip" in self.spec
 
-        if "+lld" in self.spec:
+        if "+lld" in spec:
             llvm_enable_projects += ";lld"
 
-        if "+esimd-emulator" in self.spec:
+        if "+esimd-emulator" in spec:
             sycl_enabled_plugins += ";esimd_emulator"
         if is_cuda or is_hip:
             llvm_enable_projects += ";libclc"
@@ -128,8 +130,8 @@ class Dpcpp(CMakePackage):
             libclc_gen_remangled_variants = "ON"
             sycl_enabled_plugins += ";hip"
 
-        if "+llvm-external-projects" in self.spec:
-            llvm_external_projects += ";" + self.spec.variants[
+        if "+llvm-external-projects" in spec:
+            llvm_external_projects += ";" + spec.variants[
                 "llvm-external-projects"
             ].value.replace(",", ";")
 
@@ -173,41 +175,46 @@ class Dpcpp(CMakePackage):
     def setup_build_environment(self, env):
         if "+cuda" in self.spec:
             env.set("CUDA_LIB_PATH", "{0}/lib64/stubs".format(self.spec["cuda"].prefix))
+        spec = self.spec
 
     @property
     def cc(self):
+        spec = self.spec
         msg = "cannot retrieve C compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("c", None)
+        assert spec.concrete, msg
+        if spec.external:
+            return spec.extra_attributes["compilers"].get("c", None)
         result = None
-        if "+clang" in self.spec:
-            result = os.path.join(self.spec.prefix.bin, "clang")
+        if "+clang" in spec:
+            result = os.path.join(spec.prefix.bin, "clang")
         return result
 
     @property
     def cxx(self):
+        spec = self.spec
         msg = "cannot retrieve C++ compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("cxx", None)
+        assert spec.concrete, msg
+        if spec.external:
+            return spec.extra_attributes["compilers"].get("cxx", None)
         result = None
-        if "+clang" in self.spec:
-            result = os.path.join(self.spec.prefix.bin, "clang++")
+        if "+clang" in spec:
+            result = os.path.join(spec.prefix.bin, "clang++")
         return result
 
     @run_after("install")
     def post_install(self):
-        clang_cpp_path = os.path.join(self.spec.prefix.bin, "clang++")
-        dpcpp_path = os.path.join(self.spec.prefix.bin, "dpcpp")
+        spec = self.spec
+        clang_cpp_path = os.path.join(spec.prefix.bin, "clang++")
+        dpcpp_path = os.path.join(spec.prefix.bin, "dpcpp")
 
         real_clang_cpp_path = os.path.realpath(clang_cpp_path)
         os.symlink(real_clang_cpp_path, dpcpp_path)
 
     def setup_run_environment(self, env):
-        env.set("CC", join_path(self.spec.prefix.bin, "clang"))
-        env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
-        env.prepend_path("LD_LIBRARY_PATH", join_path(self.spec.prefix, "lib"))
+        spec = self.spec
+        env.set("CC", join_path(spec.prefix.bin, "clang"))
+        env.set("CXX", join_path(spec.prefix.bin, "clang++"))
+        env.prepend_path("LD_LIBRARY_PATH", join_path(spec.prefix, "lib"))
 
 
 def get_llvm_targets_to_build(family):
