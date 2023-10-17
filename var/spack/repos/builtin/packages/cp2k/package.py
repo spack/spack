@@ -204,6 +204,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("mpi@2:")
         depends_on("mpi@3:", when="@2023.1:")
         depends_on("scalapack")
+        depends_on("mpich+fortran", when="^mpich")
+
+        conflicts("~mpi_f08", when="^mpich@4.1:")
 
     with when("+cosma"):
         depends_on("cosma+scalapack")
@@ -540,6 +543,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             libs.extend(scalapack)
             libs.extend(mpi)
             libs.extend(self.compiler.stdcxx_libs)
+
+            if "+mpi_f08" in spec:
+                cppflags.append("-D__MPI_F08")
 
             if "wannier90" in spec:
                 cppflags.append("-D__WANNIER90")
