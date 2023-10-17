@@ -71,18 +71,20 @@ class PyPyside2(PythonPackage):
 
     def patch(self):
         filter_file(
-            r"\=\${shiboken_include_dirs}",
-            ':'.join([
-                r"=${shiboken_include_dirs}",
-                self.spec["qt"]["glx"]["libglx"].prefix.include,
-                self.spec["qt"]["libxcb"].prefix.include
-            ]),
-            "sources/pyside2/cmake/Macros/PySideModules.cmake"
+            r"=${shiboken_include_dirs}",
+            ":".join(
+                [
+                    r"=${shiboken_include_dirs}",
+                    self.spec["qt"]["glx"]["libglx"].prefix.include,
+                    self.spec["qt"]["libxcb"].prefix.include,
+                ]
+            ),
+            "sources/pyside2/cmake/Macros/PySideModules.cmake",
+            string=True,
         )
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies("^llvm@11:"):
-            env.set('LLVM_INSTALL_DIR', self.spec['llvm'].prefix)
+        env.set("LLVM_INSTALL_DIR", self.spec["llvm"].prefix)
 
     def install_options(self, spec, prefix):
         args = [
