@@ -12,8 +12,21 @@ class Silo(AutotoolsPackage):
     data to binary, disk files."""
 
     homepage = "https://wci.llnl.gov/simulation/computer-codes/silo"
+    git = "https://github.com/LLNL/Silo.git"
     url = "https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2.tgz"
+    maintainers("patrickb314")
 
+    version(
+        "4.11.1",
+        preferred=True,
+        sha256="49eddc00304aa4a19074b099559edbdcaa3532c98df32f99aa62b9ec3ea7cee2",
+        url="https://github.com/LLNL/Silo/releases/download/4.11.1/silo-4.11.1.tar.xz",
+    )
+    version(
+        "4.11.1-bsd",
+        sha256="51ccfdf3c09dfc98c7858a0a6f08cc3b2a07ee3c4142ee6482ba7b24e314c2aa",
+        url="https://github.com/LLNL/Silo/releases/download/4.11.1/silo-4.11.1-bsd.tar.xz",
+    )
     version(
         "4.11",
         sha256="ab936c1f4fc158d9fdc4415965f7d9def7f4abeca596fe5a25bd8485654898ac",
@@ -68,19 +81,18 @@ class Silo(AutotoolsPackage):
     patch("H5FD_class_t-terminate.patch", when="@:4.10.2-bsd")
 
     # H5EPR_SEMI_COLON.patch was fixed in current dev
-    # patch("H5EPR_SEMI_COLON.patch", when="@:4.11-bsd")
-    patch("H5EPR_SEMI_COLON.patch")
+    patch("H5EPR_SEMI_COLON.patch", when="@:4.11-bsd")
 
     # Fix missing F77 init, fixed in 4.9
     patch("48-configure-f77.patch", when="@:4.8")
 
     # The previously used AX_CHECK_COMPILER_FLAGS macro was dropped from
     # autoconf-archive in 2011
-    patch("configure-AX_CHECK_COMPILE_FLAG.patch")
+    patch("configure-AX_CHECK_COMPILE_FLAG.patch", when="@:4.11-bsd")
 
     # API changes in hdf5-1.13 cause breakage
     # See https://github.com/LLNL/Silo/pull/260
-    patch("hdf5-113.patch", when="@4.11: +hdf5 ^hdf5@1.13:")
+    patch("hdf5-113.patch", when="@4.11:4.11-bsd +hdf5 ^hdf5@1.13:")
     conflicts("^hdf5@1.13:", when="@:4.10.2-bsd")
 
     # hzip and fpzip are not available in the BSD releases
@@ -88,10 +100,10 @@ class Silo(AutotoolsPackage):
     conflicts("+fpzip", when="@4.10.2-bsd,4.11-bsd")
 
     # zfp include missing
-    patch("zfp_error.patch", when="@4.11 +hdf5")
+    patch("zfp_error.patch", when="@4.11:4.11-bsd +hdf5")
 
     # use /usr/bin/env perl for portability
-    patch("mkinc-usr-bin-env-perl.patch")
+    patch("mkinc-usr-bin-env-perl.patch", when="@:4.11-bsd")
 
     def flag_handler(self, name, flags):
         spec = self.spec
