@@ -9,6 +9,7 @@ import os.path
 import posixpath
 from typing import Any, Dict, List
 
+import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 
 import spack.compilers
@@ -283,8 +284,10 @@ class LmodFileLayout(BaseFileLayout):
         Returns:
             str: part of the path associated with the service
         """
+
         # General format for the path part
-        path_part_fmt = os.path.join("{token.name}", "{token.version}")
+        def path_part_fmt(token):
+            return fs.polite_path([f"{token.name}", f"{token.version}"])
 
         # If we are dealing with a core compiler, return 'Core'
         core_compilers = self.conf.core_compilers
@@ -296,13 +299,13 @@ class LmodFileLayout(BaseFileLayout):
         # CompilerSpec does not have a hash, as we are not allowed to
         # use different flavors of the same compiler
         if name == "compiler":
-            return path_part_fmt.format(token=value)
+            return path_part_fmt(token=value)
 
         # In case the hierarchy token refers to a virtual provider
         # we need to append a hash to the version to distinguish
         # among flavors of the same library (e.g. openblas~openmp vs.
         # openblas+openmp)
-        path = path_part_fmt.format(token=value)
+        path = path_part_fmt(token=value)
         path = "-".join([path, value.dag_hash(length=7)])
         return path
 

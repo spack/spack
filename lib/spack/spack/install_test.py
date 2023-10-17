@@ -1039,7 +1039,7 @@ class TestSuite:
         Returns:
             str: the install test package identifier
         """
-        return spec.format("{name}-{version}-{hash:7}")
+        return spec.format_path("{name}-{version}-{hash:7}")
 
     @classmethod
     def test_log_name(cls, spec):

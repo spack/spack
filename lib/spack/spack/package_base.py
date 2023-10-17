@@ -991,13 +991,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return None
 
     def _make_resource_stage(self, root_stage, resource):
+        pretty_resource_name = fsys.polite_filename(f"{resource.name}-{self.version}")
         return ResourceStage(
             resource.fetcher,
             root=root_stage,
             resource=resource,
             name=self._resource_stage(resource),
             mirror_paths=spack.mirror.mirror_archive_paths(
-                resource.fetcher, os.path.join(self.name, f"{resource.name}-{self.version}")
+                resource.fetcher, os.path.join(self.name, pretty_resource_name)
             ),
             path=self.path,
         )
@@ -1008,8 +1009,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
+        format_string = "{name}-{version}"
+        pretty_name = self.spec.format_path(format_string)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, f"{self.name}-{self.version}"), self.spec
+            fetcher, os.path.join(self.name, pretty_name), self.spec
         )
         # Construct a path where the stage should build..
         s = self.spec
