@@ -39,6 +39,9 @@ class Patchelf(AutotoolsPackage):
     conflicts("%gcc@:6", when="@0.14:", msg="Requires C++17 support")
     conflicts("%clang@:3", when="@0.14:", msg="Requires C++17 support")
 
+    # GCC 7.5 doesn't have __cpp_deduction_guides >= 201606
+    patch("513.patch", when="@0.18: %gcc@:7")
+
     def url_for_version(self, version):
         if version < Version("0.12"):
             return "https://nixos.org/releases/patchelf/patchelf-{0}/patchelf-{1}.tar.gz".format(
