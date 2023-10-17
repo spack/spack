@@ -16,6 +16,7 @@ class Spykfunc(PythonPackage):
     submodules = True
 
     version("develop", branch="main")
+    version("0.18.4", tag="v0.18.4")
     version("0.18.3", tag="v0.18.3")
     version("0.18.1", tag="v0.18.1")
     version("0.18.0", tag="v0.18.0")
