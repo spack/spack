@@ -336,15 +336,15 @@ class Acts(CMakePackage, CudaPackage):
 
         def cmake_variant(cmake_label, spack_variant):
             enabled = spec.satisfies("+" + spack_variant)
-            return "-DACTS_BUILD_{0}={1}".format(cmake_label, enabled)
+            return f"-DACTS_BUILD_{cmake_label}={enabled}"
 
         def enable_cmake_variant(cmake_label, spack_variant):
             enabled = spec.satisfies(spack_variant)
-            return "-DACTS_ENABLE_{0}={1}".format(cmake_label, enabled)
+            return f"-DACTS_ENABLE_{cmake_label}={enabled}"
 
         def example_cmake_variant(cmake_label, spack_variant, type="BUILD"):
             enabled = spec.satisfies("+examples +" + spack_variant)
-            return "-DACTS_{0}_EXAMPLES_{1}={2}".format(type, cmake_label, enabled)
+            return f"-DACTS_{type}_EXAMPLES_{cmake_label}={enabled}"
 
         def plugin_label(plugin_name):
             if spec.satisfies("@0.33:"):
@@ -400,7 +400,7 @@ class Acts(CMakePackage, CudaPackage):
         ]
 
         log_failure_threshold = spec.variants["log_failure_threshold"].value
-        args.append("-DACTS_LOG_FAILURE_THRESHOLD={0}".format(log_failure_threshold))
+        args.append(f"-DACTS_LOG_FAILURE_THRESHOLD={log_failure_threshold}")
         if spec.satisfies("@19.4.0:"):
             args.append("-DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON")
 
@@ -431,11 +431,11 @@ class Acts(CMakePackage, CudaPackage):
         if "+cuda" in spec:
             cuda_arch = spec.variants["cuda_arch"].value
             if cuda_arch != "none":
-                args.append("-DCUDA_FLAGS=-arch=sm_{0}".format(cuda_arch[0]))
+                args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch[0]}")
 
         if "+python" in spec:
             python = spec["python"].command.path
-            args.append("-DPython_EXECUTABLE={0}".format(python))
+            args.append(f"-DPython_EXECUTABLE={python}")
 
         args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
 

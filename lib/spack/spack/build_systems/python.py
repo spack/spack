@@ -6,6 +6,7 @@ import inspect
 import os
 import re
 import shutil
+import stat
 from typing import Optional
 
 import archspec
@@ -25,6 +26,7 @@ import spack.store
 from spack.directives import build_system, depends_on, extends, maintainers
 from spack.error import NoHeadersError, NoLibrariesError, SpecError
 from spack.install_test import test_part
+from spack.util.executable import Executable
 from spack.version import Version
 
 from ._checks import BaseBuilder, execute_install_time_tests
@@ -351,6 +353,51 @@ class PythonPackage(PythonExtension):
         raise NoLibrariesError(msg.format(self.spec.name, root))
 
 
+def fixup_shebangs(path: str, old_interpreter: bytes, new_interpreter: bytes):
+    # Recurse into the install prefix and fixup shebangs
+    exe = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+    dirs = [path]
+    hardlinks = set()
+
+    while dirs:
+        with os.scandir(dirs.pop()) as entries:
+            for entry in entries:
+                if entry.is_dir(follow_symlinks=False):
+                    dirs.append(entry.path)
+                    continue
+
+                # Only consider files, not symlinks
+                if not entry.is_file(follow_symlinks=False):
+                    continue
+
+                lstat = entry.stat(follow_symlinks=False)
+
+                # Skip over files that are not executable
+                if not (lstat.st_mode & exe):
+                    continue
+
+                # Don't modify hardlinks more than once
+                if lstat.st_nlink > 1:
+                    key = (lstat.st_ino, lstat.st_dev)
+                    if key in hardlinks:
+                        continue
+                    hardlinks.add(key)
+
+                # Finally replace shebangs if any.
+                with open(entry.path, "rb+") as f:
+                    contents = f.read(2)
+                    if contents != b"#!":
+                        continue
+                    contents += f.read()
+
+                    if old_interpreter not in contents:
+                        continue
+
+                    f.seek(0)
+                    f.write(contents.replace(old_interpreter, new_interpreter))
+                    f.truncate()
+
+
 @spack.builder.builder("python_pip")
 class PythonPipBuilder(BaseBuilder):
     phases = ("install",)
@@ -447,8 +494,36 @@ class PythonPipBuilder(BaseBuilder):
         """
         return []
 
+    @property
+    def _build_venv_path(self):
+        """Return the path to the virtual environment used for building when
+        python is external."""
+        return os.path.join(self.spec.package.stage.path, "build_env")
+
+    @property
+    def _build_venv_python(self) -> Executable:
+        """Return the Python executable in the build virtual environment when
+        python is external."""
+        return Executable(os.path.join(self._build_venv_path, "bin", "python"))
+
     def install(self, pkg, spec, prefix):
         """Install everything from build directory."""
+        python: Executable = spec["python"].command
+        # Since we invoke pip with --no-build-isolation, we have to make sure that pip cannot
+        # execute hooks from user and system site-packages.
+        if spec["python"].external:
+            # There are no environment variables to disable the system site-packages, so we use a
+            # virtual environment instead. The downside of this approach is that pip produces
+            # incorrect shebangs that refer to the virtual environment, which we have to fix up.
+            python("-m", "venv", "--without-pip", self._build_venv_path)
+            pip = self._build_venv_python
+        else:
+            # For a Spack managed Python, system site-packages is empty/unused by design, so it
+            # suffices to disable user site-packages, for which there is an environment variable.
+            pip = python
+            pip.add_default_env("PYTHONNOUSERSITE", "1")
+        pip.add_default_arg("-m")
+        pip.add_default_arg("pip")
 
         args = PythonPipBuilder.std_args(pkg) + ["--prefix=" + prefix]
 
@@ -472,8 +547,31 @@ class PythonPipBuilder(BaseBuilder):
         else:
             args.append(".")
 
-        pip = inspect.getmodule(pkg).pip
         with fs.working_dir(self.build_directory):
             pip(*args)
+
+    @spack.builder.run_after("install")
+    def fixup_shebangs_pointing_to_build(self):
+        """When installing a package using an external python, we use a temporary virtual
+        environment which improves build isolation. The downside is that pip produces shebangs
+        that point to the temporary virtual environment. This method fixes them up to point to the
+        underlying Python."""
+        # No need to fixup shebangs if no build venv was used. (this post install function also
+        # runs when install was overridden in another package, so check existence of the venv path)
+        if not os.path.exists(self._build_venv_path):
+            return
+
+        # Use sys.executable, since that's what pip uses.
+        interpreter = (
+            lambda python: python("-c", "import sys; print(sys.executable)", output=str)
+            .strip()
+            .encode("utf-8")
+        )
+
+        fixup_shebangs(
+            path=self.spec.prefix,
+            old_interpreter=interpreter(self._build_venv_python),
+            new_interpreter=interpreter(self.spec["python"].command),
+        )
 
     spack.builder.run_after("install")(execute_install_time_tests)

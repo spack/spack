@@ -27,6 +27,8 @@ class Wayland(MesonPackage, AutotoolsPackage):
         default="meson",
     )
 
+    variant("doc", default=False, description="Build documentation")
+
     version("1.22.0", sha256="bbca9c906a8fb8992409ebf51812f19e2a784b2c169d4b784cdd753b4bb448ef")
     version("1.21.0", sha256="53b7fa67142e653820030ec049971bcb5e84ac99e05cba5bcb9cb55f43fae4b3")
     version("1.20.0", sha256="20523cd6f2c18c3c86725467157c6221e19de76fbfad944042a2d494af3c7a92")
@@ -45,11 +47,28 @@ class Wayland(MesonPackage, AutotoolsPackage):
         depends_on("meson@0.56.0:", type="build")
 
     depends_on("pkgconfig", type="build")
-    depends_on("doxygen", type="build")
-    depends_on("xmlto", type="build")
-    depends_on("libxslt", type="build")
-    depends_on("docbook-xsl", type="build")
     depends_on("libxml2")
     depends_on("chrpath")
     depends_on("expat")
     depends_on("libffi")
+
+    with when("+doc"):
+        depends_on("docbook-xsl", type="build")
+        depends_on("doxygen", type="build")
+        depends_on("xmlto", type="build")
+        depends_on("libxslt", type="build")
+        depends_on("graphviz+libgd", type="build")
+
+    @when("build_system=autotools")
+    def configure_args(self):
+        args = []
+        args.extend(self.enable_or_disable("documentation", variant="doc"))
+        return args
+
+    @when("build_system=meson")
+    def meson_args(self):
+        spec = self.spec
+        opt_bool = lambda c, o: "-D%s=%s" % (o, str(c).lower())
+        args = []
+        args.append(opt_bool("+doc" in spec, "documentation"))
+        return args

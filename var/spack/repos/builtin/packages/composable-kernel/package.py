@@ -64,9 +64,14 @@ class ComposableKernel(CMakePackage):
         ]
         if "auto" not in self.spec.variants["amdgpu_target"]:
             args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
+        if self.spec.satisfies("@5.6.1:"):
+            args.append(self.define("INSTANCES_ONLY", "ON"))
         return args
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
             # only instances is necessary to build and install
-            make("instances")
+            if self.spec.satisfies("@5.6.1:"):
+                make()
+            else:
+                make("instances")

@@ -1883,7 +1883,11 @@ class SpackSolverSetup:
                             continue
                         # skip build dependencies of already-installed specs
                         if concrete_build_deps or dtype != dt.BUILD:
-                            clauses.append(fn.attr("depends_on", spec.name, dep.name, dtype))
+                            clauses.append(
+                                fn.attr(
+                                    "depends_on", spec.name, dep.name, dt.flag_to_string(dtype)
+                                )
+                            )
                             for virtual_name in dspec.virtuals:
                                 clauses.append(
                                     fn.attr("virtual_on_edge", spec.name, dep.name, virtual_name)
@@ -2595,6 +2599,7 @@ class SpecBuilder:
                 r"^node_compiler$",
                 r"^package_hash$",
                 r"^root$",
+                r"^variant_default_value_from_cli$",
                 r"^virtual_node$",
                 r"^virtual_root$",
             ]
