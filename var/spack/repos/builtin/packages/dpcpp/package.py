@@ -22,7 +22,7 @@ class Dpcpp(CMakePackage):
         sha256="ca85303d712c58316a91a7c97f7c78fa563a29f1669d8b2368d0c8bd92a63068",
         url="https://github.com/intel/llvm/tarball/cb91c232",
     )
-    
+
     version("2021.09", commit="bd68232bb96386bf7649345c0557ba520e73c02d", deprecated=True)
     version("2021.12", commit="27f59d8906fcc8aece7ff6aa570ccdee52168c2d", deprecated=True)
 
@@ -64,7 +64,7 @@ class Dpcpp(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        
+
         llvm_external_projects = "sycl;llvm-spirv;opencl;xpti;xptifw"
         libclc_amd_target_names = ";amdgcn;amdgcn--amdhsa"
         libclc_nvidia_target_names = ";nvptx64--;nvptx64--nvidiacl"
@@ -84,7 +84,6 @@ class Dpcpp(CMakePackage):
         llvm_enable_projects = "clang;" + llvm_external_projects
         libclc_targets_to_build = ""
         libclc_gen_remangled_variants = "OFF"
-        sycl_build_pi_hip_platform = "AMD"
         sycl_enabled_plugins = "opencl"
         llvm_targets_to_build = get_llvm_targets_to_build(spec.target.family)
 
@@ -96,7 +95,7 @@ class Dpcpp(CMakePackage):
 
         if "+esimd-emulator" in spec:
             sycl_enabled_plugins += ";esimd_emulator"
-            
+
         if "+cuda" in spec or "+rocm" in spec:
             llvm_enable_projects += ";libclc"
             libclc_gen_remangled_variants = "ON"
@@ -112,9 +111,9 @@ class Dpcpp(CMakePackage):
             sycl_enabled_plugins += ";hip"
 
         if "+llvm-external-projects" in spec:
-            llvm_external_projects += ";" + spec.variants[
-                "llvm-external-projects"
-            ].value.replace(",", ";")
+            llvm_external_projects += ";" + spec.variants["llvm-external-projects"].value.replace(
+                ",", ";"
+            )
 
         args = [
             self.define_from_variant("LLVM_ENABLE_ASSERTIONS", "assertions"),
