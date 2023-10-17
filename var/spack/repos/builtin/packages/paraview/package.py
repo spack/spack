@@ -72,6 +72,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("kits", default=True, description="Use module kits")
     variant("pagosa", default=False, description="Build the pagosa adaptor")
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
+    variant("nvindex", default=False, description="Enable the pvNVIDIAIndeX plugin")
     variant("tbb", default=False, description="Enable multi-threaded parallelism with TBB")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
@@ -608,6 +609,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+tbb" in spec:
             cmake_args.append("-DVTK_SMP_IMPLEMENTATION_TYPE=TBB")
+
+        if "+nvindex" in spec:
+            cmake_args.append("-DPARAVIEW_PLUGIN_ENABLE_pvNVIDIAIndeX:BOOL=ON")
 
         # Hide git from Paraview so it will not use `git describe`
         # to find its own version number
