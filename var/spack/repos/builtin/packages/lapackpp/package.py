@@ -85,15 +85,7 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="+sycl", msg=backend_msg)
     conflicts("+sycl", when="@:2023.06.00", msg="+sycl requires LAPACK++ version 2023.08.25")
 
-    # TODO: +sycl requires use of the intel-oneapi compiler, but we cannot express that directly.
-    #       For now, add conflicts for other compilers instead.
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "oneapi":
-            conflicts(
-                "%{0}".format(__compiler),
-                when="+sycl",
-                msg="lapackpp+sycl must be compiled with %oneapi",
-            )
+    requires("%oneapi", when="+sycl", msg="lapackpp+sycl must be compiled with %oneapi")
 
     def cmake_args(self):
         spec = self.spec

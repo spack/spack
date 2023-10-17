@@ -64,13 +64,7 @@ class Xpmem(AutotoolsPackage):
     conflicts("+kernel-module", when="platform=darwin")
 
     # All compilers except for gcc are in conflict with +kernel-module:
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "gcc":
-            conflicts(
-                "+kernel-module",
-                when="%{0}".format(__compiler),
-                msg="Linux kernel module must be compiled with gcc",
-            )
+    requires("%gcc", when="+kernel-module", msg="Linux kernel module must be compiled with gcc")
 
     def autoreconf(self, spec, prefix):
         Executable("./autogen.sh")()

@@ -28,11 +28,7 @@ class GaussianSrc(Package):
     depends_on("tcsh", type="build")
 
     # All compilers except for pgi are in conflict:
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "pgi":
-            conflicts(
-                "%{0}".format(__compiler), msg="Gaussian can only be built with the PGI compiler"
-            )
+    requires("%pgi", msg="Gaussian can only be built with the PGI compiler")
 
     patch("16-C.01-replace-deprecated-pgf77-with-pgfortran.patch", when="@16-C.01")
     patch("16-C.01-fix-building-c-code-with-pgcc.patch", when="@16-C.01")

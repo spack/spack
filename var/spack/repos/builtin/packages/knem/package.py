@@ -49,12 +49,7 @@ class Knem(AutotoolsPackage):
     # Ideally, we should list all non-Linux-based platforms here:
     conflicts("platform=darwin")
 
-    # All compilers except for gcc are in conflict:
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "gcc":
-            conflicts(
-                "%{0}".format(__compiler), msg="Linux kernel module must be compiled with gcc"
-            )
+    requires("%gcc", msg="Linux kernel module must be compiled with gcc")
 
     @run_before("build")
     def override_kernel_compiler(self):

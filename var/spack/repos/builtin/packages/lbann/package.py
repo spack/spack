@@ -179,9 +179,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("~python", when="@0.91:0.101")
     conflicts("~pfe", when="@0.91:0.101")
 
-    for comp in spack.compilers.supported_compilers():
-        if comp != "clang":
-            conflicts("+lld", when="%" + comp)
+    requires("%clang", when="+lld")
 
     conflicts("+lld", when="+gold")
     conflicts("+gold", when="platform=darwin", msg="gold does not work on Darwin")

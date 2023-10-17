@@ -5,7 +5,6 @@
 import glob
 import os
 
-import spack.compilers
 import spack.paths
 import spack.user_environment
 from spack.package import *
@@ -53,28 +52,26 @@ class ClingoBootstrap(Clingo):
     depends_on("cmake@3.16.0:", type="build")
 
     # On Linux we bootstrap with GCC or clang
-    for compiler_spec in [
-        c for c in spack.compilers.supported_compilers() if c not in ("gcc", "clang")
-    ]:
-        conflicts(
-            "%{0}".format(compiler_spec),
-            when="platform=linux",
-            msg="GCC or clang are required to bootstrap clingo on Linux",
-        )
-        conflicts(
-            "%{0}".format(compiler_spec),
-            when="platform=cray",
-            msg="GCC or clang are required to bootstrap clingo on Cray",
-        )
+    requires(
+        "%gcc",
+        "%clang",
+        when="platform=linux",
+        msg="GCC or clang are required to bootstrap clingo on Linux",
+    )
+    requires(
+        "%gcc",
+        "%clang",
+        when="platform=cray",
+        msg="GCC or clang are required to bootstrap clingo on Cray",
+    )
     conflicts("%gcc@:5", msg="C++14 support is required to bootstrap clingo")
 
     # On Darwin we bootstrap with Apple Clang
-    for compiler_spec in [c for c in spack.compilers.supported_compilers() if c != "apple-clang"]:
-        conflicts(
-            "%{0}".format(compiler_spec),
-            when="platform=darwin",
-            msg="Apple-clang is required to bootstrap clingo on MacOS",
-        )
+    requires(
+        "%apple-clang",
+        when="platform=darwin",
+        msg="Apple-clang is required to bootstrap clingo on MacOS",
+    )
 
     # Clingo needs the Python module to be usable by Spack
     conflicts("~python", msg="Python support is required to bootstrap Spack")
