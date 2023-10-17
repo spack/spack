@@ -66,7 +66,7 @@ class Dpcpp(CMakePackage):
         spec = self.spec
 
         llvm_external_projects = "sycl;llvm-spirv;opencl;xpti;xptifw"
-        libclc_amd_target_names = ";amdgcn;amdgcn--amdhsa"
+        libclc_amd_target_names = ";amdgcn--;amdgcn--amdhsa"
         libclc_nvidia_target_names = ";nvptx64--;nvptx64--nvidiacl"
 
         if spec.platform != "darwin":
