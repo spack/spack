@@ -14,14 +14,12 @@ class LinuxPerf(Package):
 
     homepage = "https://www.kernel.org/"
     url = "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.5.5.tar.xz"
-    list_url = "https://www.kernel.org/pub/linux/kernel"
-    list_depth = 0
 
     executables = ["^perf$"]
 
-    version("6.5.5", sha256="8cf10379f7df8ea731e09bff3d0827414e4b643dd41dc99d0af339669646ef95")
-    version("6.1.55", sha256="a87e241ec15d53452c4efe219713a3769d88cc436b5b98cf6efb262c4aff15c0")
-    version("5.15.133", sha256="ef845e7934897b88e4448378ea9daacac19e07f156fe904844fab0a7d8ff5ddd")
+    version("6.5.7", sha256="0d09ea448005c9cfe5383e4c72a872b39188b928f8c44e146b03b1b7851fbb8c")
+    version("6.1.58", sha256="ce987ed3d2f640b3a2a62a0a8573d538a36dfd3cc31e2d7a239ce5a16c1c21ad")
+    version("5.15.135", sha256="14835e629e237f136cfed484fdb533c95242429809bdcdb2a2d66dfcb7447170")
 
     variant("libtraceevent", default=True, description="recommended dependency")
     variant("python", default=True, description="Python support")
