@@ -209,12 +209,12 @@ class NeurodamusModel(SimModel):
         for libnrnmech_name in find(self.prefix.lib, "libnrnmech*", recursive=False):
             # We have the two libs and must export them in different vars
             #  - NRNMECH_LIB_PATH the combined lib (used by neurodamus-py)
-            #  - BGLIBPY_MOD_LIBRARY_PATH is the pure mechanism
+            #  - BLUECELLULAB_MOD_LIBRARY_PATH is the pure mechanism
             #        (used by bglib-py)
             if "libnrnmech." in libnrnmech_name:
                 env.set("NRNMECH_LIB_PATH", libnrnmech_name)
             else:
-                env.set("BGLIBPY_MOD_LIBRARY_PATH", libnrnmech_name)
+                env.set("BLUECELLULAB_MOD_LIBRARY_PATH", libnrnmech_name)
 
 
 _BUILD_NEURODAMUS_TPL = """#!/bin/sh

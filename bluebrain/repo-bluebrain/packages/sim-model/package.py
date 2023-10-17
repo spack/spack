@@ -283,7 +283,7 @@ class SimModel(Package):
         self._setup_run_environment_common(env)
         # We will find 0 or 1 lib
         for libnrnmech_name in find(self.prefix.lib, "libnrnmech*.so", recursive=False):
-            env.prepend_path("BGLIBPY_MOD_LIBRARY_PATH", libnrnmech_name)
+            env.prepend_path("BLUECELLULAB_MOD_LIBRARY_PATH", libnrnmech_name)
 
 
 @contextmanager
