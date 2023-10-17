@@ -30,15 +30,7 @@ class PyMpi4py(PythonPackage):
 
     depends_on("py-setuptools@40.9:", type="build")
     depends_on("mpi")
-    depends_on("py-cython@0.27.0:", type="build")
-
-    # https://github.com/mpi4py/mpi4py/pull/311
-    conflicts("^py-cython@3:")
+    depends_on("py-cython@3.0.0:", when="@master", type="build")
 
     def setup_build_environment(self, env):
         env.set("MPICC", f"{self.spec['mpi'].mpicc} -shared")
-
-    @run_before("install")
-    def cythonize(self):
-        with working_dir(self.build_directory):
-            python(join_path("conf", "cythonize.py"))
