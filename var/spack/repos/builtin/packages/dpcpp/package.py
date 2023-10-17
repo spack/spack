@@ -56,7 +56,7 @@ class Dpcpp(CMakePackage):
     depends_on("cuda", when="+cuda")
     depends_on("hip", when="+rocm")
 
-    conflicts("~lld", when="+hip", msg="lld is needed for HIP plugin on AMD")
+    conflicts("~lld", when="+rocm", msg="lld is needed for HIP plugin on AMD")
     conflicts("~lld", when=(sys.platform == "windows"), msg="lld is needed on Windows")
 
     root_cmakelists_dir = "llvm"
