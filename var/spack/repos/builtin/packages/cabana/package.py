@@ -12,7 +12,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/ECP-copa/Cabana"
     git = "https://github.com/ECP-copa/Cabana.git"
-    url = "https://github.com/ECP-copa/Cabana/archive/0.5.0.tar.gz"
+    url = "https://github.com/ECP-copa/Cabana/archive/0.6.0.tar.gz"
 
     maintainers("junghans", "streeve", "sslattery")
 
@@ -47,6 +47,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.9:", type="build", when="@:0.4.0")
     depends_on("cmake@3.16:", type="build", when="@0.5.0:")
+
     depends_on("googletest", type="test", when="+testing")
     _versions = {":0.2": "-legacy", "0.3:": "@3.1:", "0.4:": "@3.2:", "0.6:": "@3.7:"}
     for _version in _versions:
@@ -63,34 +64,50 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
                 _kk_spec = "kokkos{0}+{1}".format(_kk_version, _backend)
             depends_on(_kk_spec, when="@{0}+{1}".format(_version, _backend))
 
+    # Propagate cuda architectures down to Kokkos and optional submodules
     for arch in CudaPackage.cuda_arch_values:
         cuda_dep = "+cuda cuda_arch={0}".format(arch)
         depends_on("kokkos {0}".format(cuda_dep), when=cuda_dep)
+        depends_on("heffte {0}".format(cuda_dep), when="+heffte {0}".format(cuda_dep))
+        depends_on("arborx {0}".format(cuda_dep), when="+arborx {0}".format(cuda_dep))
+        depends_on("hypre {0}".format(cuda_dep), when="+hypre {0}".format(cuda_dep))
 
     for arch in ROCmPackage.amdgpu_targets:
         rocm_dep = "+rocm amdgpu_target={0}".format(arch)
         depends_on("kokkos {0}".format(rocm_dep), when=rocm_dep)
+        depends_on("heffte {0}".format(rocm_dep), when="+heffte {0}".format(rocm_dep))
+        depends_on("arborx {0}".format(rocm_dep), when="+arborx {0}".format(rocm_dep))
+        depends_on("hypre {0}".format(rocm_dep), when="+hypre {0}".format(rocm_dep))
 
     conflicts("+cuda", when="cuda_arch=none")
+    conflicts("+rocm", when="amdgpu_target=none")
+
     depends_on("kokkos+cuda_lambda", when="+cuda")
 
+    # Dependencies for subpackages
     depends_on("arborx", when="@0.3.0:+arborx")
     depends_on("hypre-cmake@2.22.0:", when="@0.4.0:+hypre")
     depends_on("hypre-cmake@2.22.1:", when="@0.5.0:+hypre")
-    # Previous heFFTe pinned at 2.x.0 because its cmakefiles can't roll forward
-    # compatibilty to later minor versions.
     depends_on("heffte@2.0.0", when="@0.4.0+heffte")
-    depends_on("heffte@2.1.0", when="@0.5.0:+heffte")
+    depends_on("heffte@2.1.0", when="@0.5.0+heffte")
     depends_on("heffte@2.3.0:", when="@0.6.0:+heffte")
     depends_on("silo", when="@0.5.0:+silo")
     depends_on("hdf5", when="@0.6.0:+hdf5")
     depends_on("mpi", when="+mpi")
 
+    # Cabana automatically builds HDF5 support with newer cmake versions
+    # in version 0.6.0. This is fixed post-0.6
+    conflicts("~hdf5", when="@0.6.0 ^cmake@:3.26")
+
+    # Cajita support requires MPI
     conflicts("+cajita ~mpi")
     conflicts("+grid ~mpi")
 
+    # Conflict variants only available in newer versions of cabana
     conflicts("+rocm", when="@:0.2.0")
     conflicts("+sycl", when="@:0.3.0")
+    conflicts("+silo", when="@:0.3.0")
+    conflicts("+hdf5", when="@:0.5.0")
 
     def cmake_args(self):
         options = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]

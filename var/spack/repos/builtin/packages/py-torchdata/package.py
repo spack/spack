@@ -16,7 +16,7 @@ class PyTorchdata(PythonPackage):
     maintainers("adamjstewart")
 
     version("main", branch="main")
-    version("0.7.0-rc1", sha256="9d48e1a5bc0fa4e50976b89aea38d028dcb7e580dba594755d266e19c369b747")
+    version("0.7.0", sha256="0b444719c3abc67201ed0fea92ea9c4100e7f36551ba0d19a09446cc11154eb3")
     version("0.6.1", sha256="c596db251c5e6550db3f00e4308ee7112585cca4d6a1c82a433478fd86693257")
     version("0.6.0", sha256="048dea12ee96c0ea1525097959fee811d7b38c2ed05f44a90f35f8961895fb5b")
     version("0.5.1", sha256="69d80bd33ce8f08e7cfeeb71cefddfc29cede25a85881e33dbae47576b96ed29")
