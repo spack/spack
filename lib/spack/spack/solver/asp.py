@@ -971,12 +971,32 @@ class PyclingoDriver:
         return cycle_result.unsatisfiable
 
 
-class ReusableSpecsByHash(collections.abc.Mapping):
-    """Mapping to contain reusable specs keyed by DAG hash.
+class ConcreteSpecsByHash(collections.abc.Mapping):
+    """Mapping containing concrete specs keyed by DAG hash.
 
     The mapping is ensured to be consistent, i.e. if a spec in the mapping has a dependency with
     hash X, it is ensured to be the same object in memory as the spec keyed by X.
     """
+
+    class DfsButSkipAlreadyRegistered:
+        def __init__(self, register):
+            self.visitor = traverse.CoverNodesVisitor(traverse.BaseVisitor())
+            self.register = register
+            self.nodes = []
+
+        def accept(self, item):
+            if item.edge.spec.dag_hash() in self.register:
+                return False
+            return self.visitor.accept(item)
+
+        def neighbors(self, item):
+            return self.visitor.neighbors(item)
+
+        def pre(self, item):
+            pass
+
+        def post(self, item):
+            self.nodes.append(item.edge.spec)
 
     def __init__(self) -> None:
         self.data: Dict[str, spack.spec.Spec] = {}
@@ -1007,7 +1027,10 @@ class ReusableSpecsByHash(collections.abc.Mapping):
 
         # Unify objects in the container. The current implementation needs children
         # nodes to be visited before parents (so DFS post-order is fine).
-        for current_node in traverse.traverse_nodes([spec], order="post", direction="children"):
+        visitor = ConcreteSpecsByHash.DfsButSkipAlreadyRegistered(self.data)
+        traverse.traverse_depth_first_with_visitor(traverse.with_artificial_edges([spec]), visitor)
+
+        for current_node in visitor.nodes:
             current_hash = current_node.dag_hash()
 
             if current_hash in self.data:
@@ -1055,7 +1078,7 @@ class SpackSolverSetup:
         # (ID, CompilerSpec) -> dictionary of attributes
         self.compiler_info = collections.defaultdict(dict)
 
-        self.reusable_and_possible = ReusableSpecsByHash()
+        self.reusable_and_possible = ConcreteSpecsByHash()
 
         # id for dummy variables
         self._condition_id_counter = itertools.count()
