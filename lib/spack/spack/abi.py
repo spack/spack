@@ -11,6 +11,7 @@ import spack.spec
 from spack.compilers.clang import Clang
 from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
+from spack.version import ClosedOpenRange
 
 
 class ABI(object):
@@ -77,9 +78,14 @@ class ABI(object):
             return False
         return plib == clib
 
-    def _intel_compiler_compare(self, pversion, cversion):
+    def _intel_compiler_compare(self, pversion: ClosedOpenRange, cversion: ClosedOpenRange):
         """Returns true iff the intel version pversion and cversion
-        are ABI compatible"""
+        are ABI compatible
+        
+        Args:
+            pversion: parent compiler version
+            cversion: child compier version
+        """
 
         # Test major and minor versions.  Ignore build version.
         pv = pversion.lo
