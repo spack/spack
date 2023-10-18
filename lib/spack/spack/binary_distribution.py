@@ -797,11 +797,7 @@ def tarball_directory_name(spec):
     Return name of the tarball directory according to the convention
     <os>-<architecture>/<compiler>/<package>-<version>/
     """
-    return os.path.join(
-        str(spec.architecture),
-        f"{spec.compiler.name}-{spec.compiler.version}",
-        f"{spec.name}-{spec.version}",
-    )
+    return spec.format_path("{architecture}/{compiler.name}-{compiler.version}/{name}-{version}")
 
 
 def tarball_name(spec, ext):
@@ -809,10 +805,10 @@ def tarball_name(spec, ext):
     Return the name of the tarfile according to the convention
     <os>-<architecture>-<package>-<dag_hash><ext>
     """
-    return (
-        f"{spec.architecture}-{spec.compiler.name}-{spec.compiler.version}-"
-        f"{spec.name}-{spec.version}-{spec.dag_hash()}{ext}"
+    spec_formatted = spec.format_path(
+        "{architecture}-{compiler.name}-{compiler.version}-{name}-{version}-{hash}"
     )
+    return f"{spec_formatted}{ext}"
 
 
 def tarball_path_name(spec, ext):
@@ -913,7 +909,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         index_json_path,
         url_util.join(cache_prefix, "index.json"),
         keep_original=False,
-        extra_args={"ContentType": "application/json"},
+        extra_args={"ContentType": "application/json", "CacheControl": "no-cache"},
     )
 
     # Push the hash
@@ -921,7 +917,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         index_hash_path,
         url_util.join(cache_prefix, "index.json.hash"),
         keep_original=False,
-        extra_args={"ContentType": "text/plain"},
+        extra_args={"ContentType": "text/plain", "CacheControl": "no-cache"},
     )
 
 

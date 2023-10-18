@@ -64,6 +64,7 @@ __all__ = [
     "depends_on",
     "extends",
     "maintainers",
+    "license",
     "provides",
     "patch",
     "variant",
@@ -862,6 +863,44 @@ def maintainers(*names: str):
     return _execute_maintainer
 
 
+def _execute_license(pkg, license_identifier: str, when):
+    # If when is not specified the license always holds
+    when_spec = make_when_spec(when)
+    if not when_spec:
+        return
+
+    for other_when_spec in pkg.licenses:
+        if when_spec.intersects(other_when_spec):
+            when_message = ""
+            if when_spec != make_when_spec(None):
+                when_message = f"when {when_spec}"
+            other_when_message = ""
+            if other_when_spec != make_when_spec(None):
+                other_when_message = f"when {other_when_spec}"
+            err_msg = (
+                f"{pkg.name} is specified as being licensed as {license_identifier} "
+                f"{when_message}, but it is also specified as being licensed under "
+                f"{pkg.licenses[other_when_spec]} {other_when_message}, which conflict."
+            )
+            raise OverlappingLicenseError(err_msg)
+
+    pkg.licenses[when_spec] = license_identifier
+
+
+@directive("licenses")
+def license(license_identifier: str, when=None):
+    """Add a new license directive, to specify the SPDX identifier the software is
+    distributed under.
+
+    Args:
+        license_identifiers: A list of SPDX identifiers specifying the licenses
+            the software is distributed under.
+        when: A spec specifying when the license applies.
+    """
+
+    return lambda pkg: _execute_license(pkg, license_identifier, when)
+
+
 @directive("requirements")
 def requires(*requirement_specs, policy="one_of", when=None, msg=None):
     """Allows a package to request a configuration to be present in all valid solutions.
@@ -920,3 +959,7 @@ class DependencyPatchError(DirectiveError):
 
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
+
+
+class OverlappingLicenseError(DirectiveError):
+    """Raised when two licenses are declared that apply on overlapping specs."""

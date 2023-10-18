@@ -268,7 +268,7 @@ def _matching_specs(specs: List[Spec]) -> List[Spec]:
     return [spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=any) for s in specs]
 
 
-def push_fn(args):
+def push_fn(args: argparse.Namespace):
     """create a binary package and push it to a mirror"""
     if args.spec_file:
         tty.warn(
@@ -414,7 +414,7 @@ def preview_fn(args):
     )
 
 
-def check_fn(args):
+def check_fn(args: argparse.Namespace):
     """check specs against remote binary mirror(s) to see if any need to be rebuilt
 
     this command uses the process exit code to indicate its result, specifically, if the
@@ -429,7 +429,7 @@ def check_fn(args):
     specs = spack.cmd.parse_specs(args.spec or args.spec_file)
 
     if specs:
-        specs = _matching_specs(specs, specs)
+        specs = _matching_specs(specs)
     else:
         specs = spack.cmd.require_active_env("buildcache check").all_specs()
 

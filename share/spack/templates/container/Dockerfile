@@ -39,9 +39,6 @@ RUN find -L {{ paths.view }}/* -type f -exec readlink -f '{}' \; | \
 RUN cd {{ paths.environment }} && \
     spack env activate --sh -d . > activate.sh
 
-{% if extra_instructions.build %}
-{{ extra_instructions.build }}
-{% endif %}
 {% endblock build_stage %}
 {% endif %}
 
@@ -69,10 +66,6 @@ RUN { \
 RUN {% if os_package_update %}{{ os_packages_final.update }} \
  && {% endif %}{{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
  && {{ os_packages_final.clean }}
-{% endif %}
-{% if extra_instructions.final %}
-
-{{ extra_instructions.final }}
 {% endif %}
 {% endblock final_stage %}
 {% for label, value in labels.items() %}

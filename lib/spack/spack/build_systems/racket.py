@@ -64,7 +64,7 @@ class RacketBuilder(spack.builder.Builder):
 
     @property
     def subdirectory(self):
-        if self.racket_name:
+        if self.pkg.racket_name:
             return "pkgs/{0}".format(self.pkg.racket_name)
         return None
 
