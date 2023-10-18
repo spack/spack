@@ -88,7 +88,7 @@ from spack.util.environment import (
 )
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
-from spack.util.module_cmd import load_module, module, path_from_modules
+from spack.util.module_cmd import ModuleCommandError, load_module, module, path_from_modules
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -724,10 +724,14 @@ def load_external_modules(pkg):
     Args:
         pkg (spack.package_base.PackageBase): package to load deps for
     """
-    for dep in list(pkg.spec.traverse()):
+    for dep in pkg.spec.traverse():
         external_modules = dep.external_modules or []
         for external_module in external_modules:
-            load_module(external_module)
+            try:
+                load_module(external_module)
+            except ModuleCommandError as e:
+                spec_str = dep.format("{name}{@version}{/hash:7}")
+                raise ModuleCommandError(f"Cannot load module for {spec_str}: {e.message}") from e
 
 
 def setup_package(pkg, dirty, context: Context = Context.BUILD):
@@ -779,7 +783,12 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     if need_compiler:
         tty.debug("setup_package: loading compiler modules")
         for mod in pkg.compiler.modules:
-            load_module(mod)
+            try:
+                load_module(mod)
+            except ModuleCommandError as e:
+                raise ModuleCommandError(
+                    f"Cannot load {pkg.spec.compiler} compiler module: {e.message}"
+                ) from e
 
     # kludge to handle cray mpich and libsci being automatically loaded by
     # PrgEnv modules on cray platform. Module unload does no damage when
@@ -790,7 +799,12 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
             module("unload", mod)
 
     if target.module_name:
-        load_module(target.module_name)
+        try:
+            load_module(target.module_name)
+        except ModuleCommandError as e:
+            raise ModuleCommandError(
+                f"Cannot load {pkg.spec.architecture.target} module: {e.message}"
+            ) from e
 
     load_external_modules(pkg)
 

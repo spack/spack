@@ -31,7 +31,7 @@ def test_module_function_change_env(tmp_path):
     environb = {b"TEST_MODULE_ENV_VAR": b"TEST_FAIL", b"NOT_AFFECTED": b"NOT_AFFECTED"}
     src_file = tmp_path / "src_me"
     src_file.write_text("export TEST_MODULE_ENV_VAR=TEST_SUCCESS\n")
-    module("load", str(src_file), module_template=f". {src_file} 2>&1", environb=environb)
+    module("load", str(src_file), module_template=f". {src_file}", environb=environb)
     assert environb[b"TEST_MODULE_ENV_VAR"] == b"TEST_SUCCESS"
     assert environb[b"NOT_AFFECTED"] == b"NOT_AFFECTED"
 
@@ -42,7 +42,7 @@ def test_module_function_no_change(tmpdir):
         f.write("echo TEST_MODULE_FUNCTION_PRINT")
 
     old_env = os.environ.copy()
-    text = module("show", src_file, module_template=". {0} 2>&1".format(src_file))
+    text = module("show", src_file, module_template=f". {src_file}")
 
     assert text == "TEST_MODULE_FUNCTION_PRINT\n"
     assert os.environ == old_env

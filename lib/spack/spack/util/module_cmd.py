@@ -2,17 +2,19 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """
 This module contains routines related to the module command for accessing and
 parsing environment modules.
 """
 import os
 import re
+import shlex
 import subprocess
-from typing import MutableMapping, Optional
+from typing import Dict, MutableMapping, Optional
 
 import llnl.util.tty as tty
+
+import spack.error
 
 # This list is not exhaustive. Currently we only use load and unload
 # If we need another option that changes the environment, add it here.
@@ -27,47 +29,60 @@ def module(
     module_template: Optional[str] = None,
     environb: Optional[MutableMapping[bytes, bytes]] = None,
 ):
-    module_cmd = module_template or ("module " + " ".join(args))
+    """Execute the ``module`` shell function. Collects environment variables in ``environb``,
+    which defaults to ``os.environb``."""
     environb = environb or os.environb
 
-    if args[0] in module_change_commands:
-        # Suppress module output
-        module_cmd += r" >/dev/null 2>&1; " + awk_cmd
-        module_p = subprocess.Popen(
-            module_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            shell=True,
-            executable="/bin/bash",
-            env=environb,
-        )
+    MODULES_CMD = environb.get(b"MODULES_CMD", None)
+    LMOD_CMD = environb.get(b"LMOD_CMD", None)
+    SHELL = environb.get(b"SHELL", None)
+    quoted_args = " ".join(shlex.quote(arg) for arg in args)
+    shell_path = "/bin/sh"
 
-        new_environb = {}
-        output = module_p.communicate()[0]
+    # The idea here is to attempt to directly run the underlying executable of the module command,
+    # which works also when the module init script is not sourced by the shell we start.
+    if module_template is not None:  # testing
+        script = module_template
+    elif MODULES_CMD and os.access(MODULES_CMD, os.X_OK):  # environment-modules@4.1.0:
+        script = f'eval "$("$MODULES_CMD" sh {quoted_args})"'
+    elif LMOD_CMD and os.access(LMOD_CMD, os.X_OK):  # lmod should always have LMOD_CMD
+        script = f'eval "$("$LMOD_CMD" shell {quoted_args})"'
+    else:
+        # Otherwise assume the `module` shell function is defined in the shell we start
+        script = f"module {quoted_args}"
+        shell_path = SHELL.decode() if SHELL and os.access(SHELL, os.X_OK) else "/bin/bash"
+
+    # When this module command modifies environment variables, we retrieve those environment as
+    # \0 separated list of key=value pairs from stdout using a
+    if args[0] in module_change_commands:
+        # stdout should have environment from awk output; stderr should have error message
+        cmd = [shell_path, "-c", f"{script} >&2 && {awk_cmd}"]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environb)
+        stdout, stderr = proc.communicate()
+
+        if proc.returncode != 0:
+            raise ModuleCommandError.from_failure(quoted_args, proc.returncode, stderr)
 
         # Loop over each environment variable key=value byte string
-        for entry in output.strip(b"\0").split(b"\0"):
+        new_environb: Dict[bytes, bytes] = {}
+        for entry in stdout.strip(b"\0").split(b"\0"):
             # Split variable name and value
             parts = entry.split(b"=", 1)
             if len(parts) != 2:
                 continue
             new_environb[parts[0]] = parts[1]
 
-        # Update os.environ with new dict
         environb.clear()
-        environb.update(new_environb)  # novermin
+        environb.update(new_environb)
 
     else:
-        # Simply execute commands that don't change state and return output
-        module_p = subprocess.Popen(
-            module_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            shell=True,
-            executable="/bin/bash",
-        )
-        # Decode and str to return a string object in both python 2 and 3
-        return str(module_p.communicate()[0].decode())
+        # Simply execute commands that don't change state and return output (which is on stderr)
+        cmd = [shell_path, "-c", f"{script} >&2"]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        _, stderr = proc.communicate()
+        if proc.returncode != 0:
+            raise ModuleCommandError.from_failure(quoted_args, proc.returncode, stderr)
+        return stderr.decode(errors="ignore")
 
 
 def load_module(mod):
@@ -224,3 +239,14 @@ def get_path_from_module_contents(text, module_name):
 
     # Unable to find path in module
     return None
+
+
+class ModuleCommandError(spack.error.SpackError):
+    """Raised when the module command fails to execute properly."""
+
+    @classmethod
+    def from_failure(cls, command: str, returncode: int, stderr: bytes):
+        return cls(
+            f"`module {command}` failed with exit "
+            f"code {returncode}: {stderr.decode(errors='ignore')}"
+        )
