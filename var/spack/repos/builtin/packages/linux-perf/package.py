@@ -6,6 +6,8 @@
 import os.path
 from textwrap import dedent
 
+import llnl.util.tty as tty
+
 from spack.package import *
 
 
@@ -122,6 +124,8 @@ class LinuxPerf(Package):
             "LIBDW_DIR={}".format(spec["elfutils"].prefix),
             "LIBUNWIND_DIR={}".format(spec["libunwind"].prefix),
         ]
+        # Features to check post-install against `perf version --build-options`
+        checks = {"dwarf", "libunwind", "libbfd", "zlib"}
 
         if version >= Version("6.4"):
             args.append("BUILD_NONDISTRO=1")
@@ -134,11 +138,13 @@ class LinuxPerf(Package):
             args.append("NO_LIBAUDIT=1")
 
         if "+debuginfod" in spec:
-            pass
+            if version >= Version("5.19"):  # Not in --build-options before that
+                checks.add("debuginfod")
         else:
             args.append("NO_LIBDEBUGINFOD=1")
 
         if "+python" in spec:
+            checks.add("libpython")
             args.extend(
                 [
                     "PYTHON={}".format(spec["python"].command),
@@ -149,16 +155,22 @@ class LinuxPerf(Package):
             args.append("NO_LIBPYTHON=1")
 
         if "+perl" in spec:
-            pass
+            checks.add("libperl")
         else:
             args.append("NO_LIBPERL=1")
 
+        if "+openssl" in spec:
+            checks.add("libcrypto")
+        else:
+            args.append("NO_LIBCRYPTO=1")
+
         if "+slang" in spec:
-            pass
+            checks.add("libslang")
         else:
             args.append("NO_SLANG=1")
 
         if "+libpfm4" in spec:
+            checks.add("libpfm4")
             if version < Version("6.4"):
                 args.append("LIBPFM4=1")
         else:
@@ -166,31 +178,36 @@ class LinuxPerf(Package):
                 args.append("NO_LIBPFM4=1")
 
         if "+babeltrace" in spec:
+            # checks.add("babeltrace")  # Not in --build-options ?
             args.append("LIBBABELTRACE_DIR={}".format(spec["babeltrace"].prefix))
         else:
             args.append("NO_LIBBABELTRACE=1")
 
         if "+libcap" in spec:
+            # checks.add("libcap")  # Not in --build-options ?
             pass
         else:
             args.append("NO_LIBCAP=1")
 
         if "+numactl" in spec:
-            pass
+            checks.add("libnuma")
         else:
             args.append("NO_LIBNUMA=1")
 
         if "+xz" in spec:
-            pass
+            checks.add("lzma")
         else:
             args.append("NO_LZMA=1")
 
         if "+zstd" in spec:
+            checks.add("zstd")
             args.append("LIBZSTD_DIR={}".format(spec["zstd"].prefix))
         else:
             args.append("NO_LIBZSTD=1")
 
         if "+libtraceevent" in spec:
+            if version >= Version("6.2"):  # Not in --build-options before that
+                checks.add("libtraceevent")
             if version < Version("6.2"):
                 args.append("LIBTRACEEVENT_DYNAMIC=1")
         else:
@@ -198,6 +215,7 @@ class LinuxPerf(Package):
                 args.append("NO_LIBTRACEEVENT=1")
 
         if "+jvmti" in spec:
+            # checks.add("jvmti")  # Not in --build-options ?
             args.append("JDIR={}".format(spec["java"].prefix))
         else:
             args.append("NO_JVMTI=1")
@@ -231,3 +249,22 @@ class LinuxPerf(Package):
                     objdump=spec["binutils"].prefix.bin.join("objdump"),
                 )
             )
+
+        # Post-install dependency check:
+        #   $ perf version --build-options
+        #   perf version 6.5.7
+        #        dwarf: [ on  ]  # HAVE_DWARF_SUPPORT
+        #   ...
+        perf = Executable(self.prefix.bin.perf)
+        output = perf("version", "--build-options", output=str, error=str)
+        tty.msg(output)
+        enabled = set()
+        for line in output.splitlines():
+            spl = line.split(":", maxsplit=1)
+            if len(spl) >= 2 and "[ on " in spl[1]:
+                enabled.add(spl[0].strip())
+        missing = set(checks) - enabled
+        tty.msg(f"detected features: {sorted(enabled)!r}")
+        tty.msg(f"expected features: {sorted(checks)!r}")
+        if missing:
+            raise InstallError(f"Perf is missing features {sorted(missing)!r}, see log")
