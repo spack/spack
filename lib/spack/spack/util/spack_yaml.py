@@ -68,7 +68,7 @@ def syaml_type(obj):
     """
     for syaml_t, t in syaml_types.items():
         if type(obj) is not bool and isinstance(obj, t):
-            return syaml_t(obj) if type(obj) != syaml_t else obj
+            return syaml_t(obj) if type(obj) is not syaml_t else obj
     return obj
 
 

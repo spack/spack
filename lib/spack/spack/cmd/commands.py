@@ -36,13 +36,13 @@ update_completion_args: Dict[str, Dict[str, Any]] = {
     "bash": {
         "aliases": True,
         "format": "bash",
-        "header": os.path.join(spack.paths.share_path, "bash", "spack-completion.in"),
+        "header": os.path.join(spack.paths.share_path, "bash", "spack-completion.bash"),
         "update": os.path.join(spack.paths.share_path, "spack-completion.bash"),
     },
     "fish": {
         "aliases": True,
         "format": "fish",
-        "header": os.path.join(spack.paths.share_path, "fish", "spack-completion.in"),
+        "header": os.path.join(spack.paths.share_path, "fish", "spack-completion.fish"),
         "update": os.path.join(spack.paths.share_path, "spack-completion.fish"),
     },
 }
@@ -811,6 +811,9 @@ def bash(args: Namespace, out: IO) -> None:
     """
     parser = spack.main.make_argument_parser()
     spack.main.add_all_commands(parser)
+
+    aliases = ";".join(f"{key}:{val}" for key, val in spack.main.aliases.items())
+    out.write(f'SPACK_ALIASES="{aliases}"\n\n')
 
     writer = BashCompletionWriter(parser.prog, out, args.aliases)
     writer.write(parser)

@@ -40,7 +40,7 @@ class Hipsycl(CMakePackage):
     depends_on("llvm@8: +clang", when="~cuda")
     depends_on("llvm@9: +clang", when="+cuda")
     # https://github.com/OpenSYCL/OpenSYCL/pull/918 was introduced after 0.9.4
-    conflicts("llvm@16:", when="@:0.9.4")
+    conflicts("^llvm@16:", when="@:0.9.4")
     # LLVM PTX backend requires cuda7:10.1 (https://tinyurl.com/v82k5qq)
     depends_on("cuda@9:10.1", when="@0.8.1: +cuda ^llvm@9")
     depends_on("cuda@9:", when="@0.8.1: +cuda ^llvm@10:")

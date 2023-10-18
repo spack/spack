@@ -7,7 +7,6 @@ import filecmp
 import json
 import os
 import shutil
-import sys
 
 import jsonschema
 import pytest
@@ -41,10 +40,7 @@ install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
 
-pytestmark = [
-    pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
-    pytest.mark.maybeslow,
-]
+pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.maybeslow]
 
 
 @pytest.fixture()
@@ -1994,8 +1990,7 @@ spack:
 
             ci_cmd("generate", "--output-file", pipeline_path, "--artifacts-root", artifacts_root)
 
-            target_name = spack.platforms.test.Test.default
-            job_name = ci.get_job_name(job_spec, "test-debian6-%s" % target_name, None)
+            job_name = ci.get_job_name(job_spec)
 
             repro_file = os.path.join(working_dir.strpath, "repro.json")
             repro_details = {
@@ -2029,10 +2024,10 @@ spack:
         working_dir.strpath,
         output=str,
     )
-    expect_out = "docker run --rm --name spack_reproducer -v {0}:{0}:Z -ti {1}".format(
-        os.path.realpath(working_dir.strpath), image_name
-    )
-
+    # Make sure the script was generated
+    assert os.path.exists(os.path.join(os.path.realpath(working_dir.strpath), "start.sh"))
+    # Make sure we tell the suer where it is when not in interactive mode
+    expect_out = "$ {0}/start.sh".format(os.path.realpath(working_dir.strpath))
     assert expect_out in rep_out
 
 

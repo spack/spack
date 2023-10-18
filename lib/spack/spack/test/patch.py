@@ -71,7 +71,7 @@ def mock_patch_stage(tmpdir_factory, monkeypatch):
 data_path = os.path.join(spack.paths.test_path, "data", "patch")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Line ending conflict on Windows")
+@pytest.mark.not_on_windows("Line ending conflict on Windows")
 @pytest.mark.parametrize(
     "filename, sha256, archive_sha256",
     [
@@ -191,7 +191,7 @@ def test_nested_directives(mock_packages):
     """Ensure pkg data structures are set up properly by nested directives."""
     # this ensures that the patch() directive results were removed
     # properly from the DirectiveMeta._directives_to_be_executed list
-    patcher = spack.repo.path.get_pkg_class("patch-several-dependencies")
+    patcher = spack.repo.PATH.get_pkg_class("patch-several-dependencies")
     assert len(patcher.patches) == 0
 
     # this ensures that results of dependency patches were properly added
@@ -210,7 +210,7 @@ def test_nested_directives(mock_packages):
     assert len(fake_dep.patches[Spec()]) == 2
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test requires Autotools")
+@pytest.mark.not_on_windows("Test requires Autotools")
 def test_patched_dependency(mock_packages, config, install_mockery, mock_fetch):
     """Test whether patched dependencies work."""
     spec = Spec("patch-a-dependency")

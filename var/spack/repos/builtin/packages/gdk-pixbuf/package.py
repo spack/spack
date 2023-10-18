@@ -63,7 +63,7 @@ class GdkPixbuf(Package):
     depends_on("glib@2.38.0:")
     depends_on("jpeg")
     depends_on("libpng")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libtiff", when="+tiff")
     depends_on("gobject-introspection")
     depends_on("libx11", when="+x11")

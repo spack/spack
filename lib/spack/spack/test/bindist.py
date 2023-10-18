@@ -12,6 +12,7 @@ import tarfile
 import urllib.error
 import urllib.request
 import urllib.response
+from pathlib import PurePath
 
 import py
 import pytest
@@ -36,7 +37,7 @@ from spack.directory_layout import DirectoryLayout
 from spack.paths import test_path
 from spack.spec import Spec
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 mirror_cmd = spack.main.SpackCommand("mirror")
 install_cmd = spack.main.SpackCommand("install")
@@ -50,7 +51,7 @@ legacy_mirror_dir = os.path.join(test_path, "data", "mirrors", "legacy_yaml")
 def cache_directory(tmpdir):
     fetch_cache_dir = tmpdir.ensure("fetch_cache", dir=True)
     fsc = spack.fetch_strategy.FsCache(str(fetch_cache_dir))
-    spack.config.caches, old_cache_path = fsc, spack.caches.fetch_cache
+    spack.config.caches, old_cache_path = fsc, spack.caches.FETCH_CACHE
 
     yield spack.config.caches
 
@@ -114,8 +115,8 @@ def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutabl
         ]
     )
 
-    spack.config.config, old_config = cfg, spack.config.config
-    spack.config.config.set("repos", [spack.paths.mock_packages_path])
+    spack.config.CONFIG, old_config = cfg, spack.config.CONFIG
+    spack.config.CONFIG.set("repos", [spack.paths.mock_packages_path])
     njobs = spack.config.get("config:build_jobs")
     if not njobs:
         spack.config.set("config:build_jobs", 4, scope="user")
@@ -137,9 +138,9 @@ def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutabl
     if not timeout:
         spack.config.set("config:connect_timeout", 10, scope="user")
 
-    yield spack.config.config
+    yield spack.config.CONFIG
 
-    spack.config.config = old_config
+    spack.config.CONFIG = old_config
     mutable_dir.remove()
 
 
@@ -175,6 +176,33 @@ def install_dir_non_default_layout(tmpdir):
     finally:
         spack.store.STORE = real_store
         spack.store.STORE.layout = real_layout
+
+
+@pytest.fixture(scope="function")
+def dummy_prefix(tmpdir):
+    """Dummy prefix used for testing tarball creation, validation, extraction"""
+    p = tmpdir.mkdir("prefix")
+    assert os.path.isabs(p)
+
+    p.mkdir("bin")
+    p.mkdir("share")
+    p.mkdir(".spack")
+
+    app = p.join("bin", "app")
+    relative_app_link = p.join("bin", "relative_app_link")
+    absolute_app_link = p.join("bin", "absolute_app_link")
+    data = p.join("share", "file")
+
+    with open(app, "w") as f:
+        f.write("hello world")
+
+    with open(data, "w") as f:
+        f.write("hello world")
+
+    os.symlink("app", relative_app_link)
+    os.symlink(app, absolute_app_link)
+
+    return str(p)
 
 
 args = ["file"]
@@ -871,22 +899,21 @@ def test_tarball_doesnt_include_buildinfo_twice(tmpdir):
     tarball = str(tmpdir.join("prefix.tar.gz"))
 
     bindist._do_create_tarball(
-        tarfile_path=tarball,
-        binaries_dir=str(p),
-        pkg_dir="my-pkg-prefix",
-        buildinfo={"metadata": "new"},
+        tarfile_path=tarball, binaries_dir=p.strpath, buildinfo={"metadata": "new"}
     )
+
+    expected_prefix = p.strpath.lstrip("/")
 
     # Verify we don't have a repeated binary_distribution file,
     # and that the tarball contains the new one, not the old one.
     with tarfile.open(tarball) as tar:
-        assert syaml.load(tar.extractfile("my-pkg-prefix/.spack/binary_distribution")) == {
+        assert syaml.load(tar.extractfile(f"{expected_prefix}/.spack/binary_distribution")) == {
             "metadata": "new"
         }
         assert tar.getnames() == [
-            "my-pkg-prefix",
-            "my-pkg-prefix/.spack",
-            "my-pkg-prefix/.spack/binary_distribution",
+            f"{expected_prefix}",
+            f"{expected_prefix}/.spack",
+            f"{expected_prefix}/.spack/binary_distribution",
         ]
 
 
@@ -907,14 +934,16 @@ def test_reproducible_tarball_is_reproducible(tmpdir):
 
     # Create a tarball with a certain mtime of bin/app
     os.utime(app, times=(0, 0))
-    bindist._do_create_tarball(tarball_1, binaries_dir=p, pkg_dir="pkg", buildinfo=buildinfo)
+    bindist._do_create_tarball(tarball_1, binaries_dir=p.strpath, buildinfo=buildinfo)
 
     # Do it another time with different mtime of bin/app
     os.utime(app, times=(10, 10))
-    bindist._do_create_tarball(tarball_2, binaries_dir=p, pkg_dir="pkg", buildinfo=buildinfo)
+    bindist._do_create_tarball(tarball_2, binaries_dir=p.strpath, buildinfo=buildinfo)
 
     # They should be bitwise identical:
     assert filecmp.cmp(tarball_1, tarball_2, shallow=False)
+
+    expected_prefix = p.strpath.lstrip("/")
 
     # Sanity check for contents:
     with tarfile.open(tarball_1, mode="r") as f:
@@ -923,11 +952,11 @@ def test_reproducible_tarball_is_reproducible(tmpdir):
             assert m.uname == m.gname == ""
 
         assert set(f.getnames()) == {
-            "pkg",
-            "pkg/bin",
-            "pkg/bin/app",
-            "pkg/.spack",
-            "pkg/.spack/binary_distribution",
+            f"{expected_prefix}",
+            f"{expected_prefix}/bin",
+            f"{expected_prefix}/bin/app",
+            f"{expected_prefix}/.spack",
+            f"{expected_prefix}/.spack/binary_distribution",
         }
 
 
@@ -951,18 +980,135 @@ def test_tarball_normalized_permissions(tmpdir):
     with open(data, "w", opener=lambda path, flags: os.open(path, flags, 0o477)) as f:
         f.write("hello world")
 
-    bindist._do_create_tarball(tarball, binaries_dir=p, pkg_dir="pkg", buildinfo={})
+    bindist._do_create_tarball(tarball, binaries_dir=p.strpath, buildinfo={})
+
+    expected_prefix = p.strpath.lstrip("/")
 
     with tarfile.open(tarball) as tar:
         path_to_member = {member.name: member for member in tar.getmembers()}
 
     # directories should have 0o755
-    assert path_to_member["pkg"].mode == 0o755
-    assert path_to_member["pkg/bin"].mode == 0o755
-    assert path_to_member["pkg/.spack"].mode == 0o755
+    assert path_to_member[f"{expected_prefix}"].mode == 0o755
+    assert path_to_member[f"{expected_prefix}/bin"].mode == 0o755
+    assert path_to_member[f"{expected_prefix}/.spack"].mode == 0o755
 
     # executable-by-user files should be 0o755
-    assert path_to_member["pkg/bin/app"].mode == 0o755
+    assert path_to_member[f"{expected_prefix}/bin/app"].mode == 0o755
 
     # not-executable-by-user files should be 0o644
-    assert path_to_member["pkg/share/file"].mode == 0o644
+    assert path_to_member[f"{expected_prefix}/share/file"].mode == 0o644
+
+
+def test_tarball_common_prefix(dummy_prefix, tmpdir):
+    """Tests whether Spack can figure out the package directory
+    from the tarball contents, and strip them when extracting."""
+
+    # When creating a tarball, Python (and tar) use relative paths,
+    # Absolute paths become relative to `/`, so drop the leading `/`.
+    assert os.path.isabs(dummy_prefix)
+    expected_prefix = PurePath(dummy_prefix).as_posix().lstrip("/")
+
+    with tmpdir.as_cwd():
+        # Create a tarball (using absolute path for prefix dir)
+        with tarfile.open("example.tar", mode="w") as tar:
+            tar.add(name=dummy_prefix)
+
+        # Open, verify common prefix, and extract it.
+        with tarfile.open("example.tar", mode="r") as tar:
+            common_prefix = bindist._ensure_common_prefix(tar)
+            assert common_prefix == expected_prefix
+
+            # Strip the prefix from the tar entries
+            bindist._tar_strip_component(tar, common_prefix)
+
+            # Extract into prefix2
+            tar.extractall(path="prefix2")
+
+        # Verify files are all there at the correct level.
+        assert set(os.listdir("prefix2")) == {"bin", "share", ".spack"}
+        assert set(os.listdir(os.path.join("prefix2", "bin"))) == {
+            "app",
+            "relative_app_link",
+            "absolute_app_link",
+        }
+        assert set(os.listdir(os.path.join("prefix2", "share"))) == {"file"}
+
+        # Relative symlink should still be correct
+        assert os.readlink(os.path.join("prefix2", "bin", "relative_app_link")) == "app"
+
+        # Absolute symlink should remain absolute -- this is for relocation to fix up.
+        assert os.readlink(os.path.join("prefix2", "bin", "absolute_app_link")) == os.path.join(
+            dummy_prefix, "bin", "app"
+        )
+
+
+def test_tarfile_without_common_directory_prefix_fails(tmpdir):
+    """A tarfile that only contains files without a common package directory
+    should fail to extract, as we won't know where to put the files."""
+    with tmpdir.as_cwd():
+        # Create a broken tarball with just a file, no directories.
+        with tarfile.open("empty.tar", mode="w") as tar:
+            tar.addfile(tarfile.TarInfo(name="example/file"), fileobj=io.BytesIO(b"hello"))
+
+        with pytest.raises(ValueError, match="Tarball does not contain a common prefix"):
+            bindist._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
+
+
+def test_tarfile_with_files_outside_common_prefix(tmpdir, dummy_prefix):
+    """If a file is outside of the common prefix, we should fail."""
+    with tmpdir.as_cwd():
+        with tarfile.open("broken.tar", mode="w") as tar:
+            tar.add(name=dummy_prefix)
+            tar.addfile(tarfile.TarInfo(name="/etc/config_file"), fileobj=io.BytesIO(b"hello"))
+
+        with pytest.raises(
+            ValueError, match="Tarball contains file /etc/config_file outside of prefix"
+        ):
+            bindist._ensure_common_prefix(tarfile.open("broken.tar", mode="r"))
+
+
+def test_tarfile_of_spec_prefix(tmpdir):
+    """Tests whether hardlinks, symlinks, files and dirs are added correctly,
+    and that the order of entries is correct."""
+    prefix = tmpdir.mkdir("prefix")
+    prefix.ensure("a_directory", dir=True).join("file").write("hello")
+    prefix.ensure("c_directory", dir=True).join("file").write("hello")
+    prefix.ensure("b_directory", dir=True).join("file").write("hello")
+    prefix.join("file").write("hello")
+    os.symlink(prefix.join("file"), prefix.join("symlink"))
+    os.link(prefix.join("file"), prefix.join("hardlink"))
+
+    file = tmpdir.join("example.tar")
+
+    with tarfile.open(file, mode="w") as tar:
+        bindist.tarfile_of_spec_prefix(tar, prefix.strpath)
+
+    expected_prefix = prefix.strpath.lstrip("/")
+
+    with tarfile.open(file, mode="r") as tar:
+        # Verify that entries are added in depth-first pre-order, files preceding dirs,
+        # entries ordered alphabetically
+        assert tar.getnames() == [
+            f"{expected_prefix}",
+            f"{expected_prefix}/file",
+            f"{expected_prefix}/hardlink",
+            f"{expected_prefix}/symlink",
+            f"{expected_prefix}/a_directory",
+            f"{expected_prefix}/a_directory/file",
+            f"{expected_prefix}/b_directory",
+            f"{expected_prefix}/b_directory/file",
+            f"{expected_prefix}/c_directory",
+            f"{expected_prefix}/c_directory/file",
+        ]
+
+        # Check that the types are all correct
+        assert tar.getmember(f"{expected_prefix}").isdir()
+        assert tar.getmember(f"{expected_prefix}/file").isreg()
+        assert tar.getmember(f"{expected_prefix}/hardlink").islnk()
+        assert tar.getmember(f"{expected_prefix}/symlink").issym()
+        assert tar.getmember(f"{expected_prefix}/a_directory").isdir()
+        assert tar.getmember(f"{expected_prefix}/a_directory/file").isreg()
+        assert tar.getmember(f"{expected_prefix}/b_directory").isdir()
+        assert tar.getmember(f"{expected_prefix}/b_directory/file").isreg()
+        assert tar.getmember(f"{expected_prefix}/c_directory").isdir()
+        assert tar.getmember(f"{expected_prefix}/c_directory/file").isreg()

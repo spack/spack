@@ -52,14 +52,7 @@ class PyDmTree(PythonPackage):
             "'--jobs={0}',\n".format(make_jobs),
             # Enable verbose output for failures
             "'--verbose_failures',\n",
-            # Show (formatted) subcommands being executed
-            "'--subcommands=pretty_print',\n",
             "'--spawn_strategy=local',\n",
-            # Ask bazel to explain what it's up to
-            # Needs a filename as argument
-            "'--explain=explainlogfile.txt',\n",
-            # Increase verbosity of explanation,
-            "'--verbose_explanations',\n",
             # bazel uses system PYTHONPATH instead of spack paths
             "'--action_env', 'PYTHONPATH={0}',\n".format(env["PYTHONPATH"]),
         ]

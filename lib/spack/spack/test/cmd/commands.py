@@ -7,7 +7,6 @@ import filecmp
 import os
 import shutil
 import subprocess
-import sys
 
 import pytest
 
@@ -219,7 +218,8 @@ def test_fish_completion():
 def test_update_completion_arg(shell, tmpdir, monkeypatch):
     """Test the update completion flag."""
 
-    mock_infile = tmpdir.join("spack-completion.in")
+    tmpdir.join(shell).mkdir()
+    mock_infile = tmpdir.join(shell).join(f"spack-completion.{shell}")
     mock_outfile = tmpdir.join(f"spack-completion.{shell}")
 
     mock_args = {
@@ -253,9 +253,7 @@ def test_update_completion_arg(shell, tmpdir, monkeypatch):
 
 
 # Note: this test is never expected to be supported on Windows
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="shell completion script generator fails on windows"
-)
+@pytest.mark.not_on_windows("Shell completion script generator fails on windows")
 @pytest.mark.parametrize("shell", ["bash", "fish"])
 def test_updated_completion_scripts(shell, tmpdir):
     """Make sure our shell tab completion scripts remain up-to-date."""
@@ -267,7 +265,7 @@ def test_updated_completion_scripts(shell, tmpdir):
         "and adding the changed files to your pull request."
     )
 
-    header = os.path.join(spack.paths.share_path, shell, "spack-completion.in")
+    header = os.path.join(spack.paths.share_path, shell, f"spack-completion.{shell}")
     script = "spack-completion.{0}".format(shell)
     old_script = os.path.join(spack.paths.share_path, script)
     new_script = str(tmpdir.join(script))

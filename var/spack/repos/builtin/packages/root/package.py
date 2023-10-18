@@ -34,6 +34,7 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version("6.28.06", sha256="af3b673b9aca393a5c9ae1bf86eab2672aaf1841b658c5c6e7a30ab93c586533")
     version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
     version("6.28.02", sha256="6643c07710e68972b00227c68b20b1016fec16f3fba5f44a571fa1ce5bb42faa")
     version("6.28.00", sha256="afa1c5c06d0915411cb9492e474ea9ab12b09961a358e7e559013ed63b5d8084")
@@ -157,7 +158,7 @@ class Root(CMakePackage):
         default=False,
         description="Enable support for TMultilayerPerceptron " "classes' federation",
     )
-    variant("mysql", default=False)
+    variant("mysql", default=False, description="Enable support for MySQL databases")
     variant("opengl", default=True, description="Enable OpenGL support")
     variant("oracle", default=False, description="Enable support for Oracle databases")
     variant("postgres", default=False, description="Enable postgres support")
@@ -223,7 +224,7 @@ class Root(CMakePackage):
     depends_on("pcre")
     depends_on("xxhash", when="@6.13.02:")  # See cmake_args, below.
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd", when="@6.20:")
 
     # X-Graphics
@@ -633,7 +634,7 @@ class Root(CMakePackage):
 
         # With that done, let's go fixing those deps
         if spec.satisfies("@:6.12"):
-            add_include_path("zlib")
+            add_include_path("zlib-api")
         if "+x" in spec:
             if spec.satisfies("@:6.08") or spec.satisfies("@6.22:"):
                 add_include_path("xextproto")

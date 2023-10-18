@@ -35,6 +35,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version("master", branch="master")
 
+    version("13.2.0", sha256="e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da")
     version("13.1.0", sha256="61d684f0aa5e76ac6585ad8898a2427aade8979ed5e7f85492286c4dfc13ee86")
 
     version("12.3.0", sha256="949a5d4f99e786421a93b532b22ffab5578de7321369975b91aec97adfda8c3b")
@@ -181,7 +182,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         depends_on("isl@0.15:0.20", when="@9:9.9")
         depends_on("isl@0.15:", when="@10:")
 
-    depends_on("zlib", when="@6:")
+    depends_on("zlib-api", when="@6:")
     depends_on("zstd", when="@10:")
     depends_on("diffutils", type="build")
     depends_on("iconv", when="platform=darwin")
@@ -336,11 +337,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   on XCode 12.5
     conflicts("+bootstrap", when="@:11.1 %apple-clang@12.0.5")
 
-    # aarch64/M1 is supported in GCC 11.3-12.2
-    conflicts(
-        "@:11.2,12.3:",
+    # aarch64/M1 is supported in GCC 11.3-12.2 and 13
+    requires(
+        "@11.3,12.2,13.1:",
         when="target=aarch64: platform=darwin",
-        msg="Only GCC 11.3-12.2 support macOS M1 (aarch64)",
+        msg="Only GCC 11.3-12.2, 13.1+ support macOS M1 (aarch64)",
     )
 
     # Newer binutils than RHEL's is required to run `as` on some instructions
@@ -412,7 +413,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             sha256="a7843b5c6bf1401e40c20c72af69c8f6fc9754ae980bb4a5f0540220b3dcb62d",
             when="@12.2.0 target=aarch64:",
         )
-        conflicts("+bootstrap", when="@11.3.0 target=aarch64:")
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/5c206c47/gcc/gcc-13.1.0.diff",
+            sha256="cb4e8a89387f748a744da0273025d0dc2e3c76780cc390b18ada704676afea11",
+            when="@13.1.0 target=aarch64:",
+        )
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/3c5cbc8e9cf444a1967786af48e430588e1eb481/gcc/gcc-13.2.0.diff",
+            sha256="2df7ef067871a30b2531a2013b3db661ec9e61037341977bfc451e30bf2c1035",
+            when="@13.2.0 target=aarch64:",
+        )
+        conflicts("+bootstrap", when="@11.3.0,13.1: target=aarch64:")
 
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
@@ -651,9 +662,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Use installed libz
         if self.version >= Version("6"):
-            filter_file("@zlibdir@", "-L{0}".format(spec["zlib"].prefix.lib), "gcc/Makefile.in")
             filter_file(
-                "@zlibinc@", "-I{0}".format(spec["zlib"].prefix.include), "gcc/Makefile.in"
+                "@zlibdir@", "-L{0}".format(spec["zlib-api"].prefix.lib), "gcc/Makefile.in"
+            )
+            filter_file(
+                "@zlibinc@", "-I{0}".format(spec["zlib-api"].prefix.include), "gcc/Makefile.in"
             )
 
         if spec.satisfies("+nvptx"):
@@ -770,6 +783,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     "--with-as=" + binutils.join("as"),
                 ]
             )
+        elif spec.satisfies("%apple-clang@15:"):
+            # https://github.com/iains/gcc-darwin-arm64/issues/117
+            # https://github.com/iains/gcc-12-branch/issues/22
+            # https://github.com/iains/gcc-13-branch/issues/8
+            options.append("--with-ld=/Library/Developer/CommandLineTools/usr/bin/ld-classic")
 
         # enable_bootstrap
         if spec.satisfies("+bootstrap"):
@@ -1017,11 +1035,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         """
         # Detect GCC package in the directory of the GCC compiler
         # or in the $PATH if self.compiler.cc is not an absolute path:
-        from spack.detection import by_executable
+        from spack.detection import by_path
 
         compiler_dir = os.path.dirname(self.compiler.cc)
-        detected_packages = by_executable(
-            [self.__class__], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
+        detected_packages = by_path(
+            [self.name], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
         )
 
         # We consider only packages that satisfy the following constraint:

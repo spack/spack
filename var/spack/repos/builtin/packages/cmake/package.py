@@ -27,6 +27,15 @@ class Cmake(Package):
     executables = ["^cmake[0-9]*$"]
 
     version("master", branch="master")
+    version("3.27.7", sha256="08f71a106036bf051f692760ef9558c0577c42ac39e96ba097e7662bd4158d8e")
+    version("3.27.6", sha256="ef3056df528569e0e8956f6cf38806879347ac6de6a4ff7e4105dc4578732cfb")
+    version("3.27.4", sha256="0a905ca8635ca81aa152e123bdde7e54cbe764fdd9a70d62af44cad8b92967af")
+    version("3.27.3", sha256="66afdc0f181461b70b6fedcde9ecc4226c5cd184e7203617c83b7d8e47f49521")
+    version("3.27.2", sha256="798e50085d423816fe96c9ef8bee5e50002c9eca09fed13e300de8a91d35c211")
+    version("3.27.1", sha256="b1a6b0135fa11b94476e90f5b32c4c8fad480bf91cf22d0ded98ce22c5132004")
+    version("3.27.0", sha256="aaeddb6b28b993d0a6e32c88123d728a17561336ab90e0bf45032383564d3cb8")
+    version("3.26.5", sha256="c0970b1e44a7fbca4322997ce05dac521b04748fe424922152faf22d20782bf9")
+    version("3.26.4", sha256="313b6880c291bd4fe31c0aa51d6e62659282a521e695f30d5cc0d25abbd5c208")
     version("3.26.3", sha256="bbd8d39217509d163cb544a40d6428ac666ddc83e22905d3e52c925781f0f659")
     version("3.26.2", sha256="d54f25707300064308ef01d4d21b0f98f508f52dda5d527d882b9d88379f89a8")
     version("3.26.1", sha256="f29964290ad3ced782a1e58ca9fda394a82406a647e24d6afd4e6c32e42c412f")
@@ -186,7 +195,6 @@ class Cmake(Package):
     # a build dependency, and its libs will not interfere with others in
     # the build.
     variant("ownlibs", default=True, description="Use CMake-provided third-party libraries")
-    variant("qt", default=False, description="Enables the build of cmake-gui")
     variant(
         "doc",
         default=False,
@@ -221,7 +229,7 @@ class Cmake(Package):
 
     # When using curl, cmake defaults to using system zlib too, probably because
     # curl already depends on zlib. Therefore, also unconditionaly depend on zlib.
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     with when("~ownlibs"):
         depends_on("expat")
@@ -232,8 +240,8 @@ class Cmake(Package):
         depends_on("libuv@1.10.0:1.10", when="@3.11.0:3.11")
         depends_on("libuv@1.10.0:", when="@3.12.0:")
         depends_on("rhash", when="@3.8.0:")
+        depends_on("jsoncpp build_system=meson", when="@3.2:")
 
-    depends_on("qt", when="+qt")
     depends_on("ncurses", when="+ncurses")
 
     with when("+doc"):
@@ -276,8 +284,6 @@ class Cmake(Package):
         sha256="b48396c0e4f61756248156b6cebe9bc0d7a22228639b47b5aa77c9330588ce88",
         when="@3.19.0:3.19",
     )
-
-    conflicts("+qt", when="^qt@5.4.0")  # qt-5.4.0 has broken CMake modules
 
     # https://gitlab.kitware.com/cmake/cmake/issues/18166
     conflicts("%intel", when="@3.11.0:3.11.4")
@@ -351,18 +357,13 @@ class Cmake(Package):
                 # Build and link to the Spack-installed third-party libraries
                 args.append("--system-libs")
 
-                if spec.satisfies("@3.2:"):
-                    # jsoncpp requires CMake to build
-                    # use CMake-provided library to avoid circular dependency
-                    args.append("--no-system-jsoncpp")
+                # cppdap is a CMake package, avoid circular dependency
+                if spec.satisfies("@3.27:"):
+                    args.append("--no-system-cppdap")
 
             # Whatever +/~ownlibs, use system curl.
             args.append("--system-curl")
-
-            if "+qt" in spec:
-                args.append("--qt-gui")
-            else:
-                args.append("--no-qt-gui")
+            args.append("--no-qt-gui")
 
             if "+doc" in spec:
                 args.append("--sphinx-html")

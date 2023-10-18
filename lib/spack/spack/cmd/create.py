@@ -5,6 +5,7 @@
 
 import os
 import re
+import sys
 import urllib.parse
 
 import llnl.util.tty as tty
@@ -17,6 +18,7 @@ from spack.spec import Spec
 from spack.url import UndetectableNameError, UndetectableVersionError, parse_name, parse_version
 from spack.util.editor import editor
 from spack.util.executable import ProcessError, which
+from spack.util.format import get_version_lines
 from spack.util.naming import mod_to_class, simplify_name, valid_fully_qualified_module_name
 
 description = "create a new package file"
@@ -821,7 +823,12 @@ def get_versions(args, name):
     if args.url is not None and args.template != "bundle" and valid_url:
         # Find available versions
         try:
-            url_dict = spack.util.web.find_versions_of_archive(args.url)
+            url_dict = spack.url.find_versions_of_archive(args.url)
+            if len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
+                url_dict_filtered = spack.stage.interactive_version_filter(url_dict)
+                if url_dict_filtered is None:
+                    exit(0)
+                url_dict = url_dict_filtered
         except UndetectableVersionError:
             # Use fake versions
             tty.warn("Couldn't detect version in: {0}".format(args.url))
@@ -832,13 +839,11 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        versions = spack.stage.get_checksums_for_versions(
-            url_dict,
-            name,
-            first_stage_function=guesser,
-            keep_stage=args.keep_stage,
-            batch=(args.batch or len(url_dict) == 1),
+        version_hashes = spack.stage.get_checksums_for_versions(
+            url_dict, name, first_stage_function=guesser, keep_stage=args.keep_stage
         )
+
+        versions = get_version_lines(version_hashes, url_dict)
     else:
         versions = unhashed_versions
 
@@ -912,11 +917,11 @@ def get_repository(args, name):
             )
     else:
         if spec.namespace:
-            repo = spack.repo.path.get_repo(spec.namespace, None)
+            repo = spack.repo.PATH.get_repo(spec.namespace, None)
             if not repo:
                 tty.die("Unknown namespace: '{0}'".format(spec.namespace))
         else:
-            repo = spack.repo.path.first_repo()
+            repo = spack.repo.PATH.first_repo()
 
     # Set the namespace on the spec if it's not there already
     if not spec.namespace:

@@ -33,7 +33,7 @@ class Star(MakefilePackage):
         url="https://github.com/alexdobin/STAR/archive/STAR_2.4.2a.tar.gz",
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     build_directory = "source"
 

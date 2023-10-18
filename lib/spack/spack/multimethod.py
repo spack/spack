@@ -236,7 +236,7 @@ class when:
 
         # Create a multimethod with this name if there is not one already
         original_method = MultiMethodMeta._locals.get(method.__name__)
-        if not type(original_method) == SpecMultiMethod:
+        if not isinstance(original_method, SpecMultiMethod):
             original_method = SpecMultiMethod(original_method)
 
         if self.spec is not None:

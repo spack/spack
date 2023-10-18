@@ -358,7 +358,7 @@ class Openfoam(Package):
     # but particular mixes of mpi versions and InfiniBand may not work so well
     # conflicts('^openmpi~thread_multiple', when='@1712:')
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("fftw-api")
 
     # TODO: replace this with an explicit list of components of Boost,

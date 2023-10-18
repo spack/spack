@@ -29,7 +29,7 @@ class Serf(SConsPackage):
     depends_on("python+pythoncmd", type="build")
     depends_on("scons@2.3.0:", type="build")
     depends_on("uuid")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     patch("py3syntax.patch", when="@:1.3.9")
     patch("py3-hashbang.patch")
@@ -40,7 +40,7 @@ class Serf(SConsPackage):
             "APR": spec["apr"].prefix,
             "APU": spec["apr-util"].prefix,
             "OPENSSL": spec["openssl"].prefix,
-            "ZLIB": spec["zlib"].prefix,
+            "ZLIB": spec["zlib-api"].prefix,
             "DEBUG": "yes" if "+debug" in spec else "no",
         }
 

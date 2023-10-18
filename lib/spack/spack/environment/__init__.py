@@ -365,6 +365,7 @@ from .environment import (
     read,
     root,
     spack_env_var,
+    spack_env_view_var,
     update_yaml,
 )
 
@@ -397,5 +398,6 @@ __all__ = [
     "read",
     "root",
     "spack_env_var",
+    "spack_env_view_var",
     "update_yaml",
 ]

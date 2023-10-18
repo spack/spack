@@ -29,7 +29,6 @@ class LuaLuajitOpenresty(LuaImplPackage):
     )
 
     provides("lua-lang@5.1", when="+lualinks")
-    conflicts("lua", when="+lualinks")
     provides("luajit")
     lua_version_override = "5.1"
 

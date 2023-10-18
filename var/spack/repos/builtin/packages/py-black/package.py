@@ -17,6 +17,8 @@ class PyBlack(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("23.9.1", sha256="24b6b3ff5c6d9ea08a8888f6977eae858e1f340d7260cf56d70a49823236b62d")
+    version("23.9.0", sha256="3511c8a7e22ce653f89ae90dfddaf94f3bb7e2587a245246572d3b9c92adf066")
     version("23.7.0", sha256="022a582720b0d9480ed82576c920a8c1dde97cc38ff11d8d8859b3bd6ca9eedb")
     version("23.3.0", sha256="1c7b8d606e728a41ea1ccbd7264677e494e87cf630e399262ced92d4a8dac940")
     version("23.1.0", sha256="b0bd97bea8903f5a2ba7219257a44e3f1f9d00073d6cc1add68f0beec69692ac")

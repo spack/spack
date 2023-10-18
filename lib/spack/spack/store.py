@@ -25,13 +25,14 @@ import uuid
 from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
 import llnl.util.lang
-import llnl.util.tty as tty
+from llnl.util import tty
 
 import spack.config
 import spack.database
 import spack.directory_layout
 import spack.error
 import spack.paths
+import spack.spec
 import spack.util.path
 
 #: default installation root, relative to the Spack install path
@@ -134,18 +135,21 @@ def parse_install_tree(config_dict):
 class Store:
     """A store is a path full of installed Spack packages.
 
-    Stores consist of packages installed according to a
-    ``DirectoryLayout``, along with an index, or _database_ of their
-    contents.  The directory layout controls what paths look like and how
-    Spack ensures that each unique spec gets its own unique directory (or
-    not, though we don't recommend that). The database is a single file
-    that caches metadata for the entire Spack installation.  It prevents
-    us from having to spider the install tree to figure out what's there.
+    Stores consist of packages installed according to a ``DirectoryLayout``, along with a database
+    of their contents.
+
+    The directory layout controls what paths look like and how Spack ensures that each unique spec
+    gets its own unique directory (or not, though we don't recommend that).
+
+    The database is a single file that caches metadata for the entire Spack installation. It
+    prevents us from having to spider the install tree to figure out what's there.
+
+    The store is also able to lock installation prefixes, and to mark installation failures.
 
     Args:
         root: path to the root of the install tree
-        unpadded_root: path to the root of the install tree without padding.
-            The sbang script has to be installed here to work with padded roots
+        unpadded_root: path to the root of the install tree without padding. The sbang script has
+            to be installed here to work with padded roots
         projections: expression according to guidelines that describes how to construct a path to
             a package prefix in this store
         hash_length: length of the hashes used in the directory layout. Spec hash suffixes will be
@@ -170,6 +174,19 @@ class Store:
         self.upstreams = upstreams
         self.lock_cfg = lock_cfg
         self.db = spack.database.Database(root, upstream_dbs=upstreams, lock_cfg=lock_cfg)
+
+        timeout_format_str = (
+            f"{str(lock_cfg.package_timeout)}s" if lock_cfg.package_timeout else "No timeout"
+        )
+        tty.debug("PACKAGE LOCK TIMEOUT: {0}".format(str(timeout_format_str)))
+
+        self.prefix_locker = spack.database.SpecLocker(
+            spack.database.prefix_lock_path(root), default_timeout=lock_cfg.package_timeout
+        )
+        self.failure_tracker = spack.database.FailureTracker(
+            self.root, default_timeout=lock_cfg.package_timeout
+        )
+
         self.layout = spack.directory_layout.DirectoryLayout(
             root, projections=projections, hash_length=hash_length
         )
@@ -195,7 +212,7 @@ def create(configuration: ConfigurationType) -> Store:
     Args:
         configuration: configuration to create a store.
     """
-    configuration = configuration or spack.config.config
+    configuration = configuration or spack.config.CONFIG
     config_dict = configuration.get("config")
     root, unpadded_root, projections = parse_install_tree(config_dict)
     hash_length = configuration.get("config:install_hash_length")
@@ -217,7 +234,7 @@ def create(configuration: ConfigurationType) -> Store:
 
 
 def _create_global() -> Store:
-    result = create(configuration=spack.config.config)
+    result = create(configuration=spack.config.CONFIG)
     return result
 
 
@@ -355,10 +372,10 @@ def use_store(
 
     # Swap the store with the one just constructed and return it
     ensure_singleton_created()
-    spack.config.config.push_scope(
+    spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={"config": {"install_tree": data}})
     )
-    temporary_store = create(configuration=spack.config.config)
+    temporary_store = create(configuration=spack.config.CONFIG)
     original_store, STORE = STORE, temporary_store
 
     try:
@@ -366,7 +383,7 @@ def use_store(
     finally:
         # Restore the original store
         STORE = original_store
-        spack.config.config.remove_scope(scope_name=scope_name)
+        spack.config.CONFIG.remove_scope(scope_name=scope_name)
 
 
 class MatchError(spack.error.SpackError):

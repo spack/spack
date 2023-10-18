@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 import shutil
+import sys
 import tempfile
 
 import llnl.util.filesystem
@@ -68,11 +69,10 @@ SOURCE_METADATA = {
 
 def _add_scope_option(parser):
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
     parser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         help="configuration scope to read/modify",
     )
 
@@ -169,7 +169,7 @@ def _reset(args):
         if not ok_to_continue:
             raise RuntimeError("Aborting")
 
-    for scope in spack.config.config.file_scopes:
+    for scope in spack.config.CONFIG.file_scopes:
         # The default scope should stay untouched
         if scope.name == "defaults":
             continue
@@ -186,7 +186,7 @@ def _reset(args):
         if os.path.exists(bootstrap_yaml):
             shutil.move(bootstrap_yaml, backup_file)
 
-        spack.config.config.clear_caches()
+        spack.config.CONFIG.clear_caches()
 
 
 def _root(args):
@@ -326,6 +326,7 @@ def _status(args):
     if missing:
         print(llnl.util.tty.color.colorize(legend))
         print()
+        sys.exit(1)
 
 
 def _add(args):

@@ -23,7 +23,7 @@ class Leptonica(CMakePackage):
     depends_on("jpeg")
     depends_on("libpng")
     depends_on("libtiff")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libwebp+libwebpmux+libwebpdemux")
     depends_on("openjpeg")
 

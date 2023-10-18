@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
@@ -15,7 +14,7 @@ undevelop = SpackCommand("undevelop")
 env = SpackCommand("env")
 concretize = SpackCommand("concretize")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_undevelop(tmpdir, config, mock_packages, mutable_mock_env_path):

@@ -64,7 +64,7 @@ fi
     return clang_path.parent
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
+@pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("11678,13138")
 def test_compiler_find_without_paths(no_compilers_yaml, working_env, mock_executable):
     """Tests that 'spack compiler find' looks into PATH by default, if no specific path
@@ -127,7 +127,7 @@ def test_removing_compilers_from_multiple_scopes(mutable_config, mock_packages):
     assert spack.spec.CompilerSpec("gcc@=4.5.0") not in spack.compilers.all_compiler_specs()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
+@pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 def test_compiler_add(mutable_config, mock_packages, mock_executable):
     """Tests that we can add a compiler to configuration."""
     expected_version = "4.5.3"
@@ -157,7 +157,7 @@ done
     assert new_compiler.version == spack.version.Version(expected_version)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
+@pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("17590")
 def test_compiler_find_mixed_suffixes(no_compilers_yaml, working_env, compilers_dir):
     """Ensure that we'll mix compilers with different suffixes when necessary."""
@@ -189,7 +189,7 @@ def test_compiler_find_mixed_suffixes(no_compilers_yaml, working_env, compilers_
     }
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
+@pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("17590")
 def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, compilers_dir):
     """Ensure that we'll pick 'clang' over 'clang-gpu' when there is a choice."""
@@ -210,7 +210,7 @@ def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, compiler
     assert clang["paths"]["cxx"] == str(compilers_dir / "clang++")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
+@pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 def test_compiler_find_path_order(no_compilers_yaml, working_env, compilers_dir):
     """Ensure that we look for compilers in the same order as PATH, when there are duplicates"""
     new_dir = compilers_dir / "first_in_path"

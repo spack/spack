@@ -39,12 +39,26 @@ function Read-SpackArgs {
     return $SpackCMD_params, $SpackSubCommand, $SpackSubCommandArgs
 }
 
+function Set-SpackEnv {
+    # This method is responsible
+    # for processing the return from $(spack <command>)
+    # which are returned as System.Object[]'s containing
+    # a list of env commands
+    # Invoke-Expression can only handle one command at a time
+    # so we iterate over the list to invoke the env modification
+    # expressions one at a time
+    foreach($envop in $args[0]){
+        Invoke-Expression $envop
+    }
+}
+
+
 function Invoke-SpackCD {
     if (Compare-CommonArgs $SpackSubCommandArgs) {
-        python $Env:SPACK_ROOT/bin/spack cd -h
+        python "$Env:SPACK_ROOT/bin/spack" cd -h
     }
     else {
-        $LOC = $(python $Env:SPACK_ROOT/bin/spack location $SpackSubCommandArgs)
+        $LOC = $(python "$Env:SPACK_ROOT/bin/spack" location $SpackSubCommandArgs)
         if (($NULL -ne $LOC)){
             if ( Test-Path -Path $LOC){
                 Set-Location $LOC
@@ -61,7 +75,7 @@ function Invoke-SpackCD {
 
 function Invoke-SpackEnv {
     if (Compare-CommonArgs $SpackSubCommandArgs[0]) {
-        python $Env:SPACK_ROOT/bin/spack env -h
+        python "$Env:SPACK_ROOT/bin/spack" env -h
     }
     else {
         $SubCommandSubCommand = $SpackSubCommandArgs[0]
@@ -69,46 +83,46 @@ function Invoke-SpackEnv {
         switch ($SubCommandSubCommand) {
             "activate" {
                 if (Compare-CommonArgs $SubCommandSubCommandArgs) {
-                    python $Env:SPACK_ROOT/bin/spack env activate $SubCommandSubCommandArgs
+                    python "$Env:SPACK_ROOT/bin/spack" env activate $SubCommandSubCommandArgs
                 }
                 elseif ([bool]($SubCommandSubCommandArgs.Where({$_ -eq "--pwsh"}))) {
-                    python $Env:SPACK_ROOT/bin/spack env activate $SubCommandSubCommandArgs
+                    python "$Env:SPACK_ROOT/bin/spack" env activate $SubCommandSubCommandArgs
                 }
                 elseif (!$SubCommandSubCommandArgs) {
-                    python $Env:SPACK_ROOT/bin/spack env activate $SubCommandSubCommandArgs
+                    python "$Env:SPACK_ROOT/bin/spack" env activate $SubCommandSubCommandArgs
                 }
                 else {
-                    $SpackEnv = $(python $Env:SPACK_ROOT/bin/spack $SpackCMD_params env activate "--pwsh" $SubCommandSubCommandArgs)
-                    $ExecutionContext.InvokeCommand($SpackEnv)
+                    $SpackEnv = $(python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params env activate "--pwsh" $SubCommandSubCommandArgs)
+                    Set-SpackEnv $SpackEnv
                 }
             }
             "deactivate" {
                 if ([bool]($SubCommandSubCommandArgs.Where({$_ -eq "--pwsh"}))) {
-                    python $Env:SPACK_ROOT/bin/spack env deactivate $SubCommandSubCommandArgs
+                    python"$Env:SPACK_ROOT/bin/spack" env deactivate $SubCommandSubCommandArgs
                 }
                 elseif($SubCommandSubCommandArgs) {
-                    python $Env:SPACK_ROOT/bin/spack env deactivate -h
+                    python "$Env:SPACK_ROOT/bin/spack" env deactivate -h
                 }
                 else {
-                    $SpackEnv = $(python $Env:SPACK_ROOT/bin/spack $SpackCMD_params env deactivate --pwsh)
-                    $ExecutionContext.InvokeCommand($SpackEnv)
+                    $SpackEnv = $(python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params env deactivate "--pwsh")
+                    Set-SpackEnv $SpackEnv
                 }
             }
-            default {python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs}
+            default {python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs}
         }
     }
 }
 
 function Invoke-SpackLoad {
     if (Compare-CommonArgs $SpackSubCommandArgs) {
-        python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
+        python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
     }
     elseif ([bool]($SpackSubCommandArgs.Where({($_ -eq "--pwsh") -or ($_ -eq "--list")}))) {
-        python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
+        python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
     }
     else {
-        $SpackEnv = $(python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand "--pwsh" $SpackSubCommandArgs)
-        $ExecutionContext.InvokeCommand($SpackEnv)
+        $SpackEnv = $(python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand "--pwsh" $SpackSubCommandArgs)
+        Set-SpackEnv $SpackEnv
     }
 }
 
@@ -116,7 +130,7 @@ function Invoke-SpackLoad {
 $SpackCMD_params, $SpackSubCommand, $SpackSubCommandArgs = Read-SpackArgs $args
 
 if (Compare-CommonArgs $SpackCMD_params) {
-    python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
+    python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs
     exit $LASTEXITCODE
 }
 
@@ -128,5 +142,5 @@ switch($SpackSubCommand)
     "env"    {Invoke-SpackEnv}
     "load"   {Invoke-SpackLoad}
     "unload" {Invoke-SpackLoad}
-    default  {python $Env:SPACK_ROOT/bin/spack $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs}
+    default  {python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs}
 }

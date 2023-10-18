@@ -44,7 +44,7 @@ class Roms(MakefilePackage):
     depends_on("netcdf-fortran")
     depends_on("netcdf-c")
     depends_on("hdf5+fortran")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("curl")
     depends_on("amdlibm", when="%aocc")
 

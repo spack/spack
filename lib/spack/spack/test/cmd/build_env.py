@@ -54,7 +54,7 @@ def test_pickle(tmpdir):
     with tmpdir.as_cwd():
         build_env("--pickle", _out_file, "zlib")
         environment = pickle.load(open(_out_file, "rb"))
-        assert type(environment) == dict
+        assert isinstance(environment, dict)
         assert "PATH" in environment
 
 

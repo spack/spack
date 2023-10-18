@@ -60,7 +60,7 @@ class Cgal(CMakePackage):
 
     # Required for CGAL_ImageIO
     # depends_on('opengl', when='+imageio') # not yet in Spack
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # Optional to build CGAL_Qt5 (demos)
     # depends_on('opengl', when='+demos')   # not yet in Spack

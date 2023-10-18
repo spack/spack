@@ -54,7 +54,7 @@ class Poppler(CMakePackage):
     depends_on("curl", when="+libcurl")
     depends_on("openjpeg", when="+openjpeg")
     depends_on("qt@4.0:", when="+qt")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("cairo+ft@1.10.0:", when="+glib")
     depends_on("iconv", when="+iconv")
     depends_on("jpeg", when="+jpeg")
