@@ -76,10 +76,17 @@ class PyNbconvert(PythonPackage):
     def patch(self):
         # We bundle this with the spack package so that the installer
         # doesn't try to download it.
-        install(
-            join_path(self.package_dir, "style.min.css"),
-            join_path("nbconvert", "resources", "style.min.css"),
-        )
+        if self.spec.satisfies("@:6"):
+            install(
+                join_path(self.package_dir, "style.min.css"),
+                join_path("nbconvert", "resources", "style.min.css"),
+            )
+        elif self.spec.satisfies("@7:"):
+            mkdir(join_path("share", "templates", "classic", "static"))
+            install(
+                join_path(self.package_dir, "style-5.4.0.min.css"),
+                join_path("share", "templates", "classic", "static", "style.css"),
+            )
 
     def setup_run_environment(self, env):
         env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)
