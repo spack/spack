@@ -23,8 +23,7 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_dev_build_basics(tmpdir, install_mockery):
-    spec = spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmpdir}")
-    spec.concretize()
+    spec = spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmpdir}").concretized()
 
     assert "dev_path" in spec.variants
 
