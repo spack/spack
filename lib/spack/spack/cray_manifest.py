@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
+import os
+import traceback
+import warnings
 
 import jsonschema
 import jsonschema.exceptions
@@ -46,9 +49,29 @@ def translated_compiler_name(manifest_compiler_name):
         )
 
 
-def compiler_from_entry(entry):
+def compiler_from_entry(entry: dict, manifest_path: str):
+    # Note that manifest_path is only passed here to compose a
+    # useful warning message when paths appear to be missing.
     compiler_name = translated_compiler_name(entry["name"])
-    paths = entry["executables"]
+
+    if "prefix" in entry:
+        prefix = entry["prefix"]
+        paths = dict(
+            (lang, os.path.join(prefix, relpath))
+            for (lang, relpath) in entry["executables"].items()
+        )
+    else:
+        paths = entry["executables"]
+
+    # Do a check for missing paths. Note that this isn't possible for
+    # all compiler entries, since their "paths" might actually be
+    # exe names like "cc" that depend on modules being loaded. Cray
+    # manifest entries are always paths though.
+    missing_paths = []
+    for path in paths.values():
+        if not os.path.exists(path):
+            missing_paths.append(path)
+
     # to instantiate a compiler class we may need a concrete version:
     version = "={}".format(entry["version"])
     arch = entry["arch"]
@@ -57,8 +80,18 @@ def compiler_from_entry(entry):
 
     compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
     spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-    paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
-    return compiler_cls(spec, operating_system, target, paths)
+    path_list = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
+
+    if missing_paths:
+        warnings.warn(
+            "Manifest entry refers to nonexistent paths:\n\t"
+            + "\n\t".join(missing_paths)
+            + f"\nfor {str(spec)}"
+            + f"\nin {manifest_path}"
+            + "\nPlease report this issue"
+        )
+
+    return compiler_cls(spec, operating_system, target, path_list)
 
 
 def spec_from_entry(entry):
@@ -187,12 +220,21 @@ def read(path, apply_updates):
     tty.debug("{0}: {1} specs read from manifest".format(path, str(len(specs))))
     compilers = list()
     if "compilers" in json_data:
-        compilers.extend(compiler_from_entry(x) for x in json_data["compilers"])
+        compilers.extend(compiler_from_entry(x, path) for x in json_data["compilers"])
     tty.debug("{0}: {1} compilers read from manifest".format(path, str(len(compilers))))
     # Filter out the compilers that already appear in the configuration
     compilers = spack.compilers.select_new_compilers(compilers)
     if apply_updates and compilers:
-        spack.compilers.add_compilers_to_config(compilers, init_config=False)
+        for compiler in compilers:
+            try:
+                spack.compilers.add_compilers_to_config([compiler], init_config=False)
+            except Exception:
+                warnings.warn(
+                    f"Could not add compiler {str(compiler.spec)}: "
+                    f"\n\tfrom manifest: {path}"
+                    "\nPlease reexecute with 'spack -d' and include the stack trace"
+                )
+                tty.debug(f"Include this\n{traceback.format_exc()}")
     if apply_updates:
         for spec in specs.values():
             spack.store.STORE.db.add(spec, directory_layout=None)

@@ -28,7 +28,8 @@ from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import islink, readlink, resolve_link_target_relative_to_the_link, symlink
 
 from spack.util.executable import Executable, which
-from spack.util.path import path_to_os_path, system_path_filter
+
+from ..path import path_to_os_path, system_path_filter
 
 if sys.platform != "win32":
     import grp
@@ -153,6 +154,37 @@ if sys.version_info < (3, 7, 4):
                     raise
 
     shutil.copystat = copystat
+
+
+def polite_path(components: Iterable[str]):
+    """
+    Given a list of strings which are intended to be path components,
+    generate a path, and format each component to avoid generating extra
+    path entries.
+
+    For example all "/", "\", and ":" characters will be replaced with
+    "_". Other characters like "=" will also be replaced.
+    """
+    return os.path.join(*[polite_filename(x) for x in components])
+
+
+@memoized
+def _polite_antipattern():
+    # A regex of all the characters we don't want in a filename
+    return re.compile(r"[^A-Za-z0-9_.-]")
+
+
+def polite_filename(filename: str) -> str:
+    """
+    Replace generally problematic filename characters with underscores.
+
+    This differs from sanitize_filename in that it is more aggressive in
+    changing characters in the name. For example it removes "=" which can
+    confuse path parsing in external tools.
+    """
+    # This character set applies for both Windows and Linux. It does not
+    # account for reserved filenames in Windows.
+    return _polite_antipattern().sub("_", filename)
 
 
 def getuid():
@@ -336,8 +368,7 @@ def filter_file(
 
     if string:
         regex = re.escape(regex)
-    filenames = path_to_os_path(*filenames)
-    for filename in filenames:
+    for filename in path_to_os_path(*filenames):
         msg = 'FILTER FILE: {0} [replacing "{1}"]'
         tty.debug(msg.format(filename, regex))
 

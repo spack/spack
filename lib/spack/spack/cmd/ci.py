@@ -579,7 +579,9 @@ def ci_rebuild(args):
             "SPACK_COLOR=always",
             "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
             "-j$(nproc)",
-            "install-deps/{}".format(job_spec.format("{name}-{version}-{hash}")),
+            "install-deps/{}".format(
+                ev.depfile.MakefileSpec(job_spec).safe_format("{name}-{version}-{hash}")
+            ),
         ],
         spack_cmd + ["install"] + root_install_args,
     ]

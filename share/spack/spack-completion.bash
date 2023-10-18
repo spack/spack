@@ -423,12 +423,21 @@ _spack_audit() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="configs packages-https packages list"
+        SPACK_COMPREPLY="configs externals packages-https packages list"
     fi
 }
 
 _spack_audit_configs() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_audit_externals() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --list"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_audit_packages_https() {
@@ -1007,7 +1016,7 @@ _spack_env() {
 _spack_env_activate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh -v --with-view -V --without-view -p --prompt --temp -d --dir"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --with-view -v --without-view -V -p --prompt --temp -d --dir"
     else
         _environments
     fi

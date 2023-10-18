@@ -32,9 +32,7 @@ class PyJupyterServer(PythonPackage):
     depends_on("py-hatch-jupyter-builder@0.8.1:", when="@2:", type="build")
 
     with when("@:1"):
-        # TODO: replace this after concretizer learns how to concretize separate build deps
-        depends_on("py-jupyter-packaging11", when="@1.6.2:", type="build")
-        # depends_on('py-jupyter-packaging@0.9:0', when='@1.6.2:', type='build')
+        depends_on("py-jupyter-packaging@0.9:0", when="@1.6.2:", type="build")
         depends_on("py-pre-commit", when="@1.16:", type="build")
         depends_on("py-setuptools", type="build")
 

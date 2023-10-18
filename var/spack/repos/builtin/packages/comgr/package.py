@@ -21,6 +21,8 @@ class Comgr(CMakePackage):
     libraries = ["libamd_comgr"]
 
     version("master", branch="amd-stg-open")
+    version("5.6.1", sha256="0a85d84619f98be26ca7a32c71f94ed3c4e9866133789eabb451be64ce739300")
+    version("5.6.0", sha256="9396a7238b547ee68146c669b10b9d5de8f1d76527c649133c75d8076a185a72")
     version("5.5.1", sha256="0fbb15fe5a95c2e141ccd360bc413e1feda283334781540a6e5095ab27fd8019")
     version("5.5.0", sha256="97dfff03226ce0902b9d5d1c8c7bebb7a15978a81b6e9c750bf2d2473890bd42")
     version("5.4.3", sha256="8af18035550977fe0aa9cca8dfacbe65fe292e971de5a0e160710bafda05a81f")
@@ -142,6 +144,8 @@ class Comgr(CMakePackage):
         "5.4.3",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
+        "5.6.1",
         "master",
     ]:
         # llvm libs are linked statically, so this *could* be a build dep
@@ -153,7 +157,7 @@ class Comgr(CMakePackage):
             "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
 
-    for ver in ["5.5.0", "5.5.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     root_cmakelists_dir = join_path("lib", "comgr")

@@ -35,6 +35,7 @@ import llnl.url
 import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.string import comma_and, quote
 from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, temp_rename, working_dir
 from llnl.util.symlink import symlink
 
@@ -49,7 +50,6 @@ import spack.version
 import spack.version.git_ref_lookup
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, which
-from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
@@ -734,7 +734,11 @@ class GitFetchStrategy(VCSFetchStrategy):
     @property
     def git(self):
         if not self._git:
-            self._git = spack.util.git.git()
+            try:
+                self._git = spack.util.git.git(required=True)
+            except CommandNotFoundError as exc:
+                tty.error(str(exc))
+                raise
 
             # Disable advice for a quieter fetch
             # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt

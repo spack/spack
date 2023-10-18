@@ -181,3 +181,15 @@ def test_repository_construction_doesnt_use_globals(nullify_globals, repo_paths,
     repo_path = spack.repo.RepoPath(*repo_paths)
     assert len(repo_path.repos) == len(namespaces)
     assert [x.namespace for x in repo_path.repos] == namespaces
+
+
+@pytest.mark.parametrize("method_name", ["dirname_for_package_name", "filename_for_package_name"])
+def test_path_computation_with_names(method_name, mock_repo_path):
+    """Tests that repositories can compute the correct paths when using both fully qualified
+    names and unqualified names.
+    """
+    repo_path = spack.repo.RepoPath(mock_repo_path)
+    method = getattr(repo_path, method_name)
+    unqualified = method("mpileaks")
+    qualified = method("builtin.mock.mpileaks")
+    assert qualified == unqualified
