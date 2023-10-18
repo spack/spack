@@ -20,7 +20,7 @@ class PyPydataSphinxTheme(PythonPackage):
 
     depends_on("py-sphinx@5:", type=("build", "run"))
     depends_on("py-beautifulsoup4", type=("build", "run"))
-    depends_on("py-docutils@:0.16.999,0.17.1:", type=("build", "run"))
+    depends_on("py-docutils@:0.16,0.17.1:", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-babel", type=("build", "run"))
     depends_on("py-pygments@2.7:", type=("build", "run"))

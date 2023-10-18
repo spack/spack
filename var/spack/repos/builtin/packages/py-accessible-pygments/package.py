@@ -16,3 +16,4 @@ class PyAccessiblePygments(PythonPackage):
     version("0.0.4", sha256="e7b57a9b15958e9601c7e9eb07a440c813283545a20973f2574a5f453d0e953e")
 
     depends_on("py-pygments@1.5:", type=("build", "run"))
+    depends_on("py-setuptools", type=("build"))
