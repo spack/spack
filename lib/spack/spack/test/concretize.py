@@ -1170,7 +1170,7 @@ class TestConcretize:
     )
     @pytest.mark.parametrize("mock_db", [True, False])
     def test_reuse_does_not_overwrite_dev_specs(
-        self, dev_first, spec, mock_db, tmpdir, monkeypatch
+        self, dev_first, spec, mock_db, tmpdir, temporary_store, monkeypatch
     ):
         """Test that reuse does not mix dev specs with non-dev specs.
 
@@ -1182,8 +1182,7 @@ class TestConcretize:
         # dev and non-dev specs that are otherwise identical
         spec = Spec(spec)
         dev_spec = spec.copy()
-        dev_constraint = "dev_path=%s" % tmpdir.strpath
-        dev_spec["dev-build-test-install"].constrain(dev_constraint)
+        dev_spec["dev-build-test-install"].constrain(f"dev_path={tmpdir.strpath}")
 
         # run the test in both orders
         first_spec = dev_spec if dev_first else spec
@@ -1196,7 +1195,7 @@ class TestConcretize:
             return [first_spec]
 
         if mock_db:
-            monkeypatch.setattr(spack.store.STORE.db, "query", mock_fn)
+            temporary_store.db.add(first_spec, None)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
