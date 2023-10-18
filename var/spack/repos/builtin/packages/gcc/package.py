@@ -1002,6 +1002,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # run configure/make/make(install) for the amdgcn-amdhsa target
     # before running the host compiler phases
+    # See https://gcc.gnu.org/wiki/Offloading#For_AMD_GCN:
     @run_before("configure")
     def amdgcn_install(self):
         spec = self.spec
@@ -1018,18 +1019,16 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         options += [f"--prefix={prefix}"]
 
         # Copy LLVM utils
-        # See https://gcc.gnu.org/install/specific.html#amdgcn-x-amdhsa
         llvm_bin_path = join_path(spec["llvm"].prefix, "bin")
         llvm_util_path = join_path(prefix, "amdgcn-amdhsa", "bin")
         mkdirp(llvm_util_path)
-        mkdirp(join_path(prefix, "bin"))
         copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
-            "{0}".format(join_path(prefix, "bin", "amdgcn-amdhsa-ar")),
+            "{0}".format(join_path(llvm_util_path, "ar")),
         )
         copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
-            "{0}".format(join_path(prefix, "bin", "amdgcn-amdhsa-ranlib")),
+            "{0}".format(join_path(llvm_util_path, "ranlib")),
         )
         copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-mc")),
@@ -1057,7 +1056,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 "--with-build-time-tools={0}".format(llvm_util_path),
                 "--enable-as-accelerator-for={0}".format(targetguess),
                 "--disable-sjlj-exceptions",
-                "--enable-newlib-io-long-long",
                 "--disable-libquadmath",
             ]
 
@@ -1065,6 +1063,19 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             configure(*options)
             make()
             make("install")
+
+    # Symlink amdgcn-amdhsa-ar and amdgcn-amdhsa-ranlib
+    # See https://gcc.gnu.org/install/specific.html#amdgcn-x-amdhsa
+    @run_after("install")
+    def link_amdgcn(self):
+        spec = self.spec
+        if not spec.satisfies("+amdgcn"):
+            return
+
+        prefix = self.prefix
+        llvm_util_path = join_path(prefix, "amdgcn-amdhsa", "bin")
+        symlink(join_path(llvm_util_path, "ar"), join_path(prefix, "bin", "amdgcn-amdhsa-ar"))
+        symlink(join_path(llvm_util_path, "ranlib"), join_path(prefix, "bin", "amdgcn-amdhsa-ranlib"))
 
     @property
     def build_targets(self):
