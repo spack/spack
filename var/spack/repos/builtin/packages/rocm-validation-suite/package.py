@@ -183,9 +183,13 @@ class RocmValidationSuite(CMakePackage):
             filter_file(
                 "@ROCM_PATH@/rvs", self.spec.prefix.rvs, "rvs/conf/deviceid.sh.in", string=True
             )
-        elif "@5.2.0:" in self.spec:
+        elif "@5.2.0:5.4" in self.spec:
             filter_file(
                 "@ROCM_PATH@/bin", self.spec.prefix.bin, "rvs/conf/deviceid.sh.in", string=True
+            )
+        elif "@5.5:" in self.spec:
+            filter_file(
+                "@ROCM_PATH@/rvs", self.spec.prefix.rvs, "rvs/conf/deviceid.sh.in", string=True
             )
 
     def cmake_args(self):
