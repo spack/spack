@@ -1690,7 +1690,9 @@ class Environment:
                 "Loading the environment view will require reconcretization." % self.name
             )
 
-    def _env_modifications_for_view(self, view: ViewDescriptor, reverse: bool = False) -> spack.util.environment.EnvironmentModifications:
+    def _env_modifications_for_view(
+        self, view: ViewDescriptor, reverse: bool = False
+    ) -> spack.util.environment.EnvironmentModifications:
         try:
             mods = uenv.environment_modifications_for_specs(*self.concrete_roots(), view=view)
         except Exception as e:
