@@ -1015,26 +1015,20 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         targetguess = guess(output=str).rstrip("\n")
 
         options = getattr(self, "configure_flag_args", [])
-        options += ["--prefix={0}".format(prefix)]
-
-        # TODO: adapt this for --with-gcc-major-version-only configure option
-        gcc_base_ver_file = "./gcc/BASE-VER"
-        with open(gcc_base_ver_file, "r") as f:
-            gcc_base_ver = f.read().strip("\n")
+        options += [f"--prefix={prefix}"]
 
         # Copy LLVM utils
+        # See https://gcc.gnu.org/install/specific.html#amdgcn-x-amdhsa
         llvm_bin_path = join_path(spec["llvm"].prefix, "bin")
-        llvm_util_path = join_path(
-            prefix, "libexec", "gcc", targetguess, gcc_base_ver, "accel", "amdgcn-amdhsa"
-        )
+        llvm_util_path = join_path(prefix, "amdgcn-amdhsa", "bin")
         mkdirp(llvm_util_path)
         copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
-            "{0}".format(join_path(llvm_util_path, "ar")),
+            "{0}".format(join_path(prefix, "bin", "amdgcn-amdhsa-ar")),
         )
         copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
-            "{0}".format(join_path(llvm_util_path, "ranlib")),
+            "{0}".format(join_path(prefix, "bin", "amdgcn-amdhsa-ranlib")),
         )
         copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-mc")),
