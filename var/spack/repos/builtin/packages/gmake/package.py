@@ -9,7 +9,7 @@ import re
 from spack.package import *
 
 
-class Gmake(AutotoolsPackage, GNUMirrorPackage):
+class Gmake(Package, GNUMirrorPackage):
     """GNU Make is a tool which controls the generation of executables and
     other non-source files of a program from the program's source files."""
 
@@ -64,17 +64,17 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
         return match.group(1) if match else None
 
     def configure_args(self):
-        args = []
-        args.extend(self.with_or_without("guile"))
-        args.append("--disable-nls")
-        return args
-
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            Executable(os.path.join(self.stage.source_path, "build.sh"))()
+        return [
+            "--with-guile" if self.spec.satisfies("+guile") else "--without-guile",
+            "--disable-nls",
+        ]
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
+        configure = Executable(join_path(self.stage.source_path, "configure"))
+        build_sh = Executable(join_path(self.stage.source_path, "build.sh"))
+        with working_dir(self.build_directory, create=True):
+            configure(f"--prefix={prefix}", *self.configure_args())
+            build_sh()
             os.mkdir(prefix.bin)
             install("make", prefix.bin)
             os.symlink("make", prefix.bin.gmake)

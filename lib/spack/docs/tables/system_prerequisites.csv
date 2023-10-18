@@ -1,7 +1,6 @@
 Name, Supported Versions, Notes, Requirement Reason
 Python, 3.6--3.12, , Interpreter for Spack
 C/C++ Compilers, , , Building software
-make, , , Build software
 patch, , , Build software
 tar, , , Extract/create archives
 gzip, , , Compress/Decompress archives
