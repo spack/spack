@@ -1156,7 +1156,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         tty.info("Wrote new spec file to {0}".format(specs_file))
 
         # Do the same thing for offload-enabled builds
-        if self.spec.satisfies("+amdgcn") or self.spec.satisfies("+amdgcn"):
+        if self.spec.satisfies("+nvptx") or self.spec.satisfies("+amdgcn"):
             libgomp_dir = ""
             for dir in ["lib", "lib64"]:
                 libdir = join_path(self.prefix, dir)
