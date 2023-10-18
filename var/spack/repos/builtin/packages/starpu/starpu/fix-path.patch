@@ -1,0 +1,53 @@
+diff --git a/configure.ac b/configure.ac
+index 9c9f589..40d70a2 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -2172,7 +2172,7 @@ AC_SUBST(STARPU_USE_OPENCL, $enable_opencl)
+ AM_CONDITIONAL(STARPU_USE_OPENCL, test x$enable_opencl = xyes)
+ if test x$enable_opencl = xyes ; then
+ 	AC_DEFINE(STARPU_USE_OPENCL, [1], [OpenCL support is activated])
+-	STARPU_OPENCL_CPPFLAGS="${STARPU_OPENCL_CPPFLAGS} -DSTARPU_OPENCL_DATADIR=${datarootdir}/starpu/opencl -DCL_USE_DEPRECATED_OPENCL_1_1_APIS"
++	STARPU_OPENCL_CPPFLAGS="${STARPU_OPENCL_CPPFLAGS} -DSTARPU_OPENCL_DATADIR=\"\\\"${datarootdir}/starpu/opencl\\\"\" -DCL_USE_DEPRECATED_OPENCL_1_1_APIS"
+         AC_SUBST(STARPU_OPENCL_DATAdir, "$(eval echo ${datarootdir}/starpu/opencl/examples)")
+         AC_SUBST(STARPU_OPENCL_CPPFLAGS)
+         AC_SUBST(STARPU_OPENCL_LDFLAGS)
+@@ -4212,7 +4212,7 @@ if test x$enable_openmp = xyes -a \( x$enable_cuda0 = xyes -o x$enable_cuda1 = x
+ fi
+ 
+ 
+-CPPFLAGS="$CPPFLAGS -DSTARPU_SAMPLING_DIR=${datarootdir}/starpu/perfmodels/sampling"
++CPPFLAGS="$CPPFLAGS -DSTARPU_SAMPLING_DIR=\"\\\"${datarootdir}/starpu/perfmodels/sampling\\\"\""
+ STARPU_BASIC_H_CPPFLAGS="$HWLOC_CFLAGS $STARPU_CUDA_CPPFLAGS $STARPU_HIP_CPPFLAGS $STARPU_OPENCL_CPPFLAGS $STARPU_MAX_FPGA_CPPFLAGS $SIMGRID_CFLAGS $PAPI_CFLAGS"
+ 
+ # these are the flags needed to compile starpu.h
+diff --git a/src/core/perfmodel/perfmodel.c b/src/core/perfmodel/perfmodel.c
+index 8a33123..2083ea7 100644
+--- a/src/core/perfmodel/perfmodel.c
++++ b/src/core/perfmodel/perfmodel.c
+@@ -791,7 +791,7 @@ void _starpu_set_perf_model_dirs()
+ 		}
+ 	}
+ 
+-	_perf_model_add_dir(_STARPU_STRINGIFY(STARPU_SAMPLING_DIR), 1, "by installation directory");
++	_perf_model_add_dir(STARPU_SAMPLING_DIR, 1, "by installation directory");
+ }
+ 
+ int _starpu_set_default_perf_model_bus()
+diff --git a/src/drivers/opencl/driver_opencl_utils.c b/src/drivers/opencl/driver_opencl_utils.c
+index 0057904..dff5d64 100644
+--- a/src/drivers/opencl/driver_opencl_utils.c
++++ b/src/drivers/opencl/driver_opencl_utils.c
+@@ -79,8 +79,8 @@ int _starpu_opencl_locate_file(const char *source_file_name, char **located_file
+ 
+ 	if (ret == EXIT_FAILURE)
+ 	{
+-		_STARPU_CALLOC(*located_file_name, 1, strlen(_STARPU_STRINGIFY(STARPU_OPENCL_DATADIR))+1+strlen(source_file_name)+1);
+-		snprintf(*located_file_name, strlen(_STARPU_STRINGIFY(STARPU_OPENCL_DATADIR))+1+strlen(source_file_name)+1, "%s/%s", _STARPU_STRINGIFY(STARPU_OPENCL_DATADIR), source_file_name);
++		_STARPU_CALLOC(*located_file_name, 1, strlen(STARPU_OPENCL_DATADIR)+1+strlen(source_file_name)+1);
++		snprintf(*located_file_name, strlen(STARPU_OPENCL_DATADIR)+1+strlen(source_file_name)+1, "%s/%s", STARPU_OPENCL_DATADIR, source_file_name);
+ 		_STARPU_DEBUG("Trying to locate <%s>\n", *located_file_name);
+ 		if (access(*located_file_name, R_OK) == 0)
+ 			ret = EXIT_SUCCESS;
+-- 
+2.42.0
+
