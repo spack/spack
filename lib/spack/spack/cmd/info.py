@@ -72,6 +72,10 @@ def variant(s):
     return spack.spec.ENABLED_VARIANT_COLOR + s + plain_format
 
 
+def license(s):
+    return spack.spec.VERSION_COLOR + s + plain_format
+
+
 class VariantFormatter:
     def __init__(self, variants):
         self.variants = variants
@@ -348,6 +352,22 @@ def print_virtuals(pkg):
         color.cprint("    None")
 
 
+def print_licenses(pkg):
+    """Output the licenses of the project."""
+
+    color.cprint("")
+    color.cprint(section_title("Licenses: "))
+
+    if len(pkg.licenses) == 0:
+        color.cprint("    None")
+    else:
+        pad = padder(pkg.licenses, 4)
+        for when_spec in pkg.licenses:
+            license_identifier = pkg.licenses[when_spec]
+            line = license("    {0}".format(pad(license_identifier))) + color.cescape(when_spec)
+            color.cprint(line)
+
+
 def info(parser, args):
     spec = spack.spec.Spec(args.package)
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
@@ -377,6 +397,7 @@ def info(parser, args):
         (args.all or not args.no_dependencies, print_dependencies),
         (args.all or args.virtuals, print_virtuals),
         (args.all or args.tests, print_tests),
+        (args.all or True, print_licenses),
     ]
     for print_it, func in sections:
         if print_it:

@@ -6799,3 +6799,30 @@ To achieve backward compatibility with the single-class format Spack creates in 
 Overall the role of the adapter is to route access to attributes of methods first through the ``*Package``
 hierarchy, and then back to the base class builder. This is schematically shown in the diagram above, where
 the adapter role is to "emulate" a method resolution order like the one represented by the red arrows.
+
+------------------------------
+Specifying License Information
+------------------------------
+
+A significant portion of software that Spack packages is open source. Most open
+source software is released under one or more common open source licenses.
+Specifying the specific license that a package is released under in a project's
+`package.py` is good practice. To specify a license, find the SPDX identifier for
+a project and then add it using the license directive:
+
+.. code-block:: python
+
+   license("<SPDX Identifier HERE>")
+
+Note that specifying a license without a when clause makes it apply to all
+versions and variants of the package, which might not actually be the case.
+For example, a project might have switched licenses at some point or have
+certain build configurations that include files that are licensed differently.
+To account for this, you can specify when licenses should be applied. For
+example, to specify that a specific license identifier should only apply
+to versionup to and including 1.5, you could write the following directive:
+
+.. code-block:: python
+
+   license("...", when="@:1.5")
+
