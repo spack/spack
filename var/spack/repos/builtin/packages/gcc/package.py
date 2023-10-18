@@ -1075,7 +1075,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         prefix = self.prefix
         llvm_util_path = join_path(prefix, "amdgcn-amdhsa", "bin")
         symlink(join_path(llvm_util_path, "ar"), join_path(prefix, "bin", "amdgcn-amdhsa-ar"))
-        symlink(join_path(llvm_util_path, "ranlib"), join_path(prefix, "bin", "amdgcn-amdhsa-ranlib"))
+        symlink(
+            join_path(llvm_util_path, "ranlib"), join_path(prefix, "bin", "amdgcn-amdhsa-ranlib")
+        )
 
     @property
     def build_targets(self):
