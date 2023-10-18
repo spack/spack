@@ -32,3 +32,5 @@ class PyMorphio(PythonPackage):
         depends_on("hdf5", type=("build", "run"))
     depends_on("highfive", type=("build", "run"))
     depends_on("py-pybind11", type=("build", "run"))
+    # mpi is an indirect dependency, but the build fails if we don't specify it explicitly
+    depends_on("mpi", type=("build", "run"))
