@@ -155,7 +155,7 @@ class Concretizer:
             ),
         )
 
-    def choose_virtual_or_external(self, spec):
+    def choose_virtual_or_external(self, spec: spack.spec.Spec):
         """Given a list of candidate virtual and external packages, try to
         find one that is most ABI compatible.
         """
