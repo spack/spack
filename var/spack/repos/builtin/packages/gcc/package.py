@@ -1022,6 +1022,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         llvm_bin_path = join_path(spec["llvm"].prefix, "bin")
         llvm_util_path = join_path(prefix, "amdgcn-amdhsa", "bin")
         mkdirp(llvm_util_path)
+        mkdirp(join_path(prefix, "bin"))
         copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
             "{0}".format(join_path(prefix, "bin", "amdgcn-amdhsa-ar")),
