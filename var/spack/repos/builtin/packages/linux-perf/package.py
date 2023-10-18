@@ -29,6 +29,14 @@ class LinuxPerf(Package):
     variant("babeltrace", default=True, description="libbabeltrace support for CTF data format")
     variant("libcap", default=True, description="process capabilities considered by perf")
     variant("numactl", default=True, description="numa perf benchmark")
+    variant(
+        "libaudit",
+        default=False,
+        description=(
+            "get perf-trace syscall table from libaudit at runtime,"
+            " rather than unistd.h at buildtime"
+        ),
+    )
     variant("debuginfod", default=False, description="support debuginfod")
     variant(
         "zstd",
@@ -65,6 +73,7 @@ class LinuxPerf(Package):
     depends_on("libpfm4", when="+libpfm4")
     depends_on("babeltrace@1.5:", when="+babeltrace")
     depends_on("libcap", when="+libcap")
+    # depends_on("libaudit", when="+libaudit")
     depends_on("numactl", when="+numactl")
     depends_on("zstd", when="+zstd")
     depends_on("xz", when="+xz")
@@ -96,7 +105,6 @@ class LinuxPerf(Package):
     def install(self, spec, prefix):
         # TODO:
         # - GTK2=
-        # - NO_LIBAUDIT=1 when NO_SYSCALL_TABLE=1 ?
         # - NO_LIBBPF=1
         # - d3 flamegraph as resource for libexec/perf-core/scripts/python/flamegraph.py
         # - elfutils could be replaced by libelf ? (NO_LIBELF NO_LIBDWARF NO_LIBUNWIND etc.)
@@ -117,6 +125,13 @@ class LinuxPerf(Package):
 
         if version >= Version("6.4"):
             args.append("BUILD_NONDISTRO=1")
+
+        if "+libaudit" in spec:
+            checks.add("libaudit")
+            args.append("NO_SYSCALL_TABLE=1")  # will look for libaudit
+        else:
+            checks.add("syscall_table")
+            args.append("NO_LIBAUDIT=1")
 
         if "+debuginfod" in spec:
             pass
