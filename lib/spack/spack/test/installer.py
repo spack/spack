@@ -719,13 +719,12 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
     installer = create_installer(const_arg)
     request = installer.build_requests[0]
 
-    # Mock the known dependent, b, as external so assumed to be installed
+    # Mock the dependencies as external so assumed to be installed
     monkeypatch.setattr(spack.spec.Spec, "external", True)
     installer._check_deps_status(request)
 
-    # exotic architectures will add dependencies on gnuconfig, which we want to ignore
-    installed = [x for x in installer.installed if not x.startswith("gnuconfig")]
-    assert installed[0].startswith("b")
+    for dep in request.spec.traverse(root=False):
+        assert inst.package_id(dep.package) in installer.installed
 
 
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
@@ -733,13 +732,12 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     installer = create_installer(const_arg)
     request = installer.build_requests[0]
 
-    # Mock the known dependent, b, as installed upstream
+    # Mock the known dependencies as installed upstream
     monkeypatch.setattr(spack.spec.Spec, "installed_upstream", True)
     installer._check_deps_status(request)
 
-    # exotic architectures will add dependencies on gnuconfig, which we want to ignore
-    installed = [x for x in installer.installed if not x.startswith("gnuconfig")]
-    assert installed[0].startswith("b")
+    for dep in request.spec.traverse(root=False):
+        assert inst.package_id(dep.package) in installer.installed
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
