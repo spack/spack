@@ -18,7 +18,6 @@ try:
     _use_uuid = True
 except ImportError:
     _use_uuid = False
-    pass
 
 import jsonschema
 
@@ -807,22 +806,22 @@ def test_query_spec_with_non_conditional_virtual_dependency(database):
 def test_failed_spec_path_error(database):
     """Ensure spec not concrete check is covered."""
     s = spack.spec.Spec("a")
-    with pytest.raises(ValueError, match="Concrete spec required"):
-        spack.store.STORE.db._failed_spec_path(s)
+    with pytest.raises(AssertionError, match="concrete spec required"):
+        spack.store.STORE.failure_tracker.mark(s)
 
 
 @pytest.mark.db
 def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
     """Add test coverage for clear_failure operation when to be retained."""
 
-    def _is(db, spec):
+    def _is(self, spec):
         return True
 
     # Pretend the spec has been failure locked
-    monkeypatch.setattr(spack.database.Database, "prefix_failure_locked", _is)
+    monkeypatch.setattr(spack.database.FailureTracker, "lock_taken", _is)
 
-    s = spack.spec.Spec("a")
-    spack.store.STORE.db.clear_failure(s)
+    s = spack.spec.Spec("a").concretized()
+    spack.store.STORE.failure_tracker.clear(s)
     out = capfd.readouterr()[0]
     assert "Retaining failure marking" in out
 
@@ -831,16 +830,16 @@ def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
 def test_clear_failure_forced(default_mock_concretization, mutable_database, monkeypatch, capfd):
     """Add test coverage for clear_failure operation when force."""
 
-    def _is(db, spec):
+    def _is(self, spec):
         return True
 
     # Pretend the spec has been failure locked
-    monkeypatch.setattr(spack.database.Database, "prefix_failure_locked", _is)
+    monkeypatch.setattr(spack.database.FailureTracker, "lock_taken", _is)
     # Ensure raise OSError when try to remove the non-existent marking
-    monkeypatch.setattr(spack.database.Database, "prefix_failure_marked", _is)
+    monkeypatch.setattr(spack.database.FailureTracker, "persistent_mark", _is)
 
     s = default_mock_concretization("a")
-    spack.store.STORE.db.clear_failure(s, force=True)
+    spack.store.STORE.failure_tracker.clear(s, force=True)
     out = capfd.readouterr()[1]
     assert "Removing failure marking despite lock" in out
     assert "Unable to remove failure marking" in out
@@ -858,55 +857,34 @@ def test_mark_failed(default_mock_concretization, mutable_database, monkeypatch,
 
     with tmpdir.as_cwd():
         s = default_mock_concretization("a")
-        spack.store.STORE.db.mark_failed(s)
+        spack.store.STORE.failure_tracker.mark(s)
 
         out = str(capsys.readouterr()[1])
         assert "Unable to mark a as failed" in out
 
-        # Clean up the failure mark to ensure it does not interfere with other
-        # tests using the same spec.
-        del spack.store.STORE.db._prefix_failures[s.prefix]
+    spack.store.STORE.failure_tracker.clear_all()
 
 
 @pytest.mark.db
 def test_prefix_failed(default_mock_concretization, mutable_database, monkeypatch):
-    """Add coverage to prefix_failed operation."""
-
-    def _is(db, spec):
-        return True
+    """Add coverage to failed operation."""
 
     s = default_mock_concretization("a")
 
     # Confirm the spec is not already marked as failed
-    assert not spack.store.STORE.db.prefix_failed(s)
+    assert not spack.store.STORE.failure_tracker.has_failed(s)
 
     # Check that a failure entry is sufficient
-    spack.store.STORE.db._prefix_failures[s.prefix] = None
-    assert spack.store.STORE.db.prefix_failed(s)
+    spack.store.STORE.failure_tracker.mark(s)
+    assert spack.store.STORE.failure_tracker.has_failed(s)
 
     # Remove the entry and check again
-    del spack.store.STORE.db._prefix_failures[s.prefix]
-    assert not spack.store.STORE.db.prefix_failed(s)
+    spack.store.STORE.failure_tracker.clear(s)
+    assert not spack.store.STORE.failure_tracker.has_failed(s)
 
     # Now pretend that the prefix failure is locked
-    monkeypatch.setattr(spack.database.Database, "prefix_failure_locked", _is)
-    assert spack.store.STORE.db.prefix_failed(s)
-
-
-def test_prefix_read_lock_error(default_mock_concretization, mutable_database, monkeypatch):
-    """Cover the prefix read lock exception."""
-
-    def _raise(db, spec):
-        raise lk.LockError("Mock lock error")
-
-    s = default_mock_concretization("a")
-
-    # Ensure subsequent lock operations fail
-    monkeypatch.setattr(lk.Lock, "acquire_read", _raise)
-
-    with pytest.raises(Exception):
-        with spack.store.STORE.db.prefix_read_lock(s):
-            assert False
+    monkeypatch.setattr(spack.database.FailureTracker, "lock_taken", lambda self, spec: True)
+    assert spack.store.STORE.failure_tracker.has_failed(s)
 
 
 def test_prefix_write_lock_error(default_mock_concretization, mutable_database, monkeypatch):
@@ -921,7 +899,7 @@ def test_prefix_write_lock_error(default_mock_concretization, mutable_database, 
     monkeypatch.setattr(lk.Lock, "acquire_write", _raise)
 
     with pytest.raises(Exception):
-        with spack.store.STORE.db.prefix_write_lock(s):
+        with spack.store.STORE.prefix_locker.write_lock(s):
             assert False
 
 

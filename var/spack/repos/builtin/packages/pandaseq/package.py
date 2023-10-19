@@ -21,7 +21,7 @@ class Pandaseq(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type=("build", "link"))
     depends_on("m4", type="build")
-    depends_on("zlib", type="build")
+    depends_on("zlib-api", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("bzip2", type="link")
 

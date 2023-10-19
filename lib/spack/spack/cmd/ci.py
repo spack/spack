@@ -19,6 +19,7 @@ import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
 import spack.util.gpg as gpg_util
+import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 
@@ -253,6 +254,8 @@ def ci_rebuild(args):
     check a single spec against the remote mirror, and rebuild it from source if the mirror does
     not contain the hash
     """
+    rebuild_timer = timer.Timer()
+
     env = spack.cmd.require_active_env(cmd_name="ci rebuild")
 
     # Make sure the environment is "gitlab-enabled", or else there's nothing
@@ -288,6 +291,10 @@ def ci_rebuild(args):
     shared_pr_mirror_url = os.environ.get("SPACK_CI_SHARED_PR_MIRROR_URL")
     rebuild_everything = os.environ.get("SPACK_REBUILD_EVERYTHING")
     require_signing = os.environ.get("SPACK_REQUIRE_SIGNING")
+
+    # If signing key was provided via "SPACK_SIGNING_KEY", then try to import it.
+    if signing_key:
+        spack_ci.import_signing_key(signing_key)
 
     # Fail early if signing is required but we don't have a signing key
     sign_binaries = require_signing is not None and require_signing.lower() == "true"
@@ -417,11 +424,6 @@ def ci_rebuild(args):
             if os.path.isfile(src_file):
                 dst_file = os.path.join(repro_dir, file_name)
                 shutil.copyfile(src_file, dst_file)
-
-    # If signing key was provided via "SPACK_SIGNING_KEY", then try to
-    # import it.
-    if signing_key:
-        spack_ci.import_signing_key(signing_key)
 
     # Write this job's spec json into the reproduction directory, and it will
     # also be used in the generated "spack install" command to install the spec
@@ -577,7 +579,9 @@ def ci_rebuild(args):
             "SPACK_COLOR=always",
             "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
             "-j$(nproc)",
-            "install-deps/{}".format(job_spec.format("{name}-{version}-{hash}")),
+            "install-deps/{}".format(
+                ev.depfile.MakefileSpec(job_spec).safe_format("{name}-{version}-{hash}")
+            ),
         ],
         spack_cmd + ["install"] + root_install_args,
     ]
@@ -679,7 +683,7 @@ def ci_rebuild(args):
                 input_spec=job_spec,
                 buildcache_mirror_url=buildcache_mirror_url,
                 pipeline_mirror_url=pipeline_mirror_url,
-                sign_binaries=sign_binaries,
+                sign_binaries=spack_ci.can_sign_binaries(),
             ):
                 msg = tty.msg if result.success else tty.warn
                 msg(
@@ -736,6 +740,14 @@ If this project does not have public pipelines, you will need to first:
         )
 
         print(reproduce_msg)
+
+    rebuild_timer.stop()
+    try:
+        with open("install_timers.json", "w") as timelog:
+            extra_attributes = {"name": ".ci-rebuild"}
+            rebuild_timer.write_json(timelog, extra_attributes=extra_attributes)
+    except Exception as e:
+        tty.debug(str(e))
 
     # Tie job success/failure to the success/failure of building the spec
     return install_exit_code

@@ -39,7 +39,7 @@ class Graphicsmagick(AutotoolsPackage):
     depends_on("libtool")
     depends_on("libxml2")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def configure_args(self):
         args = ["--enable-shared"]

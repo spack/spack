@@ -19,6 +19,8 @@ import spack.binary_distribution
 import spack.compilers
 import spack.concretize
 import spack.config
+import spack.database
+import spack.deptypes as dt
 import spack.installer as inst
 import spack.package_base
 import spack.package_prefs as prefs
@@ -51,7 +53,6 @@ repo:
 
 def _noop(*args, **kwargs):
     """Generic monkeypatch no-op routine."""
-    pass
 
 
 def _none(*args, **kwargs):
@@ -364,7 +365,7 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
     """Test _ensure_locked when a non-lock exception is raised."""
     mock_err_msg = "Mock exception error"
 
-    def _raise(lock, timeout):
+    def _raise(lock, timeout=None):
         raise RuntimeError(mock_err_msg)
 
     const_arg = installer_args(["trivial-install-test-package"], {})
@@ -432,7 +433,7 @@ def test_ensure_locked_new_lock(install_mockery, tmpdir, lock_type, reads, write
 
 
 def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
-    orig_pl = spack.database.Database.prefix_lock
+    orig_pl = spack.database.SpecLocker.lock
 
     def _pl(db, spec, timeout):
         lock = orig_pl(db, spec, timeout)
@@ -444,7 +445,7 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
     installer = create_installer(const_arg)
     spec = installer.build_requests[0].pkg.spec
 
-    monkeypatch.setattr(spack.database.Database, "prefix_lock", _pl)
+    monkeypatch.setattr(spack.database.SpecLocker, "lock", _pl)
 
     lock_type = "read"
     ltype, lock = installer._ensure_locked(lock_type, spec.package)
@@ -457,7 +458,7 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
 
 def test_package_id_err(install_mockery):
     s = spack.spec.Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.path.get_pkg_class(s.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(s.name)
     with pytest.raises(ValueError, match="spec is not concretized"):
         inst.package_id(pkg_cls(s))
 
@@ -597,59 +598,50 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     assert "Couldn't copy in provenance for cmake" in out
 
 
-def test_clear_failures_success(install_mockery):
+def test_clear_failures_success(tmpdir):
     """Test the clear_failures happy path."""
+    failures = spack.database.FailureTracker(str(tmpdir), default_timeout=0.1)
+
+    spec = spack.spec.Spec("a")
+    spec._mark_concrete()
 
     # Set up a test prefix failure lock
-    lock = lk.Lock(
-        spack.store.STORE.db.prefix_fail_path, start=1, length=1, default_timeout=1e-9, desc="test"
-    )
-    try:
-        lock.acquire_write()
-    except lk.LockTimeoutError:
-        tty.warn("Failed to write lock the test install failure")
-    spack.store.STORE.db._prefix_failures["test"] = lock
-
-    # Set up a fake failure mark (or file)
-    fs.touch(os.path.join(spack.store.STORE.db._failure_dir, "test"))
+    failures.mark(spec)
+    assert failures.has_failed(spec)
 
     # Now clear failure tracking
-    inst.clear_failures()
+    failures.clear_all()
 
     # Ensure there are no cached failure locks or failure marks
-    assert len(spack.store.STORE.db._prefix_failures) == 0
-    assert len(os.listdir(spack.store.STORE.db._failure_dir)) == 0
+    assert len(failures.locker.locks) == 0
+    assert len(os.listdir(failures.dir)) == 0
 
     # Ensure the core directory and failure lock file still exist
-    assert os.path.isdir(spack.store.STORE.db._failure_dir)
+    assert os.path.isdir(failures.dir)
+
     # Locks on windows are a no-op
     if sys.platform != "win32":
-        assert os.path.isfile(spack.store.STORE.db.prefix_fail_path)
+        assert os.path.isfile(failures.locker.lock_path)
 
 
-def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
+@pytest.mark.xfail(sys.platform == "win32", reason="chmod does not prevent removal on Win")
+def test_clear_failures_errs(tmpdir, capsys):
     """Test the clear_failures exception paths."""
-    orig_fn = os.remove
-    err_msg = "Mock os remove"
+    failures = spack.database.FailureTracker(str(tmpdir), default_timeout=0.1)
+    spec = spack.spec.Spec("a")
+    spec._mark_concrete()
+    failures.mark(spec)
 
-    def _raise_except(path):
-        raise OSError(err_msg)
-
-    # Set up a fake failure mark (or file)
-    fs.touch(os.path.join(spack.store.STORE.db._failure_dir, "test"))
-
-    monkeypatch.setattr(os, "remove", _raise_except)
+    # Make the file marker not writeable, so that clearing_failures fails
+    failures.dir.chmod(0o000)
 
     # Clear failure tracking
-    inst.clear_failures()
+    failures.clear_all()
 
     # Ensure expected warning generated
     out = str(capsys.readouterr()[1])
     assert "Unable to remove failure" in out
-    assert err_msg in out
-
-    # Restore remove for teardown
-    monkeypatch.setattr(os, "remove", orig_fn)
+    failures.dir.chmod(0o750)
 
 
 def test_combine_phase_logs(tmpdir):
@@ -694,13 +686,17 @@ def test_combine_phase_logs_does_not_care_about_encoding(tmpdir):
         assert f.read() == data * 2
 
 
-def test_check_deps_status_install_failure(install_mockery, monkeypatch):
+def test_check_deps_status_install_failure(install_mockery):
+    """Tests that checking the dependency status on a request to install
+    'a' fails, if we mark the dependency as failed.
+    """
+    s = spack.spec.Spec("a").concretized()
+    for dep in s.traverse(root=False):
+        spack.store.STORE.failure_tracker.mark(dep)
+
     const_arg = installer_args(["a"], {})
     installer = create_installer(const_arg)
     request = installer.build_requests[0]
-
-    # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.database.Database, "prefix_failed", _true)
 
     with pytest.raises(inst.InstallError, match="install failure"):
         installer._check_deps_status(request)
@@ -723,13 +719,12 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
     installer = create_installer(const_arg)
     request = installer.build_requests[0]
 
-    # Mock the known dependent, b, as external so assumed to be installed
+    # Mock the dependencies as external so assumed to be installed
     monkeypatch.setattr(spack.spec.Spec, "external", True)
     installer._check_deps_status(request)
 
-    # exotic architectures will add dependencies on gnuconfig, which we want to ignore
-    installed = [x for x in installer.installed if not x.startswith("gnuconfig")]
-    assert installed[0].startswith("b")
+    for dep in request.spec.traverse(root=False):
+        assert inst.package_id(dep.package) in installer.installed
 
 
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
@@ -737,13 +732,12 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     installer = create_installer(const_arg)
     request = installer.build_requests[0]
 
-    # Mock the known dependent, b, as installed upstream
+    # Mock the known dependencies as installed upstream
     monkeypatch.setattr(spack.spec.Spec, "installed_upstream", True)
     installer._check_deps_status(request)
 
-    # exotic architectures will add dependencies on gnuconfig, which we want to ignore
-    installed = [x for x in installer.installed if not x.startswith("gnuconfig")]
-    assert installed[0].startswith("b")
+    for dep in request.spec.traverse(root=False):
+        assert inst.package_id(dep.package) in installer.installed
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
@@ -1006,7 +1000,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     installer = create_installer(const_arg)
 
     # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.database.Database, "prefix_failed", _true)
+    monkeypatch.setattr(spack.database.FailureTracker, "has_failed", _true)
 
     with pytest.raises(inst.InstallError, match="request failed"):
         installer.install()
@@ -1022,7 +1016,7 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     installer = create_installer(const_arg)
 
     # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.database.Database, "prefix_failed", _true)
+    monkeypatch.setattr(spack.database.FailureTracker, "has_failed", _true)
 
     with pytest.raises(inst.InstallError, match="request failed"):
         installer.install()
@@ -1121,7 +1115,7 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     #
     # This will prevent b from installing, which will cause the build of a
     # to be skipped.
-    monkeypatch.setattr(spack.database.Database, "prefix_failed", _true)
+    monkeypatch.setattr(spack.database.FailureTracker, "has_failed", _true)
 
     with pytest.raises(inst.InstallError, match="after first install failure"):
         installer.install()
@@ -1391,6 +1385,26 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     s.external_path = "/usr"
     create_installer([(s, explicit_args)]).install()
     assert spack.store.STORE.db.get_record(pkg).explicit == is_explicit
+
+
+def test_overwrite_install_does_install_build_deps(install_mockery, mock_fetch):
+    """When overwrite installing something from sources, build deps should be installed."""
+    s = spack.spec.Spec("dtrun3").concretized()
+    create_installer([(s, {})]).install()
+
+    # Verify there is a pure build dep
+    edge = s.edges_to_dependencies(name="dtbuild3").pop()
+    assert edge.depflag == dt.BUILD
+    build_dep = edge.spec
+
+    # Uninstall the build dep
+    build_dep.package.do_uninstall()
+
+    # Overwrite install the root dtrun3
+    create_installer([(s, {"overwrite": [s.dag_hash()]})]).install()
+
+    # Verify that the build dep was also installed.
+    assert build_dep.installed
 
 
 @pytest.mark.parametrize("run_tests", [True, False])

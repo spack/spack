@@ -15,7 +15,12 @@ class Ams(CMakePackage, CudaPackage):
     maintainers("koparasy", "lpottier")
 
     version("develop", branch="develop", submodules=False)
-    version("07.25.23-alpha", tag="07.25.23-alpha", submodules=False)
+    version(
+        "07.25.23-alpha",
+        tag="07.25.23-alpha",
+        commit="3aa8421f1f1ce1ae448d017214c602b9def19c90",
+        submodules=False,
+    )
 
     variant(
         "faiss",

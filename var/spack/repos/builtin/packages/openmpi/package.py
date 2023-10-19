@@ -42,10 +42,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # Current
     version(
-        "4.1.5", sha256="a640986bc257389dd379886fdae6264c8cfa56bc98b71ce3ae3dfbd8ce61dbe3"
-    )  # libmpi.so.40.30.5
+        "4.1.6", sha256="f740994485516deb63b5311af122c265179f5328a0d857a567b85db00b11e415"
+    )  # libmpi.so.40.30.6
 
     # Still supported
+    version(
+        "4.1.5", sha256="a640986bc257389dd379886fdae6264c8cfa56bc98b71ce3ae3dfbd8ce61dbe3"
+    )  # libmpi.so.40.30.5
     version(
         "4.1.4", sha256="92912e175fd1234368c8730c03f4996fe5942e7479bb1d10059405e7f2b3930d"
     )  # libmpi.so.40.30.4
@@ -523,7 +526,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on("hwloc +cuda", when="+cuda ~internal-hwloc")
     depends_on("java", when="+java")
     depends_on("sqlite", when="+sqlite3")
-    depends_on("zlib", when="@3:")
+    depends_on("zlib-api", when="@3:")
     depends_on("valgrind~mpi", when="+memchecker")
     # Singularity release 3 works better
     depends_on("singularity@3:", when="+singularity")
@@ -897,7 +900,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
         # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+        if (self.compiler.f77 is None) and (self.compiler.fc is None):
             raise InstallError("OpenMPI requires both C and Fortran compilers!")
 
     @when("@main")
@@ -961,7 +964,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(["--enable-debug"])
 
         # Package dependencies
-        for dep in ["libevent", "lustre", "singularity", "valgrind", "zlib"]:
+        for dep in ["libevent", "lustre", "singularity", "valgrind"]:
             if "^" + dep in spec:
                 config_args.append("--with-{0}={1}".format(dep, spec[dep].prefix))
 
@@ -970,6 +973,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.append("--with-pmix=internal")
         elif "^pmix" in spec:
             config_args.append("--with-pmix={0}".format(spec["pmix"].prefix))
+
+        if "^zlib-api" in spec:
+            config_args.append("--with-zlib={0}".format(spec["zlib-api"].prefix))
 
         # Hwloc support
         if spec.satisfies("+internal-hwloc"):

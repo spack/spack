@@ -33,7 +33,7 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
 
     extendable = True
 
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     configure_directory = "unix"
 

@@ -7,7 +7,6 @@ import filecmp
 import json
 import os
 import shutil
-import sys
 
 import jsonschema
 import pytest
@@ -41,10 +40,7 @@ install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
 
-pytestmark = [
-    pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
-    pytest.mark.maybeslow,
-]
+pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.maybeslow]
 
 
 @pytest.fixture()
@@ -1084,14 +1080,17 @@ def test_push_mirror_contents(
 
     ci.import_signing_key(_signing_key())
 
-    spack_yaml_contents = """
+    with tmpdir.as_cwd():
+        with open("spack.yaml", "w") as f:
+            f.write(
+                f"""\
 spack:
  definitions:
    - packages: [patchelf]
  specs:
    - $packages
  mirrors:
-   test-mirror: {0}
+   test-mirror: {mirror_url}
  ci:
    enable-artifacts-buildcache: True
    pipeline-gen:
@@ -1111,15 +1110,8 @@ spack:
          - nonbuildtag
        image: basicimage
        custom_attribute: custom!
-""".format(
-        mirror_url
-    )
-
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(spack_yaml_contents)
-
-    with tmpdir.as_cwd():
+"""
+            )
         env_cmd("create", "test", "./spack.yaml")
         with ev.read("test"):
             concrete_spec = Spec("patchelf").concretized()
@@ -1130,7 +1122,8 @@ spack:
 
             install_cmd("--add", "--keep-stage", json_path)
 
-            ci.push_mirror_contents(concrete_spec, mirror_url, True)
+            for s in concrete_spec.traverse():
+                ci.push_mirror_contents(s, mirror_url, True)
 
             buildcache_path = os.path.join(mirror_dir.strpath, "build_cache")
 
@@ -1994,8 +1987,7 @@ spack:
 
             ci_cmd("generate", "--output-file", pipeline_path, "--artifacts-root", artifacts_root)
 
-            target_name = spack.platforms.test.Test.default
-            job_name = ci.get_job_name(job_spec, "test-debian6-%s" % target_name, None)
+            job_name = ci.get_job_name(job_spec)
 
             repro_file = os.path.join(working_dir.strpath, "repro.json")
             repro_details = {

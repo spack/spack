@@ -17,7 +17,7 @@ class Libfms(CMakePackage):
     maintainers("v-dobrev", "tzanio", "cwsmith")
 
     version("develop", branch="master")
-    version("0.2.0", tag="v0.2")
+    version("0.2.0", tag="v0.2", commit="a66cb96711cc404c411f1bf07ca8db09b6f894eb")
 
     variant("conduit", default=True, description="Build with Conduit I/O support")
     variant("shared", default=True, description="Build shared libraries")

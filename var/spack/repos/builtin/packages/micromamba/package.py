@@ -110,7 +110,7 @@ class Micromamba(CMakePackage):
             depends_on("bzip2", type="link")
             depends_on("lz4", type="link")
             depends_on("zstd", type="link")
-            depends_on("zlib", type="link")
+            depends_on("zlib-api", type="link")
             depends_on("xz libs=static", type="link")
             depends_on("lzo", type="link")
             depends_on("libsolv+conda~shared", type="link")

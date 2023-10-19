@@ -16,9 +16,9 @@ class Freesasa(AutotoolsPackage):
 
     version("2.1.2", sha256="a031c4eb8cd59e802d715a37ef72930ec2d90ec53dfcf1bea0b0255980490fd5")
 
-    variant("json", default=True)
-    variant("xml", default=True)
-    variant("threads", default=True)
+    variant("json", default=True, description="Build with support for JSON output")
+    variant("xml", default=True, description="Build with support for XML output")
+    variant("threads", default=True, description="Build with support for multiple threads")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

@@ -14,6 +14,7 @@ class Bfs(MakefilePackage):
 
     maintainers("alecbcs")
 
+    version("3.0.2", sha256="d3456a9aeecc031064db0dbe012e55a11eb97be88d0ab33a90e570fe66457f92")
     version("3.0.1", sha256="a38bb704201ed29f4e0b989fb2ab3791ca51c3eff90acfc31fff424579bbf962")
 
     depends_on("acl", when="platform=linux")

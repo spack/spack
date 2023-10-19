@@ -36,7 +36,7 @@ class Pypy(Package):
 
     depends_on("libffi", when="+ctypes")
     depends_on("pkgconfig", when="+ctypes", type="build")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("bzip2", when="+bz2")
     depends_on("expat", when="+pyexpat")
     depends_on("sqlite", when="+sqlite3")

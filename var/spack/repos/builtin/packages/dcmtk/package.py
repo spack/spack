@@ -28,7 +28,7 @@ class Dcmtk(CMakePackage):
         default=True,
         description="Support 'Deflated Explicit VR Little Endian' Transfer Syntax",
     )
-    depends_on("zlib", type=("build", "link"), when="+zlib")
+    depends_on("zlib-api", type=("build", "link"), when="+zlib")
 
     variant("tiff", default=True, description="Support for TIFF output")
     depends_on("libtiff", type=("build", "link"), when="+tiff")

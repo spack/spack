@@ -17,6 +17,7 @@ import spack.cmd.test
 import spack.config
 import spack.repo
 import spack.stage
+import spack.store
 import spack.util.path
 from spack.paths import lib_path, var_path
 
@@ -117,15 +118,15 @@ def clean(parser, args):
 
     if args.downloads:
         tty.msg("Removing cached downloads")
-        spack.caches.fetch_cache.destroy()
+        spack.caches.FETCH_CACHE.destroy()
 
     if args.failures:
         tty.msg("Removing install failure marks")
-        spack.installer.clear_failures()
+        spack.store.STORE.failure_tracker.clear_all()
 
     if args.misc_cache:
         tty.msg("Removing cached information on repositories")
-        spack.caches.misc_cache.destroy()
+        spack.caches.MISC_CACHE.destroy()
 
     if args.python_cache:
         tty.msg("Removing python cache files")

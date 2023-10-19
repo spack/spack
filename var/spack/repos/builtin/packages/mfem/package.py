@@ -6,6 +6,7 @@
 import os
 import shutil
 import sys
+from platform import machine
 
 from spack.package import *
 
@@ -47,6 +48,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # 'develop' is a special version that is always larger (or newer) than any
     # other version.
     version("develop", branch="master")
+
+    version(
+        "4.6.0",
+        sha256="5fa9465b5bec56bfb777a4d2826fba48d85fbace4aed8b64a2fd4059bf075b15",
+        url="https://bit.ly/mfem-4-6",
+        extension="tar.gz",
+    )
 
     version(
         "4.5.2",
@@ -101,7 +109,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     )
 
     # Tagged development version used by the laghos package:
-    version("3.4.1-laghos-v2.0", tag="laghos-v2.0")
+    version(
+        "3.4.1-laghos-v2.0", tag="laghos-v2.0", commit="4cb8d2cbc19aac5528df650b4a41c54158d1d2c2"
+    )
 
     version(
         "3.4.0",
@@ -118,7 +128,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     )
 
     # Tagged development version used by the laghos package:
-    version("3.3.1-laghos-v1.0", tag="laghos-v1.0")
+    version(
+        "3.3.1-laghos-v1.0", tag="laghos-v1.0", commit="e1f466e6bf80d5f8449b9e1585c414bad4704195"
+    )
 
     version(
         "3.3",
@@ -282,6 +294,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "sundials@5.4.0:+cuda cuda_arch={0}".format(sm_),
             when="@4.2.0:+sundials+cuda cuda_arch={0}".format(sm_),
         )
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "sundials@5.7.0:+rocm amdgpu_target={0}".format(gfx),
+            when="@4.6.0:+sundials+rocm amdgpu_target={0}".format(gfx),
+        )
     depends_on("pumi", when="+pumi~shared")
     depends_on("pumi+shared", when="+pumi+shared")
     depends_on("pumi@2.2.3:2.2.5", when="@4.2.0:4.3.0+pumi")
@@ -292,6 +309,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("gslib@1.0.7:", when="@4.3.0:+gslib")
     depends_on("suite-sparse", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on(
+            "superlu-dist+cuda cuda_arch={0}".format(sm_),
+            when="+superlu-dist+cuda cuda_arch={0}".format(sm_),
+        )
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "superlu-dist+rocm amdgpu_target={0}".format(gfx),
+            when="+superlu-dist+rocm amdgpu_target={0}".format(gfx),
+        )
     depends_on("strumpack@3.0.0:", when="+strumpack~shared")
     depends_on("strumpack@3.0.0:+shared", when="+strumpack+shared")
     for sm_ in CudaPackage.cuda_arch_values:
@@ -334,7 +361,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("mpfr", when="+mpfr")
     depends_on("netcdf-c@4.1.3:", when="+netcdf")
     depends_on("unwind", when="+libunwind")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("gnutls", when="+gnutls")
     depends_on("conduit@0.3.1:,master:", when="+conduit")
     depends_on("conduit+mpi", when="+conduit+mpi")
@@ -441,6 +468,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # upstream.
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
     patch("mfem-4.5.patch", when="@4.5.0")
+    patch("mfem-4.6.patch", when="@4.6.0")
 
     phases = ["configure", "build", "install"]
 
@@ -852,11 +880,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if "+zlib" in spec:
             if "@:3.3.2" in spec:
-                options += ["ZLIB_DIR=%s" % spec["zlib"].prefix]
+                options += ["ZLIB_DIR=%s" % spec["zlib-api"].prefix]
             else:
                 options += [
-                    "ZLIB_OPT=-I%s" % spec["zlib"].prefix.include,
-                    "ZLIB_LIB=%s" % ld_flags_from_library_list(spec["zlib"].libs),
+                    "ZLIB_OPT=-I%s" % spec["zlib-api"].prefix.include,
+                    "ZLIB_LIB=%s" % ld_flags_from_library_list(spec["zlib-api"].libs),
                 ]
 
         if "+mpfr" in spec:
@@ -917,7 +945,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     options += ["HIP_DIR=%s" % hipsparse["rocsparse"].prefix]
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
-                craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+                craylibs_path = env["CRAYLIBS_" + machine().upper()]
                 craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
                 hip_libs += find_libraries(craylibs, craylibs_path)
             if hip_libs:

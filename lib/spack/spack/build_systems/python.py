@@ -6,6 +6,7 @@ import inspect
 import os
 import re
 import shutil
+import stat
 from typing import Optional
 
 import archspec
@@ -16,6 +17,7 @@ import llnl.util.tty as tty
 
 import spack.builder
 import spack.config
+import spack.deptypes as dt
 import spack.detection
 import spack.multimethod
 import spack.package_base
@@ -24,13 +26,14 @@ import spack.store
 from spack.directives import build_system, depends_on, extends, maintainers
 from spack.error import NoHeadersError, NoLibrariesError, SpecError
 from spack.install_test import test_part
+from spack.util.executable import Executable
 from spack.version import Version
 
 from ._checks import BaseBuilder, execute_install_time_tests
 
 
 class PythonExtension(spack.package_base.PackageBase):
-    maintainers("adamjstewart", "pradyunsg")
+    maintainers("adamjstewart")
 
     @property
     def import_modules(self):
@@ -201,7 +204,7 @@ class PythonExtension(spack.package_base.PackageBase):
             else:
                 python = self.get_external_python_for_prefix()
                 if not python.concrete:
-                    repo = spack.repo.path.repo_for_pkg(python)
+                    repo = spack.repo.PATH.repo_for_pkg(python)
                     python.namespace = repo.namespace
 
                     # Ensure architecture information is present
@@ -226,7 +229,48 @@ class PythonExtension(spack.package_base.PackageBase):
 
                     python.external_path = self.spec.external_path
                     python._mark_concrete()
-            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"), virtuals=())
+            self.spec.add_dependency_edge(python, depflag=dt.BUILD | dt.LINK | dt.RUN, virtuals=())
+
+    def get_external_python_for_prefix(self):
+        """
+        For an external package that extends python, find the most likely spec for the python
+        it depends on.
+
+        First search: an "installed" external that shares a prefix with this package
+        Second search: a configured external that shares a prefix with this package
+        Third search: search this prefix for a python package
+
+        Returns:
+          spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
+        """
+        python_externals_installed = [
+            s for s in spack.store.STORE.db.query("python") if s.prefix == self.spec.external_path
+        ]
+        if python_externals_installed:
+            return python_externals_installed[0]
+
+        python_external_config = spack.config.get("packages:python:externals", [])
+        python_externals_configured = [
+            spack.spec.parse_with_version_concrete(item["spec"])
+            for item in python_external_config
+            if item["prefix"] == self.spec.external_path
+        ]
+        if python_externals_configured:
+            return python_externals_configured[0]
+
+        python_externals_detection = spack.detection.by_path(
+            ["python"], path_hints=[self.spec.external_path]
+        )
+
+        python_externals_detected = [
+            d.spec
+            for d in python_externals_detection.get("python", [])
+            if d.prefix == self.spec.external_path
+        ]
+        if python_externals_detected:
+            return python_externals_detected[0]
+
+        raise StopIteration("No external python could be detected for %s to depend on" % self.spec)
 
 
 class PythonPackage(PythonExtension):
@@ -273,54 +317,16 @@ class PythonPackage(PythonExtension):
             name = cls.pypi.split("/")[0]
             return "https://pypi.org/simple/" + name + "/"
 
-    def get_external_python_for_prefix(self):
-        """
-        For an external package that extends python, find the most likely spec for the python
-        it depends on.
-
-        First search: an "installed" external that shares a prefix with this package
-        Second search: a configured external that shares a prefix with this package
-        Third search: search this prefix for a python package
-
-        Returns:
-          spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
-        """
-        python_externals_installed = [
-            s for s in spack.store.STORE.db.query("python") if s.prefix == self.spec.external_path
-        ]
-        if python_externals_installed:
-            return python_externals_installed[0]
-
-        python_external_config = spack.config.get("packages:python:externals", [])
-        python_externals_configured = [
-            spack.spec.parse_with_version_concrete(item["spec"])
-            for item in python_external_config
-            if item["prefix"] == self.spec.external_path
-        ]
-        if python_externals_configured:
-            return python_externals_configured[0]
-
-        python_externals_detection = spack.detection.by_executable(
-            [spack.repo.path.get_pkg_class("python")], path_hints=[self.spec.external_path]
-        )
-
-        python_externals_detected = [
-            d.spec
-            for d in python_externals_detection.get("python", [])
-            if d.prefix == self.spec.external_path
-        ]
-        if python_externals_detected:
-            return python_externals_detected[0]
-
-        raise StopIteration("No external python could be detected for %s to depend on" % self.spec)
-
     @property
     def headers(self):
         """Discover header files in platlib."""
 
+        # Remove py- prefix in package name
+        name = self.spec.name[3:]
+
         # Headers may be in either location
-        include = self.prefix.join(self.spec["python"].package.include)
-        platlib = self.prefix.join(self.spec["python"].package.platlib)
+        include = self.prefix.join(self.spec["python"].package.include).join(name)
+        platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
         headers = fs.find_all_headers(include) + fs.find_all_headers(platlib)
 
         if headers:
@@ -334,16 +340,62 @@ class PythonPackage(PythonExtension):
         """Discover libraries in platlib."""
 
         # Remove py- prefix in package name
-        library = "lib" + self.spec.name[3:].replace("-", "?")
-        root = self.prefix.join(self.spec["python"].package.platlib)
+        name = self.spec.name[3:]
 
-        for shared in [True, False]:
-            libs = fs.find_libraries(library, root, shared=shared, recursive=True)
-            if libs:
-                return libs
+        root = self.prefix.join(self.spec["python"].package.platlib).join(name)
+
+        libs = fs.find_all_libraries(root, recursive=True)
+
+        if libs:
+            return libs
 
         msg = "Unable to recursively locate {} libraries in {}"
         raise NoLibrariesError(msg.format(self.spec.name, root))
+
+
+def fixup_shebangs(path: str, old_interpreter: bytes, new_interpreter: bytes):
+    # Recurse into the install prefix and fixup shebangs
+    exe = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+    dirs = [path]
+    hardlinks = set()
+
+    while dirs:
+        with os.scandir(dirs.pop()) as entries:
+            for entry in entries:
+                if entry.is_dir(follow_symlinks=False):
+                    dirs.append(entry.path)
+                    continue
+
+                # Only consider files, not symlinks
+                if not entry.is_file(follow_symlinks=False):
+                    continue
+
+                lstat = entry.stat(follow_symlinks=False)
+
+                # Skip over files that are not executable
+                if not (lstat.st_mode & exe):
+                    continue
+
+                # Don't modify hardlinks more than once
+                if lstat.st_nlink > 1:
+                    key = (lstat.st_ino, lstat.st_dev)
+                    if key in hardlinks:
+                        continue
+                    hardlinks.add(key)
+
+                # Finally replace shebangs if any.
+                with open(entry.path, "rb+") as f:
+                    contents = f.read(2)
+                    if contents != b"#!":
+                        continue
+                    contents += f.read()
+
+                    if old_interpreter not in contents:
+                        continue
+
+                    f.seek(0)
+                    f.write(contents.replace(old_interpreter, new_interpreter))
+                    f.truncate()
 
 
 @spack.builder.builder("python_pip")
@@ -442,8 +494,36 @@ class PythonPipBuilder(BaseBuilder):
         """
         return []
 
+    @property
+    def _build_venv_path(self):
+        """Return the path to the virtual environment used for building when
+        python is external."""
+        return os.path.join(self.spec.package.stage.path, "build_env")
+
+    @property
+    def _build_venv_python(self) -> Executable:
+        """Return the Python executable in the build virtual environment when
+        python is external."""
+        return Executable(os.path.join(self._build_venv_path, "bin", "python"))
+
     def install(self, pkg, spec, prefix):
         """Install everything from build directory."""
+        python: Executable = spec["python"].command
+        # Since we invoke pip with --no-build-isolation, we have to make sure that pip cannot
+        # execute hooks from user and system site-packages.
+        if spec["python"].external:
+            # There are no environment variables to disable the system site-packages, so we use a
+            # virtual environment instead. The downside of this approach is that pip produces
+            # incorrect shebangs that refer to the virtual environment, which we have to fix up.
+            python("-m", "venv", "--without-pip", self._build_venv_path)
+            pip = self._build_venv_python
+        else:
+            # For a Spack managed Python, system site-packages is empty/unused by design, so it
+            # suffices to disable user site-packages, for which there is an environment variable.
+            pip = python
+            pip.add_default_env("PYTHONNOUSERSITE", "1")
+        pip.add_default_arg("-m")
+        pip.add_default_arg("pip")
 
         args = PythonPipBuilder.std_args(pkg) + ["--prefix=" + prefix]
 
@@ -467,8 +547,31 @@ class PythonPipBuilder(BaseBuilder):
         else:
             args.append(".")
 
-        pip = inspect.getmodule(pkg).pip
         with fs.working_dir(self.build_directory):
             pip(*args)
+
+    @spack.builder.run_after("install")
+    def fixup_shebangs_pointing_to_build(self):
+        """When installing a package using an external python, we use a temporary virtual
+        environment which improves build isolation. The downside is that pip produces shebangs
+        that point to the temporary virtual environment. This method fixes them up to point to the
+        underlying Python."""
+        # No need to fixup shebangs if no build venv was used. (this post install function also
+        # runs when install was overridden in another package, so check existence of the venv path)
+        if not os.path.exists(self._build_venv_path):
+            return
+
+        # Use sys.executable, since that's what pip uses.
+        interpreter = (
+            lambda python: python("-c", "import sys; print(sys.executable)", output=str)
+            .strip()
+            .encode("utf-8")
+        )
+
+        fixup_shebangs(
+            path=self.spec.prefix,
+            old_interpreter=interpreter(self._build_venv_python),
+            new_interpreter=interpreter(self.spec["python"].command),
+        )
 
     spack.builder.run_after("install")(execute_install_time_tests)

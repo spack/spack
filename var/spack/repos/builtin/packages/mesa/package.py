@@ -18,7 +18,7 @@ class Mesa(MesonPackage):
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
-    version("main", tag="main")
+    version("main", branch="main")
 
     version(
         "23.0.3",
@@ -52,11 +52,12 @@ class Mesa(MesonPackage):
     depends_on("cmake", type="build")
     depends_on("flex", type="build")
     depends_on("gettext", type="build")
-    depends_on("python@3:", type="build")
+    # Upperbound on 3.11 because distutils is used for checking py-mako
+    depends_on("python@3:3.11", type="build")
     depends_on("py-mako@0.8.0:", type="build")
     depends_on("unwind")
     depends_on("expat")
-    depends_on("zlib@1.2.3:")
+    depends_on("zlib-api")
 
     # Internal options
     variant("llvm", default=True, description="Enable LLVM.")

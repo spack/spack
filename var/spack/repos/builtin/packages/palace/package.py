@@ -17,7 +17,7 @@ class Palace(CMakePackage):
     maintainers("sebastiangrimberg")
 
     version("develop", branch="main")
-    version("0.11.2", tag="v0.11.2")
+    version("0.11.2", tag="v0.11.2", commit="6c3aa5f84a934a6ddd58022b2945a1bdb5fa329d")
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("int64", default=False, description="Use 64 bit integers")
@@ -39,7 +39,7 @@ class Palace(CMakePackage):
     depends_on("cmake@3.13:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("nlohmann-json")
     depends_on("fmt")
     depends_on("eigen")
@@ -94,9 +94,9 @@ class Palace(CMakePackage):
         depends_on("arpack-ng+shared", when="+shared")
         depends_on("arpack-ng~shared", when="~shared")
 
-    # Conflicts: Palace always builds its own internal MFEM, GSLIB
-    conflicts("^mfem", msg="Palace builds its own internal MFEM")
-    conflicts("^gslib", msg="Palace builds its own internal GSLIB")
+    # Palace always builds its own internal MFEM, GSLIB
+    conflicts("mfem")
+    conflicts("gslib")
 
     # More dependency variant conflicts
     conflicts("^hypre+int64", msg="Palace uses HYPRE's mixedint option for 64 bit integers")

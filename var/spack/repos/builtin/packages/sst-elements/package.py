@@ -76,7 +76,7 @@ class SstElements(AutotoolsPackage):
     depends_on("otf", when="+otf")
     depends_on("otf2", when="+otf2")
     depends_on("gettext")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("autoconf@1.68:", type="build")
     depends_on("automake@1.11.1:", type="build")

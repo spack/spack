@@ -17,7 +17,7 @@ class Rempi(AutotoolsPackage):
     version("1.0.0", sha256="1cb21f457cf8a04632150156a2ba699dd0c3f81d47e8881a9b943b9bf575fa01")
 
     depends_on("mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

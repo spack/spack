@@ -27,13 +27,12 @@ level = "long"
 
 def setup_parser(subparser):
     scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
 
     # User can only choose one
     subparser.add_argument(
         "--scope",
         choices=scopes,
-        metavar=scopes_metavar,
+        metavar=spack.config.SCOPES_METAVAR,
         help="configuration scope to read/modify",
     )
 
@@ -45,7 +44,7 @@ def setup_parser(subparser):
         help="configuration section to print\n\noptions: %(choices)s",
         nargs="?",
         metavar="section",
-        choices=spack.config.section_schemas,
+        choices=spack.config.SECTION_SCHEMAS,
     )
 
     blame_parser = sp.add_parser(
@@ -55,7 +54,7 @@ def setup_parser(subparser):
         "section",
         help="configuration section to print\n\noptions: %(choices)s",
         metavar="section",
-        choices=spack.config.section_schemas,
+        choices=spack.config.SECTION_SCHEMAS,
     )
 
     edit_parser = sp.add_parser("edit", help="edit configuration file")
@@ -64,7 +63,7 @@ def setup_parser(subparser):
         help="configuration section to edit\n\noptions: %(choices)s",
         metavar="section",
         nargs="?",
-        choices=spack.config.section_schemas,
+        choices=spack.config.SECTION_SCHEMAS,
     )
     edit_parser.add_argument(
         "--print-file", action="store_true", help="print the file name that would be edited"
@@ -146,10 +145,10 @@ def config_get(args):
     scope, section = _get_scope_and_section(args)
 
     if section is not None:
-        spack.config.config.print_section(section)
+        spack.config.CONFIG.print_section(section)
 
     elif scope and scope.startswith("env:"):
-        config_file = spack.config.config.get_config_filename(scope, section)
+        config_file = spack.config.CONFIG.get_config_filename(scope, section)
         if os.path.exists(config_file):
             with open(config_file) as f:
                 print(f.read())
@@ -162,7 +161,7 @@ def config_get(args):
 
 def config_blame(args):
     """Print out line-by-line blame of merged YAML."""
-    spack.config.config.print_section(args.section, blame=True)
+    spack.config.CONFIG.print_section(args.section, blame=True)
 
 
 def config_edit(args):
@@ -181,7 +180,7 @@ def config_edit(args):
         scope, section = _get_scope_and_section(args)
         if not scope and not section:
             tty.die("`spack config edit` requires a section argument or an active environment.")
-        config_file = spack.config.config.get_config_filename(scope, section)
+        config_file = spack.config.CONFIG.get_config_filename(scope, section)
 
     if args.print_file:
         print(config_file)
@@ -194,7 +193,7 @@ def config_list(args):
 
     Used primarily for shell tab completion scripts.
     """
-    print(" ".join(list(spack.config.section_schemas)))
+    print(" ".join(list(spack.config.SECTION_SCHEMAS)))
 
 
 def config_add(args):
@@ -251,19 +250,19 @@ def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
 
 def config_update(args):
     # Read the configuration files
-    spack.config.config.get_config(args.section, scope=args.scope)
+    spack.config.CONFIG.get_config(args.section, scope=args.scope)
     updates: List[spack.config.ConfigScope] = list(
         filter(
             lambda s: not isinstance(
                 s, (spack.config.InternalConfigScope, spack.config.ImmutableConfigScope)
             ),
-            spack.config.config.format_updates[args.section],
+            spack.config.CONFIG.format_updates[args.section],
         )
     )
 
     cannot_overwrite, skip_system_scope = [], False
     for scope in updates:
-        cfg_file = spack.config.config.get_config_filename(scope.name, args.section)
+        cfg_file = spack.config.CONFIG.get_config_filename(scope.name, args.section)
         can_be_updated = _can_update_config_file(scope, cfg_file)
         if not can_be_updated:
             if scope.name == "system":
@@ -302,7 +301,7 @@ def config_update(args):
             " the latest schema format:\n\n"
         )
         for scope in updates:
-            cfg_file = spack.config.config.get_config_filename(scope.name, args.section)
+            cfg_file = spack.config.CONFIG.get_config_filename(scope.name, args.section)
             msg += "\t[scope={0}, file={1}]\n".format(scope.name, cfg_file)
         msg += (
             "\nIf the configuration files are updated, versions of Spack "
@@ -325,7 +324,7 @@ def config_update(args):
         # Make a backup copy and rewrite the file
         bkp_file = cfg_file + ".bkp"
         shutil.copy(cfg_file, bkp_file)
-        spack.config.config.update_config(args.section, data, scope=scope.name, force=True)
+        spack.config.CONFIG.update_config(args.section, data, scope=scope.name, force=True)
         tty.msg(f'File "{cfg_file}" update [backup={bkp_file}]')
 
 
@@ -337,13 +336,13 @@ def _can_revert_update(scope_dir, cfg_file, bkp_file):
 
 
 def config_revert(args):
-    scopes = [args.scope] if args.scope else [x.name for x in spack.config.config.file_scopes]
+    scopes = [args.scope] if args.scope else [x.name for x in spack.config.CONFIG.file_scopes]
 
     # Search for backup files in the configuration scopes
     Entry = collections.namedtuple("Entry", ["scope", "cfg", "bkp"])
     to_be_restored, cannot_overwrite = [], []
     for scope in scopes:
-        cfg_file = spack.config.config.get_config_filename(scope, args.section)
+        cfg_file = spack.config.CONFIG.get_config_filename(scope, args.section)
         bkp_file = cfg_file + ".bkp"
 
         # If the backup files doesn't exist move to the next scope
@@ -457,7 +456,7 @@ def config_prefer_upstream(args):
     existing = spack.config.get("packages", scope=scope)
     new = spack.config.merge_yaml(existing, pkgs)
     spack.config.set("packages", new, scope)
-    config_file = spack.config.config.get_config_filename(scope, section)
+    config_file = spack.config.CONFIG.get_config_filename(scope, section)
 
     tty.msg("Updated config at {0}".format(config_file))
 

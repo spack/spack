@@ -348,7 +348,7 @@ class Eccodes(CMakePackage):
             args.append(self.define("OPENJPEG_PATH", self.spec["openjpeg"].prefix))
 
         if "+png" in self.spec:
-            args.append(self.define("ZLIB_ROOT", self.spec["zlib"].prefix))
+            args.append(self.define("ZLIB_ROOT", self.spec["zlib-api"].prefix))
 
         if "+aec" in self.spec:
             # Prevent overriding by environment variables AEC_DIR and AEC_PATH:

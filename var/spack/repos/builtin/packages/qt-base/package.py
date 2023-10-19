@@ -129,7 +129,7 @@ class QtBase(QtPackage):
     depends_on("icu4c")
     depends_on("libxml2")
     depends_on("pcre2+multibyte")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd")
     with when("platform=linux"):
         depends_on("libdrm")
@@ -234,6 +234,9 @@ class QtBase(QtPackage):
                 features.append("libproxy")
         for k in features:
             define("FEATURE_" + k, True)
+
+        if "~opengl" in spec:
+            args.append(self.define("INPUT_opengl", "no"))
 
         # INPUT_* arguments: undefined/no/qt/system
         sys_inputs = ["doubleconversion"]

@@ -19,6 +19,8 @@ class Rocthrust(CMakePackage):
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
 
+    version("5.6.1", sha256="63df61d5ab46d4cfda6066d748274bacecc77151692e372e6f7df5e91852bdc2")
+    version("5.6.0", sha256="e52a27bcb4add38a5f0f3a5c7e409c230bf4ba9afae19bd2e06c2be00d39db59")
     version("5.5.1", sha256="66f126e5ea46ca761533411f81e83402773f95d3184cb7645ca73df227413023")
     version("5.5.0", sha256="c031f71cd4b6eaf98664fd2ad50fc18f7ccbfa67be415dca425169d2d1c81e9e")
     version("5.4.3", sha256="d133e14ea6d27d358d1bd4d31b79fb1562d1aea7c400e5a2d28d0f159cb6c8a8")
@@ -105,7 +107,12 @@ class Rocthrust(CMakePackage):
 
     # the rocthrust library itself is header-only, but the build_type and amdgpu_target
     # are relevant to the test client
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
+    variant(
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=auto_or_any_combination_of(*amdgpu_targets),
+        sticky=True,
+    )
     depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
 
@@ -137,6 +144,8 @@ class Rocthrust(CMakePackage):
         "5.4.3",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
+        "5.6.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)

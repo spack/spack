@@ -47,7 +47,7 @@ class Gnina(CMakePackage, CudaPackage):
         ]
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on(_boost)
     depends_on("glog")
     depends_on("protobuf@:3.21.12")

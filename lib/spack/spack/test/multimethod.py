@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test for multi_method dispatch."""
-import os
-import sys
 
 import pytest
 
@@ -16,10 +14,8 @@ from spack.multimethod import NoSuchMethodError
 
 pytestmark = [
     pytest.mark.usefixtures("mock_packages", "config"),
-    pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original" or sys.platform == "win32",
-        reason="The original concretizer cannot concretize most of the specs",
-    ),
+    pytest.mark.only_clingo("The original concretizer cannot concretize most of the specs"),
+    pytest.mark.not_on_windows("Not running on windows"),
 ]
 
 

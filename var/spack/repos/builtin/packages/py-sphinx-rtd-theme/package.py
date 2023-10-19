@@ -23,7 +23,7 @@ class PySphinxRtdTheme(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-sphinx@1.6:6", when="@1:", type=("build", "run"))
-    depends_on("py-sphinx", when="@0.4.1:", type=("build", "run"))
+    depends_on("py-sphinx@:6", when="@0", type=("build", "run"))
     depends_on("py-docutils@:0.18", when="@1.2:", type=("build", "run"))
     depends_on("py-docutils@:0.17", when="@1:1.1", type=("build", "run"))
     depends_on("py-docutils@:0.16", when="@0.5.2:0", type=("build", "run"))

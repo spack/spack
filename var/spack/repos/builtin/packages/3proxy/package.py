@@ -24,13 +24,13 @@ class _3proxy(MakefilePackage):
     depends_on("m4", type="build")
 
     def build(self, spec, prefix):
-        make("-f", "Makefile.{0}".format(platform.system()), "CC={0}".format(spack_cc))
+        make("-f", f"Makefile.{platform.system()}", f"CC={spack_cc}")
 
     def install(self, spec, prefix):
         make(
             "-f",
-            "Makefile.{0}".format(platform.system()),
-            "prefix={0}".format(prefix),
-            "CC={0}".format(spack_cc),
+            f"Makefile.{platform.system()}",
+            f"prefix={prefix}",
+            f"CC={spack_cc}",
             "install",
         )
