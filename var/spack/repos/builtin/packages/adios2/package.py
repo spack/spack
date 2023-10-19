@@ -122,8 +122,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     # Propagate CUDA target to kokkos for +cuda
     for cuda_arch in CudaPackage.cuda_arch_values:
         depends_on(
-            "kokkos cuda_arch=%s" % cuda_arch,
-            when="+kokkos +cuda cuda_arch=%s" % cuda_arch,
+            "kokkos cuda_arch=%s" % cuda_arch, when="+kokkos +cuda cuda_arch=%s" % cuda_arch
         )
 
     # Propagate AMD GPU target to kokkos for +rocm
