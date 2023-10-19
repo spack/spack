@@ -12,7 +12,7 @@ class PyBbpWorkflow(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/bbp-workflow"
     git = "ssh://git@bbpgitlab.epfl.ch/nse/bbp-workflow.git"
 
-    version("3.1.36", tag="bbp-workflow-v3.1.36")
+    version("3.1.38", tag="bbp-workflow-v3.1.38")
 
     depends_on("py-setuptools", type=("build"))
 
@@ -39,6 +39,8 @@ class PyBbpWorkflow(PythonPackage):
     depends_on("py-cwl-luigi", type="run")
     depends_on("py-cwl-registry", type="run")
     depends_on("py-brayns", type="run")
+    depends_on("py-bluepyemodel", type="run")
+    depends_on("py-bluepyemodelnexus", type="run")
 
     # extra deps to include in the module
     # depend on a version with BBP ca root patch
