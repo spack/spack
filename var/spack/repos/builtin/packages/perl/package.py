@@ -272,8 +272,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Zlib.xs"),
         ]
         for filename in files_to_chmod:
-            perm = os.stat(filename).st_mode
-            os.chmod(filename, perm | 0o200)
+            try:
+                perm = os.stat(filename).st_mode
+                os.chmod(filename, perm | 0o200)
+            except IOError:
+                continue
 
     def nmake_arguments(self):
         args = []
