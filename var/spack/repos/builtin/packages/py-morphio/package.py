@@ -15,7 +15,7 @@ class PyMorphio(PythonPackage):
     git = "https://github.com/BlueBrain/MorphIO.git"
     pypi = "morphio/MorphIO-3.3.2.tar.gz"
 
-    version("develop", branch="master", submodules=True)
+    version("master", branch="master", submodules=True)
 
     version("3.3.6", sha256="0f2e55470d92a3d89f2141ae905ee104fd16257b93dafb90682d90171de2f4e6")
 
