@@ -25,5 +25,4 @@ class PyBluepyefe(PythonPackage):
     depends_on("py-igor", type=("build", "run"))
 
     def setup_run_environment(self, env):
-        env.set("NEURON_INIT_MPI", "0")
         env.unset("PMI_RANK")
