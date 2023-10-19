@@ -104,7 +104,7 @@ contains "usage: spack module " spack -m module --help
 contains "usage: spack module " spack -m module
 
 title 'Testing `spack load`'
-contains "export PATH=$(spack -m location -i b)/bin" spack -m load --sh shell-b
+contains "export PATH=$(spack -m location -i shell-b)/bin" spack -m load --sh shell-b
 succeeds spack -m load shell-b
 LIST_CONTENT=`spack -m load shell-b; spack load --list`
 contains "shell-b@" echo $LIST_CONTENT
