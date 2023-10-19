@@ -23,6 +23,3 @@ class PyBluepyefe(PythonPackage):
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-igor", type=("build", "run"))
-
-    def setup_run_environment(self, env):
-        env.unset("PMI_RANK")
