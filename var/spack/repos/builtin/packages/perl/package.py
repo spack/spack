@@ -265,10 +265,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         super().do_stage(mirror_only)
         # Add write permissions on files to be patched
         files_to_chmod = [
-                    join_path(self.stage.source_path, "pp.c"),
-                    join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Makefile.PL"),
-                    join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Zlib.xs"),
-                    ]
+            join_path(self.stage.source_path, "pp.c"),
+            join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Makefile.PL"),
+            join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Zlib.xs"),
+        ]
         for filename in files_to_chmod:
             perm = os.stat(filename).st_mode
             os.chmod(filename, perm | 0o200)
