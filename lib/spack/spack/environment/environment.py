@@ -1690,41 +1690,18 @@ class Environment:
                 "Loading the environment view will require reconcretization." % self.name
             )
 
-    def _env_modifications_for_view(self, view: ViewDescriptor, reverse: bool = False):
-        all_mods = spack.util.environment.EnvironmentModifications()
-
-        visited = set()
-
-        errors = []
-        for root_spec in self.concrete_roots():
-            if root_spec in view and root_spec.installed and root_spec.package:
-                for spec in root_spec.traverse(deptype="run", root=True):
-                    if spec.name in visited:
-                        # It is expected that only one instance of the package
-                        # can be added to the environment - do not attempt to
-                        # add multiple.
-                        tty.debug(
-                            "Not adding {0} to shell modifications: "
-                            "this package has already been added".format(
-                                spec.format("{name}/{hash:7}")
-                            )
-                        )
-                        continue
-                    else:
-                        visited.add(spec.name)
-
-                    try:
-                        mods = uenv.environment_modifications_for_spec(spec, view)
-                    except Exception as e:
-                        msg = "couldn't get environment settings for %s" % spec.format(
-                            "{name}@{version} /{hash:7}"
-                        )
-                        errors.append((msg, str(e)))
-                        continue
-
-                    all_mods.extend(mods.reversed() if reverse else mods)
-
-        return all_mods, errors
+    def _env_modifications_for_view(
+        self, view: ViewDescriptor, reverse: bool = False
+    ) -> spack.util.environment.EnvironmentModifications:
+        try:
+            mods = uenv.environment_modifications_for_specs(*self.concrete_roots(), view=view)
+        except Exception as e:
+            # Failing to setup spec-specific changes shouldn't be a hard error.
+            tty.warn(
+                "couldn't load runtime environment due to {}: {}".format(e.__class__.__name__, e)
+            )
+            return spack.util.environment.EnvironmentModifications()
+        return mods.reversed() if reverse else mods
 
     def add_view_to_env(
         self, env_mod: spack.util.environment.EnvironmentModifications, view: str
@@ -1740,12 +1717,7 @@ class Environment:
             return env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(descriptor))
-
-        mods, errors = self._env_modifications_for_view(descriptor)
-        env_mod.extend(mods)
-        if errors:
-            for err in errors:
-                tty.warn(*err)
+        env_mod.extend(self._env_modifications_for_view(descriptor))
 
         # deduplicate paths from specs mapped to the same location
         for env_var in env_mod.group_by_name():
@@ -1767,9 +1739,7 @@ class Environment:
             return env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(descriptor).reversed())
-
-        mods, _ = self._env_modifications_for_view(descriptor, reverse=True)
-        env_mod.extend(mods)
+        env_mod.extend(self._env_modifications_for_view(descriptor, reverse=True))
 
         return env_mod
 
