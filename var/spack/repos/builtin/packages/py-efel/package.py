@@ -20,8 +20,6 @@ class PyEfel(PythonPackage):
     pypi = "efel/efel-3.0.80.tar.gz"
 
     version("5.2.0", sha256="ed2c5efe22a4c703a4d9e47775b939009e1456713ac896898ebabf177c60b1dc")
-    version("4.0.4", sha256="258c506776df609edc799338fd773e78f0f0315fd6f3e2f969478bda401a8894")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.6:", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"), when="@4")
