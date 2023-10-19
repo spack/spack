@@ -1157,7 +1157,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Return the install test root directory."""
         tty.warn(
             "The 'pkg.install_test_root' property is deprecated with removal "
-            "expected v0.21. Use 'install_test_root(pkg)' instead."
+            "expected v0.22. Use 'install_test_root(pkg)' instead."
         )
         return install_test_root(self)
 
@@ -1829,7 +1829,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         msg = (
             "'pkg.cache_extra_test_sources(srcs) is deprecated with removal "
-            "expected in v0.21. Use 'cache_extra_test_sources(pkg, srcs)' "
+            "expected in v0.22. Use 'cache_extra_test_sources(pkg, srcs)' "
             "instead."
         )
         warnings.warn(msg)
