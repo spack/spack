@@ -96,9 +96,7 @@ class WindowsOs(OperatingSystem):
 
         for entry in vs_entries:
             try:
-                val = (
-                    entry.get_subkey("Capabilities").get_value("ApplicationDescription").value
-                )
+                val = entry.get_subkey("Capabilities").get_value("ApplicationDescription").value
                 vs_paths.append(clean_vs_path(val))
             except FileNotFoundError as e:
                 if hasattr(e, "winerror"):
