@@ -19,6 +19,7 @@ class Sensei(CMakePackage):
     maintainers("sshudler", "kwryankrattiger")
 
     version("develop", branch="develop")
+    version("4.1.0", sha256="e1154240c022069fee454c747d7c60e065d36b4d1dc71852b3cd527c22b531c1")
     version("4.0.0", sha256="fc1538aa1051789dbdefbe18b7f251bc46e7a6ae1db3a940c123552e0318db8b")
     version("3.2.2", sha256="d554b654880e899d97d572f02de87b0202faadaf899420ef871093b5bce320c0")
     version("3.2.1", sha256="7438fb4b148e4d1eb888c619366d0d8639122ecbbf1767e19549d6ca0c8698ca")
@@ -59,7 +60,7 @@ class Sensei(CMakePackage):
     depends_on("paraview@5.5.0:5.5.2", when="@:2.1.1 +catalyst")
     depends_on("paraview@5.6:5.7", when="@3:3.2.1 +catalyst")
     depends_on("paraview@5.7:5.9", when="@3.2.2 +catalyst")
-    depends_on("paraview@5.7:5.10", when="@4: +catalyst")
+    depends_on("paraview@5.7:5.10", when="@4:4 +catalyst")
 
     # Visit Dep
     depends_on("visit", when="+libsim")
@@ -90,12 +91,16 @@ class Sensei(CMakePackage):
     depends_on("pugixml")
     depends_on("mpi")
 
+    depends_on("paraview use_vtkm=off", when="+catalyst+ascent ^ascent+vtkh")
+    depends_on("paraview use_vtkm=off", when="+catalyst+ascent ^ascent+fides")
+
     # Can have either LibSim or Catalyst or Ascent, but not a combination
     conflicts("+libsim", when="+catalyst")
-    conflicts("+ascent", when="+catalyst")
     conflicts("+ascent", when="+libsim")
 
     # Patches
+    # https://github.com/SENSEI-insitu/SENSEI/pull/114
+    patch("adios2-remove-deprecated-functions.patch", when="@4:4.1 ^adios2@2.9:")
     patch("libsim-add-missing-symbol-visibility-pr67.patch", when="@4.0.0")
     patch("sensei-find-mpi-component-cxx-pr68.patch", when="@4.0.0")
     patch("sensei-install-external-pugixml-pr69.patch", when="@4.0.0")

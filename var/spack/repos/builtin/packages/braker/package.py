@@ -32,6 +32,7 @@ class Braker(Package):
     depends_on("perl-hash-merge", type=("build", "run"))
     depends_on("perl-logger-simple", type=("build", "run"))
     depends_on("perl-file-homedir", when="@2.1.4:", type=("build", "run"))
+    depends_on("perl-list-moreutils", when="@2.1.6:", type=("build", "run"))
     depends_on("augustus")
     depends_on("augustus@3.2.3", when="@:2.1.0")
     depends_on("genemark-et")

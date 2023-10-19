@@ -3,6 +3,103 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
+.. _concretizer-options:
+
+==========================================
+Concretization Settings (concretizer.yaml)
+==========================================
+
+The ``concretizer.yaml`` configuration file allows to customize aspects of the
+algorithm used to select the dependencies you install. The default configuration
+is the following:
+
+.. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
+   :language: yaml
+
+--------------------------------
+Reuse already installed packages
+--------------------------------
+
+The ``reuse`` attribute controls whether Spack will prefer to use installed packages (``true``), or
+whether it will do a "fresh" installation and prefer the latest settings from
+``package.py`` files and ``packages.yaml`` (``false``).
+You can use:
+
+.. code-block:: console
+
+   % spack install --reuse <spec>
+
+to enable reuse for a single installation, and you can use:
+
+.. code-block:: console
+
+   spack install --fresh <spec>
+
+to do a fresh install if ``reuse`` is enabled by default.
+``reuse: true`` is the default.
+
+------------------------------------------
+Selection of the target microarchitectures
+------------------------------------------
+
+The options under the ``targets`` attribute control which targets are considered during a solve.
+Currently the options in this section are only configurable from the ``concretizer.yaml`` file
+and there are no corresponding command line arguments to enable them for a single solve.
+
+The ``granularity`` option can take two possible values: ``microarchitectures`` and ``generic``.
+If set to:
+
+.. code-block:: yaml
+
+   concretizer:
+     targets:
+       granularity: microarchitectures
+
+Spack will consider all the microarchitectures known to ``archspec`` to label nodes for
+compatibility. If instead the option is set to:
+
+.. code-block:: yaml
+
+   concretizer:
+     targets:
+       granularity: generic
+
+Spack will consider only generic microarchitectures. For instance, when running on an
+Haswell node, Spack will consider ``haswell`` as the best target in the former case and
+``x86_64_v3`` as the best target in the latter case.
+
+The ``host_compatible`` option is a Boolean option that determines whether or not the
+microarchitectures considered during the solve are constrained to be compatible with the
+host Spack is currently running on. For instance, if this option is set to ``true``, a
+user cannot concretize for ``target=icelake`` while running on an Haswell node.
+
+---------------
+Duplicate nodes
+---------------
+
+The ``duplicates`` attribute controls whether the DAG can contain multiple configurations of
+the same package. This is mainly relevant for build dependencies, which may have their version
+pinned by some nodes, and thus be required at different versions by different nodes in the same
+DAG.
+
+The ``strategy`` option controls how the solver deals with duplicates. If the value is ``none``,
+then a single configuration per package is allowed in the DAG. This means, for instance, that only
+a single ``cmake`` or a single ``py-setuptools`` version is allowed. The result would be a slightly
+faster concretization, at the expense of making a few specs unsolvable.
+
+If the value is ``minimal`` Spack will allow packages tagged as ``build-tools`` to have duplicates.
+This allows, for instance, to concretize specs whose nodes require different, and incompatible, ranges
+of some build tool. For instance, in the figure below the latest `py-shapely` requires a newer `py-setuptools`,
+while `py-numpy` still needs an older version:
+
+.. figure::  images/shapely_duplicates.svg
+   :scale: 70 %
+   :align: center
+
+Up to Spack v0.20 ``duplicates:strategy:none`` was the default (and only) behavior. From Spack v0.21 the
+default behavior is ``duplicates:strategy:minimal``.
+
 .. _build-settings:
 
 ================================
@@ -232,76 +329,6 @@ Specific limitations include:
   then Spack will not add a new external entry (``spack config blame packages``
   can help locate all external entries).
 
-.. _concretizer-options:
-
-----------------------
-Concretizer options
-----------------------
-
-``packages.yaml`` gives the concretizer preferences for specific packages,
-but you can also use ``concretizer.yaml`` to customize aspects of the
-algorithm it uses to select the dependencies you install:
-
-.. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
-   :language: yaml
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Reuse already installed packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The ``reuse`` attribute controls whether Spack will prefer to use installed packages (``true``), or
-whether it will do a "fresh" installation and prefer the latest settings from
-``package.py`` files and ``packages.yaml`` (``false``).
-You can use:
-
-.. code-block:: console
-
-   % spack install --reuse <spec>
-
-to enable reuse for a single installation, and you can use:
-
-.. code-block:: console
-
-   spack install --fresh <spec>
-
-to do a fresh install if ``reuse`` is enabled by default.
-``reuse: true`` is the default.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Selection of the target microarchitectures
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The options under the ``targets`` attribute control which targets are considered during a solve.
-Currently the options in this section are only configurable from the ``concretizer.yaml`` file
-and there are no corresponding command line arguments to enable them for a single solve.
-
-The ``granularity`` option can take two possible values: ``microarchitectures`` and ``generic``.
-If set to:
-
-.. code-block:: yaml
-
-   concretizer:
-     targets:
-       granularity: microarchitectures
-
-Spack will consider all the microarchitectures known to ``archspec`` to label nodes for
-compatibility. If instead the option is set to:
-
-.. code-block:: yaml
-
-   concretizer:
-     targets:
-       granularity: generic
-
-Spack will consider only generic microarchitectures. For instance, when running on an
-Haswell node, Spack will consider ``haswell`` as the best target in the former case and
-``x86_64_v3`` as the best target in the latter case.
-
-The ``host_compatible`` option is a Boolean option that determines whether or not the
-microarchitectures considered during the solve are constrained to be compatible with the
-host Spack is currently running on. For instance, if this option is set to ``true``, a
-user cannot concretize for ``target=icelake`` while running on an Haswell node.
-
 .. _package-requirements:
 
 --------------------
@@ -325,48 +352,112 @@ on the command line, because it can specify constraints on packages
 is not possible to specify constraints on dependencies while also keeping
 those dependencies optional.
 
-The package requirements configuration is specified in ``packages.yaml``
-keyed by package name:
+^^^^^^^^^^^^^^^^^^^
+Requirements syntax
+^^^^^^^^^^^^^^^^^^^
+
+The package requirements configuration is specified in ``packages.yaml``,
+keyed by package name and expressed using the Spec syntax. In the simplest
+case you can specify attributes that you always want the package to have
+by providing a single spec string to ``require``:
 
 .. code-block:: yaml
 
    packages:
      libfabric:
        require: "@1.13.2"
+
+In the above example, ``libfabric`` will always build with version 1.13.2. If you
+need to compose multiple configuration scopes ``require`` accepts a list of
+strings:
+
+.. code-block:: yaml
+
+   packages:
+     libfabric:
+       require:
+       - "@1.13.2"
+       - "%gcc"
+
+In this case ``libfabric`` will always build with version 1.13.2 **and** using GCC
+as a compiler.
+
+For more complex use cases, require accepts also a list of objects. These objects
+must have either a ``any_of`` or a ``one_of`` field, containing a list of spec strings,
+and they can optionally have a ``when`` and a ``message`` attribute:
+
+.. code-block:: yaml
+
+   packages:
      openmpi:
        require:
-       - any_of: ["~cuda", "%gcc"]
+       - any_of: ["@4.1.5", "%gcc"]
+         message: "in this example only 4.1.5 can build with other compilers"
+
+``any_of`` is a list of specs. One of those specs must be satisfied
+and it is also allowed for the concretized spec to match more than one.
+In the above example, that means you could build ``openmpi@4.1.5%gcc``,
+``openmpi@4.1.5%clang`` or ``openmpi@3.9%gcc``, but
+not ``openmpi@3.9%clang``.
+
+If a custom message is provided, and the requirement is not satisfiable,
+Spack will print the custom error message:
+
+.. code-block:: console
+
+   $ spack spec openmpi@3.9%clang
+   ==> Error: in this example only 4.1.5 can build with other compilers
+
+We could express a similar requirement using the ``when`` attribute:
+
+.. code-block:: yaml
+
+   packages:
+     openmpi:
+       require:
+       - any_of: ["%gcc"]
+         when: "@:4.1.4"
+         message: "in this example only 4.1.5 can build with other compilers"
+
+In the example above, if the version turns out to be 4.1.4 or less, we require the compiler to be GCC.
+For readability, Spack also allows a ``spec`` key accepting a string when there is only a single
+constraint:
+
+.. code-block:: yaml
+
+   packages:
+     openmpi:
+       require:
+       - spec: "%gcc"
+         when: "@:4.1.4"
+         message: "in this example only 4.1.5 can build with other compilers"
+
+This code snippet and the one before it are semantically equivalent.
+
+Finally, instead of ``any_of`` you can use ``one_of`` which also takes a list of specs. The final
+concretized spec must match one and only one of them:
+
+.. code-block:: yaml
+
+   packages:
      mpich:
-      require:
-      - one_of: ["+cuda", "+rocm"]
+       require:
+       - one_of: ["+cuda", "+rocm"]
 
-Requirements are expressed using Spec syntax (the same as what is provided
-to ``spack install``). In the simplest case, you can specify attributes
-that you always want the package to have by providing a single spec to
-``require``; in the above example, ``libfabric`` will always build
-with version 1.13.2.
-
-You can provide a more-relaxed constraint and allow the concretizer to
-choose between a set of options using ``any_of`` or ``one_of``:
-
-* ``any_of`` is a list of specs. One of those specs must be satisfied
-  and it is also allowed for the concretized spec to match more than one.
-  In the above example, that means you could build ``openmpi+cuda%gcc``,
-  ``openmpi~cuda%clang`` or ``openmpi~cuda%gcc`` (in the last case,
-  note that both specs in the ``any_of`` for ``openmpi`` are
-  satisfied).
-* ``one_of`` is also a list of specs, and the final concretized spec
-  must match exactly one of them.  In the above example, that means
-  you could build ``mpich+cuda`` or ``mpich+rocm`` but not
-  ``mpich+cuda+rocm`` (note the current package definition for
-  ``mpich`` already includes a conflict, so this is redundant but
-  still demonstrates the concept).
+In the example above, that means you could build ``mpich+cuda`` or ``mpich+rocm`` but not ``mpich+cuda+rocm``.
 
 .. note::
 
    For ``any_of`` and ``one_of``, the order of specs indicates a
    preference: items that appear earlier in the list are preferred
    (note that these preferences can be ignored in favor of others).
+
+.. note::
+
+   When using a conditional requirement, Spack is allowed to actively avoid the triggering
+   condition (the ``when=...`` spec) if that leads to a concrete spec with better scores in
+   the optimization criteria. To check the current optimization criteria and their
+   priorities you can run ``spack solve zlib``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting default requirements

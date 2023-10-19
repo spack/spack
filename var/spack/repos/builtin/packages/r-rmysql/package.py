@@ -15,6 +15,7 @@ class RRmysql(RPackage):
 
     cran = "RMySQL"
 
+    version("0.10.25", sha256="ed130f9bd80ea9fd5b4fdbb6fa094c35646354507de68eb3d19a3cbc8b5a4794")
     version("0.10.24", sha256="ca1b9aacab6d76866ba09210ae881c3a7555bd5144ea0a0a446fceff80637241")
     version("0.10.23", sha256="f4ac7ed4fba83749819c07ce32d53ee024cf1cedebbda3b832644bff9edf4a15")
     version("0.10.21", sha256="3a6bf06d32d66c7c958d4f89ed517614171a7fd254ef6f4d40f4c5982c2d6b31")
@@ -23,4 +24,4 @@ class RRmysql(RPackage):
 
     depends_on("r@2.8.0:", type=("build", "run"))
     depends_on("r-dbi@0.4:", type=("build", "run"))
-    depends_on("mysql")
+    depends_on("mariadb-client")

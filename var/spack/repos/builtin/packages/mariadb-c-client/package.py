@@ -22,6 +22,9 @@ class MariadbCClient(CMakePackage):
     list_url = "https://downloads.mariadb.com/Connectors/c/"
     list_depth = 1
 
+    version("3.3.7", sha256="975a9a862fed80f84e0206373f7ef05537aada5b65d99b71b36ab892b44240bf")
+    version("3.3.5", sha256="ca72eb26f6db2befa77e48ff966f71bcd3cb44b33bd8bbb810b65e6d011c1e5c")
+    version("3.3.4", sha256="486e5fdf976a8e7fadf583ae912128655e013ac575fa79b2d1af0fb8827a78ed")
     version("3.3.2", sha256="7e0722e07d30bb906fac9fe10fb582cde1e148e05a83d9ca7b6fcc884b68fbce")
     version("3.2.7", sha256="9d7196248e6697c09c73e173fe9b282045f55ec9d7ae743c1ebad08b9ea56dda")
     version("3.2.6", sha256="9c22fff9d18db7ebdcb63979882fb6b68d2036cf2eb62f043eac922cd36bdb91")
@@ -61,7 +64,7 @@ class MariadbCClient(CMakePackage):
     depends_on("curl")
     depends_on("pcre")
     depends_on("openssl")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("krb5")
 
     # patch needed for cmake-3.20

@@ -14,4 +14,7 @@ class Iperf2(AutotoolsPackage, SourceforgePackage):
     homepage = "https://sourceforge.net/projects/iperf2"
     sourceforge_mirror_path = "iperf2/iperf-2.0.12.tar.gz"
 
+    version("2.1.9", sha256="5c0771aab00ef14520013aef01675977816e23bb8f5d9fde016f90eb2f1be788")
+    version("2.1.8", sha256="8e2cf2fbc9d0d4d1cf9d109b1e328459f9622993dc9a4c5a7dc8a2088fb7beaf")
+    version("2.1.7", sha256="1aba2e1d7aa43641ef841951ed88e16cffba898460e0c51e6b2806f3ff20e9d4")
     version("2.0.12", sha256="367f651fb1264b13f6518e41b8a7e08ce3e41b2a1c80e99ff0347561eed32646")

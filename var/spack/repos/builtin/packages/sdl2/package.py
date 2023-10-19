@@ -18,6 +18,7 @@ class Sdl2(CMakePackage):
     git = "https://github.com/libsdl-org/SDL.git"
     list_url = "https://github.com/libsdl-org/SDL.git"
 
+    version("2.26.5", sha256="ad8fea3da1be64c83c45b1d363a6b4ba8fd60f5bde3b23ec73855709ec5eabf7")
     version("2.24.1", sha256="bc121588b1105065598ce38078026a414c28ea95e66ed2adab4c44d80b309e1b")
     version("2.0.22", sha256="fe7cbf3127882e3fc7259a75a0cb585620272c51745d3852ab9dd87960697f2e")
     version("2.0.14", sha256="d8215b571a581be1332d2106f8036fcb03d12a70bae01e20f424976d275432bc")

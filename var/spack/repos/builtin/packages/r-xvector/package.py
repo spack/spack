@@ -15,6 +15,7 @@ class RXvector(RPackage):
 
     bioc = "XVector"
 
+    version("0.40.0", commit="875b4b4469e125737bee42362e7a3c75edd642f1")
     version("0.38.0", commit="8cad08446091dcc7cd759e880c0f3e47228278dd")
     version("0.36.0", commit="ff6f818ff4357eb9bf00654de9e0f508a5285408")
     version("0.34.0", commit="06adb25ac51c707b90fb8e0637fa06df237a863c")
@@ -40,4 +41,4 @@ class RXvector(RPackage):
     depends_on("r-iranges@2.15.12:", type=("build", "run"), when="@0.22.0:")
     depends_on("r-iranges@2.23.9:", type=("build", "run"), when="@0.30.0:")
     depends_on("r-zlibbioc", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")

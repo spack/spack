@@ -14,4 +14,4 @@ class DevelopBranchVersion(Package):
     git = "https://github.com/dummy/repo.git"
 
     version("develop", branch="develop")
-    version("0.2.15", "b1190f3d3471685f17cfd1ec1d252ac9")
+    version("0.2.15", md5="b1190f3d3471685f17cfd1ec1d252ac9")

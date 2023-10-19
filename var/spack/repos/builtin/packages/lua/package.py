@@ -29,7 +29,7 @@ class LuaImplPackage(MakefilePackage):
     lua_version_override = None
 
     def __init__(self, *args, **kwargs):
-        super(LuaImplPackage, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.lua_dir_name = "lua"
         pass
 
@@ -53,7 +53,7 @@ class LuaImplPackage(MakefilePackage):
         return os.path.join("share", self.lua_dir_name, self.__verdir())
 
     # luarocks needs unzip for some packages (e.g. lua-luaposix)
-    depends_on("unzip", type="run")
+    depends_on("unzip", type=("build", "run"))
 
     # luarocks needs a fetcher (curl/wget), unfortunately I have not found
     # how to force a choice for curl or wget, but curl seems the default.

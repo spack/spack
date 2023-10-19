@@ -17,15 +17,14 @@ class PyProtobuf(PythonPackage):
     homepage = "https://developers.google.com/protocol-buffers/"
     pypi = "protobuf/protobuf-3.11.0.tar.gz"
 
-    variant("cpp", default=True, description="Enable the cpp implementation")
-
+    version("4.24.3", sha256="12e9ad2ec079b833176d2921be2cb24281fa591f0b119b208b788adc48c2561d")
+    version("4.23.3", sha256="7a92beb30600332a52cdadbedb40d33fd7c8a0d7f549c440347bc606fb3fe34b")
+    version("4.21.9", sha256="61f21493d96d2a77f9ca84fefa105872550ab5ef71d21c458eb80edcf4885a99")
     version("4.21.7", sha256="71d9dba03ed3432c878a801e2ea51e034b0ea01cf3a4344fb60166cb5f6c8757")
     version("4.21.5", sha256="eb1106e87e095628e96884a877a51cdb90087106ee693925ec0a300468a9be3a")
-    version(
-        "3.20.1",
-        sha256="adc31566d027f45efe3f44eeb5b1f329da43891634d61c75a5944e9be6dd42c9",
-        preferred=True,
-    )
+    version("3.20.3", sha256="2e3427429c9cffebf259491be0af70189607f365c2f41c7c3764af6f337105f2")
+    version("3.20.2", sha256="712dca319eee507a1e7df3591e639a2b112a2f4a62d40fe7832a16fd19151750")
+    version("3.20.1", sha256="adc31566d027f45efe3f44eeb5b1f329da43891634d61c75a5944e9be6dd42c9")
     version("3.20.0", sha256="71b2c3d1cd26ed1ec7c8196834143258b2ad7f444efff26fdc366c6f5e752702")
     version("3.19.4", sha256="9df0c10adf3e83015ced42a9a7bd64e13d06c4cf45c340d2c63020ea04499d0a")
     version("3.19.3", sha256="d975a6314fbf5c524d4981e24294739216b5fb81ef3c14b86fb4b045d6690907")
@@ -60,18 +59,22 @@ class PyProtobuf(PythonPackage):
     version("3.3.0", sha256="1cbcee2c45773f57cb6de7ee0eceb97f92b9b69c0178305509b162c0160c1f04")
     version("3.0.0", sha256="ecc40bc30f1183b418fe0ec0c90bc3b53fa1707c4205ee278c6b90479e5b6ff5")
 
-    depends_on("python@3.5:", when="@3.18:", type=("build", "run"))
-    depends_on("python@3.7:", when="@3.20:", type=("build", "run"))
+    variant("cpp", default=False, when="@:4.21", description="Enable the cpp implementation")
+
+    depends_on("python", type=("build", "link", "run"))
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-six@1.9:", when="@3:", type=("build", "run"))
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", when="+cpp", type=("build", "run"))
+    depends_on("py-six@1.9:", when="@3.0:3.17", type=("build", "run"))
 
     # Setup dependencies for protobuf to use the same minor version as py-protobuf
     # Handle mapping the 4.x release to the protobuf 3.x releases
-    for ver in list(range(21, 22)):
-        depends_on("protobuf@3." + str(ver), when="+cpp @4." + str(ver))
+    depends_on("protobuf@3.21", when="+cpp @4.21")
     # Handle the 3.x series releases
     for ver in list(range(0, 21)):
-        depends_on("protobuf@3." + str(ver), when="+cpp @3." + str(ver))
+        depends_on(f"protobuf@3.{ver}", when=f"@3.{ver}+cpp")
+
+    conflicts("+cpp", when="^python@3.11:")
 
     @property
     def build_directory(self):
@@ -88,9 +91,3 @@ class PyProtobuf(PythonPackage):
     @when("+cpp")
     def install_options(self, spec, prefix):
         return ["--cpp_implementation"]
-
-    @run_after("install")
-    def fix_import_error(self):
-        if str(self.spec["python"].version.up_to(1)) == "2":
-            touch = which("touch")
-            touch(join_path(python_platlib, "google", "__init__.py"))

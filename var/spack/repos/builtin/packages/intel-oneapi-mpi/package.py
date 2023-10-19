@@ -22,6 +22,18 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html"
 
     version(
+        "2021.10.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/4f5871da-0533-4f62-b563-905edfb2e9b7/l_mpi_oneapi_p_2021.10.0.49374_offline.sh",
+        sha256="ab2e97d87b139201a2e7dab9a61ac6e8927b7783b459358c4ad69a1b1c064f40",
+        expand=False,
+    )
+    version(
+        "2021.9.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/718d6f8f-2546-4b36-b97b-bc58d5482ebf/l_mpi_oneapi_p_2021.9.0.43482_offline.sh",
+        sha256="5c170cdf26901311408809ced28498b630a494428703685203ceef6e62735ef8",
+        expand=False,
+    )
+    version(
         "2021.8.0",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19131/l_mpi_oneapi_p_2021.8.0.25329_offline.sh",
         sha256="0fcb1171fc42fd4b2d863ae474c0b0f656b0fa1fdc1df435aa851ccd6d1eaaf7",
@@ -99,6 +111,13 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     def component_dir(self):
         return "mpi"
 
+    @property
+    def env_script_args(self):
+        if "+external-libfabric" in self.spec:
+            return ("-i_mpi_ofi_internal=0",)
+        else:
+            return ()
+
     def setup_dependent_package(self, module, dep_spec):
         if "+generic-names" in self.spec:
             self.spec.mpicc = join_path(self.component_prefix.bin, "mpicc")
@@ -170,3 +189,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
                 self.component_prefix.bin.join(wrapper),
                 backup=False,
             )
+
+    @run_after("install")
+    def fixup_prefix(self):
+        self.symlink_dir(self.component_prefix.include, self.prefix.include)
+        self.symlink_dir(self.component_prefix.lib, self.prefix.lib)
+        self.symlink_dir(self.component_prefix.lib.release, self.prefix.lib)
+        self.symlink_dir(self.component_prefix.bin, self.prefix.bin)

@@ -31,8 +31,11 @@ class Krb5(AutotoolsPackage):
 
     depends_on("diffutils", type="build")
     depends_on("bison", type="build")
-    depends_on("openssl@:1")
+    depends_on("openssl@:1", when="@:1.19")
+    depends_on("openssl")
     depends_on("gettext")
+    depends_on("findutils", type="build")
+    depends_on("pkgconfig", type="build", when="^openssl~shared")
 
     variant(
         "shared", default=True, description="install shared libraries if True, static if false"
@@ -78,12 +81,14 @@ class Krb5(AutotoolsPackage):
         if "%gcc@10:" in self.spec:
             args.append("CFLAGS=-fcommon")
 
+        if self.spec["openssl"].satisfies("~shared"):
+            pkgconf = which("pkg-config")
+            ssllibs = pkgconf("--static", "--libs", "openssl", output=str)
+            args.append(f"LDFLAGS={ssllibs}")
+
         return args
 
-    def setup_build_environment(self, env):
-        env.prepend_path("LD_LIBRARY_PATH", self.spec["gettext"].prefix.lib)
-
     def flag_handler(self, name, flags):
-        if name == "ldlibs":
+        if name == "ldlibs" and "intl" in self.spec["gettext"].libs.names:
             flags.append("-lintl")
-        return (flags, None, None)
+        return inject_flags(name, flags)

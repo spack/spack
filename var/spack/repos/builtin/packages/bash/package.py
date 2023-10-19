@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Bash(AutotoolsPackage, GNUMirrorPackage):
@@ -13,8 +14,6 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/bash/"
     gnu_mirror_path = "bash/bash-5.0.tar.gz"
-
-    maintainers("adamjstewart")
 
     version("5.2", sha256="a139c166df7ff4471c5e0733051642ee5556c1cc8a4a78f145583c5c81ab32fb")
     version("5.1", sha256="cc012bc860406dcf42f64431bcd3d2fa7560c02915a601aba9cd597a39329baa")
@@ -41,6 +40,9 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
         ("5.2", "010", "c7705e029f752507310ecd7270aef437e8043a9959e4d0c6065a82517996c1cd"),
         ("5.2", "011", "831b5f25bf3e88625f3ab315043be7498907c551f86041fa3b914123d79eb6f4"),
         ("5.2", "012", "2fb107ce1fb8e93f36997c8b0b2743fc1ca98a454c7cc5a3fcabec533f67d42c"),
+        ("5.2", "013", "094b4fd81bc488a26febba5d799689b64d52a5505b63e8ee854f48d356bc7ce6"),
+        ("5.2", "014", "3ef9246f2906ef1e487a0a3f4c647ae1c289cbd8459caa7db5ce118ef136e624"),
+        ("5.2", "015", "ef73905169db67399a728e238a9413e0d689462cb9b72ab17a05dba51221358a"),
         ("5.1", "001", "ebb07b3dbadd98598f078125d0ae0d699295978a5cdaef6282fe19adef45b5fa"),
         ("5.1", "002", "15ea6121a801e48e658ceee712ea9b88d4ded022046a6147550790caf04f5dbe"),
         ("5.1", "003", "22f2cc262f056b22966281babf4b0a2f84cb7dd2223422e5dcd013c3dcbab6b1"),
@@ -174,8 +176,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
 
     def configure_args(self):
         spec = self.spec
-
-        return [
+        args = [
             # https://github.com/Homebrew/legacy-homebrew/pull/23234
             # https://trac.macports.org/ticket/40603
             "CFLAGS=-DSSH_SOURCE_BASHRC",
@@ -183,8 +184,12 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
             "--with-curses",
             "--enable-readline",
             "--with-installed-readline",
-            "--with-libiconv-prefix={0}".format(spec["iconv"].prefix),
         ]
+        if spec["iconv"].name == "libc":
+            args.append("--without-libiconv-prefix")
+        elif not is_system_path(spec["iconv"].prefix):
+            args.append("--with-libiconv-prefix={0}".format(spec["iconv"].prefix))
+        return args
 
     def check(self):
         make("tests")

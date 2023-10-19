@@ -25,6 +25,8 @@ class DarshanRuntime(AutotoolsPackage):
     test_requires_compiler = True
 
     version("main", branch="main", submodules=True)
+    version("3.4.4", sha256="d9c9df5aca94dc5ca3d56fd763bec2f74771d35126d61cb897373d2166ccd867")
+    version("3.4.3", sha256="dca5f9f9b0ead55a8724b218071ecbb5c4f2ef6027eaade3a6477256930ccc2c")
     version("3.4.2", sha256="b095c3b7c059a8eba4beb03ec092b60708780a3cae3fc830424f6f9ada811c6b")
     version("3.4.1", sha256="77c0a4675d94a0f9df5710e5b8658cc9ef0f0981a6dafb114d0389b1af64774c")
     version("3.4.0", sha256="7cc88b7c130ec3b574f6b73c63c3c05deec67b1350245de6d39ca91d4cff0842")
@@ -48,7 +50,7 @@ class DarshanRuntime(AutotoolsPackage):
     version("3.0.0", sha256="95232710f5631bbf665964c0650df729c48104494e887442596128d189da43e0")
 
     depends_on("mpi", when="+mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("hdf5", when="+hdf5")
     depends_on("parallel-netcdf", when="+parallel-netcdf")
     depends_on("papi", when="+apxc")
@@ -120,7 +122,7 @@ class DarshanRuntime(AutotoolsPackage):
         extra_args.append("--with-mem-align=8")
         extra_args.append("--with-log-path-by-env=DARSHAN_LOG_DIR_PATH")
         extra_args.append("--with-jobid-env=%s" % job_id)
-        extra_args.append("--with-zlib=%s" % spec["zlib"].prefix)
+        extra_args.append("--with-zlib=%s" % spec["zlib-api"].prefix)
 
         if "+mpi" in spec:
             extra_args.append("CC=%s" % self.spec["mpi"].mpicc)
@@ -144,70 +146,39 @@ class DarshanRuntime(AutotoolsPackage):
         test_inputs = [join_path(self.basepath, "mpi-io-test.c")]
         self.cache_extra_test_sources(test_inputs)
 
-    def _test_intercept(self):
+    def test_mpi_io_test(self):
+        """build, run, and check outputs"""
+        if "+mpi" not in self.spec:
+            raise SkipTest("Test requires +mpi build")
+
         testdir = "intercept-test"
+        logname = join_path(os.getcwd(), testdir, "test.darshan")
+        testexe = "mpi-io-test"
+
         with working_dir(testdir, create=True):
-            if "+mpi" in self.spec:
-                # compile a test program
-                logname = join_path(os.getcwd(), "test.darshan")
-                fname = join_path(
-                    self.test_suite.current_test_cache_dir,
-                    join_path(self.basepath, "mpi-io-test.c"),
-                )
-                cc = Executable(self.spec["mpi"].mpicc)
-                compile_opt = ["-c", fname]
-                link_opt = ["-o", "mpi-io-test", "mpi-io-test.o"]
-                cc(*(compile_opt))
-                cc(*(link_opt))
+            env["LD_PRELOAD"] = join_path(self.prefix.lib, "libdarshan.so")
+            env["DARSHAN_LOGFILE"] = logname
 
-                # run test program and intercept
-                purpose = "Test running code built against darshan"
-                exe = "./mpi-io-test"
-                options = ["-f", "tmp.dat"]
-                status = [0]
-                installed = False
-                expected_output = [
-                    r"Write bandwidth = \d+.\d+ Mbytes/sec",
-                    r"Read bandwidth = \d+.\d+ Mbytes/sec",
-                ]
-                env["LD_PRELOAD"] = "libdarshan.so"
-                env["DARSHAN_LOGFILE"] = logname
-                self.run_test(
-                    exe,
-                    options,
-                    expected_output,
-                    status,
-                    installed,
-                    purpose,
-                    skip_missing=False,
-                    work_dir=None,
-                )
-                env.pop("LD_PRELOAD")
+            # compile the program
+            fname = join_path(
+                self.test_suite.current_test_cache_dir, self.basepath, f"{testexe}.c"
+            )
+            cc = Executable(self.spec["mpi"].mpicc)
+            compile_opt = ["-c", fname]
+            link_opt = ["-o", "mpi-io-test", "mpi-io-test.o"]
+            cc(*(compile_opt))
+            cc(*(link_opt))
 
-                import llnl.util.tty as tty
+            # run test program and intercept
+            mpi_io_test = which(join_path(".", testexe))
+            out = mpi_io_test("-f", "tmp.dat", output=str.split, error=str.split)
+            env.pop("LD_PRELOAD")
 
-                # verify existence of log and size is > 0
-                tty.msg("Test for existince of log:")
-                if os.path.exists(logname):
-                    sr = os.stat(logname)
-                    print("PASSED")
-                    tty.msg("Test for size of log:")
-                    if not sr.st_size > 0:
-                        exc = BaseException("log size is 0")
-                        m = None
-                        if spack.config.get("config:fail_fast", False):
-                            raise TestFailure([(exc, m)])
-                        else:
-                            self.test_failures.append((exc, m))
-                    else:
-                        print("PASSED")
-                else:
-                    exc = BaseException("log does not exist")
-                    m = None
-                    if spack.config.get("config:fail_fast", False):
-                        raise TestFailure([(exc, m)])
-                    else:
-                        self.test_failures.append((exc, m))
+            expected_output = [
+                r"Write bandwidth = \d+.\d+ Mbytes/sec",
+                r"Read bandwidth = \d+.\d+ Mbytes/sec",
+            ]
+            check_outputs(expected_output, out)
 
-    def test(self):
-        self._test_intercept()
+            assert os.path.exists(logname), f"Expected {logname} to exist"
+            assert (os.stat(logname)).st_size > 0, f"Expected non-empty {logname}"

@@ -15,12 +15,15 @@ class PyScipy(PythonPackage):
     as routines for numerical integration and optimization."""
 
     homepage = "https://www.scipy.org/"
-    pypi = "scipy/scipy-1.5.4.tar.gz"
+    pypi = "scipy/scipy-1.10.1.tar.gz"
     git = "https://github.com/scipy/scipy.git"
 
     maintainers("adamjstewart", "rgommers")
 
     version("master", branch="master")
+    version("1.11.2", sha256="b29318a5e39bd200ca4381d80b065cdf3076c7d7281c5e36569e99273867f61d")
+    version("1.11.1", sha256="fb5b492fa035334fd249f0973cc79ecad8b09c604b42a127a677b45a9a3d4289")
+    version("1.11.0", sha256="f9b0248cb9d08eead44cde47cbf6339f1e9aa0dfde28f5fb27950743e317bd5d")
     version("1.10.1", sha256="2cf9dfb80a7b4589ba4c40ce7588986d6d5cebc5457cad2c2880f6bc2d42f3a5")
     version("1.10.0", sha256="c8b3cbc636a87a89b770c6afc999baa6bcbb01691b5ccbbc1b1791c7c0a07540")
     version("1.9.3", sha256="fbc5c05c85c1a02be77b1ff591087c83bc44579c6d2bd9fb798bb64ea5e1a027")
@@ -53,20 +56,32 @@ class PyScipy(PythonPackage):
     version("1.2.1", sha256="e085d1babcb419bbe58e2e805ac61924dac4ca45a07c9fa081144739e500aa3c")
     version("1.1.0", sha256="878352408424dffaa695ffedf2f9f92844e116686923ed9aa8626fc30d32cfd1")
 
+    # Based on wheel availability on PyPI
+    depends_on("python@3.9:3.12", when="@1.11:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@1.9.2:1.10", type=("build", "link", "run"))
+    depends_on("python@3.8:3.10", when="@1.8:1.9.1", type=("build", "link", "run"))
+    depends_on("python@:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
+    depends_on("python@:3.9", when="@1.5.4:1.7.1", type=("build", "link", "run"))
+    depends_on("python@:3.8", when="@1.3.2:1.5.3", type=("build", "link", "run"))
+    depends_on("python@:3.7", when="@1.1:1.3.1", type=("build", "link", "run"))
+
     # TODO: remove once pip build supports BLAS/LAPACK specification
     # https://github.com/mesonbuild/meson-python/pull/167
     depends_on("py-build", when="@1.9:", type="build")
 
-    depends_on("py-meson-python@0.11:0.12", when="@1.10.1:", type="build")
+    depends_on("py-meson-python@0.12.1:0.13", when="@1.11:", type="build")
+    depends_on("py-meson-python@0.11:0.12", when="@1.10.1:1.10", type="build")
     depends_on("py-meson-python@0.11", when="@1.10.0", type="build")
     depends_on("py-meson-python@0.9:", when="@1.9.2:1.9", type="build")
     depends_on("py-meson-python@0.8.1:", when="@1.9.1", type="build")
     depends_on("py-meson-python@0.7", when="@1.9.0", type="build")
     depends_on("meson@0.62.2", when="@1.9.0:1.9.1", type="build")
+    depends_on("py-cython@0.29.35:2", when="@1.11:", type="build")
     depends_on("py-cython@0.29.32:2", when="@1.9.2:", type="build")
     depends_on("py-cython@0.29.21:2", when="@1.9:", type="build")
     depends_on("py-cython@0.29.18:2", when="@1.7:", type="build")
-    depends_on("py-pybind11@2.10.1", when="@1.10:", type=("build", "link"))
+    depends_on("py-pybind11@2.10.4:2.10", when="@1.11:", type=("build", "link"))
+    depends_on("py-pybind11@2.10.1", when="@1.10", type=("build", "link"))
     depends_on("py-pybind11@2.4.3:2.10", when="@1.9.1:1.9", type=("build", "link"))
     depends_on("py-pybind11@2.4.3:2.9", when="@1.9.0", type=("build", "link"))
     depends_on("py-pybind11@2.4.3:2.8", when="@1.8", type=("build", "link"))
@@ -75,20 +90,23 @@ class PyScipy(PythonPackage):
     depends_on("py-pybind11@2.4.3:", when="@1.5:1.6.1", type=("build", "link"))
     depends_on("py-pybind11@2.4.0:", when="@1.4.1:1.4", type=("build", "link"))
     depends_on("py-pybind11@2.2.4:", when="@1.4.0", type=("build", "link"))
-    depends_on("py-pythran@0.12", when="@1.10:", type=("build", "link"))
-    depends_on("py-pythran@0.9.12:0.12", when="@1.9.2:1.9", type=("build", "link"))
-    depends_on("py-pythran@0.9.12:0.11", when="@1.9.0:1.9.1", type=("build", "link"))
-    depends_on("py-pythran@0.10", when="@1.8", type=("build", "link"))
-    depends_on("py-pythran@0.9.12:0.9", when="@1.7.2:1.7", type=("build", "link"))
-    depends_on("py-pythran@0.9.11", when="@1.7.0:1.7.1", type=("build", "link"))
-    depends_on("py-wheel@:0.38", when="@1.10:", type="build")
+    depends_on("py-pythran@0.12:0.13", when="@1.11:", type="build")
+    depends_on("py-pythran@0.12", when="@1.10", type="build")
+    depends_on("py-pythran@0.9.12:0.12", when="@1.9.2:1.9", type="build")
+    depends_on("py-pythran@0.9.12:0.11", when="@1.9.0:1.9.1", type="build")
+    depends_on("py-pythran@0.10", when="@1.8", type="build")
+    depends_on("py-pythran@0.9.12:0.9", when="@1.7.2:1.7", type="build")
+    depends_on("py-pythran@0.9.11", when="@1.7.0:1.7.1", type="build")
+    depends_on("py-wheel@:0.40", when="@1.11:", type="build")
+    depends_on("py-wheel@:0.38", when="@1.10", type="build")
     depends_on("py-wheel@:0.37", when="@:1.9", type="build")
     depends_on("pkgconfig", when="@1.9:", type="build")
     depends_on("py-setuptools", when="@:1.8", type="build")
     depends_on("py-setuptools@:59", when="@1.8", type="build")
     depends_on("py-setuptools@:57", when="@1.7", type="build")
     depends_on("py-setuptools@:51.0.0", when="@1.6", type="build")
-    depends_on("py-numpy@1.19.5:1.26+blas+lapack", when="@1.10:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.21.6:1.27+blas+lapack", when="@1.11:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.19.5:1.26+blas+lapack", when="@1.10", type=("build", "link", "run"))
     depends_on("py-numpy@1.18.5:1.25+blas+lapack", when="@1.9", type=("build", "link", "run"))
     depends_on("py-numpy@1.17.3:1.24+blas+lapack", when="@1.8", type=("build", "link", "run"))
     depends_on(
@@ -98,14 +116,6 @@ class PyScipy(PythonPackage):
     depends_on("py-numpy@1.14.5:+blas+lapack", when="@1.5.0:1.5", type=("build", "link", "run"))
     depends_on("py-numpy@1.13.3:+blas+lapack", when="@1.3:1.4", type=("build", "link", "run"))
     depends_on("py-numpy@1.8.2:+blas+lapack", when="@:1.2", type=("build", "link", "run"))
-    depends_on("python@3.8:3.11", when="@1.9:", type=("build", "link", "run"))
-    depends_on("python@3.8:3.10", when="@1.8", type=("build", "link", "run"))
-    depends_on("python@3.7:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
-    depends_on("python@3.7:3.9", when="@1.6.2:1.7.1", type=("build", "link", "run"))
-    depends_on("python@3.7:3.10.0", when="@1.6:1.6.1", type=("build", "link", "run"))
-    depends_on("python@3.6:3.10.0", when="@1.5.0:1.5", type=("build", "link", "run"))
-    depends_on("python@3.5:3.10.0", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:3.10.0", when="@:1.2", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")
 
     # NOTE: scipy should use the same BLAS/LAPACK as numpy.
@@ -130,7 +140,7 @@ class PyScipy(PythonPackage):
     # https://github.com/mesonbuild/meson/pull/10909#issuecomment-1282241479
     # Intel OneAPI ifx claims to support -fvisibility, but this does not work.
     # Meson adds this flag for all Python extensions which include Fortran code.
-    conflicts("%oneapi", when="@1.9:")
+    conflicts("%oneapi@:2023.0", when="@1.9:")
 
     # https://github.com/scipy/scipy/issues/12860
     patch(
@@ -183,9 +193,8 @@ class PyScipy(PythonPackage):
                 env.set("NPY_DISTUTILS_APPEND_FLAGS", "1")
 
         # https://github.com/scipy/scipy/issues/14935
-        if self.spec.satisfies("%intel ^py-pythran") or self.spec.satisfies("%oneapi ^py-pythran"):
-            if self.spec["py-pythran"].version < Version("0.12"):
-                env.set("SCIPY_USE_PYTHRAN", "0")
+        if self.spec.satisfies("%intel ^py-pythran"):
+            env.set("SCIPY_USE_PYTHRAN", "0")
 
         # Pick up BLAS/LAPACK from numpy
         if self.spec.satisfies("@:1.8"):
@@ -203,10 +212,16 @@ class PyScipy(PythonPackage):
             lapack = "mkl-dynamic-lp64-seq"
         if spec["blas"].name in ["blis", "amdblis"]:
             blas = "blis"
-        if blas == "armpl":
-            blas += "-dynamic-lp64-seq"
-        if lapack == "armpl":
-            lapack += "-dynamic-lp64-seq"
+        if "armpl" in blas:
+            if "_mp" in blas:
+                blas = "armpl-dynamic-lp64-omp"
+            else:
+                blas = "armpl-dynamic-lp64-seq"
+        if "armpl" in lapack:
+            if "_mp" in lapack:
+                lapack = "armpl-dynamic-lp64-omp"
+            else:
+                lapack = "armpl-dynamic-lp64-seq"
 
         args = [
             "setup",
@@ -226,6 +241,7 @@ class PyScipy(PythonPackage):
             "-Cbuilddir=build",
             "--no-isolation",
             "--skip-dependency-check",
+            "-Ccompile-args=-j%s" % make_jobs,
             ".",
         ]
         python(*args)

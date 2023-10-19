@@ -14,8 +14,12 @@ class Libjxl(CMakePackage):
     git = "https://github.com/libjxl/libjxl.git"
 
     version("main", branch="main", submodules=True)
-    version("0.7.0", tag="v0.7.0", submodules=True)
-    version("0.6.1", tag="v0.6.1", submodules=True)
+    version(
+        "0.7.0", tag="v0.7.0", commit="f95da131cf7c7ccd4da256356fde2fec1fa23bb5", submodules=True
+    )
+    version(
+        "0.6.1", tag="v0.6.1", commit="a205468bc5d3a353fb15dae2398a101dff52f2d3", submodules=True
+    )
 
     depends_on("cmake@3.10:", type="build")
     depends_on("brotli")

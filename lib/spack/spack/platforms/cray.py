@@ -37,7 +37,9 @@ _xc_craype_dir = "/opt/cray/pe/cdt"
 
 
 def slingshot_network():
-    return os.path.exists("/opt/cray/pe") and os.path.exists("/lib64/libcxi.so")
+    return os.path.exists("/opt/cray/pe") and (
+        os.path.exists("/lib64/libcxi.so") or os.path.exists("/usr/lib64/libcxi.so")
+    )
 
 
 def _target_name_from_craype_target_name(name):
@@ -57,7 +59,7 @@ class Cray(Platform):
           configuration file "targets.yaml" with keys 'front_end', 'back_end'
           scanning /etc/bash/bashrc.local for back_end only
         """
-        super(Cray, self).__init__("cray")
+        super().__init__("cray")
 
         # Make all craype targets available.
         for target in self._avail_targets():
@@ -137,6 +139,8 @@ class Cray(Platform):
         # If no default version, sort available versions and return latest
         versions_available = [spack.version.Version(v) for v in os.listdir(craype_dir)]
         versions_available.sort(reverse=True)
+        if not versions_available:
+            return (craype_type, None)
         return (craype_type, versions_available[0])
 
     @classmethod

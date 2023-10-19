@@ -16,6 +16,7 @@ class Kicad(CMakePackage):
     url = "https://gitlab.com/kicad/code/kicad/-/archive/5.1.8/kicad-5.1.8.tar.gz"
     maintainers("aweits")
 
+    version("7.0.2", sha256="8df56648226061c91ddd1d2ca970c66190fc70c7ace23c99cc28c209713e4dfc")
     version("5.1.9", sha256="841be864b9dc5c761193c3ee9cbdbed6729952d7b38451aa8e1977bdfdb6081b")
     version("5.1.8", sha256="bf24f8ef427b4a989479b8e4af0b8ae5c54766755f12748e2e88a922c5344ca4")
 
@@ -32,7 +33,9 @@ class Kicad(CMakePackage):
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
-    depends_on("oce+X11")
+    depends_on("oce+X11", when="@5")
+    depends_on("opencascade", when="@7:")
+    depends_on("unixodbc", when="@7:")
     depends_on("swig", type="build")
     depends_on("curl")
     depends_on("pkgconfig")
@@ -70,6 +73,18 @@ class Kicad(CMakePackage):
         ),
         ("5.1.9", "symbols", "6741a7b01f14f1f5aae3155a554816516cf02ce7790074ba8462dee8091f8c2f"),
         ("5.1.9", "templates", "bacf93567f8efe87314762448bb69698c8ed387058c13868c051c91740014aac"),
+        (
+            "7.0.2",
+            "footprints",
+            "81ba4e1a48a4a741e3860d2e6b305a1002aea41c9ce168db13f9c7650198e374",
+        ),
+        (
+            "7.0.2",
+            "packages3D",
+            "a436414b9466db3aacfbe3efedfc784bcec2d2839789234fc65414069a9e470d",
+        ),
+        ("7.0.2", "symbols", "d0f9aed81172e14da899d90e2ead6ef8c4d515da3a3847a26bab22db4a7e4528"),
+        ("7.0.2", "templates", "2ca6de284aa6d1567173d3d5ef10bb7f416cc919b7a9cae438ebb36ced15df74"),
     ]
 
     for ver, lib, checksum in resource_list:
@@ -99,6 +114,10 @@ class Kicad(CMakePackage):
         args = []
         args.append("-DKICAD_SCRIPTING_PYTHON3=ON")
         args.append("-DKICAD_SCRIPTING_WXPYTHON=OFF")
+        if self.spec.satisfies("^opencascade"):
+            args.append(
+                "-DOCC_INCLUDE_DIR={0}".format(self.spec["opencascade"].prefix.include.opencascade)
+            )
         return args
 
     @run_after("install")

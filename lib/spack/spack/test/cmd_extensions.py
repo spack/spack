@@ -14,8 +14,6 @@ import spack.config
 import spack.extensions
 import spack.main
 
-is_windows = sys.platform == "win32"
-
 
 class Extension:
     """Helper class to simplify the creation of simple command extension
@@ -274,7 +272,7 @@ def test_variable_in_extension_path(config, working_env):
     os.environ["_MY_VAR"] = os.path.join("my", "var")
     ext_paths = [os.path.join("~", "${_MY_VAR}", "spack-extension-1")]
     # Home env variable is USERPROFILE on Windows
-    home_env = "USERPROFILE" if is_windows else "HOME"
+    home_env = "USERPROFILE" if sys.platform == "win32" else "HOME"
     expected_ext_paths = [
         os.path.join(os.environ[home_env], os.environ["_MY_VAR"], "spack-extension-1")
     ]

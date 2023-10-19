@@ -12,6 +12,7 @@ class AprUtil(AutotoolsPackage):
     homepage = "https://apr.apache.org/"
     url = "https://archive.apache.org/dist/apr/apr-util-1.6.1.tar.gz"
 
+    version("1.6.3", sha256="2b74d8932703826862ca305b094eef2983c27b39d5c9414442e9976a9acf1983")
     version("1.6.1", sha256="b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459")
     version("1.6.0", sha256="483ef4d59e6ac9a36c7d3fd87ad7b9db7ad8ae29c06b9dd8ff22dda1cc416389")
     version("1.5.4", sha256="976a12a59bc286d634a21d7be0841cc74289ea9077aa1af46be19d1a6e844c19")
@@ -31,6 +32,7 @@ class AprUtil(AutotoolsPackage):
     depends_on("postgresql", when="+pgsql")
     depends_on("sqlite", when="+sqlite")
     depends_on("unixodbc", when="+odbc")
+    depends_on("pkgconfig", type="build", when="+crypto ^openssl~shared")
 
     @property
     def libs(self):
@@ -83,6 +85,13 @@ class AprUtil(AutotoolsPackage):
             args.append("--with-odbc={0}".format(spec["unixodbc"].prefix))
         else:
             args.append("--without-odbc")
+
+        if spec.satisfies("+crypto ^openssl~shared"):
+            # Need pkg-config to get zlib and -ldl flags
+            # (see https://dev.apr.apache.narkive.com/pNnO9F1S/configure-bug-openssl)
+            pkgconf = which("pkg-config")
+            ssl_libs = pkgconf("--libs", "--static", "openssl", output=str)
+            args.append(f"LIBS={ssl_libs}")
 
         return args
 

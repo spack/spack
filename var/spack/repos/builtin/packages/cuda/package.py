@@ -25,6 +25,76 @@ from spack.package import *
 
 preferred_ver = "11.8.0"
 _versions = {
+    "12.2.1": {
+        "Linux-aarch64": (
+            "a9ae6bd02684c7acfb229484368bf2691d592767ce1aed10ae9aed92c81b9f09",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.1/local_installers/cuda_12.2.1_535.86.10_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "c51e814eaa756160a73289b1f35880cc38c18e1ddedc87f46f7ff0d1696bdb95",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.1/local_installers/cuda_12.2.1_535.86.10_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "8f1aa60cc1e14fd7853eeecd53a78b7dfb2b2da0512a312cc35e4f5b79454f94",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.1/local_installers/cuda_12.2.1_535.86.10_linux_ppc64le.run",
+        ),
+    },
+    "12.2.0": {
+        "Linux-aarch64": (
+            "9c90d79bb63952cd30f1f57f9f8fe11e7a8967bba6f824df45d3464b5d37e5d8",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "ecf3d2afadcbac029f0f4505785810d52d006e4b87ba79ff3f984336a2bbf518",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "f7b5fde5f727b51c380c6199200d0525e8585475944ff8ad2791d06734f54230",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux_ppc64le.run",
+        ),
+    },
+    "12.1.1": {
+        "Linux-aarch64": (
+            "45ea4cd860f0a26d3db8ce032530f2ee0b55abdd587545213d395a73623b4278",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.1/local_installers/cuda_12.1.1_530.30.02_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "d74022d41d80105319dfa21beea39b77a5b9919539c0487a05caaf2446d6a70e",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.1/local_installers/cuda_12.1.1_530.30.02_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "c5950381f2c01fd52692372fc8e51d599e940ada2af2c82c3cc854ecff933eae",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.1/local_installers/cuda_12.1.1_530.30.02_linux_ppc64le.run",
+        ),
+    },
+    "12.1.0": {
+        "Linux-aarch64": (
+            "1d0dd884f5257c12471dc455dc1a4aee8d620191737c0b2e40f016d8adc9d009",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "68699036c12d71adb9ad2799dce2ff070270fab4488b90920b9756ab3f52c41c",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "8d75bd9da953a51062b89b8c752cffcf02b02c85cb461291d354ac2cffb2da48",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux_ppc64le.run",
+        ),
+    },
+    "12.0.1": {
+        "Linux-aarch64": (
+            "835270a8db419b9dbaefc1bab8fe5caf6f2caf381975c4b0d35cc0718c26074a",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.1/local_installers/cuda_12.0.1_525.85.12_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "1b205a06272f1463f477276fdab903f3f666917c068e520738001e69c7a1875b",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.1/local_installers/cuda_12.0.1_525.85.12_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "1e81040223c25fd72895a1348e32463d7d0f5a7e74b5d2ace897220cb6d4d849",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.1/local_installers/cuda_12.0.1_525.85.12_linux_ppc64le.run",
+        ),
+    },
     "12.0.0": {
         "Linux-aarch64": (
             "cd13e9c65d4c8f895a968706f46064d536be09f9706bce081cc864b7e4fa4544",
@@ -451,6 +521,8 @@ class Cuda(Package):
 
     maintainers("ax3l", "Rombur")
     executables = ["^nvcc$"]
+
+    skip_version_audit = ["platform=darwin"]
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())

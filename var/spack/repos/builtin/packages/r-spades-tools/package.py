@@ -19,6 +19,7 @@ class RSpadesTools(RPackage):
 
     maintainers("dorton21")
 
+    version("1.0.1", sha256="6b0d69c8737ff06e2cf312ff94b298b81f4c50af2efd498a124b99ed66a2be9a")
     version("1.0.0", sha256="1172b96ada7052fcaa3a113ed31eeb1b67dba70f40fa74cbb378c6e75e9235dc")
     version("0.3.10", sha256="ba4c075b534caaca413e2e97711b5475c2679d9546c8fee4a07fb2bb94d52c94")
     version("0.3.9", sha256="84dc47f55ded58746dcb943fde97fa4a4b852e1d2f45949ab1914cf8454e00f3")

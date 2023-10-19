@@ -20,7 +20,7 @@ class Kallisto(CMakePackage):
     # HDF5 support is optional beginning with version 0.46.2.
     variant("hdf5", when="@0.46.2:", default=False, description="Build with HDF5 support")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("hdf5", when="@:0.43")
     depends_on("hdf5", when="+hdf5")
 
@@ -57,7 +57,7 @@ class Kallisto(CMakePackage):
         """Call the original std_cmake_args and then filter the verbose
         setting.
         """
-        a = super(Kallisto, self).std_cmake_args
+        a = super().std_cmake_args
         if self.spec.satisfies("@0.44.0:"):
             args = [i for i in a if i != "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"]
             if self.spec.satisfies("@0.46.2:"):

@@ -16,6 +16,7 @@ class RBit(RPackage):
 
     cran = "bit"
 
+    version("4.0.5", sha256="f0f2536a8874b6a30b80baefbc68cb21f0ffbf51f3877bda8038c3f9f354bfbc")
     version("4.0.4", sha256="e404841fbe4ebefe4ecd4392effe673a8c9fa05f97952c4ce6e2f6159bd2f168")
     version("1.1-14", sha256="5cbaace1fb643a665a6ca69b90f7a6d624270de82420ca7a44f306753fcef254")
     version("1.1-12", sha256="ce281c87fb7602bf1a599e72f3e25f9ff7a13e390c124a4506087f69ad79d128")

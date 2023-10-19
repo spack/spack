@@ -12,6 +12,7 @@ class PerlModuleBuildTiny(PerlPackage):
     homepage = "https://metacpan.org/pod/Module::Build::Tiny"
     url = "https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-Tiny-0.039.tar.gz"
 
+    version("0.044", sha256="cb053a3049cb717dbf4fd7f3c7ab7c0cb1015b22e2d93f38b1ffc47c078322fd")
     version("0.039", sha256="7d580ff6ace0cbe555bf36b86dc8ea232581530cbeaaea09bccb57b55797f11c")
 
     depends_on("perl-module-build", type="build")

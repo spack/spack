@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
         concretizer: ['clingo']
         on_develop:
         - ${{ github.ref == 'refs/heads/develop' }}
@@ -45,12 +45,16 @@ jobs:
           os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
+        - python-version: '3.11'
+          os: ubuntu-latest
+          concretizer: 'clingo'
+          on_develop: false
 
     steps:
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -62,7 +66,7 @@ jobs:
               cmake bison libbison-dev kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov[toml] pytest-xdist pytest-cov
+          pip install --upgrade pip setuptools pytest pytest-xdist pytest-cov
           pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
     - name: Setup git configuration
       run: |
@@ -87,17 +91,17 @@ jobs:
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
+    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
   shell:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -107,7 +111,7 @@ jobs:
           sudo apt-get install -y coreutils kcov csh zsh tcsh fish dash bash
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov coverage[toml] pytest-xdist
+          pip install --upgrade pip setuptools pytest coverage[toml] pytest-xdist
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -118,7 +122,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
+    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
       with:
         flags: shelltests,linux
 
@@ -133,10 +137,11 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
     - name: Setup repo and non-root user
       run: |
           git --version
+          git config --global --add safe.directory /__w/spack/spack
           git fetch --unshallow
           . .github/workflows/setup_git.sh
           useradd spack-test
@@ -151,10 +156,10 @@ jobs:
   clingo-cffi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -163,7 +168,8 @@ jobs:
           sudo apt-get -y install coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov coverage[toml] pytest-cov clingo pytest-xdist
+          pip install --upgrade pip setuptools pytest coverage[toml] pytest-cov clingo pytest-xdist
+          pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -175,7 +181,7 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # @v2.1.0
+    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # @v2.1.0
       with:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
@@ -183,18 +189,18 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.11"]
     steps:
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools
-          pip install --upgrade pytest codecov coverage[toml] pytest-xdist pytest-cov
+          pip install --upgrade pip setuptools
+          pip install --upgrade pytest coverage[toml] pytest-xdist pytest-cov
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg2 kcov
@@ -210,6 +216,6 @@ jobs:
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
         $(which spack) unit-test --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
-    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
+    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
       with:
         flags: unittests,macos

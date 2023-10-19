@@ -21,5 +21,5 @@ class PyLhsmdu(PythonPackage):
     version("0.1", sha256="ef462054b354cd20b10c6d80876c8fdb552a8d2e23eaf74179dc91956d68d32a")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type="build")
-    depends_on("py-scipy", type="build")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))

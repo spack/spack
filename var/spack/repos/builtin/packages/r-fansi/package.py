@@ -14,6 +14,7 @@ class RFansi(RPackage):
 
     cran = "fansi"
 
+    version("1.0.4", sha256="3163214e6c40922bbb495229259ed8ce1bebd98b77098a6936d234e43da9c49f")
     version("1.0.3", sha256="86a7b83d8c9d28baebbde310cd0b459d0950a9c7ff1a6276ce5858f6a89bc06a")
     version("1.0.2", sha256="d1e2cf2e10613abe19071e3dab7c564ebcf85ad13cbee25fa1999267af01b557")
     version("0.5.0", sha256="9d1bf8c316969c163abd3dd41cc1425b2671df9471fe806bf8783794a19ca54f")

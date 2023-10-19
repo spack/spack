@@ -27,8 +27,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     homepage = 'http://www.mfem.org'
     git      = 'https://github.com/mfem/mfem.git'
 
-    maintainers = ['v-dobrev', 'tzanio', 'acfisher',
-                   'goxberry', 'markcmiller86']
+    maintainers('v-dobrev', 'tzanio', 'acfisher', 'goxberry', 'markcmiller86')
 
     test_requires_compiler = True
 
@@ -815,8 +814,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir,
-                                       self.examples_data_dir])
+        cache_extra_test_sources(self, [self.examples_src_dir, self.examples_data_dir])
 
     def test(self):
         test_dir = join_path(

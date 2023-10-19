@@ -16,6 +16,7 @@ class LibpressioTthresh(CMakePackage):
     maintainers("robertu94")
 
     version("main", branch="main")
+    version("0.0.7", sha256="5e364ef72dd1ed1cf786d2b7aef89624fdcf1a0ca845777ce54c365b35a75be2")
     version("0.0.6", sha256="e9dc4754421d892a86516c6bb892f6ff582e9ea3c242c1c052104e4f6944cbec")
     version("0.0.5", sha256="af47c90e9c16825312e390a7fb30d9d128847afb69ad6c2f6608bd80f60bae23")
     version("0.0.3", sha256="b0b0a4876d3362deafc2bb326be33882132e3d1666e0c5f916fd6fad74a18688")

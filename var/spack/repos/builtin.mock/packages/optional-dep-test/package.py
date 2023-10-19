@@ -12,8 +12,8 @@ class OptionalDepTest(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/optional_dep_test-1.0.tar.gz"
 
-    version("1.0", "0123456789abcdef0123456789abcdef")
-    version("1.1", "0123456789abcdef0123456789abcdef")
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
+    version("1.1", md5="0123456789abcdef0123456789abcdef")
 
     variant("a", default=False)
     variant("f", default=False)

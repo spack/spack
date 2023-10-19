@@ -12,7 +12,7 @@ class Boost(Package):
     homepage = "http://www.boost.org"
     url = "http://downloads.sourceforge.net/project/boost/boost/1.63.0/boost_1_63_0.tar.bz2"
 
-    version("1.63.0", "1c837ecd990bb022d07e7aab32b09847")
+    version("1.63.0", md5="1c837ecd990bb022d07e7aab32b09847")
 
     default_install_libs = set(
         [

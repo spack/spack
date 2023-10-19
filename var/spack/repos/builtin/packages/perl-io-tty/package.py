@@ -14,4 +14,5 @@ class PerlIoTty(PerlPackage):
     homepage = "https://metacpan.org/pod/IO::Tty"
     url = "https://cpan.metacpan.org/authors/id/T/TO/TODDR/IO-Tty-1.13_01.tar.gz"
 
+    version("1.17", sha256="a5f1a83020bc5b5dd6c1b570f48c7546e0a8f7fac10a068740b03925ad9e14e8")
     version("1.13_01", sha256="89798eba7c31d9c169ef2f38ff49490aa769b1d9a68033de365595cfaf9cc258")

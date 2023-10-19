@@ -19,6 +19,9 @@ class Graphviz(AutotoolsPackage):
     git = "https://gitlab.com/graphviz/graphviz.git"
     url = "https://gitlab.com/graphviz/graphviz/-/archive/2.46.0/graphviz-2.46.0.tar.bz2"
 
+    version("8.0.5", sha256="c1901fe52483fad55fbf893ccd59a3dcaedd53f0d50b5aebbbf3deaba93b674d")
+    version("8.0.1", sha256="19928f09f759676578b50101420b24475eb35f712ffbe8a97254f64b20fdbd03")
+    version("7.1.0", sha256="7943c3fa0c55c779f595259f3b9e41c7ea6ed92f0aca0d24df917f631322dc01")
     version("2.49.0", sha256="b129555743bb9bfb7b63c55825da51763b2f1ee7c0eaa6234a42a61a3aff6cc9")
     version("2.47.2", sha256="b5ebb00d4283c6d12cf16b2323e1820b535cc3823c8f261b783f7903b1d5b7fb")
     version("2.46.0", sha256="1b11684fd5488940b45bf4624393140da6032abafae08f33dc3e986cffd55d71")
@@ -100,7 +103,7 @@ class Graphviz(AutotoolsPackage):
         depends_on(lang, when=("+" + lang))
 
     # Feature dependencies
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("groff", type="build", when="+doc")
     depends_on("ghostscript", type="build", when="+doc")
     depends_on("expat", when="+expat")
@@ -149,7 +152,7 @@ class Graphviz(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         # Set MACOSX_DEPLOYMENT_TARGET to 10.x due to old configure
-        super(Graphviz, self).setup_build_environment(env)
+        super().setup_build_environment(env)
 
         if "+quartz" in self.spec:
             env.set("OBJC", self.compiler.cc)
@@ -190,10 +193,14 @@ class Graphviz(AutotoolsPackage):
             "x",
         ]:
             args += self.with_or_without(var)
-        for var in ["zlib", "expat", "java"]:
+        for var in ("expat", "java"):
             if "+" + var in spec:
                 args.append("--with-{0}includedir={1}".format(var, spec[var].prefix.include))
                 args.append("--with-{0}libdir={1}".format(var, spec[var].prefix.lib))
+
+        if "+zlib" in spec:
+            args.append("--with-zlibincludedir={}".format(spec["zlib-api"].prefix.include))
+            args.append("--with-zliblibdir={}".format(spec["zlib-api"].prefix.lib))
 
         args.append("--{0}-gtk".format("with" if "+gtkplus" in spec else "without"))
 

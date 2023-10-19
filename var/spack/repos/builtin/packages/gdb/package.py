@@ -19,6 +19,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers("robertu94")
 
+    version("13.1", sha256="4cc3d7143d6d54d289d227b1e7289dbc0fa4cbd46131ab87136e1ea831cf46d4")
     version("12.1", sha256="87296a3a9727356b56712c793704082d5df0ff36a34ca9ec9734fc9a8bdfdaab")
     version("11.2", sha256="b558b66084835e43b6361f60d60d314c487447419cdf53adf83a87020c367290")
     version("11.1", sha256="cc2903474e965a43d09c3b263952d48ced39dd22ce2d01968f3aa181335fcb9c")
@@ -45,6 +46,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     variant("gold", default=False, description="Enable gold linker")
     variant("ld", default=False, description="Enable ld")
     variant("tui", default=False, description="Enable tui")
+    variant("debuginfod", default=True, description="Enable debuginfod support", when="@10.1:")
 
     # Resolves the undefined references to libintl_gettext while linking gdbserver
     # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
@@ -77,36 +79,36 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     # https://bugzilla.redhat.com/show_bug.cgi?id=1829702
     depends_on("python@:3.8", when="@:9.2+python", type=("build", "link", "run"))
     depends_on("xz", when="+xz")
+    depends_on("zlib-api")
+    depends_on("zstd", when="@13.1:")
     depends_on("source-highlight", when="+source-highlight")
     depends_on("ncurses", when="+tui")
     depends_on("gmp", when="@11.1:")
+    depends_on("elfutils@0.179:+debuginfod", when="@10.1:+debuginfod")
 
     build_directory = "spack-build"
 
     def configure_args(self):
-        args = ["--with-system-gdbinit={0}".format(self.prefix.etc.gdbinit)]
+        args = [
+            "--with-system-gdbinit={}".format(self.prefix.etc.gdbinit),
+            "--with-system-zlib",
+            *self.enable_or_disable("lto"),
+            *self.with_or_without("quad"),
+            *self.enable_or_disable("gold"),
+            *self.enable_or_disable("ld"),
+            *self.enable_or_disable("tui"),
+            *self.with_or_without("debuginfod"),
+        ]
+
+        if self.spec.satisfies("@13.1:"):
+            args.append("--with-zstd")
 
         if self.spec.version >= Version("11.1"):
-            args.append("--with-gmp={0}".format(self.spec["gmp"].prefix))
+            args.append("--with-gmp={}".format(self.spec["gmp"].prefix))
 
         if "+python" in self.spec:
-            args.append("--with-python={0}".format(self.spec["python"].command))
-            args.append("LDFLAGS={0}".format(self.spec["python"].libs.ld_flags))
-
-        if "+lto" in self.spec:
-            args.append("--enable-lto")
-
-        if "+quad" in self.spec:
-            args.append("--with-quad")
-
-        if "+gold" in self.spec:
-            args.append("--enable-gold")
-
-        if "+ld" in self.spec:
-            args.append("--enable-ld")
-
-        if "+tui" in self.spec:
-            args.append("--enable-tui")
+            args.append("--with-python={}".format(self.spec["python"].command))
+            args.append("LDFLAGS={}".format(self.spec["python"].libs.ld_flags))
 
         return args
 

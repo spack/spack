@@ -19,13 +19,16 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     homepage = "https://github.com/microsoft/onnxruntime"
     git = "https://github.com/microsoft/onnxruntime.git"
 
-    version("1.10.0", tag="v1.10.0", submodules=True)
-    version("1.7.2", tag="v1.7.2", submodules=True)
+    version(
+        "1.10.0", tag="v1.10.0", commit="0d9030e79888d1d5828730b254fedc53c7b640c1", submodules=True
+    )
+    version(
+        "1.7.2", tag="v1.7.2", commit="5bc92dff16b0ddd5063b717fb8522ca2ad023cb0", submodules=True
+    )
 
     variant("cuda", default=False, description="Build with CUDA support")
 
     depends_on("cmake@3.1:", type="build")
-    depends_on("ninja", type="build")
     depends_on("python", type=("build", "run"))
     depends_on("py-pip", type="build")
     depends_on("protobuf")
@@ -40,7 +43,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("py-wheel", type="build")
     depends_on("py-onnx", type=("build", "run"))
     depends_on("py-flatbuffers", type=("build", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libpng")
     depends_on("py-pybind11", type="build")
     depends_on("cuda", when="+cuda")
@@ -53,7 +56,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     # https://github.com/cms-externals/onnxruntime/compare/5bc92df...d594f80
     patch("cms.patch", level=1, when="@1.7.2")
     # https://github.com/cms-externals/onnxruntime/compare/0d9030e...7a6355a
-    patch("cms_1_10.patch", whe="@1.10")
+    patch("cms_1_10.patch", when="@1.10")
     # https://github.com/microsoft/onnxruntime/issues/4234#issuecomment-698077636
     # only needed when iconv is provided by libiconv
     patch("libiconv.patch", level=0, when="@1.7.2 ^libiconv")
@@ -71,7 +74,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
         description="AVX support level",
     )
 
-    generator = "Ninja"
+    generator("ninja")
     root_cmakelists_dir = "cmake"
     build_directory = "."
 

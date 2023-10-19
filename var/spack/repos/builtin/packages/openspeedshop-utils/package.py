@@ -31,7 +31,7 @@ class OpenspeedshopUtils(CMakePackage):
     homepage = "http://www.openspeedshop.org"
     git = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
-    maintainers = ["jgalarowicz"]
+    maintainers("jgalarowicz")
 
     version("develop", branch="master")
     version("2.4.2.1", branch="2.4.2.1")

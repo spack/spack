@@ -15,6 +15,7 @@ class Ffmpeg(AutotoolsPackage):
 
     maintainers("xjrc")
 
+    version("6.0", sha256="47d062731c9f66a78380e35a19aac77cebceccd1c7cc309b9c82343ffc430c3d")
     version("5.1.2", sha256="39a0bcc8d98549f16c570624678246a6ac736c066cebdb409f9502e915b22f2b")
     version("4.4.1", sha256="8fc9f20ac5ed95115a9e285647add0eedd5cc1a98a039ada14c132452f98ac42")
     version("4.3.2", sha256="ab3a6d6a70358ba0a5f67f37f91f6656b7302b02e98e5b8c846c16763c99913a")
@@ -74,9 +75,9 @@ class Ffmpeg(AutotoolsPackage):
     variant("libx264", default=False, description="H.264 encoding")
 
     depends_on("alsa-lib", when="platform=linux")
-    depends_on("libiconv")
+    depends_on("iconv")
     depends_on("yasm@1.2.0:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("aom", when="+libaom")
     depends_on("bzip2", when="+bzlib")
@@ -103,6 +104,20 @@ class Ffmpeg(AutotoolsPackage):
 
     conflicts("%nvhpc")
 
+    # Patch solving a build failure when vulkan is enabled
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/eb0455d64690",
+        sha256="967d25a67297c53dde7151f7bc5eb37ae674525ee468880f973b9ebc3e12ed2c",
+        when="@5.1.2",
+    )
+
+    # Patch fixing a build failure with binutils 2.41.0
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/effadce6c756247ea8bae32dc13bb3e6f464f0eb",
+        sha256="d1ea47c29968507fee772234bc734d29958b62ab92400801ef28559b538a9168",
+        when="@6.0",
+    )
+
     @property
     def libs(self):
         return find_libraries("*", self.prefix, recursive=True)
@@ -112,6 +127,10 @@ class Ffmpeg(AutotoolsPackage):
         headers = find_all_headers(self.prefix.include)
         headers.directories = [self.prefix.include]
         return headers
+
+    @when("@:6.0 %apple-clang@15:")
+    def setup_build_environment(self, env):
+        env.append_flags("LDFLAGS", "-Wl,-ld_classic")
 
     def enable_or_disable_meta(self, variant, options):
         switch = "enable" if "+{0}".format(variant) in self.spec else "disable"

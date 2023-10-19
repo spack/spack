@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test Spack's custom YAML format."""
+import io
+import sys
 
 import pytest
 
@@ -88,7 +90,53 @@ def test_yaml_aliases():
         "e": aliased_list_2,
         "f": aliased_list_2,
     }
-    string = syaml.dump(dict_with_aliases)
+    stringio = io.StringIO()
+    syaml.dump(dict_with_aliases, stream=stringio)
 
     # ensure no YAML aliases appear in syaml dumps.
-    assert "*id" not in string
+    assert "*id" not in stringio.getvalue()
+
+
+@pytest.mark.parametrize(
+    "initial_content,expected_final_content",
+    [
+        # List are dumped indented as the outer attribute
+        (
+            """spack:
+  #foo
+  specs:
+  # bar
+  - zlib
+""",
+            None,
+        ),
+        (
+            """spack:
+  #foo
+  specs:
+    # bar
+    - zlib
+""",
+            """spack:
+  #foo
+  specs:
+    # bar
+  - zlib
+""",
+        ),
+    ],
+)
+@pytest.mark.xfail(sys.platform == "win32", reason="fails on Windows")
+def test_round_trip_configuration(initial_content, expected_final_content, tmp_path):
+    """Test that configuration can be loaded and dumped without too many changes"""
+    file = tmp_path / "test.yaml"
+    file.write_text(initial_content)
+    final_content = io.StringIO()
+
+    data = syaml.load_config(file)
+    syaml.dump_config(data, stream=final_content)
+
+    if expected_final_content is None:
+        expected_final_content = initial_content
+
+    assert final_content.getvalue() == expected_final_content

@@ -178,7 +178,7 @@ class TagMultiMethods(ast.NodeVisitor):
                         conditions.append(None)
                     else:
                         # Check statically whether spec satisfies the condition
-                        conditions.append(self.spec.satisfies(cond_spec, strict=True))
+                        conditions.append(self.spec.satisfies(cond_spec))
 
                 except AttributeError:
                     # In this case the condition for the 'when' decorator is
@@ -337,7 +337,7 @@ def package_ast(spec, filter_multimethods=True, source=None):
     spec = spack.spec.Spec(spec)
 
     if source is None:
-        filename = spack.repo.path.filename_for_package_name(spec.name)
+        filename = spack.repo.PATH.filename_for_package_name(spec.name)
         with open(filename) as f:
             source = f.read()
 

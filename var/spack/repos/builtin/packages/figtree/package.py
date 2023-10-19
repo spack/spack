@@ -18,6 +18,7 @@ class Figtree(Package):
     homepage = "https://github.com/rambaut/figtree"
     url = "https://github.com/rambaut/figtree/releases/download/v1.4.3/FigTree_v1.4.3.tgz"
 
+    version("1.4.4", sha256="529b867657b29e369cf81cd361e6a76bd713d488a63b91932df2385800423aa8")
     version("1.4.3", sha256="f497d4dd3a6d220f6b62495b6f47a12ade50d87dbd8d6089f168e94d202f937b")
 
     depends_on("java", type="run")

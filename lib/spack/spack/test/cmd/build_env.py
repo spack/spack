@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pickle
+import sys
 
 import pytest
 
@@ -34,12 +35,18 @@ def test_build_env_requires_a_spec(args):
 _out_file = "env.out"
 
 
+@pytest.mark.parametrize("shell", ["pwsh", "bat"] if sys.platform == "win32" else ["bash"])
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
-def test_dump(tmpdir):
+def test_dump(shell_as, shell, tmpdir):
     with tmpdir.as_cwd():
         build_env("--dump", _out_file, "zlib")
         with open(_out_file) as f:
-            assert any(line.startswith("PATH=") for line in f.readlines())
+            if shell == "pwsh":
+                assert any(line.startswith("$Env:PATH") for line in f.readlines())
+            elif shell == "bat":
+                assert any(line.startswith('set "PATH=') for line in f.readlines())
+            else:
+                assert any(line.startswith("PATH=") for line in f.readlines())
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
@@ -47,7 +54,7 @@ def test_pickle(tmpdir):
     with tmpdir.as_cwd():
         build_env("--pickle", _out_file, "zlib")
         environment = pickle.load(open(_out_file, "rb"))
-        assert type(environment) == dict
+        assert isinstance(environment, dict)
         assert "PATH" in environment
 
 

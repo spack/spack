@@ -131,7 +131,7 @@ def find_and_patch_sonames(prefix, exclude_list, patchelf):
     return patch_sonames(patchelf, prefix, relative_paths)
 
 
-def post_install(spec):
+def post_install(spec, explicit=None):
     # Skip if disabled
     if not spack.config.get("config:shared_linking:bind", False):
         return

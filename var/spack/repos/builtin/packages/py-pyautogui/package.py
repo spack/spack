@@ -14,6 +14,7 @@ class PyPyautogui(PythonPackage):
     homepage = "https://pyautogui.readthedocs.io/en/latest/"
     pypi = "PyAutoGUI/PyAutoGUI-0.9.52.tar.gz"
 
+    version("0.9.53", sha256="d31de8f712218d90be7fc98091fce1a12a3e9196e0c814eb9afd73bb2ec97035")
     version("0.9.52", sha256="a486cb6b818bcbcdf98b48d010c7cee964134fa394b756e8ce6e50d43b58ecc8")
 
     depends_on("py-setuptools", type="build")

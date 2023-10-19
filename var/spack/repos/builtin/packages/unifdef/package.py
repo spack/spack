@@ -18,6 +18,7 @@ class Unifdef(MakefilePackage):
 
     maintainers("matthiasdiener")
 
+    version("2.12", sha256="43ce0f02ecdcdc723b2475575563ddb192e988c886d368260bc0a63aee3ac400")
     version("2.11", sha256="828ffc270ac262b88fe011136acef2780c05b0dc3c5435d005651740788d4537")
 
     def edit(self, spec, prefix):

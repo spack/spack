@@ -13,6 +13,7 @@ class RHtmltools(RPackage):
 
     cran = "htmltools"
 
+    version("0.5.5", sha256="c8b23fab855a89c6ed0f6d6c7cad0ff9c5ae329c0bdb479940443ee752f26659")
     version("0.5.3", sha256="2c451b369ea8918358e2b280f548816664fe0143222c609e6bfb1f9cd2f7324f")
     version("0.5.2", sha256="7dc7d50436e5a82a5801f85bcd2f572a06a98b4027d71aa17b4854ec9b2767fb")
     version("0.5.1.1", sha256="f0bfe72ffe330f3d6c9ead5857f3a4aef80e002e32558074a3e643f2ab67a4ba")
@@ -26,5 +27,6 @@ class RHtmltools(RPackage):
     depends_on("r-rlang@0.4.10:", type=("build", "run"), when="@0.5.2:")
     depends_on("r-rlang", type=("build", "run"), when="@0.5.1:")
     depends_on("r-fastmap@1.1.0:", type=("build", "run"), when="@0.5.2:")
+    depends_on("r-ellipsis", type=("build", "run"), when="@0.5.5:")
 
     depends_on("r-rcpp", type=("build", "run"), when="@:0.3.6")

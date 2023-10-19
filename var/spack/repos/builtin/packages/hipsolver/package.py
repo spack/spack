@@ -8,7 +8,7 @@ import re
 from spack.package import *
 
 
-class Hipsolver(CMakePackage):
+class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     """hipSOLVER is a LAPACK marshalling library, with multiple supported backends.
     It sits between the application and a 'worker' LAPACK library, marshalling
     inputs into the backend library and marshalling results back to the application.
@@ -18,7 +18,7 @@ class Hipsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipSOLVER"
     git = "https://github.com/ROCmSoftwarePlatform/hipSOLVER.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
@@ -26,7 +26,10 @@ class Hipsolver(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-
+    version("5.6.1", sha256="2e546bc7771f7bf0aa7892b69cded725941573e8b70614759c3d03c21eb78dde")
+    version("5.6.0", sha256="11fa51d210853d93d24d55b20367738e49711793412f58e8d7689710b92ae16c")
+    version("5.5.1", sha256="826bd64a4887176595bb7319d9a3612e7327602efe1f42aa3f2ad0e783d1a180")
+    version("5.5.0", sha256="0f45be0f90907381ae3e82424599e2ca2112d6411b4a64c72558d63f00409b83")
     version("5.4.3", sha256="02a1bffecc494393f49f97174db7d2c101db557d32404923a44520876e682e3a")
     version("5.4.0", sha256="d53d81c55b458ba5e6ea0ec6bd24bcc79ab06789730391da82d8c33b936339d9")
     version("5.3.3", sha256="f5a487a1c7225ab748996ac4d837ac7ab26b43618c4ed97a124f8fac1d67786e")
@@ -57,6 +60,23 @@ class Hipsolver(CMakePackage):
         deprecated=True,
     )
 
+    # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
+    amdgpu_targets = ROCmPackage.amdgpu_targets
+    variant(
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=spack.variant.DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
+        .with_default("auto")
+        .with_error(
+            "the values 'auto' and 'none' are mutually exclusive with any of the other values"
+        )
+        .with_non_feature_values("auto", "none"),
+        sticky=True,
+    )
+    variant("rocm", default=True, description="Enable ROCm support")
+    conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
+    conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+
     variant(
         "build_type",
         default="Release",
@@ -66,13 +86,10 @@ class Hipsolver(CMakePackage):
 
     depends_on("cmake@3.5:", type="build")
 
-    depends_on("hip@4.1.0:", when="@4.1.0:")
-    depends_on("rocm-cmake@master", type="build", when="@master:")
+    depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:")
     depends_on("rocm-cmake@4.5.0:", type="build")
 
-    for ver in ["master", "develop"]:
-        depends_on("rocblas@" + ver, when="@" + ver)
-        depends_on("rocsolver@" + ver, when="@" + ver)
+    depends_on("hip +cuda", when="+cuda")
 
     for ver in [
         "4.5.0",
@@ -88,10 +105,23 @@ class Hipsolver(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "master",
+        "develop",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocblas@" + ver, when="@" + ver)
-        depends_on("rocsolver@" + ver, when="@" + ver)
+        depends_on("rocblas@" + ver, when="+rocm @" + ver)
+        depends_on("rocsolver@" + ver, when="+rocm @" + ver)
+
+    for tgt in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "rocblas amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
+        )
+        depends_on(
+            "rocsolver amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
+        )
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
@@ -99,9 +129,6 @@ class Hipsolver(CMakePackage):
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "hipsolver-test")
         self.run_test(exe, options=["--gtest_filter=-*known_bug*"])
-
-    def setup_build_environment(self, env):
-        env.set("CXX", self.spec["hip"].hipcc)
 
     @classmethod
     def determine_version(cls, lib):
@@ -119,6 +146,17 @@ class Hipsolver(CMakePackage):
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
         ]
+
+        args.append(self.define_from_variant("USE_CUDA", "cuda"))
+
+        # FindHIP.cmake is still used for +cuda
+        if self.spec.satisfies("+cuda"):
+            if self.spec["hip"].satisfies("@:5.1"):
+                args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
+            else:
+                args.append(
+                    self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
+                )
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))

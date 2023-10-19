@@ -13,6 +13,7 @@ class PyBreathe(PythonPackage):
     homepage = "https://github.com/michaeljones/breathe"
     url = "https://github.com/michaeljones/breathe/archive/v4.11.1.tar.gz"
 
+    version("4.35.0", sha256="55b54723752fc04b892a0f868782b1df65e69db6ca94fb32cf04be495bfd7841")
     version("4.34.0", sha256="b22e70eb4000492508d687d71f258c8f9678398e277bcee0daf34cd438a46e25")
     version("4.33.1", sha256="acda75b216b227ec09ffd74378a6c7ed8f023df4539693c6e20574d1df52e75b")
     version("4.21.0", sha256="7f97756a1b7f7998377b1153a976bf0d2879bb3ca1cb7bc846f455d37ca87ead")
@@ -42,6 +43,7 @@ class PyBreathe(PythonPackage):
     depends_on("py-sphinx@:3", type=("build", "run"), when="@:4.20")
     depends_on("py-sphinx@3:3.2", type=("build", "run"), when="@4.21:4.32")
     depends_on("py-sphinx@3:4", type=("build", "run"), when="@4.33")
-    depends_on("py-sphinx@4,5.0.1:5", type=("build", "run"), when="@4.34:")
+    depends_on("py-sphinx@4,5.0.1:5", type=("build", "run"), when="@4.34")
+    depends_on("py-sphinx@4,5.0.1:", type=("build", "run"), when="@4.35:")
 
     depends_on("doxygen@1.8.4:", type="run")

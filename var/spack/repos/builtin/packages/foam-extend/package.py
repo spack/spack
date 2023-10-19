@@ -76,7 +76,7 @@ class FoamExtend(Package):
 
     depends_on("mpi")
     depends_on("python")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("flex", type="build")
     depends_on("cmake", type="build")
 
@@ -261,7 +261,7 @@ class FoamExtend(Package):
             },
             "flex": {"FLEX_SYSTEM": 1, "FLEX_DIR": spec["flex"].prefix},
             "bison": {"BISON_SYSTEM": 1, "BISON_DIR": spec["flex"].prefix},
-            "zlib": {"ZLIB_SYSTEM": 1, "ZLIB_DIR": spec["zlib"].prefix},
+            "zlib": {"ZLIB_SYSTEM": 1, "ZLIB_DIR": spec["zlib-api"].prefix},
         }
         # Adjust configuration via prefs - sort second
         self.etc_prefs["001"].update(self.foam_arch.foam_dict())

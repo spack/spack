@@ -3,36 +3,49 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
-from llnl.util import tty
-
 from spack.package import *
 
 
 class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     """Highly Efficient FFT for Exascale"""
 
-    homepage = "https://bitbucket.org/icl/heffte"
-    url = "https://bitbucket.org/icl/heffte/get/v1.0.tar.gz"
-    git = "https://bitbucket.org/icl/heffte.git"
+    homepage = "https://github.com/icl-utk-edu/heffte/"
+    url = "https://github.com/icl-utk-edu/heffte/archive/refs/tags/v2.3.0.tar.gz"
+    git = "https://github.com/icl-utk-edu/heffte/"
 
-    maintainers("mkstoyanov")
+    maintainers("mkstoyanov", "G-Ragghianti")
     tags = ["e4s", "ecp"]
 
     test_requires_compiler = True
 
     version("develop", branch="master")
-    version("2.3.0", sha256="27c0a8da8f7bc91c8715ecb640721ab7e0454e22f6e3f521fe5acc45c28d60a9")
-    version("2.2.0", sha256="aff4f5111d3d05b269a1378bb201271c40b39e9c960c05c4ef247a31a039be58")
-    version("2.1.0", sha256="527a3e21115231715a0342afdfaf6a8878d2dd0f02f03c92b53692340fd940b9")
-    version("2.0.0", sha256="12f2b49a1a36c416eac174cf0cc50e729d56d68a9f68886d8c34bd45a0be26b6")
-    version("1.0", sha256="0902479fb5b1bad01438ca0a72efd577a3529c3d8bad0028f3c18d3a4935ca74")
-    version("0.2", sha256="4e76ae60982b316c2e873b2e5735669b22620fefa1fc82f325cdb6989bec78d1")
-    version("0.1", sha256="d279a03298d2dc76574b1ae1031acb4ea964348cf359273d1afa4668b5bfe748")
+    version("2.3.0", sha256="63db8c9a8822211d23e29f7adf5aa88bb462c91d7a18c296c3ef3a06be8d6171")
+    version("2.2.0", sha256="332346d5c1d1032288d09839134c79e4a9704e213a2d53051e96c3c414c74df0")
+    version("2.1.0", sha256="63b8ea45a220afc4fa0b14769c0dd291e614a2fe9d5a91c50d28f16ee29b3f1c")
+    version(
+        "2.0.0",
+        sha256="b575fafe19a635265904ca302d48e778341b1567c055ea7f2939c8c6718f7212",
+        deprecated=True,
+    )
+    version(
+        "1.0",
+        sha256="00e66cdff664ba90eeb26b4824f2a7341ba791b1d7220ece8180aba7623d36d5",
+        deprecated=True,
+    )
+    version(
+        "0.2",
+        sha256="6e606aa9de91912925ec49f463de4369459e509e0e21a97ca72dfa07651056e5",
+        deprecated=True,
+    )
+    version(
+        "0.1",
+        sha256="bcdc940c4cb254b178446d16c969b85ea6b5c69fdf4b6332bb3c8fbce00bccdf",
+        deprecated=True,
+    )
 
     patch("threads10.patch", when="@1.0")
     patch("fortran200.patch", when="@2.0.0")
+    patch("cmake-magma-v230.patch", when="@2.3.0")
 
     depends_on("cmake@3.10:", type=("build", "run"))
     depends_on("cmake@3.19:", when="@develop", type=("build", "run"))
@@ -71,6 +84,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocfft@5.2.3:", when="@develop+rocm", type=("build", "run"))
     depends_on("magma@2.5.3:", when="+cuda+magma", type=("build", "run"))
     depends_on("magma+rocm@2.6.1:", when="+magma+rocm @2.1:", type=("build", "run"))
+    depends_on("rocblas@3.8:", when="+magma+rocm", type=("build", "run"))
+    depends_on("rocsparse@3.8:", when="+magma+rocm", type=("build", "run"))
     depends_on("hipblas@3.8:", when="+magma+rocm", type=("build", "run"))
     depends_on("hipsparse@3.8:", when="+magma+rocm", type=("build", "run"))
 
@@ -78,6 +93,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         args = [
+            "-DHeffte_SEQUENTIAL_TESTING=ON",
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("Heffte_ENABLE_CUDA", "cuda"),
             self.define_from_variant("Heffte_ENABLE_ROCM", "rocm"),
@@ -86,12 +102,9 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("Heffte_ENABLE_MAGMA", "magma"),
             self.define_from_variant("Heffte_ENABLE_FORTRAN", "fortran"),
             self.define_from_variant("Heffte_ENABLE_PYTHON", "python"),
-            "-DBUILD_GPU={0:1s}".format(
-                "ON" if ("+cuda" in self.spec and "+fftw" in self.spec) else "OFF"
-            ),
         ]
 
-        if "+cuda" in self.spec:
+        if "+cuda" in self.spec and self.spec.satisfies("@:2.3.0"):
             cuda_arch = self.spec.variants["cuda_arch"].value
             if len(cuda_arch) > 0 or cuda_arch[0] != "none":
                 nvcc_flags = ""
@@ -99,8 +112,10 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
                     nvcc_flags += "{0};".format(nvflag)
 
                 args.append("-DCUDA_NVCC_FLAGS={0}".format(nvcc_flags))
+                archs = ";".join(cuda_arch)
+                args.append("-DCMAKE_CUDA_ARCHITECTURES=%s" % archs)
 
-        if "+rocm" in self.spec:
+        if "+rocm" in self.spec and self.spec.satisfies("@:2.3.0"):
             args.append("-DCMAKE_CXX_COMPILER={0}".format(self.spec["hip"].hipcc))
 
             rocm_arch = self.spec.variants["amdgpu_target"].value
@@ -113,65 +128,44 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
-    def cmake_bin(self, set=True):
-        """(Hack) Set/get cmake dependency path. Sync with Tasmanian."""
-        filepath = join_path(self.install_test_root, "cmake_bin_path.txt")
-        if set:
-            with open(filepath, "w") as out_file:
-                cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-                out_file.write("{0}\n".format(cmake_bin))
-        elif os.path.isfile(filepath):
-            with open(filepath, "r") as in_file:
-                return in_file.read().strip()
-
     @run_after("install")
     def setup_smoke_test(self):
+        if self.spec.satisfies("@:2.2.0"):
+            return
         install_tree(
             self.prefix.share.heffte.testing, join_path(self.install_test_root, "testing")
         )
-        self.cmake_bin(set=True)
 
-    def test(self):
-        cmake_bin = self.cmake_bin(set=False)
+    def test_make_test(self):
+        """build and run make(test)"""
 
-        if not cmake_bin:
-            tty.msg("Skipping heffte test: cmake_bin_path.txt not found")
-            return
+        if self.spec.satisfies("@:2.2.0"):
+            raise SkipTest("Test is not supported for versions @:2.2.0")
 
         # using the tests copied from <prefix>/share/heffte/testing
         cmake_dir = self.test_suite.current_test_cache_dir.testing
 
         options = [cmake_dir]
         if "+rocm" in self.spec:
-            options.append(
-                "-Dhip_DIR=" + join_path(self.spec["hip"].prefix, "lib", "cmake", "hip")
-            )
-            options.append(
-                "-DAMDDeviceLibs_DIR="
-                + join_path(self.spec["llvm-amdgpu"].prefix, "lib", "cmake", "AMDDeviceLibs")
-            )
-            options.append(
-                "-Damd_comgr_DIR="
-                + join_path(self.spec["comgr"].prefix, "lib", "cmake", "amd_comgr")
-            )
-            options.append(
-                "-Dhsa-runtime64_DIR="
-                + join_path(self.spec["hsa-rocr-dev"].prefix, "lib", "cmake", "hsa-runtime64")
-            )
-            options.append(
-                "-DHSA_HEADER=" + join_path(self.spec["hsa-rocr-dev"].prefix, "include")
-            )
-            options.append(
-                "-Drocfft_DIR=" + join_path(self.spec["rocfft"].prefix, "lib", "cmake", "rocfft")
+            options.extend(
+                [
+                    f"-Dhip_DIR={self.spec['hip'].prefix.lib.cmake.hip}",
+                    "-DAMDDeviceLibs_DIR="
+                    + f"{self.spec['llvm-amdgpu'].prefix.lib.cmake.AMDDeviceLibs}",
+                    f"-Damd_comgr_DIR={self.spec['comgr'].prefix.lib.cmake.amd_comgr}",
+                    "-Dhsa-runtime64_DIR="
+                    + f"{self.spec['hsa-rocr-dev'].prefix.lib.cmake.hsa-runtime64}",
+                    "-DHSA_HEADER={self.spec['hsa-rocr-dev'].prefix.include}",
+                    "-Drocfft_DIR={self.spec['rocfft'].prefix.lib.cmake.rocfft}",
+                ]
             )
 
-        if not self.run_test(cmake_bin, options=options, purpose="Generate the Makefile"):
-            tty.msg("Skipping heffte test: failed to generate Makefile")
-            return
+        # Provide the root directory of the MPI installation.
+        options.append(f"-DMPI_HOME={self.spec['mpi'].prefix}")
 
-        if not self.run_test("make", purpose="Build test software"):
-            tty.msg("Skipping heffte test: failed to build test")
-            return
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        cmake(*options)
 
-        if not self.run_test("make", options=["test"], purpose="Run test"):
-            tty.msg("Failed heffte test: failed to run test")
+        make = which("make")
+        make()
+        make("test")

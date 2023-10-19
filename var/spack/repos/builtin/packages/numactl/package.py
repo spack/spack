@@ -31,7 +31,7 @@ class Numactl(AutotoolsPackage):
 
     # Numactl has hardcoded minimum versions for libtool,
     # libtool@develop returns UNKOWN as a version tag and fails
-    conflicts("libtool@develop")
+    conflicts("^libtool@develop")
 
     # Numerous errors when trying to build on darwin
     conflicts("platform=darwin")

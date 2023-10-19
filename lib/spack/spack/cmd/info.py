@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
-import inspect
 import textwrap
 from itertools import zip_longest
 
@@ -14,10 +11,12 @@ import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
 import spack.cmd.common.arguments as arguments
+import spack.deptypes as dt
 import spack.fetch_strategy as fs
+import spack.install_test
 import spack.repo
 import spack.spec
-from spack.package_base import has_test_method, preferred_version
+from spack.package_base import preferred_version
 
 description = "get detailed information on a particular package"
 section = "basic"
@@ -66,14 +65,18 @@ def section_title(s):
 
 
 def version(s):
-    return spack.spec.version_color + s + plain_format
+    return spack.spec.VERSION_COLOR + s + plain_format
 
 
 def variant(s):
-    return spack.spec.enabled_variant_color + s + plain_format
+    return spack.spec.ENABLED_VARIANT_COLOR + s + plain_format
 
 
-class VariantFormatter(object):
+def license(s):
+    return spack.spec.VERSION_COLOR + s + plain_format
+
+
+class VariantFormatter:
     def __init__(self, variants):
         self.variants = variants
         self.headers = ("Name [Default]", "When", "Allowed values", "Description")
@@ -162,7 +165,7 @@ def print_dependencies(pkg):
     for deptype in ("build", "link", "run"):
         color.cprint("")
         color.cprint(section_title("%s Dependencies:" % deptype.capitalize()))
-        deps = sorted(pkg.dependencies_of_type(deptype))
+        deps = sorted(pkg.dependencies_of_type(dt.flag_from_string(deptype)))
         if deps:
             colify(deps, indent=4)
         else:
@@ -261,41 +264,7 @@ def print_tests(pkg):
     # if it has been overridden and, therefore, assumed to be implemented.
     color.cprint("")
     color.cprint(section_title("Stand-Alone/Smoke Test Methods:"))
-    names = []
-    pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
-    if has_test_method(pkg_cls):
-        pkg_base = spack.package_base.PackageBase
-        test_pkgs = [
-            str(cls.test)
-            for cls in inspect.getmro(pkg_cls)
-            if issubclass(cls, pkg_base) and cls.test != pkg_base.test
-        ]
-        test_pkgs = list(set(test_pkgs))
-        names.extend([(test.split()[1]).lower() for test in test_pkgs])
-
-    # TODO Refactor START
-    # Use code from package_base.py's test_process IF this functionality is
-    # accepted.
-    v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
-
-    # hack for compilers that are not dependencies (yet)
-    # TODO: this all eventually goes away
-    c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
-    if pkg.name in c_names:
-        v_names.extend(["c", "cxx", "fortran"])
-    if pkg.spec.satisfies("llvm+clang"):
-        v_names.extend(["c", "cxx"])
-    # TODO Refactor END
-
-    v_specs = [spack.spec.Spec(v_name) for v_name in v_names]
-    for v_spec in v_specs:
-        try:
-            pkg_cls = spack.repo.path.get_pkg_class(v_spec.name)
-            if has_test_method(pkg_cls):
-                names.append("{0}.test".format(pkg_cls.name.lower()))
-        except spack.repo.UnknownPackageError:
-            pass
-
+    names = spack.install_test.test_function_names(pkg, add_virtuals=True)
     if names:
         colify(sorted(names), indent=4)
     else:
@@ -383,9 +352,25 @@ def print_virtuals(pkg):
         color.cprint("    None")
 
 
+def print_licenses(pkg):
+    """Output the licenses of the project."""
+
+    color.cprint("")
+    color.cprint(section_title("Licenses: "))
+
+    if len(pkg.licenses) == 0:
+        color.cprint("    None")
+    else:
+        pad = padder(pkg.licenses, 4)
+        for when_spec in pkg.licenses:
+            license_identifier = pkg.licenses[when_spec]
+            line = license("    {0}".format(pad(license_identifier))) + color.cescape(when_spec)
+            color.cprint(line)
+
+
 def info(parser, args):
     spec = spack.spec.Spec(args.package)
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
 
     # Output core package information
@@ -412,6 +397,7 @@ def info(parser, args):
         (args.all or not args.no_dependencies, print_dependencies),
         (args.all or args.virtuals, print_virtuals),
         (args.all or args.tests, print_tests),
+        (args.all or True, print_licenses),
     ]
     for print_it, func in sections:
         if print_it:

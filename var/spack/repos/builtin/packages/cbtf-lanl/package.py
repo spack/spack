@@ -13,7 +13,7 @@ class CbtfLanl(CMakePackage):
     homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git = "https://github.com/OpenSpeedShop/cbtf-lanl.git"
 
-    maintainers = ["jgalarowicz"]
+    maintainers("jgalarowicz")
 
     version("develop", branch="master")
     version("1.9.4.1", branch="1.9.4.1")

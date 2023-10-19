@@ -12,6 +12,7 @@ class PyCoverage(PythonPackage):
     homepage = "https://github.com/nedbat/coveragepy"
     pypi = "coverage/coverage-4.5.4.tar.gz"
 
+    version("7.2.6", sha256="2025f913f2edb0272ef15d00b1f335ff8908c921c8eb2013536fcaf61f5a683d")
     version("6.4.4", sha256="e16c45b726acb780e1e6f88b286d3c10b3914ab03438f32117c4aa52d7f30d58")
     version("6.3.1", sha256="6c3f6158b02ac403868eea390930ae64e9a9a2a5bbfafefbb920d29258d9f2f8")
     version("6.1.2", sha256="d9a635114b88c0ab462e0355472d00a180a5fbfd8511e7f18e4ac32652e7d972")
@@ -25,10 +26,6 @@ class PyCoverage(PythonPackage):
 
     variant("toml", default=False, description="Enable pyproject.toml support")
 
-    depends_on("python@3.7:", when="@6.3:", type=("build", "run"))
-    depends_on("python@3.6:", when="@6:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@5:", type=("build", "run"))
-    depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
     depends_on("py-tomli", when="@6: +toml ^python@:3.10", type=("build", "run"))
     depends_on("py-toml", when="@:5 +toml", type=("build", "run"))

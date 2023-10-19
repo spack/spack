@@ -14,7 +14,9 @@ properties = {
         "type": "object",
         "additionalProperties": False,
         "properties": {
-            "reuse": {"type": "boolean"},
+            "reuse": {
+                "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["dependencies"]}]
+            },
             "enable_node_namespace": {"type": "boolean"},
             "targets": {
                 "type": "object",
@@ -25,6 +27,12 @@ properties = {
             },
             "unify": {
                 "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["when_possible"]}]
+            },
+            "duplicates": {
+                "type": "object",
+                "properties": {
+                    "strategy": {"type": "string", "enum": ["none", "minimal", "full"]}
+                },
             },
         },
     }

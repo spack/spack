@@ -22,8 +22,6 @@ class Fplo(MakefilePackage):
     url = "file://{0}/FPLO22.00-62.tar.gz".format(os.getcwd())
     manual_download = True
 
-    maintainers("glennpj")
-
     version("22.00-62", sha256="0d1d4e9c1e8e41900901e26c3cd08ee39dcfdeb3f2c4c8862055eaf704b6d69e")
 
     # TODO: Try to get LAPACK to work with something other than MKL. The build

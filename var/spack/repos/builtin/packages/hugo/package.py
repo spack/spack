@@ -18,6 +18,11 @@ class Hugo(Package):
 
     maintainers("alecbcs")
 
+    version("0.118.2", sha256="915d7dcb44fba949c80858f9c2a55a11256162ba28a9067752f808cfe8faedaa")
+    version("0.112.7", sha256="d706e52c74f0fb00000caf4e95b98e9d62c3536a134d5e26b433b1fa1e2a74aa")
+    version("0.111.3", sha256="b6eeb13d9ed2e5d5c6895bae56480bf0fec24a564ad9d17c90ede14a7b240999")
+    version("0.111.2", sha256="66500ae3a03cbf51a6ccf7404d01f42fdc454aa1eaea599c934860bbf0aa2fc5")
+    version("0.111.1", sha256="a71d4e1f49ca7156d3811c0b10957816b75ff2e01b35ef326e7af94dfa554ec0")
     version("0.110.0", sha256="eeb137cefcea1a47ca27dc5f6573df29a8fe0b7f1ed0362faf7f73899e313770")
     version("0.109.0", sha256="35a5ba92057fe2c20b2218c374e762887021e978511d19bbe81ce4d9c21f0c78")
     version("0.108.0", sha256="dc90e9de22ce87c22063ce9c309cefacba89269a21eb369ed556b90b22b190c5")
@@ -48,6 +53,8 @@ class Hugo(Package):
 
     variant("extended", default=False, description="Enable extended features")
 
+    phases = ["build", "install"]
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("version", output=str, error=str)
@@ -55,13 +62,16 @@ class Hugo(Package):
         return match.group(1) if match else None
 
     def setup_build_environment(self, env):
+        # Point GOPATH at the top of the staging dir for the build step.
         env.prepend_path("GOPATH", self.stage.path)
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         go_args = ["build"]
         if self.spec.satisfies("+extended"):
             go_args.extend(["--tags", "extended"])
 
         go(*go_args)
+
+    def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("hugo", prefix.bin)

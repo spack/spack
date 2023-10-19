@@ -27,6 +27,9 @@ class Hpctoolkit(AutotoolsPackage):
     test_requires_compiler = True
 
     version("develop", branch="develop")
+    version("2023.08.stable", branch="release/2023.08")
+    version("2023.08.1", tag="2023.08.1", commit="753a72affd584a5e72fe153d1e8c47a394a3886e")
+    version("2023.03.stable", branch="release/2023.03")
     version("2023.03.01", commit="9e0daf2ad169f6c7f6c60408475b3c2f71baebbf")
     version("2022.10.01", commit="e8a5cc87e8f5ddfd14338459a4106f8e0d162c83")
     version("2022.05.15", commit="8ac72d9963c4ed7b7f56acb65feb02fbce353479")
@@ -119,7 +122,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("dyninst@12.1.0:", when="@2022.0:")
     depends_on("dyninst@10.2.0:", when="@2021.0:2021.12")
     depends_on("dyninst@9.3.2:", when="@:2020")
-    depends_on("elfutils+bzip2+xz~nls", type="link")
+    depends_on("elfutils~nls", type="link")
     depends_on("gotcha@1.0.3:", when="@:2020.09")
     depends_on("intel-tbb+shared")
     depends_on("libdwarf", when="@:2022.06")
@@ -131,9 +134,9 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("libunwind@1.4: +xz+pic")
     depends_on("mbedtls+pic", when="@:2022.03")
     depends_on("xerces-c transcoder=iconv")
-    depends_on("xz+pic@:5.2.6", type="link")
+    depends_on("xz+pic libs=static", type="link")
     depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
-    depends_on("zlib+shared")
+    depends_on("zlib-api+shared")
 
     depends_on("cuda", when="+cuda")
     depends_on("oneapi-level-zero", when="+level_zero")
@@ -163,6 +166,7 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts("%gcc@:4", when="@:2020", msg="hpctoolkit requires gnu gcc 5.x or later")
 
     conflicts("^binutils@2.35:2.35.1", msg="avoid binutils 2.35 and 2.35.1 (spews errors)")
+    conflicts("^xz@5.2.7:5.2.8", msg="avoid xz 5.2.7:5.2.8 (broken symbol versions)")
 
     conflicts("+cray", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
     conflicts("+mpi", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
@@ -202,7 +206,7 @@ class Hpctoolkit(AutotoolsPackage):
             "--with-libunwind=%s" % spec["libunwind"].prefix,
             "--with-xerces=%s" % spec["xerces-c"].prefix,
             "--with-lzma=%s" % spec["xz"].prefix,
-            "--with-zlib=%s" % spec["zlib"].prefix,
+            "--with-zlib=%s" % spec["zlib-api"].prefix,
         ]
 
         if spec.satisfies("@2022.10:"):
@@ -303,11 +307,12 @@ class Hpctoolkit(AutotoolsPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
-        if self.spec.satisfies("@2022:"):
-            with working_dir("tests"):
-                make("check")
-        else:
-            tty.warn("spack test for hpctoolkit requires 2022.01.15 or later")
+        if not self.spec.satisfies("@2022:"):
+            tty.warn("requires 2022.01.15 or later")
+            return
+
+        with working_dir("tests"):
+            make("check")
 
     # Post-Install tests (spack test run).  These are the same tests
     # but with a different Makefile that works outside the build
@@ -317,13 +322,17 @@ class Hpctoolkit(AutotoolsPackage):
         if self.spec.satisfies("@2022:"):
             self.cache_extra_test_sources(["tests"])
 
-    def test(self):
-        test_dir = join_path(self.test_suite.current_test_cache_dir, "tests")
-        if self.spec.satisfies("@2022:"):
-            with working_dir(test_dir):
-                make("-f", "Makefile.spack", "all")
-                self.run_test(
-                    "./run-sort", status=[0], installed=False, purpose="selection sort unit test"
-                )
-        else:
-            tty.warn("spack test for hpctoolkit requires 2022.01.15 or later")
+    def test_run_sort(self):
+        """build and run selection sort unit test"""
+        if not self.spec.satisfies("@2022:"):
+            raise SkipTest("No tests exist for versions prior to 2022.01.15")
+
+        test_dir = self.test_suite.current_test_cache_dir.tests
+        with working_dir(test_dir):
+            make = which("make")
+            make("-f", "Makefile.spack", "all")
+
+            run_sort = which(join_path(".", "run-sort"))
+            assert run_sort, "run-sort is missing"
+
+            run_sort()
