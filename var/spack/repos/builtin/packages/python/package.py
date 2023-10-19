@@ -326,7 +326,7 @@ class Python(Package):
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = "spack-build"
 
-    executables = [r"^python[\d.]*[mw]?$"]
+    executables = [r"^python\d?$"]
 
     @classmethod
     def determine_version(cls, exe):
