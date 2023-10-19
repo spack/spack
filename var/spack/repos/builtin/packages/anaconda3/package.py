@@ -9,6 +9,7 @@ from os.path import split
 from spack.package import *
 from spack.util.environment import EnvironmentModifications
 
+
 class Anaconda3(Package):
     """
     Anaconda is a free and open-source distribution of the Python and R
