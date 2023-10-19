@@ -2263,3 +2263,26 @@ class TestConcretizeSeparately:
 def test_drop_moving_targets(v_str, v_opts, checksummed):
     v = Version(v_str)
     assert spack.solver.asp._is_checksummed_version((v, v_opts)) == checksummed
+
+
+class TestConcreteSpecsByHash:
+    """Tests the container of concrete specs"""
+
+    @pytest.mark.parametrize("input_specs", [["a"], ["a foobar=bar", "b"], ["a foobar=baz", "b"]])
+    def test_adding_specs(self, input_specs, default_mock_concretization):
+        """Tests that concrete specs in the container are equivalent, but stored as different
+        objects in memory.
+        """
+        container = spack.solver.asp.ConcreteSpecsByHash()
+        input_specs = [Spec(s).concretized() for s in input_specs]
+        for s in input_specs:
+            container.add(s)
+
+        for root in input_specs:
+            assert root.dag_hash() in container
+            assert root is not container[root.dag_hash()]
+            assert root == container[root.dag_hash()]
+
+            for node in root.traverse():
+                assert node.dag_hash() in container
+                assert node is not container[node.dag_hash()]
