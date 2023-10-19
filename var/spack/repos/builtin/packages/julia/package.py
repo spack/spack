@@ -318,6 +318,8 @@ class Julia(MakefilePackage):
             "JULIA_PRECOMPILE:={0}".format("1" if spec.variants["precompile"].value else "0"),
             # we want to use `patchelf --add-rpath` instead of `patchelf --set-rpath`
             "override PATCHELF_SET_RPATH_ARG:=--add-rpath",  # @1.9:
+            # Otherwise, Julia tries to download and build ittapi
+            "USE_INTEL_JITEVENTS:=0",  # @1.9:
         ]
 
         options.append("USEGCC:={}".format("1" if "%gcc" in spec else "0"))
