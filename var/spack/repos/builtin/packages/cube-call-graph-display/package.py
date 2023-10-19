@@ -11,7 +11,7 @@ class CubeCallGraph(AutotoolsPackage):
 
     homepage = "https://www.scalasca.org/software/cube-4.x/download.html"
     url = "https://apps.fz-juelich.de/scalasca/releases/cube/4.8/dist/callgraph-v0.4.tar.gz"
-    maintainers="swat-jsc"
+    maintainers = "swat-jsc"
 
     version("v0.4", sha256="796dd24d130864d15fdb82f9a02008aa0a37e13600c176299d6fe3cc1f9845af")
 
