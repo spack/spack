@@ -32,7 +32,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
     tags = ["windows"]
 
-    maintainers = "LydDeb"
+    maintainers("LydDeb")
 
     executables = [r"^perl(-?\d+.*)?$"]
 
