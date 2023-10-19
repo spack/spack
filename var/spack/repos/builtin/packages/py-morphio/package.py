@@ -30,5 +30,3 @@ class PyMorphio(PythonPackage):
         depends_on("py-h5py@3", type=("build", "run"))
     else:
         depends_on("hdf5", type=("build", "run"))
-    depends_on("highfive", type=("build", "run"))
-    depends_on("py-pybind11", type=("build", "run"))
