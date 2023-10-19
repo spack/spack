@@ -34,7 +34,7 @@ class PyBluepyopt(PythonPackage):
     depends_on("neuron@7.4:", type=("build", "run"), when="+neuron")
 
     def setup_run_environment(self, env):
-        env.unset("PMI_RANK")
         if self.spec.satisfies("+neuron"):
+            env.unset("PMI_RANK")
             env.set("NEURON_INIT_MPI", "0")
         env.prepend_path("PATH", self.spec["py-ipyparallel"].prefix.bin)
