@@ -17,7 +17,8 @@ import spack.config
 import spack.package_base
 import spack.spec
 import spack.util.spack_yaml as syaml
-from spack.build_environment import _static_to_shared_library, dso_suffix
+from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
+from spack.context import Context
 from spack.paths import build_env_path
 from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import EnvironmentModifications
@@ -438,10 +439,10 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     # b (parallel =True)
     s = default_mock_concretization("a foobar=bar")
 
-    spack.build_environment.set_module_variables_for_package(s.package)
+    spack.build_environment.set_package_py_globals(s.package)
     assert s["a"].package.module.make_jobs == 1
 
-    spack.build_environment.set_module_variables_for_package(s["b"].package)
+    spack.build_environment.set_package_py_globals(s["b"].package)
     assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
         parallel=s["b"].package.parallel
     )
@@ -575,3 +576,69 @@ class TestModuleMonkeyPatcher:
             if current_module == spack.package_base:
                 break
             assert current_module.SOME_ATTRIBUTE == 1
+
+
+def test_effective_deptype_build_environment(default_mock_concretization):
+    s = default_mock_concretization("dttop")
+
+    #  [    ]  dttop@1.0                    #
+    #  [b   ]      ^dtbuild1@1.0            # <- direct build dep
+    #  [b   ]          ^dtbuild2@1.0        # <- indirect build-only dep is dropped
+    #  [bl  ]          ^dtlink2@1.0         # <- linkable, and runtime dep of build dep
+    #  [  r ]          ^dtrun2@1.0          # <- non-linkable, exectuable runtime dep of build dep
+    #  [bl  ]      ^dtlink1@1.0             # <- direct build dep
+    #  [bl  ]          ^dtlink3@1.0         # <- linkable, and runtime dep of build dep
+    #  [b   ]              ^dtbuild2@1.0    # <- indirect build-only dep is dropped
+    #  [bl  ]              ^dtlink4@1.0     # <- linkable, and runtime dep of build dep
+    #  [  r ]      ^dtrun1@1.0              # <- run-only dep is pruned (should it be in PATH?)
+    #  [bl  ]          ^dtlink5@1.0         # <- children too
+    #  [  r ]          ^dtrun3@1.0          # <- children too
+    #  [b   ]              ^dtbuild3@1.0    # <- children too
+
+    expected_flags = {
+        "dttop": UseMode.ROOT,
+        "dtbuild1": UseMode.BUILDTIME_DIRECT,
+        "dtlink1": UseMode.BUILDTIME_DIRECT | UseMode.BUILDTIME,
+        "dtlink3": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtlink4": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtrun2": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
+        "dtlink2": UseMode.RUNTIME,
+    }
+
+    for spec, effective_type in spack.build_environment.effective_deptypes(
+        s, context=Context.BUILD
+    ):
+        assert effective_type & expected_flags.pop(spec.name) == effective_type
+    assert not expected_flags, f"Missing {expected_flags.keys()} from effective_deptypes"
+
+
+def test_effective_deptype_run_environment(default_mock_concretization):
+    s = default_mock_concretization("dttop")
+
+    #  [    ]  dttop@1.0                    #
+    #  [b   ]      ^dtbuild1@1.0            # <- direct build-only dep is pruned
+    #  [b   ]          ^dtbuild2@1.0        # <- children too
+    #  [bl  ]          ^dtlink2@1.0         # <- children too
+    #  [  r ]          ^dtrun2@1.0          # <- children too
+    #  [bl  ]      ^dtlink1@1.0             # <- runtime, not executable
+    #  [bl  ]          ^dtlink3@1.0         # <- runtime, not executable
+    #  [b   ]              ^dtbuild2@1.0    # <- indirect build only dep is pruned
+    #  [bl  ]              ^dtlink4@1.0     # <- runtime, not executable
+    #  [  r ]      ^dtrun1@1.0              # <- runtime and executable
+    #  [bl  ]          ^dtlink5@1.0         # <- runtime, not executable
+    #  [  r ]          ^dtrun3@1.0          # <- runtime and executable
+    #  [b   ]              ^dtbuild3@1.0    # <- indirect build-only dep is pruned
+
+    expected_flags = {
+        "dttop": UseMode.ROOT,
+        "dtlink1": UseMode.RUNTIME,
+        "dtlink3": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtlink4": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtrun1": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
+        "dtlink5": UseMode.RUNTIME,
+        "dtrun3": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
+    }
+
+    for spec, effective_type in spack.build_environment.effective_deptypes(s, context=Context.RUN):
+        assert effective_type & expected_flags.pop(spec.name) == effective_type
+    assert not expected_flags, f"Missing {expected_flags.keys()} from effective_deptypes"

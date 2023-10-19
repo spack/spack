@@ -335,15 +335,14 @@ set _b_bin $_b_loc"/bin"
 set _a_loc (spack -m location -i shell-a)
 set _a_bin $_a_loc"/bin"
 
-spt_contains "set -gx PATH $_b_bin" spack -m load --only package --fish shell-b
+spt_contains "set -gx PATH $_b_bin" spack -m load --fish shell-b
 spt_succeeds spack -m load shell-b
 set LIST_CONTENT (spack -m load shell-b; spack load --list)
 spt_contains "shell-b@" echo $LIST_CONTENT
 spt_does_not_contain "shell-a@" echo $LIST_CONTENT
 # test a variable MacOS clears and one it doesn't for recursive loads
-spt_contains "set -gx PATH $_a_bin:$_b_bin" spack -m load --fish shell-a
-spt_succeeds spack -m load --only dependencies shell-a
-spt_succeeds spack -m load --only package shell-a
+
+spt_succeeds spack -m load shell-a
 spt_fails spack -m load d
 spt_contains "usage: spack load " spack -m load -h
 spt_contains "usage: spack load " spack -m load -h d

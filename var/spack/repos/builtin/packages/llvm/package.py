@@ -752,14 +752,6 @@ class Llvm(CMakePackage, CudaPackage):
                     os.symlink(bin, sym)
             env.prepend_path("PATH", self.stage.path)
 
-    def setup_run_environment(self, env):
-        if "+clang" in self.spec:
-            env.set("CC", join_path(self.spec.prefix.bin, "clang"))
-            env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
-        if "+flang" in self.spec:
-            env.set("FC", join_path(self.spec.prefix.bin, "flang"))
-            env.set("F77", join_path(self.spec.prefix.bin, "flang"))
-
     root_cmakelists_dir = "llvm"
 
     def cmake_args(self):

@@ -7,7 +7,6 @@ import os
 
 import llnl.util.tty as tty
 
-import spack.build_environment as build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.deptypes as dt
@@ -15,7 +14,8 @@ import spack.error
 import spack.paths
 import spack.spec
 import spack.store
-from spack import traverse
+from spack import build_environment, traverse
+from spack.context import Context
 from spack.util.environment import dump_environment, pickle_environment
 
 
@@ -42,14 +42,14 @@ def setup_parser(subparser):
 
 
 class AreDepsInstalledVisitor:
-    def __init__(self, context="build"):
-        if context not in ("build", "test"):
-            raise ValueError("context can only be build or test")
-
-        if context == "build":
+    def __init__(self, context: Context = Context.BUILD):
+        if context == Context.BUILD:
+            # TODO: run deps shouldn't be required for build env.
             self.direct_deps = dt.BUILD | dt.LINK | dt.RUN
-        else:
+        elif context == Context.TEST:
             self.direct_deps = dt.BUILD | dt.TEST | dt.LINK | dt.RUN
+        else:
+            raise ValueError("context can only be Context.BUILD or Context.TEST")
 
         self.has_uninstalled_deps = False
 
@@ -76,7 +76,7 @@ class AreDepsInstalledVisitor:
         return item.edge.spec.edges_to_dependencies(depflag=depflag)
 
 
-def emulate_env_utility(cmd_name, context, args):
+def emulate_env_utility(cmd_name, context: Context, args):
     if not args.spec:
         tty.die("spack %s requires a spec." % cmd_name)
 
@@ -120,7 +120,7 @@ def emulate_env_utility(cmd_name, context, args):
                 hashes=True,
                 # This shows more than necessary, but we cannot dynamically change deptypes
                 # in Spec.tree(...).
-                deptypes="all" if context == "build" else ("build", "test", "link", "run"),
+                deptypes="all" if context == Context.BUILD else ("build", "test", "link", "run"),
             ),
         )
 
