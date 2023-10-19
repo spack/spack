@@ -251,8 +251,6 @@ spack:
   # - trilinos +cuda cuda_arch=70           # trilinos: https://github.com/trilinos/Trilinos/issues/11630
   # - upcxx +cuda cuda_arch=70              # upcxx: needs NVIDIA driver
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-power" }
-
   ci:
     pipeline-gen:
     - build-job:
