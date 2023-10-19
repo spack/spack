@@ -22,5 +22,8 @@ class Libvorbis(AutotoolsPackage):
 
     depends_on("pkgconfig", type="build")
 
+    def patch(self):
+        filter_file(r"-force_cpusubtype_ALL", "", "configure", string=True)
+
     # `make check` crashes when run in parallel
     parallel = False
