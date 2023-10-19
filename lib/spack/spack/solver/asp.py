@@ -2945,6 +2945,7 @@ class Solver:
         # These properties are settable via spack configuration, and overridable
         # by setting them directly as properties.
         self.reuse = spack.config.get("concretizer:reuse", False)
+        self.limit_target_reuse = spack.config.get("concretizer:limit_target_reuse", [])
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):
@@ -2980,12 +2981,17 @@ class Solver:
                 # TODO: update mirror configuration so it can indicate that the
                 # TODO: source cache (or any mirror really) doesn't have binaries.
                 pass
-
         # If we only want to reuse dependencies, remove the root specs
         if self.reuse == "dependencies":
             reusable_specs = [
                 spec for spec in reusable_specs if not any(root in spec for root in specs)
             ]
+
+        print(self.limit_target_reuse)
+        if self.limit_target_reuse:
+            reusable_specs = [
+                s for s in reusable_specs if s.target in self.limit_target_reuse
+                ]
 
         return reusable_specs
 
