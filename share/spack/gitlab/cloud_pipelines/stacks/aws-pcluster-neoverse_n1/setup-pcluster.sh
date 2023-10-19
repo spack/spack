@@ -6,6 +6,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 set -e
 
+spack_intel_compiler_commit="361a185ddb"
+
 set_pcluster_defaults() {
     # Set versions of pre-installed software in packages.yaml
     [ -z "${SLURM_VERSION}" ] && SLURM_VERSION=$(strings /opt/slurm/lib/libslurm.so | grep  -e '^VERSION'  | awk '{print $2}'  | sed -e 's?"??g')
@@ -72,7 +74,12 @@ EOF
     fi
 }
 
-install_packages() {
+install_compilers() {
+    # We need to treat compilers as essentially external, i.e. their installation location
+    # (including hash) must not change when any changes are pushed to spack. The reason is that
+    # changes in the compilers are not reflected in the package hashes built in the CI. Hence, those
+    # packages will reference a wrong compiler path once the path changes.
+
     # Get gcc from buildcache
     if echo "${SPACK_TARGET_ARCH}" | grep -q neoverse; then
         gcc_hash="jttj24nibqy5jsqf34as5m63umywfa3d"
@@ -86,14 +93,18 @@ install_packages() {
         spack compiler add --scope site
     )
 
+    # Intel compiler needs to be installed from a specific spack git commit.
+    # The best solution would be to have the compilers hash (or packages contents) be part of the individual packages hashes. I don't see this ATM.
     if ! echo "${SPACK_TARGET_ARCH}" | grep -q neoverse; then
+        pushd "${SPACK_ROOT}"; latest_commit=$(git log | head -n1 | awk '/commit/{print $2}'); git checkout ${spack_intel_compiler_commit}; popd
         # Add oneapi@latest & intel@latest
         spack install intel-oneapi-compilers-classic
-        bash -c ". "$(spack location -i intel-oneapi-compilers)/setvars.sh"; spack compiler add --scope site"
+        bash -c ". \"$(spack location -i intel-oneapi-compilers)\"/setvars.sh; spack compiler add --scope site"
+        pushd "${SPACK_ROOT}"; git checkout "${latest_commit}"; popd
     fi
 }
 
 set_pcluster_defaults
 setup_spack
-install_packages
+install_compilers
 patch_compilers_yaml
