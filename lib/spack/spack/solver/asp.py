@@ -978,26 +978,6 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
     hash X, it is ensured to be the same object in memory as the spec keyed by X.
     """
 
-    class DfsButSkipAlreadyRegistered:
-        def __init__(self, register):
-            self.visitor = traverse.CoverNodesVisitor(traverse.BaseVisitor())
-            self.register = register
-            self.nodes = []
-
-        def accept(self, item):
-            if item.edge.spec.dag_hash() in self.register:
-                return False
-            return self.visitor.accept(item)
-
-        def neighbors(self, item):
-            return self.visitor.neighbors(item)
-
-        def pre(self, item):
-            pass
-
-        def post(self, item):
-            self.nodes.append(item.edge.spec)
-
     def __init__(self) -> None:
         self.data: Dict[str, spack.spec.Spec] = {}
 
@@ -1025,26 +1005,26 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
         if dag_hash in self.data:
             return False
 
-        # Unify objects in the container. The current implementation needs children
-        # nodes to be visited before parents (so DFS post-order is fine).
-        visitor = ConcreteSpecsByHash.DfsButSkipAlreadyRegistered(self.data)
-        traverse.traverse_depth_first_with_visitor(traverse.with_artificial_edges([spec]), visitor)
+        # Here we need to iterate on the input and rewire the copy.
+        self.data[spec.dag_hash()] = spec.copy(deps=False)
+        nodes_to_reconstruct = [spec]
 
-        for current_node in visitor.nodes:
-            current_hash = current_node.dag_hash()
+        while nodes_to_reconstruct:
+            input_parent = nodes_to_reconstruct.pop()
+            container_parent = self.data[input_parent.dag_hash()]
 
-            if current_hash in self.data:
-                continue
+            for edge in input_parent.edges_to_dependencies():
+                input_child = edge.spec
+                container_child = self.data.get(input_child.dag_hash())
+                # Copy children that don't exist yet
+                if container_child is None:
+                    container_child = input_child.copy(deps=False)
+                    self.data[input_child.dag_hash()] = container_child
+                    nodes_to_reconstruct.append(input_child)
 
-            # Add the node and reconstruct dependencies
-            self.data[current_hash] = current_node.copy(deps=False)
-            container_node = self.data[current_hash]
-            for edge_under_reconstruction in current_node.edges_to_dependencies():
-                child_hash = edge_under_reconstruction.spec.dag_hash()
-                depflag = edge_under_reconstruction.depflag
-                virtuals = edge_under_reconstruction.virtuals
-                container_node.add_dependency_edge(
-                    self.data[child_hash], depflag=depflag, virtuals=virtuals
+                # Rewire edges
+                container_parent.add_dependency_edge(
+                    dependency_spec=container_child, depflag=edge.depflag, virtuals=edge.virtuals
                 )
         return True
 
