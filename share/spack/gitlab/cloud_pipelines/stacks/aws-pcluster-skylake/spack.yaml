@@ -30,8 +30,6 @@ spack:
   - $optimized_configs
   # - $optimized_libs
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-pcluster-skylake" }
-
   ci:
     pipeline-gen:
     - build-job:

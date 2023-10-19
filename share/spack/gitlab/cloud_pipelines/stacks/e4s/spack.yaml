@@ -382,8 +382,6 @@ spack:
   # - lbann ~cuda +rocm amdgpu_target=gfx90a    # aluminum: https://github.com/spack/spack/issues/38807
   # - papi +rocm amdgpu_target=gfx90a           # papi: https://github.com/spack/spack/issues/27898
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
-
   ci:
     pipeline-gen:
     - build-job:

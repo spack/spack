@@ -40,9 +40,6 @@ spack:
       - xbraid
       - zfp
 
-  mirrors:
-    mirror: "s3://spack-binaries/develop/radiuss"
-
   specs:
   - matrix:
     - [$radiuss]

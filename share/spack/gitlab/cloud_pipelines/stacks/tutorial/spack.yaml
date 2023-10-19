@@ -49,8 +49,6 @@ spack:
   - $clang_packages
   - $gcc_spack_built_packages
 
-  mirrors:
-    mirror: s3://spack-binaries/develop/tutorial
   ci:
     pipeline-gen:
     - build-job:

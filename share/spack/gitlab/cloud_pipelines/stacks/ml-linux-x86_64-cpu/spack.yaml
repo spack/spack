@@ -76,9 +76,6 @@ spack:
     # - r-xgboost
     - xgboost
 
-  mirrors:
-    mirror: s3://spack-binaries/develop/ml-linux-x86_64-cpu
-
   ci:
     pipeline-gen:
     - build-job:

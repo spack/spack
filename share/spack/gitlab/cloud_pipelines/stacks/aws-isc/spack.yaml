@@ -142,9 +142,6 @@ spack:
     - - $compiler
     - - $target
 
-
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-isc" }
-
   ci:
     pipeline-gen:
     - build-job:

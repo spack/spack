@@ -49,8 +49,6 @@ spack:
   # FAILURES
   # - kokkos +wrapper +cuda cuda_arch=80 ^cuda@12.0.0     # https://github.com/spack/spack/issues/35378
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/gpu-tests" }
-
   ci:
     pipeline-gen:
     - build-job:

@@ -172,7 +172,5 @@ spack:
   # - variorum            # variorum: /opt/cray/pe/cce/15.0.1/binutils/x86_64/x86_64-pc-linux-gnu/bin/ld: /opt/cray/pe/lib64/libpals.so.0: undefined reference to `json_array_append_new@@libjansson.so.4'
   # - xyce +mpi +shared +pymi +pymi_static_tpls ^trilinos~shylu # openblas: ftn-2307 ftn: ERROR in command line: The "-m" option must be followed by 0, 1, 2, 3 or 4.; make[2]: *** [<builtin>: spotrf2.o] Error 1; make[1]: *** [Makefile:27: lapacklib] Error 2; make: *** [Makefile:250: netlib] Error 2
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-cray-rhel" }
-
   cdash:
     build-group: E4S Cray

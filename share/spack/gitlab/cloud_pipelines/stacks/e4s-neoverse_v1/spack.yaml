@@ -340,8 +340,6 @@ spack:
   # - tasmanian +cuda cuda_arch=90  # tasmanian: conflicts with cuda@12
   # - upcxx +cuda cuda_arch=90      # upcxx: needs NVIDIA driver
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-arm-neoverse_v1" }
-
   ci:
     pipeline-gen:
     - build-job:
