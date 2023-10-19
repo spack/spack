@@ -562,6 +562,16 @@ class Llvm(CMakePackage, CudaPackage):
     patch("add-include-for-libelf-llvm-12-14.patch", when="@12:14")
     patch("add-include-for-libelf-llvm-15.patch", when="@15")
 
+    @when("@14:17")
+    def patch(self):
+        # https://github.com/llvm/llvm-project/pull/69458
+        filter_file(
+            r"${TERMINFO_LIB}",
+            r"${Terminfo_LIBRARIES}",
+            "lldb/source/Core/CMakeLists.txt",
+            string=True,
+        )
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
