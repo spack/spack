@@ -472,9 +472,7 @@ class TestConcretize:
 
         assert spec.satisfies("^openblas+shared")
 
-    @pytest.mark.only_clingo(
-        "Original concretizer is allowed to forego variant propagation"
-    )
+    @pytest.mark.only_clingo("Original concretizer is allowed to forego variant propagation")
     def test_concretize_propagate_multivalue_variant(self):
         """Test that multivalue variants are propagating the specified value(s)
         to their dependecies. The dependencies should not have the default value"""
