@@ -3,12 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import platform
 from os.path import split
 
-import platform
 from spack.package import *
 from spack.util.environment import EnvironmentModifications
-
 
 class Anaconda3(Package):
     """
@@ -27,24 +26,24 @@ class Anaconda3(Package):
         version(
             "2023.09-0",
             sha256="5ea1ed9808af95eb2655fe6a4ffdb66bea66ecd1d053fc2ee69eacc7685ef665",
-            expand=False
+            expand=False,
         )
     elif platform.machine() == "aarch64":
         version(
             "2023.09-0",
             sha256="69ee26361c1ec974199bce5c0369e3e9a71541de7979d2b9cfa4af556d1ae0ea",
-            expand=False
+            expand=False,
         )
     elif platform.machine() == "x86_64":
         version(
             "2023.09-0",
             sha256="6c8a4abb36fbb711dc055b7049a23bbfd61d356de9468b41c5140f8a11abd851",
-            expand=False
+            expand=False,
         )
         version(
             "2023.07-2",
             sha256="589fb34fe73bc303379abbceba50f3131254e85ce4e7cd819ba4276ba29cad16",
-            expand=False
+            expand=False,
         )
         version(
             "2022.10",
