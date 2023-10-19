@@ -18,11 +18,7 @@ class ByteUnixbench(MakefilePackage):
 
     @property
     def build_targets(self):
-        targets = []
-
-        targets.append("CC={0}".format(spack_cc))
-
-        return targets
+        return [f"CC={spack_cc}"]
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
