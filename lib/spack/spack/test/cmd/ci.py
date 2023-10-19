@@ -2209,3 +2209,50 @@ spack:
             assert all([t in rebuild_tags for t in ["spack", "service"]])
             expected_vars = ["CI_JOB_SIZE", "KUBERNETES_CPU_REQUEST", "KUBERNETES_MEMORY_REQUEST"]
             assert all([v in rebuild_vars for v in expected_vars])
+
+
+def test_ci_generate_mirror_config(
+    tmpdir,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    ci_base_environment,
+    mock_binary_index,
+):
+    """Make sure the correct mirror gets used as the buildcache destination"""
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(
+            """\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: file:///this/is/a/source/mirror
+    buildcache-destination: file:///push/binaries/here
+  ci:
+    pipeline-gen:
+    - submapping:
+      - match:
+          - archive-files
+        build-job:
+          tags:
+            - donotcare
+          image: donotcare
+"""
+        )
+
+    with tmpdir.as_cwd():
+        env_cmd("create", "test", "./spack.yaml")
+        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+
+        with ev.read("test"):
+            ci_cmd("generate", "--output-file", outputfile)
+            with open(outputfile) as of:
+                pipeline_doc = syaml.load(of.read())
+                assert "rebuild-index" in pipeline_doc
+                reindex_job = pipeline_doc["rebuild-index"]
+                assert "script" in reindex_job
+                reindex_step = reindex_job["script"][0]
+                assert "file:///push/binaries/here" in reindex_step
