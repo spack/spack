@@ -342,8 +342,6 @@ spt_contains "shell-b@" echo $LIST_CONTENT
 spt_does_not_contain "shell-a@" echo $LIST_CONTENT
 # test a variable MacOS clears and one it doesn't for recursive loads
 
-# b is not a runtime dep of a; but enters through default prefix_inspections.
-# spt_does_not_contain "set -gx PATH $_a_bin:$_b_bin" spack -m load --fish shell-a
 spt_succeeds spack -m load shell-a
 spt_fails spack -m load d
 spt_contains "usage: spack load " spack -m load -h
