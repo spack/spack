@@ -58,8 +58,6 @@ spack:
     - ["~paraview +visit"]
     - [$^visit_specs]
 
-  mirrors: {mirror: s3://spack-binaries/develop/data-vis-sdk}
-
   ci:
     pipeline-gen:
     - build-job:
