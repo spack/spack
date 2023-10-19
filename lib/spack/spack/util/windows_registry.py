@@ -339,7 +339,7 @@ class WindowsRegistryView:
 
         For more details, see the WindowsRegistryView._find_subkey_s method docstring
         """
-        kwargs = {"collect_all_matchin": True}
+        kwargs = {"collect_all_matching": True}
         return self._find_subkey_s(
             WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), **kwargs
         )
