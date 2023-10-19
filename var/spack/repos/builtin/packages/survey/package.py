@@ -87,7 +87,7 @@ class Survey(CMakePackage):
     depends_on("py-zipp", type=("build", "run"), when="@1.0.7:")
     depends_on("py-humanize", type=("build", "run"), when="@1.0.8:")
     depends_on("py-importlib-resources", type=("build", "run"), when="@1.0.8:")
-    depends_on('py-gitpython', type=('build', 'run'), when="@1.0.9:")
+    depends_on("py-gitpython", type=("build", "run"), when="@1.0.9:")
 
     extends("python")
 
