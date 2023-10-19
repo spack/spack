@@ -83,32 +83,31 @@ class WindowsOs(OperatingSystem):
                     os.path.join(str(os.getenv("ONEAPI_ROOT")), "compiler", "*", "windows", "bin")
                 )
             )
-        if not _compiler_search_paths:
-            # Second strategy: Find MSVC via the registry
-            msft = winreg.WindowsRegistryView(
-                "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
-            )
-            vs_entries = msft.find_subkeys(r"VisualStudio_.*")
-            vs_paths = []
+        # Second strategy: Find MSVC via the registry
+        msft = winreg.WindowsRegistryView(
+            "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
+        )
+        vs_entries = msft.find_subkeys(r"VisualStudio_.*")
+        vs_paths = []
 
-            def clean_vs_path(path):
-                path = path.split(",")[0].lstrip("@")
-                return str(pathlib.Path(path).parent / "..\\..")
+        def clean_vs_path(path):
+            path = path.split(",")[0].lstrip("@")
+            return str((pathlib.Path(path).parent / "..\\..").resolve())
 
-            for entry in vs_entries:
-                try:
-                    val = (
-                        entry.get_subkey("Capabilities").get_value("ApplicationDescription").value
-                    )
-                    vs_paths.append(clean_vs_path(val))
-                except FileNotFoundError as e:
-                    if hasattr(e, "winerror"):
-                        if e.winerror == 2:
-                            pass
-                        else:
-                            raise
+        for entry in vs_entries:
+            try:
+                val = (
+                    entry.get_subkey("Capabilities").get_value("ApplicationDescription").value
+                )
+                vs_paths.append(clean_vs_path(val))
+            except FileNotFoundError as e:
+                if hasattr(e, "winerror"):
+                    if e.winerror == 2:
+                        pass
                     else:
                         raise
+                else:
+                    raise
 
-            _compiler_search_paths.extend(vs_paths)
+        _compiler_search_paths.extend(vs_paths)
         return _compiler_search_paths
