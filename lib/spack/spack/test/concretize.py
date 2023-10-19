@@ -2279,10 +2279,7 @@ class TestConcreteSpecsByHash:
             container.add(s)
 
         for root in input_specs:
-            assert root.dag_hash() in container
-            assert root is not container[root.dag_hash()]
-            assert root == container[root.dag_hash()]
-
-            for node in root.traverse():
+            for node in root.traverse(root=True):
+                assert node == container[node.dag_hash()]
                 assert node.dag_hash() in container
                 assert node is not container[node.dag_hash()]
