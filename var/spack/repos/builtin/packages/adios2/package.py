@@ -9,7 +9,7 @@ import tempfile
 from spack.package import *
 
 
-class Adios2(CMakePackage, CudaPackage):
+class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     """The Adaptable Input Output System version 2,
     developed in the Exascale Computing Program"""
 
@@ -96,6 +96,8 @@ class Adios2(CMakePackage, CudaPackage):
 
     # Optional language bindings, C++11 and C always provided
     variant("cuda", default=False, when="@2.8:", description="Enable CUDA support")
+    variant("kokkos", default=False, when="@2.9:", description="Enable Kokkos support")
+    variant("sycl", default=False, when="@2.10:", description="Enable SYCL support")
     variant("python", default=False, description="Enable the Python bindings")
     variant("fortran", default=True, description="Enable the Fortran bindings")
 
@@ -108,6 +110,37 @@ class Adios2(CMakePackage, CudaPackage):
     conflicts("%oneapi@:2022.1.0", when="+fortran")
 
     depends_on("cmake@3.12.0:", type="build")
+
+    # Standalone CUDA support
+    depends_on("cuda", when="+cuda ~kokkos")
+
+    # Kokkos support
+    depends_on("kokkos@3.7: +cuda +wrapper", when="+kokkos +cuda")
+    depends_on("kokkos@3.7: +rocm", when="+kokkos +rocm")
+    depends_on("kokkos@3.7: +sycl", when="+kokkos +sycl")
+
+    # Propagate CUDA target to kokkos for +cuda
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            "kokkos cuda_arch=%s" % cuda_arch,
+            when="+kokkos +cuda cuda_arch=%s" % cuda_arch,
+        )
+
+    # Propagate AMD GPU target to kokkos for +rocm
+    for amdgpu_value in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos amdgpu_target=%s" % amdgpu_value,
+            when="+kokkos +rocm amdgpu_target=%s" % amdgpu_value,
+        )
+
+    conflicts("+cuda", when="@:2.7")
+    conflicts("+rocm", when="@:2.8")
+    conflicts("+rocm", when="+cuda")
+    conflicts("+rocm", when="~kokkos", msg="ADIOS2 does not support HIP without Kokkos")
+
+    conflicts("+cuda", when="+sycl")
+    conflicts("+rocm", when="+sycl")
+    conflicts("+sycl", when="~kokkos", msg="ADIOS2 does not support SYCL without Kokkos")
 
     for _platform in ["linux", "darwin", "cray"]:
         depends_on("pkgconfig", type="build", when=f"platform={_platform}")
@@ -216,9 +249,13 @@ class Adios2(CMakePackage, CudaPackage):
             from_variant("ADIOS2_USE_SST", "sst"),
             from_variant("ADIOS2_USE_SZ", "sz"),
             from_variant("ADIOS2_USE_ZFP", "zfp"),
-            from_variant("ADIOS2_USE_CUDA", "cuda"),
             from_variant("ADIOS2_USE_Catalyst", "libcatalyst"),
             from_variant("ADIOS2_USE_LIBPRESSIO", "libpressio"),
+            self.define("ADIOS2_USE_CUDA", self.spec.satisfies("+cuda ~kokkos")),
+            self.define("ADIOS2_USE_Kokkos", self.spec.satisfies("+kokkos")),
+            self.define("Kokkos_ENABLE_CUDA", self.spec.satisfies("+cuda +kokkos")),
+            self.define("Kokkos_ENABLE_HIP", self.spec.satisfies("+rocm")),
+            self.define("Kokkos_ENABLE_SYCL", self.spec.satisfies("+sycl")),
             self.define("BUILD_TESTING", self.run_tests),
             self.define("ADIOS2_BUILD_EXAMPLES", False),
             self.define("ADIOS2_USE_Endian_Reverse", True),
@@ -245,6 +282,14 @@ class Adios2(CMakePackage, CudaPackage):
         if "+python" in spec or self.run_tests:
             args.append(f"-DPYTHON_EXECUTABLE:FILEPATH={spec['python'].command.path}")
             args.append(f"-DPython_EXECUTABLE:FILEPATH={spec['python'].command.path}")
+
+        # hip support
+        if "+cuda" in spec:
+            args.append(self.builder.define_cuda_architectures(self))
+
+        # hip support
+        if "+rocm" in spec:
+            args.append(self.builder.define_hip_architectures(self))
 
         return args
 
