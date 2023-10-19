@@ -258,13 +258,20 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # aren't writeable so make pp.c user writeable
     # before patching. This should probably walk the
     # source and make everything writeable in the future.
+    # The patch "zlib-ng.patch" also fail. So, apply chmod
+    # to Makefile.PL and Zlib.xs too.
     def do_stage(self, mirror_only=False):
         # Do Spack's regular stage
         super().do_stage(mirror_only)
-        # Add write permissions on file to be patched
-        filename = join_path(self.stage.source_path, "pp.c")
-        perm = os.stat(filename).st_mode
-        os.chmod(filename, perm | 0o200)
+        # Add write permissions on files to be patched
+        files_to_chmod = [
+                    join_path(self.stage.source_path, "pp.c"),
+                    join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Makefile.PL"),
+                    join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Zlib.xs"),
+                    ]
+        for filename in files_to_chmod:
+            perm = os.stat(filename).st_mode
+            os.chmod(filename, perm | 0o200)
 
     def nmake_arguments(self):
         args = []
