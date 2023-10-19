@@ -62,7 +62,8 @@ class Adios2(CMakePackage, CudaPackage):
     variant(
         "libpressio", default=False, when="@2.8:", description="Enable LibPressio for compression"
     )
-    variant("blosc", default=True, when="@2.4:", description="Enable Blosc compression")
+    variant("blosc", default=True, when="@2.4:2.8", description="Enable Blosc compression")
+    variant("blosc2", default=True, when="@2.9:", description="Enable Blosc2 compression")
     variant("bzip2", default=True, when="@2.4:", description="Enable BZip2 compression")
     variant("zfp", default=True, description="Enable ZFP compression")
     variant("png", default=True, when="@2.4:", description="Enable PNG compression")
@@ -78,7 +79,7 @@ class Adios2(CMakePackage, CudaPackage):
         description="Enable the DataMan engine for WAN transports",
     )
     variant("dataspaces", default=False, when="@2.5:", description="Enable support for DATASPACES")
-    variant("ssc", default=True, description="Enable the SSC staging engine")
+    variant("ssc", default=True, when="@:2.7", description="Enable the SSC staging engine")
     variant("hdf5", default=False, description="Enable the HDF5 engine")
     variant(
         "aws",
@@ -135,8 +136,8 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("hdf5+mpi", when="+hdf5+mpi")
 
     depends_on("libpressio", when="+libpressio")
-    depends_on("c-blosc", when="@:2.8 +blosc")
-    depends_on("c-blosc2", when="@2.9: +blosc")
+    depends_on("c-blosc", when="+blosc")
+    depends_on("c-blosc2", when="+blosc2")
     depends_on("bzip2", when="+bzip2")
     depends_on("libpng@1.6:", when="+png")
     depends_on("zfp@0.5.1:0.5", when="+zfp")
@@ -202,6 +203,7 @@ class Adios2(CMakePackage, CudaPackage):
             from_variant("BUILD_SHARED_LIBS", "shared"),
             from_variant("ADIOS2_USE_AWSSDK", "aws"),
             from_variant("ADIOS2_USE_Blosc", "blosc"),
+            from_variant("ADIOS2_USE_Blosc2", "blosc2"),
             from_variant("ADIOS2_USE_BZip2", "bzip2"),
             from_variant("ADIOS2_USE_DataMan", "dataman"),
             from_variant("ADIOS2_USE_DataSpaces", "dataspaces"),
