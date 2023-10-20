@@ -28,6 +28,8 @@ class PyFenicsFfcx(PythonPackage):
 
     # CFFI is required at runtime for JIT support
     depends_on("py-cffi", type=("build", "run"))
+    # py-numpy>=1.21 required because FFCx uses NumPy typing (version
+    # requirement not properly set in the FFCx pyproject.toml file)
     depends_on("py-numpy@1.21:", type=("build", "run"))
 
     depends_on("py-fenics-ufl@main", type=("build", "run"), when="@main")
