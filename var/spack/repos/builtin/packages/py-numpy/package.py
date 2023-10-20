@@ -255,6 +255,7 @@ class PyNumpy(PythonPackage):
     def config_settings(self, spec, prefix):
         blas, lapack = self.blas_lapack_pkg_config()
         return {
+            "builddir": "build",
             "compile-args": f"-j{make_jobs}",
             "setup-args": {
                 # https://scipy.github.io/devdocs/building/blas_lapack.html

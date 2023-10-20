@@ -199,6 +199,7 @@ class PyScipy(PythonPackage):
     def config_settings(self, spec, prefix):
         blas, lapack = self.spec["py-numpy"].package.blas_lapack_pkg_config()
         return {
+            "builddir": "build",
             "compile-args": f"-j{make_jobs}",
             "setup-args": {
                 # http://scipy.github.io/devdocs/building/blas_lapack.html
