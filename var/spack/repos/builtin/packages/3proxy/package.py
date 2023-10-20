@@ -28,9 +28,5 @@ class _3proxy(MakefilePackage):
 
     def install(self, spec, prefix):
         make(
-            "-f",
-            f"Makefile.{platform.system()}",
-            f"prefix={prefix}",
-            f"CC={spack_cc}",
-            "install",
+            "-f", f"Makefile.{platform.system()}", f"prefix={prefix}", f"CC={spack_cc}", "install"
         )
