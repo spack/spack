@@ -7,7 +7,6 @@
 % TODO: Later
 %=============================================================================
 
-#program propagate_node_flag.
 % propagate flags when compiler match
 attr("node_flag_propagate", PackageNode, FlagType, Flag, Source) :- % source is a node() attribute
   attr("node_flag_possible_prop", PackageNode, FlagType, Flag, Source),
