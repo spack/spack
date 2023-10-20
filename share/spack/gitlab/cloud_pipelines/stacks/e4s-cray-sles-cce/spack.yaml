@@ -1,0 +1,36 @@
+spack:
+  include:
+  - $spack/share/spack/gitlab/cloud_pipelines/configs/linux/ci.yaml
+
+  view: false
+
+  packages:
+    # CCE-SPECIFIC PREFERENCES/REQUIREMENTS
+    all:
+      require: "%cce"
+
+  specs:
+  - adios2
+  - amrex
+  # - butterflypack  #  LDFLAGS: KeyError: "CRAYLIBS_X86_64-suse-linux"
+  - conduit
+  - h5bench
+  - hdf5-vol-async
+  - hdf5-vol-cache
+  - hdf5-vol-log
+  - hypre
+  - kokkos
+  - kokkos-kernels
+  - legion
+  # - mfem   # undefined reference due to --no-allow-shlib-undefine
+  - raja
+  # - superlu-dist  # undefined reference due to --no-allow-shlib-undefine
+  #
+  # FAILURES related to py-pip: could not find platform dependent library
+  #  ... No module named 'zlib'
+  #- flux-core
+
+  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-cray-sles-cce" }
+
+  cdash:
+    build-group: E4S Cray SLES

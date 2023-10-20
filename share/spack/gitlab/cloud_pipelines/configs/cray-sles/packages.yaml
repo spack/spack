@@ -1,16 +1,106 @@
 packages:
+  # SLES DEFAULTS
+  all:
+    providers:
+      blas: [cray-libsci]
+      lapack: [cray-libsci]
+      mpi: [cray-mpich]
+      tbb: [intel-tbb]
+      scalapack: [netlib-scalapack]
+    target:: [zen4]
+    variants: +mpi
+
+  # VARIANT PREFERENCES/REQUIREMENTS
+  binutils:
+    variants: +ld +gold +headers +libiberty ~nls
+  boost:
+    variants: +python +filesystem +iostreams +system
+  cuda:
+    version: [11.7.0]
+  elfutils:
+    require: "%gcc"
+    variants: +bzip2 ~nls +xz
+  hdf5:
+    variants: +fortran +hl +shared
+  libfabric:
+    variants: fabrics=sockets,tcp,udp,rxm
+  libunwind:
+    variants: +pic +xz
+  mesa:
+    version: [21.3.8]
+  mpich:
+    variants: ~wrapperrpath
+  ncurses:
+    require: +termlib
+  openblas:
+    require: "@0.3.20"
+    variants: threads=openmp
+  python:
+    version: [3.8.13]
+  sed:
+    require: "%gcc"
+  tbb:
+    require: "intel-tbb"
+  trilinos:
+    require:
+    - one_of: [+amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext +ifpack
+          +intrepid +intrepid2 +isorropia +kokkos +minitensor +nox +piro +phalanx
+          +rol +rythmos +sacado +stk +shards +stratimikos +tempus +tpetra
+          +trilinoscouplings +zoltan]
+    - one_of: [gotype=long_long, gotype=all]
+    - one_of: [~ml ~muelu ~zoltan2 ~teko, +ml +muelu +zoltan2 +teko]
+  xz:
+    require: "%gcc"
+    variants: +pic
+  unzip:
+    require: "%gcc"
+
   # EXTERNALS
   cray-mpich:
     buildable: false
     externals:
+    - spec: cray-mpich@8.1.25 %cce
+      prefix: /opt/cray/pe/mpich/8.1.25/ofi/cray/10.0/
+      modules:
+      - cray-mpich/8.1.25
     - spec: cray-mpich@8.1.25 %gcc
       prefix: /opt/cray/pe/mpich/8.1.25/ofi/gnu/9.1/
+      modules:
+      - cray-mpich/8.1.25
+    - spec: cray-mpich@8.1.25 %nvhpc
+      prefix: /opt/cray/pe/mpich/8.1.25/ofi/nvidia/20.7/
+      modules:
+      - cray-mpich/8.1.25
+    # TBD: Keep this given corresponding cray-libsci issue w/ oneapi?
+    - spec: cray-mpich@8.1.25 %oneapi
+      prefix: /opt/cray/pe/mpich/8.1.25/ofi/intel/19.0/
+      modules:
+      - cray-mpich/8.1.25
+    - spec: cray-mpich@8.1.25 %rocmcc
+      prefix: /opt/cray/pe/mpich/8.1.25/ofi/amd/5.0/
       modules:
       - cray-mpich/8.1.25
   cray-libsci:
     buildable: false
     externals:
+    - spec: cray-libsci@23.02.1.1 %cce
+      prefix: /opt/cray/pe/libsci/23.02.1.1/cray/9.0/x86_64/
+      modules:
+      - cray-libsci/23.02.1.1
     - spec: cray-libsci@23.02.1.1 %gcc
-      prefix: /opt/cray/pe/libsci/23.02.1.1/GNU/9.1/x86_64/
+      prefix: /opt/cray/pe/libsci/23.02.1.1/gnu/9.1/x86_64/
+      modules:
+      - cray-libsci/23.02.1.1
+    - spec: cray-libsci@23.02.1.1 %nvhpc
+      prefix: /opt/cray/pe/libsci/23.02.1.1/nvidia/20.7/x86_64/
+      modules:
+      - cray-libsci/23.02.1.1
+    # KeyError: 'oneapi' in cray-libsci/package.py's blas_libs (2023 Sep)
+    #- spec: cray-libsci@23.02.1.1 %oneapi
+    #  prefix: /opt/cray/pe/libsci/23.02.1.1/intel/2022.2/x86_64/
+    #  modules:
+    #  - cray-libsci/23.02.1.1
+    - spec: cray-libsci@23.02.1.1 %rocmcc
+      prefix: /opt/cray/pe/libsci/23.02.1.1/amd/4.0/x86_64/
       modules:
       - cray-libsci/23.02.1.1
