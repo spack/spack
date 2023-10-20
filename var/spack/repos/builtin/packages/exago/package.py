@@ -63,13 +63,13 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         msg="ExaGO Python wrapper requires at least one solver enabled.",
     )
     conflicts(
-        "+hiop~mpi ^hiop@1.0.0:~mpi", when="@1.5.1:1.6.1", 
-        msg="Github Issue #18 identified build issues in 1.6.0 release.",
+        "+hiop~mpi ^hiop@1.0.0:~mpi", when="@1.5.1:1.6.1",
+        msg="#18 - builds with hiop and without MPI cause compile time errors",
     )
     conflicts(
-        "~python+mpi",
-        msg="Bug whe python is required for MPI builds",)
-
+        "+python~mpi",
+        msg="#16 - Python wrapper requires MPI enabled",
+    )
     # Dependencies
     depends_on("python@3.6:", when="@1.3.0:+python")
     depends_on("py-pytest", type=("build", "run"), when="@1.5.0:+python")
