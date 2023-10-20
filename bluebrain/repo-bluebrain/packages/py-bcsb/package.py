@@ -18,7 +18,7 @@ class PyBcsb(PythonPackage):
     depends_on("python@3.10:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
 
-    depends_on("py-websockets@10.3:", type=("run"))
-    depends_on("py-libsonata@0.1.23:", type=("run"))
-    depends_on("py-psutil@5.9.5:", type=("run"))
-    depends_on("py-bluepy@2.5.1", type=("run"))
+    depends_on("py-websockets@10.3:", type=("build", "run"))
+    depends_on("py-libsonata@0.1.23:", type=("build", "run"))
+    depends_on("py-psutil@5.9.5:", type=("build", "run"))
+    depends_on("py-bluepy@2.5.1:", type=("build", "run"))
