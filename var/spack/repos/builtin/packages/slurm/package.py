@@ -129,6 +129,7 @@ class Slurm(AutotoolsPackage):
         description="Set system configuration path (possibly /etc/slurm)",
     )
     variant("restd", default=False, description="Enable the slurmrestd server")
+    variant("nvml", default=False, description="Enable NVML autodetection")
 
     # TODO: add variant for BG/Q and Cray support
 
@@ -155,6 +156,8 @@ class Slurm(AutotoolsPackage):
     depends_on("http-parser", when="+restd")
     depends_on("libyaml", when="+restd")
     depends_on("libjwt", when="+restd")
+
+    depends_on("cuda", when="+nvml")
 
     executables = ["^srun$", "^salloc$"]
 
@@ -212,6 +215,9 @@ class Slurm(AutotoolsPackage):
             args.append("--with-pmix={0}".format(spec["pmix"].prefix))
         else:
             args.append("--without-pmix")
+
+        if "+nvml" in spec:
+            args.append("--with-nvml={0}".format(spec["cuda"].prefix))
 
         sysconfdir = spec.variants["sysconfdir"].value
         if sysconfdir != "PREFIX/etc":
