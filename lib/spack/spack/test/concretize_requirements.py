@@ -91,6 +91,25 @@ class U(Package):
 )
 
 
+_pkgw = (
+    "w",
+    """\
+class W(Package):
+    provides('virtual-w')
+    version('1.0')
+""",
+)
+
+
+_virtualw = (
+    "virtual-w",
+    """\
+class VirtualW(Package):
+    virtual = True
+""",
+)
+
+
 @pytest.fixture
 def create_test_repo(tmpdir, mutable_config):
     repo_path = str(tmpdir)
@@ -104,7 +123,7 @@ repo:
         )
 
     packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu]:
+    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu, _pkgw]:
         pkg_dir = packages_dir.ensure(pkg_name, dir=True)
         pkg_file = pkg_dir.join("package.py")
         with open(str(pkg_file), "w") as f:
@@ -473,12 +492,29 @@ def test_require_cflags(concretize_scope, test_repo):
     """Ensures that flags can be required from configuration."""
     conf_str = """\
 packages:
+  all:
+    providers:
+      virtual-w: [w]
   y:
     require: cflags="-g"
+  virtual-w:
+    require: w cflags="-O1"
 """
     update_packages_config(conf_str)
     spec = Spec("y").concretized()
     assert spec.satisfies("cflags=-g")
+
+    # asp = solve("--show=asp", "y")
+    # import pdb; pdb.set_trace()
+
+    spec_y = Spec("y").concretized()
+    assert spec_y.satisfies("cflags=-g")
+
+    # asp = solve("--show=asp", "w")
+    # import pdb; pdb.set_trace()
+
+    spec_w = Spec("virtual-w").concretized()
+    assert spec_w.satisfies("w cflags=-O1")
 
 
 def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo):
