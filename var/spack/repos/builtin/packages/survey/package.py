@@ -19,7 +19,7 @@ class Survey(CMakePackage):
     available for tools inside current MPI implementations including:
     MPICH, MVAPICH, MPT, and OpenMPI. It also supports multiple
     architectures and has been tested on machines based on Intel,
-    AMD, ARM, and IBM P8/9 processors and integrated GPUs.
+    AMD, ARM, and IBM P8/9 processors and integrated NVIDIA GPUs.
 
     Survey is a licensed product with the source not openly available.
     To access the survey source and build with spack please contact:
