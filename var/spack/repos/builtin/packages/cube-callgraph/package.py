@@ -15,7 +15,7 @@ class CubeCallgraph(AutotoolsPackage):
 
     version("0.4", sha256="796dd24d130864d15fdb82f9a02008aa0a37e13600c176299d6fe3cc1f9845af")
 
-    depends_on("cube@4.8:")
+    depends_on("cube@4.8:+gui")
     depends_on("cubelib@4.8:")
     depends_on("qt@5.9.1:")
     depends_on("graphviz@7.1:")

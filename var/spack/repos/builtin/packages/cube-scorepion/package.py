@@ -15,7 +15,7 @@ class CubeScorepion(AutotoolsPackage):
 
     version("0.5", sha256="ff9ed6afc5e46bc54e29bba2d5d1bd8d9fae4a042aa7090791d6b5033370678a")
 
-    depends_on("cube@4.8:")
+    depends_on("cube@4.8:+gui")
     depends_on("cubelib@4.8:")
     depends_on("qt@5.9.1:")
     depends_on("scorep@7.0:")

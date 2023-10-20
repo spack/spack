@@ -15,6 +15,6 @@ class CubeJengafett(AutotoolsPackage):
 
     version("0.5", sha256="60bc00018cf2d48039b1ea5c159e0503598fa1dfe081bc3ec1e3b0d4952e180d")
 
-    depends_on("cube@4.8:")
+    depends_on("cube@4.8:+gui")
     depends_on("cubelib@4.8:")
     depends_on("qt@5.9.1:")
