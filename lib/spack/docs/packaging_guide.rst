@@ -2572,18 +2572,28 @@ In that case, you could say something like:
 Suppose the above package also has, since version 3, optional `Trilinos`
 support and you want them both to build either with or without MPI. Further
 suppose you require a version of `Trilinos` no older than 12.6. In that case,
-the `Trilinos` variant and dependency directives would be:
+the `trilinos` variant and dependency directives would be:
 
 .. code-block:: python
 
    variant("trilinos", default=False, description="Enable Trilinos support")
 
-   depends_on("trilinos@12.6:", when="@3:+trilinos")
-   depends_on("trilinos@12.6:+mpi", when="@3:+trilinos+mpi")
+   depends_on("trilinos@12.6:", when="@3: +trilinos")
+   depends_on("trilinos@12.6: +mpi", when="@3: +trilinos +mpi")
 
 
-The ``when`` argument can include any Spec constraints that are supported on
-the command line using the same :ref:`syntax <sec-specs>`.
+Alternatively, you could use the `when` context manager to equivalently specify
+the `trilinos` variant dependencies as follows:
+
+.. code-block:: python
+
+   with when("@3: +trilinos"):
+       depends_on("trilinos@12.6:")
+       depends_on("trilinos +mpi", when="+mpi")
+
+
+The argument to ``when`` in either case can include any Spec constraints that
+are supported on the command line using the same :ref:`syntax <sec-specs>`.
 
 .. note::
 
