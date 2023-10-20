@@ -845,6 +845,13 @@ class PyclingoDriver:
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
+        flags = []
+        for spec in specs:
+            flags.append(spec.compiler_flags)
+
+        if self._compiler_flag_has_propagation(flags):
+            self.control.load(os.path.join(parent_dir, "propagation.lp"))
+
 
         # Binary compatibility is based on libc on Linux, and on the os tag elsewhere
         if using_libc_compatibility():
@@ -933,6 +940,13 @@ class PyclingoDriver:
             )
 
         return result, timer, self.control.statistics
+
+    def _compiler_flag_has_propagation(self, flags):
+        for flag in flags:
+            for flag_type, flag_vals in flag.items():
+                if any(val.propagate for val in flag_vals):
+                    return True
+        return False
 
 
 class ConcreteSpecsByHash(collections.abc.Mapping):
