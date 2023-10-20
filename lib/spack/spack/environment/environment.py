@@ -1480,11 +1480,12 @@ class Environment:
                 self._add_concrete_spec(s, concrete, new=False)
 
         # Concretize any new user specs that we haven't concretized yet
-        arguments, root_specs = [], []
+        args, root_specs, i = [], [], 0
         for uspec, uspec_constraints in zip(self.user_specs, self.user_specs.specs_as_constraints):
             if uspec not in old_concretized_user_specs:
                 root_specs.append(uspec)
-                arguments.append((uspec_constraints, tests))
+                args.append((i, uspec_constraints, tests))
+                i += 1
 
         # Ensure we don't try to bootstrap clingo in parallel
         if spack.config.get("config:concretizer", "clingo") == "clingo":
@@ -1503,34 +1504,36 @@ class Environment:
         _ = spack.compilers.get_compiler_config()
 
         # Early return if there is nothing to do
-        if len(arguments) == 0:
+        if len(args) == 0:
             return []
 
         # Solve the environment in parallel on Linux
         start = time.time()
-        max_processes = min(
-            len(arguments),  # Number of specs
-            spack.util.cpus.determine_number_of_jobs(parallel=True),
-        )
+        num_procs = min(len(args), spack.util.cpus.determine_number_of_jobs(parallel=True))
 
-        # TODO: revisit this print as soon as darwin is parallel too
+        # TODO: support parallel concretization on macOS and Windows
         msg = "Starting concretization"
-        if sys.platform != "darwin":
-            pool_size = spack.util.parallel.num_processes(max_processes=max_processes)
-            if pool_size > 1:
-                msg = msg + " pool with {0} processes".format(pool_size)
+        if sys.platform not in ("darwin", "win32") and num_procs > 1:
+            msg += f" pool with {num_procs} processes"
         tty.msg(msg)
 
-        concretized_root_specs = spack.util.parallel.parallel_map(
-            _concretize_task, arguments, max_processes=max_processes, debug=tty.is_debug()
-        )
+        batch = []
+        for i, concrete, duration in spack.util.parallel.imap_unordered(
+            _concretize_task, args, processes=num_procs, debug=tty.is_debug()
+        ):
+            batch.append((i, concrete))
+            tty.verbose(f"[{duration:7.2f}s] {root_specs[i]}")
+            sys.stdout.flush()
+
+        # Add specs in original order
+        batch.sort(key=lambda x: x[0])
+        by_hash = {}  # for attaching information on test dependencies
+        for root, (_, concrete) in zip(root_specs, batch):
+            self._add_concrete_spec(root, concrete)
+            by_hash[concrete.dag_hash()] = concrete
 
         finish = time.time()
-        tty.msg("Environment concretized in %.2f seconds." % (finish - start))
-        by_hash = {}
-        for abstract, concrete in zip(root_specs, concretized_root_specs):
-            self._add_concrete_spec(abstract, concrete)
-            by_hash[concrete.dag_hash()] = concrete
+        tty.msg(f"Environment concretized in {finish - start:.2f} seconds")
 
         # Unify the specs objects, so we get correct references to all parents
         self._read_lockfile_dict(self._to_lockfile_dict())
@@ -2392,10 +2395,12 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             invalid_constraints.extend(inv_variant_constraints)
 
 
-def _concretize_task(packed_arguments):
-    spec_constraints, tests = packed_arguments
+def _concretize_task(packed_arguments) -> Tuple[int, Spec, float]:
+    index, spec_constraints, tests = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
-        return _concretize_from_constraints(spec_constraints, tests)
+        start = time.time()
+        spec = _concretize_from_constraints(spec_constraints, tests)
+        return index, spec, time.time() - start
 
 
 def make_repo_path(root):
