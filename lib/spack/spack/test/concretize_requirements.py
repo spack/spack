@@ -501,17 +501,9 @@ packages:
     require: w cflags="-O1"
 """
     update_packages_config(conf_str)
-    spec = Spec("y").concretized()
-    assert spec.satisfies("cflags=-g")
-
-    # asp = solve("--show=asp", "y")
-    # import pdb; pdb.set_trace()
 
     spec_y = Spec("y").concretized()
     assert spec_y.satisfies("cflags=-g")
-
-    # asp = solve("--show=asp", "w")
-    # import pdb; pdb.set_trace()
 
     spec_w = Spec("virtual-w").concretized()
     assert spec_w.satisfies("w cflags=-O1")
