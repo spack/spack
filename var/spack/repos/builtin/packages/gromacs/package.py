@@ -261,7 +261,6 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("hwloc", when="+hwloc@2019:")
 
     depends_on("cp2k@8.1:", when="+cp2k")
-    depends_on("dbcsr", when="+cp2k")
 
     depends_on("nvhpc", when="+cufftmp")
 

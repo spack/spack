@@ -101,6 +101,7 @@ spack:
   - gmp
   - gotcha
   - gptune ~mpispawn
+  - gromacs +cp2k ^cp2k build_system=cmake
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
