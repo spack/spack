@@ -104,7 +104,7 @@ contains "usage: spack module " spack -m module --help
 contains "usage: spack module " spack -m module
 
 title 'Testing `spack load`'
-contains "export PATH=$(spack -m location -i shell-b)/bin" spack -m load --only package --sh shell-b
+contains "export PATH=$(spack -m location -i shell-b)/bin" spack -m load --sh shell-b
 succeeds spack -m load shell-b
 LIST_CONTENT=`spack -m load shell-b; spack load --list`
 contains "shell-b@" echo $LIST_CONTENT
@@ -113,8 +113,7 @@ fails spack -m load -l
 # test a variable MacOS clears and one it doesn't for recursive loads
 contains "export PATH=$(spack -m location -i shell-a)/bin" spack -m load --sh shell-a
 contains "export PATH=$(spack -m location -i shell-b)/bin" spack -m load --sh shell-b
-succeeds spack -m load --only dependencies shell-a
-succeeds spack -m load --only package shell-a
+succeeds spack -m load shell-a
 fails spack -m load d
 contains "usage: spack load " spack -m load -h
 contains "usage: spack load " spack -m load -h d

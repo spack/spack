@@ -2228,6 +2228,43 @@ class TestConcretizeSeparately:
         s = Spec("virtual-build").concretized()
         assert s["pkgconfig"].name == "pkg-config"
 
+    @pytest.mark.regression("40595")
+    def test_no_multiple_solutions_with_different_edges_same_nodes(self):
+        r"""Tests that the root node, which has a dependency on py-setuptools without constraint,
+        doesn't randomly pick one of the two setuptools (@=59, @=60) needed by its dependency.
+
+        o py-floating@1.25.0/3baitsp
+        |\
+        | |\
+        | | |\
+        | o | | py-shapely@1.25.0/4hep6my
+        |/| | |
+        | |\| |
+        | | |/
+        | |/|
+        | | o py-setuptools@60/cwhbthc
+        | |/
+        |/|
+        | o py-numpy@1.25.0/5q5fx4d
+        |/|
+        | |\
+        | o | py-setuptools@59/jvsa7sd
+        |/ /
+        o | python@3.11.2/pdmjekv
+        o | gmake@3.0/jv7k2bl
+         /
+        o gmake@4.1/uo6ot3d
+        """
+        spec_str = "py-floating"
+
+        root = spack.spec.Spec(spec_str).concretized()
+        assert root["py-shapely"].satisfies("^py-setuptools@=60")
+        assert root["py-numpy"].satisfies("^py-setuptools@=59")
+
+        edges = root.edges_to_dependencies("py-setuptools")
+        assert len(edges) == 1
+        assert edges[0].spec.satisfies("@=60")
+
 
 @pytest.mark.parametrize(
     "v_str,v_opts,checksummed",

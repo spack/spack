@@ -168,7 +168,7 @@ def test_env_remove(capfd):
 
     foo = ev.read("foo")
     with foo:
-        with pytest.raises(spack.main.SpackCommandError):
+        with pytest.raises(SpackCommandError):
             with capfd.disabled():
                 env("remove", "-y", "foo")
         assert "foo" in env("list")
@@ -283,7 +283,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
-    assert "Warning: couldn't get environment settings" in err
+    assert "Warning: couldn't load runtime environment" in err
 
 
 def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, monkeypatch):
@@ -500,11 +500,14 @@ def test_env_activate_broken_view(
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
     with spack.repo.use_repositories(mock_custom_repository):
-        with pytest.raises(SpackCommandError):
-            env("activate", "--sh", "test")
+        wrong_repo = env("activate", "--sh", "test")
+        assert "Warning: couldn't load runtime environment" in wrong_repo
+        assert "Unknown namespace: builtin.mock" in wrong_repo
 
     # test replacing repo fixes it
-    env("activate", "--sh", "test")
+    normal_repo = env("activate", "--sh", "test")
+    assert "Warning: couldn't load runtime environment" not in normal_repo
+    assert "Unknown namespace: builtin.mock" not in normal_repo
 
 
 def test_to_lockfile_dict():
@@ -1044,7 +1047,7 @@ def test_env_commands_die_with_no_env_arg():
         env("remove")
 
     # these have an optional env arg and raise errors via tty.die
-    with pytest.raises(spack.main.SpackCommandError):
+    with pytest.raises(SpackCommandError):
         env("loads")
 
     # This should NOT raise an error with no environment
