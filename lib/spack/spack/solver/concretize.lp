@@ -1428,11 +1428,10 @@ opt_criterion(50, "number of non-default variants (non-roots)").
 #minimize{ 0@250: #true }.
 #minimize{ 0@50: #true }.
 #minimize {
-    1@50+Priority,ParentNode,PackageNode,Variant,Value
+    1@50+Priority,PackageNode,Variant,Value
     : variant_not_default(PackageNode, Variant, Value),
       not attr("root", PackageNode),
-      build_priority(PackageNode, Priority),
-      depends_on(ParentNode, PackageNode)
+      build_priority(PackageNode, Priority)
 }.
 
 % Minimize the weights of the providers, i.e. use as much as
@@ -1441,11 +1440,10 @@ opt_criterion(45, "preferred providers (non-roots)").
 #minimize{ 0@245: #true }.
 #minimize{ 0@45: #true }.
 #minimize{
-    Weight@45+Priority,ParentNode,ProviderNode,Virtual
+    Weight@45+Priority,ProviderNode,Virtual
     : provider_weight(ProviderNode, Virtual, Weight),
       not attr("root", ProviderNode),
-      build_priority(ProviderNode, Priority),
-      depends_on(ParentNode, ProviderNode)
+      build_priority(ProviderNode, Priority)
 }.
 
 % Try to minimize the number of compiler mismatches in the DAG.
@@ -1491,11 +1489,9 @@ opt_criterion(25, "version badness").
 #minimize{ 0@225: #true }.
 #minimize{ 0@25: #true }.
 #minimize{
-    Weight@25+Priority,ParentNode,PackageNode
+    Weight@25+Priority,PackageNode
     : version_weight(PackageNode, Weight),
-      not attr("root", PackageNode),
-      build_priority(PackageNode, Priority),
-      depends_on(ParentNode, PackageNode)
+      build_priority(PackageNode, Priority)
 }.
 
 % Try to use all the default values of variants
@@ -1503,11 +1499,10 @@ opt_criterion(20, "default values of variants not being used (non-roots)").
 #minimize{ 0@220: #true }.
 #minimize{ 0@20: #true }.
 #minimize{
-    1@20+Priority,ParentNode,PackageNode,Variant,Value
+    1@20+Priority,PackageNode,Variant,Value
     : variant_default_not_used(PackageNode, Variant, Value),
       not attr("root", PackageNode),
-      build_priority(PackageNode, Priority),
-      depends_on(ParentNode, PackageNode)
+      build_priority(PackageNode, Priority)
 }.
 
 % Try to use preferred compilers
@@ -1538,6 +1533,17 @@ opt_criterion(5, "non-preferred targets").
     Weight@5+Priority,PackageNode
     : node_target_weight(PackageNode, Weight),
       build_priority(PackageNode, Priority)
+}.
+
+% Choose more recent versions for nodes
+opt_criterion(1, "edge wiring").
+#minimize{ 0@201: #true }.
+#minimize{ 0@1: #true }.
+#minimize{
+    Weight@1,ParentNode,PackageNode
+    : version_weight(PackageNode, Weight),
+      not attr("root", PackageNode),
+      depends_on(ParentNode, PackageNode)
 }.
 
 %-----------
