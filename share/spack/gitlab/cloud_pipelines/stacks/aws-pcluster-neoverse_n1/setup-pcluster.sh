@@ -96,7 +96,8 @@ install_compilers() {
     # Intel compiler needs to be installed from a specific spack git commit.
     # The best solution would be to have the compilers hash (or packages contents) be part of the individual packages hashes. I don't see this ATM.
     if ! echo "${SPACK_TARGET_ARCH}" | grep -q neoverse; then
-        pushd "${SPACK_ROOT}"; git fetch --depth=1 origin ${spack_intel_compiler_commit}
+        pushd "${SPACK_ROOT}"
+        git fetch --depth=1 origin ${spack_intel_compiler_commit}
         latest_commit=$(git log | head -n1 | awk '/commit/{print $2}')
         git checkout ${spack_intel_compiler_commit}
         popd
