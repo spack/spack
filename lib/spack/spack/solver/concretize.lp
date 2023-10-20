@@ -1206,30 +1206,9 @@ same_compiler(PackageNode, DependencyNode)
      node_compiler(DependencyNode, CompilerID),
      compiler_id(CompilerID).
 
-% propagate flags when compiler match
-attr("node_flag_propagate", PackageNode, FlagType, Flag, Source) :- % source is a node() attribute
-  attr("node_flag_possible_prop", PackageNode, FlagType, Flag, Source),
-  not attr("node_flag_set", PackageNode, FlagType, _).
-
-attr("node_flag_possible_prop", PackageNode, FlagType, Flag, Source) :- % source is a node() attribute
-  same_compiler(ParentNode, PackageNode),
-  attr("node_flag_possible_prop", ParentNode, FlagType, _, Source),
-  attr("node_flag", Source, FlagType, Flag),
-  flag_type(FlagType).
-
-error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, PackageNode, FlagType) :-
-  same_compiler(Source1, PackageNode),
-  same_compiler(Source2, PackageNode),
-  attr("node_flag_propagate", _, FlagType, _, Source1),
-  attr("node_flag_propagate", _, FlagType, _, Source2),
-  Source1 < Source2.
-
 % remember where flags came from
 attr("node_flag_source", PackageNode, FlagType, PackageNode)
   :- attr("node_flag_set", PackageNode, FlagType, _).
-
-attr("node_flag_source", PackageNode, FlagType, Q)
-  :- attr("node_flag_propagate", PackageNode, FlagType, _, Q).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 attr("node_flag", PackageNode, FlagType, Flag)
@@ -1251,7 +1230,6 @@ attr("node_flag_compiler_default", PackageNode)
 
 % if a flag is set to something or inherited, it's included
 attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_set", PackageNode, FlagType, Flag).
-attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_propagate", PackageNode, FlagType, Flag, _).
 
 % if no node flags are set for a type, there are no flags.
 attr("no_flags", PackageNode, FlagType)
