@@ -1419,32 +1419,13 @@ class Environment:
 
         # Add specs in original order
         batch.sort(key=lambda x: x[0])
-        by_hash = {}  # for attaching information on test dependencies
+        unified_specs = spack.solver.asp.ConcreteSpecsByHash()
         for root, (_, concrete) in zip(root_specs, batch):
-            self._add_concrete_spec(root, concrete)
-            by_hash[concrete.dag_hash()] = concrete
+            unified_specs.add(concrete)
+            self._add_concrete_spec(root, unified_specs[concrete.dag_hash()])
 
         finish = time.time()
         tty.msg(f"Environment concretized in {finish - start:.2f} seconds")
-
-        # Unify the specs objects, so we get correct references to all parents
-        self._read_lockfile_dict(self._to_lockfile_dict())
-
-        # Re-attach information on test dependencies
-        if tests:
-            # This is slow, but the information on test dependency is lost
-            # after unification or when reading from a lockfile.
-            for h in self.specs_by_hash:
-                current_spec, computed_spec = self.specs_by_hash[h], by_hash[h]
-                for node in computed_spec.traverse():
-                    test_edges = node.edges_to_dependencies(depflag=dt.TEST)
-                    for current_edge in test_edges:
-                        test_dependency = current_edge.spec
-                        if test_dependency in current_spec[node.name]:
-                            continue
-                        current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), depflag=dt.TEST, virtuals=current_edge.virtuals
-                        )
 
         results = [
             (abstract, self.specs_by_hash[h])
