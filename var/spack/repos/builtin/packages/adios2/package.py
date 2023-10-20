@@ -95,7 +95,6 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     # Optional language bindings, C++11 and C always provided
-    variant("cuda", default=False, when="@2.8:", description="Enable CUDA support")
     variant("kokkos", default=False, when="@2.9:", description="Enable Kokkos support")
     variant("sycl", default=False, when="@2.10:", description="Enable SYCL support")
     variant("python", default=False, description="Enable the Python bindings")
@@ -134,11 +133,12 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+cuda", when="@:2.7")
     conflicts("+rocm", when="@:2.8")
-    conflicts("+rocm", when="+cuda")
-    conflicts("+rocm", when="~kokkos", msg="ADIOS2 does not support HIP without Kokkos")
 
     conflicts("+cuda", when="+sycl")
+    conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="+sycl")
+
+    conflicts("+rocm", when="~kokkos", msg="ADIOS2 does not support HIP without Kokkos")
     conflicts("+sycl", when="~kokkos", msg="ADIOS2 does not support SYCL without Kokkos")
 
     for _platform in ["linux", "darwin", "cray"]:
