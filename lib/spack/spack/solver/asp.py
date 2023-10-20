@@ -862,6 +862,13 @@ class PyclingoDriver:
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
+        flags = []
+        for spec in specs:
+            flags.append(spec.compiler_flags)
+
+        if self._compiler_flag_has_propagation(flags):
+            self.control.load(os.path.join(parent_dir, "propagation.lp"))
+
         timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
@@ -969,6 +976,13 @@ class PyclingoDriver:
             cycle_result = cycle_detection.solve()
 
         return cycle_result.unsatisfiable
+
+    def _compiler_flag_has_propagation(self, flags):
+        for flag in flags:
+            for flag_type, flag_vals in flag.items():
+                if any(val.propagate for val in flag_vals):
+                    return True
+        return False
 
 
 class SpackSolverSetup:
