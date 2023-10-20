@@ -235,6 +235,9 @@ class QtBase(QtPackage):
         for k in features:
             define("FEATURE_" + k, True)
 
+        if "~opengl" in spec:
+            args.append(self.define("INPUT_opengl", "no"))
+
         # INPUT_* arguments: undefined/no/qt/system
         sys_inputs = ["doubleconversion"]
         if "+sql" in spec:

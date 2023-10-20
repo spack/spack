@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
+
 import pytest
 
 import spack.directives
@@ -11,6 +13,7 @@ from spack.error import SpecError, UnsatisfiableSpecError
 from spack.spec import (
     ArchSpec,
     CompilerSpec,
+    DependencySpec,
     Spec,
     SpecFormatSigilError,
     SpecFormatStringError,
@@ -1004,6 +1007,84 @@ class TestSpecSemantics:
         assert new_spec.compiler_flags["cxxflags"] == ["-O1"]
 
 
+@pytest.mark.parametrize(
+    "spec_str,format_str,expected",
+    [
+        ("zlib@git.foo/bar", "{name}-{version}", str(pathlib.Path("zlib-git.foo_bar"))),
+        ("zlib@git.foo/bar", "{name}-{version}-{/hash}", None),
+        ("zlib@git.foo/bar", "{name}/{version}", str(pathlib.Path("zlib", "git.foo_bar"))),
+        (
+            "zlib@{0}=1.0%gcc".format("a" * 40),
+            "{name}/{version}/{compiler}",
+            str(pathlib.Path("zlib", "{0}_1.0".format("a" * 40), "gcc")),
+        ),
+        (
+            "zlib@git.foo/bar=1.0%gcc",
+            "{name}/{version}/{compiler}",
+            str(pathlib.Path("zlib", "git.foo_bar_1.0", "gcc")),
+        ),
+    ],
+)
+def test_spec_format_path(spec_str, format_str, expected):
+    _check_spec_format_path(spec_str, format_str, expected)
+
+
+def _check_spec_format_path(spec_str, format_str, expected, path_ctor=None):
+    spec = Spec(spec_str)
+    if not expected:
+        with pytest.raises((spack.spec.SpecFormatPathError, spack.spec.SpecFormatStringError)):
+            spec.format_path(format_str, _path_ctor=path_ctor)
+    else:
+        formatted = spec.format_path(format_str, _path_ctor=path_ctor)
+        assert formatted == expected
+
+
+@pytest.mark.parametrize(
+    "spec_str,format_str,expected",
+    [
+        (
+            "zlib@git.foo/bar",
+            r"C:\\installroot\{name}\{version}",
+            r"C:\installroot\zlib\git.foo_bar",
+        ),
+        (
+            "zlib@git.foo/bar",
+            r"\\hostname\sharename\{name}\{version}",
+            r"\\hostname\sharename\zlib\git.foo_bar",
+        ),
+        # Windows doesn't attribute any significance to a leading
+        # "/" so it is discarded
+        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", r"installroot\zlib\git.foo_bar"),
+    ],
+)
+def test_spec_format_path_windows(spec_str, format_str, expected):
+    _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PureWindowsPath)
+
+
+@pytest.mark.parametrize(
+    "spec_str,format_str,expected",
+    [
+        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", "/installroot/zlib/git.foo_bar"),
+        ("zlib@git.foo/bar", r"//installroot/{name}/{version}", "//installroot/zlib/git.foo_bar"),
+        # This is likely unintentional on Linux: Firstly, "\" is not a
+        # path separator for POSIX, so this is treated as a single path
+        # component (containing literal "\" characters); secondly,
+        # Spec.format treats "\" as an escape character, so is
+        # discarded (unless directly following another "\")
+        (
+            "zlib@git.foo/bar",
+            r"C:\\installroot\package-{name}-{version}",
+            r"C__installrootpackage-zlib-git.foo_bar",
+        ),
+        # "\" is not a POSIX separator, and Spec.format treats "\{" as a literal
+        # "{", which means that the resulting format string is invalid
+        ("zlib@git.foo/bar", r"package\{name}\{version}", None),
+    ],
+)
+def test_spec_format_path_posix(spec_str, format_str, expected):
+    _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PurePosixPath)
+
+
 @pytest.mark.regression("3887")
 @pytest.mark.parametrize("spec_str", ["py-extension2", "extension1", "perl-extension"])
 def test_is_extension_after_round_trip_to_dict(config, mock_packages, spec_str):
@@ -1326,3 +1407,15 @@ def test_abstract_hash_intersects_and_satisfies(default_mock_concretization):
     # disjoint concretization space
     assert_disjoint(abstract_none, concrete)
     assert_disjoint(abstract_none, abstract_5)
+
+
+def test_edge_equality_does_not_depend_on_virtual_order():
+    """Tests that two edges that are constructed with just a different order of the virtuals in
+    the input parameters are equal to each other.
+    """
+    parent, child = Spec("parent"), Spec("child")
+    edge1 = DependencySpec(parent, child, depflag=0, virtuals=("mpi", "lapack"))
+    edge2 = DependencySpec(parent, child, depflag=0, virtuals=("lapack", "mpi"))
+    assert edge1 == edge2
+    assert tuple(sorted(edge1.virtuals)) == edge1.virtuals
+    assert tuple(sorted(edge2.virtuals)) == edge1.virtuals

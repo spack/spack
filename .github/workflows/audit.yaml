@@ -22,8 +22,8 @@ jobs:
       matrix:
         operating_system: ["ubuntu-latest", "macos-latest"]
     steps:
-    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # @v2
-    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # @v2
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # @v2
       with:
         python-version: ${{inputs.python_version}}
     - name: Install Python packages
@@ -34,6 +34,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           coverage run $(which spack) audit packages
+          coverage run $(which spack) audit externals        
           coverage combine
           coverage xml
     - name: Package audits (without coverage)
@@ -41,6 +42,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           $(which spack) audit packages
+          $(which spack) audit externals
     - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # @v2.1.0
       if: ${{ inputs.with_coverage == 'true' }}
       with:

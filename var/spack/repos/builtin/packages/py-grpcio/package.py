@@ -37,7 +37,7 @@ class PyGrpcio(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-six@1.5.2:", when="@:1.48", type=("build", "run"))
-    depends_on("py-cython@0.23:", type="build")
+    depends_on("py-cython@0.23:2", type="build")
     depends_on("openssl")
     depends_on("zlib-api")
     depends_on("c-ares")

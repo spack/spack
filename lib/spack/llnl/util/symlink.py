@@ -11,8 +11,7 @@ import tempfile
 
 from llnl.util import lang, tty
 
-from spack.error import SpackError
-from spack.util.path import system_path_filter
+from ..path import system_path_filter
 
 if sys.platform == "win32":
     from win32file import CreateHardLink
@@ -338,7 +337,7 @@ def resolve_link_target_relative_to_the_link(link):
     return os.path.join(link_dir, target)
 
 
-class SymlinkError(SpackError):
+class SymlinkError(RuntimeError):
     """Exception class for errors raised while creating symlinks,
     junctions and hard links
     """

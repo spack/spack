@@ -54,10 +54,15 @@ import enum
 import io
 import itertools
 import os
+import pathlib
+import platform
 import re
+import socket
 import warnings
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import llnl.path
+import llnl.string
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -70,6 +75,7 @@ import spack.dependency as dp
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
+import spack.patch
 import spack.paths
 import spack.platforms
 import spack.provider_index
@@ -82,11 +88,9 @@ import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
 import spack.util.module_cmd as md
-import spack.util.path as pth
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.string
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
@@ -740,7 +744,7 @@ class DependencySpec:
         self.parent = parent
         self.spec = spec
         self.depflag = depflag
-        self.virtuals = virtuals
+        self.virtuals = tuple(sorted(set(virtuals)))
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
         """Update the current dependency types"""
@@ -1390,7 +1394,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return pth.path_to_os_path(self._external_path)[0]
+        return llnl.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -1602,13 +1606,20 @@ class Spec:
         try:
             dspec = next(dspec for dspec in orig if depflag == dspec.depflag)
         except StopIteration:
-            raise DuplicateDependencyError("Cannot depend on '%s' twice" % spec)
+            current_deps = ", ".join(
+                dt.flag_to_chars(x.depflag) + " " + x.spec.short_spec for x in orig
+            )
+            raise DuplicateDependencyError(
+                f"{self.short_spec} cannot depend on '{spec.short_spec}' multiple times.\n"
+                f"\tRequired: {dt.flag_to_chars(depflag)}\n"
+                f"\tDependency: {current_deps}"
+            )
 
         try:
             dspec.spec.constrain(spec)
         except spack.error.UnsatisfiableSpecError:
             raise DuplicateDependencyError(
-                "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
+                f"Cannot depend on incompatible specs '{dspec.spec}' and '{spec}'"
             )
 
     def add_dependency_edge(
@@ -1799,7 +1810,7 @@ class Spec:
 
     @prefix.setter
     def prefix(self, value):
-        self._prefix = spack.util.prefix.Prefix(pth.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(llnl.path.convert_to_platform_path(value))
 
     def spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
@@ -3662,7 +3673,7 @@ class Spec:
             return spec_like
         return Spec(spec_like)
 
-    def intersects(self, other: "Spec", deps: bool = True) -> bool:
+    def intersects(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if there exists at least one concrete spec that matches both
         self and other, otherwise False.
 
@@ -3785,7 +3796,7 @@ class Spec:
 
         return True
 
-    def satisfies(self, other: "Spec", deps: bool = True) -> bool:
+    def satisfies(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
@@ -3897,7 +3908,15 @@ class Spec:
                 for sha256 in self.variants["patches"]._patches_in_order_of_appearance:
                     index = spack.repo.PATH.patch_index
                     pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
-                    patch = index.patch_for_package(sha256, pkg_cls)
+                    try:
+                        patch = index.patch_for_package(sha256, pkg_cls)
+                    except spack.patch.PatchLookupError as e:
+                        raise spack.error.SpecError(
+                            f"{e}. This usually means the patch was modified or removed. "
+                            "To fix this, either reconcretize or use the original package "
+                            "repository"
+                        ) from e
+
                     self._patches.append(patch)
 
         return self._patches
@@ -4434,6 +4453,42 @@ class Spec:
         kwargs = kwargs.copy()
         kwargs.setdefault("color", None)
         return self.format(*args, **kwargs)
+
+    def format_path(
+        # self, format_string: str, _path_ctor: Optional[pathlib.PurePath] = None
+        self,
+        format_string: str,
+        _path_ctor: Optional[Callable[[Any], pathlib.PurePath]] = None,
+    ) -> str:
+        """Given a `format_string` that is intended as a path, generate a string
+        like from `Spec.format`, but eliminate extra path separators introduced by
+        formatting of Spec properties.
+
+        Path separators explicitly added to the string are preserved, so for example
+        "{name}/{version}" would generate a directory based on the Spec's name, and
+        a subdirectory based on its version; this function guarantees though that
+        the resulting string would only have two directories (i.e. that if under
+        normal circumstances that `str(Spec.version)` would contain a path
+        separator, it would not in this case).
+        """
+        format_component_with_sep = r"\{[^}]*[/\\][^}]*}"
+        if re.search(format_component_with_sep, format_string):
+            raise SpecFormatPathError(
+                f"Invalid path format string: cannot contain {{/...}}\n\t{format_string}"
+            )
+
+        path_ctor = _path_ctor or pathlib.PurePath
+        format_string_as_path = path_ctor(format_string)
+        if format_string_as_path.is_absolute():
+            output_path_components = [format_string_as_path.parts[0]]
+            input_path_components = list(format_string_as_path.parts[1:])
+        else:
+            output_path_components = []
+            input_path_components = list(format_string_as_path.parts)
+        output_path_components += [
+            fs.polite_filename(self.format(x)) for x in input_path_components
+        ]
+        return str(path_ctor(*output_path_components))
 
     def __str__(self):
         sorted_nodes = [self] + sorted(
@@ -5148,6 +5203,43 @@ def save_dependency_specfiles(root: Spec, output_directory: str, dependencies: L
             fd.write(spec.to_json(hash=ht.dag_hash))
 
 
+def get_host_environment_metadata() -> Dict[str, str]:
+    """Get the host environment, reduce to a subset that we can store in
+    the install directory, and add the spack version.
+    """
+    import spack.main
+
+    environ = get_host_environment()
+    return {
+        "host_os": environ["os"],
+        "platform": environ["platform"],
+        "host_target": environ["target"],
+        "hostname": environ["hostname"],
+        "spack_version": spack.main.get_version(),
+        "kernel_version": platform.version(),
+    }
+
+
+def get_host_environment() -> Dict[str, Any]:
+    """Return a dictionary (lookup) with host information (not including the
+    os.environ).
+    """
+    host_platform = spack.platforms.host()
+    host_target = host_platform.target("default_target")
+    host_os = host_platform.operating_system("default_os")
+    arch_fmt = "platform={0} os={1} target={2}"
+    arch_spec = Spec(arch_fmt.format(host_platform, host_os, host_target))
+    return {
+        "target": str(host_target),
+        "os": str(host_os),
+        "platform": str(host_platform),
+        "arch": arch_spec,
+        "architecture": arch_spec,
+        "arch_str": str(arch_spec),
+        "hostname": socket.gethostname(),
+    }
+
+
 class SpecParseError(spack.error.SpecError):
     """Wrapper for ParseError for when we're parsing specs."""
 
@@ -5208,7 +5300,7 @@ class InvalidDependencyError(spack.error.SpecError):
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super().__init__(
-            "Package {0} does not depend on {1}".format(pkg, spack.util.string.comma_or(deps))
+            "Package {0} does not depend on {1}".format(pkg, llnl.string.comma_or(deps))
         )
 
 
@@ -5322,6 +5414,10 @@ class NoSuchSpecFileError(SpecFilenameError):
 
 class SpecFormatStringError(spack.error.SpecError):
     """Called for errors in Spec format strings."""
+
+
+class SpecFormatPathError(spack.error.SpecError):
+    """Called for errors in Spec path-format strings."""
 
 
 class SpecFormatSigilError(SpecFormatStringError):

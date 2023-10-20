@@ -38,10 +38,13 @@ as input.
 import ast
 import collections
 import collections.abc
+import glob
 import inspect
 import itertools
+import pathlib
 import pickle
 import re
+import warnings
 from urllib.request import urlopen
 
 import llnl.util.lang
@@ -796,5 +799,78 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
             err = error_cls(summary=summary, details=[error_msg, "in " + filename])
 
             errors.append(err)
+
+    return errors
+
+
+#: Sanity checks on package directives
+external_detection = AuditClass(
+    group="externals",
+    tag="PKG-EXTERNALS",
+    description="Sanity checks for external software detection",
+    kwargs=("pkgs",),
+)
+
+
+def packages_with_detection_tests():
+    """Return the list of packages with a corresponding detection_test.yaml file."""
+    import spack.config
+    import spack.util.path
+
+    to_be_tested = []
+    for current_repo in spack.repo.PATH.repos:
+        namespace = current_repo.namespace
+        packages_dir = pathlib.PurePath(current_repo.packages_path)
+        pattern = packages_dir / "**" / "detection_test.yaml"
+        pkgs_with_tests = [
+            f"{namespace}.{str(pathlib.PurePath(x).parent.name)}" for x in glob.glob(str(pattern))
+        ]
+        to_be_tested.extend(pkgs_with_tests)
+
+    return to_be_tested
+
+
+@external_detection
+def _test_detection_by_executable(pkgs, error_cls):
+    """Test drive external detection for packages"""
+    import spack.detection
+
+    errors = []
+
+    # Filter the packages and retain only the ones with detection tests
+    pkgs_with_tests = packages_with_detection_tests()
+    selected_pkgs = []
+    for current_package in pkgs_with_tests:
+        _, unqualified_name = spack.repo.partition_package_name(current_package)
+        # Check for both unqualified name and qualified name
+        if unqualified_name in pkgs or current_package in pkgs:
+            selected_pkgs.append(current_package)
+    selected_pkgs.sort()
+
+    if not selected_pkgs:
+        summary = "No detection test to run"
+        details = [f'  "{p}" has no detection test' for p in pkgs]
+        warnings.warn("\n".join([summary] + details))
+        return errors
+
+    for pkg_name in selected_pkgs:
+        for idx, test_runner in enumerate(
+            spack.detection.detection_tests(pkg_name, spack.repo.PATH)
+        ):
+            specs = test_runner.execute()
+            expected_specs = test_runner.expected_specs
+
+            not_detected = set(expected_specs) - set(specs)
+            if not_detected:
+                summary = pkg_name + ": cannot detect some specs"
+                details = [f'"{s}" was not detected [test_id={idx}]' for s in sorted(not_detected)]
+                errors.append(error_cls(summary=summary, details=details))
+
+            not_expected = set(specs) - set(expected_specs)
+            if not_expected:
+                summary = pkg_name + ": detected unexpected specs"
+                msg = '"{0}" was detected, but was not expected [test_id={1}]'
+                details = [msg.format(s, idx) for s in sorted(not_expected)]
+                errors.append(error_cls(summary=summary, details=details))
 
     return errors

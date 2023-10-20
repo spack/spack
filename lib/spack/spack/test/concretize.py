@@ -1170,7 +1170,7 @@ class TestConcretize:
     )
     @pytest.mark.parametrize("mock_db", [True, False])
     def test_reuse_does_not_overwrite_dev_specs(
-        self, dev_first, spec, mock_db, tmpdir, monkeypatch
+        self, dev_first, spec, mock_db, tmpdir, temporary_store, monkeypatch
     ):
         """Test that reuse does not mix dev specs with non-dev specs.
 
@@ -1182,8 +1182,7 @@ class TestConcretize:
         # dev and non-dev specs that are otherwise identical
         spec = Spec(spec)
         dev_spec = spec.copy()
-        dev_constraint = "dev_path=%s" % tmpdir.strpath
-        dev_spec["dev-build-test-install"].constrain(dev_constraint)
+        dev_spec["dev-build-test-install"].constrain(f"dev_path={tmpdir.strpath}")
 
         # run the test in both orders
         first_spec = dev_spec if dev_first else spec
@@ -1196,7 +1195,7 @@ class TestConcretize:
             return [first_spec]
 
         if mock_db:
-            monkeypatch.setattr(spack.store.STORE.db, "query", mock_fn)
+            temporary_store.db.add(first_spec, None)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
@@ -2112,6 +2111,24 @@ class TestConcretize:
             # when checksums are required
             Spec("a@=3.0").concretized()
 
+    @pytest.mark.regression("39570")
+    @pytest.mark.db
+    def test_reuse_python_from_cli_and_extension_from_db(self, mutable_database):
+        """Tests that reusing python with and explicit request on the command line, when the spec
+        also reuses a python extension from the DB, doesn't fail.
+        """
+        s = Spec("py-extension1").concretized()
+        python_hash = s["python"].dag_hash()
+        s.package.do_install(fake=True, explicit=True)
+
+        with spack.config.override("concretizer:reuse", True):
+            with_reuse = Spec(f"py-extension2 ^/{python_hash}").concretized()
+
+        with spack.config.override("concretizer:reuse", False):
+            without_reuse = Spec("py-extension2").concretized()
+
+        assert with_reuse.dag_hash() == without_reuse.dag_hash()
+
 
 @pytest.fixture()
 def duplicates_test_repository():
@@ -2121,12 +2138,9 @@ def duplicates_test_repository():
 
 
 @pytest.mark.usefixtures("mutable_config", "duplicates_test_repository")
+@pytest.mark.only_clingo("Not supported by the original concretizer")
 class TestConcretizeSeparately:
     @pytest.mark.parametrize("strategy", ["minimal", "full"])
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Not supported by the original concretizer",
-    )
     def test_two_gmake(self, strategy):
         """Tests that we can concretize a spec with nodes using the same build
         dependency pinned at different versions.
@@ -2151,10 +2165,6 @@ class TestConcretizeSeparately:
         assert len(pinned_gmake) == 1 and pinned_gmake[0].satisfies("@=3.0")
 
     @pytest.mark.parametrize("strategy", ["minimal", "full"])
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Not supported by the original concretizer",
-    )
     def test_two_setuptools(self, strategy):
         """Tests that we can concretize separate build dependencies, when we are dealing
         with extensions.
@@ -2191,10 +2201,6 @@ class TestConcretizeSeparately:
         gmake = s["python"].dependencies(name="gmake", deptype="build")
         assert len(gmake) == 1 and gmake[0].satisfies("@=3.0")
 
-    @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original",
-        reason="Not supported by the original concretizer",
-    )
     def test_solution_without_cycles(self):
         """Tests that when we concretize a spec with cycles, a fallback kicks in to recompute
         a solution without cycles.
@@ -2206,6 +2212,21 @@ class TestConcretizeSeparately:
         s = Spec("cycle-b").concretized()
         assert s["cycle-a"].satisfies("~cycle")
         assert s["cycle-b"].satisfies("+cycle")
+
+    @pytest.mark.parametrize("strategy", ["minimal", "full"])
+    def test_pure_build_virtual_dependency(self, strategy):
+        """Tests that we can concretize a pure build virtual dependency, and ensures that
+        pure build virtual dependencies are accounted in the list of possible virtual
+        dependencies.
+
+        virtual-build@1.0
+        | [type=build, virtual=pkgconfig]
+        pkg-config@1.0
+        """
+        spack.config.CONFIG.set("concretizer:duplicates:strategy", strategy)
+
+        s = Spec("virtual-build").concretized()
+        assert s["pkgconfig"].name == "pkg-config"
 
 
 @pytest.mark.parametrize(
@@ -2242,3 +2263,23 @@ class TestConcretizeSeparately:
 def test_drop_moving_targets(v_str, v_opts, checksummed):
     v = Version(v_str)
     assert spack.solver.asp._is_checksummed_version((v, v_opts)) == checksummed
+
+
+class TestConcreteSpecsByHash:
+    """Tests the container of concrete specs"""
+
+    @pytest.mark.parametrize("input_specs", [["a"], ["a foobar=bar", "b"], ["a foobar=baz", "b"]])
+    def test_adding_specs(self, input_specs, default_mock_concretization):
+        """Tests that concrete specs in the container are equivalent, but stored as different
+        objects in memory.
+        """
+        container = spack.solver.asp.ConcreteSpecsByHash()
+        input_specs = [Spec(s).concretized() for s in input_specs]
+        for s in input_specs:
+            container.add(s)
+
+        for root in input_specs:
+            for node in root.traverse(root=True):
+                assert node == container[node.dag_hash()]
+                assert node.dag_hash() in container
+                assert node is not container[node.dag_hash()]

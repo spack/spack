@@ -261,6 +261,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # https://github.com/protocolbuffers/protobuf/issues/10051
     # https://github.com/tensorflow/tensorflow/issues/56266
     depends_on("py-protobuf@:3.19", type=("build", "run"), when="@:2.11")
+    # Must be matching versions of py-protobuf and protobuf
+    conflicts("^py-protobuf~cpp")
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six@1.12:", type=("build", "run"), when="@2.1:2.3,2.7:")
     depends_on("py-six@1.15", type=("build", "run"), when="@2.4:2.6")
@@ -434,6 +436,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("target=aarch64:", when="@:2.2")
     conflicts("~rocm", when="@2.7.4-rocm-enhanced")
     conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:")
+
+    # wheel 0.40 upgrades vendored packaging, trips over tensorflow-io-gcs-filesystem identifier
+    conflicts("^py-wheel@0.40:", when="@2.11:2.13")
 
     # https://www.tensorflow.org/install/source#tested_build_configurations
     conflicts("%gcc@:9.3.0", when="@2.9:")

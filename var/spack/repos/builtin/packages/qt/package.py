@@ -155,9 +155,6 @@ class Qt(Package):
     # causing qt to fail in ci.  This increases that limit to 1024.
     patch("qt59-qtbase-qtconfig256.patch", working_dir="qtbase", when="@5.9:5")
 
-    # https://bugzilla.altlinux.org/attachment.cgi?id=13362&action=diff#a/gcc13-compilefix.patch_sec1
-    patch("qt5-15-gcc13.patch", when="@5.15: %gcc@13")
-
     conflicts("%gcc@10:", when="@5.9:5.12.6 +opengl")
     conflicts("%gcc@11:", when="@5.8")
     conflicts("%apple-clang@13:", when="@:5.13")
@@ -692,9 +689,12 @@ class Qt(Package):
                 # Errors on bluetooth even when bluetooth is disabled...
                 # at least on apple-clang%12
                 config_args.extend(["-skip", "connectivity"])
-        elif version < Version("5.15") and "+gui" in spec:
+        elif "+gui" in spec:
             # Linux-only QT5 dependencies
-            config_args.append("-system-xcb")
+            if version < Version("5.9.9"):
+                config_args.append("-system-xcb")
+            else:
+                config_args.append("-xcb")
             if "+opengl" in spec:
                 config_args.append("-I{0}/include".format(spec["libx11"].prefix))
                 config_args.append("-I{0}/include".format(spec["xproto"].prefix))

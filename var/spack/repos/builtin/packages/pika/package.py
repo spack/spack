@@ -17,6 +17,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    version("0.19.1", sha256="674675abf0dd4c6f5a0b2fa3db944b277ed65c62f654029d938a8cab608a9c1d")
+    version("0.19.0", sha256="f45cc16e4e50cbb183ed743bdc8b775d49776ee33c13ea39a650f4230a5744cb")
     version("0.18.0", sha256="f34890e0594eeca6ac57f2b988d0807b502782817e53a7f7043c3f921b08c99f")
     version("0.17.0", sha256="717429fc1bc986d62cbec190a69939e91608122d09d54bda1b028871c9ca9ad4")
     version("0.16.0", sha256="59f2baec91cc9bf71ca96d21d0da1ec0092bf59da106efa51789089e0d7adcbb")
@@ -41,7 +43,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     generator("ninja")
 
     map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
-    cxxstds = ("17", "20")
+    cxxstds = ("17", "20", "23")
     variant(
         "cxxstd",
         default="17",
@@ -88,6 +90,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%gcc@:8", when="@0.2:")
     conflicts("%clang@:8", when="@0.2:")
     conflicts("+stdexec", when="cxxstd=17")
+    conflicts("cxxstd=23", when="^cmake@:3.20.2")
 
     # Other dependencies
     depends_on("boost@1.71:")
