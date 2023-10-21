@@ -40,7 +40,7 @@ class Jsoncpp(CMakePackage, MesonPackage):
         values=("default", conditional("98", when="@:1.8"), "11", "14", "17"),
         multi=False,
         description="Use the specified C++ standard when building.",
-        when="@:1.9.2 build_system=cmake",
+        when="build_system=cmake",
     )
 
     build_system("cmake", conditional("meson", when="@1.9.2:"), default="cmake")
