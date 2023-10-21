@@ -11,6 +11,7 @@ class PyCelery(PythonPackage):
 
     pypi = "celery/celery-4.2.1.tar.gz"
 
+    version("5.3.4", sha256="9023df6a8962da79eb30c0c84d5f4863d9793a466354cc931d7f72423996de28")
     version("5.2.3", sha256="e2cd41667ad97d4f6a2f4672d1c6a6ebada194c619253058b5f23704aaadaa82")
     version("5.0.0", sha256="313930fddde703d8e37029a304bf91429cd11aeef63c57de6daca9d958e1f255")
     version("4.4.7", sha256="d220b13a8ed57c78149acf82c006785356071844afe0b27012a4991d44026f9f")
@@ -63,12 +64,24 @@ class PyCelery(PythonPackage):
     depends_on("py-click-plugins@1.1.1:", when="@5.0.3:", type=("build", "run"))
     depends_on("py-click-repl@:0.1.6", when="@5.0.0:5.0", type=("build", "run"))
     depends_on("py-click-repl@0.2.0:", when="@5.2.0:", type=("build", "run"))
+
     depends_on("py-pytz@2019.3:", type=("build", "run"))
     depends_on("py-pytz@2021.3:", type=("build", "run"), when="@5.2.3")
-    depends_on("py-billiard@3.6.3.0:3", type=("build", "run"))
+    depends_on("py-pytz@2022.7:", type=("build", "run"), when="@5.3")
+
+    depends_on("py-python-dateutil@2.8.2", type=("build", "run"), when="@5.3")
+
+    depends_on("py-billiard@3.6.3.0:3", type=("build", "run"), when="@:5.0.0")
     depends_on("py-billiard@3.6.4.0:3", type=("build", "run"), when="@5.2.3")
+    depends_on("py-billiard@4.1:4", type=("build", "run"), when="@5.3")
+
     depends_on("py-kombu@4.6.11", when="@4.3.0:4", type=("build", "run"))
     depends_on("py-kombu@5.0.0:", when="@5.0.0:5.0", type=("build", "run"))
     depends_on("py-kombu@5.2.3:5", when="@5.2.0:5.2", type=("build", "run"))
+    depends_on("py-kombu@5.3.2:5", when="@5.3", type=("build", "run"))
+
     depends_on("py-vine@1.3.0", when="@4.3.0:4", type=("build", "run"))
     depends_on("py-vine@5.0.0:5", when="@5.0.0:5", type=("build", "run"))
+
+    depends_on("py-sqlalchemy@1.4.48:2.0", when="@5.3:", type=("build", "run"))
+    depends_on("py-cryptography@41.0.4:", when="@5.3:", type=("build", "run"))

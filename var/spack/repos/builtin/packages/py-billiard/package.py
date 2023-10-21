@@ -11,6 +11,7 @@ class PyBilliard(PythonPackage):
 
     pypi = "billiard/billiard-3.5.0.5.tar.gz"
 
+    version("4.1.0", sha256="1ad2eeae8e28053d729ba3373d34d9d6e210f6e4d8bf0a9c64f92bd053f1edf5")
     version("3.6.4.0", sha256="299de5a8da28a783d51b197d496bef4f1595dd023a93a4f59dde1886ae905547")
     version("3.6.3.0", sha256="d91725ce6425f33a97dfa72fb6bfef0e47d4652acd98a032bd1a7fbf06d5fa6a")
     version("3.6.1.0", sha256="b8809c74f648dfe69b973c8e660bcec00603758c9db8ba89d7719f88d5f01f26")
