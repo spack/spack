@@ -87,9 +87,7 @@ class Cairo(AutotoolsPackage):
         args.extend(self.enable_or_disable("gobject"))
         args.extend(self.enable_or_disable("ft"))
         args.extend(self.enable_or_disable("fc"))
-<<<<<<< HEAD
         args.append("--disable-dependency-tracking")
-=======
         args.extend(self.enable_or_disable("shared"))
         args.extend(self.with_or_without("pic"))
 
@@ -99,7 +97,6 @@ class Cairo(AutotoolsPackage):
             libs = pkgconf("--libs-only-l", "--static", "freetype2", output=str)
             args.append(f"LDFLAGS={ldflags}")
             args.append(f"LIBS={libs}")
->>>>>>> develop
 
         return args
 

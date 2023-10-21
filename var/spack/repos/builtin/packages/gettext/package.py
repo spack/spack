@@ -128,7 +128,6 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def libs(self):
-<<<<<<< HEAD
         # on redhat and clones, libintl is magic, you just want libc.
         # and sometimes 32 bit libraries you don't want in are in /usr/lib.
 
@@ -142,14 +141,3 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
             )
 
         return find_libraries(liblist, root=root, recursive=True)
-=======
-        # Do not fail if the installed gettext did not yet have the shared variant:
-        shared_variant = self.spec.variants.get("shared")
-        libs = find_libraries(
-            ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", "libintl"],
-            root=self.prefix,
-            recursive=True,
-            shared=True if not shared_variant else shared_variant.value,
-        )
-        return libs
->>>>>>> develop

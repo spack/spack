@@ -44,15 +44,11 @@ class Geant4(CMakePackage):
     version("10.4.0", sha256="e919b9b0a88476e00c0b18ab65d40e6a714b55ee4778f66bac32a5396c22aa74")
     version("10.3.3", sha256="bcd36a453da44de9368d1d61b0144031a58e4b43a6d2d875e19085f2700a89d8")
 
-<<<<<<< HEAD
-    _cxxstd_values = ("11", "14", "17", "20")
-=======
     _cxxstd_values = (
         conditional("11", "14", when="@:10"),
         conditional("17", when="@10.4.1:"),
         conditional("20", when="@10.7.0:"),
     )
->>>>>>> develop
     variant(
         "cxxstd",
         default="11",

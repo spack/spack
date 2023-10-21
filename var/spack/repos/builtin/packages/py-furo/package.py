@@ -12,12 +12,9 @@ class PyFuro(PythonPackage):
     homepage = "https://github.com/pradyunsg/furo"
     pypi = "furo/furo-2023.5.20.tar.gz"
 
-<<<<<<< HEAD
     maintainers("chissg", "gartung", "marcmengel", "vitodb")
 
-=======
     version("2023.9.10", sha256="5707530a476d2a63b8cad83b4f961f3739a69f4b058bcf38a03a39fa537195b2")
->>>>>>> develop
     version("2023.5.20", sha256="40e09fa17c6f4b22419d122e933089226dcdb59747b5b6c79363089827dea16f")
     version("2022.6.21", sha256="9aa983b7488a4601d13113884bfb7254502c8729942e073a0acb87a5512af223")
 

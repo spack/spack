@@ -174,7 +174,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # when compiling with debug symbols on gcc.
     conflicts("+gas", "~ld", msg="Assembler not always compatible with system ld")
 
-<<<<<<< HEAD
     # When you build ld.gold you automatically get ld, even when you add the
     # --disable-ld flag
     conflicts("~ld", "+gold")
@@ -185,8 +184,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         with working_dir(os.path.join(self.configure_directory, "gprofng")):
             force_remove("configure")
 
-=======
->>>>>>> develop
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)

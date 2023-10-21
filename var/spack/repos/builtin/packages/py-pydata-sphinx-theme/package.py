@@ -9,18 +9,13 @@ from spack.package import *
 class PyPydataSphinxTheme(PythonPackage):
     """A clean, three-column, Bootstrap-based Sphinx theme by and for the PyData community."""
 
-<<<<<<< HEAD
-    homepage = "https://pypi.org/project/pydata-sphinx-theme/"
+    homepage = "https://pydata-sphinx-theme.readthedocs.io/en/stable"
     pypi = "pydata_sphinx_theme/pydata_sphinx_theme-0.9.0.tar.gz"
 
     maintainers("chissg", "gartung", "marcmengel", "vitodb")
 
-    version("0.9.0", sha256="03598a86915b596f4bf80bef79a4d33276a83e670bf360def699dbb9f99dc57a")
-=======
-    homepage = "https://pydata-sphinx-theme.readthedocs.io/en/stable"
-    pypi = "pydata_sphinx_theme/pydata_sphinx_theme-0.14.1.tar.gz"
-
     version("0.14.1", sha256="d8d4ac81252c16a002e835d21f0fea6d04cf3608e95045c816e8cc823e79b053")
+    version("0.9.0", sha256="03598a86915b596f4bf80bef79a4d33276a83e670bf360def699dbb9f99dc57a")
 
     depends_on("python@3.8:", type=("build", "run"))
 
@@ -34,4 +29,3 @@ class PyPydataSphinxTheme(PythonPackage):
     depends_on("py-pygments@2.7:", type=("build", "run"))
     depends_on("py-accessible-pygments", type=("build", "run"))
     depends_on("py-typing-extensions", type=("build", "run"))
->>>>>>> develop

@@ -139,11 +139,7 @@ class Vecgeom(CMakePackage, CudaPackage):
         deprecated=True,
     )
 
-<<<<<<< HEAD
-    _cxxstd_values = ("11", "14", "17", "20")
-=======
     _cxxstd_values = (conditional("11", "14", when="@:1.1"), "17", conditional("20", when="@1.2:"))
->>>>>>> develop
     variant(
         "cxxstd",
         default="17",

@@ -37,11 +37,7 @@ class Jsoncpp(CMakePackage, MesonPackage):
     variant(
         "cxxstd",
         default="default",
-<<<<<<< HEAD
-        values=("default", "98", "11", "14", "17", "20"),
-=======
         values=("default", conditional("98", when="@:1.8"), "11", "14", "17"),
->>>>>>> develop
         multi=False,
         description="Use the specified C++ standard when building.",
         when="@:1.9.2 build_system=cmake",

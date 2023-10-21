@@ -154,13 +154,8 @@ class Openblas(CMakePackage, MakefilePackage):
     # Fix ICE in LLVM 9.0.0 https://github.com/OpenMathLib/OpenBLAS/pull/2329
     # Patch as in https://github.com/OpenMathLib/OpenBLAS/pull/2597
     patch("openblas_appleclang11.patch", when="@0.3.8:0.3.9 %apple-clang@11.0.3")
-<<<<<<< HEAD
     # There was an error in Reference-LAPACK that is triggered by Xcode12
     # fixed upstream by https://github.com/xianyi/OpenBLAS/pull/2808 and
-=======
-    # There was an error in Reference-LAPACK that is triggeret by Xcode12
-    # fixed upstream by https://github.com/OpenMathLib/OpenBLAS/pull/2808 and
->>>>>>> develop
     # should be included in post 0.3.10 versions. Application to earlier
     # versions was not tested.
     # See also https://github.com/OpenMathLib/OpenBLAS/issues/2870

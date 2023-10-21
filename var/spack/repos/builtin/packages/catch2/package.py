@@ -108,7 +108,6 @@ class Catch2(CMakePackage):
     version("1.3.0", sha256="245f6ee73e2fea66311afa1da59e5087ddab8b37ce64994ad88506e8af28c6ac")
 
     variant(
-<<<<<<< HEAD
         "cxxstd",
         when="@3:",
         default="17",
@@ -117,16 +116,15 @@ class Catch2(CMakePackage):
         sticky=True,
         description="C++ standard",
     )
+    variant(
+        "pic", when="@3: ~shared", default=True, description="Build with position-independent code"
+    )
+    variant("shared", when="@3:", default=False, description="Build shared library")
 
     def patch(self):
         filter_file(r'#include <vector>', '#include <vector>\n#include <cstdint>', 'src/catch2/internal/catch_string_manip.hpp')
         filter_file(r'#include <vector>', '#include <vector>\n#include <cstdint>', 'src/catch2/internal/catch_xmlwriter.hpp')
         filter_file(r'#include <vector>', '#include <vector>\n#include <cstdint>', 'src/catch2/catch_test_case_info.hpp')
-=======
-        "pic", when="@3: ~shared", default=True, description="Build with position-independent code"
-    )
-    variant("shared", when="@3:", default=False, description="Build shared library")
->>>>>>> develop
 
     def cmake_args(self):
         spec = self.spec
@@ -137,7 +135,6 @@ class Catch2(CMakePackage):
         elif spec.satisfies("@2.1.1:"):
             args.append(self.define("BUILD_TESTING", self.run_tests))
         if spec.satisfies("@3:"):
-<<<<<<< HEAD
             args.extend(
                 [
                     self.define("BUILD_TESTING", self.run_tests),
@@ -150,11 +147,9 @@ class Catch2(CMakePackage):
                     self.define("CMAKE_CXX_STANDARD_REQUIRED", True),
                 ]
             )
-=======
             args.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
->>>>>>> develop
         return args
 
     @when("@:1.6")

@@ -13,7 +13,6 @@ from .tcl import TclModulefileWriter
 from .ups_table import UpsTableModulefileWriter
 from .ups_version import UpsVersionModulefileWriter
 
-<<<<<<< HEAD
 __all__ = [
     "TclModulefileWriter",
     "LmodModulefileWriter",
@@ -22,9 +21,6 @@ __all__ = [
     "disable_modules",
     "ensure_modules_are_enabled_or_warn",
 ]
-=======
-__all__ = ["TclModulefileWriter", "LmodModulefileWriter", "disable_modules"]
->>>>>>> develop
 
 module_types = {
     "tcl": TclModulefileWriter,

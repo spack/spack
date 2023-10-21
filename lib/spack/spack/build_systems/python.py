@@ -6,12 +6,9 @@ import inspect
 import os
 import re
 import shutil
-<<<<<<< HEAD
 from typing import List, Optional  # novm
-=======
 import stat
 from typing import Optional
->>>>>>> develop
 
 import archspec
 
@@ -517,11 +514,10 @@ class PythonPipBuilder(BaseBuilder):
         """
         return []
 
-<<<<<<< HEAD
     def optional_extras(self, spec, prefix):
         """Specify optional extra features to build"""
         return []
-=======
+
     @property
     def _build_venv_path(self):
         """Return the path to the virtual environment used for building when
@@ -533,7 +529,6 @@ class PythonPipBuilder(BaseBuilder):
         """Return the Python executable in the build virtual environment when
         python is external."""
         return Executable(os.path.join(self._build_venv_path, "bin", "python"))
->>>>>>> develop
 
     def install(self, pkg, spec, prefix):
         """Install everything from build directory."""
