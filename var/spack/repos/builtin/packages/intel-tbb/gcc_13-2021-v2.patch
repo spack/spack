@@ -16,6 +16,8 @@ Signed-off-by: Sam James <sam@gentoo.org>
 
 diff --git a/test/common/utils_assert.h b/test/common/utils_assert.h
 index 1df8ae72acc49fe38dac4d9bed4e9f4f26affcf5..0123ab881e124a800a5ebf8507050148038747d5 100644
+--- a/test/common/utils_assert.h
++++ b/test/common/utils_assert.h
 @@ -20,6 +20,8 @@
  #include "config.h"
  #include "utils_report.h"

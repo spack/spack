@@ -125,7 +125,7 @@ class IntelTbb(CMakePackage, MakefilePackage):
     patch("gcc_generic-pedantic-4.4.patch", level=1, when="@:2019.0")
 
     # Patch and conflicts for GCC 13 support (#1031).
-    patch("gcc_13-2021.patch", when="@2021.1:")
+    patch("gcc_13-2021-v2.patch", when="@2021.1:")
     conflicts("%gcc@13", when="@:2021.3")
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
