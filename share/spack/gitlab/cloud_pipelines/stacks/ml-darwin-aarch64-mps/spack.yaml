@@ -82,8 +82,6 @@ spack:
   # - r-xgboost
   - xgboost
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-mps" }
-
   ci:
     pipeline-gen:
     - build-job-remove:

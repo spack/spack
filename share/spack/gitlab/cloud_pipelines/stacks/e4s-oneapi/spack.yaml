@@ -236,8 +236,6 @@ spack:
 
   - py-scipy
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-oneapi" }
-
   ci:
     pipeline-gen:
     - build-job:
