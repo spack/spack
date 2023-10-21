@@ -19,13 +19,10 @@ from llnl.path import path_to_os_path, system_path_filter
 from llnl.util import tty
 from llnl.util.lang import dedupe
 
-<<<<<<< HEAD
 import spack.platforms
 import spack.spec
 import spack.target
 
-=======
->>>>>>> develop
 from .executable import Executable, which
 
 if sys.platform == "win32":
