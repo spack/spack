@@ -52,6 +52,7 @@ class Gptune(CMakePackage):
     depends_on("py-pyaml", type=("build", "run"))
     depends_on("py-statsmodels@0.13.0:", type=("build", "run"))
     depends_on("py-mpi4py@3.0.3:", type=("build", "run"))
+    depends_on("python", type=("build", "run"))
     depends_on("pygmo", type=("build", "run"))
     depends_on("openturns", type=("build", "run"))
     depends_on("py-pymoo", type=("build", "run"), when="@3.0.0:")

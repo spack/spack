@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import sys
 
 from spack.build_environment import dso_suffix
@@ -147,6 +148,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("stratimikos", default=False, description="Compile with Stratimikos")
     variant("teko", default=False, description="Compile with Teko")
     variant("tempus", default=False, description="Compile with Tempus")
+    variant("test", default=False, description="Enable testing")
     variant("thyra", default=False, description="Compile with Thyra")
     variant("tpetra", default=True, description="Compile with Tpetra")
     variant("trilinoscouplings", default=False, description="Compile with TrilinosCouplings")
@@ -342,13 +344,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("gotype=all", when="@12.15:")
 
     # CUDA without wrapper requires clang
-    for _compiler in spack.compilers.supported_compilers():
-        if _compiler != "clang":
-            conflicts(
-                "+cuda",
-                when="~wrapper %" + _compiler,
-                msg="trilinos~wrapper+cuda can only be built with the " "Clang compiler",
-            )
+    requires(
+        "%clang",
+        when="+cuda~wrapper",
+        msg="trilinos~wrapper+cuda can only be built with the Clang compiler",
+    )
     conflicts("+cuda_rdc", when="~cuda")
     conflicts("+rocm_rdc", when="~rocm")
     conflicts("+wrapper", when="~cuda")
@@ -365,6 +365,18 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # stokhos fails on xl/xl_r
     conflicts("+stokhos", when="%xl")
     conflicts("+stokhos", when="%xl_r")
+
+    # Current Windows support, only have serial static builds
+    conflicts(
+        "+shared",
+        when="platform=windows",
+        msg="Only static builds are supported on Windows currently.",
+    )
+    conflicts(
+        "+mpi",
+        when="platform=windows",
+        msg="Only serial builds are supported on Windows currently.",
+    )
 
     # ###################### Dependencies ##########################
 
@@ -393,7 +405,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cgns", when="+exodus")
     depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
-    depends_on("hypre~internal-superlu~int64", when="+hypre")
+    for plat in ["cray", "darwin", "linux"]:
+        depends_on("hypre~internal-superlu~int64", when="+hypre platform=%s" % plat)
+    depends_on("hypre-cmake~int64", when="+hypre platform=windows")
     depends_on("kokkos-nvcc-wrapper", when="+wrapper")
     depends_on("lapack")
     # depends_on('perl', type=('build',)) # TriBITS finds but doesn't use...
@@ -446,6 +460,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("superlu-dist@develop", when="@master: +superlu-dist")
 
     # ###################### Patches ##########################
+
+    patch("shylu-node-optional.patch", when="@13:14.4.0 +shylu")
 
     patch("umfpack_from_suitesparse.patch", when="@11.14.1:12.8.1")
     for _compiler in ["xl", "xl_r", "clang"]:
@@ -598,6 +614,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 ),
             ]
         )
+
+        if "+test" in spec:
+            options.append(define_trilinos_enable("TESTS", True))
+            options.append(define("BUILD_TESTING", True))
+        else:
+            options.append(define_trilinos_enable("TESTS", False))
 
         if spec.version >= Version("13"):
             options.append(define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
@@ -809,7 +831,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
                     define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
                     define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
-                    define("MPI_BASE_DIR", spec["mpi"].prefix),
+                    define("MPI_BASE_DIR", str(pathlib.PurePosixPath(spec["mpi"].prefix))),
                 ]
             )
 

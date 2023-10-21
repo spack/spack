@@ -39,6 +39,8 @@ class Rocsolver(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("5.6.1", sha256="6a8f366218aee599a0e56755030f94ee690b34f30e6d602748632226c5dc21bb")
+    version("5.6.0", sha256="54baa7f35f3c53da9005054e6f7aeecece5526dafcb277af32cbcb3996b0cbbc")
     version("5.5.1", sha256="8bf843e42d2e89203ea5fdb6e6082cea90da8d02920ab4c09bcc2b6f69909760")
     version("5.5.0", sha256="6775aa5b96731208c12c5b450cf218d4c262a80b7ea20c2c3034c448bb2ca4d2")
     version("5.4.3", sha256="5308b68ea72f465239a4bb2ed1a0507f0df7c98d3df3fd1f392e6d9ed7975232")
@@ -132,7 +134,7 @@ class Rocsolver(CMakePackage):
     # Backport https://github.com/ROCmSoftwarePlatform/rocSOLVER/commit/2bbfb8976f6e4d667499c77e41a6433850063e88
     patch("fmt-8.1-compatibility.patch", when="@4.5.0:5.1.3")
     # Maximize compatibility with other libraries that are using fmt.
-    patch("fmt-9-compatibility.patch", when="@5.2.0:")
+    patch("fmt-9-compatibility.patch", when="@5.2.0:5.5")
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocsolver-test")
@@ -173,9 +175,13 @@ class Rocsolver(CMakePackage):
         "5.4.3",
         "5.5.0",
         "5.5.1",
+        "5.6.0",
+        "5.6.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
+    for ver in ["5.6.0", "5.6.1"]:
+        depends_on("rocsparse@5.2:", when="@5.6:")
 
     for tgt in itertools.chain(["auto"], amdgpu_targets):
         depends_on("rocblas amdgpu_target={0}".format(tgt), when="amdgpu_target={0}".format(tgt))

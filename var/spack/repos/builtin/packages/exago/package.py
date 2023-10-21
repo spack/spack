@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -13,7 +15,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/pnnl/ExaGO"
     git = "https://github.com/pnnl/ExaGO.git"
-    maintainers("ryandanehy", "CameronRutherford", "pelesh")
+    maintainers("ryandanehy", "cameronrutherford", "pelesh")
 
     version("1.5.1", commit="7abe482c8da0e247f9de4896f5982c4cacbecd78", submodules=True)
     version("1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True)
@@ -45,6 +47,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     conflicts(
         "+python", when="+ipopt+rocm", msg="Python bindings require -fPIC with Ipopt for rocm."
     )
+    variant("logging", default=False, description="Enable/Disable spdlog based logging")
 
     # Solver options
     variant("hiop", default=False, description="Enable/Disable HiOp")
@@ -175,17 +178,18 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         args.extend(
             [
                 self.define("EXAGO_ENABLE_GPU", "+cuda" in spec or "+rocm" in spec),
+                self.define("PETSC_DIR", spec["petsc"].prefix),
+                self.define("EXAGO_RUN_TESTS", self.run_tests),
+                self.define("LAPACK_LIBRARIES", spec["lapack"].libs + spec["blas"].libs),
                 self.define_from_variant("EXAGO_ENABLE_CUDA", "cuda"),
                 self.define_from_variant("EXAGO_ENABLE_HIP", "rocm"),
-                self.define("PETSC_DIR", spec["petsc"].prefix),
-                self.define("EXAGO_RUN_TESTS", True),
+                self.define_from_variant("EXAGO_ENABLE_LOGGING", "logging"),
                 self.define_from_variant("EXAGO_ENABLE_MPI", "mpi"),
                 self.define_from_variant("EXAGO_ENABLE_RAJA", "raja"),
                 self.define_from_variant("EXAGO_ENABLE_HIOP", "hiop"),
                 self.define_from_variant("EXAGO_ENABLE_IPOPT", "ipopt"),
                 self.define_from_variant("EXAGO_ENABLE_PYTHON", "python"),
                 self.define_from_variant("EXAGO_ENABLE_LOGGING", "logging"),
-                self.define("LAPACK_LIBRARIES", spec["lapack"].libs + spec["blas"].libs),
             ]
         )
 

@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Detection of software installed in the system based on paths inspections
+"""Detection of software installed in the system, based on paths inspections
 and running executables.
 """
 import collections
@@ -322,12 +322,14 @@ def by_path(
     path_hints: Optional[List[str]] = None,
     max_workers: Optional[int] = None,
 ) -> Dict[str, List[DetectedPackage]]:
-    """Return the list of packages that have been detected on the system,
-    searching by path.
+    """Return the list of packages that have been detected on the system, keyed by
+    unqualified package name.
 
     Args:
-        packages_to_search: list of package classes to be detected
+        packages_to_search: list of packages to be detected. Each package can be either unqualified
+            of fully qualified
         path_hints: initial list of paths to be searched
+        max_workers: maximum number of workers to search for packages in parallel
     """
     # TODO: Packages should be able to define both .libraries and .executables in the future
     # TODO: determine_spec_details should get all relevant libraries and executables in one call
@@ -355,7 +357,8 @@ def by_path(
                 try:
                     detected = future.result(timeout=DETECTION_TIMEOUT)
                     if detected:
-                        result[pkg_name].extend(detected)
+                        _, unqualified_name = spack.repo.partition_package_name(pkg_name)
+                        result[unqualified_name].extend(detected)
                 except Exception:
                     llnl.util.tty.debug(
                         f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached"

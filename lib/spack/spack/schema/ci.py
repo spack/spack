@@ -141,6 +141,7 @@ core_shared_properties = union_dicts(
     }
 )
 
+# TODO: Remove in Spack 0.23
 ci_properties = {
     "anyOf": [
         {
@@ -166,6 +167,7 @@ ci_properties = {
 properties = {
     "ci": {
         "oneOf": [
+            # TODO: Replace with core-shared-properties in Spack 0.23
             ci_properties,
             # Allow legacy format under `ci` for `config update ci`
             spack.schema.gitlab_ci.gitlab_ci_properties,

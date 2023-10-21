@@ -98,13 +98,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         when="@2.37:",
     )
     variant("ld", default=False, description="Enable ld.")
-    # When you build binutils with ~ld and +gas and load it in your PATH, you
-    # may end up with incompatibilities between a potentially older system ld
-    # and a recent assembler. For instance the linker on ubuntu 16.04 from
-    # binutils 2.26 and the assembler from binutils 2.36.1 will result in:
-    # "unable to initialize decompress status for section .debug_info"
-    # when compiling with debug symbols on gcc.
-    variant("gas", default=False, when="+ld", description="Enable as assembler.")
+    variant("gas", default=False, description="Enable as assembler.")
     variant("interwork", default=False, description="Enable interwork.")
     variant("gprofng", default=False, description="Enable gprofng.", when="@2.39:")
     variant(
@@ -180,6 +174,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # when compiling with debug symbols on gcc.
     conflicts("+gas", "~ld", msg="Assembler not always compatible with system ld")
 
+<<<<<<< HEAD
     # When you build ld.gold you automatically get ld, even when you add the
     # --disable-ld flag
     conflicts("~ld", "+gold")
@@ -190,6 +185,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         with working_dir(os.path.join(self.configure_directory, "gprofng")):
             force_remove("configure")
 
+=======
+>>>>>>> develop
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)

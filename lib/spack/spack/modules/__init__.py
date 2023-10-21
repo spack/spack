@@ -7,12 +7,13 @@
 include Tcl non-hierarchical modules, Lua hierarchical modules, and others.
 """
 
-from .common import disable_modules, ensure_modules_are_enabled_or_warn
+from .common import disable_modules
 from .lmod import LmodModulefileWriter
 from .tcl import TclModulefileWriter
 from .ups_table import UpsTableModulefileWriter
 from .ups_version import UpsVersionModulefileWriter
 
+<<<<<<< HEAD
 __all__ = [
     "TclModulefileWriter",
     "LmodModulefileWriter",
@@ -21,6 +22,9 @@ __all__ = [
     "disable_modules",
     "ensure_modules_are_enabled_or_warn",
 ]
+=======
+__all__ = ["TclModulefileWriter", "LmodModulefileWriter", "disable_modules"]
+>>>>>>> develop
 
 module_types = {
     "tcl": TclModulefileWriter,
