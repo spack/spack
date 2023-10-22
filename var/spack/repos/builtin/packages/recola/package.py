@@ -31,6 +31,11 @@ class Recola(CMakePackage):
         url="https://recola.hepforge.org/downloads/?f=recola-1.4.3.tar.gz",
         sha256="f6a7dce6e1f09821ba919524f786557984f216c001ab63e7793e8aa9a8560ceb",
     )
+    version(
+        "1.4.0",
+        url="https://recola.hepforge.org/downloads/?f=recola-1.4.0.tar.gz",
+        sha256="dc7db5ac9456dda2e6c03a63ad642066b0b5e4ceb8cae1f2a13ab33b35caaba8",
+    )
 
     depends_on("collier")
     depends_on("recola-sm")
