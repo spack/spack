@@ -2557,9 +2557,10 @@ Conditional dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 You may have a package that only requires a dependency under certain
-conditions. For example, you may have a package that has optional MPI support,
-- MPI is only a dependency when you want to enable MPI support for the
-package. In that case, you could say something like:
+conditions. For example, you may have a package with optional MPI support.
+You would then provide a variant to reflect that the feature is optional
+and specify the MPI dependency only applies when MPI support is enabled.
+In that case, you could say something like:
 
 .. code-block:: python
 
@@ -2567,13 +2568,39 @@ package. In that case, you could say something like:
 
    depends_on("mpi", when="+mpi")
 
-``when`` can include constraints on the variant, version, compiler, etc. and
-the :mod:`syntax<spack.spec>` is the same as for Specs written on the command
-line.
 
-If a dependency/feature of a package isn't typically used, you can save time
-by making it conditional (since Spack will not build the dependency unless it
-is required for the Spec).
+Suppose the above package also has, since version 3, optional `Trilinos`
+support and you want them both to build either with or without MPI. Further
+suppose you require a version of `Trilinos` no older than 12.6. In that case,
+the `trilinos` variant and dependency directives would be:
+
+.. code-block:: python
+
+   variant("trilinos", default=False, description="Enable Trilinos support")
+
+   depends_on("trilinos@12.6:", when="@3: +trilinos")
+   depends_on("trilinos@12.6: +mpi", when="@3: +trilinos +mpi")
+
+
+Alternatively, you could use the `when` context manager to equivalently specify
+the `trilinos` variant dependencies as follows:
+
+.. code-block:: python
+
+   with when("@3: +trilinos"):
+       depends_on("trilinos@12.6:")
+       depends_on("trilinos +mpi", when="+mpi")
+
+
+The argument to ``when`` in either case can include any Spec constraints that
+are supported on the command line using the same :ref:`syntax <sec-specs>`.
+
+.. note::
+
+   If a dependency isn't typically used, you can save time by making it
+   conditional since Spack will not build the dependency unless it is
+   required for the Spec.
+
 
 .. _dependency_dependency_patching:
 
