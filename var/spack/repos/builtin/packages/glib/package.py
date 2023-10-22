@@ -173,7 +173,7 @@ class Glib(MesonPackage, AutotoolsPackage):
     patch("meson-gettext-2.66.patch", when="@2.66:2.68,2.72")
     patch("meson-gettext-2.70.patch", when="@2.70")
 
-    # Don't use PTRACE_O_EXITKILL if it's not defined:
+    # Don't use PTRACE_O_EXITKILL if it's not defined
     patch("ptrace.patch",
           "https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3588.diff",
           sha256="2c25d7b3bf581b3ec992d7af997fa6c769174d49b9350e0320c33f5e048cba99",
