@@ -173,6 +173,13 @@ class Glib(MesonPackage, AutotoolsPackage):
     patch("meson-gettext-2.66.patch", when="@2.66:2.68,2.72")
     patch("meson-gettext-2.70.patch", when="@2.70")
 
+    # Don't use PTRACE_O_EXITKILL if it's not defined
+    patch(
+        "https://gitlab.gnome.org/GNOME/glib/-/commit/bda87264372c006c94e21ffb8ff9c50ecb3e14bd.diff",
+        sha256="2c25d7b3bf581b3ec992d7af997fa6c769174d49b9350e0320c33f5e048cba99",
+        when="@2.78.0",
+    )
+
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
         url = "https://download.gnome.org/sources/glib"
