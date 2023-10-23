@@ -558,7 +558,10 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # depends_on('pmix@1.1.2', when='@2.1.6')
     # depends_on('pmix@3.2.3', when='@4.1.2')
     depends_on("pmix@1.0:1", when="@2.0:2 ~internal-pmix")
-    depends_on("pmix@3.2:", when="@4.0:4 ~internal-pmix")
+    depends_on("pmix@3.2:4.2.2", when="@4.0:4.1.5 ~internal-pmix")
+    # 4.1.6 includes changes that fix compatibility with PMIx@4.2.3:
+    # See https://www.mail-archive.com/announce@lists.open-mpi.org//msg00158.html
+    depends_on("pmix@3.2:", when="@4.1.6:4 ~internal-pmix")
     depends_on("pmix@4.2:", when="@5.0:5 ~internal-pmix")
 
     # Libevent is required when *vendored* PMIx is used
