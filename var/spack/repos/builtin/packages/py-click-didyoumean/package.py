@@ -21,6 +21,6 @@ class PyClickDidyoumean(PythonPackage):
         depends_on("py-setuptools", type="build")
 
     with when("@0.3.0:"):
-        depends_on("python@3.6:", type=("build", "run"))
+        depends_on("python@3.6.2:3", type=("build", "run"))
         depends_on("py-click@7:", type=("build", "run"))
-        depends_on("py-poetry-core", type="build")
+        depends_on("py-poetry-core@1:", type="build")

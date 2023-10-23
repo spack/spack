@@ -86,8 +86,8 @@ class PyCelery(PythonPackage):
         depends_on("py-click-didyoumean@0.3.0:", type=("build", "run"))
         depends_on("py-click-repl@0.2.0:", type=("build", "run"))
         depends_on("py-click-plugins@1.1.1:", type=("build", "run"))
-        depends_on("py-backports-zoneinfo@0.2.1:", when="^python@:3.9", type=("build", "run"))
-        depends_on("py-pytz@2022.7:", type=("build", "run"))
+        depends_on("py-backports-zoneinfo@0.2.1:", when="^python@:3.8", type=("build", "run"))
+        depends_on("py-tzdata@2022.7:", type=("build", "run"))
         depends_on("py-python-dateutil@2.8.2:", type=("build", "run"))
         # https://github.com/celery/celery/blob/v5.3.4/requirements/extras/sqlalchemy.txt
         depends_on("py-sqlalchemy@1.4.48:2.0", when="+sqlalchemy", type=("build", "run"))
