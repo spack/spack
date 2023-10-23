@@ -1001,25 +1001,26 @@ class SetupContext:
         from leaf to root. That way externals cannot contribute search paths that would shadow
         Spack's prefixes, and dependents override variables set by dependencies."""
         env = EnvironmentModifications()
-        for dspec, flag in chain(self.external, self.nonexternal):
-            tty.debug(f"Adding env modifications for {dspec.name}")
-            pkg = dspec.package
+        for spec, flag in chain(self.external, self.nonexternal):
+            tty.debug(f"Adding env modifications for {spec.name}")
+            pkg = spec.package
 
             if self.should_setup_dependent_build_env & flag:
-                self._make_buildtime_detectable(dspec, env)
+                self._make_buildtime_detectable(spec, env)
 
                 for spec in self.specs:
                     builder = spack.builder.create(pkg)
                     builder.setup_dependent_build_environment(env, spec)
 
             if self.should_be_runnable & flag:
-                self._make_runnable(dspec, env)
+                self._make_runnable(spec, env)
 
             if self.should_setup_run_env & flag:
-                # TODO: remove setup_dependent_run_environment...
-                for spec in dspec.dependents(deptype=dt.RUN):
-                    if id(spec) in self.nodes_in_subdag:
-                        pkg.setup_dependent_run_environment(env, spec)
+                # First do setup from dependencies
+                for child in spec.dependencies(deptype=dt.RUN | dt.LINK):
+                    child.package.setup_dependent_run_environment(env, spec)
+
+                # Then from the package itself
                 pkg.setup_run_environment(env)
         return env
 
