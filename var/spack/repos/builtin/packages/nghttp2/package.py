@@ -13,6 +13,7 @@ class Nghttp2(AutotoolsPackage):
     homepage = "https://nghttp2.org/"
     url = "https://github.com/nghttp2/nghttp2/releases/download/v1.26.0/nghttp2-1.26.0.tar.gz"
 
+    version("1.57.0", sha256="1e3258453784d3b7e6cc48d0be087b168f8360b5d588c66bfeda05d07ad39ffd")
     version("1.52.0", sha256="9877caa62bd72dde1331da38ce039dadb049817a01c3bdee809da15b754771b8")
     version("1.51.0", sha256="2a0bef286f65b35c24250432e7ec042441a8157a5b93519412d9055169d9ce54")
     version("1.50.0", sha256="d162468980dba58e54e31aa2cbaf96fd2f0890e6dd141af100f6bd1b30aa73c6")
