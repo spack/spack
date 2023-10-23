@@ -130,6 +130,7 @@ class Slurm(AutotoolsPackage):
     )
     variant("restd", default=False, description="Enable the slurmrestd server")
     variant("nvml", default=False, description="Enable NVML autodetection")
+    variant("cgroup", default=False, description="Enable cgroup plugin")
 
     # TODO: add variant for BG/Q and Cray support
 
@@ -158,6 +159,7 @@ class Slurm(AutotoolsPackage):
     depends_on("libjwt", when="+restd")
 
     depends_on("cuda", when="+nvml")
+    depends_on("dbus", when="+cgroup")
 
     executables = ["^srun$", "^salloc$"]
 
