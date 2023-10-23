@@ -12,9 +12,10 @@ spack:
           - ultraliser
   specs:
     - brayns
-    - brayns@3.2.0
+    - brayns@3.2.2
     - py-bcsb
+    - py-bcsb@2.0.0
     - py-brayns
-    - py-brayns@3.2.0
+    - py-brayns@3.2.2
     - brion +python
     - ultraliser ^hdf5~mpi

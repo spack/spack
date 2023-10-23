@@ -15,10 +15,8 @@ class Brayns(CMakePackage):
     submodules = False
 
     version("develop", branch="develop")
-    version("3.1.2", tag="3.1.2")
-    version("3.2.0", tag="3.2.0")
-    version("3.2.1", tag="3.2.1")
     version("3.2.2", tag="3.2.2")
+    version("3.3.0", tag="3.3.0")
 
     depends_on("cmake@3.15:", type="build")
     depends_on("ispc@1.18.0:", type="build")
@@ -30,12 +28,8 @@ class Brayns(CMakePackage):
     depends_on("morphio@3.3.4:")
     depends_on("mvdtool@2.4.9:")
 
-    depends_on("ospray@2.10.4", when="@:3.2.0")
-    depends_on("rkcommon@1.10.0", when="@:3.2.0")
-
-    depends_on("ospray@2.10.5", when="@3.2.1")
-
-    depends_on("ospray@2.10.6", when="@3.2.2:")
+    depends_on("rkcommon@1.10.0")
+    depends_on("ospray@2.10.6")
 
     depends_on("spdlog@1.9.2")
     depends_on("poco@1.12.4")
