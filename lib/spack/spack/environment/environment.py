@@ -1518,11 +1518,14 @@ class Environment:
         tty.msg(msg)
 
         batch = []
-        for i, concrete, duration in spack.util.parallel.imap_unordered(
-            _concretize_task, args, processes=num_procs, debug=tty.is_debug()
+        for j, (i, concrete, duration) in enumerate(
+            spack.util.parallel.imap_unordered(
+                _concretize_task, args, processes=num_procs, debug=tty.is_debug()
+            )
         ):
             batch.append((i, concrete))
-            tty.verbose(f"[{duration:7.2f}s] {root_specs[i]}")
+            percentage = (j + 1) / len(args) * 100
+            tty.verbose(f"{duration:6.1f}s [{percentage:3.0f}%] {root_specs[i]}")
             sys.stdout.flush()
 
         # Add specs in original order
