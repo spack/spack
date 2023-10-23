@@ -1107,7 +1107,7 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
             return False
 
         # Here we need to iterate on the input and rewire the copy.
-        self.data[spec.dag_hash()] = spec.copy(deps=False)
+        self.data[dag_hash] = spec.copy(deps=False)
         nodes_to_reconstruct = [spec]
 
         while nodes_to_reconstruct:
@@ -1127,6 +1127,44 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
                 container_parent.add_dependency_edge(
                     dependency_spec=container_child, depflag=edge.depflag, virtuals=edge.virtuals
                 )
+        return True
+
+    def query(self, spec: spack.spec.Spec) -> List[spack.spec.Spec]:
+        return [s for s in self.data.values() if s.satisfies(spec)]
+
+    def delete(self, spec: spack.spec.Spec, transitive: bool = False) -> bool:
+        if not spec.concrete:
+            msg = f"cannot delete the non-concrete spec '{spec}'"
+            raise ValueError(msg)
+
+        dag_hash = spec.dag_hash()
+        if dag_hash not in self.data:
+            return False
+
+        root = self.data[dag_hash]
+        dependents = root.dependents()
+        if dependents and not transitive:
+            msg = (
+                f"cannot remove {spec.short_spec}, since it is needed by "
+                f"{', '.join(s.short_spec for s in dependents)}"
+            )
+            raise ValueError(msg)
+
+        for parent in dependents:
+            self.delete(parent, transitive=transitive)
+
+        dependents = root.dependents()
+        assert not dependents, "dependents should have been removed already"
+
+        # Remove references from this node
+        for dependency in root.dependencies():
+            dependency._dependents.edges[root.name] = [
+                x
+                for x in dependency._dependents.edges[root.name]
+                if x.parent.dag_hash() != dag_hash
+            ]
+
+        del self.data[dag_hash]
         return True
 
     def __len__(self) -> int:
