@@ -59,7 +59,7 @@ using GNU Make, you should add a dependency on ``gmake``:
 
 .. code-block:: python
 
-   depends_on('gmake', type='build')
+   depends_on("gmake", type="build")
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -93,8 +93,8 @@ there are any other variables you need to set, you can do this in the
 .. code-block:: python
 
    def edit(self, spec, prefix):
-       env['PREFIX'] = prefix
-       env['BLASLIB'] = spec['blas'].libs.ld_flags
+       env["PREFIX"] = prefix
+       env["BLASLIB"] = spec["blas"].libs.ld_flags
 
 
 `cbench <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cbench/package.py>`_
@@ -113,7 +113,7 @@ you can do this like so:
 
 .. code-block:: python
 
-   build_targets = ['CC=cc']
+   build_targets = ["CC=cc"]
 
 
 If you do need access to the spec, you can create a property like so:
@@ -125,8 +125,8 @@ If you do need access to the spec, you can create a property like so:
        spec = self.spec
 
        return [
-           'CC=cc',
-           'BLASLIB={0}'.format(spec['blas'].libs.ld_flags),
+           "CC=cc",
+           f"BLASLIB={spec['blas'].libs.ld_flags}",
        ]
 
 
@@ -145,12 +145,12 @@ and a ``filter_file`` method to help with this. For example:
 .. code-block:: python
 
    def edit(self, spec, prefix):
-       makefile = FileFilter('Makefile')
+       makefile = FileFilter("Makefile")
 
-       makefile.filter(r'^\s*CC\s*=.*',  'CC = '  + spack_cc)
-       makefile.filter(r'^\s*CXX\s*=.*', 'CXX = ' + spack_cxx)
-       makefile.filter(r'^\s*F77\s*=.*', 'F77 = ' + spack_f77)
-       makefile.filter(r'^\s*FC\s*=.*',  'FC = '  + spack_fc)
+       makefile.filter(r"^\s*CC\s*=.*",  f"CC = {spack_cc}")
+       makefile.filter(r"^\s*CXX\s*=.*", f"CXX = {spack_cxx}")
+       makefile.filter(r"^\s*F77\s*=.*", f"F77 = {spack_f77}")
+       makefile.filter(r"^\s*FC\s*=.*",  f"FC = {spack_fc}")
 
 
 `stream <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/stream/package.py>`_
@@ -181,16 +181,16 @@ well for storing variables:
 
    def edit(self, spec, prefix):
        config = {
-           'CC': 'cc',
-           'MAKE': 'make',
+           "CC": "cc",
+           "MAKE": "make",
        }
 
-       if '+blas' in spec:
-           config['BLAS_LIBS'] = spec['blas'].libs.joined()
+       if spec.satisfies("+blas"):
+           config["BLAS_LIBS"] = spec["blas"].libs.joined()
 
-       with open('make.inc', 'w') as inc:
+       with open("make.inc", "w") as inc:
            for key in config:
-               inc.write('{0} = {1}\n'.format(key, config[key]))
+               inc.write(f"{key} = {config[key]}\n")
 
 
 `elk <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/elk/package.py>`_
@@ -204,14 +204,14 @@ them in a list:
 
    def edit(self, spec, prefix):
        config = [
-           'INSTALL_DIR = {0}'.format(prefix),
-           'INCLUDE_DIR = $(INSTALL_DIR)/include',
-           'LIBRARY_DIR = $(INSTALL_DIR)/lib',
+           f"INSTALL_DIR = {prefix}",
+           "INCLUDE_DIR = $(INSTALL_DIR)/include",
+           "LIBRARY_DIR = $(INSTALL_DIR)/lib",
        ]
 
-       with open('make.inc', 'w') as inc:
+       with open("make.inc", "w") as inc:
            for var in config:
-               inc.write('{0}\n'.format(var))
+               inc.write(f"{var}\n")
 
 
 `hpl <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/hpl/package.py>`_
@@ -284,7 +284,7 @@ can tell Spack where to locate it like so:
 
 .. code-block:: python
 
-   build_directory = 'src'
+   build_directory = "src"
 
 
 ^^^^^^^^^^^^^^^^^^^
@@ -299,8 +299,8 @@ install the package:
 
    def install(self, spec, prefix):
        mkdir(prefix.bin)
-       install('foo', prefix.bin)
-       install_tree('lib', prefix.lib)
+       install("foo", prefix.bin)
+       install_tree("lib", prefix.lib)
 
 
 ^^^^^^^^^^^^^^^^^^^^^^

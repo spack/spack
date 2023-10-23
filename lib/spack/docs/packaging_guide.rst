@@ -1549,7 +1549,7 @@ its value:
 
     def configure_args(self):
         ...
-        if "+shared" in self.spec:
+        if self.spec.satisfies("+shared"):
             extra_args.append("--enable-shared")
         else:
             extra_args.append("--disable-shared")
@@ -1636,7 +1636,7 @@ Within a package recipe a multi-valued variant is tested using a ``key=value`` s
 
   .. code-block:: python
 
-    if "languages=jit" in spec:
+    if spec.satisfies("languages=jit"):
         options.append("--enable-host-shared")
 
 """""""""""""""""""""""""""""""""""""""""""
@@ -3528,7 +3528,7 @@ need to override methods like ``configure_args``:
 
    def configure_args(self):
         args = ["--enable-cxx"] + self.enable_or_disable("libs")
-        if "libs=static" in self.spec:
+        if self.spec.satisfies("libs=static"):
             args.append("--with-pic")
         return args
 
@@ -4391,7 +4391,7 @@ for supported features, for instance:
 
 .. code-block:: python
 
-   if "avx512" in spec.target:
+   if spec.satisfies("target=avx512"):
        args.append("--with-avx512")
 
 The snippet above will append the ``--with-avx512`` item to a list of arguments only if the corresponding
