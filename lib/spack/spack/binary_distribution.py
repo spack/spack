@@ -11,6 +11,7 @@ import io
 import itertools
 import json
 import os
+import pathlib
 import re
 import shutil
 import sys
@@ -631,21 +632,14 @@ def build_cache_prefix(prefix):
 
 
 def buildinfo_file_name(prefix):
-    """
-    Filename of the binary package meta-data file
-    """
-    return os.path.join(prefix, ".spack/binary_distribution")
+    """Filename of the binary package meta-data file"""
+    return os.path.join(prefix, ".spack", "binary_distribution")
 
 
 def read_buildinfo_file(prefix):
-    """
-    Read buildinfo file
-    """
-    filename = buildinfo_file_name(prefix)
-    with open(filename, "r") as inputfile:
-        content = inputfile.read()
-        buildinfo = syaml.load(content)
-    return buildinfo
+    """Read buildinfo file"""
+    with open(buildinfo_file_name(prefix), "r") as f:
+        return syaml.load(f)
 
 
 class BuildManifestVisitor(BaseDirectoryVisitor):
@@ -1152,8 +1146,9 @@ def gzip_compressed_tarfile(path):
         yield tar, inner_checksum, outer_checksum
 
 
-def _tarinfo_name(p: str):
-    return p.lstrip("/")
+def _tarinfo_name(absolute_path: str, *, _path=pathlib.PurePath) -> str:
+    """Compute tarfile entry name as the relative path from the (system) root."""
+    return _path(*_path(absolute_path).parts[1:]).as_posix()
 
 
 def tarfile_of_spec_prefix(tar: tarfile.TarFile, prefix: str) -> None:
