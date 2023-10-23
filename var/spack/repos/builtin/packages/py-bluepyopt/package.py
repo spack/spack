@@ -17,8 +17,7 @@ class PyBluepyopt(PythonPackage):
     # patch required to avoid hpe-mpi linked mechanism library
     patch("pmi_rank.patch")
 
-    variant("neuron", default=True, description="Use BluePyOpt together with NEURON")
-    variant("scoop", default=True, description="Use BluePyOpt together with py-scoop")
+    variant("scoop", default=False, description="Use BluePyOpt together with py-scoop")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.6:", type=("build", "run"))
@@ -29,12 +28,10 @@ class PyBluepyopt(PythonPackage):
     depends_on("py-pickleshare@0.7.3:", type=("build", "run"))
     depends_on("py-jinja2@2.8:", type=("build", "run"))
     depends_on("py-future", type=("build", "run"))
-    depends_on("py-pebble@4.3.10:", type=("build", "run"))
+    depends_on("py-pebble@4.6:", type=("build", "run"))
     depends_on("py-scoop@0.7:", type=("build", "run"), when="+scoop")
-    depends_on("neuron@7.4:", type=("build", "run"), when="+neuron")
+    depends_on("neuron@7.4:", type=("build", "run"))
 
     def setup_run_environment(self, env):
-        if self.spec.satisfies("+neuron"):
-            env.unset("PMI_RANK")
-            env.set("NEURON_INIT_MPI", "0")
-        env.prepend_path("PATH", self.spec["py-ipyparallel"].prefix.bin)
+        env.unset("PMI_RANK")
+        env.set("NEURON_INIT_MPI", "0")

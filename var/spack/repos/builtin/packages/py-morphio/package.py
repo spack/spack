@@ -19,17 +19,13 @@ class PyMorphio(PythonPackage):
 
     version("3.3.6", sha256="0f2e55470d92a3d89f2141ae905ee104fd16257b93dafb90682d90171de2f4e6")
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@24.2:", type="build")
     depends_on("py-setuptools-scm", type="build")
 
-    depends_on("ninja", type=("build", "run"))
-    depends_on("cmake@3.2:", type=("build", "run"))
+    depends_on("ninja", type="build")
+    depends_on("cmake@3.2:", type="build")
     depends_on("py-numpy@1.14.1:", type=("build", "run"))
     if sys.platform == "win32":
         depends_on("py-h5py@3", type=("build", "run"))
     else:
-        depends_on("hdf5", type=("build", "run"))
-    depends_on("highfive", type=("build", "run"))
-    depends_on("py-pybind11", type=("build", "run"))
-    # mpi is an indirect dependency, but the build fails if we don't specify it explicitly
-    depends_on("mpi", type=("build", "run"))
+        depends_on("hdf5")

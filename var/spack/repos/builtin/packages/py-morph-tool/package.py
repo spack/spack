@@ -18,22 +18,22 @@ class PyMorphTool(PythonPackage):
     version("2.9.0", sha256="c60d4010e17ddcc3f53c864c374fffee05713c8f8fd2ba4eed7706041ce1fa47")
 
     variant("neuron", default=False, description="Enable additional neuron support")
-    variant("plotly", default=False, description="Enable additional plotly support")
+    variant("plot", default=False, description="Enable additional plotly support")
     variant("parallel", default=False, description="Enable additional parallel support")
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools-scm", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools-scm", type="build")
 
     depends_on("py-click@6.7:", type=("build", "run"))
     depends_on("py-deprecation@2.1.0:", type=("build", "run"))
     depends_on("py-more-itertools@8.6.0:", type=("build", "run"))
-    depends_on("py-morphio@3,develop", type=("build", "run"))
-    depends_on("py-neurom@3,develop", type=("build", "run"))
+    depends_on("py-morphio@3", type=("build", "run"))
+    depends_on("py-neurom@3", type=("build", "run"))
     depends_on("py-numpy@1.14:", type=("build", "run"))
     depends_on("py-pandas@1.0.3:", type=("build", "run"))
     depends_on("py-xmltodict@0.12.0:", type=("build", "run"))
 
-    depends_on("py-plotly@4.1.0:", type=("build", "run"), when="+plotly")
+    depends_on("py-plotly@4.1.0:", type=("build", "run"), when="+plot")
     depends_on("py-dask+bag@2.19.0:", type=("build", "run"), when="+parallel")
     depends_on("neuron+python@7.8:", type=("build", "run"), when="+neuron")
     depends_on("py-bluepyopt@1.9.37:", type=("build", "run"), when="+neuron")

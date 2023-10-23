@@ -15,6 +15,7 @@ class PyBluepyemodel(PythonPackage):
     version("0.0.46", sha256="ad4c125e491f3337fcc341a4f389b8a616d883ce50fd77d9fb0ea6e13be5da61")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools-scm", type="build")
 
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
@@ -33,8 +34,3 @@ class PyBluepyemodel(PythonPackage):
     depends_on("neuron+python@8.0:", type=("build", "run"))
     depends_on("py-jinja2@3.0.3", when="@0.0.11:", type=("build", "run"))
     depends_on("py-currentscape@0.0.11:", type=("build", "run"))
-
-    def patch(self):
-        # This dependency has survived, even though the modules needing it were axed mid
-        # 2021
-        filter_file(r".*psycopg2-binary.*", "", "setup.py")
