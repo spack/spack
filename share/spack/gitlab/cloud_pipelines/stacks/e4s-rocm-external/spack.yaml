@@ -258,6 +258,7 @@ spack:
   - tau +mpi +rocm   # tau: has issue with `spack env depfile` build
 
   # ROCM 908
+  - adios2 +kokkos +rocm amdgpu_target=gfx908
   - amrex +rocm amdgpu_target=gfx908
   - arborx +rocm amdgpu_target=gfx908
   - cabana +rocm amdgpu_target=gfx908
@@ -297,6 +298,7 @@ spack:
   # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
 
   # ROCM 90a
+  - adios2 +kokkos +rocm amdgpu_target=gfx90a
   - amrex +rocm amdgpu_target=gfx90a
   - arborx +rocm amdgpu_target=gfx90a
   - cabana +rocm amdgpu_target=gfx90a
@@ -334,8 +336,6 @@ spack:
   # --
   # - lbann ~cuda +rocm amdgpu_target=gfx90a    # aluminum: https://github.com/spack/spack/issues/38807
   # - papi +rocm amdgpu_target=gfx90a           # papi: https://github.com/spack/spack/issues/27898
-
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-rocm-external" }
 
   ci:
     pipeline-gen:

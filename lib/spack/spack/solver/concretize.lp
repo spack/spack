@@ -1535,6 +1535,17 @@ opt_criterion(5, "non-preferred targets").
       build_priority(PackageNode, Priority)
 }.
 
+% Choose more recent versions for nodes
+opt_criterion(1, "edge wiring").
+#minimize{ 0@201: #true }.
+#minimize{ 0@1: #true }.
+#minimize{
+    Weight@1,ParentNode,PackageNode
+    : version_weight(PackageNode, Weight),
+      not attr("root", PackageNode),
+      depends_on(ParentNode, PackageNode)
+}.
+
 %-----------
 % Notes
 %-----------

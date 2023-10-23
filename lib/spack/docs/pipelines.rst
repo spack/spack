@@ -213,6 +213,16 @@ pipeline jobs.
 ``spack ci generate``
 ^^^^^^^^^^^^^^^^^^^^^
 
+Throughout this documentation, references to the "mirror" mean the target
+mirror which is checked for the presence of up-to-date specs, and where
+any scheduled jobs should push built binary packages.  In the past, this
+defaulted to the mirror at index 0 in the mirror configs, and could be
+overridden using the ``--buildcache-destination`` argument. Starting with
+Spack 0.23, ``spack ci generate`` will require you to identify this mirror
+by the name "buildcache-destination".  While you can configure any number
+of mirrors as sources for your pipelines, you will need to identify the
+destination mirror by name.
+
 Concretizes the specs in the active environment, stages them (as described in
 :ref:`staging_algorithm`), and writes the resulting ``.gitlab-ci.yml`` to disk.
 During concretization of the environment, ``spack ci generate`` also writes a

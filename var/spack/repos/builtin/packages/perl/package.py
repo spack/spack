@@ -32,6 +32,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
     tags = ["windows"]
 
+    maintainers("LydDeb")
+
     executables = [r"^perl(-?\d+.*)?$"]
 
     # see https://www.cpan.org/src/README.html for
@@ -258,13 +260,23 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # aren't writeable so make pp.c user writeable
     # before patching. This should probably walk the
     # source and make everything writeable in the future.
+    # The patch "zlib-ng.patch" also fail. So, apply chmod
+    # to Makefile.PL and Zlib.xs too.
     def do_stage(self, mirror_only=False):
         # Do Spack's regular stage
         super().do_stage(mirror_only)
-        # Add write permissions on file to be patched
-        filename = join_path(self.stage.source_path, "pp.c")
-        perm = os.stat(filename).st_mode
-        os.chmod(filename, perm | 0o200)
+        # Add write permissions on files to be patched
+        files_to_chmod = [
+            join_path(self.stage.source_path, "pp.c"),
+            join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Makefile.PL"),
+            join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Zlib.xs"),
+        ]
+        for filename in files_to_chmod:
+            try:
+                perm = os.stat(filename).st_mode
+                os.chmod(filename, perm | 0o200)
+            except IOError:
+                continue
 
     def nmake_arguments(self):
         args = []
@@ -401,14 +413,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 maker()
                 maker("install")
 
-    def _setup_dependent_env(self, env, dependent_spec, deptype):
+    def _setup_dependent_env(self, env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
         any other perl extensions it depends on,
         assuming they were installed with INSTALL_BASE defined."""
         perl_lib_dirs = []
-        for d in dependent_spec.traverse(deptype=deptype):
-            if d.package.extends(self.spec):
-                perl_lib_dirs.append(d.prefix.lib.perl5)
+        if dependent_spec.package.extends(self.spec):
+            perl_lib_dirs.append(dependent_spec.prefix.lib.perl5)
         if perl_lib_dirs:
             perl_lib_path = ":".join(perl_lib_dirs)
             env.prepend_path("PERL5LIB", perl_lib_path)
@@ -416,10 +427,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             env.append_path("PATH", self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptype=("build", "run", "test"))
+        self._setup_dependent_env(env, dependent_spec)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptype=("run",))
+        self._setup_dependent_env(env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
