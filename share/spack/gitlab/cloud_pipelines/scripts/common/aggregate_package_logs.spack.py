@@ -30,7 +30,7 @@ if __name__ == "__main__":
     data = []
 
     # Look in the CWD for logs
-    local_log_path = os.path.join(os.path.getcwd(), args.log)
+    local_log_path = os.path.join(os.getcwd(), args.log)
     if os.path.exists(local_log_path):
         with open(local_log_path) as fd:
             data.append(json.load(fd))
