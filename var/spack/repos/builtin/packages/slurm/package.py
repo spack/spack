@@ -131,6 +131,7 @@ class Slurm(AutotoolsPackage):
     variant("restd", default=False, description="Enable the slurmrestd server")
     variant("nvml", default=False, description="Enable NVML autodetection")
     variant("cgroup", default=False, description="Enable cgroup plugin")
+    variant("pam", default=False, description="Enable PAM support")
 
     # TODO: add variant for BG/Q and Cray support
 
@@ -160,6 +161,7 @@ class Slurm(AutotoolsPackage):
 
     depends_on("cuda", when="+nvml")
     depends_on("dbus", when="+cgroup")
+    depends_on("linux-pam", when="+pam")
 
     executables = ["^srun$", "^salloc$"]
 
@@ -220,6 +222,9 @@ class Slurm(AutotoolsPackage):
 
         if spec.satisfies("+nvml"):
             args.append(f"--with-nvml={spec['cuda'].prefix}")
+
+        if spec.satisfies("+pam"):
+            args.append(f"--with-pam_dir={spec['linux-pam'].prefix}")
 
         sysconfdir = spec.variants["sysconfdir"].value
         if sysconfdir != "PREFIX/etc":
