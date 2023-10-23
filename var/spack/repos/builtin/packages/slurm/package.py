@@ -218,8 +218,8 @@ class Slurm(AutotoolsPackage):
         else:
             args.append("--without-pmix")
 
-        if "+nvml" in spec:
-            args.append("--with-nvml={0}".format(spec["cuda"].prefix))
+        if spec.satisfies("+nvml"):
+            args.append(f"--with-nvml={spec['cuda'].prefix}")
 
         sysconfdir = spec.variants["sysconfdir"].value
         if sysconfdir != "PREFIX/etc":
