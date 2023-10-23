@@ -12,6 +12,7 @@ class PyRedis(PythonPackage):
     homepage = "https://github.com/redis/redis-py"
     pypi = "redis/redis-3.3.8.tar.gz"
 
+    version("4.6.0", sha256="585dc516b9eb042a619ef0a39c3d7d55fe81bdb4df09a52c9cdde0d07bf1aa7d")
     version("4.5.1", sha256="1eec3741cda408d3a5f84b78d089c8b8d895f21b3b050988351e925faf202864")
     version("3.5.3", sha256="0e7e0cfca8660dea8b7d5cd8c4f6c5e29e11f31158c0b0ae91a397f00e5a05a2")
     version("3.5.0", sha256="7378105cd8ea20c4edc49f028581e830c01ad5f00be851def0f4bc616a83cd89")
