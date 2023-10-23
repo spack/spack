@@ -75,6 +75,9 @@ class PyCelery(PythonPackage):
     depends_on("py-vine@1.3.0", when="@4.3.0:4", type=("build", "run"))
     depends_on("py-vine@5.0.0:5", when="@5.0.0:5", type=("build", "run"))
 
+    with when("@5.2.3:5"):
+        depends_on("py-cryptography", type=("build", "run"))
+
     with when("@5.3.4:5"):
         depends_on("py-billiard@4.1:4", type=("build", "run"))
         depends_on("py-kombu@5.3.2:5", type=("build", "run"))
@@ -87,6 +90,6 @@ class PyCelery(PythonPackage):
         depends_on("py-pytz@2022.7:", type=("build", "run"))
         depends_on("py-python-dateutil@2.8.2:", type=("build", "run"))
         # https://github.com/celery/celery/blob/v5.3.4/requirements/extras/sqlalchemy.txt
-        depends_on("py-sqlalchemy@1.4.48:2.0", when="@5.3:", type=("build", "run"))
+        depends_on("py-sqlalchemy@1.4.48:2.0", type=("build", "run"))
         # https://github.com/celery/celery/blob/v5.3.4/requirements/extras/auth.txt
-        depends_on("py-cryptography@41.0.3:", when="@5.3:", type=("build", "run"))
+        depends_on("py-cryptography@41.0.3:", type=("build", "run"))
