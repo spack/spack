@@ -90,6 +90,6 @@ class PyCelery(PythonPackage):
         depends_on("py-pytz@2022.7:", type=("build", "run"))
         depends_on("py-python-dateutil@2.8.2:", type=("build", "run"))
         # https://github.com/celery/celery/blob/v5.3.4/requirements/extras/sqlalchemy.txt
-        depends_on("py-sqlalchemy@1.4.48:2.0", type=("build", "run"))
+        depends_on("py-sqlalchemy@1.4.48:2.0", when="+sqlalchemy", type=("build", "run"))
         # https://github.com/celery/celery/blob/v5.3.4/requirements/extras/auth.txt
         depends_on("py-cryptography@41.0.3:", type=("build", "run"))
