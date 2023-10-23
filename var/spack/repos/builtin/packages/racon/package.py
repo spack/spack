@@ -32,7 +32,7 @@ class Racon(CMakePackage):
     conflicts("%gcc@:4.7")
     conflicts("%clang@:3.1")
 
-    patch('aarch64.patch', when='@:1.4 target=aarch64:')
+    patch("aarch64.patch", when="@:1.4 target=aarch64:")
 
     def cmake_args(self):
         args = ["-Dracon_build_wrapper=ON"]

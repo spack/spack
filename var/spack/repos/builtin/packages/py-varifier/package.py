@@ -11,7 +11,7 @@ class PyVarifier(PythonPackage):
 
     homepage = "https://github.com/iqbal-lab-org/varifier"
     pypi = "varifier/varifier-0.3.1.tar.gz"
-    git="https://github.com/iqbal-lab-org/varifier"
+    git = "https://github.com/iqbal-lab-org/varifier"
 
     version("master", branch="master")
     version("0.3.1", sha256="74d0da83508b0ffd2c838d0cd6dc59db244df0bd50fce5271a8d7e01a0a931f1")
@@ -23,7 +23,7 @@ class PyVarifier(PythonPackage):
     depends_on("vt", type="run")
     depends_on("py-biopython", type=("build", "run"))
     depends_on("py-cluster-vcf-records@0.13.2:", type=("build", "run"))
-    #mappy >= 2.17 provided by minimap2
+    # mappy >= 2.17 provided by minimap2
     depends_on("minimap2@2.17:", type=("build", "run"))
     depends_on("py-pandas")
     depends_on("py-pyfastaq@3.14.0:")
@@ -33,5 +33,4 @@ class PyVarifier(PythonPackage):
 
     @run_before("install")
     def configure(self):
-        filter_file(", \"k8\"", "", "varifier/truth_variant_finding.py")
-
+        filter_file(', "k8"', "", "varifier/truth_variant_finding.py")

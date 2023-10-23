@@ -11,7 +11,7 @@ class PyQcovid(PythonPackage):
 
     homepage = "https://github.com/iqbal-lab-org/QCovid"
     url = "https://github.com/iqbal-lab-org/QCovid"
-    git="https://github.com/iqbal-lab-org/QCovid"
+    git = "https://github.com/iqbal-lab-org/QCovid"
 
     version("master", branch="master")
 

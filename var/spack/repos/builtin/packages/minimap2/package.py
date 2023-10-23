@@ -53,5 +53,5 @@ class Minimap2(PythonPackage):
         mkdirp(prefix.bin)
         install("minimap2", prefix.bin)
         if self.spec.satisfies("js_engine=node"):
-            filter_file(r"k8",  "node",  "./misc/paftools.js")
+            filter_file(r"k8", "node", "./misc/paftools.js")
         install("./misc/paftools.js", prefix.bin)
