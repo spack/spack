@@ -131,6 +131,7 @@ ENABLED_VARIANT_COLOR = "@B"  #: color for highlighting enabled variants
 DISABLED_VARIANT_COLOR = "r"  #: color for highlighting disabled varaints
 DEPENDENCY_COLOR = "@."  #: color for highlighting dependencies
 HASH_COLOR = "@K"  #: color for highlighting package hashes
+LICENSE_COLOR = "@y"  #: color for highlighting package licenses
 
 #: This map determines the coloring of specs when using color output.
 #: We make the fields different colors to enhance readability.
@@ -143,6 +144,7 @@ COLOR_FORMATS = {
     "~": DISABLED_VARIANT_COLOR,
     "^": DEPENDENCY_COLOR,
     "#": HASH_COLOR,
+    "license": LICENSE_COLOR,
 }
 
 #: Regex used for splitting by spec field separators.
@@ -163,6 +165,7 @@ DISPLAY_FORMAT = (
     "{name}{@version}"
     "{%compiler.name}{@compiler.version}{compiler_flags}"
     "{variants}{arch=architecture}{/abstract_hash}"
+    "{license=license}"
 )
 
 #: Regular expression to pull spec contents out of clearsigned signature
@@ -1522,6 +1525,9 @@ class Spec:
         """Called by the parser to add a known flag.
         Known flags currently include "arch"
         """
+
+        if name == "license":
+            return
 
         # If the == syntax is used to propagate the spec architecture
         # This is an error
@@ -4253,6 +4259,7 @@ class Spec:
             hash[:len]    The DAG hash with optional length argument
             spack_root    The spack root directory
             spack_install The spack install directory
+            license    The package license
 
         The ``^`` sigil can be used to access dependencies by name.
         ``s.format({^mpi.name})`` will print the name of the MPI
@@ -4295,6 +4302,7 @@ class Spec:
                 that accepts a string and returns another one
 
         """
+
         color = kwargs.get("color", False)
         transform = kwargs.get("transform", {})
 
@@ -4317,6 +4325,9 @@ class Spec:
             elif attribute.startswith("arch="):
                 sig = " arch="  # include space as separator
                 attribute = attribute[5:]
+            elif attribute.startswith("license="):
+                sig = " license="
+                attribute = attribute[8:]
 
             current = spec
             if attribute.startswith("^"):
@@ -4350,6 +4361,15 @@ class Spec:
                 return
             elif attribute == "spack_install":
                 write(morph(spec, spack.store.STORE.layout.root))
+                return
+            elif attribute == "license":
+                if self.concrete:
+                    used_license = "UNKNOWN"
+                    for when_license_spec in spec.package.licenses:
+                        if self.intersects(when_license_spec):
+                            used_license = spec.package.licenses[when_license_spec]
+                            break
+                    write(sig + morph(spec, used_license), "license")
                 return
             elif re.match(r"hash(:\d)?", attribute):
                 col = "#"
