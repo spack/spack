@@ -17,7 +17,7 @@ class PyLangchain(PythonPackage):
     version("0.0.101", sha256="ee3945c0b8f2d6ba34e5ba63d9362578290269d02999b0049206b508be11e5cc")
 
     depends_on("python@3.8.1:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    depends_on("py-poetry-core@1:", type="build")
     depends_on("py-pydantic@1", type=("build", "run"))
     depends_on("py-sqlalchemy@1", when="@0.0.101", type=("build", "run"))
     depends_on("py-sqlalchemy@1.4:2", when="@0.0.235:", type=("build", "run"))
