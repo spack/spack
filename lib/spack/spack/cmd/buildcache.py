@@ -20,7 +20,6 @@ import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
-import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
 import spack.mirror
@@ -38,18 +37,6 @@ from spack.stage import Stage
 description = "create, download and install binary packages"
 section = "packaging"
 level = "long"
-
-
-@arguments.arg
-def deptype_default_default_deptype():
-    return Args(
-        "--deptype",
-        action=arguments.DeptypeAction,
-        metavar="deptype",
-        default=dt.DEFAULT_TYPES,
-        help="comma-separated list of deptypes to traverse\ndefault=%s"
-        % ",".join(dt.DEFAULT_TYPES),
-    )
 
 
 def setup_parser(subparser: argparse.ArgumentParser):
@@ -97,7 +84,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="stop pushing on first failure (default is best effort)",
     )
-    arguments.add_common_arguments(push, ["specs", "deptype_default_default_deptype"])
+    arguments.add_common_arguments(push, ["specs"])
     push.set_defaults(func=push_fn)
 
     install = subparsers.add_parser("install", help=install_fn.__doc__)
@@ -307,7 +294,6 @@ def push_fn(args: argparse.Namespace):
         specs,
         root="package" in args.things_to_install,
         dependencies="dependencies" in args.things_to_install,
-        deptype=args.deptype,
     )
 
     # When pushing multiple specs, print the url once ahead of time, as well as how
