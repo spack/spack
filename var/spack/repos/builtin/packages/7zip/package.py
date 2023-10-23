@@ -75,8 +75,8 @@ class _7zip(SourceforgePackage, Package):
     def build(self, spec, prefix):
         link_type = "1" if "static" in spec.variants["link_type"].value else "0"
         nmake_args = [
-            "PLATFORM=%s" % self.plat_arch,
-            "MY_STATIC_LINK=%s" % link_type,
+            f"PLATFORM={self.plat_arch}",
+            f"MY_STATIC_LINK={link_type}",
             "NEW_COMPILER=1",
         ]
         # 7zips makefile is configured in such as way that if this value is set

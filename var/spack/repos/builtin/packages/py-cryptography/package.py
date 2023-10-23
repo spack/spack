@@ -13,6 +13,7 @@ class PyCryptography(PythonPackage):
     homepage = "https://github.com/pyca/cryptography"
     pypi = "cryptography/cryptography-1.8.1.tar.gz"
 
+    version("41.0.3", sha256="6d192741113ef5e30d89dcb5b956ef4e1578f304708701b8b73d38e3e1461f34")
     version("40.0.2", sha256="c33c0d32b8594fa647d2e01dbccc303478e16fdd7cf98652d5b3ed11aa5e5c99")
     version("39.0.2", sha256="bc5b871e977c8ee5a1bbc42fa8d19bcc08baf0c51cbf1586b0e87a2694dde42f")
     version("38.0.4", sha256="175c1a818b87c9ac80bb7377f5520b7f31b3ef2a0004e2420319beadedb67290")
@@ -30,12 +31,16 @@ class PyCryptography(PythonPackage):
 
     variant("idna", default=False, when="@2.5:3.0", description="Deprecated U-label support")
 
+    # distutils required in version <= 40
+    depends_on("python@:3.11", when="@:40", type=("build", "run"))
+    depends_on("py-setuptools@61.0:", when="@41:", type="build")
     depends_on("py-setuptools@40.6:60.8,60.9.1:", when="@37:", type="build")
     depends_on("py-setuptools@40.6:", when="@2.7:36", type="build")
     depends_on("py-setuptools@18.5:", when="@2.2:2.6", type="build")
     depends_on("py-setuptools@11.3:", when="@:2.1", type="build")
     depends_on("py-setuptools-rust@0.11.4:", when="@3.4.2:", type="build")
     depends_on("py-setuptools-rust@0.11.4:", when="@3.4:3.4.1", type=("build", "run"))
+    depends_on("rust@1.56:", when="@41:", type="build")
     depends_on("rust@1.48:", when="@38:", type="build")
     depends_on("rust@1.41:", when="@3.4.5:", type="build")
     depends_on("rust@1.45:", when="@3.4.3:3.4.4", type="build")

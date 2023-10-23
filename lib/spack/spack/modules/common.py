@@ -34,10 +34,8 @@ import datetime
 import inspect
 import os
 import os.path
-import pathlib
 import re
 import string
-import warnings
 from typing import Optional
 
 import llnl.util.filesystem
@@ -59,6 +57,7 @@ import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
+from spack.context import Context
 
 
 #: config section for this file
@@ -589,7 +588,7 @@ class BaseFileLayout:
         if not projection:
             projection = self.conf.default_projections["all"]
 
-        name = self.spec.format(projection)
+        name = self.spec.format_path(projection)
         # Not everybody is working on linux...
         parts = name.split("/")
         name = os.path.join(*parts)
@@ -720,10 +719,16 @@ class BaseContext(tengine.Context):
         )
 
         # Let the extendee/dependency modify their extensions/dependencies
-        # before asking for package-specific modifications
-        env.extend(spack.build_environment.modifications_from_dependencies(spec, context="run"))
-        # Package specific modifications
-        spack.build_environment.set_module_variables_for_package(spec.package)
+
+        # The only thing we care about is `setup_dependent_run_environment`, but
+        # for that to work, globals have to be set on the package modules, and the
+        # whole chain of setup_dependent_package has to be followed from leaf to spec.
+        # So: just run it here, but don't collect env mods.
+        spack.build_environment.SetupContext(context=Context.RUN).set_all_package_py_globals()
+
+        # Then run setup_dependent_run_environment before setup_run_environment.
+        for dep in spec.dependencies(deptype=("link", "run")):
+            dep.package.setup_dependent_run_environment(env, spec)
         spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
@@ -819,43 +824,6 @@ class BaseContext(tengine.Context):
     def verbose(self):
         """Verbosity level."""
         return self.conf.verbose
-
-
-def ensure_modules_are_enabled_or_warn():
-    """Ensures that, if a custom configuration file is found with custom configuration for the
-    default tcl module set, then tcl module file generation is enabled. Otherwise, a warning
-    is emitted.
-    """
-
-    # TODO (v0.21 - Remove this function)
-    # Check if TCL module generation is enabled, return early if it is
-    enabled = spack.config.get("modules:default:enable", [])
-    if "tcl" in enabled:
-        return
-
-    # Check if we have custom TCL module sections
-    for scope in spack.config.CONFIG.file_scopes:
-        # Skip default configuration
-        if scope.name.startswith("default"):
-            continue
-
-        data = spack.config.get("modules:default:tcl", scope=scope.name)
-        if data:
-            config_file = pathlib.Path(scope.path)
-            if not scope.name.startswith("env"):
-                config_file = config_file / "modules.yaml"
-            break
-    else:
-        return
-
-    # If we are here we have a custom "modules" section in "config_file"
-    msg = (
-        f"detected custom TCL modules configuration in {config_file}, while TCL module file "
-        f"generation for the default module set is disabled. "
-        f"In Spack v0.20 module file generation has been disabled by default. To enable "
-        f"it run:\n\n\t$ spack config add 'modules:default:enable:[tcl]'\n"
-    )
-    warnings.warn(msg)
 
 
 class BaseModuleFileWriter:

@@ -7,7 +7,6 @@ import os
 import re
 import subprocess
 import sys
-from distutils.version import StrictVersion
 from typing import Dict, List, Set
 
 import spack.compiler
@@ -115,11 +114,11 @@ class VCVarsInvocation(VarsInvocation):
 
 def get_valid_fortran_pth(comp_ver):
     cl_ver = str(comp_ver)
-    sort_fn = lambda fc_ver: StrictVersion(fc_ver)
+    sort_fn = lambda fc_ver: Version(fc_ver)
     sort_fc_ver = sorted(list(avail_fc_version), key=sort_fn)
     for ver in sort_fc_ver:
         if ver in fortran_mapping:
-            if StrictVersion(cl_ver) <= StrictVersion(fortran_mapping[ver]):
+            if Version(cl_ver) <= Version(fortran_mapping[ver]):
                 return fc_path[ver]
     return None
 

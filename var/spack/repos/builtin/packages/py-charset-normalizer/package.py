@@ -13,6 +13,7 @@ class PyCharsetNormalizer(PythonPackage):
     homepage = "https://github.com/ousret/charset_normalizer"
     pypi = "charset-normalizer/charset-normalizer-2.0.7.tar.gz"
 
+    version("3.3.0", sha256="63563193aec44bce707e0c5ca64ff69fa72ed7cf34ce6e11d5127555756fd2f6")
     version("3.1.0", sha256="34e0a2f9c370eb95597aae63bf85eb5e96826d81e3dcf88b8886012906f509b5")
     version("3.0.1", sha256="ebea339af930f8ca5d7a699b921106c6e29c617fe9606fa7baa043c1cdae326f")
     version("2.1.1", sha256="5a3d016c7c547f69d6f81fb0db9449ce888b418b5b9952cc5e6e66843e9dd845")
