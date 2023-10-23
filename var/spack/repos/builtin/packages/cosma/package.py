@@ -48,6 +48,9 @@ class Cosma(CMakePackage):
     with when("+cuda"):
         variant("nccl", default=False, description="Use cuda nccl")
 
+    with when("+rocm"):
+        variant("rccl", default=False, description="Use rocm rccl")
+
     depends_on("cmake@3.22:", type="build")
     depends_on("mpi@3:")
     depends_on("blas", when="~cuda ~rocm")
@@ -114,6 +117,7 @@ class Cosma(CMakePackage):
             self.define_from_variant("COSMA_WITH_TESTS", "tests"),
             self.define_from_variant("COSMA_WITH_APPS", "apps"),
             self.define_from_variant("COSMA_WITH_NCCL", "nccl"),
+            self.define_from_variant("COSMA_WITH_RCCL", "rccl"),
             self.define_from_variant("COSMA_WITH_GPU_AWARE_MPI", "gpu_direct"),
             self.define_from_variant("COSMA_WITH_PROFILING", "profiling"),
             self.define("COSMA_WITH_BENCHMARKS", False),
