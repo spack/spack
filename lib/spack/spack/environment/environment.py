@@ -805,6 +805,8 @@ class Environment:
         self.spec_lists: Dict[str, SpecList] = {user_speclist_name: SpecList()}
         #: User specs from the last concretization
         self.concretized_user_specs: List[Spec] = []
+        #: All the specs in the environment, including transitive, by hash
+        self.all_specs_by_hash = spack.solver.asp.ConcreteSpecsByHash()
         #: Roots associated with the last concretization, in order
         self.concretized_order: List[str] = []
         #: Concretized root specs by hash
@@ -1203,6 +1205,7 @@ class Environment:
         """Clears the internal state associated with managing user specs"""
         self.concretized_user_specs = []
         self.concretized_order = []
+        self.all_specs_by_hash = spack.solver.asp.ConcreteSpecsByHash()
         self.specs_by_hash = {}
 
     def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
@@ -1629,17 +1632,19 @@ class Environment:
         """
         assert concrete.concrete
 
+        h = concrete.dag_hash()
+        self.all_specs_by_hash.add(concrete)
+
         # when a spec is newly concretized, we need to make a note so
         # that we can write its package to the env repo on write()
         if new:
-            self.new_specs.append(concrete)
+            self.new_specs.append(self.all_specs_by_hash[h])
 
         # update internal lists of specs
         self.concretized_user_specs.append(spec)
 
-        h = concrete.dag_hash()
         self.concretized_order.append(h)
-        self.specs_by_hash[h] = concrete
+        self.specs_by_hash[h] = self.all_specs_by_hash[h]
 
     def _dev_specs_that_need_overwrite(self):
         """Return the hashes of all specs that need to be reinstalled due to source code change."""
