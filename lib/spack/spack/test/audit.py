@@ -21,6 +21,10 @@ import spack.config
         (["wrong-variant-in-depends-on"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a GitHub patch URL without full_index=1
         (["invalid-github-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
+        # This package has invalid GitLab patch URLs
+        (["invalid-gitlab-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
+        # This package has invalid GitLab patch URLs
+        (["invalid-selfhosted-gitlab-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a stand-alone 'test*' method in build-time callbacks
         (["fail-test-audit"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has no issues
