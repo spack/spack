@@ -807,7 +807,7 @@ class Environment:
         self.concretized_user_specs: List[Spec] = []
         #: Roots associated with the last concretization, in order
         self.concretized_order: List[str] = []
-        #: Concretized specs by hash
+        #: Concretized root specs by hash
         self.specs_by_hash: Dict[str, Spec] = {}
         #: Repository for this environment (memoized)
         self._repo = None
@@ -1180,10 +1180,7 @@ class Environment:
             the user spec and the corresponding concretized spec.
         """
         if force:
-            # Clear previously concretized specs
-            self.concretized_user_specs = []
-            self.concretized_order = []
-            self.specs_by_hash = {}
+            self._clear_specs()
 
         # Remove concrete specs that no longer correlate to a user spec
         for spec in set(self.concretized_user_specs) - set(self.user_specs):
@@ -1201,6 +1198,12 @@ class Environment:
 
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
+
+    def _clear_specs(self) -> None:
+        """Clears the internal state associated with managing user specs"""
+        self.concretized_user_specs = []
+        self.concretized_order = []
+        self.specs_by_hash = {}
 
     def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
         """
@@ -1274,9 +1277,7 @@ class Environment:
             concrete: abstract for (abstract, concrete) in self.concretized_specs()
         }
 
-        self.concretized_user_specs = []
-        self.concretized_order = []
-        self.specs_by_hash = {}
+        self._clear_specs()
 
         result_by_user_spec = {}
         solver = spack.solver.asp.Solver()
@@ -1300,17 +1301,13 @@ class Environment:
     def _concretize_together(
         self, tests: bool = False
     ) -> List[Tuple[spack.spec.Spec, spack.spec.Spec]]:
-        """Concretization strategy that concretizes all the specs
-        in the same DAG.
-        """
+        """Concretization strategy that concretizes all the specs in the same DAG."""
         # Exit early if the set of concretized specs is the set of user specs
         new_user_specs, kept_user_specs, specs_to_concretize = self._get_specs_to_concretize()
         if not new_user_specs:
             return []
 
-        self.concretized_user_specs = []
-        self.concretized_order = []
-        self.specs_by_hash = {}
+        self._clear_specs()
 
         try:
             concrete_specs: List[spack.spec.Spec] = spack.concretize.concretize_specs_together(
@@ -1352,9 +1349,7 @@ class Environment:
         old_concretized_order = self.concretized_order
         old_specs_by_hash = self.specs_by_hash
 
-        self.concretized_user_specs = []
-        self.concretized_order = []
-        self.specs_by_hash = {}
+        self._clear_specs()
 
         for s, h in zip(old_concretized_user_specs, old_concretized_order):
             if s in self.user_specs:
@@ -1630,8 +1625,7 @@ class Environment:
         Arguments:
             spec (Spec): user spec that resulted in the concrete spec
             concrete (Spec): spec concretized within this environment
-            new (bool): whether to write this spec's package to the env
-                repo on write()
+            new (bool): whether to write this spec's package to the env repo on write()
         """
         assert concrete.concrete
 
