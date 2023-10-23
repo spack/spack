@@ -11,8 +11,16 @@ class PyClickDidyoumean(PythonPackage):
     homepage = "https://github.com/click-contrib/click-didyoumean"
     pypi = "click-didyoumean/click-didyoumean-0.0.3.tar.gz"
 
+    version("0.3.0", sha256="f184f0d851d96b6d29297354ed981b7dd71df7ff500d82fa6d11f0856bee8035")
     version("0.0.3", sha256="112229485c9704ff51362fe34b2d4f0b12fc71cc20f6d2b3afabed4b8bfa6aeb")
 
     depends_on("python@3.0:", type=("build", "run"))
     depends_on("py-click", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+
+    with when("@0.0.3:"):
+        depends_on("py-setuptools", type="build")
+
+    with when("@0.3.0:"):
+        depends_on("python@3.6:", type=("build", "run"))
+        depends_on("py-click@7:", type=("build", "run"))
+        depends_on("py-poetry-core", type="build")
