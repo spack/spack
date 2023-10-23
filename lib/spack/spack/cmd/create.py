@@ -876,16 +876,7 @@ def get_versions(args, name):
             url_dict = {version: args.url}
 
         version_hashes = spack.stage.get_checksums_for_versions(
-<<<<<<< HEAD
-            url_dict,
-            name,
-            first_stage_function=guesser,
-            keep_stage=args.keep_stage,
-            batch=(args.batch or len(url_dict) == 1 or args.limit > 0),
-            limit=args.limit,
-=======
             url_dict, name, first_stage_function=guesser, keep_stage=args.keep_stage
->>>>>>> develop
         )
 
         versions = get_version_lines(version_hashes, url_dict)
