@@ -18,8 +18,8 @@ class Garfieldpp(CMakePackage):
 
     maintainers("mirguest")
     patch(
-        "https://gitlab.cern.ch/garfield/garfieldpp/-/commit/882c3023cfa89b45ca7a0c95ab1518454536e8e1.patch",
-        sha256="440bc8129c55168e6c45d39e4344911d48ddb13fd3f9ee05974b2ede46a23b93",
+        "https://gitlab.cern.ch/garfield/garfieldpp/-/commit/882c3023cfa89b45ca7a0c95ab1518454536e8e1.diff",
+        sha256="ea3b91d67011abe41e72c7b55578d14b77bd2ef5e7f344077091934b24f38f0d",
         when="@4.0",
     )
 
