@@ -984,16 +984,16 @@ spack:
     - mpileaks
 """
         )
-    f.close()
 
     with tmpdir.as_cwd():
         with pytest.raises(spack.main.SpackCommandError) as e:
-            output = env("create", "test", "./spack.yaml")
-            assert "'spacks' was unexpected" in str(output)
-            assert "exited with code 1: env('create', 'test', './spack.yaml')\"" in str(e)
+            _ = env("create", "test", "./spack.yaml")
+            assert "'spacks' was unexpected" in str(e)
 
-        assert "test" not in env("list")
+    assert "test" not in env("list")
 
+
+def test_bad_env_yaml_format_remove():
     badenv = "badenv"
     env("create", badenv)
     tmpdir = spack.environment.environment.environment_dir_from_name(badenv, exists_ok=True)
@@ -1001,17 +1001,12 @@ spack:
     with open(filename, "w") as f:
         f.write(
             """\
-spack:
-  spacks:
     - mpileaks
 """
         )
-    f.close()
 
     assert badenv in env("list")
-
     env("remove", "-y", badenv)
-
     assert badenv not in env("list")
 
 
