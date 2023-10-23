@@ -109,19 +109,19 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("cmake@3.12.0:", type="build")
 
     for _platform in ["linux", "darwin", "cray"]:
-        depends_on("pkgconfig", type="build", when="platform=%s" % _platform)
+        depends_on("pkgconfig", type="build", when=f"platform={_platform}")
         variant(
             "pic",
             default=False,
             description="Build pic-enabled static libraries",
-            when="platform=%s" % _platform,
+            when=f"platform={_platform}",
         )
         # libffi and libfabric and not currently supported on Windows
         # see Paraview's superbuild handling of libfabric at
         # https://gitlab.kitware.com/paraview/paraview-superbuild/-/blob/master/projects/adios2.cmake#L3
-        depends_on("libffi", when="+sst platform=%s" % _platform)  # optional in DILL
+        depends_on("libffi", when=f"+sst platform={_platform}")  # optional in DILL
         depends_on(
-            "libfabric@1.6.0:", when="+sst platform=%s" % _platform
+            "libfabric@1.6.0:", when=f"+sst platform={_platform}"
         )  # optional in EVPath and SST
         # depends_on('bison', when='+sst')     # optional in FFS, broken package
         # depends_on('flex', when='+sst')      # optional in FFS, depends on BISON
@@ -130,6 +130,7 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("libzmq", when="+dataman")
     depends_on("dataspaces@1.8.0:", when="+dataspaces")
 
+    depends_on("hdf5@:1.12", when="@:2.8 +hdf5")
     depends_on("hdf5~mpi", when="+hdf5~mpi")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
 
@@ -240,8 +241,8 @@ class Adios2(CMakePackage, CudaPackage):
             args.extend(["-DCMAKE_Fortran_SUBMODULE_EXT=.smod", "-DCMAKE_Fortran_SUBMODULE_SEP=."])
 
         if "+python" in spec or self.run_tests:
-            args.append("-DPYTHON_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path)
-            args.append("-DPython_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path)
+            args.append(f"-DPYTHON_EXECUTABLE:FILEPATH={spec['python'].command.path}")
+            args.append(f"-DPython_EXECUTABLE:FILEPATH={spec['python'].command.path}")
 
         return args
 

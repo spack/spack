@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class PyTorchvision(PythonPackage):
-    """The torchvision package consists of popular datasets, model
-    architectures, and common image transformations for computer vision."""
+    """Image and video datasets and models for torch deep learning."""
 
     homepage = "https://github.com/pytorch/vision"
     url = "https://github.com/pytorch/vision/archive/v0.8.2.tar.gz"
@@ -18,6 +17,7 @@ class PyTorchvision(PythonPackage):
     maintainers("adamjstewart")
 
     version("main", branch="main")
+    version("0.16.0", sha256="79b30b082237e3ead21e74587cedf4a4d832f977cf7dfeccfb65f67988b12ceb")
     version("0.15.2", sha256="1efcb80e0a6e42c54f07ee16167839b4d302aeeecc12839cc47c74b06a2c20d4")
     version("0.15.1", sha256="689d23d4ebb0c7e54e8651c89b17155b64341c14ae4444a04ca7dc6f2b6a0a43")
     version("0.14.1", sha256="ced67e1cf1f97e168cdf271851a4d0b6d382ab7936e7bcbb39aaa87239c324b6")
@@ -55,15 +55,14 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision#installation
     depends_on("python@3.8:3.11", when="@0.15:", type=("build", "link", "run"))
-    depends_on("python@3.7:3.10", when="@0.12:0.14", type=("build", "link", "run"))
-    depends_on("python@3.6:3.9", when="@0.8.2:0.11", type=("build", "link", "run"))
-    depends_on("python@3.6:3.8", when="@0.7:0.8.1", type=("build", "link", "run"))
-    depends_on("python@3.5:3.8", when="@0.6", type=("build", "link", "run"))
-    depends_on("python@2.7,3.5:3.8", when="@0.5", type=("build", "link", "run"))
-    depends_on("python@2.7,3.5:3.7", when="@:0.4", type=("build", "link", "run"))
+    depends_on("python@:3.10", when="@0.12:0.14", type=("build", "link", "run"))
+    depends_on("python@:3.9", when="@0.8.2:0.11", type=("build", "link", "run"))
+    depends_on("python@:3.8", when="@0.5:0.8.1", type=("build", "link", "run"))
+    depends_on("python@:3.7", when="@:0.4", type=("build", "link", "run"))
 
     # https://github.com/pytorch/vision#installation
     depends_on("py-torch@main", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.1.0", when="@0.16.0", type=("build", "link", "run"))
     depends_on("py-torch@2.0.1", when="@0.15.2", type=("build", "link", "run"))
     depends_on("py-torch@2.0.0", when="@0.15.1", type=("build", "link", "run"))
     depends_on("py-torch@1.13.1", when="@0.14.1", type=("build", "link", "run"))

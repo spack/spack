@@ -451,9 +451,7 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
     monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c: True)
 
     results = ci.create_buildcache(
-        None,
-        buildcache_mirror_url="file:///fake-url-one",
-        pipeline_mirror_url="file:///fake-url-two",
+        None, destination_mirror_urls=["file:///fake-url-one", "file:///fake-url-two"]
     )
 
     assert len(results) == 2
@@ -463,7 +461,7 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
     assert result2.success
     assert result2.url == "file:///fake-url-two"
 
-    results = ci.create_buildcache(None, buildcache_mirror_url="file:///fake-url-one")
+    results = ci.create_buildcache(None, destination_mirror_urls=["file:///fake-url-one"])
 
     assert len(results) == 1
     assert results[0].success

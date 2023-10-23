@@ -1427,7 +1427,7 @@ complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -d 'show this help message and exit'
 
 # spack env activate
-set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view V/without-view p/prompt temp d/dir=
+set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view= V/without-view p/prompt temp d/dir=
 complete -c spack -n '__fish_spack_using_command_pos 0 env activate' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -d 'show this help message and exit'
@@ -1441,10 +1441,10 @@ complete -c spack -n '__fish_spack_using_command env activate' -l bat -f -a shel
 complete -c spack -n '__fish_spack_using_command env activate' -l bat -d 'print bat commands to activate the environment'
 complete -c spack -n '__fish_spack_using_command env activate' -l pwsh -f -a shell
 complete -c spack -n '__fish_spack_using_command env activate' -l pwsh -d 'print powershell commands to activate environment'
-complete -c spack -n '__fish_spack_using_command env activate' -s v -l with-view -f -a with_view
-complete -c spack -n '__fish_spack_using_command env activate' -s v -l with-view -d 'update PATH, etc., with associated view'
-complete -c spack -n '__fish_spack_using_command env activate' -s V -l without-view -f -a with_view
-complete -c spack -n '__fish_spack_using_command env activate' -s V -l without-view -d 'do not update PATH, etc., with associated view'
+complete -c spack -n '__fish_spack_using_command env activate' -l with-view -s v -r -f -a with_view
+complete -c spack -n '__fish_spack_using_command env activate' -l with-view -s v -r -d 'set runtime environment variables for specific view'
+complete -c spack -n '__fish_spack_using_command env activate' -l without-view -s V -f -a without_view
+complete -c spack -n '__fish_spack_using_command env activate' -l without-view -s V -d 'do not set runtime environment variables for any view'
 complete -c spack -n '__fish_spack_using_command env activate' -s p -l prompt -f -a prompt
 complete -c spack -n '__fish_spack_using_command env activate' -s p -l prompt -d 'decorate the command line prompt when activating'
 complete -c spack -n '__fish_spack_using_command env activate' -l temp -f -a temp
