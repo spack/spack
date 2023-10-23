@@ -59,7 +59,7 @@ class Grpc(CMakePackage):
     depends_on("zlib-api")
     depends_on("c-ares")
     depends_on("abseil-cpp", when="@1.27:")
-    depends_on("re2+pic", when="@1.33.1:")
+    depends_on("re2+pic@2023-09-01", when="@1.33.1:")
 
     def cmake_args(self):
         args = [
