@@ -27,7 +27,7 @@ import archspec.cpu.schema
 import llnl.util.lang
 import llnl.util.lock
 import llnl.util.tty as tty
-from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
+from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, working_dir
 
 import spack.binary_distribution
 import spack.caches
@@ -36,6 +36,7 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.error
 import spack.package_base
 import spack.package_prefs
 import spack.paths
@@ -52,7 +53,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
-from spack.util.web import FetchError
 
 
 def ensure_configuration_fixture_run_before(request):
@@ -472,7 +472,7 @@ class MockCache:
 
 class MockCacheFetcher:
     def fetch(self):
-        raise FetchError("Mock cache always fails for tests")
+        raise spack.error.FetchError("Mock cache always fails for tests")
 
     def __str__(self):
         return "[mock fetch cache]"
@@ -565,6 +565,8 @@ def mock_repo_path():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
+    if not os.path.exists(spec.package.build_log_path):
+        touchp(spec.package.build_log_path)
 
 
 @pytest.fixture
@@ -1712,17 +1714,6 @@ def brand_new_binary_cache():
     )
 
 
-@pytest.fixture
-def directory_with_manifest(tmpdir):
-    """Create a manifest file in a directory. Used by 'spack external'."""
-    with tmpdir.as_cwd():
-        test_db_fname = "external-db.json"
-        with open(test_db_fname, "w") as db_file:
-            json.dump(spack.test.cray_manifest.create_manifest_content(), db_file)
-
-    yield str(tmpdir)
-
-
 @pytest.fixture()
 def noncyclical_dir_structure(tmpdir):
     """
@@ -1940,3 +1931,20 @@ def nullify_globals(request, monkeypatch):
     monkeypatch.setattr(spack.caches, "FETCH_CACHE", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)
+
+
+def pytest_runtest_setup(item):
+    # Skip tests if they are marked only clingo and are run with the original concretizer
+    only_clingo_marker = item.get_closest_marker(name="only_clingo")
+    if only_clingo_marker and os.environ.get("SPACK_TEST_SOLVER") == "original":
+        pytest.skip(*only_clingo_marker.args)
+
+    # Skip tests if they are marked only original and are run with clingo
+    only_original_marker = item.get_closest_marker(name="only_original")
+    if only_original_marker and os.environ.get("SPACK_TEST_SOLVER", "clingo") == "clingo":
+        pytest.skip(*only_original_marker.args)
+
+    # Skip test marked "not_on_windows" if they're run on Windows
+    not_on_windows_marker = item.get_closest_marker(name="not_on_windows")
+    if not_on_windows_marker and sys.platform == "win32":
+        pytest.skip(*not_on_windows_marker.args)

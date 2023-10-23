@@ -6,11 +6,11 @@
 
 import os
 import shutil
-import sys
 from itertools import product
 
 import pytest
 
+import llnl.url
 from llnl.util.filesystem import working_dir
 
 from spack.paths import spack_root
@@ -22,7 +22,7 @@ datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data", "com
 ext_archive = {}
 [
     ext_archive.update({ext: ".".join(["Foo", ext])})
-    for ext in scomp.ALLOWED_ARCHIVE_TYPES
+    for ext in llnl.url.ALLOWED_ARCHIVE_TYPES
     if "TAR" not in ext
 ]
 # Spack does not use Python native handling for tarballs or zip
@@ -71,7 +71,7 @@ def test_native_unpacking(tmpdir_factory, archive_file_and_extension):
         assert "TEST" in contents
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Only Python unpacking available on Windows")
+@pytest.mark.not_on_windows("Only Python unpacking available on Windows")
 @pytest.mark.parametrize(
     "archive_file_and_extension", [(ext, True) for ext in ext_archive.keys()], indirect=True
 )
@@ -96,38 +96,3 @@ def test_unallowed_extension():
     bad_ext_archive = "Foo.cxx"
     with pytest.raises(CommandNotFoundError):
         scomp.decompressor_for(bad_ext_archive)
-
-
-@pytest.mark.parametrize("archive", ext_archive.values())
-def test_get_extension(archive):
-    ext = scomp.extension_from_path(archive)
-    assert ext_archive[ext] == archive
-
-
-def test_get_bad_extension():
-    archive = "Foo.cxx"
-    ext = scomp.extension_from_path(archive)
-    assert ext is None
-
-
-@pytest.mark.parametrize("path", ext_archive.values())
-def test_allowed_archive(path):
-    assert scomp.allowed_archive(path)
-
-
-@pytest.mark.parametrize("ext_path", ext_archive.items())
-def test_strip_compression_extension(ext_path):
-    ext, path = ext_path
-    stripped = scomp.strip_compression_extension(path)
-    if ext == "zip":
-        assert stripped == "Foo.zip"
-        stripped = scomp.strip_compression_extension(path, "zip")
-        assert stripped == "Foo"
-    elif (
-        ext == "tar"
-        or ext in scomp.CONTRACTION_MAP.keys()
-        or ext in [".".join(ext) for ext in product(scomp.PRE_EXTS, scomp.EXTS)]
-    ):
-        assert stripped == "Foo.tar" or stripped == "Foo.TAR"
-    else:
-        assert stripped == "Foo"

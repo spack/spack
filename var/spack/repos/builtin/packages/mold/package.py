@@ -14,6 +14,7 @@ class Mold(CMakePackage):
 
     maintainers("jabcross")
 
+    version("2.1.0", sha256="a32bec1282671b18ea4691855aed925ea2f348dfef89cb7689cd81273ea0c5df")
     version("2.0.0", sha256="2ae8a22db09cbff626df74c945079fa29c1e5f60bbe02502dcf69191cf43527b")
     version("1.11.0", sha256="99318eced81b09a77e4c657011076cc8ec3d4b6867bd324b8677974545bc4d6f")
     version("1.7.1", sha256="fa2558664db79a1e20f09162578632fa856b3cde966fbcb23084c352b827dfa9")

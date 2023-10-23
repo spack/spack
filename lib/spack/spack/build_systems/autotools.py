@@ -46,6 +46,7 @@ class AutotoolsPackage(spack.package_base.PackageBase):
         depends_on("gnuconfig", type="build", when="target=ppc64le:")
         depends_on("gnuconfig", type="build", when="target=aarch64:")
         depends_on("gnuconfig", type="build", when="target=riscv64:")
+        depends_on("gmake", type="build")
         conflicts("platform=windows")
 
     def flags_to_build_system_args(self, flags):

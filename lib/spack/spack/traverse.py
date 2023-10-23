@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from collections import defaultdict, namedtuple
+from typing import Union
 
+import spack.deptypes as dt
 import spack.spec
 
 # Export only the high-level API.
@@ -26,8 +28,8 @@ class BaseVisitor:
     """A simple visitor that accepts all edges unconditionally and follows all
     edges to dependencies of a given ``deptype``."""
 
-    def __init__(self, deptype="all"):
-        self.deptype = deptype
+    def __init__(self, depflag: dt.DepFlag = dt.ALL):
+        self.depflag = depflag
 
     def accept(self, item):
         """
@@ -43,15 +45,15 @@ class BaseVisitor:
         return True
 
     def neighbors(self, item):
-        return sort_edges(item.edge.spec.edges_to_dependencies(deptype=self.deptype))
+        return sort_edges(item.edge.spec.edges_to_dependencies(depflag=self.depflag))
 
 
 class ReverseVisitor:
     """A visitor that reverses the arrows in the DAG, following dependents."""
 
-    def __init__(self, visitor, deptype="all"):
+    def __init__(self, visitor, depflag: dt.DepFlag = dt.ALL):
         self.visitor = visitor
-        self.deptype = deptype
+        self.depflag = depflag
 
     def accept(self, item):
         return self.visitor.accept(item)
@@ -61,7 +63,7 @@ class ReverseVisitor:
         generic programming"""
         spec = item.edge.spec
         return sort_edges(
-            [edge.flip() for edge in spec.edges_from_dependents(deptype=self.deptype)]
+            [edge.flip() for edge in spec.edges_from_dependents(depflag=self.depflag)]
         )
 
 
@@ -174,7 +176,9 @@ class TopoVisitor:
         return list(reversed(self.reverse_order))
 
 
-def get_visitor_from_args(cover, direction, deptype, key=id, visited=None, visitor=None):
+def get_visitor_from_args(
+    cover, direction, depflag: Union[dt.DepFlag, dt.DepTypes], key=id, visited=None, visitor=None
+):
     """
     Create a visitor object from common keyword arguments.
 
@@ -190,7 +194,7 @@ def get_visitor_from_args(cover, direction, deptype, key=id, visited=None, visit
         direction (str): ``children`` or ``parents``. If ``children``, does a traversal
             of this spec's children.  If ``parents``, traverses upwards in the DAG
             towards the root.
-        deptype (str or tuple): allowed dependency types
+        deptype: allowed dependency types
         key: function that takes a spec and outputs a key for uniqueness test.
         visited (set or None): a set of nodes not to follow (when using cover=nodes/edges)
         visitor: An initial visitor that is used for composition.
@@ -198,13 +202,15 @@ def get_visitor_from_args(cover, direction, deptype, key=id, visited=None, visit
     Returns:
         A visitor
     """
-    visitor = visitor or BaseVisitor(deptype)
+    if not isinstance(depflag, dt.DepFlag):
+        depflag = dt.canonicalize(depflag)
+    visitor = visitor or BaseVisitor(depflag)
     if cover == "nodes":
         visitor = CoverNodesVisitor(visitor, key, visited)
     elif cover == "edges":
         visitor = CoverEdgesVisitor(visitor, key, visited)
     if direction == "parents":
-        visitor = ReverseVisitor(visitor, deptype)
+        visitor = ReverseVisitor(visitor, depflag)
     return visitor
 
 
@@ -212,7 +218,7 @@ def with_artificial_edges(specs):
     """Initialize a list of edges from an imaginary root node to the root specs."""
     return [
         EdgeAndDepth(
-            edge=spack.spec.DependencySpec(parent=None, spec=s, deptypes=(), virtuals=()), depth=0
+            edge=spack.spec.DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0
         )
         for s in specs
     ]
@@ -374,7 +380,12 @@ def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):
 
 # Topologic order
 def traverse_edges_topo(
-    specs, direction="children", deptype="all", key=id, root=True, all_edges=False
+    specs,
+    direction="children",
+    deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
+    key=id,
+    root=True,
+    all_edges=False,
 ):
     """
     Returns a list of edges in topological order, in the sense that all in-edges of a
@@ -386,13 +397,15 @@ def traverse_edges_topo(
         specs (list): List of root specs (considered to be depth 0)
         direction (str): ``children`` (edges are directed from dependent to dependency)
             or ``parents`` (edges are flipped / directed from dependency to dependent)
-        deptype (str or tuple): allowed dependency types
+        deptype: allowed dependency types
         key: function that takes a spec and outputs a key for uniqueness test.
         root (bool): Yield the root nodes themselves
         all_edges (bool): When ``False`` only one in-edge per node is returned, when
             ``True`` all reachable edges are returned.
     """
-    visitor = BaseVisitor(deptype)
+    if not isinstance(deptype, dt.DepFlag):
+        deptype = dt.canonicalize(deptype)
+    visitor: Union[BaseVisitor, ReverseVisitor, TopoVisitor] = BaseVisitor(deptype)
     if direction == "parents":
         visitor = ReverseVisitor(visitor, deptype)
     visitor = TopoVisitor(visitor, key=key, root=root, all_edges=all_edges)
@@ -409,7 +422,7 @@ def traverse_edges(
     order="pre",
     cover="nodes",
     direction="children",
-    deptype="all",
+    deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
     depth=False,
     key=id,
     visited=None,
@@ -435,7 +448,7 @@ def traverse_edges(
         direction (str): ``children`` or ``parents``. If ``children``, does a traversal
             of this spec's children.  If ``parents``, traverses upwards in the DAG
             towards the root.
-        deptype (str or tuple): allowed dependency types
+        deptype: allowed dependency types
         depth (bool): When ``False``, yield just edges. When ``True`` yield
             the tuple (depth, edge), where depth corresponds to the depth
             at which edge.spec was discovered.
@@ -478,7 +491,7 @@ def traverse_nodes(
     order="pre",
     cover="nodes",
     direction="children",
-    deptype="all",
+    deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
     depth=False,
     key=id,
     visited=None,
@@ -502,7 +515,7 @@ def traverse_nodes(
         direction (str): ``children`` or ``parents``. If ``children``, does a traversal
             of this spec's children.  If ``parents``, traverses upwards in the DAG
             towards the root.
-        deptype (str or tuple): allowed dependency types
+        deptype: allowed dependency types
         depth (bool): When ``False``, yield just edges. When ``True`` yield
             the tuple ``(depth, edge)``, where depth corresponds to the depth
             at which ``edge.spec`` was discovered.
@@ -517,7 +530,9 @@ def traverse_nodes(
         yield (item[0], item[1].spec) if depth else item.spec
 
 
-def traverse_tree(specs, cover="nodes", deptype="all", key=id, depth_first=True):
+def traverse_tree(
+    specs, cover="nodes", deptype: Union[dt.DepFlag, dt.DepTypes] = "all", key=id, depth_first=True
+):
     """
     Generator that yields ``(depth, DependencySpec)`` tuples in the depth-first
     pre-order, so that a tree can be printed from it.
@@ -533,7 +548,7 @@ def traverse_tree(specs, cover="nodes", deptype="all", key=id, depth_first=True)
             ``paths`` -- Explore every unique path reachable from the root.
             This descends into visited subtrees and will accept nodes multiple
             times if they're reachable by multiple paths.
-        deptype (str or tuple): allowed dependency types
+        deptype: allowed dependency types
         key: function that takes a spec and outputs a key for uniqueness test.
         depth_first (bool): Explore the tree in depth-first or breadth-first order.
             When setting ``depth_first=True`` and ``cover=nodes``, each spec only

@@ -37,10 +37,7 @@ def setup_parser(subparser):
         action="store_true",
         help="only list remote versions newer than the latest checksummed version",
     )
-    subparser.add_argument(
-        "-c", "--concurrency", default=32, type=int, help="number of concurrent requests"
-    )
-    arguments.add_common_arguments(subparser, ["package"])
+    arguments.add_common_arguments(subparser, ["package", "jobs"])
 
 
 def versions(parser, args):
@@ -68,7 +65,7 @@ def versions(parser, args):
         if args.safe:
             return
 
-    fetched_versions = pkg.fetch_remote_versions(args.concurrency)
+    fetched_versions = pkg.fetch_remote_versions(args.jobs)
 
     if args.new:
         if sys.stdout.isatty():

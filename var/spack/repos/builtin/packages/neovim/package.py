@@ -16,7 +16,7 @@ class Neovim(CMakePackage):
     maintainers("albestro", "trws")
 
     version("master", branch="master")
-    version("stable", tag="stable")
+    version("stable", tag="stable", commit="7d4bba7aa7a4a3444919ea7a3804094c290395ef")
     version("0.9.1", sha256="8db17c2a1f4776dcda00e59489ea0d98ba82f7d1a8ea03281d640e58d8a3a00e")
     version("0.9.0", sha256="39d79107c54d2f3babcad2cd157c399241c04f6e75e98c18e8afaf2bb5e82937")
     version("0.8.3", sha256="adf45ff160e1d89f519b6114732eba03485ae469beb27919b0f7a4f6b44233c1")

@@ -22,10 +22,11 @@ class Justbuild(Package):
     maintainers("asartori86")
 
     version("master", branch="master")
-    version("1.1.4", tag="v1.1.4")
-    version("1.1.3", tag="v1.1.3")
-    version("1.1.2", tag="v1.1.2")
-    version("1.0.0", tag="v1.0.0")
+    version("1.2.1", tag="v1.2.1", commit="959cd90083d0c783389cd09e187c98322c16469f")
+    version("1.1.4", tag="v1.1.4", commit="32e96afd159f2158ca129fd00bf02c273d8e1e48")
+    version("1.1.3", tag="v1.1.3", commit="3aed5d450aec38be18edec822ac2efac6d49a938")
+    version("1.1.2", tag="v1.1.2", commit="67b486e2ce6ab657a98b2212a9b6f68935d07a29")
+    version("1.0.0", tag="v1.0.0", commit="c29b671f798e82ba26b5f54ebc9e24c7dcfb8166")
 
     depends_on("python@3:", type=("build", "run"))
     depends_on("wget", type=("build", "run"))
@@ -34,6 +35,10 @@ class Justbuild(Package):
 
     def setup_build_environment(self, env):
         ar = which("ar")
+        if self.spec.version < Version("1.2.1"):
+            family = ', "COMPILER_FAMILY":"unknown"'
+        else:
+            family = ', "TOOLCHAIN_CONFIG": {"FAMILY": "unknown"}'
         if self.spec.satisfies("%gcc@10:"):
             gcc = which("gcc")
             gpp = which("g++")
@@ -43,7 +48,7 @@ class Justbuild(Package):
                 + '  "CC":"{0}"'.format(gcc.path)
                 + ', "CXX":"{0}"'.format(gpp.path)
                 + ', "AR":"{0}"'.format(ar.path)
-                + ', "COMPILER_FAMILY":"unknown"'
+                + family
                 + ', "ENV":{'
                 + '    "PATH":"{0}"'.format(os.environ["PATH"])
                 + "   }"

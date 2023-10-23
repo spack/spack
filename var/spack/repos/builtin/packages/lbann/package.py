@@ -140,8 +140,18 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("onednn", default=False, description="Support for OneDNN")
     variant("onnx", default=False, description="Support for exporting models into ONNX format")
     variant("nvshmem", default=False, description="Support for NVSHMEM")
-    variant("python", default=True, description="Support for Python extensions (e.g. Data Reader)")
-    variant("pfe", default=True, description="Python Frontend for generating and launching models")
+    variant(
+        "python",
+        default=True,
+        sticky=True,
+        description="Support for Python extensions (e.g. Data Reader)",
+    )
+    variant(
+        "pfe",
+        default=True,
+        sticky=True,
+        description="Python Frontend for generating and launching models",
+    )
     variant("boost", default=False, description="Enable callbacks that use Boost libraries")
     variant("asan", default=False, description="Build with support for address-sanitizer")
     variant("unit_tests", default=False, description="Support for unit testing")
@@ -169,9 +179,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("~python", when="@0.91:0.101")
     conflicts("~pfe", when="@0.91:0.101")
 
-    for comp in spack.compilers.supported_compilers():
-        if comp != "clang":
-            conflicts("+lld", when="%" + comp)
+    requires("%clang", when="+lld")
 
     conflicts("+lld", when="+gold")
     conflicts("+gold", when="platform=darwin", msg="gold does not work on Darwin")
@@ -338,9 +346,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     @property
     def cache_name(self):
         hostname = socket.gethostname()
-        if "SYS_TYPE" in env:
-            # Get a hostname that has no node identifier
-            hostname = hostname.rstrip("1234567890")
+        # Get a hostname that has no node identifier
+        hostname = hostname.rstrip("1234567890")
         return "LBANN_{0}_{1}-{2}-{3}@{4}.cmake".format(
             hostname,
             self.spec.version,

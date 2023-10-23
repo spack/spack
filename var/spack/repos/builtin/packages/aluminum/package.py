@@ -48,7 +48,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
         sha256="78b03e36e5422e8651f400feb4d8a527f87302db025d77aa37e223be6b9bdfc9",
         deprecated=True,
     )
-    version("1.0.0-lbann", tag="v1.0.0-lbann")
+    version("1.0.0-lbann", tag="v1.0.0-lbann", commit="40a062b1f63e84e074489c0f926f36b806c6b8f3")
     version("1.0.0", sha256="028d12e271817214db5c07c77b0528f88862139c3e442e1b12f58717290f414a")
     version(
         "0.7.0",

@@ -45,7 +45,8 @@ Listing available packages
 
 To install software with Spack, you need to know what software is
 available.  You can see a list of available package names at the
-:ref:`package-list` webpage, or using the ``spack list`` command.
+`packages.spack.io <https://packages.spack.io>`_ website, or
+using the ``spack list`` command.
 
 .. _cmd-spack-list:
 
@@ -60,7 +61,7 @@ can install:
    :ellipsis: 10
 
 There are thousands of them, so we've truncated the output above, but you
-can find a :ref:`full list here <package-list>`.
+can find a `full list here <https://packages.spack.io>`_.
 Packages are listed by name in alphabetical order.
 A pattern to match with no wildcards, ``*`` or ``?``,
 will be treated as though it started and ended with

@@ -21,3 +21,9 @@ class PyRuamelYamlClib(PythonPackage):
     # to prevent legacy-install-failure
     depends_on("python@:3.9", when="@0.2.0", type=("build", "link", "run"))
     depends_on("py-setuptools@28.7.0:", type="build")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=incompatible-function-pointer-types")
+        return (flags, None, None)

@@ -25,7 +25,7 @@ class RS4vectors(RPackage):
     version("0.34.0", commit="f590de3ec4d896a63351d0c1925d3856c0bd5292")
     version("0.32.3", commit="ad90e78fd3a4059cfcf2846498fb0748b4394e1a")
     version("0.28.1", commit="994cb7ef830e76f8b43169cc72b553869fafb2ed")
-    version("0.26.1", commit="935769c")
+    version("0.26.1", commit="935769c7e2767230feb47f6f8147e0e2908af4f0")
     version("0.22.1", commit="d25e517b48ca4184a4c2ee1f8223c148a55a8b8a")
     version("0.20.1", commit="1878b2909086941e556c5ea953c6fd86aebe9b02")
     version("0.18.3", commit="d6804f94ad3663828440914920ac933b934aeff1")

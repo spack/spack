@@ -15,4 +15,4 @@ class CppLogger(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-    version("0.0.1", tag="v0.0.1")
+    version("0.0.1", tag="v0.0.1", commit="47994ccd8958129a422950a432742b902bb283ca")

@@ -7,7 +7,6 @@ import collections
 import getpass
 import io
 import os
-import sys
 import tempfile
 from datetime import date
 
@@ -278,6 +277,25 @@ def test_add_config_path(mutable_config):
     compilers = spack.config.get("packages")["all"]["compiler"]
     assert "gcc" in compilers
 
+    # Try quotes to escape brackets
+    path = "config:install_tree:projections:cmake:\
+'{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+    spack.config.add(path)
+    set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
+    assert set_value == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+
+    # NOTE:
+    # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
+    # schemas (such as a dropped "root" component) which is atypical and may lead to passing tests
+    # when the behavior is in reality incorrect.
+    # the config path below is such that no subkey accepts a string as a valid entry in our schema
+
+    # try quotes to escape colons
+    path = "config:build_stage:'C:\\path\\to\\config.yaml'"
+    spack.config.add(path)
+    set_value = spack.config.get("config")["build_stage"]
+    assert "C:\\path\\to\\config.yaml" in set_value
+
 
 @pytest.mark.regression("17543,23259")
 def test_add_config_path_with_enumerated_type(mutable_config):
@@ -484,7 +502,7 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     assert projections == expected_proj
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Padding unsupported on Windows")
+@pytest.mark.not_on_windows("Padding unsupported on Windows")
 @pytest.mark.parametrize(
     "config_settings,expected",
     [
@@ -816,7 +834,7 @@ def test_bad_config_section(mock_low_high_config):
         spack.config.get("foobar")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="chmod not supported on Windows")
+@pytest.mark.not_on_windows("chmod not supported on Windows")
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_bad_command_line_scopes(tmpdir, config):
     cfg = spack.config.Configuration()
@@ -1395,7 +1413,7 @@ def test_config_file_dir_failure(tmpdir, mutable_empty_config):
         spack.config.read_config_file(tmpdir.strpath)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="chmod not supported on Windows")
+@pytest.mark.not_on_windows("chmod not supported on Windows")
 def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
     """Test reading a configuration file without permissions to ensure
     ConfigFileError is raised."""

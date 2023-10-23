@@ -185,7 +185,7 @@ def compiler_list(args):
         os_str = os
         if target:
             os_str += "-%s" % target
-        cname = "%s{%s} %s" % (spack.spec.compiler_color, name, os_str)
+        cname = "%s{%s} %s" % (spack.spec.COMPILER_COLOR, name, os_str)
         tty.hline(colorize(cname), char="-")
         colify(reversed(sorted(c.spec.display_str for c in compilers)))
 

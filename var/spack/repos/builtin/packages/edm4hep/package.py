@@ -125,6 +125,7 @@ class Edm4hep(CMakePackage):
         return args
 
     def setup_run_environment(self, env):
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["edm4hep"].libs.directories[0])
         env.prepend_path("PYTHONPATH", self.prefix.python)
 
     def url_for_version(self, version):

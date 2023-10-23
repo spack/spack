@@ -228,7 +228,7 @@ class BuildcacheBootstrapper(Bootstrapper):
                 if not abstract_spec.intersects(candidate_spec):
                     continue
 
-                if python_spec is not None and python_spec not in abstract_spec:
+                if python_spec is not None and not abstract_spec.intersects(f"^{python_spec}"):
                     continue
 
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
@@ -446,16 +446,11 @@ def ensure_executables_in_path_or_raise(
                     current_bootstrapper.last_search["spec"],
                     current_bootstrapper.last_search["command"],
                 )
-                env_mods = spack.util.environment.EnvironmentModifications()
-                for dep in concrete_spec.traverse(
-                    root=True, order="post", deptype=("link", "run")
-                ):
-                    env_mods.extend(
-                        spack.user_environment.environment_modifications_for_spec(
-                            dep, set_package_py_globals=False
-                        )
+                cmd.add_default_envmod(
+                    spack.user_environment.environment_modifications_for_specs(
+                        concrete_spec, set_package_py_globals=False
                     )
-                cmd.add_default_envmod(env_mods)
+                )
                 return cmd
 
     assert exception_handler, (
@@ -476,16 +471,16 @@ def ensure_executables_in_path_or_raise(
 def _add_externals_if_missing() -> None:
     search_list = [
         # clingo
-        spack.repo.PATH.get_pkg_class("cmake"),
-        spack.repo.PATH.get_pkg_class("bison"),
+        "cmake",
+        "bison",
         # GnuPG
-        spack.repo.PATH.get_pkg_class("gawk"),
+        "gawk",
         # develop deps
-        spack.repo.PATH.get_pkg_class("git"),
+        "git",
     ]
     if IS_WINDOWS:
-        search_list.append(spack.repo.PATH.get_pkg_class("winbison"))
-    externals = spack.detection.by_executable(search_list)
+        search_list.append("winbison")
+    externals = spack.detection.by_path(search_list)
     # System git is typically deprecated, so mark as non-buildable to force it as external
     non_buildable_externals = {k: externals.pop(k) for k in ("git",) if k in externals}
     spack.detection.update_configuration(externals, scope="bootstrap", buildable=True)

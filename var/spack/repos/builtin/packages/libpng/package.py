@@ -37,6 +37,14 @@ class Libpng(CMakePackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+    variant("pic", default=False, description="PIC")
+
+    @property
+    def libs(self):
+        # v1.2 does not have a version-less symlink
+        libraries = f"libpng{self.version.up_to(2).joined}"
+        shared = "libs=shared" in self.spec
+        return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
 
 
 class CMakeBuilder(CMakeBuilder):
@@ -46,6 +54,7 @@ class CMakeBuilder(CMakeBuilder):
             self.define("ZLIB_ROOT", self.spec["zlib-api"].prefix),
             self.define("PNG_SHARED", "shared" in self.spec.variants["libs"].value),
             self.define("PNG_STATIC", "static" in self.spec.variants["libs"].value),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
         if self.spec.satisfies("platform=darwin target=aarch64:"):
             args.append("-DPNG_ARM_NEON=off")

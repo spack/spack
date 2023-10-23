@@ -18,7 +18,6 @@ try:
     _use_uuid = True
 except ImportError:
     _use_uuid = False
-    pass
 
 import jsonschema
 

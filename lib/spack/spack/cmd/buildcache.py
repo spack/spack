@@ -13,6 +13,7 @@ from typing import List
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
+from llnl.string import plural
 from llnl.util.lang import elide_list
 
 import spack.binary_distribution as bindist
@@ -20,6 +21,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
+import spack.error
 import spack.mirror
 import spack.relocate
 import spack.repo
@@ -31,7 +33,6 @@ import spack.util.web as web_util
 from spack.cmd import display_specs
 from spack.spec import Spec, save_dependency_specfiles
 from spack.stage import Stage
-from spack.util.string import plural
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -77,6 +78,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "The default is to build a cache for the package along with all its dependencies. "
         "Alternatively, one can decide to build a cache for only the package or only the "
         "dependencies",
+    )
+    push.add_argument(
+        "--fail-fast",
+        action="store_true",
+        help="stop pushing on first failure (default is best effort)",
     )
     arguments.add_common_arguments(push, ["specs"])
     push.set_defaults(func=push_fn)
@@ -262,7 +268,7 @@ def _matching_specs(specs: List[Spec]) -> List[Spec]:
     return [spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=any) for s in specs]
 
 
-def push_fn(args):
+def push_fn(args: argparse.Namespace):
     """create a binary package and push it to a mirror"""
     if args.spec_file:
         tty.warn(
@@ -296,6 +302,7 @@ def push_fn(args):
         tty.info(f"Selected {len(specs)} specs to push to {url}")
 
     skipped = []
+    failed = []
 
     # tty printing
     color = clr.get_color_when()
@@ -326,11 +333,17 @@ def push_fn(args):
         except bindist.NoOverwriteException:
             skipped.append(format_spec(spec))
 
+        # Catch any other exception unless the fail fast option is set
+        except Exception as e:
+            if args.fail_fast or isinstance(e, (bindist.PickKeyException, bindist.NoKeyException)):
+                raise
+            failed.append((format_spec(spec), e))
+
     if skipped:
         if len(specs) == 1:
             tty.info("The spec is already in the buildcache. Use --force to overwrite it.")
         elif len(skipped) == len(specs):
-            tty.info("All specs are already in the buildcache. Use --force to overwite them.")
+            tty.info("All specs are already in the buildcache. Use --force to overwrite them.")
         else:
             tty.info(
                 "The following {} specs were skipped as they already exist in the buildcache:\n"
@@ -339,6 +352,17 @@ def push_fn(args):
                     len(skipped), ", ".join(elide_list(skipped, 5))
                 )
             )
+
+    if failed:
+        if len(failed) == 1:
+            raise failed[0][1]
+
+        raise spack.error.SpackError(
+            f"The following {len(failed)} errors occurred while pushing specs to the buildcache",
+            "\n".join(
+                elide_list([f"    {spec}: {e.__class__.__name__}: {e}" for spec, e in failed], 5)
+            ),
+        )
 
 
 def install_fn(args):
@@ -390,7 +414,7 @@ def preview_fn(args):
     )
 
 
-def check_fn(args):
+def check_fn(args: argparse.Namespace):
     """check specs against remote binary mirror(s) to see if any need to be rebuilt
 
     this command uses the process exit code to indicate its result, specifically, if the
@@ -405,7 +429,7 @@ def check_fn(args):
     specs = spack.cmd.parse_specs(args.spec or args.spec_file)
 
     if specs:
-        specs = _matching_specs(specs, specs)
+        specs = _matching_specs(specs)
     else:
         specs = spack.cmd.require_active_env("buildcache check").all_specs()
 
@@ -503,7 +527,7 @@ def copy_buildcache_file(src_url, dest_url, local_path=None):
             temp_stage.create()
             temp_stage.fetch()
             web_util.push_to_url(local_path, dest_url, keep_original=True)
-        except web_util.FetchError as e:
+        except spack.error.FetchError as e:
             # Expected, since we have to try all the possible extensions
             tty.debug("no such file: {0}".format(src_url))
             tty.debug(e)

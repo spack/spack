@@ -10,21 +10,16 @@ import json
 import os
 import os.path
 import pickle
-import platform
 import re
-import socket
 import sys
 from functools import wraps
 from typing import Any, Callable, Dict, List, MutableMapping, Optional, Tuple, Union
 
+from llnl.path import path_to_os_path, system_path_filter
 from llnl.util import tty
 from llnl.util.lang import dedupe
 
-import spack.platforms
-import spack.spec
-
 from .executable import Executable, which
-from .path import path_to_os_path, system_path_filter
 
 if sys.platform == "win32":
     SYSTEM_PATHS = [
@@ -47,7 +42,7 @@ _SHELL_SET_STRINGS = {
     "csh": "setenv {0} {1};\n",
     "fish": "set -gx {0} {1};\n",
     "bat": 'set "{0}={1}"\n',
-    "pwsh": "$Env:{0}={1}\n",
+    "pwsh": "$Env:{0}='{1}'\n",
 }
 
 
@@ -56,7 +51,7 @@ _SHELL_UNSET_STRINGS = {
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
     "bat": 'set "{0}="\n',
-    "pwsh": "Remove-Item Env:{0}\n",
+    "pwsh": "Set-Item -Path Env:{0}\n",
 }
 
 
@@ -222,43 +217,6 @@ def pickle_environment(path: Path, environment: Optional[Dict[str, str]] = None)
     """Pickle an environment dictionary to a file."""
     with open(path, "wb") as pickle_file:
         pickle.dump(dict(environment if environment else os.environ), pickle_file, protocol=2)
-
-
-def get_host_environment_metadata() -> Dict[str, str]:
-    """Get the host environment, reduce to a subset that we can store in
-    the install directory, and add the spack version.
-    """
-    import spack.main
-
-    environ = get_host_environment()
-    return {
-        "host_os": environ["os"],
-        "platform": environ["platform"],
-        "host_target": environ["target"],
-        "hostname": environ["hostname"],
-        "spack_version": spack.main.get_version(),
-        "kernel_version": platform.version(),
-    }
-
-
-def get_host_environment() -> Dict[str, Any]:
-    """Return a dictionary (lookup) with host information (not including the
-    os.environ).
-    """
-    host_platform = spack.platforms.host()
-    host_target = host_platform.target("default_target")
-    host_os = host_platform.operating_system("default_os")
-    arch_fmt = "platform={0} os={1} target={2}"
-    arch_spec = spack.spec.Spec(arch_fmt.format(host_platform, host_os, host_target))
-    return {
-        "target": str(host_target),
-        "os": str(host_os),
-        "platform": str(host_platform),
-        "arch": arch_spec,
-        "architecture": arch_spec,
-        "arch_str": str(arch_spec),
-        "hostname": socket.gethostname(),
-    }
 
 
 @contextlib.contextmanager
@@ -429,7 +387,7 @@ class RemovePath(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemovePath: {self.name}-{str(self.value)}", level=3)
         environment_value = env.get(self.name, "")
-        directories = environment_value.split(self.separator) if environment_value else []
+        directories = environment_value.split(self.separator)
         directories = [
             path_to_os_path(os.path.normpath(x)).pop()
             for x in directories
@@ -724,11 +682,10 @@ class EnvironmentModifications:
                     cmds += _SHELL_UNSET_STRINGS[shell].format(name)
                 else:
                     if sys.platform != "win32":
-                        cmd = _SHELL_SET_STRINGS[shell].format(
-                            name, double_quote_escape(new_env[name])
-                        )
+                        new_env_name = double_quote_escape(new_env[name])
                     else:
-                        cmd = _SHELL_SET_STRINGS[shell].format(name, new_env[name])
+                        new_env_name = new_env[name]
+                    cmd = _SHELL_SET_STRINGS[shell].format(name, new_env_name)
                     cmds += cmd
         return cmds
 

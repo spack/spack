@@ -9,7 +9,6 @@ import hashlib
 import io
 import itertools
 import json
-import multiprocessing.pool
 import os
 import re
 import shutil
@@ -24,7 +23,7 @@ import urllib.request
 import warnings
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import List, NamedTuple, Optional, Union
+from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 from urllib.error import HTTPError, URLError
 
 import llnl.util.filesystem as fsys
@@ -35,6 +34,7 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
+import spack.error
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -49,6 +49,7 @@ import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
@@ -215,11 +216,11 @@ class BinaryCacheIndex:
                 with self._index_file_cache.read_transaction(cache_key):
                     db._read_from_file(cache_path)
             except spack_db.InvalidDatabaseVersionError as e:
-                msg = (
+                tty.warn(
                     f"you need a newer Spack version to read the buildcache index for the "
                     f"following mirror: '{mirror_url}'. {e.database_version_message}"
                 )
-                raise BuildcacheIndexError(msg) from e
+                return
 
             spec_list = db.query_local(installed=False, in_buildcache=True)
 
@@ -624,8 +625,7 @@ def buildinfo_file_name(prefix):
     """
     Filename of the binary package meta-data file
     """
-    name = os.path.join(prefix, ".spack/binary_distribution")
-    return name
+    return os.path.join(prefix, ".spack/binary_distribution")
 
 
 def read_buildinfo_file(prefix):
@@ -646,8 +646,7 @@ class BuildManifestVisitor(BaseDirectoryVisitor):
     directories."""
 
     def __init__(self):
-        # Save unique identifiers of files to avoid
-        # relocating hardlink files for each path.
+        # Save unique identifiers of hardlinks to avoid relocating them multiple times
         self.visited = set()
 
         # Lists of files we will check
@@ -656,6 +655,8 @@ class BuildManifestVisitor(BaseDirectoryVisitor):
 
     def seen_before(self, root, rel_path):
         stat_result = os.lstat(os.path.join(root, rel_path))
+        if stat_result.st_nlink == 1:
+            return False
         identifier = (stat_result.st_dev, stat_result.st_ino)
         if identifier in self.visited:
             return True
@@ -796,11 +797,7 @@ def tarball_directory_name(spec):
     Return name of the tarball directory according to the convention
     <os>-<architecture>/<compiler>/<package>-<version>/
     """
-    return os.path.join(
-        str(spec.architecture),
-        f"{spec.compiler.name}-{spec.compiler.version}",
-        f"{spec.name}-{spec.version}",
-    )
+    return spec.format_path("{architecture}/{compiler.name}-{compiler.version}/{name}-{version}")
 
 
 def tarball_name(spec, ext):
@@ -808,10 +805,10 @@ def tarball_name(spec, ext):
     Return the name of the tarfile according to the convention
     <os>-<architecture>-<package>-<dag_hash><ext>
     """
-    return (
-        f"{spec.architecture}-{spec.compiler.name}-{spec.compiler.version}-"
-        f"{spec.name}-{spec.version}-{spec.dag_hash()}{ext}"
+    spec_formatted = spec.format_path(
+        "{architecture}-{compiler.name}-{compiler.version}-{name}-{version}-{hash}"
     )
+    return f"{spec_formatted}{ext}"
 
 
 def tarball_path_name(spec, ext):
@@ -876,32 +873,18 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         db: A spack database used for adding specs and then writing the index.
         temp_dir (str): Location to write index.json and hash for pushing
         concurrency (int): Number of parallel processes to use when fetching
-
-    Return:
-        None
     """
+    for file in file_list:
+        contents = read_method(file)
+        # Need full spec.json name or this gets confused with index.json.
+        if file.endswith(".json.sig"):
+            specfile_json = Spec.extract_json_from_clearsig(contents)
+            fetched_spec = Spec.from_dict(specfile_json)
+        elif file.endswith(".json"):
+            fetched_spec = Spec.from_json(contents)
+        else:
+            continue
 
-    def _fetch_spec_from_mirror(spec_url):
-        spec_file_contents = read_method(spec_url)
-
-        if spec_file_contents:
-            # Need full spec.json name or this gets confused with index.json.
-            if spec_url.endswith(".json.sig"):
-                specfile_json = Spec.extract_json_from_clearsig(spec_file_contents)
-                return Spec.from_dict(specfile_json)
-            if spec_url.endswith(".json"):
-                return Spec.from_json(spec_file_contents)
-
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
-    try:
-        fetched_specs = tp.map(
-            llnl.util.lang.star(_fetch_spec_from_mirror), [(f,) for f in file_list]
-        )
-    finally:
-        tp.terminate()
-        tp.join()
-
-    for fetched_spec in fetched_specs:
         db.add(fetched_spec, None)
         db.mark(fetched_spec, "in_buildcache", True)
 
@@ -926,7 +909,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         index_json_path,
         url_util.join(cache_prefix, "index.json"),
         keep_original=False,
-        extra_args={"ContentType": "application/json"},
+        extra_args={"ContentType": "application/json", "CacheControl": "no-cache"},
     )
 
     # Push the hash
@@ -934,7 +917,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         index_hash_path,
         url_util.join(cache_prefix, "index.json.hash"),
         keep_original=False,
-        extra_args={"ContentType": "text/plain"},
+        extra_args={"ContentType": "text/plain", "CacheControl": "no-cache"},
     )
 
 
@@ -1170,57 +1153,99 @@ def gzip_compressed_tarfile(path):
         yield tar
 
 
-def deterministic_tarinfo(tarinfo: tarfile.TarInfo):
-    # We only add files, symlinks, hardlinks, and directories
-    # No character devices, block devices and FIFOs should ever enter a tarball.
-    if tarinfo.isdev():
-        return None
-
-    # For distribution, it makes no sense to user/group data; since (a) they don't exist
-    # on other machines, and (b) they lead to surprises as `tar x` run as root will change
-    # ownership if it can. We want to extract as the current user. By setting owner to root,
-    # root will extract as root, and non-privileged user will extract as themselves.
-    tarinfo.uid = 0
-    tarinfo.gid = 0
-    tarinfo.uname = ""
-    tarinfo.gname = ""
-
-    # Reset mtime to epoch time, our prefixes are not truly immutable, so files may get
-    # touched; as long as the content does not change, this ensures we get stable tarballs.
-    tarinfo.mtime = 0
-
-    # Normalize mode
-    if tarinfo.isfile() or tarinfo.islnk():
-        # If user can execute, use 0o755; else 0o644
-        # This is to avoid potentially unsafe world writable & exeutable files that may get
-        # extracted when Python or tar is run with privileges
-        tarinfo.mode = 0o644 if tarinfo.mode & 0o100 == 0 else 0o755
-    else:  # symbolic link and directories
-        tarinfo.mode = 0o755
-
-    return tarinfo
+def _tarinfo_name(p: str):
+    return p.lstrip("/")
 
 
-def tar_add_metadata(tar: tarfile.TarFile, path: str, data: dict):
-    # Serialize buildinfo for the tarball
-    bstring = syaml.dump(data, default_flow_style=True).encode("utf-8")
-    tarinfo = tarfile.TarInfo(name=path)
-    tarinfo.size = len(bstring)
-    tar.addfile(deterministic_tarinfo(tarinfo), io.BytesIO(bstring))
+def tarfile_of_spec_prefix(tar: tarfile.TarFile, prefix: str) -> None:
+    """Create a tarfile of an install prefix of a spec. Skips existing buildinfo file.
+    Only adds regular files, symlinks and dirs. Skips devices, fifos. Preserves hardlinks.
+    Normalizes permissions like git. Tar entries are added in depth-first pre-order, with
+    dir entries partitioned by file | dir, and sorted alphabetically, for reproducibility.
+    Partitioning ensures only one dir is in memory at a time, and sorting improves compression.
+
+    Args:
+        tar: tarfile object to add files to
+        prefix: absolute install prefix of spec"""
+    if not os.path.isabs(prefix) or not os.path.isdir(prefix):
+        raise ValueError(f"prefix '{prefix}' must be an absolute path to a directory")
+    hardlink_to_tarinfo_name: Dict[Tuple[int, int], str] = dict()
+    stat_key = lambda stat: (stat.st_dev, stat.st_ino)
+
+    try:  # skip buildinfo file if it exists
+        files_to_skip = [stat_key(os.lstat(buildinfo_file_name(prefix)))]
+    except OSError:
+        files_to_skip = []
+
+    dir_stack = [prefix]
+    while dir_stack:
+        dir = dir_stack.pop()
+
+        # Add the dir before its contents
+        dir_info = tarfile.TarInfo(_tarinfo_name(dir))
+        dir_info.type = tarfile.DIRTYPE
+        dir_info.mode = 0o755
+        tar.addfile(dir_info)
+
+        # Sort by name: reproducible & improves compression
+        with os.scandir(dir) as it:
+            entries = sorted(it, key=lambda entry: entry.name)
+
+        new_dirs = []
+        for entry in entries:
+            if entry.is_dir(follow_symlinks=False):
+                new_dirs.append(entry.path)
+                continue
+
+            file_info = tarfile.TarInfo(_tarinfo_name(entry.path))
+
+            s = entry.stat(follow_symlinks=False)
+
+            # Skip existing binary distribution files.
+            id = stat_key(s)
+            if id in files_to_skip:
+                continue
+
+            # Normalize the mode
+            file_info.mode = 0o644 if s.st_mode & 0o100 == 0 else 0o755
+
+            if entry.is_symlink():
+                file_info.type = tarfile.SYMTYPE
+                file_info.linkname = os.readlink(entry.path)
+                tar.addfile(file_info)
+
+            elif entry.is_file(follow_symlinks=False):
+                # Deduplicate hardlinks
+                if s.st_nlink > 1:
+                    if id in hardlink_to_tarinfo_name:
+                        file_info.type = tarfile.LNKTYPE
+                        file_info.linkname = hardlink_to_tarinfo_name[id]
+                        tar.addfile(file_info)
+                        continue
+                    hardlink_to_tarinfo_name[id] = file_info.name
+
+                # If file not yet seen, copy it.
+                file_info.type = tarfile.REGTYPE
+                file_info.size = s.st_size
+
+                with open(entry.path, "rb") as f:
+                    tar.addfile(file_info, f)
+
+        dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
 
 
-def deterministic_tarinfo_without_buildinfo(tarinfo: tarfile.TarInfo):
-    """Skip buildinfo file when creating a tarball, and normalize other tarinfo fields."""
-    if tarinfo.name.endswith("/.spack/binary_distribution"):
-        return None
-
-    return deterministic_tarinfo(tarinfo)
-
-
-def _do_create_tarball(tarfile_path: str, binaries_dir: str, pkg_dir: str, buildinfo: dict):
+def _do_create_tarball(tarfile_path: str, binaries_dir: str, buildinfo: dict):
     with gzip_compressed_tarfile(tarfile_path) as tar:
-        tar.add(name=binaries_dir, arcname=pkg_dir, filter=deterministic_tarinfo_without_buildinfo)
-        tar_add_metadata(tar, buildinfo_file_name(pkg_dir), buildinfo)
+        # Tarball the install prefix
+        tarfile_of_spec_prefix(tar, binaries_dir)
+
+        # Serialize buildinfo for the tarball
+        bstring = syaml.dump(buildinfo, default_flow_style=True).encode("utf-8")
+        tarinfo = tarfile.TarInfo(name=_tarinfo_name(buildinfo_file_name(binaries_dir)))
+        tarinfo.type = tarfile.REGTYPE
+        tarinfo.size = len(bstring)
+        tarinfo.mode = 0o644
+        tar.addfile(tarinfo, io.BytesIO(bstring))
 
 
 class PushOptions(NamedTuple):
@@ -1292,14 +1317,12 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     ):
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
-    pkg_dir = os.path.basename(spec.prefix.rstrip(os.path.sep))
-
     binaries_dir = spec.prefix
 
     # create info for later relocation and create tar
     buildinfo = get_buildinfo_dict(spec)
 
-    _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
+    _do_create_tarball(tarfile_path, binaries_dir, buildinfo)
 
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
@@ -1431,7 +1454,7 @@ def try_fetch(url_to_fetch):
 
     try:
         stage.fetch()
-    except web_util.FetchError:
+    except spack.error.FetchError:
         stage.destroy()
         return None
 
@@ -1594,9 +1617,10 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         for rel_path in buildinfo[key]:
             stat_result = os.lstat(os.path.join(root, rel_path))
             identifier = (stat_result.st_dev, stat_result.st_ino)
-            if identifier in visited:
-                continue
-            visited.add(identifier)
+            if stat_result.st_nlink > 1:
+                if identifier in visited:
+                    continue
+                visited.add(identifier)
             new_list.append(rel_path)
         buildinfo[key] = new_list
 
@@ -1813,10 +1837,11 @@ def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
                 m.linkname = m.linkname[result.end() :]
 
 
-def extract_tarball(spec, download_result, unsigned=False, force=False):
+def extract_tarball(spec, download_result, unsigned=False, force=False, timer=timer.NULL_TIMER):
     """
     extract binary tarball for given package into install area
     """
+    timer.start("extract")
     if os.path.exists(spec.prefix):
         if force:
             shutil.rmtree(spec.prefix)
@@ -1896,7 +1921,9 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
 
     os.remove(tarfile_path)
     os.remove(specfile_path)
+    timer.stop("extract")
 
+    timer.start("relocate")
     try:
         relocate_package(spec)
     except Exception as e:
@@ -1917,6 +1944,7 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
         if os.path.exists(filename):
             os.remove(filename)
         _delete_staged_downloads(download_result)
+    timer.stop("relocate")
 
 
 def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
@@ -2154,7 +2182,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
                 if not os.path.exists(stage.save_filename):
                     try:
                         stage.fetch()
-                    except web_util.FetchError:
+                    except spack.error.FetchError:
                         continue
 
             tty.debug("Found key {0}".format(fingerprint))
@@ -2306,7 +2334,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
             try:
                 stage.fetch()
                 break
-            except web_util.FetchError as e:
+            except spack.error.FetchError as e:
                 tty.debug(e)
         else:
             if fail_if_missing:
@@ -2383,22 +2411,12 @@ class BinaryCacheQuery:
 
         self.possible_specs = specs
 
-    def __call__(self, spec, **kwargs):
+    def __call__(self, spec: Spec, **kwargs):
         """
         Args:
-            spec (str): The spec being searched for in its string representation or hash.
+            spec: The spec being searched for
         """
-        matches = []
-        if spec.startswith("/"):
-            # Matching a DAG hash
-            query_hash = spec.replace("/", "")
-            for candidate_spec in self.possible_specs:
-                if candidate_spec.dag_hash().startswith(query_hash):
-                    matches.append(candidate_spec)
-        else:
-            # Matching a spec constraint
-            matches = [s for s in self.possible_specs if s.satisfies(spec)]
-        return matches
+        return [s for s in self.possible_specs if s.satisfies(spec)]
 
 
 class FetchIndexError(Exception):

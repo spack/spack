@@ -2,18 +2,20 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import concurrent.futures
 import errno
 import getpass
 import glob
 import hashlib
+import io
 import os
 import shutil
 import stat
 import sys
 import tempfile
-from typing import Dict, Iterable
+from typing import Callable, Dict, Iterable, Optional, Set
 
+import llnl.string
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -26,6 +28,8 @@ from llnl.util.filesystem import (
     partition_path,
     remove_linked_tree,
 )
+from llnl.util.tty.colify import colify
+from llnl.util.tty.color import colorize
 
 import spack.caches
 import spack.config
@@ -34,12 +38,14 @@ import spack.fetch_strategy as fs
 import spack.mirror
 import spack.paths
 import spack.spec
+import spack.stage
 import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 from spack.util.crypto import bit_length, prefix_bits
-from spack.util.web import FetchError
+from spack.util.editor import editor, executable
+from spack.version import StandardVersion, VersionList
 
 # The well-known stage source subdirectory name.
 _source_path_subdir = "spack-src"
@@ -52,7 +58,7 @@ def compute_stage_name(spec):
     """Determine stage name given a spec"""
     default_stage_structure = stage_prefix + "{name}-{version}-{hash}"
     stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
-    return spec.format(format_string=stage_name_structure)
+    return spec.format_path(format_string=stage_name_structure)
 
 
 def create_stage_root(path: str) -> None:
@@ -241,10 +247,7 @@ class Stage:
     similar, and are intended to persist for only one run of spack.
     """
 
-    """Shared dict of all stage locks."""
-    stage_locks: Dict[str, spack.util.lock.Lock] = {}
-
-    """Most staging is managed by Spack.  DIYStage is one exception."""
+    #: Most staging is managed by Spack. DIYStage is one exception.
     managed_by_spack = True
 
     def __init__(
@@ -330,17 +333,12 @@ class Stage:
         # details on this approach.
         self._lock = None
         if lock:
-            if self.name not in Stage.stage_locks:
-                sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
-                lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
-                stage_lock_path = os.path.join(get_stage_root(), ".lock")
-
-                tty.debug("Creating stage lock {0}".format(self.name))
-                Stage.stage_locks[self.name] = spack.util.lock.Lock(
-                    stage_lock_path, start=lock_id, length=1, desc=self.name
-                )
-
-            self._lock = Stage.stage_locks[self.name]
+            sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
+            lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
+            stage_lock_path = os.path.join(get_stage_root(), ".lock")
+            self._lock = spack.util.lock.Lock(
+                stage_lock_path, start=lock_id, length=1, desc=self.name
+            )
 
         # When stages are reused, we need to know whether to re-create
         # it.  This marks whether it has been created/destroyed.
@@ -522,7 +520,7 @@ class Stage:
 
             self.fetcher = self.default_fetcher
             default_msg = "All fetchers failed for {0}".format(self.name)
-            raise FetchError(err_msg or default_msg, None)
+            raise spack.error.FetchError(err_msg or default_msg, None)
 
         print_errors(errors)
 
@@ -868,102 +866,294 @@ def purge():
                     os.remove(stage_path)
 
 
-def get_checksums_for_versions(url_dict, name, **kwargs):
-    """Fetches and checksums archives from URLs.
-
-    This function is called by both ``spack checksum`` and ``spack
-    create``.  The ``first_stage_function`` argument allows the caller to
-    inspect the first downloaded archive, e.g., to determine the build
-    system.
+def interactive_version_filter(
+    url_dict: Dict[StandardVersion, str],
+    known_versions: Iterable[StandardVersion] = (),
+    *,
+    url_changes: Set[StandardVersion] = set(),
+    input: Callable[..., str] = input,
+) -> Optional[Dict[StandardVersion, str]]:
+    """Interactively filter the list of spidered versions.
 
     Args:
-        url_dict (dict): A dictionary of the form: version -> URL
-        name (str): The name of the package
-        first_stage_function (typing.Callable): function that takes a Stage and a URL;
-            this is run on the stage of the first URL downloaded
-        keep_stage (bool): whether to keep staging area when command completes
-        batch (bool): whether to ask user how many versions to fetch (false)
-            or fetch all versions (true)
-        fetch_options (dict): Options used for the fetcher (such as timeout
-            or cookies)
+        url_dict: Dictionary of versions to URLs
+        known_versions: Versions that can be skipped because they are already known
 
     Returns:
-        (dict): A dictionary of the form: version -> checksum
-
+        Filtered dictionary of versions to URLs or None if the user wants to quit
     """
-    batch = kwargs.get("batch", False)
-    fetch_options = kwargs.get("fetch_options", None)
-    first_stage_function = kwargs.get("first_stage_function", None)
-    keep_stage = kwargs.get("keep_stage", False)
-
-    sorted_versions = sorted(url_dict.keys(), reverse=True)
-
     # Find length of longest string in the list for padding
-    max_len = max(len(str(v)) for v in sorted_versions)
-    num_ver = len(sorted_versions)
-
-    tty.msg(
-        "Found {0} version{1} of {2}:".format(num_ver, "" if num_ver == 1 else "s", name),
-        "",
-        *llnl.util.lang.elide_list(
-            ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v]) for v in sorted_versions]
-        ),
-    )
-    print()
-
-    if batch:
-        archives_to_fetch = len(sorted_versions)
-    else:
-        archives_to_fetch = tty.get_number(
-            "How many would you like to checksum?", default=1, abort="q"
-        )
-
-    if not archives_to_fetch:
-        tty.die("Aborted.")
-
-    versions = sorted_versions[:archives_to_fetch]
-    urls = [url_dict[v] for v in versions]
-
-    tty.debug("Downloading...")
-    version_hashes = {}
-    i = 0
-    errors = []
-    for url, version in zip(urls, versions):
-        try:
-            if fetch_options:
-                url_or_fs = fs.URLFetchStrategy(url, fetch_options=fetch_options)
-            else:
-                url_or_fs = url
-            with Stage(url_or_fs, keep=keep_stage) as stage:
-                # Fetch the archive
-                stage.fetch()
-                if i == 0 and first_stage_function:
-                    # Only run first_stage_function the first time,
-                    # no need to run it every time
-                    first_stage_function(stage, url)
-
-                # Checksum the archive and add it to the list
-                version_hashes[version] = spack.util.crypto.checksum(
-                    hashlib.sha256, stage.archive_file
+    sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
+    version_filter = VersionList([":"])
+    max_len = max(len(str(v)) for v in sorted_and_filtered)
+    orig_url_dict = url_dict  # only copy when using editor to modify
+    print_header = True
+    VERSION_COLOR = spack.spec.VERSION_COLOR
+    while True:
+        if print_header:
+            has_filter = version_filter != VersionList([":"])
+            header = []
+            if not sorted_and_filtered:
+                header.append("No versions selected")
+            elif len(sorted_and_filtered) == len(orig_url_dict):
+                header.append(
+                    f"Selected {llnl.string.plural(len(sorted_and_filtered), 'version')}"
                 )
-                i += 1
-        except FailedDownloadError:
-            errors.append("Failed to fetch {0}".format(url))
-        except Exception as e:
-            tty.msg("Something failed on {0}, skipping.  ({1})".format(url, e))
+            else:
+                header.append(
+                    f"Selected {len(sorted_and_filtered)} of {len(orig_url_dict)} versions"
+                )
+            if sorted_and_filtered and known_versions:
+                num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
+                header.append(f"{llnl.string.plural(num_new, 'new version')}")
+            if has_filter:
+                header.append(colorize(f"Filtered by {VERSION_COLOR}{version_filter}@."))
 
-    for msg in errors:
-        tty.debug(msg)
+            version_with_url = [
+                colorize(
+                    f"{VERSION_COLOR}{str(v):{max_len}}@.  {url_dict[v]}"
+                    f"{'  @K{# NOTE: change of URL}' if v in url_changes else ''}"
+                )
+                for v in sorted_and_filtered
+            ]
+            tty.msg(". ".join(header), *llnl.util.lang.elide_list(version_with_url))
+            print()
+
+        print_header = True
+
+        tty.info(colorize("Enter @*{number} of versions to take, or use a @*{command}:"))
+        commands = (
+            "@*b{[c]}hecksum",
+            "@*b{[e]}dit",
+            "@*b{[f]}ilter",
+            "@*b{[a]}sk each",
+            "@*b{[n]}ew only",
+            "@*b{[r]}estart",
+            "@*b{[q]}uit",
+        )
+        colify(list(map(colorize, commands)), indent=4)
+
+        try:
+            command = input(colorize("@*g{action>} ")).strip().lower()
+        except EOFError:
+            print()
+            command = "q"
+
+        if command == "c":
+            break
+        elif command == "e":
+            # Create a temporary file in the stage dir with lines of the form
+            # <version> <url>
+            # which the user can modify. Once the editor is closed, the file is
+            # read back in and the versions to url dict is updated.
+
+            # Create a temporary file by hashing its contents.
+            buffer = io.StringIO()
+            buffer.write("# Edit this file to change the versions and urls to fetch\n")
+            for v in sorted_and_filtered:
+                buffer.write(f"{str(v):{max_len}}  {url_dict[v]}\n")
+            data = buffer.getvalue().encode("utf-8")
+
+            short_hash = hashlib.sha1(data).hexdigest()[:7]
+            filename = f"{spack.stage.stage_prefix}versions-{short_hash}.txt"
+            filepath = os.path.join(spack.stage.get_stage_root(), filename)
+
+            # Write contents
+            with open(filepath, "wb") as f:
+                f.write(data)
+
+            # Open editor
+            editor(filepath, exec_fn=executable)
+
+            # Read back in
+            with open(filepath, "r") as f:
+                orig_url_dict, url_dict = url_dict, {}
+                for line in f:
+                    line = line.strip()
+                    # Skip empty lines and comments
+                    if not line or line.startswith("#"):
+                        continue
+                    try:
+                        version, url = line.split(None, 1)
+                    except ValueError:
+                        tty.warn(f"Couldn't parse: {line}")
+                        continue
+                    try:
+                        url_dict[StandardVersion.from_string(version)] = url
+                    except ValueError:
+                        tty.warn(f"Invalid version: {version}")
+                        continue
+                sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
+
+            os.unlink(filepath)
+        elif command == "f":
+            tty.msg(
+                colorize(
+                    f"Examples filters: {VERSION_COLOR}1.2@. "
+                    f"or {VERSION_COLOR}1.1:1.3@. "
+                    f"or {VERSION_COLOR}=1.2, 1.2.2:@."
+                )
+            )
+            try:
+                # Allow a leading @ version specifier
+                filter_spec = input(colorize("@*g{filter>} ")).strip().lstrip("@")
+            except EOFError:
+                print()
+                continue
+            try:
+                version_filter.intersect(VersionList([filter_spec]))
+            except ValueError:
+                tty.warn(f"Invalid version specifier: {filter_spec}")
+                continue
+            # Apply filter
+            sorted_and_filtered = [v for v in sorted_and_filtered if v.satisfies(version_filter)]
+        elif command == "a":
+            i = 0
+            while i < len(sorted_and_filtered):
+                v = sorted_and_filtered[i]
+                try:
+                    answer = input(f"  {str(v):{max_len}}  {url_dict[v]} [Y/n]? ").strip().lower()
+                except EOFError:
+                    # If ^D, don't fully exit, but go back to the command prompt, now with possibly
+                    # fewer versions
+                    print()
+                    break
+                if answer in ("n", "no"):
+                    del sorted_and_filtered[i]
+                elif answer in ("y", "yes", ""):
+                    i += 1
+            else:
+                # Went over each version, so go to checksumming
+                break
+        elif command == "n":
+            sorted_and_filtered = [v for v in sorted_and_filtered if v not in known_versions]
+        elif command == "r":
+            url_dict = orig_url_dict
+            sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
+            version_filter = VersionList([":"])
+        elif command == "q":
+            try:
+                if input("Really quit [y/N]? ").strip().lower() in ("y", "yes"):
+                    return None
+            except EOFError:
+                print()
+                return None
+        else:
+            # Last restort: filter the top N versions
+            try:
+                n = int(command)
+                invalid_command = n < 1
+            except ValueError:
+                invalid_command = True
+
+            if invalid_command:
+                tty.warn(f"Ignoring invalid command: {command}")
+                print_header = False
+                continue
+
+            sorted_and_filtered = sorted_and_filtered[:n]
+
+    return {v: url_dict[v] for v in sorted_and_filtered}
+
+
+def get_checksums_for_versions(
+    url_by_version: Dict[str, str],
+    package_name: str,
+    *,
+    first_stage_function: Optional[Callable[[Stage, str], None]] = None,
+    keep_stage: bool = False,
+    concurrency: Optional[int] = None,
+    fetch_options: Optional[Dict[str, str]] = None,
+) -> Dict[str, str]:
+    """Computes the checksums for each version passed in input, and returns the results.
+
+    Archives are fetched according to the usl dictionary passed as input.
+
+    The ``first_stage_function`` argument allows the caller to inspect the first downloaded
+    archive, e.g., to determine the build system.
+
+    Args:
+        url_by_version: URL keyed by version
+        package_name: name of the package
+        first_stage_function: function that takes a Stage and a URL; this is run on the stage
+            of the first URL downloaded
+        keep_stage: whether to keep staging area when command completes
+        batch: whether to ask user how many versions to fetch (false) or fetch all versions (true)
+        fetch_options: options used for the fetcher (such as timeout or cookies)
+        concurrency: maximum number of workers to use for retrieving archives
+
+    Returns:
+        A dictionary mapping each version to the corresponding checksum
+    """
+    versions = sorted(url_by_version.keys(), reverse=True)
+    search_arguments = [(url_by_version[v], v) for v in versions]
+
+    version_hashes, errors = {}, []
+
+    # Don't spawn 16 processes when we need to fetch 2 urls
+    if concurrency is not None:
+        concurrency = min(concurrency, len(search_arguments))
+    else:
+        concurrency = min(os.cpu_count() or 1, len(search_arguments))
+
+    # The function might have side effects in memory, that would not be reflected in the
+    # parent process, if run in a child process. If this pattern happens frequently, we
+    # can move this function call *after* having distributed the work to executors.
+    if first_stage_function is not None:
+        (url, version), search_arguments = search_arguments[0], search_arguments[1:]
+        checksum, error = _fetch_and_checksum(url, fetch_options, keep_stage, first_stage_function)
+        if error is not None:
+            errors.append(error)
+
+        if checksum is not None:
+            version_hashes[version] = checksum
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=concurrency) as executor:
+        results = []
+        for url, version in search_arguments:
+            future = executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage)
+            results.append((version, future))
+
+        for version, future in results:
+            checksum, error = future.result()
+            if error is not None:
+                errors.append(error)
+                continue
+            version_hashes[version] = checksum
+
+        for msg in errors:
+            tty.debug(msg)
 
     if not version_hashes:
-        tty.die("Could not fetch any versions for {0}".format(name))
+        tty.die(f"Could not fetch any versions for {package_name}")
 
     num_hash = len(version_hashes)
-    tty.debug(
-        "Checksummed {0} version{1} of {2}:".format(num_hash, "" if num_hash == 1 else "s", name)
-    )
+    tty.debug(f"Checksummed {num_hash} version{'' if num_hash == 1 else 's'} of {package_name}:")
 
     return version_hashes
+
+
+def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
+    try:
+        url_or_fs = url
+        if options:
+            url_or_fs = fs.URLFetchStrategy(url, fetch_options=options)
+
+        with Stage(url_or_fs, keep=keep_stage) as stage:
+            # Fetch the archive
+            stage.fetch()
+            if action_fn is not None:
+                # Only run first_stage_function the first time,
+                # no need to run it every time
+                action_fn(stage, url)
+
+            # Checksum the archive and add it to the list
+            checksum = spack.util.crypto.checksum(hashlib.sha256, stage.archive_file)
+        return checksum, None
+    except FailedDownloadError:
+        return None, f"[WORKER] Failed to fetch {url}"
+    except Exception as e:
+        return None, f"[WORKER] Something failed on {url}, skipping.  ({e})"
 
 
 class StageError(spack.error.SpackError):
