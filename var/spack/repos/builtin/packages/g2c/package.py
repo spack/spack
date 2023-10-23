@@ -56,7 +56,7 @@ class G2c(CMakePackage):
     depends_on("libpng", when="+png")
     depends_on("jasper", when="+jasper")
     depends_on("openjpeg", when="+openjpeg")
-    depends_on("libxml2@2.9:")
+    depends_on("libxml2@2.9:", when="@develop")
 
     conflicts("+jasper +openjpeg", msg="Either Jasper or OpenJPEG should be used, not both")
 
