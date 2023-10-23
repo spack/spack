@@ -46,8 +46,8 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
     patch("exit-prior-to-running-configure.patch", when="@1.1.1")
     patch("fix_encoding.patch", when="@1.1:")
     patch(
-        "https://gitlab.xiph.org/xiph/theora/-/commit/7288b539c52e99168488dc3a343845c9365617c8.patch",
-        sha256="8b1f256fa6bfb4ce1355c5be1104e8cfe695c8484d8ea19db06c006880a02298",
+        "https://gitlab.xiph.org/xiph/theora/-/commit/7288b539c52e99168488dc3a343845c9365617c8.diff",
+        sha256="e01ef71a1c19783a0b323b90a625e5c360ddb7ee03d2b6c201f1519f1704ea11",
         when="^libpng@1.6:",
     )
     patch("libtheora-inc-external-ogg.patch", when="platform=windows")
