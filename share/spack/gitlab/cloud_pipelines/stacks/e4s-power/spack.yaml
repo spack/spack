@@ -28,8 +28,6 @@ spack:
         blas: [openblas]
         mpi: [mpich]
       variants: +mpi cuda_arch=70
-    adios2:
-      require: "@2.8:"
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
     elfutils:
