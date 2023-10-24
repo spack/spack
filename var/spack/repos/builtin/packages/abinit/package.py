@@ -27,6 +27,7 @@ class Abinit(AutotoolsPackage):
     homepage = "https://www.abinit.org/"
     url = "https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz"
 
+    maintainers("downloadico")
     version("9.10.3", sha256="3f2a9aebbf1fee9855a09dd687f88d2317b8b8e04f97b2628ab96fb898dce49b")
     version("9.8.4", sha256="a086d5045f0093b432e6a044d5f71f7edf5a41a62d67b3677cb0751d330c564a")
     version("9.8.3", sha256="de823878aea2c20098f177524fbb4b60de9b1b5971b2e835ec244dfa3724589b")
@@ -166,10 +167,8 @@ class Abinit(AutotoolsPackage):
                 options.extend(
                     [
                         "WANNIER90_CPPFLAGS=-I{0}".format(spec["wannier90"].prefix.modules),
-                        "WANNIER90_LIBS=-L{0}".format(
-                            spec["wannier90"].prefix.lib
-                        ),
-                        "WANNIER90_LDFLAGS=-lwannier"
+                        "WANNIER90_LIBS=-L{0}".format(spec["wannier90"].prefix.lib),
+                        "WANNIER90_LDFLAGS=-lwannier",
                     ]
                 )
         else:
@@ -188,7 +187,7 @@ class Abinit(AutotoolsPackage):
             if "@9.8:" in spec:
                 oapp("F90={0}".format(spec["mpi"].mpifc))
             else:
-                oapp("FC={0}".format(spec["mpi"].mpifc))                
+                oapp("FC={0}".format(spec["mpi"].mpifc))
 
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
