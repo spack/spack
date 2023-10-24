@@ -344,7 +344,7 @@ def create_in_dir(
 
     except spack.config.ConfigFormatError as e:
         shutil.rmtree(manifest_dir)
-        tty.die(e)
+        raise e
 
     return Environment(manifest_dir)
 

@@ -986,8 +986,8 @@ spack:
         )
 
     with tmpdir.as_cwd():
-        with pytest.raises(spack.main.SpackCommandError) as e:
-            _ = env("create", "test", "./spack.yaml")
+        with pytest.raises(spack.config.ConfigFormatError) as e:
+            env("create", "test", "./spack.yaml")
             assert "'spacks' was unexpected" in str(e)
 
     assert "test" not in env("list")
