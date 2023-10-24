@@ -42,8 +42,9 @@ class Sperr(CMakePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("USE_OMP", "openmp"),
             self.define_from_variant("BUILD_CLI_UTILITIES", "utilities"),
+            self.define_from_variant("USE_ZSTD", "zstd"),
+            "-DUSE_BUNDLED_ZSTD=OFF", # not in use since version 0.7.x
             "-DSPERR_PREFER_RPATH=OFF",
-            "-DUSE_BUNDLED_ZSTD=OFF", # not used since version 0.7.x
             "-DBUILD_UNIT_TESTS=OFF",
         ]
         return args
