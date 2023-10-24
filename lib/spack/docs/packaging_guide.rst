@@ -2844,7 +2844,7 @@ make sense during the build phase may not be needed at runtime, and vice versa. 
 it makes sense to let a dependency set the environment variables for its dependents. To allow all
 this, Spack provides four different methods that can be overridden in a package:
 
-1. :meth:`setup_build_environment <spack.package_base.PackageBase.setup_build_environment>`
+1. :meth:`setup_build_environment <spack.builder.Builder.setup_build_environment>`
 2. :meth:`setup_run_environment <spack.package_base.PackageBase.setup_run_environment>`
 3. :meth:`setup_dependent_build_environment <spack.builder.Builder.setup_dependent_build_environment>`
 4. :meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
