@@ -582,6 +582,8 @@ class Cuda(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
+        env.set("CUDA_HOME", self.prefix)
+        env.set("NVHPC_CUDA_HOME", self.prefix)
 
     @property
     def cmake_prefix_paths(self):
