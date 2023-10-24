@@ -2884,12 +2884,18 @@ example of this can be found in the ``Python`` package:
    :pyobject: Python.setup_dependent_package
    :linenos:
 
-This allows most python packages to have a very simple install procedure, like the following:
+This allows Python packages to directly use these variables:
 
 .. code-block:: python
 
    def install(self, spec, prefix):
-       setup_py("install", "--prefix={0}".format(prefix))
+       ...
+       install("script.py", python_platlib)
+
+.. note::
+
+   We recommend to use ``setup_dependent_package`` sparingly, as it is not always clear where
+   global variables are coming from when editing a ``package.py`` file.
 
 -----
 Views
