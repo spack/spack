@@ -114,12 +114,13 @@ class LuaImplPackage(MakefilePackage):
         if not dependent_spec.package.extends(self.spec):
             return
 
-        for dir in {self.lua_lib_dir, self.lua_lib64_dir, self.lua_share_dir}:
+        for dir in (self.lua_lib_dir, self.lua_lib64_dir, self.lua_share_dir):
             abs_dir = os.path.join(dependent_spec.prefix, dir)
             if not os.path.isdir(abs_dir):
                 continue
-            env.prepend_path("LUA_PATH", abs_dir, separator=";")
-            env.prepend_path("LUA_CPATH", abs_dir, separator=";")
+            env.prepend_path("LUA_PATH", os.path.join(abs_dir, "?.lua"), separator=";")
+            env.prepend_path("LUA_PATH", os.path.join(abs_dir, "?", "init.lua"), separator=";")
+            env.prepend_path("LUA_CPATH", os.path.join(abs_dir, "?.so"), separator=";")
 
     def setup_run_environment(self, env):
         env.prepend_path(
