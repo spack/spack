@@ -20,6 +20,7 @@ class G2(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
     version("develop", branch="develop")
+    version("3.4.8", sha256="071a6f799c4c4fdfd5d0478152a0cbb9d668d12d71c78d5bda71845fc5580a7f")
     version("3.4.7", sha256="d6530611e3a515122f11ed4aeede7641f6f8932ef9ee0d4828786572767304dc")
     version("3.4.6", sha256="c4b03946365ce0bacf1e10e8412a5debd72d8671d1696aa4fb3f3adb119175fe")
     version("3.4.5", sha256="c18e991c56964953d778632e2d74da13c4e78da35e8d04cb742a2ca4f52737b6")
@@ -36,7 +37,8 @@ class G2(CMakePackage):
     )
     variant("w3emc", default=True, description="Enable GRIB1 through w3emc", when="@3.4.6:")
 
-    depends_on("jasper@:2.0.32")
+    depends_on("jasper@:2.0.32", when="@:3.4.7")
+    depends_on("jasper")
     depends_on("libpng")
     depends_on("bacio", when="@3.4.6:")
     with when("+w3emc"):
@@ -62,3 +64,7 @@ class G2(CMakePackage):
             lib = find_libraries("libg2_" + suffix, root=self.prefix, shared=False, recursive=True)
             env.set("G2_LIB" + suffix, lib[0])
             env.set("G2_INC" + suffix, join_path(self.prefix, "include_" + suffix))
+
+    def check(self):
+        with working_dir(self.builder.build_directory):
+            make("test")

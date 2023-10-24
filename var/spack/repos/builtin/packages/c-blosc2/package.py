@@ -17,9 +17,10 @@ class CBlosc2(CMakePackage):
     maintainers("ax3l", "robert-mijakovic")
 
     version("develop", branch="master")
-    # 2.10.1+ adds Blosc2 CMake CONFIG files
+    version("2.10.5", sha256="a88f94bf839c1371aab8207a6a43698ceb92c72f65d0d7fe5b6e59f24c138b4d")
     # 2.10.2+ fixes regressions with external dependencies
     version("2.10.2", sha256="069785bc14c006c7dab40ea0c620bdf3eb8752663fd55c706d145bceabc2a31d")
+    # 2.10.1+ adds Blosc2 CMake CONFIG files
     version("2.10.1", sha256="1dd65be2d76eee205c06e8812cc1360448620eee5e368b25ade4ea310654cd01")
     version("2.10.0", sha256="cb7f7c0c62af78982140ecff21a2f3ca9ce6a0a1c02e314fcdce1a98da0fe231")
     version("2.9.3", sha256="1f36b7d79d973505582b9a804803b640dcc0425af3d5e676070847ac4eb38176")
@@ -38,7 +39,7 @@ class CBlosc2(CMakePackage):
     variant("zlib", default=True, description="support for ZLIB")
     variant("zstd", default=True, description="support for ZSTD")
 
-    depends_on("cmake@2.8.10:", type="build")
+    depends_on("cmake@3.16.3:", type="build")
     depends_on("lizard", when="+lizard")
     depends_on("lz4", when="+lz4")
     depends_on("snappy", when="+snappy")

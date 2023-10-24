@@ -168,7 +168,7 @@ def test_env_remove(capfd):
 
     foo = ev.read("foo")
     with foo:
-        with pytest.raises(spack.main.SpackCommandError):
+        with pytest.raises(SpackCommandError):
             with capfd.disabled():
                 env("remove", "-y", "foo")
         assert "foo" in env("list")
@@ -283,7 +283,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
-    assert "Warning: couldn't get environment settings" in err
+    assert "Warning: couldn't load runtime environment" in err
 
 
 def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, monkeypatch):
@@ -500,11 +500,14 @@ def test_env_activate_broken_view(
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
     with spack.repo.use_repositories(mock_custom_repository):
-        with pytest.raises(SpackCommandError):
-            env("activate", "--sh", "test")
+        wrong_repo = env("activate", "--sh", "test")
+        assert "Warning: couldn't load runtime environment" in wrong_repo
+        assert "Unknown namespace: builtin.mock" in wrong_repo
 
     # test replacing repo fixes it
-    env("activate", "--sh", "test")
+    normal_repo = env("activate", "--sh", "test")
+    assert "Warning: couldn't load runtime environment" not in normal_repo
+    assert "Unknown namespace: builtin.mock" not in normal_repo
 
 
 def test_to_lockfile_dict():
@@ -663,7 +666,7 @@ packages:
         e.write()
 
         env_mod = spack.util.environment.EnvironmentModifications()
-        e.add_default_view_to_env(env_mod)
+        e.add_view_to_env(env_mod, "default")
         env_variables = {}
         env_mod.apply_modifications(env_variables)
         assert str(fake_bin) in env_variables["PATH"]
@@ -1044,7 +1047,7 @@ def test_env_commands_die_with_no_env_arg():
         env("remove")
 
     # these have an optional env arg and raise errors via tty.die
-    with pytest.raises(spack.main.SpackCommandError):
+    with pytest.raises(SpackCommandError):
         env("loads")
 
     # This should NOT raise an error with no environment
@@ -2356,7 +2359,7 @@ def test_env_activate_sh_prints_shell_output(tmpdir, mock_stage, mock_fetch, ins
     This is a cursory check; ``share/spack/qa/setup-env-test.sh`` checks
     for correctness.
     """
-    env("create", "test", add_view=True)
+    env("create", "test")
 
     out = env("activate", "--sh", "test")
     assert "export SPACK_ENV=" in out
@@ -2371,7 +2374,7 @@ def test_env_activate_sh_prints_shell_output(tmpdir, mock_stage, mock_fetch, ins
 
 def test_env_activate_csh_prints_shell_output(tmpdir, mock_stage, mock_fetch, install_mockery):
     """Check the shell commands output by ``spack env activate --csh``."""
-    env("create", "test", add_view=True)
+    env("create", "test")
 
     out = env("activate", "--csh", "test")
     assert "setenv SPACK_ENV" in out
@@ -2388,7 +2391,7 @@ def test_env_activate_csh_prints_shell_output(tmpdir, mock_stage, mock_fetch, in
 def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     """Check that the root of the default view in the environment is added
     to the shell unconditionally."""
-    env("create", "test", add_view=True)
+    env("create", "test")
 
     with ev.read("test") as e:
         viewdir = e.default_view.root
@@ -2401,6 +2404,27 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
         or "export PATH='{0}".format(viewdir_bin) in out
         or 'export PATH="{0}'.format(viewdir_bin) in out
     )
+
+
+def test_env_activate_custom_view(tmp_path: pathlib.Path, mock_packages):
+    """Check that an environment can be activated with a non-default view."""
+    env_template = tmp_path / "spack.yaml"
+    default_dir = tmp_path / "defaultdir"
+    nondefaultdir = tmp_path / "nondefaultdir"
+    with open(env_template, "w") as f:
+        f.write(
+            f"""\
+spack:
+  specs: [a]
+  view:
+    default:
+      root: {default_dir}
+    nondefault:
+      root: {nondefaultdir}"""
+        )
+    env("create", "test", str(env_template))
+    shell = env("activate", "--sh", "--with-view", "nondefault", "test")
+    assert os.path.join(nondefaultdir, "bin") in shell
 
 
 def test_concretize_user_specs_together():

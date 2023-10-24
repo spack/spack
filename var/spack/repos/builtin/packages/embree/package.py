@@ -13,6 +13,7 @@ class Embree(CMakePackage):
     url = "https://github.com/embree/embree/archive/v3.7.0.tar.gz"
     maintainers("aumuell")
 
+    version("4.3.0", sha256="baf0a57a45837fc055ba828a139467bce0bc0c6a9a5f2dccb05163d012c12308")
     version("4.2.0", sha256="b0479ce688045d17aa63ce6223c84b1cdb5edbf00d7eda71c06b7e64e21f53a0")
     version("4.1.0", sha256="117efd87d6dddbf7b164edd94b0bc057da69d6422a25366283cded57ed94738b")
     version("4.0.1", sha256="1fa3982fa3531f1b6e81f19e6028ae8a62b466597f150b853440fe35ef7c6c06")
@@ -36,6 +37,17 @@ class Embree(CMakePackage):
     depends_on("ispc", when="+ispc", type="build")
 
     depends_on("tbb")
+
+    # official aarch64 support on macOS starting with 3.13.0, on Linux since 4.0.0
+    # upstream patch for Linux/aarch64 applies cleanly to 3.13.5, and 3.13.3 works by chance
+    conflicts("@:3.12", when="target=aarch64:")
+    conflicts("@:3.13.2", when="target=aarch64: platform=linux")
+    conflicts("@3.13.4", when="target=aarch64: platform=linux")
+    patch(
+        "https://github.com/embree/embree/commit/82ca6b5ccb7abe0403a658a0e079926478f04cb1.patch?full_index=1",
+        sha256="3af5a65e8875549b4c930d4b0f2840660beba4a7f295d8c89068250a1df376f2",
+        when="@3.13.5",
+    )
 
     def cmake_args(self):
         spec = self.spec

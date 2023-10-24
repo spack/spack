@@ -17,6 +17,7 @@ class Openimagedenoise(CMakePackage):
 
     # maintainers("github_user1", "github_user2")
 
+    version("2.0.1", sha256="328eeb9809d18e835dca7203224af3748578794784c026940c02eea09c695b90")
     version("1.4.3", sha256="3276e252297ebad67a999298d8f0c30cfb221e166b166ae5c955d88b94ad062a")
     version("1.4.2", sha256="e70d27ce24b41364782376c1b3b4f074f77310ccfe5f8ffec4a13a347e48a0ea")
     version("1.4.1", sha256="9088966685a78adf24b8de075d66e4c0019bd7b2b9d29c6e45aaf35d294e3f6f")

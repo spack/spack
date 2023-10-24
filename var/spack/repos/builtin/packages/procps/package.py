@@ -17,6 +17,7 @@ class Procps(AutotoolsPackage):
     url = "https://gitlab.com/procps-ng/procps/-/archive/v4.0.3/procps-v4.0.3.tar.gz"
 
     version("master", branch="master")
+    version("4.0.4", sha256="3214fab0f817d169f2c117842ba635bafb1cd6090273e311a8b5c6fc393ddb9d")
     version("4.0.3", sha256="14cc21219c45d196772274ea3f194f6d668b6cc667fbde9ee6d8039121b73fa6")
     version("4.0.2", sha256="b03e4b55eaa5661e726acb714e689356d80bc056b09965c2284d039ba8dc21e8")
     version("4.0.1", sha256="1eaff353306aba12816d14881f2b88c7c9d06023825f7224700f0c01f66c65cd")
@@ -35,8 +36,11 @@ class Procps(AutotoolsPackage):
     depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("dejagnu", type="test")
     depends_on("iconv")
-    depends_on("gettext", type="build")
-    depends_on("gettext", when="+nls")
+    depends_on("gettext", type="build")  # required by autogen.sh
+    with when("+nls"):
+        depends_on("gettext")
+        # msgfmt 0.22 gives parsing errors
+        depends_on("gettext@:0.21", when="@:4.0.3")
     depends_on("ncurses")
 
     conflicts("platform=darwin", msg="procps is linux-only")

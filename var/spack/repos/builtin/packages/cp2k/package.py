@@ -103,6 +103,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     )
     variant("pytorch", default=False, description="Enable libtorch support")
     variant("quip", default=False, description="Enable quip support")
+    variant("mpi_f08", default=False, description="Use MPI F08 module")
 
     variant(
         "enable_regtests",
@@ -203,6 +204,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("mpi@2:")
         depends_on("mpi@3:", when="@2023.1:")
         depends_on("scalapack")
+        depends_on("mpich+fortran", when="^mpich")
+
+        conflicts("~mpi_f08", when="^mpich@4.1:")
 
     with when("+cosma"):
         depends_on("cosma+scalapack")
@@ -272,8 +276,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     depends_on("wannier90", when="@3.0+mpi")
 
     with when("build_system=cmake"):
-        depends_on("dbcsr")
-        depends_on("dbcsr@2.6:", when="@2023.2:")
+        depends_on("dbcsr@2.6:")
         depends_on("dbcsr+openmp", when="+openmp")
         depends_on("dbcsr+cuda", when="+cuda")
         depends_on("dbcsr+rocm", when="+rocm")
@@ -347,6 +350,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     # These patches backport 2023.x fixes to previous versions
     patch("backport_avoid_null_2022.x.patch", when="@2022.1:2022.2 %aocc@:4.0")
     patch("backport_avoid_null_9.1.patch", when="@9.1 %aocc@:4.0")
+    patch("cmake-fixes-2023.2.patch", when="@2023.2 build_system=cmake")
 
     # Patch for an undefined constant due to incompatible changes in ELPA
     @when("@9.1:2022.2 +elpa")
@@ -422,9 +426,13 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         ldflags = []
         libs = []
 
-        # CP2K Makefile doesn't set C standard, but the source code uses
-        # C99-style for-loops with inline definition of iterating variable.
-        cflags.append(self.compiler.c99_flag)
+        # CP2K Makefile doesn't set C standard
+        if spec.satisfies("@2023.2:"):
+            # Use of DBL_DECIMAL_DIG
+            cflags.append(self.compiler.c11_flag)
+        else:
+            # C99-style for-loops with inline definition of iterating variable.
+            cflags.append(self.compiler.c99_flag)
 
         if "%intel" in spec:
             cflags.append("-fp-model precise")
@@ -539,6 +547,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             libs.extend(scalapack)
             libs.extend(mpi)
             libs.extend(self.compiler.stdcxx_libs)
+
+            if "+mpi_f08" in spec:
+                cppflags.append("-D__MPI_F08")
 
             if "wannier90" in spec:
                 cppflags.append("-D__WANNIER90")
@@ -947,6 +958,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("CP2K_USE_VORI", "libvori"),
             self.define_from_variant("CP2K_USE_SPLA", "spla"),
             self.define_from_variant("CP2K_USE_QUIP", "quip"),
+            self.define_from_variant("CP2K_USE_MPI_F08", "mpi_f08"),
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though

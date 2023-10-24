@@ -27,6 +27,7 @@ class Cmake(Package):
     executables = ["^cmake[0-9]*$"]
 
     version("master", branch="master")
+    version("3.27.7", sha256="08f71a106036bf051f692760ef9558c0577c42ac39e96ba097e7662bd4158d8e")
     version("3.27.6", sha256="ef3056df528569e0e8956f6cf38806879347ac6de6a4ff7e4105dc4578732cfb")
     version("3.27.4", sha256="0a905ca8635ca81aa152e123bdde7e54cbe764fdd9a70d62af44cad8b92967af")
     version("3.27.3", sha256="66afdc0f181461b70b6fedcde9ecc4226c5cd184e7203617c83b7d8e47f49521")
@@ -239,7 +240,7 @@ class Cmake(Package):
         depends_on("libuv@1.10.0:1.10", when="@3.11.0:3.11")
         depends_on("libuv@1.10.0:", when="@3.12.0:")
         depends_on("rhash", when="@3.8.0:")
-        depends_on("jsoncpp", when="@3.2:")
+        depends_on("jsoncpp build_system=meson", when="@3.2:")
 
     depends_on("ncurses", when="+ncurses")
 
