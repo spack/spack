@@ -56,5 +56,7 @@ class Spglib(CMakePackage):
 
     def cmake_args(self):
         pfx = "SPGLIB_" if self.spec.satisfies("@2.1.0:") else ""
-        return [self.define_from_variant(pfx + "USE_OMP", "openmp"),
-                self.define_from_variant(pfx + "WITH_Fortran", "fortran")]
+        return [
+            self.define_from_variant(pfx + "USE_OMP", "openmp"),
+            self.define_from_variant(pfx + "WITH_Fortran", "fortran"),
+        ]
