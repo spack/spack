@@ -50,7 +50,7 @@ class Mgard(CMakePackage, CudaPackage):
     depends_on("libarchive", when="@2021-11-12:")
     depends_on("tclap", when="@2021-11-12")
     depends_on("yaml-cpp", when="@2021-11-12:")
-    depends_on("cmake@3.19:")
+    depends_on("cmake@3.19:", type="build")
     depends_on("nvcomp@2.2.0:", when="@2022-11-18:+cuda")
     depends_on("nvcomp@2.0.2", when="@:2021-11-12+cuda")
     conflicts("cuda_arch=none", when="+cuda")

@@ -29,7 +29,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("release", branch="release")
-    version("2.1.0-rc1", sha256="337df672ac5c2e0b442571a1380aa98ae70a155c93488c32198d055cb893417a")
+    version("2.1.0-rc2", sha256="94631fff9f668f40c9c797f03cf32a0d22d57111e309b1e8133c2a3f292b4af1")
     version(
         "2.0.0",
         sha256="32643cf3564fa77f8e2a2a5456a574b6b2355bb68918eb62ccde493993ade1a3",
@@ -102,6 +102,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     # VTK-m uses the default Kokkos backend
     depends_on("kokkos", when="+kokkos")
+    depends_on("kokkos@3.7:3.9", when="@2.0 +kokkos")
     # VTK-m native CUDA and Kokkos CUDA backends are not compatible
     depends_on("kokkos ~cuda", when="+kokkos +cuda +cuda_native")
     depends_on("kokkos +cuda", when="+kokkos +cuda ~cuda_native")
