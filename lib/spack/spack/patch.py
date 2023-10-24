@@ -7,6 +7,7 @@ import hashlib
 import inspect
 import os
 import os.path
+import pathlib
 import sys
 
 import llnl.util.filesystem
@@ -36,10 +37,12 @@ def apply_patch(stage, patch_path, level=1, working_dir="."):
     """
     git_utils_path = os.environ.get("PATH", "")
     if sys.platform == "win32":
-        git = which_string("git", required=True)
-        git_root = git.split("\\")[:-2]
-        git_root.extend(["usr", "bin"])
-        git_utils_path = os.sep.join(git_root)
+        git = which_string("git")
+        if git:
+            git = pathlib.Path(git)
+            git_root = git.parent.parent
+            git_root = git_root / "usr" / "bin"
+            git_utils_path = os.pathsep.join([str(git_root), git_utils_path])
 
     # TODO: Decouple Spack's patch support on Windows from Git
     # for Windows, and instead have Spack directly fetch, install, and
