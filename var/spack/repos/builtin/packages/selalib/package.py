@@ -39,7 +39,7 @@ class Selalib(CMakePackage):
     depends_on("fgsl")
     depends_on("git", type=("build", "run", "test"))
     depends_on("hdf5+fortran+cxx")
-    depends_on("lapack", when="-mpi")
+    depends_on("lapack", when="~mpi")
     with when("+mpi"):
         depends_on("mpi")
         depends_on("fftw+mpi")
