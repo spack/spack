@@ -17,7 +17,7 @@ class PyMorphTool(PythonPackage):
     version("2.9.1", sha256="305e9456c8047726588b23dfa070eb95ccbe5573e9fea3e0a83dc93eacdf61dc")
     version("2.9.0", sha256="c60d4010e17ddcc3f53c864c374fffee05713c8f8fd2ba4eed7706041ce1fa47")
 
-    variant("neuron", default=False, description="Enable additional neuron support")
+    variant("nrn", default=False, description="Enable additional neuron support")
     variant("plot", default=False, description="Enable additional plotly support")
     variant("parallel", default=False, description="Enable additional parallel support")
 
@@ -35,5 +35,5 @@ class PyMorphTool(PythonPackage):
 
     depends_on("py-plotly@4.1.0:", type=("build", "run"), when="+plot")
     depends_on("py-dask+bag@2.19.0:", type=("build", "run"), when="+parallel")
-    depends_on("neuron+python@7.8:", type=("build", "run"), when="+neuron")
-    depends_on("py-bluepyopt@1.9.37:", type=("build", "run"), when="+neuron")
+    depends_on("neuron+python@7.8:", type=("build", "run"), when="+nrn")
+    depends_on("py-bluepyopt@1.9.37:", type=("build", "run"), when="+nrn")

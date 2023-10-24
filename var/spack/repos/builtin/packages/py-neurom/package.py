@@ -20,6 +20,7 @@ class PyNeurom(PythonPackage):
 
     depends_on("py-setuptools@42:", type=("build", "run"))
     depends_on("py-setuptools-scm", type="build")
+    depends_on("python@3.8:", type=("build", "run"))
 
     depends_on("py-click@7.0:", type=("build", "run"))
     depends_on("py-matplotlib@3.2.1:", type=("build", "run"))
