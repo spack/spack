@@ -2858,11 +2858,10 @@ The Qt package, for instance, uses this call:
 to set the ``QTDIR`` environment variable so that packages that depend on a particular Qt
 installation will find it.
 
-The following diagram will give you an idea on when each of these methods is called in a build
+The following diagram will give you an idea when each of these methods is called in a build
 context:
 
 .. image:: images/setup_env.png
-   :width: 100%
    :align: center
 
 Notice that ``setup_dependent_run_environment`` can be called multiple times, once for each
