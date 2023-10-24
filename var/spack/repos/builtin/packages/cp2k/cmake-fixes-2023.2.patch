@@ -72,7 +72,7 @@ index 3f81c7b52..f2d85d033 100644
 -      FATAL_ERROR
 -        "Fftw3 threads and openmp supports can not be used at the same time")
 -  endif()
-+  if(CP2K_USE_FFTW3_WITH_MKL OR NOT TARGET CP2K::BLAS::MKL::blas)
++  if(CP2K_USE_FFTW3_WITH_MKL OR NOT CP2K_BLAS_VENDOR MATCHES "MKL")
 +    find_package(Fftw REQUIRED)
 +    if(CP2K_ENABLE_FFTW3_THREADS_SUPPORT AND CP2K_ENABLE_FFTW3_OPENMP_SUPPORT)
 +      message(
