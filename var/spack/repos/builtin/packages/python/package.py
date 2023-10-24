@@ -19,7 +19,6 @@ from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
-from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
 
@@ -1157,34 +1156,6 @@ print(json.dumps(config))
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
-        # Ensure the current Python is first in the PATH
-        path = os.path.dirname(self.command.path)
-        if not is_system_path(path):
-            env.prepend_path("PATH", path)
-
-        # Add installation prefix to PYTHONPATH, needed to run import tests
-        prefixes = set()
-        if dependent_spec.package.extends(self.spec):
-            prefixes.add(dependent_spec.prefix)
-
-        # Add direct build/run/test dependencies to PYTHONPATH,
-        # needed to build the package and to run import tests
-        for direct_dep in dependent_spec.dependencies(deptype=("build", "run", "test")):
-            if direct_dep.package.extends(self.spec):
-                prefixes.add(direct_dep.prefix)
-
-                # Add recursive run dependencies of all direct dependencies,
-                # needed by direct dependencies at run-time
-                for indirect_dep in direct_dep.traverse(deptype="run"):
-                    if indirect_dep.package.extends(self.spec):
-                        prefixes.add(indirect_dep.prefix)
-
-        for prefix in prefixes:
-            # Packages may be installed in platform-specific or platform-independent
-            # site-packages directories
-            for directory in {self.platlib, self.purelib}:
-                env.prepend_path("PYTHONPATH", os.path.join(prefix, directory))
-
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
         # operations are normally taken from the sysconfigdata file, which we
@@ -1230,9 +1201,7 @@ print(json.dumps(config))
                 # invoked directly (no change would be required in that case
                 # because Spack arranges for the Spack ld wrapper to be the
                 # first instance of "ld" in PATH).
-                new_link = config_link.replace(
-                    " {0} ".format(config_compile), " {0} ".format(new_compile)
-                )
+                new_link = config_link.replace(f" {config_compile} ", f" {new_compile} ")
 
             # There is logic in the sysconfig module that is sensitive to the
             # fact that LDSHARED is set in the environment, therefore we export
@@ -1245,11 +1214,13 @@ print(json.dumps(config))
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
-        if dependent_spec.package.extends(self.spec):
-            # Packages may be installed in platform-specific or platform-independent
-            # site-packages directories
-            for directory in {self.platlib, self.purelib}:
-                env.prepend_path("PYTHONPATH", os.path.join(dependent_spec.prefix, directory))
+        if not dependent_spec.package.extends(self.spec):
+            return
+
+        # Packages may be installed in platform-specific or platform-independent site-packages
+        # directories
+        for directory in {self.platlib, self.purelib}:
+            env.prepend_path("PYTHONPATH", os.path.join(dependent_spec.prefix, directory))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods."""
