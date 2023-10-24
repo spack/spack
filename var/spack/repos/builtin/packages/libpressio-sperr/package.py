@@ -17,7 +17,7 @@ class LibpressioSperr(CMakePackage):
 
     depends_on("libpressio@0.88.0:", when="@0.0.3:")
     depends_on("libpressio@:0.88.0", when="@:0.0.2")
-    depends_on("sperr", when="@:0.6.2")
+    depends_on("sperr@:0.6.2")
     depends_on("pkgconfig", type="build")
 
     version("master", branch="master")
