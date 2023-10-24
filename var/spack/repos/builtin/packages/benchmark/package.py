@@ -16,7 +16,16 @@ class Benchmark(CMakePackage):
     # first properly installed CMake config packages in
     # 1.2.0 release: https://github.com/google/benchmark/issues/363
     version("main", branch="main")
+    version("1.8.3", sha256="6bc180a57d23d4d9515519f92b0c83d61b05b5bab188961f36ac7b06b0d9e9ce")
+    version("1.8.2", sha256="2aab2980d0376137f969d92848fbb68216abb07633034534fc8c65cc4e7a0e93")
+    version("1.8.1", sha256="e9ff65cecfed4f60c893a1e8a1ba94221fad3b27075f2f80f47eb424b0f8c9bd")
+    version("1.8.0", sha256="ea2e94c24ddf6594d15c711c06ccd4486434d9cf3eca954e2af8a20c88f9f172")
+    version("1.7.1", sha256="6430e4092653380d9dc4ccb45a1e2dc9259d581f4866dc0759713126056bc1d7")
+    version("1.7.0", sha256="3aff99169fa8bdee356eaa1f691e835a6e57b1efeadb8a0f9f228531158246ac")
+    version("1.6.2", sha256="a9f77e6188c1cd4ebedfa7538bf5176d6acc72ead6f456919e5f464ef2f06158")
+    version("1.6.1", sha256="6132883bc8c9b0df5375b16ab520fac1a85dc9e4cf5be59480448ece74b278d4")
     version("1.6.0", sha256="1f71c72ce08d2c1310011ea6436b31e39ccab8c2db94186d26657d41747c85d6")
+    version("1.5.6", sha256="789f85b4810d13ff803834ea75999e41b326405d83d6a538baf01499eda96102")
     version("1.5.5", sha256="3bff5f237c317ddfd8d5a9b96b3eede7c0802e799db520d38ce756a2a46a18a0")
     version("1.5.4", sha256="e3adf8c98bb38a198822725c0fc6c0ae4711f16fbbf6aeb311d5ad11e5a081b5")
     version("1.5.0", sha256="3c6a165b6ecc948967a1ead710d4a181d7b0fbcaa183ef7ea84604994966221a")
