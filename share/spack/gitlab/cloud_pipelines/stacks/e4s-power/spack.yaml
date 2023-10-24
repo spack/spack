@@ -101,6 +101,7 @@ spack:
   - gmp
   - gotcha
   - gptune
+  - gromacs +cp2k ^cp2k build_system=cmake
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
@@ -250,8 +251,6 @@ spack:
   # - py-torch +cuda cuda_arch=70           # skipped
   # - trilinos +cuda cuda_arch=70           # trilinos: https://github.com/trilinos/Trilinos/issues/11630
   # - upcxx +cuda cuda_arch=70              # upcxx: needs NVIDIA driver
-
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-power" }
 
   ci:
     pipeline-gen:

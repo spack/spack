@@ -3,6 +3,12 @@ stages: [ "generate", "build", "publish" ]
 variables:
   SPACK_DISABLE_LOCAL_CONFIG: "1"
   SPACK_USER_CACHE_PATH: "${CI_PROJECT_DIR}/tmp/_user_cache/"
+  # PR_MIRROR_FETCH_DOMAIN: "https://binaries-prs.spack.io"
+  PR_MIRROR_FETCH_DOMAIN: "s3://spack-binaries-prs"
+  PR_MIRROR_PUSH_DOMAIN: "s3://spack-binaries-prs"
+  # PROTECTED_MIRROR_FETCH_DOMAIN: "https://binaries.spack.io"
+  PROTECTED_MIRROR_FETCH_DOMAIN: "s3://spack-binaries"
+  PROTECTED_MIRROR_PUSH_DOMAIN: "s3://spack-binaries"
 
 default:
   image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
@@ -68,7 +74,9 @@ default:
 ########################################
 .base-job:
   variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    PIPELINE_MIRROR_TEMPLATE: "single-src-protected-mirrors.yaml.in"
+    # TODO: We can remove this when we drop the "deprecated" stack
+    PUSH_BUILDCACHE_DEPRECATED: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
 
   rules:
     - if: $CI_COMMIT_REF_NAME == "develop"
@@ -76,7 +84,7 @@ default:
       when: always
       variables:
         SPACK_PIPELINE_TYPE: "spack_protected_branch"
-        SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+        SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
         SPACK_REQUIRE_SIGNING: "True"
         AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
@@ -86,7 +94,7 @@ default:
       when: always
       variables:
         SPACK_PIPELINE_TYPE: "spack_protected_branch"
-        SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+        SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
         SPACK_PRUNE_UNTOUCHED: "False"
         SPACK_PRUNE_UP_TO_DATE: "False"
         SPACK_REQUIRE_SIGNING: "True"
@@ -98,8 +106,8 @@ default:
       when: always
       variables:
         SPACK_PIPELINE_TYPE: "spack_copy_only"
-        SPACK_SOURCE_MIRROR: "s3://spack-binaries/SPACK_REPLACE_VERSION/${SPACK_CI_STACK_NAME}"
-        SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+        SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
+        PIPELINE_MIRROR_TEMPLATE: "copy-only-protected-mirrors.yaml.in"
         AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
         OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
@@ -108,9 +116,16 @@ default:
       when: always
       variables:
         SPACK_PIPELINE_TYPE: "spack_pull_request"
-        SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+        # TODO: We can remove this when we drop the "deprecated" stack
+        PUSH_BUILDCACHE_DEPRECATED: "${PR_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
         SPACK_PRUNE_UNTOUCHED: "True"
         SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
+        # TODO: Change sync script to include target in branch name.  Then we could
+        # TODO: have multiple types of "PR" pipeline here.  It would be better if we could
+        # TODO: keep just this one and use a regex to capture the target branch, but so
+        # TODO: far gitlab doesn't support that.
+        PR_TARGET_REF_NAME: "develop"
+        PIPELINE_MIRROR_TEMPLATE: "multi-src-mirrors.yaml.in"
         AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
         OIDC_TOKEN_AUDIENCE: "pr_binary_mirror"
@@ -126,13 +141,15 @@ default:
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
     - export SPACK_CI_CONFIG_ROOT="${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
-    - spack
+    - spack python -c "import os,sys; print(os.path.expandvars(sys.stdin.read()))"
+      < "${SPACK_CI_CONFIG_ROOT}/${PIPELINE_MIRROR_TEMPLATE}" > "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
+    - spack config add -f "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
+    - spack -v
       --config-scope "${SPACK_CI_CONFIG_ROOT}"
       --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
       --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
       ${CI_STACK_CONFIG_SCOPES}
       ci generate --check-index-only
-      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   after_script:
@@ -180,9 +197,9 @@ default:
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
-    - spack
+    - spack -v
       ci generate --check-index-only
-      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
+      --buildcache-destination "${PUSH_BUILDCACHE_DEPRECATED}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   after_script:
@@ -219,8 +236,7 @@ protected-publish:
     max: 2
     when: ["runner_system_failure", "stuck_or_timeout_failure"]
   variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
-    SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
     SPACK_PIPELINE_TYPE: "spack_protected_branch"
     AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
@@ -252,11 +268,6 @@ protected-publish:
 # and duplicated dictionary keys are simply overridden.  For this reason,
 # you should inlclude your custom definitions at the end of the of the
 # extends list.
-#
-# Also note that if extending .base-job, the mirror url given in your
-# spack.yaml should take the form:
-#
-#     s3://spack-binaries/develop/${SPACK_CI_STACK_NAME}
 #
 ########################################
 # My Super Cool Pipeline

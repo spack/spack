@@ -921,7 +921,7 @@ def interactive_version_filter(
 
         print_header = True
 
-        print("commands:")
+        tty.info(colorize("Enter @*{number} of versions to take, or use a @*{command}:"))
         commands = (
             "@*b{[c]}hecksum",
             "@*b{[e]}dit",
@@ -931,10 +931,10 @@ def interactive_version_filter(
             "@*b{[r]}estart",
             "@*b{[q]}uit",
         )
-        colify(list(map(colorize, commands)), indent=2)
+        colify(list(map(colorize, commands)), indent=4)
 
         try:
-            command = input(colorize("@*g{command>} ")).strip().lower()
+            command = input(colorize("@*g{action>} ")).strip().lower()
         except EOFError:
             print()
             command = "q"
@@ -1039,9 +1039,20 @@ def interactive_version_filter(
                 print()
                 return None
         else:
-            tty.warn(f"Ignoring invalid command: {command}")
-            print_header = False
-            continue
+            # Last restort: filter the top N versions
+            try:
+                n = int(command)
+                invalid_command = n < 1
+            except ValueError:
+                invalid_command = True
+
+            if invalid_command:
+                tty.warn(f"Ignoring invalid command: {command}")
+                print_header = False
+                continue
+
+            sorted_and_filtered = sorted_and_filtered[:n]
+
     return {v: url_dict[v] for v in sorted_and_filtered}
 
 
