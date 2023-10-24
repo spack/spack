@@ -947,7 +947,9 @@ class SetupContext:
             reversed(specs_with_type), lambda t: t[0].external
         )
         self.should_be_runnable = UseMode.BUILDTIME_DIRECT | UseMode.RUNTIME_EXECUTABLE
-        self.should_setup_run_env = UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE
+        self.should_setup_run_env = (
+            UseMode.BUILDTIME_DIRECT | UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE
+        )
         self.should_setup_dependent_build_env = UseMode.BUILDTIME | UseMode.BUILDTIME_DIRECT
         self.should_setup_build_env = UseMode.ROOT if context == Context.BUILD else UseMode(0)
 
