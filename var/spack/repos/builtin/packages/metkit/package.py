@@ -31,6 +31,7 @@ class Metkit(CMakePackage):
     depends_on("eckit@1.21:", when="@1.10:")
 
     depends_on("eccodes@2.5:", when="+grib")
+    depends_on("eccodes@2.27:", when="@1.10.2: +grib")
 
     depends_on("odc", when="+odb")
 
