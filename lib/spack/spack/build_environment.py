@@ -1016,8 +1016,7 @@ class SetupContext:
                 self._make_runnable(dspec, env)
 
             if self.should_setup_run_env & flag:
-                # TODO: remove setup_dependent_run_environment...
-                for spec in dspec.dependents(deptype=dt.RUN):
+                for spec in dspec.dependents(deptype=dt.LINK | dt.RUN):
                     if id(spec) in self.nodes_in_subdag:
                         pkg.setup_dependent_run_environment(env, spec)
                 pkg.setup_run_environment(env)
