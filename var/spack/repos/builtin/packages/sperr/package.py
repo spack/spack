@@ -30,7 +30,7 @@ class Sperr(CMakePackage):
     variant("shared", description="build shared libaries", default=True)
     variant("openmp", description="use openmp in 3D inputs", default=True)
     variant("utilities", description="build SPERR CLI utilities", default=True)
-    # only need zstd if version is up to 0.6.2
+    # only take zstd variant if version is up to 0.6.2
     variant("zstd", description="use zstd for more compression", default=True, when="@:0.6.2")
 
     def cmake_args(self):
