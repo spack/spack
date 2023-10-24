@@ -136,7 +136,7 @@ class Neovim(CMakePackage):
     # Support for `libvterm@0.2:` has been added in neovim@0.8.0
     # term: Add support for libvterm >= 0.2 (https://github.com/neovim/neovim/releases/tag/v0.8.0)
     # https://github.com/neovim/neovim/issues/16217#issuecomment-958590493
-    conflicts("^libvterm@0.2:", when="@:0.7")
+    conflicts("libvterm@0.2:", when="@:0.7")
 
     # https://github.com/neovim/neovim/issues/25770
     conflicts("libluv@1.44:", when="platform=darwin")
