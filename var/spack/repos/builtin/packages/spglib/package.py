@@ -54,4 +54,5 @@ class Spglib(CMakePackage):
         return find_libraries("libsymspg", root=self.prefix, shared=True, recursive=True)
 
     def cmake_args(self):
-        return [self.define_from_variant("USE_OMP", "openmp")]
+        pfx = "SPGLIB_" if self.spec.satisfies("@2.1.0:") else ""
+        return [self.define_from_variant(pfx + "USE_OMP", "openmp")]
