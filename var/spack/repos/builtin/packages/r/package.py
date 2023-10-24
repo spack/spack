@@ -208,15 +208,6 @@ class R(AutotoolsPackage):
         return join_path("rlib", "R", "library")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        # Set R_LIBS to include the library dir for the
-        # extension and any other R extensions it depends on.
-        r_libs_path = []
-        for d in dependent_spec.traverse(deptype=("build", "run")):
-            if d.package.extends(self.spec):
-                r_libs_path.append(join_path(d.prefix, self.r_lib_dir))
-
-        r_libs_path = ":".join(r_libs_path)
-        env.set("R_LIBS", r_libs_path)
         # R_LIBS_USER gets set to a directory in HOME/R if it is not set, such as
         # during package installation with the --vanilla flag. Set it to null
         # to ensure that it does not point to a directory that may contain R
@@ -232,7 +223,6 @@ class R(AutotoolsPackage):
     def setup_dependent_run_environment(self, env, dependent_spec):
         # For run time environment set only the path for dependent_spec and
         # prepend it to R_LIBS
-        env.set("R_HOME", join_path(self.prefix, "rlib", "R"))
         if dependent_spec.package.extends(self.spec):
             env.prepend_path("R_LIBS", join_path(dependent_spec.prefix, self.r_lib_dir))
 
