@@ -34,6 +34,11 @@ import spack.util.web as web_util
 from spack.cmd import display_specs
 from spack.spec import Spec, save_dependency_specfiles
 from spack.stage import Stage
+<<<<<<< HEAD
+from spack.util.pattern import Args
+from spack.util.string import plural
+=======
+>>>>>>> develop
 
 description = "create, download and install binary packages"
 section = "packaging"
