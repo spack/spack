@@ -342,7 +342,20 @@ class PythonPackageTemplate(PackageTemplate):
         # FIXME: Add configuration settings to be passed to the build backend
         # FIXME: If not needed, delete this function
         settings = {}
-        return settings"""
+        return settings
+
+    def install_options(self, spec, prefix):
+        # FIXME: Add options to pass to setup.py install
+        # FIXME: If not needed, delete this function
+        options = []
+        return options
+
+    def optional_extras(self, spec, prefix):
+        # FIXME: Add extras to pass to pip install:
+        # FIXME:   pip install ... <path/wheel>[extra,...]
+        # FIXME: If not needed, delete this function.
+        extras = []
+        return extras"""
 
     def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
@@ -478,6 +491,17 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
     # depends_on("perl-foo", type=("build", "run"))"""
 
 
+class PerlinstallPackageTemplate(PerlmakePackageTemplate):
+    """Provides appropriate overrides for Perl extensions
+    that use Module::Install with Makefile.PL"""
+
+    dependencies = """\
+    depends_on("perl-module-install", type="build")
+
+    # FIXME: Add additional dependencies if required:
+    # depends_on("perl-foo", type=("build", "run"))"""
+
+
 class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
 
@@ -588,6 +612,7 @@ templates = {
     "racket": RacketPackageTemplate,
     "perlmake": PerlmakePackageTemplate,
     "perlbuild": PerlbuildPackageTemplate,
+    "perlinstall": PerlbuildPackageTemplate,
     "octave": OctavePackageTemplate,
     "ruby": RubyPackageTemplate,
     "makefile": MakefilePackageTemplate,
@@ -636,6 +661,13 @@ def setup_parser(subparser):
     )
     subparser.add_argument(
         "-b", "--batch", action="store_true", help="don't ask which versions to checksum"
+    )
+    subparser.add_argument(
+        "--limit",
+        action="store",
+        type=int,
+        default=0,
+        help="maximum number of versions to checksum (implies --batch)",
     )
 
 
@@ -688,6 +720,7 @@ class BuildSystemGuesser:
             (r"/setup\.(py|cfg)$", "python"),
             (r"/WORKSPACE$", "bazel"),
             (r"/Build\.PL$", "perlbuild"),
+            (r"/inc/Module/Install\.pm$", "perlinstall"),
             (r"/Makefile\.PL$", "perlmake"),
             (r"/.*\.gemspec$", "ruby"),
             (r"/Rakefile$", "ruby"),
