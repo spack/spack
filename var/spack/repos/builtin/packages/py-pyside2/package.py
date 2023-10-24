@@ -71,10 +71,10 @@ class PyPyside2(PythonPackage):
 
     def patch(self):
         filter_file(
-            r"=${shiboken_include_dirs}",
+            "=${shiboken_include_dirs}",
             ":".join(
                 [
-                    r"=${shiboken_include_dirs}",
+                    "=${shiboken_include_dirs}",
                     self.spec["qt"]["glx"]["libglx"].prefix.include,
                     self.spec["qt"]["libxcb"].prefix.include,
                 ]
