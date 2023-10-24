@@ -17,7 +17,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pnnl/ExaGO.git"
     maintainers("ryandanehy", "cameronrutherford", "pelesh")
 
-    version("1.5.1", commit="7abe482c8da0e247f9de4896f5982c4cacbecd78", submodules=True)
+    version("1.5.1", tag="v1.5.1", submodules=True)
     version("1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True)
     version("1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True)
     version("1.4.0", commit="4f4c3fdb40b52ace2d6ba000e7f24b340ec8e886", submodules=True)
@@ -64,7 +64,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     # Dependencies
-    depends_on("python@3.6:", when="@1.3.0:+python")
+    depends_on("python@3.6:3.10", when="@1.3.0:1.5+python")
     depends_on("py-pytest", type=("build", "run"), when="@1.5.0:+python")
     depends_on("py-mpi4py", when="@1.3.0:+mpi+python")
     depends_on("pkgconfig", type="build")
