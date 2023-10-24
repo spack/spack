@@ -95,24 +95,37 @@ def libraries_in_ld_and_system_library_path(
             DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH environment
             variables as well as the standard system library paths.
     """
-    path_hints = (
-        path_hints
-        or spack.util.environment.get_path("LD_LIBRARY_PATH")
+    default_lib_search_paths = (
+        spack.util.environment.get_path("LD_LIBRARY_PATH")
         + spack.util.environment.get_path("DYLD_LIBRARY_PATH")
         + spack.util.environment.get_path("DYLD_FALLBACK_LIBRARY_PATH")
         + spack.util.ld_so_conf.host_dynamic_linker_search_paths()
     )
+    path_hints = path_hints if path_hints is not None else default_lib_search_paths
+
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
     return path_to_dict(search_paths)
 
 
 def libraries_in_windows_paths(path_hints: List[str]) -> Dict[str, str]:
-    search_hints = path_hints or spack.util.environment.get_path("PATH")
+    """Get the paths of all libraries available from the system PATH paths.
+
+    For more details, see `libraries_in_ld_and_system_library_path` regarding
+    return type and contents.
+
+    Args:
+        path_hints: list of paths to be searched. If None the list will be
+            constructed based on the set of PATH environment
+            variables as well as the standard system library paths.
+    """
+    search_hints = (
+        path_hints if path_hints is not None else spack.util.environment.get_path("PATH")
+    )
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*search_hints)
     # on Windows, some libraries (.dlls) are found in the bin directory or sometimes
     # at the search root. Add both of those options to the search scheme
     search_paths.extend(llnl.util.filesystem.search_paths_for_executables(*search_hints))
-    if not path_hints:
+    if path_hints is None:
         # if no user provided path was given, add defaults to the search
         search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
         # SDK and WGL should be handled by above, however on occasion the WDK is in an atypical
@@ -240,6 +253,8 @@ class Finder:
         Args:
             pkg_name: package being detected
             initial_guess: initial list of paths to search from the caller
+                           if None, default paths are searched. If this
+                           is an empty list, nothing will be searched.
         """
         import spack.repo
 
@@ -298,7 +313,7 @@ class LibrariesFinder(Finder):
         libraries_by_path = (
             libraries_in_ld_and_system_library_path(path_hints=paths)
             if sys.platform != "win32"
-            else libraries_in_windows_paths(paths)
+            else libraries_in_windows_paths()
         )
         patterns = [re.compile(x) for x in patterns]
         result = []
@@ -354,7 +369,7 @@ def by_path(
                     if detected:
                         _, unqualified_name = spack.repo.partition_package_name(pkg_name)
                         result[unqualified_name].extend(detected)
-                except Exception:
+                except concurrent.futures.TimeoutError:
                     llnl.util.tty.debug(
                         f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached"
                     )
