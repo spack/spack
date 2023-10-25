@@ -245,6 +245,7 @@ class Qt(Package):
             depends_on("fontconfig")
             depends_on("libsm")
             depends_on("libx11")
+            depends_on("xproto")
             depends_on("libxcb")
             depends_on("libxkbcommon")
             depends_on("xcb-util-image")
