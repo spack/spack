@@ -1527,7 +1527,7 @@ class Environment:
             percentage = (j + 1) / len(args) * 100
             tty.verbose(
                 f"{duration:6.1f}s [{percentage:3.0f}%] {root_specs[i].colored_str}: "
-                f"{concrete.cformat('/{hash:7}')}"
+                f"{concrete.cformat('{/hash:7}')}"
             )
             sys.stdout.flush()
 
