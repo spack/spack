@@ -4,6 +4,13 @@ spack:
     all:
       require: target=ppc64le
       variants: ~cuda~rocm
+    # Errors during py-torchaudio on Ubuntu build saying
+    # ppc64le is not supported for FFmpeg multi-version integration.
+    ffmpeg:
+      externals:
+        - spec: ffmpeg@3.2.3
+          prefix: /usr
+      buildable: false
 
   specs:
     # Horovod

@@ -9,6 +9,13 @@ spack:
       require: ~cuda
     mpi:
       require: openmpi
+    # Errors during py-torchaudio build on Ubuntu saying
+    # ppc64le is not supported for FFmpeg multi-version integration.
+    ffmpeg:
+      externals:
+        - spec: ffmpeg@3.2.3
+          prefix: /usr
+      buildable: false
 
   specs:
     # Horovod
