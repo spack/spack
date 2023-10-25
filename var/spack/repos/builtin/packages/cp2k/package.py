@@ -87,7 +87,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         "dlaf",
         default=False,
         description="Enable DLA-Future eigensolver and Cholesky decomposition",
-        when="@master build_system=cmake",  #  TODO: Pin version when integrated in a release
+        # TODO: Pin version when integrated in a release
+        when="@master build_system=cmake",
     )
     variant(
         "sirius",
