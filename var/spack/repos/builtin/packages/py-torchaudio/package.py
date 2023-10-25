@@ -83,6 +83,9 @@ class PyTorchaudio(PythonPackage):
         # tools/setup_helpers/extension.py
         env.set("BUILD_SOX", 0)
 
+        if "^ffmpeg" in self.spec:
+            env.set("FFMPEG_ROOT", self.spec["ffmpeg"].prefix)
+
         if "+cuda" in self.spec["py-torch"]:
             env.set("USE_CUDA", 1)
             torch_cuda_arch_list = ";".join(
