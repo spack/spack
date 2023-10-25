@@ -85,11 +85,51 @@ _double_compiler_definition = [
 ]
 
 
+# Data used in the test below to audit conflicting compiler definitions
+_conflicting_compiler_definition = [
+    {
+        "compiler": {
+            "spec": "clang@14.0.0",
+            "paths": {
+                "cc": "/usr/bin/clang",
+                "cxx": "/usr/bin/clang++",
+                "f77": "null",
+                "fc": "null",
+            },
+            "flags": {},
+            "operating_system": "ubuntu22.04",
+            "target": "x86_64",
+            "modules": [],
+            "environment": {},
+            "extra_rpaths": [],
+        }
+    },
+    {
+        "compiler": {
+            "spec": "clang@15.0.0",
+            "paths": {
+                "cc": "/usr/bin/clang",
+                "cxx": "/usr/bin/clang++",
+                "f77": "null",
+                "fc": "null",
+            },
+            "flags": {},
+            "operating_system": "ubuntu22.04",
+            "target": "x86_64",
+            "modules": [],
+            "environment": {},
+            "extra_rpaths": [],
+        }
+    },
+]
+
+
 @pytest.mark.parametrize(
     "config_section,data,failing_check",
     [
-        # Double compiler definitions in compilers.yaml
+        # Double or conflicting compiler definitions in compilers.yaml
         ("compilers", _double_compiler_definition, "CFG-COMPILER"),
+        ("compilers", _conflicting_compiler_definition, "CFG-COMPILER"),
         # Multiple definitions of the same external spec in packages.yaml
         (
             "packages",

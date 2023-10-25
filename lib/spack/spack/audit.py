@@ -49,6 +49,7 @@ from urllib.request import urlopen
 
 import llnl.util.lang
 
+import spack.compilers
 import spack.config
 import spack.patch
 import spack.repo
@@ -199,6 +200,40 @@ def _search_duplicate_compilers(error_cls):
         except Exception:
             details = []
         errors.append(error_cls(summary=error_msg.format(spec), details=details))
+
+    return errors
+
+
+def compiler_def_to_string(c):
+    """Return a string composed of the paths, os, and target"""
+    compiler = c.get("compiler", {})
+    paths = compiler.get("paths", {})
+    return "_".join(
+        [
+            paths.get("cc", "None") or "None",
+            paths.get("cxx", "None") or "None",
+            paths.get("f77", "None") or "None",
+            paths.get("fc", "None") or "None",
+            compiler.get("operating_system", "None"),
+            compiler.get("target", "None"),
+        ]
+    )
+
+
+@config_compiler
+def _search_conflicting_compilers(error_cls):
+    """Report when multiple compilers with the same definitions have different specs"""
+    errors = []
+
+    compilers = list(sorted(spack.config.get("compilers"), key=lambda x: x["compiler"]["spec"]))
+    for defn_str, group in itertools.groupby(compilers, key=compiler_def_to_string):
+        group = list(group)
+        if len(group) == 1:
+            continue
+
+        conflicting_specs = [x["compiler"]["spec"] for x in group]
+        error_msg = f"Compiler definitions conflict: {conflicting_specs}"
+        errors.append(error_cls(summary=error_msg, details=[]))
 
     return errors
 
