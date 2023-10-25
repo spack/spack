@@ -103,7 +103,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         "breakpad",
         default=True,
         description="Enable breakpad crash dump library",
-        when="@1.9:1.11",
+        when="@1.10:1.11",
     )
 
     conflicts("+cuda+rocm")
@@ -284,6 +284,14 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         "https://github.com/pytorch/pytorch/pull/55063.patch?full_index=1",
         sha256="2229bcbf20fbe88aa9f7318f89c126ec7f527875ffe689a763c78abfa127a65c",
         when="@1.1:1.8.1",
+    )
+
+    # https://github.com/pytorch/pytorch/issues/70297
+    patch(
+        "https://github.com/google/breakpad/commit/605c51ed96ad44b34c457bbca320e74e194c317e.patch?full_index=1",
+        sha256="694d83db3a2147d543357f22ba5c8d5683d0ed43e693d42bca8f24ec50080f98",
+        when="+breakpad",
+        working_dir="third_party/breakpad",
     )
 
     # Fixes CMake configuration error when XNNPACK is disabled
