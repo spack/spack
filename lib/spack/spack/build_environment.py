@@ -992,7 +992,7 @@ class SetupContext:
         - Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
         tools can find Spack-built dependencies (when context=build)
         - Running custom package environment modifications: setup_run_environment,
-        setup_dependent_run_environment setup_build_environment, setup_dependent_build_environment.
+        setup_dependent_run_environment, setup_build_environment, setup_dependent_build_environment.
 
         The (partial) order imposed on the specs is externals first, then topological
         from leaf to root. That way externals cannot contribute search paths that would shadow
