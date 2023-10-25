@@ -354,6 +354,7 @@ class Openjdk(Package):
 
             version(ver, sha256=pkg[0], url=pkg[1], preferred=is_preferred)
 
+    provides("java@21", when="@21.0:21")
     provides("java@17", when="@17.0:17")
     provides("java@16", when="@16.0:16")
     provides("java@11", when="@11.0:11")
