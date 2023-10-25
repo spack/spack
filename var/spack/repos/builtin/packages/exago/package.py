@@ -32,15 +32,27 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     version(
         "1.4.0", tag="v1.4.0", commit="4f4c3fdb40b52ace2d6ba000e7f24b340ec8e886", submodules=True
     )
-
-    version("1.3.0", commit="58b039d746a6eac8e84b0afc01354cd58caec485", submodules=True)
-    version("1.2.0", commit="255a214ec747b7bdde7a6d8151c083067b4d0907", submodules=True)
-    version("1.1.2", commit="db3bb16e19c09e01402071623258dae4d13e5133", submodules=True)
-    version("1.1.1", commit="0e0a3f27604876749d47c06ec71daaca4b270df9", submodules=True)
-    version("1.1.0", commit="dc8dd85544ff1b55a64a3cbbbdf12b8a0c6fdaf6", submodules=True)
-    version("1.0.0", commit="230d7df2f384f68b952a1ea03aad41431eaad283")
-    version("0.99.2", commit="56961641f50827b3aa4c14524f2f978dc48b9ce5")
-    version("0.99.1", commit="0ae426c76651ba5a9dbcaeb95f18d1b8ba961690")
+    version(
+        "1.3.0", tag="v1.3.0", commit="58b039d746a6eac8e84b0afc01354cd58caec485", submodules=True
+    )
+    version(
+        "1.1.2", tag="v1.1.2", commit="db3bb16e19c09e01402071623258dae4d13e5133", submodules=True
+    )
+    version(
+        "1.1.1", tag="v1.1.1", commit="0e0a3f27604876749d47c06ec71daaca4b270df9", submodules=True
+    )
+    version(
+        "1.1.0", tag="v1.1.0", commit="dc8dd85544ff1b55a64a3cbbbdf12b8a0c6fdaf6", submodules=True
+    )
+    version(
+        "1.0.0", tag="v1.0.0",  commit="230d7df2f384f68b952a1ea03aad41431eaad283"
+    )
+    version(
+        "0.99.2", tag="v0.99.2", commit="56961641f50827b3aa4c14524f2f978dc48b9ce5"
+    )
+    version(
+        "0.99.1", tag="v0.99.1", commit="0ae426c76651ba5a9dbcaeb95f18d1b8ba961690"
+    )
     version("main", branch="main", submodules=True)
     version("develop", branch="develop", submodules=True)
     version(
@@ -90,7 +102,6 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda", when="+cuda")
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
-    depends_on("hiop@0.7.0:1.0.0", when="@1.5.0:+hiop")
     depends_on("cmake@3.18:", type="build")
 
     # Profiling
@@ -131,7 +142,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hiop@0.3.99:", when="@0.99:+hiop")
     depends_on("hiop@0.5.1:", when="@1.1.0:+hiop")
     depends_on("hiop@0.5.3:", when="@1.3.0:+hiop")
-    depends_on("hiop@0.7.0:", when="@1.5.0:+hiop")
+    depends_on("hiop@0.7.0:1.0.0", when="@1.5.0:+hiop")
 
     depends_on("hiop~mpi", when="+hiop~mpi")
     depends_on("hiop+mpi", when="+hiop+mpi")
