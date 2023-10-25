@@ -315,7 +315,7 @@ class LibrariesFinder(Finder):
         libraries_by_path = (
             libraries_in_ld_and_system_library_path(path_hints=paths)
             if sys.platform != "win32"
-            else libraries_in_windows_paths()
+            else libraries_in_windows_paths(path_hints=paths)
         )
         patterns = [re.compile(x) for x in patterns]
         result = []
