@@ -109,6 +109,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("rocprim", when="+rocm")
     depends_on("umpire", when="+umpire")
     depends_on("caliper", when="+caliper")
+    depends_on("intel-oneapi-mkl", when="+sycl")
+    depends_on("intel-oneapi-dpl", when="+sycl")
+
 
     gpu_pkgs = ["magma", "umpire"]
     for sm_ in CudaPackage.cuda_arch_values:
@@ -279,13 +282,23 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.extend(["--without-hip", "--disable-rocrand", "--disable-rocsparse"])
 
         if "+sycl" in spec:
-            configure_args.append("--with-sycl")
             sycl_compatible_compilers = ["dpcpp", "icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
                 raise InstallError(
                     "Hypre's SYCL GPU Backend requires DPC++ (dpcpp)"
                     + " or the oneAPI CXX (icpx) compiler."
                 )
+            sycl_inc = ""
+            sycl_pkgs = ["intel-oneapi-dpl", "intel-oneapi-mkl"]
+            for pkg in sycl_pkgs:
+                if "^" + pkg in spec:
+                    sycl_inc += spec[pkg].headers.include_flags + " "
+            configure_args.extend(
+                [
+                    "--with-sycl",
+                    "--with-extra-CUFLAGS={0}".format(sycl_inc),
+                ]
+            )
 
         if "+unified-memory" in spec:
             configure_args.append("--enable-unified-memory")
