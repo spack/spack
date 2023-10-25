@@ -16,6 +16,8 @@ class Krb5(AutotoolsPackage):
     list_url = "https://kerberos.org/dist/krb5/"
     list_depth = 1
 
+    maintainers = ["cosmicexplorer"]
+
     version("1.20.1", sha256="704aed49b19eb5a7178b34b2873620ec299db08752d6a8574f95d41879ab8851")
     version("1.19.4", sha256="41f5981c5a4de0a26b3937e679a116cd5b3739641fd253124aac91f7179b54eb")
     version("1.19.3", sha256="56d04863cfddc9d9eb7af17556e043e3537d41c6e545610778676cf551b9dcd0")
@@ -71,9 +73,11 @@ class Krb5(AutotoolsPackage):
     def configure_args(self):
         args = ["--without-system-verto"]
 
+        args += self.enable_or_disable("shared")
+        # TODO: allow negating a boolean variant with self.enable_or_disable() so
+        # that a build option can be *dis*abled when the variant is *en*abled!
         if "~shared" in self.spec:
             args.append("--enable-static")
-            args.append("--disable-shared")
         else:
             args.append("--disable-static")
 
