@@ -17,10 +17,22 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pnnl/ExaGO.git"
     maintainers("ryandanehy", "cameronrutherford", "pelesh")
 
-    version("1.5.1", tag="v1.5.1", submodules=True)
-    version("1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True)
-    version("1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True)
-    version("1.4.0", commit="4f4c3fdb40b52ace2d6ba000e7f24b340ec8e886", submodules=True)
+    version(
+        "1.6.0", tag="v1.6.0", commit="159cd173572280ac0f6f094a71dcc3ebeeb34076", submodules=True
+    )
+    version(
+        "1.5.1", tag="v1.5.1", commit="84e9faf9d9dad8d851075eba26038338d90e6d3a", submodules=True
+    )
+    version(
+        "1.5.0", tag="v1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True
+    )
+    version(
+        "1.4.1", tag="v1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True
+    )
+    version(
+        "1.4.0", tag="v1.4.0", commit="4f4c3fdb40b52ace2d6ba000e7f24b340ec8e886", submodules=True
+    )
+
     version("1.3.0", commit="58b039d746a6eac8e84b0afc01354cd58caec485", submodules=True)
     version("1.2.0", commit="255a214ec747b7bdde7a6d8151c083067b4d0907", submodules=True)
     version("1.1.2", commit="db3bb16e19c09e01402071623258dae4d13e5133", submodules=True)
@@ -47,7 +59,6 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     conflicts(
         "+python", when="+ipopt+rocm", msg="Python bindings require -fPIC with Ipopt for rocm."
     )
-    variant("logging", default=False, description="Enable/Disable spdlog based logging")
 
     # Solver options
     variant("hiop", default=False, description="Enable/Disable HiOp")
@@ -79,7 +90,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda", when="+cuda")
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
-
+    depends_on("hiop@0.7.0:1.0.0", when="@1.5.0:+hiop")
     depends_on("cmake@3.18:", type="build")
 
     # Profiling
