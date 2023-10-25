@@ -71,7 +71,7 @@ class Ldak(Package):
             filter_file('#include"glpk.h"', "#include<glpk.h>", "ldak.c")
             filter_file(r"weights\[", "tally3[", "weightfuns.c")
         cc = Executable(spack_cc)
-        args = ["ldak.c", "-fopenmp", "-o", "ldak"] + includes + libs
+        args = ["ldak.c", self.compiler.openmp_flag, "-o", "ldak"] + includes + libs
         cc(*args)
 
     def install(self, spec, prefix):
