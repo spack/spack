@@ -101,6 +101,7 @@ spack:
   - gmp
   - gotcha
   - gptune ~mpispawn
+  - gromacs +cp2k ^cp2k build_system=cmake
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
@@ -339,8 +340,6 @@ spack:
   # - slepc +cuda cuda_arch=90      # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - tasmanian +cuda cuda_arch=90  # tasmanian: conflicts with cuda@12
   # - upcxx +cuda cuda_arch=90      # upcxx: needs NVIDIA driver
-
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-arm-neoverse_v1" }
 
   ci:
     pipeline-gen:

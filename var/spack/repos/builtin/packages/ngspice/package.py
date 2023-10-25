@@ -18,6 +18,7 @@ class Ngspice(AutotoolsPackage):
 
     # Master version by default adds the experimental adms feature
     version("master", branch="master")
+    version("41", sha256="1ce219395d2f50c33eb223a1403f8318b168f1e6d1015a7db9dbf439408de8c4")
     version("40", sha256="e303ca7bc0f594e2d6aa84f68785423e6bf0c8dad009bb20be4d5742588e890d")
     version("39", sha256="bf94e811eaad8aaf05821d036a9eb5f8a65d21d30e1cab12701885e09618d771")
     version("38", sha256="2c3e22f6c47b165db241cf355371a0a7558540ab2af3f8b5eedeeb289a317c56")
@@ -52,6 +53,7 @@ class Ngspice(AutotoolsPackage):
     variant("openmp", default=False, description="Compile with multi-threading support")
     variant("readline", default=True, description="Build readline support (for bin)")
     variant("fft", default=True, description="Use external fftw lib")
+    variant("osdi", default=False, description="Use osdi/OpenVAF")
 
     depends_on("fftw-api@3:~mpi~openmp", when="+fft~openmp")
     depends_on("fftw-api@3:~mpi+openmp", when="+fft+openmp")
@@ -120,6 +122,8 @@ class Ngspice(AutotoolsPackage):
             args.append("--enable-openmp")
         if "~fft" in spec:
             args.append("--with-fftw3=no")
+        if "+osdi" in spec:
+            args.append("--enable-osdi")
         if "darwin" in spec.architecture:
             args.append("--enable-pss")
         if "@master" in spec:

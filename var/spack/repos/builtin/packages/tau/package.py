@@ -261,8 +261,9 @@ class Tau(Package):
         if "+mpi" in spec:
             env["CC"] = spec["mpi"].mpicc
             env["CXX"] = spec["mpi"].mpicxx
-            env["F77"] = spec["mpi"].mpif77
-            env["FC"] = spec["mpi"].mpifc
+            if "+fortran" in spec:
+                env["F77"] = spec["mpi"].mpif77
+                env["FC"] = spec["mpi"].mpifc
             options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
             options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
 

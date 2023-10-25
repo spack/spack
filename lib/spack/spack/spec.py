@@ -54,6 +54,7 @@ import enum
 import io
 import itertools
 import os
+import pathlib
 import platform
 import re
 import socket
@@ -4453,6 +4454,42 @@ class Spec:
         kwargs.setdefault("color", None)
         return self.format(*args, **kwargs)
 
+    def format_path(
+        # self, format_string: str, _path_ctor: Optional[pathlib.PurePath] = None
+        self,
+        format_string: str,
+        _path_ctor: Optional[Callable[[Any], pathlib.PurePath]] = None,
+    ) -> str:
+        """Given a `format_string` that is intended as a path, generate a string
+        like from `Spec.format`, but eliminate extra path separators introduced by
+        formatting of Spec properties.
+
+        Path separators explicitly added to the string are preserved, so for example
+        "{name}/{version}" would generate a directory based on the Spec's name, and
+        a subdirectory based on its version; this function guarantees though that
+        the resulting string would only have two directories (i.e. that if under
+        normal circumstances that `str(Spec.version)` would contain a path
+        separator, it would not in this case).
+        """
+        format_component_with_sep = r"\{[^}]*[/\\][^}]*}"
+        if re.search(format_component_with_sep, format_string):
+            raise SpecFormatPathError(
+                f"Invalid path format string: cannot contain {{/...}}\n\t{format_string}"
+            )
+
+        path_ctor = _path_ctor or pathlib.PurePath
+        format_string_as_path = path_ctor(format_string)
+        if format_string_as_path.is_absolute():
+            output_path_components = [format_string_as_path.parts[0]]
+            input_path_components = list(format_string_as_path.parts[1:])
+        else:
+            output_path_components = []
+            input_path_components = list(format_string_as_path.parts)
+        output_path_components += [
+            fs.polite_filename(self.format(x)) for x in input_path_components
+        ]
+        return str(path_ctor(*output_path_components))
+
     def __str__(self):
         sorted_nodes = [self] + sorted(
             self.traverse(root=False), key=lambda x: x.name or x.abstract_hash
@@ -5377,6 +5414,10 @@ class NoSuchSpecFileError(SpecFilenameError):
 
 class SpecFormatStringError(spack.error.SpecError):
     """Called for errors in Spec format strings."""
+
+
+class SpecFormatPathError(spack.error.SpecError):
+    """Called for errors in Spec path-format strings."""
 
 
 class SpecFormatSigilError(SpecFormatStringError):
