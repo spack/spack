@@ -2875,7 +2875,7 @@ Setting package module variables
 --------------------------------
 
 Apart from modifying environment variables of the dependent package, you can also define Python
-variables to be used in the dependent. This is done by implementing
+variables to be used by the dependent. This is done by implementing
 :meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`. An
 example of this can be found in the ``Python`` package:
 
