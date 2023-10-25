@@ -226,8 +226,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("protobuf@3.4:3.18", when="@:5.10%xl")
     depends_on("protobuf@3.4:3.18", when="@:5.10%xl_r")
     # protobuf requires newer abseil-cpp, which in turn requires C++14,
-    # but paraview uses C++11 by default
-    depends_on("protobuf@3.4:3.21", when="@:5.11")
+    # but paraview uses C++11 by default. Use for 5.11+ until ParaView updates
+    # its C++ standard level.
+    depends_on("protobuf@3.4:3.21", when="@5.11:")
+    depends_on("protobuf@3.4:3.21", when="@master")
     depends_on("libxml2")
     depends_on("lz4")
     depends_on("xz")
@@ -280,7 +282,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
-    patch("vtk-adios2-module-no-kit.patch", when="@5.8:")
+    patch("vtk-adios2-module-no-kit.patch", when="@5.8:5.11")
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
+    patch("vtk-adios2-module-no-kit-5.12.patch", when="@5.12:")
 
     # Patch for paraview 5.9.0%xl_r
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7591
@@ -425,6 +429,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PARAVIEW_ENABLE_VISITBRIDGE", "visitbridge"),
             self.define_from_variant("VISIT_BUILD_READER_Silo", "visitbridge"),
         ]
+
+        if spec.satisfies("@5.12:"):
+            cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_fast_float:BOOL=OFF")
+            cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_token:BOOL=OFF")
 
         if spec.satisfies("@5.11:"):
             cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF")
