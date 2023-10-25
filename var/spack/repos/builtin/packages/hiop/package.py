@@ -103,7 +103,10 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+cuda".format(hiop_v))
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+rocm".format(hiop_v))
 
-    depends_on("cuda@11:", when="@develop:+cuda")
+    # https://github.com/spack/spack/issues/40678
+    depends_on("cuda@11:11.9", when="@develop:+cuda")
+    depends_on("cuda@:11.9", when="+cuda")
+
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
     depends_on("raja+openmp", when="+raja~cuda~rocm")
