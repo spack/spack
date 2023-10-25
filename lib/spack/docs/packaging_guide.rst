@@ -2893,7 +2893,7 @@ This allows Python packages to directly use these variables:
 
 .. note::
 
-   We recommend to use ``setup_dependent_package`` sparingly, as it is not always clear where
+   We recommend using ``setup_dependent_package`` sparingly, as it is not always clear where
    global variables are coming from when editing a ``package.py`` file.
 
 -----
