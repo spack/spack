@@ -118,6 +118,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         "@12.3.0": "13.0.1",
         "@13.1.0": "13.0.1",
         "@13.2.0": "13.0.1",
+        "@master": "13.0.1",
     }
 
     # AMDGCN build requires a Newlib version contemporaneous with GCC
@@ -136,7 +137,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         "@12.3.0": "4.3.0.20230120",  # GCC: 2023-05-08, Newlib: 2023-01-20
         "@13.1.0": "4.3.0.20230120",  # GCC: 2023-04-26, Newlib: 2023-01-20
         "@13.2.0": "4.3.0.20230120",  # GCC: 2023-07-27, Newlib: 2023-01-20
-        "@develop": "4.3.0.20230120",  # Newest version of Newlib
+        "@master": "4.3.0.20230120",  # Newest version of Newlib
     }
 
     # We specifically do not add 'all' variant here because:
