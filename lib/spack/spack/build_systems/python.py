@@ -472,7 +472,7 @@ class PythonPipBuilder(BaseBuilder):
         """
         return []
 
-    def install(self, pkg: "PythonPackage", spec: Spec, prefix: Prefix) -> None:
+    def install(self, pkg: PythonPackage, spec: Spec, prefix: Prefix) -> None:
         """Install everything from build directory."""
 
         args = PythonPipBuilder.std_args(pkg) + [f"--prefix={prefix}"]
