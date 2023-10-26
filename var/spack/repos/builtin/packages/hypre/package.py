@@ -112,7 +112,6 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("intel-oneapi-mkl", when="+sycl")
     depends_on("intel-oneapi-dpl", when="+sycl")
 
-
     gpu_pkgs = ["magma", "umpire"]
     for sm_ in CudaPackage.cuda_arch_values:
         for pkg in gpu_pkgs:
@@ -293,12 +292,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             for pkg in sycl_pkgs:
                 if "^" + pkg in spec:
                     sycl_inc += spec[pkg].headers.include_flags + " "
-            configure_args.extend(
-                [
-                    "--with-sycl",
-                    "--with-extra-CUFLAGS={0}".format(sycl_inc),
-                ]
-            )
+            configure_args.extend(["--with-sycl", "--with-extra-CUFLAGS={0}".format(sycl_inc)])
 
         if "+unified-memory" in spec:
             configure_args.append("--enable-unified-memory")
