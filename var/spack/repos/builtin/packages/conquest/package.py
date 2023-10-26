@@ -66,13 +66,24 @@ class Conquest(MakefilePackage):
         fftw_ld = self.spec["fftw"].libs.ld_flags
         libxc_ld = self.spec["libxc"].libs.ld_flags
 
-        defs_file = FileFilter("./src/system.make")
+        if self.version <= Version("1.2"):
+            defs_file = FileFilter("./src/system.make")
+        else:
+            # Starting from 1.3 there's automated logic in the Makefile that picks
+            # from a list of possible files for system/compiler-specific definitions.
+            # This is useful for manual builds, but since the spack will do its own
+            # automation of compiler-specific flags, we need to override it.
+            defs_file = FileFilter("./src/system/system.example.make")
+            makefile = FileFilter("./src/Makefile")
+            makefile.filter("SYSTEM =.*", "SYSTEM = example")
+            makefile.filter("$(info Building on SYSTEM $(SYSTEM), using makefile $(SYSTEM_PATH))",
+                            "$(info Building on SYSTEM $(SYSTEM), using spack")
 
-        defs_file.filter("COMPFLAGS=.*", f"COMPFLAGS= {fflags}")
-        defs_file.filter("LINKFLAGS=.*", f"LINKFLAGS= {ldflags}")
-        defs_file.filter("# BLAS=.*", f"BLAS= {lapack_ld} {blas_ld}")
-        defs_file.filter("FFT_LIB=.*", f"FFT_LIB={fftw_ld}")
-        defs_file.filter("XC_LIB=.*", f"XC_LIB={libxc_ld} -lxcf90 -lxc")
+        defs_file.filter(".*COMPFLAGS=.*", f"COMPFLAGS= {fflags}")
+        defs_file.filter(".*LINKFLAGS=.*", f"LINKFLAGS= {ldflags}")
+        defs_file.filter(".*BLAS=.*", f"BLAS= {lapack_ld} {blas_ld}")
+        defs_file.filter(".*FFT_LIB=.*", f"FFT_LIB={fftw_ld}")
+        defs_file.filter(".*XC_LIB=.*", f"XC_LIB={libxc_ld} -lxcf90 -lxc")
 
         if "+openmp" in self.spec:
             defs_file.filter("OMP_DUMMY = DUMMY", "OMP_DUMMY = ")
