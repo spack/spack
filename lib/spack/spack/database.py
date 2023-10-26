@@ -1090,6 +1090,8 @@ class Database:
                 os.remove(temp_file)
             raise
 
+        self.modified = False
+
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""
         if os.path.isfile(self._index_path):
