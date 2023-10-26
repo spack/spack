@@ -25,7 +25,7 @@ from urllib.request import HTTPHandler, Request, build_opener
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
-from llnl.util.tty.color import colorize
+from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
@@ -213,11 +213,10 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
                 status = colorize("@*g{[x]}  ")
                 msg = f"  {status}{s.cformat(spec_fmt)}{reason_msg}"
             else:
-                msg = f"  @K -   {s.format(spec_fmt)}{reason_msg}"
+                msg = f"{s.format(spec_fmt)}{reason_msg}"
                 if rebuild_decisions[job].mirrors:
                     msg += " found on mirror: " + ", ".join(rebuild_decisions[job].mirrors)
-                msg += "@."
-                msg = colorize(msg)
+                msg = colorize(f"  @K -   {cescape(msg)}@.")
             tty.msg(msg)
 
 
