@@ -2270,11 +2270,11 @@ class CDashHandler:
         Returns: (str) current CDash build stamp"""
         build_stamp = os.environ.get("SPACK_CDASH_BUILD_STAMP")
         if build_stamp:
-            tty.verbose("Using build stamp ({0}) from the environment".format(build_stamp))
+            tty.debug("Using build stamp ({0}) from the environment".format(build_stamp))
             return build_stamp
 
         build_stamp = cdash_build_stamp(self.build_group, time.time())
-        tty.verbose("Generated new build stamp ({0})".format(build_stamp))
+        tty.debug("Generated new build stamp ({0})".format(build_stamp))
         return build_stamp
 
     @property  # type: ignore
