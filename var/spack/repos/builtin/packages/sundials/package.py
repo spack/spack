@@ -291,7 +291,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     patch("remove-links-to-OpenMP-vector.patch", when="@5.5.0:5.7.0")
     # fix issues with exported PETSc target(s) in SUNDIALSConfig.cmake
     patch("sundials-v5.8.0.patch", when="@5.8.0")
-
+    # Fix static and import lib naming clash with ninja generator and MSVC
+    patch("SundialsAddLibrary_no_dup_targets.patch", when="platform=windows")
+    # Fix lack of link to MPI with MPI dependent targets with MSVC
+    patch("sundials-link-mpi-when-enabled.patch", when="platform=windows")
     # ==========================================================================
     # SUNDIALS Settings
     # ==========================================================================

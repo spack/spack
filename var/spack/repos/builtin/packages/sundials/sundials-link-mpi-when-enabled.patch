@@ -1,0 +1,36 @@
+diff --git a/src/nvector/manyvector/CMakeLists.txt b/src/nvector/manyvector/CMakeLists.txt
+index 96c18b94c..9c2f2a867 100644
+--- a/src/nvector/manyvector/CMakeLists.txt
++++ b/src/nvector/manyvector/CMakeLists.txt
+@@ -59,6 +59,7 @@ if(BUILD_NVECTOR_MPIMANYVECTOR)
+       ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_mpimanyvector.h
+     INCLUDE_SUBDIR
+       nvector
++    LINK_LIBRARIES PUBLIC MPI::MPI_C
+     OBJECT_LIBRARIES
+       sundials_generic_obj
+     COMPILE_DEFINITIONS
+diff --git a/src/nvector/mpiplusx/CMakeLists.txt b/src/nvector/mpiplusx/CMakeLists.txt
+index b6ca27136..b36f525d8 100644
+--- a/src/nvector/mpiplusx/CMakeLists.txt
++++ b/src/nvector/mpiplusx/CMakeLists.txt
+@@ -32,6 +32,7 @@ sundials_add_library(sundials_nvecmpiplusx
+     ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_mpiplusx.h
+   INCLUDE_SUBDIR
+     nvector
++  LINK_LIBRARIES PUBLIC MPI::MPI_C
+   OBJECT_LIBRARIES
+     sundials_generic_obj
+     sundials_nvecmpimanyvector_obj
+diff --git a/src/nvector/parallel/CMakeLists.txt b/src/nvector/parallel/CMakeLists.txt
+index d5d2e28a5..a1f05db62 100644
+--- a/src/nvector/parallel/CMakeLists.txt
++++ b/src/nvector/parallel/CMakeLists.txt
+@@ -32,6 +32,7 @@ sundials_add_library(sundials_nvecparallel
+     ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_parallel.h
+   INCLUDE_SUBDIR
+     nvector
++  LINK_LIBRARIES PUBLIC MPI::MPI_C
+   OBJECT_LIBRARIES
+     sundials_generic_obj
+   OUTPUT_NAME
