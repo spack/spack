@@ -42,7 +42,6 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     generator("ninja")
 
-    map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
     cxxstds = ("17", "20", "23")
     variant(
         "cxxstd",
@@ -91,6 +90,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%clang@:8", when="@0.2:")
     conflicts("+stdexec", when="cxxstd=17")
     conflicts("cxxstd=23", when="^cmake@:3.20.2")
+    # CUDA version <= 11 does not support C++20 and newer
+    for cxxstd in filter(lambda x: x != "17", cxxstds):
+        conflicts(f"cxxstd={cxxstd}", when="^cuda@:11")
 
     # Other dependencies
     depends_on("boost@1.71:")
@@ -139,7 +141,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             )
 
     for cxxstd in cxxstds:
-        depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
+        depends_on("boost cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
         depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
 
     # COROUTINES
