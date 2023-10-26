@@ -54,21 +54,6 @@ spack:
     cuda:
       version: [11.8.0]
 
-  compilers:
-  - compiler:
-      spec: gcc@11.4.0
-      paths:
-        cc: /usr/bin/gcc
-        cxx: /usr/bin/g++
-        f77: /usr/bin/gfortran
-        fc: /usr/bin/gfortran
-      flags: {}
-      operating_system: ubuntu20.04
-      target: aarch64
-      modules: []
-      environment: {}
-      extra_rpaths: []
-
   specs:
   # CPU
   - adios

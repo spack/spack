@@ -24,12 +24,28 @@ import spack.package_base
 import spack.spec
 import spack.store
 from spack.directives import build_system, depends_on, extends, maintainers
-from spack.error import NoHeadersError, NoLibrariesError, SpecError
+from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import test_part
 from spack.util.executable import Executable
-from spack.version import Version
 
 from ._checks import BaseBuilder, execute_install_time_tests
+
+
+def _flatten_dict(dictionary):
+    """Iterable that yields KEY=VALUE paths through a dictionary.
+    Args:
+        dictionary: Possibly nested dictionary of arbitrary keys and values.
+    Yields:
+        A single path through the dictionary.
+    """
+    for key, item in dictionary.items():
+        if isinstance(item, dict):
+            # Recursive case
+            for value in _flatten_dict(item):
+                yield f"{key}={value}"
+        else:
+            # Base case
+            yield f"{key}={item}"
 
 
 class PythonExtension(spack.package_base.PackageBase):
@@ -454,14 +470,15 @@ class PythonPipBuilder(BaseBuilder):
     def config_settings(self, spec, prefix):
         """Configuration settings to be passed to the PEP 517 build backend.
 
-        Requires pip 22.1 or newer.
+        Requires pip 22.1 or newer for keys that appear only a single time,
+        or pip 23.1 or newer if the same key appears multiple times.
 
         Args:
             spec (spack.spec.Spec): build spec
             prefix (spack.util.prefix.Prefix): installation prefix
 
         Returns:
-            dict: dictionary of KEY, VALUE settings
+            dict: Possibly nested dictionary of KEY, VALUE settings
         """
         return {}
 
@@ -525,22 +542,14 @@ class PythonPipBuilder(BaseBuilder):
         pip.add_default_arg("-m")
         pip.add_default_arg("pip")
 
-        args = PythonPipBuilder.std_args(pkg) + ["--prefix=" + prefix]
+        args = PythonPipBuilder.std_args(pkg) + [f"--prefix={prefix}"]
 
-        for key, value in self.config_settings(spec, prefix).items():
-            if spec["py-pip"].version < Version("22.1"):
-                raise SpecError(
-                    "'{}' package uses 'config_settings' which is only supported by "
-                    "pip 22.1+. Add the following line to the package to fix this:\n\n"
-                    '    depends_on("py-pip@22.1:", type="build")'.format(spec.name)
-                )
-
-            args.append("--config-settings={}={}".format(key, value))
-
+        for setting in _flatten_dict(self.config_settings(spec, prefix)):
+            args.append(f"--config-settings={setting}")
         for option in self.install_options(spec, prefix):
-            args.append("--install-option=" + option)
+            args.append(f"--install-option={option}")
         for option in self.global_options(spec, prefix):
-            args.append("--global-option=" + option)
+            args.append(f"--global-option={option}")
 
         if pkg.stage.archive_file and pkg.stage.archive_file.endswith(".whl"):
             args.append(pkg.stage.archive_file)
