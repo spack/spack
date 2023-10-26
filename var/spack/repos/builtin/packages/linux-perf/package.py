@@ -75,7 +75,7 @@ class LinuxPerf(Package):
     depends_on("libpfm4", when="+libpfm4")
     depends_on("babeltrace@1.5:", when="+babeltrace")
     depends_on("libcap", when="+libcap")
-    # depends_on("libaudit", when="+libaudit")
+    depends_on("audit-userspace", when="+libaudit")
     depends_on("numactl", when="+numactl")
     depends_on("zstd", when="+zstd")
     depends_on("xz", when="+xz")
