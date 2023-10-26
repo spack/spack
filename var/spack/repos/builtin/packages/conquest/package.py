@@ -76,8 +76,10 @@ class Conquest(MakefilePackage):
             defs_file = FileFilter("./src/system/system.example.make")
             makefile = FileFilter("./src/Makefile")
             makefile.filter("SYSTEM =.*", "SYSTEM = example")
-            makefile.filter("$(info Building on SYSTEM $(SYSTEM), using makefile $(SYSTEM_PATH))",
-                            "$(info Building on SYSTEM $(SYSTEM), using spack")
+            makefile.filter(
+                "$(info Building on SYSTEM $(SYSTEM), using makefile $(SYSTEM_PATH))",
+                "$(info Building on SYSTEM $(SYSTEM), using spack",
+            )
 
         defs_file.filter(".*COMPFLAGS=.*", f"COMPFLAGS= {fflags}")
         defs_file.filter(".*LINKFLAGS=.*", f"LINKFLAGS= {ldflags}")
