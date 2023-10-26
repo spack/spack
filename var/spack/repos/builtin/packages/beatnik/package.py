@@ -55,7 +55,7 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("mpich ~rocm", when="+rocm")
     conflicts("openmpi ~cuda", when="+cuda")
     conflicts("^intel-mpi")  # Heffte won't build with intel MPI because of needed C++ MPI support
-    conflicts("^spectrum-mpi", when="^cuda@11.3:") # cuda-aware spectrum is broken with cuda 11.3:
+    conflicts("^spectrum-mpi", when="^cuda@11.3:")  # cuda-aware spectrum is broken with cuda 11.3:
 
     # Propagate CUDA and AMD GPU targets to cabana
     for cuda_arch in CudaPackage.cuda_arch_values:
