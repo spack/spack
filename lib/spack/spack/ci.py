@@ -202,7 +202,7 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
 
     tty.msg("Staging summary ([x] means a job needs rebuilding):")
     for stage_index, stage in enumerate(stages):
-        tty.msg("  stage {0} ({1} jobs):".format(stage_index, len(stage)))
+        tty.msg(f"  stage {stage_index} ({len(stage)} jobs):")
 
         for job in sorted(stage, key=lambda j: (not rebuild_decisions[j].rebuild, j)):
             s = spec_labels[job]
@@ -211,9 +211,9 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
             spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
             if rebuild_decisions[job].rebuild:
                 status = colorize("@*g{[x]}  ")
-                msg = f"{status}{s.cformat(spec_fmt)}{reason_msg}"
+                msg = f"  {status}{s.cformat(spec_fmt)}{reason_msg}"
             else:
-                msg = f"@K -   {s.format(spec_fmt)}{reason_msg}"
+                msg = f"  @K -   {s.format(spec_fmt)}{reason_msg}"
                 if rebuild_decisions[job].mirrors:
                     msg += " found on mirror: " + ", ".join(rebuild_decisions[job].mirrors)
                 msg += "@."
