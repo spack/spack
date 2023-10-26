@@ -8,10 +8,10 @@ import argparse
 import pytest
 
 import spack.cmd.checksum
+import spack.parser
 import spack.repo
 import spack.spec
 from spack.main import SpackCommand
-import spack.parser
 from spack.stage import interactive_version_filter
 from spack.version import Version
 
