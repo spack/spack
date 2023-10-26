@@ -206,20 +206,19 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
 
         for job in sorted(stage, key=lambda j: (not rebuild_decisions[j].rebuild, j)):
             s = spec_labels[job]
-            rebuild = rebuild_decisions[job].rebuild
             reason = rebuild_decisions[job].reason
             reason_msg = " ({0})".format(reason) if reason else ""
             spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
-            if rebuild:
-                msg = f"@g{{[x]}}  {s.cformat(spec_fmt)}{reason_msg}"
+            if rebuild_decisions[job].rebuild:
+                status = colorize("@*g{[x]}  ")
+                msg = f"{status}{s.cformat(spec_fmt)}{reason_msg}"
             else:
-                grey_start = "@K{ -   "
-                grey_end = "}"
-                msg = f"{grey_start}{s.format(spec_fmt)}{reason_msg}"
+                msg = f"@K -   {s.format(spec_fmt)}{reason_msg}"
                 if rebuild_decisions[job].mirrors:
                     msg += " found on mirror: " + ", ".join(rebuild_decisions[job].mirrors)
-                msg += grey_end
-            tty.msg(colorize(msg))
+                msg += "@."
+                msg = colorize(msg)
+            tty.msg(msg)
 
 
 def _compute_spec_deps(spec_list):
