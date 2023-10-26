@@ -207,7 +207,7 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
         for job in sorted(stage, key=lambda j: (not rebuild_decisions[j].rebuild, j)):
             s = spec_labels[job]
             reason = rebuild_decisions[job].reason
-            reason_msg = " ({0})".format(reason) if reason else ""
+            reason_msg = f" ({reason})" if reason else ""
             spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
             if rebuild_decisions[job].rebuild:
                 status = colorize("@*g{[x]}  ")
