@@ -870,6 +870,7 @@ def interactive_version_filter(
     url_dict: Dict[StandardVersion, str],
     known_versions: Iterable[StandardVersion] = (),
     *,
+    initial_verion_filter: Optional[VersionList] = None,
     url_changes: Set[StandardVersion] = set(),
     input: Callable[..., str] = input,
 ) -> Optional[Dict[StandardVersion, str]]:
@@ -883,8 +884,9 @@ def interactive_version_filter(
         Filtered dictionary of versions to URLs or None if the user wants to quit
     """
     # Find length of longest string in the list for padding
-    sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
-    version_filter = VersionList([":"])
+    version_filter = initial_verion_filter or VersionList([":"])
+    sorted_and_filtered = [v for v in url_dict if v.satisfies(version_filter)]
+    sorted_and_filtered.sort(reverse=True)
     max_len = max(len(str(v)) for v in sorted_and_filtered)
     orig_url_dict = url_dict  # only copy when using editor to modify
     print_header = True

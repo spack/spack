@@ -8,6 +8,7 @@ import argparse
 import pytest
 
 import spack.cmd.checksum
+import spack.parser
 import spack.repo
 import spack.spec
 from spack.main import SpackCommand
@@ -254,17 +255,10 @@ def test_checksum_deprecated_version(mock_packages, mock_clone_repo, mock_fetch,
     assert "Added 0 new versions to" not in output
 
 
-def test_checksum_at(mock_packages):
-    pkg_cls = spack.repo.PATH.get_pkg_class("zlib")
-    versions = [str(v) for v in pkg_cls.versions]
-    output = spack_checksum(f"zlib@{versions[0]}")
-    assert "Found 1 version" in output
-
-
 def test_checksum_url(mock_packages):
     pkg_cls = spack.repo.PATH.get_pkg_class("zlib")
-    output = spack_checksum(f"{pkg_cls.url}", fail_on_error=False)
-    assert "accepts package names" in output
+    with pytest.raises(spack.parser.SpecSyntaxError):
+        spack_checksum(f"{pkg_cls.url}")
 
 
 def test_checksum_verification_fails(install_mockery, capsys):
