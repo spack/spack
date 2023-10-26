@@ -30,8 +30,8 @@ class AlsaLib(AutotoolsPackage):
         spec = self.spec
         args = []
         if spec.satisfies("+python"):
-            args.append("--with-pythonlibs={0}".format(spec["python"].libs.ld_flags))
-            args.append("--with-pythonincludes={0}".format(spec["python"].headers.include_flags))
+            args.append(f"--with-pythonlibs={spec['python'].libs.ld_flags}")
+            args.append(f"--with-pythonincludes={spec['python'].headers.include_flags}")
         else:
             args.append("--disable-python")
         return args

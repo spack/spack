@@ -69,7 +69,7 @@ class Augustus(MakefilePackage):
                 filter_file("g++", spack_cxx, "makefile", string=True)
                 filter_file(
                     "g++ -I/usr/include/boost",
-                    "{0} -I{1}".format(spack_cxx, self.spec["boost"].prefix.include),
+                    f"{spack_cxx} -I{self.spec['boost'].prefix.include}",
                     "src/subdir.mk",
                     string=True,
                 )
@@ -101,7 +101,7 @@ class Augustus(MakefilePackage):
 
         with working_dir(join_path("auxprogs", "filterBam", "src")):
             makefile = FileFilter("Makefile")
-            makefile.filter("BAMTOOLS = .*", "BAMTOOLS = {0}".format(bamtools))
+            makefile.filter("BAMTOOLS = .*", f"BAMTOOLS = {bamtools}")
             makefile.filter("INCLUDES = *", "INCLUDES = -I$(BAMTOOLS)/include/bamtools ")
             if "bamtools@2.5:" in spec:
                 makefile.filter(
@@ -113,32 +113,30 @@ class Augustus(MakefilePackage):
                 )
         with working_dir(join_path("auxprogs", "bam2hints")):
             makefile = FileFilter("Makefile")
-            makefile.filter("/usr/include/bamtools", "{0}/include/bamtools".format(bamtools))
+            makefile.filter("/usr/include/bamtools", f"{bamtools}/include/bamtools")
             if "bamtools@2.5:" in spec:
                 makefile.filter(
-                    "LIBS = -lbamtools -lz",
-                    "LIBS = {0}/lib64" "/libbamtools.a -lz".format(bamtools),
+                    "LIBS = -lbamtools -lz", f"LIBS = {bamtools}/lib64/libbamtools.a -lz"
                 )
             if "bamtools@:2.4" in spec:
                 makefile.filter(
-                    "LIBS = -lbamtools -lz",
-                    "LIBS = {0}/lib/bamtools" "/libbamtools.a -lz".format(bamtools),
+                    "LIBS = -lbamtools -lz", f"LIBS = {bamtools}/lib/bamtools/libbamtools.a -lz"
                 )
 
         if self.version < Version("3.4.0"):
             with working_dir(join_path("auxprogs", "bam2wig")):
                 makefile = FileFilter("Makefile")
                 # point tools to spack installations
-                makefile.filter("BCFTOOLS=.*$", "BCFTOOLS={0}/include".format(bcftools))
-                makefile.filter("SAMTOOLS=.*$", "SAMTOOLS={0}/include".format(samtools))
-                makefile.filter("HTSLIB=.*$", "HTSLIB={0}/include".format(htslib))
+                makefile.filter("BCFTOOLS=.*$", f"BCFTOOLS={bcftools}/include")
+                makefile.filter("SAMTOOLS=.*$", f"SAMTOOLS={samtools}/include")
+                makefile.filter("HTSLIB=.*$", f"HTSLIB={htslib}/include")
 
                 # fix bad linking dirs
                 makefile.filter("$(SAMTOOLS)/libbam.a", "$(SAMTOOLS)/../lib/libbam.a", string=True)
                 makefile.filter("$(HTSLIB)/libhts.a", "$(HTSLIB)/../lib/libhts.a", string=True)
             with working_dir(join_path("auxprogs", "checkTargetSortedness")):
                 makefile = FileFilter("Makefile")
-                makefile.filter("SAMTOOLS.*=.*$", "SAMTOOLS={0}/include".format(samtools))
+                makefile.filter("SAMTOOLS.*=.*$", f"SAMTOOLS={samtools}/include")
                 makefile.filter("LIBS=-lbam", "LIBS=$(SAMTOOLS)/../lib/libbam.a", string=True)
         else:
             mysql = self.spec["mysql-client"].prefix
@@ -147,12 +145,12 @@ class Augustus(MakefilePackage):
 
             with working_dir("src"):
                 makefile = FileFilter("Makefile")
-                makefile.filter(r"/usr/include/mysql\+\+", "{0}/include/mysql++".format(mysqlpp))
+                makefile.filter(r"/usr/include/mysql\+\+", f"{mysqlpp}/include/mysql++")
                 if "^mariadb-c-client" in spec:
-                    makefile.filter("/usr/include/mysql", "{0}/include/mariadb".format(mysql))
+                    makefile.filter("/usr/include/mysql", f"{mysql}/include/mariadb")
                 else:
-                    makefile.filter("/usr/include/mysql", "{0}/include/mysql".format(mysql))
-                makefile.filter("/usr/include/lpsolve", "{0}/include/lpsolve".format(lpsolve))
+                    makefile.filter("/usr/include/mysql", f"{mysql}/include/mysql")
+                makefile.filter("/usr/include/lpsolve", f"{lpsolve}/include/lpsolve")
 
     def install(self, spec, prefix):
         install_tree("bin", join_path(self.spec.prefix, "bin"))
@@ -163,12 +161,12 @@ class Augustus(MakefilePackage):
     def filter_sbang(self):
         with working_dir(self.prefix.scripts):
             pattern = "^#!.*"
-            repl = "#!{0}".format(self.spec["perl"].command.path)
+            repl = f"#!{self.spec['perl'].command.path}"
             files = glob.glob("*.pl")
             for file in files:
                 filter_file(pattern, repl, *files, backup=False)
 
-            repl = "#!{0}".format(self.spec["python"].command.path)
+            repl = f"#!{self.spec['python'].command.path}"
             files = glob.glob("*.py")
             for file in files:
                 filter_file(pattern, repl, *files, backup=False)

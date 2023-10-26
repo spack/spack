@@ -28,11 +28,9 @@ class Aspcud(CMakePackage):
     depends_on("clingo")
 
     def cmake_args(self):
-        spec = self.spec
-        gringo_path = join_path(spec["clingo"].prefix.bin, "gringo")
-        clasp_path = join_path(spec["clingo"].prefix.bin, "clasp")
-        args = [
-            "-DASPCUD_GRINGO_PATH={0}".format(gringo_path),
-            "-DASPCUD_CLASP_PATH={0}".format(clasp_path),
+        gringo_path = join_path(self.spec["clingo"].prefix.bin, "gringo")
+        clasp_path = join_path(self.spec["clingo"].prefix.bin, "clasp")
+        return [
+            self.define("ASPCUD_GRINGO_PATH", gringo_path),
+            self.define("ASPCUD_CLASP_PATH", clasp_path),
         ]
-        return args

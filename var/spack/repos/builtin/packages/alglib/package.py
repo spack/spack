@@ -30,7 +30,7 @@ class Alglib(MakefilePackage):
         filter_file(r"so", dso_suffix, make_file)
 
     def install(self, spec, prefix):
-        name = "libalglib.{0}".format(dso_suffix)
+        name = f"libalglib.{dso_suffix}"
         with working_dir("src"):
             mkdirp(prefix.lib)
             install(name, prefix.lib)

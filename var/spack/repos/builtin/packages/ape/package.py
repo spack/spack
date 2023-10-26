@@ -23,9 +23,9 @@ class Ape(Package):
         args = []
         args.extend(
             [
-                "--prefix=%s" % prefix,
-                "--with-gsl-prefix=%s" % spec["gsl"].prefix,
-                "--with-libxc-prefix=%s" % spec["libxc"].prefix,
+                f"--prefix={prefix}",
+                f"--with-gsl-prefix={spec['gsl'].prefix}",
+                f"--with-libxc-prefix={spec['libxc'].prefix}",
             ]
         )
 

@@ -22,4 +22,4 @@ class AbiComplianceChecker(MakefilePackage):
     depends_on("universal-ctags")
 
     def install(self, spec, prefix):
-        make("prefix={0}".format(prefix), "install")
+        make(f"prefix={prefix}", "install")

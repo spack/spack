@@ -28,7 +28,7 @@ class Audacious(AutotoolsPackage):
 
     def patch(self):
         search_path_args = " ".join(self.autoreconf_search_path_args)
-        search_path_str = "-I m4 {0}".format(search_path_args)
+        search_path_str = f"-I m4 {search_path_args}"
         filter_file("-I m4", search_path_str, "autogen.sh")
 
     def autoreconf(self, spec, prefix):

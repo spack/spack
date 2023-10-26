@@ -43,4 +43,4 @@ class Ace(MakefilePackage):
                     "include $(ACE_ROOT)/include/makeinclude/"
                     "platform_linux" + supported[self.compiler.name] + ".GNU\n"
                 )
-                f.write("INSTALL_PREFIX=%s" % prefix)
+                f.write(f"INSTALL_PREFIX={prefix}")
