@@ -11,8 +11,10 @@ ci:
   - build-job:
       before_script-:
       - - spack list --count  # ensure that spack's cache is populated
-      - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
-        - spack compiler list
+      - - spack compiler find
+        - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
+        - spack audit configs
+        - spack config blame compilers
         - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
       - - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
         # AWS runners mount E4S public key (verification), UO runners mount public/private (signing/verification)
