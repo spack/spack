@@ -25,6 +25,7 @@ from urllib.request import HTTPHandler, Request, build_opener
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
+from llnl.util.tty.color import colorize
 
 import spack
 import spack.binary_distribution as bindist
@@ -95,15 +96,6 @@ def get_job_name(spec: spack.spec.Spec, build_group: str = ""):
 def _remove_reserved_tags(tags):
     """Convenience function to strip reserved tags from jobs"""
     return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
-
-
-def _get_spec_string(spec):
-    format_elements = ["{name}{@version}", "{%compiler}"]
-
-    if spec.architecture:
-        format_elements.append(" {arch=architecture}")
-
-    return spec.format("".join(format_elements))
 
 
 def _spec_deps_key(s):
@@ -212,20 +204,25 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
     for stage_index, stage in enumerate(stages):
         tty.msg("  stage {0} ({1} jobs):".format(stage_index, len(stage)))
 
-        for job in sorted(stage):
+        for job in sorted(stage, key=lambda j: (not rebuild_decisions[j].rebuild, j)):
             s = spec_labels[job]
             rebuild = rebuild_decisions[job].rebuild
             reason = rebuild_decisions[job].reason
             reason_msg = " ({0})".format(reason) if reason else ""
-            tty.msg(
-                "    [{1}] {0} -> {2}{3}".format(
-                    job, "x" if rebuild else " ", _get_spec_string(s), reason_msg
-                )
-            )
-            if rebuild_decisions[job].mirrors:
-                tty.msg("          found on the following mirrors:")
-                for murl in rebuild_decisions[job].mirrors:
-                    tty.msg("            {0}".format(murl))
+
+            rebuild_status = "@g{[x]}  "
+            spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
+
+            if rebuild:
+                msg = f"{rebuild_status}{s.cformat(spec_fmt)}{reason_msg}"
+            else:
+                grey_start = "@K{"
+                grey_end = "}"
+                msg = f"{grey_start}{s.format(spec_fmt)}{reason_msg}"
+                if rebuild_decisions[job].mirrors:
+                    msg += " found on mirror: " + ", ".join(rebuild_decisions[job].mirrors)
+                msg += grey_end
+            tty.msg(colorize(msg))
 
 
 def _compute_spec_deps(spec_list):
