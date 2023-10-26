@@ -232,6 +232,13 @@ class LmodConfiguration(BaseConfiguration):
         """Returns the list of tokens that are not available."""
         return [x for x in self.hierarchy_tokens if x not in self.available]
 
+    @property
+    def hidden(self):
+        # Never hide a module that opens a hierarchy
+        if any(self.spec.package.provides(x) for x in self.hierarchy_tokens):
+            return False
+        return super().hidden
+
 
 class LmodFileLayout(BaseFileLayout):
     """File layout for lmod module files."""
@@ -273,6 +280,13 @@ class LmodFileLayout(BaseFileLayout):
             ".".join([self.use_name, self.extension]),  # file name
         )
         return fullname
+
+    @property
+    def modulerc(self):
+        """Returns the modulerc file associated with current module file"""
+        return os.path.join(
+            os.path.dirname(self.filename), ".".join([".modulerc", self.extension])
+        )
 
     def token_to_path(self, name, value):
         """Transforms a hierarchy token into the corresponding path part.
@@ -469,6 +483,10 @@ class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
 
     default_template = posixpath.join("modules", "modulefile.lua")
+
+    modulerc_header: list = []
+
+    hide_cmd_format = 'hide_version("%s")'
 
 
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
