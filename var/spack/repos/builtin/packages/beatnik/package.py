@@ -14,8 +14,8 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("patrickb314", "JStewart28")
 
-    # Add proper versions and checksums here. Will add 1.0 when a proper SHA is available
-    # version("1.0", sha256="XXX")
+    # Add proper versions and checksums here.
+    version("1.0", commit="ae31ef9cb44678d5ace77994b45b0778defa3d2f")
     version("develop", branch="develop")
     version("main", branch="main")
 
