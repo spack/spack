@@ -491,10 +491,6 @@ class BaseConfiguration:
         exclude_rules = conf.get("exclude", [])
         exclude_matches = [x for x in exclude_rules if spec.satisfies(x)]
 
-        # Should I exclude the module because it's implicit?
-        exclude_implicits = conf.get("exclude_implicits", None)
-        excluded_as_implicit = exclude_implicits and not self.explicit
-
         def debug_info(line_header, match_list):
             if match_list:
                 msg = "\t{0} : {1}".format(line_header, spec.cshort_spec)
@@ -505,15 +501,27 @@ class BaseConfiguration:
         debug_info("INCLUDE", include_matches)
         debug_info("EXCLUDE", exclude_matches)
 
-        if excluded_as_implicit:
-            msg = "\tEXCLUDED_AS_IMPLICIT : {0}".format(spec.cshort_spec)
-            tty.debug(msg)
-
-        is_excluded = exclude_matches or excluded_as_implicit
-        if not include_matches and is_excluded:
+        if not include_matches and exclude_matches:
             return True
 
         return False
+
+    @property
+    def hidden(self):
+        """Returns True if the module has been hidden, False otherwise."""
+
+        # A few variables for convenience of writing the method
+        spec = self.spec
+        conf = self.module.configuration(self.name)
+
+        hidden_as_implicit = not self.explicit and conf.get(
+            "hide_implicits", conf.get("exclude_implicits", False)
+        )
+
+        if hidden_as_implicit:
+            tty.debug(f"\tHIDDEN_AS_IMPLICIT : {spec.cshort_spec}")
+
+        return hidden_as_implicit
 
     @property
     def context(self):
@@ -849,6 +857,26 @@ class BaseModuleFileWriter:
             name = type(self).__name__
             raise DefaultTemplateNotDefined(msg.format(name))
 
+        # Check if format for module hide command has been defined,
+        # throw if not found
+        try:
+            self.hide_cmd_format
+        except AttributeError:
+            msg = "'{0}' object has no attribute 'hide_cmd_format'\n"
+            msg += "Did you forget to define it in the class?"
+            name = type(self).__name__
+            raise HideCmdFormatNotDefined(msg.format(name))
+
+        # Check if modulerc header content has been defined,
+        # throw if not found
+        try:
+            self.modulerc_header
+        except AttributeError:
+            msg = "'{0}' object has no attribute 'modulerc_header'\n"
+            msg += "Did you forget to define it in the class?"
+            name = type(self).__name__
+            raise ModulercHeaderNotDefined(msg.format(name))
+
     def _get_template(self):
         """Gets the template that will be rendered for this spec."""
         # Get templates and put them in the order of importance:
@@ -943,6 +971,9 @@ class BaseModuleFileWriter:
         # Symlink defaults if needed
         self.update_module_defaults()
 
+        # record module hiddenness if implicit
+        self.update_module_hiddenness()
+
     def update_module_defaults(self):
         if any(self.spec.satisfies(default) for default in self.conf.defaults):
             # This spec matches a default, it needs to be symlinked to default
@@ -953,6 +984,60 @@ class BaseModuleFileWriter:
             os.symlink(self.layout.filename, default_tmp)
             os.rename(default_tmp, default_path)
 
+    def update_module_hiddenness(self, remove=False):
+        """Update modulerc file corresponding to module to add or remove
+        command that hides module depending on its hidden state.
+
+        Args:
+            remove (bool): if True, hiddenness information for module is
+                removed from modulerc.
+        """
+        modulerc_path = self.layout.modulerc
+        hide_module_cmd = self.hide_cmd_format % self.layout.use_name
+        hidden = self.conf.hidden and not remove
+        modulerc_exists = os.path.exists(modulerc_path)
+        updated = False
+
+        if modulerc_exists:
+            # retrieve modulerc content
+            with open(modulerc_path, "r") as f:
+                content = f.readlines()
+                content = "".join(content).split("\n")
+                # remove last empty item if any
+                if len(content[-1]) == 0:
+                    del content[-1]
+            already_hidden = hide_module_cmd in content
+
+            # remove hide command if module not hidden
+            if already_hidden and not hidden:
+                content.remove(hide_module_cmd)
+                updated = True
+
+            # add hide command if module is hidden
+            elif not already_hidden and hidden:
+                if len(content) == 0:
+                    content = self.modulerc_header.copy()
+                content.append(hide_module_cmd)
+                updated = True
+        else:
+            content = self.modulerc_header.copy()
+            if hidden:
+                content.append(hide_module_cmd)
+                updated = True
+
+        # no modulerc file change if no content update
+        if updated:
+            is_empty = content == self.modulerc_header or len(content) == 0
+            # remove existing modulerc if empty
+            if modulerc_exists and is_empty:
+                os.remove(modulerc_path)
+            # create or update modulerc
+            elif content != self.modulerc_header:
+                # ensure file ends with a newline character
+                content.append("")
+                with open(modulerc_path, "w") as f:
+                    f.write("\n".join(content))
+
     def remove(self):
         """Deletes the module file."""
         mod_file = self.layout.filename
@@ -960,6 +1045,7 @@ class BaseModuleFileWriter:
             try:
                 os.remove(mod_file)  # Remove the module file
                 self.remove_module_defaults()  # Remove default targeting module file
+                self.update_module_hiddenness(remove=True)  # Remove hide cmd in modulerc
                 os.removedirs(
                     os.path.dirname(mod_file)
                 )  # Remove all the empty directories from the leaf up
@@ -999,6 +1085,18 @@ class ModuleNotFoundError(ModulesError):
 
 class DefaultTemplateNotDefined(AttributeError, ModulesError):
     """Raised if the attribute 'default_template' has not been specified
+    in the derived classes.
+    """
+
+
+class HideCmdFormatNotDefined(AttributeError, ModulesError):
+    """Raised if the attribute 'hide_cmd_format' has not been specified
+    in the derived classes.
+    """
+
+
+class ModulercHeaderNotDefined(AttributeError, ModulesError):
+    """Raised if the attribute 'modulerc_header' has not been specified
     in the derived classes.
     """
 
