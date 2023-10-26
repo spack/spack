@@ -131,6 +131,9 @@ class PyScipy(PythonPackage):
         "when building with MSVC",
     )
 
+    # https://docs.scipy.org/doc//scipy-1.10.1/release.1.7.3.html
+    conflicts("platform=darwin target=aarch64:", when="@:1.7.2")
+
     # https://github.com/scipy/scipy/pull/11324
     conflicts("@1.4.0:1.4.1", when="target=ppc64le:")
 
