@@ -98,3 +98,5 @@ class Conquest(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("./bin/Conquest", prefix.bin)
+        if self.version > Version("1.2"):
+            install_tree("./benchmarks/", join_path(prefix, "benchmarks"))
