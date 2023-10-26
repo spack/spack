@@ -30,7 +30,6 @@ class PyTorchgeo(PythonPackage):
     variant("docs", default=False, description="Install documentation dependencies")
     variant("style", default=False, description="Install style checking tools")
     variant("tests", default=False, description="Install testing tools")
-    variant("rebuild-me", default=False, description="CI test")
 
     # NOTE: historically, dependencies had upper bounds based on semantic version compatibility.
     # However, these were removed to improve maintainability and flexibility of the recipe.
