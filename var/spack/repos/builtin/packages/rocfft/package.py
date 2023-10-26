@@ -18,6 +18,8 @@ class Rocfft(CMakePackage):
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocfft"]
+    version("5.7.1", sha256="202f11f60dc8738e29bbd1b397d419e032794f8bffb7f48f2b31f09cc5f08bc2")
+    version("5.7.0", sha256="3c4a1537a6ec76dc9b622644fe3890647306bf9f28f61c5d2028259c31bb964f")
     version("5.6.1", sha256="a65861e453587c3e6393da75b0b1976508c61f968aecda77fbec920fea48489e")
     version("5.6.0", sha256="e3d4a6c1bdac78f9a22033f57011af783d560308103f73542f9e0e4dd133d38a")
     version("5.5.1", sha256="57423a64f5cdb1c37ff0891b6c17b59f73198d46be42db4ae23781ef2c0cd49d")
@@ -159,6 +161,8 @@ class Rocfft(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
