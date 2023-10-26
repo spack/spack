@@ -21,6 +21,7 @@ class Rccl(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librccl"]
+    version("5.7.0", sha256="4c2825a3e4323ef3c2f8855ef445c1a81cf1992fb37e3e8a07a50db354aa3954")
     version("5.6.1", sha256="27ec6b86a1a329684d808f728c1fce134517ac8e6e7047689f95dbf8386c077e")
     version("5.6.0", sha256="cce13c8a9e233e7ddf91a67b1626b7aaeaf818fefe61af8de6b6b6ff47cb358c")
     version("5.5.1", sha256="f6b9dc6dafeb49d95c085825876b09317d8252771c746ccf5aa19a9204a404b2")
@@ -116,7 +117,7 @@ class Rccl(CMakePackage):
 
     patch("0001-Fix-numactl-path-issue.patch", when="@3.7.0:4.3.2")
     patch("0002-Fix-numactl-rocm-smi-path-issue.patch", when="@4.5.0:5.2.1")
-    patch("0003-Fix-numactl-rocm-smi-path-issue.patch", when="@5.2.3:")
+    patch("0003-Fix-numactl-rocm-smi-path-issue.patch", when="@5.2.3:5.6")
 
     depends_on("cmake@3.5:", type="build")
     for ver in [
@@ -147,6 +148,7 @@ class Rccl(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -180,6 +182,7 @@ class Rccl(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
     ]:
         depends_on("numactl@2:", when="@" + ver)
     for ver in [
@@ -200,11 +203,12 @@ class Rccl(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
     ]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
         depends_on("chrpath", when="@5.3.0:")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
     depends_on("googletest@1.11.0:", when="@5.3:")
 
