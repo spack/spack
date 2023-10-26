@@ -42,7 +42,6 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     generator("ninja")
 
-    map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
     cxxstds = ("17", "20", "23")
     variant(
         "cxxstd",
@@ -142,7 +141,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             )
 
     for cxxstd in cxxstds:
-        depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
+        depends_on("boost cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
         depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
 
     # COROUTINES
