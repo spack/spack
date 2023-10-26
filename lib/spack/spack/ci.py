@@ -213,9 +213,11 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
                 status = colorize("@*g{[x]}  ")
                 msg = f"  {status}{s.cformat(spec_fmt)}{reason_msg}"
             else:
-                msg = f"{s.format(spec_fmt)}{reason_msg}"
+                msg = s.format(spec_fmt)
                 if rebuild_decisions[job].mirrors:
-                    msg += " found on mirror: " + ", ".join(rebuild_decisions[job].mirrors)
+                    msg += " found on: " + ", ".join(rebuild_decisions[job].mirrors)
+                else:
+                    msg += reason_msg
                 msg = colorize(f"  @K -   {cescape(msg)}@.")
             tty.msg(msg)
 
