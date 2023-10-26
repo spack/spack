@@ -25,6 +25,9 @@ class Libluv(CMakePackage):
     depends_on("lua-lang", type="link")
     depends_on("libuv", type="link")
 
+    # https://github.com/neovim/neovim/issues/25770
+    conflicts("libluv@1.44:1.45", when="platform=darwin")
+
     def cmake_args(self):
         args = [
             "-DLUA_BUILD_TYPE=System",

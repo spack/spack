@@ -140,9 +140,6 @@ class Neovim(CMakePackage):
     # https://github.com/neovim/neovim/issues/16217#issuecomment-958590493
     conflicts("libvterm@0.2:", when="@:0.7")
 
-    # https://github.com/neovim/neovim/issues/25770
-    conflicts("libluv@1.44:", when="platform=darwin")
-
     @when("^lua")
     def cmake_args(self):
         return [self.define("PREFER_LUA", True)]
