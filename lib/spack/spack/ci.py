@@ -2250,13 +2250,13 @@ class CDashHandler:
                 spec.architecture,
                 self.build_group,
             )
-            tty.verbose(
+            tty.debug(
                 "Generated CDash build name ({0}) from the {1}".format(build_name, spec.name)
             )
             return build_name
 
         build_name = os.environ.get("SPACK_CDASH_BUILD_NAME")
-        tty.verbose("Using CDash build name ({0}) from the environment".format(build_name))
+        tty.debug("Using CDash build name ({0}) from the environment".format(build_name))
         return build_name
 
     @property  # type: ignore
