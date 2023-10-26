@@ -232,6 +232,13 @@ class LmodConfiguration(BaseConfiguration):
         """Returns the list of tokens that are not available."""
         return [x for x in self.hierarchy_tokens if x not in self.available]
 
+    @property
+    def hidden(self):
+        # Never hide a module that opens a hierarchy
+        if any(self.spec.package.provides(x) for x in self.hierarchy_tokens):
+            return False
+        return super().hidden
+
 
 class LmodFileLayout(BaseFileLayout):
     """File layout for lmod module files."""
