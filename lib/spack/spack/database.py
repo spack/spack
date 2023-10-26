@@ -1106,9 +1106,11 @@ class Database:
                 self.last_seen_verifier = current_verifier
                 # Read from file if a database exists
                 self._read_from_file(self._index_path)
+                self.modified = False
             elif self._state_is_inconsistent:
                 self._read_from_file(self._index_path)
                 self._state_is_inconsistent = False
+                self.modified = False
             return
         elif self.is_upstream:
             tty.warn("upstream not found: {0}".format(self._index_path))
