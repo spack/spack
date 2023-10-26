@@ -37,30 +37,30 @@ def setup_parser(subparser):
         help="don't clean up staging area when command completes",
     )
     subparser.add_argument(
-        "-b",
         "--batch",
+        "-b",
         action="store_true",
         default=False,
         help="don't ask which versions to checksum",
     )
     subparser.add_argument(
-        "-l",
         "--latest",
+        "-l",
         action="store_true",
         default=False,
         help="checksum the latest available version",
     )
     subparser.add_argument(
-        "-p",
         "--preferred",
+        "-p",
         action="store_true",
         default=False,
         help="checksum the known Spack preferred version",
     )
     modes_parser = subparser.add_mutually_exclusive_group()
     modes_parser.add_argument(
-        "-a",
         "--add-to-package",
+        "-a",
         action="store_true",
         default=False,
         help="add new versions to package",
