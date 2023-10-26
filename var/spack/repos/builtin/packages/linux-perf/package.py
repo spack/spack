@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
+import re
 from textwrap import dedent
 
 import llnl.util.tty as tty
@@ -63,7 +64,7 @@ class LinuxPerf(Package):
     depends_on("libunwind components=ptrace")
     depends_on("libiberty")
     depends_on("binutils", type=("build", "link", "run"))
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("libtraceevent", when="+libtraceevent")
 
@@ -107,16 +108,8 @@ class LinuxPerf(Package):
     def install(self, spec, prefix):
         # TODO:
         # - GTK2=
-        # - NO_LIBBPF=1
-        # - d3 flamegraph as resource for libexec/perf-core/scripts/python/flamegraph.py
-        # - elfutils could be replaced by libelf ? (NO_LIBELF NO_LIBDWARF NO_LIBUNWIND etc.)
-
-        # Note:
-        #
-        # The majority of "NO_*" are tested using ifdef/indef and not if/eq/neq.
-        # i.e. NO_LIBPYTHON=0/1/foobar will all disable libpython.
-        #
-        # This also means there is no trivial way to force a dependency (for most of them).
+        # - NO_LIBBPF=1 ?
+        # - d3 flamegraph resources (libexec/perf-core/scripts/python/flamegraph.py)
 
         version = self.spec.version
 
@@ -257,12 +250,8 @@ class LinuxPerf(Package):
         #   ...
         perf = Executable(self.prefix.bin.perf)
         output = perf("version", "--build-options", output=str, error=str)
-        tty.msg(output)
-        enabled = set()
-        for line in output.splitlines():
-            spl = line.split(":", maxsplit=1)
-            if len(spl) >= 2 and "[ on " in spl[1]:
-                enabled.add(spl[0].strip())
+        tty.msg(output)  # keep a trace in build log
+        enabled = set(re.findall(r"^\s*(\S+)\s*:\s*\[\s*on\s*\]", output, re.MULTILINE))
         missing = set(checks) - enabled
         tty.msg(f"detected features: {sorted(enabled)!r}")
         tty.msg(f"expected features: {sorted(checks)!r}")
