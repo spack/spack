@@ -209,14 +209,11 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
             rebuild = rebuild_decisions[job].rebuild
             reason = rebuild_decisions[job].reason
             reason_msg = " ({0})".format(reason) if reason else ""
-
-            rebuild_status = "@g{[x]}  "
             spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
-
             if rebuild:
-                msg = f"{rebuild_status}{s.cformat(spec_fmt)}{reason_msg}"
+                msg = f"@g{{[x]}}  {s.cformat(spec_fmt)}{reason_msg}"
             else:
-                grey_start = "@K{"
+                grey_start = "@K{ -   "
                 grey_end = "}"
                 msg = f"{grey_start}{s.format(spec_fmt)}{reason_msg}"
                 if rebuild_decisions[job].mirrors:
