@@ -305,6 +305,7 @@ class Curl(NMakePackage, AutotoolsPackage):
     depends_on("libssh2", when="+libssh2")
     depends_on("libssh", when="+libssh")
     depends_on("krb5", when="+gssapi")
+    depends_on("rtmpdump", when="+librtmp")
 
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
