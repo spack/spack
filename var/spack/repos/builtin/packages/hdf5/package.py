@@ -74,6 +74,11 @@ class Hdf5(CMakePackage):
         preferred=True,
     )
     version(
+        "1.10.11",
+        sha256="341684c5c0976b8c7e6951735a400275a90693604464cac73e9f323c696fc79c",
+        preferred=True,
+    )
+    version(
         "1.10.10",
         sha256="a6877ab7bd5d769d2d68618fdb54beb50263dcc2a8c157fe7e2186925cdb02db",
         preferred=True,
