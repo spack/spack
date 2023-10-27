@@ -15,15 +15,16 @@ path = "lib/spack/spack/__init__.py"
 
 [project.optional-dependencies]
 dev = [
+  "black",
+  "click",
+  "flake8",
+  "isort>=4.3.5",
+  "mypy>=0.900",
   "pip>=21.3",
   "pytest",
   "pytest-xdist",
+  "pyupgrade",
   "setuptools",
-  "click",
-  'black',
-  "mypy",
-  "isort",
-  "flake8",
   "vermin",
 ]
 ci = [
