@@ -13,9 +13,11 @@ class Elsi(CMakePackage):
 
     homepage = "https://wordpress.elsi-interchange.org/"
     url = "https://wordpress.elsi-interchange.org/wp-content/uploads/2019/03/elsi-2.2.1.tar.gz"
+    git = "https://gitlab.com/elsi_project/elsi_interface.git"
 
     license("BSD-3-Clause")
 
+    version("2.6.2", tag="v2.6.2", commit="cdb6f8e1cb370ec577043e097038516606f0d8af")
     version("2.2.1", sha256="5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d")
 
     variant("add_underscore", default=True, description="Suffix C functions with an underscore")
@@ -72,6 +74,9 @@ class Elsi(CMakePackage):
         if self.spec.satisfies("+use_external_elpa"):
             elpa_module = find(self.spec["elpa"].prefix, "elpa.mod")
             args.append(self.define("INC_PATHS", os.path.dirname(elpa_module[0])))
+
+        if "%gcc" in self.spec:
+            args.append("-DCMAKE_Fortran_FLAGS_RELEASE=-O2 -DNDEBUG")
 
         # Only when using fujitsu compiler
         if self.spec.satisfies("%fj"):
