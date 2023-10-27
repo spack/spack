@@ -32,11 +32,11 @@ def grouper(iterable, n, fillvalue=None):
 #: List of directories to exclude from checks -- relative to spack root
 exclude_directories = [os.path.relpath(spack.paths.external_path, spack.paths.prefix)]
 
-#: Order in which tools should be run. flake8 is last so that it can
-#: double-check the results of other tools (if, e.g., --fix was provided)
+#: Order in which tools should be run. flake8 and mypy are last so that they
+#: can double-check the results of other tools (if, e.g., --fix was provided)
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
-tool_names = ["isort", "black", "pyupgrade", "mypy", "flake8"]
+tool_names = ["isort", "black", "pyupgrade", "flake8", "mypy"]
 
 #: tools we run in spack style
 tools = {}
