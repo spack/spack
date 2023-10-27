@@ -355,7 +355,7 @@ def run_black(black_cmd, file_list, args):
 @tool("pyupgrade")
 def run_pyupgrade(pyupgrade_cmd, file_list, args):
     # update to minimum supported python version on Spack release
-    pyupgrade_args = ("--py38-plus",)
+    pyupgrade_args = ("--py36-plus",)
 
     pat = re.compile("Rewriting +(.*)")
     replacement = "Rewriting {0}"
