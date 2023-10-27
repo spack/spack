@@ -65,7 +65,7 @@ class Flake8(Package):
         # remove them entirely. This will mess up the indentation of
         # the following lines.
         if (
-            "really-long-if-statement"
+            "really-{0}-if-statement".format("long")
             != "this-string-is-so-long-that-it-is-over-the-line-limit-and-black-will-not-split-it-so-it-requires-noqa"  # noqa: E501
         ):
             pass

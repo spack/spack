@@ -209,10 +209,11 @@ def test_fix_style(external_style_root):
     assert filecmp.cmp(broken_py, fixed_py)
 
 
+@pytest.mark.skipif(not which("black"), reason="black is not installed.")
 @pytest.mark.skipif(not which("flake8"), reason="flake8 is not installed.")
 @pytest.mark.skipif(not which("isort"), reason="isort is not installed.")
 @pytest.mark.skipif(not which("mypy"), reason="mypy is not installed.")
-@pytest.mark.skipif(not which("black"), reason="black is not installed.")
+@pytest.mark.skipif(not which("pyupgrade"), reason="pyupgrade is not installed.")
 def test_external_root(external_style_root, capfd):
     """Ensure we can run in a separate root directory w/o configuration files."""
     tmpdir, py_file = external_style_root
@@ -280,6 +281,15 @@ def test_style_with_errors(flake8_package_with_errors):
 def test_style_with_black(flake8_package_with_errors):
     output = style("--tool", "black,flake8", flake8_package_with_errors, fail_on_error=False)
     assert "black found errors" in output
+    assert style.returncode != 0
+    assert "spack style found errors" in output
+
+
+@pytest.mark.skipif(not which("pyupgrade"), reason="pyupgrade is not installed.")
+@pytest.mark.skipif(not which("flake8"), reason="flake8 is not installed.")
+def test_style_with_pyupgrade(flake8_package_with_errors):
+    output = style("--tool", "pyupgrade,flake8", flake8_package_with_errors, fail_on_error=False)
+    assert "pyupgrade found errors" in output
     assert style.returncode != 0
     assert "spack style found errors" in output
 
