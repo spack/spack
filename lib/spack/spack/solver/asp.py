@@ -2842,7 +2842,10 @@ class SpecBuilder:
                 ordered_compiler_flags = list(llnl.util.lang.dedupe(from_compiler + from_sources))
                 compiler_flags = spec.compiler_flags.get(flag_type, [])
 
-                msg = "%s does not equal %s" % (set(compiler_flags), set(ordered_compiler_flags))
+                msg = "compiler flags %s does not equal %s for %s" % (
+                    set(compiler_flags), set(ordered_compiler_flags), spec.name
+                )
+
                 assert set(compiler_flags) == set(ordered_compiler_flags), msg
 
                 spec.compiler_flags.update({flag_type: ordered_compiler_flags})

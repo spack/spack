@@ -507,6 +507,13 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # protobuf definitions.
     patch("0008-Fix-protobuf-errors-when-using-system-protobuf.patch", when="@2.5:2.6")
 
+    def patch(self):
+        filter_file(
+            '#include "absl',
+            '#include <cstdint>\n#include "absl',
+            'tensorflow/tsl/platform/stringpiece.h',
+         )
+
     phases = ["configure", "build", "install"]
 
     # https://www.tensorflow.org/install/source
