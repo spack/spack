@@ -154,7 +154,7 @@ class Abinit(AutotoolsPackage):
                 oapp("--with-wannier90-bins={0}".format(spec["wannier90"].prefix.bin))
                 oapp("--enable-connectors")
                 oapp("--with-dft-flavor=atompaw+libxc+wannier90")
-            elif "@:9.8" in spec:
+            elif spec.satisfies("@:9.8"):
                 options.extend(
                     [
                         "WANNIER90_CPPFLAGS=-I{0}".format(spec["wannier90"].prefix.modules),
@@ -166,8 +166,8 @@ class Abinit(AutotoolsPackage):
             else:
                 options.extend(
                     [
-                        "WANNIER90_CPPFLAGS=-I{0}".format(spec["wannier90"].prefix.modules),
-                        "WANNIER90_LIBS=-L{0}".format(spec["wannier90"].prefix.lib),
+                        f"WANNIER90_CPPFLAGS=-I{spec['wannier90'].prefix.modules}",
+                        f"WANNIER90_LIBS=-L{spec['wannier90'].prefix.lib}"
                         "WANNIER90_LDFLAGS=-lwannier",
                     ]
                 )
@@ -184,10 +184,10 @@ class Abinit(AutotoolsPackage):
         if "+mpi" in spec:
             oapp("CC={0}".format(spec["mpi"].mpicc))
             oapp("CXX={0}".format(spec["mpi"].mpicxx))
-            if "@9.8:" in spec:
-                oapp("F90={0}".format(spec["mpi"].mpifc))
+            if spec.satisfies("@9.8:"):
+                oapp(f"F90={spec['mpi'].mpifc}")
             else:
-                oapp("FC={0}".format(spec["mpi"].mpifc))
+                oapp(f"FC={spec['mpi'].mpifc}")
 
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
