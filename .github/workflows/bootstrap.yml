@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     container: "fedora:latest"
     steps:
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
@@ -26,7 +26,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
-          fetch-depth: 0
+          filter: tree:0 # partial treeless clone for speed
+          fetch-depth: 0 # no commit history limit
       - name: Setup non-root user
         run: |
           # See [1] below
@@ -36,8 +37,7 @@ jobs:
       - name: Setup repo
         shell: runuser -u spack-test -- bash {0}
         run: |
-          git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
     steps:
-      - name: Install dependencies
+      - name: Install system dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -64,7 +64,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
-          fetch-depth: 0
+          filter: tree:0 # partial treeless clone for speed
+          fetch-depth: 0 # no commit history limit
       - name: Setup non-root user
         run: |
           # See [1] below
@@ -74,8 +75,7 @@ jobs:
       - name: Setup repo
         shell: runuser -u spack-test -- bash {0}
         run: |
-          git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
     steps:
-      - name: Install dependencies
+      - name: Install system dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -101,7 +101,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
-          fetch-depth: 0
+          filter: tree:0 # partial treeless clone for speed
+          fetch-depth: 0 # no commit history limit
       - name: Setup non-root user
         run: |
           # See [1] below
@@ -111,8 +112,7 @@ jobs:
       - name: Setup repo
         shell: runuser -u spack-test -- bash {0}
         run: |
-          git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -124,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     container: "opensuse/leap:latest"
     steps:
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           # Harden CI by applying the workaround described here: https://www.suse.com/support/kb/doc/?id=000019505
           zypper update -y || zypper update -y
@@ -135,13 +135,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
-          fetch-depth: 0
+          filter: tree:0 # partial treeless clone for speed
+          fetch-depth: 0 # no commit history limit
       - name: Setup repo
         run: |
           # See [1] below
           git config --global --add safe.directory /__w/spack/spack
-          git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
@@ -193,7 +193,7 @@ jobs:
                 not_found=0
                 old_path="$PATH"
                 export PATH="$ver_dir:$PATH"
-                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
+                ./bin/spack-tmpconfig -b ./.github/workflows/bin/bootstrap-test.sh
                 export PATH="$old_path"
               fi
             fi
@@ -206,11 +206,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
-          fetch-depth: 0
+          filter: tree:0 # partial treeless clone for speed
+          fetch-depth: 0 # no commit history limit
       - name: Setup repo
         run: |
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap clingo
         run: |
           set -ex
@@ -224,7 +225,7 @@ jobs:
                 not_found=0
                 old_path="$PATH"
                 export PATH="$ver_dir:$PATH"
-                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
+                ./bin/spack-tmpconfig -b ./.github/workflows/bin/bootstrap-test.sh
                 export PATH="$old_path"
               fi
             fi
@@ -238,7 +239,7 @@ jobs:
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
     steps:
-      - name: Install dependencies
+      - name: Install system dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -247,9 +248,10 @@ jobs:
               bzip2 curl file g++ gcc patchelf gfortran git gzip \
               make patch unzip xz-utils python3 python3-dev tree
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae1
         with:
-          fetch-depth: 0
+          filter: tree:0 # partial treeless clone for speed
+          fetch-depth: 0 # no commit history limit
       - name: Setup non-root user
         run: |
           # See [1] below
@@ -259,8 +261,7 @@ jobs:
       - name: Setup repo
         shell: runuser -u spack-test -- bash {0}
         run: |
-          git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap GnuPG
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -274,7 +275,7 @@ jobs:
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
     steps:
-      - name: Install dependencies
+      - name: Install system dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -286,7 +287,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
-          fetch-depth: 0
+          filter: tree:0 # partial treeless clone for speed
+          fetch-depth: 0 # no commit history limit
       - name: Setup non-root user
         run: |
           # See [1] below
@@ -296,8 +298,7 @@ jobs:
       - name: Setup repo
         shell: runuser -u spack-test -- bash {0}
         run: |
-          git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
       - name: Bootstrap GnuPG
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -311,7 +312,7 @@ jobs:
   macos-gnupg-binaries:
     runs-on: macos-latest
     steps:
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           brew install tree
           # Remove GnuPG since we want to bootstrap it
@@ -329,7 +330,7 @@ jobs:
   macos-gnupg-sources:
     runs-on: macos-latest
     steps:
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           brew install gawk tree
           # Remove GnuPG since we want to bootstrap it

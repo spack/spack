@@ -1,0 +1,5 @@
+# setup
+setuptools==68.2.2
+
+# install
+clingo==5.6.2

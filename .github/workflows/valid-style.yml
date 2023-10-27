@@ -25,8 +25,8 @@ jobs:
         cache: 'pip'
     - name: Install Python Packages
       run: |
-        pip install --upgrade pip setuptools
-        pip install -r .github/workflows/style/requirements.txt
+        pip install -r .github/workflows/requirements/required.txt
+        pip install -r .github/workflows/requirements/style.txt
     - name: vermin (Spack's Core)
       run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
@@ -37,20 +37,20 @@ jobs:
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       with:
-        fetch-depth: 0
+        filter: tree:0 # partial treeless clone for speed
+        fetch-depth: 0 # no commit history limit
     - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236
       with:
         python-version: '3.11'
         cache: 'pip'
     - name: Install Python packages
       run: |
-        pip install --upgrade pip setuptools
-        pip install -r .github/workflows/style/requirements.txt
+        pip install -r .github/workflows/requirements/required.txt
+        pip install -r .github/workflows/requirements/style.txt
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
-        git --version
-        . .github/workflows/setup_git.sh
+        . .github/workflows/bin/setup_git.sh
     - name: Run style tests
       run: |
           share/spack/qa/run-style-tests
@@ -72,10 +72,9 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
       - name: Setup repo and non-root user
         run: |
-          git --version
           git config --global --add safe.directory /__w/spack/spack
           git fetch --unshallow
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
           useradd spack-test
           chown -R spack-test .
       - name: Bootstrap Spack development environment
