@@ -231,10 +231,7 @@ class Acts(CMakePackage, CudaPackage):
 
     # Variants that only affect Acts examples for now
     variant(
-        "binaries",
-        default=False,
-        description="Build the examples binaries",
-        when="@23: +examples",
+        "binaries", default=False, description="Build the examples binaries", when="@23: +examples"
     )
     variant(
         "edm4hep",
