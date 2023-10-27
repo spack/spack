@@ -9,3 +9,4 @@ tcl:
       '+debug': foo
       '^mpich': foo
       '~debug': bar
+      '^mpi': 'mpi={^mpi.name}-v{^mpi.version}'

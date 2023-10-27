@@ -357,9 +357,10 @@ class TestTcl:
         """Tests adding suffixes to module file name."""
         module_configuration("suffix")
 
-        writer, spec = factory("mpileaks+debug target=x86_64")
+        writer, spec = factory("mpileaks+debug target=x86_64 ^mpich@3.0.4")
         assert "foo" in writer.layout.use_name
         assert "foo-foo" not in writer.layout.use_name
+        assert "mpi=mpich-v3.0.4" in writer.layout.use_name
 
         writer, spec = factory("mpileaks~debug target=x86_64")
         assert "foo-bar" in writer.layout.use_name
