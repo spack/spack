@@ -85,15 +85,11 @@ class PyScipy(PythonPackage):
     depends_on("py-pybind11@2.4.3:", when="@1.5:1.6.1", type=("build", "link"))
     depends_on("py-pybind11@2.4.0:", when="@1.4.1:1.4", type=("build", "link"))
     depends_on("py-pybind11@2.2.4:", when="@1.4.0", type=("build", "link"))
-    depends_on("py-pythran@0.12:0.14", when="@1.11.3:", type="build")
-    depends_on("py-pythran@0.12:0.13", when="@1.11.0:1.11.2", type="build")
-    depends_on("py-pythran@0.12", when="@1.10", type="build")
-    depends_on("py-pythran@0.9.12:0.12", when="@1.9.2:1.9", type="build")
-    depends_on("py-pythran@0.9.12:0.11", when="@1.9.0:1.9.1", type="build")
-    depends_on("py-pythran@0.10", when="@1.8", type="build")
-    depends_on("py-pythran@0.9.12:0.9", when="@1.7.2:1.7", type="build")
-    depends_on("py-pythran@0.9.11", when="@1.7.0:1.7.1", type="build")
-    depends_on("py-wheel@:0.40", when="@1.11:", type="build")
+    depends_on("py-pythran@0.12:", when="@1.10:", type="build")
+    depends_on("py-pythran@0.10:", when="@1.8", type="build")
+    depends_on("py-pythran@0.9.12:", when="@1.7.2:", type="build")
+    depends_on("py-pythran@0.9.11:", when="@1.7:", type="build")
+    depends_on("py-wheel@:0.40", when="@1.11.0:1.11.2", type="build")
     depends_on("py-wheel@:0.38", when="@1.10", type="build")
     depends_on("py-wheel@:0.37", when="@:1.9", type="build")
     depends_on("pkgconfig", when="@1.9:", type="build")
@@ -119,6 +115,9 @@ class PyScipy(PythonPackage):
     depends_on("lapack@3.4.1:", when="@1.2:")
     depends_on("lapack")
     depends_on("blas")
+
+    # https://github.com/scipy/scipy/issues/19352
+    conflicts("^py-cython@3.0.3")
 
     # meson.build
     # https://docs.scipy.org/doc/scipy/dev/toolchain.html#compilers
