@@ -237,7 +237,10 @@ class Dealii(CMakePackage, CudaPackage):
     #     "trilinos@master+rol~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2",
     #     when="+trilinos+cuda",
     # )
-    depends_on("trilinos+cuda", when="@9.5:+trilinos+cuda")
+    for a in CudaPackage.cuda_arch_values:
+        arch_str = "+cuda cuda_arch=" + a
+        trilinos_spec = "trilinos " + arch_str
+        depends_on(trilinos_spec, when="@9.5:+trilinos " + arch_str)
     depends_on("vtk", when="@9.6:+vtk")
 
     # Explicitly provide a destructor in BlockVector,
