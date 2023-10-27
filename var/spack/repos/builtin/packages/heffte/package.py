@@ -131,8 +131,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
                     "-DAMDDeviceLibs_DIR="
                     + f"{self.spec['llvm-amdgpu'].prefix.lib.cmake.AMDDeviceLibs}",
                     f"-Damd_comgr_DIR={self.spec['comgr'].prefix.lib.cmake.amd_comgr}",
-                    "-Dhsa-runtime64_DIR="
-                    + hsa_runtime,
+                    "-Dhsa-runtime64_DIR=" + hsa_runtime,
                     f"-DHSA_HEADER={self.spec['hsa-rocr-dev'].prefix.include}",
                     f"-Drocfft_DIR={self.spec['rocfft'].prefix.lib.cmake.rocfft}",
                 ]
