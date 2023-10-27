@@ -42,6 +42,7 @@ class Fdb(CMakePackage):
 
     depends_on("eckit@1.16:")
     depends_on("eckit+admin", when="+tools")
+    depends_on("eckit@1.24.4:", when="@5.11.22:")
 
     depends_on("eccodes@2.10:")
     depends_on("eccodes+tools", when="+tools")
