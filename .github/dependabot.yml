@@ -12,6 +12,10 @@ updates:
       interval: "daily"
   # Requirements to run style checks
   - package-ecosystem: "pip"
-    directory: "/.github/workflows/style"
+    directory: "/.github/workflows/requirements"
     schedule:
       interval: "daily"
+    ignore:
+      # setuptools releases new versions almost daily
+      - dependency-name: "setuptools"
+        update-types: ["version-update:semver-patch"]
