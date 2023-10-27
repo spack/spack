@@ -29,8 +29,8 @@ class PyPint(PythonPackage):
     version("0.9", sha256="32d8a9a9d63f4f81194c0014b3b742679dce81a26d45127d9810a68a561fe4e2")
     version("0.8.1", sha256="afcf31443a478c32bbac4b00337ee9026a13d0e2ac83d30c79151462513bb0d4")
 
-    depends_on("python@3.9:", when="@0.22:", type="build", "run")
-    depends_on("python@3.8:", when="@0.19:0.21", type="build", "run")
+    depends_on("python@3.9:", when="@0.22:", type=("build", "run"))
+    depends_on("python@3.8:", when="@0.19:0.21", type=("build", "run"))
     depends_on("py-setuptools@61:", when="@0.21:", type="build")
     depends_on("py-setuptools@41:", when="@0.16:0.20", type="build")
     depends_on("py-setuptools@41:", when="@0.11:0.15", type=("build", "run"))
