@@ -618,7 +618,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
             # we use the mkl interface of gromacs
             options.append("-DGMX_FFT_LIBRARY=mkl")
-            if not self.spec["mkl"].satisfies("@2023:"):
+            if self.spec.satisfies("@:2022"):
                 options.append(
                     "-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0])
                 )
