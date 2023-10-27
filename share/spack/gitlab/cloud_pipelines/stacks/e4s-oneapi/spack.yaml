@@ -120,6 +120,7 @@ spack:
   - nccmp
   - nco
   - netlib-scalapack
+  - nrm
   - omega-h
   - openmpi
   - papi
@@ -186,7 +187,6 @@ spack:
   # - geopm               # geopm issue: https://github.com/spack/spack/issues/38795
   # - hpctoolkit          # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
   # - mgard +serial +openmp +timing +unstructured ~cuda # mgard: mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
-  # - nrm                 # upper bound on py-pip forces old, non-building py-scipy@1.8.1 %oneapi
   # - openfoam            # cgal: https://github.com/spack/spack/issues/39481
   # - openpmd-api         # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
   # - swig@4.0.2-fortran  # ?
