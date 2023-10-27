@@ -2286,13 +2286,16 @@ def needs_rebuild(spec, mirror_url):
     # format of the name, in order to determine if the package
     # needs to be rebuilt.
     cache_prefix = build_cache_prefix(mirror_url)
-    specfile_name = tarball_name(spec, ".spec.json.sig")
+    specfile_name = tarball_name(spec, ".spec.json")
     specfile_path = os.path.join(cache_prefix, specfile_name)
+    specfile_name_signed = tarball_name(spec, ".spec.json.sig")
+    specfile_path_signed = os.path.join(cache_prefix, specfile_name_signed)
 
     # Only check for the presence of the json version of the spec.  If the
     # mirror only has the json version, or doesn't have the spec at all, we
     # need to rebuild.
-    return not web_util.url_exists(specfile_path)
+    return not (web_util.url_exists(specfile_path) or
+                web_util.url_exists(specfile_path_signed))
 
 
 def check_specs_against_mirrors(mirrors, specs, output_file=None):
