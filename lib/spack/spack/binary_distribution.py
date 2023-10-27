@@ -2294,8 +2294,7 @@ def needs_rebuild(spec, mirror_url):
     # Only check for the presence of the json version of the spec.  If the
     # mirror only has the json version, or doesn't have the spec at all, we
     # need to rebuild.
-    return not (web_util.url_exists(specfile_path) or
-                web_util.url_exists(specfile_path_signed))
+    return not (web_util.url_exists(specfile_path) or web_util.url_exists(specfile_path_signed))
 
 
 def check_specs_against_mirrors(mirrors, specs, output_file=None):
