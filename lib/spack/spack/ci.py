@@ -215,7 +215,7 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
             else:
                 msg = f"{s.format(spec_fmt)}{reason_msg}"
                 if rebuild_decisions[job].mirrors:
-                    msg += " found on mirror: " + ", ".join(rebuild_decisions[job].mirrors)
+                    msg += f" [{', '.join(rebuild_decisions[job].mirrors)}]"
                 msg = colorize(f"  @K -   {cescape(msg)}@.")
             tty.msg(msg)
 
