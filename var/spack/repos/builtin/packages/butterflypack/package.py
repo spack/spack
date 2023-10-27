@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from platform import machine
 
 
 class Butterflypack(CMakePackage):
@@ -74,7 +75,7 @@ class Butterflypack(CMakePackage):
         args.append("-Denable_openmp=%s" % ("ON" if "+openmp" in spec else "OFF"))
         if "%cce" in spec:
             # Assume the proper Cray CCE module (cce) is loaded:
-            craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+            craylibs_path = env["CRAYLIBS_" + machine().upper()]
             env.setdefault("LDFLAGS", "")
             env["LDFLAGS"] += " -Wl,-rpath," + craylibs_path
 
