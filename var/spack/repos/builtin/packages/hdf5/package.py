@@ -41,6 +41,12 @@ class Hdf5(CMakePackage):
 
     # Odd versions are considered experimental releases
     # Even versions are maintenance versions
+    # Using tag for testing;  official release will have sha256 checksum
+    version(
+        "1.14.3",
+        tag="hdf5-1_14_3-rc1",
+        preferred=True
+    )
     version(
         "1.14.2",
         sha256="1c342e634008284a8c2794c8e7608e2eaf26d01d445fb3dfd7f33cb2fb51ac53",
