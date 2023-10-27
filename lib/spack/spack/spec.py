@@ -75,6 +75,7 @@ import spack.dependency as dp
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
+import spack.parser
 import spack.patch
 import spack.paths
 import spack.platforms
@@ -1318,8 +1319,6 @@ class Spec:
         self.external_path = external_path
         self.external_module = external_module
         """
-        import spack.parser
-
         # Copy if spec_like is a Spec.
         if isinstance(spec_like, Spec):
             self._dup(spec_like)

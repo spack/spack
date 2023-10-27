@@ -543,7 +543,7 @@ def add_concretizer_args(subparser):
     )
 
 
-def add_s3_connection_args(subparser, add_help):
+def add_connection_args(subparser, add_help):
     subparser.add_argument(
         "--s3-access-key-id", help="ID string to use to connect to this S3 mirror"
     )
@@ -559,6 +559,8 @@ def add_s3_connection_args(subparser, add_help):
     subparser.add_argument(
         "--s3-endpoint-url", help="endpoint URL to use to connect to this S3 mirror"
     )
+    subparser.add_argument("--oci-username", help="username to use to connect to this OCI mirror")
+    subparser.add_argument("--oci-password", help="password to use to connect to this OCI mirror")
 
 
 def use_buildcache(cli_arg_value):

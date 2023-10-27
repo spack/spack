@@ -37,6 +37,7 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.mirror
 import spack.paths
+import spack.resource
 import spack.spec
 import spack.stage
 import spack.util.lock
@@ -455,6 +456,7 @@ class Stage:
             mirror_urls = [
                 url_util.join(mirror.fetch_url, rel_path)
                 for mirror in spack.mirror.MirrorCollection(source=True).values()
+                if not mirror.fetch_url.startswith("oci://")
                 for rel_path in self.mirror_paths
             ]
 
@@ -658,8 +660,14 @@ class Stage:
 
 
 class ResourceStage(Stage):
-    def __init__(self, url_or_fetch_strategy, root, resource, **kwargs):
-        super().__init__(url_or_fetch_strategy, **kwargs)
+    def __init__(
+        self,
+        fetch_strategy: fs.FetchStrategy,
+        root: Stage,
+        resource: spack.resource.Resource,
+        **kwargs,
+    ):
+        super().__init__(fetch_strategy, **kwargs)
         self.root_stage = root
         self.resource = resource
 

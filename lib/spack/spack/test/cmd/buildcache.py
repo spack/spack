@@ -326,4 +326,8 @@ def test_correct_specs_are_pushed(
 
     buildcache(*buildcache_create_args)
 
-    assert packages_to_push == expected
+    # Order is not guaranteed, so we can't just compare lists
+    assert set(packages_to_push) == set(expected)
+
+    # Ensure no duplicates
+    assert len(set(packages_to_push)) == len(packages_to_push)

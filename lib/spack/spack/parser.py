@@ -66,7 +66,6 @@ from llnl.util.tty import color
 
 import spack.error
 import spack.spec
-import spack.variant
 import spack.version
 
 IS_WINDOWS = sys.platform == "win32"
@@ -164,7 +163,7 @@ class Token:
     __slots__ = "kind", "value", "start", "end"
 
     def __init__(
-        self, kind: TokenType, value: str, start: Optional[int] = None, end: Optional[int] = None
+        self, kind: TokenBase, value: str, start: Optional[int] = None, end: Optional[int] = None
     ):
         self.kind = kind
         self.value = value
@@ -264,8 +263,8 @@ class SpecParser:
         return list(filter(lambda x: x.kind != TokenType.WS, tokenize(self.literal_str)))
 
     def next_spec(
-        self, initial_spec: Optional[spack.spec.Spec] = None
-    ) -> Optional[spack.spec.Spec]:
+        self, initial_spec: Optional["spack.spec.Spec"] = None
+    ) -> Optional["spack.spec.Spec"]:
         """Return the next spec parsed from text.
 
         Args:
@@ -298,7 +297,7 @@ class SpecParser:
 
         return root_spec
 
-    def all_specs(self) -> List[spack.spec.Spec]:
+    def all_specs(self) -> List["spack.spec.Spec"]:
         """Return all the specs that remain to be parsed"""
         return list(iter(self.next_spec, None))
 
@@ -313,7 +312,9 @@ class SpecNodeParser:
         self.has_compiler = False
         self.has_version = False
 
-    def parse(self, initial_spec: Optional[spack.spec.Spec] = None) -> Optional[spack.spec.Spec]:
+    def parse(
+        self, initial_spec: Optional["spack.spec.Spec"] = None
+    ) -> Optional["spack.spec.Spec"]:
         """Parse a single spec node from a stream of tokens
 
         Args:
@@ -414,7 +415,7 @@ class FileParser:
     def __init__(self, ctx):
         self.ctx = ctx
 
-    def parse(self, initial_spec: spack.spec.Spec) -> spack.spec.Spec:
+    def parse(self, initial_spec: "spack.spec.Spec") -> "spack.spec.Spec":
         """Parse a spec tree from a specfile.
 
         Args:
@@ -437,7 +438,7 @@ class FileParser:
         return initial_spec
 
 
-def parse(text: str) -> List[spack.spec.Spec]:
+def parse(text: str) -> List["spack.spec.Spec"]:
     """Parse text into a list of strings
 
     Args:
@@ -450,8 +451,8 @@ def parse(text: str) -> List[spack.spec.Spec]:
 
 
 def parse_one_or_raise(
-    text: str, initial_spec: Optional[spack.spec.Spec] = None
-) -> spack.spec.Spec:
+    text: str, initial_spec: Optional["spack.spec.Spec"] = None
+) -> "spack.spec.Spec":
     """Parse exactly one spec from text and return it, or raise
 
     Args:

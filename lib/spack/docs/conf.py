@@ -204,6 +204,7 @@ nitpick_ignore = [
     ("py:class", "clingo.Control"),
     ("py:class", "six.moves.urllib.parse.ParseResult"),
     ("py:class", "TextIO"),
+    ("py:class", "hashlib._Hash"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
