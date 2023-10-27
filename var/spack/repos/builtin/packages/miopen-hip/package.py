@@ -126,7 +126,6 @@ class MiopenHip(CMakePackage):
         when="@5.7:",
     )
 
-
     for ver in [
         "3.5.0",
         "3.7.0",

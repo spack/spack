@@ -143,7 +143,7 @@ class HsakmtRoct(CMakePackage):
         if self.spec.satisfies("@5.4.3:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
         if self.spec.satisfies("@5.7.0:"):
-           args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
+            args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
 
         return args
 

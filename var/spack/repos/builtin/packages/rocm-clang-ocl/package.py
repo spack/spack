@@ -143,7 +143,7 @@ class RocmClangOcl(CMakePackage):
         depends_on(
             "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0","5.7.1"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)
 
     test_src_dir = "test"
