@@ -62,14 +62,12 @@ class PyScipy(PythonPackage):
     depends_on("python@:3.8", when="@1.3.2:1.5.3", type=("build", "link", "run"))
     depends_on("python@:3.7", when="@1.1:1.3.1", type=("build", "link", "run"))
 
-    depends_on("py-meson-python@0.12.1:0.14", when="@1.11.3:", type="build")
-    depends_on("py-meson-python@0.12.1:0.13", when="@1.11.0:1.11.2", type="build")
-    depends_on("py-meson-python@0.11:0.12", when="@1.10.1:1.10", type="build")
-    depends_on("py-meson-python@0.11", when="@1.10.0", type="build")
-    depends_on("py-meson-python@0.9:", when="@1.9.2:1.9", type="build")
-    depends_on("py-meson-python@0.8.1:", when="@1.9.1", type="build")
-    depends_on("py-meson-python@0.7", when="@1.9.0", type="build")
-    depends_on("meson@0.62.2", when="@1.9.0:1.9.1", type="build")
+    depends_on("py-meson-python@0.12.1:", when="@1.11:", type="build")
+    depends_on("py-meson-python@0.11:", when="@1.10:", type="build")
+    depends_on("py-meson-python@0.9:", when="@1.9.2:", type="build")
+    depends_on("py-meson-python@0.8.1:", when="@1.9.1:", type="build")
+    depends_on("py-meson-python@0.7:", when="@1.9:", type="build")
+    depends_on("meson", when="@1.9.0:1.9.1", type="build")
     depends_on("py-cython@0.29.35:2", when="@1.11:", type="build")
     depends_on("py-cython@0.29.32:2", when="@1.9.2:", type="build")
     depends_on("py-cython@0.29.21:2", when="@1.9:", type="build")
@@ -116,9 +114,6 @@ class PyScipy(PythonPackage):
     depends_on("lapack")
     depends_on("blas")
 
-    # https://github.com/scipy/scipy/issues/19352
-    conflicts("^py-cython@3.0.3")
-
     # meson.build
     # https://docs.scipy.org/doc/scipy/dev/toolchain.html#compilers
     conflicts("%gcc@:7", when="@1.10:", msg="SciPy requires GCC >= 8.0")
@@ -130,16 +125,22 @@ class PyScipy(PythonPackage):
         "when building with MSVC",
     )
 
-    # https://docs.scipy.org/doc//scipy-1.10.1/release.1.7.3.html
-    conflicts("platform=darwin target=aarch64:", when="@:1.7.2")
-
-    # https://github.com/scipy/scipy/pull/11324
-    conflicts("@1.4.0:1.4.1", when="target=ppc64le:")
+    # https://github.com/scipy/scipy/issues/19352
+    conflicts("^py-cython@3.0.3")
 
     # https://github.com/mesonbuild/meson/pull/10909#issuecomment-1282241479
     # Intel OneAPI ifx claims to support -fvisibility, but this does not work.
     # Meson adds this flag for all Python extensions which include Fortran code.
     conflicts("%oneapi@:2023.0", when="@1.9:")
+
+    # error: expected unqualified-id (exact compiler versions unknown)
+    conflicts("%apple-clang@15:", when="@:1.9")
+
+    # https://docs.scipy.org/doc//scipy-1.10.1/release.1.7.3.html
+    conflicts("platform=darwin target=aarch64:", when="@:1.7.2")
+
+    # https://github.com/scipy/scipy/pull/11324
+    conflicts("@1.4.0:1.4.1", when="target=ppc64le:")
 
     # https://github.com/scipy/scipy/issues/12860
     patch(
