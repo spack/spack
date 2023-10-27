@@ -8,6 +8,7 @@ Utility module for dealing with Windows Registry.
 """
 
 import os
+import re
 import sys
 from contextlib import contextmanager
 
@@ -68,8 +69,19 @@ class RegistryKey:
         sub_keys, _, _ = winreg.QueryInfoKey(self.hkey)
         for i in range(sub_keys):
             sub_name = winreg.EnumKey(self.hkey, i)
-            sub_handle = winreg.OpenKeyEx(self.hkey, sub_name, access=winreg.KEY_READ)
-            self._keys.append(RegistryKey(os.path.join(self.path, sub_name), sub_handle))
+            try:
+                sub_handle = winreg.OpenKeyEx(self.hkey, sub_name, access=winreg.KEY_READ)
+                self._keys.append(RegistryKey(os.path.join(self.path, sub_name), sub_handle))
+            except OSError as e:
+                if hasattr(e, "winerror"):
+                    if e.winerror == 5:
+                        # This is a permission error, we can't read this key
+                        # move on
+                        pass
+                    else:
+                        raise
+                else:
+                    raise
 
     def _gather_value_info(self):
         """Compose all values for this key into a dict of form value name: RegistryValue Object"""
@@ -161,6 +173,15 @@ class WindowsRegistryView:
         self.root = root_key
         self._reg = None
 
+    class KeyMatchConditions:
+        @staticmethod
+        def regex_matcher(subkey_name):
+            return lambda x: re.match(subkey_name, x.name)
+
+        @staticmethod
+        def name_matcher(subkey_name):
+            return lambda x: subkey_name == x.name
+
     @contextmanager
     def invalid_reg_ref_error_handler(self):
         try:
@@ -193,6 +214,10 @@ class WindowsRegistryView:
             return False
         return True
 
+    def _regex_match_subkeys(self, subkey):
+        r_subkey = re.compile(subkey)
+        return [key for key in self.get_subkeys() if r_subkey.match(key.name)]
+
     @property
     def reg(self):
         if not self._reg:
@@ -218,51 +243,106 @@ class WindowsRegistryView:
         with self.invalid_reg_ref_error_handler():
             return self.reg.subkeys
 
+    def get_matching_subkeys(self, subkey_name):
+        """Returns all subkeys regex matching subkey name
+
+        Note: this method obtains only direct subkeys of the given key and does not
+        desced to transtitve subkeys. For this behavior, see `find_matching_subkeys`"""
+        self._regex_match_subkeys(subkey_name)
+
     def get_values(self):
         if not self._valid_reg_check():
             raise RegistryError("Cannot query values from invalid key %s" % self.key)
         with self.invalid_reg_ref_error_handler():
             return self.reg.values
 
-    def _traverse_subkeys(self, stop_condition):
+    def _traverse_subkeys(self, stop_condition, collect_all_matching=False):
         """Perform simple BFS of subkeys, returning the key
         that successfully triggers the stop condition.
         Args:
             stop_condition: lambda or function pointer that takes a single argument
                             a key and returns a boolean value based on that key
+            collect_all_matching: boolean value, if True, the traversal collects and returns
+                            all keys meeting stop condition. If false, once stop
+                            condition is met, the key that triggered the condition '
+                            is returned.
         Return:
             the key if stop_condition is triggered, or None if not
         """
+        collection = []
         if not self._valid_reg_check():
             raise RegistryError("Cannot query values from invalid key %s" % self.key)
         with self.invalid_reg_ref_error_handler():
             queue = self.reg.subkeys
             for key in queue:
                 if stop_condition(key):
-                    return key
+                    if collect_all_matching:
+                        collection.append(key)
+                    else:
+                        return key
                 queue.extend(key.subkeys)
-            return None
+            return collection if collection else None
 
-    def find_subkey(self, subkey_name, recursive=True):
-        """If non recursive, this method is the same as get subkey with error handling
-        Otherwise perform a BFS of subkeys until desired key is found
-        Returns None or RegistryKey object corresponding to requested key name
+    def _find_subkey_s(self, search_key, collect_all_matching=False):
+        """Retrieve one or more keys regex matching `search_key`.
+        One key will be returned unless `collect_all_matching` is enabled,
+        in which case call matches are returned.
 
         Args:
-            subkey_name (str): string representing subkey to be searched for
-            recursive (bool): optional argument, if True, subkey need not be a direct
-                                sub key of this registry entry, and this method will
-                                search all subkeys recursively.
-                                Default is True
+            search_key (str): regex string represeting a subkey name structure
+                              to be matched against.
+                              Cannot be provided alongside `direct_subkey`
+            collect_all_matching (bool): No-op if `direct_subkey` is specified
         Return:
             the desired subkey as a RegistryKey object, or none
         """
+        return self._traverse_subkeys(search_key, collect_all_matching=collect_all_matching)
 
-        if not recursive:
-            return self.get_subkey(subkey_name)
+    def find_subkey(self, subkey_name):
+        """Perform a BFS of subkeys until desired key is found
+        Returns None or RegistryKey object corresponding to requested key name
 
-        else:
-            return self._traverse_subkeys(lambda x: x.name == subkey_name)
+        Args:
+            subkey_name (str)
+        Return:
+            the desired subkey as a RegistryKey object, or none
+
+        For more details, see the WindowsRegistryView._find_subkey_s method docstring
+        """
+        return self._find_subkey_s(
+            WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name)
+        )
+
+    def find_matching_subkey(self, subkey_name):
+        """Perform a BFS of subkeys until a key matching subkey name regex is found
+        Returns None or the first RegistryKey object corresponding to requested key name
+
+        Args:
+            subkey_name (str)
+        Return:
+            the desired subkey as a RegistryKey object, or none
+
+        For more details, see the WindowsRegistryView._find_subkey_s method docstring
+        """
+        return self._find_subkey_s(
+            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name)
+        )
+
+    def find_subkeys(self, subkey_name):
+        """Exactly the same as find_subkey, except this function tries to match
+        a regex to multiple keys
+
+        Args:
+            subkey_name (str)
+        Return:
+            the desired subkeys as a list of RegistryKey object, or none
+
+        For more details, see the WindowsRegistryView._find_subkey_s method docstring
+        """
+        kwargs = {"collect_all_matching": True}
+        return self._find_subkey_s(
+            WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), **kwargs
+        )
 
     def find_value(self, val_name, recursive=True):
         """
