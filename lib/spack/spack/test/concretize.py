@@ -1170,7 +1170,7 @@ class TestConcretize:
     )
     @pytest.mark.parametrize("mock_db", [True, False])
     def test_reuse_does_not_overwrite_dev_specs(
-        self, dev_first, spec, mock_db, tmpdir, monkeypatch
+        self, dev_first, spec, mock_db, tmpdir, temporary_store, monkeypatch
     ):
         """Test that reuse does not mix dev specs with non-dev specs.
 
@@ -1182,8 +1182,7 @@ class TestConcretize:
         # dev and non-dev specs that are otherwise identical
         spec = Spec(spec)
         dev_spec = spec.copy()
-        dev_constraint = "dev_path=%s" % tmpdir.strpath
-        dev_spec["dev-build-test-install"].constrain(dev_constraint)
+        dev_spec["dev-build-test-install"].constrain(f"dev_path={tmpdir.strpath}")
 
         # run the test in both orders
         first_spec = dev_spec if dev_first else spec
@@ -1196,7 +1195,7 @@ class TestConcretize:
             return [first_spec]
 
         if mock_db:
-            monkeypatch.setattr(spack.store.STORE.db, "query", mock_fn)
+            temporary_store.db.add(first_spec, None)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
@@ -2112,6 +2111,24 @@ class TestConcretize:
             # when checksums are required
             Spec("a@=3.0").concretized()
 
+    @pytest.mark.regression("39570")
+    @pytest.mark.db
+    def test_reuse_python_from_cli_and_extension_from_db(self, mutable_database):
+        """Tests that reusing python with and explicit request on the command line, when the spec
+        also reuses a python extension from the DB, doesn't fail.
+        """
+        s = Spec("py-extension1").concretized()
+        python_hash = s["python"].dag_hash()
+        s.package.do_install(fake=True, explicit=True)
+
+        with spack.config.override("concretizer:reuse", True):
+            with_reuse = Spec(f"py-extension2 ^/{python_hash}").concretized()
+
+        with spack.config.override("concretizer:reuse", False):
+            without_reuse = Spec("py-extension2").concretized()
+
+        assert with_reuse.dag_hash() == without_reuse.dag_hash()
+
 
 @pytest.fixture()
 def duplicates_test_repository():
@@ -2211,6 +2228,43 @@ class TestConcretizeSeparately:
         s = Spec("virtual-build").concretized()
         assert s["pkgconfig"].name == "pkg-config"
 
+    @pytest.mark.regression("40595")
+    def test_no_multiple_solutions_with_different_edges_same_nodes(self):
+        r"""Tests that the root node, which has a dependency on py-setuptools without constraint,
+        doesn't randomly pick one of the two setuptools (@=59, @=60) needed by its dependency.
+
+        o py-floating@1.25.0/3baitsp
+        |\
+        | |\
+        | | |\
+        | o | | py-shapely@1.25.0/4hep6my
+        |/| | |
+        | |\| |
+        | | |/
+        | |/|
+        | | o py-setuptools@60/cwhbthc
+        | |/
+        |/|
+        | o py-numpy@1.25.0/5q5fx4d
+        |/|
+        | |\
+        | o | py-setuptools@59/jvsa7sd
+        |/ /
+        o | python@3.11.2/pdmjekv
+        o | gmake@3.0/jv7k2bl
+         /
+        o gmake@4.1/uo6ot3d
+        """
+        spec_str = "py-floating"
+
+        root = spack.spec.Spec(spec_str).concretized()
+        assert root["py-shapely"].satisfies("^py-setuptools@=60")
+        assert root["py-numpy"].satisfies("^py-setuptools@=59")
+
+        edges = root.edges_to_dependencies("py-setuptools")
+        assert len(edges) == 1
+        assert edges[0].spec.satisfies("@=60")
+
 
 @pytest.mark.parametrize(
     "v_str,v_opts,checksummed",
@@ -2246,3 +2300,23 @@ class TestConcretizeSeparately:
 def test_drop_moving_targets(v_str, v_opts, checksummed):
     v = Version(v_str)
     assert spack.solver.asp._is_checksummed_version((v, v_opts)) == checksummed
+
+
+class TestConcreteSpecsByHash:
+    """Tests the container of concrete specs"""
+
+    @pytest.mark.parametrize("input_specs", [["a"], ["a foobar=bar", "b"], ["a foobar=baz", "b"]])
+    def test_adding_specs(self, input_specs, default_mock_concretization):
+        """Tests that concrete specs in the container are equivalent, but stored as different
+        objects in memory.
+        """
+        container = spack.solver.asp.ConcreteSpecsByHash()
+        input_specs = [Spec(s).concretized() for s in input_specs]
+        for s in input_specs:
+            container.add(s)
+
+        for root in input_specs:
+            for node in root.traverse(root=True):
+                assert node == container[node.dag_hash()]
+                assert node.dag_hash() in container
+                assert node is not container[node.dag_hash()]

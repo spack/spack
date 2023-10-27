@@ -1549,7 +1549,7 @@ its value:
 
     def configure_args(self):
         ...
-        if "+shared" in self.spec:
+        if self.spec.satisfies("+shared"):
             extra_args.append("--enable-shared")
         else:
             extra_args.append("--disable-shared")
@@ -1636,7 +1636,7 @@ Within a package recipe a multi-valued variant is tested using a ``key=value`` s
 
   .. code-block:: python
 
-    if "languages=jit" in spec:
+    if spec.satisfies("languages=jit"):
         options.append("--enable-host-shared")
 
 """""""""""""""""""""""""""""""""""""""""""
@@ -2557,9 +2557,10 @@ Conditional dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 You may have a package that only requires a dependency under certain
-conditions. For example, you may have a package that has optional MPI support,
-- MPI is only a dependency when you want to enable MPI support for the
-package. In that case, you could say something like:
+conditions. For example, you may have a package with optional MPI support.
+You would then provide a variant to reflect that the feature is optional
+and specify the MPI dependency only applies when MPI support is enabled.
+In that case, you could say something like:
 
 .. code-block:: python
 
@@ -2567,13 +2568,39 @@ package. In that case, you could say something like:
 
    depends_on("mpi", when="+mpi")
 
-``when`` can include constraints on the variant, version, compiler, etc. and
-the :mod:`syntax<spack.spec>` is the same as for Specs written on the command
-line.
 
-If a dependency/feature of a package isn't typically used, you can save time
-by making it conditional (since Spack will not build the dependency unless it
-is required for the Spec).
+Suppose the above package also has, since version 3, optional `Trilinos`
+support and you want them both to build either with or without MPI. Further
+suppose you require a version of `Trilinos` no older than 12.6. In that case,
+the `trilinos` variant and dependency directives would be:
+
+.. code-block:: python
+
+   variant("trilinos", default=False, description="Enable Trilinos support")
+
+   depends_on("trilinos@12.6:", when="@3: +trilinos")
+   depends_on("trilinos@12.6: +mpi", when="@3: +trilinos +mpi")
+
+
+Alternatively, you could use the `when` context manager to equivalently specify
+the `trilinos` variant dependencies as follows:
+
+.. code-block:: python
+
+   with when("@3: +trilinos"):
+       depends_on("trilinos@12.6:")
+       depends_on("trilinos +mpi", when="+mpi")
+
+
+The argument to ``when`` in either case can include any Spec constraints that
+are supported on the command line using the same :ref:`syntax <sec-specs>`.
+
+.. note::
+
+   If a dependency isn't typically used, you can save time by making it
+   conditional since Spack will not build the dependency unless it is
+   required for the Spec.
+
 
 .. _dependency_dependency_patching:
 
@@ -3501,7 +3528,7 @@ need to override methods like ``configure_args``:
 
    def configure_args(self):
         args = ["--enable-cxx"] + self.enable_or_disable("libs")
-        if "libs=static" in self.spec:
+        if self.spec.satisfies("libs=static"):
             args.append("--with-pic")
         return args
 
@@ -4364,7 +4391,7 @@ for supported features, for instance:
 
 .. code-block:: python
 
-   if "avx512" in spec.target:
+   if spec.satisfies("target=avx512"):
        args.append("--with-avx512")
 
 The snippet above will append the ``--with-avx512`` item to a list of arguments only if the corresponding
@@ -6799,3 +6826,30 @@ To achieve backward compatibility with the single-class format Spack creates in 
 Overall the role of the adapter is to route access to attributes of methods first through the ``*Package``
 hierarchy, and then back to the base class builder. This is schematically shown in the diagram above, where
 the adapter role is to "emulate" a method resolution order like the one represented by the red arrows.
+
+------------------------------
+Specifying License Information
+------------------------------
+
+A significant portion of software that Spack packages is open source. Most open
+source software is released under one or more common open source licenses.
+Specifying the specific license that a package is released under in a project's
+`package.py` is good practice. To specify a license, find the SPDX identifier for
+a project and then add it using the license directive:
+
+.. code-block:: python
+
+   license("<SPDX Identifier HERE>")
+
+Note that specifying a license without a when clause makes it apply to all
+versions and variants of the package, which might not actually be the case.
+For example, a project might have switched licenses at some point or have
+certain build configurations that include files that are licensed differently.
+To account for this, you can specify when licenses should be applied. For
+example, to specify that a specific license identifier should only apply
+to versionup to and including 1.5, you could write the following directive:
+
+.. code-block:: python
+
+   license("...", when="@:1.5")
+

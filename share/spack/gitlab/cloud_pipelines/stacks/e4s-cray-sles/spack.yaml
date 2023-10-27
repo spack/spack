@@ -171,7 +171,5 @@ spack:
   # - variorum
   # - xyce +mpi +shared +pymi +pymi_static_tpls ^trilinos~shylu
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-cray-sles" }
-
   cdash:
     build-group: E4S Cray SLES

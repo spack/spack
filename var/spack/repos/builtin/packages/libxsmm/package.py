@@ -82,6 +82,9 @@ class Libxsmm(MakefilePackage):
     # (<https://github.com/spack/spack/pull/21671#issuecomment-779882282>).
     depends_on("binutils+ld+gas@2.33:", type="build", when="@:1.17")
 
+    # Intel Architecture or compatible CPU required
+    requires("target=x86_64:")
+
     @property
     def libs(self):
         result = find_libraries(["libxsmm", "libxsmmf"], root=self.prefix, recursive=True)

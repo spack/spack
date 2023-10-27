@@ -1198,6 +1198,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 sun_comps += ",nvecparhyp,nvecparallel"
         if "+cuda" in spec and "+cuda" in spec["sundials"]:
             sun_comps += ",nveccuda"
+        if "+rocm" in spec and "+rocm" in spec["sundials"]:
+            sun_comps += ",nvechip"
         return sun_comps
 
     @property
