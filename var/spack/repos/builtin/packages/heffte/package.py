@@ -68,6 +68,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         args = [
             "-DHeffte_SEQUENTIAL_TESTING=ON",
+            "-DHeffte_ENABLE_TESTING=ON",
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("Heffte_ENABLE_CUDA", "cuda"),
             self.define_from_variant("Heffte_ENABLE_ROCM", "rocm"),
@@ -120,7 +121,10 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
         cmake_dir = self.test_suite.current_test_cache_dir.testing
 
         options = [cmake_dir]
+        options.append(f"-DHeffte_DIR={self.spec.prefix.lib.cmake.Heffte}")
         if "+rocm" in self.spec:
+            # path name is 'hsa-runtime64' but python cannot have '-' in variable name
+            hsa_runtime = join_path(self.spec["hsa-rocr-dev"].prefix.lib.cmake, "hsa-runtime64")
             options.extend(
                 [
                     f"-Dhip_DIR={self.spec['hip'].prefix.lib.cmake.hip}",
@@ -128,9 +132,9 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
                     + f"{self.spec['llvm-amdgpu'].prefix.lib.cmake.AMDDeviceLibs}",
                     f"-Damd_comgr_DIR={self.spec['comgr'].prefix.lib.cmake.amd_comgr}",
                     "-Dhsa-runtime64_DIR="
-                    + f"{self.spec['hsa-rocr-dev'].prefix.lib.cmake.hsa-runtime64}",
-                    "-DHSA_HEADER={self.spec['hsa-rocr-dev'].prefix.include}",
-                    "-Drocfft_DIR={self.spec['rocfft'].prefix.lib.cmake.rocfft}",
+                    + hsa_runtime,
+                    f"-DHSA_HEADER={self.spec['hsa-rocr-dev'].prefix.include}",
+                    f"-Drocfft_DIR={self.spec['rocfft'].prefix.lib.cmake.rocfft}",
                 ]
             )
 
