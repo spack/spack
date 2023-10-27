@@ -8,8 +8,8 @@ from spack.package import *
 
 class PyMoarchiving(PythonPackage):
     """
-    Biobjective Archive class with hypervolume indicator
-    and uncrowded hypervolume improvement computation
+    Biobjective Archive class with hypervolume indicator and uncrowded
+    hypervolume improvement computation.
     """
 
     homepage = "https://github.com/CMA-ES/moarchiving"
@@ -19,7 +19,7 @@ class PyMoarchiving(PythonPackage):
 
     version("0.6.0", sha256="705ded992d399bc1ac703e68391bded6f64e1bde81b2bb25061eaa6208b5b29a")
 
-    variant("arbitrary_precision", default=True, description="Build with Fraction support")
+    variant("arbitrary_precision", default=False, description="Build with Fraction support")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-fraction", type=("build", "run"), when="+arbitrary_precision")
+    depends_on("py-fraction", when="+arbitrary_precision", type=("build", "run"))
