@@ -31,6 +31,7 @@ from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, 
 
 import spack.binary_distribution
 import spack.caches
+import spack.cmd.buildcache
 import spack.compilers
 import spack.config
 import spack.database
@@ -1948,3 +1949,21 @@ def pytest_runtest_setup(item):
     not_on_windows_marker = item.get_closest_marker(name="not_on_windows")
     if not_on_windows_marker and sys.platform == "win32":
         pytest.skip(*not_on_windows_marker.args)
+
+
+@pytest.fixture(scope="function")
+def disable_parallel_buildcache_push(monkeypatch):
+    class MockPool:
+        def map(self, func, args):
+            return [func(a) for a in args]
+
+        def starmap(self, func, args):
+            return [func(*a) for a in args]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", MockPool)
