@@ -135,7 +135,6 @@ spack:
     # #providers
     - openblas
     - openjdk@17  # HELP-17046
-    - openjdk@11  # Should be preferred by Spark for now
     - poppler
     - python
     - qhull
