@@ -353,7 +353,7 @@ def run_black(black_cmd, file_list, args):
 
 
 @tool("pyupgrade")
-def run_black(pyupgrade_cmd, file_list, args):
+def run_pyupgrade(pyupgrade_cmd, file_list, args):
     # update to minimum supported python version on Spack release
     pyupgrade_args = ("--py38-plus",)
 
