@@ -231,6 +231,12 @@ class Acts(CMakePackage, CudaPackage):
 
     # Variants that only affect Acts examples for now
     variant(
+        "binaries",
+        default=False,
+        description="Build the examples binaries",
+        when="@23: +examples",
+    )
+    variant(
         "edm4hep",
         default=False,
         description="Build the EDM4hep examples",
@@ -369,6 +375,7 @@ class Acts(CMakePackage, CudaPackage):
             cmake_variant("ANALYSIS_APPS", "analysis"),
             plugin_cmake_variant("AUTODIFF", "autodiff"),
             cmake_variant("BENCHMARKS", "benchmarks"),
+            example_cmake_variant("BINARIES", "binaries"),
             plugin_cmake_variant("CUDA", "cuda"),
             plugin_cmake_variant("DD4HEP", "dd4hep"),
             example_cmake_variant("DD4HEP", "dd4hep"),
