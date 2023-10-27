@@ -36,7 +36,7 @@ exclude_directories = [os.path.relpath(spack.paths.external_path, spack.paths.pr
 #: double-check the results of other tools (if, e.g., --fix was provided)
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
-tool_names = ["isort", "black", "flake8", "mypy"]
+tool_names = ["isort", "black", "mypy", "pyupgrade", "flake8"]
 
 #: tools we run in spack style
 tools = {}
@@ -95,7 +95,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
             "Ensure that '%s' exists, or specify files to check explicitly." % base,
         )
 
-    range = "{0}...".format(base_sha.strip())
+    range = f"{base_sha.strip()}..."
 
     git_args = [
         # Add changed files committed since branching off of develop
@@ -348,6 +348,28 @@ def run_black(black_cmd, file_list, args):
         rewrite_and_print_output(output, args, pat, replacement)
 
     print_tool_result("black", returncode)
+
+    return returncode
+
+
+@tool("pyupgrade")
+def run_black(pyupgrade_cmd, file_list, args):
+    # update to minimum supported python version on Spack release
+    pyupgrade_args = ("--py38-plus",)
+
+    pat = re.compile("Rewriting +(.*)")
+    replacement = "Rewriting {0}"
+    returncode = 0
+    output = ""
+    # run in chunks of 100 at a time to avoid line length limit
+    # filename parameter in config *does not work* for this reliably
+    for chunk in grouper(file_list, 100):
+        packed_args = pyupgrade_args + tuple(chunk)
+        output = pyupgrade_cmd(*packed_args, fail_on_error=False, output=str, error=str)
+        returncode |= pyupgrade_cmd.returncode
+        rewrite_and_print_output(output, args, pat, replacement)
+
+    print_tool_result("pyupgrade", returncode)
 
     return returncode
 
