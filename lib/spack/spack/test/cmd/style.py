@@ -68,6 +68,10 @@ def flake8_package_with_errors(scope="function"):
     package.filter(
         "from spack.package import *", "from spack.package import *\nimport os", string=True
     )
+
+    # this is a pyupgrade error
+    package.filter('"really-long-if-statement"', '"really-{0}-if-statement".format("long")')
+
     yield tmp
 
 
@@ -109,12 +113,10 @@ def test_changed_no_base(git, tmpdir, capfd):
 
 def test_changed_files_all_files():
     # it's hard to guarantee "all files", so do some sanity checks.
-    files = set(
-        [
-            os.path.join(spack.paths.prefix, os.path.normpath(path))
-            for path in changed_files(all_files=True)
-        ]
-    )
+    files = {
+        os.path.join(spack.paths.prefix, os.path.normpath(path))
+        for path in changed_files(all_files=True)
+    }
 
     # spack has a lot of files -- check that we're in the right ballpark
     assert len(files) > 6000
