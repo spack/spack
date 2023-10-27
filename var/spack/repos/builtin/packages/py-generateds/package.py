@@ -19,4 +19,4 @@ class PyGenerateds(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-six", type=("build", "run"))
     depends_on("py-lxml", type=("build", "run"))
-    depends_on("py-requests@2.21.0", type=("build", "run"))
+    depends_on("py-requests@2.21:", type=("build", "run"))
