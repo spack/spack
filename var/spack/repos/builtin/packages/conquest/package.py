@@ -69,17 +69,7 @@ class Conquest(MakefilePackage):
         if self.version <= Version("1.2"):
             defs_file = FileFilter("./src/system.make")
         else:
-            # Starting from 1.3 there's automated logic in the Makefile that picks
-            # from a list of possible files for system/compiler-specific definitions.
-            # This is useful for manual builds, but since the spack will do its own
-            # automation of compiler-specific flags, we need to override it.
             defs_file = FileFilter("./src/system/system.example.make")
-            makefile = FileFilter("./src/Makefile")
-            makefile.filter("SYSTEM =.*", "SYSTEM = example")
-            makefile.filter(
-                "$(info Building on SYSTEM $(SYSTEM), using makefile $(SYSTEM_PATH))",
-                "$(info Building on SYSTEM $(SYSTEM), using spack",
-            )
 
         defs_file.filter(".*COMPFLAGS=.*", f"COMPFLAGS= {fflags}")
         defs_file.filter(".*LINKFLAGS=.*", f"LINKFLAGS= {ldflags}")
@@ -94,6 +84,17 @@ class Conquest(MakefilePackage):
             defs_file.filter(
                 "MULT_KERN =.*", f"MULT_KERN = {self.spec.variants['mult_kern'].value}"
             )
+
+    def build(self, spec, prefix):
+        # Starting from 1.3 there's automated logic in the Makefile that picks
+        # from a list of possible files for system/compiler-specific definitions.
+        # This is useful for manual builds, but since the spack will do its own
+        # automation of compiler-specific flags, we will override it.
+        with working_dir("src"):
+            if self.version <= Version("1.2"):
+                make()
+            else:
+                make("SYSTEM = example")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
