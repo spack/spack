@@ -45,6 +45,8 @@ class PyPyzmq(PythonPackage):
 
     # pyproject.toml
     depends_on("py-setuptools", type="build")
+    # !=3.0.* in python_requires: setuptools parser changed in v60 and errors.
+    depends_on("py-setuptools@:59", when="@:19", type="build")
     depends_on("py-packaging", type="build")
 
     # setup.py
