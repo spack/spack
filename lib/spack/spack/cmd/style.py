@@ -36,7 +36,7 @@ exclude_directories = [os.path.relpath(spack.paths.external_path, spack.paths.pr
 #: double-check the results of other tools (if, e.g., --fix was provided)
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
-tool_names = ["isort", "black", "mypy", "pyupgrade", "flake8"]
+tool_names = ["isort", "black", "pyupgrade", "mypy", "flake8"]
 
 #: tools we run in spack style
 tools = {}
