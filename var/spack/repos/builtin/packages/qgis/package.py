@@ -65,7 +65,7 @@ class Qgis(CMakePackage):
         "custom_widgets", default=False, description="Build QGIS custom widgets for Qt Designer"
     )
     variant("desktop", default=True, description="Build QGIS desktop")
-    #variant("draco", default=True, description="Build with DRACO support") #TODO
+    # variant("draco", default=True, description="Build with DRACO support") #TODO
     variant("georeferencer", default=True, description="Build GeoReferencer plugin")
     variant("globe", default=False, description="Build Globe plugin")
     variant("grass7", default=False, description="Build with GRASS providers and plugin")
@@ -80,7 +80,7 @@ class Qgis(CMakePackage):
     )
     variant("oauth2_plugin", default=True, description="Build OAuth2 authentication method plugin")
     variant("oracle", default=False, description="Build with Oracle support")
-    #variant("pdal", default=False, description="Build with PDAL support") # TODO
+    # variant("pdal", default=False, description="Build with PDAL support") # TODO
     variant("postgresql", default=True, description="Build with PostreSQL support")
     variant(
         "py_compile",
