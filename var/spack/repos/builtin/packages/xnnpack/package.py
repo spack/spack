@@ -194,7 +194,8 @@ class Xnnpack(CMakePackage):
                 "PTHREADPOOL_SOURCE_DIR", join_path(self.stage.source_path, "deps", "pthreadpool")
             ),
             self.define("PSIMD_SOURCE_DIR", join_path(self.stage.source_path, "deps", "psimd")),
-            self.define("BUILD_SHARED_LIBS", True),
+            # https://salsa.debian.org/deeplearning-team/xnnpack/-/blob/master/debian/rules
+            self.define("XNNPACK_LIBRARY_TYPE", "shared"),
             self.define("XNNPACK_BUILD_TESTS", False),
             self.define("XNNPACK_BUILD_BENCHMARKS", False),
         ]
