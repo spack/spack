@@ -12,7 +12,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
     containing many extensions to the original method."""
 
     homepage = "https://www.dftbplus.org"
-    url = "https://github.com/dftbplus/dftbplus/archive/22.1.tar.gz"
+    url = "https://github.com/dftbplus/dftbplus/releases/download/22.1/dftbplus-22.1.tar.xz"
     git = "https://github.com/dftbplus/dftbplus.git"
 
     maintainers = ["HaoZeke", "aradi"]
@@ -32,13 +32,6 @@ class Dftbplus(CMakePackage, MakefilePackage):
     )
 
     variant(
-        "build_type",
-        default="Release",
-        description="The build type to build",
-        values=("Debug", "Release", "RelWithDebInfo"),
-    )
-
-    variant(
         "api",
         default=True,
         description="Whether public API should be included and the DFTB+ library installed.",
@@ -51,6 +44,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
     variant(
         "chimes",
         default=False,
+        when="21.2:",
         description="Whether repulsive corrections" "via the ChIMES library should be enabled.",
     )
     variant(
@@ -67,15 +61,17 @@ class Dftbplus(CMakePackage, MakefilePackage):
     variant(
         "mbd",
         default=False,
+        when="21.1:",
         description="Whether DFTB+ should be built with many-body-dispersion support.",
     )
     variant("mpi", default=False, description="Whether DFTB+ should support MPI-parallelism.")
     variant(
-        "omp", default=True, description="Whether OpenMP thread parallisation should be enabled."
+        "openmp", default=True, description="Whether OpenMP thread parallisation should be enabled."
     )
     variant(
         "plumed",
         default=False,
+        when="@20.1:",
         description="Whether metadynamics via the PLUMED2 library should be allowed.",
     )
     variant("poisson", default=False, description="Whether the Poisson-solver should be included.")
@@ -87,6 +83,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
     variant(
         "sdftd3",
         default=False,
+        when="@21.2:",
         description="Whether the s-dftd3 library should be included",
     )
     variant(
@@ -102,7 +99,10 @@ class Dftbplus(CMakePackage, MakefilePackage):
         "(serial version is built without libNEGF/transport)",
     )
     variant(
-        "tblite", default=False, description="Whether xTB support should be included via tblite."
+        "tblite",
+        default=False,
+        when="@21.2:",
+        description="Whether xTB support should be included via tblite."
     )
 
     variant("shared", default=False, description="Most often for the Python wrappers.")
@@ -111,11 +111,12 @@ class Dftbplus(CMakePackage, MakefilePackage):
     variant(
         "dftd3",
         default=False,
+        when="@:21.1",
         description="Use DftD3 dispersion library " "(if you need this dispersion model)",
     )
 
     depends_on("cmake@3.16:", type="build")
-    depends_on("ninja", type="build")
+    depends_on("ninja@1.10", type="build")
 
     depends_on("blas", when="-mpi")
     depends_on("lapack", when="-mpi")
@@ -130,6 +131,13 @@ class Dftbplus(CMakePackage, MakefilePackage):
     depends_on("python", when="+python")
     # Only for 19.1
     depends_on("dftd3-lib@0.9.2", when="+dftd3")
+
+    # Conflicts
+    conflicts("+python", when="~shared")
+    conflicts("-poisson", when="+transport")
+
+    # Extensions
+    extends("python", when="+python")
 
     @when("@19.1")  # Only version without CMake
     def edit(self, spec, prefix):
@@ -220,6 +228,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
 
     def cmake_args(self):
         args = [
+            self.define_from_variant("WITH_OPENMP", "openmp"),
             self.define_from_variant("WITH_API", "api"),
             self.define_from_variant("WITH_ARPACK", "arpack"),
             self.define_from_variant("WITH_CHIMES", "chimes"),
