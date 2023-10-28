@@ -27,6 +27,8 @@ class Hpctoolkit(AutotoolsPackage):
     test_requires_compiler = True
 
     version("develop", branch="develop")
+    version("2023.08.stable", branch="release/2023.08")
+    version("2023.08.1", tag="2023.08.1", commit="753a72affd584a5e72fe153d1e8c47a394a3886e")
     version("2023.03.stable", branch="release/2023.03")
     version("2023.03.01", commit="9e0daf2ad169f6c7f6c60408475b3c2f71baebbf")
     version("2022.10.01", commit="e8a5cc87e8f5ddfd14338459a4106f8e0d162c83")
@@ -134,7 +136,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("xerces-c transcoder=iconv")
     depends_on("xz+pic libs=static", type="link")
     depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
-    depends_on("zlib+shared")
+    depends_on("zlib-api+shared")
 
     depends_on("cuda", when="+cuda")
     depends_on("oneapi-level-zero", when="+level_zero")
@@ -164,7 +166,7 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts("%gcc@:4", when="@:2020", msg="hpctoolkit requires gnu gcc 5.x or later")
 
     conflicts("^binutils@2.35:2.35.1", msg="avoid binutils 2.35 and 2.35.1 (spews errors)")
-    conflicts("xz@5.2.7:5.2.8", msg="avoid xz 5.2.7:5.2.8 (broken symbol versions)")
+    conflicts("^xz@5.2.7:5.2.8", msg="avoid xz 5.2.7:5.2.8 (broken symbol versions)")
 
     conflicts("+cray", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
     conflicts("+mpi", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
@@ -204,7 +206,7 @@ class Hpctoolkit(AutotoolsPackage):
             "--with-libunwind=%s" % spec["libunwind"].prefix,
             "--with-xerces=%s" % spec["xerces-c"].prefix,
             "--with-lzma=%s" % spec["xz"].prefix,
-            "--with-zlib=%s" % spec["zlib"].prefix,
+            "--with-zlib=%s" % spec["zlib-api"].prefix,
         ]
 
         if spec.satisfies("@2022.10:"):

@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import stat
-import sys
 
 import pytest
 
@@ -15,10 +14,11 @@ import spack.modules.tcl
 import spack.package_base
 import spack.schema.modules
 import spack.spec
+import spack.util.spack_yaml as syaml
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_update_dictionary_extending_list():
@@ -82,7 +82,7 @@ def test_modules_default_symlink(
     assert not os.path.lexists(link_path)
 
 
-class MockDb(object):
+class MockDb:
     def __init__(self, db_ids, spec_hash_to_db):
         self.upstream_dbs = db_ids
         self.spec_hash_to_db = spec_hash_to_db
@@ -91,7 +91,7 @@ class MockDb(object):
         return self.spec_hash_to_db.get(spec_hash)
 
 
-class MockSpec(object):
+class MockSpec:
     def __init__(self, unique_id):
         self.unique_id = unique_id
 
@@ -181,7 +181,7 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
 
     # Mock deletion of the package
     spec._package = None
-    monkeypatch.setattr(spack.repo.path, "get", find_nothing)
+    monkeypatch.setattr(spack.repo.PATH, "get", find_nothing)
     with pytest.raises(spack.repo.UnknownPackageError):
         spec.package
 
@@ -191,11 +191,30 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
     spack.package_base.PackageBase.uninstall_by_spec(spec)
 
 
+@pytest.mark.parametrize(
+    "module_type, old_config,new_config",
+    [("tcl", "exclude_implicits.yaml", "hide_implicits.yaml")],
+)
+def test_exclude_include_update(module_type, old_config, new_config):
+    module_test_data_root = os.path.join(spack.paths.test_path, "data", "modules", module_type)
+    with open(os.path.join(module_test_data_root, old_config)) as f:
+        old_yaml = syaml.load(f)
+    with open(os.path.join(module_test_data_root, new_config)) as f:
+        new_yaml = syaml.load(f)
+
+    # ensure file that needs updating is translated to the right thing.
+    assert spack.schema.modules.update_keys(old_yaml, spack.schema.modules.old_to_new_key)
+    assert new_yaml == old_yaml
+    # ensure a file that doesn't need updates doesn't get updated
+    original_new_yaml = new_yaml.copy()
+    assert not spack.schema.modules.update_keys(new_yaml, spack.schema.modules.old_to_new_key)
+    assert original_new_yaml == new_yaml
+
+
 @pytest.mark.regression("37649")
 def test_check_module_set_name(mutable_config):
     """Tests that modules set name are validated correctly and an error is reported if the
     name we require does not exist or is reserved by the configuration."""
-
     # Minimal modules.yaml config.
     spack.config.set(
         "modules",

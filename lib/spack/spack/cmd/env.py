@@ -8,7 +8,9 @@ import os
 import shutil
 import sys
 import tempfile
+from typing import Optional
 
+import llnl.string as string
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -28,7 +30,6 @@ import spack.environment.shell
 import spack.schema.env
 import spack.spec
 import spack.tengine
-import spack.util.string as string
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
@@ -96,22 +97,16 @@ def env_activate_setup_parser(subparser):
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
-        "-v",
         "--with-view",
-        action="store_const",
-        dest="with_view",
-        const=True,
-        default=True,
-        help="update PATH etc. with associated view",
+        "-v",
+        metavar="name",
+        help="set runtime environment variables for specific view",
     )
     view_options.add_argument(
-        "-V",
         "--without-view",
-        action="store_const",
-        dest="with_view",
-        const=False,
-        default=True,
-        help="do not update PATH etc. with associated view",
+        "-V",
+        action="store_true",
+        help="do not set runtime environment variables for any view",
     )
 
     subparser.add_argument(
@@ -161,7 +156,7 @@ def env_activate(args):
 
     # Error out when -e, -E, -D flags are given, cause they are ambiguous.
     if args.env or args.no_env or args.env_dir:
-        tty.die("Calling spack env activate with --env, --env-dir and --no-env " "is ambiguous")
+        tty.die("Calling spack env activate with --env, --env-dir and --no-env is ambiguous")
 
     env_name_or_dir = args.activate_env or args.dir
 
@@ -197,10 +192,20 @@ def env_activate(args):
 
     # Activate new environment
     active_env = ev.Environment(env_path)
+
+    # Check if runtime environment variables are requested, and if so, for what view.
+    view: Optional[str] = None
+    if args.with_view:
+        view = args.with_view
+        if not active_env.has_view(view):
+            tty.die(f"The environment does not have a view named '{view}'")
+    elif not args.without_view and active_env.has_view(ev.default_view_name):
+        view = ev.default_view_name
+
     cmds += spack.environment.shell.activate_header(
-        env=active_env, shell=args.shell, prompt=env_prompt if args.prompt else None
+        env=active_env, shell=args.shell, prompt=env_prompt if args.prompt else None, view=view
     )
-    env_mods.extend(spack.environment.shell.activate(env=active_env, add_view=args.with_view))
+    env_mods.extend(spack.environment.shell.activate(env=active_env, view=view))
     cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 
@@ -239,6 +244,13 @@ def env_deactivate_setup_parser(subparser):
         const="bat",
         help="print bat commands to activate the environment",
     )
+    shells.add_argument(
+        "--pwsh",
+        action="store_const",
+        dest="shell",
+        const="pwsh",
+        help="print pwsh commands to activate the environment",
+    )
 
 
 def env_deactivate(args):
@@ -250,7 +262,7 @@ def env_deactivate(args):
 
     # Error out when -e, -E, -D flags are given, cause they are ambiguous.
     if args.env or args.no_env or args.env_dir:
-        tty.die("Calling spack env deactivate with --env, --env-dir and --no-env " "is ambiguous")
+        tty.die("Calling spack env deactivate with --env, --env-dir and --no-env is ambiguous")
 
     if ev.active_environment() is None:
         tty.die("No environment is currently active.")
@@ -290,7 +302,7 @@ def env_create_setup_parser(subparser):
         "envfile",
         nargs="?",
         default=None,
-        help="either a lockfile (must end with '.json' or '.lock') or a manifest file.",
+        help="either a lockfile (must end with '.json' or '.lock') or a manifest file",
     )
 
 
@@ -418,7 +430,7 @@ def env_list(args):
     colify(color_names, indent=4)
 
 
-class ViewAction(object):
+class ViewAction:
     regenerate = "regenerate"
     enable = "enable"
     disable = "disable"
@@ -608,16 +620,16 @@ def env_depfile_setup_parser(subparser):
         "--make-target-prefix",
         default=None,
         metavar="TARGET",
-        help="prefix Makefile targets (and variables) with <TARGET>/<name>. By default "
+        help="prefix Makefile targets (and variables) with <TARGET>/<name>\n\nby default "
         "the absolute path to the directory makedeps under the environment metadata dir is "
-        "used. Can be set to an empty string --make-prefix ''.",
+        "used. can be set to an empty string --make-prefix ''",
     )
     subparser.add_argument(
         "--make-disable-jobserver",
         default=True,
         action="store_false",
         dest="jobserver",
-        help="disable POSIX jobserver support.",
+        help="disable POSIX jobserver support",
     )
     subparser.add_argument(
         "--use-buildcache",
@@ -625,8 +637,8 @@ def env_depfile_setup_parser(subparser):
         type=arguments.use_buildcache,
         default="package:auto,dependencies:auto",
         metavar="[{auto,only,never},][package:{auto,only,never},][dependencies:{auto,only,never}]",
-        help="When using `only`, redundant build dependencies are pruned from the DAG. "
-        "This flag is passed on to the generated spack install commands.",
+        help="when using `only`, redundant build dependencies are pruned from the DAG\n\n"
+        "this flag is passed on to the generated spack install commands",
     )
     subparser.add_argument(
         "-o",
@@ -640,7 +652,7 @@ def env_depfile_setup_parser(subparser):
         "--generator",
         default="make",
         choices=("make",),
-        help="specify the depfile type. Currently only make is supported.",
+        help="specify the depfile type\n\ncurrently only make is supported",
     )
     subparser.add_argument(
         metavar="specs",

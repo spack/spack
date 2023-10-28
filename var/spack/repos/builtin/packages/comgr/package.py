@@ -14,14 +14,17 @@ class Comgr(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport"
     git = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git"
-    url = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libamd_comgr"]
 
     version("master", branch="amd-stg-open")
-
+    version("5.6.1", sha256="0a85d84619f98be26ca7a32c71f94ed3c4e9866133789eabb451be64ce739300")
+    version("5.6.0", sha256="9396a7238b547ee68146c669b10b9d5de8f1d76527c649133c75d8076a185a72")
+    version("5.5.1", sha256="0fbb15fe5a95c2e141ccd360bc413e1feda283334781540a6e5095ab27fd8019")
+    version("5.5.0", sha256="97dfff03226ce0902b9d5d1c8c7bebb7a15978a81b6e9c750bf2d2473890bd42")
     version("5.4.3", sha256="8af18035550977fe0aa9cca8dfacbe65fe292e971de5a0e160710bafda05a81f")
     version("5.4.0", sha256="f4b83b27ff6195679d695c3f41fa25456e9c50bae6d978f46d3541b472aef757")
     version("5.3.3", sha256="6a4ef69e672a077b5909977248445f0eedf5e124af9812993a4d444be030c78b")
@@ -102,13 +105,6 @@ class Comgr(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     # Disable the hip compile tests.  Spack should not be using
     # /opt/rocm, and this breaks the build when /opt/rocm exists.
     patch("hip-tests.patch", when="@:4.2.0")
@@ -116,7 +112,7 @@ class Comgr(CMakePackage):
     depends_on("cmake@3.2.0:", type="build", when="@:3.8")
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
 
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("z3", type="link")
     depends_on("ncurses", type="link")
 
@@ -146,6 +142,10 @@ class Comgr(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
         "master",
     ]:
         # llvm libs are linked statically, so this *could* be a build dep
@@ -157,10 +157,15 @@ class Comgr(CMakePackage):
             "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
 
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     root_cmakelists_dir = join_path("lib", "comgr")
 
     def cmake_args(self):
         args = [self.define("BUILD_TESTING", self.run_tests)]
+        if self.spec.satisfies("@5.4.3:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
         return args
 
     @classmethod

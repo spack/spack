@@ -26,6 +26,7 @@ class Julia(MakefilePackage):
     maintainers("vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
+    version("1.9.2", sha256="015438875d591372b80b09d01ba899657a6517b7c72ed41222298fef9d4ad86b")
     version("1.9.0", sha256="48f4c8a7d5f33d0bc6ce24226df20ab49e385c2d0c3767ec8dfdb449602095b2")
     version("1.8.5", sha256="d31026cc6b275d14abce26fd9fd5b4552ac9d2ce8bde4291e494468af5743031")
     version("1.8.4", sha256="b7b8ee64fb947db8d61104f231e1b25342fe330d29e0d2273f93c264f32c5333")
@@ -123,7 +124,7 @@ class Julia(MakefilePackage):
         when="^llvm@12.0.1",
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch",
-            sha256="10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4",
+            sha256="37f2f6193e1205ea49b9a56100a70b038b64abf402115f263c6132cdf0df80c3",
         ),
     )
     depends_on(
@@ -131,7 +132,7 @@ class Julia(MakefilePackage):
         when="^llvm@13.0.1",
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch",
-            sha256="45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f",
+            sha256="d9e7f0befeddddcba40eaed3895c4f4734980432b156c39d7a251bc44abb13ca",
         ),
     )
     depends_on(
@@ -139,7 +140,7 @@ class Julia(MakefilePackage):
         when="^llvm@14.0.6",
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff",
-            sha256="f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099",
+            sha256="f3fd1803459bdaac0e26d0f3b1874b0e3f97e9411a9e98043d36f788ab4fd00e",
         ),
     )
 
@@ -184,7 +185,8 @@ class Julia(MakefilePackage):
     depends_on("suite-sparse +pic")
     depends_on("unwind")
     depends_on("utf8proc")
-    depends_on("zlib +shared +pic +optimize")
+    depends_on("zlib-api")
+    depends_on("zlib +shared +pic +optimize", when="^zlib")
 
     # Patches for julia
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
@@ -251,7 +253,6 @@ class Julia(MakefilePackage):
             "pcre2",
             "suite-sparse",
             "utf8proc",
-            "zlib",
         ]
         if "+openlibm" in self.spec:
             pkgs.append("openlibm")
@@ -260,6 +261,8 @@ class Julia(MakefilePackage):
         for pkg in pkgs:
             for dir in self.spec[pkg].libs.directories:
                 env.prepend_path(linker_var, dir)
+        for dir in self.spec["zlib-api"].libs.directories:
+            env.prepend_path(linker_var, dir)
 
     def edit(self, spec, prefix):
         # TODO: use a search query for blas / lapack?
@@ -315,6 +318,8 @@ class Julia(MakefilePackage):
             "JULIA_PRECOMPILE:={0}".format("1" if spec.variants["precompile"].value else "0"),
             # we want to use `patchelf --add-rpath` instead of `patchelf --set-rpath`
             "override PATCHELF_SET_RPATH_ARG:=--add-rpath",  # @1.9:
+            # Otherwise, Julia tries to download and build ittapi
+            "USE_INTEL_JITEVENTS:=0",  # @1.9:
         ]
 
         options.append("USEGCC:={}".format("1" if "%gcc" in spec else "0"))

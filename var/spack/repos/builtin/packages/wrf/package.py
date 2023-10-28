@@ -70,6 +70,11 @@ class Wrf(Package):
     tags = ["windows"]
 
     version(
+        "4.5.1",
+        sha256="9d557c34c105db4d41e727843ecb19199233c7cf82c5369b34a2ce8efe65e2d1",
+        url="https://github.com/wrf-model/WRF/releases/download/v4.5.1/v4.5.1.tar.gz",
+    )
+    version(
         "4.5.0",
         sha256="14fd78abd4e32c1d99e2e97df0370030a5c58ec84c343591bdc5e74f163c5525",
         url="https://github.com/wrf-model/WRF/releases/download/v4.5/v4.5.tar.gz",
@@ -96,15 +101,22 @@ class Wrf(Package):
         url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
     )
 
-    variant("build_type", default="dmpar", values=("serial", "smpar", "dmpar", "dm+sm"))
+    variant(
+        "build_type",
+        default="dmpar",
+        description="Build type",
+        values=("serial", "smpar", "dmpar", "dm+sm"),
+    )
     variant(
         "nesting",
         default="basic",
+        description="Nesting",
         values=("no_nesting", "basic", "preset_moves", "vortex_following"),
     )
     variant(
         "compile_type",
         default="em_real",
+        description="Compile type",
         values=(
             "em_real",
             "em_quarter_ss",
@@ -156,14 +168,23 @@ class Wrf(Package):
     patch("patches/4.2/var.gen_be.Makefile.patch", when="@4.2:")
     patch("patches/4.2/Makefile.patch", when="@4.2")
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
-    patch("patches/4.2/add_aarch64.patch", when="@4.2:")
+    patch("patches/4.2/add_aarch64.patch", when="@4.2:4.3.1 %gcc target=aarch64:")
+    patch("patches/4.2/add_aarch64_acfl.patch", when="@4.2:4.3.1 %arm target=aarch64:")
     patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
     patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2: %aocc@3.0.0:3.2.0")
     patch("patches/4.2/hdf5_fix.patch", when="@4.2: %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
+    patch(
+        "patches/4.2/add_tools_flags_acfl2304.patch",
+        when="@4.2:4.4.2 %arm@23.04.1: target=aarch64:",
+    )
+
+    patch("patches/4.3/add_aarch64.patch", when="@4.3.2:4.4.2 %gcc target=aarch64:")
+    patch("patches/4.3/add_aarch64_acfl.patch", when="@4.3.2:4.4.2 %arm target=aarch64:")
 
     patch("patches/4.4/arch.postamble.patch", when="@4.4:")
     patch("patches/4.4/configure.patch", when="@4.4:4.4.2")
+    patch("patches/4.4/ifx.patch", when="@4.4: %oneapi")
 
     patch("patches/4.5/configure.patch", when="@4.5:")
     # Fix WRF to remove deprecated ADIOS2 functions
@@ -192,6 +213,17 @@ class Wrf(Package):
         sha256="27c7268f6c84b884d21e4afad0bab8554b06961cf4d6bfd7d0f5a457dcfdffb1",
         when="@4.3.1",
     )
+    # Add ARM compiler support
+    patch(
+        "https://github.com/wrf-model/WRF/pull/1888/commits/4a084e03575da65f254917ef5d8eb39074abd3fc.patch",
+        sha256="c522c4733720df9a18237c06d8ab6199fa9674d78375b644aec7017cb38af9c5",
+        when="@4.5: %arm",
+    )
+    patch(
+        "https://github.com/wrf-model/WRF/pull/1888/commits/6087d9192f7f91967147e50f5bc8b9e49310cf98.patch",
+        sha256="f82a18cf7334e0cbbfdf4ef3aa91ca26d4a372709f114ce0116b3fbb136ffac6",
+        when="@4.5: %arm",
+    )
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
@@ -205,7 +237,7 @@ class Wrf(Package):
     depends_on("netcdf-fortran")
     depends_on("jasper")
     depends_on("libpng")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("perl")
     depends_on("jemalloc", when="%aocc")
     # not sure if +fortran is required, but seems like a good idea
@@ -328,11 +360,17 @@ class Wrf(Package):
             config.filter("^DM_FC.*mpif90", "DM_FC = {0}".format(self.spec["mpi"].mpifc))
             config.filter("^DM_CC.*mpicc", "DM_CC = {0}".format(self.spec["mpi"].mpicc))
 
+    @run_before("configure")
+    def fortran_check(self):
+        if not self.compiler.fc:
+            msg = "cannot build WRF without a Fortran compiler"
+            raise RuntimeError(msg)
+
     def configure(self, spec, prefix):
         # Remove broken default options...
         self.do_configure_fixup()
 
-        if self.spec.compiler.name not in ["intel", "gcc", "aocc", "fj"]:
+        if self.spec.compiler.name not in ["intel", "gcc", "arm", "aocc", "fj", "oneapi"]:
             raise InstallError(
                 "Compiler %s not currently supported for WRF build." % self.spec.compiler.name
             )

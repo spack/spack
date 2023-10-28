@@ -14,7 +14,7 @@ class Sosflow(CMakePackage):
     homepage = "https://github.com/cdwdirect/sos_flow/wiki"
     git = "https://github.com/cdwdirect/sos_flow.git"
 
-    version("spack", tag="spack-build-v0.9901")
+    version("spack", tag="spack-build-v0.9901", commit="57c77f18af88b01615d5900124f9cfd1770c8241")
 
     depends_on("libevpath")
     depends_on("sqlite@3:")

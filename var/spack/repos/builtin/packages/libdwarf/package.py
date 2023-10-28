@@ -35,7 +35,7 @@ class Libdwarf(Package):
     version("20130126", sha256="c23c847935f8612f4fcdcfa0b3311f1553dcbd95bb683d3d5e030440201192fe")
     depends_on("elfutils@0.163", when="@20160507", type="link")
     depends_on("elf", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
 
     parallel = False
 
@@ -63,7 +63,7 @@ class Libdwarf(Package):
             configure("--prefix=" + prefix, "--enable-shared", *extra_config_args)
             filter_file(
                 r"^dwfzlib\s*=\s*-lz",
-                "dwfzlib=-L{0} -lz".format(self.spec["zlib"].prefix.lib),
+                "dwfzlib=-L{0} -lz".format(self.spec["zlib-api"].prefix.lib),
                 "Makefile",
             )
             make()
@@ -94,7 +94,7 @@ class Libdwarf(Package):
             configure("--prefix=" + prefix)
             filter_file(
                 r"^dwfzlib\s*=\s*-lz",
-                "dwfzlib=-L{0} -lz".format(self.spec["zlib"].prefix.lib),
+                "dwfzlib=-L{0} -lz".format(self.spec["zlib-api"].prefix.lib),
                 "Makefile",
             )
 

@@ -46,7 +46,7 @@ class SstMacro(AutotoolsPackage):
     depends_on("m4", type="build", when="@master:")
 
     depends_on("binutils", type="build")
-    depends_on("zlib", type=("build", "link"))
+    depends_on("zlib-api", type=("build", "link"))
     depends_on("otf2", when="+otf2")
     depends_on("llvm+clang@5:9", when="+skeletonizer")
     depends_on("mpi", when="+pdes_mpi")

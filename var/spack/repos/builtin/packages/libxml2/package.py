@@ -17,6 +17,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     url = "https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.13.tar.xz"
     list_url = "https://gitlab.gnome.org/GNOME/libxml2/-/releases"
 
+    maintainers("AlexanderRichert-NOAA")
+
     def url_for_version(self, version):
         if version >= Version("2.9.13"):
             url = "https://download.gnome.org/sources/libxml2/{0}/libxml2-{1}.tar.xz"
@@ -38,12 +40,16 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     version("2.7.8", sha256="cda23bc9ebd26474ca8f3d67e7d1c4a1f1e7106364b690d822e009fdc3c417ec")
 
     variant("python", default=False, description="Enable Python support")
+    variant("shared", default=True, description="Build shared library")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
+
+    conflicts("~pic+shared")
 
     depends_on("pkgconfig@0.9.0:", type="build", when="build_system=autotools")
     # conditional on non Windows, but rather than specify for each platform
     # specify for non Windows builder, which has equivalent effect
     depends_on("iconv", when="build_system=autotools")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("xz")
 
     # avoid cycle dependency for concretizer
@@ -68,11 +74,17 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     # Use NAN/INFINITY if available to avoid SIGFPE
     # See https://gitlab.gnome.org/GNOME/libxml2/-/merge_requests/186
     patch(
-        "https://gitlab.gnome.org/GNOME/libxml2/-/commit/c9925454fd384a17c8c03d358c6778a552e9287b.patch",
-        sha256="3e06d42596b105839648070a5921157fe284b932289ffdbfa304ddc3457e5637",
+        "https://gitlab.gnome.org/GNOME/libxml2/-/commit/c9925454fd384a17c8c03d358c6778a552e9287b.diff",
+        sha256="5dc43fed02b443d2563a502a52caafe39477c06fc30b70f786d5ed3eb5aea88d",
         when="@2.9.11:2.9.14",
     )
     build_system(conditional("nmake", when="platform=windows"), "autotools", default="autotools")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags" and self.spec.satisfies("+pic"):
+            flags.append(self.compiler.cc_pic_flag)
+            flags.append("-DPIC")
+        return (flags, None, None)
 
     @property
     def command(self):
@@ -185,7 +197,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             xmllint("--dtdvalid", dtd_path, data_dir.join("info.xml"))
 
 
-class RunAfter(object):
+class RunAfter:
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def import_module_test(self):
@@ -213,6 +225,10 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
         else:
             args.append("--without-python")
 
+        args.extend(self.enable_or_disable("shared"))
+        # PIC setting is taken care of above by self.flag_handler()
+        args.append("--without-pic")
+
         return args
 
 
@@ -235,8 +251,9 @@ class NMakeBuilder(nmake.NMakeBuilder, RunAfter):
                 "iconv=no",
                 "zlib=yes",
                 "lzma=yes",
-                "lib=%s" % ";".join((spec["zlib"].prefix.lib, spec["xz"].prefix.lib)),
-                "include=%s" % ";".join((spec["zlib"].prefix.include, spec["xz"].prefix.include)),
+                "lib=%s" % ";".join((spec["zlib-api"].prefix.lib, spec["xz"].prefix.lib)),
+                "include=%s"
+                % ";".join((spec["zlib-api"].prefix.include, spec["xz"].prefix.include)),
             ]
             if "+python" in spec:
                 opts.append("python=yes")

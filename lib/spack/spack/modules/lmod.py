@@ -9,6 +9,7 @@ import os.path
 import posixpath
 from typing import Any, Dict, List
 
+import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 
 import spack.compilers
@@ -143,7 +144,7 @@ class LmodConfiguration(BaseConfiguration):
 
         # Check if all the tokens in the hierarchy are virtual specs.
         # If not warn the user and raise an error.
-        not_virtual = [t for t in tokens if t != "compiler" and not spack.repo.path.is_virtual(t)]
+        not_virtual = [t for t in tokens if t != "compiler" and not spack.repo.PATH.is_virtual(t)]
         if not_virtual:
             msg = "Non-virtual specs in 'hierarchy' list for lmod: {0}\n"
             msg += "Please check the 'modules.yaml' configuration files"
@@ -231,6 +232,13 @@ class LmodConfiguration(BaseConfiguration):
         """Returns the list of tokens that are not available."""
         return [x for x in self.hierarchy_tokens if x not in self.available]
 
+    @property
+    def hidden(self):
+        # Never hide a module that opens a hierarchy
+        if any(self.spec.package.provides(x) for x in self.hierarchy_tokens):
+            return False
+        return super().hidden
+
 
 class LmodFileLayout(BaseFileLayout):
     """File layout for lmod module files."""
@@ -273,6 +281,13 @@ class LmodFileLayout(BaseFileLayout):
         )
         return fullname
 
+    @property
+    def modulerc(self):
+        """Returns the modulerc file associated with current module file"""
+        return os.path.join(
+            os.path.dirname(self.filename), ".".join([".modulerc", self.extension])
+        )
+
     def token_to_path(self, name, value):
         """Transforms a hierarchy token into the corresponding path part.
 
@@ -283,8 +298,10 @@ class LmodFileLayout(BaseFileLayout):
         Returns:
             str: part of the path associated with the service
         """
+
         # General format for the path part
-        path_part_fmt = os.path.join("{token.name}", "{token.version}")
+        def path_part_fmt(token):
+            return fs.polite_path([f"{token.name}", f"{token.version}"])
 
         # If we are dealing with a core compiler, return 'Core'
         core_compilers = self.conf.core_compilers
@@ -296,13 +313,13 @@ class LmodFileLayout(BaseFileLayout):
         # CompilerSpec does not have a hash, as we are not allowed to
         # use different flavors of the same compiler
         if name == "compiler":
-            return path_part_fmt.format(token=value)
+            return path_part_fmt(token=value)
 
         # In case the hierarchy token refers to a virtual provider
         # we need to append a hash to the version to distinguish
         # among flavors of the same library (e.g. openblas~openmp vs.
         # openblas+openmp)
-        path = path_part_fmt.format(token=value)
+        path = path_part_fmt(token=value)
         path = "-".join([path, value.dag_hash(length=7)])
         return path
 
@@ -466,6 +483,10 @@ class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
 
     default_template = posixpath.join("modules", "modulefile.lua")
+
+    modulerc_header: list = []
+
+    hide_cmd_format = 'hide_version("%s")'
 
 
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):

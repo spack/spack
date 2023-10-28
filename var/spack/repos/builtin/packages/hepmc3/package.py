@@ -31,6 +31,7 @@ class Hepmc3(CMakePackage):
     # note that version 3.0.0 is not supported
     # conflicts with cmake configuration
 
+    variant("protobuf", default=False, description="Enable Protobuf I/O")
     variant("python", default=False, description="Enable Python bindings")
     variant("rootio", default=False, description="Enable ROOT I/O")
     variant(
@@ -41,6 +42,7 @@ class Hepmc3(CMakePackage):
 
     depends_on("cmake@2.8.9:", type="build")
     depends_on("root", when="+rootio")
+    depends_on("protobuf", when="+protobuf")
     depends_on("python", when="+python")
 
     conflicts("%gcc@9.3.0", when="@:3.1.1")
@@ -48,22 +50,25 @@ class Hepmc3(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
         args = [
-            "-DHEPMC3_ENABLE_PYTHON={0}".format(spec.satisfies("+python")),
-            "-DHEPMC3_ENABLE_ROOTIO={0}".format(spec.satisfies("+rootio")),
-            "-DHEPMC3_INSTALL_INTERFACES={0}".format(spec.satisfies("+interfaces")),
+            from_variant("HEPMC3_ENABLE_PROTOBUF", "protobuf"),
+            from_variant("HEPMC3_ENABLE_PYTHON", "python"),
+            from_variant("HEPMC3_ENABLE_ROOTIO", "rootio"),
+            from_variant("HEPMC3_INSTALL_INTERFACES", "interfaces"),
+            self.define("HEPMC3_ENABLE_TEST", self.run_tests),
         ]
 
-        if self.spec.satisfies("+python"):
+        if "+python" in spec:
             py_ver = spec["python"].version.up_to(2)
             args.extend(
                 [
-                    "-DHEPMC3_PYTHON_VERSIONS={0}".format(py_ver),
-                    "-DHEPMC3_Python_SITEARCH{0}={1}".format(py_ver.joined, python_platlib),
+                    from_variant("HEPMC3_PYTHON_VERSIONS", str(py_ver)),
+                    from_variant("HEPMC3_Python_SITEARCH" + py_ver.joined, python_platlib),
                 ]
             )
 
-        if self.spec.satisfies("+rootio"):
-            args.append("-DROOT_DIR={0}".format(self.spec["root"].prefix))
-        args.append("-DHEPMC3_ENABLE_TEST={0}".format(self.run_tests))
+        if "+rootio" in spec:
+            args.append(self.define("ROOT_DIR", spec["root"].prefix))
+
         return args

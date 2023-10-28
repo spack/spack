@@ -28,6 +28,7 @@ class Votca(CMakePackage):
         "new-gmx", default=False, description="Build against gromacs>2019 - no tabulated kernels"
     )
     variant("xtp", default=True, description="Build xtp parts of votca")
+
     conflicts("votca-tools")
     conflicts("votca-csg")
     conflicts("votca-xtp")

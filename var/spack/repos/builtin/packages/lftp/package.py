@@ -25,14 +25,14 @@ class Lftp(AutotoolsPackage):
     depends_on("ncurses")
     depends_on("openssl")
     depends_on("readline")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def configure_args(self):
         args = [
             "--with-expat={0}".format(self.spec["expat"].prefix),
             "--with-openssl={0}".format(self.spec["openssl"].prefix),
             "--with-readline={0}".format(self.spec["readline"].prefix),
-            "--with-zlib={0}".format(self.spec["zlib"].prefix),
+            "--with-zlib={0}".format(self.spec["zlib-api"].prefix),
             "--disable-dependency-tracking",
         ]
         if self.spec["iconv"].name == "libc":

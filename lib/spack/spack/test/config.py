@@ -7,7 +7,6 @@ import collections
 import getpass
 import io
 import os
-import sys
 import tempfile
 from datetime import date
 
@@ -236,7 +235,7 @@ def test_write_key_to_disk(mock_low_high_config, compiler_specs):
     spack.config.set("compilers", b_comps["compilers"], scope="high")
 
     # Clear caches so we're forced to read from disk.
-    spack.config.config.clear_caches()
+    spack.config.CONFIG.clear_caches()
 
     # Same check again, to ensure consistency.
     check_compiler_config(a_comps["compilers"], *compiler_specs.a)
@@ -249,7 +248,7 @@ def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
     spack.config.set("compilers", b_comps["compilers"], scope="low")
 
     # Clear caches so we're forced to read from disk.
-    spack.config.config.clear_caches()
+    spack.config.CONFIG.clear_caches()
 
     # Same check again, to ensure consistency.
     check_compiler_config(a_comps["compilers"], *compiler_specs.a)
@@ -277,6 +276,25 @@ def test_add_config_path(mutable_config):
     spack.config.add(path)
     compilers = spack.config.get("packages")["all"]["compiler"]
     assert "gcc" in compilers
+
+    # Try quotes to escape brackets
+    path = "config:install_tree:projections:cmake:\
+'{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+    spack.config.add(path)
+    set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
+    assert set_value == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+
+    # NOTE:
+    # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
+    # schemas (such as a dropped "root" component) which is atypical and may lead to passing tests
+    # when the behavior is in reality incorrect.
+    # the config path below is such that no subkey accepts a string as a valid entry in our schema
+
+    # try quotes to escape colons
+    path = "config:build_stage:'C:\\path\\to\\config.yaml'"
+    spack.config.add(path)
+    set_value = spack.config.get("config")["build_stage"]
+    assert "C:\\path\\to\\config.yaml" in set_value
 
 
 @pytest.mark.regression("17543,23259")
@@ -313,7 +331,7 @@ def test_write_list_in_memory(mock_low_high_config):
     assert config == repos_high["repos"] + repos_low["repos"]
 
 
-class MockEnv(object):
+class MockEnv:
     def __init__(self, path):
         self.path = path
 
@@ -369,7 +387,7 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     spack.config.set(
         "modules:default", {"roots": {"lmod": os.path.join("foo", "bar", "baz")}}, scope="low"
     )
-    spack.config.config.clear_caches()
+    spack.config.CONFIG.clear_caches()
     path = spack.config.get("modules:default:roots:lmod")
     assert spack_path.canonicalize_path(path) == os.path.normpath(
         os.path.join(mock_low_high_config.scopes["low"].path, os.path.join("foo", "bar", "baz"))
@@ -467,7 +485,7 @@ full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDE
     ],
 )
 def test_parse_install_tree(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.default_install_tree_root
+    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -484,7 +502,7 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     assert projections == expected_proj
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Padding unsupported on Windows")
+@pytest.mark.not_on_windows("Padding unsupported on Windows")
 @pytest.mark.parametrize(
     "config_settings,expected",
     [
@@ -522,7 +540,7 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     ],
 )
 def test_parse_install_tree_padded(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.default_install_tree_root
+    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -816,7 +834,7 @@ def test_bad_config_section(mock_low_high_config):
         spack.config.get("foobar")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="chmod not supported on Windows")
+@pytest.mark.not_on_windows("chmod not supported on Windows")
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_bad_command_line_scopes(tmpdir, config):
     cfg = spack.config.Configuration()
@@ -854,18 +872,18 @@ config:
 
 def test_nested_override():
     """Ensure proper scope naming of nested overrides."""
-    base_name = spack.config.overrides_base_name
+    base_name = spack.config._OVERRIDES_BASE_NAME
 
     def _check_scopes(num_expected, debug_values):
         scope_names = [
-            s.name for s in spack.config.config.scopes.values() if s.name.startswith(base_name)
+            s.name for s in spack.config.CONFIG.scopes.values() if s.name.startswith(base_name)
         ]
 
         for i in range(num_expected):
             name = "{0}{1}".format(base_name, i)
             assert name in scope_names
 
-            data = spack.config.config.get_config("config", name)
+            data = spack.config.CONFIG.get_config("config", name)
             assert data["debug"] == debug_values[i]
 
     # Check results from single and nested override
@@ -878,23 +896,23 @@ def test_nested_override():
 
 def test_alternate_override(monkeypatch):
     """Ensure proper scope naming of override when conflict present."""
-    base_name = spack.config.overrides_base_name
+    base_name = spack.config._OVERRIDES_BASE_NAME
 
     def _matching_scopes(regexpr):
         return [spack.config.InternalConfigScope("{0}1".format(base_name))]
 
     # Check that the alternate naming works
-    monkeypatch.setattr(spack.config.config, "matching_scopes", _matching_scopes)
+    monkeypatch.setattr(spack.config.CONFIG, "matching_scopes", _matching_scopes)
 
     with spack.config.override("config:debug", False):
         name = "{0}2".format(base_name)
 
         scope_names = [
-            s.name for s in spack.config.config.scopes.values() if s.name.startswith(base_name)
+            s.name for s in spack.config.CONFIG.scopes.values() if s.name.startswith(base_name)
         ]
         assert name in scope_names
 
-        data = spack.config.config.get_config("config", name)
+        data = spack.config.CONFIG.get_config("config", name)
         assert data["debug"] is False
 
 
@@ -1158,13 +1176,13 @@ def test_license_dir_config(mutable_config, mock_packages):
     expected_dir = spack.paths.default_license_dir
     assert spack.config.get("config:license_dir") == expected_dir
     assert spack.package_base.PackageBase.global_license_dir == expected_dir
-    assert spack.repo.path.get_pkg_class("a").global_license_dir == expected_dir
+    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == expected_dir
 
     rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
     spack.config.set("config:license_dir", rel_path)
     assert spack.config.get("config:license_dir") == rel_path
     assert spack.package_base.PackageBase.global_license_dir == rel_path
-    assert spack.repo.path.get_pkg_class("a").global_license_dir == rel_path
+    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == rel_path
 
 
 @pytest.mark.regression("22547")
@@ -1230,21 +1248,21 @@ def test_default_install_tree(monkeypatch):
 
 def test_local_config_can_be_disabled(working_env):
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = "true"
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
 
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = ""
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
 
     del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" in cfg.scopes
     assert "site" in cfg.scopes
@@ -1395,7 +1413,7 @@ def test_config_file_dir_failure(tmpdir, mutable_empty_config):
         spack.config.read_config_file(tmpdir.strpath)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="chmod not supported on Windows")
+@pytest.mark.not_on_windows("chmod not supported on Windows")
 def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
     """Test reading a configuration file without permissions to ensure
     ConfigFileError is raised."""

@@ -75,7 +75,7 @@ class Magics(CMakePackage):
     # that files that make calls to png library get compiled and linked
     # unconditionally, which makes png a non-optional dependency (and
     # ENABLE_PNG always has to be set to ON).
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libpng")
 
     # GRIB support is non-optional, regardless of what the instruction says.

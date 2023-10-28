@@ -34,6 +34,9 @@ class Phist(CMakePackage):
     version("develop", branch="devel")
     version("master", branch="master")
 
+    # compatible with trilinos@14:
+    version("1.12.0", sha256="0f02e39b16d14cf7c47a3c468e788c7c0e71857eb1c0a4edb601e1e5b67e8668")
+
     # compatible with python@3.11: and cray-libsci as BLAS/LAPACK provider
     version("1.11.2", sha256="e23f76307c26b930f7331a734b0a864ea6d7fb4a13c12f3c5d70c2c41481747b")
 
@@ -131,9 +134,11 @@ class Phist(CMakePackage):
         description="generate Fortran 2003 bindings (requires Python3 and " "a Fortran compiler)",
     )
 
+    # Trilinos 14 had some tpetra/kokkos API changes that are reflected in the phist 1.12 tag
+    conflicts("^trilinos@14:", when="@:1.11.2")
     # Build error with cray-libsci because they define macro 'I', workaround in phist-1.11.2
     conflicts("^cray-libsci", when="@:1.11.1")
-    # phist@1.11.2 got rid of some deprecated python code
+    # phist@1.11.2 got rid of some deprecated python code + a patch below
     conflicts("^python@3.11:", when="@:1.11.1")
     # The builtin kernels switched from the 'mpi' to the 'mpi_f08' module in
     # phist 1.9.6, which causes compile-time errors with mpich and older
@@ -150,6 +155,12 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
+    # remove 'rU' file mode in a python script
+    patch("remove_rU_mode_in_python_script.patch", when="@:1.12.0 +fortran ^python@3.11:")
+    # Avoid trying to compile some SSE code if SSE is not available
+    # This patch will be part of phist 1.11.3 and greater and only affects
+    # the 'builtin' kernel_lib.
+    patch("avoid-sse.patch", when="@:1.11.2 kernel_lib=builtin")
     # Only applies to 1.9.4: While SSE instructions are handled correctly,
     # build fails on ppc64le unless -DNO_WARN_X86_INTRINSICS is defined.
     patch("ppc64_sse.patch", when="@1.9.4")
@@ -244,6 +255,7 @@ class Phist(CMakePackage):
         lapacke_include_dir = spec["lapack:c"].headers.directories[0]
 
         args = [
+            "-DCMAKE_FIND_DEBUG_MODE=On",
             "-DPHIST_USE_CCACHE=OFF",
             "-DPHIST_KERNEL_LIB=%s" % kernel_lib,
             "-DPHIST_OUTLEV=%s" % outlev,

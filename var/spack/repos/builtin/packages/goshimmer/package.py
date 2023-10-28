@@ -20,7 +20,7 @@ class Goshimmer(Package):
     depends_on("snappy")
     depends_on("rocksdb")
     depends_on("zstd")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("lz4")
 
     @property

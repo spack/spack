@@ -45,7 +45,7 @@ class Gplates(CMakePackage):
     # Released before PROJ.6 was released, so assuming it's not supported
     depends_on("proj@4.6:5", when="@:2.1")
     depends_on("qwt@6.0.1:")
-    depends_on("zlib", when="@2.3:")
+    depends_on("zlib-api", when="@2.3:")
 
     # When built in parallel, headers are not generated before they are used
     # (specifically, ViewportWindowUi.h) with the Makefiles generator.

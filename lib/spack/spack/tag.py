@@ -32,10 +32,10 @@ def packages_with_tags(tags, installed, skip_empty):
     """
     tag_pkgs = collections.defaultdict(lambda: list)
     spec_names = _get_installed_package_names() if installed else []
-    keys = spack.repo.path.tag_index if tags is None else tags
+    keys = spack.repo.PATH.tag_index if tags is None else tags
     for tag in keys:
         packages = [
-            name for name in spack.repo.path.tag_index[tag] if not installed or name in spec_names
+            name for name in spack.repo.PATH.tag_index[tag] if not installed or name in spec_names
         ]
         if packages or not skip_empty:
             tag_pkgs[tag] = packages

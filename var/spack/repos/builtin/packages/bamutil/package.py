@@ -24,7 +24,7 @@ class Bamutil(MakefilePackage):
         url="https://genome.sph.umich.edu/w/images/7/70/BamUtilLibStatGen.1.0.13.tgz",
     )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("git", type="build", when="@1.0.15:")
 
     patch("libstatgen-issue-9.patch", when="@1.0.13")

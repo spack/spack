@@ -48,7 +48,7 @@ class PyDistributed(PythonPackage):
     depends_on("py-click@8.0:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-cloudpickle@1.5.0:", type=("build", "run"))
     depends_on("py-jinja2", type=("build", "run"), when="@2022.2.1:")
-    depends_on("py-jinja2@2.10.3", type=("build", "run"), when="@2023.4.1:")
+    depends_on("py-jinja2@2.10.3:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-locket@1:", type=("build", "run"), when="@2022.2.1:")
     depends_on("py-msgpack@0.6.0:", type=("build", "run"))
     depends_on("py-msgpack@1.0.0:", type=("build", "run"), when="@2023.4.1:")
@@ -57,6 +57,7 @@ class PyDistributed(PythonPackage):
     depends_on("py-psutil@5.7.0:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-sortedcontainers@:1,2.0.2:", type=("build", "run"))
     depends_on("py-sortedcontainers@2.0.5:", type=("build", "run"), when="@2023.4.1:")
+    depends_on("py-tblib@1.6:", type=("build", "run"))
     depends_on("py-toolz@0.8.2:", type=("build", "run"))
     # Note that the setup.py is wrong for py-toolz, when="@2022.10.2".
     # See https://github.com/dask/distributed/pull/7309

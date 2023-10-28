@@ -8,7 +8,6 @@ import io
 import os
 import pathlib
 import shutil
-import sys
 from argparse import Namespace
 
 import pytest
@@ -19,10 +18,12 @@ import llnl.util.link_tree
 import spack.cmd.env
 import spack.config
 import spack.environment as ev
+import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
 import spack.error
 import spack.modules
+import spack.package_base
 import spack.paths
 import spack.repo
 import spack.util.spack_json as sjson
@@ -39,7 +40,7 @@ from spack.version import Version
 pytestmark = [
     pytest.mark.usefixtures("mutable_mock_env_path", "config", "mutable_mock_repo"),
     pytest.mark.maybeslow,
-    pytest.mark.skipif(sys.platform == "win32", reason="Envs unsupported on Window"),
+    pytest.mark.not_on_windows("Envs unsupported on Window"),
 ]
 
 env = SpackCommand("env")
@@ -148,7 +149,7 @@ def test_env_list(mutable_mock_env_path):
     assert "baz" in out
 
     # make sure `spack env list` skips invalid things in var/spack/env
-    mutable_mock_env_path.join(".DS_Store").ensure(file=True)
+    (mutable_mock_env_path / ".DS_Store").touch()
     out = env("list")
 
     assert "foo" in out
@@ -167,7 +168,7 @@ def test_env_remove(capfd):
 
     foo = ev.read("foo")
     with foo:
-        with pytest.raises(spack.main.SpackCommandError):
+        with pytest.raises(SpackCommandError):
             with capfd.disabled():
                 env("remove", "-y", "foo")
         assert "foo" in env("list")
@@ -248,8 +249,8 @@ def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install("dependent-install")
 
     # Check one explicit, one implicit install
-    dependent = spack.store.db.query(explicit=True)
-    dependency = spack.store.db.query(explicit=False)
+    dependent = spack.store.STORE.db.query(explicit=True)
+    dependency = spack.store.STORE.db.query(explicit=False)
     assert len(dependent) == 1
     assert len(dependency) == 1
 
@@ -260,7 +261,7 @@ def test_env_roots_marked_explicit(install_mockery, mock_fetch):
         e.concretize()
         e.install_all()
 
-    explicit = spack.store.db.query(explicit=True)
+    explicit = spack.store.STORE.db.query(explicit=True)
     assert len(explicit) == 2
 
 
@@ -275,14 +276,14 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
     def setup_error(pkg, env):
         raise RuntimeError("cmake-client had issues!")
 
-    pkg = spack.repo.path.get_pkg_class("cmake-client")
+    pkg = spack.repo.PATH.get_pkg_class("cmake-client")
     monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
 
     spack.environment.shell.activate(e)
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
-    assert "Warning: couldn't get environment settings" in err
+    assert "Warning: couldn't load runtime environment" in err
 
 
 def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, monkeypatch):
@@ -360,10 +361,10 @@ spack:
     assert "depb: Executing phase:" in out
     assert "a: Executing phase:" in out
 
-    depb = spack.store.db.query_one("depb", installed=True)
+    depb = spack.store.STORE.db.query_one("depb", installed=True)
     assert depb, "Expected depb to be installed"
 
-    a = spack.store.db.query_one("a", installed=True)
+    a = spack.store.STORE.db.query_one("a", installed=True)
     assert a, "Expected a to be installed"
 
 
@@ -499,11 +500,14 @@ def test_env_activate_broken_view(
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
     with spack.repo.use_repositories(mock_custom_repository):
-        with pytest.raises(SpackCommandError):
-            env("activate", "--sh", "test")
+        wrong_repo = env("activate", "--sh", "test")
+        assert "Warning: couldn't load runtime environment" in wrong_repo
+        assert "Unknown namespace: builtin.mock" in wrong_repo
 
     # test replacing repo fixes it
-    env("activate", "--sh", "test")
+    normal_repo = env("activate", "--sh", "test")
+    assert "Warning: couldn't load runtime environment" not in normal_repo
+    assert "Unknown namespace: builtin.mock" not in normal_repo
 
 
 def test_to_lockfile_dict():
@@ -662,7 +666,7 @@ packages:
         e.write()
 
         env_mod = spack.util.environment.EnvironmentModifications()
-        e.add_default_view_to_env(env_mod)
+        e.add_view_to_env(env_mod, "default")
         env_variables = {}
         env_mod.apply_modifications(env_variables)
         assert str(fake_bin) in env_variables["PATH"]
@@ -1043,7 +1047,7 @@ def test_env_commands_die_with_no_env_arg():
         env("remove")
 
     # these have an optional env arg and raise errors via tty.die
-    with pytest.raises(spack.main.SpackCommandError):
+    with pytest.raises(SpackCommandError):
         env("loads")
 
     # This should NOT raise an error with no environment
@@ -1116,12 +1120,12 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
 
 
 @pytest.mark.usefixtures("config")
-def test_indirect_build_dep(tmpdir):
+def test_indirect_build_dep(tmp_path):
     """Simple case of X->Y->Z where Y is a build/link dep and Z is a
     build-only dep. Make sure this concrete DAG is preserved when writing the
     environment out and reading it back.
     """
-    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder = spack.repo.MockRepositoryBuilder(tmp_path / "repo")
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", "build", None)])
     builder.add_package("x", dependencies=[("y", None, None)])
@@ -1144,7 +1148,7 @@ def test_indirect_build_dep(tmpdir):
 
 
 @pytest.mark.usefixtures("config")
-def test_store_different_build_deps(tmpdir):
+def test_store_different_build_deps(tmp_path):
     r"""Ensure that an environment can store two instances of a build-only
     dependency::
 
@@ -1155,7 +1159,7 @@ def test_store_different_build_deps(tmpdir):
               z1
 
     """
-    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder = spack.repo.MockRepositoryBuilder(tmp_path / "mirror")
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", "build", None)])
     builder.add_package("x", dependencies=[("y", None, None), ("z", "build", None)])
@@ -2355,7 +2359,7 @@ def test_env_activate_sh_prints_shell_output(tmpdir, mock_stage, mock_fetch, ins
     This is a cursory check; ``share/spack/qa/setup-env-test.sh`` checks
     for correctness.
     """
-    env("create", "test", add_view=True)
+    env("create", "test")
 
     out = env("activate", "--sh", "test")
     assert "export SPACK_ENV=" in out
@@ -2370,7 +2374,7 @@ def test_env_activate_sh_prints_shell_output(tmpdir, mock_stage, mock_fetch, ins
 
 def test_env_activate_csh_prints_shell_output(tmpdir, mock_stage, mock_fetch, install_mockery):
     """Check the shell commands output by ``spack env activate --csh``."""
-    env("create", "test", add_view=True)
+    env("create", "test")
 
     out = env("activate", "--csh", "test")
     assert "setenv SPACK_ENV" in out
@@ -2387,7 +2391,7 @@ def test_env_activate_csh_prints_shell_output(tmpdir, mock_stage, mock_fetch, in
 def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     """Check that the root of the default view in the environment is added
     to the shell unconditionally."""
-    env("create", "test", add_view=True)
+    env("create", "test")
 
     with ev.read("test") as e:
         viewdir = e.default_view.root
@@ -2400,6 +2404,27 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
         or "export PATH='{0}".format(viewdir_bin) in out
         or 'export PATH="{0}'.format(viewdir_bin) in out
     )
+
+
+def test_env_activate_custom_view(tmp_path: pathlib.Path, mock_packages):
+    """Check that an environment can be activated with a non-default view."""
+    env_template = tmp_path / "spack.yaml"
+    default_dir = tmp_path / "defaultdir"
+    nondefaultdir = tmp_path / "nondefaultdir"
+    with open(env_template, "w") as f:
+        f.write(
+            f"""\
+spack:
+  specs: [a]
+  view:
+    default:
+      root: {default_dir}
+    nondefault:
+      root: {nondefaultdir}"""
+        )
+    env("create", "test", str(env_template))
+    shell = env("activate", "--sh", "--with-view", "nondefault", "test")
+    assert os.path.join(nondefaultdir, "bin") in shell
 
 
 def test_concretize_user_specs_together():
@@ -2800,11 +2825,11 @@ spack:
             install_root
         )
     )
-    current_store_root = str(spack.store.root)
+    current_store_root = str(spack.store.STORE.root)
     assert str(current_store_root) != install_root
     with spack.environment.Environment(str(tmpdir)):
-        assert str(spack.store.root) == install_root
-    assert str(spack.store.root) == current_store_root
+        assert str(spack.store.STORE.root) == install_root
+    assert str(spack.store.STORE.root) == current_store_root
 
 
 def test_activate_temp(monkeypatch, tmpdir):
@@ -3136,6 +3161,57 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
     assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
 
 
+def test_depfile_safe_format():
+    """Test that depfile.MakefileSpec.safe_format() escapes target names."""
+
+    class SpecLike:
+        def format(self, _):
+            return "abc@def=ghi"
+
+    spec = depfile.MakefileSpec(SpecLike())
+    assert spec.safe_format("{name}") == "abc_def_ghi"
+    assert spec.unsafe_format("{name}") == "abc@def=ghi"
+
+
+def test_depfile_works_with_gitversions(tmpdir, mock_packages, monkeypatch):
+    """Git versions may contain = chars, which should be escaped in targets,
+    otherwise they're interpreted as makefile variable assignments."""
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", "repo.git", raising=False)
+    env("create", "test")
+
+    make = Executable("make")
+    makefile = str(tmpdir.join("Makefile"))
+
+    # Create an environment with dttop and dtlink1 both at a git version,
+    # and generate a depfile
+    with ev.read("test"):
+        add(f"dttop@{'a' * 40}=1.0 ^dtlink1@{'b' * 40}=1.0")
+        concretize()
+        env("depfile", "-o", makefile, "--make-disable-jobserver", "--make-prefix=prefix")
+
+    # Do a dry run on the generated depfile
+    out = make("-n", "-f", makefile, output=str)
+
+    # Check that all specs are there (without duplicates)
+    specs_that_make_would_install = _parse_dry_run_package_installs(out)
+    expected_installs = [
+        "dtbuild1",
+        "dtbuild2",
+        "dtbuild3",
+        "dtlink1",
+        "dtlink2",
+        "dtlink3",
+        "dtlink4",
+        "dtlink5",
+        "dtrun1",
+        "dtrun2",
+        "dtrun3",
+        "dttop",
+    ]
+    assert set(specs_that_make_would_install) == set(expected_installs)
+    assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
+
+
 @pytest.mark.parametrize(
     "picked_package,expected_installs",
     [
@@ -3297,12 +3373,11 @@ def test_relative_view_path_on_command_line_is_made_absolute(tmp_path, config):
         assert os.path.samefile("view", environment.default_view.root)
 
 
-def test_environment_created_in_users_location(mutable_config, tmpdir):
+def test_environment_created_in_users_location(mutable_mock_env_path, tmp_path):
     """Test that an environment is created in a location based on the config"""
-    spack.config.set("config:environments_root", str(tmpdir.join("envs")))
-    env_dir = spack.config.get("config:environments_root")
+    env_dir = str(mutable_mock_env_path)
 
-    assert tmpdir.strpath in env_dir
+    assert str(tmp_path) in env_dir
     assert not os.path.isdir(env_dir)
 
     dir_name = "user_env"

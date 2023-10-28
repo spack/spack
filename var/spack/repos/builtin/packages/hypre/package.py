@@ -24,6 +24,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("develop", branch="master")
+    version("2.29.0", sha256="98b72115407a0e24dbaac70eccae0da3465f8f999318b2c9241631133f42d511")
     version("2.28.0", sha256="2eea68740cdbc0b49a5e428f06ad7af861d1e169ce6a12d2cf0aa2fc28c4a2ae")
     version("2.27.0", sha256="507a3d036bb1ac21a55685ae417d769dd02009bde7e09785d0ae7446b4ae1f98")
     version("2.26.0", sha256="c214084bddc61a06f3758d82947f7f831e76d7e3edeac2c78bb82d597686e05d")
@@ -75,6 +76,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("gptune", default=False, description="Add the GPTune hookup code")
     variant("umpire", default=False, description="Enable Umpire support")
     variant("sycl", default=False, description="Enable SYCL support")
+    variant("magma", default=False, description="Enable MAGMA interface")
     variant("caliper", default=False, description="Enable Caliper support")
 
     # Patch to add gptune hookup codes
@@ -99,6 +101,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("blas")
     depends_on("lapack")
+    depends_on("magma", when="+magma")
     depends_on("superlu-dist", when="+superlu-dist+mpi")
     depends_on("rocsparse", when="+rocm")
     depends_on("rocthrust", when="+rocm")
@@ -107,18 +110,23 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("umpire", when="+umpire")
     depends_on("caliper", when="+caliper")
 
+    gpu_pkgs = ["magma", "umpire"]
     for sm_ in CudaPackage.cuda_arch_values:
-        depends_on(
-            "umpire+cuda cuda_arch={0}".format(sm_), when="+umpire+cuda cuda_arch={0}".format(sm_)
-        )
-    for gfx in ROCmPackage.amdgpu_targets:
-        depends_on(
-            "umpire+rocm amdgpu_target={0}".format(gfx),
-            when="+umpire+rocm amdgpu_target={0}".format(gfx),
-        )
+        for pkg in gpu_pkgs:
+            depends_on(
+                "{0}+cuda cuda_arch={1}".format(pkg, sm_),
+                when="+{0}+cuda cuda_arch={1}".format(pkg, sm_),
+            )
 
-    # Uses deprecated cuSPARSE functions/types (e.g. csrsv2Info_t).
-    depends_on("cuda@:11", when="+cuda")
+    for gfx in ROCmPackage.amdgpu_targets:
+        for pkg in gpu_pkgs:
+            depends_on(
+                "{0}+rocm amdgpu_target={1}".format(pkg, gfx),
+                when="+{0}+rocm amdgpu_target={1}".format(pkg, gfx),
+            )
+
+    # hypre@:2.28.0 uses deprecated cuSPARSE functions/types (e.g. csrsv2Info_t).
+    depends_on("cuda@:11", when="@:2.28.0+cuda")
 
     # Conflicts
     conflicts("+cuda", when="+int64")
@@ -148,6 +156,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     # Option added in v2.24.0
     conflicts("+sycl", when="@:2.23")
+
+    # Option added in v2.29.0
+    conflicts("+magma", when="@:2.28")
 
     configure_directory = "src"
 
@@ -268,7 +279,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.extend(["--without-hip", "--disable-rocrand", "--disable-rocsparse"])
 
         if "+sycl" in spec:
-            configure_args.append("--with-scyl")
+            configure_args.append("--with-sycl")
             sycl_compatible_compilers = ["dpcpp", "icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
                 raise InstallError(
@@ -278,6 +289,11 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if "+unified-memory" in spec:
             configure_args.append("--enable-unified-memory")
+
+        if "+magma" in spec:
+            configure_args.append("--with-magma-include=%s" % spec["magma"].prefix.include)
+            configure_args.append("--with-magma-lib=%s" % spec["magma"].libs)
+            configure_args.append("--with-magma")
 
         configure_args.extend(self.enable_or_disable("fortran"))
 
@@ -328,7 +344,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     @run_after("install")
     def cache_test_sources(self):
-        self.cache_extra_test_sources(self.extra_install_tests)
+        cache_extra_test_sources(self, self.extra_install_tests)
 
     @property
     def _cached_tests_work_dir(self):

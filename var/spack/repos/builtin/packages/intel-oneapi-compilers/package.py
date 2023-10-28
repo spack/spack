@@ -3,11 +3,32 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.compilers
 from spack.build_environment import dso_suffix
 from spack.package import *
 
 versions = [
+    {
+        "version": "2023.2.1",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/ebf5d9aa-17a7-46a4-b5df-ace004227c0e/l_dpcpp-cpp-compiler_p_2023.2.1.8_offline.sh",
+            "sha256": "f5656b2f5bb5d904639e6ef1f90a2d2e760d2906e82ebc0dd387709738ca714b",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm//IRC_NAS/0d65c8d4-f245-4756-80c4-6712b43cf835/l_fortran-compiler_p_2023.2.1.8_offline.sh",
+            "sha256": "d4e36abc014c184698fec318a127f15a696b5333b3b0282aba1968b351207185",
+        },
+    },
+    {
+        "version": "2023.2.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/748687b0-5a22-467c-86c6-c312fa0206b2/l_dpcpp-cpp-compiler_p_2023.2.0.49256_offline.sh",
+            "sha256": "21497b2dd2bc874794c2321561af313082725f61e3101e05a050f98b7351e08f",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/237236c4-434b-4576-96ac-020ceeb22619/l_fortran-compiler_p_2023.2.0.49254_offline.sh",
+            "sha256": "37c0ad6f0013512d98e385f8708ca29b23c45fddc9ec76069f1d93663668d511",
+        },
+    },
     {
         "version": "2023.1.0",
         "cpp": {
@@ -143,16 +164,13 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
-    depends_on("patchelf", type="build")
+    # See https://github.com/spack/spack/issues/39252
+    depends_on("patchelf@:0.17", type="build")
 
     # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
     # cannot express that properly. For now, add conflicts for non-gcc compilers
     # instead.
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "gcc":
-            conflicts(
-                "%{0}".format(__compiler), msg="intel-oneapi-compilers must be installed with %gcc"
-            )
+    requires("%gcc", msg="intel-oneapi-compilers must be installed with %gcc")
 
     for v in versions:
         version(v["version"], expand=False, **v["cpp"])
@@ -183,7 +201,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
         and from setting CC/CXX/F77/FC
         """
-        super(IntelOneapiCompilers, self).setup_run_environment(env)
+        super().setup_run_environment(env)
 
         env.set("CC", self.component_prefix.linux.bin.icx)
         env.set("CXX", self.component_prefix.linux.bin.icpx)
@@ -195,7 +213,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # install_tree("/opt/intel/oneapi/compiler", self.prefix)
 
         # install cpp
-        super(IntelOneapiCompilers, self).install(spec, prefix)
+        super().install(spec, prefix)
 
         # install fortran
         self.install_component(find("fortran-installer", "*")[0])
@@ -253,7 +271,10 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             llvm_flags.append("-Wno-unused-command-line-argument")
 
         self.write_config_file(
-            common_flags + llvm_flags, self.component_prefix.linux.bin, ["icx", "icpx", "ifx"]
+            common_flags + llvm_flags, self.component_prefix.linux.bin, ["icx", "icpx"]
+        )
+        self.write_config_file(
+            common_flags + classic_flags, self.component_prefix.linux.bin, ["ifx"]
         )
         self.write_config_file(
             common_flags + classic_flags,

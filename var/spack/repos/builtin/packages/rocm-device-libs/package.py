@@ -12,13 +12,16 @@ class RocmDeviceLibs(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs"
     git = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git"
-    url = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="amd-stg-open")
-
+    version("5.6.1", sha256="f0dfab272ff936225bfa1e9dabeb3c5d12ce08b812bf53ffbddd2ddfac49761c")
+    version("5.6.0", sha256="efb5dcdca9b3a9fbe408d494fb4a23e0b78417eb5fa8eebd4a5d226088f28921")
+    version("5.5.1", sha256="3b5f6dd85f0e3371f6078da7b59bf77d5b210e30f1cc66ef1e2de6bbcb775833")
+    version("5.5.0", sha256="5ab95aeb9c8bed0514f96f7847e21e165ed901ed826cdc9382c14d199cbadbd3")
     version("5.4.3", sha256="f4f7281f2cea6d268fcc3662b37410957d4f0bc23e0df9f60b12eb0fcdf9e26e")
     version("5.4.0", sha256="d68813ded47179c39914c8d1b76af3dad8c714b10229d1e2246af67609473951")
     version("5.3.3", sha256="963c9a0561111788b55a8c3b492e2a5737047914752376226c97a28122a4d768")
@@ -99,17 +102,10 @@ class RocmDeviceLibs(CMakePackage):
         deprecated=True,
     )
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo"),
-        description="CMake build type",
-    )
-
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
     depends_on("cmake@3.4.3:", type="build")
 
-    depends_on("zlib", type="link", when="@3.9.0:")
+    depends_on("zlib-api", type="link", when="@3.9.0:")
     depends_on("texinfo", type="link", when="@3.9.0:")
 
     depends_on("rocm-cmake@3.5.0:", type="build")
@@ -142,9 +138,16 @@ class RocmDeviceLibs(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
         "master",
     ]:
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
+
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
 
     def cmake_args(self):
         spec = self.spec
