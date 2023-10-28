@@ -1,34 +1,72 @@
---- old/Makefile
-+++ new/Makefile
-@@ -76,6 +76,9 @@
-
+diff --git a/mpi-serial/Makefile b/mpi-serial/Makefile
+index 0b1ca1d..e89a693 100644
+--- a/mpi-serial/Makefile
++++ b/mpi-serial/Makefile
+@@ -8,7 +8,7 @@ VPATH=$(SRCDIR)/mpi-serial
+ MODULE		= mpi-serial
+ 
+ SRCS_F90	= fort.F90 \
+-                  mpif.F90
++		  mpif.F90
+ 
+ SRCS_C		= mpi.c \
+ 		  send.c \
+@@ -17,20 +17,20 @@ SRCS_C		= mpi.c \
+ 		  req.c \
+ 		  list.c \
+ 		  handles.c \
+-                  comm.c \
++		  comm.c \
+ 		  error.c \
+-                  ic_merge.c \
+-                  group.c \
+-                  time.c \
+-                  pack.c \
+-                  type.c \
+-                  type_const.c \
+-                  copy.c \
+-                  op.c \
+-                  cart.c \
+-                  getcount.c \
+-                  probe.c \
+-                  info.c
++		  ic_merge.c \
++		  group.c \
++		  time.c \
++		  pack.c \
++		  type.c \
++		  type_const.c \
++		  copy.c \
++		  op.c \
++		  cart.c \
++		  getcount.c \
++		  probe.c \
++		  info.c
+ 
+ 
+ OBJS_ALL	= $(SRCS_C:.c=.o) \
+@@ -76,6 +76,9 @@ MYF90FLAGS=$(INCPATH) $(DEFS) $(FCFLAGS)  $(MPEUFLAGS)
+ 
  .PHONY: clean tests install
-
+ 
 +includedir = $(PREFIX)/include
 +libdir = $(PREFIX)/lib
 +
  clean:
  	/bin/rm -f *.o ctest ftest $(LIB) mpi.mod config.log config.status
  	cd tests ; $(MAKE) clean
-@@ -83,7 +86,7 @@
+@@ -83,11 +86,9 @@ clean:
  tests:
  	cd tests; make
-
+ 
 -install: lib
 +install: $(LIB)
  	$(MKINSTALLDIRS) $(libdir) $(includedir)
  	$(INSTALL) lib$(MODULE).a -m 644 $(libdir)
  	$(INSTALL) mpi.h -m 644 $(includedir)
---- old/Makefile.conf.in
-+++ new/Makefile.conf.in
-@@ -10,7 +10,8 @@
- LIBS            = @LIBS@
- CRULE           = .c.o
- F90RULE         = .F90.o
+ 	$(INSTALL) mpif.h -m 644 $(includedir)
 -
-+MKINSTALLDIRS   = mkdir
- SHELL		= /bin/sh
 -
-+INSTALL         = install
- MODULE		= mpi-serial
-+PREFIX          = @prefix@
+-
++	$(INSTALL) *.mod -m 644 $(includedir)
+

@@ -41,8 +41,7 @@ class MpiSerial(AutotoolsPackage):
 
         if name == "cflags":
             config_flags.append(self.compiler.cc_pic_flag)
-
-            if spec.compiler.name in ["oneapi"]:
+            if spec.satisfies("%intel") or spec.satisfies("%oneapi"):
                 # OneAPI fails due to these standards checks
                 config_flags.append("-Wno-error=implicit-int")
                 config_flags.append("-Wno-error=implicit-function-declaration")
@@ -52,7 +51,7 @@ class MpiSerial(AutotoolsPackage):
         return flags, None, (config_flags or None)
 
     def configure_args(self):
-        args = []
+        args = [PREFIX=]
 
         realsize = int(self.spec.variants["fort-real-size"].value)
         if realsize != 4:

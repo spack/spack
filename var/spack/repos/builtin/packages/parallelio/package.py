@@ -80,6 +80,7 @@ class Parallelio(CMakePackage):
         if spec.satisfies("+fortran"):
             args.extend([define("NetCDF_Fortran_PATH", spec["netcdf-fortran"].prefix)])
         if spec.satisfies("+mpi"):
+            print("spec mpi is {}".format(spec["mpi"]))
             env["CC"] = spec["mpi"].mpicc
             env["FC"] = spec["mpi"].mpifc
         else:

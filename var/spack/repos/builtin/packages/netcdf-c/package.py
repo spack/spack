@@ -284,6 +284,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     def flag_handler(self, name, flags):
         if self.builder.build_system == "autotools":
             if name == "cflags":
+                flags.append("-Wno-error=incompatible-function-pointer-types")
                 if "+pic" in self.spec:
                     flags.append(self.compiler.cc_pic_flag)
                 if "+optimize" in self.spec:
