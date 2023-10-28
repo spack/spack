@@ -182,13 +182,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # Third party dependencies
     depends_on("fp16@2020-05-14", when="@1.6:")
     depends_on("fxdiv@2020-04-17", when="@1.6:")
-    # https://github.com/pytorch/pytorch/issues/60332
-    # depends_on("xnnpack@2024-02-29", when="@2.3:+xnnpack")
-    # depends_on("xnnpack@2022-12-21", when="@2.0:2.2+xnnpack")
-    # depends_on("xnnpack@2022-02-16", when="@1.12:1+xnnpack")
-    # depends_on("xnnpack@2021-06-21", when="@1.10:1.11+xnnpack")
-    # depends_on("xnnpack@2021-02-22", when="@1.8:1.9+xnnpack")
-    # depends_on("xnnpack@2020-03-23", when="@1.6:1.7+xnnpack")
+    depends_on("xnnpack@2024-02-29", when="@2.3:+xnnpack")
+    depends_on("xnnpack@2022-12-21", when="@2.0:2.2+xnnpack")
+    depends_on("xnnpack@2022-02-16", when="@1.12:1+xnnpack")
+    depends_on("xnnpack@2021-06-21", when="@1.10:1.11+xnnpack")
+    depends_on("xnnpack@2021-02-22", when="@1.8:1.9+xnnpack")
+    depends_on("xnnpack@2020-03-23", when="@1.6:1.7+xnnpack")
     depends_on("benchmark", when="@1.6:+test")
     depends_on("cpuinfo@2023-11-04", when="@2.3:")
     depends_on("cpuinfo@2023-01-13", when="@2.1:2.2")
@@ -663,8 +662,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         env.set("USE_SYSTEM_SLEEF", "ON")
         # env.set("USE_SYSTEM_TBB", "ON")
         # env.set("USE_SYSTEM_UCC", "ON")
-        # https://github.com/pytorch/pytorch/issues/60332
-        # env.set("USE_SYSTEM_XNNPACK", "ON")
+        env.set("USE_SYSTEM_XNNPACK", "ON")
         # env.set("USE_SYSTEM_ZSTD", "ON")
 
         if self.spec.satisfies("+custom-protobuf"):
