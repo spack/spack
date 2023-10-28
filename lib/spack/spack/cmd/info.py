@@ -333,26 +333,6 @@ def _fmt_variant(variant, max_name_default_len, indent, when=None, out=None):
     out.write("\n")
 
 
-def _variants_by_name_when(pkg):
-    """Adaptor to get variants keyed by { name: { when: { [Variant...] } }."""
-    # TODO: replace with pkg.variants_by_name(when=True) when unified directive dicts are merged.
-    variants = {}
-    for name, (variant, whens) in sorted(pkg.variants.items()):
-        for when in whens:
-            variants.setdefault(name, {}).setdefault(when, []).append(variant)
-    return variants
-
-
-def _variants_by_when_name(pkg):
-    """Adaptor to get variants keyed by { when: { name: Variant } }"""
-    # TODO: replace with pkg.variants when unified directive dicts are merged.
-    variants = {}
-    for name, (variant, whens) in pkg.variants.items():
-        for when in whens:
-            variants.setdefault(when, {})[name] = variant
-    return variants
-
-
 def _print_variants_header(pkg):
     """output variants"""
 
@@ -363,7 +343,7 @@ def _print_variants_header(pkg):
     color.cprint("")
     color.cprint(section_title("Variants:"))
 
-    variants_by_name = _variants_by_name_when(pkg)
+    variants_by_name = pkg.variants_by_name(when=True)
 
     # Calculate the max length of the "name [default]" part of the variant display
     # This lets us know where to print variant values.
@@ -387,8 +367,7 @@ def print_variants_grouped_by_when(pkg):
     max_name_default_len, _ = _print_variants_header(pkg)
 
     indent = 4
-    variants = _variants_by_when_name(pkg)
-    for when, variants_by_name in sorted(variants.items(), key=_unconstrained_ver_first):
+    for when, variants_by_name in sorted(pkg.variants.items(), key=_unconstrained_ver_first):
         padded_values = max_name_default_len + 4
         start_indent = indent
 
