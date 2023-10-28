@@ -145,9 +145,6 @@ def create_temp_env_directory():
 
 
 def env_activate(args):
-    if not args.activate_env and not args.dir and not args.temp:
-        tty.die("spack env activate requires an environment name, directory, or --temp")
-
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate", "    eval `spack env activate {sh_arg} [...]`"
@@ -160,8 +157,16 @@ def env_activate(args):
 
     env_name_or_dir = args.activate_env or args.dir
 
+    # When executing `spack env activate` without further arguments, activate
+    # the home environment. It's created when it doesn't exist yet.
+    if not env_name_or_dir and not args.temp:
+        short_name = "home"
+        if not ev.exists(short_name):
+            ev.create(short_name)
+        env_path = ev.root(short_name)
+
     # Temporary environment
-    if args.temp:
+    elif args.temp:
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
