@@ -448,6 +448,7 @@ def _by_name(
             else:
                 all_by_name.setdefault(name, []).append(value)
 
+    # this needs to preserve the insertion order of whens
     return dict(sorted(all_by_name.items()))
 
 
@@ -593,7 +594,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     provided: Dict["spack.spec.Spec", Set["spack.spec.Spec"]]
     provided_together: Dict["spack.spec.Spec", List[Set[str]]]
     patches: Dict["spack.spec.Spec", List["spack.patch.Patch"]]
-    variants: Dict[str, Tuple["spack.variant.Variant", "spack.spec.Spec"]]
+    variants: Dict["spack.spec.Spec", Dict[str, "spack.variant.Variant"]]
     languages: Dict["spack.spec.Spec", Set[str]]
 
     #: By default, packages are not virtual
@@ -746,6 +747,40 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     @classmethod
     def dependencies_by_name(cls, when: bool = False):
         return _by_name(cls.dependencies, when=when)
+
+    @classmethod
+    def variant_names(cls):
+        return _names(cls.variants)
+
+    @classmethod
+    def variants_by_name(cls, when: bool = False):
+        return _by_name(cls.variants, when)
+
+    @classmethod
+    def variants_for_spec(
+        cls, variant_name: str, spec: "spack.spec.Spec"
+    ) -> List["spack.variant.Variant"]:
+        """Get any variant definitions for the variant 'name' that apply to the provided spec.
+
+        Arguments:
+            name: name of variant of interest.
+            spec: any variants whose ``when`` clause intersects this spec will be returned.
+        """
+        possible_variants = []
+        for when, variants_by_name in cls.variants.items():
+            pkg_variant = variants_by_name.get(variant_name)
+            if pkg_variant and when.intersects(spec):
+                possible_variants.append(pkg_variant)
+        return possible_variants
+
+    def variant_descriptor(self, name):
+        """Get the variant descriptor for a variant on this package's spec."""
+        if name not in self.spec.variants:
+            raise ValueError(f"No variant '{name}' on spec: {self.spec}")
+
+        for when, variants_by_name in self.variants.items():
+            if self.spec.satisfies(when) and name in variants_by_name:
+                return variants_by_name[name]
 
     @classmethod
     def possible_dependencies(

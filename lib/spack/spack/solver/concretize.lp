@@ -819,58 +819,128 @@ error(10, Message) :-
 %-----------------------------------------------------------------------------
 % Variant semantics
 %-----------------------------------------------------------------------------
-% a variant is a variant of a package if it is a variant under some condition
-% and that condition holds
-node_has_variant(node(NodeID, Package), Variant) :-
-  pkg_fact(Package, conditional_variant(ID, Variant)),
-  condition_holds(ID, node(NodeID, Package)).
+% Packages define potentially several definitions for each variant, and depending
+% on their attibutes, duplicate nodes for the same package may use different
+% definitions. So the variant logic has several jobs:
+% A. Associate a variant definition with a node, by VariantID
+% B. Associate defaults and attributes (sticky, etc.) for the selected variant ID with the node.
+% C. Once these rules are established for a node, select variant value(s) based on them.
 
-node_has_variant(node(ID, Package), Variant) :-
-  pkg_fact(Package, variant(Variant)),
-  attr("node", node(ID, Package)).
+% A: Selecting a variant definition
+
+% Variant definitions come from package facts in two ways:
+% 1. unconditional variants are always defined on all nodes for a given package
+variant_definition(node(NodeID, Package), Name, VariantID) :-
+  pkg_fact(Package, variant_definition(Name, VariantID)),
+  attr("node", node(NodeID, Package)).
+
+% 2. conditional variants are only defined if the conditions hold for the node
+variant_definition(node(NodeID, Package), Name, VariantID) :-
+  pkg_fact(Package, variant_condition(Name, VariantID, ConditionID)),
+  condition_holds(ConditionID, node(NodeID, Package)).
+
+% If there are any definitions for a variant on a node, the variant is "defined".
+variant_defined(PackageNode, Name) :- variant_definition(PackageNode, Name, _).
+
+% We must select one definition for each defined variant on a node.
+1 {
+  node_has_variant(PackageNode, Name, VariantID) : variant_definition(PackageNode, Name, VariantID)
+} 1 :-
+  variant_defined(PackageNode, Name).
+
+% Solver must pick the variant definition with the highest id. When conditions hold
+% for two or more variant definitions, this prefers the last one defined.
+:- node_has_variant(node(NodeID, Package), Name, SelectedVariantID),
+   variant_definition(node(NodeID, Package), Name, VariantID),
+   VariantID > SelectedVariantID.
+
+% B: Associating applicable package rules with nodes
+
+% The default value for a variant in a package is what is prescribed:
+% 1. On the command line
+% 2. In packages.yaml (if there's no command line settings)
+% 3. In the package.py file (if there are no settings in packages.yaml and the command line)
+
+% -- Associate the definition's default values with the node
+% note that the package.py variant defaults are associated with a particular definition, but
+% packages.yaml and CLI are associated with just the variant name.
+variant_default_value(node(NodeID, Package), VariantName, Value) :-
+  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+  pkg_fact(Package, variant_default_value_from_package_py(VariantID, Value)),
+  not variant_default_value_from_packages_yaml(Package, VariantName, _),
+  not attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, _).
+
+variant_default_value(node(NodeID, Package), VariantName, Value) :-
+  node_has_variant(node(NodeID, Package), VariantName, _),
+  variant_default_value_from_packages_yaml(Package, VariantName, Value),
+  not attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, _).
+
+variant_default_value(node(NodeID, Package), VariantName, Value) :-
+    node_has_variant(node(NodeID, Package), VariantName, _),
+    attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, Value).
+
+% -- Associate the definition's possible values with the node
+variant_possible_value(node(NodeID, Package), VariantName, Value) :-
+  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+  pkg_fact(Package, variant_possible_value(VariantID, Value)).
+
+variant_value_from_disjoint_sets(node(NodeID, Package), VariantName, Value1, Set1) :-
+  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+  pkg_fact(Package, variant_value_from_disjoint_sets(VariantID, Value1, Set1)).
+
+% -- Associate definition's arity with the node
+variant_single_value(node(NodeID, Package), VariantName) :-
+  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+  pkg_fact(Package, variant_single_value(VariantID)).
+
+% C: Determining variant values on each node
+
+% if a variant is sticky, but not set, its value is the default value
+attr("variant_value_id", node(ID, Package), Variant, Value, VariantID) :-
+  node_has_variant(node(ID, Package), Variant, VariantID),
+  variant_default_value(node(ID, Package), Variant, Value),
+  pkg_fact(Package, variant_sticky(VariantID)),
+  not attr("variant_set", node(ID, Package), Variant),
+  build(node(ID, Package)).
+
+% we can choose variant values from all the possible values for the node
+{
+  attr("variant_value_id", PackageNode, Variant, Value, VariantID)
+  : variant_possible_value(PackageNode, Variant, Value)
+} :-
+  attr("node", PackageNode),
+  node_has_variant(PackageNode, Variant, VariantID),
+  build(PackageNode).
+
+% VariantID is only needed for reconstruction on the python side, so we can ignore it here
+attr("variant_value", PackageNode, Variant, Value) :-
+  attr("variant_value_id", PackageNode, Variant, Value, VariantID).
 
 % a variant cannot be set if it is not a variant on the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
-  :- attr("variant_set", node(X, Package), Variant),
-     not node_has_variant(node(X, Package), Variant),
-     build(node(X, Package)).
+  :- attr("variant_set", node(ID, Package), Variant),
+     not node_has_variant(node(ID, Package), Variant, _),
+     build(node(ID, Package)).
 
 % a variant cannot take on a value if it is not a variant of the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
-  :- attr("variant_value", node(X, Package), Variant, _),
-     not node_has_variant(node(X, Package), Variant),
-     build(node(X, Package)).
-
-% if a variant is sticky and not set its value is the default value
-attr("variant_value", node(ID, Package), Variant, Value) :-
-  node_has_variant(node(ID, Package), Variant),
-  not attr("variant_set", node(ID, Package), Variant),
-  pkg_fact(Package, variant_sticky(Variant)),
-  variant_default_value(Package, Variant, Value),
-  build(node(ID, Package)).
+  :- attr("variant_value", node(ID, Package), Variant, _),
+     not node_has_variant(node(ID, Package), Variant, _),
+     build(node(ID, Package)).
 
 % at most one variant value for single-valued variants.
-{
-  attr("variant_value", node(ID, Package), Variant, Value)
-  : pkg_fact(Package, variant_possible_value(Variant, Value))
-}
- :- attr("node", node(ID, Package)),
-    node_has_variant(node(ID, Package), Variant),
-    build(node(ID, Package)).
-
-
 error(100, "'{0}' required multiple values for single-valued variant '{1}'", Package, Variant)
   :- attr("node", node(ID, Package)),
-     node_has_variant(node(ID, Package), Variant),
-     pkg_fact(Package, variant_single_value(Variant)),
+     node_has_variant(node(ID, Package), Variant, _),
+     variant_single_value(node(ID, Package), Variant),
      build(node(ID, Package)),
      2 { attr("variant_value", node(ID, Package), Variant, Value) }.
 
 error(100, "No valid value for variant '{1}' of package '{0}'", Package, Variant)
-  :- attr("node", node(X, Package)),
-     node_has_variant(node(X, Package), Variant),
-     build(node(X, Package)),
-     not attr("variant_value", node(X, Package), Variant, _).
+  :- attr("node", node(ID, Package)),
+     node_has_variant(node(ID, Package), Variant, _),
+     build(node(ID, Package)),
+     not attr("variant_value", node(ID, Package), Variant, _).
 
 % if a variant is set to anything, it is considered 'set'.
 attr("variant_set", PackageNode, Variant) :- attr("variant_set", PackageNode, Variant, _).
@@ -880,17 +950,16 @@ attr("variant_set", PackageNode, Variant) :- attr("variant_set", PackageNode, Va
 % have been built w/different variants from older/different package versions.
 error(10, "'Spec({1}={2})' is not a valid value for '{0}' variant '{1}'", Package, Variant, Value)
  :- attr("variant_value", node(ID, Package), Variant, Value),
-    not pkg_fact(Package, variant_possible_value(Variant, Value)),
+    not variant_possible_value(node(ID, Package), Variant, Value),
     build(node(ID, Package)).
 
-% Some multi valued variants accept multiple values from disjoint sets.
-% Ensure that we respect that constraint and we don't pick values from more
-% than one set at once
+% Some multi valued variants accept multiple values from disjoint sets. Ensure that we
+% respect that constraint and we don't pick values from more than one set at once
 error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come from disjoint value sets", Package, Variant, Value1, Value2)
   :- attr("variant_value", node(ID, Package), Variant, Value1),
      attr("variant_value", node(ID, Package), Variant, Value2),
-     pkg_fact(Package, variant_value_from_disjoint_sets(Variant, Value1, Set1)),
-     pkg_fact(Package, variant_value_from_disjoint_sets(Variant, Value2, Set2)),
+     variant_value_from_disjoint_sets(node(ID, Package), Variant, Value1, Set1),
+     variant_value_from_disjoint_sets(node(ID, Package), Variant, Value2, Set2),
      Set1 < Set2, % see[1]
      build(node(ID, Package)).
 
@@ -902,7 +971,7 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
 % specified in an external, we score it as if it was a default value.
 variant_not_default(node(ID, Package), Variant, Value)
  :- attr("variant_value", node(ID, Package), Variant, Value),
-    not variant_default_value(Package, Variant, Value),
+    not variant_default_value(node(ID, Package), Variant, Value),
     % variants set explicitly on the CLI don't count as non-default
     not attr("variant_set", node(ID, Package), Variant, Value),
     % variant values forced by propagation don't count as non-default
@@ -913,11 +982,10 @@ variant_not_default(node(ID, Package), Variant, Value)
     not external_with_variant_set(node(ID, Package), Variant, Value),
     attr("node", node(ID, Package)).
 
-
 % A default variant value that is not used
 variant_default_not_used(node(ID, Package), Variant, Value)
-  :- variant_default_value(Package, Variant, Value),
-     node_has_variant(node(ID, Package), Variant),
+  :- variant_default_value(node(ID, Package), Variant, Value),
+     node_has_variant(node(ID, Package), Variant, _),
      not attr("variant_value", node(ID, Package), Variant, Value),
      not propagate(node(ID, Package), variant_value(Variant, _)),
      attr("node", node(ID, Package)).
@@ -931,25 +999,6 @@ external_with_variant_set(node(NodeID, Package), Variant, Value)
     external(node(NodeID, Package)),
     attr("node", node(NodeID, Package)).
 
-% The default value for a variant in a package is what is prescribed:
-%
-% 1. On the command line
-% 2. In packages.yaml (if there's no command line settings)
-% 3. In the package.py file (if there are no settings in
-%    packages.yaml and the command line)
-%
-variant_default_value(Package, Variant, Value)
- :- pkg_fact(Package, variant_default_value_from_package_py(Variant, Value)),
-    not variant_default_value_from_packages_yaml(Package, Variant, _),
-    not attr("variant_default_value_from_cli", node(min_dupe_id, Package), Variant, _).
-
-variant_default_value(Package, Variant, Value)
- :- variant_default_value_from_packages_yaml(Package, Variant, Value),
-    not attr("variant_default_value_from_cli", node(min_dupe_id, Package), Variant, _).
-
-variant_default_value(Package, Variant, Value) :-
-    attr("variant_default_value_from_cli", node(min_dupe_id, Package), Variant, Value).
-
 % Treat 'none' in a special way - it cannot be combined with other
 % values even if the variant is multi-valued
 error(100, "{0} variant '{1}' cannot have values '{2}' and 'none'", Package, Variant, Value)
@@ -958,23 +1007,25 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and 'none'", Package, Var
     Value != "none",
     build(node(X, Package)).
 
-% patches and dev_path are special variants -- they don't have to be
-% declared in the package, so we just allow them to spring into existence
-% when assigned a value.
-auto_variant("dev_path").
-auto_variant("patches").
+% -- Auto variants
+% These don't have to be declared in the package. We allow them to spring into
+% existence when assigned a value.
+variant_possible_value(PackageNode, Variant, Value)
+  :- attr("variant_set", PackageNode, Variant, Value), auto_variant(Variant, _).
 
-node_has_variant(PackageNode, Variant)
-  :- attr("variant_set", PackageNode, Variant, _), auto_variant(Variant).
+node_has_variant(PackageNode, Variant, VariantID)
+  :- attr("variant_set", PackageNode, Variant, _), auto_variant(Variant, VariantID).
 
-pkg_fact(Package, variant_single_value("dev_path"))
-  :- attr("variant_set", node(ID, Package), "dev_path", _).
+variant_single_value(PackageNode, Variant)
+  :- auto_variant_single_value(VariantID),
+     node_has_variant(PackageNode, Variant, VariantID), auto_variant(Variant, VariantID).
 
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.
 #defined variant_default_value/3.
 #defined variant_default_value_from_packages_yaml/3.
+#defined variant_default_value_from_package_py/3.
 
 %-----------------------------------------------------------------------------
 % Propagation semantics
@@ -1004,9 +1055,9 @@ propagate(ChildNode, PropagatedAttribute, edge_types(DepType1, DepType2)) :-
 %----
 
 % If a variant is propagated, and can be accepted, set its value
-attr("variant_value", node(ID, Package), Variant, Value) :-
+attr("variant_value_id", node(ID, Package), Variant, Value, VariantID) :-
   propagate(node(ID, Package), variant_value(Variant, Value)),
-  node_has_variant(node(ID, Package), Variant),
+  node_has_variant(node(ID, Package), Variant, VariantID),
   pkg_fact(Package, variant_possible_value(Variant, Value)),
   not attr("variant_set", node(ID, Package), Variant).
 

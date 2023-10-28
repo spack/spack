@@ -452,7 +452,7 @@ _spack_audit_packages_https() {
 _spack_audit_packages() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help --strict-variants"
     else
         SPACK_COMPREPLY=""
     fi

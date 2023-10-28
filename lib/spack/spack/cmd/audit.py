@@ -41,6 +41,14 @@ def setup_parser(subparser):
     # Audit package recipes
     pkg_parser = sp.add_parser("packages", help="audit package recipes")
 
+    # TODO: this should be set to true and removed as an option eventually
+    pkg_parser.add_argument(
+        "--strict-variants",
+        action="store_true",
+        default=False,
+        help="report if variant cannot exist in context where it's referenced",
+    )
+
     for group in [pkg_parser, https_parser, external_parser]:
         group.add_argument(
             "name",
@@ -61,6 +69,7 @@ def configs(parser, args):
 
 
 def packages(parser, args):
+    spack.audit.strict_variants = args.strict_variants
     pkgs = args.name or spack.repo.PATH.all_package_names()
     reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
     _process_reports(reports)

@@ -690,7 +690,7 @@ To resolve this problem, please try the following:
 
         # Defensively look that the name passed as argument is among
         # variants
-        if variant not in self.pkg.variants:
+        if variant not in self.pkg.variants_by_name():
             msg = '"{0}" is not a variant of "{1}"'
             raise KeyError(msg.format(variant, self.pkg.name))
 
@@ -699,7 +699,7 @@ To resolve this problem, please try the following:
 
         # Create a list of pairs. Each pair includes a configuration
         # option and whether or not that option is activated
-        variant_desc, _ = self.pkg.variants[variant]
+        variant_desc = self.pkg.variant_descriptor(variant)
         if set(variant_desc.values) == set((True, False)):
             # BoolValuedVariant carry information about a single option.
             # Nonetheless, for uniformity of treatment we'll package them

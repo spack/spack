@@ -11,6 +11,7 @@ import functools
 import inspect
 import itertools
 import re
+from typing import Any, List, Optional, Type
 
 import llnl.util.lang as lang
 import llnl.util.tty.color
@@ -18,6 +19,8 @@ from llnl.string import comma_or
 
 import spack.error as error
 import spack.parser
+import spack.repo
+import spack.spec
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = [
@@ -33,6 +36,23 @@ reserved_names = [
 ]
 
 special_variant_values = [None, "none", "*"]
+
+
+class ValidValue:
+    def __init__(self, values):
+        self._values = values
+
+    def __call__(self, v):
+        return v in self._values
+
+    def __eq__(self, other):
+        return self._values == other._values
+
+    def __str__(self):
+        return f"<valid if in {self._values}>"
+
+
+always_true = lambda x: True
 
 
 class Variant:
@@ -73,7 +93,7 @@ class Variant:
         self.values = None
         if values == "*":
             # wildcard is a special case to make it easy to say any value is ok
-            self.single_value_validator = lambda x: True
+            self.single_value_validator = always_true
 
         elif isinstance(values, type):
             # supplying a type means any value *of that type*
@@ -93,7 +113,7 @@ class Variant:
         else:
             # Otherwise, assume values is the set of allowed explicit values
             self.values = _flatten(values)
-            self.single_value_validator = lambda x: x in tuple(self.values)
+            self.single_value_validator = ValidValue(self.values)
 
         self.multi = multi
         self.group_validator = validator
@@ -131,11 +151,14 @@ class Variant:
             raise MultipleValuesInExclusiveVariantError(vspec, pkg_cls)
 
         # Check and record the values that are not allowed
-        not_allowed_values = [
-            x for x in value if x != "*" and self.single_value_validator(x) is False
-        ]
-        if not_allowed_values:
-            raise InvalidVariantValueError(self, not_allowed_values, pkg_cls)
+        invalid_values = ", ".join(
+            f"'{v}'" for v in value if v != "*" and self.single_value_validator(v) is False
+        )
+        if invalid_values:
+            pkg_info = f" in package '{pkg_cls.name}'" if pkg_cls else ""
+            raise InvalidVariantValueError(
+                f"invalid values for variant '{self.name}'{pkg_info}: {invalid_values}\n"
+            )
 
         # Validate the group of values if needed
         if self.group_validator is not None and value != ("*",):
@@ -198,10 +221,22 @@ class Variant:
             and self.multi == other.multi
             and self.single_value_validator == other.single_value_validator
             and self.group_validator == other.group_validator
+            and self.sticky == other.sticky
         )
 
     def __ne__(self, other):
         return not self == other
+
+    def __str__(self):
+        return (
+            f"Variant('{self.name}', "
+            f"default='{self.default}', "
+            f"values={self.values}, "
+            f"multi={self.multi}, "
+            f"single_value_validator={self.single_value_validator}, "
+            f"group_validator={self.group_validator}, "
+            f"sticky={self.sticky})"
+        )
 
 
 def implicit_variant_conversion(method):
@@ -720,12 +755,15 @@ def disjoint_sets(*sets):
 class Value:
     """Conditional value that might be used in variants."""
 
-    def __init__(self, value, when):
+    value: Any
+    when: Optional["spack.spec.Spec"]  # optional b/c we need to know about disabled values
+
+    def __init__(self, value: Any, when: Optional["spack.spec.Spec"]):
         self.value = value
         self.when = when
 
     def __repr__(self):
-        return "Value({0.value}, when={0.when})".format(self)
+        return f"Value({self.value}, when={self.when})"
 
     def __str__(self):
         return str(self.value)
@@ -745,15 +783,92 @@ class Value:
         return self.value < other.value
 
 
+def prevalidate_variant_value(
+    pkg_cls: "Type[spack.package_base.PackageBase]",
+    variant: Variant,
+    value: Any,
+    spec: Optional["spack.spec.Spec"] = None,
+    strict: bool = False,
+) -> List[Variant]:
+    """Do as much validation of a variant value as is possible before concretization.
+
+    This checks that the variant value is valid for *some* definition of the variant, and
+    it raises if we know *before* concretization that the value cannot occur. On success
+    it returns the variant definitions for which the variant is valid.
+
+    Arguments:
+        pkg_cls: package in which variant is (potentially multiply) defined
+        variant: variant to validate
+        value: value of variant
+        spec: optionally restrict validation only to variants defined for this spec
+        strict: if True, raise an exception if no variant definition is valid for any
+            constraint on the spec.
+
+    Return:
+        list of variant definitions that will accept the given value. List will be empty
+        only if the variant is a reserved variant.
+    """
+    # don't validate wildcards or variants with reserved names
+    if value == "*" or variant.name in reserved_names:
+        return []
+
+    try:
+        variants_by_name = pkg_cls.variants_by_name(when=True)
+        when_variants = variants_by_name[variant.name]
+    except KeyError:
+        raise RuntimeError(f"variant '{variant.name}' not found in package '{pkg_cls.name}'")
+
+    # do as much prevalidation as we can -- check only those
+    # variants whose when constraint intersects this spec
+    errors = []
+    possible_definitions = []
+    valid_definitions = []
+    for when, pkg_variants in when_variants.items():
+        for pkg_variant_def in pkg_variants:
+            if spec and not spec.intersects(when):
+                continue
+            possible_definitions.append(pkg_variant_def)
+
+            try:
+                pkg_variant_def.validate_or_raise(variant, pkg_cls)
+                valid_definitions.append(pkg_variant_def)
+            except spack.error.SpecError as e:
+                errors.append(e)
+
+    # value is valid for some definition
+    if valid_definitions:
+        return valid_definitions
+
+    # there is no possible definition for this variant, given the constraints on the spec.
+    if strict and not possible_definitions:
+        when = f" when {spec}" if spec else ""
+        raise InvalidVariantValueError(
+            f"variant '{variant.name}' does not exist for '{pkg_cls.name}'{when}"
+        )
+
+    # there is a possible definition, but the value isn't valid for any possible definition
+    if errors:  # always true if strict
+        # if there is just one error, raise the specific error
+        if len(errors) == 1:
+            raise errors[0]
+
+        raise InvalidVariantValueError(
+            "multiple variant issues:", "\n".join(e.message for e in errors)
+        )
+
+    # only happens if we're not strict and there are no possible_definitions
+    # TODO: always be strict?
+    return []
+
+
 class _ConditionalVariantValues(lang.TypedMutableSequence):
     """A list, just with a different type"""
 
 
-def conditional(*values, **kwargs):
+def conditional(*values: List[Any], when: Optional["spack.directives.WhenType"] = None):
     """Conditional values that can be used in variant declarations."""
-    if len(kwargs) != 1 and "when" not in kwargs:
-        raise ValueError('conditional statement expects a "when=" parameter only')
-    when = kwargs["when"]
+    # _make_when_spec returns None when the condition is statically false.
+    when = spack.directives._make_when_spec(when)
     return _ConditionalVariantValues([Value(x, when=when) for x in values])
 
 
@@ -801,14 +916,7 @@ class InvalidVariantValueCombinationError(error.SpecError):
 
 
 class InvalidVariantValueError(error.SpecError):
-    """Raised when a valid variant has at least an invalid value."""
-
-    def __init__(self, variant, invalid_values, pkg):
-        msg = 'invalid values for variant "{0.name}"{2}: {1}\n'
-        pkg_info = ""
-        if pkg is not None:
-            pkg_info = ' in package "{0}"'.format(pkg.name)
-        super().__init__(msg.format(variant, invalid_values, pkg_info))
+    """Raised when variants have invalid values."""
 
 
 class InvalidVariantForSpecError(error.SpecError):

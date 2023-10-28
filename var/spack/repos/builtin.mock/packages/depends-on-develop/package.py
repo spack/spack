@@ -10,6 +10,7 @@ from spack.package import *
 class DependsOnDevelop(Package):
     homepage = "example.com"
     url = "fake.com"
+    git = "https://example.com/fake.git"
 
     version("main", branch="main")
     version("0.0.0", sha256="0123456789abcdef0123456789abcdef")
