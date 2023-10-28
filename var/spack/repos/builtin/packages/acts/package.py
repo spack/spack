@@ -226,6 +226,7 @@ class Acts(CMakePackage, CudaPackage):
     variant("mlpack", default=False, description="Build MLpack plugin", when="@25:")
     variant("onnx", default=False, description="Build ONNX plugin")
     variant("odd", default=False, description="Build the Open Data Detector", when="@19.1:")
+    variant("podio", default=False, description="Build Podio plugin", when="@30.3:")
     variant(
         "profilecpu",
         default=False,
@@ -312,6 +313,8 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("mlpack@3.1.1:", when="+mlpack")
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
     depends_on("podio @0.6:", when="@25: +edm4hep")
+    depends_on("podio @0.16:", when="@30.3: +edm4hep")
+    depends_on("podio @0.16:", when="+podio")
     depends_on("pythia8", when="+pythia8")
     depends_on("python", when="+python")
     depends_on("python@3.8:", when="+python @19.11:19")
@@ -402,6 +405,7 @@ class Acts(CMakePackage, CudaPackage):
             plugin_cmake_variant("ONNX", "onnx"),
             enable_cmake_variant("CPU_PROFILING", "profilecpu"),
             enable_cmake_variant("MEMORY_PROFILING", "profilemem"),
+            plugin_cmake_variant("PODIO", "podio"),
             example_cmake_variant("PYTHIA8", "pythia8"),
             example_cmake_variant("PYTHON_BINDINGS", "python"),
             plugin_cmake_variant("ACTSVG", "svg"),
