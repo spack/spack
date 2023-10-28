@@ -50,7 +50,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
     variant(
         "chimes",
         default=False,
-        when="21.2:",
+        when="@21.2:",
         description="Whether repulsive corrections" "via the ChIMES library should be enabled.",
     )
     variant(
@@ -72,7 +72,9 @@ class Dftbplus(CMakePackage, MakefilePackage):
     )
     variant("mpi", default=False, description="Whether DFTB+ should support MPI-parallelism.")
     variant(
-        "openmp", default=True, description="Whether OpenMP thread parallisation should be enabled."
+        "openmp",
+        default=True,
+        description="Whether OpenMP thread parallisation should be enabled.",
     )
     variant(
         "plumed",
@@ -108,7 +110,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
         "tblite",
         default=False,
         when="@21.2:",
-        description="Whether xTB support should be included via tblite."
+        description="Whether xTB support should be included via tblite.",
     )
 
     variant("shared", default=False, description="Most often for the Python wrappers.")
