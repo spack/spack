@@ -24,7 +24,6 @@ class Qgis(CMakePackage):
         sha256="d6d0ea39ed3433d553f8b83324dc14cfa90f8caaf766fa484791df9169800f25",
         preferred=True,
     )
-    # Prefer latest long term release
     version("3.28.11", sha256="c5eb703893c7f98de051c45d677c4a34b40f986db51782a4930ddefad4e193b4")
     version("3.28.10", sha256="cff867e97909bbc2facce6343770dcb1b61fc6e4855f57783e30bf63d51c5218")
     version("3.28.3", sha256="a09124f46465a520f6d735306ba3954c339b84aa396d6f52b476b82edcc4fe0e")
