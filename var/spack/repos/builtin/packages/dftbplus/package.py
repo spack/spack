@@ -15,8 +15,14 @@ class Dftbplus(CMakePackage, MakefilePackage):
     url = "https://github.com/dftbplus/dftbplus/releases/download/22.1/dftbplus-22.1.tar.xz"
     git = "https://github.com/dftbplus/dftbplus.git"
 
-    maintainers = ["HaoZeke", "aradi"]
+    maintainers = ["HaoZeke", "aradi", "iamashwin99"]
     generator = "Ninja"
+
+    build_system(
+        conditional("cmake", when="@20.1:"),
+        conditional("makefile", when="@:19.1"),
+        default="cmake",
+    )
 
     version("main", branch="main")
     version("22.1", sha256="f0fc9a076aa2d7be03c31a3a845d8151fc0cc0b1d421e11c37044f78a42abb33")
