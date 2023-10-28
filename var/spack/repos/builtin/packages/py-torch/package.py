@@ -426,14 +426,19 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@2.0.0:2.0.1",
     )
 
-    @when("@1.5.0:")
     def patch(self):
-        # https://github.com/pytorch/pytorch/issues/52208
         filter_file(
-            "torch_global_deps PROPERTIES LINKER_LANGUAGE C",
-            "torch_global_deps PROPERTIES LINKER_LANGUAGE CXX",
-            "caffe2/CMakeLists.txt",
+            "#include <string>",
+            "#include <string>\n#include <cstdint>",
+            "third_party/fbgemm/include/fbgemm/UtilsAvx2.h"
         )
+        with when("@1.5.0:"):
+            # https://github.com/pytorch/pytorch/issues/52208
+            filter_file(
+                "torch_global_deps PROPERTIES LINKER_LANGUAGE C",
+                "torch_global_deps PROPERTIES LINKER_LANGUAGE CXX",
+                "caffe2/CMakeLists.txt",
+            )
 
     def setup_build_environment(self, env):
         """Set environment variables used to control the build.

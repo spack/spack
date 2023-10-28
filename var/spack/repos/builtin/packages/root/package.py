@@ -344,6 +344,13 @@ class Root(CMakePackage):
     # See https://github.com/root-project/root/issues/11135
     conflicts("+ipo", msg="LTO is not a supported configuration for building ROOT")
 
+    def patch(self):
+        filter_file(
+            r'#include <sstream>',
+            '#include <sstream>\n#include <cstdint>',
+            'graf3d/eve7/inc/ROOT/REveTypes.hxx'
+        )
+
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
         result = []

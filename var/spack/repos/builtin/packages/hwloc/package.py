@@ -176,12 +176,14 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
             args.append("--with-rocm={0}".format(self.spec["hip"].prefix))
             args.append("--with-rocm-version={0}".format(self.spec["hip"].version))
 
+        if "+libxml2" in self.spec:
+            args.append("--with-libxml2={0}".format(self.spec["libxml2"].prefix))
+
         args.extend(self.enable_or_disable("netloc"))
         args.extend(self.enable_or_disable("cairo"))
         args.extend(self.enable_or_disable("nvml"))
         args.extend(self.enable_or_disable("gl"))
         args.extend(self.enable_or_disable("cuda"))
-        args.extend(self.enable_or_disable("libxml2"))
         args.extend(self.enable_or_disable("libudev"))
         args.extend(self.enable_or_disable("pci"))
         args.extend(self.enable_or_disable("libs"))
