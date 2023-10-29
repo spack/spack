@@ -201,5 +201,5 @@ class Xnnpack(CMakePackage):
         ]
 
     def setup_build_environment(self, env):
-        self.prepend_flag("CFLAGS", self.compiler.cc_pic_flag)
-        self.prepend_flag("CXXFLAGS", self.compiler.cxx_pic_flag)
+        env.prepend_flag("CFLAGS", self.compiler.cc_pic_flag)
+        env.prepend_flag("CXXFLAGS", self.compiler.cxx_pic_flag)
