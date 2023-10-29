@@ -18,6 +18,7 @@ class Onnx(CMakePackage):
     git = "https://github.com/onnx/onnx.git"
 
     version("master", branch="master")
+    version("1.14.1", sha256="e296f8867951fa6e71417a18f2e550a730550f8829bd35e947b4df5e3e777aa1")
     version(
         "1.13.1", sha256="090d3e10ec662a98a2a72f1bf053f793efc645824f0d4b779e0ce47468a0890e"
     )  # py-torch@2:
@@ -60,7 +61,7 @@ class Onnx(CMakePackage):
     depends_on("protobuf")
 
     def patch(self):
-        if self.spec.satisfies("@1.13 ^protobuf@3.22:"):
+        if self.spec.satisfies("@1.13: ^protobuf@3.22:"):
             filter_file("CMAKE_CXX_STANDARD 11", "CMAKE_CXX_STANDARD 14", "CMakeLists.txt")
 
     def cmake_args(self):
