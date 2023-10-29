@@ -31,8 +31,6 @@ class MpiSerial(AutotoolsPackage):
         description="Specify the size of Fortran double precision variables",
     )
 
-    #patch("install.patch")
-
     provides("mpi")
 
     def flag_handler(self, name, flags):
@@ -41,10 +39,10 @@ class MpiSerial(AutotoolsPackage):
 
         if name == "cflags":
             config_flags.append(self.compiler.cc_pic_flag)
-#            if spec.satisfies("%intel") or spec.satisfies("%oneapi"):
-# OneAPI fails due to these standards checks
-            config_flags.append("-Wno-error=implicit-int")
-            config_flags.append("-Wno-error=implicit-function-declaration")
+            if spec.satisfies("%oneapi"):
+                # OneAPI fails due to these standards checks
+                config_flags.append("-Wno-error=implicit-int")
+                config_flags.append("-Wno-error=implicit-function-declaration")
         elif name == "fflags":
             config_flags.append(self.compiler.fc_pic_flag)
 
