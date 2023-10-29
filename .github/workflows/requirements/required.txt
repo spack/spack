@@ -1,5 +1,6 @@
 # setup
-setuptools==68.2.2
+# upper-bounded to allow older pythons to use lower versions
+setuptools<=68.2.2
 
 # install
 clingo==5.6.2
