@@ -37,7 +37,6 @@ class Liggghts(MakefilePackage):
     patch("makefile-llvm-based-compiler.patch", when="%oneapi")
     # C++17 support
     patch("cpp-17.patch")
-    depends_on("zlib-api", when="+gzip")
     build_directory = "src"
     build_targets = ["auto"]
 
