@@ -14,9 +14,7 @@ class Sleef(CMakePackage):
     git = "https://github.com/shibatch/sleef.git"
 
     version("master", branch="master")
-    version(
-        "3.5.1_2020-12-22", commit="e0a003ee838b75d11763aa9c3ef17bf71a725bff"
-    )  # py-torch@1.8:
+    version("3.5.1_2020-12-22", commit="e0a003ee838b75d11763aa9c3ef17bf71a725bff")  # py-torch@1.8:
     version(
         "3.5.1",
         sha256="415ee9b1bcc5816989d3d4d92afd0cd3f9ee89cbd5a33eb008e69751e40438ab",
