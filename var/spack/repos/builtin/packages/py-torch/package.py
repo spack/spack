@@ -269,6 +269,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-six", type="test")
     depends_on("py-psutil", type="test")
 
+    # https://github.com/pytorch/pytorch/issues/90448
+    patch(
+        "https://github.com/pytorch/pytorch/pull/97270.patch?full_index=1",
+        sha256="beb3fb57746cf8443f5caa6e08b2f8f4d4822c1e11e0c912134bd166c6a0ade7",
+        when="@1.10:2.0",
+    )
+
     # Fix BLAS being overridden by MKL
     # https://github.com/pytorch/pytorch/issues/60328
     patch(
