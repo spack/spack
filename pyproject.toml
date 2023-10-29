@@ -23,7 +23,6 @@ dev = [
   "pip>=21.3",
   "pytest",
   "pytest-xdist",
-  "pyupgrade",
   "setuptools",
   "vermin",
 ]

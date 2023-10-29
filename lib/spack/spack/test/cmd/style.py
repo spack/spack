@@ -69,9 +69,6 @@ def flake8_package_with_errors(scope="function"):
         "from spack.package import *", "from spack.package import *\nimport os", string=True
     )
 
-    # this is a pyupgrade error
-    package.filter('"really-long-if-statement"', '"really-{0}-if-statement".format("long")')
-
     yield tmp
 
 
@@ -215,7 +212,6 @@ def test_fix_style(external_style_root):
 @pytest.mark.skipif(not which("flake8"), reason="flake8 is not installed.")
 @pytest.mark.skipif(not which("isort"), reason="isort is not installed.")
 @pytest.mark.skipif(not which("mypy"), reason="mypy is not installed.")
-@pytest.mark.skipif(not which("pyupgrade"), reason="pyupgrade is not installed.")
 def test_external_root(external_style_root, capfd):
     """Ensure we can run in a separate root directory w/o configuration files."""
     tmpdir, py_file = external_style_root
@@ -287,15 +283,6 @@ def test_style_with_black(flake8_package_with_errors):
     assert "spack style found errors" in output
 
 
-@pytest.mark.skipif(not which("pyupgrade"), reason="pyupgrade is not installed.")
-@pytest.mark.skipif(not which("flake8"), reason="flake8 is not installed.")
-def test_style_with_pyupgrade(flake8_package_with_errors):
-    output = style("--tool", "pyupgrade,flake8", flake8_package_with_errors, fail_on_error=False)
-    assert "pyupgrade found errors" in output
-    assert style.returncode != 0
-    assert "spack style found errors" in output
-
-
 def test_skip_tools():
-    output = style("--skip", "isort,black,pyupgrade,mypy,flake8")
+    output = style("--skip", "isort,black,mypy,flake8")
     assert "Nothing to run" in output
