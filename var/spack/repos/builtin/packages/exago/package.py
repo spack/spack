@@ -69,7 +69,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     # Adds ExaGO's python wrapper to PYTHONPATH
     extends("python", when="+python")
- 
+
     # Solver options
     variant("hiop", default=False, description="Enable/Disable HiOp")
     variant("ipopt", default=False, description="Enable/Disable IPOPT")
