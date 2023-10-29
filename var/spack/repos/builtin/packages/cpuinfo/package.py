@@ -38,4 +38,5 @@ class Cpuinfo(CMakePackage):
             self.define("CPUINFO_BUILD_BENCHMARKS", False),
             self.define("CPUINFO_LIBRARY_TYPE", "shared"),
             self.define("CPUINFO_LOG_LEVEL", "error"),
+            self.define("CMAKE_SKIP_RPATH", True),
         ]
