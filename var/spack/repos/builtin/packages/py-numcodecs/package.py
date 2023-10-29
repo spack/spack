@@ -49,10 +49,11 @@ class PyNumcodecs(PythonPackage):
         # This package likes to compile natively by checking cpu features and then setting flags
         # -msse2 and -mavx2, which we want to avoid in Spack. This could go away if the package
         # supports external libraries.
-        if "avx2" not in self.spec.target.features:
-            env.set("DISABLE_NUMCODECS_AVX2", "1")
-        if "sse2" not in self.spec.target.features:
-            env.set("DISABLE_NUMCODECS_SSE2", "1")
+        if self.spec.satisfies("target=x86_64:"):
+            if "avx2" not in self.spec.target.features:
+                env.set("DISABLE_NUMCODECS_AVX2", "1")
+            if "sse2" not in self.spec.target.features:
+                env.set("DISABLE_NUMCODECS_SSE2", "1")
 
     def flag_handler(self, name, flags):
         if name == "cflags":
