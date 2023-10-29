@@ -16,7 +16,7 @@ class Sleef(CMakePackage):
     version("master", branch="master")
     version(
         "3.5.1_2020-12-22", commit="e0a003ee838b75d11763aa9c3ef17bf71a725bff"
-    )  # py-torch@1.8:1.9
+    )  # py-torch@1.8:
     version(
         "3.5.1",
         sha256="415ee9b1bcc5816989d3d4d92afd0cd3f9ee89cbd5a33eb008e69751e40438ab",
@@ -45,12 +45,8 @@ class Sleef(CMakePackage):
     # See https://github.com/pytorch/pytorch/issues/26892
     # See https://github.com/pytorch/pytorch/pull/26993
 
+    # Apple Clang build issues
+    # https://github.com/shibatch/sleef/issues/474
+
     generator("ninja")
     depends_on("cmake@3.4.3:", type="build")
-
-    def cmake_args(self):
-        return [
-            self.define("DISABLE_FFTW", True),
-            self.define("DISABLE_MPFR", True),
-            self.define("DISABLE_SSL", True),
-        ]
