@@ -199,3 +199,7 @@ class Xnnpack(CMakePackage):
             self.define("XNNPACK_BUILD_TESTS", False),
             self.define("XNNPACK_BUILD_BENCHMARKS", False),
         ]
+
+    def setup_build_environment(self, env):
+        self.prepend_flag("CFLAGS", self.compiler.cc_pic_flag)
+        self.prepend_flag("CXXFLAGS", self.compiler.cxx_pic_flag)
