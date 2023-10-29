@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-
+import os
 
 class MpiSerial(AutotoolsPackage):
     """A single processor implementation of the mpi library."""
@@ -31,7 +31,7 @@ class MpiSerial(AutotoolsPackage):
         description="Specify the size of Fortran double precision variables",
     )
 
-    patch("install.patch")
+    #patch("install.patch")
 
     provides("mpi")
 
@@ -41,17 +41,17 @@ class MpiSerial(AutotoolsPackage):
 
         if name == "cflags":
             config_flags.append(self.compiler.cc_pic_flag)
-            if spec.satisfies("%intel") or spec.satisfies("%oneapi"):
-                # OneAPI fails due to these standards checks
-                config_flags.append("-Wno-error=implicit-int")
-                config_flags.append("-Wno-error=implicit-function-declaration")
+#            if spec.satisfies("%intel") or spec.satisfies("%oneapi"):
+# OneAPI fails due to these standards checks
+            config_flags.append("-Wno-error=implicit-int")
+            config_flags.append("-Wno-error=implicit-function-declaration")
         elif name == "fflags":
             config_flags.append(self.compiler.fc_pic_flag)
 
         return flags, None, (config_flags or None)
 
     def configure_args(self):
-        args = [PREFIX=]
+        args = []
 
         realsize = int(self.spec.variants["fort-real-size"].value)
         if realsize != 4:
@@ -61,3 +61,13 @@ class MpiSerial(AutotoolsPackage):
             args.extend(["--enable-fort-double={0}".format(doublesize)])
 
         return args
+    def install(self, spec, prefix):
+        mkdir(prefix.lib)
+        mkdir(prefix.include)
+        install("libmpi-serial.a", prefix.lib)
+        install("mpi.h", prefix.include)
+        install("mpif.h", prefix.include)
+        if os.path.isfile("mpi.mod"):
+            install("mpi.mod", prefix.include)
+        if os.path.isfile("MPI.mod"):
+            install("MPI.mod", prefix.include)
