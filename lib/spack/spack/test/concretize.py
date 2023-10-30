@@ -1761,6 +1761,13 @@ class TestConcretize:
         s.concretize()
         assert s.satisfies("develop-branch-version@main")
 
+    def test_git_ref_version_depends_on(self):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("Original concretizer cannot account for git hashes")
+        s = Spec("depends-on-gitversion")
+        c = s.concretized()
+        assert "develop-branch-version@git.foo=0.2.15" in str(c)
+
     @pytest.mark.regression("31484")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_installed_externals_are_reused(self, mutable_database, repo_with_changing_recipe):

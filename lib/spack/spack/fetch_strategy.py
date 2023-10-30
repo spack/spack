@@ -1503,7 +1503,9 @@ def _check_version_attributes(fetcher, pkg, version):
     all_optionals = set(a for s in all_strategies for a in s.optional_attrs)
 
     args = pkg.versions[version]
-    extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr, "no_cache"])
+    extra = (
+        set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr, "no_cache", "submodules"])
+    )
     extra.intersection_update(all_optionals)
 
     if extra:

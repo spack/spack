@@ -772,7 +772,12 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
                         skip_version_check = True
                         break
                 assert skip_version_check or any(
-                    v.intersects(s.versions) for v in list(dependency_pkg_cls.versions)
+                    v.intersects(s.versions)
+                    or (
+                        isinstance(s.versions.concrete, spack.version.GitVersion)
+                        and v.intersects(s.version.ref_version)
+                    )
+                    for v in list(dependency_pkg_cls.versions)
                 )
             except Exception:
                 summary = (

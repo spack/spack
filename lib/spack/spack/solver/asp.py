@@ -1064,7 +1064,6 @@ class SpackSolverSetup:
         pkg = packagize(pkg)
         declared_versions = self.declared_versions[pkg.name]
         partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
-
         most_to_least_preferred = []
         for _, group in itertools.groupby(partially_sorted_versions, key=key_fn):
             most_to_least_preferred.extend(
@@ -1977,6 +1976,17 @@ class SpackSolverSetup:
                 self.declared_versions[pkg_name].append(
                     DeclaredVersion(version=v, idx=idx, origin=Provenance.PACKAGE_PY)
                 )
+
+            # Fully-qualified Gitversion in depends_on()
+            for _, conditions in sorted(pkg_cls.dependencies.items()):
+                for cond, dep in sorted(conditions.items()):
+                    if isinstance(dep.spec.versions[0], spack.version.GitVersion):
+                        v = dep.spec.version
+                        if v.ref and v.ref_version:
+                            self.possible_versions[dep.name].add(v)
+                            self.declared_versions[dep.name].append(
+                                DeclaredVersion(version=v, idx=0, origin=Provenance.PACKAGE_PY)
+                            )
 
             if pkg_name not in packages_yaml or "version" not in packages_yaml[pkg_name]:
                 continue

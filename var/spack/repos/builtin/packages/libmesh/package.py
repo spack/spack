@@ -16,8 +16,15 @@ class Libmesh(AutotoolsPackage):
     url = "https://github.com/libMesh/libmesh/releases/download/v1.0.0/libmesh-1.0.0.tar.bz2"
     git = "https://github.com/libMesh/libmesh.git"
 
+    force_autoreconf = True
+
     version("master", branch="master", submodules=True)
 
+    version(
+        "1.7.0",
+        sha256="bcadf5fc06b8be1a09b274cf5e2b5e472675ee8458ab30d31c969028f690f3e3",
+        submodules=True,
+    )
     version("1.4.1", sha256="67eb7d5a9c954d891ca1386b70f138333a87a141d9c44213449ca6be69a66414")
     version("1.4.0", sha256="62d7fce89096c950d1b38908484856ea63df57754b64cde6582e7ac407c8c81d")
     version("1.3.1", sha256="638cf30d05c249315760f16cbae4804964db8857a04d5e640f37617bef17ab0f")
@@ -100,6 +107,13 @@ class Libmesh(AutotoolsPackage):
     variant("hdf5", default=False, description="Compile with support for HDF5 files")
     variant("slepc", default=False, description="Compile with support for the SLEPc eigensolver")
     variant("petsc", default=False, description="Compile with support for the PETSc")
+    variant("unique", default=False, description="Compile with support for unique-id")
+    variant(
+        "warnings",
+        default=True,
+        description="Warn about deprecated, experimental, or questionable code",
+    )
+    variant("xdr", default=False, description="Require XDR")
 
     # other features:
     variant("debug", default=False, description="Compile with support for debugging")
@@ -126,6 +140,9 @@ class Libmesh(AutotoolsPackage):
         "variant.",
     )
 
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
     depends_on("boost", when="+boost")
 
     # TODO: replace this with an explicit list of components of Boost,
@@ -133,7 +150,7 @@ class Libmesh(AutotoolsPackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants, when="+boost")
     depends_on("eigen", when="+eigen")
-    depends_on("hdf5+mpi", when="+hdf5+mpi")
+    depends_on("hdf5+mpi+hl", when="+hdf5+mpi")
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+slepc")
     # compilation dependencies depend on perl
@@ -144,6 +161,27 @@ class Libmesh(AutotoolsPackage):
     depends_on("petsc", when="+petsc")
     depends_on("tbb", when="threads=tbb")
     depends_on("vtk", when="+vtk")
+    depends_on("libtirpc")
+
+    patch(
+        "https://github.com/libMesh/libmesh/commit/2950e259975141fd83d2213d1663d01279ef906d.patch?full_index=1",
+        sha256="965c6879408fbb6388befa095fe36c730e0461d0a20e7ea156e0c7318010d737",
+        when="@:1.7.1 ^vtk@9.2",
+    )
+
+    def patch(self):
+        filter_file(
+            "-ltirpc",
+            self.spec["libtirpc"].libs.ld_flags,
+            "m4/libmesh_optional_packages.m4",
+            string=True,
+        )
+        filter_file(
+            "-I/usr/include/tirpc",
+            self.spec["libtirpc"].headers.include_flags,
+            "m4/libmesh_optional_packages.m4",
+            string=True,
+        )
 
     def configure_args(self):
         options = []
@@ -156,6 +194,7 @@ class Libmesh(AutotoolsPackage):
         # to perform this check:
         options.append("--disable-strict-lgpl")
 
+        options.extend(self.enable_or_disable("warnings"))
         # The Hinnant unique pointer implementation is incompatible with boost
         # (and not necessary with C++11 support), so unconditionally disable
         # it:
@@ -207,7 +246,13 @@ class Libmesh(AutotoolsPackage):
 
         if "+vtk" in self.spec:
             options.append("--enable-vtk")
-            options.append("--with-vtk=%s" % self.spec["vtk"].prefix)
+            options.append("--enable-vtk-required")
+            vtk_suffix = self.spec["vtk"].version.up_to(2)
+            vtk_include_dir = join_path(
+                self.spec["vtk"].prefix.include, "vtk-{0}".format(vtk_suffix)
+            )
+            options.append("--with-vtk-include=%s" % vtk_include_dir)
+            options.append("--with-vtk-lib=%s" % self.spec["vtk"].prefix.lib)
         else:
             options.append("--disable-vtk")
 
@@ -238,6 +283,7 @@ class Libmesh(AutotoolsPackage):
             options.append("--disable-blocked-storage")
 
         if "+hdf5" in self.spec:
+            options.append("--enable-hdf5=yes")
             options.append("--with-hdf5=%s" % self.spec["hdf5"].prefix)
         else:
             options.append("--enable-hdf5=no")
@@ -258,6 +304,9 @@ class Libmesh(AutotoolsPackage):
             options.append("PETSC_DIR=%s" % self.spec["petsc"].prefix)
         else:
             options.append("--enable-petsc=no")
+
+        if "+unique" in self.spec:
+            options.append("--enable-unique-id")
 
         if "+slepc" in self.spec:
             options.append("--enable-slepc=yes")
@@ -304,6 +353,11 @@ class Libmesh(AutotoolsPackage):
             options.append("--with-tbb=%s" % self.spec["tbb"].prefix)
         else:
             options.append("--enable-tbb=no")
+
+        if "+xdr" in self.spec:
+            options.append("--enable-xdr-required")
+        else:
+            options.append("--disable-xdr")
 
         return options
 
