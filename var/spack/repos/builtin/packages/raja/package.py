@@ -286,7 +286,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
                     entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
 
         entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", "+plugins" in spec))
-  
+
         entries.append(
             cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)
         )
