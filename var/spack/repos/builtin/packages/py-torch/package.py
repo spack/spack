@@ -198,8 +198,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
     # https://github.com/pytorch/pytorch/issues/60334
     # depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
-    # https://github.com/Maratyszcza/FP16/issues/18
-    # depends_on("fp16@2020-05-14", when="@1.6:")
+    depends_on("fp16@2020-05-14", when="@1.6:")
     depends_on("pthreadpool@2021-04-13", when="@1.9:")
     depends_on("pthreadpool@2020-10-05", when="@1.8")
     depends_on("pthreadpool@2020-06-15", when="@1.6:1.7")
@@ -631,8 +630,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             # env.set("USE_SYSTEM_CPUINFO", "ON")
             # https://github.com/pytorch/pytorch/issues/60270
             # env.set("USE_SYSTEM_GLOO", "ON")
-            # https://github.com/Maratyszcza/FP16/issues/18
-            # env.set("USE_SYSTEM_FP16", "ON")
+            env.set("USE_SYSTEM_FP16", "ON")
             env.set("USE_SYSTEM_PTHREADPOOL", "ON")
             env.set("USE_SYSTEM_PSIMD", "ON")
             env.set("USE_SYSTEM_FXDIV", "ON")
