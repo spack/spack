@@ -923,6 +923,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
+            hip_headers = HeaderList([])
             hip_libs = LibraryList([])
             # To use a C++ compiler that supports -xhip flag one can use
             # something like this:
@@ -933,7 +934,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             #   hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
             if "^hipsparse" in spec:  # hipsparse is needed @4.4.0:+rocm
                 hipsparse = spec["hipsparse"]
-                options += ["HIP_OPT=%s" % hipsparse.headers.cpp_flags]
+                hip_headers += hipsparse.headers
                 hip_libs += hipsparse.libs
                 # Note: MFEM's defaults.mk wants to find librocsparse.* in
                 # $(HIP_DIR)/lib, so we set HIP_DIR to be $ROCM_PATH when using
@@ -943,11 +944,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     options += ["HIP_DIR=%s" % env["ROCM_PATH"]]
                 else:
                     options += ["HIP_DIR=%s" % hipsparse["rocsparse"].prefix]
+            if "^rocthrust" in spec and not spec["hip"].external:
+                # petsc+rocm needs the rocthrust header path
+                hip_headers += spec["rocthrust"].headers
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
                 craylibs_path = env["CRAYLIBS_" + machine().upper()]
                 craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
                 hip_libs += find_libraries(craylibs, craylibs_path)
+            if hip_headers:
+                options += ["HIP_OPT=%s" % hip_headers.cpp_flags]
             if hip_libs:
                 options += ["HIP_LIB=%s" % ld_flags_from_library_list(hip_libs)]
 
