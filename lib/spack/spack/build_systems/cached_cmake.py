@@ -291,6 +291,20 @@ class CachedCMakeBuilder(CMakeBuilder):
                 if "%gcc" in spec:
                     gcc_bin = os.path.dirname(self.pkg.compiler.cxx)
                     gcc_prefix = os.path.join(gcc_bin, "..")
+
+                    # With > 5.5 rocm versions (or so) the use of amdclang
+                    # compiler becomes mandatory. Spack does not allow
+                    # dependencies on compilers yet, so we enforce the compiler
+                    # here. The drawback being that this is not visible even in
+                    # the full spec, only implied by the +rocm variant.
+                    llvm_amdgpu_clang = "{0}/clang".format(spec["llvm-amdgpu"].prefix.bin)
+                    llvm_amdgpu_clangpp = "{0}/clang++".format(spec["llvm-amdgpu"].prefix.bin)
+                    entries.append(
+                        cmake_cache_string("CMAKE_C_COMPILER", llvm_amdgpu_clang)
+                    )
+                    entries.append(
+                        cmake_cache_string("CMAKE_CXX_COMPILER", llvm_amdgpu_clangpp)
+                    )
                 else:
                     gcc_prefix = spec_uses_toolchain(spec)[0]
                 entries.append(
