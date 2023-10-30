@@ -28,6 +28,7 @@ import os
 import os.path
 import re
 import shutil
+import urllib.error
 import urllib.parse
 from typing import List, Optional
 
@@ -41,6 +42,7 @@ from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
+import spack.oci.opener
 import spack.url
 import spack.util.crypto as crypto
 import spack.util.git
@@ -535,6 +537,34 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
         # Notify the user how we fetched.
         tty.msg("Using cached archive: {0}".format(path))
+
+
+class OCIRegistryFetchStrategy(URLFetchStrategy):
+    def __init__(self, url=None, checksum=None, **kwargs):
+        super().__init__(url, checksum, **kwargs)
+
+        self._urlopen = kwargs.get("_urlopen", spack.oci.opener.urlopen)
+
+    @_needs_stage
+    def fetch(self):
+        file = self.stage.save_filename
+        tty.msg(f"Fetching {self.url}")
+
+        try:
+            response = self._urlopen(self.url)
+        except urllib.error.URLError as e:
+            # clean up archive on failure.
+            if self.archive_file:
+                os.remove(self.archive_file)
+            if os.path.lexists(file):
+                os.remove(file)
+            raise FailedDownloadError(self.url, f"Failed to fetch {self.url}: {e}") from e
+
+        if os.path.lexists(file):
+            os.remove(file)
+
+        with open(file, "wb") as f:
+            shutil.copyfileobj(response, f)
 
 
 class VCSFetchStrategy(FetchStrategy):

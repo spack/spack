@@ -50,7 +50,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     version("main", branch="main", submodules=True)
     version("develop", branch="develop", submodules=True)
     version(
-        "5-18-2022-snapshot",
+        "snapshot.5-18-2022",
         tag="5-18-2022-snapshot",
         commit="3eb58335db71bb72341153a7867eb607402067ca",
         submodules=True,
