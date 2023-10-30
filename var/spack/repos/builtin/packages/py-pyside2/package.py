@@ -54,7 +54,7 @@ class PyPyside2(PythonPackage):
     depends_on("cmake@3.1:", type="build")
     # libclang versioning from sources/shiboken2/doc/gettingstarted.rst
     depends_on("llvm@6", type="build", when="@5.12:5.13")
-    depends_on("llvm@10:", type="build", when="@5.15")
+    depends_on("llvm@10:", type="build", when="@5.15:")
     depends_on("py-setuptools", type="build")
     depends_on("py-packaging", type="build")
     depends_on("py-wheel", type="build")
