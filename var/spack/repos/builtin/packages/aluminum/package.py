@@ -119,12 +119,14 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
         "ofi_libfabric_plugin",
         default=spack.platforms.cray.slingshot_network(),
         when="+rccl",
+        sticky=True,
         description="Builds with support for OFI libfabric enhanced RCCL/NCCL communication lib",
     )
     variant(
         "ofi_libfabric_plugin",
         default=spack.platforms.cray.slingshot_network(),
         when="+nccl",
+        sticky=True,
         description="Builds with support for OFI libfabric enhanced RCCL/NCCL communication lib",
     )
 
