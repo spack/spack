@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 import os
+
+from spack.package import *
+
 
 class MpiSerial(AutotoolsPackage):
     """A single processor implementation of the mpi library."""
@@ -59,6 +61,7 @@ class MpiSerial(AutotoolsPackage):
             args.extend(["--enable-fort-double={0}".format(doublesize)])
 
         return args
+
     def install(self, spec, prefix):
         mkdir(prefix.lib)
         mkdir(prefix.include)
