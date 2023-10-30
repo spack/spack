@@ -345,7 +345,7 @@ class Tau(Package):
                 options.append("-tbb=%s" % spec["intel-tbb"].prefix)
             if "+boost" not in spec:
                 options.append("-boost=%s" % spec["boost"].prefix)
-            if "+elf" not int spec:
+            if "+elf" not in spec:
                 options.append("-elf=%s" % spec["elfutils"].prefix)
 
         compiler_specific_options = self.set_compiler_options(spec)
