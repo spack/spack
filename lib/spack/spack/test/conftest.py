@@ -495,7 +495,7 @@ def mock_binary_index(monkeypatch, tmpdir_factory):
     tmpdir = tmpdir_factory.mktemp("mock_binary_index")
     index_path = tmpdir.join("binary_index").strpath
     mock_index = spack.binary_distribution.BinaryCacheIndex(index_path)
-    monkeypatch.setattr(spack.binary_distribution, "binary_index", mock_index)
+    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
     yield
 
 
@@ -1710,8 +1710,8 @@ def inode_cache():
 @pytest.fixture(autouse=True)
 def brand_new_binary_cache():
     yield
-    spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
-        spack.binary_distribution._binary_index
+    spack.binary_distribution.BINARY_INDEX = llnl.util.lang.Singleton(
+        spack.binary_distribution.BinaryCacheIndex
     )
 
 
