@@ -9,7 +9,7 @@ import stat as st
 import llnl.util.filesystem as fs
 
 import spack.package_prefs as pp
-from spack.error import SpackError
+from spack.util.error import UtilityError
 
 
 def set_permissions_by_spec(path, spec):
@@ -44,5 +44,5 @@ def set_permissions(path, perms, group=None):
         fs.chgrp(path, group, follow_symlinks=False)
 
 
-class InvalidPermissionsError(SpackError):
+class InvalidPermissionsError(UtilityError):
     """Error class for invalid permission setters"""
