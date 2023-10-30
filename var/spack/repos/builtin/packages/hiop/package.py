@@ -22,6 +22,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("ryandanehy", "cameronrutherford", "pelesh")
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version("1.0.1", commit="c5e156c6f27d046f590dc35114980e3f9c573ca6", submodules=True)
     version("1.0.0", commit="10b7d3ee0a15cb4949ccee8c905d447b9528794f", submodules=True)
     version("0.7.2", commit="d0f57c880d4202a72c62dd1f5c92e3bc8acb9788", submodules=True)
     version("0.7.1", commit="8064ef6b2249ad2feca92a9d1e90060bad3eebc7", submodules=True)
@@ -102,7 +103,10 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+cuda".format(hiop_v))
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+rocm".format(hiop_v))
 
-    depends_on("cuda@11:", when="@develop:+cuda")
+    # https://github.com/spack/spack/issues/40678
+    depends_on("cuda@11:11.9", when="@develop:+cuda")
+    depends_on("cuda@:11.9", when="+cuda")
+
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
     depends_on("raja+openmp", when="+raja~cuda~rocm")

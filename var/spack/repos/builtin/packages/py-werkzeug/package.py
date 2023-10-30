@@ -31,6 +31,7 @@ class PyWerkzeug(PythonPackage):
     version("0.11.11", sha256="e72c46bc14405cba7a26bd2ce28df734471bc9016bc8b4cb69466c2c14c2f7e5")
 
     depends_on("python@3.8:", when="@2.3:", type=("build", "run"))
+    depends_on("python@:3.9", when="@:0.12", type=("build", "run"))
     depends_on("py-flit-core@:3", when="@2.3.7:", type="build")
     depends_on("py-markupsafe@2.1.1:", when="@2.2:", type=("build", "run"))
 

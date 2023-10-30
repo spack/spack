@@ -7,9 +7,8 @@ from spack.package import *
 
 
 class PyTensorboard(PythonPackage):
-    """TensorBoard is a suite of web applications for
-    inspecting and understanding your TensorFlow runs and
-    graphs."""
+    """TensorBoard is a suite of web applications for inspecting and understanding
+    your TensorFlow runs and graphs."""
 
     homepage = "https://github.com/tensorflow/tensorboard"
     url = "https://files.pythonhosted.org/packages/py3/t/tensorboard/tensorboard-2.9.1-py3-none-any.whl"
@@ -17,6 +16,16 @@ class PyTensorboard(PythonPackage):
 
     maintainers("aweits")
 
+    version(
+        "2.14.1",
+        sha256="3db108fb58f023b6439880e177743c5f1e703e9eeb5fb7d597871f949f85fd58",
+        expand=False,
+    )
+    version(
+        "2.14.0",
+        sha256="3667f9745d99280836ad673022362c840f60ed8fefd5a3e30bf071f5a8fd0017",
+        expand=False,
+    )
     version(
         "2.13.0",
         sha256="ab69961ebddbddc83f5fa2ff9233572bdad5b883778c35e4fe94bf1798bd8481",
@@ -118,6 +127,7 @@ class PyTensorboard(PythonPackage):
         expand=False,
     )
 
+    depends_on("python@3.9:", type=("build", "run"), when="@2.14:")
     depends_on("python@3.8:", type=("build", "run"), when="@2.12:")
     depends_on("py-absl-py@0.4:", type=("build", "run"))
     depends_on("py-grpcio@1.48.2:", type=("build", "run"), when="@2.12:")
@@ -135,10 +145,10 @@ class PyTensorboard(PythonPackage):
     depends_on("py-protobuf@3.6.0:3.19", type=("build", "run"), when="@:2.8")
     depends_on("py-requests@2.21.0:2", type=("build", "run"))
     depends_on("py-setuptools@41.0.0:", type=("build", "run"))
+    depends_on("py-six@1.10.0:", type=("build", "run"), when="@:2.4,2.14:")
     depends_on("py-tensorboard-data-server@0.7", type=("build", "run"), when="@2.12:")
     depends_on("py-tensorboard-data-server@0.6", type=("build", "run"), when="@2.5:2.11")
-    depends_on("py-tensorboard-plugin-wit@1.6.0:", type=("build", "run"))
+    depends_on("py-tensorboard-plugin-wit@1.6.0:", type=("build", "run"), when="@:2.13")
     depends_on("py-werkzeug@1.0.1:", type=("build", "run"), when="@2.9:")
     depends_on("py-werkzeug@0.11.15:", type=("build", "run"))
-    depends_on("py-wheel@0.26:", type="build")
-    depends_on("py-six@1.10.0:", type=("build", "run"), when="@:2.4")
+    depends_on("py-wheel@0.26:", type="build", when="@:2.13")

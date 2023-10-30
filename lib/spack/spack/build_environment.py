@@ -40,12 +40,15 @@ import re
 import sys
 import traceback
 import types
+from collections import defaultdict
+from enum import Flag, auto
+from itertools import chain
 from typing import List, Tuple
 
 import llnl.util.tty as tty
 from llnl.string import plural
 from llnl.util.filesystem import join_path
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, stable_partition
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
@@ -55,17 +58,21 @@ import spack.build_systems.meson
 import spack.build_systems.python
 import spack.builder
 import spack.config
+import spack.deptypes as dt
 import spack.main
 import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.repo
 import spack.schema.environment
+import spack.spec
 import spack.store
 import spack.subprocess_context
 import spack.user_environment
 import spack.util.path
 import spack.util.pattern
+from spack import traverse
+from spack.context import Context
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
@@ -76,7 +83,6 @@ from spack.util.environment import (
     env_flag,
     filter_system_paths,
     get_path,
-    inspect_path,
     is_system_path,
     validate,
 )
@@ -108,7 +114,6 @@ SPACK_DEBUG_LOG_ID = "SPACK_DEBUG_LOG_ID"
 SPACK_DEBUG_LOG_DIR = "SPACK_DEBUG_LOG_DIR"
 SPACK_CCACHE_BINARY = "SPACK_CCACHE_BINARY"
 SPACK_SYSTEM_DIRS = "SPACK_SYSTEM_DIRS"
-
 
 # Platform-specific library suffix.
 if sys.platform == "darwin":
@@ -406,19 +411,13 @@ def set_compiler_environment_variables(pkg, env):
 
 
 def set_wrapper_variables(pkg, env):
-    """Set environment variables used by the Spack compiler wrapper
-    (which have the prefix `SPACK_`) and also add the compiler wrappers
-    to PATH.
+    """Set environment variables used by the Spack compiler wrapper (which have the prefix
+    `SPACK_`) and also add the compiler wrappers to PATH.
 
-    This determines the injected -L/-I/-rpath options; each
-    of these specifies a search order and this function computes these
-    options in a manner that is intended to match the DAG traversal order
-    in `modifications_from_dependencies`: that method uses a post-order
-    traversal so that `PrependPath` actions from dependencies take lower
-    precedence; we use a post-order traversal here to match the visitation
-    order of `modifications_from_dependencies` (so we are visiting the
-    lowest priority packages first).
-    """
+    This determines the injected -L/-I/-rpath options; each of these specifies a search order and
+    this function computes these options in a manner that is intended to match the DAG traversal
+    order in `SetupContext`. TODO: this is not the case yet, we're using post order, SetupContext
+    is using topo order."""
     # Set environment variables if specified for
     # the given compiler
     compiler = pkg.compiler
@@ -537,45 +536,42 @@ def set_wrapper_variables(pkg, env):
     env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
 
 
-def set_module_variables_for_package(pkg):
+def set_package_py_globals(pkg, context: Context = Context.BUILD):
     """Populate the Python module of a package with some useful global names.
     This makes things easier for package writers.
     """
-    # Put a marker on this module so that it won't execute the body of this
-    # function again, since it is not needed
-    marker = "_set_run_already_called"
-    if getattr(pkg.module, marker, False):
-        return
-
     module = ModuleChangePropagator(pkg)
 
-    jobs = determine_number_of_jobs(parallel=pkg.parallel)
-
     m = module
-    m.make_jobs = jobs
 
-    # TODO: make these build deps that can be installed if not found.
-    m.make = MakeExecutable("make", jobs)
-    m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
-    # TODO: johnwparent: add package or builder support to define these build tools
-    # for now there is no entrypoint for builders to define these on their
-    # own
-    if sys.platform == "win32":
-        m.nmake = Executable("nmake")
-        m.msbuild = Executable("msbuild")
-        # analog to configure for win32
-        m.cscript = Executable("cscript")
+    if context == Context.BUILD:
+        jobs = determine_number_of_jobs(parallel=pkg.parallel)
+        m.make_jobs = jobs
 
-    # Find the configure script in the archive path
-    # Don't use which for this; we want to find it in the current dir.
-    m.configure = Executable("./configure")
+        # TODO: make these build deps that can be installed if not found.
+        m.make = MakeExecutable("make", jobs)
+        m.gmake = MakeExecutable("gmake", jobs)
+        m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
+        # TODO: johnwparent: add package or builder support to define these build tools
+        # for now there is no entrypoint for builders to define these on their
+        # own
+        if sys.platform == "win32":
+            m.nmake = Executable("nmake")
+            m.msbuild = Executable("msbuild")
+            # analog to configure for win32
+            m.cscript = Executable("cscript")
 
-    # Standard CMake arguments
-    m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-    m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-    m.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
+        # Find the configure script in the archive path
+        # Don't use which for this; we want to find it in the current dir.
+        m.configure = Executable("./configure")
 
-    # Put spack compiler paths in module scope.
+        # Standard CMake arguments
+        m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
+        m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+        m.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
+
+    # Put spack compiler paths in module scope. (Some packages use it
+    # in setup_run_environment etc, so don't put it context == build)
     link_dir = spack.paths.build_env_path
     m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
     m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
@@ -599,9 +595,6 @@ def set_module_variables_for_package(pkg):
 
     m.static_to_shared_library = static_to_shared_library
 
-    # Put a marker on this module so that it won't execute the body of this
-    # function again, since it is not needed
-    setattr(m, marker, True)
     module.propagate_changes_to_mro()
 
 
@@ -727,12 +720,15 @@ def load_external_modules(pkg):
             load_module(external_module)
 
 
-def setup_package(pkg, dirty, context="build"):
+def setup_package(pkg, dirty, context: Context = Context.BUILD):
     """Execute all environment setup routines."""
-    if context not in ["build", "test"]:
-        raise ValueError("'context' must be one of ['build', 'test'] - got: {0}".format(context))
+    if context not in (Context.BUILD, Context.TEST):
+        raise ValueError(f"'context' must be Context.BUILD or Context.TEST - got {context}")
 
-    set_module_variables_for_package(pkg)
+    # First populate the package.py's module with the relevant globals that could be used in any
+    # of the setup_* functions.
+    setup_context = SetupContext(pkg.spec, context=context)
+    setup_context.set_all_package_py_globals()
 
     # Keep track of env changes from packages separately, since we want to
     # issue warnings when packages make "suspicious" modifications.
@@ -740,13 +736,15 @@ def setup_package(pkg, dirty, context="build"):
     env_mods = EnvironmentModifications()
 
     # setup compilers for build contexts
-    need_compiler = context == "build" or (context == "test" and pkg.test_requires_compiler)
+    need_compiler = context == Context.BUILD or (
+        context == Context.TEST and pkg.test_requires_compiler
+    )
     if need_compiler:
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
     tty.debug("setup_package: grabbing modifications from dependencies")
-    env_mods.extend(modifications_from_dependencies(pkg.spec, context, custom_mods_only=False))
+    env_mods.extend(setup_context.get_env_modifications())
     tty.debug("setup_package: collected all modifications from dependencies")
 
     # architecture specific setup
@@ -754,7 +752,7 @@ def setup_package(pkg, dirty, context="build"):
     target = platform.target(pkg.spec.architecture.target)
     platform.setup_platform_environment(pkg, env_mods)
 
-    if context == "build":
+    if context == Context.BUILD:
         tty.debug("setup_package: setup build environment for root")
         builder = spack.builder.create(pkg)
         builder.setup_build_environment(env_mods)
@@ -765,16 +763,7 @@ def setup_package(pkg, dirty, context="build"):
                 "config to assume that the package is part of the system"
                 " includes and omit it when invoked with '--cflags'."
             )
-    elif context == "test":
-        tty.debug("setup_package: setup test environment for root")
-        env_mods.extend(
-            inspect_path(
-                pkg.spec.prefix,
-                spack.user_environment.prefix_inspections(pkg.spec.platform),
-                exclude=is_system_path,
-            )
-        )
-        pkg.setup_run_environment(env_mods)
+    elif context == Context.TEST:
         env_mods.prepend_path("PATH", ".")
 
     # First apply the clean environment changes
@@ -813,158 +802,245 @@ def setup_package(pkg, dirty, context="build"):
     return env_base
 
 
-def _make_runnable(pkg, env):
-    # Helper method which prepends a Package's bin/ prefix to the PATH
-    # environment variable
-    prefix = pkg.prefix
+class EnvironmentVisitor:
+    def __init__(self, *roots: spack.spec.Spec, context: Context):
+        # For the roots (well, marked specs) we follow different edges
+        # than for their deps, depending on the context.
+        self.root_hashes = set(s.dag_hash() for s in roots)
 
-    for dirname in ["bin", "bin64"]:
-        bin_dir = os.path.join(prefix, dirname)
-        if os.path.isdir(bin_dir):
-            env.prepend_path("PATH", bin_dir)
+        if context == Context.BUILD:
+            # Drop direct run deps in build context
+            # We don't really distinguish between install and build time test deps,
+            # so we include them here as build-time test deps.
+            self.root_depflag = dt.BUILD | dt.TEST | dt.LINK
+        elif context == Context.TEST:
+            # This is more of an extended run environment
+            self.root_depflag = dt.TEST | dt.RUN | dt.LINK
+        elif context == Context.RUN:
+            self.root_depflag = dt.RUN | dt.LINK
+
+    def neighbors(self, item):
+        spec = item.edge.spec
+        if spec.dag_hash() in self.root_hashes:
+            depflag = self.root_depflag
+        else:
+            depflag = dt.LINK | dt.RUN
+        return traverse.sort_edges(spec.edges_to_dependencies(depflag=depflag))
 
 
-def modifications_from_dependencies(
-    spec, context, custom_mods_only=True, set_package_py_globals=True
-):
-    """Returns the environment modifications that are required by
-    the dependencies of a spec and also applies modifications
-    to this spec's package at module scope, if need be.
+class UseMode(Flag):
+    #: Entrypoint spec (a spec to be built; an env root, etc)
+    ROOT = auto()
 
-    Environment modifications include:
+    #: A spec used at runtime, but no executables in PATH
+    RUNTIME = auto()
 
-    - Updating PATH so that executables can be found
-    - Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
-      tools can find Spack-built dependencies
-    - Running custom package environment modifications
+    #: A spec used at runtime, with executables in PATH
+    RUNTIME_EXECUTABLE = auto()
 
-    Custom package modifications can conflict with the default PATH changes
-    we make (specifically for the PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH
-    environment variables), so this applies changes in a fixed order:
+    #: A spec that's a direct build or test dep
+    BUILDTIME_DIRECT = auto()
 
-    - All modifications (custom and default) from external deps first
-    - All modifications from non-external deps afterwards
+    #: A spec that should be visible in search paths in a build env.
+    BUILDTIME = auto()
 
-    With that order, `PrependPath` actions from non-external default
-    environment modifications will take precedence over custom modifications
-    from external packages.
+    #: Flag is set when the (node, mode) is finalized
+    ADDED = auto()
 
-    A secondary constraint is that custom and default modifications are
-    grouped on a per-package basis: combined with the post-order traversal this
-    means that default modifications of dependents can override custom
-    modifications of dependencies (again, this would only occur for PATH,
-    CMAKE_PREFIX_PATH, or PKG_CONFIG_PATH).
 
-    Args:
-        spec (spack.spec.Spec): spec for which we want the modifications
-        context (str): either 'build' for build-time modifications or 'run'
-            for run-time modifications
-        custom_mods_only (bool): if True returns only custom modifications, if False
-            returns custom and default modifications
-        set_package_py_globals (bool): whether or not to set the global variables in the
-            package.py files (this may be problematic when using buildcaches that have
-            been built on a different but compatible OS)
-    """
-    if context not in ["build", "run", "test"]:
-        raise ValueError(
-            "Expecting context to be one of ['build', 'run', 'test'], " "got: {0}".format(context)
+def effective_deptypes(
+    *specs: spack.spec.Spec, context: Context = Context.BUILD
+) -> List[Tuple[spack.spec.Spec, UseMode]]:
+    """Given a list of input specs and a context, return a list of tuples of
+    all specs that contribute to (environment) modifications, together with
+    a flag specifying in what way they do so. The list is ordered topologically
+    from root to leaf, meaning that environment modifications should be applied
+    in reverse so that dependents override dependencies, not the other way around."""
+    visitor = traverse.TopoVisitor(
+        EnvironmentVisitor(*specs, context=context),
+        key=lambda x: x.dag_hash(),
+        root=True,
+        all_edges=True,
+    )
+    traverse.traverse_depth_first_with_visitor(traverse.with_artificial_edges(specs), visitor)
+
+    # Dictionary with "no mode" as default value, so it's easy to write modes[x] |= flag.
+    use_modes = defaultdict(lambda: UseMode(0))
+    nodes_with_type = []
+
+    for edge in visitor.edges:
+        parent, child, depflag = edge.parent, edge.spec, edge.depflag
+
+        # Mark the starting point
+        if parent is None:
+            use_modes[child] = UseMode.ROOT
+            continue
+
+        parent_mode = use_modes[parent]
+
+        # Nothing to propagate.
+        if not parent_mode:
+            continue
+
+        # Dependending on the context, include particular deps from the root.
+        if UseMode.ROOT & parent_mode:
+            if context == Context.BUILD:
+                if (dt.BUILD | dt.TEST) & depflag:
+                    use_modes[child] |= UseMode.BUILDTIME_DIRECT
+                if dt.LINK & depflag:
+                    use_modes[child] |= UseMode.BUILDTIME
+
+            elif context == Context.TEST:
+                if (dt.RUN | dt.TEST) & depflag:
+                    use_modes[child] |= UseMode.RUNTIME_EXECUTABLE
+                elif dt.LINK & depflag:
+                    use_modes[child] |= UseMode.RUNTIME
+
+            elif context == Context.RUN:
+                if dt.RUN & depflag:
+                    use_modes[child] |= UseMode.RUNTIME_EXECUTABLE
+                elif dt.LINK & depflag:
+                    use_modes[child] |= UseMode.RUNTIME
+
+        # Propagate RUNTIME and RUNTIME_EXECUTABLE through link and run deps.
+        if (UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE | UseMode.BUILDTIME_DIRECT) & parent_mode:
+            if dt.LINK & depflag:
+                use_modes[child] |= UseMode.RUNTIME
+            if dt.RUN & depflag:
+                use_modes[child] |= UseMode.RUNTIME_EXECUTABLE
+
+        # Propagate BUILDTIME through link deps.
+        if UseMode.BUILDTIME & parent_mode:
+            if dt.LINK & depflag:
+                use_modes[child] |= UseMode.BUILDTIME
+
+        # Finalize the spec; the invariant is that all in-edges are processed
+        # before out-edges, meaning that parent is done.
+        if not (UseMode.ADDED & parent_mode):
+            use_modes[parent] |= UseMode.ADDED
+            nodes_with_type.append((parent, parent_mode))
+
+    # Attach the leaf nodes, since we only added nodes with out-edges.
+    for spec, parent_mode in use_modes.items():
+        if parent_mode and not (UseMode.ADDED & parent_mode):
+            nodes_with_type.append((spec, parent_mode))
+
+    return nodes_with_type
+
+
+class SetupContext:
+    """This class encapsulates the logic to determine environment modifications, and is used as
+    well to set globals in modules of package.py."""
+
+    def __init__(self, *specs: spack.spec.Spec, context: Context) -> None:
+        """Construct a ModificationsFromDag object.
+        Args:
+            specs: single root spec for build/test context, possibly more for run context
+            context: build, run, or test"""
+        if (context == Context.BUILD or context == Context.TEST) and not len(specs) == 1:
+            raise ValueError("Cannot setup build environment for multiple specs")
+        specs_with_type = effective_deptypes(*specs, context=context)
+
+        self.specs = specs
+        self.context = context
+        self.external: List[Tuple[spack.spec.Spec, UseMode]]
+        self.nonexternal: List[Tuple[spack.spec.Spec, UseMode]]
+        # Reverse so we go from leaf to root
+        self.nodes_in_subdag = set(id(s) for s, _ in specs_with_type)
+
+        # Split into non-external and external, maintaining topo order per group.
+        self.external, self.nonexternal = stable_partition(
+            reversed(specs_with_type), lambda t: t[0].external
         )
+        self.should_be_runnable = UseMode.BUILDTIME_DIRECT | UseMode.RUNTIME_EXECUTABLE
+        self.should_setup_run_env = UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE
+        self.should_setup_dependent_build_env = UseMode.BUILDTIME | UseMode.BUILDTIME_DIRECT
 
-    env = EnvironmentModifications()
+        if context == Context.RUN or context == Context.TEST:
+            self.should_be_runnable |= UseMode.ROOT
+            self.should_setup_run_env |= UseMode.ROOT
 
-    # Note: see computation of 'custom_mod_deps' and 'exe_deps' later in this
-    # function; these sets form the building blocks of those collections.
-    build_deps = set(spec.dependencies(deptype=("build", "test")))
-    link_deps = set(spec.traverse(root=False, deptype="link"))
-    build_link_deps = build_deps | link_deps
-    build_and_supporting_deps = set()
-    for build_dep in build_deps:
-        build_and_supporting_deps.update(build_dep.traverse(deptype="run"))
-    run_and_supporting_deps = set(spec.traverse(root=False, deptype=("run", "link")))
-    test_and_supporting_deps = set()
-    for test_dep in set(spec.dependencies(deptype="test")):
-        test_and_supporting_deps.update(test_dep.traverse(deptype="run"))
+        # Everything that calls setup_run_environment and setup_dependent_* needs globals set.
+        self.should_set_package_py_globals = (
+            self.should_setup_dependent_build_env | self.should_setup_run_env | UseMode.ROOT
+        )
+        # In a build context, the root and direct build deps need build-specific globals set.
+        self.needs_build_context = UseMode.ROOT | UseMode.BUILDTIME_DIRECT
 
-    # All dependencies that might have environment modifications to apply
-    custom_mod_deps = set()
-    if context == "build":
-        custom_mod_deps.update(build_and_supporting_deps)
-        # Tests may be performed after build
-        custom_mod_deps.update(test_and_supporting_deps)
-    else:
-        # test/run context
-        custom_mod_deps.update(run_and_supporting_deps)
-        if context == "test":
-            custom_mod_deps.update(test_and_supporting_deps)
-    custom_mod_deps.update(link_deps)
+    def set_all_package_py_globals(self):
+        """Set the globals in modules of package.py files."""
+        for dspec, flag in chain(self.external, self.nonexternal):
+            pkg = dspec.package
 
-    # Determine 'exe_deps': the set of packages with binaries we want to use
-    if context == "build":
-        exe_deps = build_and_supporting_deps | test_and_supporting_deps
-    elif context == "run":
-        exe_deps = set(spec.traverse(deptype="run"))
-    elif context == "test":
-        exe_deps = test_and_supporting_deps
+            if self.should_set_package_py_globals & flag:
+                if self.context == Context.BUILD and self.needs_build_context & flag:
+                    set_package_py_globals(pkg, context=Context.BUILD)
+                else:
+                    # This includes runtime dependencies, also runtime deps of direct build deps.
+                    set_package_py_globals(pkg, context=Context.RUN)
 
-    def default_modifications_for_dep(dep):
-        if dep in build_link_deps and not is_system_path(dep.prefix) and context == "build":
-            prefix = dep.prefix
+            for spec in dspec.dependents():
+                # Note: some specs have dependents that are unreachable from the root, so avoid
+                # setting globals for those.
+                if id(spec) not in self.nodes_in_subdag:
+                    continue
+                dependent_module = ModuleChangePropagator(spec.package)
+                pkg.setup_dependent_package(dependent_module, spec)
+                dependent_module.propagate_changes_to_mro()
 
-            env.prepend_path("CMAKE_PREFIX_PATH", prefix)
+    def get_env_modifications(self) -> EnvironmentModifications:
+        """Returns the environment variable modifications for the given input specs and context.
+        Environment modifications include:
+        - Updating PATH for packages that are required at runtime
+        - Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
+        tools can find Spack-built dependencies (when context=build)
+        - Running custom package environment modifications (setup_run_environment,
+        setup_dependent_build_environment, setup_dependent_run_environment)
 
-            for directory in ("lib", "lib64", "share"):
-                pcdir = os.path.join(prefix, directory, "pkgconfig")
-                if os.path.isdir(pcdir):
-                    env.prepend_path("PKG_CONFIG_PATH", pcdir)
+        The (partial) order imposed on the specs is externals first, then topological
+        from leaf to root. That way externals cannot contribute search paths that would shadow
+        Spack's prefixes, and dependents override variables set by dependencies."""
+        env = EnvironmentModifications()
+        for dspec, flag in chain(self.external, self.nonexternal):
+            tty.debug(f"Adding env modifications for {dspec.name}")
+            pkg = dspec.package
 
-        if dep in exe_deps and not is_system_path(dep.prefix):
-            _make_runnable(dep, env)
+            if self.should_setup_dependent_build_env & flag:
+                self._make_buildtime_detectable(dspec, env)
 
-    def add_modifications_for_dep(dep):
-        tty.debug("Adding env modifications for {0}".format(dep.name))
-        # Some callers of this function only want the custom modifications.
-        # For callers that want both custom and default modifications, we want
-        # to perform the default modifications here (this groups custom
-        # and default modifications together on a per-package basis).
-        if not custom_mods_only:
-            default_modifications_for_dep(dep)
+                for spec in self.specs:
+                    builder = spack.builder.create(pkg)
+                    builder.setup_dependent_build_environment(env, spec)
 
-        # Perform custom modifications here (PrependPath actions performed in
-        # the custom method override the default environment modifications
-        # we do to help the build, namely for PATH, CMAKE_PREFIX_PATH, and
-        # PKG_CONFIG_PATH)
-        if dep in custom_mod_deps:
-            dpkg = dep.package
-            if set_package_py_globals:
-                set_module_variables_for_package(dpkg)
+            if self.should_be_runnable & flag:
+                self._make_runnable(dspec, env)
 
-            current_module = ModuleChangePropagator(spec.package)
-            dpkg.setup_dependent_package(current_module, spec)
-            current_module.propagate_changes_to_mro()
+            if self.should_setup_run_env & flag:
+                # TODO: remove setup_dependent_run_environment...
+                for spec in dspec.dependents(deptype=dt.RUN):
+                    if id(spec) in self.nodes_in_subdag:
+                        pkg.setup_dependent_run_environment(env, spec)
+                pkg.setup_run_environment(env)
+        return env
 
-            if context == "build":
-                builder = spack.builder.create(dpkg)
-                builder.setup_dependent_build_environment(env, spec)
-            else:
-                dpkg.setup_dependent_run_environment(env, spec)
-        tty.debug("Added env modifications for {0}".format(dep.name))
+    def _make_buildtime_detectable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
+        if is_system_path(dep.prefix):
+            return
 
-    # Note that we want to perform environment modifications in a fixed order.
-    # The Spec.traverse method provides this: i.e. in addition to
-    # the post-order semantics, it also guarantees a fixed traversal order
-    # among dependencies which are not constrained by post-order semantics.
-    for dspec in spec.traverse(root=False, order="post"):
-        if dspec.external:
-            add_modifications_for_dep(dspec)
+        env.prepend_path("CMAKE_PREFIX_PATH", dep.prefix)
+        for d in ("lib", "lib64", "share"):
+            pcdir = os.path.join(dep.prefix, d, "pkgconfig")
+            if os.path.isdir(pcdir):
+                env.prepend_path("PKG_CONFIG_PATH", pcdir)
 
-    for dspec in spec.traverse(root=False, order="post"):
-        # Default env modifications for non-external packages can override
-        # custom modifications of external packages (this can only occur
-        # for modifications to PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH)
-        if not dspec.external:
-            add_modifications_for_dep(dspec)
+    def _make_runnable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
+        if is_system_path(dep.prefix):
+            return
 
-    return env
+        for d in ("bin", "bin64"):
+            bin_dir = os.path.join(dep.prefix, d)
+            if os.path.isdir(bin_dir):
+                env.prepend_path("PATH", bin_dir)
 
 
 def get_cmake_prefix_path(pkg):
@@ -996,7 +1072,7 @@ def get_cmake_prefix_path(pkg):
 def _setup_pkg_and_run(
     serialized_pkg, function, kwargs, write_pipe, input_multiprocess_fd, jsfd1, jsfd2
 ):
-    context = kwargs.get("context", "build")
+    context: str = kwargs.get("context", "build")
 
     try:
         # We are in the child process. Python sets sys.stdin to
@@ -1012,7 +1088,7 @@ def _setup_pkg_and_run(
         if not kwargs.get("fake", False):
             kwargs["unmodified_env"] = os.environ.copy()
             kwargs["env_modifications"] = setup_package(
-                pkg, dirty=kwargs.get("dirty", False), context=context
+                pkg, dirty=kwargs.get("dirty", False), context=Context.from_string(context)
             )
         return_value = function(pkg, kwargs)
         write_pipe.send(return_value)
