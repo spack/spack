@@ -18,8 +18,7 @@ from llnl.util.lock import LockUpgradeError  # noqa: F401
 from llnl.util.lock import ReadTransaction  # noqa: F401
 from llnl.util.lock import WriteTransaction  # noqa: F401
 
-import spack.error
-import spack.paths
+import spack.util.error
 
 
 class Lock(llnl.util.lock.Lock):
@@ -100,4 +99,4 @@ def check_lock_safety(path: str) -> None:
                 f"Running a shared spack without locks is unsafe. You must "
                 f"restrict permissions on {path} or enable locks."
             )
-            raise spack.error.SpackError(msg, long_msg)
+            raise spack.util.error.UtilityError(msg, long_msg)

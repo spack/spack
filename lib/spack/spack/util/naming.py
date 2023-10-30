@@ -8,7 +8,7 @@ import itertools
 import re
 import string
 
-import spack.error
+import spack.util.error
 
 __all__ = [
     "mod_to_class",
@@ -159,7 +159,7 @@ def validate_fully_qualified_module_name(mod_name):
         raise InvalidFullyQualifiedModuleNameError(mod_name)
 
 
-class InvalidModuleNameError(spack.error.SpackError):
+class InvalidModuleNameError(spack.util.error.UtilityError):
     """Raised when we encounter a bad module name."""
 
     def __init__(self, name):
@@ -167,7 +167,7 @@ class InvalidModuleNameError(spack.error.SpackError):
         self.name = name
 
 
-class InvalidFullyQualifiedModuleNameError(spack.error.SpackError):
+class InvalidFullyQualifiedModuleNameError(spack.util.error.UtilityError):
     """Raised when we encounter a bad full package name."""
 
     def __init__(self, name):

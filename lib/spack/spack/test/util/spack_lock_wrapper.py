@@ -12,6 +12,7 @@ from llnl.util.filesystem import getuid, group_ids
 
 import spack.config
 import spack.util.lock as lk
+import spack.util.error
 
 
 def test_disable_locking(tmpdir):
@@ -54,7 +55,7 @@ def test_lock_checks_user(tmpdir):
 
     # unsafe
     tmpdir.chmod(0o777)
-    with pytest.raises(spack.error.SpackError):
+    with pytest.raises(spack.util.error.UtilityError):
         lk.check_lock_safety(path)
 
     # safe
@@ -85,12 +86,12 @@ def test_lock_checks_group(tmpdir):
 
     # unsafe
     tmpdir.chmod(0o774)
-    with pytest.raises(spack.error.SpackError):
+    with pytest.raises(spack.util.error.UtilityError):
         lk.check_lock_safety(path)
 
     # unsafe
     tmpdir.chmod(0o777)
-    with pytest.raises(spack.error.SpackError):
+    with pytest.raises(spack.util.error.UtilityError):
         lk.check_lock_safety(path)
 
     # safe
