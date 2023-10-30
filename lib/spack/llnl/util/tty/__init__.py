@@ -211,6 +211,7 @@ def info(message, *args, **kwargs):
                 stream.write(line + "\n")
         else:
             stream.write(indent + _output_filter(str(arg)) + "\n")
+    stream.flush()
 
 
 def verbose(message, *args, **kwargs):
