@@ -31,6 +31,7 @@ class PyPint(PythonPackage):
 
     depends_on("python@3.9:", when="@0.22:", type=("build", "run"))
     depends_on("python@3.8:", when="@0.19:0.21", type=("build", "run"))
+    depends_on("py-typing-extensions", when="@0.22:", type=("build", "run"))
     depends_on("py-setuptools@61:", when="@0.21:", type="build")
     depends_on("py-setuptools@41:", when="@0.16:0.20", type="build")
     depends_on("py-setuptools@41:", when="@0.11:0.15", type=("build", "run"))
