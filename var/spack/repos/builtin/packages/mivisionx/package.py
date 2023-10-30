@@ -117,9 +117,18 @@ class Mivisionx(CMakePackage):
     variant("opencl", default=False, description="Use OPENCL as the backend")
     variant("hip", default=True, description="Use HIP as backend")
     variant("add_tests", default=False, description="add tests and samples folder")
-    patch("0001-add-half-include-path.patch", when="@5.5:")
+    patch("0001-add-half-include-path.patch", when="@5.5")
+    patch("0001-add-half-include-path-5.6.patch", when="@5.6:")
+    patch("0002-add-half-include-path-for-tests.patch", when="@5.5: +add_tests")
+
+    patch(
+        "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/commit/da24882438b91a0ae1feee23206b75c1a1256887.patch?full_index=1",
+        sha256="41caff199224f904ef5dc2cd9c5602d6cfa41eba6af0fcc782942a09dd202ab4",
+        when="@5.6",
+    )
 
     conflicts("+opencl", when="@5.6.0:")
+    conflicts("+add_tests", when="@:5.4")
 
     def patch(self):
         if self.spec.satisfies("@4.2.0"):
@@ -288,7 +297,11 @@ class Mivisionx(CMakePackage):
     depends_on("libjpeg-turbo@2.0.6+partial_decoder", type="build")
     depends_on("rpp", when="@5.5:")
     depends_on("lmdb", when="@5.5:")
-    depends_on("py-protobuf@3.20.3+cpp", type=("build", "run"), when="+add_tests")
+    depends_on("py-setuptools", when="@5.6:")
+    depends_on("py-wheel", when="@5.6:")
+    depends_on("py-pybind11", when="@5.6:")
+    depends_on("py-google-api-python-client", when="+add_tests")
+    depends_on("py-protobuf@3.20.3", type=("build", "run"), when="+add_tests")
     depends_on("py-future", when="+add_tests")
     depends_on("py-numpy", when="+add_tests")
     depends_on("py-pytz", when="+add_tests")
@@ -394,6 +407,7 @@ class Mivisionx(CMakePackage):
                     "TurboJpeg_LIBRARIES_DIRS", "{0}/lib64".format(spec["libjpeg-turbo"].prefix)
                 )
             )
+            args.append(self.define("CMAKE_INSTALL_PREFIX_PYTHON", spec.prefix))
         return args
 
     @run_after("install")
