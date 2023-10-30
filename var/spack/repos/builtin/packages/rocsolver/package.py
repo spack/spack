@@ -126,6 +126,7 @@ class Rocsolver(CMakePackage):
     depends_on("cmake@3.8:", type="build", when="@4.1.0:")
     depends_on("cmake@3.5:", type="build")
     depends_on("fmt@7:", type="build", when="@4.5.0:")
+    depends_on("fmt@7:8.0.1", type="test", when="@5.6:")
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
