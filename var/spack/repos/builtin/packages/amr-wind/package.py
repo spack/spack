@@ -29,9 +29,29 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("tests", default=True, description="Activate regression tests")
     variant("tiny_profile", default=False, description="Activate tiny profile")
+    variant("cppcheck", default=False,
+            description="Turn on cppcheck")
+    variant("clangtidy", default=False,
+            description="Turn on clang-tidy")
+    variant("hdf5", default=False,
+            description="Enable HDF5 plots with ZFP compression")
+    variant("umpire", default=False,
+            description="Enable Umpire")
+    variant("sycl", default=False,
+            description="Enable SYCL backend")
+    variant("gpu-aware-mpi", default=False,
+            description="gpu-aware-mpi")
 
     depends_on("hypre~int64@2.20.0:", when="+hypre")
     depends_on("hypre+mpi", when="+hypre+mpi")
+    depends_on("hdf5~mpi", when="+hdf5~mpi")
+    depends_on("hdf5+mpi", when="+hdf5+mpi")
+    depends_on("h5z-zfp", when="+hdf5")
+    depends_on("zfp", when="+hdf5")
+    depends_on("hypre+umpire", when="+umpire")
+    depends_on("hypre+sycl", when="+sycl")
+    depends_on("hypre+gpu-aware-mpi", when="+gpu-aware-mpi")
+
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
     for arch in ROCmPackage.amdgpu_targets:
@@ -83,8 +103,24 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
 
+        if "+cppcheck" in spec:
+            cmake_options.append(self.define("AMR_WIND_ENABLE_CPPCHECK", True))
+
+        if "+clangtidy" in spec:
+            cmake_options.append(self.define("AMR_WIND_ENABLE_CLANG_TIDY", True))
+
         if "+mpi" in self.spec:
             args.append(define("MPI_HOME", self.spec["mpi"].prefix))
+
+        if "+hdf5" in spec:
+            cmake_options.append(self.define("AMR_WIND_ENABLE_HDF5", True))
+            cmake_options.append(self.define("AMR_WIND_ENABLE_HDF5_ZFP", True))
+            # Help AMReX understand if HDF5 is parallel or not.
+            # Building HDF5 with CMake as Spack does, causes this inspection to break.
+            if "+mpi" in spec:
+                cmake_options.append(self.define("HDF5_IS_PARALLEL", True))
+            else:
+                cmake_options.append(self.define("HDF5_IS_PARALLEL", False))
 
         if "+cuda" in self.spec:
             amrex_arch = [
@@ -97,5 +133,15 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             args.append(define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
             targets = self.spec.variants["amdgpu_target"].value
             args.append("-DAMReX_AMD_ARCH=" + ";".join(str(x) for x in targets))
+
+        if "+sycl" in self.spec:
+            cmake_options.append(self.define("AMR_WIND_ENABLE_SYCL", True))
+            # SYCL GPU backend only supported with Intel's oneAPI or DPC++ compilers
+            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
+                raise InstallError(
+                    "AMReX's SYCL GPU Backend requires DPC++ (dpcpp)"
+                    + " or the oneAPI CXX (icpx) compiler."
+                )
 
         return args
