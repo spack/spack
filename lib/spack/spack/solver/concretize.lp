@@ -1325,6 +1325,10 @@ build_priority(PackageNode, 0)   :- not build(PackageNode), attr("node", Package
 
 #defined installed_hash/2.
 
+% This statement, which is a hidden feature of clingo, let us avoid cycles in the DAG
+#edge (A, B) : depends_on(A, B).
+
+
 %-----------------------------------------------------------------
 % Optimization to avoid errors
 %-----------------------------------------------------------------
