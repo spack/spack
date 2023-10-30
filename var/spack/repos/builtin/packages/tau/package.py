@@ -338,7 +338,7 @@ class Tau(Package):
                 if found:
                     break
             options.append("-pythonlib=%s" % lib_path)
-    
+
         if "+dyninst" in spec:
             options.append("-dyninst=%s" % spec["dyninst"].prefix)
             if "+tbb" not in spec:
