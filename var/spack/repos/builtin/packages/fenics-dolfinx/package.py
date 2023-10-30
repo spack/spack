@@ -15,6 +15,7 @@ class FenicsDolfinx(CMakePackage):
     maintainers("chrisrichardson", "garth-wells", "nate-sime", "jhale")
 
     version("main", branch="main")
+    version("0.7.1", sha256="ed701830506aa5a0b32e13cb055156505f1f2fe2f90b82486115248300c4a82a")
     version("0.7.0", sha256="9245e457a03c37983337456c0835263b7be083c5bf2978738b4e462ee5e83cde")
     version("0.6.0", sha256="eb8ac2bb2f032b0d393977993e1ab6b4101a84d54023a67206e3eac1a8d79b80")
     version("0.5.1", sha256="a570e3f6ed8e7c570e7e61d0e6fd44fa9dad2c5f8f1f48a6dc9ad22bacfbc973")
