@@ -41,7 +41,7 @@ class Subversion(AutotoolsPackage):
 
     depends_on("apr")
     depends_on("apr-util")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("sqlite@3.8.2:")
     depends_on("expat")
     depends_on("lz4", when="@1.10:")
@@ -67,7 +67,7 @@ class Subversion(AutotoolsPackage):
                 spec["expat"].libs.directories[0],
                 spec["expat"].libs.names[0],
             ),
-            "--with-zlib={0}".format(spec["zlib"].prefix),
+            "--with-zlib={0}".format(spec["zlib-api"].prefix),
             "--without-apxs",
             "--without-trang",
             "--without-doxygen",

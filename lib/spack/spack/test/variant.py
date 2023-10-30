@@ -23,7 +23,7 @@ from spack.variant import (
 )
 
 
-class TestMultiValuedVariant(object):
+class TestMultiValuedVariant:
     def test_initialization(self):
         # Basic properties
         a = MultiValuedVariant("foo", "bar,baz")
@@ -198,7 +198,7 @@ class TestMultiValuedVariant(object):
         assert a.yaml_entry() == expected
 
 
-class TestSingleValuedVariant(object):
+class TestSingleValuedVariant:
     def test_initialization(self):
         # Basic properties
         a = SingleValuedVariant("foo", "bar")
@@ -356,7 +356,7 @@ class TestSingleValuedVariant(object):
         assert a.yaml_entry() == expected
 
 
-class TestBoolValuedVariant(object):
+class TestBoolValuedVariant:
     def test_initialization(self):
         # Basic properties - True value
         for v in (True, "True", "TRUE", "TrUe"):
@@ -525,16 +525,16 @@ class TestBoolValuedVariant(object):
 
 def test_from_node_dict():
     a = MultiValuedVariant.from_node_dict("foo", ["bar"])
-    assert type(a) == MultiValuedVariant
+    assert type(a) is MultiValuedVariant
 
     a = MultiValuedVariant.from_node_dict("foo", "bar")
-    assert type(a) == SingleValuedVariant
+    assert type(a) is SingleValuedVariant
 
     a = MultiValuedVariant.from_node_dict("foo", "true")
-    assert type(a) == BoolValuedVariant
+    assert type(a) is BoolValuedVariant
 
 
-class TestVariant(object):
+class TestVariant:
     def test_validation(self):
         a = Variant(
             "foo", default="", description="", values=("bar", "baz", "foobar"), multi=False
@@ -584,7 +584,7 @@ class TestVariant(object):
         assert a.allowed_values == "bar, baz, foobar"
 
 
-class TestVariantMapTest(object):
+class TestVariantMapTest:
     def test_invalid_values(self):
         # Value with invalid type
         a = VariantMap(None)

@@ -13,7 +13,7 @@ class Mesa18(AutotoolsPackage):
     - a system for rendering interactive 3D graphics."""
 
     homepage = "https://www.mesa3d.org"
-    maintainers("v-dobrev", "chuckatkins", "ChristianTackeGSI")
+    maintainers("v-dobrev", "ChristianTackeGSI")
 
     # Note that we always want to build from the git repo instead of a
     # tarball since the tarball has pre-generated files for certain versions
@@ -21,7 +21,7 @@ class Mesa18(AutotoolsPackage):
     # whatever version of LLVM you're using.
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
 
-    version("18.3.6", tag="mesa-18.3.6")
+    version("18.3.6", tag="mesa-18.3.6", commit="11049bcff86da8013a4f63bd68daf637e3af22f3")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -36,7 +36,7 @@ class Mesa18(AutotoolsPackage):
     depends_on("python@:3.8", type="build")  # https://github.com/spack/spack/issues/28219
     depends_on("py-mako@0.8.0:", type="build")
     depends_on("libxml2")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("expat")
     depends_on("ncurses+termlib")
 

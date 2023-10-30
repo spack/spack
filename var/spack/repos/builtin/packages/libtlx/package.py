@@ -25,6 +25,7 @@ class Libtlx(CMakePackage):
 
     maintainers("fabratu")
 
+    version("0.6.1", sha256="24dd1acf36dd43b8e0414420e3f9adc2e6bb0e75047e872a06167961aedad769")
     version(
         "0.5.20200222", sha256="99e63691af3ada066682243f3a65cd6eb32700071cdd6cfedb18777b5ff5ff4d"
     )

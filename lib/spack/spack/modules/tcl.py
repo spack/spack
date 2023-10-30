@@ -6,14 +6,11 @@
 """This module implements the classes necessary to generate Tcl
 non-hierarchical modules.
 """
+import os.path
 import posixpath
-import string
 from typing import Any, Dict
 
-import llnl.util.tty as tty
-
 import spack.config
-import spack.projections as proj
 import spack.tengine as tengine
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
@@ -56,14 +53,14 @@ def make_context(spec, module_set_name, explicit):
 class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
 
-    @property
-    def conflicts(self):
-        """Conflicts for this module file"""
-        return self.conf.get("conflict", [])
-
 
 class TclFileLayout(BaseFileLayout):
     """File layout for tcl module files."""
+
+    @property
+    def modulerc(self):
+        """Returns the modulerc file associated with current module file"""
+        return os.path.join(os.path.dirname(self.filename), ".modulerc")
 
 
 class TclContext(BaseContext):
@@ -74,29 +71,6 @@ class TclContext(BaseContext):
         """List of modules that needs to be loaded automatically."""
         return self._create_module_list_of("specs_to_prereq")
 
-    @tengine.context_property
-    def conflicts(self):
-        """List of conflicts for the tcl module file."""
-        fmts = []
-        projection = proj.get_projection(self.conf.projections, self.spec)
-        f = string.Formatter()
-        for item in self.conf.conflicts:
-            if len([x for x in f.parse(item)]) > 1:
-                for naming_dir, conflict_dir in zip(projection.split("/"), item.split("/")):
-                    if naming_dir != conflict_dir:
-                        message = "conflict scheme does not match naming "
-                        message += "scheme [{spec}]\n\n"
-                        message += 'naming scheme   : "{nformat}"\n'
-                        message += 'conflict scheme : "{cformat}"\n\n'
-                        message += "** You may want to check your "
-                        message += "`modules.yaml` configuration file **\n"
-                        tty.error(message.format(spec=self.spec, nformat=projection, cformat=item))
-                        raise SystemExit("Module generation aborted.")
-                item = self.spec.format(item)
-            fmts.append(item)
-        # Substitute spec tokens if present
-        return [self.spec.format(x) for x in fmts]
-
 
 class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
@@ -105,3 +79,7 @@ class TclModulefileWriter(BaseModuleFileWriter):
     # os.path.join due to spack.spec.Spec.format
     # requiring forward slash path seperators at this stage
     default_template = posixpath.join("modules", "modulefile.tcl")
+
+    modulerc_header = ["#%Module4.7"]
+
+    hide_cmd_format = "module-hide --soft --hidden-loaded %s"

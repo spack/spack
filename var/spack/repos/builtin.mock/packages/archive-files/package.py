@@ -17,7 +17,7 @@ class ArchiveFiles(AutotoolsPackage):
 
     @property
     def archive_files(self):
-        return super(ArchiveFiles, self).archive_files + ["../../outside.log"]
+        return super().archive_files + ["../../outside.log"]
 
     def autoreconf(self, spec, prefix):
         pass

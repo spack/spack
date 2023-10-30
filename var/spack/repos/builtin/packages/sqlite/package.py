@@ -17,6 +17,8 @@ class Sqlite(AutotoolsPackage):
 
     homepage = "https://www.sqlite.org"
 
+    version("3.43.2", sha256="6d422b6f62c4de2ca80d61860e3a3fb693554d2f75bb1aaca743ccc4d6f609f0")
+    version("3.42.0", sha256="7abcfd161c6e2742ca5c6c0895d1f853c940f203304a0b49da4e1eca5d088ca6")
     version("3.40.1", sha256="2c5dea207fa508d765af1ef620b637dcb06572afa6f01f0815bd5bbf864b33d9")
     version("3.40.0", sha256="0333552076d2700c75352256e91c78bf5cd62491589ba0c69aed0a81868980e7")
     version("3.39.4", sha256="f31d445b48e67e284cf206717cc170ab63cbe4fd7f79a82793b772285e78fdbb")
@@ -58,7 +60,7 @@ class Sqlite(AutotoolsPackage):
     variant("rtree", default=True, description="Build with Rtree module")
 
     depends_on("readline")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts("+fts", when="@:3.25")
@@ -152,7 +154,9 @@ class Sqlite(AutotoolsPackage):
         version_string = str(full_version[0]) + "".join(["%02d" % v for v in full_version[1:]])
         # See https://www.sqlite.org/chronology.html for version -> year
         # correspondence.
-        if version >= Version("3.37.2"):
+        if version >= Version("3.41.0"):
+            year = "2023"
+        elif version >= Version("3.37.2"):
             year = "2022"
         elif version >= Version("3.34.1"):
             year = "2021"

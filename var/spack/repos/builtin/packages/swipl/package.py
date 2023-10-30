@@ -45,7 +45,7 @@ class Swipl(CMakePackage):
     depends_on("unwind", when="+unwind")
     depends_on("unixodbc", when="+odbc")
     depends_on("openssl", when="+ssl")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
 
     depends_on("libxt", when="+xpce")
     depends_on("libx11", when="+xpce")

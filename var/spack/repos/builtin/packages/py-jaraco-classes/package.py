@@ -12,9 +12,8 @@ class PyJaracoClasses(PythonPackage):
     homepage = "https://github.com/jaraco/jaraco.classes"
     pypi = "jaraco.classes/jaraco.classes-3.2.2.tar.gz"
 
+    version("3.2.3", sha256="89559fa5c1d3c34eff6f631ad80bb21f378dbcbb35dd161fd2c6b93f5be2f98a")
     version("3.2.2", sha256="6745f113b0b588239ceb49532aa09c3ebb947433ce311ef2f8e3ad64ebb74594")
-
-    depends_on("python@3.7:", type=("build", "run"))
 
     depends_on("py-setuptools@56:", type="build")
     depends_on("py-setuptools-scm@3.4.1: +toml", type="build")

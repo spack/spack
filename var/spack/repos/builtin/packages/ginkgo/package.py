@@ -16,13 +16,16 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://ginkgo-project.github.io/"
     git = "https://github.com/ginkgo-project/ginkgo.git"
 
+    test_requires_compiler = True
+
     maintainers("tcojean", "hartwiganzt")
 
     tags = ["e4s"]
 
     version("develop", branch="develop")
     version("master", branch="master")
-    version("1.5.0", commit="234594c92b58e2384dfb43c2d08e7f43e2b58e7a", preferred=True)  # v1.5.0
+    version("1.6.0", commit="1f1ed46e724334626f016f105213c047e16bc1ae", preferred=True)  # v1.6.0
+    version("1.5.0", commit="234594c92b58e2384dfb43c2d08e7f43e2b58e7a")  # v1.5.0
     version("1.5.0.glu_experimental", branch="glu_experimental")
     version("1.4.0", commit="f811917c1def4d0fcd8db3fe5c948ce13409e28e")  # v1.4.0
     version("1.3.0", commit="4678668c66f634169def81620a85c9a20b7cec78")  # v1.3.0
@@ -47,6 +50,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipsparse", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("rocrand", when="+rocm")
+    depends_on("hiprand", when="+rocm")
+    depends_on("hipfft", when="+rocm")
     # ROCPRIM is not a direct dependency, but until we have reviewed our CMake
     # setup for rocthrust, this needs to also be added here.
     depends_on("rocprim", when="+rocm")
@@ -72,17 +77,15 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^rocprim@4.1.0:", when="@:1.3.0")
 
     # Skip smoke tests if compatible hardware isn't found
-    patch("1.4.0_skip_invalid_smoke_tests.patch", when="@master")
     patch("1.4.0_skip_invalid_smoke_tests.patch", when="@1.4.0")
 
     # Newer DPC++ compilers use the updated SYCL 2020 standard which change
     # kernel attribute propagation rules. This doesn't work well with the
     # initial Ginkgo oneAPI support.
-    patch("1.4.0_dpcpp_use_old_standard.patch", when="+oneapi @master")
     patch("1.4.0_dpcpp_use_old_standard.patch", when="+oneapi @1.4.0")
 
     # Add missing include statement
-    patch("thrust-count-header.patch", when="+rocm @1.5.0:")
+    patch("thrust-count-header.patch", when="+rocm @1.5.0")
 
     def setup_build_environment(self, env):
         spec = self.spec
@@ -160,33 +163,32 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
                 )
         return args
 
-    extra_install_tests = join_path("test", "test_install")
+    @property
+    def extra_install_tests(self):
+        return "test_install" if self.spec.satisfies("@1.3.0") else "test"
 
     @run_after("install")
     def cache_test_sources(self):
         self.cache_extra_test_sources(self.extra_install_tests)
 
-    @property
-    def _cached_tests_src_dir(self):
-        """The cached smoke test source directory."""
-        return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
+    def _cached_tests_src_dir(self, script):
+        """The cached smoke test source directory for the script."""
+        subdir = script if self.spec.satisfies("@1.4.0:") else ""
+        return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests, subdir)
 
-    @property
-    def _cached_tests_work_dir(self):
-        """The working directory for cached test sources."""
-        return join_path(self._cached_tests_src_dir, "build")
+    def _build_and_run_test(self, script):
+        """Build and run the test against the installation."""
+        src_dir = self._cached_tests_src_dir(script)
 
-    def _build_test(self):
-        cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
         cmake_args = [
-            "-DCMAKE_C_COMPILER={0}".format(self.compiler.cc),
-            "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx),
-            self._cached_tests_src_dir,
+            f"-DCMAKE_C_COMPILER={os.environ['CC']}",
+            f"-DCMAKE_CXX_COMPILER={os.environ['CXX']}",
+            src_dir,
         ]
 
         # Fix: For HIP tests, add the ARCH compilation flags when not present
         if "+rocm" in self.spec:
-            src_path = join_path(self._cached_tests_src_dir, "CMakeLists.txt")
+            src_path = join_path(src_dir, "CMakeLists.txt")
             cmakelists = open(src_path, "rt")
             data = cmakelists.read()
             data = data.replace(
@@ -198,43 +200,39 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             cmakelists.write(data)
             cmakelists.close()
 
-        if not self.run_test(
-            cmake_bin,
-            options=cmake_args,
-            purpose="Generate the Makefile",
-            work_dir=self._cached_tests_work_dir,
-        ):
-            print("Skipping Ginkgo test: failed to generate Makefile")
-            return
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        make = which("make")
+        with working_dir(src_dir):
+            cmake(*cmake_args)
+            make()
+            exe = which(script)
+            output = exe(output=str.split, error=str.split)
+            assert "correctly detected and is complete" in output
 
-        if not self.run_test(
-            "make", purpose="Build test software", work_dir=self._cached_tests_work_dir
-        ):
-            print("Skipping Ginkgo test: failed to build test")
-            return
+    def test_install(self):
+        """build, run and check results of test_install"""
+        if not self.spec.satisfies("@1.3.0:"):
+            raise SkipTest("Test is only available for v1.3.0:")
 
-    def test(self):
-        """Run the smoke tests."""
-        # For now only 1.4.0 and later releases support this scheme.
-        if self.spec.satisfies("@:1.3.0"):
-            print("SKIPPED: smoke tests not supported with this Ginkgo version.")
-            return
+        self._build_and_run_test("test_install")
 
-        self._build_test()
+    def test_install_cuda(self):
+        """build, run and check results of test_install_cuda"""
+        if not self.spec.satisfies("@1.4.0: +cuda"):
+            raise SkipTest("Test is only available for v1.4.0: +cuda")
 
-        # Perform the test(s) created by setup_build_tests.
-        files = [
-            ("test_install", [r"REFERENCE", r"correctly detected and is complete"]),
-            ("test_install_cuda", [r"CUDA", r"correctly detected and is complete"]),
-            ("test_install_hip", [r"HIP", r"correctly detected and is complete"]),
-        ]
-        for f, expected in files:
-            self.run_test(
-                f,
-                [],
-                expected,
-                skip_missing=True,
-                installed=False,
-                purpose="test: Running {0}".format(f),
-                work_dir=self._cached_tests_work_dir,
-            )
+        self._build_and_run_test("test_install_cuda")
+
+    def test_install_hip(self):
+        """build, run and check results of test_install_hip"""
+        if not self.spec.satisfies("@1.4.0: +rocm"):
+            raise SkipTest("Test is only available for v1.4.0: +rocm")
+
+        self._build_and_run_test("test_install_hip")
+
+    def test_exportbuild(self):
+        """build, run and check results of test_exportbuild"""
+        if not self.spec.satisfies("@1.4.0:"):
+            raise SkipTest("Test is only available for v1.4.0:")
+
+        self._build_and_run_test("test_exportbuild")

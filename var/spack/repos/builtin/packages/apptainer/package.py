@@ -27,6 +27,7 @@ class Apptainer(SingularityBase):
     git = "https://github.com/apptainer/apptainer.git"
 
     version("main", branch="main")
+    version("1.1.9", sha256="c615777539154288542cf393d3fd44c04ccb3260bc6330dc324d4e4ebe902bfa")
     version("1.1.7", sha256="e6d3956a26c3965703402e17f153ba07f59bf710068806462b314d2d04e825e7")
     version("1.1.6", sha256="5f32d305279a51ce8bdbe69e733c4ac12b1efdcb77758fab8ec9463e96a8fd82")
     version("1.1.5", sha256="3eadb26b6656a89a111abe29c7e50eab0023e9a8718f1e77e46ca871398bfa67")
@@ -35,6 +36,7 @@ class Apptainer(SingularityBase):
     version("1.0.2", sha256="2d7a9d0a76d5574459d249c3415e21423980d9154ce85e8c34b0600782a7dfd3")
 
     depends_on("go@1.17.5:", when="@1.1.0:")
+    depends_on("squashfuse", type="run")
 
     singularity_org = "apptainer"
     singularity_name = "apptainer"
@@ -51,3 +53,8 @@ class Apptainer(SingularityBase):
         if spec.satisfies("@1.1.0: +suid"):
             options.append("--with-suid")
         return options
+
+    def flag_handler(self, name, flags):
+        # Certain go modules this build pulls in cannot be built with anything
+        # other than -O0. Best to just discard any injected flags.
+        return (None, flags, None)

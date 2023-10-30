@@ -6,6 +6,7 @@ import inspect
 import os
 import re
 import shutil
+import stat
 from typing import Optional
 
 import archspec
@@ -16,20 +17,39 @@ import llnl.util.tty as tty
 
 import spack.builder
 import spack.config
+import spack.deptypes as dt
 import spack.detection
 import spack.multimethod
 import spack.package_base
 import spack.spec
 import spack.store
 from spack.directives import build_system, depends_on, extends, maintainers
-from spack.error import NoHeadersError, NoLibrariesError, SpecError
-from spack.version import Version
+from spack.error import NoHeadersError, NoLibrariesError
+from spack.install_test import test_part
+from spack.util.executable import Executable
 
 from ._checks import BaseBuilder, execute_install_time_tests
 
 
+def _flatten_dict(dictionary):
+    """Iterable that yields KEY=VALUE paths through a dictionary.
+    Args:
+        dictionary: Possibly nested dictionary of arbitrary keys and values.
+    Yields:
+        A single path through the dictionary.
+    """
+    for key, item in dictionary.items():
+        if isinstance(item, dict):
+            # Recursive case
+            for value in _flatten_dict(item):
+                yield f"{key}={value}"
+        else:
+            # Base case
+            yield f"{key}={item}"
+
+
 class PythonExtension(spack.package_base.PackageBase):
-    maintainers("adamjstewart", "pradyunsg")
+    maintainers("adamjstewart")
 
     @property
     def import_modules(self):
@@ -167,18 +187,106 @@ class PythonExtension(spack.package_base.PackageBase):
 
         view.remove_files(to_remove)
 
-    def test(self):
+    def test_imports(self):
         """Attempts to import modules of the installed package."""
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
+        python = inspect.getmodule(self).python
         for module in self.import_modules:
-            self.run_test(
-                inspect.getmodule(self).python.path,
-                ["-c", "import {0}".format(module)],
-                purpose="checking import of {0}".format(module),
+            with test_part(
+                self,
+                f"test_imports_{module}",
+                purpose=f"checking import of {module}",
                 work_dir="spack-test",
-            )
+            ):
+                python("-c", f"import {module}")
+
+    def update_external_dependencies(self, extendee_spec=None):
+        """
+        Ensure all external python packages have a python dependency
+
+        If another package in the DAG depends on python, we use that
+        python for the dependency of the external. If not, we assume
+        that the external PythonPackage is installed into the same
+        directory as the python it depends on.
+        """
+        # TODO: Include this in the solve, rather than instantiating post-concretization
+        if "python" not in self.spec:
+            if extendee_spec:
+                python = extendee_spec
+            elif "python" in self.spec.root:
+                python = self.spec.root["python"]
+            else:
+                python = self.get_external_python_for_prefix()
+                if not python.concrete:
+                    repo = spack.repo.PATH.repo_for_pkg(python)
+                    python.namespace = repo.namespace
+
+                    # Ensure architecture information is present
+                    if not python.architecture:
+                        host_platform = spack.platforms.host()
+                        host_os = host_platform.operating_system("default_os")
+                        host_target = host_platform.target("default_target")
+                        python.architecture = spack.spec.ArchSpec(
+                            (str(host_platform), str(host_os), str(host_target))
+                        )
+                    else:
+                        if not python.architecture.platform:
+                            python.architecture.platform = spack.platforms.host()
+                        if not python.architecture.os:
+                            python.architecture.os = "default_os"
+                        if not python.architecture.target:
+                            python.architecture.target = archspec.cpu.host().family.name
+
+                    # Ensure compiler information is present
+                    if not python.compiler:
+                        python.compiler = self.spec.compiler
+
+                    python.external_path = self.spec.external_path
+                    python._mark_concrete()
+            self.spec.add_dependency_edge(python, depflag=dt.BUILD | dt.LINK | dt.RUN, virtuals=())
+
+    def get_external_python_for_prefix(self):
+        """
+        For an external package that extends python, find the most likely spec for the python
+        it depends on.
+
+        First search: an "installed" external that shares a prefix with this package
+        Second search: a configured external that shares a prefix with this package
+        Third search: search this prefix for a python package
+
+        Returns:
+          spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
+        """
+        python_externals_installed = [
+            s for s in spack.store.STORE.db.query("python") if s.prefix == self.spec.external_path
+        ]
+        if python_externals_installed:
+            return python_externals_installed[0]
+
+        python_external_config = spack.config.get("packages:python:externals", [])
+        python_externals_configured = [
+            spack.spec.parse_with_version_concrete(item["spec"])
+            for item in python_external_config
+            if item["prefix"] == self.spec.external_path
+        ]
+        if python_externals_configured:
+            return python_externals_configured[0]
+
+        python_externals_detection = spack.detection.by_path(
+            ["python"], path_hints=[self.spec.external_path]
+        )
+
+        python_externals_detected = [
+            d.spec
+            for d in python_externals_detection.get("python", [])
+            if d.prefix == self.spec.external_path
+        ]
+        if python_externals_detected:
+            return python_externals_detected[0]
+
+        raise StopIteration("No external python could be detected for %s to depend on" % self.spec)
 
 
 class PythonPackage(PythonExtension):
@@ -225,99 +333,16 @@ class PythonPackage(PythonExtension):
             name = cls.pypi.split("/")[0]
             return "https://pypi.org/simple/" + name + "/"
 
-    def update_external_dependencies(self, extendee_spec=None):
-        """
-        Ensure all external python packages have a python dependency
-
-        If another package in the DAG depends on python, we use that
-        python for the dependency of the external. If not, we assume
-        that the external PythonPackage is installed into the same
-        directory as the python it depends on.
-        """
-        # TODO: Include this in the solve, rather than instantiating post-concretization
-        if "python" not in self.spec:
-            if extendee_spec:
-                python = extendee_spec
-            elif "python" in self.spec.root:
-                python = self.spec.root["python"]
-            else:
-                python = self.get_external_python_for_prefix()
-                if not python.concrete:
-                    repo = spack.repo.path.repo_for_pkg(python)
-                    python.namespace = repo.namespace
-
-                    # Ensure architecture information is present
-                    if not python.architecture:
-                        host_platform = spack.platforms.host()
-                        host_os = host_platform.operating_system("default_os")
-                        host_target = host_platform.target("default_target")
-                        python.architecture = spack.spec.ArchSpec(
-                            (str(host_platform), str(host_os), str(host_target))
-                        )
-                    else:
-                        if not python.architecture.platform:
-                            python.architecture.platform = spack.platforms.host()
-                        if not python.architecture.os:
-                            python.architecture.os = "default_os"
-                        if not python.architecture.target:
-                            python.architecture.target = archspec.cpu.host().family.name
-
-                    # Ensure compiler information is present
-                    if not python.compiler:
-                        python.compiler = self.spec.compiler
-
-                    python.external_path = self.spec.external_path
-                    python._mark_concrete()
-            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"))
-
-    def get_external_python_for_prefix(self):
-        """
-        For an external package that extends python, find the most likely spec for the python
-        it depends on.
-
-        First search: an "installed" external that shares a prefix with this package
-        Second search: a configured external that shares a prefix with this package
-        Third search: search this prefix for a python package
-
-        Returns:
-          spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
-        """
-        python_externals_installed = [
-            s for s in spack.store.db.query("python") if s.prefix == self.spec.external_path
-        ]
-        if python_externals_installed:
-            return python_externals_installed[0]
-
-        python_external_config = spack.config.get("packages:python:externals", [])
-        python_externals_configured = [
-            spack.spec.parse_with_version_concrete(item["spec"])
-            for item in python_external_config
-            if item["prefix"] == self.spec.external_path
-        ]
-        if python_externals_configured:
-            return python_externals_configured[0]
-
-        python_externals_detection = spack.detection.by_executable(
-            [spack.repo.path.get_pkg_class("python")], path_hints=[self.spec.external_path]
-        )
-
-        python_externals_detected = [
-            d.spec
-            for d in python_externals_detection.get("python", [])
-            if d.prefix == self.spec.external_path
-        ]
-        if python_externals_detected:
-            return python_externals_detected[0]
-
-        raise StopIteration("No external python could be detected for %s to depend on" % self.spec)
-
     @property
     def headers(self):
         """Discover header files in platlib."""
 
+        # Remove py- prefix in package name
+        name = self.spec.name[3:]
+
         # Headers may be in either location
-        include = self.prefix.join(self.spec["python"].package.include)
-        platlib = self.prefix.join(self.spec["python"].package.platlib)
+        include = self.prefix.join(self.spec["python"].package.include).join(name)
+        platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
         headers = fs.find_all_headers(include) + fs.find_all_headers(platlib)
 
         if headers:
@@ -331,16 +356,62 @@ class PythonPackage(PythonExtension):
         """Discover libraries in platlib."""
 
         # Remove py- prefix in package name
-        library = "lib" + self.spec.name[3:].replace("-", "?")
-        root = self.prefix.join(self.spec["python"].package.platlib)
+        name = self.spec.name[3:]
 
-        for shared in [True, False]:
-            libs = fs.find_libraries(library, root, shared=shared, recursive=True)
-            if libs:
-                return libs
+        root = self.prefix.join(self.spec["python"].package.platlib).join(name)
+
+        libs = fs.find_all_libraries(root, recursive=True)
+
+        if libs:
+            return libs
 
         msg = "Unable to recursively locate {} libraries in {}"
         raise NoLibrariesError(msg.format(self.spec.name, root))
+
+
+def fixup_shebangs(path: str, old_interpreter: bytes, new_interpreter: bytes):
+    # Recurse into the install prefix and fixup shebangs
+    exe = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+    dirs = [path]
+    hardlinks = set()
+
+    while dirs:
+        with os.scandir(dirs.pop()) as entries:
+            for entry in entries:
+                if entry.is_dir(follow_symlinks=False):
+                    dirs.append(entry.path)
+                    continue
+
+                # Only consider files, not symlinks
+                if not entry.is_file(follow_symlinks=False):
+                    continue
+
+                lstat = entry.stat(follow_symlinks=False)
+
+                # Skip over files that are not executable
+                if not (lstat.st_mode & exe):
+                    continue
+
+                # Don't modify hardlinks more than once
+                if lstat.st_nlink > 1:
+                    key = (lstat.st_ino, lstat.st_dev)
+                    if key in hardlinks:
+                        continue
+                    hardlinks.add(key)
+
+                # Finally replace shebangs if any.
+                with open(entry.path, "rb+") as f:
+                    contents = f.read(2)
+                    if contents != b"#!":
+                        continue
+                    contents += f.read()
+
+                    if old_interpreter not in contents:
+                        continue
+
+                    f.seek(0)
+                    f.write(contents.replace(old_interpreter, new_interpreter))
+                    f.truncate()
 
 
 @spack.builder.builder("python_pip")
@@ -354,7 +425,7 @@ class PythonPipBuilder(BaseBuilder):
     legacy_long_methods = ("install_options", "global_options", "config_settings")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = ("build_directory", "install_time_test_callbacks")
+    legacy_attributes = ("archive_files", "build_directory", "install_time_test_callbacks")
 
     #: Callback names for install-time test
     install_time_test_callbacks = ["test"]
@@ -398,19 +469,23 @@ class PythonPipBuilder(BaseBuilder):
 
     def config_settings(self, spec, prefix):
         """Configuration settings to be passed to the PEP 517 build backend.
-        Requires pip 22.1+, which requires Python 3.7+.
+
+        Requires pip 22.1 or newer for keys that appear only a single time,
+        or pip 23.1 or newer if the same key appears multiple times.
 
         Args:
             spec (spack.spec.Spec): build spec
             prefix (spack.util.prefix.Prefix): installation prefix
 
         Returns:
-            dict: dictionary of KEY, VALUE settings
+            dict: Possibly nested dictionary of KEY, VALUE settings
         """
         return {}
 
     def install_options(self, spec, prefix):
         """Extra arguments to be supplied to the setup.py install command.
+
+        Requires pip 23.0 or older.
 
         Args:
             spec (spack.spec.Spec): build spec
@@ -425,6 +500,8 @@ class PythonPipBuilder(BaseBuilder):
         """Extra global options to be supplied to the setup.py call before the install
         or bdist_wheel command.
 
+        Deprecated in pip 23.1.
+
         Args:
             spec (spack.spec.Spec): build spec
             prefix (spack.util.prefix.Prefix): installation prefix
@@ -434,33 +511,76 @@ class PythonPipBuilder(BaseBuilder):
         """
         return []
 
+    @property
+    def _build_venv_path(self):
+        """Return the path to the virtual environment used for building when
+        python is external."""
+        return os.path.join(self.spec.package.stage.path, "build_env")
+
+    @property
+    def _build_venv_python(self) -> Executable:
+        """Return the Python executable in the build virtual environment when
+        python is external."""
+        return Executable(os.path.join(self._build_venv_path, "bin", "python"))
+
     def install(self, pkg, spec, prefix):
         """Install everything from build directory."""
+        python: Executable = spec["python"].command
+        # Since we invoke pip with --no-build-isolation, we have to make sure that pip cannot
+        # execute hooks from user and system site-packages.
+        if spec["python"].external:
+            # There are no environment variables to disable the system site-packages, so we use a
+            # virtual environment instead. The downside of this approach is that pip produces
+            # incorrect shebangs that refer to the virtual environment, which we have to fix up.
+            python("-m", "venv", "--without-pip", self._build_venv_path)
+            pip = self._build_venv_python
+        else:
+            # For a Spack managed Python, system site-packages is empty/unused by design, so it
+            # suffices to disable user site-packages, for which there is an environment variable.
+            pip = python
+            pip.add_default_env("PYTHONNOUSERSITE", "1")
+        pip.add_default_arg("-m")
+        pip.add_default_arg("pip")
 
-        args = PythonPipBuilder.std_args(pkg) + ["--prefix=" + prefix]
+        args = PythonPipBuilder.std_args(pkg) + [f"--prefix={prefix}"]
 
-        for key, value in self.config_settings(spec, prefix).items():
-            if spec["py-pip"].version < Version("22.1"):
-                raise SpecError(
-                    "'{}' package uses 'config_settings' which is only supported by "
-                    "pip 22.1+. Add the following line to the package to fix this:\n\n"
-                    '    depends_on("py-pip@22.1:", type="build")'.format(spec.name)
-                )
-
-            args.append("--config-settings={}={}".format(key, value))
-
+        for setting in _flatten_dict(self.config_settings(spec, prefix)):
+            args.append(f"--config-settings={setting}")
         for option in self.install_options(spec, prefix):
-            args.append("--install-option=" + option)
+            args.append(f"--install-option={option}")
         for option in self.global_options(spec, prefix):
-            args.append("--global-option=" + option)
+            args.append(f"--global-option={option}")
 
         if pkg.stage.archive_file and pkg.stage.archive_file.endswith(".whl"):
             args.append(pkg.stage.archive_file)
         else:
             args.append(".")
 
-        pip = inspect.getmodule(pkg).pip
         with fs.working_dir(self.build_directory):
             pip(*args)
+
+    @spack.builder.run_after("install")
+    def fixup_shebangs_pointing_to_build(self):
+        """When installing a package using an external python, we use a temporary virtual
+        environment which improves build isolation. The downside is that pip produces shebangs
+        that point to the temporary virtual environment. This method fixes them up to point to the
+        underlying Python."""
+        # No need to fixup shebangs if no build venv was used. (this post install function also
+        # runs when install was overridden in another package, so check existence of the venv path)
+        if not os.path.exists(self._build_venv_path):
+            return
+
+        # Use sys.executable, since that's what pip uses.
+        interpreter = (
+            lambda python: python("-c", "import sys; print(sys.executable)", output=str)
+            .strip()
+            .encode("utf-8")
+        )
+
+        fixup_shebangs(
+            path=self.spec.prefix,
+            old_interpreter=interpreter(self._build_venv_python),
+            new_interpreter=interpreter(self.spec["python"].command),
+        )
 
     spack.builder.run_after("install")(execute_install_time_tests)

@@ -15,14 +15,15 @@ import archspec.cpu
 
 from llnl.util import tty
 
-import spack.build_environment
 import spack.environment
 import spack.tengine
+import spack.util.cpus
 import spack.util.executable
 from spack.environment import depfile
 
 from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path
+from .core import _add_externals_if_missing
 
 
 class BootstrapEnvironment(spack.environment.Environment):
@@ -136,7 +137,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             "-C",
             str(self.environment_root()),
             "-j",
-            str(spack.build_environment.determine_number_of_jobs(parallel=True)),
+            str(spack.util.cpus.determine_number_of_jobs(parallel=True)),
             **kwargs,
         )
 
@@ -175,16 +176,17 @@ def black_root_spec() -> str:
 
 def flake8_root_spec() -> str:
     """Return the root spec used to bootstrap flake8"""
-    return _root_spec("py-flake8")
+    return _root_spec("py-flake8@3.8.2:")
 
 
 def pytest_root_spec() -> str:
     """Return the root spec used to bootstrap flake8"""
-    return _root_spec("py-pytest")
+    return _root_spec("py-pytest@6.2.4:")
 
 
 def ensure_environment_dependencies() -> None:
     """Ensure Spack dependencies from the bootstrap environment are installed and ready to use"""
+    _add_externals_if_missing()
     with BootstrapEnvironment() as env:
         env.update_installations()
         env.update_syspath_and_environ()

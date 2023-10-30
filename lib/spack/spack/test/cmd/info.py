@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import sys
 
 import pytest
 
@@ -12,8 +11,6 @@ import spack.cmd.info
 from spack.main import SpackCommand
 
 info = SpackCommand("info")
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Not yet implemented on Windows")
 
 
 @pytest.fixture(scope="module")
@@ -91,6 +88,7 @@ def test_info_fields(pkg_query, parser, print_buffer):
         "Installation Phases:",
         "Virtual Packages:",
         "Tags:",
+        "Licenses:",
     )
 
     args = parser.parse_args(["--all", pkg_query])

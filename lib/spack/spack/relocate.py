@@ -39,7 +39,7 @@ class InstallRootStringError(spack.error.SpackError):
             file_path (str): path of the binary
             root_path (str): original Spack's store root string
         """
-        super(InstallRootStringError, self).__init__(
+        super().__init__(
             "\n %s \ncontains string\n %s \n"
             "after replacing it in rpaths.\n"
             "Package should not be relocated.\n Use -a to override." % (file_path, root_path)
@@ -599,19 +599,6 @@ def make_elf_binaries_relative(new_binaries, orig_binaries, orig_layout_root):
             _set_elf_rpaths(new_binary, new_rpaths)
 
 
-def ensure_binaries_are_relocatable(binaries):
-    """Raise an error if any binary in the list is not relocatable.
-
-    Args:
-        binaries (list): list of binaries to check
-
-    Raises:
-        InstallRootStringError: if the file is not relocatable
-    """
-    for binary in binaries:
-        ensure_binary_is_relocatable(binary)
-
-
 def warn_if_link_cant_be_relocated(link, target):
     if not os.path.isabs(target):
         return
@@ -661,83 +648,6 @@ def relocate_text_bin(binaries, prefixes):
       spack.relocate_text.BinaryTextReplaceError: when the new path is longer than the old path
     """
     return BinaryFilePrefixReplacer.from_strings_or_bytes(prefixes).apply(binaries)
-
-
-def is_relocatable(spec):
-    """Returns True if an installed spec is relocatable.
-
-    Args:
-        spec (spack.spec.Spec): spec to be analyzed
-
-    Returns:
-        True if the binaries of an installed spec
-        are relocatable and False otherwise.
-
-    Raises:
-        ValueError: if the spec is not installed
-    """
-    if not spec.install_status():
-        raise ValueError("spec is not installed [{0}]".format(str(spec)))
-
-    if spec.external or spec.virtual:
-        tty.warn("external or virtual package %s is not relocatable" % spec.name)
-        return False
-
-    # Explore the installation prefix of the spec
-    for root, dirs, files in os.walk(spec.prefix, topdown=True):
-        dirs[:] = [d for d in dirs if d not in (".spack", "man")]
-        try:
-            abs_paths = (os.path.join(root, f) for f in files)
-            ensure_binaries_are_relocatable(filter(is_binary, abs_paths))
-        except InstallRootStringError:
-            return False
-
-    return True
-
-
-def ensure_binary_is_relocatable(filename, paths_to_relocate=None):
-    """Raises if any given or default absolute path is found in the
-    binary (apart from rpaths / load commands).
-
-    Args:
-        filename: absolute path of the file to be analyzed
-
-    Raises:
-        InstallRootStringError: if the binary contains an absolute path
-        ValueError: if the filename does not exist or the path is not absolute
-    """
-    paths_to_relocate = paths_to_relocate or [spack.store.layout.root, spack.paths.prefix]
-
-    if not os.path.exists(filename):
-        raise ValueError("{0} does not exist".format(filename))
-
-    if not os.path.isabs(filename):
-        raise ValueError("{0} is not an absolute path".format(filename))
-
-    strings = executable.Executable("strings")
-
-    # Remove the RPATHS from the strings in the executable
-    set_of_strings = set(strings(filename, output=str).split())
-
-    m_type, m_subtype = fs.mime_type(filename)
-    if m_type == "application":
-        tty.debug("{0},{1}".format(m_type, m_subtype), level=2)
-
-    if not is_macos:
-        if m_subtype == "x-executable" or m_subtype == "x-sharedlib":
-            rpaths = ":".join(_elf_rpaths_for(filename))
-            set_of_strings.discard(rpaths)
-    else:
-        if m_subtype == "x-mach-binary":
-            rpaths, deps, idpath = macholib_get_paths(filename)
-            set_of_strings.discard(set(rpaths))
-            set_of_strings.discard(set(deps))
-            if idpath is not None:
-                set_of_strings.discard(idpath)
-
-    for path_to_relocate in paths_to_relocate:
-        if any(path_to_relocate in x for x in set_of_strings):
-            raise InstallRootStringError(filename, path_to_relocate)
 
 
 def is_binary(filename):
@@ -793,7 +703,7 @@ def fixup_macos_rpath(root, filename):
     args = []
 
     # Check dependencies for non-rpath entries
-    spack_root = spack.store.layout.root
+    spack_root = spack.store.STORE.layout.root
     for name in deps:
         if name.startswith(spack_root):
             tty.debug("Spack-installed dependency for {0}: {1}".format(abspath, name))

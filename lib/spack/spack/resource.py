@@ -11,7 +11,7 @@ package to enable optional features.
 """
 
 
-class Resource(object):
+class Resource:
     """Represents an optional resource to be fetched by a package.
 
     Aggregates a name, a fetcher, a destination and a placement.

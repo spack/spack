@@ -125,7 +125,7 @@ class IntelTbb(CMakePackage, MakefilePackage):
     patch("gcc_generic-pedantic-4.4.patch", level=1, when="@:2019.0")
 
     # Patch and conflicts for GCC 13 support (#1031).
-    patch("gcc_13-2021.patch", when="@2021.1:")
+    patch("gcc_13-2021-v2.patch", when="@2021.1:")
     conflicts("%gcc@13", when="@:2021.3")
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
@@ -143,6 +143,9 @@ class IntelTbb(CMakePackage, MakefilePackage):
     # https://github.com/oneapi-src/oneTBB/pull/258
     # https://github.com/oneapi-src/oneTBB/commit/86f6dcdc17a8f5ef2382faaef860cfa5243984fe.patch?full_index=1
     patch("macos-arm64.patch", when="@:2021.0")
+
+    # build older tbb with %oneapi
+    patch("intel-tbb.2020.3-icx.patch", when="@2020.3 %oneapi")
 
     # Support for building with %nvhpc
     # 1) remove flags nvhpc compilers do not recognize
@@ -181,7 +184,7 @@ class IntelTbb(CMakePackage, MakefilePackage):
         return find_libraries("libtbb*", root=self.prefix, shared=shared, recursive=True)
 
 
-class SetupEnvironment(object):
+class SetupEnvironment:
     # We set OS here in case the user has it set to something else
     # that TBB doesn't expect.
     def setup_build_environment(self, env):

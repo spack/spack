@@ -29,7 +29,7 @@ class Libpsl(AutotoolsPackage):
 
     def url_for_version(self, version):
         if version >= Version("0.21.1"):
-            return super(Libpsl, self).url_for_version(version)
+            return super().url_for_version(version)
         url_fmt = (
             "https://github.com/rockdaboot/libpsl/releases/download/libpsl-{0}/libpsl-{0}.tar.gz"
         )

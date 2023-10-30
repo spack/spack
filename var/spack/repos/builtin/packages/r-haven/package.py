@@ -37,6 +37,6 @@ class RHaven(RPackage):
     depends_on("r-vctrs@0.3.0:", type=("build", "run"), when="@2.3.1:")
     depends_on("r-cpp11", type=("build", "run"), when="@2.4:")
     depends_on("gmake", type="build")
-    depends_on("zlib", when="@2.4:")
+    depends_on("zlib-api", when="@2.4:")
 
     depends_on("r-rcpp@0.11.4:", type=("build", "run"), when="@:2.3")

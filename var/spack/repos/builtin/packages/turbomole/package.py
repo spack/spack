@@ -44,7 +44,7 @@ class Turbomole(Package):
     def do_fetch(self, mirror_only=True):
         if "+mpi" in self.spec and "+smp" in self.spec:
             raise InstallError("Can not have both SMP and MPI enabled in the " "same build.")
-        super(Turbomole, self).do_fetch(mirror_only)
+        super().do_fetch(mirror_only)
 
     def get_tm_arch(self):
         if "TURBOMOLE" in os.getcwd():

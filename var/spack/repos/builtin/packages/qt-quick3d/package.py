@@ -14,6 +14,9 @@ class QtQuick3d(QtPackage):
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
 
+    version("6.5.2", sha256="7b40e578fc1ee2a5f5c413873fdb0552bb97829b70296ba3c6844da062608a7e")
+    version("6.5.1", sha256="2b4f65f6c616302b38656f287e9acdf5a9f0e220ef79eaa2e80946780898fa51")
+    version("6.5.0", sha256="eaf41f06450b2be50f16b39ec06c06d10dd337b7516aba1d95695b326fd9ef40")
     version("6.4.3", sha256="609f37efb97c9ef893630b5d29f1ad98a51a47700e260c604931285ac8521479")
     version("6.4.2", sha256="940145615fe3c4c8fb346c5bfc10f94fc7a4005c8c187886e0f3088ea0ce0778")
     version("6.4.1", sha256="67daeed69b9e7b3da516c6205e737fdba30a267978c1fb9d34723a6dc5588585")
