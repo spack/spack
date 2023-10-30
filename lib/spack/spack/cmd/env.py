@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import shlex
 import shutil
 import sys
 import tempfile
@@ -163,7 +164,12 @@ def env_activate(args):
         short_name = "home"
         if not ev.exists(short_name):
             ev.create(short_name)
+            action = "Created and activated"
+        else:
+            action = "Activated"
         env_path = ev.root(short_name)
+        msg = f"{action} home environment in {env_path}\n"
+        print(f"printf {shlex.quote(msg)}")
 
     # Temporary environment
     elif args.temp:
@@ -171,6 +177,8 @@ def env_activate(args):
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
         ev.create_in_dir(env).write(regenerate=False)
+        msg = f"Created and activated temporary environment in {env_path}\n"
+        print(f"printf {shlex.quote(msg)}")
 
     # Managed environment
     elif ev.exists(env_name_or_dir) and not args.dir:
