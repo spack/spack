@@ -53,7 +53,7 @@ class Squashfuse(AutotoolsPackage):
 
     def url_for_version(self, version):
         url = "https://github.com/vasi/squashfuse/releases/download/"
-        if version > Version("0.1.104"):
+        if version == Version("0.5.0"):
             url += "v{}/squashfuse-{}.tar.gz"
         else:
             url += "{}/squashfuse-{}.tar.gz"
