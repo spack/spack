@@ -75,7 +75,7 @@ class Eccodes(CMakePackage):
         "aec", 
         default=True, 
         when="@2.25.0:", 
-        description="Enable Adaptive Entropy Coding for decoding/encoding"
+        description="Enable Adaptive Entropy Coding for decoding/encoding",
     )
     variant(
         "aec", default=False, description="Enable Adaptive Entropy Coding for decoding/encoding"
