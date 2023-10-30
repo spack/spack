@@ -923,7 +923,8 @@ pkg_fact(Package, variant_single_value("dev_path"))
 %-----------------------------------------------------------------------------
 
 % if no platform is set, fall back to the default
-:- attr("node_platform", _, Platform), not allowed_platform(Platform).
+error(100, "platform '{0}' is not allowed on the current host", Platform)
+  :- attr("node_platform", _, Platform), not allowed_platform(Platform).
 
 attr("node_platform", PackageNode, Platform)
  :- attr("node", PackageNode),
@@ -1532,6 +1533,17 @@ opt_criterion(5, "non-preferred targets").
     Weight@5+Priority,PackageNode
     : node_target_weight(PackageNode, Weight),
       build_priority(PackageNode, Priority)
+}.
+
+% Choose more recent versions for nodes
+opt_criterion(1, "edge wiring").
+#minimize{ 0@201: #true }.
+#minimize{ 0@1: #true }.
+#minimize{
+    Weight@1,ParentNode,PackageNode
+    : version_weight(PackageNode, Weight),
+      not attr("root", PackageNode),
+      depends_on(ParentNode, PackageNode)
 }.
 
 %-----------

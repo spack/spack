@@ -74,8 +74,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     # Use NAN/INFINITY if available to avoid SIGFPE
     # See https://gitlab.gnome.org/GNOME/libxml2/-/merge_requests/186
     patch(
-        "https://gitlab.gnome.org/GNOME/libxml2/-/commit/c9925454fd384a17c8c03d358c6778a552e9287b.patch",
-        sha256="3e06d42596b105839648070a5921157fe284b932289ffdbfa304ddc3457e5637",
+        "https://gitlab.gnome.org/GNOME/libxml2/-/commit/c9925454fd384a17c8c03d358c6778a552e9287b.diff",
+        sha256="5dc43fed02b443d2563a502a52caafe39477c06fc30b70f786d5ed3eb5aea88d",
         when="@2.9.11:2.9.14",
     )
     build_system(conditional("nmake", when="platform=windows"), "autotools", default="autotools")

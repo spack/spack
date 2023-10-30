@@ -13,7 +13,7 @@ import pprint
 import re
 import types
 import warnings
-from typing import List, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
 
 import archspec.cpu
 
@@ -971,6 +971,70 @@ class PyclingoDriver:
         return cycle_result.unsatisfiable
 
 
+class ConcreteSpecsByHash(collections.abc.Mapping):
+    """Mapping containing concrete specs keyed by DAG hash.
+
+    The mapping is ensured to be consistent, i.e. if a spec in the mapping has a dependency with
+    hash X, it is ensured to be the same object in memory as the spec keyed by X.
+    """
+
+    def __init__(self) -> None:
+        self.data: Dict[str, spack.spec.Spec] = {}
+
+    def __getitem__(self, dag_hash: str) -> spack.spec.Spec:
+        return self.data[dag_hash]
+
+    def add(self, spec: spack.spec.Spec) -> bool:
+        """Adds a new concrete spec to the mapping. Returns True if the spec was just added,
+        False if the spec was already in the mapping.
+
+        Args:
+            spec: spec to be added
+
+        Raises:
+            ValueError: if the spec is not concrete
+        """
+        if not spec.concrete:
+            msg = (
+                f"trying to store the non-concrete spec '{spec}' in a container "
+                f"that only accepts concrete"
+            )
+            raise ValueError(msg)
+
+        dag_hash = spec.dag_hash()
+        if dag_hash in self.data:
+            return False
+
+        # Here we need to iterate on the input and rewire the copy.
+        self.data[spec.dag_hash()] = spec.copy(deps=False)
+        nodes_to_reconstruct = [spec]
+
+        while nodes_to_reconstruct:
+            input_parent = nodes_to_reconstruct.pop()
+            container_parent = self.data[input_parent.dag_hash()]
+
+            for edge in input_parent.edges_to_dependencies():
+                input_child = edge.spec
+                container_child = self.data.get(input_child.dag_hash())
+                # Copy children that don't exist yet
+                if container_child is None:
+                    container_child = input_child.copy(deps=False)
+                    self.data[input_child.dag_hash()] = container_child
+                    nodes_to_reconstruct.append(input_child)
+
+                # Rewire edges
+                container_parent.add_dependency_edge(
+                    dependency_spec=container_child, depflag=edge.depflag, virtuals=edge.virtuals
+                )
+        return True
+
+    def __len__(self) -> int:
+        return len(self.data)
+
+    def __iter__(self):
+        return iter(self.data)
+
+
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
@@ -994,9 +1058,7 @@ class SpackSolverSetup:
         # (ID, CompilerSpec) -> dictionary of attributes
         self.compiler_info = collections.defaultdict(dict)
 
-        # hashes we've already added facts for
-        self.seen_hashes = set()
-        self.reusable_and_possible = {}
+        self.reusable_and_possible = ConcreteSpecsByHash()
 
         # id for dummy variables
         self._condition_id_counter = itertools.count()
@@ -1883,7 +1945,11 @@ class SpackSolverSetup:
                             continue
                         # skip build dependencies of already-installed specs
                         if concrete_build_deps or dtype != dt.BUILD:
-                            clauses.append(fn.attr("depends_on", spec.name, dep.name, dtype))
+                            clauses.append(
+                                fn.attr(
+                                    "depends_on", spec.name, dep.name, dt.flag_to_string(dtype)
+                                )
+                            )
                             for virtual_name in dspec.virtuals:
                                 clauses.append(
                                     fn.attr("virtual_on_edge", spec.name, dep.name, virtual_name)
@@ -2314,25 +2380,29 @@ class SpackSolverSetup:
         for pkg, variant, value in self.variant_values_from_specs:
             self.gen.fact(fn.pkg_fact(pkg, fn.variant_possible_value(variant, value)))
 
-    def _facts_from_concrete_spec(self, spec, possible):
+    def register_concrete_spec(self, spec, possible):
         # tell the solver about any installed packages that could
         # be dependencies (don't tell it about the others)
-        h = spec.dag_hash()
-        if spec.name in possible and h not in self.seen_hashes:
-            self.reusable_and_possible[h] = spec
-            try:
-                # Only consider installed packages for repo we know
-                spack.repo.PATH.get(spec)
-            except (spack.repo.UnknownNamespaceError, spack.repo.UnknownPackageError):
-                return
+        if spec.name not in possible:
+            return
 
+        try:
+            # Only consider installed packages for repo we know
+            spack.repo.PATH.get(spec)
+        except (spack.repo.UnknownNamespaceError, spack.repo.UnknownPackageError) as e:
+            tty.debug(f"[REUSE] Issues when trying to reuse {spec.short_spec}: {str(e)}")
+            return
+
+        self.reusable_and_possible.add(spec)
+
+    def concrete_specs(self):
+        """Emit facts for reusable specs"""
+        for h, spec in self.reusable_and_possible.items():
             # this indicates that there is a spec like this installed
             self.gen.fact(fn.installed_hash(spec.name, h))
-
             # this describes what constraints it imposes on the solve
             self.impose(h, spec, body=True)
             self.gen.newline()
-
             # Declare as possible parts of specs that are not in package.py
             # - Add versions to possible versions
             # - Add OS to possible OS's
@@ -2343,15 +2413,12 @@ class SpackSolverSetup:
                 )
                 self.possible_oses.add(dep.os)
 
-            # add the hash to the one seen so far
-            self.seen_hashes.add(h)
-
     def define_concrete_input_specs(self, specs, possible):
         # any concrete specs in the input spec list
         for input_spec in specs:
             for spec in input_spec.traverse():
                 if spec.concrete:
-                    self._facts_from_concrete_spec(spec, possible)
+                    self.register_concrete_spec(spec, possible)
 
     def setup(
         self,
@@ -2418,14 +2485,13 @@ class SpackSolverSetup:
         # get possible compilers
         self.possible_compilers = self.generate_possible_compilers(specs)
 
-        self.gen.h1("Concrete input spec definitions")
+        self.gen.h1("Reusable concrete specs")
         self.define_concrete_input_specs(specs, self.pkgs)
-
         if reuse:
-            self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
-                self._facts_from_concrete_spec(reusable_spec, self.pkgs)
+                self.register_concrete_spec(reusable_spec, self.pkgs)
+        self.concrete_specs()
 
         self.gen.h1("Generic statements on possible packages")
         node_counter.possible_packages_facts(self.gen, fn)
@@ -2616,7 +2682,6 @@ class SpecBuilder:
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
-        self._hash_specs = []
         self._flag_sources = collections.defaultdict(lambda: set())
         self._flag_compiler_defaults = set()
 
@@ -2627,7 +2692,6 @@ class SpecBuilder:
     def hash(self, node, h):
         if node not in self._specs:
             self._specs[node] = self._hash_lookup[h]
-        self._hash_specs.append(node)
 
     def node(self, node):
         if node not in self._specs:
@@ -2865,12 +2929,10 @@ class SpecBuilder:
         # fix flags after all specs are constructed
         self.reorder_flags()
 
-        # cycle detection
-        roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
-
         # inject patches -- note that we' can't use set() to unique the
         # roots here, because the specs aren't complete, and the hash
         # function will loop forever.
+        roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
         roots = dict((id(r), r) for r in roots)
         for root in roots.values():
             spack.spec.Spec.inject_patches_variant(root)

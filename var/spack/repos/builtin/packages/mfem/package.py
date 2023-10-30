@@ -468,6 +468,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # upstream.
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
     patch("mfem-4.5.patch", when="@4.5.0")
+    patch("mfem-4.6.patch", when="@4.6.0")
 
     phases = ["configure", "build", "install"]
 
@@ -1197,6 +1198,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 sun_comps += ",nvecparhyp,nvecparallel"
         if "+cuda" in spec and "+cuda" in spec["sundials"]:
             sun_comps += ",nveccuda"
+        if "+rocm" in spec and "+rocm" in spec["sundials"]:
+            sun_comps += ",nvechip"
         return sun_comps
 
     @property
