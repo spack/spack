@@ -66,7 +66,6 @@ from llnl.util.tty import color
 
 import spack.error
 import spack.spec
-import spack.variant
 import spack.version
 
 IS_WINDOWS = sys.platform == "win32"
@@ -76,7 +75,9 @@ IS_WINDOWS = sys.platform == "win32"
 IDENTIFIER = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9\-]*)"
 DOTTED_IDENTIFIER = rf"(?:{IDENTIFIER}(?:\.{IDENTIFIER})+)"
 GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
-GIT_VERSION = rf"(?:(?:git\.(?:{DOTTED_IDENTIFIER}|{IDENTIFIER}))|(?:{GIT_HASH}))"
+#: Git refs include branch names, and can contain "." and "/"
+GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
+GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
 
 NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
@@ -127,7 +128,8 @@ class TokenType(TokenBase):
     # Dependency
     DEPENDENCY = r"(?:\^)"
     # Version
-    VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION})=(?:{VERSION}))"
+    VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
+    GIT_VERSION = rf"@(?:{GIT_VERSION_PATTERN})"
     VERSION = rf"(?:@\s*(?:{VERSION_LIST}))"
     # Variants
     PROPAGATED_BOOL_VARIANT = rf"(?:(?:\+\+|~~|--)\s*{NAME})"
@@ -161,7 +163,7 @@ class Token:
     __slots__ = "kind", "value", "start", "end"
 
     def __init__(
-        self, kind: TokenType, value: str, start: Optional[int] = None, end: Optional[int] = None
+        self, kind: TokenBase, value: str, start: Optional[int] = None, end: Optional[int] = None
     ):
         self.kind = kind
         self.value = value
@@ -261,8 +263,8 @@ class SpecParser:
         return list(filter(lambda x: x.kind != TokenType.WS, tokenize(self.literal_str)))
 
     def next_spec(
-        self, initial_spec: Optional[spack.spec.Spec] = None
-    ) -> Optional[spack.spec.Spec]:
+        self, initial_spec: Optional["spack.spec.Spec"] = None
+    ) -> Optional["spack.spec.Spec"]:
         """Return the next spec parsed from text.
 
         Args:
@@ -295,7 +297,7 @@ class SpecParser:
 
         return root_spec
 
-    def all_specs(self) -> List[spack.spec.Spec]:
+    def all_specs(self) -> List["spack.spec.Spec"]:
         """Return all the specs that remain to be parsed"""
         return list(iter(self.next_spec, None))
 
@@ -310,7 +312,9 @@ class SpecNodeParser:
         self.has_compiler = False
         self.has_version = False
 
-    def parse(self, initial_spec: Optional[spack.spec.Spec] = None) -> Optional[spack.spec.Spec]:
+    def parse(
+        self, initial_spec: Optional["spack.spec.Spec"] = None
+    ) -> Optional["spack.spec.Spec"]:
         """Parse a single spec node from a stream of tokens
 
         Args:
@@ -358,8 +362,10 @@ class SpecNodeParser:
                     compiler_name.strip(), compiler_version
                 )
                 self.has_compiler = True
-            elif self.ctx.accept(TokenType.VERSION) or self.ctx.accept(
-                TokenType.VERSION_HASH_PAIR
+            elif (
+                self.ctx.accept(TokenType.VERSION_HASH_PAIR)
+                or self.ctx.accept(TokenType.GIT_VERSION)
+                or self.ctx.accept(TokenType.VERSION)
             ):
                 if self.has_version:
                     raise spack.spec.MultipleVersionError(
@@ -409,7 +415,7 @@ class FileParser:
     def __init__(self, ctx):
         self.ctx = ctx
 
-    def parse(self, initial_spec: spack.spec.Spec) -> spack.spec.Spec:
+    def parse(self, initial_spec: "spack.spec.Spec") -> "spack.spec.Spec":
         """Parse a spec tree from a specfile.
 
         Args:
@@ -432,7 +438,7 @@ class FileParser:
         return initial_spec
 
 
-def parse(text: str) -> List[spack.spec.Spec]:
+def parse(text: str) -> List["spack.spec.Spec"]:
     """Parse text into a list of strings
 
     Args:
@@ -445,8 +451,8 @@ def parse(text: str) -> List[spack.spec.Spec]:
 
 
 def parse_one_or_raise(
-    text: str, initial_spec: Optional[spack.spec.Spec] = None
-) -> spack.spec.Spec:
+    text: str, initial_spec: Optional["spack.spec.Spec"] = None
+) -> "spack.spec.Spec":
     """Parse exactly one spec from text and return it, or raise
 
     Args:

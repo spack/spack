@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.compilers
 from spack.build_environment import dso_suffix
 from spack.package import *
 
@@ -171,11 +170,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
     # cannot express that properly. For now, add conflicts for non-gcc compilers
     # instead.
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "gcc":
-            conflicts(
-                "%{0}".format(__compiler), msg="intel-oneapi-compilers must be installed with %gcc"
-            )
+    requires("%gcc", msg="intel-oneapi-compilers must be installed with %gcc")
 
     for v in versions:
         version(v["version"], expand=False, **v["cpp"])
@@ -279,9 +274,12 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             common_flags + llvm_flags, self.component_prefix.linux.bin, ["icx", "icpx"]
         )
         self.write_config_file(
+            common_flags + classic_flags, self.component_prefix.linux.bin, ["ifx"]
+        )
+        self.write_config_file(
             common_flags + classic_flags,
             self.component_prefix.linux.bin.intel64,
-            ["icc", "icpc", "ifort", "ifx"],
+            ["icc", "icpc", "ifort"],
         )
 
     def _ld_library_path(self):

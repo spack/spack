@@ -1325,6 +1325,10 @@ build_priority(PackageNode, 0)   :- not build(PackageNode), attr("node", Package
 
 #defined installed_hash/2.
 
+% This statement, which is a hidden feature of clingo, let us avoid cycles in the DAG
+#edge (A, B) : depends_on(A, B).
+
+
 %-----------------------------------------------------------------
 % Optimization to avoid errors
 %-----------------------------------------------------------------
@@ -1533,6 +1537,17 @@ opt_criterion(5, "non-preferred targets").
     Weight@5+Priority,PackageNode
     : node_target_weight(PackageNode, Weight),
       build_priority(PackageNode, Priority)
+}.
+
+% Choose more recent versions for nodes
+opt_criterion(1, "edge wiring").
+#minimize{ 0@201: #true }.
+#minimize{ 0@1: #true }.
+#minimize{
+    Weight@1,ParentNode,PackageNode
+    : version_weight(PackageNode, Weight),
+      not attr("root", PackageNode),
+      depends_on(ParentNode, PackageNode)
 }.
 
 %-----------

@@ -19,4 +19,4 @@ class AcpicaTools(MakefilePackage):
     depends_on("bison", type="build")
 
     def install(self, spec, prefix):
-        make("PREFIX={0}".format(prefix), "install")
+        make(f"PREFIX={prefix}", "install")
