@@ -67,10 +67,15 @@ class Ispc(CMakePackage):
         sha256="d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc",
     )
 
+    # Fix library lookup for NCurses in CMake
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/ispc/ispc/pull/2638.patch?full_index=1",
+        when="@1.18:1.20",
+        sha256="3f7dae8d4a683fca2a6157bbcb7cbe9692ff2094b0f4afaf29be121c02b0b3ad",
+    )
+
     def setup_build_environment(self, env):
         if self.spec.satisfies("@1.18.0:"):
-            env.append_flags("LDFLAGS", "-lcurses")
-            env.append_flags("LDFLAGS", "-ltinfo")
             env.append_flags("LDFLAGS", "-lz")
 
     def patch(self):
