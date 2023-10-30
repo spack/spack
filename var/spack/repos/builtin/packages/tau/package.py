@@ -338,12 +338,15 @@ class Tau(Package):
                 if found:
                     break
             options.append("-pythonlib=%s" % lib_path)
-
+    
         if "+dyninst" in spec:
-            options.append("-dyninst=%" %spec["dyninst"].prefix)
-            options.append("-tbb=%s" %spec["intel-tbb"].prefix)
-            options.append("-boost=%s" %spec["boost"].prefix)
-            options.append("-elf+%s" %spec["elfutils"].prefix)
+            options.append("-dyninst=%s" % spec["dyninst"].prefix)
+            if "+tbb" not in spec:
+                options.append("-tbb=%s" % spec["intel-tbb"].prefix)
+            if "+boost" not in spec:
+                options.append("-boost=%s" % spec["boost"].prefix)
+            if "+elf" not int spec:
+                options.append("-elf=%s" % spec["elfutils"].prefix)
 
         compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)
