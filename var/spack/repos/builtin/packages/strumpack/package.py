@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from platform import machine
+
 from spack.package import *
 from spack.util.environment import set_env
 
@@ -173,7 +175,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
 
         if "%cce" in spec:
             # Assume the proper Cray CCE module (cce) is loaded:
-            craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+            craylibs_path = env["CRAYLIBS_" + machine().upper()]
             env.setdefault("LDFLAGS", "")
             env["LDFLAGS"] += " -Wl,-rpath," + craylibs_path
 

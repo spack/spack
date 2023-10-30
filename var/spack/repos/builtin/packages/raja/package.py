@@ -139,6 +139,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         "omptask", default=False, description="Build OpenMP task variants of internal algorithms"
     )
 
+    variant("plugins", default=False, description="Enable runtime plugins")
     variant("examples", default=True, description="Build examples.")
     variant("exercises", default=True, description="Build exercises.")
     # TODO: figure out gtest dependency and then set this default True
@@ -284,6 +285,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
                 if "+cuda" in spec:
                     entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
 
+        entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", "+plugins" in spec))
+  
         entries.append(
             cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)
         )
