@@ -1677,7 +1677,7 @@ spack:
     with tmpdir.as_cwd():
         env("create", "test", "./spack.yaml")
         with ev.read("test") as e:
-            concretize()
+            e.concretize()
 
             before_user = e.user_specs.specs
             before_conc = e.concretized_user_specs

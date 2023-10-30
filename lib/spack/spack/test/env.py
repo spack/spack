@@ -719,7 +719,7 @@ def test_variant_propagation_with_unify_false(tmp_path, mock_packages):
         assert node.satisfies("+foo")
 
 
-def test_env_with_include_defs(clean_test_environment, mutable_mock_env_path, mock_packages):
+def test_env_with_include_defs(mutable_mock_env_path, mock_packages):
     """Test environment with included definitions file."""
     env_path = mutable_mock_env_path
     env_path.mkdir()
@@ -749,8 +749,8 @@ def test_env_with_include_defs(clean_test_environment, mutable_mock_env_path, mo
     )
 
     e = ev.Environment(env_path)
-    ev.activate(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
 
 def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
@@ -775,6 +775,6 @@ def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
     )
 
     e = ev.Environment(env_path)
-    ev.activate(e)
-    with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):
-        e.concretize()
+    with e:
+        with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):
+            e.concretize()
