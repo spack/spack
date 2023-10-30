@@ -145,6 +145,12 @@ def create_temp_env_directory():
     return tempfile.mkdtemp(prefix="spack-")
 
 
+def _tty_info(msg):
+    """tty.info like function that prints the equivalent printf statement for eval."""
+    decorated = f'{colorize("@*b{==>}")} {msg}\n'
+    print(f"printf {shlex.quote(decorated)}")
+
+
 def env_activate(args):
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
@@ -168,8 +174,7 @@ def env_activate(args):
         else:
             action = "Activated"
         env_path = ev.root(short_name)
-        msg = f"{action} home environment in {env_path}\n"
-        print(f"printf {shlex.quote(msg)}")
+        _tty_info(f"{action} home environment in {env_path}")
 
     # Temporary environment
     elif args.temp:
@@ -177,8 +182,7 @@ def env_activate(args):
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
         ev.create_in_dir(env).write(regenerate=False)
-        msg = f"Created and activated temporary environment in {env_path}\n"
-        print(f"printf {shlex.quote(msg)}")
+        _tty_info(f"Created and activated temporary environment in {env_path}")
 
     # Managed environment
     elif ev.exists(env_name_or_dir) and not args.dir:
