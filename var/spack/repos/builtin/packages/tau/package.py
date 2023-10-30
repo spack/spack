@@ -138,7 +138,7 @@ class Tau(Package):
     # ADIOS2, SQLite only available from 2.29.1 on
     conflicts("+adios2", when="@:2.29.1")
     conflicts("+sqlite", when="@:2.29.1")
-    conflicts("+dyninst", when"@:2.32.2")
+    conflicts("+dyninst", when"@:2.32.1")
 
     patch("unwind.patch", when="@2.29.0")
 
