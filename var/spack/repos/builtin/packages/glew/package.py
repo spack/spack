@@ -34,6 +34,9 @@ class Glew(CMakePackage):
     conflicts("^glx", when="gl=osmesa")
     conflicts("^glx", when="gl=other")
     conflicts("^glx", when="gl=egl")
+    conflicts("^egl", when="gl=glx")
+    conflicts("^egl", when="gl=osmesa")
+    conflicts("^egl", when="gl=other")
 
     depends_on("gl")
     depends_on("osmesa", when="gl=osmesa")
