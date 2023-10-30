@@ -25,7 +25,7 @@ import urllib.request
 import warnings
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Dict, List, NamedTuple, Optional, Set, Tuple
 from urllib.error import HTTPError, URLError
 
 import llnl.util.filesystem as fsys
@@ -53,6 +53,7 @@ import spack.traverse as traverse
 import spack.util.crypto
 import spack.util.file_cache as file_cache
 import spack.util.gpg
+import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.timer as timer
@@ -130,25 +131,25 @@ class BinaryCacheIndex:
     mean we should have paid the price to update the cache earlier?
     """
 
-    def __init__(self, cache_root):
-        self._index_cache_root = cache_root
+    def __init__(self, cache_root: Optional[str] = None):
+        self._index_cache_root: str = cache_root or binary_index_location()
 
         # the key associated with the serialized _local_index_cache
         self._index_contents_key = "contents.json"
 
         # a FileCache instance storing copies of remote binary cache indices
-        self._index_file_cache = None
+        self._index_file_cache: Optional[file_cache.FileCache] = None
 
         # stores a map of mirror URL to index hash and cache key (index path)
-        self._local_index_cache = None
+        self._local_index_cache: Optional[dict] = None
 
         # hashes of remote indices already ingested into the concrete spec
         # cache (_mirrors_for_spec)
-        self._specs_already_associated = set()
+        self._specs_already_associated: Set[str] = set()
 
         # mapping from mirror urls to the time.time() of the last index fetch and a bool indicating
         # whether the fetch succeeded or not.
-        self._last_fetch_times = {}
+        self._last_fetch_times: Dict[str, float] = {}
 
         # _mirrors_for_spec is a dictionary mapping DAG hashes to lists of
         # entries indicating mirrors where that concrete spec can be found.
@@ -158,7 +159,7 @@ class BinaryCacheIndex:
         #     - the concrete spec itself, keyed by ``spec`` (including the
         #           full hash, since the dag hash may match but we want to
         #           use the updated source if available)
-        self._mirrors_for_spec = {}
+        self._mirrors_for_spec: Dict[str, dict] = {}
 
     def _init_local_index_cache(self):
         if not self._index_file_cache:
@@ -529,15 +530,8 @@ def binary_index_location():
     return spack.util.path.canonicalize_path(cache_root)
 
 
-def _binary_index():
-    """Get the singleton store instance."""
-    return BinaryCacheIndex(binary_index_location())
-
-
-#: Singleton binary_index instance
-binary_index: Union[BinaryCacheIndex, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
-    _binary_index
-)
+#: Default binary cache index instance
+BINARY_INDEX: BinaryCacheIndex = llnl.util.lang.Singleton(BinaryCacheIndex)  # type: ignore
 
 
 class NoOverwriteException(spack.error.SpackError):
@@ -2255,7 +2249,7 @@ def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
         tty.debug("No Spack mirrors are currently configured")
         return {}
 
-    results = binary_index.find_built_spec(spec, mirrors_to_check=mirrors_to_check)
+    results = BINARY_INDEX.find_built_spec(spec, mirrors_to_check=mirrors_to_check)
 
     # The index may be out-of-date. If we aren't only considering indices, try
     # to fetch directly since we know where the file should be.
@@ -2264,7 +2258,7 @@ def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
         # We found a spec by the direct fetch approach, we might as well
         # add it to our mapping.
         if results:
-            binary_index.update_spec(spec, results)
+            BINARY_INDEX.update_spec(spec, results)
 
     return results
 
@@ -2280,12 +2274,12 @@ def update_cache_and_get_specs():
     Throws:
         FetchCacheError
     """
-    binary_index.update()
-    return binary_index.get_all_built_specs()
+    BINARY_INDEX.update()
+    return BINARY_INDEX.get_all_built_specs()
 
 
 def clear_spec_cache():
-    binary_index.clear()
+    BINARY_INDEX.clear()
 
 
 def get_keys(install=False, trust=False, force=False, mirrors=None):
