@@ -4491,10 +4491,16 @@ class Spec:
 
     def __str__(self):
         sorted_nodes = [self] + sorted(
-            self.traverse(root=False), key=lambda x: x.name or x.abstract_hash
+            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
         )
-        spec_str = " ^".join(d.format() for d in sorted_nodes)
-        return spec_str.strip()
+        return " ^".join(d.format() for d in sorted_nodes).strip()
+
+    @property
+    def colored_str(self):
+        sorted_nodes = [self] + sorted(
+            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
+        )
+        return " ^".join(d.cformat() for d in sorted_nodes).strip()
 
     def install_status(self):
         """Helper for tree to print DB install status."""
