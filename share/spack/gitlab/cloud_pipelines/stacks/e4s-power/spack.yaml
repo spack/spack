@@ -5,21 +5,6 @@ spack:
     reuse: false
     unify: false
 
-  compilers:
-  - compiler:
-      spec: gcc@9.4.0
-      paths:
-        cc: /usr/bin/gcc
-        cxx: /usr/bin/g++
-        f77: /usr/bin/gfortran
-        fc: /usr/bin/gfortran
-      flags: {}
-      operating_system: ubuntu20.04
-      target: ppc64le
-      modules: []
-      environment: {}
-      extra_rpaths: []
-
   packages:
     all:
       require: "%gcc@9.4.0 target=ppc64le"
@@ -214,6 +199,7 @@ spack:
   - caliper +cuda cuda_arch=70
   - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire ~shared
   - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp ~paraview +cuda cuda_arch=70
+  - exago +mpi +python +raja +hiop ~rocm +cuda cuda_arch=70 ~ipopt ^hiop@1.0.0 ~sparse +mpi +raja ~rocm +cuda cuda_arch=70 #^raja@0.14.0
   - flecsi +cuda cuda_arch=70
   - ginkgo +cuda cuda_arch=70
   - heffte +cuda cuda_arch=70

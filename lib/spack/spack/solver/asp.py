@@ -8,7 +8,6 @@ import copy
 import enum
 import itertools
 import os
-import pathlib
 import pprint
 import re
 import types
@@ -889,14 +888,6 @@ class PyclingoDriver:
 
         timer.start("solve")
         solve_result = self.control.solve(**solve_kwargs)
-
-        if solve_result.satisfiable and self._model_has_cycles(models):
-            tty.debug(f"cycles detected, falling back to slower algorithm [specs={specs}]")
-            self.control.load(os.path.join(parent_dir, "cycle_detection.lp"))
-            self.control.ground([("no_cycle", [])])
-            models.clear()
-            solve_result = self.control.solve(**solve_kwargs)
-
         timer.stop("solve")
 
         # once done, construct the solve result
@@ -949,26 +940,6 @@ class PyclingoDriver:
             pprint.pprint(self.control.statistics)
 
         return result, timer, self.control.statistics
-
-    def _model_has_cycles(self, models):
-        """Returns true if the best model has cycles in it"""
-        cycle_detection = clingo.Control()
-        parent_dir = pathlib.Path(__file__).parent
-        lp_file = parent_dir / "cycle_detection.lp"
-
-        min_cost, best_model = min(models)
-        with cycle_detection.backend() as backend:
-            for atom in best_model:
-                if atom.name == "attr" and str(atom.arguments[0]) == '"depends_on"':
-                    symbol = fn.depends_on(atom.arguments[1], atom.arguments[2])
-                    atom_id = backend.add_atom(symbol.symbol())
-                    backend.add_rule([atom_id], [], choice=False)
-
-            cycle_detection.load(str(lp_file))
-            cycle_detection.ground([("base", []), ("no_cycle", [])])
-            cycle_result = cycle_detection.solve()
-
-        return cycle_result.unsatisfiable
 
 
 class ConcreteSpecsByHash(collections.abc.Mapping):

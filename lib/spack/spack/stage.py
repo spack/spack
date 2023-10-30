@@ -37,6 +37,7 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.mirror
 import spack.paths
+import spack.resource
 import spack.spec
 import spack.stage
 import spack.util.lock
@@ -455,6 +456,7 @@ class Stage:
             mirror_urls = [
                 url_util.join(mirror.fetch_url, rel_path)
                 for mirror in spack.mirror.MirrorCollection(source=True).values()
+                if not mirror.fetch_url.startswith("oci://")
                 for rel_path in self.mirror_paths
             ]
 
@@ -658,8 +660,14 @@ class Stage:
 
 
 class ResourceStage(Stage):
-    def __init__(self, url_or_fetch_strategy, root, resource, **kwargs):
-        super().__init__(url_or_fetch_strategy, **kwargs)
+    def __init__(
+        self,
+        fetch_strategy: fs.FetchStrategy,
+        root: Stage,
+        resource: spack.resource.Resource,
+        **kwargs,
+    ):
+        super().__init__(fetch_strategy, **kwargs)
         self.root_stage = root
         self.resource = resource
 
@@ -870,6 +878,7 @@ def interactive_version_filter(
     url_dict: Dict[StandardVersion, str],
     known_versions: Iterable[StandardVersion] = (),
     *,
+    initial_verion_filter: Optional[VersionList] = None,
     url_changes: Set[StandardVersion] = set(),
     input: Callable[..., str] = input,
 ) -> Optional[Dict[StandardVersion, str]]:
@@ -883,8 +892,9 @@ def interactive_version_filter(
         Filtered dictionary of versions to URLs or None if the user wants to quit
     """
     # Find length of longest string in the list for padding
-    sorted_and_filtered = sorted(url_dict.keys(), reverse=True)
-    version_filter = VersionList([":"])
+    version_filter = initial_verion_filter or VersionList([":"])
+    sorted_and_filtered = [v for v in url_dict if v.satisfies(version_filter)]
+    sorted_and_filtered.sort(reverse=True)
     max_len = max(len(str(v)) for v in sorted_and_filtered)
     orig_url_dict = url_dict  # only copy when using editor to modify
     print_header = True

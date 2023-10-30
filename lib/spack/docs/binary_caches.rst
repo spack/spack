@@ -156,6 +156,131 @@ List of popular build caches
 * `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
 
 
+-----------------------------------------
+OCI / Docker V2 registries as build cache
+-----------------------------------------
+
+Spack can also use OCI or Docker V2 registries such as Dockerhub, Quay.io,
+Github Packages, GitLab Container Registry, JFrog Artifactory, and others
+as build caches. This is a convenient way to share binaries using public
+infrastructure, or to cache Spack built binaries in Github Actions and
+GitLab CI.
+
+To get started, configure an OCI mirror using ``oci://`` as the scheme,
+and optionally specify a username and password (or personal access token):
+
+.. code-block:: console
+
+    $ spack mirror add --oci-username username --oci-password password my_registry oci://example.com/my_image
+
+Spack follows the naming conventions of Docker, with Dockerhub as the default
+registry. To use Dockerhub, you can omit the registry domain:
+
+.. code-block:: console
+
+    $ spack mirror add --oci-username username --oci-password password my_registry oci://username/my_image
+
+From here, you can use the mirror as any other build cache:
+
+.. code-block:: console
+
+    $ spack buildcache push my_registry <specs...>  # push to the registry
+    $ spack install <specs...> # install from the registry
+
+A unique feature of buildcaches on top of OCI registries is that it's incredibly
+easy to generate get a runnable container image with the binaries installed. This
+is a great way to make applications available to users without requiring them to
+install Spack -- all you need is Docker, Podman or any other OCI-compatible container
+runtime.
+
+To produce container images, all you need to do is add the ``--base-image`` flag
+when pushing to the build cache:
+
+.. code-block:: console
+
+    $ spack buildcache push --base-image ubuntu:20.04 my_registry ninja
+    Pushed to example.com/my_image:ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz.spack
+
+    $ docker run -it example.com/my_image:ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz.spack
+    root@e4c2b6f6b3f4:/# ninja --version
+    1.11.1
+
+If ``--base-image`` is not specified, distroless images are produced. In practice,
+you won't be able to run these as containers, since they don't come with libc and
+other system dependencies. However, they are still compatible with tools like
+``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
+
+.. note::
+    The docker ``overlayfs2`` storage driver is limited to 128 layers, above which a
+    ``max depth exceeded`` error may be produced when pulling the image. There
+    are `alternative drivers <https://docs.docker.com/storage/storagedriver/>`_.
+
+------------------------------------
+Using a buildcache in GitHub Actions
+------------------------------------
+
+GitHub Actions is a popular CI/CD platform for building and testing software,
+but each CI job has limited resources, making from source builds too slow for
+many applications. Spack build caches can be used to share binaries between CI
+runs, speeding up CI significantly.
+
+A typical workflow is to include a ``spack.yaml`` environment in your repository
+that specifies the packages to install:
+
+.. code-block:: yaml
+
+    spack:
+      specs: [pkg-x, pkg-y]
+    packages:
+      all:
+        require: target=x86_64_v2
+    mirrors:
+      github_packages: oci://ghcr.io/<user>/<repo>
+
+And a GitHub action that sets up Spack, installs packages from the build cache
+or from sources, and pushes newly built binaries to the build cache:
+
+.. code-block:: yaml
+
+    name: Install Spack packages
+
+    on: push
+
+    env:
+      SPACK_COLOR: always
+
+    jobs:
+      example:
+        runs-on: ubuntu-22.04
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+
+        - name: Install Spack
+          run: |
+            git clone --depth=1 https://github.com/spack/spack.git
+            echo "$PWD/spack/bin/" >> "$GITHUB_PATH"
+
+        - name: Concretize
+          run: spack -e . concretize
+
+        - name: Install
+          run: spack -e . install --no-check-signature --fail-fast
+
+        - name: Push to buildcache
+          run: |
+            spack -e . mirror set --oci-username <user> --oci-password "${{ secrets.GITHUB_TOKEN }}" github_packages
+            spack -e . buildcache push --base-image ubuntu:22.04 --unsigned --update-index github_packages
+            if: always()
+
+The first time this action runs, it will build the packages from source and
+push them to the build cache. Subsequent runs will pull the binaries from the
+build cache. The concretizer will ensure that prebuilt binaries are favored
+over source builds.
+
+The build cache entries appear in the GitHub Packages section of your repository,
+and contain instructions for pulling and running them with ``docker`` or ``podman``.
+
 ----------
 Relocation
 ----------
