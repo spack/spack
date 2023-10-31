@@ -129,7 +129,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
     depends_on("blas", when="-mpi")
     depends_on("lapack", when="-mpi")
 
-    depends_on("arpack-ng", when="+arpack")
+    depends_on("arpack-ng", when="+arpack~mpi")
     depends_on("simple-dftd3", when="+sdftd3")
     depends_on("elsi", when="+elsi")
     depends_on("magma", when="+gpu")
