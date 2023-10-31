@@ -8,7 +8,7 @@
 from spack.package import *
 
 
-class Exawind(CudaPackage, ROCmPackage):
+class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     """Multi-application driver for Exawind project."""
 
     homepage = "https://github.com/Exawind/exawind-driver"
