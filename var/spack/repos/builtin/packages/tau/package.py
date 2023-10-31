@@ -99,6 +99,7 @@ class Tau(Package):
     variant(
         "x86_64", default=False, description="Force build for x86 Linux instead of auto-detect"
     )
+    variant("dyninst", default=False, description="Activates dyninst support")
 
     depends_on("cmake@3.14:", type="build", when="%clang")
     depends_on("zlib-api", type="link")
@@ -128,6 +129,7 @@ class Tau(Package):
     depends_on("rocm-smi-lib", when="@2.32.1: +rocm")
     depends_on("java", type="run")  # for paraprof
     depends_on("oneapi-level-zero", when="+level_zero")
+    depends_on("dyninst@12.3.0:", when="+dyninst")
 
     # Elf only required from 2.28.1 on
     conflicts("+elf", when="@:2.28.0")
@@ -136,6 +138,7 @@ class Tau(Package):
     # ADIOS2, SQLite only available from 2.29.1 on
     conflicts("+adios2", when="@:2.29.1")
     conflicts("+sqlite", when="@:2.29.1")
+    conflicts("+dyninst", when="@:2.32.1")
 
     patch("unwind.patch", when="@2.29.0")
 
@@ -336,6 +339,15 @@ class Tau(Package):
                 if found:
                     break
             options.append("-pythonlib=%s" % lib_path)
+
+        if "+dyninst" in spec:
+            options.append("-dyninst=%s" % spec["dyninst"].prefix)
+            if "+tbb" not in spec:
+                options.append("-tbb=%s" % spec["intel-tbb"].prefix)
+            if "+boost" not in spec:
+                options.append("-boost=%s" % spec["boost"].prefix)
+            if "+elf" not in spec:
+                options.append("-elf=%s" % spec["elfutils"].prefix)
 
         compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)
