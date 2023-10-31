@@ -5,6 +5,7 @@
 
 import itertools
 import os
+import subprocess
 import sys
 
 from spack.package import *
@@ -668,3 +669,22 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         cmake_args.append(self.define_from_variant("VTKOSPRAY_ENABLE_DENOISER", "raytracing"))
 
         return cmake_args
+
+    @on_package_attributes(run_tests=True)
+    @run_after("install")
+    def build_test(self):
+        spec = self.spec
+        if "+python" not in spec:
+            raise RuntimeError(
+                "Python needed for smoke test missing", "reinstall with `+python` variant"
+            )
+
+        spackdir = os.path.dirname(os.path.realpath(__file__))
+        pkgdir = join_path(spackdir, "test")
+        pkgtest = join_path(pkgdir, "test-pvpython.py")
+        pvpy = join_path(str(self.spec.prefix), "bin/pvpython")
+        output = join_path(pkgdir, "test-pvpython.png")
+
+        with working_dir(pkgdir, create=False):
+            res = subprocess.run([pvpy, "--force-offscreen-rendering", pkgtest])
+            assert res.returncode == 0 and os.path.exists(output)
