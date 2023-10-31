@@ -991,8 +991,26 @@ spack:
     with tmpdir.as_cwd():
         with pytest.raises(spack.config.ConfigFormatError) as e:
             env("create", "test", "./spack.yaml")
-        assert "spack.yaml:2" in str(e)
-        assert "'spacks' was unexpected" in str(e)
+            assert "'spacks' was unexpected" in str(e)
+
+    assert "test" not in env("list")
+
+
+def test_bad_env_yaml_format_remove():
+    badenv = "badenv"
+    env("create", badenv)
+    tmpdir = spack.environment.environment.environment_dir_from_name(badenv, exists_ok=True)
+    filename = os.path.join(tmpdir, "spack.yaml")
+    with open(filename, "w") as f:
+        f.write(
+            """\
+    - mpileaks
+"""
+        )
+
+    assert badenv in env("list")
+    env("remove", "-y", badenv)
+    assert badenv not in env("list")
 
 
 def test_env_loads(install_mockery, mock_fetch):
