@@ -89,20 +89,17 @@ class Openscenegraph(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        shared_status = "ON" if "+shared" in spec else "OFF"
-        opengl_profile = "GL{0}".format(spec["gl"].version.up_to(1))
-
         args = [
             # Variant Options #
-            "-DDYNAMIC_OPENSCENEGRAPH={0}".format(shared_status),
-            "-DDYNAMIC_OPENTHREADS={0}".format(shared_status),
-            "-DOPENGL_PROFILE={0}".format(opengl_profile),
+            self.define_from_variant("DYNAMIC_OPENSCENEGRAPH", "shared"),
+            self.define_from_variant("DYNAMIC_OPENTHREADS", "shared"),
             self.define_from_variant("BUILD_OSG_APPLICATIONS", "apps"),
             # General Options #
-            "-DOSG_NOTIFY_DISABLED=ON",
-            "-DLIB_POSTFIX=",
-            "-DCMAKE_RELWITHDEBINFO_POSTFIX=",
-            "-DCMAKE_MINSIZEREL_POSTFIX=",
+            self.define("OPENGL_PROFILE", f"GL{spec['gl'].version.up_to(1)}"),
+            self.define("OSG_NOTIFY_DISABLED", True),
+            self.define("LIB_POSTFIX", ""),
+            self.define("CMAKE_RELWITHDEBINFO_POSTFIX", ""),
+            self.define("CMAKE_MINSIZEREL_POSTFIX", ""),
         ]
 
         # explicitly disable or enable plugins depending on variants
