@@ -256,6 +256,12 @@ class Dftbplus(CMakePackage, MakefilePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
         # SCALAPACK
+        # Note: dftbplus@20.1 uses plural form of the option names
+        #       (e.g. -DSCALAPACK_LIBRARIES)
+        # but dftbplus@20.2 onwards uses singular
+        #       (e.g. -DSCALAPACK_LIBRARY)
+        # and plural form is ignored.
+        # We set both inorder to be compatible with all versions.
         if "+mpi" in self.spec:
             # we use scalapack for linear algebra
             args.extend(
