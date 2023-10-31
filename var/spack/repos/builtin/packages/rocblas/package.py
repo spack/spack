@@ -138,8 +138,10 @@ class Rocblas(CMakePackage):
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-        depends_on("rocm-openmp-extras@" + ver, type="test", when="@" + ver)
+    def check(self):
+        if "@4.2.0:" in self.spec:
+            exe = join_path(self.build_directory, "clients", "staging", "rocblas-test")
+            self.run_test(exe, options=["--gtest_filter=*quick*-*known_bug*"])
 
     depends_on("hip@4.1.0:", when="@4.1.0:")
     depends_on("llvm-amdgpu@4.1.0:", type="build", when="@4.1.0:")
@@ -248,8 +250,6 @@ class Rocblas(CMakePackage):
     # Finding Python package and set command python as python3
     patch("0004-Find-python.patch", when="@5.2.0:5.4")
     patch("0006-Guard-use-of-OpenMP-to-make-it-optional-5.4.patch", when="@5.4")
-    patch("0007-add-rocm-opnemp-extras-blas-to-test.patch", when="@5.5")
-    patch("0007-add-rocm-opnemp-extras-blas-to-test-5.6.patch", when="@5.6")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -275,11 +275,7 @@ class Rocblas(CMakePackage):
         ]
         if self.run_tests:
             args.append(self.define("LINK_BLIS", "OFF"))
-            if self.spec.satisfies("@5.5.0:"):
-                args.append(
-                    self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix)
-                )
-                args.append(self.define("NETLIB_DIR", self.spec["netlib-lapack"].prefix))
+
         arch_define_name = "AMDGPU_TARGETS"
         if "+tensile" in self.spec:
             tensile_path = join_path(self.stage.source_path, "Tensile")
@@ -317,9 +313,3 @@ class Rocblas(CMakePackage):
             args.append(self.define("Tensile_CODE_OBJECT_VERSION", "default"))
 
         return args
-
-    @run_after("build")
-    @on_package_attributes(run_tests=True)
-    def check_build(self):
-        exe = Executable(join_path(self.build_directory, "clients", "staging", "rocblas-test"))
-        exe("--gtest_filter=*quick*-*known_bug*")
