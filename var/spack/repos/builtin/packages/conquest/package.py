@@ -48,6 +48,10 @@ class Conquest(MakefilePackage):
     )
 
     build_directory = "src"
+    # The SYSTEM variable is required above version 1.2.
+    # Versions 1.2 and older should ignore it.
+    build_targets = ["SYSTEM = example"]
+
 
     def edit(self, spec, prefix):
         fflags = "-O3 -fallow-argument-mismatch"
@@ -66,10 +70,14 @@ class Conquest(MakefilePackage):
         fftw_ld = self.spec["fftw"].libs.ld_flags
         libxc_ld = self.spec["libxc"].libs.ld_flags
 
-        if self.version <= Version("1.2"):
-            defs_file = FileFilter("./src/system.make")
-        else:
+        # Starting from 1.3 there's automated logic in the Makefile that picks
+        # from a list of possible files for system/compiler-specific definitions.
+        # This is useful for manual builds, but since the spack will do its own
+        # automation of compiler-specific flags, we will override it.
+        if self.version > Version("1.2"):
             defs_file = FileFilter("./src/system/system.example.make")
+        else:
+            defs_file = FileFilter("./src/system.make")
 
         defs_file.filter(".*COMPFLAGS=.*", f"COMPFLAGS= {fflags}")
         defs_file.filter(".*LINKFLAGS=.*", f"LINKFLAGS= {ldflags}")
@@ -84,17 +92,6 @@ class Conquest(MakefilePackage):
             defs_file.filter(
                 "MULT_KERN =.*", f"MULT_KERN = {self.spec.variants['mult_kern'].value}"
             )
-
-    def build(self, spec, prefix):
-        # Starting from 1.3 there's automated logic in the Makefile that picks
-        # from a list of possible files for system/compiler-specific definitions.
-        # This is useful for manual builds, but since the spack will do its own
-        # automation of compiler-specific flags, we will override it.
-        with working_dir("src"):
-            if self.version <= Version("1.2"):
-                make()
-            else:
-                make("SYSTEM = example")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
