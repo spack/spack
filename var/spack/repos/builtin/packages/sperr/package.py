@@ -27,7 +27,7 @@ class Sperr(CMakePackage):
     variant("openmp", description="use OpenMP in 3D inputs", default=True)
     variant("utilities", description="build SPERR CLI utilities", default=True)
     variant("zstd", description="use ZSTD for more compression", default=True, when="@:0.6.2")
-    variant("bundle_zstd", description="Use SPERR bundled ZSTD. Keep it off in SPACK builds.", 
+    variant("bundle_zstd", description="Use SPERR bundled ZSTD. Keep it off in SPACK builds.",
             default=False, when="@:0.6.2")
 
     # Depend ons
