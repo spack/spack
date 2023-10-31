@@ -29,6 +29,7 @@ class Dbus(AutotoolsPackage):
     version("1.8.2", sha256="5689f7411165adc953f37974e276a3028db94447c76e8dd92efe910c6d3bae08")
 
     variant("xml_docs", default=False, description="Build XML documentation")
+    variant("system-socket", default="default", description="Location for the DBus system socket")
 
     depends_on("pkgconfig", type="build")
     depends_on("docbook-xml", type="build")
@@ -41,6 +42,9 @@ class Dbus(AutotoolsPackage):
     def configure_args(self):
         args = ["--disable-systemd", "--disable-launchd"]
         args += self.enable_or_disable("xml-docs", variant="xml_docs")
+        socket = self.spec.variants["system-socket"].value
+        if socket != "default":
+            args += ["--with-system-socket={0}".format(socket)]
         return args
 
     @run_after("install")
