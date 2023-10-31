@@ -1,3 +1,11 @@
+# v0.20.3 (2023-10-31)
+
+## Bugfixes
+
+- Fix a bug where `spack mirror set-url` would drop configured connection info (reverts #34210)
+- Fix a minor issue with package hash computation for Python 3.12 (#40328)
+
+
 # v0.20.2 (2023-10-03)
 
 ## Features in this release
