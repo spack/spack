@@ -469,16 +469,22 @@ packages:
 
 
 @pytest.mark.regression("34241")
-def test_require_cflags(concretize_scope, test_repo):
+def test_require_cflags(concretize_scope, mock_packages):
     """Ensures that flags can be required from configuration."""
     conf_str = """\
 packages:
-  y:
+  mpich2:
     require: cflags="-g"
+  mpi:
+    require: mpich cflags="-O1"
 """
     update_packages_config(conf_str)
-    spec = Spec("y").concretized()
-    assert spec.satisfies("cflags=-g")
+
+    spec_mpich2 = Spec("mpich2").concretized()
+    assert spec_mpich2.satisfies("cflags=-g")
+
+    spec_mpi = Spec("mpi").concretized()
+    assert spec_mpi.satisfies("mpich cflags=-O1")
 
 
 def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo):
