@@ -131,7 +131,7 @@ ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
 ENABLED_VARIANT_COLOR = "@B"  #: color for highlighting enabled variants
 DISABLED_VARIANT_COLOR = "r"  #: color for highlighting disabled varaints
 DEPENDENCY_COLOR = "@."  #: color for highlighting dependencies
-HASH_COLOR = "@K"  #: color for highlighting package hashes
+HASH_COLOR = "@w"  #: color for highlighting package hashes
 
 #: This map determines the coloring of specs when using color output.
 #: We make the fields different colors to enhance readability.
@@ -4597,7 +4597,7 @@ class Spec:
                     out += clr.colorize("@r{[-]}  ", color=color)
 
             if hashes:
-                out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hashlen)
+                out += clr.colorize("@w{%s}  ", color=color) % node.dag_hash(hashlen)
 
             if show_types:
                 if cover == "nodes":

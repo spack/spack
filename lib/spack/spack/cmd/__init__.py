@@ -294,7 +294,7 @@ def ensure_single_spec_or_die(spec, matching_specs):
     format_string = "{name}{@version}{%compiler.name}{@compiler.version}{arch=architecture}"
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
-        colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
+        colorize("  @w{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
     ]
     args += ["Use a more specific spec (e.g., prepend '/' to the hash)."]
     tty.die(*args)
@@ -305,7 +305,7 @@ def gray_hash(spec, length):
         # default to maximum hash length
         length = 32
     h = spec.dag_hash(length) if spec.concrete else "-" * length
-    return colorize("@K{%s}" % h)
+    return colorize("@w{%s}" % h)
 
 
 def display_specs_as_json(specs, deps=False):

@@ -192,7 +192,7 @@ def setup_env(env):
         if any(spec.dag_hash() == r.dag_hash() for r in roots):
             return color.colorize("@*{%s}" % fmt)
         elif spec in removed:
-            return color.colorize("@K{%s}" % fmt)
+            return color.colorize("@w{%s}" % fmt)
         else:
             return "%s" % fmt
 

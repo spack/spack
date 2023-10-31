@@ -100,7 +100,7 @@ def _process_result(result, show, required_format, kwargs):
         maxlen = max(len(s[2]) for s in result.criteria)
         color.cprint("@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " "))
 
-        fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
+        fmt = "  @w{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
         for i, (installed_cost, build_cost, name) in enumerate(result.criteria, 1):
             color.cprint(
                 fmt

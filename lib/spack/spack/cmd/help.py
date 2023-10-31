@@ -21,7 +21,7 @@ spec expression syntax:
   package [constraints] [^dependency [constraints] ...]
 
   package                           any package from 'spack list', or
-  @K{/hash}                             unique prefix or full hash of
+  @w{/hash}                             unique prefix or full hash of
                                     installed package
 
   constraints:
@@ -60,7 +60,7 @@ spec expression syntax:
 
     dependencies:
       ^dependency [constraints]     specify constraints on dependencies
-      ^@K{/hash}                        build with a specific installed
+      ^@w{/hash}                        build with a specific installed
                                     dependency
 
   examples:
