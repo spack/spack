@@ -1484,10 +1484,15 @@ class SpackSolverSetup:
     def condition(self, required_spec, imposed_spec=None, name=None, msg=None, node=False):
         """Generate facts for a dependency or virtual provider condition.
 
+        Constraints can be passed as a Spec, or as a list of AspFunction objects constructed
+        manually using self.spec_clauses(). The latter format is supported for cases where
+        individual constraints must be added or removed.
+
         Arguments:
-            required_spec (spack.spec.Spec): the spec that triggers this condition
-            imposed_spec (spack.spec.Spec or None): the spec with constraints that
-                are imposed when this condition is triggered
+            required_spec (spack.spec.Spec or List[AspFunction]): the constraints that triggers
+                this condition
+            imposed_spec (spack.spec.Spec, List[AspFunction], or None): the constraints that are
+                imposed when this condition is triggered
             name (str or None): name for `required_spec` (required if
                 required_spec is anonymous, ignored if not)
             msg (str or None): description of the condition
@@ -1496,8 +1501,8 @@ class SpackSolverSetup:
         Returns:
             int: id of the condition created by this function
         """
-        named_cond = required_spec.copy()
         if isinstance(named_cond, spack.spec.Spec):
+            named_cond = required_spec.copy()
             named_cond.name = named_cond.name or name
             name = named_cond.name
         assert name, "must provide name for anonymous conditions!"
@@ -1613,7 +1618,7 @@ class SpackSolverSetup:
                     if t & depflag
                 ]
 
-                _ = self.condition(required, imposed, pkg.name, msg)
+                self.condition(required, imposed, pkg.name, msg)
 
                 self.gen.newline()
 
@@ -1777,7 +1782,7 @@ class SpackSolverSetup:
             for local_idx, spec in enumerate(external_specs):
                 msg = "%s available as external when satisfying %s" % (spec.name, spec)
                 external_imposition = [fn.attr("external_conditions_hold", spec.name, local_idx)]
-                _ = self.condition(spec, external_imposition, msg=msg)
+                self.condition(spec, external_imposition, msg=msg)
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
