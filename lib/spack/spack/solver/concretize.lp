@@ -40,7 +40,7 @@
 :- provider(_, VirtualNode), not attr("virtual_node", VirtualNode), internal_error("provider with no virtual node").
 :- provider(PackageNode, _), not attr("node", PackageNode), internal_error("provider with no real node").
 
-:- attr("root", node(ID, PackageNode)), ID > min_dupe_id, internal_error("root in non-minimum unification set").
+:- attr("root", node(ID, PackageNode)), ID > min_dupe_id, internal_error("root with a non-minimal duplicate ID").
 
 % Nodes in the "root" unification set cannot depend on non-root nodes if the dependency is "link" or "run"
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "link"), ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("link dependency out of the root unification set").
@@ -48,7 +48,7 @@
 
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
-:- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName), internal_error("unified package in multiple unification sets").
+:- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
 
 unification_set("root", PackageNode) :- attr("root", PackageNode).
 unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
