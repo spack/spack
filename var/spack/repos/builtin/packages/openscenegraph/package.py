@@ -107,25 +107,16 @@ class Openscenegraph(CMakePackage):
 
         # explicitly disable or enable plugins depending on variants
         # CMake will still search for the packages, but won't build the plugins requiring them
-        def build_plugin(plugin, variant=False):
-            if not variant:
-                variant = plugin
-            if spec.satisfies("+{}".format(variant)):
-                value = 1
-            else:
-                value = 0
-            return self.define("BUILD_OSG_PLUGIN_{}".format(plugin.upper()), value)
-
-        args.append(build_plugin("dicom", "dcmtk"))
-        args.append(build_plugin("exr", "openexr"))
-        args.append(build_plugin("ffmpeg"))
-        args.append(build_plugin("gdal"))
-        args.append(build_plugin("ogr", "gdal"))
-        args.append(build_plugin("gta"))
-        args.append(build_plugin("inventor"))
-        args.append(build_plugin("opencascade"))
-        args.append(build_plugin("pdf"))
-        args.append(build_plugin("svg"))
+        args.append(self.define_from_variant("BUILD_OSG_PLUGIN_DICOM", "dcmtk"))
+        args.append(self.define_from_variant("BUILD_OSG_PLUGIN_EXR", "openexr"))
+        args.append(self.define_from_variant("BUILD_OSG_PLUGIN_FFMPEG", "ffmpeg"))
+        args.append(self.define_from_variant("BUILD_OSG_PLUGIN_GDAL", "gdal"))
+        args.append(self.define_from_variant("BUILD_OSG_PLUGIN_OGR", "gdal"))
+        args.append(self.define_from_variant("BUILD_OSG_PLUGIN_GTA", "gta"))
+        args.append(self.define_from_variant("BUILD_OSG_PLUGIN_INVENTOR", "inventor"))
+        args.append(self.define_from_variant("BUILD_OSG_PLUGIN_OPENCASCADE", "opencascade"))
+        args.append(self.define_from_variant("BUILD_OSG_PLUGIN_PDF", "pdf"))
+        args.append(self.define_from_variant("BUILD_OSG_PLUGIN_SVG", "svg"))
 
         # NOTE: This is necessary in order to allow OpenSceneGraph to compile
         # despite containing a number of implicit bool to int conversions.
