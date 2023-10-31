@@ -621,7 +621,7 @@ aws-isc-aarch64-build:
 
 tutorial-generate:
   extends: [ ".tutorial", ".generate-x86_64"]
-  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-07
+  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-10-30
 
 tutorial-build:
   extends: [ ".tutorial", ".build" ]
