@@ -46,6 +46,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
         "arpack",
         default=False,
         description="Whether the ARPACK library should be included (needed for TD-DFTB).",
+        when="~mpi",
     )
     variant(
         "chimes",
