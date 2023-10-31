@@ -52,7 +52,6 @@ class Conquest(MakefilePackage):
     # Versions 1.2 and older should ignore it.
     build_targets = ["SYSTEM = example"]
 
-
     def edit(self, spec, prefix):
         fflags = "-O3 -fallow-argument-mismatch"
         ldflags = ""
