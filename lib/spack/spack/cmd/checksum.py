@@ -67,9 +67,9 @@ def setup_parser(subparser):
     modes_parser.add_argument(
         "--verify", action="store_true", default=False, help="verify known package checksums"
     )
-    subparser.add_argument("package", help="package or spec. for example cmake or cmake@3.18")
+    subparser.add_argument("package", help="name or spec (e.g. `cmake` or `cmake@3.18`)")
     subparser.add_argument(
-        "versions", nargs=argparse.REMAINDER, help="versions to generate checksums for"
+        "versions", nargs="*", help="checksum only specific version (if ommitted, Spack will spider for versions)"
     )
     arguments.add_common_arguments(subparser, ["jobs"])
 
