@@ -138,7 +138,8 @@ class Dftbplus(CMakePackage, MakefilePackage):
     depends_on("mpi", when="+mpi")
     depends_on("plumed", when="+plumed")
     depends_on("scalapack", when="+mpi")
-    depends_on("python", when="+python")
+    depends_on("python@3.2:", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))  # for tests
     # Only for 19.1
     depends_on("dftd3-lib@0.9.2", when="+dftd3")
 
