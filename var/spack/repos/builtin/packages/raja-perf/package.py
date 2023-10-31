@@ -32,6 +32,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("0.5.0", tag="v0.5.0", submodules="True")
     version("0.4.0", tag="0.4.0", submodules="True")
 
+    variant("mpi", default=False, description="Enable MPI support")
     variant("openmp", default=True, description="Build OpenMP backend")
     variant("openmp_target", default=False, description="Build with OpenMP target support")
     variant("shared", default=False, description="Build Shared Libs")
@@ -56,6 +57,8 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.20:", when="@0.12.0:", type="build")
     depends_on("cmake@3.23:", when="@0.12.0: +rocm", type="build")
     depends_on("cmake@3.14:", when="@:0.12.0", type="build")
+
+    depends_on("mpi", when="+mpi")
 
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 
@@ -217,6 +220,14 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
                         "BLT_OPENMP_LINK_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"
                     )
                 )
+
+        return entries
+
+    def initconfig_mpi_entries(self):
+        spec = self.spec
+
+        entries = super(RajaPerf, self).initconfig_mpi_entries()
+        entries.append(cmake_cache_option("ENABLE_MPI", "+mpi" in spec))
 
         return entries
 
