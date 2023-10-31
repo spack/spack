@@ -1497,8 +1497,9 @@ class SpackSolverSetup:
         Returns:
             int: id of the condition created by this function
         """
+        # Defensive copy of string or spec
+        named_cond = required_spec.copy()
         if isinstance(named_cond, spack.spec.Spec):
-            named_cond = required_spec.copy()
             named_cond.name = named_cond.name or name
             name = named_cond.name
         assert name, "must provide name for anonymous conditions!"
