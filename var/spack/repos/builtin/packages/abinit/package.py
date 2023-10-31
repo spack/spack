@@ -184,10 +184,7 @@ class Abinit(AutotoolsPackage):
         if "+mpi" in spec:
             oapp(f"CC={spec['mpi'].mpicc}")
             oapp(f"CXX={spec['mpi'].mpicxx}")
-            if spec.satisfies("@9.8:"):
-                oapp(f"F90={spec['mpi'].mpifc}")
-            else:
-                oapp(f"FC={spec['mpi'].mpifc}")
+            oapp(f"FC={spec['mpi'].mpifc}")
 
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
