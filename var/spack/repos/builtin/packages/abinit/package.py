@@ -182,8 +182,8 @@ class Abinit(AutotoolsPackage):
                 "--without-wannier90",
 
         if "+mpi" in spec:
-            oapp("CC={0}".format(spec["mpi"].mpicc))
-            oapp("CXX={0}".format(spec["mpi"].mpicxx))
+            oapp(f"CC={spec['mpi'].mpicc}")
+            oapp(f"CXX={spec['mpi'].mpicxx}")
             if spec.satisfies("@9.8:"):
                 oapp(f"F90={spec['mpi'].mpifc}")
             else:
