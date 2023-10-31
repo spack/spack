@@ -1484,7 +1484,7 @@ class Environment:
         for uspec, uspec_constraints in zip(self.user_specs, self.user_specs.specs_as_constraints):
             if uspec not in old_concretized_user_specs:
                 root_specs.append(uspec)
-                args.append((i, uspec_constraints, tests))
+                args.append((i, [str(x) for x in uspec_constraints], tests))
                 i += 1
 
         # Ensure we don't try to bootstrap clingo in parallel
@@ -2403,6 +2403,7 @@ def _concretize_from_constraints(spec_constraints, tests=False):
 
 def _concretize_task(packed_arguments) -> Tuple[int, Spec, float]:
     index, spec_constraints, tests = packed_arguments
+    spec_constraints = [Spec(x) for x in spec_constraints]
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
         spec = _concretize_from_constraints(spec_constraints, tests)
