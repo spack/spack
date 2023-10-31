@@ -96,9 +96,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(
             "trilinos@13.4.0.2022.10.27: "
             "~shared+exodus+tpetra+zoltan+stk+boost~superlu-dist~superlu"
-            "+hdf5+shards~hypre+gtest+rocm amdgpu_target={0}".format(
-                _arch
-            ),
+            "+hdf5+shards~hypre+gtest+rocm amdgpu_target={0}".format(_arch),
             when="+rocm amdgpu_target={0}".format(_arch),
         )
         depends_on(

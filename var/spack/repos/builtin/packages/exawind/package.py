@@ -7,6 +7,7 @@
 
 from spack.package import *
 
+
 class Exawind(CudaPackage, ROCmPackage):
     """Multi-application driver for Exawind project."""
 
