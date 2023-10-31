@@ -166,7 +166,12 @@ class Glib(MesonPackage, AutotoolsPackage):
         sha256="fa31180b55a832cbb75cc640bb115b7b092a26d7bcf0f48768de55576f0a38d3",
         when="@2.76.1",
     )
-
+    # fix for older glibc
+    patch(
+        "https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3588.diff",
+        sha256="2c25d7b3bf581b3ec992d7af997fa6c769174d49b9350e0320c33f5e048cba99",
+        when="@2.80.0",
+    )
     # glib prefers the libc version of gettext, which breaks the build if the
     # external version is also found.
     patch("meson-gettext.patch", when="@2.58:2.64")
