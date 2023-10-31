@@ -91,25 +91,6 @@ class U(Package):
 )
 
 
-_pkgw = (
-    "w",
-    """\
-class W(Package):
-    provides('virtual-w')
-    version('1.0')
-""",
-)
-
-
-_virtualw = (
-    "virtual-w",
-    """\
-class VirtualW(Package):
-    virtual = True
-""",
-)
-
-
 @pytest.fixture
 def create_test_repo(tmpdir, mutable_config):
     repo_path = str(tmpdir)
@@ -123,7 +104,7 @@ repo:
         )
 
     packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu, _pkgw]:
+    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu]:
         pkg_dir = packages_dir.ensure(pkg_name, dir=True)
         pkg_file = pkg_dir.join("package.py")
         with open(str(pkg_file), "w") as f:
@@ -488,25 +469,22 @@ packages:
 
 
 @pytest.mark.regression("34241")
-def test_require_cflags(concretize_scope, test_repo):
+def test_require_cflags(concretize_scope, mock_packages):
     """Ensures that flags can be required from configuration."""
     conf_str = """\
 packages:
-  all:
-    providers:
-      virtual-w: [w]
-  y:
+  mpich2:
     require: cflags="-g"
-  virtual-w:
-    require: w cflags="-O1"
+  mpi:
+    require: mpich cflags="-O1"
 """
     update_packages_config(conf_str)
 
-    spec_y = Spec("y").concretized()
-    assert spec_y.satisfies("cflags=-g")
+    spec_mpich2 = Spec("mpich2").concretized()
+    assert spec_mpich2.satisfies("cflags=-g")
 
-    spec_w = Spec("virtual-w").concretized()
-    assert spec_w.satisfies("w cflags=-O1")
+    spec_mpi = Spec("mpi").concretized()
+    assert spec_mpi.satisfies("mpich cflags=-O1")
 
 
 def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo):
