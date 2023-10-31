@@ -68,7 +68,7 @@ class RubyBuilder(BaseBuilder):
         gems = glob.glob("*.gem")
         if gems:
             # if --install-dir is not used, GEM_PATH is deleted from the
-            # environement, and Gems required to build native extensions will
+            # environment, and Gems required to build native extensions will
             # not be found. Those extensions are built during `gem install`.
             inspect.getmodule(self.pkg).gem(
                 "install", "--norc", "--ignore-dependencies", "--install-dir", prefix, gems[0]

@@ -269,7 +269,7 @@ class Hdf5(CMakePackage):
                 # starting version 1.8.10) does not produce it. Instead, the
                 # basename of the library file is 'libhdf5_hl_fortran'. Which
                 # means that switching to CMake requires rebuilding of all
-                # dependant packages that use the High-level Fortran interface.
+                # dependent packages that use the High-level Fortran interface.
                 # Therefore, we do not try to preserve backward compatibility
                 # with Autotools installations by creating symlinks. The only
                 # packages that could benefit from it would be those that

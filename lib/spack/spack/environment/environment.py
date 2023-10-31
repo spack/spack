@@ -125,7 +125,7 @@ spack:
     )
 
 
-#: regex for validating enviroment names
+#: regex for validating environment names
 valid_environment_name_re = r"^\w[\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
@@ -2722,7 +2722,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.changed = True
 
     def add_definition(self, user_spec: str, list_name: str) -> None:
-        """Appends a user spec to the first active definition mathing the name passed as argument.
+        """Appends a user spec to the first active definition matching the name passed as argument.
 
         Args:
             user_spec: user spec to be appended

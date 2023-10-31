@@ -65,9 +65,9 @@ _ALL_QUOTES = _SINGLE_QUOTES + _MULTI_QUOTES
 
 
 def is_simple_tuple(slice_value):
-    # when unparsing a non-empty tuple, the parantheses can be safely
+    # when unparsing a non-empty tuple, the parentheses can be safely
     # omitted if there aren't any elements that explicitly requires
-    # parantheses (such as starred expressions).
+    # parentheses (such as starred expressions).
     return (
         isinstance(slice_value, ast.Tuple)
         and slice_value.elts

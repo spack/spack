@@ -323,7 +323,7 @@ def supported_compilers_for_platform(platform: spack.platforms.Platform) -> List
 
     Args:
         platform (str): string representation of platform
-            for which compiler compatability should be determined
+            for which compiler compatibility should be determined
     """
     return [
         name
@@ -763,7 +763,7 @@ def make_compiler_list(detected_versions):
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, f"={version}")
         paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
-        # TODO: johnwparent - revist the following line as per discussion at:
+        # TODO: johnwparent - revisit the following line as per discussion at:
         # https://github.com/spack/spack/pull/33385/files#r1040036318
         target = archspec.cpu.host()
         compiler = compiler_cls(spec, operating_system, str(target.family), paths)

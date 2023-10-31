@@ -30,7 +30,7 @@ def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
     # Calculate the comparison (c)
     c = spack.cmd.diff.compare_specs(specA, specB, to_string=True)
 
-    # these particular diffs should have the same length b/c thre aren't
+    # these particular diffs should have the same length b/c there aren't
     # any node differences -- just value differences.
     assert len(c["a_not_b"]) == len(c["b_not_a"])
 

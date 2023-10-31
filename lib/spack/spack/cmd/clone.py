@@ -69,7 +69,7 @@ def clone(parser, args):
     files_in_the_way = os.listdir(prefix)
     if files_in_the_way:
         tty.die(
-            "There are already files there! Delete these files before boostrapping spack.",
+            "There are already files there! Delete these files before bootstrapping spack.",
             *files_in_the_way,
         )
 

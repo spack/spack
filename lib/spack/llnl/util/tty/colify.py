@@ -110,7 +110,7 @@ def colify(
     of them, similar to how gnu ls does. This supports both
     uniform-width and variable-width (tighter) columns.
 
-    If elts is not a list of strings, each element is first conveted
+    If elts is not a list of strings, each element is first converted
     using ``str()``.
 
     Keyword Arguments:
@@ -158,7 +158,7 @@ def colify(
 
     console_cols = max(1, console_cols - indent)
 
-    # Choose a method.  Variable-width colums vs uniform-width.
+    # Choose a method.  Variable-width columns vs uniform-width.
     if method == "variable":
         config = config_variable_cols(elts, console_cols, padding, cols)
     elif method == "uniform":

@@ -197,7 +197,7 @@ def dump_environment(path: Path, environment: Optional[MutableMapping[str, str]]
 
     Args:
         path: path of the file to write
-        environment: environment to be writte. If None os.environ is used.
+        environment: environment to be written. If None os.environ is used.
     """
     use_env = environment or os.environ
     hidden_vars = {"PS1", "PWD", "OLDPWD", "TERM_SESSION_ID"}
@@ -615,7 +615,7 @@ class EnvironmentModifications:
         Only creates reversals for additions to the environment, as reversing
         ``unset`` and ``remove_path`` modifications is impossible.
 
-        Reversable operations are set(), prepend_path(), append_path(),
+        Reversible operations are set(), prepend_path(), append_path(),
         set_path(), and append_flags().
         """
         rev = EnvironmentModifications()

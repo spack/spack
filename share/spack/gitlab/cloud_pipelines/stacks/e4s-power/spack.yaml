@@ -127,7 +127,7 @@ spack:
   - petsc
   - plasma
   - plumed
-  - precice
+  - precise
   - pruners-ninja
   - pumi
   - py-h5py

@@ -517,7 +517,7 @@ class SpackCI:
         return jname
 
     def __apply_submapping(self, dest, spec, section):
-        """Apply submapping setion to the IR dict"""
+        """Apply submapping section to the IR dict"""
         matched = False
         only_first = section.get("match_behavior", "first") == "first"
 
@@ -1443,7 +1443,7 @@ def can_sign_binaries():
 
 
 def can_verify_binaries():
-    """Utility method to determin if this spack instance is capable (at
+    """Utility method to determine if this spack instance is capable (at
     least in theory) of verifying signed binaries."""
     return len(gpg_util.public_keys()) >= 1
 
@@ -1474,7 +1474,7 @@ def push_mirror_contents(input_spec: spack.spec.Spec, mirror_url, sign_binaries)
         # that exception type here, since users of the
         # `spack ci rebuild' may not need or want any dependency
         # on boto3.  So we use the first non-boto exception type
-        # in the heirarchy:
+        # in the hierarchy:
         #     boto3.exceptions.S3UploadFailedError
         #     boto3.exceptions.Boto3Error
         #     Exception

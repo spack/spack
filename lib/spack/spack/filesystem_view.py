@@ -131,9 +131,9 @@ class FilesystemView:
     Governs a filesystem view that is located at certain root-directory.
 
     Packages are linked from their install directories into a common file
-    hierachy.
+    hierarchy.
 
-    In distributed filesystems, loading each installed package seperately
+    In distributed filesystems, loading each installed package separately
     can lead to slow-downs due to too many directories being traversed.
     This can be circumvented by loading all needed modules into a common
     directory structure.
@@ -163,7 +163,7 @@ class FilesystemView:
         Add given specs to view.
 
         Should accept `with_dependencies` as keyword argument (default
-        True) to indicate wether or not dependencies should be activated as
+        True) to indicate whether or not dependencies should be activated as
         well.
 
         Should except an `exclude` keyword argument containing a list of
@@ -190,11 +190,11 @@ class FilesystemView:
         Removes given specs from view.
 
         Should accept `with_dependencies` as keyword argument (default
-        True) to indicate wether or not dependencies should be deactivated
+        True) to indicate whether or not dependencies should be deactivated
         as well.
 
         Should accept `with_dependents` as keyword argument (default True)
-        to indicate wether or not dependents on the deactivated specs
+        to indicate whether or not dependents on the deactivated specs
         should be removed as well.
 
         Should except an `exclude` keyword argument containing a list of

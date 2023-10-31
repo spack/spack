@@ -264,7 +264,7 @@ def copy_missing_layers(
         stages.cache_local()
 
         for stage, digest in zip(stages, missing_digests):
-            # No need to check existince again, force=True.
+            # No need to check existence again, force=True.
             upload_blob(
                 dst, file=stage.save_filename, force=True, digest=digest, _urlopen=_urlopen
             )

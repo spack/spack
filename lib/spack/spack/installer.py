@@ -80,7 +80,7 @@ STATUS_FAILED = "failed"
 #: process)
 STATUS_INSTALLING = "installing"
 
-#: Build status indicating the spec was sucessfully installed
+#: Build status indicating the spec was successfully installed
 STATUS_INSTALLED = "installed"
 
 #: Build status indicating the task has been popped from the queue
@@ -286,7 +286,7 @@ def _packages_needed_to_bootstrap_compiler(
 
     Args:
         compiler: the compiler to bootstrap
-        architecture: the architecture for which to boostrap the compiler
+        architecture: the architecture for which to bootstrap the compiler
         pkgs: the packages that may need their compiler installed
 
     Return:
@@ -1194,7 +1194,7 @@ class PackageInstaller:
         Add bootstrap compilers and dependencies to the build queue.
 
         Args:
-            compiler: the compiler to boostrap
+            compiler: the compiler to bootstrap
             architecture: the architecture for which to bootstrap the compiler
             pkgs: the package list with possible compiler dependencies
             request: the associated install request
@@ -1237,7 +1237,7 @@ class PackageInstaller:
         all_deps: Dict[str, Set[str]],
     ) -> None:
         """
-        Creates and queus the initial build task for the package.
+        Creates and queues the initial build task for the package.
 
         Args:
             pkg: the package to be built and installed
@@ -2291,7 +2291,7 @@ class BuildProcessInstaller:
         # whether to do a fake install
         self.fake = install_args.get("fake", False)
 
-        # whether to install source code with the packag
+        # whether to install source code with the package
         self.install_source = install_args.get("install_source", False)
 
         # whether to keep the build stage after installation

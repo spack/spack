@@ -585,7 +585,7 @@ def test_effective_deptype_build_environment(default_mock_concretization):
     #  [b   ]      ^dtbuild1@1.0            # <- direct build dep
     #  [b   ]          ^dtbuild2@1.0        # <- indirect build-only dep is dropped
     #  [bl  ]          ^dtlink2@1.0         # <- linkable, and runtime dep of build dep
-    #  [  r ]          ^dtrun2@1.0          # <- non-linkable, exectuable runtime dep of build dep
+    #  [  r ]          ^dtrun2@1.0          # <- non-linkable, executable runtime dep of build dep
     #  [bl  ]      ^dtlink1@1.0             # <- direct build dep
     #  [bl  ]          ^dtlink3@1.0         # <- linkable, and runtime dep of build dep
     #  [b   ]              ^dtbuild2@1.0    # <- indirect build-only dep is dropped

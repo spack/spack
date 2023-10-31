@@ -1193,7 +1193,7 @@ def test_single_file_scope_cache_clearing(env_yaml):
     assert before
     # Clear the cache of the Single file scope
     scope.clear()
-    # Check that the section can be retireved again and it's
+    # Check that the section can be retrieved again and it's
     # the same as before
     after = scope.get_section("config")
     assert after
@@ -1426,7 +1426,7 @@ def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
 
 
 def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
-    """Test reading a configuration file with invalid (unparseable) YAML
+    """Test reading a configuration file with invalid (unparsable) YAML
     raises a ConfigFileError."""
     filename = join_path(tmpdir.strpath, "test.yaml")
     with open(filename, "w") as f:

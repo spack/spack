@@ -52,7 +52,7 @@ def test_name_parsing(image_ref, expected):
         "example.com:1234/a/b/c:",
         # empty digest
         "example.com:1234/a/b/c@sha256:",
-        # unsupport digest algorithm
+        # unsupported digest algorithm
         f"example.com:1234/a/b/c@sha512:{'a'*128}",
         # invalid digest length
         f"example.com:1234/a/b/c@sha256:{'a'*63}",

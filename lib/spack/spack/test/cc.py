@@ -381,7 +381,7 @@ def test_Wl_parsing_NAG_is_ignored(wrapper_environment):
 
 
 def test_Xlinker_parsing(wrapper_environment):
-    # -Xlinker <x> ... -Xlinker <y> may have compiler flags inbetween, like -O3 in this
+    # -Xlinker <x> ... -Xlinker <y> may have compiler flags in between, like -O3 in this
     # example. Also check that a trailing -Xlinker (which is a compiler error) is not
     # dropped or given an empty argument.
     check_args(

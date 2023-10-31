@@ -134,7 +134,7 @@ spack:
   - phist
   - plasma
   - plumed
-  - precice
+  - precise
   - pruners-ninja
   - pumi
   - py-h5py

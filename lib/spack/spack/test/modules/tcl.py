@@ -566,7 +566,7 @@ class TestTcl:
         writer.write(overwrite=True)
         assert not os.path.exists(writer.layout.modulerc)
 
-        # reenable hide_implicits configuration option
+        # re-enable hide_implicits configuration option
         module_configuration("hide_implicits")
         writer = writer_cls(spec, "default")
         writer.write(overwrite=True)

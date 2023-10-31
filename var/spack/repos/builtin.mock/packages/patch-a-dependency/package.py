@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PatchADependency(Package):
-    """Package that requries a patched version of a dependency."""
+    """Package that requires a patched version of a dependency."""
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/patch-a-dependency-1.0.tar.gz"

@@ -73,7 +73,7 @@ class OpenFileTracker:
     1. Tracking by pid ensures that, if we fork, we don't inadvertently track the parent
        process's lockfiles. ``fcntl`` locks are not inherited across forks, so we'll
        just track new lockfiles in the child.
-    2. Tracking by inode ensures that referencs are counted per inode, and that we don't
+    2. Tracking by inode ensures that references are counted per inode, and that we don't
        inadvertently close a file whose inode still has open locks.
     3. Tracking by both pid and inode ensures that we only open lockfiles the minimum
        number of times necessary for the locks we have.
@@ -710,7 +710,7 @@ class LockTransaction:
     """Simple nested transaction context manager that uses a file lock.
 
     Arguments:
-        lock (Lock): underlying lock for this transaction to be accquired on
+        lock (Lock): underlying lock for this transaction to be acquired on
             enter and released on exit
         acquire (typing.Callable or contextlib.contextmanager): function to be called
             after lock is acquired, or contextmanager to enter after acquire and leave
@@ -719,14 +719,14 @@ class LockTransaction:
             ``acquire`` is a contextmanager, this will be called *after*
             exiting the nexted context and before the lock is released.
         timeout (float): number of seconds to set for the timeout when
-            accquiring the lock (default no timeout)
+            acquiring the lock (default no timeout)
 
     If the ``acquire_fn`` returns a value, it is used as the return value for
     ``__enter__``, allowing it to be passed as the ``as`` argument of a
     ``with`` statement.
 
     If ``acquire_fn`` returns a context manager, *its* ``__enter__`` function
-    will be called after the lock is acquired, and its ``__exit__`` funciton
+    will be called after the lock is acquired, and its ``__exit__`` function
     will be called before ``release_fn`` in ``__exit__``, allowing you to
     nest a context manager inside this one.
 

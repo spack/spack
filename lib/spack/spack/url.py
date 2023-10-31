@@ -165,7 +165,7 @@ def parse_version_offset(path):
     # ]
     #
     # The first regex that matches string will be used to determine
-    # the version of the package. Thefore, hyperspecific regexes should
+    # the version of the package. Therefore, hyperspecific regexes should
     # come first while generic, catch-all regexes should come last.
     # With that said, regular expressions are slow, so if possible, put
     # ones that only catch one or two URLs at the bottom.
@@ -349,7 +349,7 @@ def parse_name_offset(path, v=None):
     # ]
     #
     # The first regex that matches string will be used to determine
-    # the name of the package. Thefore, hyperspecific regexes should
+    # the name of the package. Therefore, hyperspecific regexes should
     # come first while generic, catch-all regexes should come last.
     # With that said, regular expressions are slow, so if possible, put
     # ones that only catch one or two URLs at the bottom.

@@ -380,7 +380,7 @@ def _check_remove_and_add_package(database, spec):
     assert concrete_spec in installed
     assert installed == original
 
-    # sanity check against direcory layout and check ref counts.
+    # sanity check against directory layout and check ref counts.
     _check_db_sanity(database)
     database._check_ref_counts()
 

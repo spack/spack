@@ -35,7 +35,7 @@ def compare_output(current_output, blessed_output):
         print("-" * 80)
         print(current_output)
         print("-" * 80)
-        raise RuntimeError("Ouput check failed.", "See spack_output.log for details")
+        raise RuntimeError("Output check failed.", "See spack_output.log for details")
 
 
 def compare_output_file(current_output, blessed_output_file):

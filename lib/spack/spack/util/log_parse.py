@@ -24,7 +24,7 @@ def parse_log_events(stream, context=6, jobs=None, profile=False):
         profile (bool): print out profile information for parsing
 
     Returns:
-        (tuple): two lists containig ``BuildError`` and
+        (tuple): two lists containing ``BuildError`` and
             ``BuildWarning`` objects.
 
     This is a wrapper around ``ctest_log_parser.CTestLogParser`` that

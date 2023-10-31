@@ -375,7 +375,7 @@ def by_path(
                     )
                 except Exception as e:
                     llnl.util.tty.debug(
-                        f"[EXTERNAL DETECTION] Skipping {pkg_name}: exception occured {e}"
+                        f"[EXTERNAL DETECTION] Skipping {pkg_name}: exception occurred {e}"
                     )
 
     return result

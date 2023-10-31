@@ -67,7 +67,7 @@ class CmakeClient(CMakePackage):
         )
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        spack_cc  # Ensure spack module-scope variable is avaiable
+        spack_cc  # Ensure spack module-scope variable is available
         check(
             from_cmake == "from_cmake",
             "setup_dependent_build_environment couldn't read global set by cmake.",
@@ -79,7 +79,7 @@ class CmakeClient(CMakePackage):
         )
 
     def setup_dependent_package(self, module, dspec):
-        spack_cc  # Ensure spack module-scope variable is avaiable
+        spack_cc  # Ensure spack module-scope variable is available
         check(
             from_cmake == "from_cmake",
             "setup_dependent_package couldn't read global set by cmake.",

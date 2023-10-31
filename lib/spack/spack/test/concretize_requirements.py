@@ -410,7 +410,7 @@ packages:
 """
     update_packages_config(conf_str)
     s2 = Spec("x").concretized()
-    # The requirement forces choosing the eariler version
+    # The requirement forces choosing the earlier version
     assert s2.satisfies("@1.0")
 
 

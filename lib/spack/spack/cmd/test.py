@@ -128,7 +128,7 @@ def setup_parser(subparser):
         "Test results will be filtered by space-"
         "separated suite name(s) and installed\nspecs when provided.  "
         "If names are provided, then only results for those test\nsuites "
-        "will be shown.  If installed specs are provided, then ony results"
+        "will be shown.  If installed specs are provided, then only results"
         "\nmatching those specs will be shown."
     )
 

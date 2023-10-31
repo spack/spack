@@ -992,7 +992,7 @@ def sync_fn(args):
 
 def manifest_copy(manifest_file_list):
     """Read manifest files containing information about specific specs to copy
-    from source to destination, remove duplicates since any binary packge for
+    from source to destination, remove duplicates since any binary package for
     a given hash should be the same as any other, and copy all files specified
     in the manifest files."""
     deduped_manifest = {}

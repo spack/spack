@@ -36,7 +36,7 @@ def mod_to_class(mod_name):
        * Module and package names use lowercase_with_underscores.
        * Class names use the CapWords convention.
 
-    Regular source code follows these convetions.  Spack is a bit
+    Regular source code follows these conventions.  Spack is a bit
     more liberal with its Package names and Compiler names:
 
        * They can contain '-' as well as '_', but cannot start with '-'.

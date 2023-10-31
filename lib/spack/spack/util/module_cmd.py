@@ -169,7 +169,7 @@ def get_path_from_module_contents(text, module_name):
     def match_flag_and_strip(line, flag, strip=[]):
         flag_idx = line.find(flag)
         if flag_idx >= 0:
-            # Search for the first occurence of any separator marking the end of
+            # Search for the first occurrence of any separator marking the end of
             # the path.
             separators = (" ", '"', "'")
             occurrences = [line.find(s, flag_idx) for s in separators]

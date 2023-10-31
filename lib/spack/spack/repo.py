@@ -251,7 +251,7 @@ def get_all_package_diffs(type, rev1="HEAD^1", rev2="HEAD"):
     lower_type = type.lower()
     if not re.match("^[arc]*$", lower_type):
         tty.die(
-            "Invald change type: '%s'." % type,
+            "Invalid change type: '%s'." % type,
             "Can contain only A (added), R (removed), or C (changed)",
         )
 

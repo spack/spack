@@ -99,7 +99,7 @@ class LmodConfiguration(BaseConfiguration):
 
     # Note: Posixpath is used here as well as below as opposed to
     # os.path.join due to spack.spec.Spec.format
-    # requiring forward slash path seperators at this stage
+    # requiring forward slash path separators at this stage
     default_projections = {"all": posixpath.join("{name}", "{version}")}
 
     @property

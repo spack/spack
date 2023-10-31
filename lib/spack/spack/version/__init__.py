@@ -10,7 +10,7 @@ StandardVersion: A single version of a package.
 ClosedOpenRange: A range of versions of a package.
 VersionList: A ordered list of Version and VersionRange elements.
 
-The set of Version and ClosedOpenRange is totally ordered wiht <
+The set of Version and ClosedOpenRange is totally ordered with <
 defined as Version(x) < VersionRange(Version(y), Version(x))
 if Version(x) <= Version(y).
 """

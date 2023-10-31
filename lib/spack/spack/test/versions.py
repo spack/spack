@@ -828,7 +828,7 @@ def test_git_versions_without_explicit_reference(
 
 def test_total_order_versions_and_ranges():
     # The set of version ranges and individual versions are comparable, which is used in
-    # VersionList. The comparsion across types is based on default version comparsion
+    # VersionList. The comparison across types is based on default version comparison
     # of StandardVersion, GitVersion.ref_version, and ClosedOpenRange.lo.
 
     # StandardVersion / GitVersion (at equal ref version)

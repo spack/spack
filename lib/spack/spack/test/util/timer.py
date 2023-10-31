@@ -11,7 +11,7 @@ import spack.util.timer as timer
 
 class Tick:
     """Timer that increments the seconds passed by 1
-    everytime tick is called."""
+    every time tick is called."""
 
     def __init__(self):
         self.time = 0.0

@@ -15,7 +15,7 @@ There are two parts to the build environment:
    This is how things are set up when install() is called.  Spack
    takes advantage of each package being in its own module by adding a
    bunch of command-like functions (like configure(), make(), etc.) in
-   the package's module scope.  Ths allows package writers to call
+   the package's module scope.  This allows package writers to call
    them all directly in Package.install() without writing 'self.'
    everywhere.  No, this isn't Pythonic.  Yes, it makes the code more
    readable and more like the shell script from which someone is
@@ -320,7 +320,7 @@ def set_compiler_environment_variables(pkg, env):
 
     # Populate an object with the list of environment modifications
     # and return it
-    # TODO : add additional kwargs for better diagnostics, like requestor,
+    # TODO : add additional kwargs for better diagnostics, like requester,
     # ttyout, ttyerr, etc.
     link_dir = spack.paths.build_env_path
 
@@ -375,7 +375,7 @@ def set_compiler_environment_variables(pkg, env):
     build_system_flags = {}
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Always convert flag_handler to function type.
-        # This avoids discrepencies in calling conventions between functions
+        # This avoids discrepancies in calling conventions between functions
         # and methods, or between bound and unbound methods in python 2.
         # We cannot effectively convert everything to a bound method, which
         # would be the simpler solution.

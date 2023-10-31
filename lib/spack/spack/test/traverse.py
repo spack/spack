@@ -239,7 +239,7 @@ def test_breadth_first_versus_depth_first_tree(abstract_specs_chain):
         for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=False)
     ] == [(0, "chain-a"), (1, "chain-b"), (1, "chain-c"), (1, "chain-d")]
 
-    # DFS will disover all nodes along the chain a -> b -> c -> d.
+    # DFS will discover all nodes along the chain a -> b -> c -> d.
     assert [
         (depth, edge.spec.name)
         for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=True)
@@ -384,7 +384,7 @@ def test_traverse_edges_topo(abstract_specs_toposort):
         for e in traverse.traverse_edges(input_specs, order="topo", cover="edges", root=False)
     ]
 
-    # See figure above, we have 7 edges (excluding artifical ones to the root)
+    # See figure above, we have 7 edges (excluding artificial ones to the root)
     assert set(edges) == set(
         [("A", "B"), ("A", "C"), ("B", "F"), ("B", "G"), ("C", "D"), ("D", "B"), ("E", "D")]
     )

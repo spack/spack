@@ -360,7 +360,7 @@ GitHub.sublime-settings
 # JetBrains-specific ignores #
 ##############################
 
-# Ignore the entire folder since it may conatin more files than
+# Ignore the entire folder since it may contain more files than
 # just the ones listed below
 .idea/
 

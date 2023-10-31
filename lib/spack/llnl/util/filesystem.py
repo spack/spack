@@ -227,7 +227,7 @@ def file_command(*args):
 
 @memoized
 def _get_mime_type():
-    """Generate method to call `file` system command to aquire mime type
+    """Generate method to call `file` system command to acquire mime type
     for a specified path
     """
     if sys.platform == "win32":
@@ -517,7 +517,7 @@ def exploding_archive_catch(stage):
     # NOTE: The tar program on Mac OS X will encode HFS metadata in
     # hidden files, which can end up *alongside* a single top-level
     # directory.  We initially ignore presence of hidden files to
-    # accomodate these "semi-exploding" tarballs but ensure the files
+    # accommodate these "semi-exploding" tarballs but ensure the files
     # are copied to the source directory.
 
     # Expand all tarballs in their own directory to contain
@@ -528,7 +528,7 @@ def exploding_archive_catch(stage):
     os.chdir(tarball_container)
     try:
         yield
-        # catch an exploding archive on sucessful extraction
+        # catch an exploding archive on successful extraction
         os.chdir(orig_dir)
         exploding_archive_handler(tarball_container, stage)
     except Exception as e:
@@ -2435,7 +2435,7 @@ class WindowsSimulatedRPath:
     One instance of this class is associated with a package (only on Windows)
     For each lib/binary directory in an associated package, this class introduces
     a symlink to any/all dependent libraries/binaries. This includes the packages
-    own bin/lib directories, meaning the libraries are linked to the bianry directory
+    own bin/lib directories, meaning the libraries are linked to the binary directory
     and vis versa.
     """
 
@@ -2512,7 +2512,7 @@ class WindowsSimulatedRPath:
         mode is not enabled"""
 
         def report_already_linked():
-            # We have either already symlinked or we are encoutering a naming clash
+            # We have either already symlinked or we are encountering a naming clash
             # either way, we don't want to overwrite existing libraries
             already_linked = islink(str(dest_file))
             tty.debug(

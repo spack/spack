@@ -203,7 +203,7 @@ def library_prefix(library_dir: str) -> str:
     assert os.path.isdir(library_dir)
 
     components = library_dir.split(os.sep)
-    # covert to lowercase to match lib, LIB, Lib, etc.
+    # convert to lowercase to match lib, LIB, Lib, etc.
     lowered_components = library_dir.lower().split(os.sep)
     if "lib64" in lowered_components:
         idx = lowered_components.index("lib64")
@@ -381,7 +381,7 @@ def find_win32_additional_install_paths() -> List[str]:
     windows_search_ext = []
     cuda_re = r"CUDA_PATH[a-zA-Z1-9_]*"
     # The list below should be expanded with other
-    # common Windows install locations as neccesary
+    # common Windows install locations as necessary
     path_ext_keys = ["I_MPI_ONEAPI_ROOT", "MSMPI_BIN", "MLAB_ROOT", "NUGET_PACKAGES"]
     user = os.environ["USERPROFILE"]
     add_path = lambda key: re.search(cuda_re, key) or key in path_ext_keys

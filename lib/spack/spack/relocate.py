@@ -283,7 +283,7 @@ def modify_object_macholib(cur_path, paths_to_paths):
     This function is used when install machO buildcaches on linux by
     rewriting mach-o loader commands for dependency library paths of
     mach-o binaries and the id path for mach-o libraries.
-    Rewritting of rpaths is handled by replace_prefix_bin.
+    Rewriting of rpaths is handled by replace_prefix_bin.
     Inputs
     mach-o binary to be modified
     dictionary mapping paths in old install layout to new install layout
@@ -397,7 +397,7 @@ def relocate_macho_binaries(
     path_names, old_layout_root, new_layout_root, prefix_to_prefix, rel, old_prefix, new_prefix
 ):
     """
-    Use macholib python package to get the rpaths, depedent libraries
+    Use macholib python package to get the rpaths, dependent libraries
     and library identity for libraries from the MachO object. Modify them
     with the replacement paths queried from the dictionary mapping old layout
     prefixes to hashes and the dictionary mapping hashes to the new layout

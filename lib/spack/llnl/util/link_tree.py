@@ -291,7 +291,7 @@ class LinkTree:
     LinkTree objects are constructed with a source root.  Their
     methods allow you to create and delete trees of symbolic links
     back to the source tree in specific destination directories.
-    Trees comprise symlinks only to files; directries are never
+    Trees comprise symlinks only to files; directories are never
     symlinked to, to prevent the source directory from ever being
     modified.
     """

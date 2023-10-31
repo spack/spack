@@ -51,7 +51,7 @@ from spack.directory_layout import DirectoryLayoutError, InconsistentInstallDire
 from spack.error import SpackError
 from spack.util.crypto import bit_length
 
-# TODO: Provide an API automatically retyring a build after detecting and
+# TODO: Provide an API automatically retrying a build after detecting and
 # TODO: clearing a failure.
 
 #: DB goes in this directory underneath the root

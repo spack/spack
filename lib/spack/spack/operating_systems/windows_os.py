@@ -21,7 +21,7 @@ def windows_version():
     # include the build number as this provides important information
     # for low lever packages and components like the SDK and WDK
     # The build number is the version component that would otherwise
-    # be the patch version in sematic versioning, i.e. z of x.y.z
+    # be the patch version in semantic versioning, i.e. z of x.y.z
     return Version(platform.version())
 
 

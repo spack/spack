@@ -139,7 +139,7 @@ def _gunzip(archive_file):
 
 def _py_gunzip(archive_file):
     """Returns path to gunzip'd file
-    Decompresses `.gz` compressed archvies via python gzip module"""
+    Decompresses `.gz` compressed archives via python gzip module"""
     decompressed_file = os.path.basename(llnl.url.strip_compression_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
@@ -506,7 +506,7 @@ class BZipFileType(CompressedFileTypeInterface):
     def decomp_in_memory(stream):
         if is_bz2_supported():
             # checking for underlying archive, only decomp as many bytes
-            # as is absolutely neccesary for largest archive header (tar)
+            # as is absolutely necessary for largest archive header (tar)
             comp_stream = stream.read(TarFileType.OFFSET + TarFileType.header_size())
             return io.BytesIO(initial_bytes=bz2.BZ2Decompressor().decompress(comp_stream))
         return None
@@ -539,7 +539,7 @@ class GZipFileType(CompressedFileTypeInterface):
     def decomp_in_memory(stream):
         if is_gzip_supported():
             # checking for underlying archive, only decomp as many bytes
-            # as is absolutely neccesary for largest archive header (tar)
+            # as is absolutely necessary for largest archive header (tar)
             return io.BytesIO(
                 initial_bytes=gzip.GzipFile(fileobj=stream).read(
                     TarFileType.OFFSET + TarFileType.header_size()
@@ -560,7 +560,7 @@ class LzmaFileType(CompressedFileTypeInterface):
     def decomp_in_memory(stream):
         if is_lzma_supported():
             # checking for underlying archive, only decomp as many bytes
-            # as is absolutely neccesary for largest archive header (tar)
+            # as is absolutely necessary for largest archive header (tar)
             max_size = TarFileType.OFFSET + TarFileType.header_size()
             return io.BytesIO(
                 initial_bytes=lzma.LZMADecompressor().decompress(
@@ -604,7 +604,7 @@ VALID_FILETYPES = [
 
 def extension_from_stream(stream, decompress=False):
     """Return extension represented by stream corresponding to archive file
-    If stream does not represent an archive type recongized by Spack
+    If stream does not represent an archive type recognized by Spack
     (see `spack.util.compression.ALLOWED_ARCHIVE_TYPES`) method will return None
 
     Extension type is derived by searching for identifying bytes
@@ -655,7 +655,7 @@ def extension_from_file(file, decompress=False):
     by string parsing.
 
     Args:
-        file (os.PathLike): path descibing file on system for which ext
+        file (os.PathLike): path describing file on system for which ext
             will be determined.
         decompress (bool): If True, method will peek into compressed
             files to check for archive file types. default is False.

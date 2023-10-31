@@ -57,7 +57,7 @@ ci:
       - openturns
       - parallelio
       - plumed
-      - precice
+      - precise
       #- py-tensorflow
       #- qt
       - raja

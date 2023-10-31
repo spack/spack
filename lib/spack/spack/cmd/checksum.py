@@ -89,7 +89,7 @@ def checksum(parser, args):
     versions = [Version(v) for v in args.versions]
 
     # Define placeholder for remote versions.
-    # This'll help reduce redundant work if we need to check for the existance
+    # This'll help reduce redundant work if we need to check for the existence
     # of remote versions more than once.
     remote_versions = None
 
@@ -223,7 +223,7 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict):
 
 def add_versions_to_package(pkg: PackageBase, version_lines: str):
     """
-    Add checksumed versions to a package's instructions and open a user's
+    Add checksummed versions to a package's instructions and open a user's
     editor so they may double check the work of the function.
 
     Args:

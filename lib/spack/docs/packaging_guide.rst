@@ -5197,7 +5197,7 @@ installed example.
            example = which(self.prefix.bin.example)
            example()
 
-Output showing the identification of each test part after runnig the tests
+Output showing the identification of each test part after running the tests
 is illustrated below.
 
 .. code-block:: console

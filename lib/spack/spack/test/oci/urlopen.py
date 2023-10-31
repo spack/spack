@@ -279,8 +279,8 @@ def test_registry_with_short_lived_bearer_tokens():
         ("GET", "/v2/"),  # 2: retry with bearer token
         ("GET", "/v2/"),  # 3: with incorrect bearer token
         ("GET", "/v2/"),  # 4: retry with new bearer token
-        ("GET", "/v2/"),  # 5: with recyled correct bearer token
-        ("GET", "/v2/"),  # 6: with recyled correct bearer token
+        ("GET", "/v2/"),  # 5: with recycled correct bearer token
+        ("GET", "/v2/"),  # 6: with recycled correct bearer token
     ]
 
 
@@ -494,7 +494,7 @@ def test_image_reference_str():
     [
         # white space issue
         " example.com/image",
-        # not alpha-numeric
+        # not alphanumeric
         "hello#world:latest",
     ],
 )

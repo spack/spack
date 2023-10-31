@@ -194,7 +194,7 @@ class when:
 
            This allows each package to have a default version of install() AND
            specialized versions for particular platforms.  The version that is
-           called depends on the architecutre of the instantiated package.
+           called depends on the architecture of the instantiated package.
 
            Note that this works for methods other than install, as well.  So,
            if you only have part of the install that is platform specific, you

@@ -627,7 +627,7 @@ def allows_unknown_args(command):
     """Implements really simple argument injection for unknown arguments.
 
     Commands may add an optional argument called "unknown args" to
-    indicate they can handle unknonwn args, and we'll pass the unknown
+    indicate they can handle unknown args, and we'll pass the unknown
     args in.
     """
     info = dict(inspect.getmembers(command))

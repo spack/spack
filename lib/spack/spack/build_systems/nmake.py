@@ -71,7 +71,7 @@ class NMakeBuilder(BaseBuilder):
         """Control whether or not Spack warns about quoted arguments passed to
         build utilities. If this is True, spack will not warn about quotes.
         This is useful in cases with a space in the path or when build scripts
-        require quoted arugments."""
+        require quoted arguments."""
         return False
 
     @property
@@ -98,7 +98,7 @@ class NMakeBuilder(BaseBuilder):
     def makefile_name(self):
         """Name of the current makefile. This is currently an empty value.
         If a project defines this value, it will be used with the /f argument
-        to provide nmake an explicit makefile. This is usefule in scenarios where
+        to provide nmake an explicit makefile. This is useful in scenarios where
         there are multiple nmake files in the same directory."""
         return ""
 
@@ -107,7 +107,7 @@ class NMakeBuilder(BaseBuilder):
         return "{}={}".format(nmake_arg, value)
 
     def override_env(self, var_name, new_value):
-        """Helper method to format arguments for overridding env variables on the
+        """Helper method to format arguments for overriding env variables on the
         nmake command line. Returns properly formatted argument"""
         return "/E{}={}".format(var_name, new_value)
 

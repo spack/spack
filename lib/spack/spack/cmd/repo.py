@@ -153,7 +153,7 @@ def repo_list(args):
             continue
 
     if sys.stdout.isatty():
-        msg = "%d package repositor" % len(repos)
+        msg = "%d package repository" % len(repos)
         msg += "y." if len(repos) == 1 else "ies."
         tty.msg(msg)
 

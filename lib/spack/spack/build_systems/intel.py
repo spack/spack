@@ -446,7 +446,7 @@ class IntelPackage(Package):
             # <HASH>/compilers_and_libraries/linux/bin/intel64/icc -> ...
             #   Ditto.
             #
-            #  Now, the Spack packages for MKL and MPI packges use version
+            #  Now, the Spack packages for MKL and MPI packages use version
             #  triplets, but the one for intel-parallel-studio does not.
             #  So, we can't have it quite as easy as:
             # d = Prefix(d.append('compilers_and_libraries_' + self.version))
@@ -689,7 +689,7 @@ class IntelPackage(Package):
             # Note about search root here: For MKL, the directory
             # "$MKLROOT/../compiler" will be present even for an MKL-only
             # product installation (as opposed to one being ghosted via
-            # packages.yaml), specificially to provide the 'iomp5' libs.
+            # packages.yaml), specifically to provide the 'iomp5' libs.
 
         elif "%gcc" in self.spec:
             with self.compiler.compiler_environment():

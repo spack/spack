@@ -224,7 +224,7 @@ class Stage:
 
     When used as a context manager, the stage is automatically
     destroyed if no exception is raised by the context. If an
-    excpetion is raised, the stage is left in the filesystem and NOT
+    exception is raised, the stage is left in the filesystem and NOT
     destroyed, for potential reuse later.
 
     You can also use the stage's create/destroy functions manually,
@@ -482,7 +482,7 @@ class Stage:
                     0, fs.from_url_scheme(url, digest, expand=expand, extension=extension)
                 )
 
-            if self.default_fetcher.cachable:
+            if self.default_fetcher.cacheable:
                 for rel_path in reversed(list(self.mirror_paths)):
                     cache_fetcher = spack.caches.FETCH_CACHE.fetcher(
                         rel_path, digest, expand=expand, extension=extension

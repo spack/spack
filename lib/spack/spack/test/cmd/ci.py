@@ -1378,7 +1378,7 @@ spack:
                     assert the_elt["after_script"][0] == "post step one"
                 if "flatten-deps" in ci_key:
                     # The flatten-deps match specifies that we keep the two
-                    # top level variables, but add a third specifc one.  It
+                    # top level variables, but add a third specific one.  It
                     # also adds a custom tag which should be combined with
                     # the top-level tag.
                     the_elt = yaml_contents[ci_key]

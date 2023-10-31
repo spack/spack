@@ -701,7 +701,7 @@ class ErrorHandler:
             return self.no_value_error(*args)
 
         # For variant formatting, we sometimes have to construct specs
-        # to format values properly. Find/replace all occurances of
+        # to format values properly. Find/replace all occurrences of
         # Spec(...) with the string representation of the spec mentioned
         msg = msg.format(*args)
         specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
@@ -1089,7 +1089,7 @@ class SpackSolverSetup:
     def spec_versions(self, spec):
         """Return list of clauses expressing spec's version constraints."""
         spec = specify(spec)
-        msg = "Internal Error: spec with no name occured. Please report to the spack maintainers."
+        msg = "Internal Error: spec with no name occurred. Please report to the spack maintainers."
         assert spec.name, msg
 
         if spec.concrete:
@@ -1750,13 +1750,13 @@ class SpackSolverSetup:
         """Wrap a call to `_spec_clauses()` into a try/except block that
         raises a comprehensible error message in case of failure.
         """
-        requestor = kwargs.pop("required_from", None)
+        requester = kwargs.pop("required_from", None)
         try:
             clauses = self._spec_clauses(*args, **kwargs)
         except RuntimeError as exc:
             msg = str(exc)
-            if requestor:
-                msg += ' [required from package "{0}"]'.format(requestor)
+            if requester:
+                msg += ' [required from package "{0}"]'.format(requester)
             raise RuntimeError(msg)
         return clauses
 

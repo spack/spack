@@ -1174,7 +1174,7 @@ def merge_yaml(dest, source, prepend=False, append=False):
     parent instead of merging.
 
     `+:` will extend the default prepend merge strategy to include string concatenation
-    `-:` will change the merge strategy to append, it also includes string concatentation
+    `-:` will change the merge strategy to append, it also includes string concatenation
     """
 
     def they_are(t):
@@ -1517,7 +1517,7 @@ class ConfigFormatError(ConfigError):
         super().__init__(message)
 
     def _get_mark(self, validation_error, data):
-        """Get the file/line mark fo a validation error from a Spack YAML file."""
+        """Get the file/line mark for a validation error from a Spack YAML file."""
 
         def _get_mark_or_first_member_mark(obj):
             # mark of object itelf

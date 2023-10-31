@@ -41,12 +41,12 @@ class AttributesFoo(BundlePackage):
     def libs(self):
         return find_libraries("libFoo", root=self.home, recursive=True)
 
-    # Header provided by the bar virutal package
+    # Header provided by the bar virtual package
     @property
     def bar_headers(self):
         return find_headers("bar/bar", root=self.home.include, recursive=False)
 
-    # Libary provided by the bar virtual package
+    # Library provided by the bar virtual package
     @property
     def bar_libs(self):
         return find_libraries("libFooBar", root=self.home, recursive=True)

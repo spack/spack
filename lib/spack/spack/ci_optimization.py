@@ -250,7 +250,7 @@ def build_histogram(iterator, key):
     Returns a list of tuples (hash, count, proportion, value), where
 
       - "hash" is a sha1sum hash of the value.
-      - "count" is the number of occurences of values that hash to "hash".
+      - "count" is the number of occurrences of values that hash to "hash".
       - "proportion" is the proportion of all values considered above that
         hash to "hash".
       - "value" is one of the values considered above that hash to "hash".
@@ -258,7 +258,7 @@ def build_histogram(iterator, key):
         undefined.
 
     The list is sorted in descending order by count, yielding the most
-    frequently occuring hashes first.
+    frequently occurring hashes first.
     """
     buckets = collections.defaultdict(int)
     values = {}

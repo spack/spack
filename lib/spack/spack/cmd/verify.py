@@ -22,7 +22,7 @@ def setup_parser(subparser):
         "-l", "--local", action="store_true", help="verify only locally installed packages"
     )
     subparser.add_argument(
-        "-j", "--json", action="store_true", help="ouptut json-formatted errors"
+        "-j", "--json", action="store_true", help="output json-formatted errors"
     )
     subparser.add_argument("-a", "--all", action="store_true", help="verify all packages")
     subparser.add_argument(

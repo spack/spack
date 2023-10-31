@@ -77,7 +77,7 @@ class TclModulefileWriter(BaseModuleFileWriter):
 
     # Note: Posixpath is used here as opposed to
     # os.path.join due to spack.spec.Spec.format
-    # requiring forward slash path seperators at this stage
+    # requiring forward slash path separators at this stage
     default_template = posixpath.join("modules", "modulefile.tcl")
 
     modulerc_header = ["#%Module4.7"]

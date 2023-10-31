@@ -60,6 +60,6 @@ class Boost(Package):
     variant(
         "singlethreaded", default=False, description="Build single-threaded versions of libraries"
     )
-    variant("icu", default=False, description="Build with Unicode and ICU suport")
+    variant("icu", default=False, description="Build with Unicode and ICU support")
     variant("graph", default=False, description="Build the Boost Graph library")
     variant("taggedlayout", default=False, description="Augment library names with build options")

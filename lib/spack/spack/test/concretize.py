@@ -1610,7 +1610,7 @@ class TestConcretize:
         assert len(concrete_specs) == expected
 
     @pytest.mark.parametrize(
-        "specs,expected_spec,occurances",
+        "specs,expected_spec,occurrences",
         [
             # The algorithm is greedy, and it might decide to solve the "best"
             # spec early in which case reuse is suboptimal. In this case the most
@@ -1640,7 +1640,7 @@ class TestConcretize:
         ],
     )
     @pytest.mark.only_clingo("Original concretizer cannot concretize in rounds")
-    def test_best_effort_coconcretize_preferences(self, specs, expected_spec, occurances):
+    def test_best_effort_coconcretize_preferences(self, specs, expected_spec, occurrences):
         """Test package preferences during coconcretization."""
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver()
@@ -1653,7 +1653,7 @@ class TestConcretize:
         for spec in concrete_specs.values():
             if expected_spec in spec:
                 counter += 1
-        assert counter == occurances, concrete_specs
+        assert counter == occurrences, concrete_specs
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_coconcretize_reuse_and_virtuals(self):

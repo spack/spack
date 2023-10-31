@@ -15,7 +15,7 @@ hashes = {"sha256": 32, "md5": 16, "sha1": 20, "sha224": 28, "sha384": 48, "sha5
 # Note: keys are ordered by popularity for earliest return in ``hash_key in version_dict`` checks.
 
 
-#: size of hash digests in bytes, mapped to algoritm names
+#: size of hash digests in bytes, mapped to algorithm names
 _size_to_hash = dict((v, k) for k, v in hashes.items())
 
 

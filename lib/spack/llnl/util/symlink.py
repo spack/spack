@@ -24,7 +24,7 @@ def symlink(source_path: str, link_path: str, allow_broken_symlinks: bool = not 
     Create a link.
 
     On non-Windows and Windows with System Administrator
-    privleges this will be a normal symbolic link via
+    privileges this will be a normal symbolic link via
     os.symlink.
 
     On Windows without privledges the link will be a

@@ -290,7 +290,7 @@ def parse_pt_dynamic(f, elf):
 
     f.seek(elf.pt_dynamic_p_offset)
 
-    # In case of broken ELF files, don't read beyond the advertized size.
+    # In case of broken ELF files, don't read beyond the advertised size.
     for _ in range(elf.pt_dynamic_p_filesz // dynamic_array_size):
         data = read_exactly(f, dynamic_array_size, "Malformed dynamic array entry")
         tag, val = unpack(dynamic_array_fmt, data)
@@ -528,7 +528,7 @@ def replace_rpath_in_place_or_raise(path, substitutions):
             return True
 
     except ElfParsingError:
-        # This just means the file wasnt an elf file, so there's no point
+        # This just means the file wasn't an elf file, so there's no point
         # in updating its rpath anyways; ignore this problem.
         return False
 

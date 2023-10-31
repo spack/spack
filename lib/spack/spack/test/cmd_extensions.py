@@ -91,7 +91,7 @@ def hello_world(parser, args):
 
 @pytest.fixture(scope="function")
 def hello_world_cmd(hello_world_extension):
-    """Create and return an invokable "hello-world" extension command."""
+    """Create and return an invocable "hello-world" extension command."""
     yield spack.main.SpackCommand("hello-world")
 
 

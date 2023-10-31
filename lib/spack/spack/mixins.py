@@ -34,7 +34,7 @@ def filter_compiler_wrappers(*files, **kwargs):
             relative_root
                 path relative to prefix where to start searching for
                 the files to be filtered. If not set the install prefix
-                wil be used as the search root. **It is highly recommended
+                will be used as the search root. **It is highly recommended
                 to set this, as searching from the installation prefix may
                 affect performance severely in some cases**.
 

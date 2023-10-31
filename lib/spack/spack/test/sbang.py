@@ -112,7 +112,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.luajit_shebang)
 
-        # Luajit occuring in text, not in shebang
+        # Luajit occurring in text, not in shebang
         self.luajit_textbang = os.path.join(self.tempdir, "luajit_in_text")
         with open(self.luajit_textbang, "w") as f:
             f.write(short_line)
@@ -127,7 +127,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.node_shebang)
 
-        # Node occuring in text, not in shebang
+        # Node occurring in text, not in shebang
         self.node_textbang = os.path.join(self.tempdir, "node_in_text")
         with open(self.node_textbang, "w") as f:
             f.write(short_line)
@@ -142,7 +142,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.php_shebang)
 
-        # php occuring in text, not in shebang
+        # php occurring in text, not in shebang
         self.php_textbang = os.path.join(self.tempdir, "php_in_text")
         with open(self.php_textbang, "w") as f:
             f.write(short_line)

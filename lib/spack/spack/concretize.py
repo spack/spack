@@ -41,7 +41,7 @@ import spack.variant as vt
 from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
 from spack.version import ClosedOpenRange, VersionList, ver
 
-#: impements rudimentary logic for ABI compatibility
+#: implements rudimentary logic for ABI compatibility
 _abi: Union[spack.abi.ABI, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
     lambda: spack.abi.ABI()
 )
@@ -189,7 +189,7 @@ class Concretizer:
         TODO: In many cases we probably want to look for installed
               versions of each package and use an installed version
               if we can link to it.  The policy implemented here will
-              tend to rebuild a lot of stuff becasue it will prefer
+              tend to rebuild a lot of stuff because it will prefer
               a compiler in the spec to any compiler already-
               installed things were built with.  There is likely
               some better policy that finds some middle ground

@@ -173,12 +173,12 @@ class Msvc(Compiler):
         # file based on compiler executable path.
         super().__init__(*args, **kwargs)
         # To use the MSVC compilers, VCVARS must be invoked
-        # VCVARS is located at a fixed location, referencable
+        # VCVARS is located at a fixed location, referenceable
         # idiomatically by the following relative path from the
         # compiler.
         # Spack first finds the compilers via VSWHERE
         # and stores their path, but their respective VCVARS
-        # file must be invoked before useage.
+        # file must be invoked before usage.
         env_cmds = []
         compiler_root = os.path.join(self.cc, "../../../../../../..")
         vcvars_script_path = os.path.join(compiler_root, "Auxiliary", "Build", "vcvars64.bat")
@@ -261,7 +261,7 @@ class Msvc(Compiler):
     def vs_root(self):
         # The MSVC install root is located at a fix level above the compiler
         # and is referenceable idiomatically via the pattern below
-        # this should be consistent accross versions
+        # this should be consistent across versions
         return os.path.abspath(os.path.join(self.cc, "../../../../../../../.."))
 
     def setup_custom_environment(self, pkg, env):

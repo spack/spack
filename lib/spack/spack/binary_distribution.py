@@ -1127,7 +1127,7 @@ def gzip_compressed_tarfile(path):
     # Create gzip compressed tarball of the install prefix
     # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility.
     #    If the filename="" is dropped, Python will use fileobj.name instead.
-    #    This should effectively mimick `gzip --no-name`.
+    #    This should effectively mimic `gzip --no-name`.
     # 2) On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
     # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
     # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB

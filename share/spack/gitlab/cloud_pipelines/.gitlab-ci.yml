@@ -272,7 +272,7 @@ protected-publish:
 # Note that when extending other jobs, gitlab does not merge lists (nor
 # does it merge dictionary values in the case of key conflicts).  So lists
 # and duplicated dictionary keys are simply overridden.  For this reason,
-# you should inlclude your custom definitions at the end of the of the
+# you should include your custom definitions at the end of the of the
 # extends list.
 #
 ########################################

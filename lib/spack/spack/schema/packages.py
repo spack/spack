@@ -28,7 +28,7 @@ properties = {
                             # specs. Either at least one or exactly one spec
                             # in the group must be satisfied (depending on
                             # whether you use "any_of" or "one_of",
-                            # repectively)
+                            # respectively)
                             {
                                 "type": "array",
                                 "items": {

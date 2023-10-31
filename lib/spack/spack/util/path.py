@@ -93,7 +93,7 @@ SPACK_MAX_INSTALL_PATH_LENGTH = 300
 
 #: Padded paths comprise directories with this name (or some prefix of it). :
 #: It starts with two underscores to make it unlikely that prefix matches would
-#: include some other component of the intallation path.
+#: include some other component of the installation path.
 SPACK_PATH_PADDING_CHARS = "__spack_path_placeholder__"
 
 
@@ -336,7 +336,7 @@ def filter_padding():
 
     padding = spack.config.get("config:install_tree:padded_length", None)
     if padding:
-        # filter out all padding from the intsall command output
+        # filter out all padding from the install command output
         with tty.output_filter(padding_filter):
             yield
     else:

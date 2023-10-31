@@ -269,7 +269,7 @@
 
    Spack's traditional [package preferences](
      https://spack.readthedocs.io/en/latest/build_settings.html#package-preferences)
-   are soft, but we've added hard requriements to `packages.yaml` and `spack.yaml`
+   are soft, but we've added hard requirements to `packages.yaml` and `spack.yaml`
    (#32528, #32369). Package requirements use the same syntax as specs:
 
    ```yaml
@@ -1185,7 +1185,7 @@ This minor release includes two new features:
 
 This release also includes several important fixes:
 
-* MPICC and related variables are now cleand in the build environment (#17450)
+* MPICC and related variables are now cleaned in the build environment (#17450)
 * LLVM flang only builds CUDA offload components when +cuda (#17466)
 * CI pipelines no longer upload user environments that can contain secrets to the internet (#17545)
 * CI pipelines add bootstrapped compilers to the compiler config (#17536)

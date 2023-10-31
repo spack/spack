@@ -289,7 +289,7 @@ class WindowsRegistryView:
         in which case call matches are returned.
 
         Args:
-            search_key (str): regex string represeting a subkey name structure
+            search_key (str): regex string representing a subkey name structure
                               to be matched against.
                               Cannot be provided alongside `direct_subkey`
             collect_all_matching (bool): No-op if `direct_subkey` is specified

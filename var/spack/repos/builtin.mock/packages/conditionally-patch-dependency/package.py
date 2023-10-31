@@ -8,7 +8,7 @@ from spack.package import *
 
 
 class ConditionallyPatchDependency(Package):
-    """Package that conditionally requries a patched version
+    """Package that conditionally requires a patched version
     of a dependency."""
 
     homepage = "http://www.example.com"

@@ -60,7 +60,7 @@ class AutotoolsPackage(spack.package_base.PackageBase):
                 values_str = "{0}={1}".format(var_name, " ".join(values))
                 self.configure_flag_args.append(values_str)
         # Spack's fflags are meant for both F77 and FC, therefore we
-        # additionaly set FCFLAGS if required.
+        # additionally set FCFLAGS if required.
         values = flags.get("fflags", None)
         if values:
             values_str = "FCFLAGS={0}".format(" ".join(values))
@@ -588,7 +588,7 @@ To resolve this problem, please try the following:
 
     def configure_args(self):
         """Return the list of all the arguments that must be passed to configure,
-        except ``--prefix`` which will be pre-pended to the list.
+        except ``--prefix`` which will be prepended to the list.
         """
         return []
 

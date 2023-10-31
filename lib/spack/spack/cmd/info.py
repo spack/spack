@@ -242,7 +242,7 @@ def print_tests(pkg):
     # expected functionality (e.g., a 'check' or 'test' targets).
     #
     # So the presence of a callback in Spack does not necessarily correspond
-    # to the actual presence of built-time tests for a package.
+    # to the actual presence of build-time tests for a package.
     for callbacks, phase in [
         (getattr(pkg, "build_time_test_callbacks", None), "Build"),
         (getattr(pkg, "install_time_test_callbacks", None), "Install"),

@@ -129,7 +129,7 @@ COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
 ENABLED_VARIANT_COLOR = "@B"  #: color for highlighting enabled variants
-DISABLED_VARIANT_COLOR = "r"  #: color for highlighting disabled varaints
+DISABLED_VARIANT_COLOR = "r"  #: color for highlighting disabled variants
 DEPENDENCY_COLOR = "@."  #: color for highlighting dependencies
 HASH_COLOR = "@K"  #: color for highlighting package hashes
 
@@ -1134,7 +1134,7 @@ def _libs_default_handler(descriptor, spec, cls):
 
     for shared in search_shared:
         # Since we are searching for link libraries, on Windows search only for
-        # ".Lib" extensions by default as those represent import libraries for implict links.
+        # ".Lib" extensions by default as those represent import libraries for implicit links.
         libs = fs.find_libraries(name, home, shared=shared, recursive=True, runtime=False)
         if libs:
             return libs
@@ -5348,7 +5348,7 @@ class UnsatisfiableVersionSpecError(spack.error.UnsatisfiableSpecError):
 
 
 class UnsatisfiableCompilerSpecError(spack.error.UnsatisfiableSpecError):
-    """Raised when a spec comiler conflicts with package constraints."""
+    """Raised when a spec compiler conflicts with package constraints."""
 
     def __init__(self, provided, required):
         super().__init__(provided, required, "compiler")

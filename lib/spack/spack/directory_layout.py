@@ -24,7 +24,7 @@ from spack.error import SpackError
 
 # Note: Posixpath is used here as opposed to
 # os.path.join due to spack.spec.Spec.format
-# requiring forward slash path seperators at this stage
+# requiring forward slash path separators at this stage
 default_projections = {
     "all": posixpath.join(
         "{architecture}", "{compiler.name}-{compiler.version}", "{name}-{version}-{hash}"
@@ -112,7 +112,7 @@ class DirectoryLayout:
         _check_concrete(spec)
         with open(path, "w") as f:
             # The hash of the projection is the DAG hash which contains
-            # the full provenance, so it's availabe if we want it later
+            # the full provenance, so it's available if we want it later
             spec.to_json(f, hash=ht.dag_hash)
 
     def write_host_environment(self, spec):

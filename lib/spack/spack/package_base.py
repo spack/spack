@@ -710,7 +710,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Each item in the returned dictionary maps a (potentially
         transitive) dependency of this package to its possible
         *immediate* dependencies. If ``expand_virtuals`` is ``False``,
-        virtual package names wil be inserted as keys mapped to empty
+        virtual package names will be inserted as keys mapped to empty
         sets of dependencies.  Virtuals, if not expanded, are treated as
         though they have no immediate dependencies.
 

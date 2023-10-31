@@ -413,7 +413,7 @@ class BaseConfiguration:
     @property
     def projections(self):
         """Projection from specs to module names"""
-        # backwards compatiblity for naming_scheme key
+        # backwards compatibility for naming_scheme key
         conf = self.module.configuration(self.name)
         if "naming_scheme" in conf:
             default = {"all": conf["naming_scheme"]}

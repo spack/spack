@@ -528,7 +528,7 @@ def test_config_update_config(config_yaml_v015):
     config_yaml_v015()
     config("update", "-y", "config")
 
-    # Check the entires have been transformed
+    # Check the entries have been transformed
     data = spack.config.get("config")
     check_config_updated(data)
 

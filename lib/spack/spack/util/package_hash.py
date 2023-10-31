@@ -74,7 +74,7 @@ class RemoveDirectives(ast.NodeTransformer):
         # opposed to function calls through a variable callback). We remove them.
         #
         # Note that changes to directives (e.g., a preferred version change or a hash
-        # chnage on an archive) are already represented in the spec *outside* the
+        # change on an archive) are already represented in the spec *outside* the
         # package hash.
         return (
             None
@@ -135,7 +135,7 @@ class RemoveDirectives(ast.NodeTransformer):
         if self.in_classdef:
             return node
 
-        # guard against recrusive class definitions
+        # guard against recursive class definitions
         self.in_classdef = True
         self.generic_visit(node)
         self.in_classdef = False

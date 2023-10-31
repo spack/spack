@@ -135,7 +135,7 @@ def test_url_join_absolute_paths():
     # - All absolute paths are absolute path components.  Joining a URL with
     #   these components has the effect of completely replacing the path of the
     #   URL with the absolute path.  These components do not specify a URL
-    #   scheme, so the scheme of the URL procuced when joining them depend on
+    #   scheme, so the scheme of the URL produced when joining them depend on
     #   those provided by components that came before it (file:// assumed if no
     #   such scheme is provided).
 

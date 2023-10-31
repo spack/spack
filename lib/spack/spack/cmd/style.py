@@ -197,7 +197,7 @@ def cwd_relative(path, args):
 def rewrite_and_print_output(
     output, args, re_obj=re.compile(r"^(.+):([0-9]+):"), replacement=r"{0}:{1}:"
 ):
-    """rewrite ouput with <file>:<line>: format to respect path args"""
+    """rewrite output with <file>:<line>: format to respect path args"""
 
     # print results relative to current working directory
     def translate(match):
@@ -357,7 +357,7 @@ def validate_toolset(arg_value):
     tools = set(",".join(arg_value).split(","))  # allow args like 'isort,flake8'
     for tool in tools:
         if tool not in tool_names:
-            tty.die("Invaild tool: '%s'" % tool, "Choose from: %s" % ", ".join(tool_names))
+            tty.die("Invalid tool: '%s'" % tool, "Choose from: %s" % ", ".join(tool_names))
     return tools
 
 

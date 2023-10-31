@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PatchSeveralDependencies(Package):
-    """Package that requries multiple patches on a dependency."""
+    """Package that requires multiple patches on a dependency."""
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/patch-a-dependency-1.0.tar.gz"
