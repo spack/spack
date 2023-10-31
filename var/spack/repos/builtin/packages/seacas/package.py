@@ -135,8 +135,8 @@ class Seacas(CMakePackage):
     variant("x11", default=True, description="Compile with X11")
 
     # ###################### Dependencies ##########################
-    depends_on("cmake@3.17:", type="build")
-    depends_on("cmake@3.22:", when="@2023-10-24", type="build")
+    depends_on("cmake@3.22:", when="@2023-10-24:", type="build")
+    depends_on("cmake@3.17:", when="@:2023-05-30", type="build")
     depends_on("mpi", when="+mpi")
 
     # Always depends on netcdf-c
@@ -144,10 +144,10 @@ class Seacas(CMakePackage):
     depends_on("netcdf-c@4.8.0:~mpi", when="~mpi")
     depends_on("hdf5+hl~mpi", when="~mpi")
 
+    depends_on("fmt@10.1.0", when="@2023-10-24:")
+    depends_on("fmt@9.1.0", when="@2022-10-14:2023-05-30")
     depends_on("fmt@8.1.0:9", when="@2022-03-04:2022-05-16")
-    depends_on("fmt@9.1.0", when="@2022-10-14")
-    depends_on("fmt@9.1.0:", when="@2023-05-30")
-    depends_on("fmt@10.1.0:", when="@2023-10-24")
+
     depends_on("matio", when="+matio")
     depends_on("libx11", when="+x11")
 
