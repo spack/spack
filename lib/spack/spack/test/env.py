@@ -882,8 +882,11 @@ spack:
             - [{", ".join(item for item in matrix_line)}]
   specs:
     - $install
+  concretizer:
+    unify: false
 """
     )
-    with pytest.raises(RuntimeError):
+    # Here we raise different exceptions depending on whether we solve serially or not
+    with pytest.raises(Exception):
         with ev.Environment(tmp_path) as e:
             e.concretize()
