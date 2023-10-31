@@ -19,7 +19,7 @@ class Ipm(AutotoolsPackage):
     maintainers("Christoph-TU")
 
     version("master", branch="master", preferred=True)
-    version("2.0.6", tag="2.0.6")
+    version("2.0.6", tag="2.0.6", commit="b008141ee16d39b33e20bffde615564afa107575")
 
     variant("papi", default=False, description="Enable PAPI")
     variant("cuda", default=False, description="Enable CUDA")

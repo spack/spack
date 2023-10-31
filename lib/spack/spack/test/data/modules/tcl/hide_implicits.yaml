@@ -1,0 +1,6 @@
+enable:
+  - tcl
+tcl:
+  hide_implicits: true
+  all:
+    autoload: direct

@@ -98,7 +98,7 @@ SPACK_PATH_PADDING_CHARS = "__spack_path_placeholder__"
 
 
 def win_exe_ext():
-    return ".exe"
+    return r"(?:\.bat|\.exe)"
 
 
 def sanitize_filename(filename: str) -> str:
