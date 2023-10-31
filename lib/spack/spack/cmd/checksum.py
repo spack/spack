@@ -70,7 +70,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         "versions",
         nargs="*",
-        help="checksum only specific version (if ommitted, Spack will search for remote versions)",
+        help="checksum these specific versions (if ommitted, Spack searches for remote versions)",
     )
     arguments.add_common_arguments(subparser, ["jobs"])
     subparser.epilog = (
