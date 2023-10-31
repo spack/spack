@@ -1345,6 +1345,9 @@ class SpackSolverSetup:
         # virtuals
         self.package_provider_rules(pkg)
 
+        # dependencies
+        self.package_dependencies_rules(pkg)
+
         # virtual preferences
         self.virtual_preferences(
             pkg.name,
@@ -1352,13 +1355,6 @@ class SpackSolverSetup:
         )
 
         self.package_requirement_rules(pkg)
-
-        # trigger and effect tables
-        self.trigger_rules()
-        self.effect_rules()
-
-        # dependencies have special triggers/effects, have to be handled separately
-        self.package_dependencies_rules(pkg)
 
         # trigger and effect tables
         self.trigger_rules()
