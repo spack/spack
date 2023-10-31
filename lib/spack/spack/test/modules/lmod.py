@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 
 import pytest
 
@@ -433,3 +434,87 @@ class TestLmod:
         path = module.layout.filename
 
         assert str(spec.os) not in path
+
+    def test_hide_implicits(self, module_configuration):
+        """Tests the addition and removal of hide command in modulerc."""
+        module_configuration("hide_implicits")
+
+        spec = spack.spec.Spec("mpileaks@2.3").concretized()
+
+        # mpileaks is defined as implicit, thus hide command should appear in modulerc
+        writer = writer_cls(spec, "default", False)
+        writer.write()
+        assert os.path.exists(writer.layout.modulerc)
+        with open(writer.layout.modulerc) as f:
+            content = f.readlines()
+            content = "".join(content).split("\n")
+        hide_cmd = 'hide_version("%s")' % writer.layout.use_name
+        assert len([x for x in content if hide_cmd == x]) == 1
+
+        # mpileaks becomes explicit, thus modulerc is removed
+        writer = writer_cls(spec, "default", True)
+        writer.write(overwrite=True)
+        assert not os.path.exists(writer.layout.modulerc)
+
+        # mpileaks is defined as explicit, no modulerc file should exist
+        writer = writer_cls(spec, "default", True)
+        writer.write()
+        assert not os.path.exists(writer.layout.modulerc)
+
+        # explicit module is removed
+        writer.remove()
+        assert not os.path.exists(writer.layout.modulerc)
+        assert not os.path.exists(writer.layout.filename)
+
+        # implicit module is removed
+        writer = writer_cls(spec, "default", False)
+        writer.write(overwrite=True)
+        assert os.path.exists(writer.layout.filename)
+        assert os.path.exists(writer.layout.modulerc)
+        writer.remove()
+        assert not os.path.exists(writer.layout.modulerc)
+        assert not os.path.exists(writer.layout.filename)
+
+        # three versions of mpileaks are implicit
+        writer = writer_cls(spec, "default", False)
+        writer.write(overwrite=True)
+        spec_alt1 = spack.spec.Spec("mpileaks@2.2").concretized()
+        spec_alt2 = spack.spec.Spec("mpileaks@2.1").concretized()
+        writer_alt1 = writer_cls(spec_alt1, "default", False)
+        writer_alt1.write(overwrite=True)
+        writer_alt2 = writer_cls(spec_alt2, "default", False)
+        writer_alt2.write(overwrite=True)
+        assert os.path.exists(writer.layout.modulerc)
+        with open(writer.layout.modulerc) as f:
+            content = f.readlines()
+            content = "".join(content).split("\n")
+        hide_cmd = 'hide_version("%s")' % writer.layout.use_name
+        hide_cmd_alt1 = 'hide_version("%s")' % writer_alt1.layout.use_name
+        hide_cmd_alt2 = 'hide_version("%s")' % writer_alt2.layout.use_name
+        assert len([x for x in content if hide_cmd == x]) == 1
+        assert len([x for x in content if hide_cmd_alt1 == x]) == 1
+        assert len([x for x in content if hide_cmd_alt2 == x]) == 1
+
+        # one version is removed, a second becomes explicit
+        writer_alt1.remove()
+        writer_alt2 = writer_cls(spec_alt2, "default", True)
+        writer_alt2.write(overwrite=True)
+        assert os.path.exists(writer.layout.modulerc)
+        with open(writer.layout.modulerc) as f:
+            content = f.readlines()
+            content = "".join(content).split("\n")
+        assert len([x for x in content if hide_cmd == x]) == 1
+        assert len([x for x in content if hide_cmd_alt1 == x]) == 0
+        assert len([x for x in content if hide_cmd_alt2 == x]) == 0
+
+        # disable hide_implicits configuration option
+        module_configuration("autoload_direct")
+        writer = writer_cls(spec, "default")
+        writer.write(overwrite=True)
+        assert not os.path.exists(writer.layout.modulerc)
+
+        # reenable hide_implicits configuration option
+        module_configuration("hide_implicits")
+        writer = writer_cls(spec, "default")
+        writer.write(overwrite=True)
+        assert os.path.exists(writer.layout.modulerc)

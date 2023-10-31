@@ -48,9 +48,6 @@ os.environ["PATH"] += "%s%s" % (os.pathsep, os.path.abspath("_spack_root/bin"))
 os.environ["COLIFY_SIZE"] = "25x120"
 os.environ["COLUMNS"] = "120"
 
-# Generate full package list if needed
-subprocess.call(["spack", "list", "--format=html", "--update=package_list.html"])
-
 # Generate a command index if an update is needed
 subprocess.call(
     [
@@ -207,6 +204,7 @@ nitpick_ignore = [
     ("py:class", "clingo.Control"),
     ("py:class", "six.moves.urllib.parse.ParseResult"),
     ("py:class", "TextIO"),
+    ("py:class", "hashlib._Hash"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),

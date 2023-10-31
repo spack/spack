@@ -76,12 +76,20 @@ class Esmf(MakefilePackage):
     )
     variant("debug", default=False, description="Build with debugging symbols and options enabled")
     variant("shared", default=True, description="Build shared library")
+
     # 'esmf_os', 'esmf_comm', 'esmf_pio' variants allow override values for their corresponding
     # build environment variables. Documentation, including valid values, can be found at
     # https://earthsystemmodeling.org/docs/release/latest/ESMF_usrdoc/node10.html#SECTION000105000000000000000
     variant("esmf_os", default="auto", description="Override for ESMF_OS variable")
     variant("esmf_comm", default="auto", description="Override for ESMF_COMM variable")
     variant("esmf_pio", default="auto", description="Override for ESMF_PIO variable")
+    # Set the 'snapshot' variant any time a beta snapshot is used in order to obtain
+    # correct module name behavior for MAPL.
+    variant(
+        "snapshot",
+        default="none",
+        description="Named variant for snapshots versions (e.g., 'b09')",
+    )
 
     # Optional dependencies
     depends_on("mpi", when="+mpi")
@@ -90,12 +98,12 @@ class Esmf(MakefilePackage):
     depends_on("netcdf-fortran@3.6:", when="+netcdf")
     depends_on("parallel-netcdf@1.2.0:", when="+pnetcdf")
     depends_on("xerces-c@3.1.0:", when="+xerces")
-    depends_on("parallelio@2.5.7: +mpi", when="@8.3.0:8.3.99+external-parallelio+mpi")
-    depends_on("parallelio@2.5.7: ~mpi", when="@8.3.0:8.3.99+external-parallelio~mpi")
-    depends_on("parallelio@2.5.9: +mpi", when="@8.4.0:8.4.99+external-parallelio+mpi")
-    depends_on("parallelio@2.5.9: ~mpi", when="@8.4.0:8.4.99+external-parallelio~mpi")
-    depends_on("parallelio@2.5.10: +mpi", when="@8.5.0:+external-parallelio+mpi")
-    depends_on("parallelio@2.5.10: ~mpi", when="@8.5.0:+external-parallelio~mpi")
+    depends_on("parallelio@2.5.7: +mpi", when="@8.3+external-parallelio+mpi")
+    depends_on("parallelio@2.5.7: ~mpi", when="@8.3+external-parallelio~mpi")
+    depends_on("parallelio@2.5.9: +mpi", when="@8.4+external-parallelio+mpi")
+    depends_on("parallelio@2.5.9: ~mpi", when="@8.4+external-parallelio~mpi")
+    depends_on("parallelio@2.5.10: +mpi", when="@8.5:+external-parallelio+mpi")
+    depends_on("parallelio@2.5.10: ~mpi", when="@8.5:+external-parallelio~mpi")
     depends_on("cmake@3.5.2:", type="build", when="~external-parallelio")
 
     # Testing dependencies
@@ -241,7 +249,7 @@ class Esmf(MakefilePackage):
         if (
             self.compiler.name in ["gcc", "clang", "apple-clang"]
             and gfortran_major_version >= 10
-            and self.spec.satisfies("@:8.2.99")
+            and (self.spec.satisfies("@:8.2.99") or self.spec.satisfies("@8.3.0b09"))
         ):
             env.set("ESMF_F90COMPILEOPTS", "-fallow-argument-mismatch")
 
@@ -268,6 +276,9 @@ class Esmf(MakefilePackage):
         if "+mpi" in spec:
             if "^cray-mpich" in self.spec:
                 env.set("ESMF_COMM", "mpi")
+                # https://github.com/jcsda/spack-stack/issues/517
+                if self.spec.satisfies("@:8.4.1"):
+                    env.set("ESMF_CXXLINKLIBS", "-lmpifort -lmpi")
             elif "^mvapich2" in spec:
                 env.set("ESMF_COMM", "mvapich2")
             elif "^mpich" in spec:
@@ -327,7 +338,7 @@ class Esmf(MakefilePackage):
             netcdfc = spec["netcdf-c"]
             if netcdfc.satisfies("~shared"):
                 nc_config = which(os.path.join(netcdfc.prefix.bin, "nc-config"))
-                nc_flags = nc_config("--libs", output=str).strip()
+                nc_flags = nc_config("--static", "--libs", output=str).strip()
                 env.set("ESMF_NETCDF_LIBS", nc_flags)
 
         ###################

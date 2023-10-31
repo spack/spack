@@ -19,7 +19,7 @@ class PyJupyterServerProxy(PythonPackage):
 
     version("3.2.2", sha256="54690ea9467035d187c930c599e76065017baf16e118e6eebae0d3a008c4d946")
 
-    depends_on("py-jupyter-packaging7@0.7.9:0.7", type="build")
+    depends_on("py-jupyter-packaging@0.7.9:0.7", type="build")
     depends_on("py-jupyterlab@3.0:3", type="build")
     depends_on("py-setuptools@40.8.0:", type="build")
 

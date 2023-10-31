@@ -4,17 +4,19 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import tempfile
 
 from spack.package import *
 
 
-class Adios2(CMakePackage, CudaPackage):
+class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     """The Adaptable Input Output System version 2,
     developed in the Exascale Computing Program"""
 
     homepage = "https://csmd.ornl.gov/software/adios2"
     url = "https://github.com/ornladios/ADIOS2/archive/v2.8.0.tar.gz"
     git = "https://github.com/ornladios/ADIOS2.git"
+    test_requires_compiler = True
 
     maintainers("ax3l", "vicentebolea", "williamfgc")
 
@@ -60,7 +62,8 @@ class Adios2(CMakePackage, CudaPackage):
     variant(
         "libpressio", default=False, when="@2.8:", description="Enable LibPressio for compression"
     )
-    variant("blosc", default=True, when="@2.4:", description="Enable Blosc compression")
+    variant("blosc", default=True, when="@2.4:2.8", description="Enable Blosc compression")
+    variant("blosc2", default=True, when="@2.9:", description="Enable Blosc2 compression")
     variant("bzip2", default=True, when="@2.4:", description="Enable BZip2 compression")
     variant("zfp", default=True, description="Enable ZFP compression")
     variant("png", default=True, when="@2.4:", description="Enable PNG compression")
@@ -76,7 +79,7 @@ class Adios2(CMakePackage, CudaPackage):
         description="Enable the DataMan engine for WAN transports",
     )
     variant("dataspaces", default=False, when="@2.5:", description="Enable support for DATASPACES")
-    variant("ssc", default=True, description="Enable the SSC staging engine")
+    variant("ssc", default=True, when="@:2.7", description="Enable the SSC staging engine")
     variant("hdf5", default=False, description="Enable the HDF5 engine")
     variant(
         "aws",
@@ -92,7 +95,8 @@ class Adios2(CMakePackage, CudaPackage):
     )
 
     # Optional language bindings, C++11 and C always provided
-    variant("cuda", default=False, when="@2.8:", description="Enable CUDA support")
+    variant("kokkos", default=False, when="@2.9:", description="Enable Kokkos support")
+    variant("sycl", default=False, when="@2.10:", description="Enable SYCL support")
     variant("python", default=False, description="Enable the Python bindings")
     variant("fortran", default=True, description="Enable the Fortran bindings")
 
@@ -106,20 +110,51 @@ class Adios2(CMakePackage, CudaPackage):
 
     depends_on("cmake@3.12.0:", type="build")
 
+    # Standalone CUDA support
+    depends_on("cuda", when="+cuda ~kokkos")
+
+    # Kokkos support
+    depends_on("kokkos@3.7: +cuda +wrapper", when="+kokkos +cuda")
+    depends_on("kokkos@3.7: +rocm", when="+kokkos +rocm")
+    depends_on("kokkos@3.7: +sycl", when="+kokkos +sycl")
+
+    # Propagate CUDA target to kokkos for +cuda
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            "kokkos cuda_arch=%s" % cuda_arch, when="+kokkos +cuda cuda_arch=%s" % cuda_arch
+        )
+
+    # Propagate AMD GPU target to kokkos for +rocm
+    for amdgpu_value in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos amdgpu_target=%s" % amdgpu_value,
+            when="+kokkos +rocm amdgpu_target=%s" % amdgpu_value,
+        )
+
+    conflicts("+cuda", when="@:2.7")
+    conflicts("+rocm", when="@:2.8")
+
+    conflicts("+cuda", when="+sycl")
+    conflicts("+rocm", when="+cuda")
+    conflicts("+rocm", when="+sycl")
+
+    conflicts("+rocm", when="~kokkos", msg="ADIOS2 does not support HIP without Kokkos")
+    conflicts("+sycl", when="~kokkos", msg="ADIOS2 does not support SYCL without Kokkos")
+
     for _platform in ["linux", "darwin", "cray"]:
-        depends_on("pkgconfig", type="build", when="platform=%s" % _platform)
+        depends_on("pkgconfig", type="build", when=f"platform={_platform}")
         variant(
             "pic",
             default=False,
             description="Build pic-enabled static libraries",
-            when="platform=%s" % _platform,
+            when=f"platform={_platform}",
         )
         # libffi and libfabric and not currently supported on Windows
         # see Paraview's superbuild handling of libfabric at
         # https://gitlab.kitware.com/paraview/paraview-superbuild/-/blob/master/projects/adios2.cmake#L3
-        depends_on("libffi", when="+sst platform=%s" % _platform)  # optional in DILL
+        depends_on("libffi", when=f"+sst platform={_platform}")  # optional in DILL
         depends_on(
-            "libfabric@1.6.0:", when="+sst platform=%s" % _platform
+            "libfabric@1.6.0:", when=f"+sst platform={_platform}"
         )  # optional in EVPath and SST
         # depends_on('bison', when='+sst')     # optional in FFS, broken package
         # depends_on('flex', when='+sst')      # optional in FFS, depends on BISON
@@ -128,12 +163,13 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("libzmq", when="+dataman")
     depends_on("dataspaces@1.8.0:", when="+dataspaces")
 
+    depends_on("hdf5@:1.12", when="@:2.8 +hdf5")
     depends_on("hdf5~mpi", when="+hdf5~mpi")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
 
     depends_on("libpressio", when="+libpressio")
-    depends_on("c-blosc", when="@:2.8 +blosc")
-    depends_on("c-blosc2", when="@2.9: +blosc")
+    depends_on("c-blosc", when="+blosc")
+    depends_on("c-blosc2", when="+blosc2")
     depends_on("bzip2", when="+bzip2")
     depends_on("libpng@1.6:", when="+png")
     depends_on("zfp@0.5.1:0.5", when="+zfp")
@@ -199,6 +235,7 @@ class Adios2(CMakePackage, CudaPackage):
             from_variant("BUILD_SHARED_LIBS", "shared"),
             from_variant("ADIOS2_USE_AWSSDK", "aws"),
             from_variant("ADIOS2_USE_Blosc", "blosc"),
+            from_variant("ADIOS2_USE_Blosc2", "blosc2"),
             from_variant("ADIOS2_USE_BZip2", "bzip2"),
             from_variant("ADIOS2_USE_DataMan", "dataman"),
             from_variant("ADIOS2_USE_DataSpaces", "dataspaces"),
@@ -211,9 +248,13 @@ class Adios2(CMakePackage, CudaPackage):
             from_variant("ADIOS2_USE_SST", "sst"),
             from_variant("ADIOS2_USE_SZ", "sz"),
             from_variant("ADIOS2_USE_ZFP", "zfp"),
-            from_variant("ADIOS2_USE_CUDA", "cuda"),
             from_variant("ADIOS2_USE_Catalyst", "libcatalyst"),
             from_variant("ADIOS2_USE_LIBPRESSIO", "libpressio"),
+            self.define("ADIOS2_USE_CUDA", self.spec.satisfies("+cuda ~kokkos")),
+            self.define("ADIOS2_USE_Kokkos", self.spec.satisfies("+kokkos")),
+            self.define("Kokkos_ENABLE_CUDA", self.spec.satisfies("+cuda +kokkos")),
+            self.define("Kokkos_ENABLE_HIP", self.spec.satisfies("+rocm")),
+            self.define("Kokkos_ENABLE_SYCL", self.spec.satisfies("+sycl")),
             self.define("BUILD_TESTING", self.run_tests),
             self.define("ADIOS2_BUILD_EXAMPLES", False),
             self.define("ADIOS2_USE_Endian_Reverse", True),
@@ -238,8 +279,16 @@ class Adios2(CMakePackage, CudaPackage):
             args.extend(["-DCMAKE_Fortran_SUBMODULE_EXT=.smod", "-DCMAKE_Fortran_SUBMODULE_SEP=."])
 
         if "+python" in spec or self.run_tests:
-            args.append("-DPYTHON_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path)
-            args.append("-DPython_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path)
+            args.append(f"-DPYTHON_EXECUTABLE:FILEPATH={spec['python'].command.path}")
+            args.append(f"-DPython_EXECUTABLE:FILEPATH={spec['python'].command.path}")
+
+        # hip support
+        if "+cuda" in spec:
+            args.append(self.builder.define_cuda_architectures(self))
+
+        # hip support
+        if "+rocm" in spec:
+            args.append(self.builder.define_hip_architectures(self))
 
         return args
 
@@ -281,3 +330,58 @@ class Adios2(CMakePackage, CudaPackage):
             env.prepend_path("HDF5_PLUGIN_PATH", os.path.dirname(all_libs[idx]))
         except ValueError:
             pass
+
+    @run_after("install")
+    def setup_install_tests(self):
+        """
+        Copy the example files after the package is installed to an
+        install test subdirectory for use during `spack test run`.
+        """
+        extra_install_tests = [join_path("testing", "install", "C")]
+        self.cache_extra_test_sources(extra_install_tests)
+
+    def test_run_executables(self):
+        """Run installed adios2 executables"""
+
+        commands_and_args = [("bpls", ["-v", "-V"]), ("adios2-config", ["-v"])]
+
+        for cmd, opts in commands_and_args:
+            with test_part(
+                self,
+                f"test_run_executables_{cmd}",
+                purpose=f"run installed adios2 executable {cmd}",
+            ):
+                exe = which(join_path(self.prefix.bin, cmd))
+                exe(*opts)
+
+    def test_examples(self):
+        """Build and run an example program"""
+        src_dir = self.test_suite.current_test_cache_dir.testing.install.C
+        test_stage_dir = self.test_suite.test_dir_for_spec(self.spec)
+
+        # Create the build tree within this spec's test stage dir so it gets
+        # cleaned up automatically
+        build_dir = tempfile.mkdtemp(dir=test_stage_dir)
+
+        std_cmake_args = []
+
+        if "+mpi" in self.spec:
+            mpi_exec = join_path(self.spec["mpi"].prefix, "bin", "mpiexec")
+            std_cmake_args.append(f"-DMPIEXEC_EXECUTABLE={mpi_exec}")
+
+        built_programs = ["adios_c_mpi_test", "adios_adios2c_test", "adios_c_test"]
+
+        with working_dir(build_dir):
+            with test_part(
+                self, "test_examples_build", purpose="build example against installed adios2"
+            ):
+                cmake(src_dir, *std_cmake_args)
+                make()
+
+            for p in built_programs:
+                exe = which(join_path(".", p))
+                if exe:
+                    with test_part(
+                        self, f"test_examples_run_{p}", purpose=f"run built adios2 example {p}"
+                    ):
+                        exe()

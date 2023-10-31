@@ -508,6 +508,7 @@ complete -c spack -n '__fish_spack_using_command arch' -s b -l backend -d 'print
 # spack audit
 set -g __fish_spack_optspecs_spack_audit h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 audit' -f -a configs -d 'audit configuration files'
+complete -c spack -n '__fish_spack_using_command_pos 0 audit' -f -a externals -d 'check external detection in packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 audit' -f -a packages-https -d 'check https in packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 audit' -f -a packages -d 'audit package recipes'
 complete -c spack -n '__fish_spack_using_command_pos 0 audit' -f -a list -d 'list available checks and exits'
@@ -518,6 +519,14 @@ complete -c spack -n '__fish_spack_using_command audit' -s h -l help -d 'show th
 set -g __fish_spack_optspecs_spack_audit_configs h/help
 complete -c spack -n '__fish_spack_using_command audit configs' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command audit configs' -s h -l help -d 'show this help message and exit'
+
+# spack audit externals
+set -g __fish_spack_optspecs_spack_audit_externals h/help list
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 audit externals' -f -a '(__fish_spack_packages)'
+complete -c spack -n '__fish_spack_using_command audit externals' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command audit externals' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command audit externals' -l list -f -a list_externals
+complete -c spack -n '__fish_spack_using_command audit externals' -l list -d 'if passed, list which packages have detection tests'
 
 # spack audit packages-https
 set -g __fish_spack_optspecs_spack_audit_packages_https h/help all
@@ -687,7 +696,7 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
@@ -707,9 +716,13 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -f 
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -f -a fail_fast
 complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l base-image -r -f -a base_image
+complete -c spack -n '__fish_spack_using_command buildcache push' -l base-image -r -d 'specify the base image for the buildcache. '
+complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -f -a jobs
+complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned k/key= update-index spec-file= only= fail-fast base-image= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
@@ -729,6 +742,10 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast -f -a fail_fast
 complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l base-image -r -f -a base_image
+complete -c spack -n '__fish_spack_using_command buildcache create' -l base-image -r -d 'specify the base image for the buildcache. '
+complete -c spack -n '__fish_spack_using_command buildcache create' -s j -l jobs -r -f -a jobs
+complete -c spack -n '__fish_spack_using_command buildcache create' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache install
 set -g __fish_spack_optspecs_spack_buildcache_install h/help f/force m/multiple u/unsigned o/otherarch
@@ -890,23 +907,25 @@ complete -c spack -n '__fish_spack_using_command change' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command change' -s a -l all -d 'change all matching specs (allow changing more than one spec)'
 
 # spack checksum
-set -g __fish_spack_optspecs_spack_checksum h/help keep-stage b/batch l/latest p/preferred a/add-to-package verify
+set -g __fish_spack_optspecs_spack_checksum h/help keep-stage b/batch l/latest p/preferred a/add-to-package verify j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos 0 checksum' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 checksum' -f -a '(__fish_spack_package_versions $__fish_spack_argparse_argv[1])'
 complete -c spack -n '__fish_spack_using_command checksum' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command checksum' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command checksum' -l keep-stage -f -a keep_stage
 complete -c spack -n '__fish_spack_using_command checksum' -l keep-stage -d 'don\'t clean up staging area when command completes'
-complete -c spack -n '__fish_spack_using_command checksum' -s b -l batch -f -a batch
-complete -c spack -n '__fish_spack_using_command checksum' -s b -l batch -d 'don\'t ask which versions to checksum'
-complete -c spack -n '__fish_spack_using_command checksum' -s l -l latest -f -a latest
-complete -c spack -n '__fish_spack_using_command checksum' -s l -l latest -d 'checksum the latest available version'
-complete -c spack -n '__fish_spack_using_command checksum' -s p -l preferred -f -a preferred
-complete -c spack -n '__fish_spack_using_command checksum' -s p -l preferred -d 'checksum the known Spack preferred version'
-complete -c spack -n '__fish_spack_using_command checksum' -s a -l add-to-package -f -a add_to_package
-complete -c spack -n '__fish_spack_using_command checksum' -s a -l add-to-package -d 'add new versions to package'
+complete -c spack -n '__fish_spack_using_command checksum' -l batch -s b -f -a batch
+complete -c spack -n '__fish_spack_using_command checksum' -l batch -s b -d 'don\'t ask which versions to checksum'
+complete -c spack -n '__fish_spack_using_command checksum' -l latest -s l -f -a latest
+complete -c spack -n '__fish_spack_using_command checksum' -l latest -s l -d 'checksum the latest available version'
+complete -c spack -n '__fish_spack_using_command checksum' -l preferred -s p -f -a preferred
+complete -c spack -n '__fish_spack_using_command checksum' -l preferred -s p -d 'checksum the known Spack preferred version'
+complete -c spack -n '__fish_spack_using_command checksum' -l add-to-package -s a -f -a add_to_package
+complete -c spack -n '__fish_spack_using_command checksum' -l add-to-package -s a -d 'add new versions to package'
 complete -c spack -n '__fish_spack_using_command checksum' -l verify -f -a verify
 complete -c spack -n '__fish_spack_using_command checksum' -l verify -d 'verify known package checksums'
+complete -c spack -n '__fish_spack_using_command checksum' -s j -l jobs -r -f -a jobs
+complete -c spack -n '__fish_spack_using_command checksum' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack ci
 set -g __fish_spack_optspecs_spack_ci h/help
@@ -1273,7 +1292,7 @@ complete -c spack -n '__fish_spack_using_command dependencies' -s i -l installed
 complete -c spack -n '__fish_spack_using_command dependencies' -s t -l transitive -f -a transitive
 complete -c spack -n '__fish_spack_using_command dependencies' -s t -l transitive -d 'show all transitive dependencies'
 complete -c spack -n '__fish_spack_using_command dependencies' -l deptype -r -f -a deptype
-complete -c spack -n '__fish_spack_using_command dependencies' -l deptype -r -d 'comma-separated list of deptypes to traverse'
+complete -c spack -n '__fish_spack_using_command dependencies' -l deptype -r -d 'comma-separated list of deptypes to traverse (default=build,link,run,test)'
 complete -c spack -n '__fish_spack_using_command dependencies' -s V -l no-expand-virtuals -f -a expand_virtuals
 complete -c spack -n '__fish_spack_using_command dependencies' -s V -l no-expand-virtuals -d 'do not expand virtual dependencies'
 
@@ -1416,7 +1435,7 @@ complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -d 'show this help message and exit'
 
 # spack env activate
-set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view V/without-view p/prompt temp d/dir=
+set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view= V/without-view p/prompt temp d/dir=
 complete -c spack -n '__fish_spack_using_command_pos 0 env activate' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -d 'show this help message and exit'
@@ -1430,10 +1449,10 @@ complete -c spack -n '__fish_spack_using_command env activate' -l bat -f -a shel
 complete -c spack -n '__fish_spack_using_command env activate' -l bat -d 'print bat commands to activate the environment'
 complete -c spack -n '__fish_spack_using_command env activate' -l pwsh -f -a shell
 complete -c spack -n '__fish_spack_using_command env activate' -l pwsh -d 'print powershell commands to activate environment'
-complete -c spack -n '__fish_spack_using_command env activate' -s v -l with-view -f -a with_view
-complete -c spack -n '__fish_spack_using_command env activate' -s v -l with-view -d 'update PATH, etc., with associated view'
-complete -c spack -n '__fish_spack_using_command env activate' -s V -l without-view -f -a with_view
-complete -c spack -n '__fish_spack_using_command env activate' -s V -l without-view -d 'do not update PATH, etc., with associated view'
+complete -c spack -n '__fish_spack_using_command env activate' -l with-view -s v -r -f -a with_view
+complete -c spack -n '__fish_spack_using_command env activate' -l with-view -s v -r -d 'set runtime environment variables for specific view'
+complete -c spack -n '__fish_spack_using_command env activate' -l without-view -s V -f -a without_view
+complete -c spack -n '__fish_spack_using_command env activate' -l without-view -s V -d 'do not set runtime environment variables for any view'
 complete -c spack -n '__fish_spack_using_command env activate' -s p -l prompt -f -a prompt
 complete -c spack -n '__fish_spack_using_command env activate' -s p -l prompt -d 'decorate the command line prompt when activating'
 complete -c spack -n '__fish_spack_using_command env activate' -l temp -f -a temp
@@ -1815,7 +1834,7 @@ complete -c spack -n '__fish_spack_using_command graph' -s c -l color -d 'use di
 complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -f -a installed
 complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -d 'graph installed specs, or specs in the active env (implies --dot)'
 complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -f -a deptype
-complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -d 'comma-separated list of deptypes to traverse'
+complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -d 'comma-separated list of deptypes to traverse (default=build,link,run,test)'
 
 # spack help
 set -g __fish_spack_optspecs_spack_help h/help a/all spec
@@ -2128,7 +2147,7 @@ complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -
 complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -r -d 'find mirror to destroy by url'
 
 # spack mirror add
-set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= s3-access-key-id= s3-access-key-secret= s3-access-token= s3-profile= s3-endpoint-url=
+set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= s3-access-key-id= s3-access-key-secret= s3-access-token= s3-profile= s3-endpoint-url= oci-username= oci-password=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror add' -f
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -d 'show this help message and exit'
@@ -2146,6 +2165,10 @@ complete -c spack -n '__fish_spack_using_command mirror add' -l s3-profile -r -f
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-profile -r -d 'S3 profile name to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-endpoint-url -r -f -a s3_endpoint_url
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-endpoint-url -r -d 'endpoint URL to use to connect to this S3 mirror'
+complete -c spack -n '__fish_spack_using_command mirror add' -l oci-username -r -f -a oci_username
+complete -c spack -n '__fish_spack_using_command mirror add' -l oci-username -r -d 'username to use to connect to this OCI mirror'
+complete -c spack -n '__fish_spack_using_command mirror add' -l oci-password -r -f -a oci_password
+complete -c spack -n '__fish_spack_using_command mirror add' -l oci-password -r -d 'password to use to connect to this OCI mirror'
 
 # spack mirror remove
 set -g __fish_spack_optspecs_spack_mirror_remove h/help scope=
@@ -2164,7 +2187,7 @@ complete -c spack -n '__fish_spack_using_command mirror rm' -l scope -r -f -a '_
 complete -c spack -n '__fish_spack_using_command mirror rm' -l scope -r -d 'configuration scope to modify'
 
 # spack mirror set-url
-set -g __fish_spack_optspecs_spack_mirror_set_url h/help push fetch scope= s3-access-key-id= s3-access-key-secret= s3-access-token= s3-profile= s3-endpoint-url=
+set -g __fish_spack_optspecs_spack_mirror_set_url h/help push fetch scope= s3-access-key-id= s3-access-key-secret= s3-access-token= s3-profile= s3-endpoint-url= oci-username= oci-password=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror set-url' -f -a '(__fish_spack_mirrors)'
 complete -c spack -n '__fish_spack_using_command mirror set-url' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror set-url' -s h -l help -d 'show this help message and exit'
@@ -2184,9 +2207,13 @@ complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-profile -
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-profile -r -d 'S3 profile name to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-endpoint-url -r -f -a s3_endpoint_url
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-endpoint-url -r -d 'endpoint URL to use to connect to this S3 mirror'
+complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-username -r -f -a oci_username
+complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-username -r -d 'username to use to connect to this OCI mirror'
+complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-password -r -f -a oci_password
+complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-password -r -d 'password to use to connect to this OCI mirror'
 
 # spack mirror set
-set -g __fish_spack_optspecs_spack_mirror_set h/help push fetch type= url= scope= s3-access-key-id= s3-access-key-secret= s3-access-token= s3-profile= s3-endpoint-url=
+set -g __fish_spack_optspecs_spack_mirror_set h/help push fetch type= url= scope= s3-access-key-id= s3-access-key-secret= s3-access-token= s3-profile= s3-endpoint-url= oci-username= oci-password=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror set' -f -a '(__fish_spack_mirrors)'
 complete -c spack -n '__fish_spack_using_command mirror set' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror set' -s h -l help -d 'show this help message and exit'
@@ -2210,6 +2237,10 @@ complete -c spack -n '__fish_spack_using_command mirror set' -l s3-profile -r -f
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-profile -r -d 'S3 profile name to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-endpoint-url -r -f -a s3_endpoint_url
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-endpoint-url -r -d 'endpoint URL to use to connect to this S3 mirror'
+complete -c spack -n '__fish_spack_using_command mirror set' -l oci-username -r -f -a oci_username
+complete -c spack -n '__fish_spack_using_command mirror set' -l oci-username -r -d 'username to use to connect to this OCI mirror'
+complete -c spack -n '__fish_spack_using_command mirror set' -l oci-password -r -f -a oci_password
+complete -c spack -n '__fish_spack_using_command mirror set' -l oci-password -r -d 'password to use to connect to this OCI mirror'
 
 # spack mirror list
 set -g __fish_spack_optspecs_spack_mirror_list h/help scope=
@@ -2931,7 +2962,7 @@ complete -c spack -n '__fish_spack_using_command verify' -s f -l files -f -a typ
 complete -c spack -n '__fish_spack_using_command verify' -s f -l files -d 'treat entries as absolute filenames'
 
 # spack versions
-set -g __fish_spack_optspecs_spack_versions h/help s/safe safe-only r/remote n/new c/concurrency=
+set -g __fish_spack_optspecs_spack_versions h/help s/safe safe-only r/remote n/new j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos 0 versions' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command versions' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command versions' -s h -l help -d 'show this help message and exit'
@@ -2943,8 +2974,8 @@ complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -f -a 
 complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -d 'only list remote versions of the package'
 complete -c spack -n '__fish_spack_using_command versions' -s n -l new -f -a new
 complete -c spack -n '__fish_spack_using_command versions' -s n -l new -d 'only list remote versions newer than the latest checksummed version'
-complete -c spack -n '__fish_spack_using_command versions' -s c -l concurrency -r -f -a concurrency
-complete -c spack -n '__fish_spack_using_command versions' -s c -l concurrency -r -d 'number of concurrent requests'
+complete -c spack -n '__fish_spack_using_command versions' -s j -l jobs -r -f -a jobs
+complete -c spack -n '__fish_spack_using_command versions' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack view
 set -g __fish_spack_optspecs_spack_view h/help v/verbose e/exclude= d/dependencies=

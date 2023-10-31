@@ -191,6 +191,14 @@ def ci_generate(args):
     """
     env = spack.cmd.require_active_env(cmd_name="ci generate")
 
+    if args.copy_to:
+        tty.warn("The flag --copy-to is deprecated and will be removed in Spack 0.23")
+
+    if args.buildcache_destination:
+        tty.warn(
+            "The flag --buildcache-destination is deprecated and will be removed in Spack 0.23"
+        )
+
     output_file = args.output_file
     copy_yaml_to = args.copy_to
     run_optimizer = args.optimize
@@ -264,12 +272,6 @@ def ci_rebuild(args):
     if not ci_config:
         tty.die("spack ci rebuild requires an env containing ci cfg")
 
-    tty.msg(
-        "SPACK_BUILDCACHE_DESTINATION={0}".format(
-            os.environ.get("SPACK_BUILDCACHE_DESTINATION", None)
-        )
-    )
-
     # Grab the environment variables we need.  These either come from the
     # pipeline generation step ("spack ci generate"), where they were written
     # out as variables, or else provided by GitLab itself.
@@ -277,6 +279,7 @@ def ci_rebuild(args):
     job_log_dir = os.environ.get("SPACK_JOB_LOG_DIR")
     job_test_dir = os.environ.get("SPACK_JOB_TEST_DIR")
     repro_dir = os.environ.get("SPACK_JOB_REPRO_DIR")
+    # TODO: Remove this in Spack 0.23
     local_mirror_dir = os.environ.get("SPACK_LOCAL_MIRROR_DIR")
     concrete_env_dir = os.environ.get("SPACK_CONCRETE_ENV_DIR")
     ci_pipeline_id = os.environ.get("CI_PIPELINE_ID")
@@ -285,9 +288,12 @@ def ci_rebuild(args):
     job_spec_pkg_name = os.environ.get("SPACK_JOB_SPEC_PKG_NAME")
     job_spec_dag_hash = os.environ.get("SPACK_JOB_SPEC_DAG_HASH")
     spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE")
+    # TODO: Remove this in Spack 0.23
     remote_mirror_override = os.environ.get("SPACK_REMOTE_MIRROR_OVERRIDE")
+    # TODO: Remove this in Spack 0.23
     remote_mirror_url = os.environ.get("SPACK_REMOTE_MIRROR_URL")
     spack_ci_stack_name = os.environ.get("SPACK_CI_STACK_NAME")
+    # TODO: Remove this in Spack 0.23
     shared_pr_mirror_url = os.environ.get("SPACK_CI_SHARED_PR_MIRROR_URL")
     rebuild_everything = os.environ.get("SPACK_REBUILD_EVERYTHING")
     require_signing = os.environ.get("SPACK_REQUIRE_SIGNING")
@@ -344,21 +350,36 @@ def ci_rebuild(args):
 
     full_rebuild = True if rebuild_everything and rebuild_everything.lower() == "true" else False
 
+    pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
+    deprecated_mirror_config = False
+    buildcache_destination = None
+    if "buildcache-destination" in pipeline_mirrors:
+        buildcache_destination = pipeline_mirrors["buildcache-destination"]
+    else:
+        deprecated_mirror_config = True
+        # TODO: This will be an error in Spack 0.23
+
     # If no override url exists, then just push binary package to the
     # normal remote mirror url.
+    # TODO: Remove in Spack 0.23
     buildcache_mirror_url = remote_mirror_override or remote_mirror_url
+    if buildcache_destination:
+        buildcache_mirror_url = buildcache_destination.push_url
 
     # Figure out what is our temporary storage mirror: Is it artifacts
     # buildcache?  Or temporary-storage-url-prefix?  In some cases we need to
     # force something or pipelines might not have a way to propagate build
     # artifacts from upstream to downstream jobs.
+    # TODO: Remove this in Spack 0.23
     pipeline_mirror_url = None
 
+    # TODO: Remove this in Spack 0.23
     temp_storage_url_prefix = None
     if "temporary-storage-url-prefix" in ci_config:
         temp_storage_url_prefix = ci_config["temporary-storage-url-prefix"]
         pipeline_mirror_url = url_util.join(temp_storage_url_prefix, ci_pipeline_id)
 
+    # TODO: Remove this in Spack 0.23
     enable_artifacts_mirror = False
     if "enable-artifacts-buildcache" in ci_config:
         enable_artifacts_mirror = ci_config["enable-artifacts-buildcache"]
@@ -454,12 +475,14 @@ def ci_rebuild(args):
     # If we decided there should be a temporary storage mechanism, add that
     # mirror now so it's used when we check for a hash match already
     # built for this spec.
+    # TODO: Remove this block in Spack 0.23
     if pipeline_mirror_url:
         mirror = spack.mirror.Mirror(pipeline_mirror_url, name=spack_ci.TEMP_STORAGE_MIRROR_NAME)
         spack.mirror.add(mirror, cfg.default_modify_scope())
         pipeline_mirrors.append(pipeline_mirror_url)
 
     # Check configured mirrors for a built spec with a matching hash
+    # TODO: Remove this block in Spack 0.23
     mirrors_to_check = None
     if remote_mirror_override:
         if spack_pipeline_type == "spack_protected_branch":
@@ -477,7 +500,8 @@ def ci_rebuild(args):
             )
         pipeline_mirrors.append(remote_mirror_override)
 
-    if spack_pipeline_type == "spack_pull_request":
+    # TODO: Remove this in Spack 0.23
+    if deprecated_mirror_config and spack_pipeline_type == "spack_pull_request":
         if shared_pr_mirror_url != "None":
             pipeline_mirrors.append(shared_pr_mirror_url)
 
@@ -499,6 +523,7 @@ def ci_rebuild(args):
         tty.msg("No need to rebuild {0}, found hash match at: ".format(job_spec_pkg_name))
         for match in matches:
             tty.msg("    {0}".format(match["mirror_url"]))
+        # TODO: Remove this block in Spack 0.23
         if enable_artifacts_mirror:
             matching_mirror = matches[0]["mirror_url"]
             build_cache_dir = os.path.join(local_mirror_dir, "build_cache")
@@ -513,7 +538,8 @@ def ci_rebuild(args):
     # only want to keep the mirror being used by the current pipeline as it's binary
     # package destination.  This ensures that the when we rebuild everything, we only
     # consume binary dependencies built in this pipeline.
-    if full_rebuild:
+    # TODO: Remove this in Spack 0.23
+    if deprecated_mirror_config and full_rebuild:
         spack_ci.remove_other_mirrors(pipeline_mirrors, cfg.default_modify_scope())
 
     # No hash match anywhere means we need to rebuild spec
@@ -579,7 +605,9 @@ def ci_rebuild(args):
             "SPACK_COLOR=always",
             "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
             "-j$(nproc)",
-            "install-deps/{}".format(job_spec.format("{name}-{version}-{hash}")),
+            "install-deps/{}".format(
+                ev.depfile.MakefileSpec(job_spec).safe_format("{name}-{version}-{hash}")
+            ),
         ],
         spack_cmd + ["install"] + root_install_args,
     ]
@@ -676,21 +704,25 @@ def ci_rebuild(args):
     # print out some instructions on how to reproduce this build failure
     # outside of the pipeline environment.
     if install_exit_code == 0:
-        if buildcache_mirror_url or pipeline_mirror_url:
-            for result in spack_ci.create_buildcache(
-                input_spec=job_spec,
-                buildcache_mirror_url=buildcache_mirror_url,
-                pipeline_mirror_url=pipeline_mirror_url,
-                sign_binaries=spack_ci.can_sign_binaries(),
-            ):
-                msg = tty.msg if result.success else tty.warn
-                msg(
-                    "{} {} to {}".format(
-                        "Pushed" if result.success else "Failed to push",
-                        job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when()),
-                        result.url,
-                    )
+        mirror_urls = [buildcache_mirror_url]
+
+        # TODO: Remove this block in Spack 0.23
+        if pipeline_mirror_url:
+            mirror_urls.append(pipeline_mirror_url)
+
+        for result in spack_ci.create_buildcache(
+            input_spec=job_spec,
+            destination_mirror_urls=mirror_urls,
+            sign_binaries=spack_ci.can_sign_binaries(),
+        ):
+            msg = tty.msg if result.success else tty.warn
+            msg(
+                "{} {} to {}".format(
+                    "Pushed" if result.success else "Failed to push",
+                    job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when()),
+                    result.url,
                 )
+            )
 
         # If this is a develop pipeline, check if the spec that we just built is
         # on the broken-specs list. If so, remove it.

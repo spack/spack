@@ -6,6 +6,7 @@
 import os
 import shutil
 import sys
+from platform import machine
 
 from spack.package import *
 
@@ -47,6 +48,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # 'develop' is a special version that is always larger (or newer) than any
     # other version.
     version("develop", branch="master")
+
+    version(
+        "4.6.0",
+        sha256="5fa9465b5bec56bfb777a4d2826fba48d85fbace4aed8b64a2fd4059bf075b15",
+        url="https://bit.ly/mfem-4-6",
+        extension="tar.gz",
+    )
 
     version(
         "4.5.2",
@@ -286,6 +294,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "sundials@5.4.0:+cuda cuda_arch={0}".format(sm_),
             when="@4.2.0:+sundials+cuda cuda_arch={0}".format(sm_),
         )
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "sundials@5.7.0:+rocm amdgpu_target={0}".format(gfx),
+            when="@4.6.0:+sundials+rocm amdgpu_target={0}".format(gfx),
+        )
     depends_on("pumi", when="+pumi~shared")
     depends_on("pumi+shared", when="+pumi+shared")
     depends_on("pumi@2.2.3:2.2.5", when="@4.2.0:4.3.0+pumi")
@@ -296,6 +309,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("gslib@1.0.7:", when="@4.3.0:+gslib")
     depends_on("suite-sparse", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on(
+            "superlu-dist+cuda cuda_arch={0}".format(sm_),
+            when="+superlu-dist+cuda cuda_arch={0}".format(sm_),
+        )
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "superlu-dist+rocm amdgpu_target={0}".format(gfx),
+            when="+superlu-dist+rocm amdgpu_target={0}".format(gfx),
+        )
     depends_on("strumpack@3.0.0:", when="+strumpack~shared")
     depends_on("strumpack@3.0.0:+shared", when="+strumpack+shared")
     for sm_ in CudaPackage.cuda_arch_values:
@@ -445,6 +468,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # upstream.
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
     patch("mfem-4.5.patch", when="@4.5.0")
+    patch("mfem-4.6.patch", when="@4.6.0")
 
     phases = ["configure", "build", "install"]
 
@@ -899,6 +923,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
+            hip_headers = HeaderList([])
             hip_libs = LibraryList([])
             # To use a C++ compiler that supports -xhip flag one can use
             # something like this:
@@ -909,7 +934,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             #   hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
             if "^hipsparse" in spec:  # hipsparse is needed @4.4.0:+rocm
                 hipsparse = spec["hipsparse"]
-                options += ["HIP_OPT=%s" % hipsparse.headers.cpp_flags]
+                hip_headers += hipsparse.headers
                 hip_libs += hipsparse.libs
                 # Note: MFEM's defaults.mk wants to find librocsparse.* in
                 # $(HIP_DIR)/lib, so we set HIP_DIR to be $ROCM_PATH when using
@@ -919,11 +944,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     options += ["HIP_DIR=%s" % env["ROCM_PATH"]]
                 else:
                     options += ["HIP_DIR=%s" % hipsparse["rocsparse"].prefix]
+            if "^rocthrust" in spec and not spec["hip"].external:
+                # petsc+rocm needs the rocthrust header path
+                hip_headers += spec["rocthrust"].headers
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
-                craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+                craylibs_path = env["CRAYLIBS_" + machine().upper()]
                 craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
                 hip_libs += find_libraries(craylibs, craylibs_path)
+            if hip_headers:
+                options += ["HIP_OPT=%s" % hip_headers.cpp_flags]
             if hip_libs:
                 options += ["HIP_LIB=%s" % ld_flags_from_library_list(hip_libs)]
 
@@ -1174,6 +1204,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 sun_comps += ",nvecparhyp,nvecparallel"
         if "+cuda" in spec and "+cuda" in spec["sundials"]:
             sun_comps += ",nveccuda"
+        if "+rocm" in spec and "+rocm" in spec["sundials"]:
+            sun_comps += ",nvechip"
         return sun_comps
 
     @property

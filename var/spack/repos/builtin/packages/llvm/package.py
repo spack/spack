@@ -35,6 +35,7 @@ class Llvm(CMakePackage, CudaPackage):
     family = "compiler"  # Used by lmod
 
     version("main", branch="main")
+    version("17.0.1", sha256="d51b10be66c10a6a81f4c594b554ffbf1063ffbadcb810af37d1f88d6e0b49dd")
     version("16.0.6", sha256="56b2f75fdaa95ad5e477a246d3f0d164964ab066b4619a01836ef08e475ec9d5")
     version("16.0.5", sha256="e0fbca476693fcafa125bc71c8535587b6d9950293122b66b262bb4333a03942")
     version("16.0.4", sha256="10c3fe1757d2e4f1cd7745dc548ecf687680a71824ec81701c38524c2a0753e2")
@@ -242,6 +243,8 @@ class Llvm(CMakePackage, CudaPackage):
         description="Enable zstd support for static analyzer / lld",
     )
 
+    provides("libllvm@16", when="@16.0.0:16")
+    provides("libllvm@15", when="@15.0.0:15")
     provides("libllvm@14", when="@14.0.0:14")
     provides("libllvm@13", when="@13.0.0:13")
     provides("libllvm@12", when="@12.0.0:12")
@@ -559,6 +562,16 @@ class Llvm(CMakePackage, CudaPackage):
     patch("add-include-for-libelf-llvm-12-14.patch", when="@12:14")
     patch("add-include-for-libelf-llvm-15.patch", when="@15")
 
+    @when("@14:17")
+    def patch(self):
+        # https://github.com/llvm/llvm-project/pull/69458
+        filter_file(
+            r"${TERMINFO_LIB}",
+            r"${Terminfo_LIBRARIES}",
+            "lldb/source/Core/CMakeLists.txt",
+            string=True,
+        )
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
@@ -596,6 +609,8 @@ class Llvm(CMakePackage, CudaPackage):
             compiler = Executable(exe)
             output = compiler("--version", output=str, error=str)
             if "Apple" in output:
+                return None
+            if "AMD" in output:
                 return None
             match = version_regex.search(output)
             if match:
@@ -736,14 +751,6 @@ class Llvm(CMakePackage, CudaPackage):
                     mkdirp(self.stage.path)
                     os.symlink(bin, sym)
             env.prepend_path("PATH", self.stage.path)
-
-    def setup_run_environment(self, env):
-        if "+clang" in self.spec:
-            env.set("CC", join_path(self.spec.prefix.bin, "clang"))
-            env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
-        if "+flang" in self.spec:
-            env.set("FC", join_path(self.spec.prefix.bin, "flang"))
-            env.set("F77", join_path(self.spec.prefix.bin, "flang"))
 
     root_cmakelists_dir = "llvm"
 

@@ -186,7 +186,7 @@ def solve(parser, args):
             timers=args.timers,
             stats=args.stats,
             setup_only=setup_only,
-            deprecated=allow_deprecated,
+            allow_deprecated=allow_deprecated,
         )
         if not setup_only:
             _process_result(result, show, required_format, kwargs)
@@ -197,7 +197,7 @@ def solve(parser, args):
                 out=output,
                 timers=args.timers,
                 stats=args.stats,
-                deprecated=allow_deprecated,
+                allow_deprecated=allow_deprecated,
             )
         ):
             if "solutions" in show:

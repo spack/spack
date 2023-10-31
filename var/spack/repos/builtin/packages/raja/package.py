@@ -114,6 +114,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     variant("openmp", default=True, description="Build OpenMP backend")
     variant("shared", default=True, description="Build Shared Libs")
+    variant("plugins", default=False, description="Enable runtime plugins")
     variant("examples", default=True, description="Build examples.")
     variant("exercises", default=True, description="Build exercises.")
     # TODO: figure out gtest dependency and then set this default True
@@ -137,7 +138,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@:3.20", when="@:2022.03+rocm", type="build")
     depends_on("cmake@3.23:", when="@2022.10:+rocm", type="build")
-    depends_on("cmake@3.14:", when="@2022.03.0:")
+    depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
 
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 
@@ -225,6 +226,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "camp" in self.spec:
             entries.append(cmake_cache_path("camp_DIR", spec["camp"].prefix))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
+        entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", "+plugins" in spec))
         entries.append(
             cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)
         )
