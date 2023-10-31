@@ -481,7 +481,14 @@ class PythonPipBuilder(BaseBuilder):
         else:
             args.append(".")
 
-        pip = inspect.getmodule(pkg).pip
+        pip = spec["python"].command
+        # Hide user packages, since we don't have build isolation. This is
+        # necessary because pip / setuptools may run hooks from arbitrary
+        # packages during the build. There is no equivalent variable to hide
+        # system packages, so we this is not reliable for external Python.
+        pip.add_default_env("PYTHONNOUSERSITE", "1")
+        pip.add_default_arg("-m")
+        pip.add_default_arg("pip")
         with fs.working_dir(self.build_directory):
             pip(*args)
 
