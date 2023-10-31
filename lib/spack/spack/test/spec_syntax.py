@@ -525,6 +525,31 @@ def specfile_for(default_mock_concretization):
             ],
             "zlib@git.foo/bar",
         ),
+        # Variant propagation
+        (
+            "zlib ++foo",
+            [
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(TokenType.PROPAGATED_BOOL_VARIANT, "++foo"),
+            ],
+            "zlib++foo",
+        ),
+        (
+            "zlib ~~foo",
+            [
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(TokenType.PROPAGATED_BOOL_VARIANT, "~~foo"),
+            ],
+            "zlib~~foo",
+        ),
+        (
+            "zlib foo==bar",
+            [
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(TokenType.PROPAGATED_KEY_VALUE_PAIR, "foo==bar"),
+            ],
+            "zlib foo==bar",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip):
