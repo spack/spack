@@ -1238,7 +1238,7 @@ class SpackSolverSetup:
             message=None,
         )
 
-    def pkg_rules(self, pkg, tests, variant_maps):
+    def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
 
         # versions
@@ -1246,7 +1246,7 @@ class SpackSolverSetup:
         self.gen.newline()
 
         # variants
-        self.variant_rules(pkg, variant_maps)
+        self.variant_rules(pkg)
 
         # conflicts
         self.conflict_rules(pkg)
@@ -1298,7 +1298,7 @@ class SpackSolverSetup:
                 self.gen.newline()
         self._effect_cache.clear()
 
-    def variant_rules(self, pkg, variant_maps):
+    def variant_rules(self, pkg):
         for name, entry in sorted(pkg.variants.items()):
             variant, when = entry
 
@@ -1314,12 +1314,6 @@ class SpackSolverSetup:
 
                     cond_id = self.condition(w, name=pkg.name, msg=msg)
                     self.gen.fact(fn.pkg_fact(pkg.name, fn.conditional_variant(cond_id, name)))
-            for variant_map in variant_maps:
-                if name in variant_map:
-                    break
-
-            concrete_variant = variant_map.get(name, None)
-
             single_value = not variant.multi
             if single_value:
                 self.gen.fact(fn.pkg_fact(pkg.name, fn.variant_single_value(name)))
@@ -1328,7 +1322,7 @@ class SpackSolverSetup:
                         pkg.name, fn.variant_default_value_from_package_py(name, variant.default)
                     )
                 )
-            elif not concrete_variant or not concrete_variant.propagate:
+            else:
                 spec_variant = variant.make_default()
                 defaults = spec_variant.value
                 for val in sorted(defaults):
@@ -2471,14 +2465,10 @@ class SpackSolverSetup:
             allow_deprecated=allow_deprecated, require_checksum=checksummed
         )
 
-        spec_variants = []
-        for spec in specs:
-            spec_variants.append(spec.variants)
-
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
             self.gen.h2("Package rules: %s" % pkg)
-            self.pkg_rules(pkg, tests=self.tests, variant_maps=spec_variants)
+            self.pkg_rules(pkg, tests=self.tests)
             self.gen.h2("Package preferences: %s" % pkg)
             self.preferred_variants(pkg)
             self.target_preferences(pkg)
