@@ -217,7 +217,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("onnx@1.8.0_2020-11-03", when="@1.8:1.9+onnx_ml")
     depends_on("onnx@1.7.0_2020-05-31", when="@1.6:1.7+onnx_ml")
     with when("~custom-protobuf"):
-        depends_on("protobuf@3.13.0", when="@1.10:")
+        depends_on("protobuf@3.13.0.1", when="@1.10:")
         depends_on("protobuf@3.11.4", when="@1.6:1.9")
         depends_on("protobuf@3.6.1", when="@1.1:1.5")
         depends_on("protobuf@3.5.0", when="@1.0")
