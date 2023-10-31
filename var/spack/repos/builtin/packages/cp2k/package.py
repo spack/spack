@@ -84,6 +84,13 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         when="@6.1:",
     )
     variant(
+        "dlaf",
+        default=False,
+        description="Enable DLA-Future eigensolver and Cholesky decomposition",
+        # TODO: Pin version when integrated in a release
+        when="@master build_system=cmake",
+    )
+    variant(
         "sirius",
         default=False,
         description="Enable planewave electronic structure calculations via SIRIUS",
@@ -226,6 +233,15 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("elpa@2021.11.001:", when="@9.1:")
         depends_on("elpa@2023.05.001:", when="@2023.2:")
 
+    with when("+dlaf"):
+        conflicts(
+            "~mpi", msg="DLA-Future requires MPI. Only the distributed eigensolver is available."
+        )
+        depends_on("dla-future@0.2.1: +scalapack")
+        depends_on("dla-future ~cuda~rocm", when="~cuda~rocm")
+        depends_on("dla-future +cuda", when="+cuda")
+        depends_on("dla-future +rocm", when="+rocm")
+
     with when("+plumed"):
         depends_on("plumed+shared")
         depends_on("plumed+mpi", when="+mpi")
@@ -276,12 +292,10 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     depends_on("wannier90", when="@3.0+mpi")
 
     with when("build_system=cmake"):
-        depends_on("dbcsr")
-        depends_on("dbcsr@2.6:", when="@2023.2:")
+        depends_on("dbcsr@2.6:")
         depends_on("dbcsr+openmp", when="+openmp")
         depends_on("dbcsr+cuda", when="+cuda")
         depends_on("dbcsr+rocm", when="+rocm")
-        conflicts("+mpi_f08", when="@:2023.2")
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts("%apple-clang")
@@ -352,6 +366,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     # These patches backport 2023.x fixes to previous versions
     patch("backport_avoid_null_2022.x.patch", when="@2022.1:2022.2 %aocc@:4.0")
     patch("backport_avoid_null_9.1.patch", when="@9.1 %aocc@:4.0")
+    patch("cmake-fixes-2023.2.patch", when="@2023.2 build_system=cmake")
 
     # Patch for an undefined constant due to incompatible changes in ELPA
     @when("@9.1:2022.2 +elpa")
@@ -427,9 +442,13 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         ldflags = []
         libs = []
 
-        # CP2K Makefile doesn't set C standard, but the source code uses
-        # C99-style for-loops with inline definition of iterating variable.
-        cflags.append(self.compiler.c99_flag)
+        # CP2K Makefile doesn't set C standard
+        if spec.satisfies("@2023.2:"):
+            # Use of DBL_DECIMAL_DIG
+            cflags.append(self.compiler.c11_flag)
+        else:
+            # C99-style for-loops with inline definition of iterating variable.
+            cflags.append(self.compiler.c99_flag)
 
         if "%intel" in spec:
             cflags.append("-fp-model precise")
@@ -942,6 +961,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         args += [
             self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
             self.define_from_variant("CP2K_USE_ELPA", "elpa"),
+            self.define_from_variant("CP2K_USE_DLAF", "dlaf"),
             self.define_from_variant("CP2K_USE_LIBINT2", "libint"),
             self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
             self.define_from_variant("CP2K_USE_SPLA", "spla"),

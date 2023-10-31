@@ -45,6 +45,9 @@ class PyPyzmq(PythonPackage):
 
     # pyproject.toml
     depends_on("py-setuptools", type="build")
+    # https://github.com/zeromq/pyzmq/issues/1278
+    # https://github.com/zeromq/pyzmq/pull/1317
+    depends_on("py-setuptools@:59", when="@17:18.0", type="build")
     depends_on("py-packaging", type="build")
 
     # setup.py
