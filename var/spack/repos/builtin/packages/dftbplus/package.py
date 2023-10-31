@@ -257,12 +257,29 @@ class Dftbplus(CMakePackage, MakefilePackage):
         ]
         # SCALAPACK
         if "+mpi" in self.spec:
+            # we use scalapack for linear algebra
             args.extend(
                 [
                     self.define("SCALAPACK_FOUND", "true"),
                     self.define("SCALAPACK_INCLUDE_DIRS", self.spec["scalapack"].prefix.include),
                     self.define("SCALAPACK_LIBRARIES", self.spec["scalapack"].libs.joined(";")),
                     self.define("SCALAPACK_LIBRARY", self.spec["scalapack"].libs.joined(";")),
+                ]
+            )
+        else:
+            # we define the lapack and blas libraries
+            lapack_libs = self.spec["lapack"].libs.joined(";")
+            blas_libs = self.spec["blas"].libs.joined(";")
+            args.extend(
+                [
+                    self.define("LAPACK_FOUND", True),
+                    self.define("LAPACK_INCLUDE_DIRS", self.spec["lapack"].prefix.include),
+                    self.define("LAPACK_LIBRARIES", lapack_libs),
+                    self.define("LAPACK_LIBRARY", lapack_libs),
+                    self.define("BLAS_FOUND", True),
+                    self.define("BLAS_INCLUDE_DIRS", self.spec["blas"].prefix.include),
+                    self.define("BLAS_LIBRARIES", blas_libs),
+                    self.define("BLAS_LIBRARY", blas_libs),
                 ]
             )
         if "+python" in self.spec:
