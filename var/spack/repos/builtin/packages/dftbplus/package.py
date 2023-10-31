@@ -59,6 +59,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
         default=False,
         description="Use the ELSI library for large scale systems. "
         "Only has any effect if you build with '+mpi'",
+        when="+mpi"
     )
     variant(
         "gpu",
