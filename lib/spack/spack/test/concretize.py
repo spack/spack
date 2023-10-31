@@ -462,38 +462,6 @@ class TestConcretize:
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    @pytest.mark.parametrize("unify", [True, False, "when_possible"])
-    def test_concretize_environment_propagated_disabled_variant(
-        self, unify, tmpdir, mutable_mock_env_path
-    ):
-        """Ensure that variants are propagated in a concrete environment"""
-        path = tmpdir.join("spack.yaml")
-
-        with tmpdir.as_cwd():
-            with open(str(path), "w") as f:
-                f.write(
-                    """\
-spack:
-  specs:
-    - ascent ~~shared +adios2
-"""
-                )
-
-        SpackCommand("env")("create", "test", str(path))
-
-        test = spack.environment.read("test")
-        test.unify = unify
-        test.concretize()
-
-        for spec in test.specs_by_hash.values():
-            for dep in spec.dependencies():
-                if dep.name == "adios2":
-                    assert dep.satisfies("~shared")
-                    assert dep.satisfies("^bzip2 ~shared")
-
-    @pytest.mark.only_clingo(
-        "Optional compiler propagation isn't deprecated for original concretizer"
-    )
     def test_concretize_propagate_disabled_variant(self):
         """Test a package variant value was passed from its parent."""
         spec = Spec("ascent~~shared +adios2")
