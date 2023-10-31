@@ -161,7 +161,6 @@ class LlvmAmdgpu(CMakePackage):
     # OpenMP clang toolchain looks for bitcode files in llvm/bin/../lib
     # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
     # Below patch is to look in the old path.
-    patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:")
     patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:5.6")
 
     # Below patch is to set the flag -mcode-object-version=none until
@@ -235,9 +234,7 @@ class LlvmAmdgpu(CMakePackage):
         resource(
             name="hsa-runtime",
             placement="hsa-runtime",
-            url="https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-{0}.tar.gz".format(
-                d_version
-            ),
+            url="https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-{d_version}.tar.gz",
             sha256=d_shasum,
             when="@{0}".format(d_version),
         )
@@ -256,9 +253,7 @@ class LlvmAmdgpu(CMakePackage):
         resource(
             name="comgr",
             placement="comgr",
-            url="https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-{0}.tar.gz".format(
-                d_version
-            ),
+            url="https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-{d_version}.tar.gz",
             sha256=d_shasum,
             when="@{0}".format(d_version),
         )
