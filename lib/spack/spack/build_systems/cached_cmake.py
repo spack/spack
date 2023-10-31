@@ -299,8 +299,8 @@ class CachedCMakeBuilder(CMakeBuilder):
                     # the full spec, only implied by the +rocm variant.
                     llvm_amdgpu_clang = "{0}/clang".format(spec["llvm-amdgpu"].prefix.bin)
                     llvm_amdgpu_clangpp = "{0}/clang++".format(spec["llvm-amdgpu"].prefix.bin)
-                    entries.append(cmake_cache_string("CMAKE_C_COMPILER", llvm_amdgpu_clang))
-                    entries.append(cmake_cache_string("CMAKE_CXX_COMPILER", llvm_amdgpu_clangpp))
+                    entries.append(cmake_cache_path("CMAKE_C_COMPILER", llvm_amdgpu_clang))
+                    entries.append(cmake_cache_path("CMAKE_CXX_COMPILER", llvm_amdgpu_clangpp))
                 else:
                     gcc_prefix = spec_uses_toolchain(spec)[0]
                 entries.append(
