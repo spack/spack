@@ -19,30 +19,30 @@
 { attr("virtual_node", node(0..X-1, Package)) } :- max_dupes(Package, X), virtual(Package).
 
 % Integrity constraints on DAG nodes
-:- attr("root", PackageNode), not attr("node", PackageNode).
-:- attr("version", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
-:- attr("node_version_satisfies", PackageNode), not attr("node", PackageNode).
-:- attr("hash", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_platform", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_os", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_target", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_compiler_version", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode).
-:- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("node_flag_source", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("no_flags", PackageNode, _), not attr("node", PackageNode).
-:- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode).
-:- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
-:- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
-:- attr("node_flag_source", ParentNode, _, _), not attr("node", ParentNode).
-:- attr("node_flag_source", _, _, ChildNode), not attr("node", ChildNode).
+error(100, "e5") :- attr("root", PackageNode), not attr("node", PackageNode).
+error(100, "e6") :- attr("version", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
+error(100, "e7") :- attr("node_version_satisfies", PackageNode), not attr("node", PackageNode).
+error(100, "e7") :- attr("hash", PackageNode, _), not attr("node", PackageNode).
+error(100, "e8") :- attr("node_platform", PackageNode, _), not attr("node", PackageNode).
+error(100, "e9") :- attr("node_os", PackageNode, _), not attr("node", PackageNode).
+error(100, "e10") :- attr("node_target", PackageNode, _), not attr("node", PackageNode).
+error(100, "e11") :- attr("node_compiler_version", PackageNode, _, _), not attr("node", PackageNode).
+error(100, "e12") :- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
+error(100, "e13") :- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode).
+error(100, "e14") :- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode).
+error(100, "e15") :- attr("node_flag_source", PackageNode, _, _), not attr("node", PackageNode).
+error(100, "e16") :- attr("no_flags", PackageNode, _), not attr("node", PackageNode).
+error(100, "e17") :- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode).
+error(100, "e18") :- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
+error(100, "e19") :- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
+error(100, "e20") :- attr("node_flag_source", ParentNode, _, _), not attr("node", ParentNode).
+error(100, "e21") :- attr("node_flag_source", _, _, ChildNode), not attr("node", ChildNode).
 
-:- attr("virtual_node", VirtualNode), not provider(_, VirtualNode).
-:- provider(_, VirtualNode), not attr("virtual_node", VirtualNode).
-:- provider(PackageNode, _), not attr("node", PackageNode).
+error(100, "e1") :- attr("virtual_node", VirtualNode), not provider(_, VirtualNode).
+error(100, "e2") :- provider(_, VirtualNode), not attr("virtual_node", VirtualNode).
+error(100, "e3") :- provider(PackageNode, _), not attr("node", PackageNode).
 
-:- attr("root", node(ID, PackageNode)), ID > min_dupe_id.
+error(100, "e4") :- attr("root", node(ID, PackageNode)), ID > min_dupe_id.
 
 % Nodes in the "root" unification set cannot depend on non-root nodes if the dependency is "link" or "run"
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "link"), ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)).
@@ -516,6 +516,13 @@ attr("virtual_node", VirtualNode) :- attr("virtual_root", VirtualNode).
 % then the provider is the root package.
 attr("root", PackageNode) :- attr("virtual_root", VirtualNode), provider(PackageNode, VirtualNode).
 
+attr("virtual_root", VirtualNode) :- attr("root", PackageNode), provider(PackageNode, VirtualNode).
+
+% This is required for require_cflags to pass with `require: w cflags="-O1"`
+1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) } :-
+  virtual_condition_holds(node(ProviderID, Provider), Virtual),
+  attr("node", node(ProviderID, Provider)).
+
 % The provider is selected among the nodes for which the virtual condition holds
 1 { provider(PackageNode, node(X, Virtual)) :
     attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual) } 1
@@ -674,10 +681,32 @@ activate_requirement(node(ID, Package), X) :-
   requirement_conditional(Package, X, Y).
 
 requirement_group_satisfied(node(ID, Package), X) :-
-  1 { condition_holds(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } 1,
+  1 { requirement_condition_satisfied(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } 1,
   requirement_policy(Package, X, "one_of"),
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X).
+
+requirement_condition_satisfied(Y, node(VirtualID, Virtual)) :-
+  condition_holds(Y, node(ProviderID, Provider)),
+  requirement_group_member(Y, Virtual, X),
+  provider(node(ProviderID, Provider), node(VirtualID, Virtual)).
+
+requirement_condition_satisfied(Y, node(ID, Package)) :-
+  condition_holds(Y, node(ID, Package)),
+  requirement_group_member(Y, Package, X).
+
+{ impose(EffectID, node(ID, Package)) } :-
+  pkg_fact(Package, condition_effect(Y, EffectID)),
+  requirement_group_member(Y, Package, X),
+  activate_requirement(node(ID, Package), X),
+  requirement_group(Package, X).
+
+{ impose(EffectID, node(ProviderID, Provider)) } :-
+  pkg_fact(Provider, condition_effect(Y, EffectID)),
+  provider(node(ProviderID, Provider), node(VirtualID, Virtual)),
+  requirement_group_member(Y, Virtual, X),
+  activate_requirement(node(VirtualID, Virtual), X),
+  requirement_group(Virtual, X).
 
 requirement_weight(node(ID, Package), Group, W) :-
   condition_holds(Y, node(ID, Package)),
@@ -696,15 +725,28 @@ requirement_group_satisfied(node(ID, Package), X) :-
 % flags if their only source is from a requirement. This is overly-specific
 % and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
 
-{ attr("node_flag", node(ID, A1), A2, A3) } :-
-  requirement_group_member(Y, Package, X),
-  activate_requirement(node(ID, Package), X),
-  imposed_constraint(Y,"node_flag_set", A1, A2, A3).
+% None of the following 3 are needed for `virtual-w:require: w cflags="-O1"`
+% (1) and (3) are needed for `y:require: cflags="-g"`
 
-{ attr("node_flag_source", node(ID, A1), A2, node(ID, A3)) } :-
-  requirement_group_member(Y, Package, X),
-  activate_requirement(node(ID, Package), X),
-  imposed_constraint(Y,"node_flag_source", A1, A2, A3).
+%{ attr("node_flag", node(ID, Package), FlagType, FlagValue) } :-
+%  requirement_group_member(ConditionID, Package, RequirementID),
+%  activate_requirement(node(ID, Package), RequirementID),
+%  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+%  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue).
+
+%{ attr("node_flag", node(ProviderID, Provider), FlagType, FlagValue) } :-
+%  requirement_group_member(ConditionID, Virtual, RequirementID),
+%  activate_requirement(node(VirtualID, Virtual), RequirementID),
+%  pkg_fact(Virtual, condition_effect(ConditionID, EffectID)),
+%  imposed_constraint(EffectID, "node_flag_set", Virtual, FlagType, FlagValue),
+%  provider(node(ProviderID, Provider), node(VirtualID, Virtual)).
+
+%{ attr("node_flag_source", node(NodeID1, Package1), FlagType, node(NodeID2, Package2)) } :-
+%  requirement_group_member(ConditionID, Package1, RequirementID),
+%  activate_requirement(node(NodeID1, Package1), RequirementID),
+%  pkg_fact(Package1, condition_effect(ConditionID, EffectID)),
+%  imposed_constraint(EffectID, "node_flag_source", Package1, FlagType, Package2),
+%  imposed_packages(NodeID2, Package2).
 
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {

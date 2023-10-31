@@ -1624,8 +1624,6 @@ class SpackSolverSetup:
                 spec.attach_git_version_lookup()
 
                 when_spec = spec
-                if virtual:
-                    when_spec = spack.spec.Spec(pkg_name)
 
                 try:
                     member_id = self.condition(
