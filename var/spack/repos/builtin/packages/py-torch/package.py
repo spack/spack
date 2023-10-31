@@ -184,6 +184,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("protobuf@3.11.4", when="@1.6:1.9")
     depends_on("protobuf@3.6.1", when="@1.1:1.5")
     depends_on("protobuf@3.5.0", when="@1.0")
+    depends_on("py-protobuf@3.13", when="@1.10:", type=("build", "run"))
+    depends_on("py-protobuf@3.11", when="@1.6:1.9", type=("build", "run"))
+    depends_on("py-protobuf@3.6", when="@1.1:1.5", type=("build", "run"))
+    depends_on("py-protobuf@3.5", when="@1.0", type=("build", "run"))
     depends_on("eigen")
     # https://github.com/pytorch/pytorch/issues/60329
     # depends_on("cpuinfo@2023-01-13", when="@2.1:")
