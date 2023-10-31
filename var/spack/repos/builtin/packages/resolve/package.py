@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Resolve(CMakePackage, CudaPackage):
+class Resolve(CMakePackage, CudaPackage, ROCmPackage):
     """ReSolve is a library of GPU-resident sparse linear solvers. It contains iterative and direct
     solvers designed to run on NVIDIA and AMD GPUs, as well as CPU devices."""
 
@@ -21,11 +21,9 @@ class Resolve(CMakePackage, CudaPackage):
 
     depends_on("suite-sparse", when="+klu")
 
-    # # We do not use CUDA modules of suite-sparse so we don't specify cuda_arch
-    # # For other dependencies we could
-    # for arch in CudaPackage.cuda_arch_values:
-    #   cuda_dep = "+cuda cuda_arch={0}".format(arch)
-    #   # depends_on("suite-sparse {0}".format(cuda_dep), when=cuda_dep)
+    # Need at least 5.6+
+    depends_on("rocsparse@5.6.0:", when="+rocm")
+    depends_on("rocblas@5.6.0:", when="+rocm")
 
     def cmake_args(self):
         args = []
@@ -35,18 +33,22 @@ class Resolve(CMakePackage, CudaPackage):
             [self.define("RESOLVE_USE_KLU", "klu"), self.define("RESOLVE_TEST_WITH_BSUB", False)]
         )
 
-        # This will error if no arch is provided, which is ok
-        # Perhaps there is a more graceful way to handle this:
-        # if not spec.satisfies("cuda_arch=none"):
-        # I don't think it is a good idea to build without cuda_arch when +cuda?
         if "+cuda" in spec:
             cuda_arch_list = spec.variants["cuda_arch"].value
             if cuda_arch_list[0] != "none":
                 args.append(self.define("CMAKE_CUDA_ARCHITECTURES", cuda_arch_list))
             else:
                 args.append(self.define("CMAKE_CUDA_ARCHITECTURES", "70;75;80"))
-        else:
-            args.append(self.define("RESOLVE_USE_CUDA", False))
-            args.append(self.define("RESOLVE_USE_GPU", False))
+            args.append(self.define("RESOLVE_USE_CUDA", True))
+            args.append(self.define("RESOLVE_USE_GPU", True))
+        elif "+rocm" in spec:
+            rocm_arch_list = spec.variants["amdgpu_target"].value
+            # `+rocm` conflicts with amdgpu_target == "none"...
+            # if rocm_arch_list[0] == "none":
+            #     rocm_arch_list = "gfx90a"
+            args.append(self.define("GPU_TARGETS", rocm_arch_list))
+            args.append(self.define("AMDGPU_TARGETS", rocm_arch_list))
+            args.append(self.define("RESOLVE_USE_HIP", True))
+            args.append(self.define("RESOLVE_USE_GPU", True))
 
         return args
