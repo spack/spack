@@ -214,7 +214,7 @@ class BuildcacheBootstrapper(Bootstrapper):
         with spack.config.override(self.mirror_scope):
             # This index is currently needed to get the compiler used to build some
             # specs that we know by dag hash.
-            spack.binary_distribution.binary_index.regenerate_spec_cache()
+            spack.binary_distribution.BINARY_INDEX.regenerate_spec_cache()
             index = spack.binary_distribution.update_cache_and_get_specs()
 
             if not index:

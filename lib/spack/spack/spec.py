@@ -75,6 +75,7 @@ import spack.dependency as dp
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
+import spack.parser
 import spack.patch
 import spack.paths
 import spack.platforms
@@ -1318,8 +1319,6 @@ class Spec:
         self.external_path = external_path
         self.external_module = external_module
         """
-        import spack.parser
-
         # Copy if spec_like is a Spec.
         if isinstance(spec_like, Spec):
             self._dup(spec_like)
@@ -4492,10 +4491,16 @@ class Spec:
 
     def __str__(self):
         sorted_nodes = [self] + sorted(
-            self.traverse(root=False), key=lambda x: x.name or x.abstract_hash
+            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
         )
-        spec_str = " ^".join(d.format() for d in sorted_nodes)
-        return spec_str.strip()
+        return " ^".join(d.format() for d in sorted_nodes).strip()
+
+    @property
+    def colored_str(self):
+        sorted_nodes = [self] + sorted(
+            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
+        )
+        return " ^".join(d.cformat() for d in sorted_nodes).strip()
 
     def install_status(self):
         """Helper for tree to print DB install status."""
