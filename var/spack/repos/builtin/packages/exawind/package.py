@@ -5,9 +5,10 @@
 # This software is released under the BSD 3-clause license. See LICENSE file
 # for more details.
 
-from spack import *
-from shutil import copyfile
 import os
+from shutil import copyfile
+
+from spack.package import *
 
 
 class Exawind(CudaPackage, ROCmPackage):
@@ -24,32 +25,40 @@ class Exawind(CudaPackage, ROCmPackage):
     # to avoid cloning the mesh submodule
     version("master", branch="main", submodules=True)
 
-    variant("openfast", default=False,
-            description="Enable OpenFAST integration")
-    variant("hypre", default=True,
-            description="Enable hypre solver")
-    variant("stk_simd", default=False,
-            description="Enable SIMD in STK")
-    variant("umpire", default=False,
-            description="Enable Umpire")
-    variant("tiny_profile", default=False,
-            description="Turn on AMR-wind with tiny profile")
-    variant("sycl", default=False,
-            description="Enable SYCL backend for AMR-Wind")
-    variant("gpu-aware-mpi", default=False,
-            description="gpu-aware-mpi")
+    variant("openfast", default=False, description="Enable OpenFAST integration")
+    variant("hypre", default=True, description="Enable hypre solver")
+    variant("stk_simd", default=False, description="Enable SIMD in STK")
+    variant("umpire", default=False, description="Enable Umpire")
+    variant("tiny_profile", default=False, description="Turn on AMR-wind with tiny profile")
+    variant("sycl", default=False, description="Enable SYCL backend for AMR-Wind")
+    variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
 
     conflicts("+hypre", when="+sycl")
 
     for arch in CudaPackage.cuda_arch_values:
-        depends_on("amr-wind+cuda cuda_arch=%s" % arch, when="+amr_wind_gpu+cuda cuda_arch=%s" % arch)
-        depends_on("nalu-wind+cuda cuda_arch=%s" % arch, when="+nalu_wind_gpu+cuda cuda_arch=%s" % arch)
-        depends_on("trilinos+cuda cuda_arch=%s" % arch, when="+nalu_wind_gpu+cuda cuda_arch=%s" % arch)
+        depends_on(
+            "amr-wind+cuda cuda_arch=%s" % arch, when="+amr_wind_gpu+cuda cuda_arch=%s" % arch
+        )
+        depends_on(
+            "nalu-wind+cuda cuda_arch=%s" % arch, when="+nalu_wind_gpu+cuda cuda_arch=%s" % arch
+        )
+        depends_on(
+            "trilinos+cuda cuda_arch=%s" % arch, when="+nalu_wind_gpu+cuda cuda_arch=%s" % arch
+        )
 
     for arch in ROCmPackage.amdgpu_targets:
-        depends_on("amr-wind+rocm amdgpu_target=%s" % arch, when="+amr_wind_gpu+rocm amdgpu_target=%s" % arch)
-        depends_on("nalu-wind+rocm amdgpu_target=%s" % arch, when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch)
-        depends_on("trilinos+rocm amdgpu_target=%s" % arch, when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch)
+        depends_on(
+            "amr-wind+rocm amdgpu_target=%s" % arch,
+            when="+amr_wind_gpu+rocm amdgpu_target=%s" % arch,
+        )
+        depends_on(
+            "nalu-wind+rocm amdgpu_target=%s" % arch,
+            when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch,
+        )
+        depends_on(
+            "trilinos+rocm amdgpu_target=%s" % arch,
+            when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch,
+        )
 
     depends_on("nalu-wind+tioga")
     depends_on("amr-wind+netcdf+mpi")

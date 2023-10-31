@@ -13,6 +13,7 @@ class Openfast(CMakePackage):
     git = "https://github.com/OpenFAST/openfast.git"
 
     maintainers("jrood-nrel")
+    patch("hub_seg_fault.patch", when="@2.7:3.2")
 
     version("develop", branch="dev")
     version("master", branch="main")

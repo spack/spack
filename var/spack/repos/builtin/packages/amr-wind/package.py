@@ -29,18 +29,10 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("tests", default=True, description="Activate regression tests")
     variant("tiny_profile", default=False, description="Activate tiny profile")
-    variant("cppcheck", default=False,
-            description="Turn on cppcheck")
-    variant("clangtidy", default=False,
-            description="Turn on clang-tidy")
-    variant("hdf5", default=False,
-            description="Enable HDF5 plots with ZFP compression")
-    variant("umpire", default=False,
-            description="Enable Umpire")
-    variant("sycl", default=False,
-            description="Enable SYCL backend")
-    variant("gpu-aware-mpi", default=False,
-            description="gpu-aware-mpi")
+    variant("hdf5", default=False, description="Enable HDF5 plots with ZFP compression")
+    variant("umpire", default=False, description="Enable Umpire")
+    variant("sycl", default=False, description="Enable SYCL backend")
+    variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
 
     depends_on("hypre~int64@2.20.0:", when="+hypre")
     depends_on("hypre+mpi", when="+hypre+mpi")
@@ -102,12 +94,6 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             define("AMR_WIND_ENABLE_ALL_WARNINGS", True),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
-
-        if "+cppcheck" in spec:
-            cmake_options.append(self.define("AMR_WIND_ENABLE_CPPCHECK", True))
-
-        if "+clangtidy" in spec:
-            cmake_options.append(self.define("AMR_WIND_ENABLE_CLANG_TIDY", True))
 
         if "+mpi" in self.spec:
             args.append(define("MPI_HOME", self.spec["mpi"].prefix))
