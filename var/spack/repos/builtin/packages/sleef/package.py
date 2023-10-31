@@ -45,6 +45,7 @@ class Sleef(CMakePackage):
 
     # Apple Clang build issues
     # https://github.com/shibatch/sleef/issues/474
+    conflicts("%apple-clang@15:")
 
     generator("ninja")
     depends_on("cmake@3.4.3:", type="build")
