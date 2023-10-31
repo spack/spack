@@ -104,6 +104,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
     variant(
         "transport",
         default=False,
+        when="+shared",
         description="Whether transport via libNEGF should be included. "
         "Only affects parallel build. "
         "(serial version is built without libNEGF/transport)",
