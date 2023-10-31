@@ -3765,7 +3765,7 @@ Similarly, ``spack install example +feature build_system=autotools`` will pick
 the  ``AutotoolsBuilder`` and invoke ``./configure --with-my-feature``.
 
 Dependencies are always specified in the package class. When some dependencies
-depend on the choice of the build system, it is possible to use when conditions as 
+depend on the choice of the build system, it is possible to use when conditions as
 usual:
 
 .. code-block:: python
@@ -3783,7 +3783,7 @@ usual:
            depends_on("cmake@3.18:", when="@2.0:", type="build")
            depends_on("cmake@3:", type="build")
 
-       # Specify extra build dependencies used only in the configure script 
+       # Specify extra build dependencies used only in the configure script
        with when("build_system=autotools"):
            depends_on("perl", type="build")
            depends_on("pkgconfig", type="build")
@@ -6831,25 +6831,58 @@ the adapter role is to "emulate" a method resolution order like the one represen
 Specifying License Information
 ------------------------------
 
-A significant portion of software that Spack packages is open source. Most open
-source software is released under one or more common open source licenses.
-Specifying the specific license that a package is released under in a project's
-`package.py` is good practice. To specify a license, find the SPDX identifier for
-a project and then add it using the license directive:
+Most of the software in Spack is open source, and most open source software is released
+under one or more `common open source licenses <https://opensource.org/licenses/>`_.
+Specifying the license that a package is released under in a project's
+`package.py` is good practice. To specify a license, find the `SPDX identifier
+<https://spdx.org/licenses/>`_ for a project and then add it using the license
+directive:
 
 .. code-block:: python
 
    license("<SPDX Identifier HERE>")
 
+For example, the SPDX ID for the Apache Software License, version 2.0 is ``Apache-2.0``,
+so you'd write:
+
+.. code-block:: python
+
+   license("Apache-2.0")
+
+Or, for a dual-licensed package like Spack, you would use an `SPDX Expression
+<https://spdx.github.io/spdx-spec/v2-draft/SPDX-license-expressions/>`_ with both of its
+licenses:
+
+.. code-block:: python
+
+   license("Apache-2.0 OR MIT")
+
 Note that specifying a license without a when clause makes it apply to all
 versions and variants of the package, which might not actually be the case.
 For example, a project might have switched licenses at some point or have
 certain build configurations that include files that are licensed differently.
-To account for this, you can specify when licenses should be applied. For
-example, to specify that a specific license identifier should only apply
-to versionup to and including 1.5, you could write the following directive:
+Spack itself used to be under the ``LGPL-2.1`` license, until it was relicensed
+in version ``0.12`` in 2018.
+
+You can specify when a ``license()`` directive applies using with a ``when=``
+clause, just like other directives. For example, to specify that a specific
+license identifier should only apply to versions up to ``0.11``, but another
+license should apply for later versions, you could write:
 
 .. code-block:: python
 
-   license("...", when="@:1.5")
+   license("LGPL-2.1", when="@:0.11")
+   license("Apache-2.0 OR MIT", when="@0.12:")
 
+Note that unlike for most other directives, the ``when=`` constraints in the
+``license()`` directive can't intersect. Spack needs to be able to resolve
+exactly one license identifier expression for any given version. To specify
+*multiple* licenses, use SPDX expressions and operators as above. The operators
+you probably care most about are:
+
+* ``OR``: user chooses one license to adhere to; and
+* ``AND``: user has to adhere to all the licenses.
+
+You may also care about `license exceptions
+<https://spdx.org/licenses/exceptions-index.html>`_ that use the ``WITH`` operator,
+e.g. ``Apache-2.0 WITH LLVM-exception``.
