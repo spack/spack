@@ -70,8 +70,6 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("nalu-wind+ninja", when="+ninja")
     depends_on("amr-wind+ninja", when="+ninja")
     depends_on("amr-wind+sycl", when="+sycl")
-    depends_on("nalu-wind@multiphase", when="@multiphase")
-    depends_on("amr-wind@multiphase", when="@multiphase")
     # not required but added so these get picked up as a
     # direct dependency when creating snapshots
     depends_on("trilinos")
