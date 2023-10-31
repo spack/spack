@@ -330,16 +330,21 @@ def create_in_dir(
     if with_view is None and keep_relative:
         return Environment(manifest_dir)
 
-    manifest = EnvironmentManifestFile(manifest_dir)
+    try:
+        manifest = EnvironmentManifestFile(manifest_dir)
 
-    if with_view is not None:
-        manifest.set_default_view(with_view)
+        if with_view is not None:
+            manifest.set_default_view(with_view)
 
-    if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
-        init_file = pathlib.Path(init_file)
-        manifest.absolutify_dev_paths(init_file.parent)
+        if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
+            init_file = pathlib.Path(init_file)
+            manifest.absolutify_dev_paths(init_file.parent)
 
-    manifest.flush()
+        manifest.flush()
+
+    except spack.config.ConfigFormatError as e:
+        shutil.rmtree(manifest_dir)
+        raise e
 
     return Environment(manifest_dir)
 
