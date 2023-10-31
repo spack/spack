@@ -19,6 +19,7 @@ documentation:
 * [Deploying modules on BlueBrain5](bluebrain/documentation/deploy_bb5.md)
 * [Debugging pull requests on BlueBrain5](bluebrain/documentation/debug_bb5.md)
 * [Continuous Integration with Spack on BlueBrain5](bluebrain/documentation/ci_bb5.md)
+* [Reproducing a failed CI build](bluebrain/documentation/reproduce_ci.md)
 
 # <img src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo.svg" width="64" valign="middle" alt="Spack"/> Spack
 
