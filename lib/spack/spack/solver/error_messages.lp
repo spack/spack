@@ -75,6 +75,9 @@ condition_cause(Condition2, Condition1, ID) :-
   imposed_nodes(Effect, node(ID1, Package1), node(ID, Package)),
   attr("depends_on", node(X, Parent), node(ID, Package), Type).
 
+% The literal startcauses is used to separate the variables that are part of the error from the
+% ones describing the causal tree of the error.
+
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
 error(1, "Cannot satisfy '{0}@{1}'", Package, Constraint, startcauses, ConstraintCause)
