@@ -13,7 +13,7 @@ import pprint
 import re
 import types
 import warnings
-from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union, Set
 
 import archspec.cpu
 
@@ -706,17 +706,19 @@ class ErrorHandler:
         cause: str,
         conditions: Dict[str, str],
         condition_causes: List[Tuple[str, str, str]],
+        seen: Set,
         indent: str = "        ",
     ) -> List[str]:
         """Implementation of recursion for self.get_cause_tree"""
-        parents = [c for e, c, _ in condition_causes if e == cause]
+        seen = set(seen) | set(cause)
+        parents = [c for e, c, _ in condition_causes if e == cause and c not in seen]
         local = "required because %s " % conditions[cause]
 
         return [indent + local] + [
             c
             for parent in parents
             for c in self._get_cause_tree(
-                parent, conditions, condition_causes, indent=indent + "  "
+                parent, conditions, condition_causes, seen, indent=indent + "  "
             )
         ]
 
@@ -734,7 +736,7 @@ class ErrorHandler:
         condition_causes: List[Tuple[str, str, str]] = list(
             extract_args(self.full_model, "condition_cause")
         )
-        return self._get_cause_tree(cause, conditions, condition_causes)
+        return self._get_cause_tree(cause, conditions, condition_causes, set())
 
     def handle_error(self, msg, *args):
         """Handle an error state derived by the solver."""
