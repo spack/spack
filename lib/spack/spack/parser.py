@@ -96,9 +96,9 @@ else:
 VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
 QUOTED_VALUE = r"[\"']+(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
 
-VERSION = r"=?([a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
-VERSION_RANGE = rf"({VERSION}\s*:\s*{VERSION}(?!\s*=)|:\s*{VERSION}(?!\s*=)|{VERSION}\s*:|:)"
-VERSION_LIST = rf"({VERSION_RANGE}|{VERSION})(\s*[,]\s*({VERSION_RANGE}|{VERSION}))*"
+VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
+VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
+VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
 
 
 class TokenBase(enum.Enum):
