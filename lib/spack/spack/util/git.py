@@ -24,7 +24,6 @@ def git(required: bool = False):
     # If we're running under pytest, add this to ignore the fix for CVE-2022-39253 in
     # git 2.38.1+. Do this in one place; we need git to do this in all parts of Spack.
     if git and "pytest" in sys.modules:
-        git.add_default_arg("-c")
-        git.add_default_arg("protocol.file.allow=always")
+        git.add_default_arg("-c", "protocol.file.allow=always")
 
     return git

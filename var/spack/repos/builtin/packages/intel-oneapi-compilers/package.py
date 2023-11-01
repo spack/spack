@@ -226,8 +226,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     def inject_rpaths(self):
         # Sets rpath so the compilers can work without setting LD_LIBRARY_PATH.
         patchelf = which("patchelf")
-        patchelf.add_default_arg("--set-rpath")
-        patchelf.add_default_arg(":".join(self._ld_library_path()))
+        patchelf.add_default_arg("--set-rpath", ":".join(self._ld_library_path()))
         for pd in ["bin", "lib", join_path("compiler", "lib", "intel64_lin")]:
             for file in find(self.component_prefix.linux.join(pd), "*", recursive=False):
                 # Try to patch all files, patchelf will do nothing and fail if file
