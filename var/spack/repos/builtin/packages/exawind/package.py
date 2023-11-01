@@ -28,7 +28,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     variant("sycl", default=False, description="Enable SYCL backend for AMR-Wind")
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
 
-    conflicts("+hypre", when="+sycl")
+    conflicts("amr-wind+hypre", when="+sycl")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on(
@@ -56,12 +56,10 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("openfast+cxx@2.6.0:", when="+openfast")
     depends_on("openfast+cxx@2.6.0:", when="^nalu-wind+openfast")
     depends_on("openfast+cxx@2.6.0:", when="^amr-wind+openfast")
-    depends_on("amr-wind+hypre", when="+hypre")
+    depends_on("amr-wind+hypre", when="+hypre~sycl")
     depends_on("amr-wind~hypre", when="~hypre")
+    depends_on("nalu-wind+hypre", when="+hypre")
     depends_on("nalu-wind~hypre", when="~hypre")
-    depends_on("trilinos+ninja", when="+ninja")
-    depends_on("nalu-wind+ninja", when="+ninja")
-    depends_on("amr-wind+ninja", when="+ninja")
     depends_on("amr-wind+sycl", when="+sycl")
     depends_on("nalu-wind+umpire", when="+umpire")
     depends_on("amr-wind+umpire", when="+umpire")
