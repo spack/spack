@@ -66,7 +66,7 @@ Resources:
 * **Matrix space**: [#spack-space:matrix.org](https://matrix.to/#/#spack-space:matrix.org):
   [bridged](https://github.com/matrix-org/matrix-appservice-slack#matrix-appservice-slack) to Slack.
 * [**Github Discussions**](https://github.com/spack/spack/discussions):
-  not just for discussions, also Q&A.
+  not just for discussions, but also Q&A.
 * **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
 * **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
   `@mention` us!
