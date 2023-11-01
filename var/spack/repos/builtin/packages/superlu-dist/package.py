@@ -53,7 +53,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         ),
     )
     variant("shared", default=True, description="Build shared libraries")
-    variant("parmetis", default=True, description="Build the ParMETIS library")
+    variant("parmetis", default=True, description="Enable ParMETIS library")
 
     depends_on("mpi")
     depends_on("blas")
