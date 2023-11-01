@@ -701,7 +701,14 @@ class ErrorHandler:
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
 
     # TODO GBB: make these only track within the same condition set
-    def _get_cause_tree(self, cause, conditions, condition_causes, literals, indent="        "):
+    def _get_cause_tree(
+        self,
+        cause: str,
+        conditions: Dict[str, str],
+        condition_causes: List[Tuple[str, str, str]],
+        indent: str = "        ",
+    ) -> List[str]:
+        """Implementation of recursion for self.get_cause_tree"""
         parents = [c for e, c, _ in condition_causes if e == cause]
         local = "required because %s " % conditions[cause]
 
@@ -709,14 +716,25 @@ class ErrorHandler:
             c
             for parent in parents
             for c in self._get_cause_tree(
-                parent, conditions, condition_causes, literals, indent=indent + "  "
+                parent, conditions, condition_causes, indent=indent + "  "
             )
         ]
 
-    def get_cause_tree(self, cause):
-        conditions = dict(extract_args(self.full_model, "condition_reason"))
-        condition_causes = list(extract_args(self.full_model, "condition_cause"))
-        return self._get_cause_tree(cause, conditions, condition_causes, [])
+    def get_cause_tree(self, cause: str) -> List[str]:
+        """
+        Get the cause tree associated with the given cause.
+
+        Arguments:
+            cause: The root cause of the tree (final condition)
+
+        Returns:
+            A list of strings describing the causes, formatted to display tree structure.
+        """
+        conditions: Dict[str, str] = dict(extract_args(self.full_model, "condition_reason"))
+        condition_causes: List[Tuple[str, str, str]] = list(
+            extract_args(self.full_model, "condition_cause")
+        )
+        return self._get_cause_tree(cause, conditions, condition_causes)
 
     def handle_error(self, msg, *args):
         """Handle an error state derived by the solver."""
