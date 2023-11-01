@@ -30,6 +30,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     patch("cmake-magma-v230.patch", when="@2.3.0")
+    patch("fortran200.patch", when="@2.0.0")
 
     depends_on("cmake@3.10:", when="@:2.3.0", type=("build", "run"))
     depends_on("cmake@3.19:", when="@2.4.0:", type=("build", "run"))
