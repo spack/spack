@@ -3477,9 +3477,9 @@ The above is short for:
    .. code-block:: python
 
       with default_args(when="+feature"):
-            depends_on("foo")
-            depends_on("bar")
-            depends_on("baz", when="+baz")
+          depends_on("foo")
+          depends_on("bar")
+          depends_on("baz", when="+baz")
 
    is equivalent to:
 
