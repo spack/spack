@@ -43,7 +43,6 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
         "msbuild", "autotools", default="autotools" if sys.platform != "win32" else "msbuild"
     )
 
-    patch("exit-prior-to-running-configure.patch", when="@1.1.1")
     patch("fix_encoding.patch", when="@1.1:")
     patch(
         "https://gitlab.xiph.org/xiph/theora/-/commit/7288b539c52e99168488dc3a343845c9365617c8.diff",
@@ -62,10 +61,9 @@ class AutotoolsBuilder(AutotoolsBuilder):
 
     def autoreconf(self, pkg, spec, prefix):
         sh = which("sh")
-        if self.spec.satisfies("target=aarch64:"):
-            sh("./autogen.sh", "prefix={0}".format(prefix), "--build=arm-linux")
-        else:
-            sh("./autogen.sh", "prefix={0}".format(prefix))
+        # arguments are passed on to configure, let it just print its version
+        # and exit, so that configure can run in the configure build phase
+        sh("./autogen.sh", "-V")
 
 
 class MSBuildBuilder(MSBuildBuilder):
