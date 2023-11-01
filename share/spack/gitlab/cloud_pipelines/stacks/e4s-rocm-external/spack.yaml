@@ -240,7 +240,7 @@ spack:
   specs:
   # ROCM NOARCH
   - hpctoolkit +rocm
-  - tau +mpi +rocm   # tau: has issue with `spack env depfile` build
+  - tau +mpi +rocm +syscall  # tau: has issue with `spack env depfile` build
 
   # ROCM 908
   - adios2 +kokkos +rocm amdgpu_target=gfx908
