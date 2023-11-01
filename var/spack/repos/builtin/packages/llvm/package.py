@@ -973,14 +973,12 @@ class Llvm(CMakePackage, CudaPackage):
                 cmake(*cmake_args)
                 ninja()
                 ninja("install")
-        if "+python" in self.spec:
-            install_tree("llvm/bindings/python", python_platlib)
-
-            if "+clang" in self.spec:
-                install_tree("clang/bindings/python", python_platlib)
+        if "+python" in spec and "+clang" in spec:
+            install_tree("clang/bindings/python/clang", join_path(site_packages_dir, "clang"))
 
         with working_dir(self.build_directory):
-            install_tree("bin", join_path(self.prefix, "libexec", "llvm"))
+            if not os.path.exists(join_path(self.prefix, "libexec", "llvm")):
+                install_tree("bin", join_path(self.prefix, "libexec", "llvm"))
 
     def llvm_config(self, *args, **kwargs):
         lc = Executable(self.prefix.bin.join("llvm-config"))
