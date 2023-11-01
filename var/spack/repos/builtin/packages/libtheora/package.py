@@ -49,6 +49,18 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
         sha256="e01ef71a1c19783a0b323b90a625e5c360ddb7ee03d2b6c201f1519f1704ea11",
         when="^libpng@1.6:",
     )
+    # add -no-undefined
+    patch(
+        "https://gitlab.xiph.org/xiph/theora/-/commit/391ab0e99f2ad730231dbe5fc1154b990087f17d.diff",
+        sha256="d9bb5a9573819a27b3a925b1b66c33b36d9bca11b05d8aef88566eb6c8700690",
+        when="@:1.1.1",
+    )
+    # link theoraenc to theoradec
+    patch(
+        "https://gitlab.xiph.org/xiph/theora/-/commit/133b951b60fd845eabbc38bf7acd998bb9be75fc.diff",
+        sha256="e01511aff0130a40c889868d3713a56458744f39d1bb5ad98c8058da50233aa7",
+        when="@:1.1.1",
+    )
     patch("libtheora-inc-external-ogg.patch", when="platform=windows")
 
 
