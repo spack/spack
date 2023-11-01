@@ -50,9 +50,7 @@ class Sleef(CMakePackage):
     generator("ninja")
     depends_on("cmake@3.4.3:", type="build")
 
-    def cmake_args(self):
-        return [
-            self.define("DISABLE_FFTW", True),
-            self.define("DISABLE_MPFR", True),
-            self.define("DISABLE_SSL", True),
-        ]
+    # https://github.com/shibatch/sleef/issues/475
+    depends_on("fftw-api")
+    depends_on("mpfr")
+    depends_on("openssl")
