@@ -37,9 +37,6 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(
             "nalu-wind+cuda cuda_arch=%s" % arch, when="+nalu_wind_gpu+cuda cuda_arch=%s" % arch
         )
-        depends_on(
-            "trilinos+cuda cuda_arch=%s" % arch, when="+nalu_wind_gpu+cuda cuda_arch=%s" % arch
-        )
 
     for arch in ROCmPackage.amdgpu_targets:
         depends_on(
@@ -48,10 +45,6 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
         )
         depends_on(
             "nalu-wind+rocm amdgpu_target=%s" % arch,
-            when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch,
-        )
-        depends_on(
-            "trilinos+rocm amdgpu_target=%s" % arch,
             when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch,
         )
 
@@ -70,11 +63,6 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("nalu-wind+ninja", when="+ninja")
     depends_on("amr-wind+ninja", when="+ninja")
     depends_on("amr-wind+sycl", when="+sycl")
-    # not required but added so these get picked up as a
-    # direct dependency when creating snapshots
-    depends_on("trilinos")
-    depends_on("cmake")
-    depends_on("mpi")
     depends_on("nalu-wind+umpire", when="+umpire")
     depends_on("amr-wind+umpire", when="+umpire")
     depends_on("amr-wind+tiny_profile", when="+tiny_profile")
@@ -109,7 +97,6 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define("H5Z_ZFP_USE_STATIC_LIBS", True))
 
         if spec.satisfies("^amr-wind+ascent"):
-            # Necessary on Crusher to successfully find OpenMP
             args.append(self.define("CMAKE_EXE_LINKER_FLAGS", self.compiler.openmp_flag))
 
         return args

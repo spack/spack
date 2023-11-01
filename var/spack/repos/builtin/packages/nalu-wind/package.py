@@ -110,7 +110,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     # indirect dependency needed to make original concretizer work
     depends_on("netcdf-c+parallel-netcdf")
     depends_on("boost +filesystem +iostreams cxxstd=14", when="+boost")
-    cxxstd = ["14", "17"]
+    cxxstd = ["17"]
     variant("cxxstd", default="17", values=cxxstd, multi=False)
     variant("tests", default=True, description="Activate regression tests")
     variant("unit-tests", default=True, description="Activate unit tests")
