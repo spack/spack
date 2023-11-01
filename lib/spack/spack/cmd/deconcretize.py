@@ -64,9 +64,9 @@ def find_matching_specs(
     has_errors = False
     for spec in specs:
         if spec is any:
-            matching = [s for _, s in env.concretized_specs()]
+            matching = list(env.all_specs())
         else:
-            matching = [s for _, s in env.concretized_specs() if s.satisfies(spec)]
+            matching = [s for s in env.all_specs() if s.satisfies(spec)]
 
         if not allow_multiple_matches and len(matching) > 1:
             tty.error(f"{spec} matches multiple concrete specs:")

@@ -1367,7 +1367,10 @@ class Environment:
 
         # If this was the only user spec that concretized to this concrete spec, remove it
         if dag_hash not in self.concretized_order:
-            del self.specs_by_hash[dag_hash]
+            # if we deconcretized a dependency that doesn't correspond to a root, it
+            # won't be here.
+            if dag_hash in self.specs_by_hash:
+                del self.specs_by_hash[dag_hash]
 
     def _get_specs_to_concretize(
         self,
