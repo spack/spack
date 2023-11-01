@@ -17,6 +17,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    version("0.20.0", sha256="f338cceea66a0e3954806b2aca08f6560bba524ecea222f04bc18b483851c877")
     version("0.19.1", sha256="674675abf0dd4c6f5a0b2fa3db944b277ed65c62f654029d938a8cab608a9c1d")
     version("0.19.0", sha256="f45cc16e4e50cbb183ed743bdc8b775d49776ee33c13ea39a650f4230a5744cb")
     version("0.18.0", sha256="f34890e0594eeca6ac57f2b988d0807b502782817e53a7f7043c3f921b08c99f")
