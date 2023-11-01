@@ -147,10 +147,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("unit_tests", default=False, description="Support for unit testing")
     variant("caliper", default=False, description="Support for instrumentation with caliper")
     variant(
-        "shared",
-        default=True,
-        sticky=True,
-        description="Enables the build of shared libraries")
+        "shared", default=True, sticky=True, description="Enables the build of shared libraries"
+    )
 
     # LBANN benefits from high performance linkers, but passing these in as command
     # line options forces the linker flags to unnecessarily propagate to all
