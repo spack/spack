@@ -127,7 +127,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
         cmake_dir = self.test_suite.current_test_cache_dir.testing
 
         options = [cmake_dir]
-        options.append(f"-DHeffte_DIR={self.spec.prefix.lib.cmake.Heffte}")
+        options.append(self.define("Heffte_DIR",self.spec.prefix.lib.cmake.Heffte))
         if "+rocm" in self.spec:
             # path name is 'hsa-runtime64' but python cannot have '-' in variable name
             hsa_runtime = join_path(self.spec["hsa-rocr-dev"].prefix.lib.cmake, "hsa-runtime64")
