@@ -32,20 +32,20 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on(
-            "amr-wind+cuda cuda_arch=%s" % arch, when="+amr_wind_gpu+cuda cuda_arch=%s" % arch
+            "amr-wind+cuda cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch
         )
         depends_on(
-            "nalu-wind+cuda cuda_arch=%s" % arch, when="+nalu_wind_gpu+cuda cuda_arch=%s" % arch
+            "nalu-wind+cuda cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch
         )
 
     for arch in ROCmPackage.amdgpu_targets:
         depends_on(
             "amr-wind+rocm amdgpu_target=%s" % arch,
-            when="+amr_wind_gpu+rocm amdgpu_target=%s" % arch,
+            when="+rocm amdgpu_target=%s" % arch,
         )
         depends_on(
             "nalu-wind+rocm amdgpu_target=%s" % arch,
-            when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch,
+            when="+rocm amdgpu_target=%s" % arch,
         )
 
     depends_on("nalu-wind+tioga")
