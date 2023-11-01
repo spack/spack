@@ -752,19 +752,13 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     target = platform.target(pkg.spec.architecture.target)
     platform.setup_platform_environment(pkg, env_mods)
 
-    if context == Context.BUILD:
-        tty.debug("setup_package: setup build environment for root")
-        builder = spack.builder.create(pkg)
-        builder.setup_build_environment(env_mods)
-
-        if (not dirty) and (not env_mods.is_unset("CPATH")):
-            tty.debug(
-                "A dependency has updated CPATH, this may lead pkg-"
-                "config to assume that the package is part of the system"
-                " includes and omit it when invoked with '--cflags'."
-            )
-    elif context == Context.TEST:
+    if context == Context.TEST:
         env_mods.prepend_path("PATH", ".")
+    elif context == Context.BUILD and not dirty and not env_mods.is_unset("CPATH"):
+        tty.debug(
+            "A dependency has updated CPATH, this may lead pkg-config to assume that the package "
+            "is part of the system includes and omit it when invoked with '--cflags'."
+        )
 
     # First apply the clean environment changes
     env_base.apply_modifications()
@@ -953,8 +947,11 @@ class SetupContext:
             reversed(specs_with_type), lambda t: t[0].external
         )
         self.should_be_runnable = UseMode.BUILDTIME_DIRECT | UseMode.RUNTIME_EXECUTABLE
-        self.should_setup_run_env = UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE
+        self.should_setup_run_env = (
+            UseMode.BUILDTIME_DIRECT | UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE
+        )
         self.should_setup_dependent_build_env = UseMode.BUILDTIME | UseMode.BUILDTIME_DIRECT
+        self.should_setup_build_env = UseMode.ROOT if context == Context.BUILD else UseMode(0)
 
         if context == Context.RUN or context == Context.TEST:
             self.should_be_runnable |= UseMode.ROOT
@@ -994,8 +991,9 @@ class SetupContext:
         - Updating PATH for packages that are required at runtime
         - Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
         tools can find Spack-built dependencies (when context=build)
-        - Running custom package environment modifications (setup_run_environment,
-        setup_dependent_build_environment, setup_dependent_run_environment)
+        - Running custom package environment modifications: setup_run_environment,
+        setup_dependent_run_environment, setup_build_environment,
+        setup_dependent_build_environment.
 
         The (partial) order imposed on the specs is externals first, then topological
         from leaf to root. That way externals cannot contribute search paths that would shadow
@@ -1008,16 +1006,17 @@ class SetupContext:
             if self.should_setup_dependent_build_env & flag:
                 self._make_buildtime_detectable(dspec, env)
 
-                for spec in self.specs:
-                    builder = spack.builder.create(pkg)
-                    builder.setup_dependent_build_environment(env, spec)
+                for root in self.specs:  # there is only one root in build context
+                    spack.builder.create(pkg).setup_dependent_build_environment(env, root)
+
+            if self.should_setup_build_env & flag:
+                spack.builder.create(pkg).setup_build_environment(env)
 
             if self.should_be_runnable & flag:
                 self._make_runnable(dspec, env)
 
             if self.should_setup_run_env & flag:
-                # TODO: remove setup_dependent_run_environment...
-                for spec in dspec.dependents(deptype=dt.RUN):
+                for spec in dspec.dependents(deptype=dt.LINK | dt.RUN):
                     if id(spec) in self.nodes_in_subdag:
                         pkg.setup_dependent_run_environment(env, spec)
                 pkg.setup_run_environment(env)
