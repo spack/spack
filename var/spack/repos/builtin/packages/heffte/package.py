@@ -133,18 +133,20 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             hsa_runtime = join_path(self.spec["hsa-rocr-dev"].prefix.lib.cmake, "hsa-runtime64")
             options.extend(
                 [
-                    self.define("hip_DIR", self.spec['hip'].prefix.lib.cmake.hip),
-                    self.define("AMDDeviceLibs_DIR",
-                                self.spec['llvm-amdgpu'].prefix.lib.cmake.AMDDeviceLibs),
-                    self.define("amd_comgr_DIR", self.spec['comgr'].prefix.lib.cmake.amd_comgr),
+                    self.define("hip_DIR", self.spec["hip"].prefix.lib.cmake.hip),
+                    self.define(
+                        "AMDDeviceLibs_DIR",
+                        self.spec["llvm-amdgpu"].prefix.lib.cmake.AMDDeviceLibs,
+                    ),
+                    self.define("amd_comgr_DIR", self.spec["comgr"].prefix.lib.cmake.amd_comgr),
                     self.define("hsa-runtime64_DIR", hsa_runtime),
-                    self.define("HSA_HEADER", self.spec['hsa-rocr-dev'].prefix.include),
-                    self.define("rocfft_DIR", self.spec['rocfft'].prefix.lib.cmake.rocfft),
+                    self.define("HSA_HEADER", self.spec["hsa-rocr-dev"].prefix.include),
+                    self.define("rocfft_DIR", self.spec["rocfft"].prefix.lib.cmake.rocfft),
                 ]
             )
 
         # Provide the root directory of the MPI installation.
-        options.append(self.define("MPI_HOME", self.spec['mpi'].prefix))
+        options.append(self.define("MPI_HOME", self.spec["mpi"].prefix))
 
         cmake = which(self.spec["cmake"].prefix.bin.cmake)
         cmake(*options)
