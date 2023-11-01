@@ -388,27 +388,25 @@ def env_remove(args):
         except spack.config.ConfigFormatError:
             bad_envs.append(env_name)
 
-        if not args.yes_to_all:
-            environments = string.plural(len(args.rm_env), "environment", show_n=False)
-            envs = string.comma_and(args.rm_env)
-            answer = tty.get_yes_or_no(f"Really remove  {environments} {envs}?", default=False)
-            if not answer:
-                tty.die("Will not remove any environments")
+    if not args.yes_to_all:
+        environments = string.plural(len(args.rm_env), "environment", show_n=False)
+        envs = string.comma_and(args.rm_env)
+        answer = tty.get_yes_or_no(f"Really remove {environments} {envs}?", default=False)
+        if not answer:
+            tty.die("Will not remove any environments")
 
-        for env in read_envs:
-            name = env.name
-            if env.active:
-                tty.die(f"Environment {name} can't be removed while activated.")
-            env.destroy()
-            tty.msg(f"Successfully removed environment {name}")
+    for env in read_envs:
+        name = env.name
+        if env.active:
+            tty.die(f"Environment {name} can't be removed while activated.")
+        env.destroy()
+        tty.msg(f"Successfully removed environment '{name}'")
 
-        for bad_env_name in bad_envs:
-            shutil.rmtree(
-                spack.environment.environment.environment_dir_from_name(
-                    bad_env_name, exists_ok=True
-                )
-            )
-            tty.msg(f"Successfully removed environment '{bad_env_name}'")
+    for bad_env_name in bad_envs:
+        shutil.rmtree(
+            spack.environment.environment.environment_dir_from_name(bad_env_name, exists_ok=True)
+        )
+        tty.msg(f"Successfully removed environment '{bad_env_name}'")
 
 
 #
