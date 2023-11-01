@@ -10,7 +10,6 @@ import llnl.util.tty as tty
 
 import spack.cmd
 
-
 display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 
 

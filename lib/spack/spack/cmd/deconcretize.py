@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-from typing import List, Optional
+from typing import List
 
 import llnl.util.tty as tty
 
