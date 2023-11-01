@@ -31,22 +31,12 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("amr-wind+hypre", when="+sycl")
 
     for arch in CudaPackage.cuda_arch_values:
-        depends_on(
-            "amr-wind+cuda cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch
-        )
-        depends_on(
-            "nalu-wind+cuda cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch
-        )
+        depends_on("amr-wind+cuda cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch)
+        depends_on("nalu-wind+cuda cuda_arch=%s" % arch, when="+cuda cuda_arch=%s" % arch)
 
     for arch in ROCmPackage.amdgpu_targets:
-        depends_on(
-            "amr-wind+rocm amdgpu_target=%s" % arch,
-            when="+rocm amdgpu_target=%s" % arch,
-        )
-        depends_on(
-            "nalu-wind+rocm amdgpu_target=%s" % arch,
-            when="+rocm amdgpu_target=%s" % arch,
-        )
+        depends_on("amr-wind+rocm amdgpu_target=%s" % arch, when="+rocm amdgpu_target=%s" % arch)
+        depends_on("nalu-wind+rocm amdgpu_target=%s" % arch, when="+rocm amdgpu_target=%s" % arch)
 
     depends_on("nalu-wind+tioga")
     depends_on("amr-wind+netcdf+mpi")

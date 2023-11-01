@@ -45,6 +45,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("hypre", default=True, description="Compile with Hypre support")
     variant("trilinos-solvers", default=True, description="Compile with Trilinos Solvers support")
     variant("catalyst", default=False, description="Compile with Catalyst support")
+    variant("shared", default=True, description="Build shared libraries")
     variant("fftw", default=False, description="Compile with FFTW support")
     variant("boost", default=False, description="Enable Boost integration")
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
