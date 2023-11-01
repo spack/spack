@@ -42,4 +42,4 @@ class Rsync(AutotoolsPackage):
         return match.group(1) if match else None
 
     def configure_args(self):
-        return ["--with-included-zlib=no"]
+        return ["--with-included-zlib=no --disable-roll-simd"]
