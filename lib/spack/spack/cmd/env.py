@@ -148,7 +148,7 @@ def create_temp_env_directory():
 def _tty_info(msg):
     """tty.info like function that prints the equivalent printf statement for eval."""
     decorated = f'{colorize("@*b{==>}")} {msg}\n'
-    print(f"printf {shlex.quote(decorated)}")
+    print(f"printf {shlex.quote(decorated)};")
 
 
 def env_activate(args):
