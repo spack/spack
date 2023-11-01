@@ -693,7 +693,6 @@ class ErrorHandler:
     def __init__(self, model):
         self.model = model
         self.full_model = None
-        self.error_args = extract_args(model, "error")
 
     def multiple_values_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
@@ -760,7 +759,8 @@ class ErrorHandler:
         return "\n".join([header] + messages)
 
     def raise_if_errors(self):
-        if not self.error_args:
+        initial_error_args = extract_args(self.model, "error")
+        if not initial_error_args:
             return
 
         error_causation = clingo.Control()
@@ -781,9 +781,9 @@ class ErrorHandler:
             _ = error_causation.solve(on_model=on_model)
 
         # No choices so there will be only one model
-        self.error_args = extract_args(self.full_model, "error")
+        error_args = extract_args(self.full_model, "error")
         errors = sorted(
-            [(int(priority), msg, args) for priority, msg, *args in self.error_args], reverse=True
+            [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
         )
         msg = self.message(errors)
         raise UnsatisfiableSpecError(msg)
