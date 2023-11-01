@@ -161,7 +161,7 @@ class LlvmAmdgpu(CMakePackage):
     # OpenMP clang toolchain looks for bitcode files in llvm/bin/../lib
     # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
     # Below patch is to look in the old path.
-    patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:")
+    patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:5.6")
 
     # Below patch is to set the flag -mcode-object-version=none until
     # the below fix is available in device-libs release code.
@@ -225,6 +225,44 @@ class LlvmAmdgpu(CMakePackage):
         git="https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git",
         branch="amd-stg-open",
         when="@master +rocm-device-libs",
+    )
+
+    for d_version, d_shasum in [
+        ("5.6.1", "4de9a57c2092edf9398d671c8a2c60626eb7daf358caf710da70d9c105490221"),
+        ("5.6.0", "30875d440df9d8481ffb24d87755eae20a0efc1114849a72619ea954f1e9206c"),
+    ]:
+        resource(
+            name="hsa-runtime",
+            placement="hsa-runtime",
+            url=f"https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-{d_version}.tar.gz",
+            sha256=d_shasum,
+            when="@{0}".format(d_version),
+        )
+    resource(
+        name="hsa-runtime",
+        placement="hsa-runtime",
+        git="https://github.com/RadeonOpenCompute/ROCR-Runtime.git",
+        branch="master",
+        when="@master",
+    )
+
+    for d_version, d_shasum in [
+        ("5.6.1", "0a85d84619f98be26ca7a32c71f94ed3c4e9866133789eabb451be64ce739300"),
+        ("5.6.0", "9396a7238b547ee68146c669b10b9d5de8f1d76527c649133c75d8076a185a72"),
+    ]:
+        resource(
+            name="comgr",
+            placement="comgr",
+            url=f"https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-{d_version}.tar.gz",
+            sha256=d_shasum,
+            when="@{0}".format(d_version),
+        )
+    resource(
+        name="comgr",
+        placement="comgr",
+        git="https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git",
+        branch="amd-stg-open",
+        when="@master",
     )
 
     def cmake_args(self):
@@ -292,6 +330,12 @@ class LlvmAmdgpu(CMakePackage):
         if self.spec.satisfies("@5.5.0:"):
             args.append("-DCLANG_DEFAULT_RTLIB=compiler-rt")
             args.append("-DCLANG_DEFAULT_UNWINDLIB=libgcc")
+        if self.spec.satisfies("@5.6.0:"):
+            hsainc_path = os.path.join(self.stage.source_path, "hsa-runtime/src/inc")
+            comgrinc_path = os.path.join(self.stage.source_path, "comgr/lib/comgr/include")
+            args.append("-DSANITIZER_HSA_INCLUDE_PATH={0}".format(hsainc_path))
+            args.append("-DSANITIZER_COMGR_INCLUDE_PATH={0}".format(comgrinc_path))
+            args.append("-DSANITIZER_AMDGPU:Bool=ON")
         return args
 
     @run_after("install")
