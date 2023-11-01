@@ -27,15 +27,15 @@ class Vcftools(AutotoolsPackage):
     # this needs to be in sync with what setup_run_environment adds to
     # PERL5LIB below
     def configure_args(self):
-        ret = []
+        args = []
         # between 0.1.16 and 14 the behavior of the configure script
         # wrt the perl lib dir changed and it became relative to the
         # install directory, if you specify the whole prefix in
         # it now you end up with a nasty recreation of the
         # prefix tree in self.prefix.
-        if self.spec.satisfies("@0.1.14"):
-            ret.append("--with-pmdir={0}".format(self.prefix.lib))
-        return ret
+        if self.spec.satisfies("@:0.1.14"):
+            args.append(f"--with-pmdir={self.prefix.lib}")
+        return args
 
     @run_before("install")
     def filter_sbang(self):
