@@ -229,3 +229,5 @@ error(0, Msg, startcauses, TriggerID, ConstraintID)
 #defined trigger_and_effect/3.
 #defined build/1.
 #defined node_has_variant/2.
+#defined provider/2.
+#defined external_version/3.
