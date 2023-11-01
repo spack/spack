@@ -1012,8 +1012,8 @@ def test_bad_env_yaml_format_remove(mutable_mock_env_path):
 @pytest.mark.parametrize("answer", ["-y", ""])
 def test_multi_env_remove(mutable_mock_env_path, monkeypatch, answer):
     """Test removal (or not) of a valid and invalid environment"""
-    resp = answer == "-y"
-    monkeypatch.setattr(tty, "get_yes_or_no", lambda prompt, default: resp)
+    remove_environment = answer == "-y"
+    monkeypatch.setattr(tty, "get_yes_or_no", lambda prompt, default: remove_environment)
 
     environments = ["goodenv", "badenv"]
     for e in environments:
@@ -1021,12 +1021,11 @@ def test_multi_env_remove(mutable_mock_env_path, monkeypatch, answer):
 
     # Ensure the bad environment contains invalid yaml
     filename = mutable_mock_env_path / environments[1] / "spack.yaml"
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    filename.write_text(
+        """\
     - libdwarf
 """
-        )
+    )
 
     assert all(e in env("list") for e in environments)
 
@@ -1034,7 +1033,7 @@ def test_multi_env_remove(mutable_mock_env_path, monkeypatch, answer):
     args.extend(environments)
     output = env("remove", *args, fail_on_error=False)
 
-    if resp is True:
+    if remove_environment is True:
         # Successfully removed (and reported removal) of *both* environments
         assert not all(e in env("list") for e in environments)
         assert output.count("Successfully removed") == 2
