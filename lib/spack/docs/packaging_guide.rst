@@ -2688,60 +2688,6 @@ appear in the package file (or in this case, in the list).
    right version. If two packages depend on ``binutils`` patched *the
    same* way, they can both use a single installation of ``binutils``.
 
-.. _setup-dependent-environment:
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Influence how dependents are built or run
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack provides a mechanism for dependencies to influence the
-environment of their dependents by overriding  the
-:meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
-or the
-:meth:`setup_dependent_build_environment <spack.builder.Builder.setup_dependent_build_environment>`
-methods.
-The Qt package, for instance, uses this call:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
-   :pyobject: Qt.setup_dependent_build_environment
-   :linenos:
-
-to set the ``QTDIR`` environment variable so that packages
-that depend on a particular Qt installation will find it.
-Another good example of how a dependency can influence
-the build environment of dependents is the Python package:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.setup_dependent_build_environment
-   :linenos:
-
-In the method above it is ensured that any package that depends on Python
-will have the ``PYTHONPATH``, ``PYTHONHOME`` and ``PATH`` environment
-variables set appropriately before starting the installation. To make things
-even simpler the ``python setup.py`` command is also inserted into the module
-scope of dependents by overriding a third method called
-:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`
-:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.setup_dependent_package
-   :linenos:
-
-This allows most python packages to have a very simple install procedure,
-like the following:
-
-.. code-block:: python
-
-   def install(self, spec, prefix):
-       setup_py("install", "--prefix={0}".format(prefix))
-
-Finally the Python package takes also care of the modifications to ``PYTHONPATH``
-to allow dependencies to run correctly:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-    :pyobject: Python.setup_dependent_run_environment
-    :linenos:
-
 
 .. _packaging_conflicts:
 
@@ -2885,6 +2831,70 @@ variant(s) are selected.  This may be accomplished with conditional
        variant("python", default=True, description="Build the Python extension Module")
        extends("python", when="+python")
        ...
+
+.. _setup-environment:
+
+--------------------------------------------
+Runtime and build time environment variables
+--------------------------------------------
+
+Spack provides a few methods to help package authors set up the required environment variables for
+their package. Environment variables typically depend on how the package is used: variables that
+make sense during the build phase may not be needed at runtime, and vice versa. Further, sometimes
+it makes sense to let a dependency set the environment variables for its dependents. To allow all
+this, Spack provides four different methods that can be overridden in a package:
+
+1. :meth:`setup_build_environment <spack.builder.Builder.setup_build_environment>`
+2. :meth:`setup_run_environment <spack.package_base.PackageBase.setup_run_environment>`
+3. :meth:`setup_dependent_build_environment <spack.builder.Builder.setup_dependent_build_environment>`
+4. :meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
+
+The Qt package, for instance, uses this call:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
+   :pyobject: Qt.setup_dependent_build_environment
+   :linenos:
+
+to set the ``QTDIR`` environment variable so that packages that depend on a particular Qt
+installation will find it.
+
+The following diagram will give you an idea when each of these methods is called in a build
+context:
+
+.. image:: images/setup_env.png
+   :align: center
+
+Notice that ``setup_dependent_run_environment`` can be called multiple times, once for each
+dependent package, whereas ``setup_run_environment`` is called only once for the package itself.
+This means that the former should only be used if the environment variables depend on the dependent
+package, whereas the latter should be used if the environment variables depend only on the package
+itself.
+
+--------------------------------
+Setting package module variables
+--------------------------------
+
+Apart from modifying environment variables of the dependent package, you can also define Python
+variables to be used by the dependent. This is done by implementing
+:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`. An
+example of this can be found in the ``Python`` package:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
+   :pyobject: Python.setup_dependent_package
+   :linenos:
+
+This allows Python packages to directly use these variables:
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       ...
+       install("script.py", python_platlib)
+
+.. note::
+
+   We recommend using ``setup_dependent_package`` sparingly, as it is not always clear where
+   global variables are coming from when editing a ``package.py`` file.
 
 -----
 Views
