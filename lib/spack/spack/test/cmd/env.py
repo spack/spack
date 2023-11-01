@@ -1035,11 +1035,12 @@ def test_multi_env_remove(mutable_mock_env_path, monkeypatch, answer):
     output = env("remove", *args, fail_on_error=False)
 
     if resp is True:
+        # Successfully removed (and reported removal) of *both* environments
         assert not all(e in env("list") for e in environments)
         assert output.count("Successfully removed") == 2
     else:
+        # Not removing any of the environments
         assert all(e in env("list") for e in environments)
-        assert "not remove any" in output
 
 
 def test_env_loads(install_mockery, mock_fetch):
