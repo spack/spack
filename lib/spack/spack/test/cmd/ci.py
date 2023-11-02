@@ -691,7 +691,7 @@ spack:
 
             root_spec_dag_hash = None
 
-            for h, s in env.specs_by_hash.items():
+            for h, s in env.root_specs_by_hash.items():
                 if s.name == pkg_name:
                     root_spec_dag_hash = h
 
@@ -944,7 +944,7 @@ spack:
             env.concretize()
             root_spec_dag_hash = None
 
-            for h, s in env.specs_by_hash.items():
+            for h, s in env.root_specs_by_hash.items():
                 if s.name == "archive-files":
                     root_spec_dag_hash = h
 
@@ -1974,7 +1974,7 @@ spack:
 
             job_spec = None
 
-            for h, s in env.specs_by_hash.items():
+            for h, s in env.root_specs_by_hash.items():
                 if s.name == "archive-files":
                     job_spec = s
 

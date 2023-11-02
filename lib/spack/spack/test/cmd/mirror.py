@@ -49,7 +49,7 @@ def test_mirror_from_env(tmp_path, mock_packages, mock_fetch, config, mutable_mo
 
     e = ev.read(env_name)
     assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
-    for spec in e.specs_by_hash.values():
+    for spec in e.root_specs_by_hash.values():
         mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
         expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
         assert mirror_res == expected
