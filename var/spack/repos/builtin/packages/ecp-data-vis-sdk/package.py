@@ -102,7 +102,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     amdgpu_target_variants = ["amdgpu_target={0}".format(x) for x in ROCmPackage.amdgpu_targets]
 
     dav_sdk_depends_on(
-        "adios2+shared+mpi+python+blosc+sst+ssc+dataman",
+        "adios2+shared+mpi+python+sst+dataman",
         when="+adios2",
         propagate=["cuda", "hdf5", "sz", "zfp", "fortran"] + cuda_arch_variants,
     )

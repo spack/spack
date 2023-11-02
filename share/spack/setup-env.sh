@@ -98,7 +98,7 @@ _spack_shell_wrapper() {
             if [ "$_sp_arg" = "-h" ] || [ "$_sp_arg" = "--help" ]; then
                 command spack cd -h
             else
-                LOC="$(spack location $_sp_arg "$@")"
+                LOC="$(SPACK_COLOR="${SPACK_COLOR:-always}" spack location $_sp_arg "$@")"
                 if [ -d "$LOC" ] ; then
                     cd "$LOC"
                 else
@@ -136,7 +136,7 @@ _spack_shell_wrapper() {
                             command spack env activate "$@"
                         else
                             # Actual call to activate: source the output.
-                            stdout="$(command spack $_sp_flags env activate --sh "$@")" || return
+                            stdout="$(SPACK_COLOR="${SPACK_COLOR:-always}" command spack $_sp_flags env activate --sh "$@")" || return
                             eval "$stdout"
                         fi
                         ;;
@@ -158,7 +158,7 @@ _spack_shell_wrapper() {
                             command spack env deactivate -h
                         else
                             # No args: source the output of the command.
-                            stdout="$(command spack $_sp_flags env deactivate --sh)" || return
+                            stdout="$(SPACK_COLOR="${SPACK_COLOR:-always}" command spack $_sp_flags env deactivate --sh)" || return
                             eval "$stdout"
                         fi
                         ;;
@@ -186,7 +186,7 @@ _spack_shell_wrapper() {
                 # Args contain --sh, --csh, or -h/--help: just execute.
                 command spack $_sp_flags $_sp_subcommand "$@"
             else
-                stdout="$(command spack $_sp_flags $_sp_subcommand --sh "$@")" || return
+                stdout="$(SPACK_COLOR="${SPACK_COLOR:-always}" command spack $_sp_flags $_sp_subcommand --sh "$@")" || return
                 eval "$stdout"
             fi
             ;;

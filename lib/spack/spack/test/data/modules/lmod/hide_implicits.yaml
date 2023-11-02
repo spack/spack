@@ -1,0 +1,11 @@
+enable:
+  - lmod
+lmod:
+  hide_implicits: true
+  core_compilers:
+    - 'clang@3.3'
+  hierarchy:
+    - mpi
+
+  all:
+    autoload: direct

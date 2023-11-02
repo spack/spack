@@ -1838,7 +1838,8 @@ class TestConcretize:
         # If we concretize with --reuse it is not, since "mpich~debug" was already installed
         with spack.config.override("concretizer:reuse", True):
             s = Spec("mpich").concretized()
-            assert s.satisfies("~debug")
+            assert s.installed
+            assert s.satisfies("~debug"), s
 
     @pytest.mark.regression("32471")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
@@ -2132,14 +2133,16 @@ class TestConcretize:
 
 @pytest.fixture()
 def duplicates_test_repository():
-    builder_test_path = os.path.join(spack.paths.repos_path, "duplicates.test")
-    with spack.repo.use_repositories(builder_test_path) as mock_repo:
+    repository_path = os.path.join(spack.paths.repos_path, "duplicates.test")
+    with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 
 
 @pytest.mark.usefixtures("mutable_config", "duplicates_test_repository")
 @pytest.mark.only_clingo("Not supported by the original concretizer")
 class TestConcretizeSeparately:
+    """Collects test on separate concretization"""
+
     @pytest.mark.parametrize("strategy", ["minimal", "full"])
     def test_two_gmake(self, strategy):
         """Tests that we can concretize a spec with nodes using the same build
@@ -2228,6 +2231,43 @@ class TestConcretizeSeparately:
         s = Spec("virtual-build").concretized()
         assert s["pkgconfig"].name == "pkg-config"
 
+    @pytest.mark.regression("40595")
+    def test_no_multiple_solutions_with_different_edges_same_nodes(self):
+        r"""Tests that the root node, which has a dependency on py-setuptools without constraint,
+        doesn't randomly pick one of the two setuptools (@=59, @=60) needed by its dependency.
+
+        o py-floating@1.25.0/3baitsp
+        |\
+        | |\
+        | | |\
+        | o | | py-shapely@1.25.0/4hep6my
+        |/| | |
+        | |\| |
+        | | |/
+        | |/|
+        | | o py-setuptools@60/cwhbthc
+        | |/
+        |/|
+        | o py-numpy@1.25.0/5q5fx4d
+        |/|
+        | |\
+        | o | py-setuptools@59/jvsa7sd
+        |/ /
+        o | python@3.11.2/pdmjekv
+        o | gmake@3.0/jv7k2bl
+         /
+        o gmake@4.1/uo6ot3d
+        """
+        spec_str = "py-floating"
+
+        root = spack.spec.Spec(spec_str).concretized()
+        assert root["py-shapely"].satisfies("^py-setuptools@=60")
+        assert root["py-numpy"].satisfies("^py-setuptools@=59")
+
+        edges = root.edges_to_dependencies("py-setuptools")
+        assert len(edges) == 1
+        assert edges[0].spec.satisfies("@=60")
+
 
 @pytest.mark.parametrize(
     "v_str,v_opts,checksummed",
@@ -2283,3 +2323,40 @@ class TestConcreteSpecsByHash:
                 assert node == container[node.dag_hash()]
                 assert node.dag_hash() in container
                 assert node is not container[node.dag_hash()]
+
+
+@pytest.fixture()
+def edges_test_repository():
+    repository_path = os.path.join(spack.paths.repos_path, "edges.test")
+    with spack.repo.use_repositories(repository_path) as mock_repo:
+        yield mock_repo
+
+
+@pytest.mark.usefixtures("mutable_config", "edges_test_repository")
+@pytest.mark.only_clingo("Edge properties not supported by the original concretizer")
+class TestConcretizeEdges:
+    """Collects tests on edge properties"""
+
+    @pytest.mark.parametrize(
+        "spec_str,expected_satisfies,expected_not_satisfies",
+        [
+            ("conditional-edge", ["^zlib@2.0"], ["^zlib-api"]),
+            ("conditional-edge~foo", ["^zlib@2.0"], ["^zlib-api"]),
+            (
+                "conditional-edge+foo",
+                ["^zlib@1.0", "^zlib-api", "^[virtuals=zlib-api] zlib"],
+                ["^[virtuals=mpi] zlib"],
+            ),
+        ],
+    )
+    def test_condition_triggered_by_edge_property(
+        self, spec_str, expected_satisfies, expected_not_satisfies
+    ):
+        """Tests that we can enforce constraints based on edge attributes"""
+        s = Spec(spec_str).concretized()
+
+        for expected in expected_satisfies:
+            assert s.satisfies(expected), str(expected)
+
+        for not_expected in expected_not_satisfies:
+            assert not s.satisfies(not_expected), str(not_expected)

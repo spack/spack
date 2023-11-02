@@ -37,16 +37,16 @@ class AprUtil(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries(
-            ["libaprutil-{0}".format(self.version.up_to(1))], root=self.prefix, recursive=True
+            [f"libaprutil-{self.version.up_to(1)}"], root=self.prefix, recursive=True
         )
 
     def configure_args(self):
         spec = self.spec
 
         args = [
-            "--with-apr={0}".format(spec["apr"].prefix),
-            "--with-expat={0}".format(spec["expat"].prefix),
-            "--with-iconv={0}".format(spec["iconv"].prefix),
+            f"--with-apr={spec['apr'].prefix}",
+            f"--with-expat={spec['expat'].prefix}",
+            f"--with-iconv={spec['iconv'].prefix}",
             # TODO: Add support for the following database managers
             "--without-ndbm",
             "--without-berkeley-db",
@@ -55,34 +55,30 @@ class AprUtil(AutotoolsPackage):
         ]
 
         if "+crypto" in spec:
-            args.extend(["--with-crypto", "--with-openssl={0}".format(spec["openssl"].prefix)])
+            args.extend(["--with-crypto", f"--with-openssl={spec['openssl'].prefix}"])
         else:
             args.append("--without-crypto")
 
         if "+gdbm" in spec:
-            args.append("--with-gdbm={0}".format(spec["gdbm"].prefix))
+            args.append(f"--with-gdbm={spec['gdbm'].prefix}")
         else:
             args.append("--without-gdbm")
 
         if "+pgsql" in spec:
-            args.append("--with-pgsql={0}".format(spec["postgresql"].prefix))
+            args.append(f"--with-pgsql={spec['postgresql'].prefix}")
         else:
             args.append("--without-pgsql")
 
         if "+sqlite" in spec:
             if spec.satisfies("^sqlite@3.0:3"):
-                args.extend(
-                    ["--with-sqlite3={0}".format(spec["sqlite"].prefix), "--without-sqlite2"]
-                )
+                args.extend([f"--with-sqlite3={spec['sqlite'].prefix}", "--without-sqlite2"])
             elif spec.satisfies("^sqlite@2.0:2"):
-                args.extend(
-                    ["--with-sqlite2={0}".format(spec["sqlite"].prefix), "--without-sqlite3"]
-                )
+                args.extend([f"--with-sqlite2={spec['sqlite'].prefix}", "--without-sqlite3"])
         else:
             args.extend(["--without-sqlite2", "--without-sqlite3"])
 
         if "+odbc" in spec:
-            args.append("--with-odbc={0}".format(spec["unixodbc"].prefix))
+            args.append(f"--with-odbc={spec['unixodbc'].prefix}")
         else:
             args.append("--without-odbc")
 

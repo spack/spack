@@ -24,6 +24,9 @@ class PyKombu(PythonPackage):
     variant("redis", default=False, description="Use redis transport")
 
     depends_on("py-setuptools", type="build")
+    # "pytz>dev" in tests_require: setuptools parser changed in v60 and errors.
+    depends_on("py-setuptools@:59", when="@4.6:5.2", type="build")
+
     depends_on("py-amqp@2.5.2:2.5", when="@:4.6.6", type=("build", "run"))
     depends_on("py-amqp@2.6.0:2.6", when="@4.6.7:4", type=("build", "run"))
     depends_on("py-amqp@5.0.0:5", when="@5.0.0:5.0.2", type=("build", "run"))
