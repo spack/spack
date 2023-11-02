@@ -863,7 +863,6 @@ class PyclingoDriver:
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
 
-
         has_propagation = False
         for spec in specs:
             for dep in spec.traverse(root=True):
