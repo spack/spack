@@ -25,6 +25,7 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsparse@5.6:", when="+rocm")
     depends_on("rocblas@5.6:", when="+rocm")
     depends_on("rocsolver@5.6:", when="+rocm")
+    depends_on("roctracer-dev@5.6:", when="+rocm")
 
     def cmake_args(self):
         args = []
