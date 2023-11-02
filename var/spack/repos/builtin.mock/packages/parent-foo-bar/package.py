@@ -14,7 +14,7 @@ class ParentFooBar(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/parent-foo-bar-1.0.tar.gz"
 
-    version("1.0", md5="abcdefg0123456789abcdefg")
+    version("1.0", md5="abcdefg0123456789abcdefghfedcba0")
 
     variant("foo", default=True, description="")
     variant("bar", default=True, description="")
