@@ -1314,6 +1314,7 @@ class SpackSolverSetup:
 
                     cond_id = self.condition(w, name=pkg.name, msg=msg)
                     self.gen.fact(fn.pkg_fact(pkg.name, fn.conditional_variant(cond_id, name)))
+
             single_value = not variant.multi
             if single_value:
                 self.gen.fact(fn.pkg_fact(pkg.name, fn.variant_single_value(name)))
