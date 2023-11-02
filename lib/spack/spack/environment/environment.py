@@ -1738,11 +1738,9 @@ class Environment:
         # If it's not a partial hash prefix we can early exit
         early_exit = len(dag_hash) == 32
         matches = []
-        for spec in traverse.traverse_nodes(
-            self.concrete_roots(), key=traverse.by_dag_hash, order="breadth"
-        ):
-            if spec.dag_hash().startswith(dag_hash):
-                matches.append(spec)
+        for current_hash, current_node in self.all_specs_by_hash.items():
+            if current_hash.startswith(dag_hash):
+                matches.append(current_node)
                 if early_exit:
                     break
         return matches
