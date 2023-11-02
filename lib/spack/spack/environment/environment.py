@@ -1238,6 +1238,10 @@ class Environment:
             # won't be here.
             if dag_hash in self.root_specs_by_hash:
                 del self.root_specs_by_hash[dag_hash]
+            try:
+                self.all_specs_by_hash.delete(spec, transitive=False)
+            except ValueError:
+                pass
 
     def _get_specs_to_concretize(
         self,
