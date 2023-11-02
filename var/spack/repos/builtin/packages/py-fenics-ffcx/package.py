@@ -24,7 +24,8 @@ class PyFenicsFfcx(PythonPackage):
 
     depends_on("python@3.8:", when="@0.7:", type=("build", "run"))
     depends_on("py-setuptools@62:", when="@0.7:", type="build")
-    depends_on("py-setuptools@58:", when="@0.4.2:0.6", type="build")
+    # Runtime dependency on pkg_resources from setuptools at 0.6.0
+    depends_on("py-setuptools@58:", when="@0.4.2:0.6", type=("build", "run"))
 
     # CFFI is required at runtime for JIT support
     depends_on("py-cffi", type=("build", "run"))
@@ -35,6 +36,7 @@ class PyFenicsFfcx(PythonPackage):
     depends_on("py-fenics-ufl@main", type=("build", "run"), when="@main")
     depends_on("py-fenics-ufl@2023.3.0:", type=("build", "run"), when="@0.8")
     depends_on("py-fenics-ufl@2023.2.0", type=("build", "run"), when="@0.7")
+    depends_on("py-fenics-ufl@2023.1", type=("build", "run"), when="@0.6")
     depends_on("py-fenics-ufl@2022.2.0", type=("build", "run"), when="@0.5.0:0.5")
     depends_on("py-fenics-ufl@2022.1.0", type=("build", "run"), when="@0.4.2")
 
