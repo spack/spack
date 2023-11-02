@@ -696,15 +696,18 @@ requirement_group_satisfied(node(ID, Package), X) :-
 % flags if their only source is from a requirement. This is overly-specific
 % and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
 
-{ attr("node_flag", node(ID, A1), A2, A3) } :-
-  requirement_group_member(Y, Package, X),
-  activate_requirement(node(ID, Package), X),
-  imposed_constraint(Y,"node_flag_set", A1, A2, A3).
+{ attr("node_flag", node(ID, Package), FlagType, FlagValue) } :-
+  requirement_group_member(ConditionID, Package, RequirementID),
+  activate_requirement(node(ID, Package), RequirementID),
+  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue).
 
-{ attr("node_flag_source", node(ID, A1), A2, node(ID, A3)) } :-
-  requirement_group_member(Y, Package, X),
-  activate_requirement(node(ID, Package), X),
-  imposed_constraint(Y,"node_flag_source", A1, A2, A3).
+{ attr("node_flag_source", node(NodeID1, Package1), FlagType, node(NodeID2, Package2)) } :-
+  requirement_group_member(ConditionID, Package1, RequirementID),
+  activate_requirement(node(NodeID1, Package1), RequirementID),
+  pkg_fact(Package1, condition_effect(ConditionID, EffectID)),
+  imposed_constraint(EffectID, "node_flag_source", Package1, FlagType, Package2),
+  imposed_packages(NodeID2, Package2).
 
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
