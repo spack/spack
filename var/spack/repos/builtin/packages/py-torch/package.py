@@ -194,10 +194,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # depends_on("cpuinfo@2022-08-19", when="@1.13:2.0")
     # depends_on("cpuinfo@2020-12-17", when="@1.8:1.12")
     # depends_on("cpuinfo@2020-06-11", when="@1.6:1.7")
-    # https://github.com/shibatch/sleef/issues/427
-    # depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
-    # https://github.com/pytorch/pytorch/issues/60334
-    # depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
+    depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
+    depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
     depends_on("fp16@2020-05-14", when="@1.6:")
     depends_on("pthreadpool@2021-04-13", when="@1.9:")
     depends_on("pthreadpool@2020-10-05", when="@1.8")
@@ -307,11 +305,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # Fixes build error when ROCm is enabled for pytorch-1.5 release
     patch("rocm.patch", when="@1.5+rocm")
-
-    # Fixes fatal error: sleef.h: No such file or directory
-    # https://github.com/pytorch/pytorch/pull/35359
-    # https://github.com/pytorch/pytorch/issues/26555
-    # patch("sleef.patch", when="@:1.5")
 
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
     # https://github.com/pytorch/pytorch/pull/37086
@@ -628,13 +621,11 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         env.set("pybind11_INCLUDE_DIR", self.spec["py-pybind11"].prefix.include)
         if self.spec.satisfies("@1.10:"):
             env.set("USE_SYSTEM_PYBIND11", "ON")
-        # https://github.com/pytorch/pytorch/issues/60334
-        # if self.spec.satisfies("@1.8:"):
-        #     env.set("USE_SYSTEM_SLEEF", "ON")
         if self.spec.satisfies("@1.6:"):
             # env.set("USE_SYSTEM_LIBS", "ON")
             # https://github.com/pytorch/pytorch/issues/60329
             # env.set("USE_SYSTEM_CPUINFO", "ON")
+            env.set("USE_SYSTEM_SLEEF", "ON")
             env.set("USE_SYSTEM_GLOO", "ON")
             env.set("USE_SYSTEM_FP16", "ON")
             env.set("USE_SYSTEM_PTHREADPOOL", "ON")
