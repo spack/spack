@@ -25,7 +25,6 @@ import spack.repo
 import spack.solver.asp
 import spack.variant as vt
 from spack.concretize import find_spec
-from spack.main import SpackCommand
 from spack.spec import CompilerSpec, Spec
 from spack.version import Version, ver
 
@@ -486,13 +485,11 @@ class TestConcretize:
     )
     def test_concretize_propagate_specified_variant(self):
         """Test that only the specified variant is propagated to the dependencies"""
-        spec = Spec("splice-b++bar")
+        spec = Spec("parent-foo-bar ~~foo")
         spec.concretize()
 
-        assert spec.satisfies("+bar") and spec.satisfies("^splice-a+bar")
-        assert spec.satisfies("+bar") and spec.satisfies("^splice-z+bar")
-        assert spec.satisfies("+foo") and not spec.satisfies("^splice-a+foo")
-        assert spec.satisfies("+foo") and not spec.satisfies("^splice-z+foo")
+        assert spec.satisfies("~foo") and spec.satisfies("^dependency-foo-bar~foo")
+        assert spec.satisfies("+bar") and not spec.satisfies("^dependency-foo-bar+bar")
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed

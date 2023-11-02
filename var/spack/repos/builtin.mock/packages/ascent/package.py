@@ -7,10 +7,11 @@ from spack.package import *
 
 
 class Ascent(Package):
-    """Fake ascent package."""
+    """This packagae has the variants shared, defaulted
+    to True and adios2 defaulted to False"""
 
     homepage = "https://github.com/Alpine-DAV/ascent"
-    url = "someplace"
+    url = "http://www.example.com/ascent-1.0.tar.gz"
 
     version("0.9.2", sha256="44cd954aa5db478ab40042cd54fd6fcedf25000c3bb510ca23fcff8090531b91")
 
