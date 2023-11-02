@@ -528,10 +528,15 @@ class DAGWithDependencyTypes(DotGraphBuilder):
 
     def edge_entry(self, edge):
         colormap = {"build": "dodgerblue", "link": "crimson", "run": "goldenrod"}
+        label = ""
+        if edge.virtuals:
+            label = f" xlabel=\"virtuals={','.join(edge.virtuals)}\""
         return (
             edge.parent.dag_hash(),
             edge.spec.dag_hash(),
-            f"[color=\"{':'.join(colormap[x] for x in dt.flag_to_tuple(edge.depflag))}\"]",
+            f"[color=\"{':'.join(colormap[x] for x in dt.flag_to_tuple(edge.depflag))}\""
+            + label
+            + "]",
         )
 
 

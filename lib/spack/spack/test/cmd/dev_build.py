@@ -11,6 +11,7 @@ import llnl.util.filesystem as fs
 
 import spack.build_environment
 import spack.environment as ev
+import spack.error
 import spack.spec
 import spack.store
 from spack.main import SpackCommand
@@ -237,7 +238,7 @@ spack:
 
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
-            with pytest.raises(RuntimeError):
+            with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
                 install()
 
 

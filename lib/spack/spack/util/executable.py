@@ -35,9 +35,9 @@ class Executable:
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
 
-    def add_default_arg(self, arg):
-        """Add a default argument to the command."""
-        self.exe.append(arg)
+    def add_default_arg(self, *args):
+        """Add default argument(s) to the command."""
+        self.exe.extend(args)
 
     def add_default_env(self, key, value):
         """Set an environment variable when the command is run.

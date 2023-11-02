@@ -202,7 +202,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     xsdk_depends_on("pflotran@4.0.1", when="@0.8.0")
     xsdk_depends_on("pflotran@3.0.2", when="@0.7.0")
 
-    xsdk_depends_on("alquimia@develop", when="@develop +alquimia")
+    xsdk_depends_on("alquimia@master", when="@develop +alquimia")
     xsdk_depends_on("alquimia@1.0.10", when="@0.8.0 +alquimia")
     xsdk_depends_on("alquimia@1.0.9", when="@0.7.0 +alquimia")
 

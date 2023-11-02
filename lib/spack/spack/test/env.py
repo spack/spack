@@ -690,3 +690,29 @@ def test_removing_spec_from_manifest_with_exact_duplicates(
     assert "zlib" in manifest.read_text()
     with ev.Environment(tmp_path) as env:
         assert len(env.user_specs) == 1
+
+
+@pytest.mark.regression("35298")
+@pytest.mark.only_clingo("Propagation not supported in the original concretizer")
+def test_variant_propagation_with_unify_false(tmp_path, mock_packages):
+    """Spack distributes concretizations to different processes, when unify:false is selected and
+    the number of roots is 2 or more. When that happens, the specs to be concretized need to be
+    properly reconstructed on the worker process, if variant propagation was requested.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        """
+    spack:
+      specs:
+      - parent-foo ++foo
+      - c
+      concretizer:
+        unify: false
+    """
+    )
+    with ev.Environment(tmp_path) as env:
+        env.concretize()
+
+    root = env.matching_spec("parent-foo")
+    for node in root.traverse():
+        assert node.satisfies("+foo")

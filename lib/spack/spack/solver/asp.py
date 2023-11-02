@@ -8,7 +8,6 @@ import copy
 import enum
 import itertools
 import os
-import pathlib
 import pprint
 import re
 import types
@@ -889,14 +888,6 @@ class PyclingoDriver:
 
         timer.start("solve")
         solve_result = self.control.solve(**solve_kwargs)
-
-        if solve_result.satisfiable and self._model_has_cycles(models):
-            tty.debug(f"cycles detected, falling back to slower algorithm [specs={specs}]")
-            self.control.load(os.path.join(parent_dir, "cycle_detection.lp"))
-            self.control.ground([("no_cycle", [])])
-            models.clear()
-            solve_result = self.control.solve(**solve_kwargs)
-
         timer.stop("solve")
 
         # once done, construct the solve result
@@ -949,26 +940,6 @@ class PyclingoDriver:
             pprint.pprint(self.control.statistics)
 
         return result, timer, self.control.statistics
-
-    def _model_has_cycles(self, models):
-        """Returns true if the best model has cycles in it"""
-        cycle_detection = clingo.Control()
-        parent_dir = pathlib.Path(__file__).parent
-        lp_file = parent_dir / "cycle_detection.lp"
-
-        min_cost, best_model = min(models)
-        with cycle_detection.backend() as backend:
-            for atom in best_model:
-                if atom.name == "attr" and str(atom.arguments[0]) == '"depends_on"':
-                    symbol = fn.depends_on(atom.arguments[1], atom.arguments[2])
-                    atom_id = backend.add_atom(symbol.symbol())
-                    backend.add_rule([atom_id], [], choice=False)
-
-            cycle_detection.load(str(lp_file))
-            cycle_detection.ground([("base", []), ("no_cycle", [])])
-            cycle_result = cycle_detection.solve()
-
-        return cycle_result.unsatisfiable
 
 
 class ConcreteSpecsByHash(collections.abc.Mapping):
@@ -1530,6 +1501,17 @@ class SpackSolverSetup:
                 )
             self.gen.newline()
 
+        for when, sets_of_virtuals in pkg.provided_together.items():
+            condition_id = self.condition(
+                when, name=pkg.name, msg="Virtuals are provided together"
+            )
+            for set_id, virtuals_together in enumerate(sets_of_virtuals):
+                for name in virtuals_together:
+                    self.gen.fact(
+                        fn.pkg_fact(pkg.name, fn.provided_together(condition_id, set_id, name))
+                    )
+            self.gen.newline()
+
     def package_dependencies_rules(self, pkg):
         """Translate 'depends_on' directives into ASP logic."""
         for _, conditions in sorted(pkg.dependencies.items()):
@@ -1930,6 +1912,15 @@ class SpackSolverSetup:
             if getattr(spec, "_package_hash", None):
                 clauses.append(fn.attr("package_hash", spec.name, spec._package_hash))
             clauses.append(fn.attr("hash", spec.name, spec.dag_hash()))
+
+        edges = spec.edges_from_dependents()
+        virtuals = [x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])]
+        if not body:
+            for virtual in virtuals:
+                clauses.append(fn.attr("provider_set", spec.name, virtual))
+        else:
+            for virtual in virtuals:
+                clauses.append(fn.attr("virtual_on_incoming_edges", spec.name, virtual))
 
         # add all clauses from dependencies
         if transitive:
@@ -3153,10 +3144,11 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
         msg = (
             "Spack concretizer internal error. Please submit a bug report and include the "
             "command, environment if applicable and the following error message."
-            f"\n    {provided} is unsatisfiable, errors are:"
+            f"\n    {provided} is unsatisfiable"
         )
 
-        msg += "".join([f"\n    {conflict}" for conflict in conflicts])
+        if conflicts:
+            msg += ", errors are:" + "".join([f"\n    {conflict}" for conflict in conflicts])
 
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
 
