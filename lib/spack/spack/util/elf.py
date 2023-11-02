@@ -377,7 +377,7 @@ def parse_header(f, elf):
     elf.elf_hdr = ElfHeader._make(unpack(elf_header_fmt, data))
 
 
-def _do_parse_elf(f, interpreter=True, dynamic_section=True):
+def _do_parse_elf(f, interpreter=True, dynamic_section=True, only_header=False):
     # We don't (yet?) allow parsing ELF files at a nonzero offset, we just
     # jump to absolute offsets as they are specified in the ELF file.
     if f.tell() != 0:
@@ -385,6 +385,9 @@ def _do_parse_elf(f, interpreter=True, dynamic_section=True):
 
     elf = ElfFile()
     parse_header(f, elf)
+
+    if only_header:
+        return elf
 
     # We don't handle anything but executables and shared libraries now.
     if elf.elf_hdr.e_type not in (ELF_CONSTANTS.ET_EXEC, ELF_CONSTANTS.ET_DYN):
@@ -403,11 +406,11 @@ def _do_parse_elf(f, interpreter=True, dynamic_section=True):
     return elf
 
 
-def parse_elf(f, interpreter=False, dynamic_section=False):
+def parse_elf(f, interpreter=False, dynamic_section=False, only_header=False):
     """Given a file handle f for an ELF file opened in binary mode, return an ElfFile
     object that is stores data about rpaths"""
     try:
-        return _do_parse_elf(f, interpreter, dynamic_section)
+        return _do_parse_elf(f, interpreter, dynamic_section, only_header)
     except (DeprecationWarning, struct.error):
         # According to the docs old versions of Python can throw DeprecationWarning
         # instead of struct.error.
