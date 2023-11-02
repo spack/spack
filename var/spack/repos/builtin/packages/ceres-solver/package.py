@@ -33,6 +33,7 @@ class CeresSolver(CMakePackage):
     depends_on("eigen@3.3:", when="@2.0.0:")
     depends_on("lapack")
     depends_on("glog@0.3.5:")
+    depends_on("suite-sparse", when="+suitesparse")
 
     def cmake_args(self):
         args = []
