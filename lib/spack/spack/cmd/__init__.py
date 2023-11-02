@@ -277,27 +277,47 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, fir
     else:
         matching_specs = spack.store.STORE.db.query(spec, hashes=hashes, installed=installed)
     if not matching_specs:
-        tty.die("Spec '%s' matches no installed packages." % spec)
+        tty.die(f"Spec '{spec}' matches no installed packages.")
 
     elif first:
         return matching_specs[0]
 
-    ensure_single_spec_or_die(spec, matching_specs)
-
-    return matching_specs[0]
+    return get_single_spec_or_maybe_die(spec, matching_specs)
 
 
-def ensure_single_spec_or_die(spec, matching_specs):
-    if len(matching_specs) <= 1:
-        return
+def get_single_spec_or_maybe_die(
+    spec: spack.spec.Spec, matching_specs: List[spack.spec.Spec]
+) -> spack.spec.Spec:
+    if len(matching_specs) == 1:
+        return matching_specs[0]
+
+    if len(matching_specs) == 0:
+        tty.die(f"Spec '{spec}' matches no packages.")
 
     format_string = "{name}{@version}{%compiler.name}{@compiler.version}{arch=architecture}"
-    args = ["%s matches multiple packages." % spec, "Matching packages:"]
+    args = [f"{spec.colored_str} matches multiple packages:"]
     args += [
-        colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
+        colorize("@*b{" f"[{i+1}]" "} @K{" f"{s.dag_hash(7)}" "} ") + s.cformat(format_string)
+        for (i, s) in enumerate(matching_specs)
     ]
-    args += ["Use a more specific spec (e.g., prepend '/' to the hash)."]
-    tty.die(*args)
+
+    if not sys.stdin.isatty():
+        tty.die(*args, "Use a more specific spec (e.g., prepend '/' to the hash).")
+
+    # Let the user pick a spec interactively
+    tty.error(*args)
+    sys.stderr.write(colorize("@*g{select match>} "))
+    sys.stderr.flush()
+    try:
+        picked = int(input().strip())
+        assert 1 <= picked <= len(matching_specs)
+    except (ValueError, AssertionError):
+        tty.error("Invalid selection.")
+        exit(1)
+    except EOFError:
+        sys.stderr.write("\n")
+        exit(1)
+    return matching_specs[picked - 1]
 
 
 def gray_hash(spec, length):
