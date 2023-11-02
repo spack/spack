@@ -1421,10 +1421,8 @@ class Environment:
 
         # Add specs in original order
         batch.sort(key=lambda x: x[0])
-        unified_specs = spack.solver.asp.ConcreteSpecsByHash()
         for root, (_, concrete) in zip(root_specs, batch):
-            unified_specs.add(concrete)
-            self._add_concrete_spec(root, unified_specs[concrete.dag_hash()])
+            self._add_concrete_spec(root, concrete)
 
         finish = time.time()
         tty.msg(f"Environment concretized in {finish - start:.2f} seconds")
