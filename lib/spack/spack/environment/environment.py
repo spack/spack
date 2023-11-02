@@ -1690,11 +1690,11 @@ class Environment:
 
     def all_specs(self) -> List[Spec]:
         """Returns a list of all concrete specs"""
-        return list(self.all_specs_generator())
+        return list(self.all_specs_by_hash.values())
 
-    def all_hashes(self):
+    def all_hashes(self) -> List[str]:
         """Return hashes of all specs."""
-        return [s.dag_hash() for s in self.all_specs_generator()]
+        return [h for h in self.all_specs_by_hash]
 
     def roots(self):
         """Specs explicitly requested by the user *in this environment*.
@@ -1727,7 +1727,7 @@ class Environment:
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
         for s, h in zip(self.concretized_user_specs, self.concretized_order):
-            yield (s, self.root_specs_by_hash[h])
+            yield s, self.root_specs_by_hash[h]
 
     def concrete_roots(self):
         """Same as concretized_specs, except it returns the list of concrete
