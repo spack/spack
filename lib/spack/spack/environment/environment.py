@@ -1755,11 +1755,7 @@ class Environment:
 
     def all_matching_specs(self, *specs: spack.spec.Spec) -> List[Spec]:
         """Returns all concretized specs in the environment satisfying any of the input specs"""
-        return [
-            s
-            for s in traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
-            if any(s.satisfies(t) for t in specs)
-        ]
+        return [s for s in self.all_specs_by_hash.values() if any(s.satisfies(t) for t in specs)]
 
     @spack.repo.autospec
     def matching_spec(self, spec):
@@ -1782,11 +1778,7 @@ class Environment:
         env_root_to_user = {root.dag_hash(): user for user, root in self.concretized_specs()}
         root_matches, dep_matches = [], []
 
-        for env_spec in traverse.traverse_nodes(
-            specs=[root for _, root in self.concretized_specs()],
-            key=traverse.by_dag_hash,
-            order="breadth",
-        ):
+        for env_spec in self.all_specs_by_hash.values():
             if not env_spec.satisfies(spec):
                 continue
 
