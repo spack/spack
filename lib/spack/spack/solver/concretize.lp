@@ -738,7 +738,6 @@ requirement_group_satisfied(node(ID, Package), X) :-
   imposed_constraint(EffectID, "node_flag_source", Package1, FlagType, Package2),
   imposed_nodes(EffectID, node(NodeID2, Package2), node(NodeID1, Package1)).
 
-
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
     Z : requirement_has_weight(Y, Z), condition_holds(Y, node(ID, Package)), requirement_group_member(Y, Package, Group);
