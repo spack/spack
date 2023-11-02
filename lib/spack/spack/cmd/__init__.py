@@ -298,17 +298,20 @@ def get_single_spec_or_maybe_die(
         fmt = "{name}{@version}{compiler.name}{@compiler.version}{arch=architecture}{/hash:7}"
     else:
         fmt = "{hash:7} {name}{@version}{compiler.name}{@compiler.version}{arch=architecture}"
-    args = [f"{spec.colored_str} matches multiple packages:"]
-    args += [
+    args = (
         colorize("@*b{" f"[{i+1}]" "} ") + s.cformat(fmt) for (i, s) in enumerate(matching_specs)
-    ]
+    )
 
     if not sys.stdin.isatty():
-        tty.die(*args, "Use a more specific spec (e.g., prepend '/' to the hash).")
+        tty.die(
+            f"{spec.colored_str} matches multiple packages:",
+            *args,
+            "Use a more specific spec (e.g., prepend '/' to the hash).",
+        )
 
     # Let the user pick a spec interactively
-    tty.error(*args)
-    sys.stderr.write(colorize("@*g{select match>} "))
+    tty.info(f"Select a matching spec for {spec.colored_str}:", *args, stream=sys.stderr)
+    sys.stderr.write(colorize("@*g{select>} "))
     sys.stderr.flush()
     try:
         picked = int(input().strip())
