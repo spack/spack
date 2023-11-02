@@ -59,7 +59,7 @@ class GoBootstrap(Package):
 
     # determine system os and architecture/target
     os = platform.system().lower()
-    target = go_targets[platform.machine().lower()]
+    target = go_targets.get(platform.machine().lower(), platform.machine().lower())
 
     # construct releases for current system configuration
     for release in go_releases:
