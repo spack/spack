@@ -720,7 +720,7 @@ requirement_group_satisfied(node(ID, Package), X) :-
   activate_requirement(node(NodeID1, Package1), RequirementID),
   pkg_fact(Package1, condition_effect(ConditionID, EffectID)),
   imposed_constraint(EffectID, "node_flag_source", Package1, FlagType, Package2),
-  imposed_packages(NodeID2, Package2).
+  imposed_nodes(EffectID, node(NodeID2, Package2), node(NodeID1, Package1)).
 
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
