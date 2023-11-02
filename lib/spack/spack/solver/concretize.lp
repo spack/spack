@@ -152,8 +152,6 @@ mentioned_in_literal(Root, Mentioned) :-
 condition_set(node(min_dupe_id, Root), node(min_dupe_id, Mentioned), link_run) :-
   mentioned_in_literal(Root, Mentioned).
 
-provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, VirtualNode).
-
 % Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
 explicitly_requested_root(node(min_dupe_id, Package)) :-
   solve_literal(TriggerID),
@@ -388,7 +386,7 @@ imposed_nodes(ConditionID, PackageNode, node(X, A1))
 
 % Conditions that hold impose may impose constraints on other specs
 attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(ID, PackageNode, node(X, A1)).
-attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(ID, PackageNode, node(X, A1)).
+attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
 attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
 attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(ID, PackageNode, node(X, A1)).
 
@@ -398,6 +396,14 @@ attr("node_flag_source", node(X, A1), A2, node(Y, A3))
   :- impose(ID, node(X, A1)),
      imposed_constraint(ID, "node_flag_source", A1, A2, A3),
      condition_set(node(Y, A3), node(X, A1)).
+
+attr("provider_set", node(PDupID, Provider), node(VDupID, Virtual))
+  :- impose(ID, RequestingNode),
+     imposed_constraint(ID, "provider_set", Provider, Virtual),
+     condition_set(RequestingNode, node(PDupID, Provider)),
+     condition_set(RequestingNode, node(VDupID, Virtual)).
+
+provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, VirtualNode).
 
 % Here we can't use the condition set because it's a recursive definition, that doesn't define the
 % node index, and leads to unsatisfiability. Hence we say that one and only one node index must
