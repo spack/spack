@@ -27,7 +27,7 @@ from ruamel.yaml import comments, constructor, emitter, error, representer
 
 from llnl.util.tty.color import cextra, clen, colorize
 
-import spack.error
+from .error import UtilityError
 
 # Only export load and dump
 __all__ = ["load", "dump", "SpackYAMLError"]
@@ -493,7 +493,7 @@ def name_mark(name):
     return error.StringMark(name, None, None, None, None, None)
 
 
-class SpackYAMLError(spack.error.SpackError):
+class SpackYAMLError(UtilityError):
     """Raised when there are issues with YAML parsing."""
 
     def __init__(self, msg, yaml_error):

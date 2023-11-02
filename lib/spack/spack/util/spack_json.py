@@ -7,7 +7,7 @@
 import json
 from typing import Any, Dict, Optional
 
-import spack.error
+from .error import UtilityError
 
 __all__ = ["load", "dump", "SpackJSONError"]
 
@@ -29,7 +29,7 @@ def dump(data: Dict, stream: Optional[Any] = None) -> Optional[str]:
     return None
 
 
-class SpackJSONError(spack.error.SpackError):
+class SpackJSONError(UtilityError):
     """Raised when there are issues with JSON parsing."""
 
     def __init__(self, msg: str, json_error: BaseException):
