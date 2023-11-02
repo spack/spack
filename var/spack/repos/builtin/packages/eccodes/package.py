@@ -35,8 +35,6 @@ _definitions = {
     }
 }
 
-_samples = {}
-
 
 class Eccodes(CMakePackage):
     """ecCodes is a package developed by ECMWF for processing meteorological
@@ -86,12 +84,6 @@ class Eccodes(CMakePackage):
         "extra_definitions",
         values=any_combination_of(*_definitions.keys()),
         description="List of extra definitions to install",
-    )
-
-    variant(
-        "extra_samples",
-        values=any_combination_of(*_samples.keys()),
-        description="List of extra samples to install",
     )
 
     depends_on("netcdf-c", when="+netcdf")
