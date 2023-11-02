@@ -1948,11 +1948,9 @@ class Environment:
 
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""
-        self.root_specs_by_hash = {}
+        self._clear_specs()
 
         roots = d["roots"]
-        self.concretized_user_specs = [Spec(r["spec"]) for r in roots]
-        self.concretized_order = [r["hash"] for r in roots]
         json_specs_by_hash = d["concrete_specs"]
 
         # Track specs by their lockfile key.  Currently spack uses the finest
@@ -1962,7 +1960,6 @@ class Environment:
         specs_by_hash = {}
 
         # Track specs by their DAG hash, allows handling DAG hash collisions
-        first_seen = {}
         current_lockfile_format = d["_meta"]["lockfile-version"]
         try:
             reader = READER_CLS[current_lockfile_format]
@@ -1992,25 +1989,12 @@ class Environment:
                     specs_by_hash[dep_hash], depflag=dt.canonicalize(deptypes), virtuals=virtuals
                 )
 
-        # Traverse the root specs one at a time in the order they appear.
-        # The first time we see each DAG hash, that's the one we want to
-        # keep.  This is only required as long as we support older lockfile
-        # formats where the mapping from DAG hash to lockfile key is possibly
-        # one-to-many.
-        for lockfile_key in self.concretized_order:
-            for s in specs_by_hash[lockfile_key].traverse():
-                if s.dag_hash() not in first_seen:
-                    first_seen[s.dag_hash()] = s
-
-        # Now make sure concretized_order and our internal specs dict
-        # contains the keys used by modern spack (i.e. the dag_hash
-        # that includes build deps and package hash).
-        self.concretized_order = [
-            specs_by_hash[h_key].dag_hash() for h_key in self.concretized_order
-        ]
-
-        for spec_dag_hash in self.concretized_order:
-            self.root_specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
+        # Add the specs to the environment. We traverse by lockfile_key (which depends on the
+        # lockfile version), but we store by dag hash.
+        concretized_user_specs = [Spec(r["spec"]) for r in roots]
+        concretized_order = [r["hash"] for r in roots]
+        for abstract_spec, lockfile_key in zip(concretized_user_specs, concretized_order):
+            self._add_concrete_spec(abstract_spec, specs_by_hash[lockfile_key], new=False)
 
     def write(self, regenerate: bool = True) -> None:
         """Writes an in-memory environment to its location on disk.
