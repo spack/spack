@@ -38,19 +38,25 @@ class Sleef(CMakePackage):
     )  # py-torch@0.4.1:1.0
     version("3.2", sha256="3130c5966e204e6d6a3ace81e543d12b5b21f60897f1c185bfa587c1bd77bee2")
 
-    # Some versions have ICE when building RelWithDebInfo with GCC 7
-    # See https://github.com/shibatch/sleef/issues/234
-    # See https://github.com/pytorch/pytorch/issues/26892
-    # See https://github.com/pytorch/pytorch/pull/26993
-
-    # Apple Clang build issues
     # https://github.com/shibatch/sleef/issues/474
     conflicts("%apple-clang@15:")
 
     generator("ninja")
     depends_on("cmake@3.4.3:", type="build")
 
-    # https://github.com/shibatch/sleef/issues/475
-    depends_on("fftw-api")
-    depends_on("mpfr")
-    depends_on("openssl")
+    # # https://github.com/shibatch/sleef/issues/475
+    # depends_on("fftw-api")
+    # depends_on("mpfr")
+    # depends_on("openssl")
+
+    # # https://github.com/shibatch/sleef/issues/458
+    # conflicts("^mpfr@4.2:")
+
+    def cmake_args(self):
+        # Taken from PyTorch's aten/src/ATen/CMakeLists.txt
+        return [
+            self.define("BUILD_SHARED_LIBS", False),
+            self.define("BUILD_DFT", False),
+            self.define("BUILD_GNUABI_LIBS", False),
+            self.define("BUILD_TESTS", False),
+        ]
