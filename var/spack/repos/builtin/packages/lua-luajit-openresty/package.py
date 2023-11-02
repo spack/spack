@@ -28,8 +28,7 @@ class LuaLuajitOpenresty(LuaImplPackage):
         description="add symlinks to make lua-luajit a drop-in lua replacement",
     )
 
-    provides("lua-lang@5.1", when="+lualinks")
-    provides("luajit")
+    provides("luajit", "lua-lang@5.1", when="+lualinks")
     lua_version_override = "5.1"
 
     @run_after("install")

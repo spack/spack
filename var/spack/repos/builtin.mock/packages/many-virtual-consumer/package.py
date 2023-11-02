@@ -19,4 +19,4 @@ class ManyVirtualConsumer(Package):
     # This directive is an example of imposing a constraint on a
     # dependency is that dependency is in the DAG. This pattern
     # is mainly used with virtual providers.
-    depends_on("low-priority-provider@1.0", when="^low-priority-provider")
+    depends_on("low-priority-provider@1.0", when="^[virtuals=mpi,lapack] low-priority-provider")

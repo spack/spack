@@ -113,16 +113,21 @@ unification_set(SetID, VirtualNode)
 multiple_nodes_attribute("node_flag_source").
 multiple_nodes_attribute("depends_on").
 multiple_nodes_attribute("virtual_on_edge").
+multiple_nodes_attribute("provider_set").
 
 % Map constraint on the literal ID to facts on the node
 attr(Name, node(min_dupe_id, A1))             :- literal(LiteralID, Name, A1), solve_literal(LiteralID).
-attr(Name, node(min_dupe_id, A1), A2)         :- literal(LiteralID, Name, A1, A2), solve_literal(LiteralID).
+attr(Name, node(min_dupe_id, A1), A2)         :- literal(LiteralID, Name, A1, A2), solve_literal(LiteralID), not multiple_nodes_attribute(Name).
 attr(Name, node(min_dupe_id, A1), A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), solve_literal(LiteralID), not multiple_nodes_attribute(Name).
 attr(Name, node(min_dupe_id, A1), A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), solve_literal(LiteralID).
 
 % Special cases where nodes occur in arguments other than A1
 attr("node_flag_source", node(min_dupe_id, A1), A2, node(min_dupe_id, A3)) :- literal(LiteralID, "node_flag_source", A1, A2, A3), solve_literal(LiteralID).
 attr("depends_on",       node(min_dupe_id, A1), node(min_dupe_id, A2), A3) :- literal(LiteralID, "depends_on",       A1, A2, A3), solve_literal(LiteralID).
+
+attr("virtual_node", node(min_dupe_id, Virtual))                              :- literal(LiteralID, "provider_set", _,        Virtual), solve_literal(LiteralID).
+attr("provider_set", node(min_dupe_id, Provider), node(min_dupe_id, Virtual)) :- literal(LiteralID, "provider_set", Provider, Virtual), solve_literal(LiteralID).
+provider(node(min_dupe_id, Provider), node(min_dupe_id, Virtual))             :- literal(LiteralID, "provider_set", Provider, Virtual), solve_literal(LiteralID).
 
 % Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
 explicitly_requested_root(node(min_dupe_id, A1)) :- literal(LiteralID, "root", A1), solve_literal(LiteralID).
@@ -476,6 +481,19 @@ error(1, Msg)
 % Virtual dependencies
 %-----------------------------------------------------------------------------
 
+% If the provider is set from the command line, its weight is 0
+possible_provider_weight(ProviderNode, VirtualNode, 0, "Set on the command line")
+  :- attr("provider_set", ProviderNode, VirtualNode).
+
+% Enforces all virtuals to be provided, if multiple of them are provided together
+error(100, "Package '{0}' needs to provide both '{1}' and '{2}' together, but provides only '{1}'", Package, Virtual1, Virtual2)
+:- condition_holds(ID, node(X, Package)),
+   pkg_fact(Package, provided_together(ID, SetID, Virtual1)),
+   pkg_fact(Package, provided_together(ID, SetID, Virtual2)),
+   Virtual1 != Virtual2,
+   attr("virtual_on_incoming_edges", node(X, Package), Virtual1),
+   not attr("virtual_on_incoming_edges", node(X, Package), Virtual2).
+
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
 node_depends_on_virtual(PackageNode, Virtual, Type)
@@ -494,12 +512,19 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
      provider(ProviderNode, node(_, Virtual)),
      not external(PackageNode).
 
+attr("virtual_on_incoming_edges", ProviderNode, Virtual)
+  :- attr("virtual_on_edge", _, ProviderNode, Virtual).
+
 % dependencies on virtuals also imply that the virtual is a virtual node
 1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }
   :- node_depends_on_virtual(PackageNode, Virtual).
 
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
+
+error(100, "'{0}' cannot be a provider for the '{1}' virtual", Package, Virtual)
+  :-  attr("provider_set", node(min_dupe_id, Package), node(min_dupe_id, Virtual)),
+      not virtual_condition_holds( node(min_dupe_id, Package), Virtual).
 
 error(100, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
@@ -520,20 +545,6 @@ attr("root", PackageNode) :- attr("virtual_root", VirtualNode), provider(Package
 1 { provider(PackageNode, node(X, Virtual)) :
     attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual) } 1
   :- attr("virtual_node", node(X, Virtual)).
-
-% If a spec is selected as a provider, it is for all the virtual it could provide
-:- provider(PackageNode, node(X, Virtual1)),
-   virtual_condition_holds(PackageNode, Virtual2),
-   Virtual2 != Virtual1,
-   unification_set(SetID, PackageNode),
-   unification_set(SetID, node(X, Virtual2)),
-   not provider(PackageNode, node(X, Virtual2)).
-
-% If a spec is a dependency, and could provide a needed virtual, it must be a provider
-:- node_depends_on_virtual(PackageNode, Virtual),
-   depends_on(PackageNode, PossibleProviderNode),
-   virtual_condition_holds(PossibleProviderNode, Virtual),
-   not attr("virtual_on_edge", PackageNode, PossibleProviderNode, Virtual).
 
 % The provider provides the virtual if some provider condition holds.
 virtual_condition_holds(node(ProviderID, Provider), Virtual) :- virtual_condition_holds(ID, node(ProviderID, Provider), Virtual).
@@ -560,6 +571,8 @@ do_not_impose(EffectID, node(X, Package))
 :- provider(PackageNode, node(VirtualID, Virtual)),
    not virtual_condition_holds(PackageNode, Virtual),
    internal_error("Virtual when provides not respected").
+
+#defined provided_together/4.
 
 %-----------------------------------------------------------------------------
 % Virtual dependency weights

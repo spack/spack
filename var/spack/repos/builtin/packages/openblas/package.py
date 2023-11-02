@@ -88,8 +88,7 @@ class Openblas(CMakePackage, MakefilePackage):
     )
 
     # virtual dependency
-    provides("blas")
-    provides("lapack")
+    provides("blas", "lapack")
     provides("lapack@3.9.1:", when="@0.3.15:")
     provides("lapack@3.7.0", when="@0.2.20")
 

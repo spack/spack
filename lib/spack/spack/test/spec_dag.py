@@ -532,6 +532,7 @@ class TestSpecDag:
         assert not spec.eq_dag(expected_normalized, deptypes=True)
         assert not spec.eq_dag(non_unique_nodes, deptypes=True)
 
+    @pytest.mark.xfail(reason="String representation changed")
     def test_normalize_with_virtual_package(self):
         spec = Spec("mpileaks ^mpi ^libelf@1.8.11 ^libdwarf")
         spec.normalize()

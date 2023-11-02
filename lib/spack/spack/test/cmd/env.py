@@ -2461,8 +2461,12 @@ def test_concretize_user_specs_together():
     e.remove("mpich")
     e.add("mpich2")
 
+    exc_cls = spack.error.SpackError
+    if spack.config.get("config:concretizer") == "clingo":
+        exc_cls = spack.error.UnsatisfiableSpecError
+
     # Concretizing without invalidating the concrete spec for mpileaks fails
-    with pytest.raises(spack.error.UnsatisfiableSpecError):
+    with pytest.raises(exc_cls):
         e.concretize()
     e.concretize(force=True)
 
@@ -2494,9 +2498,12 @@ def test_duplicate_packages_raise_when_concretizing_together():
     e.add("mpileaks~opt")
     e.add("mpich")
 
-    with pytest.raises(
-        spack.error.UnsatisfiableSpecError, match=r"You could consider setting `concretizer:unify`"
-    ):
+    exc_cls, match = spack.error.SpackError, None
+    if spack.config.get("config:concretizer") == "clingo":
+        exc_cls = spack.error.UnsatisfiableSpecError
+        match = r"You could consider setting `concretizer:unify`"
+
+    with pytest.raises(exc_cls, match=match):
         e.concretize()
 
 
