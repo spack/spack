@@ -73,7 +73,7 @@ class RustBootstrap(Package):
 
     # Determine system os and architecture/target.
     os = platform.system().lower()
-    target = rust_targets[platform.machine().lower()]
+    target = rust_targets.get(platform.machine().lower(), platform.machine().lower())
 
     # Pre-release versions of the bootstrap compiler.
     # Note: These versions are unchecksumed since they will change
