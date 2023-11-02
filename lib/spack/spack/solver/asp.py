@@ -845,11 +845,13 @@ class PyclingoDriver:
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
-        flags = []
-        for spec in specs:
-            flags.append(spec.compiler_flags)
 
-        if self._compiler_flag_has_propagation(flags):
+
+        has_propagation = False
+        for spec in specs:
+            for dep in spec.traverse(root=True):
+                has_propagation |= self._compiler_flag_has_propagation(dep.compiler_flags)
+        if has_propagation:
             self.control.load(os.path.join(parent_dir, "propagation.lp"))
 
 
@@ -1011,6 +1013,12 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
 
     def __iter__(self):
         return iter(self.data)
+
+    def _compiler_flag_has_propagation(self, flags):
+        for _, flag_vals in flags.items():
+            if any(val.propagate for val in flag_vals):
+                return True
+        return False
 
 
 # types for condition caching in solver setup
