@@ -232,6 +232,10 @@ class MakefileModel:
             "pkg_ids": " ".join(self.all_pkg_identifiers),
         }
 
+    @property
+    def empty(self):
+        return len(self.roots) == 0
+
     @staticmethod
     def from_env(
         env: ev.Environment,
@@ -254,15 +258,10 @@ class MakefileModel:
             jobserver: when enabled, make will invoke Spack with jobserver support. For
                 dry-run this should be disabled.
         """
-        # If no specs are provided as a filter, build all the specs in the environment.
-        if filter_specs:
-            entrypoints = [env.matching_spec(s) for s in filter_specs]
-        else:
-            entrypoints = [s for _, s in env.concretized_specs()]
-
+        roots = env.all_matching_specs(*filter_specs) if filter_specs else env.concrete_roots()
         visitor = DepfileSpecVisitor(pkg_buildcache, dep_buildcache)
         traverse.traverse_breadth_first_with_visitor(
-            entrypoints, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
+            roots, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
         )
 
-        return MakefileModel(env, entrypoints, visitor.adjacency_list, make_prefix, jobserver)
+        return MakefileModel(env, roots, visitor.adjacency_list, make_prefix, jobserver)

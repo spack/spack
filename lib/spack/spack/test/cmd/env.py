@@ -3382,6 +3382,20 @@ post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
             assert "post-install: {}".format(s.dag_hash()) in out
 
 
+def test_depfile_empty_does_not_error(tmp_path):
+    # For empty environments Spack should create a depfile that does nothing
+    make = Executable("make")
+    makefile = str(tmp_path / "Makefile")
+
+    env("create", "test")
+    with ev.read("test"):
+        env("depfile", "-o", makefile)
+
+    make("-f", makefile)
+
+    assert make.returncode == 0
+
+
 def test_unify_when_possible_works_around_conflicts():
     e = ev.create("coconcretization")
     e.unify = "when_possible"
