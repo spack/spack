@@ -13,7 +13,7 @@ import pprint
 import re
 import types
 import warnings
-from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union, Set
+from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 import archspec.cpu
 
@@ -700,19 +700,22 @@ class ErrorHandler:
     def no_value_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
 
-    # TODO GBB: make these only track within the same condition set
     def _get_cause_tree(
         self,
-        cause: str,
+        cause: Tuple[str, str],
         conditions: Dict[str, str],
-        condition_causes: List[Tuple[str, str, str]],
+        condition_causes: List[Tuple[Tuple[str, str], Tuple[str, str]]],
         seen: Set,
         indent: str = "        ",
     ) -> List[str]:
-        """Implementation of recursion for self.get_cause_tree"""
+        """
+        Implementation of recursion for self.get_cause_tree. Much of this operates on tuples
+        (condition_id, set_id) in which the latter idea means that the condition represented by
+        the former held in the condition set represented by the latter.
+        """
         seen = set(seen) | set(cause)
-        parents = [c for e, c, _ in condition_causes if e == cause and c not in seen]
-        local = "required because %s " % conditions[cause]
+        parents = [c for e, c in condition_causes if e == cause and c not in seen]
+        local = "required because %s " % conditions[cause[0]]
 
         return [indent + local] + [
             c
@@ -722,7 +725,7 @@ class ErrorHandler:
             )
         ]
 
-    def get_cause_tree(self, cause: str) -> List[str]:
+    def get_cause_tree(self, cause: Tuple[str, str]) -> List[str]:
         """
         Get the cause tree associated with the given cause.
 
@@ -733,8 +736,9 @@ class ErrorHandler:
             A list of strings describing the causes, formatted to display tree structure.
         """
         conditions: Dict[str, str] = dict(extract_args(self.full_model, "condition_reason"))
-        condition_causes: List[Tuple[str, str, str]] = list(
-            extract_args(self.full_model, "condition_cause")
+        condition_causes: List[Tuple[Tuple[str, str], Tuple[str, str]]] = list(
+            ((Effect, EID), (Cause, CID))
+            for Effect, EID, Cause, CID in extract_args(self.full_model, "condition_cause")
         )
         return self._get_cause_tree(cause, conditions, condition_causes, set())
 
@@ -750,10 +754,13 @@ class ErrorHandler:
             idx = args.index("startcauses")
         except ValueError:
             msg_args = args
-            cause_args = []
+            causes = []
         else:
             msg_args = args[:idx]
             cause_args = args[idx + 1 :]
+            cause_args_conditions = cause_args[::2]
+            cause_args_ids = cause_args[1::2]
+            causes = list(zip(cause_args_conditions, cause_args_ids))
 
         msg = msg.format(*msg_args)
 
@@ -764,7 +771,7 @@ class ErrorHandler:
         for spec_str in specs_to_construct:
             msg = msg.replace("Spec(%s)" % spec_str, str(spack.spec.Spec(spec_str)))
 
-        for cause in set(cause_args):
+        for cause in set(causes):
             for c in self.get_cause_tree(cause):
                 msg += f"\n{c}"
 
