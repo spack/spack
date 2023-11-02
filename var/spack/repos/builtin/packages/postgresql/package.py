@@ -93,7 +93,7 @@ class Postgresql(AutotoolsPackage):
             config_args.append("--with-tcl")
 
         if "+xml" in self.spec:
-            config_args.append("--with-libxml")
+            config_args.append("CFLAGS=-I%s/include/libxml2"%self.spec['libxml2'].prefix)
 
         return config_args
 
