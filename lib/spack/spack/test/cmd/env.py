@@ -14,6 +14,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
+import llnl.util.tty as tty
 
 import spack.cmd.env
 import spack.config
@@ -977,10 +978,9 @@ packages:
     assert any([x.satisfies("libelf@0.8.10") for x in e._get_environment_specs()])
 
 
-def test_bad_env_yaml_format(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
+def test_bad_env_yaml_format(environment_from_manifest):
+    with pytest.raises(spack.config.ConfigFormatError) as e:
+        environment_from_manifest(
             """\
 spack:
   spacks:
@@ -988,19 +988,15 @@ spack:
 """
         )
 
-    with tmpdir.as_cwd():
-        with pytest.raises(spack.config.ConfigFormatError) as e:
-            env("create", "test", "./spack.yaml")
-            assert "'spacks' was unexpected" in str(e)
+        assert "'spacks' was unexpected" in str(e)
 
     assert "test" not in env("list")
 
 
-def test_bad_env_yaml_format_remove():
+def test_bad_env_yaml_format_remove(mutable_mock_env_path):
     badenv = "badenv"
     env("create", badenv)
-    tmpdir = spack.environment.environment.environment_dir_from_name(badenv, exists_ok=True)
-    filename = os.path.join(tmpdir, "spack.yaml")
+    filename = mutable_mock_env_path / "spack.yaml"
     with open(filename, "w") as f:
         f.write(
             """\
@@ -1011,6 +1007,39 @@ def test_bad_env_yaml_format_remove():
     assert badenv in env("list")
     env("remove", "-y", badenv)
     assert badenv not in env("list")
+
+
+@pytest.mark.parametrize("answer", ["-y", ""])
+def test_multi_env_remove(mutable_mock_env_path, monkeypatch, answer):
+    """Test removal (or not) of a valid and invalid environment"""
+    remove_environment = answer == "-y"
+    monkeypatch.setattr(tty, "get_yes_or_no", lambda prompt, default: remove_environment)
+
+    environments = ["goodenv", "badenv"]
+    for e in environments:
+        env("create", e)
+
+    # Ensure the bad environment contains invalid yaml
+    filename = mutable_mock_env_path / environments[1] / "spack.yaml"
+    filename.write_text(
+        """\
+    - libdwarf
+"""
+    )
+
+    assert all(e in env("list") for e in environments)
+
+    args = [answer] if answer else []
+    args.extend(environments)
+    output = env("remove", *args, fail_on_error=False)
+
+    if remove_environment is True:
+        # Successfully removed (and reported removal) of *both* environments
+        assert not all(e in env("list") for e in environments)
+        assert output.count("Successfully removed") == 2
+    else:
+        # Not removing any of the environments
+        assert all(e in env("list") for e in environments)
 
 
 def test_env_loads(install_mockery, mock_fetch):
