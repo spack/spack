@@ -909,7 +909,7 @@ def test_env_with_included_config_var_path(tmpdir, packages_file):
 
     e = ev.Environment(env_path)
     with e:
-        concretize()
+        e.concretize()
 
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
