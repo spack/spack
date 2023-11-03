@@ -24,7 +24,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-    version("1.7.0", branch="develop", preferred=True)  # v1.7.0
+    version("1.7.0", branch="develop")  # v1.7.0
     version("1.6.0", commit="1f1ed46e724334626f016f105213c047e16bc1ae")  # v1.6.0
     version("1.5.0", commit="234594c92b58e2384dfb43c2d08e7f43e2b58e7a")  # v1.5.0
     version("1.5.0.glu_experimental", branch="glu_experimental")
@@ -67,6 +67,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("intel-oneapi-mkl", when="+sycl")
     depends_on("intel-oneapi-dpl", when="+sycl")
+    depends_on("intel-oneapi-tbb", when="+sycl")
 
     conflicts("%gcc@:5.2.9")
     conflicts("+rocm", when="@:1.1.1")
@@ -94,6 +95,13 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
         if "+sycl" in spec:
             env.set("MKLROOT", join_path(spec["intel-oneapi-mkl"].prefix, "mkl", "latest"))
             env.set("DPL_ROOT", join_path(spec["intel-oneapi-dpl"].prefix, "dpl", "latest"))
+            # The `IntelSYCLConfig.cmake` is broken with spack. By default, it
+            # relies on the CMAKE_CXX_COMPILER being the real ipcx/dpcpp
+            # compiler. If not, the variable SYCL_COMPILER of that script is
+            # broken, and all the SYCL detection mechanism is wrong. We fix it
+            # by giving hint environment variables.
+            env.set("SYCL_LIBRARY_DIR_HINT", os.path.dirname(os.path.dirname(self.compiler.cxx)))
+            env.set("SYCL_INCLUDE_DIR_HINT", os.path.dirname(os.path.dirname(self.compiler.cxx)))
 
     def cmake_args(self):
         # Check that the have the correct C++ standard is available
@@ -118,7 +126,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
         args = [
             from_variant("GINKGO_BUILD_CUDA", "cuda"),
             from_variant("GINKGO_BUILD_HIP", "rocm"),
-            from_variant("GINKGO_BUILD_DPCPP", "sycl"),
+            from_variant("GINKGO_BUILD_SYCL", "sycl"),
             from_variant("GINKGO_BUILD_OMP", "openmp"),
             from_variant("GINKGO_BUILD_MPI", "mpi"),
             from_variant("BUILD_SHARED_LIBS", "shared"),
