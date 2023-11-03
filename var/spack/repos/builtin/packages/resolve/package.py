@@ -21,11 +21,19 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("suite-sparse", when="+klu")
 
-    # Need at least 5.6+
-    depends_on("rocsparse@5.6:", when="+rocm")
-    depends_on("rocblas@5.6:", when="+rocm")
-    depends_on("rocsolver@5.6:", when="+rocm")
-    depends_on("roctracer-dev@5.6:", when="+rocm")
+
+    with when("+rocm"):
+      # Need at least 5.6+
+      depends_on("rocsparse@5.6:")
+      depends_on("rocblas@5.6:")
+      depends_on("rocsolver@5.6:")
+
+      # Optional profiling dependecies
+      # Will be controlled by variant in the future
+      depends_on("roctracer-dev@5.6:")
+      depends_on("roctracer-dev-api@5.6:")
+      depends_on("rocprofiler-dev@5.6:")
+
 
     def cmake_args(self):
         args = []
@@ -42,7 +50,6 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
             else:
                 args.append(self.define("CMAKE_CUDA_ARCHITECTURES", "70;75;80"))
             args.append(self.define("RESOLVE_USE_CUDA", True))
-            args.append(self.define("RESOLVE_USE_GPU", True))
 
         elif "+rocm" in spec:
             rocm_arch_list = spec.variants["amdgpu_target"].value
@@ -52,6 +59,5 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define("GPU_TARGETS", rocm_arch_list))
             args.append(self.define("AMDGPU_TARGETS", rocm_arch_list))
             args.append(self.define("RESOLVE_USE_HIP", True))
-            args.append(self.define("RESOLVE_USE_GPU", True))
 
         return args
