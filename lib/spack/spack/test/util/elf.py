@@ -120,6 +120,21 @@ def test_parser_doesnt_deal_with_nonzero_offset():
         elf.parse_elf(elf_at_offset_one)
 
 
+def test_only_header():
+    # When passing only_header=True parsing a file that is literally just a header
+    # without any sections/segments should not error.
+
+    # 32 bit
+    elf_32 = elf.parse_elf(io.BytesIO(b"\x7fELF\x01\x01" + b"\x00" * 46), only_header=True)
+    assert not elf_32.is_64_bit
+    assert elf_32.is_little_endian
+
+    # 64 bit
+    elf_64 = elf.parse_elf(io.BytesIO(b"\x7fELF\x02\x01" + b"\x00" * 58), only_header=True)
+    assert elf_64.is_64_bit
+    assert elf_64.is_little_endian
+
+
 @pytest.mark.requires_executables("gcc")
 @skip_unless_linux
 def test_elf_get_and_replace_rpaths(binary_with_rpaths):
