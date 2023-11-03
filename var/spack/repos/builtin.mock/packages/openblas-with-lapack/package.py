@@ -14,5 +14,4 @@ class OpenblasWithLapack(Package):
 
     version("0.2.15", md5="b1190f3d3471685f17cfd1ec1d252ac9")
 
-    provides("lapack")
-    provides("blas")
+    provides("lapack", "blas")

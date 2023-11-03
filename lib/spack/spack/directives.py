@@ -573,17 +573,21 @@ def extends(spec, type=("build", "run"), **kwargs):
     return _execute_extends
 
 
-@directive("provided")
-def provides(*specs, **kwargs):
-    """Allows packages to provide a virtual dependency.  If a package provides
-    'mpi', other packages can declare that they depend on "mpi", and spack
-    can use the providing package to satisfy the dependency.
+@directive(dicts=("provided", "provided_together"))
+def provides(*specs, when: Optional[str] = None):
+    """Allows packages to provide a virtual dependency.
+
+    If a package provides "mpi", other packages can declare that they depend on "mpi",
+    and spack can use the providing package to satisfy the dependency.
+
+    Args:
+        *specs: virtual specs provided by this package
+        when: condition when this provides clause needs to be considered
     """
 
     def _execute_provides(pkg):
         import spack.parser  # Avoid circular dependency
 
-        when = kwargs.get("when")
         when_spec = make_when_spec(when)
         if not when_spec:
             return
@@ -591,15 +595,18 @@ def provides(*specs, **kwargs):
         # ``when`` specs for ``provides()`` need a name, as they are used
         # to build the ProviderIndex.
         when_spec.name = pkg.name
+        spec_objs = [spack.spec.Spec(x) for x in specs]
+        spec_names = [x.name for x in spec_objs]
+        if len(spec_names) > 1:
+            pkg.provided_together.setdefault(when_spec, []).append(set(spec_names))
 
-        for string in specs:
-            for provided_spec in spack.parser.parse(string):
-                if pkg.name == provided_spec.name:
-                    raise CircularReferenceError("Package '%s' cannot provide itself." % pkg.name)
+        for provided_spec in spec_objs:
+            if pkg.name == provided_spec.name:
+                raise CircularReferenceError("Package '%s' cannot provide itself." % pkg.name)
 
-                if provided_spec not in pkg.provided:
-                    pkg.provided[provided_spec] = set()
-                pkg.provided[provided_spec].add(when_spec)
+            if provided_spec not in pkg.provided:
+                pkg.provided[provided_spec] = set()
+            pkg.provided[provided_spec].add(when_spec)
 
     return _execute_provides
 
