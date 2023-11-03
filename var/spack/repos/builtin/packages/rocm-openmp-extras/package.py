@@ -576,10 +576,10 @@ class RocmOpenmpExtras(Package):
         ]
         if self.spec.satisfies("@5.7"):
             openmp_common_args += [
-                    "-DLIBDRM_LIB={0}/lib".format(libdrm_prefix),
-                    "-DHSAKMT_INC_PATH={0}/include".format(hsakmt_prefix),
-                    "-DNUMACTL_DIR={0}".format(numactl_prefix),
-                ]
+                "-DLIBDRM_LIB={0}/lib".format(libdrm_prefix),
+                "-DHSAKMT_INC_PATH={0}/include".format(hsakmt_prefix),
+                "-DNUMACTL_DIR={0}".format(numactl_prefix),
+            ]
         if self.spec.version < Version("4.1.0"):
             openmp_common_args += ["-DHSA_INCLUDE={0}".format(hsa_prefix)]
         else:
