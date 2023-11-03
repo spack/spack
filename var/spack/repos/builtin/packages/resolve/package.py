@@ -30,9 +30,9 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
 
       # Optional profiling dependecies
       # Will be controlled by variant in the future
-      depends_on("roctracer-dev@5.6:")
-      depends_on("roctracer-dev-api@5.6:")
-      depends_on("rocprofiler-dev@5.6:")
+      # depends_on("roctracer-dev@5.6:")
+      # depends_on("roctracer-dev-api@5.6:")
+      # depends_on("rocprofiler-dev@5.6:")
 
 
     def cmake_args(self):
