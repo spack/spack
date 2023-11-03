@@ -13,3 +13,5 @@ class PerlDatetime(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/DateTime-1.63.tar.gz"
 
     version("1.63", sha256="1b11e49ec6e184ae2a10eccd05eda9534f32458fc644c12ab710c29a3a816f6f")
+
+    depends_on("perl-namespace-autoclean", type=("run"))
