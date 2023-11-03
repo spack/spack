@@ -881,6 +881,7 @@ variant_default_not_used(node(ID, Package), Variant, Value)
   :- variant_default_value(Package, Variant, Value),
      node_has_variant(node(ID, Package), Variant),
      not attr("variant_value", node(ID, Package), Variant, Value),
+     not attr("variant_propagate", node(ID, Package), Variant, _, _),
      attr("node", node(ID, Package)).
 
 % The variant is set in an external spec
