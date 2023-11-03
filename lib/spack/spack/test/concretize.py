@@ -2360,3 +2360,16 @@ class TestConcretizeEdges:
 
         for not_expected in expected_not_satisfies:
             assert not s.satisfies(not_expected), str(not_expected)
+
+    def test_virtuals_provided_together_but_only_one_required_in_dag(self):
+        """Tests that we can use a provider that provides more than one virtual together,
+        and is providing only one, iff the others are not needed in the DAG.
+
+        o blas-only-client
+        | [virtual=blas]
+        o openblas (provides blas and lapack together)
+
+        """
+        s = Spec("blas-only-client ^openblas").concretized()
+        assert s.satisfies("^[virtuals=blas] openblas")
+        assert not s.satisfies("^[virtuals=blas,lapack] openblas")
