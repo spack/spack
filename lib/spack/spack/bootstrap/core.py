@@ -294,7 +294,7 @@ class SourceBootstrapper(Bootstrapper):
             # This is needed to help the old concretizer taking the `setuptools` dependency
             # only when bootstrapping from sources on Python 3.12
             if spec_for_current_python() == "python@3.12":
-                concrete_spec.constrain("+force-setuptools")
+                concrete_spec.constrain("+force_setuptools")
 
             if module == "clingo":
                 # TODO: remove when the old concretizer is deprecated  # pylint: disable=fixme

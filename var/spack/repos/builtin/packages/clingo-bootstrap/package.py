@@ -33,11 +33,11 @@ class ClingoBootstrap(Clingo):
     )
 
     variant(
-        "force-setuptools",
+        "force_setuptools",
         default=False,
         description="Force a dependency on setuptools to help the old concretizer",
     )
-    depends_on("py-setuptools", type="build", when="+force-setuptools")
+    depends_on("py-setuptools", type="build", when="+force_setuptools")
 
     # Enable LTO
     conflicts("~ipo", when="+optimized")
