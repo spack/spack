@@ -176,6 +176,7 @@ class LlvmAmdgpu(CMakePackage):
     # This fix is targeting 6.1 rocm release.
     # Need patch until https://github.com/llvm/llvm-project/pull/67291 is merged.
     patch("001-Add-i1-mul-patterns.patch", when="@5.6")
+    patch("001-Add-i1-mul-patterns-5.7.patch", when="@5.7")
 
     conflicts("^cmake@3.19.0")
 

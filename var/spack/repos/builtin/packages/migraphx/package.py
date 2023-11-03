@@ -19,6 +19,8 @@ class Migraphx(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libmigraphx"]
 
+    version("5.7.1", sha256="3e58c043a5a7d1357ee05725fd6cd41e190b070f1ba57f61300128429902089c")
+    version("5.7.0", sha256="14f13554367d2d6490d66f8b5b739203225e7acce25085559e7c4acf29e2a4d5")
     version("5.6.1", sha256="b108c33f07572ffd880b20f6de06f1934ab2a1b41ae69095612322ac412fa91c")
     version("5.6.0", sha256="eaec90535d62002fd5bb264677ad4a7e30c55f18d2a287680d0495c7e60432b2")
     version("5.5.1", sha256="e71c4744f8ef6a1a99c179bbad94b8fe9bd7686eaa9397f376b70988c3341f0c")
@@ -131,7 +133,6 @@ class Migraphx(CMakePackage):
     depends_on("py-pybind11", type="build", when="@:4.0.0")
     depends_on("py-pybind11@2.6:", type="build", when="@4.1.0:")
     depends_on("pkgconfig", type="build", when="@5.3.0:")
-
     for ver in [
         "3.5.0",
         "3.7.0",
@@ -160,12 +161,17 @@ class Migraphx(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("miopen-hip@" + ver, when="@" + ver)
+
+    for ver in ["5.7.0", "5.7.1"]:
+        depends_on("composable-kernel@" + ver, when="@" + ver)
 
     @property
     def cmake_python_hints(self):

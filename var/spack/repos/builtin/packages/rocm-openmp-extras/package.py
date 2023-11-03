@@ -241,6 +241,8 @@ class RocmOpenmpExtras(Package):
     depends_on("awk", type="build")
     depends_on("elfutils", type=("build", "link"))
     depends_on("libffi", type=("build", "link"))
+    depends_on("libdrm", when="@5.7")
+    depends_on("numactl", when="@5.7")
 
     for ver in [
         "3.9.0",
@@ -323,6 +325,7 @@ class RocmOpenmpExtras(Package):
             placement="llvm-project",
             when="@" + ver,
         )
+    patch("001-hsakmt-roct-library-path.patch", when="@5.7")
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
@@ -492,6 +495,9 @@ class RocmOpenmpExtras(Package):
         devlibs_src = "{0}/rocm-openmp-extras/rocm-device-libs".format(src)
         hsa_prefix = self.spec["hsa-rocr-dev"].prefix
         hsakmt_prefix = self.spec["hsakmt-roct"].prefix
+        if self.spec.satisfies("@5.7"):
+            libdrm_prefix = self.spec["libdrm"].prefix
+            numactl_prefix = self.spec["numactl"].prefix
         comgr_prefix = self.spec["comgr"].prefix
         llvm_inc = "/rocm-openmp-extras/llvm-project/llvm/include"
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
@@ -568,7 +574,12 @@ class RocmOpenmpExtras(Package):
             "-DCMAKE_CXX_FLAGS=-isystem{0} -I{1}".format(elfutils_inc, ffi_inc),
             "-DNEW_BC_PATH=1",
         ]
-
+        if self.spec.satisfies("@5.7"):
+            openmp_common_args += [
+                    "-DLIBDRM_LIB={0}/lib".format(libdrm_prefix),
+                    "-DHSAKMT_INC_PATH={0}/include".format(hsakmt_prefix),
+                    "-DNUMACTL_DIR={0}".format(numactl_prefix),
+                ]
         if self.spec.version < Version("4.1.0"):
             openmp_common_args += ["-DHSA_INCLUDE={0}".format(hsa_prefix)]
         else:

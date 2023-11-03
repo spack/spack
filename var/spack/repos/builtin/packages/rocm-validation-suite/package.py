@@ -20,7 +20,8 @@ class RocmValidationSuite(CMakePackage):
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
-
+    version("5.7.1", sha256="202f2b6e014bbbeec40af5d3ec630c042f09a61087a77bd70715d81044ea4d65")
+    version("5.7.0", sha256="f049b7786a220e9b6dfe099f17727dd0d9e41be9e680fe8309eae400cc5536ea")
     version("5.6.1", sha256="d5e4100e2d07311dfa101563c15d026a8130442cdee8af9ef861832cd7866c0d")
     version("5.6.0", sha256="54cc5167055870570c97ee7114f48d24d5415f984e0c9d7b58b83467e0cf18fb")
     version("5.5.1", sha256="0fbfaa9f68642b590ef04f9778013925bbf3f17bdcd35d4c85a8ffd091169a6e")
@@ -117,7 +118,7 @@ class RocmValidationSuite(CMakePackage):
     )
     patch(
         "007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.6.patch",
-        when="@5.6:",
+        when="@5.6",
     )
 
     depends_on("cmake@3.5:", type="build")
@@ -158,6 +159,8 @@ class RocmValidationSuite(CMakePackage):
         "5.5.1",
         "5.6.0",
         "5.6.1",
+        "5.7.0",
+        "5.7.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocminfo@" + ver, when="@" + ver)
