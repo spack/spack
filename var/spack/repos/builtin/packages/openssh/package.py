@@ -107,7 +107,7 @@ class Openssh(AutotoolsPackage):
         filter_file(r"if \(n != 3 && n != 4\)", "if (n < 2)", "configure")
 
         # https://github.com/Homebrew/homebrew-core/blob/7aabdeb30506be9b01708793ae553502c115dfc8/Formula/o/openssh.rb#L71-L77
-        if self.spec.target.family == "x86_64" and self.spec.platform == "darwin":
+        if self.spec.target.family == "x86_64" and self.spec.platform in ["darwin", "linux"]:
             filter_file(r"-fzero-call-used-regs=all", "-fzero-call-used-regs=used", "configure")
 
     def configure_args(self):
