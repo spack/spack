@@ -2352,7 +2352,7 @@ the following at the command line of a bash shell:
 
 .. code-block:: console
 
-   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 &; done
+   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 & done
 
 .. note::
 
