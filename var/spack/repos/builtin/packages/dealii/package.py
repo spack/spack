@@ -520,6 +520,12 @@ class Dealii(CMakePackage, CudaPackage):
                         self.define("CUDA_HOST_COMPILER", spec["mpi"].mpicxx),
                     ]
                 )
+            # Make sure we use the same compiler that kokkos uses
+            if "+kokkos" in spec:
+                options.extend([self.define("CMAKE_CXX_COMPILER", spec["kokkos"].kokkos_cxx)])
+            # Make sure we use the same compiler that Trilinos uses
+            if "+trilinos" in spec:
+                options.extend([self.define("CMAKE_CXX_COMPILER", spec["trilinos"].kokkos_cxx)])
 
         # Python bindings
         if spec.satisfies("@8.5.0:"):
