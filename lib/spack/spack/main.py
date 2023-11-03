@@ -671,7 +671,6 @@ class SpackCommand:
                 Windows, where it is always False.
         """
         self.parser = make_argument_parser()
-        self.command = self.parser.add_command(command_name)
         self.command_name = command_name
         # TODO: figure out how to support this on windows
         self.subprocess = subprocess if sys.platform != "win32" else False
@@ -703,13 +702,14 @@ class SpackCommand:
 
         if self.subprocess:
             p = sp.Popen(
-                [spack.paths.spack_script, self.command_name] + prepend + list(argv),
+                [spack.paths.spack_script] + prepend + [self.command_name] + list(argv),
                 stdout=sp.PIPE,
                 stderr=sp.STDOUT,
             )
             out, self.returncode = p.communicate()
             out = out.decode()
         else:
+            command = self.parser.add_command(self.command_name)
             args, unknown = self.parser.parse_known_args(
                 prepend + [self.command_name] + list(argv)
             )
@@ -717,7 +717,7 @@ class SpackCommand:
             out = io.StringIO()
             try:
                 with log_output(out, echo=True):
-                    self.returncode = _invoke_command(self.command, self.parser, args, unknown)
+                    self.returncode = _invoke_command(command, self.parser, args, unknown)
 
             except SystemExit as e:
                 self.returncode = e.code

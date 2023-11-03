@@ -58,6 +58,20 @@ def test_subcommands():
     assert "spack compiler add" in out2
 
 
+@pytest.mark.not_on_windows("subprocess not supported on Windows")
+def test_override_alias():
+    """Test that spack commands cannot be overriden by aliases."""
+
+    install = spack.main.SpackCommand("install", subprocess=True)
+    instal = spack.main.SpackCommand("instal", subprocess=True)
+
+    out = install(fail_on_error=False, global_args=["-c", "config:aliases:install:find"])
+    assert "install requires a package argument or active environment" in out
+
+    out = instal(fail_on_error=False, global_args=["-c", "config:aliases:instal:find"])
+    assert "install requires a package argument or active environment" not in out
+
+
 def test_rst():
     """Do some simple sanity checks of the rst writer."""
     out1 = commands("--format=rst")
