@@ -72,7 +72,6 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%gcc@:5.2.9")
     conflicts("+rocm", when="@:1.1.1")
     conflicts("+mpi", when="@:1.4.0")
-    #conflicts("+openmp", when="+sycl")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     conflicts("^hip@4.1.0:", when="@:1.3.0")
@@ -88,7 +87,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^rocthrust@:4.3.1", when="@1.6.0:")
     conflicts("^rocprim@:4.3.1", when="@1.6.0:")
 
-    conflicts("+sycl", when="@:1.4.0", msg="For SYCL support, please use Ginkgo version 1.4.0 and newer."
+    conflicts(
+        "+sycl", when="@:1.4.0", msg="For SYCL support, please use Ginkgo version 1.4.0 and newer."
     )
 
     # Skip smoke tests if compatible hardware isn't found
@@ -123,7 +123,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             except UnsupportedCompilerFlag:
                 raise InstallError("Ginkgo requires a C++14-compliant C++ compiler")
 
-        if self.spec.satisfies("@1.4.0:1.6.0 +sycl") and not self.spec.satisfies("%oneapi@2021.3.0:"):
+        if self.spec.satisfies("@1.4.0:1.6.0 +sycl") and not self.spec.satisfies(
+            "%oneapi@2021.3.0:"
+        ):
             raise InstallError("ginkgo +sycl requires %oneapi@2021.3.0:")
         elif self.spec.satisfies("@1.7.0: +sycl") and not self.spec.satisfies("%oneapi@2022.1.0:"):
             raise InstallError("ginkgo +sycl requires %oneapi@2022.1.0:")
@@ -181,9 +183,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
         if "+sycl" in self.spec:
             sycl_compatible_compilers = ["dpcpp", "icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
-                raise InstallError(
-                    "ginkgo +sycl requires DPC++ (dpcpp) or icpx compiler."
-                )
+                raise InstallError("ginkgo +sycl requires DPC++ (dpcpp) or icpx compiler.")
         return args
 
     @property
