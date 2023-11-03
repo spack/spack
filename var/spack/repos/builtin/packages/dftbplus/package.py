@@ -59,7 +59,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
         default=False,
         description="Use the ELSI library for large scale systems. "
         "Only has any effect if you build with '+mpi'",
-        when="+mpi"
+        when="+mpi",
     )
     variant(
         "gpu",
@@ -69,7 +69,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
     variant(
         "mbd",
         default=False,
-        when="21.1:",
+        when="@21.1:",
         description="Whether DFTB+ should be built with many-body-dispersion support.",
     )
     variant("mpi", default=False, description="Whether DFTB+ should support MPI-parallelism.")
