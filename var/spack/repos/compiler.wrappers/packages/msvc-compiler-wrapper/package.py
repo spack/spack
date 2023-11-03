@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.paths
+
 from spack.package import *
 
 
-class MsvcCompilerWrapper(Package):
+class MsvcCompilerWrapper(NMakePackage):
     """Package to represent Spack """
 
     homepage = "https://github.com/spack/msvc-wrapper"
@@ -18,12 +20,8 @@ class MsvcCompilerWrapper(Package):
 
     version("main", branch="main")
 
-    phases = ["build", "install"]
 
-    def build(self, spec, prefix):
-        with working_dir(spec.stage.source_path):
-            Executable("cl.exe")("/EHsc cl.cxx")
+    build_targets = ["cl.exe"]
 
-    def install(self, spec, prefix):
-        with working_dir(spec.stage.source_path):
-            copy(".\\cl.exe", prefix.bin)
+    def nmake_install_args(self, spec, prefix):
+            return [f"PREFIX={spack.paths.build_env_path}\\msvc"]
