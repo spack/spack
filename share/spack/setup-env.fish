@@ -144,34 +144,6 @@ function shift_args -d "simulates bash shift"
 
 end
 
-
-
-
-#
-# CAPTURE_ALL: helper function used to capture stdout, stderr, and status
-#   -> CAPTURE_ALL: there is a bug in fish, that prevents stderr re-capture
-#                   from nested command substitution:
-#                   https://github.com/fish-shell/fish-shell/issues/6459
-#
-
-function capture_all
-    begin;
-        begin;
-            eval $argv[1]
-            set $argv[2] $status  # read sets the `status` flag => capture here
-        end 2>| read -z __err
-    end 1>| read -z __out
-
-    # output arrays
-    set $argv[3] (echo $__out | string split \n)
-    set $argv[4] (echo $__err | string split \n)
-
-    return 0
-end
-
-
-
-
 #
 # GET_SP_FLAGS, and GET_MOD_ARGS: support functions for extracting arguments and
 # flags. Note bash's `shift` operation is simulated by the `__sp_remaining_args`
@@ -381,6 +353,13 @@ function spack_runner -d "Runner function for the `spack` wrapper"
         end
     end
 
+    # Support color in stdout capturing subshells
+    if set -q SPACK_COLOR
+        set -g _SPACK_COLOR $SPACK_COLOR
+    else
+        set -g _SPACK_COLOR always
+    end
+
     #
     # Accumulate initial flags for main spack command
     #
@@ -456,8 +435,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
 
         # CASE: spack subcommand is `env`. Here we get the spack runtime to
         # supply the appropriate shell commands for setting the environment
-        # varibles. These commands are then run by fish (using the `capture_all`
-        # function, instead of a command substitution).
+        # variables. These commands are then eval'd by fish.
 
         case "env"
 
@@ -484,14 +462,13 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                             command spack env activate $_a
                             return
                         else
-                            # actual call to activate: source the output
-                            set -l sp_env_cmd "command spack $sp_flags env activate --fish $__sp_remaining_args"
-                            capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
-                            eval $__sp_stdout
-                            if test -n "$__sp_stderr"
-                                echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
+                            set -l __sp_stdout (SPACK_COLOR=$_SPACK_COLOR command spack $sp_flags env activate --fish $__sp_remaining_args)
+                            set -l __sp_status $status
+                            if test $__sp_status -ne 0
+                                return $__sp_status
                             end
-                            return $__sp_stat
+                            eval $__sp_stdout
+                            return
                         end
 
                     case "deactivate"
@@ -512,15 +489,13 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                             return
                         else
                             # no args: source the output of the command
-                            set -l sp_env_cmd "command spack $sp_flags env deactivate --fish"
-                            capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
-                            if test $__sp_stat -ne 0
-                                if test -n "$__sp_stderr"
-                                    echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
-                                end
-                                return $__sp_stat
+                            set -l __sp_stdout (SPACK_COLOR=$_SPACK_COLOR command spack $sp_flags env deactivate --fish)
+                            set -l __sp_status $status
+                            if test $__sp_status -ne 0
+                                return $__sp_status
                             end
                             eval $__sp_stdout
+                            return
                         end
 
                     case "*"
@@ -553,15 +528,13 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                 return
             else
                 # actual call to activate: source the output
-                set -l sp_env_cmd "command spack $sp_flags $sp_subcommand --fish $__sp_remaining_args"
-                capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
-                if test $__sp_stat -ne 0
-                    if test -n "$__sp_stderr"
-                        echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
-                    end
-                    return $__sp_stat
+                set -l __sp_stdout (SPACK_COLOR=$_SPACK_COLOR command spack $sp_flags $sp_subcommand --fish $__sp_remaining_args)
+                set -l __sp_status $status
+                if test $__sp_status -ne 0
+                    return $__sp_status
                 end
                 eval $__sp_stdout
+                return
             end
 
 
