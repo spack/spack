@@ -291,6 +291,10 @@ class SourceBootstrapper(Bootstrapper):
         with spack_python_interpreter():
             # Add hint to use frontend operating system on Cray
             concrete_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
+            # This is needed to help the old concretizer taking the `setuptools` dependency
+            # only when bootstrapping from sources on Python 3.12
+            if spec_for_current_python() == "python@3.12":
+                concrete_spec.constrain("+force-setuptools")
 
             if module == "clingo":
                 # TODO: remove when the old concretizer is deprecated  # pylint: disable=fixme
@@ -491,9 +495,6 @@ def _add_externals_if_missing() -> None:
 
 def clingo_root_spec() -> str:
     """Return the root spec used to bootstrap clingo"""
-    # This is needed to help the old concretizer taking the `setuptools` dependency
-    if spec_for_current_python() == "python@3.12":
-        return _root_spec("clingo-bootstrap@spack+python+force-setuptools")
     return _root_spec("clingo-bootstrap@spack+python")
 
 
