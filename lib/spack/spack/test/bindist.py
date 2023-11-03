@@ -589,6 +589,24 @@ def test_install_legacy_buildcache_layout(install_mockery_mutable_config):
     assert expect_line in output
 
 
+def test_install_v1_buildcache_layout(default_config):
+    """
+    Test that we can still install buildcaches that were generated using
+    buildcache layout version 1.
+    """
+    v1_layout_dir = os.path.join(test_path, "data", "mirrors", "v1_layout")
+    mirror_url = "file://{0}".format(v1_layout_dir)
+    filename = (
+        "test-debian6-core2-gcc-9.4.0-libelf-0.8.13-" "haahnjwjngowrsx4b7hh2zxzoqcmfjfd.spec.json"
+    )
+    spec_json_path = os.path.join(v1_layout_dir, "build_cache", filename)
+    mirror_cmd("add", "--scope", "site", "test-legacy-layout", mirror_url)
+    output = install_cmd("--no-check-signature", "--cache-only", "-f", spec_json_path, output=str)
+    mirror_cmd("rm", "--scope=site", "test-legacy-layout")
+    expect_line = "Extracting libelf-0.8.13-haahnjwjngowrsx4b7hh2zxzoqcmfjfd from binary cache"
+    assert expect_line in output
+
+
 @pytest.mark.nomockstage
 def test_install_future_buildcache_layout(install_mockery_mutable_config, mock_fetch):
     """

@@ -850,11 +850,13 @@ def check_fn(args: argparse.Namespace):
 
 
 def download_fn(args):
-    """download buildcache entry from a remote mirror to local folder
+    """DEPRECATED: download buildcache entry from a remote mirror to local folder
 
     this command uses the process exit code to indicate its result, specifically, a non-zero exit
     code indicates that the command failed to download at least one of the required buildcache
-    components
+    components.
+
+    This command is deprecated and will be removed in spack v0.23.
     """
     if args.spec_file:
         tty.warn(
