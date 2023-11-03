@@ -10,6 +10,7 @@ class Squashfuse(AutotoolsPackage):
     """squashfuse - Mount SquashFS archives using FUSE"""
 
     homepage = "https://github.com/vasi/squashfuse"
+    url = "https://github.com/vasi/squashfuse/releases/download/0.1.104/squashfuse-0.1.104.tar.gz"
     git = "https://github.com/vasi/squashfuse.git"
 
     maintainers("haampie")
@@ -50,14 +51,6 @@ class Squashfuse(AutotoolsPackage):
     depends_on("autoconf", type="build", when="@master")
     depends_on("automake", type="build", when="@master")
     depends_on("libtool", type="build", when="@master")
-
-    def url_for_version(self, version):
-        url = "https://github.com/vasi/squashfuse/releases/download/"
-        if version == Version("0.5.0"):
-            url += "v{}/squashfuse-{}.tar.gz"
-        else:
-            url += "{}/squashfuse-{}.tar.gz"
-        return url.format(version, version)
 
     def flag_handler(self, name, flags):
         if name == "cflags" and "+min_size" in self.spec:
