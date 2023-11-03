@@ -482,7 +482,7 @@ class Stage:
                     0, fs.from_url_scheme(url, digest, expand=expand, extension=extension)
                 )
 
-            if self.default_fetcher.cacheable:
+            if self.default_fetcher.cachable:
                 for rel_path in reversed(list(self.mirror_paths)):
                     cache_fetcher = spack.caches.FETCH_CACHE.fetcher(
                         rel_path, digest, expand=expand, extension=extension

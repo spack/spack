@@ -152,7 +152,7 @@ class FetchStrategy:
         """
 
     @property
-    def cacheable(self):
+    def cachable(self):
         """Whether fetcher is capable of caching the resource it retrieves.
 
         This generally is determined by whether the resource is
@@ -219,7 +219,7 @@ class BundleFetchStrategy(FetchStrategy):
         return True
 
     @property
-    def cacheable(self):
+    def cachable(self):
         """Report False as there is no code to cache."""
         return False
 
@@ -418,7 +418,7 @@ class URLFetchStrategy(FetchStrategy):
         return self.stage.archive_file
 
     @property
-    def cacheable(self):
+    def cachable(self):
         return self.cache_enabled and bool(self.digest)
 
     @_needs_stage
@@ -784,7 +784,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         return self._git
 
     @property
-    def cacheable(self):
+    def cachable(self):
         return self.cache_enabled and bool(self.commit or self.tag)
 
     def source_id(self):
@@ -1017,7 +1017,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
         return self._cvs
 
     @property
-    def cacheable(self):
+    def cachable(self):
         return self.cache_enabled and (bool(self.branch) or bool(self.date))
 
     def source_id(self):
@@ -1131,7 +1131,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
         return self._svn
 
     @property
-    def cacheable(self):
+    def cachable(self):
         return self.cache_enabled and bool(self.revision)
 
     def source_id(self):
@@ -1242,7 +1242,7 @@ class HgFetchStrategy(VCSFetchStrategy):
         return self._hg
 
     @property
-    def cacheable(self):
+    def cachable(self):
         return self.cache_enabled and bool(self.revision)
 
     def source_id(self):
@@ -1438,7 +1438,7 @@ def stable_target(fetcher):
     """Returns whether the fetcher target is expected to have a stable
     checksum. This is only true if the target is a preexisting archive
     file."""
-    if isinstance(fetcher, URLFetchStrategy) and fetcher.cacheable:
+    if isinstance(fetcher, URLFetchStrategy) and fetcher.cachable:
         return True
     return False
 
@@ -1701,8 +1701,8 @@ class FsCache:
         self.root = os.path.abspath(root)
 
     def store(self, fetcher, relative_dest):
-        # skip fetchers that aren't cacheable
-        if not fetcher.cacheable:
+        # skip fetchers that aren't cachable
+        if not fetcher.cachable:
             return
 
         # Don't store things that are already cached.

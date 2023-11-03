@@ -120,7 +120,7 @@ spack:
   - pdt
   - petsc
   - plumed
-  - precise
+  - precice
   - pumi
   - py-h5py +mpi
   - py-h5py ~mpi

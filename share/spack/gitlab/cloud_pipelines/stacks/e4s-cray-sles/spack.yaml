@@ -136,7 +136,7 @@ spack:
   # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +mgard # python: Could not find platform dependent libraries <exec_prefix>
   # - petsc                       # petsc: SyntaxError: (unicode error) \N escapes not supported (can't load unicodedata module)
   # - plumed                      # python: Could not find platform dependent libraries <exec_prefix>
-  # - precise                     # petsc: SyntaxError: (unicode error) \N escapes not supported (can't load unicodedata module)
+  # - precice                     # petsc: SyntaxError: (unicode error) \N escapes not supported (can't load unicodedata module)
   # - py-h5py +mpi                # python: Could not find platform dependent libraries <exec_prefix>
   # - py-h5py ~mpi                # python: Could not find platform dependent libraries <exec_prefix>
   # - py-libensemble +mpi +nlopt  # python: Could not find platform dependent libraries <exec_prefix>
