@@ -492,7 +492,9 @@ error(100, "Package '{0}' needs to provide both '{1}' and '{2}' together, but pr
    pkg_fact(Package, provided_together(ID, SetID, Virtual2)),
    Virtual1 != Virtual2,
    attr("virtual_on_incoming_edges", node(X, Package), Virtual1),
-   not attr("virtual_on_incoming_edges", node(X, Package), Virtual2).
+   not attr("virtual_on_incoming_edges", node(X, Package), Virtual2),
+   attr("virtual_node", node(_, Virtual1)),
+   attr("virtual_node", node(_, Virtual2)).
 
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
