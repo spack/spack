@@ -200,7 +200,7 @@ spack:
   - kokkos +sycl +openmp cxxstd=17 +tests +examples
   - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +tests +examples
   - slate +sycl
-  - sundials +sycl cxxstd=17 +examples_install
+  - sundials +sycl cxxstd=17 +examples-install
   - tau +mpi +opencl +level_zero ~pdt +syscall   # tau: requires libdrm.so to be installed
   # --
   # - ginkgo +oneapi                    # InstallError: Ginkgo's oneAPI backend requires theDPC++ compiler as main CXX compiler.
