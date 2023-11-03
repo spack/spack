@@ -25,16 +25,16 @@ class Dftbplus(CMakePackage, MakefilePackage):
     )
 
     version("main", branch="main")
-    version("22.1", sha256="f0fc9a076aa2d7be03c31a3a845d8151fc0cc0b1d421e11c37044f78a42abb33")
-    version("21.2", sha256="e73aa698ff951b59f7fe2ea027b292bae16abf545c9fdbb11b5b5127f04a3c10")
-    version("21.1", sha256="31d5a488843a05d8589a375307a2832c1fc938f9f7d830c45a062726659e7b0a")
-    version("20.2.1", sha256="6b1827a45b20d1757119a75abcb851cd4362e7abc58601094d029ed5922d6da7")
-    version("20.2", sha256="6b1f10c7efbdaf59acf64d8fb8afc80460c0fbc6c4dbe256b760223cbd28ed2c")
-    version("20.1", sha256="a155ca927c804234587c61c4938d154f31578c816b0ce20eaee3b5d7e39d91dc")
+    version("22.1", sha256="02daca6f4c6372656598f3ba0311110c8e473c87c8d934d7bb276feaa4cc1c82")
+    version("21.2", sha256="fbeb0e0ea93ab4dc4450f298ec712d2cf991f19f621badf57dae05f0e43b5906")
+    version("21.1", sha256="8c1eb8a38f72c421e2ae20118a6db3a656fa84e8b180ef387e549a73ae77f970")
+    version("20.2.1", sha256="95cc85fdb08bd57ca013bd09f4f902303720e17d015a5fab2d4db63fcb6d9cb3")
+    version("20.2", sha256="eafd219159d600624041658046c89db539ceb0c1d2988b72321c80d9b992c9bf")
+    version("20.1", sha256="04c2b906b8670937c8ddd9c5fb68e7e9921b464840cf54aa3d698db98167d0b7")
     version(
         "19.1",
-        sha256="4d07f5c6102f06999d8cfdb1d17f5b59f9f2b804697f14b3bc562e3ea094b8a8",
         deprecated=True,
+        sha256="78f45ef0571c78cf732a5493d32830455a832fa05ebcad43098895e46ad8d220",
     )
 
     variant(
