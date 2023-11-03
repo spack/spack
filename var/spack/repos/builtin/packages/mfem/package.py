@@ -919,6 +919,22 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "CUDA_CXX=%s" % join_path(spec["cuda"].prefix, "bin", "nvcc"),
                 "CUDA_ARCH=sm_%s" % cuda_arch,
             ]
+            # Check if we are using a CUDA installation where the math libs are
+            # in a separate directory:
+            culibs = ["libcusparse"]
+            cuda_libs = find_optional_library(culibs, spec["cuda"].prefix)
+            if not cuda_libs:
+                p0 = os.path.realpath(join_path(spec["cuda"].prefix, "bin", "nvcc"))
+                p0 = os.path.dirname(p0)
+                p1 = os.path.dirname(p0)
+                while p1 != p0:
+                    cuda_libs = find_optional_library(culibs, join_path(p1, "math_libs"))
+                    if cuda_libs:
+                        break
+                    p0, p1 = p1, os.path.dirname(p1)
+                if not cuda_libs:
+                    raise InstallError("Required CUDA libraries not found: %s" % culibs)
+                options += ["CUDA_LIB=%s" % ld_flags_from_library_list(cuda_libs)]
 
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)

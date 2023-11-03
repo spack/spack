@@ -1501,6 +1501,17 @@ class SpackSolverSetup:
                 )
             self.gen.newline()
 
+        for when, sets_of_virtuals in pkg.provided_together.items():
+            condition_id = self.condition(
+                when, name=pkg.name, msg="Virtuals are provided together"
+            )
+            for set_id, virtuals_together in enumerate(sets_of_virtuals):
+                for name in virtuals_together:
+                    self.gen.fact(
+                        fn.pkg_fact(pkg.name, fn.provided_together(condition_id, set_id, name))
+                    )
+            self.gen.newline()
+
     def package_dependencies_rules(self, pkg):
         """Translate 'depends_on' directives into ASP logic."""
         for _, conditions in sorted(pkg.dependencies.items()):
@@ -1901,6 +1912,15 @@ class SpackSolverSetup:
             if getattr(spec, "_package_hash", None):
                 clauses.append(fn.attr("package_hash", spec.name, spec._package_hash))
             clauses.append(fn.attr("hash", spec.name, spec.dag_hash()))
+
+        edges = spec.edges_from_dependents()
+        virtuals = [x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])]
+        if not body:
+            for virtual in virtuals:
+                clauses.append(fn.attr("provider_set", spec.name, virtual))
+        else:
+            for virtual in virtuals:
+                clauses.append(fn.attr("virtual_on_incoming_edges", spec.name, virtual))
 
         # add all clauses from dependencies
         if transitive:
@@ -3124,10 +3144,11 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
         msg = (
             "Spack concretizer internal error. Please submit a bug report and include the "
             "command, environment if applicable and the following error message."
-            f"\n    {provided} is unsatisfiable, errors are:"
+            f"\n    {provided} is unsatisfiable"
         )
 
-        msg += "".join([f"\n    {conflict}" for conflict in conflicts])
+        if conflicts:
+            msg += ", errors are:" + "".join([f"\n    {conflict}" for conflict in conflicts])
 
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
 
