@@ -414,9 +414,9 @@ spt_contains 'spack_test_2_env' 'fish' '-c' 'echo $PATH'
 spt_does_not_contain 'spack_test_env' 'fish' '-c' 'echo $PATH'
 despacktivate
 
-echo "Testing home environment"
+echo "Testing default environment"
 spack env activate
-contains "In environment home" spack env status
+contains "In environment default" spack env status
 despacktivate
 
 echo "Correct error exit codes for activate and deactivate"

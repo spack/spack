@@ -165,16 +165,16 @@ def env_activate(args):
     env_name_or_dir = args.activate_env or args.dir
 
     # When executing `spack env activate` without further arguments, activate
-    # the home environment. It's created when it doesn't exist yet.
+    # the default environment. It's created when it doesn't exist yet.
     if not env_name_or_dir and not args.temp:
-        short_name = "home"
+        short_name = "default"
         if not ev.exists(short_name):
             ev.create(short_name)
             action = "Created and activated"
         else:
             action = "Activated"
         env_path = ev.root(short_name)
-        _tty_info(f"{action} home environment in {env_path}")
+        _tty_info(f"{action} default environment in {env_path}")
 
     # Temporary environment
     elif args.temp:
