@@ -6,7 +6,7 @@ index c5c15d0a..496cc80d 100644
  // C Compatible Includes
  #include "XdmfCore.hpp"
  #include "XdmfHeavyDataController.hpp"
-+#include <stdint.h>
++#include <cstdint>
  
  // So that hdf5 does not need to be included in the header files
  // It would add a dependancy to programs that use Xdmf
@@ -26,7 +26,7 @@ index cfbec6f4..f83aa0de 100644
  #include "XdmfCore.hpp"
  #include "XdmfHeavyDataWriter.hpp"
  #include "XdmfHeavyDataController.hpp"
-+#include <stdint.h>
++#include <cstdint>
  
  // So that hdf5 does not need to be included in the header files
  // It would add a dependancy to programs that use Xdmf
