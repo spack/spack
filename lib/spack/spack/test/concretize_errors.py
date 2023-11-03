@@ -30,7 +30,7 @@ external_error_messages = [
         " which was not satisfied"
     ),
     "        'quantum-espresso+veritas' required",
-    "        required because quantum-espresso+veritas requested from CLI"
+    "        required because quantum-espresso+veritas requested from CLI",
 ]
 
 variant_error_messages = [
@@ -44,20 +44,19 @@ variant_error_messages = [
 external_config = {
     "packages:quantum-espresso": {
         "buildable": False,
-        "externals": [
-            {
-                "spec": "quantum-espresso@1.0~veritas",
-                "prefix": "/path/to/qe",
-            }
-        ]
+        "externals": [{"spec": "quantum-espresso@1.0~veritas", "prefix": "/path/to/qe"}],
     }
 }
 
-@pytest.mark.parametrize("error_messages,config_set,spec", [
-    (version_error_messages, {}, "quantum-espresso^fftw@1.1:"),
-    (external_error_messages, external_config, "quantum-espresso+veritas"),
-    (variant_error_messages, {}, "quantum-espresso+invino^fftw~mpi"),
-])
+
+@pytest.mark.parametrize(
+    "error_messages,config_set,spec",
+    [
+        (version_error_messages, {}, "quantum-espresso^fftw@1.1:"),
+        (external_error_messages, external_config, "quantum-espresso+veritas"),
+        (variant_error_messages, {}, "quantum-espresso+invino^fftw~mpi"),
+    ],
+)
 def test_error_messages(error_messages, config_set, spec, mock_packages, mutable_config):
     for path, conf in config_set.items():
         spack.config.set(path, conf)
