@@ -458,7 +458,11 @@ class BaseConfiguration:
             if constraint in self.spec:
                 suffixes.append(suffix)
         suffixes = list(dedupe(suffixes))
-        if self.hash:
+        # For hidden modules we can always add a fixed length hash as suffix, since it guards
+        # against file name clashes, and the module is not exposed to the user anyways.
+        if self.hidden:
+            suffixes.append(self.spec.dag_hash(length=7))
+        elif self.hash:
             suffixes.append(self.hash)
         return suffixes
 
