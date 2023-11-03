@@ -81,6 +81,13 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^rocthrust@4.1.0:", when="@:1.3.0")
     conflicts("^rocprim@4.1.0:", when="@:1.3.0")
 
+    # Ginkgo 1.6.0 start relying on ROCm 4.5.0
+    conflicts("^hip@:4.3.1", when="@1.6.0:")
+    conflicts("^hipblas@:4.3.1", when="@1.6.0:")
+    conflicts("^hipsparse@:4.3.1", when="@1.6.0:")
+    conflicts("^rocthrust@:4.3.1", when="@1.6.0:")
+    conflicts("^rocprim@:4.3.1", when="@1.6.0:")
+
     conflicts("+sycl", when="@:1.4.0", msg="For SYCL support, please use Ginkgo version 1.4.0 and newer."
     )
 
