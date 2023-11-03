@@ -48,9 +48,15 @@ class Conquest(MakefilePackage):
     )
 
     build_directory = "src"
+
     # The SYSTEM variable is required above version 1.2.
     # Versions 1.2 and older should ignore it.
-    build_targets = ["SYSTEM = example"]
+    @property
+    def build_targets(self):
+        if self.version > Version("1.2"):
+            return ["SYSTEM = example", "Conquest"]
+        else:
+            return ["Conquest"]
 
     def edit(self, spec, prefix):
         fflags = "-O3 -fallow-argument-mismatch"
