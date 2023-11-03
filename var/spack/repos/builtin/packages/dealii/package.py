@@ -502,9 +502,6 @@ class Dealii(CMakePackage, CudaPackage):
         if "+mpi" in spec:
             options.extend(
                 [
-                    self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
-                    self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
-                    self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
                     self.define("MPI_C_COMPILER", spec["mpi"].mpicc),
                     self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx),
                     self.define("MPI_Fortran_COMPILER", spec["mpi"].mpifc),
