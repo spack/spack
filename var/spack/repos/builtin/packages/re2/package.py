@@ -14,6 +14,9 @@ class Re2(CMakePackage):
     url = "https://github.com/google/re2/archive/2020-08-01.tar.gz"
 
     version(
+        "2023-09-01", sha256="5bb6875ae1cd1e9fedde98018c346db7260655f86fdb8837e3075103acd3649b"
+    )
+    version(
         "2021-06-01", sha256="26155e050b10b5969e986dab35654247a3b1b295e0532880b5a9c13c0a700ceb"
     )
     version(
@@ -25,6 +28,8 @@ class Re2(CMakePackage):
 
     variant("shared", default=False, description="Build shared instead of static libraries")
     variant("pic", default=True, description="Enable position independent code")
+
+    depends_on("abseil-cpp", when="@2023-09-01:")
 
     # shared libs must have position-independent code
     conflicts("+shared ~pic")

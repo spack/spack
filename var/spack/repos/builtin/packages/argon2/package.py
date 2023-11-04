@@ -20,4 +20,4 @@ class Argon2(MakefilePackage):
     version("20161029", sha256="fe0049728b946b58b94cc6db89b34e2d050c62325d16316a534d2bedd78cd5e7")
 
     def install(self, spec, prefix):
-        make("PREFIX={0}".format(prefix), "install", "LIBRARY_REL=lib")
+        make(f"PREFIX={prefix}", "install", "LIBRARY_REL=lib")

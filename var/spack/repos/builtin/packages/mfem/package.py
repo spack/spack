@@ -468,6 +468,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # upstream.
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
     patch("mfem-4.5.patch", when="@4.5.0")
+    patch("mfem-4.6.patch", when="@4.6.0")
 
     phases = ["configure", "build", "install"]
 
@@ -918,10 +919,27 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "CUDA_CXX=%s" % join_path(spec["cuda"].prefix, "bin", "nvcc"),
                 "CUDA_ARCH=sm_%s" % cuda_arch,
             ]
+            # Check if we are using a CUDA installation where the math libs are
+            # in a separate directory:
+            culibs = ["libcusparse"]
+            cuda_libs = find_optional_library(culibs, spec["cuda"].prefix)
+            if not cuda_libs:
+                p0 = os.path.realpath(join_path(spec["cuda"].prefix, "bin", "nvcc"))
+                p0 = os.path.dirname(p0)
+                p1 = os.path.dirname(p0)
+                while p1 != p0:
+                    cuda_libs = find_optional_library(culibs, join_path(p1, "math_libs"))
+                    if cuda_libs:
+                        break
+                    p0, p1 = p1, os.path.dirname(p1)
+                if not cuda_libs:
+                    raise InstallError("Required CUDA libraries not found: %s" % culibs)
+                options += ["CUDA_LIB=%s" % ld_flags_from_library_list(cuda_libs)]
 
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
+            hip_headers = HeaderList([])
             hip_libs = LibraryList([])
             # To use a C++ compiler that supports -xhip flag one can use
             # something like this:
@@ -932,7 +950,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             #   hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
             if "^hipsparse" in spec:  # hipsparse is needed @4.4.0:+rocm
                 hipsparse = spec["hipsparse"]
-                options += ["HIP_OPT=%s" % hipsparse.headers.cpp_flags]
+                hip_headers += hipsparse.headers
                 hip_libs += hipsparse.libs
                 # Note: MFEM's defaults.mk wants to find librocsparse.* in
                 # $(HIP_DIR)/lib, so we set HIP_DIR to be $ROCM_PATH when using
@@ -942,11 +960,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     options += ["HIP_DIR=%s" % env["ROCM_PATH"]]
                 else:
                     options += ["HIP_DIR=%s" % hipsparse["rocsparse"].prefix]
+            if "^rocthrust" in spec and not spec["hip"].external:
+                # petsc+rocm needs the rocthrust header path
+                hip_headers += spec["rocthrust"].headers
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
                 craylibs_path = env["CRAYLIBS_" + machine().upper()]
                 craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
                 hip_libs += find_libraries(craylibs, craylibs_path)
+            if hip_headers:
+                options += ["HIP_OPT=%s" % hip_headers.cpp_flags]
             if hip_libs:
                 options += ["HIP_LIB=%s" % ld_flags_from_library_list(hip_libs)]
 
@@ -1197,6 +1220,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 sun_comps += ",nvecparhyp,nvecparallel"
         if "+cuda" in spec and "+cuda" in spec["sundials"]:
             sun_comps += ",nveccuda"
+        if "+rocm" in spec and "+rocm" in spec["sundials"]:
+            sun_comps += ",nvechip"
         return sun_comps
 
     @property

@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 import tempfile
+from typing import Optional
 
 import llnl.string as string
 import llnl.util.filesystem as fs
@@ -96,22 +97,16 @@ def env_activate_setup_parser(subparser):
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
-        "-v",
         "--with-view",
-        action="store_const",
-        dest="with_view",
-        const=True,
-        default=True,
-        help="update PATH, etc., with associated view",
+        "-v",
+        metavar="name",
+        help="set runtime environment variables for specific view",
     )
     view_options.add_argument(
-        "-V",
         "--without-view",
-        action="store_const",
-        dest="with_view",
-        const=False,
-        default=True,
-        help="do not update PATH, etc., with associated view",
+        "-V",
+        action="store_true",
+        help="do not set runtime environment variables for any view",
     )
 
     subparser.add_argument(
@@ -197,10 +192,20 @@ def env_activate(args):
 
     # Activate new environment
     active_env = ev.Environment(env_path)
+
+    # Check if runtime environment variables are requested, and if so, for what view.
+    view: Optional[str] = None
+    if args.with_view:
+        view = args.with_view
+        if not active_env.has_view(view):
+            tty.die(f"The environment does not have a view named '{view}'")
+    elif not args.without_view and active_env.has_view(ev.default_view_name):
+        view = ev.default_view_name
+
     cmds += spack.environment.shell.activate_header(
-        env=active_env, shell=args.shell, prompt=env_prompt if args.prompt else None
+        env=active_env, shell=args.shell, prompt=env_prompt if args.prompt else None, view=view
     )
-    env_mods.extend(spack.environment.shell.activate(env=active_env, add_view=args.with_view))
+    env_mods.extend(spack.environment.shell.activate(env=active_env, view=view))
     cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 
@@ -375,28 +380,33 @@ def env_remove(args):
     and manifests embedded in repositories should be removed manually.
     """
     read_envs = []
+    bad_envs = []
     for env_name in args.rm_env:
-        env = ev.read(env_name)
-        read_envs.append(env)
+        try:
+            env = ev.read(env_name)
+            read_envs.append(env)
+        except spack.config.ConfigFormatError:
+            bad_envs.append(env_name)
 
     if not args.yes_to_all:
-        answer = tty.get_yes_or_no(
-            "Really remove %s %s?"
-            % (
-                string.plural(len(args.rm_env), "environment", show_n=False),
-                string.comma_and(args.rm_env),
-            ),
-            default=False,
-        )
+        environments = string.plural(len(args.rm_env), "environment", show_n=False)
+        envs = string.comma_and(args.rm_env)
+        answer = tty.get_yes_or_no(f"Really remove {environments} {envs}?", default=False)
         if not answer:
             tty.die("Will not remove any environments")
 
     for env in read_envs:
+        name = env.name
         if env.active:
-            tty.die("Environment %s can't be removed while activated." % env.name)
-
+            tty.die(f"Environment {name} can't be removed while activated.")
         env.destroy()
-        tty.msg("Successfully removed environment '%s'" % env.name)
+        tty.msg(f"Successfully removed environment '{name}'")
+
+    for bad_env_name in bad_envs:
+        shutil.rmtree(
+            spack.environment.environment.environment_dir_from_name(bad_env_name, exists_ok=True)
+        )
+        tty.msg(f"Successfully removed environment '{bad_env_name}'")
 
 
 #
@@ -662,18 +672,31 @@ def env_depfile(args):
     # Currently only make is supported.
     spack.cmd.require_active_env(cmd_name="env depfile")
 
+    env = ev.active_environment()
+
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.
     filter_specs = spack.cmd.parse_specs(args.specs) if args.specs else None
     template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
     model = depfile.MakefileModel.from_env(
-        ev.active_environment(),
+        env,
         filter_specs=filter_specs,
         pkg_buildcache=depfile.UseBuildCache.from_string(args.use_buildcache[0]),
         dep_buildcache=depfile.UseBuildCache.from_string(args.use_buildcache[1]),
         make_prefix=args.make_prefix,
         jobserver=args.jobserver,
     )
+
+    # Warn in case we're generating a depfile for an empty environment. We don't automatically
+    # concretize; the user should do that explicitly. Could be changed in the future if requested.
+    if model.empty:
+        if not env.user_specs:
+            tty.warn("no specs in the environment")
+        elif filter_specs is not None:
+            tty.warn("no concrete matching specs found in environment")
+        else:
+            tty.warn("environment is not concretized. Run `spack concretize` first")
+
     makefile = template.render(model.to_dict())
 
     # Finally write to stdout/file.

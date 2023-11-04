@@ -20,6 +20,7 @@ class FluxCore(AutotoolsPackage):
     maintainers("grondo")
 
     version("master", branch="master")
+    version("0.55.0", sha256="2925b8a084e9d1069a96de7689b515ad6f2051ecfb9fbbe4d2643507de7ccd30")
     version("0.54.0", sha256="721fc3fff64b3b167ae55d0e29379ff3211729248ef97e3b9855816219063b42")
     version("0.53.0", sha256="2f14d032a2d54f34e066c8a15c79917089e9f7f8558baa03dbfe63dbf56918b7")
     version("0.52.0", sha256="dca434238405e4cae4686c8143f2cc79919bfd9e26b09c980e1e5f69ffd0c448")
@@ -125,7 +126,7 @@ class FluxCore(AutotoolsPackage):
     conflicts("platform=darwin", msg="flux-core does not support MacOS based platforms.")
     conflicts("platform=windows", msg="flux-core does not support Windows based platforms.")
 
-    depends_on("libarchive", when="@0.38.0:")
+    depends_on("libarchive+iconv", when="@0.38.0:")
     depends_on("ncurses@6.2:", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
     depends_on("czmq@3.0.1:")

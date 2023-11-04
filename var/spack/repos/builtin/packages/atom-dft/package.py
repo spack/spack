@@ -24,8 +24,8 @@ class AtomDft(MakefilePackage):
     @property
     def build_targets(self):
         return [
-            "XMLF90_ROOT=%s" % self.spec["xmlf90"].prefix,
-            "GRIDXC_ROOT=%s" % self.spec["libgridxc"].prefix,
+            f"XMLF90_ROOT={self.spec['xmlf90'].prefix}",
+            f"GRIDXC_ROOT={self.spec['libgridxc'].prefix}",
             "FC=fc",
         ]
 

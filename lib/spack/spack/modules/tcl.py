@@ -6,6 +6,7 @@
 """This module implements the classes necessary to generate Tcl
 non-hierarchical modules.
 """
+import os.path
 import posixpath
 from typing import Any, Dict
 
@@ -56,6 +57,11 @@ class TclConfiguration(BaseConfiguration):
 class TclFileLayout(BaseFileLayout):
     """File layout for tcl module files."""
 
+    @property
+    def modulerc(self):
+        """Returns the modulerc file associated with current module file"""
+        return os.path.join(os.path.dirname(self.filename), ".modulerc")
+
 
 class TclContext(BaseContext):
     """Context class for tcl module files."""
@@ -73,3 +79,7 @@ class TclModulefileWriter(BaseModuleFileWriter):
     # os.path.join due to spack.spec.Spec.format
     # requiring forward slash path seperators at this stage
     default_template = posixpath.join("modules", "modulefile.tcl")
+
+    modulerc_header = ["#%Module4.7"]
+
+    hide_cmd_format = "module-hide --soft --hidden-loaded %s"

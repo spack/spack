@@ -14,6 +14,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
+import llnl.util.tty as tty
 
 import spack.cmd.env
 import spack.config
@@ -168,7 +169,7 @@ def test_env_remove(capfd):
 
     foo = ev.read("foo")
     with foo:
-        with pytest.raises(spack.main.SpackCommandError):
+        with pytest.raises(SpackCommandError):
             with capfd.disabled():
                 env("remove", "-y", "foo")
         assert "foo" in env("list")
@@ -283,7 +284,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
-    assert "Warning: couldn't get environment settings" in err
+    assert "Warning: couldn't load runtime environment" in err
 
 
 def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, monkeypatch):
@@ -500,11 +501,14 @@ def test_env_activate_broken_view(
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
     with spack.repo.use_repositories(mock_custom_repository):
-        with pytest.raises(SpackCommandError):
-            env("activate", "--sh", "test")
+        wrong_repo = env("activate", "--sh", "test")
+        assert "Warning: couldn't load runtime environment" in wrong_repo
+        assert "Unknown namespace: builtin.mock" in wrong_repo
 
     # test replacing repo fixes it
-    env("activate", "--sh", "test")
+    normal_repo = env("activate", "--sh", "test")
+    assert "Warning: couldn't load runtime environment" not in normal_repo
+    assert "Unknown namespace: builtin.mock" not in normal_repo
 
 
 def test_to_lockfile_dict():
@@ -663,7 +667,7 @@ packages:
         e.write()
 
         env_mod = spack.util.environment.EnvironmentModifications()
-        e.add_default_view_to_env(env_mod)
+        e.add_view_to_env(env_mod, "default")
         env_variables = {}
         env_mod.apply_modifications(env_variables)
         assert str(fake_bin) in env_variables["PATH"]
@@ -974,10 +978,9 @@ packages:
     assert any([x.satisfies("libelf@0.8.10") for x in e._get_environment_specs()])
 
 
-def test_bad_env_yaml_format(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
+def test_bad_env_yaml_format(environment_from_manifest):
+    with pytest.raises(spack.config.ConfigFormatError) as e:
+        environment_from_manifest(
             """\
 spack:
   spacks:
@@ -985,11 +988,58 @@ spack:
 """
         )
 
-    with tmpdir.as_cwd():
-        with pytest.raises(spack.config.ConfigFormatError) as e:
-            env("create", "test", "./spack.yaml")
-        assert "spack.yaml:2" in str(e)
         assert "'spacks' was unexpected" in str(e)
+
+    assert "test" not in env("list")
+
+
+def test_bad_env_yaml_format_remove(mutable_mock_env_path):
+    badenv = "badenv"
+    env("create", badenv)
+    filename = mutable_mock_env_path / "spack.yaml"
+    with open(filename, "w") as f:
+        f.write(
+            """\
+    - mpileaks
+"""
+        )
+
+    assert badenv in env("list")
+    env("remove", "-y", badenv)
+    assert badenv not in env("list")
+
+
+@pytest.mark.parametrize("answer", ["-y", ""])
+def test_multi_env_remove(mutable_mock_env_path, monkeypatch, answer):
+    """Test removal (or not) of a valid and invalid environment"""
+    remove_environment = answer == "-y"
+    monkeypatch.setattr(tty, "get_yes_or_no", lambda prompt, default: remove_environment)
+
+    environments = ["goodenv", "badenv"]
+    for e in environments:
+        env("create", e)
+
+    # Ensure the bad environment contains invalid yaml
+    filename = mutable_mock_env_path / environments[1] / "spack.yaml"
+    filename.write_text(
+        """\
+    - libdwarf
+"""
+    )
+
+    assert all(e in env("list") for e in environments)
+
+    args = [answer] if answer else []
+    args.extend(environments)
+    output = env("remove", *args, fail_on_error=False)
+
+    if remove_environment is True:
+        # Successfully removed (and reported removal) of *both* environments
+        assert not all(e in env("list") for e in environments)
+        assert output.count("Successfully removed") == 2
+    else:
+        # Not removing any of the environments
+        assert all(e in env("list") for e in environments)
 
 
 def test_env_loads(install_mockery, mock_fetch):
@@ -1044,7 +1094,7 @@ def test_env_commands_die_with_no_env_arg():
         env("remove")
 
     # these have an optional env arg and raise errors via tty.die
-    with pytest.raises(spack.main.SpackCommandError):
+    with pytest.raises(SpackCommandError):
         env("loads")
 
     # This should NOT raise an error with no environment
@@ -2356,7 +2406,7 @@ def test_env_activate_sh_prints_shell_output(tmpdir, mock_stage, mock_fetch, ins
     This is a cursory check; ``share/spack/qa/setup-env-test.sh`` checks
     for correctness.
     """
-    env("create", "test", add_view=True)
+    env("create", "test")
 
     out = env("activate", "--sh", "test")
     assert "export SPACK_ENV=" in out
@@ -2371,7 +2421,7 @@ def test_env_activate_sh_prints_shell_output(tmpdir, mock_stage, mock_fetch, ins
 
 def test_env_activate_csh_prints_shell_output(tmpdir, mock_stage, mock_fetch, install_mockery):
     """Check the shell commands output by ``spack env activate --csh``."""
-    env("create", "test", add_view=True)
+    env("create", "test")
 
     out = env("activate", "--csh", "test")
     assert "setenv SPACK_ENV" in out
@@ -2388,7 +2438,7 @@ def test_env_activate_csh_prints_shell_output(tmpdir, mock_stage, mock_fetch, in
 def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     """Check that the root of the default view in the environment is added
     to the shell unconditionally."""
-    env("create", "test", add_view=True)
+    env("create", "test")
 
     with ev.read("test") as e:
         viewdir = e.default_view.root
@@ -2401,6 +2451,27 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
         or "export PATH='{0}".format(viewdir_bin) in out
         or 'export PATH="{0}'.format(viewdir_bin) in out
     )
+
+
+def test_env_activate_custom_view(tmp_path: pathlib.Path, mock_packages):
+    """Check that an environment can be activated with a non-default view."""
+    env_template = tmp_path / "spack.yaml"
+    default_dir = tmp_path / "defaultdir"
+    nondefaultdir = tmp_path / "nondefaultdir"
+    with open(env_template, "w") as f:
+        f.write(
+            f"""\
+spack:
+  specs: [a]
+  view:
+    default:
+      root: {default_dir}
+    nondefault:
+      root: {nondefaultdir}"""
+        )
+    env("create", "test", str(env_template))
+    shell = env("activate", "--sh", "--with-view", "nondefault", "test")
+    assert os.path.join(nondefaultdir, "bin") in shell
 
 
 def test_concretize_user_specs_together():
@@ -2419,8 +2490,12 @@ def test_concretize_user_specs_together():
     e.remove("mpich")
     e.add("mpich2")
 
+    exc_cls = spack.error.SpackError
+    if spack.config.get("config:concretizer") == "clingo":
+        exc_cls = spack.error.UnsatisfiableSpecError
+
     # Concretizing without invalidating the concrete spec for mpileaks fails
-    with pytest.raises(spack.error.UnsatisfiableSpecError):
+    with pytest.raises(exc_cls):
         e.concretize()
     e.concretize(force=True)
 
@@ -2452,9 +2527,12 @@ def test_duplicate_packages_raise_when_concretizing_together():
     e.add("mpileaks~opt")
     e.add("mpich")
 
-    with pytest.raises(
-        spack.error.UnsatisfiableSpecError, match=r"You could consider setting `concretizer:unify`"
-    ):
+    exc_cls, match = spack.error.SpackError, None
+    if spack.config.get("config:concretizer") == "clingo":
+        exc_cls = spack.error.UnsatisfiableSpecError
+        match = r"You could consider setting `concretizer:unify`"
+
+    with pytest.raises(exc_cls, match=match):
         e.concretize()
 
 
@@ -3302,6 +3380,20 @@ post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
     with ev.read("test") as test:
         for s in test.all_specs():
             assert "post-install: {}".format(s.dag_hash()) in out
+
+
+def test_depfile_empty_does_not_error(tmp_path):
+    # For empty environments Spack should create a depfile that does nothing
+    make = Executable("make")
+    makefile = str(tmp_path / "Makefile")
+
+    env("create", "test")
+    with ev.read("test"):
+        env("depfile", "-o", makefile)
+
+    make("-f", makefile)
+
+    assert make.returncode == 0
 
 
 def test_unify_when_possible_works_around_conflicts():
