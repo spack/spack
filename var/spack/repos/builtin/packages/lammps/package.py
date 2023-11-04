@@ -712,6 +712,16 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     )
     patch("hip_cmake.patch", when="@20220623:20221222 ~kokkos+rocm")
 
+    # Add large potential files
+    resource(
+        name="C_10_10.mesocnt",
+        url="https://download.lammps.org/potentials/C_10_10.mesocnt",
+        sha256="923f600a081d948eb8b4510f84aa96167b5a6c3e1aba16845d2364ae137dc346",
+        expand=False,
+        placement={"C_10_10.mesocnt": "potentials/C_10_10.mesocnt"},
+        when="+mesont",
+    )
+
     root_cmakelists_dir = "cmake"
 
     def cmake_args(self):
@@ -729,6 +739,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("{}_MPI".format(mpi_prefix), "mpi"),
             self.define_from_variant("BUILD_OMP", "openmp"),
             self.define("ENABLE_TESTING", self.run_tests),
+            self.define("DOWNLOAD_POTENTIALS", False),
         ]
         if "~kokkos" in spec:
             # LAMMPS can be build with the GPU package OR the KOKKOS package
