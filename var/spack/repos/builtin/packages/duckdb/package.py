@@ -17,11 +17,14 @@ class Duckdb(MakefilePackage):
     maintainers("teaguesterling")
 
     version("master", branch="master")
+    version("0.9.1", sha256="37a43188d9354ce3ca101b2b118d867f5f76d04c3b83c09d86fd7508351a631b")
+    version("0.9.0", sha256="3dbf3326a831bf0797591572440e81a3d6d668f8e33a25ce04efae19afc3a23d")
     version("0.8.1", sha256="a0674f7e320dc7ebcf51990d7fc1c0e7f7b2c335c08f5953702b5285e6c30694")
     version("0.8.0", sha256="df3b8e0b72bce38914f0fb1cd02235d8b616df9209beb14beb06bfbcaaf2e97f")
     version("0.7.1", sha256="67f840f861e5ffbe137d65a8543642d016f900b89dd035492d562ad11acf0e1e")
 
     depends_on("python@3:")
+    depends_on("cmake")
 
     variant("autocomplete", default=True, description="Include autocomplete for CLI in build")
     variant("icu", default=True, description="Compile with bundled ICU library")
