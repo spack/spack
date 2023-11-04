@@ -21,7 +21,6 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("suite-sparse", when="+klu")
 
-
     with when("+rocm"):
         # Need at least 5.6+
         depends_on("rocsparse@5.6:")
@@ -33,7 +32,6 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
         # depends_on("roctracer-dev@5.6:")
         # depends_on("roctracer-dev-api@5.6:")
         # depends_on("rocprofiler-dev@5.6:")
-
 
     def cmake_args(self):
         args = []
