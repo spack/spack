@@ -3,13 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import datetime as dt
+import os
 
 import archspec
 
 from spack.package import *
 
 
-class Lammps(CMakePackage, CudaPackage, ROCmPackage):
+class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
     Parallel Simulator.
     """
@@ -608,11 +609,14 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("plumed", when="+plumed")
     depends_on("eigen@3:", when="+user-smd")
     depends_on("eigen@3:", when="+machdyn")
-    depends_on("py-cython", when="+mliap+python")
-    depends_on("py-cython", when="+ml-iap+python")
+    depends_on("py-cython", when="+mliap+python", type="build")
+    depends_on("py-cython", when="+ml-iap+python", type="build")
+    depends_on("py-pip", when="+python", type="build")
+    depends_on("py-wheel", when="+python", type="build")
+    depends_on("py-build", when="+python", type="build")
     depends_on("py-numpy", when="+python")
     depends_on("py-mpi4py", when="+python+mpi")
-    depends_on("py-setuptools", when="@20220217:+python", type="build")
+    depends_on("py-setuptools@42:", when="@20220217:+python", type=("build", "run"))
     depends_on("n2p2@2.1.4:", when="+user-hdnnp")
     depends_on("n2p2@2.1.4:", when="+ml-hdnnp")
     depends_on("n2p2+shared", when="+lib ^n2p2")
@@ -841,6 +845,9 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
+        if "+python" in spec:
+            args.append(self.define("Python_EXECUTABLE", spec["python"].command.path))
+
         return args
 
     def setup_build_environment(self, env):
@@ -850,5 +857,20 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     def setup_run_environment(self, env):
         env.set("LAMMPS_POTENTIALS", self.prefix.share.lammps.potentials)
         if "+python" in self.spec:
-            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
-            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
+            if self.spec.platform == "darwin":
+                env.prepend_path("DYLD_LIBRARY_PATH", self.prefix.lib)
+                env.prepend_path("DYLD_LIBRARY_PATH", self.prefix.lib64)
+            else:
+                env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+                env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
+
+    @run_after("install")
+    def install_python(self):
+        # do LAMMPS Python package installation using pip
+        if self.spec.satisfies("@20230328: +python"):
+            with working_dir("python"):
+                os.environ["LAMMPS_VERSION_FILE"] = join_path(
+                    self.stage.source_path, "src", "version.h"
+                )
+                args = std_pip_args + ["--prefix=" + self.prefix, "."]
+                pip(*args)
