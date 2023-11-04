@@ -29,9 +29,14 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
     version(
+        "20230802.1",
+        sha256="0e5568485e5ee080412dba44a1b7a93f864f1b5c75121f11d528854269953ed0",
+        preferred=True,
+    )
+    version(
         "20230802",
         sha256="48dc8b0b0583689e80ea2052275acbc3e3fce89707ac557e120db5564257f7df",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "20230615",
@@ -343,6 +348,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     stable_versions = {
+        "20230802.1",
         "20230802",
         "20220623.4",
         "20220623.3",
