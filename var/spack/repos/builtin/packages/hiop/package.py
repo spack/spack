@@ -115,7 +115,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     # 1.0.2 fixes bug with cuda 12 compatibility
     # hiop@0.6.0 requires cusolver API in cuda@11
-    depends_on("cuda@11:11.9", when="@0.6.0:1.0.1")
+    depends_on("cuda@11:11.9", when="@0.6.0:1.0.1+cuda")
     depends_on("cuda@11:", when="@develop:+cuda")
     # Before hiop@0.6.0 only cuda requirement was magma
     depends_on("cuda", when="@:0.5.4+cuda")
