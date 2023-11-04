@@ -733,7 +733,9 @@ class BaseContext(tengine.Context):
         # for that to work, globals have to be set on the package modules, and the
         # whole chain of setup_dependent_package has to be followed from leaf to spec.
         # So: just run it here, but don't collect env mods.
-        spack.build_environment.SetupContext(context=Context.RUN).set_all_package_py_globals()
+        spack.build_environment.SetupContext(
+            spec, context=Context.RUN
+        ).set_all_package_py_globals()
 
         # Then run setup_dependent_run_environment before setup_run_environment.
         for dep in spec.dependencies(deptype=("link", "run")):
