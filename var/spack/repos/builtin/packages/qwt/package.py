@@ -28,8 +28,8 @@ class Qwt(QMakePackage):
     patch("no-designer.patch", when="~designer")
     patch("no-opengl_6_1.patch", when="@6.1 ~opengl")
 
-    depends_on("qt+tools", when="+designer ^qt")
-    depends_on("qt+opengl", when="+opengl ^qt")
+    depends_on("qt+tools", when="+designer")
+    depends_on("qt+opengl", when="+opengl")
 
     # Qwt does not support Qt6; this picks the right qmake provider
     conflicts("qt-base")
