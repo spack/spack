@@ -488,7 +488,7 @@ class TestTcl:
 
         assert str(spec.os) not in path
 
-    def test_hide_implicits(self, module_configuration):
+    def test_hide_implicits(self, module_configuration, temporary_store):
         """Tests the addition and removal of hide command in modulerc."""
         module_configuration("hide_implicits")
 
@@ -503,12 +503,12 @@ class TestTcl:
         hide_implicit_mpileaks = f"module-hide --soft --hidden-loaded {writer.layout.use_name}"
         assert len([x for x in content if hide_implicit_mpileaks == x]) == 1
 
-        # The direct dependencies are all implicit, and they should have depends_on with fixed
+        # The direct dependencies are all implicit, and they should have depends-on with fixed
         # 7 character hash, even though the config is set to hash_length = 0.
         with open(writer.layout.filename) as f:
-            content = [line.strip() for line in f.readlines()]
+            depends_statements = [line.strip() for line in f.readlines() if "depends-on" in line]
             for dep in spec.dependencies(deptype=("link", "run")):
-                assert any(dep.dag_hash(7) in line for line in content if "depends-on" in line)
+                assert any(dep.dag_hash(7) in line for line in depends_statements)
 
         # when mpileaks becomes explicit, its file name changes (hash_length = 0), meaning an
         # extra module file is created; the old one still exists and remains hidden.

@@ -435,7 +435,7 @@ class TestLmod:
 
         assert str(spec.os) not in path
 
-    def test_hide_implicits(self, module_configuration):
+    def test_hide_implicits(self, module_configuration, temporary_store):
         """Tests the addition and removal of hide command in modulerc."""
         module_configuration("hide_implicits")
 
@@ -450,12 +450,17 @@ class TestLmod:
         hide_implicit_mpileaks = f'hide_version("{writer.layout.use_name}")'
         assert len([x for x in content if hide_implicit_mpileaks == x]) == 1
 
-        # The direct dependencies are all implicit, and they should have depends_on with fixed
-        # 7 character hash, even though the config is set to hash_length = 0.
+        # The direct dependencies are all implicitly installed, and they should all be hidden,
+        # except for mpich, which is provider for mpi, which is in the hierarchy, and therefore
+        # can't be hidden. All other hidden modules should have a 7 character hash (the config
+        # hash_length = 0 only applies to exposed modules).
         with open(writer.layout.filename) as f:
-            content = [line.strip() for line in f.readlines()]
+            depends_statements = [line.strip() for line in f.readlines() if "depends_on" in line]
             for dep in spec.dependencies(deptype=("link", "run")):
-                assert any(dep.dag_hash(7) in line for line in content if "depends_on" in line)
+                if dep.satisfies("mpi"):
+                    assert not any(dep.dag_hash(7) in line for line in depends_statements)
+                else:
+                    assert any(dep.dag_hash(7) in line for line in depends_statements)
 
         # when mpileaks becomes explicit, its file name changes (hash_length = 0), meaning an
         # extra module file is created; the old one still exists and remains hidden.
