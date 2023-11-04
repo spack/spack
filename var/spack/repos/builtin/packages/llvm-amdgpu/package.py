@@ -241,9 +241,7 @@ class LlvmAmdgpu(CMakePackage):
         resource(
             name="hsa-runtime",
             placement="hsa-runtime",
-            url="https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-{0}.tar.gz".format(
-                d_version
-            ),
+            url=f"https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-{d_version}.tar.gz",
             sha256=d_shasum,
             when="@{0}".format(d_version),
         )
@@ -264,9 +262,7 @@ class LlvmAmdgpu(CMakePackage):
         resource(
             name="comgr",
             placement="comgr",
-            url="https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-{0}.tar.gz".format(
-                d_version
-            ),
+            url=f"https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-{d_version}.tar.gz",
             sha256=d_shasum,
             when="@{0}".format(d_version),
         )
