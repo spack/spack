@@ -6,7 +6,6 @@
 import argparse
 import os
 import shutil
-import spack.util.spack_yaml as syaml
 import sys
 import tempfile
 from typing import Optional
@@ -556,7 +555,6 @@ def env_update(args):
     backup_file = manifest_file + ".bkp"
 
     needs_update = not ev.is_latest_format(manifest_file)
-
     if not needs_update:
         tty.msg('No update needed for the environment "{0}"'.format(args.update_env))
         return
