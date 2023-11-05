@@ -39,35 +39,35 @@ class PyNetworkx(PythonPackage):
         description="Optional requirements that may require extra steps to install",
     )
 
-    depends_on("python@3.8:", when="@2.7:", type=("build", "run"))
-    depends_on("python@3.7:", when="@2.6:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@2.7:")
+    depends_on("python@3.7:", type=("build", "run"), when="@2.6:")
     depends_on("py-setuptools", type="build")
 
     with when("+default"):
         # From requirements/default.txt
-        depends_on("py-numpy@1.20:", when="@3:", type=("build", "run"))
-        depends_on("py-numpy@1.19:", when="@2.8.6:", type=("build", "run"))
-        depends_on("py-scipy@1.8:", when="@2.8.6:", type=("build", "run"))
-        depends_on("py-matplotlib@3.4:", when="@2.8.6:", type=("build", "run"))
-        depends_on("py-pandas@1.3:", when="@2.8.6:", type=("build", "run"))
+        depends_on("py-numpy@1.20:", type=("build", "run"), when="@3:")
+        depends_on("py-numpy@1.19:", type=("build", "run"), when="@2.8.6:")
+        depends_on("py-scipy@1.8:", type=("build", "run"), when="@2.8.6:")
+        depends_on("py-matplotlib@3.4:", type=("build", "run"), when="@2.8.6:")
+        depends_on("py-pandas@1.3:", type=("build", "run"), when="@2.8.6:")
 
         # Historical dependencies
-        depends_on("py-decorator@4.3.0:4", when="@2.5.1:2.5", type=("build", "run"))
-        depends_on("py-decorator@4.3.0:", when="@2.2:2.4", type=("build", "run"))
-        depends_on("py-decorator@4.1.0:", when="@2.0:2.1", type=("build", "run"))
-        depends_on("py-decorator@3.4.0:", when="@:1", type=("build", "run"))
+        depends_on("py-decorator@4.3.0:4", type=("build", "run"), when="@2.5.1:2.5")
+        depends_on("py-decorator@4.3.0:", type=("build", "run"), when="@2.2:2.4")
+        depends_on("py-decorator@4.1.0:", type=("build", "run"), when="@2.0:2.1")
+        depends_on("py-decorator@3.4.0:", type=("build", "run"), when="@:1")
 
     with when("+extra"):
         # From requirements/extra.txt
-        depends_on("py-lxml@4.6:", when="@2.7:", type=("build", "run"))
-        depends_on("py-lxml@4.5:", when="@2.6:", type=("build", "run"))
-        depends_on("py-pygraphviz@1.10:", when="@3:", type=("build", "run"))
-        depends_on("py-pygraphviz@1.9:", when="@2.7:", type=("build", "run"))
-        depends_on("py-pygraphviz@1.7:", when="@2.6:", type=("build", "run"))
+        depends_on("py-lxml@4.6:", type=("build", "run"), when="@2.7:")
+        depends_on("py-lxml@4.5:", type=("build", "run"), when="@2.6:")
+        depends_on("py-pygraphviz@1.10:", type=("build", "run"), when="@3:")
+        depends_on("py-pygraphviz@1.9:", type=("build", "run"), when="@2.7:")
+        depends_on("py-pygraphviz@1.7:", type=("build", "run"), when="@2.6:")
         depends_on("py-pygraphviz@1.5:1", type=("build", "run"))
-        depends_on("py-pydot@1.4.2:", when="@2.7:", type=("build", "run"))
+        depends_on("py-pydot@1.4.2:", type=("build", "run"), when="@2.7:")
         depends_on("py-pydot@1.4.1:", type=("build", "run"))
-        depends_on("py-sympy@1.10:", when="@2.8:", type=("build", "run"))
+        depends_on("py-sympy@1.10:", type=("build", "run"), when="@2.8:")
 
     def url_for_version(self, version):
         ext = "tar.gz"

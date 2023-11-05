@@ -18,7 +18,7 @@ class PyPytestCov(PythonPackage):
     version("2.3.1", sha256="fa0a212283cdf52e2eecc24dd6459bb7687cc29adb60cb84258fab73be8dda0f")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-pytest@4.6:", when="@3:", type=("build", "run"))
+    depends_on("py-pytest@4.6:", type=("build", "run"), when="@3:")
     depends_on("py-pytest@3.6:", type=("build", "run"))
-    depends_on("py-coverage@5.2.1: +toml", when="@3:", type=("build", "run"))
+    depends_on("py-coverage@5.2.1: +toml", type=("build", "run"), when="@3:")
     depends_on("py-coverage@4.4:", type=("build", "run"))

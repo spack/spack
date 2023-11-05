@@ -31,13 +31,13 @@ class Scalasca(AutotoolsPackage):
     depends_on("mpi")
 
     # version 2.6.1+
-    depends_on("scorep@8:", when="@2.6.1:", type=("run"))
+    depends_on("scorep@8:", type=("run"), when="@2.6.1:")
     depends_on("otf2@3:", when="@2.6.1:")
     depends_on("cubew@4.8:", when="@2.6.1:")
 
     # version 2.4 - 2.6.0
     depends_on("cubew@4.4:4.7", when="@2.4:2.6.0")
-    depends_on("scorep@6.0:7", when="@2.4:2.6.0", type=("run"))
+    depends_on("scorep@6.0:7", type=("run"), when="@2.4:2.6.0")
 
     # version 2.3 - 2.6.0
     depends_on("otf2@2:2.99", when="@2.3:2.6.0")

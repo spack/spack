@@ -31,23 +31,23 @@ class PyWatchdog(PythonPackage):
         description="Build optional watchmedo utility script",
     )
 
-    depends_on("python@2.6:2,3.2:", when="@0.9.0:", type=("build", "run"))
-    depends_on("python@2.7:2,3.4:", when="@0.10.0:", type=("build", "run"))
-    depends_on("python@3.6:", when="@2.1.6:", type=("build", "run"))
+    depends_on("python@2.6:2,3.2:", type=("build", "run"), when="@0.9.0:")
+    depends_on("python@2.7:2,3.4:", type=("build", "run"), when="@0.10.0:")
+    depends_on("python@3.6:", type=("build", "run"), when="@2.1.6:")
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-pyyaml@3.9:", when="@0.7.1", type=("build", "run"))
-    depends_on("py-pyyaml@3.10:", when="@0.8.0:0.8.3", type=("build", "run"))
-    depends_on("py-pyyaml@3.10:", when="@0.9.0", type=("build", "run"))
-    depends_on("py-pyyaml@3.10:", when="@0.10.0: +watchmedo", type=("build", "run"))
-    depends_on("py-pyyaml@3.10:", when="@2.1.6: +watchmedo", type=("build", "run"))
+    depends_on("py-pyyaml@3.9:", type=("build", "run"), when="@0.7.1")
+    depends_on("py-pyyaml@3.10:", type=("build", "run"), when="@0.8.0:0.8.3")
+    depends_on("py-pyyaml@3.10:", type=("build", "run"), when="@0.9.0")
+    depends_on("py-pyyaml@3.10:", type=("build", "run"), when="@0.10.0: +watchmedo")
+    depends_on("py-pyyaml@3.10:", type=("build", "run"), when="@2.1.6: +watchmedo")
 
-    depends_on("py-argh@0.8.1:", when="@0.7.1", type=("build", "run"))
-    depends_on("py-argh@0.24.1:", when="@0.8.0:0.9.0", type=("build", "run"))
-    depends_on("py-argh@0.24.1:", when="@0.10.0:0.10.3 +watchmedo", type=("build", "run"))
+    depends_on("py-argh@0.8.1:", type=("build", "run"), when="@0.7.1")
+    depends_on("py-argh@0.24.1:", type=("build", "run"), when="@0.8.0:0.9.0")
+    depends_on("py-argh@0.24.1:", type=("build", "run"), when="@0.10.0:0.10.3 +watchmedo")
 
-    depends_on("py-pathtools@0.1.1:", when="@0:0.10.3", type=("build", "run"))
+    depends_on("py-pathtools@0.1.1:", type=("build", "run"), when="@0:0.10.3")
 
     # Missing dependencies
     conflicts("platform=darwin", when="@0.10.0:0.10.1")

@@ -129,7 +129,7 @@ class RocprofilerDev(CMakePackage):
         depends_on(f"rocminfo@{ver}", when=f"@{ver}")
         depends_on(f"roctracer-dev-api@{ver}", when=f"@{ver}")
 
-    depends_on("numactl", when="@4.3.1", type="link")
+    depends_on("numactl", type="link", when="@4.3.1")
     # See https://github.com/ROCm-Developer-Tools/rocprofiler/pull/50
     patch("fix-includes.patch")
     patch("0001-Continue-build-in-absence-of-aql-profile-lib.patch", when="@5.3:")

@@ -21,7 +21,7 @@ class Pcl(CMakePackage):
     version("1.11.1", sha256="19d1a0bee2bc153de47c05da54fc6feb23393f306ab2dea2e25419654000336e")
 
     depends_on("cmake@3.5:", type="build")
-    depends_on("cmake@3.10:", when="@1.12.1:", type="build")
+    depends_on("cmake@3.10:", type="build", when="@1.12.1:")
     depends_on("eigen@3.1:")
     depends_on("eigen@3.3:", when="@1.13:")
     depends_on("flann@1.7:")

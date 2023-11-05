@@ -24,10 +24,10 @@ class PyNeo(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-numpy@1.3.0:", when="@0.3.3:0.4.1", type=("build", "run"))
-    depends_on("py-numpy@1.7.1:", when="@0.5.2:0.8.0", type=("build", "run"))
-    depends_on("py-numpy@1.13.0:", when="@0.9.0", type=("build", "run"))
-    depends_on("py-numpy@1.16.1:", when="@0.10.0:", type=("build", "run"))
+    depends_on("py-numpy@1.3.0:", type=("build", "run"), when="@0.3.3:0.4.1")
+    depends_on("py-numpy@1.7.1:", type=("build", "run"), when="@0.5.2:0.8.0")
+    depends_on("py-numpy@1.13.0:", type=("build", "run"), when="@0.9.0")
+    depends_on("py-numpy@1.16.1:", type=("build", "run"), when="@0.10.0:")
 
-    depends_on("py-quantities@0.9.0:", when="@0.3.3:0.8.0", type=("build", "run"))
-    depends_on("py-quantities@0.12.1:", when="@0.9.0:", type=("build", "run"))
+    depends_on("py-quantities@0.9.0:", type=("build", "run"), when="@0.3.3:0.8.0")
+    depends_on("py-quantities@0.12.1:", type=("build", "run"), when="@0.9.0:")

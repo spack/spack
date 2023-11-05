@@ -40,13 +40,13 @@ class PySlepc4py(PythonPackage):
 
     patch("ldshared.patch", when="@:3.18")
 
-    depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
+    depends_on("py-cython@0.29.32:", type="build", when="^python@3.11:")
     depends_on("py-cython@0.24:", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
 
     depends_on("py-petsc4py", type=("build", "run"))
-    depends_on("py-petsc4py@main", when="@main", type=("build", "run"))
+    depends_on("py-petsc4py@main", type=("build", "run"), when="@main")
     for ver in ["3.20", "3.19", "3.18", "3.17", "3.16", "3.15", "3.13", "3.12", "3.11"]:
         depends_on(f"py-petsc4py@{ver}", when=f"@{ver}", type=("build", "run"))
 

@@ -27,7 +27,7 @@ class Gl2ps(CMakePackage):
 
     depends_on("libpng", when="+png")
     depends_on("zlib-api", when="+zlib")
-    depends_on("texlive", when="+doc", type="build")
+    depends_on("texlive", type="build", when="+doc")
 
     def cmake_args(self):
         spec = self.spec

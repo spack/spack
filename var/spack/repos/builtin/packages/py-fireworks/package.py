@@ -30,5 +30,5 @@ class PyFireworks(PythonPackage):
     depends_on("py-flask-paginate@0.4.5:", type=("build", "run"))
     depends_on("py-gunicorn@19.6.0:", type=("build", "run"))
     depends_on("py-tqdm@4.8.4:", type=("build", "run"))
-    depends_on("py-importlib-metadata@4.8.2:", when="^python@:3.7", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata@4.8.2:", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")

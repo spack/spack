@@ -26,9 +26,9 @@ class CeresSolver(CMakePackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("examples", default=False, description="Build examples")
 
-    depends_on("cmake@2.8.0:", when="@1.12.0:1.14.0", type="build")
-    depends_on("cmake@3.5:", when="@2.0.0", type="build")
-    depends_on("cmake@3.16:3.27", when="@2.2.0", type="build")
+    depends_on("cmake@2.8.0:", type="build", when="@1.12.0:1.14.0")
+    depends_on("cmake@3.5:", type="build", when="@2.0.0")
+    depends_on("cmake@3.16:3.27", type="build", when="@2.2.0")
     depends_on("eigen@3:")
     depends_on("eigen@3.3:", when="@2.0.0:")
     depends_on("lapack")

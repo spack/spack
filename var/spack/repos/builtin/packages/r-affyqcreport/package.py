@@ -26,7 +26,7 @@ class RAffyqcreport(RPackage):
     depends_on("r-affy", type=("build", "run"))
     depends_on("r-lattice", type=("build", "run"))
     depends_on("r-affyplm", type=("build", "run"))
-    depends_on("r-biobase", when="@1.68.0:", type=("build", "run"))
+    depends_on("r-biobase", type=("build", "run"), when="@1.68.0:")
     depends_on("r-genefilter", type=("build", "run"))
     depends_on("r-rcolorbrewer", type=("build", "run"))
     depends_on("r-simpleaffy", type=("build", "run"))

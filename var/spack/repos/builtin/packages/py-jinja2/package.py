@@ -31,14 +31,14 @@ class PyJinja2(PythonPackage):
 
     variant("i18n", default=False, description="Enables I18N support with Babel")
 
-    depends_on("python@3.7:", when="@3.1:", type=("build", "run"))
-    depends_on("python@3.6:", when="@3:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@3.1:")
+    depends_on("python@3.6:", type=("build", "run"), when="@3:")
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-markupsafe@2.0:", when="@3:", type=("build", "run"))
+    depends_on("py-markupsafe@2.0:", type=("build", "run"), when="@3:")
     depends_on("py-markupsafe@0.23:", type=("build", "run"))
-    depends_on("py-babel@2.7:", when="@3:+i18n", type=("build", "run"))
-    depends_on("py-babel@0.8:", when="+i18n", type=("build", "run"))
+    depends_on("py-babel@2.7:", type=("build", "run"), when="@3:+i18n")
+    depends_on("py-babel@0.8:", type=("build", "run"), when="+i18n")
 
     # https://github.com/pallets/jinja/issues/1585
     conflicts("^py-markupsafe@2.1:", when="@:2")

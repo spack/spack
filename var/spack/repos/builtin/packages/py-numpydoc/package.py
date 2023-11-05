@@ -17,8 +17,8 @@ class PyNumpydoc(PythonPackage):
     version("0.6.0", sha256="1ec573e91f6d868a9940d90a6599f3e834a2d6c064030fbe078d922ee21dcfa1")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-sphinx@4.2:", when="@1.5:", type=("build", "run"))
-    depends_on("py-sphinx@1.6.5:", when="@1.1.0", type=("build", "run"))
-    depends_on("py-sphinx@1.0.1:1.6.7", when="@0.6.0", type=("build", "run"))
-    depends_on("py-jinja2@2.10:", when="@1.3.0:", type=("build", "run"))
-    depends_on("py-jinja2@2.3:", when="@1.1.0", type=("build", "run"))
+    depends_on("py-sphinx@4.2:", type=("build", "run"), when="@1.5:")
+    depends_on("py-sphinx@1.6.5:", type=("build", "run"), when="@1.1.0")
+    depends_on("py-sphinx@1.0.1:1.6.7", type=("build", "run"), when="@0.6.0")
+    depends_on("py-jinja2@2.10:", type=("build", "run"), when="@1.3.0:")
+    depends_on("py-jinja2@2.3:", type=("build", "run"), when="@1.1.0")

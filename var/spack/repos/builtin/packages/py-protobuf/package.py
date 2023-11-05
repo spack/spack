@@ -64,8 +64,8 @@ class PyProtobuf(PythonPackage):
     depends_on("python", type=("build", "link", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     # in newer pip versions --install-option does not exist
-    depends_on("py-pip@:23.0", when="+cpp", type=("build", "run"))
-    depends_on("py-six@1.9:", when="@3.0:3.17", type=("build", "run"))
+    depends_on("py-pip@:23.0", type=("build", "run"), when="+cpp")
+    depends_on("py-six@1.9:", type=("build", "run"), when="@3.0:3.17")
 
     # Setup dependencies for protobuf to use the same minor version as py-protobuf
     # Handle mapping the 4.x release to the protobuf 3.x releases

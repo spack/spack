@@ -19,7 +19,7 @@ class PyPox(PythonPackage):
     version("0.2.1", sha256="580bf731fee233c58eac0974011b5bf0698efb7337b0a1696d289043b4fcd7f4")
 
     depends_on("python@2.5:2.8,3.1:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.6:", when="@0.3.0:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.6:", type=("build", "run"), when="@0.3.0:")
 
     depends_on("py-setuptools@0.6:", type="build")
 

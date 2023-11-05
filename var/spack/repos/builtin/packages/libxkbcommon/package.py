@@ -41,9 +41,9 @@ class Libxkbcommon(MesonPackage, AutotoolsPackage):
 
     variant("wayland", default=False, description="Enable Wayland support")
 
-    depends_on("meson@0.41:", when="@0.9:", type="build")
-    depends_on("meson@0.49:", when="@1.0:", type="build")
-    depends_on("meson@0.51:", when="@1.5:", type="build")
+    depends_on("meson@0.41:", type="build", when="@0.9:")
+    depends_on("meson@0.49:", type="build", when="@1.0:")
+    depends_on("meson@0.51:", type="build", when="@1.5:")
     depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("bison", type="build")
     depends_on("util-macros")

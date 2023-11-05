@@ -38,7 +38,7 @@ class Cereal(CMakePackage):
     patch("LockGuard-default-ctor.patch", when="@:1.3.0")
 
     depends_on("cmake@2.6.2:", type="build")
-    depends_on("cmake@3.6.0:", when="@1.3.0:", type="build")
+    depends_on("cmake@3.6.0:", type="build", when="@1.3.0:")
 
     def cmake_args(self):
         # Boost is only used for self-tests, which we are not running (yet?)

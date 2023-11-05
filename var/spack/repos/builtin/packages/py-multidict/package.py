@@ -22,4 +22,4 @@ class PyMultidict(PythonPackage):
     depends_on("py-setuptools@40:", type="build")
 
     # Historical dependencies
-    depends_on("py-pip@18:", when="@:4", type="build")
+    depends_on("py-pip@18:", type="build", when="@:4")

@@ -33,12 +33,12 @@ class PyShapely(PythonPackage):
     version("1.6.4", sha256="b10bc4199cfefcf1c0e5d932eac89369550320ca4bdf40559328d85f1ca4f655")
 
     # pyproject.toml
-    depends_on("py-cython", when="@2.0.2:", type="build")
-    depends_on("py-cython@0.29:0", when="@2.0.0:2.0.1", type="build")
-    depends_on("py-cython@0.29.24:2", when="@:1", type="build")
-    depends_on("py-setuptools@61:", when="@2:", type="build")
-    depends_on("py-setuptools@:63", when="@:1", type="build")
-    depends_on("py-numpy@1.14:", when="@2:", type=("build", "link", "run"))
+    depends_on("py-cython", type="build", when="@2.0.2:")
+    depends_on("py-cython@0.29:0", type="build", when="@2.0.0:2.0.1")
+    depends_on("py-cython@0.29.24:2", type="build", when="@:1")
+    depends_on("py-setuptools@61:", type="build", when="@2:")
+    depends_on("py-setuptools@:63", type="build", when="@:1")
+    depends_on("py-numpy@1.14:", type=("build", "link", "run"), when="@2:")
     depends_on("py-numpy", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")
     depends_on("py-pytest-cov", type="test")

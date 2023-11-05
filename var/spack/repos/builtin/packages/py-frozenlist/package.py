@@ -18,7 +18,7 @@ class PyFrozenlist(PythonPackage):
     version("1.2.0", sha256="68201be60ac56aff972dc18085800b6ee07973c49103a8aba669dee3d71079de")
 
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("python@3.7:", when="@1.3.1:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@1.3.1:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@46.4.0:", when="@1.3.1:", type="build")
-    depends_on("py-wheel@0.37.0:", when="@1.3.1:", type="build")
+    depends_on("py-setuptools@46.4.0:", type="build", when="@1.3.1:")
+    depends_on("py-wheel@0.37.0:", type="build", when="@1.3.1:")

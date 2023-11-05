@@ -31,6 +31,6 @@ class RAnnotate(RPackage):
     depends_on("r-dbi", type=("build", "run"))
     depends_on("r-xtable", type=("build", "run"))
     depends_on("r-biocgenerics@0.13.8:", type=("build", "run"))
-    depends_on("r-httr", when="@1.68.0:", type=("build", "run"))
+    depends_on("r-httr", type=("build", "run"), when="@1.68.0:")
 
-    depends_on("r-rcurl", when="@:1.62.0", type=("build", "run"))
+    depends_on("r-rcurl", type=("build", "run"), when="@:1.62.0")

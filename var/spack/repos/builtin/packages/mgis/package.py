@@ -67,9 +67,9 @@ class Mgis(CMakePackage):
     depends_on("tfel@rliv-3.2", when="@rliv-1.0")
     depends_on("tfel@master", when="@master")
     depends_on(
-        "boost+python+numpy+exception+container", when="+python", type=("build", "link", "run")
+        "boost+python+numpy+exception+container", type=("build", "link", "run"), when="+python"
     )
-    depends_on("py-numpy", when="+python", type=("build", "link", "run"))
+    depends_on("py-numpy", type=("build", "link", "run"), when="+python")
 
     extends("python", when="+python")
 

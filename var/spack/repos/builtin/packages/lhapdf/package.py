@@ -37,9 +37,9 @@ class Lhapdf(AutotoolsPackage):
     depends_on("m4", type="build")
 
     extends("python", when="+python")
-    depends_on("py-cython", when="+python", type="build")
-    depends_on("py-setuptools", when="+python", type="build")
-    depends_on("gettext", when="+python", type="build")
+    depends_on("py-cython", type="build", when="+python")
+    depends_on("py-setuptools", type="build", when="+python")
+    depends_on("gettext", type="build", when="+python")
 
     def setup_build_environment(self, env):
         # Add -lintl if provided by gettext, otherwise libintl is provided by the system's glibc:

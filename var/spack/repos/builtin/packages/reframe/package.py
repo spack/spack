@@ -88,31 +88,31 @@ class Reframe(Package):
 
     # ReFrame requires git up to version 3.1, see:
     # https://github.com/eth-cscs/reframe/issues/1464
-    depends_on("git", when="@2.0:3.1", type="run")
+    depends_on("git", type="run", when="@2.0:3.1")
 
     # supported python versions
-    depends_on("python@3.5:", when="@2.0:2", type="run")
-    depends_on("python@3.6:", when="@3.0:", type="run")
+    depends_on("python@3.5:", type="run", when="@2.0:2")
+    depends_on("python@3.6:", type="run", when="@3.0:")
 
     # build dependencies
     depends_on("py-setuptools", type="build")
 
     # runtime dependencies
-    depends_on("py-archspec", when="@3.7.0:", type="run")
-    depends_on("py-argcomplete", when="@3.4.1:", type="run")
-    depends_on("py-importlib-metadata", when="^python@:3.7", type="run")
+    depends_on("py-archspec", type="run", when="@3.7.0:")
+    depends_on("py-argcomplete", type="run", when="@3.4.1:")
+    depends_on("py-importlib-metadata", type="run", when="^python@:3.7")
     depends_on("py-jsonschema", type="run")
-    depends_on("py-lxml", when="@3.6.0:", type="run")
-    depends_on("py-pyyaml", when="@3.4.1:", type="run")
-    depends_on("py-requests", when="@3.4.1:", type="run")
-    depends_on("py-semver", when="@3.4.2:", type="run")
+    depends_on("py-lxml", type="run", when="@3.6.0:")
+    depends_on("py-pyyaml", type="run", when="@3.4.1:")
+    depends_on("py-requests", type="run", when="@3.4.1:")
+    depends_on("py-semver", type="run", when="@3.4.2:")
 
     # extension dependencies
-    depends_on("py-pygelf", when="+gelf", type="run")
+    depends_on("py-pygelf", type="run", when="+gelf")
 
     # documentation dependencies
-    depends_on("py-sphinx", when="+docs", type="build")
-    depends_on("py-sphinx-rtd-theme", when="+docs", type="build")
+    depends_on("py-sphinx", type="build", when="+docs")
+    depends_on("py-sphinx-rtd-theme", type="build", when="+docs")
 
     # sanity check
     sanity_check_is_file = ["bin/reframe"]

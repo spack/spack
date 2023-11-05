@@ -247,19 +247,19 @@ spack package at this time.""",
     depends_on("argobots", when="+argobots")
 
     # building from git requires regenerating autotools files
-    depends_on("automake@1.15:", when="@develop", type="build")
-    depends_on("libtool@2.4.4:", when="@develop", type="build")
-    depends_on("m4", when="@develop", type="build")
-    depends_on("autoconf@2.67:", when="@develop", type="build")
+    depends_on("automake@1.15:", type="build", when="@develop")
+    depends_on("libtool@2.4.4:", type="build", when="@develop")
+    depends_on("m4", type="build", when="@develop"),
+    depends_on("autoconf@2.67:", type="build", when="@develop")
 
     # building with "+hwloc' also requires regenerating autotools files
-    depends_on("automake@1.15:", when="@3.3 +hwloc", type="build")
-    depends_on("libtool@2.4.4:", when="@3.3 +hwloc", type="build")
-    depends_on("m4", when="@3.3 +hwloc", type="build")
-    depends_on("autoconf@2.67:", when="@3.3 +hwloc", type="build")
+    depends_on("automake@1.15:", type="build", when="@3.3 +hwloc")
+    depends_on("libtool@2.4.4:", type="build", when="@3.3 +hwloc")
+    depends_on("m4", type="build", when="@3.3 +hwloc"),
+    depends_on("autoconf@2.67:", type="build", when="@3.3 +hwloc")
 
     # MPICH's Yaksa submodule requires python to configure
-    depends_on("python@3.0:", when="@develop", type="build")
+    depends_on("python@3.0:", type="build", when="@develop")
 
     depends_on("cray-pmi", when="pmi=cray")
 

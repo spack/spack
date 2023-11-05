@@ -20,5 +20,5 @@ class PyAsttokens(PythonPackage):
     depends_on("py-setuptools@44:", type="build")
     depends_on("py-setuptools-scm+toml@3.4.3:", type="build")
 
-    depends_on("py-six@1.12:", when="@2.3:", type=("build", "run"))
+    depends_on("py-six@1.12:", type=("build", "run"), when="@2.3:")
     depends_on("py-six", type=("build", "run"))

@@ -51,11 +51,11 @@ class PerlFth(Package):
     depends_on("perl", type="run")
     depends_on("perl-cgi", type="run")
     # Actual dependency was on etags only, but no longer in recent releases:
-    depends_on("emacs", when="@:0.520", type="run")
+    depends_on("emacs", type="run", when="@:0.520")
     # For fth.pl -hevea option
-    depends_on("hevea", when="+hevea", type="run")
+    depends_on("hevea", type="run", when="+hevea")
     # Actual dependency is on pdflatex only for fth.pl -latexindex option
-    depends_on("texlive", when="+pdflatex", type="run")
+    depends_on("texlive", type="run", when="+pdflatex")
     # initmak.pl uses md5sum provided by coreutils
     depends_on("coreutils", type="run")
     depends_on("dos2unix", type="build")

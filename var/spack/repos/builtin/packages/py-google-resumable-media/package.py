@@ -16,5 +16,5 @@ class PyGoogleResumableMedia(PythonPackage):
     version("0.3.2", sha256="3e38923493ca0d7de0ad91c31acfefc393c78586db89364e91cb4f11990e51ba")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-google-crc32c@1:", when="@2:", type=("build", "run"))
-    depends_on("py-six", when="@0", type=("build", "run"))
+    depends_on("py-google-crc32c@1:", type=("build", "run"), when="@2:")
+    depends_on("py-six", type=("build", "run"), when="@0")

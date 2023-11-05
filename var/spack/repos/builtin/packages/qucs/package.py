@@ -51,8 +51,8 @@ class Qucs(AutotoolsPackage):
     # from https://github.com/Qucs/qucsator, or they can also be provided by
     # ngspice and xyce.
     # See https://qucs-help.readthedocs.io/en/spice4qucs/BasSim.html
-    depends_on("ngspice build=bin", when="simulators=ngspice", type="run")
-    depends_on("xyce", when="simulators=xyce", type="run")
+    depends_on("ngspice build=bin", type="run", when="simulators=ngspice")
+    depends_on("xyce", type="run", when="simulators=xyce")
 
     def autoreconf(self, spec, prefix):
         sh = which("sh")

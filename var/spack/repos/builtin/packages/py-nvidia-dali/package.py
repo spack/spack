@@ -191,9 +191,9 @@ class PyNvidiaDali(PythonPackage):
     for v in cuda110_versions:
         depends_on("cuda@11", when=v, type=("build", "run"))
 
-    depends_on("python@3.6:3.11", when="@1.23:", type=("build", "run"))
-    depends_on("python@3.6:3.10", when="@:1.22", type=("build", "run"))
+    depends_on("python@3.6:3.11", type=("build", "run"), when="@1.23:")
+    depends_on("python@3.6:3.10", type=("build", "run"), when="@:1.22")
     depends_on("py-astunparse@1.6.0:", type=("build", "run"))
-    depends_on("py-gast@0.3.3:", when="@1.27:", type=("build", "run"))
-    depends_on("py-gast@0.2.1:0.4.0", when="@:1.26", type=("build", "run"))
-    depends_on("py-dm-tree", when="@1.27:", type=("build", "run"))
+    depends_on("py-gast@0.3.3:", type=("build", "run"), when="@1.27:")
+    depends_on("py-gast@0.2.1:0.4.0", type=("build", "run"), when="@:1.26")
+    depends_on("py-dm-tree", type=("build", "run"), when="@1.27:")

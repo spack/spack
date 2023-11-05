@@ -125,12 +125,12 @@ class Migraphx(CMakePackage):
     depends_on("blaze", type="build")
     depends_on("nlohmann-json", type="link")
     depends_on("msgpack-c", type="link")
-    depends_on("half@1.12.0", when="@:5.5", type="link")
+    depends_on("half@1.12.0", type="link", when="@:5.5")
     depends_on("half@2:", when="@5.6:")
     depends_on("python@3.5:", type="build")
-    depends_on("py-pybind11", when="@:4.0.0", type="build")
-    depends_on("py-pybind11@2.6:", when="@4.1.0:", type="build")
-    depends_on("pkgconfig", when="@5.3.0:", type="build")
+    depends_on("py-pybind11", type="build", when="@:4.0.0")
+    depends_on("py-pybind11@2.6:", type="build", when="@4.1.0:")
+    depends_on("pkgconfig", type="build", when="@5.3.0:")
 
     for ver in [
         "3.5.0",

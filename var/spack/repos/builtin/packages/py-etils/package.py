@@ -19,8 +19,8 @@ class PyEtils(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
 
-    depends_on("py-importlib-resources", when="+epath", type=("build", "run"))
-    depends_on("py-typing-extensions", when="+epath", type=("build", "run"))
-    depends_on("py-zipp", when="+epath", type=("build", "run"))
+    depends_on("py-importlib-resources", type=("build", "run"), when="+epath")
+    depends_on("py-typing-extensions", type=("build", "run"), when="+epath")
+    depends_on("py-zipp", type=("build", "run"), when="+epath")
 
     depends_on("py-flit-core@3.5:3", type="build")

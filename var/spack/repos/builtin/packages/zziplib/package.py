@@ -29,14 +29,14 @@ class Zziplib(AutotoolsPackage, CMakePackage):
         default="cmake",
     )
 
-    depends_on("python@3.5:", when="@0.13.72:", type="build")
+    depends_on("python@3.5:", type="build", when="@0.13.72:")
     depends_on("python", type="build")
     depends_on("zlib-api")
     # see zzip/CMakeLists.txt
-    depends_on("coreutils", when="@0.13.72:", type="build")
-    depends_on("pkgconfig", when="@0.13.72:", type="build")
-    depends_on("zip", when="@0.13.72:", type="build")
-    depends_on("unzip", when="@0.13.72:", type="build")
+    depends_on("coreutils", type="build", when="@0.13.72:")
+    depends_on("pkgconfig", type="build", when="@0.13.72:")
+    depends_on("zip", type="build", when="@0.13.72:")
+    depends_on("unzip", type="build", when="@0.13.72:")
 
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):

@@ -16,6 +16,6 @@ class PyVirtualenvClone(PythonPackage):
     version("0.2.6", sha256="6b3be5cab59e455f08c9eda573d23006b7d6fb41fae974ddaa2b275c93cc4405")
 
     depends_on("python@2.6:", type=("build", "run"))
-    depends_on("python@2.7:2,3.4:", when="@0.5.7:", type=("build", "run"))
+    depends_on("python@2.7:2,3.4:", type=("build", "run"), when="@0.5.7:")
     # not just build-time, requires pkg_resources
     depends_on("py-setuptools", type=("build", "run"))

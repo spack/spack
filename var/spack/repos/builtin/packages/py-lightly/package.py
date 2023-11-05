@@ -35,7 +35,7 @@ class PyLightly(PythonPackage):
     version("1.4.1", sha256="4c64657639c66ee5c8b4b8d300fc9b5287dc7e14a260f3a2e04917dca7f57f5b")
 
     # setup.py
-    depends_on("py-setuptools@21:", when="@1.4.2:", type="build")
+    depends_on("py-setuptools@21:", type="build", when="@1.4.2:")
 
     # requirements/base.txt
     depends_on("py-certifi@14.05.14:", type=("build", "run"))
@@ -49,22 +49,22 @@ class PyLightly(PythonPackage):
     depends_on("py-urllib3@1.15.1:", type=("build", "run"))
 
     # requirements/openapi.txt
-    depends_on("py-python-dateutil@2.5.3:", when="@1.4.8:", type=("build", "run"))
-    depends_on("py-setuptools@21:", when="@1.4.15:", type=("build", "run"))
-    depends_on("py-urllib3@1.25.3:", when="@1.4.8:", type=("build", "run"))
-    depends_on("py-pydantic@1.10.5:1", when="@1.4.8:", type=("build", "run"))
-    depends_on("py-aenum@3.1.11:", when="@1.4.8:", type=("build", "run"))
+    depends_on("py-python-dateutil@2.5.3:", type=("build", "run"), when="@1.4.8:")
+    depends_on("py-setuptools@21:", type=("build", "run"), when="@1.4.15:")
+    depends_on("py-urllib3@1.25.3:", type=("build", "run"), when="@1.4.8:")
+    depends_on("py-pydantic@1.10.5:1", type=("build", "run"), when="@1.4.8:")
+    depends_on("py-aenum@3.1.11:", type=("build", "run"), when="@1.4.8:")
 
     # requirements/torch.txt
     depends_on("py-torch", type=("build", "run"))
-    depends_on("py-torch@:1", when="@:1.4.1", type=("build", "run"))
+    depends_on("py-torch@:1", type=("build", "run"), when="@:1.4.1")
     depends_on("py-torchvision", type=("build", "run"))
     depends_on("py-pytorch-lightning@1.0.4:", type=("build", "run"))
-    depends_on("py-pytorch-lightning@1.0.4:1", when="@:1.4.1", type=("build", "run"))
+    depends_on("py-pytorch-lightning@1.0.4:1", type=("build", "run"), when="@:1.4.1")
 
     # https://github.com/lightly-ai/lightly/issues/1153
-    depends_on("py-torch+distributed", when="@:1.4.4", type=("build", "run"))
+    depends_on("py-torch+distributed", type=("build", "run"), when="@:1.4.4")
 
     # Historical dependencies
-    depends_on("py-setuptools@21:", when="@1.4.8", type=("build", "run"))
-    depends_on("py-setuptools@21:65.5.1", when="@:1.4.1", type=("build", "run"))
+    depends_on("py-setuptools@21:", type=("build", "run"), when="@1.4.8")
+    depends_on("py-setuptools@21:65.5.1", type=("build", "run"), when="@:1.4.1")

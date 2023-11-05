@@ -43,7 +43,7 @@ class PyAzuremlCore(PythonPackage):
     depends_on("py-azure-mgmt-storage@1.5.0:15", type=("build", "run"))
     depends_on("py-azure-mgmt-keyvault@0.40.0:6", type=("build", "run"))
     depends_on("py-azure-mgmt-authorization@0.40.0:0", type=("build", "run"))
-    depends_on("py-azure-mgmt-network@10.0:10", when="@1.8.0", type=("build", "run"))
+    depends_on("py-azure-mgmt-network@10.0:10", type=("build", "run"), when="@1.8.0")
     depends_on("py-azure-graphrbac@0.40.0:0", type=("build", "run"))
     depends_on("py-azure-common@1.1.12:", type=("build", "run"))
     depends_on("py-msrest@0.5.1:", type=("build", "run"))

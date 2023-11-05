@@ -104,8 +104,8 @@ class Graphviz(AutotoolsPackage):
 
     # Feature dependencies
     depends_on("zlib-api")
-    depends_on("groff", when="+doc", type="build")
-    depends_on("ghostscript", when="+doc", type="build")
+    depends_on("groff", type="build", when="+doc")
+    depends_on("ghostscript", type="build", when="+doc")
     depends_on("expat", when="+expat")
     depends_on("libgd", when="+libgd")
     depends_on("fontconfig", when="+libgd")
@@ -132,7 +132,7 @@ class Graphviz(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("pkgconfig", type="build")
     # to process f-strings used in gen_version.py
-    depends_on("python@3.6:", when="@2.47:", type="build")
+    depends_on("python@3.6:", type="build", when="@2.47:")
 
     conflicts("~doc", when="@:2.45", msg="graphviz always builds documentation below version 2.46")
     conflicts(

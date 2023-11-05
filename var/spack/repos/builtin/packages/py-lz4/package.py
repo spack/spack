@@ -17,10 +17,10 @@ class PyLz4(PythonPackage):
     version("3.1.0", sha256="debe75513db3eb9e5cdcd82a329ff38374b6316ab65b848b571e0404746c1e05")
 
     depends_on("python@3.5:", type=("build", "run"))
-    depends_on("python@3.7:", when="@4.0.2:", type=("build", "run"))
-    depends_on("py-setuptools@45:", when="@4.0.2:", type="build")
+    depends_on("python@3.7:", type=("build", "run"), when="@4.0.2:")
+    depends_on("py-setuptools@45:", type="build", when="@4.0.2:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@6.2:+toml", when="@4.0.2:", type="build")
+    depends_on("py-setuptools-scm@6.2:+toml", type="build", when="@4.0.2:")
     depends_on("py-setuptools-scm", type="build")
     depends_on("py-pkgconfig", type="build")
     depends_on("lz4@1.7.5:")

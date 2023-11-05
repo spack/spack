@@ -42,7 +42,7 @@ class RMlr(RPackage):
     depends_on("r-bbmisc@1.11:", type=("build", "run"))
     depends_on("r-checkmate@1.8.2:", type=("build", "run"))
     depends_on("r-data-table", type=("build", "run"))
-    depends_on("r-data-table@1.12.4:", when="@2.18.0:", type=("build", "run"))
+    depends_on("r-data-table@1.12.4:", type=("build", "run"), when="@2.18.0:")
     depends_on("r-ggplot2", type=("build", "run"))
     depends_on("r-parallelmap@1.3:", type=("build", "run"))
     depends_on("r-stringi", type=("build", "run"))

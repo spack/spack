@@ -19,14 +19,14 @@ class PyCsvkit(PythonPackage):
     version("0.9.1", sha256="92f8b8647becb5cb1dccb3af92a13a4e85702d42ba465ce8447881fb38c9f93a")
 
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-agate@1.6.1:", when="@1:", type=("build", "run"))
-    depends_on("py-agate-excel@0.2.2:", when="@1:", type=("build", "run"))
-    depends_on("py-agate-dbf@0.2.2:", when="@1.0.7:", type=("build", "run"))
-    depends_on("py-agate-dbf@0.2.0:", when="@1:", type=("build", "run"))
-    depends_on("py-agate-sql@0.5.3:", when="@1:", type=("build", "run"))
+    depends_on("py-agate@1.6.1:", type=("build", "run"), when="@1:")
+    depends_on("py-agate-excel@0.2.2:", type=("build", "run"), when="@1:")
+    depends_on("py-agate-dbf@0.2.2:", type=("build", "run"), when="@1.0.7:")
+    depends_on("py-agate-dbf@0.2.0:", type=("build", "run"), when="@1:")
+    depends_on("py-agate-sql@0.5.3:", type=("build", "run"), when="@1:")
 
     # Historical dependencies
-    depends_on("py-six@1.6.1:", when="@:1.0", type=("build", "run"))
+    depends_on("py-six@1.6.1:", type=("build", "run"), when="@:1.0")
     with when("@0.9.1"):
         depends_on("py-xlrd@0.7.1:", type=("build", "run"))
         depends_on("py-sqlalchemy@0.6.6:", type=("build", "run"))

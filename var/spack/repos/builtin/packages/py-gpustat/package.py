@@ -20,12 +20,12 @@ class PyGpustat(PythonPackage):
         preferred=True,
     )
 
-    depends_on("python@3.4:", when="@1.0.0:", type=("build", "run"))
+    depends_on("python@3.4:", type=("build", "run"), when="@1.0.0:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", when="@0.6.0", type="build")
-    depends_on("py-pytest-runner@5:", when="@1:", type="build")
+    depends_on("py-pytest-runner", type="build", when="@0.6.0")
+    depends_on("py-pytest-runner@5:", type="build", when="@1:")
     depends_on("py-six@1.7:", type=("build", "run"))
     depends_on("py-nvidia-ml-py3@7.352.0:", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"))
-    depends_on("py-blessings@1.6:", when="@0.6.0", type=("build", "run"))
-    depends_on("py-blessed@1.17.1:", when="@1.0.0:", type=("build", "run"))
+    depends_on("py-blessings@1.6:", type=("build", "run"), when="@0.6.0")
+    depends_on("py-blessed@1.17.1:", type=("build", "run"), when="@1.0.0:")

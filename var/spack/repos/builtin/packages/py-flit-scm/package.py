@@ -22,4 +22,4 @@ class PyFlitScm(PythonPackage):
 
     depends_on("py-flit-core@3.5:3", type=("build", "run"))
     depends_on("py-setuptools-scm@6.4:", type=("build", "run"))
-    depends_on("py-tomli", when="^python@:3.10", type=("build", "run"))
+    depends_on("py-tomli", type=("build", "run"), when="^python@:3.10")

@@ -18,7 +18,7 @@ class RMemoise(RPackage):
     version("1.1.0", sha256="b276f9452a26aeb79e12dd7227fcc8712832781a42f92d70e86040da0573980c")
     version("1.0.0", sha256="fd1b6cf12929890db7819f74a44a1dbe3d6f25c8a608a956d827f8be2f6c026b")
 
-    depends_on("r-rlang@0.4.10:", when="@2.0.1:", type=("build", "run"))
-    depends_on("r-cachem", when="@2.0.1:", type=("build", "run"))
+    depends_on("r-rlang@0.4.10:", type=("build", "run"), when="@2.0.1:")
+    depends_on("r-cachem", type=("build", "run"), when="@2.0.1:")
 
-    depends_on("r-digest@0.6.3:", when="@:1.1.0", type=("build", "run"))
+    depends_on("r-digest@0.6.3:", type=("build", "run"), when="@:1.1.0")

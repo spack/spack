@@ -24,7 +24,7 @@ class Stc(AutotoolsPackage):
     depends_on("java", type=("build", "run"))
     depends_on("ant", type="build")
     depends_on("turbine", type=("build", "run"))
-    depends_on("turbine@master", when="@master", type=("build", "run"))
+    depends_on("turbine@master", type=("build", "run"), when="@master")
     depends_on("zsh", type=("build", "run"))
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

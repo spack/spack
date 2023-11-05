@@ -48,10 +48,10 @@ class PyAwkward(PythonPackage):
     patch("pybind11.patch", when="@:1.2.2")
     patch("pybind11_02.patch", when="@1.2.3:1.8.0")
 
-    depends_on("py-hatchling@1.10:", when="@2:", type="build")
-    depends_on("py-hatch-fancy-pypi-readme", when="@2:", type="build")
-    depends_on("py-setuptools@42.0:", when="@:1", type=("build", "run"))
-    depends_on("py-pyyaml", when="@:1", type="build")
+    depends_on("py-hatchling@1.10:", type="build", when="@2:")
+    depends_on("py-hatch-fancy-pypi-readme", type="build", when="@2:")
+    depends_on("py-setuptools@42.0:", type=("build", "run"), when="@:1")
+    depends_on("py-pyyaml", type="build", when="@:1")
 
     _awkward_to_awkward_cpp_map = [
         ("@2.0.0", "@2"),
@@ -70,19 +70,19 @@ class PyAwkward(PythonPackage):
         depends_on("py-awkward-cpp{}".format(_awkward_cpp), when=_awkward, type=("build", "run"))
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("python@3.6:", when="@1.9:", type=("build", "run"))
-    depends_on("python@3.7:", when="@1.10:", type=("build", "run"))
-    depends_on("py-numpy@1.13.1:", when="@:1", type=("build", "run"))
-    depends_on("py-numpy@1.14.5:", when="@2.0", type=("build", "run"))
-    depends_on("py-numpy@1.17.0:", when="@2.1:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@1.9:")
+    depends_on("python@3.7:", type=("build", "run"), when="@1.10:")
+    depends_on("py-numpy@1.13.1:", type=("build", "run"), when="@:1")
+    depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@2.0")
+    depends_on("py-numpy@1.17.0:", type=("build", "run"), when="@2.1:")
     depends_on("py-pybind11", type=("build", "link"))
-    depends_on("py-importlib-resources", when="@2: ^python@:3.8", type=("build", "run"))
-    depends_on("py-typing-extensions@4.1:", when="@2: ^python@:3.10", type=("build", "run"))
-    depends_on("py-packaging", when="@2:", type=("build", "run"))
+    depends_on("py-importlib-resources", type=("build", "run"), when="@2: ^python@:3.8")
+    depends_on("py-typing-extensions@4.1:", type=("build", "run"), when="@2: ^python@:3.10")
+    depends_on("py-packaging", type=("build", "run"), when="@2:")
     depends_on("dlpack", when="@1.0.0:")
     depends_on("rapidjson")
     depends_on("cmake@3.13:", type="build")
-    depends_on("py-wheel@0.36.0:", when="@:1.7.0", type="build")
+    depends_on("py-wheel@0.36.0:", type="build", when="@:1.7.0")
 
     @when("@1.9.0:")
     def setup_build_environment(self, env):

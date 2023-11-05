@@ -206,10 +206,10 @@ class Root(CMakePackage):
 
     # ###################### Dependencies ######################
 
-    depends_on("cmake@3.4.3:", when="@:6.16", type="build")
-    depends_on("cmake@3.9:", when="@6.18.00:", type="build")
-    depends_on("cmake@3.16:", when="@6.26.00:", type="build")
-    depends_on("cmake@3.19:", when="@6.28.00: platform=darwin", type="build")
+    depends_on("cmake@3.4.3:", type="build", when="@:6.16")
+    depends_on("cmake@3.9:", type="build", when="@6.18.00:")
+    depends_on("cmake@3.16:", type="build", when="@6.26.00:")
+    depends_on("cmake@3.19:", type="build", when="@6.28.00: platform=darwin")
     depends_on("pkgconfig", type="build")
 
     depends_on("blas")
@@ -245,13 +245,13 @@ class Root(CMakePackage):
     depends_on("qt@:4", when="+qt4")
 
     # Python
-    depends_on("python@2.7:", when="+python", type=("build", "run"))
-    depends_on("python@2.7:3.10", when="@:6.26.09 +python", type=("build", "run"))
-    depends_on("py-numpy", when="+tmva", type=("build", "run"))
+    depends_on("python@2.7:", type=("build", "run"), when="+python")
+    depends_on("python@2.7:3.10", type=("build", "run"), when="@:6.26.09 +python")
+    depends_on("py-numpy", type=("build", "run"), when="+tmva")
     # This numpy dependency was not intended and will hopefully
     # be fixed in 6.20.06.
     # See: https://sft.its.cern.ch/jira/browse/ROOT-10626
-    depends_on("py-numpy", when="@6.20.00:6.20.05 +python", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"), when="@6.20.00:6.20.05 +python")
 
     # Optional dependencies
     depends_on("arrow", when="+arrow")
@@ -270,9 +270,9 @@ class Root(CMakePackage):
     depends_on("postgresql", when="+postgres")
     depends_on("pythia6+root", when="+pythia6")
     depends_on("pythia8", when="+pythia8")
-    depends_on("r", when="+r", type=("build", "run"))
-    depends_on("r-rcpp", when="+r", type=("build", "run"))
-    depends_on("r-rinside", when="+r", type=("build", "run"))
+    depends_on("r", type=("build", "run"), when="+r")
+    depends_on("r-rcpp", type=("build", "run"), when="+r")
+    depends_on("r-rinside", type=("build", "run"), when="+r")
     depends_on("readline", when="+r")
     depends_on("shadow", when="+shadow")
     depends_on("sqlite", when="+sqlite")

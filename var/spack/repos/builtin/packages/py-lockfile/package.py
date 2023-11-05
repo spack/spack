@@ -26,4 +26,4 @@ class PyLockfile(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-pbr", type="build")
-    depends_on("py-pbr@1.8:", when="@0.12.2:", type="build")
+    depends_on("py-pbr@1.8:", type="build", when="@0.12.2:")

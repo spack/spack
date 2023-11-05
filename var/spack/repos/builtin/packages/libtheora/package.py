@@ -26,7 +26,7 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
 
     variant("doc", default=False, description="Build documentation")
 
-    depends_on("doxygen", when="+doc", type="build")
+    depends_on("doxygen", type="build", when="+doc")
     depends_on("libogg")
     depends_on("libpng")
     with when("build_system=autotools"):

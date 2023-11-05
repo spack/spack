@@ -20,6 +20,6 @@ class PyPyvolve(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-biopython", type=("build", "run"))
-    depends_on("py-numpy@1.20.0:", when="@1.1.0:", type=("build", "run"))
-    depends_on("py-numpy@1.7:", when="@1.0.3:", type=("build", "run"))
+    depends_on("py-numpy@1.20.0:", type=("build", "run"), when="@1.1.0:")
+    depends_on("py-numpy@1.7:", type=("build", "run"), when="@1.0.3:")
     depends_on("py-scipy", type=("build", "run"))

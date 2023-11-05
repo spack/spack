@@ -41,15 +41,15 @@ class PyPillowBase(PythonPackage):
 
     # Required dependencies
     # https://pillow.readthedocs.io/en/latest/installation.html#python-support
-    depends_on("python@3.8:3.11", when="@10:", type=("build", "link", "run"))
-    depends_on("python@3.7:3.11", when="@9.3:9.5", type=("build", "link", "run"))
-    depends_on("python@3.7:3.10", when="@9.0:9.2", type=("build", "link", "run"))
-    depends_on("python@3.6:3.10", when="@8.3.2:8.4", type=("build", "link", "run"))
-    depends_on("python@3.6:3.9", when="@8:8.3.1", type=("build", "link", "run"))
-    depends_on("python@3.5:3.8", when="@7.0:7.2", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.5:3.8", when="@6.2.1:6.2.2", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.5:3.7", when="@6.0:6.2.0", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:3.7", when="@5.2:5.4", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", type=("build", "link", "run"), when="@10:")
+    depends_on("python@3.7:3.11", type=("build", "link", "run"), when="@9.3:9.5")
+    depends_on("python@3.7:3.10", type=("build", "link", "run"), when="@9.0:9.2")
+    depends_on("python@3.6:3.10", type=("build", "link", "run"), when="@8.3.2:8.4")
+    depends_on("python@3.6:3.9", type=("build", "link", "run"), when="@8:8.3.1")
+    depends_on("python@3.5:3.8", type=("build", "link", "run"), when="@7.0:7.2")
+    depends_on("python@2.7:2.8,3.5:3.8", type=("build", "link", "run"), when="@6.2.1:6.2.2")
+    depends_on("python@2.7:2.8,3.5:3.7", type=("build", "link", "run"), when="@6.0:6.2.0")
+    depends_on("python@2.7:2.8,3.4:3.7", type=("build", "link", "run"), when="@5.2:5.4")
     depends_on("py-setuptools", type="build")
 
     # Optional dependencies

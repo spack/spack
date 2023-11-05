@@ -100,7 +100,7 @@ class Onednn(CMakePackage):
     )
 
     # https://github.com/oneapi-src/oneDNN#requirements-for-building-from-source
-    depends_on("cmake@2.8.12:", when="@2.3:", type="build")
+    depends_on("cmake@2.8.12:", type="build", when="@2.3:")
     depends_on("cmake@2.8.11:", type="build")
     depends_on("tbb@2017:", when="cpu_runtime=tbb")
     depends_on("llvm-openmp", when="%apple-clang cpu_runtime=omp")

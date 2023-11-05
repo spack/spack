@@ -26,6 +26,6 @@ class RViridis(RPackage):
 
     depends_on("r@2.10:", type=("build", "run"))
     depends_on("r-viridislite@0.3.0:", type=("build", "run"))
-    depends_on("r-viridislite@0.4.0:", when="@0.6.2:", type=("build", "run"))
+    depends_on("r-viridislite@0.4.0:", type=("build", "run"), when="@0.6.2:")
     depends_on("r-ggplot2@1.0.1:", type=("build", "run"))
     depends_on("r-gridextra", type=("build", "run"))

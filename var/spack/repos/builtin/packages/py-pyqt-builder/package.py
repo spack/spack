@@ -17,5 +17,5 @@ class PyPyqtBuilder(PythonPackage):
 
     depends_on("py-setuptools@30.3:", type="build")
     depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-sip@6.7:6", when="@1.15:", type=("build", "run"))
+    depends_on("py-sip@6.7:6", type=("build", "run"), when="@1.15:")
     depends_on("py-sip@6.3:6", type=("build", "run"))

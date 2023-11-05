@@ -27,4 +27,4 @@ class RMatrixgenerics(RPackage):
     version("1.2.1", commit="abcc9ca0504e0b915cd7933a3169a8e9e5bd2fe9")
 
     depends_on("r-matrixstats@0.57.1:", type=("build", "run"))
-    depends_on("r-matrixstats@0.60.1:", when="@1.6.0:", type=("build", "run"))
+    depends_on("r-matrixstats@0.60.1:", type=("build", "run"), when="@1.6.0:")

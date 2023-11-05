@@ -18,6 +18,6 @@ class PyTidynamics(PythonPackage):
     version("1.0.0", sha256="b7bd669d380b0f469f3a8aedfbc0e5fa967fe8dc44e196f54baf0edb59846976")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", when="@1.1.2:", type="build")
+    depends_on("py-setuptools-scm", type="build", when="@1.1.2:")
 
     depends_on("py-numpy", type=("build", "run"))

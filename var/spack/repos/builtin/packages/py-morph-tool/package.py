@@ -33,7 +33,7 @@ class PyMorphTool(PythonPackage):
     depends_on("py-pandas@1.0.3:", type=("build", "run"))
     depends_on("py-xmltodict@0.12.0:", type=("build", "run"))
 
-    depends_on("py-plotly@4.1.0:", when="+plot", type=("build", "run"))
-    depends_on("py-dask+bag@2.19.0:", when="+parallel", type=("build", "run"))
-    depends_on("neuron+python@7.8:", when="+nrn", type=("build", "run"))
-    depends_on("py-bluepyopt@1.9.37:", when="+nrn", type=("build", "run"))
+    depends_on("py-plotly@4.1.0:", type=("build", "run"), when="+plot")
+    depends_on("py-dask+bag@2.19.0:", type=("build", "run"), when="+parallel")
+    depends_on("neuron+python@7.8:", type=("build", "run"), when="+nrn")
+    depends_on("py-bluepyopt@1.9.37:", type=("build", "run"), when="+nrn")

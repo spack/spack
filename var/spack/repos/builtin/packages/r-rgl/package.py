@@ -31,17 +31,17 @@ class RRgl(RPackage):
 
     depends_on("r+X", type=("build", "run"))
     depends_on("r@3.2.0:", type=("build", "run"))
-    depends_on("r@3.3.0:", when="@0.108.3:", type=("build", "run"))
+    depends_on("r@3.3.0:", type=("build", "run"), when="@0.108.3:")
     depends_on("r-htmlwidgets", type=("build", "run"))
-    depends_on("r-htmlwidgets@1.6.0:", when="@1.1.3:", type=("build", "run"))
+    depends_on("r-htmlwidgets@1.6.0:", type=("build", "run"), when="@1.1.3:")
     depends_on("r-htmltools", type=("build", "run"))
     depends_on("r-knitr", type=("build", "run"))
-    depends_on("r-knitr@1.33:", when="@0.108.3:", type=("build", "run"))
+    depends_on("r-knitr@1.33:", type=("build", "run"), when="@0.108.3:")
     depends_on("r-jsonlite@0.9.20:", type=("build", "run"))
     depends_on("r-magrittr", type=("build", "run"))
-    depends_on("r-r6", when="@0.108.3:", type=("build", "run"))
-    depends_on("r-mime", when="@0.110.2:", type=("build", "run"))
-    depends_on("r-base64enc", when="@0.110.2:", type=("build", "run"))
+    depends_on("r-r6", type=("build", "run"), when="@0.108.3:")
+    depends_on("r-mime", type=("build", "run"), when="@0.110.2:")
+    depends_on("r-base64enc", type=("build", "run"), when="@0.110.2:")
     depends_on("libx11")
     depends_on("gl")
     depends_on("glu")
@@ -50,9 +50,9 @@ class RRgl(RPackage):
     depends_on("freetype", type="link")
     depends_on("pandoc@1.14:", type="build")
 
-    depends_on("r-shiny", when="@:0.104.16", type=("build", "run"))
-    depends_on("r-crosstalk", when="@0.99.16:0.104.16", type=("build", "run"))
-    depends_on("r-manipulatewidget@0.9.0:", when="@0.99.16:0.104.16", type=("build", "run"))
+    depends_on("r-shiny", type=("build", "run"), when="@:0.104.16")
+    depends_on("r-crosstalk", type=("build", "run"), when="@0.99.16:0.104.16")
+    depends_on("r-manipulatewidget@0.9.0:", type=("build", "run"), when="@0.99.16:0.104.16")
 
     def configure_args(self):
         args = [

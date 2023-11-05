@@ -37,11 +37,11 @@ class PyFenicsUfl(PythonPackage):
     )
     version("2016.2.0", tag="ufl-2016.2.0", commit="962d56f65821fb9c50ca4a5a858882c472243431")
 
-    depends_on("python@3.8:", when="@2023.2.0:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@2023.2.0:")
 
-    depends_on("py-setuptools@62:", when="@2023.2.0:", type="build")
-    depends_on("py-setuptools@58:", when="@2022.1.0:2023.1.1.post0", type="build")
-    depends_on("py-setuptools@40:", when="@2016.2.0:2021.1.0", type="build")
+    depends_on("py-setuptools@62:", type="build", when="@2023.2.0:")
+    depends_on("py-setuptools@58:", type="build", when="@2022.1.0:2023.1.1.post0")
+    depends_on("py-setuptools@40:", type="build", when="@2016.2.0:2021.1.0")
     depends_on("py-numpy", type=("build", "run"))
 
     depends_on("py-pytest", type="test")

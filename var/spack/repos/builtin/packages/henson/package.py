@@ -20,11 +20,11 @@ class Henson(CMakePackage):
 
     variant("python", default=False, description="Build Python bindings")
     extends("python", when="+python")
-    depends_on("py-mpi4py", when="+python", type=("build", "run"))
+    depends_on("py-mpi4py", type=("build", "run"), when="+python")
     variant("mpi-wrappers", default=False, description="Build MPI wrappers (PMPI)")
 
     variant("boost", default=False, description="Use Boost for coroutine support")
-    depends_on("boost+context", when="+boost", type=("build", "run"))
+    depends_on("boost+context", type=("build", "run"), when="+boost")
     conflicts("~boost", when="target=aarch64:")
 
     conflicts("^openmpi", when="+mpi-wrappers")

@@ -18,8 +18,8 @@ class PyOpenmesh(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")
-    depends_on("cmake@3.1:", when="@1.1.3 platform=windows", type="build")
-    depends_on("cmake@3.3.0:", when="@1.2.2 platform=windows", type="build")
+    depends_on("cmake@3.1:", type="build", when="@1.1.3 platform=windows")
+    depends_on("cmake@3.3.0:", type="build", when="@1.2.2 platform=windows")
     depends_on("cmake", type="build")
 
     depends_on("py-numpy", type=("build", "run"))

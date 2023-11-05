@@ -27,4 +27,4 @@ class RA4reporting(RPackage):
 
     depends_on("r-xtable", type=("build", "run"))
 
-    depends_on("r-annaffy", when="@:1.32.0", type=("build", "run"))
+    depends_on("r-annaffy", type=("build", "run"), when="@:1.32.0")

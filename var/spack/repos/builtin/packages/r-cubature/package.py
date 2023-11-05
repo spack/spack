@@ -27,7 +27,7 @@ class RCubature(RPackage):
     version("2.0.2", sha256="641165c665ff490c523bccc05c42bb6851e42676b6b366b55fc442a51a8fbe8c")
     version("1.1-2", sha256="0a05469bdc85d6bd8165a42a3fc5c35a06700d279e4e8b3cf4669df19edffeed")
 
-    depends_on("r-rcpp", when="@2.0.3:", type=("build", "run"))
+    depends_on("r-rcpp", type=("build", "run"), when="@2.0.3:")
     depends_on("gmake", type="build")
 
     parallel = False

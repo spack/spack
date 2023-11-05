@@ -27,8 +27,8 @@ class RGgvis(RPackage):
     depends_on("r-shiny@0.11.1:", type=("build", "run"))
     depends_on("r-magrittr", type=("build", "run"))
     depends_on("r-dplyr@0.4.0:", type=("build", "run"))
-    depends_on("r-dplyr@0.5.0:", when="@0.4.7:", type=("build", "run"))
-    depends_on("r-rlang", when="@0.4.7:", type=("build", "run"))
+    depends_on("r-dplyr@0.5.0:", type=("build", "run"), when="@0.4.7:")
+    depends_on("r-rlang", type=("build", "run"), when="@0.4.7:")
     depends_on("r-htmltools@0.2.4:", type=("build", "run"))
 
-    depends_on("r-lazyeval", when="@:0.4.4", type=("build", "run"))
+    depends_on("r-lazyeval", type=("build", "run"), when="@:0.4.4")

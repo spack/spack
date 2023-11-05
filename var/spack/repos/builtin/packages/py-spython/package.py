@@ -24,8 +24,8 @@ class PySpython(PythonPackage):
         multi=False,
     )
 
-    depends_on("singularityce@3.5.2:", when="runtime=singularityce", type="run")
-    depends_on("singularity@3.5.2:", when="runtime=singularity", type="run")
+    depends_on("singularityce@3.5.2:", type="run", when="runtime=singularityce")
+    depends_on("singularity@3.5.2:", type="run", when="runtime=singularity")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-semver@2.8.1:", when="@:0.2", type=("build", "run"))
+    depends_on("py-semver@2.8.1:", type=("build", "run"), when="@:0.2")

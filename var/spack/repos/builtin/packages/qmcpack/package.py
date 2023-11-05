@@ -169,12 +169,12 @@ class Qmcpack(CMakePackage, CudaPackage):
     # FIXME: once concretizer can unite unconditional and conditional
     # dependencies, some of the '~mpi' variants below will not be necessary.
     # Essential libraries
-    depends_on("cmake@3.4.3:", when="@:3.5.0", type="build")
-    depends_on("cmake@3.6.0:", when="@3.6.0:", type="build")
-    depends_on("cmake@3.14.0:", when="@3.10.0:", type="build")
-    depends_on("cmake@3.17.0:", when="@3.16.0:", type="build")
+    depends_on("cmake@3.4.3:", type="build", when="@:3.5.0")
+    depends_on("cmake@3.6.0:", type="build", when="@3.6.0:")
+    depends_on("cmake@3.14.0:", type="build", when="@3.10.0:")
+    depends_on("cmake@3.17.0:", type="build", when="@3.16.0:")
     depends_on("boost+exception+serialization+random", type="build")
-    depends_on("boost@1.61.0:+exception+serialization+random", when="@3.6.0:", type="build")
+    depends_on("boost@1.61.0:+exception+serialization+random", type="build", when="@3.6.0:")
     depends_on("libxml2")
     depends_on("mpi", when="+mpi")
     depends_on("python@3:", when="@3.9:")
@@ -193,11 +193,11 @@ class Qmcpack(CMakePackage, CudaPackage):
     # It may be necesseary to disable the blas and lapack
     # when building the 'py-numpy' package, but it should not be a hard
     # dependency on the 'py-numpy~blas~lapack' variant
-    depends_on("py-numpy", when="+da", type="run")
+    depends_on("py-numpy", type="run", when="+da")
 
     # GUI is optional for data anlysis
     # py-matplotlib leads to a long complex DAG for dependencies
-    depends_on("py-matplotlib", when="+gui", type="run")
+    depends_on("py-matplotlib", type="run", when="+gui")
 
     # Backport several patches from recent versions of QMCPACK
     # The test_numerics unit test is broken prior to QMCPACK 3.3.0

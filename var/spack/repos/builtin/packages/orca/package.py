@@ -48,7 +48,7 @@ class Orca(Package):
         expand=False,
     )
 
-    depends_on("zstd", when="@:4.2.1", type="build")
+    depends_on("zstd", type="build", when="@:4.2.1")
     depends_on("libevent", type="run")
     depends_on("libpciaccess", type="run")
 

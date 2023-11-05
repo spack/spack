@@ -35,7 +35,7 @@ class RFpc(RPackage):
     version("2.1-10", sha256="5d17c5f475c3f24a4809678cbc6186a357276240cf7fcb00d5670b9e68baa096")
 
     depends_on("r@2.0.0:", type=("build", "run"))
-    depends_on("r@2.0:", when="@2.2-10:", type=("build", "run"))
+    depends_on("r@2.0:", type=("build", "run"), when="@2.2-10:")
     depends_on("r-mass", type=("build", "run"))
     depends_on("r-cluster", type=("build", "run"))
     depends_on("r-mclust", type=("build", "run"))
@@ -46,5 +46,5 @@ class RFpc(RPackage):
     depends_on("r-robustbase", type=("build", "run"))
     depends_on("r-kernlab", type=("build", "run"))
 
-    depends_on("r-trimcluster", when="@:2.1-10", type=("build", "run"))
-    depends_on("r-mvtnorm", when="@:2.2-2", type=("build", "run"))
+    depends_on("r-trimcluster", type=("build", "run"), when="@:2.1-10")
+    depends_on("r-mvtnorm", type=("build", "run"), when="@:2.2-2")

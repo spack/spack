@@ -17,5 +17,5 @@ class PyMpmath(PythonPackage):
     version("1.0.0", sha256="04d14803b6875fe6d69e6dccea87d5ae5599802e4b1df7997bddd2024001050c")
     version("0.19", sha256="68ddf6426dcda445323467d89892d2cffbbd1ae0b31ac1241b1b671749d63222")
 
-    depends_on("py-setuptools@36.7.0:", when="@1.2.0:", type="build")
-    depends_on("py-setuptools-scm@1.7.0:", when="@1.2.0:", type="build")
+    depends_on("py-setuptools@36.7.0:", type="build", when="@1.2.0:")
+    depends_on("py-setuptools-scm@1.7.0:", type="build", when="@1.2.0:")

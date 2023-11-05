@@ -61,7 +61,7 @@ class PyPybind11(CMakePackage, PythonExtension):
     with when("build_system=cmake"):
         generator("ninja")
         depends_on("cmake@3.13:", type="build")
-        depends_on("cmake@3.18:", when="@2.6.0:", type="build")
+        depends_on("cmake@3.18:", type="build", when="@2.6.0:")
 
     # https://github.com/pybind/pybind11/#supported-compilers
     conflicts("%clang@:3.2")

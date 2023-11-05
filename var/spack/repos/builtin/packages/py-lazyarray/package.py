@@ -25,11 +25,11 @@ class PyLazyarray(PythonPackage):
 
     # Required versions come from doc/installation.txt or:
     # https://lazyarray.readthedocs.io/en/latest/installation.html#dependencies
-    depends_on("python@2.7:3.9", when="@0.3:0.3.4", type=("build", "run"))
-    depends_on("python@3.4:3.9", when="@0.4:0.5.1", type=("build", "run"))
-    depends_on("python@3.6:", when="@0.5.2:", type=("build", "run"))
-    depends_on("py-numpy@1.5:", when="@:0.2.10", type=("build", "run"))
-    depends_on("py-numpy@1.12:", when="@0.3:0.5.1", type=("build", "run"))
-    depends_on("py-numpy@1.13:", when="@0.5.2:", type=("build", "run"))
+    depends_on("python@2.7:3.9", type=("build", "run"), when="@0.3:0.3.4")
+    depends_on("python@3.4:3.9", type=("build", "run"), when="@0.4:0.5.1")
+    depends_on("python@3.6:", type=("build", "run"), when="@0.5.2:")
+    depends_on("py-numpy@1.5:", type=("build", "run"), when="@:0.2.10")
+    depends_on("py-numpy@1.12:", type=("build", "run"), when="@0.3:0.5.1")
+    depends_on("py-numpy@1.13:", type=("build", "run"), when="@0.5.2:")
 
     depends_on("py-setuptools", type="build")

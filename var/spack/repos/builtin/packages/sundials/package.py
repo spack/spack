@@ -219,7 +219,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     # Build dependencies
     depends_on("cmake@3.12:", type="build")
-    depends_on("cmake@3.18:", when="+cuda", type="build")
+    depends_on("cmake@3.18:", type="build", when="+cuda")
 
     # MPI related dependencies
     depends_on("mpi", when="+mpi")

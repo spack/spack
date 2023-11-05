@@ -20,8 +20,8 @@ class F77Zmq(MakefilePackage):
     version("4.3.1", sha256="a15d72d93022d3e095528d2808c7767cece974a2dc0e2dd95e4c122f60fcf0a8")
 
     depends_on("libzmq")
-    depends_on("python@3:", when="@:4.3.1", type="build")
-    depends_on("python", when="@4.3.2:", type="build")
+    depends_on("python@3:", type="build", when="@:4.3.1")
+    depends_on("python", type="build", when="@4.3.2:")
 
     def setup_build_environment(self, env):
         env.append_flags("CFLAGS", "-O3")

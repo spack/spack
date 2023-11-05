@@ -42,4 +42,4 @@ class RGplots(RPackage):
     depends_on("r-catools", type=("build", "run"))
     depends_on("r-kernsmooth", type=("build", "run"))
 
-    depends_on("r-gdata", when="@:3.0.1.1", type=("build", "run"))
+    depends_on("r-gdata", type=("build", "run"), when="@:3.0.1.1")

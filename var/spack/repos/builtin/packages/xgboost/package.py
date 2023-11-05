@@ -39,7 +39,7 @@ class Xgboost(CMakePackage, CudaPackage):
     variant("openmp", default=True, description="Build with OpenMP support")
 
     depends_on("cmake@3.13:", type="build")
-    depends_on("cmake@3.16:", when="platform=darwin", type="build")
+    depends_on("cmake@3.16:", type="build", when="platform=darwin")
     depends_on("cuda@10:", when="+cuda")
     # https://github.com/dmlc/xgboost/pull/7379
     depends_on("cuda@10:11.4", when="@:1.5.0+cuda")

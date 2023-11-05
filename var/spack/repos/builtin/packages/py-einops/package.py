@@ -20,6 +20,6 @@ class PyEinops(PythonPackage):
     version("0.5.0", sha256="8b7a83cffc1ea88e306df099b7cbb9c3ba5003bd84d05ae44be5655864abb8d3")
     version("0.3.2", sha256="5200e413539f0377f4177ef00dc019968f4177c49b1db3e836c7883df2a5fe2e")
 
-    depends_on("python@3.8:", when="@0.7:", type=("build", "run"))
-    depends_on("py-hatchling@1.10:", when="@0.5:", type="build")
-    depends_on("py-setuptools", when="@:0.4", type="build")
+    depends_on("python@3.8:", type=("build", "run"), when="@0.7:")
+    depends_on("py-hatchling@1.10:", type="build", when="@0.5:")
+    depends_on("py-setuptools", type="build", when="@:0.4")

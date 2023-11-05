@@ -114,9 +114,9 @@ class Hpctoolkit(AutotoolsPackage):
         " +graph +regex +shared +multithreaded visibility=global"
     )
 
-    depends_on("binutils +libiberty", when="@2021:2022.06", type="link")
-    depends_on("binutils +libiberty~nls", when="@2020.04:2020", type="link")
-    depends_on("binutils@:2.33.1 +libiberty~nls", when="@:2020.03", type="link")
+    depends_on("binutils +libiberty", type="link", when="@2021:2022.06")
+    depends_on("binutils +libiberty~nls", type="link", when="@2020.04:2020")
+    depends_on("binutils@:2.33.1 +libiberty~nls", type="link", when="@:2020.03")
     depends_on("boost" + boost_libs)
     depends_on("bzip2+shared", type="link")
     depends_on("dyninst@12.1.0:", when="@2022.0:")
@@ -145,21 +145,21 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("opencl-c-headers", when="+opencl")
 
     depends_on("intel-xed+pic", when="target=x86_64:")
-    depends_on("memkind", when="@2021.05.01:", type=("build", "run"))
+    depends_on("memkind", type=("build", "run"), when="@2021.05.01:")
     depends_on("papi", when="+papi")
     depends_on("libpfm4", when="~papi")
     depends_on("mpi", when="+cray")
     depends_on("mpi", when="+mpi")
-    depends_on("hpcviewer@2022.10:", when="@2022.10: +viewer", type="run")
-    depends_on("hpcviewer", when="+viewer", type="run")
-    depends_on("python@3.10:", when="+python", type=("build", "run"))
+    depends_on("hpcviewer@2022.10:", type="run", when="@2022.10: +viewer")
+    depends_on("hpcviewer", type="run", when="+viewer")
+    depends_on("python@3.10:", type=("build", "run"), when="+python")
 
     # Avoid 'link' dep, we don't actually link, and that adds rpath
     # that conflicts with app.
-    depends_on("hip@4.5:", when="+rocm", type=("build", "run"))
-    depends_on("hsa-rocr-dev@4.5:", when="+rocm", type=("build", "run"))
-    depends_on("roctracer-dev@4.5:", when="+rocm", type=("build", "run"))
-    depends_on("rocprofiler-dev@4.5:", when="+rocm", type=("build", "run"))
+    depends_on("hip@4.5:", type=("build", "run"), when="+rocm")
+    depends_on("hsa-rocr-dev@4.5:", type=("build", "run"), when="+rocm")
+    depends_on("roctracer-dev@4.5:", type=("build", "run"), when="+rocm")
+    depends_on("rocprofiler-dev@4.5:", type=("build", "run"), when="+rocm")
 
     conflicts("%gcc@:7", when="@2022.10:", msg="hpctoolkit requires gnu gcc 8.x or later")
     conflicts("%gcc@:6", when="@2021.00:2022.06", msg="hpctoolkit requires gnu gcc 7.x or later")
@@ -181,7 +181,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     # Change python to python3 for some old revs that use a script
     # with /usr/bin/env python.
-    depends_on("python@3.4:", when="@2020.03:2020.08", type="build")
+    depends_on("python@3.4:", type="build", when="@2020.03:2020.08")
     patch("python3.patch", when="@2020.03:2020.08")
 
     # Fix a bug where make would mistakenly overwrite hpcrun-fmt.h.

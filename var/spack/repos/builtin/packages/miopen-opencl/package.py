@@ -113,7 +113,7 @@ class MiopenOpencl(CMakePackage):
     depends_on("bzip2", type="link")
     depends_on("sqlite", type="link")
     depends_on("half", type="build")
-    depends_on("miopengemm@1.1.6", when="@3.5.0", type="link")
+    depends_on("miopengemm@1.1.6", type="link", when="@3.5.0")
 
     for ver in ["3.5.0"]:
         depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")

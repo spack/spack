@@ -29,23 +29,23 @@ class PyTraitsui(PythonPackage):
         multi=False,
     )
 
-    depends_on("python@3.6:", when="@7.2:", type="build")
+    depends_on("python@3.6:", type="build", when="@7.2:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-traits@6.2:", when="@7.3:", type=("build", "run"))
-    depends_on("py-traits@6.1:", when="@7.2:", type=("build", "run"))
-    depends_on("py-traits@6:", when="@7.1:", type=("build", "run"))
+    depends_on("py-traits@6.2:", type=("build", "run"), when="@7.3:")
+    depends_on("py-traits@6.1:", type=("build", "run"), when="@7.2:")
+    depends_on("py-traits@6:", type=("build", "run"), when="@7.1:")
     depends_on("py-traits", type=("build", "run"))
-    depends_on("py-pyface@7.3:", when="@7.3:", type=("build", "run"))
-    depends_on("py-pyface@7.1:", when="@7.1:", type=("build", "run"))
+    depends_on("py-pyface@7.3:", type=("build", "run"), when="@7.3:")
+    depends_on("py-pyface@7.1:", type=("build", "run"), when="@7.1:")
     depends_on("py-pyface@6:", type=("build", "run"))
-    depends_on("py-six", when="@:6", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"), when="@:6")
 
     conflicts("backend=pyside", when="@7.1:")
     conflicts("backend=pyside2", when="@:7.0")
 
     # Backends
     with when("backend=wx"):
-        depends_on("py-wxpython@4:", when="@7:", type=("build", "run"))
+        depends_on("py-wxpython@4:", type=("build", "run"), when="@7:")
         depends_on("py-wxpython@2.8.10:", type=("build", "run"))
         depends_on("py-numpy", type=("build", "run"))
     with when("backend=pyqt"):

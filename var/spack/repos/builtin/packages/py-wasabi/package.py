@@ -18,6 +18,6 @@ class PyWasabi(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on(
-        "py-typing-extensions@3.7.4.1:4.4", when="@1.1.2:^python@:3.7", type=("build", "run")
+        "py-typing-extensions@3.7.4.1:4.4", type=("build", "run"), when="@1.1.2:^python@:3.7"
     )
-    depends_on("py-colorama@0.4.6:", when="@1.1.2:platform=windows", type=("build", "run"))
+    depends_on("py-colorama@0.4.6:", type=("build", "run"), when="@1.1.2:platform=windows")

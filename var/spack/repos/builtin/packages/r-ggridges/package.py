@@ -24,8 +24,8 @@ class RGgridges(RPackage):
 
     depends_on("r@3.2:", type=("build", "run"))
     depends_on("r-ggplot2@2.2.0:", type=("build", "run"))
-    depends_on("r-ggplot2@3.0.0:", when="@0.5.3:", type=("build", "run"))
+    depends_on("r-ggplot2@3.0.0:", type=("build", "run"), when="@0.5.3:")
     depends_on("r-scales@0.4.1:", type=("build", "run"))
-    depends_on("r-withr@2.1.1:", when="@0.5.0:", type=("build", "run"))
+    depends_on("r-withr@2.1.1:", type=("build", "run"), when="@0.5.0:")
 
-    depends_on("r-plyr@1.8.0:", when="@:0.5.3", type=("build", "run"))
+    depends_on("r-plyr@1.8.0:", type=("build", "run"), when="@:0.5.3")

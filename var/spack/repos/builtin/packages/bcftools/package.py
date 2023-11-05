@@ -44,9 +44,9 @@ class Bcftools(AutotoolsPackage):
     )
 
     depends_on("gsl", when="+libgsl")
-    depends_on("py-matplotlib", when="@1.6:", type="run")
-    depends_on("perl", when="@1.8:~perl-filters", type="run")
-    depends_on("perl", when="@1.8:+perl-filters", type=("build", "run"))
+    depends_on("py-matplotlib", type="run", when="@1.6:")
+    depends_on("perl", type="run", when="@1.8:~perl-filters")
+    depends_on("perl", type=("build", "run"), when="@1.8:+perl-filters")
 
     depends_on("htslib@1.16", when="@1.16")
     depends_on("htslib@1.15", when="@1.15")

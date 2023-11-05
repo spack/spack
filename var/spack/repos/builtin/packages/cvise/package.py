@@ -29,8 +29,8 @@ class Cvise(CMakePackage):
     depends_on("py-psutil", type=("build", "run"))
     depends_on("unifdef", type=("build", "run"))
 
-    depends_on("py-pytest", when="+pytest", type=("build", "run"))
-    depends_on("colordiff", when="+colordiff", type=("build", "run"))
+    depends_on("py-pytest", type=("build", "run"), when="+pytest")
+    depends_on("colordiff", type=("build", "run"), when="+colordiff")
 
     def cmake_args(self):
         return ["-DPYTHON_EXECUTABLE=" + self.spec["python"].command.path]

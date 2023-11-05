@@ -21,5 +21,5 @@ class PyBottleneck(PythonPackage):
     version("1.0.0", sha256="8d9b7ad4fadf9648acc924a6ee522c7cb5b474e75faaad9d90dfd55e2805b495")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-versioneer", when="@1.3.3:", type="build")
+    depends_on("py-versioneer", type="build", when="@1.3.3:")
     depends_on("py-numpy", type=("build", "run"))

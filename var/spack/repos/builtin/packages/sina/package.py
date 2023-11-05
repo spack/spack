@@ -26,7 +26,7 @@ class Sina(CachedCMakePackage):
 
     depends_on("cmake@3.8.0:", type="build")
     depends_on("adiak", when="+adiak")
-    depends_on("doxygen", when="+docs", type="build")
+    depends_on("doxygen", type="build", when="+docs")
     depends_on("conduit")
 
     def cmake_args(self):

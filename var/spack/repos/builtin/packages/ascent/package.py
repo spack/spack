@@ -276,8 +276,8 @@ class Ascent(CMakePackage, CudaPackage):
     #######################
     # Documentation related
     #######################
-    depends_on("py-sphinx", when="+python+doc", type="build")
-    depends_on("py-sphinx-rtd-theme", when="+python+doc", type="build")
+    depends_on("py-sphinx", type="build", when="+python+doc")
+    depends_on("py-sphinx-rtd-theme", type="build", when="+python+doc")
 
     ###########
     # Conflicts

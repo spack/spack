@@ -61,7 +61,7 @@ class Dakota(CMakePackage):
     depends_on("mpi", when="+mpi")
 
     depends_on("python")
-    depends_on("perl-data-dumper", when="@6.12:", type="build")
+    depends_on("perl-data-dumper", type="build", when="@6.12:")
     depends_on("boost@:1.68.0", when="@:6.12")
     depends_on("boost@1.69.0:", when="@6.18:")
 
@@ -70,7 +70,7 @@ class Dakota(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants, when="@:6.12")
     depends_on("cmake@2.8.9:", type="build")
-    depends_on("cmake@3.17:", when="@6.18:", type="build")
+    depends_on("cmake@3.17:", type="build", when="@6.18:")
 
     def cmake_args(self):
         spec = self.spec

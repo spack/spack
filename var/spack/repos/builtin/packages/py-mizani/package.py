@@ -23,26 +23,26 @@ class PyMizani(PythonPackage):
     depends_on("py-palettable", type=("build", "run"))
 
     # variable requirements
-    depends_on("python@3.8:", when="@0.7.4:", type=("build", "run"))
-    depends_on("python@3.6:", when="@0.6.0:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@0.7.4:")
+    depends_on("python@3.6:", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("py-setuptools@45:", when="@0.8.1:", type="build")
-    depends_on("py-setuptools@42:", when="@0.7.4:", type="build")
-    depends_on("py-setuptools", when="@0.6.0:", type="build")
+    depends_on("py-setuptools@45:", type="build", when="@0.8.1:")
+    depends_on("py-setuptools@42:", type="build", when="@0.7.4:")
+    depends_on("py-setuptools", type="build", when="@0.6.0:")
 
-    depends_on("py-setuptools-scm@6.2:", when="@0.8.1:", type="build")
+    depends_on("py-setuptools-scm@6.2:", type="build", when="@0.8.1:")
 
-    depends_on("py-matplotlib@3.5.0:", when="@0.7.4:", type=("build", "run"))
-    depends_on("py-matplotlib@3.1.1:", when="@0.6.0:", type=("build", "run"))
+    depends_on("py-matplotlib@3.5.0:", type=("build", "run"), when="@0.7.4:")
+    depends_on("py-matplotlib@3.1.1:", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("py-numpy@1.19.0:", when="@0.7.4:", type=("build", "run"))
-    depends_on("py-numpy", when="@0.6.0:", type=("build", "run"))
+    depends_on("py-numpy@1.19.0:", type=("build", "run"), when="@0.7.4:")
+    depends_on("py-numpy", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("py-scipy@1.5.0:", when="@0.7.4:", type=("build", "run"))
+    depends_on("py-scipy@1.5.0:", type=("build", "run"), when="@0.7.4:")
 
-    depends_on("py-pandas@1.3.5:", when="@0.7.4:", type=("build", "run"))
-    depends_on("py-pandas@1.1.0:", when="@0.7.2:", type=("build", "run"))
-    depends_on("py-pandas@1.0.0:", when="@0.7.0:", type=("build", "run"))
-    depends_on("py-pandas@0.25.0:", when="@0.6.0:", type=("build", "run"))
+    depends_on("py-pandas@1.3.5:", type=("build", "run"), when="@0.7.4:")
+    depends_on("py-pandas@1.1.0:", type=("build", "run"), when="@0.7.2:")
+    depends_on("py-pandas@1.0.0:", type=("build", "run"), when="@0.7.0:")
+    depends_on("py-pandas@0.25.0:", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("py-backports-zoneinfo", when="@0.8.1:^python@:3.8", type=("build", "run"))
+    depends_on("py-backports-zoneinfo", type=("build", "run"), when="@0.8.1:^python@:3.8")

@@ -35,14 +35,14 @@ class PyTomopy(PythonPackage):
     depends_on("py-scikit-build", type=("build"))
     depends_on("py-scikit-image@0.17:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pyfftw", when="@1.0:1.9", type=("build", "run"))
+    depends_on("py-pyfftw", type=("build", "run"), when="@1.0:1.9")
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
     depends_on("py-pywavelets", type=("build", "run"))
     depends_on("py-dxchange", type=("build", "run"))
-    depends_on("py-numexpr", when="@1.11:", type=("build", "run"))
+    depends_on("py-numexpr", type=("build", "run"), when="@1.11:")
 
     @when("@1.10:")
     def install_options(self, spec, prefix):

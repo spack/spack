@@ -44,44 +44,44 @@ class PyDatalad(PythonPackage):
     # upper bound needed because otherwise the following error occurs:
     # 'extras_require' must be a dictionary whose values are strings or lists
     # of strings containing valid project/version requirement specifiers.
-    depends_on("py-setuptools@40.8.0:66", when="@:17", type="build")
+    depends_on("py-setuptools@40.8.0:66", type="build", when="@:17")
 
     depends_on("git", type=("build", "run"))
     depends_on("git-annex", type=("build", "run"))
 
     # core
-    depends_on("py-platformdirs", when="@0.16:", type=("build", "run"))
-    depends_on("py-chardet@3.0.4:", when="@0.18.2:", type=("build", "run"))
-    depends_on("py-chardet@3.0.4:4", when="@:0.18.1", type=("build", "run"))
-    depends_on("py-colorama", when="platform=windows", type=("build", "run"))
-    depends_on("py-distro", when="^python@3.8:", type=("build", "run"))
-    depends_on("py-importlib-metadata@3.6:", when="@0.16: ^python@:3.9", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="@:0.15 ^python@:3.7", type=("build", "run"))
+    depends_on("py-platformdirs", type=("build", "run"), when="@0.16:")
+    depends_on("py-chardet@3.0.4:", type=("build", "run"), when="@0.18.2:")
+    depends_on("py-chardet@3.0.4:4", type=("build", "run"), when="@:0.18.1")
+    depends_on("py-colorama", type=("build", "run"), when="platform=windows")
+    depends_on("py-distro", type=("build", "run"), when="^python@3.8:")
+    depends_on("py-importlib-metadata@3.6:", type=("build", "run"), when="@0.16: ^python@:3.9")
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@:0.15 ^python@:3.7")
     depends_on("py-iso8601", type=("build", "run"))
     depends_on("py-humanize", type=("build", "run"))
     depends_on("py-fasteners@0.14:", type=("build", "run"))
-    depends_on("py-packaging", when="@0.15.4:", type=("build", "run"))
+    depends_on("py-packaging", type=("build", "run"), when="@0.15.4:")
     depends_on("py-patool@1.7:", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
-    depends_on("py-typing-extensions@4:", when="@0.18.4: ^python@:3.10", type=("build", "run"))
-    depends_on("py-typing-extensions", when="@0.18.3: ^python@:3.9", type=("build", "run"))
+    depends_on("py-typing-extensions@4:", type=("build", "run"), when="@0.18.4: ^python@:3.10")
+    depends_on("py-typing-extensions", type=("build", "run"), when="@0.18.3: ^python@:3.9")
     depends_on("py-annexremote", type=("build", "run"))
-    depends_on("py-looseversion", when="@0.18:", type=("build", "run"))
-    depends_on("py-appdirs", when="@:0.15", type=("build", "run"))
-    depends_on("py-wrapt", when="@:0.15", type=("build", "run"))
+    depends_on("py-looseversion", type=("build", "run"), when="@0.18:")
+    depends_on("py-appdirs", type=("build", "run"), when="@:0.15")
+    depends_on("py-wrapt", type=("build", "run"), when="@:0.15")
 
     # downloaders
     depends_on("py-boto", type=("build", "run"))
-    depends_on("py-keyring@20.0:23.8,23.9.1:", when="@0.16:", type=("build", "run"))
+    depends_on("py-keyring@20.0:23.8,23.9.1:", type=("build", "run"), when="@0.16:")
     depends_on("py-keyring@8.0:", type=("build", "run"))
     depends_on("py-keyrings-alt", type=("build", "run"))
     depends_on("py-msgpack", type=("build", "run"))
     depends_on("py-requests@1.2:", type=("build", "run"))
 
     # publish
-    depends_on("py-python-gitlab", when="@0.14.7:", type=("build", "run"))
-    depends_on("py-pygithub", when="@:0.16", type=("build", "run"))
-    depends_on("py-jsmin", when="@:0.14", type=("build", "run"))
+    depends_on("py-python-gitlab", type=("build", "run"), when="@0.14.7:")
+    depends_on("py-pygithub", type=("build", "run"), when="@:0.16")
+    depends_on("py-jsmin", type=("build", "run"), when="@:0.14")
 
     # metadata
     with when("@:0.17"):
@@ -92,25 +92,25 @@ class PyDatalad(PythonPackage):
         depends_on("py-requests-ftp", type=("build", "run"))
 
     with when("+misc"):
-        depends_on("py-argcomplete@1.12.3:", when="@0.16.5:", type=("build", "run"))
-        depends_on("py-argcomplete", when="@0.14.7:", type=("build", "run"))
+        depends_on("py-argcomplete@1.12.3:", type=("build", "run"), when="@0.16.5:")
+        depends_on("py-argcomplete", type=("build", "run"), when="@0.14.7:")
         depends_on("py-pyperclip", type=("build", "run"))
         depends_on("py-python-dateutil", type=("build", "run"))
 
     with when("+tests"):
         depends_on("py-beautifulsoup4", type=("build", "run"))
         depends_on("py-httpretty@0.9.4:", type=("build", "run"))
-        depends_on("py-mypy", when="@0.18.3:", type=("build", "run"))
-        depends_on("py-mypy@0.900:0", when="@0.17.4:0.18.2", type=("build", "run"))
-        depends_on("py-pytest", when="@0.17.9:", type=("build", "run"))
-        depends_on("py-pytest@7", when="@0.17.0:0.17.8", type=("build", "run"))
-        depends_on("py-pytest-cov", when="@0.17.9:", type=("build", "run"))
-        depends_on("py-pytest-cov@3", when="@0.17.0:0.17.8", type=("build", "run"))
-        depends_on("py-pytest-fail-slow@0.2:0", when="@0.17:", type=("build", "run"))
-        depends_on("py-types-python-dateutil", when="@0.17.4:", type=("build", "run"))
-        depends_on("py-types-requests", when="@0.17.4:", type=("build", "run"))
+        depends_on("py-mypy", type=("build", "run"), when="@0.18.3:")
+        depends_on("py-mypy@0.900:0", type=("build", "run"), when="@0.17.4:0.18.2")
+        depends_on("py-pytest", type=("build", "run"), when="@0.17.9:")
+        depends_on("py-pytest@7", type=("build", "run"), when="@0.17.0:0.17.8")
+        depends_on("py-pytest-cov", type=("build", "run"), when="@0.17.9:")
+        depends_on("py-pytest-cov@3", type=("build", "run"), when="@0.17.0:0.17.8")
+        depends_on("py-pytest-fail-slow@0.2:0", type=("build", "run"), when="@0.17:")
+        depends_on("py-types-python-dateutil", type=("build", "run"), when="@0.17.4:")
+        depends_on("py-types-requests", type=("build", "run"), when="@0.17.4:")
         depends_on("py-vcrpy", type=("build", "run"))
-        depends_on("py-nose@1.3.4:", when="@:0.16", type=("build", "run"))
+        depends_on("py-nose@1.3.4:", type=("build", "run"), when="@:0.16")
 
     with when("+duecredit"):
         depends_on("py-duecredit", type=("build", "run"))

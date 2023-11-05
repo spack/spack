@@ -44,8 +44,8 @@ class _3dtk(CMakePackage):
 
     generator("ninja")
 
-    depends_on("cmake@3.5:", when="@trunk", type="build")
-    depends_on("cmake@2.6.1:2", when="@1.2", type="build")
+    depends_on("cmake@3.5:", type="build", when="@trunk")
+    depends_on("cmake@2.6.1:2", type="build", when="@1.2")
     depends_on(
         "boost@:1.75+serialization+graph+regex+filesystem+system+thread+date_time+program_options"
     )

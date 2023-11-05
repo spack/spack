@@ -17,4 +17,4 @@ class PyFqdn(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-cached-property@1.3:", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-cached-property@1.3:", type=("build", "run"), when="^python@:3.7")

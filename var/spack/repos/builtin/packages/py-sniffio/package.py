@@ -18,5 +18,5 @@ class PySniffio(PythonPackage):
     version("1.1.0", sha256="8e3810100f69fe0edd463d02ad407112542a11ffdc29f67db2bf3771afb87a21")
 
     depends_on("python@3.5:", type=("build", "run"))
-    depends_on("python@3.7:", when="@1.3.0:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@1.3.0:")
     depends_on("py-setuptools", type="build")

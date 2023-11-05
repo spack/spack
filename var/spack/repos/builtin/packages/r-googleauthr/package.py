@@ -20,9 +20,9 @@ class RGoogleauthr(RPackage):
 
     depends_on("r@3.3.0:", type=("build", "run"))
     depends_on("r-assertthat", type=("build", "run"))
-    depends_on("r-assertthat@0.2.0:", when="@2.0.1:", type=("build", "run"))
+    depends_on("r-assertthat@0.2.0:", type=("build", "run"), when="@2.0.1:")
     depends_on("r-cli", type=("build", "run"))
-    depends_on("r-cli@2.0.2:", when="@2.0.1:", type=("build", "run"))
+    depends_on("r-cli@2.0.2:", type=("build", "run"), when="@2.0.1:")
     depends_on("r-digest", type=("build", "run"))
     depends_on("r-gargle@1.2.0:", type=("build", "run"))
     depends_on("r-httr@1.4.0:", type=("build", "run"))

@@ -21,9 +21,9 @@ class PyAdbEnhanced(PythonPackage):
     version("2.5.2", sha256="055676156c1566b8d952b9fdfdd89fc09f2d5d1e3b90b4cdf40858ce9947e2ca")
 
     depends_on("python@3:", type=("build", "run"))
-    depends_on("python@3.4:", when="@2.5.10:", type=("build", "run"))
+    depends_on("python@3.4:", type=("build", "run"), when="@2.5.10:")
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-docopt", type=("build", "run"))
-    depends_on("py-future", when="@:2.5.4", type=("build", "run"))
+    depends_on("py-future", type=("build", "run"), when="@:2.5.4")
     depends_on("py-psutil", type=("build", "run"))
-    depends_on("py-asyncio", when="@:2.5.4", type=("build", "run"))
+    depends_on("py-asyncio", type=("build", "run"), when="@:2.5.4")

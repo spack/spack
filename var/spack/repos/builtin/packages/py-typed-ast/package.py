@@ -31,7 +31,7 @@ class PyTypedAst(PythonPackage):
     )
 
     depends_on("python@3.3:", type=("build", "link", "run"))
-    depends_on("python@3.6:", when="@1.5.4:", type=("build", "link", "run"))
+    depends_on("python@3.6:", type=("build", "link", "run"), when="@1.5.4:")
     depends_on("python@:3.8", when="@:1.4.0")  # build errors with 3.9 until 1.4.1
     depends_on("py-setuptools", type="build")
 

@@ -30,4 +30,4 @@ class PyOsloConfig(PythonPackage):
     depends_on("py-rfc3986@1.2.0:", type=("build", "run"))
     depends_on("py-pyyaml@5.1:", type=("build", "run"))
     depends_on("py-requests@2.18.0:", type=("build", "run"))
-    depends_on("py-importlib-metadata@1.7.0:", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata@1.7.0:", type=("build", "run"), when="^python@:3.7")

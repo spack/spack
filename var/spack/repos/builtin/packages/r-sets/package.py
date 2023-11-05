@@ -50,5 +50,5 @@ class RSets(RPackage):
     version("0.1-1", sha256="4e41480757e33897a26974e5234801ff1c15f1a3952c96071787b43141a130de")
     version("0.1", sha256="18dda6c9d526a2f41f2b49a472fb27a7f1bb9ce6ea137b8963e8ad6c378825d0")
 
-    depends_on("r@2.6:", when="@0.1:", type=("build", "run"))
-    depends_on("r@2.7:", when="@0.1-2:", type=("build", "run"))
+    depends_on("r@2.6:", type=("build", "run"), when="@0.1:")
+    depends_on("r@2.7:", type=("build", "run"), when="@0.1-2:")

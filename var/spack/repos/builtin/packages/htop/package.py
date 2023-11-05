@@ -36,10 +36,10 @@ class Htop(AutotoolsPackage):
 
     depends_on("ncurses")
     depends_on("ncurses@6:", when="@3:")
-    depends_on("m4", when="@3:", type="build")
-    depends_on("autoconf", when="@3:", type="build")
-    depends_on("automake", when="@3:", type="build")
-    depends_on("libtool", when="@3:", type="build")
+    depends_on("m4", type="build", when="@3:")
+    depends_on("autoconf", type="build", when="@3:")
+    depends_on("automake", type="build", when="@3:")
+    depends_on("libtool", type="build", when="@3:")
     depends_on("hwloc", when="+hwloc")
     depends_on("python+pythoncmd", type="build")
 

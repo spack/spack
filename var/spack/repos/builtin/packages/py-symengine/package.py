@@ -24,14 +24,14 @@ class PySymengine(PythonPackage):
     version("0.2.0", sha256="78a14aea7aad5e7cbfb5cabe141581f9bba30e3c319690e5db8ad99fdf2d8885")
 
     # Build dependencies
-    depends_on("python@2.7:2.8,3.3:", when="@0.2.0", type=("build", "run"))
-    depends_on("python@3.6:3", when="@0.8.1:", type=("build", "run"))
-    depends_on("python@3.7:3", when="@0.9.2:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.3:", type=("build", "run"), when="@0.2.0")
+    depends_on("python@3.6:3", type=("build", "run"), when="@0.8.1:")
+    depends_on("python@3.7:3", type=("build", "run"), when="@0.9.2:")
     depends_on("py-setuptools", type="build")
     # https://github.com/symengine/symengine.py/issues/429
-    depends_on("py-setuptools@:60", when="@:0.9.2", type="build")
-    depends_on("py-cython@0.19.1:", when="@0.2.0", type="build")
-    depends_on("py-cython@0.29.24:", when="@0.8.1:", type="build")
+    depends_on("py-setuptools@:60", type="build", when="@:0.9.2")
+    depends_on("py-cython@0.19.1:", type="build", when="@0.2.0")
+    depends_on("py-cython@0.29.24:", type="build", when="@0.8.1:")
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
     depends_on("cmake@2.8.12:", type="build")

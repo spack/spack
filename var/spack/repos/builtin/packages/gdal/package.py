@@ -309,7 +309,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("libxml2", when="+libxml2")
     # depends_on('luratech', when='+luratech')
     depends_on("lz4", when="+lz4")
-    depends_on("jackcess@1.2", when="+mdb", type="run")
+    depends_on("jackcess@1.2", type="run", when="+mdb")
     depends_on("mongo-cxx-driver", when="+mongocxx")
     # depends_on('bsoncxx', when='+mongocxx')
     # depends_on('mrf', when='+mrf')
@@ -367,26 +367,26 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     # see gdal_version_and_min_supported_python_version
     # in swig/python/osgeo/__init__.py
-    depends_on("python@3.6:", when="@3.3:+python", type=("build", "link", "run"))
-    depends_on("python@2.0:", when="@3.2:+python", type=("build", "link", "run"))
-    depends_on("python", when="+python", type=("build", "link", "run"))
+    depends_on("python@3.6:", type=("build", "link", "run"), when="@3.3:+python")
+    depends_on("python@2.0:", type=("build", "link", "run"), when="@3.2:+python")
+    depends_on("python", type=("build", "link", "run"), when="+python")
     # Uses distutils
-    depends_on("python@:3.11", when="@:3.4+python", type=("build", "link", "run"))
+    depends_on("python@:3.11", type=("build", "link", "run"), when="@:3.4+python")
     # swig/python/setup.py
-    depends_on("py-setuptools@:57", when="@:3.2+python", type="build")  # needs 2to3
-    depends_on("py-setuptools", when="+python", type="build")
-    depends_on("py-numpy@1.0.0:", when="+python", type=("build", "run"))
-    depends_on("swig", when="+python", type="build")
-    depends_on("java@7:", when="@3.2:+java", type=("build", "link", "run"))
-    depends_on("java@6:", when="@2.4:+java", type=("build", "link", "run"))
-    depends_on("java@5:", when="@2.1:+java", type=("build", "link", "run"))
-    depends_on("java@4:", when="@:2.0+java", type=("build", "link", "run"))
-    depends_on("ant", when="+java", type="build")
-    depends_on("swig", when="+java", type="build")
-    depends_on("perl", when="+perl", type=("build", "run"))
-    depends_on("swig", when="+perl", type="build")
-    depends_on("php", when="+php", type=("build", "link", "run"))
-    depends_on("swig", when="+php", type="build")
+    depends_on("py-setuptools@:57", type="build", when="@:3.2+python")  # needs 2to3
+    depends_on("py-setuptools", type="build", when="+python")
+    depends_on("py-numpy@1.0.0:", type=("build", "run"), when="+python")
+    depends_on("swig", type="build", when="+python")
+    depends_on("java@7:", type=("build", "link", "run"), when="@3.2:+java")
+    depends_on("java@6:", type=("build", "link", "run"), when="@2.4:+java")
+    depends_on("java@5:", type=("build", "link", "run"), when="@2.1:+java")
+    depends_on("java@4:", type=("build", "link", "run"), when="@:2.0+java")
+    depends_on("ant", type="build", when="+java")
+    depends_on("swig", type="build", when="+java")
+    depends_on("perl", type=("build", "run"), when="+perl")
+    depends_on("swig", type="build", when="+perl")
+    depends_on("php", type=("build", "link", "run"), when="+php")
+    depends_on("swig", type="build", when="+php")
 
     # https://gdal.org/development/rfc/rfc88_googletest.html
     depends_on("googletest@1.10:", type="test")

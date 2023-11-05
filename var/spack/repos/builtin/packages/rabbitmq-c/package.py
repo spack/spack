@@ -26,9 +26,9 @@ class RabbitmqC(CMakePackage):
     variant("tools", default=False, description="Build the tools")
 
     depends_on("cmake@3.12:", type="build")
-    depends_on("openssl@1.1.1:", when="+ssl", type=("build", "link", "run"))
-    depends_on("doxygen", when="+doc", type="build")
-    depends_on("popt@1.14:", when="+tools", type=("build", "link", "run"))
+    depends_on("openssl@1.1.1:", type=("build", "link", "run"), when="+ssl")
+    depends_on("doxygen", type="build", when="+doc")
+    depends_on("popt@1.14:", type=("build", "link", "run"), when="+tools")
 
     def cmake_args(self):
         args = [

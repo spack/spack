@@ -21,8 +21,8 @@ class Cepgen(CMakePackage):
 
     generator("ninja")
 
-    depends_on("cmake@3.5:", when="@1.0:", type="build")
-    depends_on("cmake@3.20:", when="@1.1:", type="build")
+    depends_on("cmake@3.5:", type="build", when="@1.0:")
+    depends_on("cmake@3.20:", type="build", when="@1.1:")
 
     depends_on("gsl")
     depends_on("openblas")

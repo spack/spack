@@ -116,27 +116,27 @@ class Openspeedshop(CMakePackage):
     depends_on("qt@3:3.9", when="gui=qt3")
 
     # Dependencies for the openspeedshop cbtf packages.
-    depends_on("cbtf@develop", when="@develop", type=("build", "link", "run"))
-    depends_on("cbtf@1.9.3:9999", when="@2.4.0:9999", type=("build", "link", "run"))
+    depends_on("cbtf@develop", type=("build", "link", "run"), when="@develop")
+    depends_on("cbtf@1.9.3:9999", type=("build", "link", "run"), when="@2.4.0:9999")
 
-    depends_on("cbtf-krell@develop", when="@develop", type=("build", "link", "run"))
-    depends_on("cbtf-krell@1.9.3:9999", when="@2.4.0:9999", type=("build", "link", "run"))
+    depends_on("cbtf-krell@develop", type=("build", "link", "run"), when="@develop")
+    depends_on("cbtf-krell@1.9.3:9999", type=("build", "link", "run"), when="@2.4.0:9999")
 
-    depends_on("cbtf-krell@develop+crayfe", when="@develop+crayfe", type=("build", "link", "run"))
+    depends_on("cbtf-krell@develop+crayfe", type=("build", "link", "run"), when="@develop+crayfe")
     depends_on(
-        "cbtf-krell@1.9.3:9999+crayfe", when="@2.4.0:9999+crayfe", type=("build", "link", "run")
+        "cbtf-krell@1.9.3:9999+crayfe", type=("build", "link", "run"), when="@2.4.0:9999+crayfe"
     )
 
-    depends_on("cbtf-krell@develop+mpich2", when="@develop+mpich2", type=("build", "link", "run"))
+    depends_on("cbtf-krell@develop+mpich2", type=("build", "link", "run"), when="@develop+mpich2")
     depends_on(
-        "cbtf-krell@1.9.3:9999+mpich2", when="@2.4.0:9999+mpich2", type=("build", "link", "run")
+        "cbtf-krell@1.9.3:9999+mpich2", type=("build", "link", "run"), when="@2.4.0:9999+mpich2"
     )
 
-    depends_on("cbtf-krell@develop+mpt", when="@develop+mpt", type=("build", "link", "run"))
-    depends_on("cbtf-krell@1.9.3:9999+mpt", when="@2.4.0:9999+mpt", type=("build", "link", "run"))
+    depends_on("cbtf-krell@develop+mpt", type=("build", "link", "run"), when="@develop+mpt")
+    depends_on("cbtf-krell@1.9.3:9999+mpt", type=("build", "link", "run"), when="@2.4.0:9999+mpt")
 
     depends_on(
-        "cbtf-krell@develop+mvapich2", when="@develop+mvapich2", type=("build", "link", "run")
+        "cbtf-krell@develop+mvapich2", type=("build", "link", "run"), when="@develop+mvapich2"
     )
     depends_on(
         "cbtf-krell@1.9.3:9999+mvapich2",
@@ -145,18 +145,18 @@ class Openspeedshop(CMakePackage):
     )
 
     depends_on(
-        "cbtf-krell@develop+openmpi", when="@develop+openmpi", type=("build", "link", "run")
+        "cbtf-krell@develop+openmpi", type=("build", "link", "run"), when="@develop+openmpi"
     )
     depends_on(
-        "cbtf-krell@1.9.3:9999+openmpi", when="@2.4.0:9999+openmpi", type=("build", "link", "run")
+        "cbtf-krell@1.9.3:9999+openmpi", type=("build", "link", "run"), when="@2.4.0:9999+openmpi"
     )
 
-    depends_on("cbtf-argonavis@develop", when="@develop+cuda", type=("build", "link", "run"))
-    depends_on("cbtf-argonavis@1.9.3:9999", when="@2.4.0:9999+cuda", type=("build", "link", "run"))
+    depends_on("cbtf-argonavis@develop", type=("build", "link", "run"), when="@develop+cuda")
+    depends_on("cbtf-argonavis@1.9.3:9999", type=("build", "link", "run"), when="@2.4.0:9999+cuda")
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+lwthreads", when="@develop", type=("build", "link", "run"))
-    depends_on("mrnet@5.0.1-3:+lwthreads", when="@2.4.0:9999", type=("build", "link", "run"))
+    depends_on("mrnet@5.0.1-3:+lwthreads", type=("build", "link", "run"), when="@develop")
+    depends_on("mrnet@5.0.1-3:+lwthreads", type=("build", "link", "run"), when="@2.4.0:9999")
 
     patch("arm.patch", when="target=aarch64:")
     parallel = False

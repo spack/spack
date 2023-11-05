@@ -32,6 +32,6 @@ class RCirclize(RPackage):
 
     depends_on("r@3.0.0:", type=("build", "run"))
     depends_on("r-globaloptions@0.1.0:", type=("build", "run"))
-    depends_on("r-globaloptions@0.1.2:", when="@0.4.12:", type=("build", "run"))
+    depends_on("r-globaloptions@0.1.2:", type=("build", "run"), when="@0.4.12:")
     depends_on("r-shape", type=("build", "run"))
     depends_on("r-colorspace", type=("build", "run"))

@@ -26,12 +26,12 @@ class PySympy(PythonPackage):
     version("1.0", sha256="3eacd210d839e4db911d216a9258a3ac6f936992f66db211e22767983297ffae")
     version("0.7.6", sha256="dfa3927e9befdfa7da7a18783ccbc2fe489ce4c46aa335a879e49e48fc03d7a7")
 
-    depends_on("python@2.7:2.8,3.4:", when="@:1.4", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@1.5", type=("build", "run"))
-    depends_on("python@3.5:", when="@1.6", type=("build", "run"))
-    depends_on("python@3.6:", when="@1.7:", type=("build", "run"))
-    depends_on("python@3.8:", when="@1.11.1:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:1.4")
+    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@1.5")
+    depends_on("python@3.5:", type=("build", "run"), when="@1.6")
+    depends_on("python@3.6:", type=("build", "run"), when="@1.7:")
+    depends_on("python@3.8:", type=("build", "run"), when="@1.11.1:")
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
-    depends_on("py-mpmath@0.19:", when="@1.0:", type=("build", "run"))
+    depends_on("py-mpmath@0.19:", type=("build", "run"), when="@1.0:")

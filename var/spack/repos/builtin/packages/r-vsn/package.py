@@ -36,12 +36,12 @@ class RVsn(RPackage):
     version("3.44.0", commit="e54513fcdd07ccfb8094359e93cef145450f0ee0")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@3.4.0:", when="@3.46.0:", type=("build", "run"))
-    depends_on("r@4.0.0:", when="@3.62.0:", type=("build", "run"))
+    depends_on("r@3.4.0:", type=("build", "run"), when="@3.46.0:")
+    depends_on("r@4.0.0:", type=("build", "run"), when="@3.62.0:")
     depends_on("r-biobase", type=("build", "run"))
     depends_on("r-affy", type=("build", "run"))
     depends_on("r-limma", type=("build", "run"))
     depends_on("r-lattice", type=("build", "run"))
     depends_on("r-ggplot2", type=("build", "run"))
 
-    depends_on("r-hexbin", when="@3.44.0:3.52.0", type=("build", "run"))
+    depends_on("r-hexbin", type=("build", "run"), when="@3.44.0:3.52.0")

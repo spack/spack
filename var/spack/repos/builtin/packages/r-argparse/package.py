@@ -23,12 +23,12 @@ class RArgparse(RPackage):
     version("2.0.1", sha256="949843920d14fc7c162aedab331a936499541736e7dafbb103fbfd79be8147ab")
     version("1.1.1", sha256="441449f0816411a868fd1b15cf4b2bc45931bbd4b67d6592dbe48875905cf93b")
 
-    depends_on("r@3.6.0:", when="@2.1.6:", type=("build", "run"))
+    depends_on("r@3.6.0:", type=("build", "run"), when="@2.1.6:")
 
-    depends_on("r-r6", when="@2.0.0:", type=("build", "run"))
+    depends_on("r-r6", type=("build", "run"), when="@2.0.0:")
     depends_on("r-findpython", type=("build", "run"))
     depends_on("r-jsonlite", type=("build", "run"))
     depends_on("python@3.2:", type=("build", "run"))
 
-    depends_on("r-proto@1:", when="@1.0.0:1.9.9", type=("build", "run"))
-    depends_on("r-getopt", when="@1.0.0:1.9.9", type=("build", "run"))
+    depends_on("r-proto@1:", type=("build", "run"), when="@1.0.0:1.9.9")
+    depends_on("r-getopt", type=("build", "run"), when="@1.0.0:1.9.9")

@@ -55,7 +55,7 @@ class Vim(AutotoolsPackage):
     depends_on("findutils", type="build")
     depends_on("ncurses", when="@7.4:")
 
-    depends_on("cscope", when="+cscope", type="run")
+    depends_on("cscope", type="run", when="+cscope")
     depends_on("lua", when="+lua")
     depends_on("perl", when="+perl")
     depends_on("python", when="+python")

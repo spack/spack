@@ -23,7 +23,7 @@ class RTigris(RPackage):
     version("0.5.3", sha256="6ecf76f82216798465cd9704acb432caea47469ffc4953f1aaefa4d642a28445")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@3.3.0:", when="@0.6.1:", type=("build", "run"))
+    depends_on("r@3.3.0:", type=("build", "run"), when="@0.6.1:")
     depends_on("r-stringr", type=("build", "run"))
     depends_on("r-magrittr", type=("build", "run"))
     depends_on("r-rappdirs", type=("build", "run"))
@@ -32,7 +32,7 @@ class RTigris(RPackage):
     depends_on("r-sf", type=("build", "run"))
     depends_on("r-dplyr", type=("build", "run"))
 
-    depends_on("r-rgeos", when="@:0.5.3", type=("build", "run"))
-    depends_on("r-maptools", when="@:1.6.1", type=("build", "run"))
-    depends_on("r-rgdal", when="@:1.6.1", type=("build", "run"))
-    depends_on("r-sp", when="@:1.6.1", type=("build", "run"))
+    depends_on("r-rgeos", type=("build", "run"), when="@:0.5.3")
+    depends_on("r-maptools", type=("build", "run"), when="@:1.6.1")
+    depends_on("r-rgdal", type=("build", "run"), when="@:1.6.1")
+    depends_on("r-sp", type=("build", "run"), when="@:1.6.1")

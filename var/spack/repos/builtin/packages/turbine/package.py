@@ -33,9 +33,9 @@ class Turbine(AutotoolsPackage):
     depends_on("r-rinside", when="+r")
     depends_on("hdf5", when="+hdf5")
     depends_on("mpi")
-    depends_on("autoconf", when="@master", type="build")
-    depends_on("automake", when="@master", type="build")
-    depends_on("libtool", when="@master", type="build")
+    depends_on("autoconf", type="build", when="@master")
+    depends_on("automake", type="build", when="@master")
+    depends_on("libtool", type="build", when="@master")
     depends_on("m4", type=("build", "run"))
 
     def setup_build_environment(self, env):

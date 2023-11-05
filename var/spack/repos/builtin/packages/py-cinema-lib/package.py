@@ -36,8 +36,8 @@ class PyCinemaLib(PythonPackage):
     variant("opencv", default=False, description="Enable computer vision algorithms from OpenCV")
 
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-numpy@1.13:", when="+image", type=("build", "run"))
-    depends_on("py-numpy@1.13:", when="+opencv", type=("build", "run"))
-    depends_on("py-scikit-image@0.13.1:", when="+image", type=("build", "run"))
-    depends_on("opencv@3.4:+python3", when="+opencv", type=("build", "run"))
+    depends_on("py-numpy@1.13:", type=("build", "run"), when="+image")
+    depends_on("py-numpy@1.13:", type=("build", "run"), when="+opencv")
+    depends_on("py-scikit-image@0.13.1:", type=("build", "run"), when="+image")
+    depends_on("opencv@3.4:+python3", type=("build", "run"), when="+opencv")
     depends_on("py-setuptools", type=("build", "run"))

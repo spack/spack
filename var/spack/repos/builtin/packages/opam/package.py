@@ -31,8 +31,8 @@ class Opam(AutotoolsPackage):
 
     # OCaml 4.10.0 has removed the -safe-string flag, which is necessary
     # for OPAM 1i (see docstring of setup_build_environment).
-    depends_on("ocaml@:4.09.0", when="@:1.2.2", type="build")
-    depends_on("ocaml", when="@2.0.0:", type="build")
+    depends_on("ocaml@:4.09.0", type="build", when="@:1.2.2")
+    depends_on("ocaml", type="build", when="@2.0.0:")
 
     parallel = False
 

@@ -19,6 +19,6 @@ class PyNptyping(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-typish@1.7.0:", type=("build", "run"))
-    depends_on("py-numpy@1.21.5", when="^python@:3.7", type=("build", "run"))
-    depends_on("py-numpy@1.20.0:1", when="^python@3.8:", type=("build", "run"))
-    depends_on("py-typing-extensions@4.0.0:4", when="^python@:3.9", type=("build", "run"))
+    depends_on("py-numpy@1.21.5", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-numpy@1.20.0:1", type=("build", "run"), when="^python@3.8:")
+    depends_on("py-typing-extensions@4.0.0:4", type=("build", "run"), when="^python@:3.9")

@@ -36,7 +36,7 @@ class Malt(CMakePackage):
     )
 
     # Dependencies
-    depends_on("node-js@18:", when="+nodejs", type=("build", "run"))
+    depends_on("node-js@18:", type=("build", "run"), when="+nodejs")
     depends_on("libelf")
     depends_on("libunwind")
     depends_on("binutils", type="run")

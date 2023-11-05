@@ -29,8 +29,8 @@ class EcmwfAtlas(CMakePackage):
     depends_on("ecbuild", type=("build"))
     depends_on("eckit@:1.23", when="@:0.33")
     depends_on("eckit@1.24:", when="@0.34:")
-    depends_on("boost cxxstd=14 visibility=hidden", when="@0.26.0:0.33.99", type=("build", "run"))
-    depends_on("boost cxxstd=17 visibility=hidden", when="@0.34.0:", type=("build", "run"))
+    depends_on("boost cxxstd=14 visibility=hidden", type=("build", "run"), when="@0.26.0:0.33.99")
+    depends_on("boost cxxstd=17 visibility=hidden", type=("build", "run"), when="@0.34.0:")
     variant("fckit", default=True, description="Enable fckit")
     depends_on("fckit@:0.10", when="@:0.33 +fckit")
     depends_on("fckit@0.11:", when="@0.34: +fckit")
@@ -49,7 +49,7 @@ class EcmwfAtlas(CMakePackage):
     )
 
     variant("openmp", default=True, description="Use OpenMP")
-    depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
+    depends_on("llvm-openmp", type=("build", "run"), when="+openmp %apple-clang")
     variant("shared", default=True, description="Build shared libraries")
 
     variant("trans", default=False, description="Enable trans")

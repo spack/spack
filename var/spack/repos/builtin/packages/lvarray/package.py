@@ -63,7 +63,7 @@ class Lvarray(CMakePackage, CudaPackage):
     variant("docs", default=False, description="Build docs")
     variant("addr2line", default=True, description="Build support for addr2line.")
 
-    depends_on("blt", when="@0.2.0:", type="build")
+    depends_on("blt", type="build", when="@0.2.0:")
 
     depends_on("camp")
     depends_on("camp+cuda", when="+cuda")
@@ -80,12 +80,12 @@ class Lvarray(CMakePackage, CudaPackage):
 
     depends_on("caliper", when="+caliper")
 
-    depends_on("python +shared +pic", when="+pylvarray", type=("build", "link", "run"))
-    depends_on("py-numpy@1.19:", when="+pylvarray", type=("build", "link", "run"))
-    depends_on("py-scipy@1.5.2:", when="+pylvarray", type=("build", "run"))
+    depends_on("python +shared +pic", type=("build", "link", "run"), when="+pylvarray")
+    depends_on("py-numpy@1.19:", type=("build", "link", "run"), when="+pylvarray")
+    depends_on("py-scipy@1.5.2:", type=("build", "run"), when="+pylvarray")
 
-    depends_on("doxygen@1.8.13:", when="+docs", type="build")
-    depends_on("py-sphinx@1.6.3:", when="+docs", type="build")
+    depends_on("doxygen@1.8.13:", type="build", when="+docs")
+    depends_on("py-sphinx@1.6.3:", type="build", when="+docs")
 
     phases = ["hostconfig", "cmake", "build", "install"]
 

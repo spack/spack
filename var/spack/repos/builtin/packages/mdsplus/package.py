@@ -43,7 +43,7 @@ class Mdsplus(AutotoolsPackage):
     depends_on("motif")
 
     # Language bindings
-    depends_on("java", when="+java", type=("build", "run"))
+    depends_on("java", type=("build", "run"), when="+java")
 
     def configure_args(self):
         return self.enable_or_disable("java")

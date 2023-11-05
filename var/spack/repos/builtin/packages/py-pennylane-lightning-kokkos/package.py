@@ -24,8 +24,8 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     version("0.30.0", sha256="7c8f0e0431f8052993cd8033a316f53590c7bf5419445d0725e214b93cbc661b")
     version("0.29.1", sha256="f51ba7718defc7bb5064f690f381e04b2ec58cb09f22a171ae5f410860716e30")
 
-    depends_on("kokkos@:3.7.2", when="@:0.30", type=("run", "build"))
-    depends_on("kokkos@4:", when="@0.31:", type=("run", "build"))
+    depends_on("kokkos@:3.7.2", type=("run", "build"), when="@:0.30")
+    depends_on("kokkos@4:", type=("run", "build"), when="@0.31:")
 
     # kokkos backends
     backends = {
@@ -72,12 +72,12 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("py-pybind11", type="link")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
-    depends_on("py-pennylane@0.28:", when="@:0.30", type=("build", "run"))
-    depends_on("py-pennylane@0.30:", when="@0.31:", type=("build", "run"))
+    depends_on("py-pennylane@0.28:", type=("build", "run"), when="@:0.30")
+    depends_on("py-pennylane@0.30:", type=("build", "run"), when="@0.31:")
     # This requirement differs from `pennylane>=0.30` in `setup.py`,
     # but the introduction of `StatePrep` demands `pennylane>=0.32`
-    depends_on("py-pennylane@0.32:", when="@0.32:", type=("build", "run"))
-    depends_on("py-pennylane-lightning~kokkos", when="@:0.31", type=("build", "run"))
+    depends_on("py-pennylane@0.32:", type=("build", "run"), when="@0.32:")
+    depends_on("py-pennylane-lightning~kokkos", type=("build", "run"), when="@:0.31")
 
     # variant defined dependencies
     depends_on("llvm-openmp", when="+openmp %apple-clang")

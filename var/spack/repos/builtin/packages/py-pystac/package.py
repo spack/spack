@@ -19,7 +19,7 @@ class PyPystac(PythonPackage):
     version("1.0.1", sha256="3927f2104cd2077638e046b9c258d5e6b442bfabf2d179cbefbf10f509efae85")
     version("0.5.4", sha256="9fc3359364685adf54e3bc78c87550a8bc8b0a927405419bd8e4bbd42a8efc79")
 
-    depends_on("python@3.7:", when="@1:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@1:")
     depends_on("py-setuptools", type="build")
     depends_on("py-python-dateutil@2.7:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7:", when="@1: ^python@:3.7", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7:", type=("build", "run"), when="@1: ^python@:3.7")

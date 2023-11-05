@@ -19,11 +19,11 @@ class PyDnaio(PythonPackage):
     version("0.3", sha256="47e4449affad0981978fe986684fc0d9c39736f05a157f6cf80e54dae0a92638")
 
     depends_on("py-setuptools@52:", type=("build", "run"))
-    depends_on("py-setuptools-scm@6.2:", when="@0.4:", type="build")
+    depends_on("py-setuptools-scm@6.2:", type="build", when="@0.4:")
     # 0.9.1 deps
-    depends_on("python@3.7:", when="@0.9.1:", type=("build", "run"))
-    depends_on("py-cython@0.29.20:", when="@0.9.1:", type="build")
-    depends_on("py-xopen@1.4.0:", when="@0.9.1:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@0.9.1:")
+    depends_on("py-cython@0.29.20:", type="build", when="@0.9.1:")
+    depends_on("py-xopen@1.4.0:", type=("build", "run"), when="@0.9.1:")
     # older deps
     depends_on("py-xopen", type=("build", "run"))
-    depends_on("py-xopen@0.8.2:", when="@0.4:", type=("build", "run"))
+    depends_on("py-xopen@0.8.2:", type=("build", "run"), when="@0.4:")

@@ -25,6 +25,6 @@ class PyMorphio(PythonPackage):
     depends_on("ninja", type="build")
     depends_on("cmake@3.2:", type="build")
     depends_on("py-numpy@1.14.1:", type=("build", "run"))
-    depends_on("py-h5py@3", when="platform=windows", type=("build", "run"))
+    depends_on("py-h5py@3", type=("build", "run"), when="platform=windows")
     if sys.platform != "win32":
         depends_on("hdf5")

@@ -162,8 +162,8 @@ class Rocsparse(CMakePackage):
 
     depends_on("googletest@1.11.0:", when="@5.1.0: +test")
     depends_on("googletest@1.10.0:", when="+test")
-    depends_on("python@3:", when="+test", type="build")
-    depends_on("py-pyyaml", when="+test", type="build")
+    depends_on("python@3:", type="build", when="+test")
+    depends_on("py-pyyaml", type="build", when="+test")
 
     with when("+test"):
         resource(

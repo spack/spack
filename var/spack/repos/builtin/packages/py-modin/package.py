@@ -24,8 +24,8 @@ class PyModin(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-pandas@1.5.1", when="^python@3.8:", type=("build", "run"))
-    depends_on("py-pandas@1.1.5", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-pandas@1.5.1", type=("build", "run"), when="^python@3.8:")
+    depends_on("py-pandas@1.1.5", type=("build", "run"), when="^python@:3.7")
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-numpy@1.18.5:", type=("build", "run"))
     depends_on("py-fsspec", type=("build", "run"))
@@ -39,7 +39,7 @@ class PyModin(PythonPackage):
     with when("engine=dask"):
         depends_on("py-dask@2.22:", type=("build", "run"))
         depends_on("py-distributed@2.22:", type=("build", "run"))
-        depends_on("py-pickle5", when="^python@:3.7", type=("build", "run"))
+        depends_on("py-pickle5", type=("build", "run"), when="^python@:3.7")
 
     def setup_run_environment(self, env):
         # modin/config/envvars.py

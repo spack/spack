@@ -19,12 +19,12 @@ class PyAutopep8(PythonPackage):
     version("1.4.4", sha256="4d8eec30cc81bc5617dbf1218201d770dc35629363547f17577c61683ccfb3ee")
     version("1.3.3", sha256="ff787bffb812818c3071784b5ce9a35f8c481a0de7ea0ce4f8b68b8788a12f30")
 
-    depends_on("py-pycodestyle@2.3.0:", when="@1.3:", type=("build", "run"))
-    depends_on("py-pycodestyle@2.4.0:", when="@1.4:", type=("build", "run"))
-    depends_on("py-pycodestyle@2.7.0:", when="@1.5.6:", type=("build", "run"))
-    depends_on("py-pycodestyle@2.8.0:", when="@1.6.0:", type=("build", "run"))
-    depends_on("py-pycodestyle@2.9.1:", when="@1.7.0:", type=("build", "run"))
+    depends_on("py-pycodestyle@2.3.0:", type=("build", "run"), when="@1.3:")
+    depends_on("py-pycodestyle@2.4.0:", type=("build", "run"), when="@1.4:")
+    depends_on("py-pycodestyle@2.7.0:", type=("build", "run"), when="@1.5.6:")
+    depends_on("py-pycodestyle@2.8.0:", type=("build", "run"), when="@1.6.0:")
+    depends_on("py-pycodestyle@2.9.1:", type=("build", "run"), when="@1.7.0:")
 
-    depends_on("py-toml", when="@1.5.3:", type=("build", "run"))
+    depends_on("py-toml", type=("build", "run"), when="@1.5.3:")
 
     depends_on("py-setuptools", type="build")

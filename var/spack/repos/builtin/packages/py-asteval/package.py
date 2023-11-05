@@ -16,6 +16,6 @@ class PyAsteval(PythonPackage):
     version("0.9.18", sha256="5d64e18b8a72c2c7ae8f9b70d1f80b68bbcaa98c1c0d7047c35489d03209bc86")
 
     depends_on("python@3.5:", type=("build", "run"))
-    depends_on("python@3.6:", when="@0.9.25:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@0.9.25:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", when="@0.9.25:", type="build")
+    depends_on("py-setuptools-scm", type="build", when="@0.9.25:")

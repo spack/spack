@@ -236,7 +236,7 @@ class Boost(Package):
     depends_on("zlib-api", when="+iostreams")
     depends_on("zstd", when="+iostreams")
     depends_on("xz", when="+iostreams")
-    depends_on("py-numpy", when="+numpy", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"), when="+numpy")
 
     # Improve the error message when the context-impl variant is conflicting
     conflicts("context-impl=fcontext", when="@:1.65.0")

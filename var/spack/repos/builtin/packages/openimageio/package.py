@@ -38,8 +38,8 @@ class Openimageio(CMakePackage):
 
     variant("python", default=False, description="Build python bindings")
     extends("python", when="+python")
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-pybind11", when="+python", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-pybind11", type=("build", "run"), when="+python")
 
     variant("qt", default=False, description="Build qt viewer")
     depends_on("qt@5.6.0:+opengl", when="+qt")

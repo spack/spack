@@ -26,7 +26,7 @@ class JsonC(CMakePackage, AutotoolsPackage):
         default="cmake",
     )
 
-    depends_on("autoconf", when="build_system=autotools", type="build")
+    depends_on("autoconf", type="build", when="build_system=autotools")
 
     parallel = False
 

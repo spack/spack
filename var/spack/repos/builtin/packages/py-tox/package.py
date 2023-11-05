@@ -16,7 +16,7 @@ class PyTox(PythonPackage):
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-importlib-metadata@1.1.0:", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata@1.1.0:", type=("build", "run"), when="^python@:3.7")
     depends_on("py-packaging@14:", type=("build", "run"))
     depends_on("py-pluggy@0.12.0:0", type=("build", "run"))
     depends_on("py-py@1.4.17:1", type=("build", "run"))

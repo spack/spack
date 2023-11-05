@@ -61,8 +61,8 @@ class SuiteSparse(Package):
 
     depends_on("mpfr@4.0.0:", when="@5.8.0:")
     depends_on("gmp", when="@5.8.0:")
-    depends_on("m4", when="@5.0.0:", type="build")
-    depends_on("cmake", when="+graphblas @5.2.0:", type="build")
+    depends_on("m4", type="build", when="@5.0.0:")
+    depends_on("cmake", type="build", when="+graphblas @5.2.0:")
     depends_on("metis@5.1.0", when="@4.5.1:")
 
     with when("+tbb"):

@@ -48,8 +48,8 @@ class RGoDb(RPackage):
 
     depends_on("r@2.7.0:", type=("build", "run"))
     depends_on("r-annotationdbi@1.37.4:", type=("build", "run"))
-    depends_on("r-annotationdbi@1.51.3:", when="@3.12.1:", type=("build", "run"))
-    depends_on("r-annotationdbi@1.55.1:", when="@3.14.0:", type=("build", "run"))
-    depends_on("r-annotationdbi@1.57.1:", when="@3.15.0:", type=("build", "run"))
-    depends_on("r-annotationdbi@1.59.1:", when="@3.16.0:", type=("build", "run"))
-    depends_on("r-annotationdbi@1.61.0:", when="@3.17.0:", type=("build", "run"))
+    depends_on("r-annotationdbi@1.51.3:", type=("build", "run"), when="@3.12.1:")
+    depends_on("r-annotationdbi@1.55.1:", type=("build", "run"), when="@3.14.0:")
+    depends_on("r-annotationdbi@1.57.1:", type=("build", "run"), when="@3.15.0:")
+    depends_on("r-annotationdbi@1.59.1:", type=("build", "run"), when="@3.16.0:")
+    depends_on("r-annotationdbi@1.61.0:", type=("build", "run"), when="@3.17.0:")

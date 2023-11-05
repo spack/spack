@@ -30,13 +30,13 @@ class PyWerkzeug(PythonPackage):
     version("0.11.15", sha256="455d7798ac263266dbd38d4841f7534dd35ca9c3da4a8df303f8488f38f3bcc0")
     version("0.11.11", sha256="e72c46bc14405cba7a26bd2ce28df734471bc9016bc8b4cb69466c2c14c2f7e5")
 
-    depends_on("python@3.8:", when="@2.3:", type=("build", "run"))
-    depends_on("python@:3.9", when="@:0.12", type=("build", "run"))
-    depends_on("py-flit-core@:3", when="@2.3.7:", type="build")
-    depends_on("py-markupsafe@2.1.1:", when="@2.2:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@2.3:")
+    depends_on("python@:3.9", type=("build", "run"), when="@:0.12")
+    depends_on("py-flit-core@:3", type="build", when="@2.3.7:")
+    depends_on("py-markupsafe@2.1.1:", type=("build", "run"), when="@2.2:")
 
     # Historical dependencies
-    depends_on("py-setuptools", when="@:2.3.6", type="build")
+    depends_on("py-setuptools", type="build", when="@:2.3.6")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/w/werkzeug/{0}-{1}.tar.gz"

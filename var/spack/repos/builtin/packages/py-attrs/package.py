@@ -27,12 +27,12 @@ class PyAttrs(PythonPackage):
     version("18.1.0", sha256="e0d0eb91441a3b53dab4d9b743eafc1ac44476296a2053b6ca3af0b139faf87b")
     version("16.3.0", sha256="80203177723e36f3bbe15aa8553da6e80d47bfe53647220ccaa9ad7a5e473ccc")
 
-    depends_on("py-hatchling", when="@23.1:", type="build")
-    depends_on("py-hatch-vcs", when="@23.1:", type="build")
-    depends_on("py-hatch-fancy-pypi-readme", when="@23.1:", type="build")
+    depends_on("py-hatchling", type="build", when="@23.1:")
+    depends_on("py-hatch-vcs", type="build", when="@23.1:")
+    depends_on("py-hatch-fancy-pypi-readme", type="build", when="@23.1:")
 
     with when("@:22.2.0"):
-        depends_on("py-setuptools@40.6.0:", when="@19.1", type="build")
+        depends_on("py-setuptools@40.6.0:", type="build", when="@19.1")
         depends_on("py-setuptools", type="build")
 
-    depends_on("py-importlib-metadata", when="@23.1: ^python@3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@23.1: ^python@3.7")

@@ -26,7 +26,7 @@ class RRdpack(RPackage):
     version("0.11-0", sha256="8fb449c80fbe931cdce51f728fb03a1978009ccce66fd6b9edacdc6ff4118d85")
 
     depends_on("r@2.15.0:", type=("build", "run"))
-    depends_on("r-rbibutils@1.3:", when="@2.1:", type=("build", "run"))
+    depends_on("r-rbibutils@1.3:", type=("build", "run"), when="@2.1:")
 
-    depends_on("r-bibtex@0.4.0:", when="@:0.11-0", type=("build", "run"))
-    depends_on("r-gbrd", when="@:2.1", type=("build", "run"))
+    depends_on("r-bibtex@0.4.0:", type=("build", "run"), when="@:0.11-0")
+    depends_on("r-gbrd", type=("build", "run"), when="@:2.1")

@@ -26,42 +26,42 @@ class PyStatsmodels(PythonPackage):
     version("0.10.2", sha256="9cd2194c6642a8754e85f9a6e6912cdf996bebf6ff715d3cc67f65dadfd37cc9")
     version("0.10.1", sha256="320659a80f916c2edf9dfbe83512d9004bb562b72eedb7d9374562038697fa10")
 
-    depends_on("python@3.8:", when="@0.14:", type=("build", "link", "run"))
+    depends_on("python@3.8:", type=("build", "link", "run"), when="@0.14:")
     depends_on("python", type=("build", "link", "run"))
 
-    depends_on("py-setuptools@59.2:", when="@0.13.3:", type="build")
+    depends_on("py-setuptools@59.2:", type="build", when="@0.13.3:")
     depends_on("py-setuptools@0.6c5:", type="build")
 
     # pyproject.toml
-    depends_on("py-cython@0.29.26:2", when="@0.14:", type="build")
-    depends_on("py-cython@0.29.32:2", when="@0.13.5:0.13", type="build")
-    depends_on("py-cython@0.29.22:2", when="@0.13:", type="build")
-    depends_on("py-cython@0.29.14:2", when="@0.12:", type="build")
+    depends_on("py-cython@0.29.26:2", type="build", when="@0.14:")
+    depends_on("py-cython@0.29.32:2", type="build", when="@0.13.5:0.13")
+    depends_on("py-cython@0.29.22:2", type="build", when="@0.13:")
+    depends_on("py-cython@0.29.14:2", type="build", when="@0.12:")
     depends_on("py-cython@0.29:2", type="build")
-    depends_on("py-setuptools-scm+toml@7.0", when="@0.13.3:", type="build")
+    depends_on("py-setuptools-scm+toml@7.0", type="build", when="@0.13.3:")
 
     # patsy@0.5.1 works around a Python change
     #    https://github.com/statsmodels/statsmodels/issues/5343 and
     #    https://github.com/pydata/patsy/pull/131
 
     # requirements.txt
-    depends_on("py-numpy@1.18:", when="@0.14:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.17:", when="@0.13:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.15:", when="@0.12.1:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.11:", when="@0.10.1:", type=("build", "link", "run"))
-    depends_on("py-scipy@1.4:", when="@0.13.5:", type=("build", "run"))
+    depends_on("py-numpy@1.18:", type=("build", "link", "run"), when="@0.14:")
+    depends_on("py-numpy@1.17:", type=("build", "link", "run"), when="@0.13:")
+    depends_on("py-numpy@1.15:", type=("build", "link", "run"), when="@0.12.1:")
+    depends_on("py-numpy@1.11:", type=("build", "link", "run"), when="@0.10.1:")
+    depends_on("py-scipy@1.4:", type=("build", "run"), when="@0.13.5:")
     conflicts("^py-scipy@1.9.2")
-    depends_on("py-scipy@1.3:", when="@0.13:", type=("build", "run"))
-    depends_on("py-scipy@1.2:", when="@0.12:", type=("build", "run"))
-    depends_on("py-scipy@0.18:", when="@0.10.1:", type=("build", "run"))
-    depends_on("py-pandas@1:", when="@0.14:", type=("build", "run"))
-    depends_on("py-pandas@0.25:", when="@0.13:", type=("build", "run"))
-    depends_on("py-pandas@0.23:", when="@0.12:", type=("build", "run"))
-    depends_on("py-pandas@0.19:", when="@0.10.1:", type=("build", "run"))
-    depends_on("py-patsy@0.5.2:", when="@0.13:", type=("build", "run"))
-    depends_on("py-patsy@0.5.1:", when="@0.12:", type=("build", "run"))
-    depends_on("py-patsy@0.4:", when="@0.10.1:", type=("build", "run"))
-    depends_on("py-packaging@21.3:", when="@0.13.2:", type=("build", "run"))
+    depends_on("py-scipy@1.3:", type=("build", "run"), when="@0.13:")
+    depends_on("py-scipy@1.2:", type=("build", "run"), when="@0.12:")
+    depends_on("py-scipy@0.18:", type=("build", "run"), when="@0.10.1:")
+    depends_on("py-pandas@1:", type=("build", "run"), when="@0.14:")
+    depends_on("py-pandas@0.25:", type=("build", "run"), when="@0.13:")
+    depends_on("py-pandas@0.23:", type=("build", "run"), when="@0.12:")
+    depends_on("py-pandas@0.19:", type=("build", "run"), when="@0.10.1:")
+    depends_on("py-patsy@0.5.2:", type=("build", "run"), when="@0.13:")
+    depends_on("py-patsy@0.5.1:", type=("build", "run"), when="@0.12:")
+    depends_on("py-patsy@0.4:", type=("build", "run"), when="@0.10.1:")
+    depends_on("py-packaging@21.3:", type=("build", "run"), when="@0.13.2:")
 
     depends_on("py-pytest", type="test")
 

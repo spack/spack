@@ -26,7 +26,7 @@ class PyMetaphlan(PythonPackage):
     depends_on("py-biopython", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-hclust2", when="@4.0.2:", type=("build", "run"))
+    depends_on("py-hclust2", type=("build", "run"), when="@4.0.2:")
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-dendropy", type=("build", "run"))
     depends_on("py-pysam", type=("build", "run"))

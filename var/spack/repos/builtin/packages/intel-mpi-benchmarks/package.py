@@ -36,7 +36,7 @@ class IntelMpiBenchmarks(MakefilePackage):
 
     depends_on("mpi", when="@2019:")
     depends_on("intel-mpi", when="@2018")
-    depends_on("gmake", when="@2018", type="build")
+    depends_on("gmake", type="build", when="@2018")
 
     conflicts(
         "^openmpi",

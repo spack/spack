@@ -20,4 +20,4 @@ class PyDunamai(PythonPackage):
     depends_on("py-poetry-core@1:", type="build")
 
     depends_on("py-packaging@20.9:", type=("build", "run"))
-    depends_on("py-importlib-metadata@1.6:", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata@1.6:", type=("build", "run"), when="^python@:3.7")

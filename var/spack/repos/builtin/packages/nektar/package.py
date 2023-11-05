@@ -21,8 +21,8 @@ class Nektar(CMakePackage):
     variant("hdf5", default=True, description="Builds with hdf5 support")
     variant("scotch", default=False, description="Builds with scotch partitioning support")
 
-    depends_on("cmake@2.8.8:", when="~hdf5", type="build")
-    depends_on("cmake@3.2:", when="+hdf5", type="build")
+    depends_on("cmake@2.8.8:", type="build", when="~hdf5")
+    depends_on("cmake@3.2:", type="build", when="+hdf5")
 
     depends_on("blas")
     depends_on("lapack")

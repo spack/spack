@@ -34,5 +34,5 @@ class RConstruct(RPackage):
     depends_on("r-stanheaders@2.18.0:", type=("build", "run"))
     depends_on("r-bh@1.66.0:", type=("build", "run"))
     depends_on("r-rcppeigen@0.3.3.3.0:", type=("build", "run"))
-    depends_on("r-rcppparallel@5.0.1:", when="@1.0.5:", type=("build", "run"))
+    depends_on("r-rcppparallel@5.0.1:", type=("build", "run"), when="@1.0.5:")
     depends_on("gmake", type="build")

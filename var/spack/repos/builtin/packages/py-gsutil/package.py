@@ -25,19 +25,19 @@ class PyGsutil(PythonPackage):
     depends_on("py-argcomplete@1.9.4:", type=("build", "run"))
     depends_on("py-crcmod@1.7:", type=("build", "run"))
     depends_on("py-fasteners@0.14.1:", type=("build", "run"))
-    depends_on("py-gcs-oauth2-boto-plugin@3:", when="@5:", type=("build", "run"))
+    depends_on("py-gcs-oauth2-boto-plugin@3:", type=("build", "run"), when="@5:")
     depends_on("py-gcs-oauth2-boto-plugin@2.7:", type=("build", "run"))
     depends_on("py-google-apitools@0.5.32:", type=("build", "run"))
-    depends_on("py-httplib2@0.20.4", when="@5.17:", type=("build", "run"))
+    depends_on("py-httplib2@0.20.4", type=("build", "run"), when="@5.17:")
     depends_on("py-httplib2@0.18:", type=("build", "run"))
     depends_on("py-google-reauth@0.1.0:", type=("build", "run"))
     depends_on("py-monotonic@1.4:", type=("build", "run"))
     depends_on("py-pyopenssl@0.13:", type=("build", "run"))
     depends_on("py-retry-decorator@1.0.0:", type=("build", "run"))
     depends_on("py-six@1.12.0:", type=("build", "run"))
-    depends_on("py-google-auth+aiohttp@2.5:", when="@5.7:", type=("build", "run"))
+    depends_on("py-google-auth+aiohttp@2.5:", type=("build", "run"), when="@5.7:")
 
     # Historical dependencies
-    depends_on("py-mock@2:3.0.5", when="@:4.67", type=("build", "run"))
+    depends_on("py-mock@2:3.0.5", type=("build", "run"), when="@:4.67")
 
     skip_modules = ["gslib.vendored"]

@@ -32,13 +32,13 @@ class PyRadicalEntk(PythonPackage):
     depends_on("py-radical-utils", type=("build", "run"))
     depends_on("py-radical-pilot", type=("build", "run"))
 
-    depends_on("py-radical-pilot@1.18:", when="@1.20:", type=("build", "run"))
+    depends_on("py-radical-pilot@1.18:", type=("build", "run"), when="@1.20:")
 
-    depends_on("py-radical-utils@1.12:", when="@1.12:", type=("build", "run"))
-    depends_on("py-radical-pilot@1.12:1.17", when="@1.12:1.19", type=("build", "run"))
+    depends_on("py-radical-utils@1.12:", type=("build", "run"), when="@1.12:")
+    depends_on("py-radical-pilot@1.12:1.17", type=("build", "run"), when="@1.12:1.19")
 
-    depends_on("py-radical-utils@:1.11", when="@:1.11", type=("build", "run"))
-    depends_on("py-radical-pilot@:1.11", when="@:1.11", type=("build", "run"))
+    depends_on("py-radical-utils@:1.11", type=("build", "run"), when="@:1.11")
+    depends_on("py-radical-pilot@:1.11", type=("build", "run"), when="@:1.11")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))

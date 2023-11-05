@@ -34,5 +34,5 @@ class PyJupyterlabPygments(PythonPackage):
         expand=False,
     )
 
-    depends_on("python@3.7:", when="@0.2.2:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@0.2.2:")
     depends_on("py-pygments@2.4.1:2", type=("build", "run"))

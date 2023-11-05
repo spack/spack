@@ -23,7 +23,7 @@ class Mindthegap(CMakePackage):
         "2.0.2", tag="v2.0.2", commit="8401af2a2bce9997396fbf0a04757ca7c887a1da", submodules=True
     )
 
-    depends_on("cmake@3.1:", when="@2.3.0", type="build")
-    depends_on("cmake@2.6:", when="@2.0.2", type="build")
+    depends_on("cmake@3.1:", type="build", when="@2.3.0")
+    depends_on("cmake@2.6:", type="build", when="@2.0.2")
 
     depends_on("zlib-api")

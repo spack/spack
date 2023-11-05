@@ -26,10 +26,10 @@ class Libquo(AutotoolsPackage):
 
     depends_on("mpi")
 
-    depends_on("m4", when="@develop", type="build")
-    depends_on("autoconf", when="@develop", type="build")
-    depends_on("automake", when="@develop", type="build")
-    depends_on("libtool", when="@develop", type="build")
+    depends_on("m4", type="build", when="@develop")
+    depends_on("autoconf", type="build", when="@develop")
+    depends_on("automake", type="build", when="@develop")
+    depends_on("libtool", type="build", when="@develop")
 
     @when("@develop")
     def autoreconf(self, spec, prefix):

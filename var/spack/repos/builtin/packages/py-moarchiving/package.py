@@ -22,4 +22,4 @@ class PyMoarchiving(PythonPackage):
     variant("arbitrary_precision", default=False, description="Build with Fraction support")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-fraction", when="+arbitrary_precision", type=("build", "run"))
+    depends_on("py-fraction", type=("build", "run"), when="+arbitrary_precision")

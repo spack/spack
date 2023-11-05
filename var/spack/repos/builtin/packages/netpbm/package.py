@@ -51,7 +51,7 @@ class Netpbm(MakefilePackage):
     depends_on("libtiff")
     depends_on("libpng")
     # Ghostscript is called as "gs" by pstopnm and pbmtextps
-    depends_on("ghostscript", when="+ghostscript", type="run")
+    depends_on("ghostscript", type="run", when="+ghostscript")
 
     # These are the optional libs:
     # svgtopam : http://netpbm.sourceforge.net/prereq.html
@@ -59,7 +59,7 @@ class Netpbm(MakefilePackage):
     # https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/netpbm.rb
     depends_on("libxml2", when="+all")
     # thinkjettopbm : http://netpbm.sourceforge.net/prereq.html
-    depends_on("flex", when="+all", type=("build", "run"))
+    depends_on("flex", type=("build", "run"), when="+all")
     # https://formulae.brew.sh/formula/netpbm
     depends_on("jasper", when="+all~builtin")
     # Only Mac Ports sets a dependency to jbig

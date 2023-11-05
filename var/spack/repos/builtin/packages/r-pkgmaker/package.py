@@ -30,8 +30,8 @@ class RPkgmaker(RPackage):
     depends_on("r-stringr", type=("build", "run"))
     depends_on("r-xtable", type=("build", "run"))
     depends_on("r-withr", type=("build", "run"))
-    depends_on("r-assertthat", when="@0.32.2:", type=("build", "run"))
+    depends_on("r-assertthat", type=("build", "run"), when="@0.32.2:")
 
-    depends_on("r-stringi", when="@:0.27", type=("build", "run"))
-    depends_on("r-magrittr", when="@:0.27", type=("build", "run"))
-    depends_on("r-bibtex@0.4:", when="@:0.27", type=("build", "run"))
+    depends_on("r-stringi", type=("build", "run"), when="@:0.27")
+    depends_on("r-magrittr", type=("build", "run"), when="@:0.27")
+    depends_on("r-bibtex@0.4:", type=("build", "run"), when="@:0.27")

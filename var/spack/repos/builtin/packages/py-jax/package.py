@@ -25,12 +25,12 @@ class PyJax(PythonPackage):
     version("0.3.23", sha256="bff436e15552a82c0ebdef32737043b799e1e10124423c57a6ae6118c3a7b6cd")
     version("0.2.25", sha256="822e8d1e06257eaa0fdc4c0a0686c4556e9f33647fa2a766755f984786ae7446")
 
-    depends_on("python@3.8:", when="@0.4:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@0.4:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.20:", when="@0.3:", type=("build", "run"))
+    depends_on("py-numpy@1.20:", type=("build", "run"), when="@0.3:")
     depends_on("py-numpy@1.18:", type=("build", "run"))
     depends_on("py-opt-einsum", type=("build", "run"))
-    depends_on("py-scipy@1.5:", when="@0.3:", type=("build", "run"))
+    depends_on("py-scipy@1.5:", type=("build", "run"), when="@0.3:")
     depends_on("py-scipy@1.2.1:", type=("build", "run"))
 
     # See _minimum_jaxlib_version in jax/version.py
@@ -40,6 +40,6 @@ class PyJax(PythonPackage):
         depends_on(f"py-jaxlib@{jaxlib}:", when=f"@{jax}", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("py-absl-py", when="@:0.3", type=("build", "run"))
-    depends_on("py-typing-extensions", when="@:0.3", type=("build", "run"))
-    depends_on("py-etils+epath", when="@0.3", type=("build", "run"))
+    depends_on("py-absl-py", type=("build", "run"), when="@:0.3")
+    depends_on("py-typing-extensions", type=("build", "run"), when="@:0.3")
+    depends_on("py-etils+epath", type=("build", "run"), when="@0.3")

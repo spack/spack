@@ -35,7 +35,7 @@ class P7zip(MakefilePackage):
     # all3 includes 7z, 7za, and 7zr
     build_targets = ["all3"]
 
-    depends_on("yasm", when="%clang", type="build")
+    depends_on("yasm", type="build", when="%clang")
 
     # Old package is abandoned, newer versions come from a fork
     def url_for_version(self, version):

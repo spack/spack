@@ -20,12 +20,12 @@ class PyParamiko(PythonPackage):
     variant("invoke", default=False, description="Enable invoke support")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-bcrypt@3.1.3:", when="@2.7:", type=("build", "run"))
+    depends_on("py-bcrypt@3.1.3:", type=("build", "run"), when="@2.7:")
     depends_on("py-cryptography@1.1:", type=("build", "run"))
-    depends_on("py-cryptography@2.5:", when="@2.7:", type=("build", "run"))
-    depends_on("py-pyasn1@0.1.7:", when="@:2.1", type=("build", "run"))
-    depends_on("py-pynacl@1.0.1:", when="@2.7:", type=("build", "run"))
-    depends_on("py-six", when="@2.9.3:", type=("build", "run"))
+    depends_on("py-cryptography@2.5:", type=("build", "run"), when="@2.7:")
+    depends_on("py-pyasn1@0.1.7:", type=("build", "run"), when="@:2.1")
+    depends_on("py-pynacl@1.0.1:", type=("build", "run"), when="@2.7:")
+    depends_on("py-six", type=("build", "run"), when="@2.9.3:")
 
-    depends_on("py-invoke@1.3:", when="+invoke", type=("build", "run"))
+    depends_on("py-invoke@1.3:", type=("build", "run"), when="+invoke")
     conflicts("+invoke", when="@2.1.2")

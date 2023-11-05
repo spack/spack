@@ -18,8 +18,8 @@ class PyLoguru(PythonPackage):
 
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-aiocontextvars@0.2.0:", when="^python@3.6:", type=("build", "run"))
-    depends_on("py-colorama@0.3.4:", when="platform=windows", type=("build", "run"))
+    depends_on("py-aiocontextvars@0.2.0:", type=("build", "run"), when="^python@3.6:")
+    depends_on("py-colorama@0.3.4:", type=("build", "run"), when="platform=windows")
     # Missing dependency required for windows
     # depends_on('py-win32-setctime@1.0.0:',
     #            when='platform=windows',

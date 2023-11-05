@@ -61,7 +61,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("metis@5: +int64", when="+int64")
     depends_on("parmetis ~int64", when="~int64")
     depends_on("metis@5: ~int64", when="~int64")
-    depends_on("cmake@3.18.1:", when="@7.1.0:", type="build")
+    depends_on("cmake@3.18.1:", type="build", when="@7.1.0:")
     depends_on("hipblas", when="+rocm")
     depends_on("rocsolver", when="+rocm")
 

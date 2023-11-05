@@ -19,13 +19,13 @@ class PyAmqp(PythonPackage):
     version("2.4.1", sha256="6816eed27521293ee03aa9ace300a07215b11fee4e845588a9b863a7ba30addb")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("python@3.6:", when="@5.0.9:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@5.0.9:")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", type="build")
 
-    depends_on("py-vine@1.1.3:4", when="@2", type=("build", "run"))
-    depends_on("py-vine@5.0.0", when="@5.0.0:5", type=("build", "run"))
+    depends_on("py-vine@1.1.3:4", type=("build", "run"), when="@2")
+    depends_on("py-vine@5.0.0", type=("build", "run"), when="@5.0.0:5")
 
     def setup_build_environment(self, env):
         env.set("CELERY_ENABLE_SPEEDUPS", True)

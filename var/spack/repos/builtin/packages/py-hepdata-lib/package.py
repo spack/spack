@@ -25,4 +25,4 @@ class PyHepdataLib(PythonPackage):
     depends_on("py-six", type=("build", "run"))
     depends_on("py-pytest-runner", type="build")
     depends_on("py-pytest-cov", type="build")
-    depends_on("py-hepdata-validator@0.3.2:", when="@0.10.1:", type=("build", "run"))
+    depends_on("py-hepdata-validator@0.3.2:", type=("build", "run"), when="@0.10.1:")

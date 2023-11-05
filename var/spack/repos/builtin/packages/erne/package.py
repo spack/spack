@@ -22,7 +22,7 @@ class Erne(AutotoolsPackage):
         "+atomic+iostreams+regex+thread+container",
         type=("build", "link", "run"),
     )
-    depends_on("openmpi", when="+mpi", type=("build", "run"))
+    depends_on("openmpi", type=("build", "run"), when="+mpi")
 
     def configure_args(self):
         if "+mpi" in self.spec:

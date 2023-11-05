@@ -41,7 +41,7 @@ class Fckit(CMakePackage):
     depends_on("eckit@1.24: +mpi", when="@0.11: +eckit")
 
     variant("openmp", default=True, description="Use OpenMP?")
-    depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
+    depends_on("llvm-openmp", type=("build", "run"), when="+openmp %apple-clang")
     variant("shared", default=True, description="Build shared libraries")
     variant("fismahigh", default=False, description="Apply patching for FISMA-high compliance")
     variant(

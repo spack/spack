@@ -105,7 +105,7 @@ class Charmpp(Package):
 
     # Versions 7.0.0+ use CMake by default when it's available. It's more
     # robust.
-    depends_on("cmake@3.4:", when="@7.0.0:", type="build")
+    depends_on("cmake@3.4:", type="build", when="@7.0.0:")
 
     depends_on("mpi", when="backend=mpi")
     depends_on("papi", when="+papi")

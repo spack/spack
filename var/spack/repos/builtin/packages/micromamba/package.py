@@ -57,7 +57,7 @@ class Micromamba(CMakePackage):
         # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/micromamba/src/common_options.hpp#L12
         depends_on("cli11@2.2:", type="link")
 
-        depends_on("zstd build_system=cmake", when="@1.4.0:", type="link")
+        depends_on("zstd build_system=cmake", type="link", when="@1.4.0:")
 
         # 1.4.2 made the static build the old "full_static" build and it needs some work.
     with when("linkage=static"):

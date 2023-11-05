@@ -25,4 +25,4 @@ class RFda(RPackage):
     depends_on("r-fds", type=("build", "run"))
     depends_on("r-desolve", type=("build", "run"))
 
-    depends_on("r-matrix", when="@5.5.1", type=("build", "run"))
+    depends_on("r-matrix", type=("build", "run"), when="@5.5.1")

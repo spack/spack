@@ -26,15 +26,15 @@ class PyMacs2(PythonPackage):
         when="@2.2.7.1^python@3.10:",
     )
 
-    depends_on("python@3.6:", when="@2.2.7.1:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@2.2.7.1:")
     # version 2.2.4 does not build with python-3.10
-    depends_on("python@3.5:3.9", when="@2.2.4", type=("build", "run"))
+    depends_on("python@3.5:3.9", type=("build", "run"), when="@2.2.4")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@41.2:", when="@2.2.4:", type="build")
-    depends_on("py-numpy@1.17:", when="@2.2.4:", type=("build", "run"))
-    depends_on("py-cython@0.29.24:", when="@2.2.8:", type="build")
-    depends_on("py-cython@0.29:", when="@2.2.4:2.2.7.1", type="build")
+    depends_on("py-setuptools@41.2:", type="build", when="@2.2.4:")
+    depends_on("py-numpy@1.17:", type=("build", "run"), when="@2.2.4:")
+    depends_on("py-cython@0.29.24:", type="build", when="@2.2.8:")
+    depends_on("py-cython@0.29:", type="build", when="@2.2.4:2.2.7.1")
 
     def patch(self):
         # regenerate C files from pyx files with cython

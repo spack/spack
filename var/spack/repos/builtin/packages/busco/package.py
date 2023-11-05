@@ -27,18 +27,18 @@ class Busco(PythonPackage):
     version("2.0.1", sha256="bd72a79b880370e9b61b8c722e171818c7c85d46cc1e2f80595df2738a7e220c")
 
     # https://busco.ezlab.org/busco_userguide.html#manual-installation
-    depends_on("python@3.3:", when="@4:", type=("build", "run"))
+    depends_on("python@3.3:", type=("build", "run"), when="@4:")
     # pip silently replaces distutils with setuptools
-    depends_on("py-setuptools", when="@3:", type="build")
+    depends_on("py-setuptools", type="build", when="@3:")
     depends_on("blast-plus")
     depends_on("hmmer")
     depends_on("augustus")
-    depends_on("py-biopython", when="@4.1.3:", type=("build", "run"))
-    depends_on("py-pandas", when="@5:", type="run")
-    depends_on("bbmap", when="@5:", type="run")
-    depends_on("prodigal", when="@5:", type="run")
-    depends_on("metaeuk", when="@5:", type="run")
-    depends_on("sepp", when="@5:", type="run")
+    depends_on("py-biopython", type=("build", "run"), when="@4.1.3:")
+    depends_on("py-pandas", type="run", when="@5:")
+    depends_on("bbmap", type="run", when="@5:")
+    depends_on("prodigal", type="run", when="@5:")
+    depends_on("metaeuk", type="run", when="@5:")
+    depends_on("sepp", type="run", when="@5:")
 
     def install(self, spec, prefix):
         if self.spec.satisfies("@4.1.3:"):

@@ -381,7 +381,7 @@ class Openfoam(Package):
     depends_on("metis@5:", when="+metis")
     depends_on("metis+int64", when="+metis+int64")
     # mgridgen is statically linked
-    depends_on("parmgridgen", when="+mgridgen", type="build")
+    depends_on("parmgridgen", type="build", when="+mgridgen")
     depends_on("zoltan", when="+zoltan")
     depends_on("vtk", when="+vtk")
     depends_on("adios2~fortran", when="@1912:")

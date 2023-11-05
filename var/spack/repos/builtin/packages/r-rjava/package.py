@@ -20,7 +20,7 @@ class RRjava(RPackage):
     version("0.9-8", sha256="dada5e031414da54eb80b9024d51866c20b92d41d68da65789fe0130bc54bd8a")
 
     depends_on("r@2.5:", type=("build", "run"))
-    depends_on("r@3.6.0:", when="@1.0-6:", type=("build", "run"))
+    depends_on("r@3.6.0:", type=("build", "run"), when="@1.0-6:")
     depends_on("java@2:")
     depends_on("gmake", type="build")
 

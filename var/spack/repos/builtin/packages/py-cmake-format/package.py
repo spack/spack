@@ -23,5 +23,5 @@ class PyCmakeFormat(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-six@1.13.0:", type=("build", "run"))
 
-    depends_on("py-pyyaml@5.3:", when="+yaml", type=("build", "run"))
-    depends_on("py-jinja2@2.10.3", when="+htmlgen", type=("build", "run"))
+    depends_on("py-pyyaml@5.3:", type=("build", "run"), when="+yaml")
+    depends_on("py-jinja2@2.10.3", type=("build", "run"), when="+htmlgen")

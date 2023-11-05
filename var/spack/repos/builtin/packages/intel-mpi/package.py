@@ -126,7 +126,7 @@ class IntelMpi(IntelPackage):
     variant(
         "external-libfabric", default=False, description="Enable external libfabric dependency"
     )
-    depends_on("libfabric", when="+external-libfabric", type=("build", "link", "run"))
+    depends_on("libfabric", type=("build", "link", "run"), when="+external-libfabric")
     depends_on("cpio", type="build")
 
     def setup_dependent_build_environment(self, *args):

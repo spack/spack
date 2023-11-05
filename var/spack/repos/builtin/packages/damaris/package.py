@@ -64,7 +64,7 @@ class Damaris(CMakePackage):
     depends_on("cmake@3.18.0:", type=("build"))
     depends_on("boost@1.67:+thread+log+filesystem+date_time+system")
     depends_on("boost+python", when="+python")
-    depends_on("py-mpi4py", when="+python", type=("build", "run"))
+    depends_on("py-mpi4py", type=("build", "run"), when="+python")
     depends_on("hdf5@1.8.20:", when="+hdf5")
     depends_on("paraview+python+mpi+development_files", when="+catalyst")
     depends_on("visit+mpi", when="+visit")

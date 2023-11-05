@@ -27,7 +27,7 @@ class Glog(Package):
     )
 
     depends_on("gflags")
-    depends_on("cmake", when="@0.3.5:", type="build")
+    depends_on("cmake", type="build", when="@0.3.5:")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

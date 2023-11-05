@@ -29,10 +29,10 @@ class PyFlake8(PythonPackage):
     version("3.0.4", sha256="b4c210c998f07d6ff24325dd91fbc011f2c37bcd6bf576b188de01d8656e970d")
     version("2.5.4", sha256="cc1e58179f6cf10524c7bfdd378f5536d0a61497688517791639a5ecc867492f")
 
-    depends_on("python@3.8.1:", when="@6:", type=("build", "run"))
-    depends_on("python@3.6.1:", when="@5:", type=("build", "run"))
-    depends_on("python@3.6:", when="@4:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@3.9.2:", type=("build", "run"))
+    depends_on("python@3.8.1:", type=("build", "run"), when="@6:")
+    depends_on("python@3.6.1:", type=("build", "run"), when="@5:")
+    depends_on("python@3.6:", type=("build", "run"), when="@4:")
+    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@3.9.2:")
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
 
     # Most Python packages only require py-setuptools as a build dependency.
@@ -45,60 +45,60 @@ class PyFlake8(PythonPackage):
     # http://flake8.pycqa.org/en/latest/internal/releases.html#releasing-flake8
 
     # Flake8 6.1.X
-    depends_on("py-mccabe@0.7", when="@6.1", type=("build", "run"))
-    depends_on("py-pycodestyle@2.11", when="@6.1", type=("build", "run"))
-    depends_on("py-pyflakes@3.1", when="@6.1", type=("build", "run"))
+    depends_on("py-mccabe@0.7", type=("build", "run"), when="@6.1")
+    depends_on("py-pycodestyle@2.11", type=("build", "run"), when="@6.1")
+    depends_on("py-pyflakes@3.1", type=("build", "run"), when="@6.1")
 
     # Flake8 6.0.X
-    depends_on("py-mccabe@0.7", when="@6.0", type=("build", "run"))
-    depends_on("py-pycodestyle@2.10", when="@6.0", type=("build", "run"))
-    depends_on("py-pyflakes@3.0", when="@6.0", type=("build", "run"))
+    depends_on("py-mccabe@0.7", type=("build", "run"), when="@6.0")
+    depends_on("py-pycodestyle@2.10", type=("build", "run"), when="@6.0")
+    depends_on("py-pyflakes@3.0", type=("build", "run"), when="@6.0")
 
     # Flake8 5.0.X
-    depends_on("py-mccabe@0.7", when="@5.0", type=("build", "run"))
-    depends_on("py-pycodestyle@2.9", when="@5.0", type=("build", "run"))
-    depends_on("py-pyflakes@2.5", when="@5.0", type=("build", "run"))
+    depends_on("py-mccabe@0.7", type=("build", "run"), when="@5.0")
+    depends_on("py-pycodestyle@2.9", type=("build", "run"), when="@5.0")
+    depends_on("py-pyflakes@2.5", type=("build", "run"), when="@5.0")
 
     # Flake8 4.0.X
-    depends_on("py-mccabe@0.6", when="@4.0", type=("build", "run"))
-    depends_on("py-pycodestyle@2.8", when="@4.0", type=("build", "run"))
-    depends_on("py-pyflakes@2.4", when="@4.0", type=("build", "run"))
+    depends_on("py-mccabe@0.6", type=("build", "run"), when="@4.0")
+    depends_on("py-pycodestyle@2.8", type=("build", "run"), when="@4.0")
+    depends_on("py-pyflakes@2.4", type=("build", "run"), when="@4.0")
 
     # Flake8 3.9.X
-    depends_on("py-pyflakes@2.3", when="@3.9", type=("build", "run"))
-    depends_on("py-pycodestyle@2.7", when="@3.9", type=("build", "run"))
-    depends_on("py-mccabe@0.6", when="@3.9", type=("build", "run"))
+    depends_on("py-pyflakes@2.3", type=("build", "run"), when="@3.9")
+    depends_on("py-pycodestyle@2.7", type=("build", "run"), when="@3.9")
+    depends_on("py-mccabe@0.6", type=("build", "run"), when="@3.9")
 
     # Flake8 3.8.X
-    depends_on("py-pyflakes@2.2", when="@3.8", type=("build", "run"))
-    depends_on("py-pycodestyle@2.6", when="@3.8", type=("build", "run"))
-    depends_on("py-mccabe@0.6", when="@3.8", type=("build", "run"))
+    depends_on("py-pyflakes@2.2", type=("build", "run"), when="@3.8")
+    depends_on("py-pycodestyle@2.6", type=("build", "run"), when="@3.8")
+    depends_on("py-mccabe@0.6", type=("build", "run"), when="@3.8")
 
     # Flake8 3.7.X
-    depends_on("py-entrypoints@0.3", when="@3.7", type=("build", "run"))
-    depends_on("py-pyflakes@2.1", when="@3.7", type=("build", "run"))
-    depends_on("py-pycodestyle@2.5", when="@3.7", type=("build", "run"))
-    depends_on("py-mccabe@0.6", when="@3.7", type=("build", "run"))
+    depends_on("py-entrypoints@0.3", type=("build", "run"), when="@3.7")
+    depends_on("py-pyflakes@2.1", type=("build", "run"), when="@3.7")
+    depends_on("py-pycodestyle@2.5", type=("build", "run"), when="@3.7")
+    depends_on("py-mccabe@0.6", type=("build", "run"), when="@3.7")
 
     # Flake8 3.5.X
-    depends_on("py-pyflakes@1.5:1.6", when="@3.5", type=("build", "run"))
-    depends_on("py-pycodestyle@2.0:2.4", when="@3.5", type=("build", "run"))
-    depends_on("py-mccabe@0.6", when="@3.5", type=("build", "run"))
+    depends_on("py-pyflakes@1.5:1.6", type=("build", "run"), when="@3.5")
+    depends_on("py-pycodestyle@2.0:2.4", type=("build", "run"), when="@3.5")
+    depends_on("py-mccabe@0.6", type=("build", "run"), when="@3.5")
 
     # Flake8 3.0.X
-    depends_on("py-pyflakes@0.8.1:1.1,1.2.3:1.2", when="@3.0", type=("build", "run"))
-    depends_on("py-pycodestyle@2.0", when="@3.0", type=("build", "run"))
-    depends_on("py-mccabe@0.5", when="@3.0", type=("build", "run"))
+    depends_on("py-pyflakes@0.8.1:1.1,1.2.3:1.2", type=("build", "run"), when="@3.0")
+    depends_on("py-pycodestyle@2.0", type=("build", "run"), when="@3.0")
+    depends_on("py-mccabe@0.5", type=("build", "run"), when="@3.0")
 
     # Flake8 2.5.X
-    depends_on("py-pyflakes@0.8.1:1.0", when="@2.5", type=("build", "run"))
-    depends_on("py-pycodestyle@1.5.7:1.5,1.6.3:", when="@2.5", type=("build", "run"))
-    depends_on("py-mccabe@0.2.1:0.4", when="@2.5", type=("build", "run"))
+    depends_on("py-pyflakes@0.8.1:1.0", type=("build", "run"), when="@2.5")
+    depends_on("py-pycodestyle@1.5.7:1.5,1.6.3:", type=("build", "run"), when="@2.5")
+    depends_on("py-mccabe@0.2.1:0.4", type=("build", "run"), when="@2.5")
 
     # Python version-specific backports
-    depends_on("py-importlib-metadata", when="@3.8:3.9.2 ^python@:3.7", type=("build", "run"))
-    depends_on("py-importlib-metadata@:4.2", when="@4: ^python@:3.7", type=("build", "run"))
-    depends_on("py-importlib-metadata@1.1:4.2", when="@5.0.4: ^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@3.8:3.9.2 ^python@:3.7")
+    depends_on("py-importlib-metadata@:4.2", type=("build", "run"), when="@4: ^python@:3.7")
+    depends_on("py-importlib-metadata@1.1:4.2", type=("build", "run"), when="@5.0.4: ^python@:3.7")
 
     @when("@:3.5")
     def patch(self):

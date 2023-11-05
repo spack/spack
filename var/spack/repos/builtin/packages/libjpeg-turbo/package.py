@@ -72,7 +72,7 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
         depends_on("libtool", type="build")
 
     with when("build_system=cmake"):
-        depends_on("cmake", when="@1.5.90:", type="build")
+        depends_on("cmake", type="build", when="@1.5.90:")
 
     @property
     def libs(self):

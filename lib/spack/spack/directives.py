@@ -544,7 +544,7 @@ def conflicts(conflict_spec, when=None, msg=None):
 
 
 @directive(("dependencies"))
-def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
+def depends_on(spec, type=dt.DEFAULT_TYPES, when=None, patches=None):
     """Creates a dict of deps with specs defining when they apply.
 
     Args:

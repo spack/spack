@@ -23,16 +23,16 @@ class PyPackaging(PythonPackage):
     version("17.1", sha256="f019b770dd64e585a99714f1fd5e01c7a8f11b45635aa953fd41c689a657375b")
     version("16.8", sha256="5d50835fdf0a7edf0b55e311b7c887786504efea1177abd7e69329a8e5ea619e")
 
-    depends_on("py-flit-core@3.3:", when="@22:", type="build")
+    depends_on("py-flit-core@3.3:", type="build", when="@22:")
 
     # Needed to bootstrap Spack correctly on Python 3.6 (rhel8 platform-python)
-    depends_on("python@3.7:", when="@22:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@22:")
 
     # Historical dependencies
-    depends_on("py-setuptools@40.8.0:", when="@20.8:21", type="build")
-    depends_on("py-setuptools", when="@:20.7", type="build")
-    depends_on("py-pyparsing@2.0.2:3.0.4,3.0.6:", when="@21.3:21", type=("build", "run"))
-    depends_on("py-pyparsing@2.0.2:2", when="@21.1:21.2", type=("build", "run"))
-    depends_on("py-pyparsing@2.0.2:", when="@:21.0", type=("build", "run"))
-    depends_on("py-six", when="@:20.7", type=("build", "run"))
-    depends_on("py-attrs", when="@19.1", type=("build", "run"))
+    depends_on("py-setuptools@40.8.0:", type="build", when="@20.8:21")
+    depends_on("py-setuptools", type="build", when="@:20.7")
+    depends_on("py-pyparsing@2.0.2:3.0.4,3.0.6:", type=("build", "run"), when="@21.3:21")
+    depends_on("py-pyparsing@2.0.2:2", type=("build", "run"), when="@21.1:21.2")
+    depends_on("py-pyparsing@2.0.2:", type=("build", "run"), when="@:21.0")
+    depends_on("py-six", type=("build", "run"), when="@:20.7")
+    depends_on("py-attrs", type=("build", "run"), when="@19.1")

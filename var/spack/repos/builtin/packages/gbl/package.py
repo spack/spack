@@ -20,7 +20,7 @@ class Gbl(CMakePackage):
 
     variant("root", default=True, description="Support ROOT for user I/O")
     depends_on("eigen", type=("build", "link"))
-    depends_on("root", when="+root", type=("build", "link"))
+    depends_on("root", type=("build", "link"), when="+root")
 
     root_cmakelists_dir = "cpp"
 

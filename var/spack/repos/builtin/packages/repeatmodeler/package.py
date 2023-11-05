@@ -26,8 +26,8 @@ class Repeatmodeler(Package):
     depends_on("perl-json", type=("build", "run"))
     depends_on("perl-uri", type=("build", "run"))
     depends_on("perl-libwww-perl", type=("build", "run"))
-    depends_on("perl-file-which", when="@2.0.4:", type=("build", "run"))
-    depends_on("perl-devel-size", when="@2.0.4:", type=("build", "run"))
+    depends_on("perl-file-which", type=("build", "run"), when="@2.0.4:")
+    depends_on("perl-devel-size", type=("build", "run"), when="@2.0.4:")
 
     depends_on("repeatmasker", type="run")
     depends_on("recon+repeatmasker", type="run")
@@ -37,12 +37,12 @@ class Repeatmodeler(Package):
     depends_on("ncbi-rmblastn", type="run")
 
     # "optional" dependencies that it still wants
-    depends_on("cdhit", when="@2.0.4:", type="run")
-    depends_on("genometools", when="@2.0.4:", type="run")
-    depends_on("mafft", when="@2.0.4:", type="run")
-    depends_on("ninja-phylogeny", when="@2.0.4:", type="run")
-    depends_on("blat", when="@2.0.4:", type="run")
-    depends_on("ltr-retriever", when="@2.0.4:", type="run")
+    depends_on("cdhit", type="run", when="@2.0.4:")
+    depends_on("genometools", type="run", when="@2.0.4:")
+    depends_on("mafft", type="run", when="@2.0.4:")
+    depends_on("ninja-phylogeny", type="run", when="@2.0.4:")
+    depends_on("blat", type="run", when="@2.0.4:")
+    depends_on("ltr-retriever", type="run", when="@2.0.4:")
 
     def install(self, spec, prefix):
         # interactive configuration script

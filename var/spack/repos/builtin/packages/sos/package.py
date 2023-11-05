@@ -29,8 +29,8 @@ class Sos(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
 
-    depends_on("libfabric", when="+ofi", type="link")
-    depends_on("xpmem", when="+xpmem", type="link")
+    depends_on("libfabric", type="link", when="+ofi")
+    depends_on("xpmem", type="link", when="+xpmem")
 
     # Enable use of the OSH wrappers outside of Spack by preventing
     # them from using the spack wrappers

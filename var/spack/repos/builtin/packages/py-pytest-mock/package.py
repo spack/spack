@@ -22,10 +22,10 @@ class PyPytestMock(PythonPackage):
         url="https://pypi.io/packages/source/p/pytest-mock/pytest-mock-1.2.zip",
     )
 
-    depends_on("python@2.7:2.8,3.4:", when="@:1.11.1", type=("build", "run"))
-    depends_on("python@3.7:", when="@3.10.0:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:1.11.1")
+    depends_on("python@3.7:", type=("build", "run"), when="@3.10.0:")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")
     depends_on("py-pytest@2.7:", type=("build", "run"))
-    depends_on("py-pytest@5:", when="@3.10.0:", type=("build", "run"))
+    depends_on("py-pytest@5:", type=("build", "run"), when="@3.10.0:")

@@ -31,8 +31,8 @@ class Coin3d(AutotoolsPackage, CMakePackage):
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants, type="build")
-    depends_on("doxygen", when="+html", type="build")
-    depends_on("perl", when="+html", type="build")
+    depends_on("doxygen", type="build", when="+html")
+    depends_on("perl", type="build", when="+html")
     depends_on("glu", type="link")
     depends_on("gl", type="link")
     depends_on("libsm", type="link")

@@ -33,7 +33,7 @@ class PyXgboost(PythonPackage):
     for ver in ["1.3.3", "1.5.2", "1.6.1", "1.6.2"]:
         depends_on(f"xgboost@{ver}", when=f"@{ver}")
 
-    depends_on("python@3.7:", when="@1.6:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@1.6:")
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type=("build"))
     # in newer pip versions --install-option does not exist
@@ -42,16 +42,16 @@ class PyXgboost(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
 
-    depends_on("py-pandas", when="+pandas", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"), when="+pandas")
 
-    depends_on("py-scikit-learn", when="+scikit-learn", type=("build", "run"))
+    depends_on("py-scikit-learn", type=("build", "run"), when="+scikit-learn")
 
-    depends_on("py-dask", when="+dask", type=("build", "run"))
-    depends_on("py-pandas", when="+dask", type=("build", "run"))
-    depends_on("py-distributed", when="+dask", type=("build", "run"))
+    depends_on("py-dask", type=("build", "run"), when="+dask")
+    depends_on("py-pandas", type=("build", "run"), when="+dask")
+    depends_on("py-distributed", type=("build", "run"), when="+dask")
 
-    depends_on("py-graphviz", when="+plotting", type=("build", "run"))
-    depends_on("py-matplotlib", when="+plotting", type=("build", "run"))
+    depends_on("py-graphviz", type=("build", "run"), when="+plotting")
+    depends_on("py-matplotlib", type=("build", "run"), when="+plotting")
 
     def patch(self):
         # https://github.com/dmlc/xgboost/issues/6706

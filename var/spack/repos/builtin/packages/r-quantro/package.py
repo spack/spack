@@ -30,7 +30,7 @@ class RQuantro(RPackage):
     version("1.10.0", commit="111337c0aba052aa49c3d2e2d3042794b28858c9")
 
     depends_on("r@3.1.3:", type=("build", "run"))
-    depends_on("r@4.0:", when="@1.24.0:", type=("build", "run"))
+    depends_on("r@4.0:", type=("build", "run"), when="@1.24.0:")
     depends_on("r-biobase", type=("build", "run"))
     depends_on("r-minfi", type=("build", "run"))
     depends_on("r-doparallel", type=("build", "run"))

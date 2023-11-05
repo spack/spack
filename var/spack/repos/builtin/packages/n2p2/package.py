@@ -33,12 +33,12 @@ class N2p2(MakefilePackage):
     depends_on("blas")
     depends_on("gsl", type=("build", "run", "link"))
     depends_on("eigen", type=("build", "run", "link"))
-    depends_on("doxygen", when="+doc", type="build")
-    depends_on("texlive", when="+doc", type="build")
+    depends_on("doxygen", type="build", when="+doc")
+    depends_on("texlive", type="build", when="+doc")
     depends_on("py-cython", type=("build", "run"))
-    depends_on("py-breathe", when="+doc", type="build")
-    depends_on("py-sphinx", when="+doc", type="build")
-    depends_on("py-sphinx-rtd-theme", when="+doc", type="build")
+    depends_on("py-breathe", type="build", when="+doc")
+    depends_on("py-sphinx", type="build", when="+doc")
+    depends_on("py-sphinx-rtd-theme", type="build", when="+doc")
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')

@@ -21,12 +21,12 @@ class Fontconfig(AutotoolsPackage):
     version("2.11.1", sha256="b6b066c7dce3f436fdc0dfbae9d36122b38094f4f53bd8dffd45e195b0540d8d")
 
     depends_on("freetype")
-    depends_on("gperf", when="@2.12.2:", type="build")
+    depends_on("gperf", type="build", when="@2.12.2:")
     depends_on("libxml2")
     depends_on("pkgconfig", type="build")
     depends_on("font-util")
     depends_on("uuid", when="@2.13.1:")
-    depends_on("python@3:", when="@2.13.93:", type="build")
+    depends_on("python@3:", type="build", when="@2.13.93:")
 
     def patch(self):
         """Make test/run-test.sh compatible with dash"""

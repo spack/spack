@@ -31,9 +31,9 @@ class Exaca(CMakePackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("testing", default=False, description="Build unit tests")
 
-    depends_on("cmake@3.9:", when="@:1.1", type="build")
-    depends_on("cmake@3.12:", when="@master", type="build")
-    depends_on("googletest@1.10:", when="@1.1:+testing", type="test")
+    depends_on("cmake@3.9:", type="build", when="@:1.1")
+    depends_on("cmake@3.12:", type="build", when="@master")
+    depends_on("googletest@1.10:", type="test", when="@1.1:+testing")
     depends_on("kokkos@3.0:", when="@:1.1")
     depends_on("kokkos@3.2:", when="@1.2:")
     depends_on("mpi")

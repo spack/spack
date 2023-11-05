@@ -67,22 +67,22 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     depends_on("pkgconfig")
 
     depends_on("flux-core", type=("build", "link", "run"))
-    depends_on("flux-core+cuda", when="+cuda", type=("build", "run", "link"))
-    depends_on("flux-core@0.16.0:0.16", when="@0.8.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.22.0", when="@0.14.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.23.0:0.25", when="@0.15.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.26.0:", when="@0.16.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.28.0:", when="@0.17.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.29.0:", when="@0.18.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.30.0:", when="@0.19.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.31.0:", when="@0.19.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.38.0:", when="@0.21.0", type=("build", "run", "link"))
-    depends_on("flux-core@master", when="@master", type=("build", "run", "link"))
+    depends_on("flux-core+cuda", type=("build", "run", "link"), when="+cuda")
+    depends_on("flux-core@0.16.0:0.16", type=("build", "run", "link"), when="@0.8.0")
+    depends_on("flux-core@0.22.0", type=("build", "run", "link"), when="@0.14.0")
+    depends_on("flux-core@0.23.0:0.25", type=("build", "run", "link"), when="@0.15.0")
+    depends_on("flux-core@0.26.0:", type=("build", "run", "link"), when="@0.16.0")
+    depends_on("flux-core@0.28.0:", type=("build", "run", "link"), when="@0.17.0")
+    depends_on("flux-core@0.29.0:", type=("build", "run", "link"), when="@0.18.0")
+    depends_on("flux-core@0.30.0:", type=("build", "run", "link"), when="@0.19.0")
+    depends_on("flux-core@0.31.0:", type=("build", "run", "link"), when="@0.19.0")
+    depends_on("flux-core@0.38.0:", type=("build", "run", "link"), when="@0.21.0")
+    depends_on("flux-core@master", type=("build", "run", "link"), when="@master")
 
     # Need autotools when building on master:
-    depends_on("autoconf", when="@master", type="build")
-    depends_on("automake", when="@master", type="build")
-    depends_on("libtool", when="@master", type="build")
+    depends_on("autoconf", type="build", when="@master")
+    depends_on("automake", type="build", when="@master")
+    depends_on("libtool", type="build", when="@master")
 
     # Set default to cmake so master (and branches) use it
     build_system(

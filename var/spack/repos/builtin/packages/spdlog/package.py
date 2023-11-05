@@ -53,8 +53,8 @@ class Spdlog(CMakePackage):
         description="Build using external fmt libraries instead of bundled one",
     )
 
-    depends_on("cmake@3.2:", when="@:1.7.0", type="build")
-    depends_on("cmake@3.10:", when="@1.8.0:", type="build")
+    depends_on("cmake@3.2:", type="build", when="@:1.7.0")
+    depends_on("cmake@3.10:", type="build", when="@1.8.0:")
 
     depends_on("fmt@5.3:", when="+fmt_external")
     depends_on("fmt@7:", when="@1.7: +fmt_external")

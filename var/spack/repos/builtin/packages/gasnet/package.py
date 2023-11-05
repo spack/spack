@@ -80,8 +80,8 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
 
     depends_on("mpi", when="conduits=mpi")
 
-    depends_on("autoconf@2.69", when="@master:", type="build")
-    depends_on("automake@1.16:", when="@master:", type="build")
+    depends_on("autoconf@2.69", type="build", when="@master:")
+    depends_on("automake@1.16:", type="build", when="@master:")
 
     conflicts("^hip@:4.4.0", when="+rocm")
 

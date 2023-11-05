@@ -16,8 +16,8 @@ class PyPybtexDocutils(PythonPackage):
     version("0.2.1", sha256="e4b075641c1d68a3e98a6d73ad3d029293fcf9e0773512315ef9c8482f251337")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@3.6:", when="@1.0.0:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@1.0.0:")
     depends_on("py-setuptools", type="build")
     depends_on("py-docutils@0.8:", type=("build", "run"))
     depends_on("py-pybtex@0.16:", type=("build", "run"))
-    depends_on("py-six", when="@:0.2.2", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"), when="@:0.2.2")

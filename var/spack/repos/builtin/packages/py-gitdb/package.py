@@ -20,8 +20,8 @@ class PyGitdb(PythonPackage):
     version("4.0.5", sha256="c9e1f2d0db7ddb9a704c2a0217be31214e91a4fe1dea1efad19ae42ba0c285c9")
 
     depends_on("python@3.4:", type=("build", "run"))
-    depends_on("python@3.6:", when="@4.0.8:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@4.0.8:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-smmap@3.0.1:3", when="@:4.0.5", type=("build", "run"))
-    depends_on("py-smmap@3.0.1:4", when="@4.0.6:4.0.7", type=("build", "run"))
-    depends_on("py-smmap@3.0.1:5", when="@4.0.8:", type=("build", "run"))
+    depends_on("py-smmap@3.0.1:3", type=("build", "run"), when="@:4.0.5")
+    depends_on("py-smmap@3.0.1:4", type=("build", "run"), when="@4.0.6:4.0.7")
+    depends_on("py-smmap@3.0.1:5", type=("build", "run"), when="@4.0.8:")

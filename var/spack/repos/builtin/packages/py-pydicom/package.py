@@ -22,9 +22,9 @@ class PyPydicom(PythonPackage):
 
     variant("numpy", default=False, description="Use NumPy for Pixel data")
 
-    depends_on("py-flit-core@3.2:3", when="@2.4:", type="build")
+    depends_on("py-flit-core@3.2:3", type="build", when="@2.4:")
 
-    depends_on("py-numpy", when="+numpy", type="run")
+    depends_on("py-numpy", type="run", when="+numpy")
 
     # Historical dependencies
-    depends_on("py-setuptools", when="@:2.3", type=("build", "run"))
+    depends_on("py-setuptools", type=("build", "run"), when="@:2.3")

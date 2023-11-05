@@ -36,7 +36,7 @@ class NetcdfFortran(AutotoolsPackage):
 
     depends_on("netcdf-c")
     depends_on("netcdf-c@4.7.4:", when="@4.5.3:")  # nc_def_var_szip required
-    depends_on("doxygen", when="+doc", type="build")
+    depends_on("doxygen", type="build", when="+doc")
 
     # Enable 'make check' for NAG, which is too strict.
     patch("nag_testing.patch", when="@4.4.5%nag")

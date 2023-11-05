@@ -21,6 +21,6 @@ class RPool(RPackage):
     depends_on("r@3.0.0:", type=("build", "run"))
     depends_on("r-dbi", type=("build", "run"))
     depends_on("r-r6", type=("build", "run"))
-    depends_on("r-withr", when="@1.0.1:", type=("build", "run"))
-    depends_on("r-rlang@1.0.0:", when="@1.0.1:", type=("build", "run"))
+    depends_on("r-withr", type=("build", "run"), when="@1.0.1:")
+    depends_on("r-rlang@1.0.0:", type=("build", "run"), when="@1.0.1:")
     depends_on("r-later@1.0.0:", type=("build", "run"))

@@ -38,5 +38,5 @@ class RIrkernel(RPackage):
     depends_on("r-digest", type=("build", "run"))
     depends_on("py-jupyter-client", type="run")
 
-    depends_on("r-evaluate@0.5.4:", when="@0.7", type=("build", "run"))
-    depends_on("r-devtools", when="@0.7", type=("build", "run"))
+    depends_on("r-evaluate@0.5.4:", type=("build", "run"), when="@0.7")
+    depends_on("r-devtools", type=("build", "run"), when="@0.7")

@@ -35,12 +35,12 @@ class Cosmomc(Package):
 
     depends_on("mpi", when="+mpi")
     depends_on("planck-likelihood", when="+planck")
-    depends_on("py-matplotlib", when="+python", type=("build", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-pandas", when="+python", type=("build", "run"))
-    depends_on("py-scipy", when="+python", type=("build", "run"))
-    depends_on("py-six", when="+python", type=("build", "run"))
-    depends_on("python @2.7:2,3.4:", when="+python", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"), when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-pandas", type=("build", "run"), when="+python")
+    depends_on("py-scipy", type=("build", "run"), when="+python")
+    depends_on("py-six", type=("build", "run"), when="+python")
+    depends_on("python @2.7:2,3.4:", type=("build", "run"), when="+python")
 
     patch("Makefile.patch")
     patch("errorstop.patch")

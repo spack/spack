@@ -22,15 +22,15 @@ class PyGoogleAuth(PythonPackage):
     variant("aiohttp", default=False, when="@1.22.1:", description="Enables aiohttp support")
 
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-cachetools@2:5", when="@2.11:", type=("build", "run"))
-    depends_on("py-cachetools@2:4", when="@2.3", type=("build", "run"))
+    depends_on("py-cachetools@2:5", type=("build", "run"), when="@2.11:")
+    depends_on("py-cachetools@2:4", type=("build", "run"), when="@2.3")
     depends_on("py-cachetools@2:", type=("build", "run"))
     depends_on("py-pyasn1-modules@0.2.1:", type=("build", "run"))
-    depends_on("py-rsa@3.1.4:4", when="@2.3:", type=("build", "run"))
+    depends_on("py-rsa@3.1.4:4", type=("build", "run"), when="@2.3:")
     depends_on("py-rsa@3.1.4:", type=("build", "run"))
     depends_on("py-six@1.9:", type=("build", "run"))
-    depends_on("py-urllib3@:1", when="@2.18:", type=("build", "run"))
+    depends_on("py-urllib3@:1", type=("build", "run"), when="@2.18:")
 
     with when("+aiohttp"):
         depends_on("py-aiohttp@3.6.2:3", type=("build", "run"))
-        depends_on("py-requests@2.20:2", when="@1.30.2:", type=("build", "run"))
+        depends_on("py-requests@2.20:2", type=("build", "run"), when="@1.30.2:")

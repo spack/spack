@@ -103,7 +103,7 @@ class Fenics(CMakePackage):
         depends_on("py-fenics-ffc{0}".format(wver), type=("build", "run"), when=wver + "+python")
 
     # package dependencies
-    depends_on("python@3.5:", when="+python", type=("build", "run"))
+    depends_on("python@3.5:", type=("build", "run"), when="+python")
     depends_on("eigen@3.2.0:")
     depends_on("pkgconfig", type="build")
     depends_on("zlib-api", when="+zlib")
@@ -137,11 +137,11 @@ class Fenics(CMakePackage):
     depends_on("py-pybind11@2.2.4", type=("build", "run"))
     depends_on("cmake@3.17.3:", type="build")
 
-    depends_on("py-pip", when="+python", type="build")
-    depends_on("py-wheel", when="+python", type="build")
-    depends_on("py-setuptools", when="+python", type="build")
-    depends_on("py-pkgconfig", when="+python", type=("build", "run"))
-    depends_on("py-sphinx@1.0.1:", when="+doc", type="build")
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-wheel", type="build", when="+python")
+    depends_on("py-setuptools", type="build", when="+python")
+    depends_on("py-pkgconfig", type=("build", "run"), when="+python")
+    depends_on("py-sphinx@1.0.1:", type="build", when="+doc")
 
     def cmake_args(self):
         args = [

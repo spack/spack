@@ -28,33 +28,33 @@ class PyFiona(PythonPackage):
     version("1.8.18", sha256="b732ece0ff8886a29c439723a3e1fc382718804bb057519d537a81308854967a")
 
     # pyproject.toml
-    depends_on("python@:3.10", when="@1.8.21", type=("build", "link", "run"))
-    depends_on("python@:3.9", when="@:1.8.20", type=("build", "link", "run"))
+    depends_on("python@:3.10", type=("build", "link", "run"), when="@1.8.21")
+    depends_on("python@:3.9", type=("build", "link", "run"), when="@:1.8.20")
     depends_on("py-cython", type="build")
     # Overly strict version requirements
-    # depends_on("py-cython@3.0.2:3", when="@1.9.5:", type="build")
-    # depends_on("py-cython@0.29.29:0.29", when="@1.9.0:1.9.4", type="build")
-    depends_on("py-setuptools@67.8:", when="@1.9.5:", type="build")
-    depends_on("py-setuptools@61:", when="@1.9:", type="build")
-    depends_on("py-attrs@19.2:", when="@1.9:", type=("build", "run"))
+    # depends_on("py-cython@3.0.2:3", type="build", when="@1.9.5:")
+    # depends_on("py-cython@0.29.29:0.29", type="build", when="@1.9.0:1.9.4")
+    depends_on("py-setuptools@67.8:", type="build", when="@1.9.5:")
+    depends_on("py-setuptools@61:", type="build", when="@1.9:")
+    depends_on("py-attrs@19.2:", type=("build", "run"), when="@1.9:")
     depends_on("py-attrs@17:", type=("build", "run"))
     depends_on("py-certifi", type=("build", "run"))
-    depends_on("py-click@8", when="@1.9:", type=("build", "run"))
+    depends_on("py-click@8", type=("build", "run"), when="@1.9:")
     depends_on("py-click@4:", type=("build", "run"))
     depends_on("py-click-plugins@1:", type=("build", "run"))
     depends_on("py-cligj@0.5:", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="@1.9.2: ^python@:3.9", type=("build", "run"))
-    depends_on("py-six", when="@1.9.4:", type=("build", "run"))
-    depends_on("py-six@1.7:", when="@:1.8", type=("build", "run"))
-    depends_on("py-setuptools", when="@:1.9.1,1.9.5:", type="run")
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@1.9.2: ^python@:3.9")
+    depends_on("py-six", type=("build", "run"), when="@1.9.4:")
+    depends_on("py-six@1.7:", type=("build", "run"), when="@:1.8")
+    depends_on("py-setuptools", type="run", when="@:1.9.1,1.9.5:")
 
     # setup.py or release notes
-    depends_on("gdal@3.1:", when="@1.9:", type=("build", "link", "run"))
+    depends_on("gdal@3.1:", type=("build", "link", "run"), when="@1.9:")
     depends_on("gdal@1.8:", type=("build", "link", "run"))
 
     # Historical dependencies
-    depends_on("py-munch@2.3.2:", when="@1.9.0:1.9.3", type=("build", "run"))
-    depends_on("py-munch", when="@:1.8", type=("build", "run"))
+    depends_on("py-munch@2.3.2:", type=("build", "run"), when="@1.9.0:1.9.3")
+    depends_on("py-munch", type=("build", "run"), when="@:1.8")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/{0}/{0}iona/{0}iona-{1}.tar.gz"

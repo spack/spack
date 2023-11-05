@@ -24,5 +24,5 @@ class PyPymongo(PythonPackage):
     version("3.3.0", sha256="3d45302fc2622fabf34356ba274c69df41285bac71bbd229f1587283b851b91e")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@3.7:", when="@4.2.0:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@4.2.0:")
     depends_on("py-setuptools", type="build")

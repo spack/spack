@@ -21,16 +21,16 @@ class PyPythonGitlab(PythonPackage):
     version("0.17", sha256="f79337cd8b2343195b7ac0909e0483624d4235cca78fc76196a0ee4e109c9a70")
     version("0.16", sha256="2c50dc0bd3ed7c6b1edb6e556b0f0109493ae9dfa46e3bffcf3e5e67228d7d53")
 
-    depends_on("python@3.7:", when="@3:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@3:")
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-requests@2.25:", when="@2.10.1:", type=("build", "run"))
-    depends_on("py-requests@2.22:", when="@2:", type=("build", "run"))
-    depends_on("py-requests@2.4.2:", when="@1.4:", type=("build", "run"))
+    depends_on("py-requests@2.25:", type=("build", "run"), when="@2.10.1:")
+    depends_on("py-requests@2.22:", type=("build", "run"), when="@2:")
+    depends_on("py-requests@2.4.2:", type=("build", "run"), when="@1.4:")
     depends_on("py-requests@1:", type=("build", "run"))
-    depends_on("py-requests-toolbelt@0.10.1:", when="@3.13:", type=("build", "run"))
-    depends_on("py-requests-toolbelt@0.9.1:", when="@2.6:", type=("build", "run"))
-    depends_on("py-typing-extensions@4:", when="@3.14: ^python@:3.7", type=("build", "run"))
+    depends_on("py-requests-toolbelt@0.10.1:", type=("build", "run"), when="@3.13:")
+    depends_on("py-requests-toolbelt@0.9.1:", type=("build", "run"), when="@2.6:")
+    depends_on("py-typing-extensions@4:", type=("build", "run"), when="@3.14: ^python@:3.7")
 
     # Historical dependencies
-    depends_on("py-six", when="@:1", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"), when="@:1")

@@ -57,8 +57,8 @@ class LuaImplPackage(MakefilePackage):
 
     # luarocks needs a fetcher (curl/wget), unfortunately I have not found
     # how to force a choice for curl or wget, but curl seems the default.
-    depends_on("curl", when="fetcher=curl", type="run")
-    depends_on("wget", when="fetcher=wget", type="run")
+    depends_on("curl", type="run", when="fetcher=curl")
+    depends_on("wget", type="run", when="fetcher=wget")
 
     resource(
         name="luarocks",

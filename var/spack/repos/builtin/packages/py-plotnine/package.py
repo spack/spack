@@ -21,37 +21,37 @@ class PyPlotnine(PythonPackage):
     version("0.7.0", sha256="8ee67cbf010ccea32670760e930b7b02177030a89ccdf85e35d156a96ce36cd3")
     version("0.6.0", sha256="aae2c8164abb209ef4f28cab01132d23f6879fcf8d492657487359e1241459e5")
 
-    depends_on("python@3.8:", when="@0.9.0:", type=("build", "run"))
-    depends_on("python@3.6:", when="@0.6.0:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@0.9.0:")
+    depends_on("python@3.6:", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("py-setuptools@59:", when="@0.9.0:", type="build")
-    depends_on("py-setuptools", when="@0.6.0:", type="build")
+    depends_on("py-setuptools@59:", type="build", when="@0.9.0:")
+    depends_on("py-setuptools", type="build", when="@0.6.0:")
 
-    depends_on("py-setuptools-scm@6.4:+toml", when="@0.9.0:", type="build")
+    depends_on("py-setuptools-scm@6.4:+toml", type="build", when="@0.9.0:")
 
-    depends_on("py-descartes@1.1.0:", when="@:0.8.0", type=("build", "run"))
+    depends_on("py-descartes@1.1.0:", type=("build", "run"), when="@:0.8.0")
 
-    depends_on("py-matplotlib@3.5.0:", when="@0.9.0:", type=("build", "run"))
-    depends_on("py-matplotlib@3.1.1:", when="@0.6.0:", type=("build", "run"))
+    depends_on("py-matplotlib@3.5.0:", type=("build", "run"), when="@0.9.0:")
+    depends_on("py-matplotlib@3.1.1:", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("py-mizani@0.7.3:", when="@0.8.0:", type=("build", "run"))
-    depends_on("py-mizani@0.6.0:", when="@0.6.0:", type=("build", "run"))
+    depends_on("py-mizani@0.7.3:", type=("build", "run"), when="@0.8.0:")
+    depends_on("py-mizani@0.6.0:", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("py-numpy@1.19.0:", when="@0.8.0:", type=("build", "run"))
-    depends_on("py-numpy@1.16.0:", when="@0.6.0:", type=("build", "run"))
+    depends_on("py-numpy@1.19.0:", type=("build", "run"), when="@0.8.0:")
+    depends_on("py-numpy@1.16.0:", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("py-pandas@1.3.5:", when="@0.9.0:", type=("build", "run"))
-    depends_on("py-pandas@1.1.0:", when="@0.7.1:", type=("build", "run"))
-    depends_on("py-pandas@1.0.3:", when="@0.7.0:", type=("build", "run"))
-    depends_on("py-pandas@0.25.0:", when="@0.6.0:", type=("build", "run"))
+    depends_on("py-pandas@1.3.5:", type=("build", "run"), when="@0.9.0:")
+    depends_on("py-pandas@1.1.0:", type=("build", "run"), when="@0.7.1:")
+    depends_on("py-pandas@1.0.3:", type=("build", "run"), when="@0.7.0:")
+    depends_on("py-pandas@0.25.0:", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("py-patsy@0.5.1:", when="@0.7.0:", type=("build", "run"))
-    depends_on("py-patsy@0.4.1:", when="@0.6.0:", type=("build", "run"))
+    depends_on("py-patsy@0.5.1:", type=("build", "run"), when="@0.7.0:")
+    depends_on("py-patsy@0.4.1:", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("py-scipy@1.5.0:", when="@0.8.0:", type=("build", "run"))
-    depends_on("py-scipy@1.2.0:", when="@0.6.0:", type=("build", "run"))
+    depends_on("py-scipy@1.5.0:", type=("build", "run"), when="@0.8.0:")
+    depends_on("py-scipy@1.2.0:", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("py-statsmodels@0.13.2:", when="@0.9.0:", type=("build", "run"))
-    depends_on("py-statsmodels@0.12.1:", when="@0.8.0:", type=("build", "run"))
-    depends_on("py-statsmodels@0.11.1:", when="@0.7.0:", type=("build", "run"))
-    depends_on("py-statsmodels@0.9.0:", when="@0.6.0:", type=("build", "run"))
+    depends_on("py-statsmodels@0.13.2:", type=("build", "run"), when="@0.9.0:")
+    depends_on("py-statsmodels@0.12.1:", type=("build", "run"), when="@0.8.0:")
+    depends_on("py-statsmodels@0.11.1:", type=("build", "run"), when="@0.7.0:")
+    depends_on("py-statsmodels@0.9.0:", type=("build", "run"), when="@0.6.0:")

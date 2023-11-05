@@ -24,5 +24,5 @@ class PyBabel(PythonPackage):
     version("2.3.4", sha256="c535c4403802f6eb38173cd4863e419e2274921a01a8aad8a5b497c131c62875")
 
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-pytz@2015.7:", when="@2.12: ^python@:3.8", type=("build", "run"))
-    depends_on("py-pytz@2015.7:", when="@:2.10", type=("build", "run"))
+    depends_on("py-pytz@2015.7:", type=("build", "run"), when="@2.12: ^python@:3.8")
+    depends_on("py-pytz@2015.7:", type=("build", "run"), when="@:2.10")

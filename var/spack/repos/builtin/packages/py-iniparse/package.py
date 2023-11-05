@@ -15,6 +15,6 @@ class PyIniparse(PythonPackage):
 
     version("master", branch="master")
 
-    depends_on("python@2.6:2.8,3.3:", when="@master:", type=("build", "run"))
+    depends_on("python@2.6:2.8,3.3:", type=("build", "run"), when="@master:")
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")

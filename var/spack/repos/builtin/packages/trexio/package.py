@@ -23,8 +23,8 @@ class Trexio(AutotoolsPackage):
 
     variant("hdf5", default=True, description="Enable HDF5 support")
 
-    depends_on("emacs@26.0:", when="@master", type="build")
-    depends_on("python@3.6:", when="@master", type="build")
+    depends_on("emacs@26.0:", type="build", when="@master")
+    depends_on("python@3.6:", type="build", when="@master")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

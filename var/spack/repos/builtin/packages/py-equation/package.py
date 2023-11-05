@@ -19,5 +19,5 @@ class PyEquation(PythonPackage):
 
     depends_on("py-setuptools", type=("build", "run"))
 
-    depends_on("py-numpy", when="+vectormaths", type=("build", "run"))
-    depends_on("py-scipy@0.12.0:", when="+sciconst", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"), when="+vectormaths")
+    depends_on("py-scipy@0.12.0:", type=("build", "run"), when="+sciconst")

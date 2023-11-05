@@ -22,5 +22,5 @@ class PySphinxThemeBuilder(PythonPackage):
     depends_on("py-rich", type=("build", "run"))
     depends_on("py-nodeenv", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-tomli", when="^python@:3.10", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-tomli", type=("build", "run"), when="^python@:3.10")
+    depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")

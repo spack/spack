@@ -55,17 +55,17 @@ class CbtfArgonavis(CMakePackage):
     depends_on(Boost.with_default_variants)
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+lwthreads", when="@develop", type=("build", "link", "run"))
-    depends_on("mrnet@5.0.1-3+lwthreads", when="@1.9.3:9999", type=("build", "link", "run"))
+    depends_on("mrnet@5.0.1-3:+lwthreads", type=("build", "link", "run"), when="@develop")
+    depends_on("mrnet@5.0.1-3+lwthreads", type=("build", "link", "run"), when="@1.9.3:9999")
 
     # For CBTF
-    depends_on("cbtf@develop", when="@develop", type=("build", "link", "run"))
-    depends_on("cbtf@1.9.3:9999", when="@1.9.3:9999", type=("build", "link", "run"))
+    depends_on("cbtf@develop", type=("build", "link", "run"), when="@develop")
+    depends_on("cbtf@1.9.3:9999", type=("build", "link", "run"), when="@1.9.3:9999")
 
     # For CBTF with runtime
-    depends_on("cbtf@develop+runtime", when="@develop+runtime", type=("build", "link", "run"))
+    depends_on("cbtf@develop+runtime", type=("build", "link", "run"), when="@develop+runtime")
     depends_on(
-        "cbtf@1.9.3:9999+runtime", when="@1.9.3:9999+runtime", type=("build", "link", "run")
+        "cbtf@1.9.3:9999+runtime", type=("build", "link", "run"), when="@1.9.3:9999+runtime"
     )
 
     # For libmonitor
@@ -75,14 +75,14 @@ class CbtfArgonavis(CMakePackage):
     depends_on("papi@5.4.1:", type=("build", "link", "run"))
 
     # For CBTF-KRELL
-    depends_on("cbtf-krell@develop", when="@develop", type=("build", "link", "run"))
-    depends_on("cbtf-krell@1.9.3:9999", when="@1.9.3:9999", type=("build", "link", "run"))
+    depends_on("cbtf-krell@develop", type=("build", "link", "run"), when="@develop")
+    depends_on("cbtf-krell@1.9.3:9999", type=("build", "link", "run"), when="@1.9.3:9999")
 
     depends_on(
-        "cbtf-krell@develop+runtime", when="@develop+runtime", type=("build", "link", "run")
+        "cbtf-krell@develop+runtime", type=("build", "link", "run"), when="@develop+runtime"
     )
     depends_on(
-        "cbtf-krell@1.9.3:9999+runtime", when="@1.9.3:9999+runtime", type=("build", "link", "run")
+        "cbtf-krell@1.9.3:9999+runtime", type=("build", "link", "run"), when="@1.9.3:9999+runtime"
     )
 
     # For CUDA

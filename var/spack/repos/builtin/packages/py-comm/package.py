@@ -17,5 +17,5 @@ class PyComm(PythonPackage):
 
     depends_on("py-hatchling@1.10:", type="build")
 
-    depends_on("py-traitlets@4:", when="@0.1.4:", type=("build", "run"))
-    depends_on("py-traitlets@5.3:", when="@0.1.3", type=("build", "run"))
+    depends_on("py-traitlets@4:", type=("build", "run"), when="@0.1.4:")
+    depends_on("py-traitlets@5.3:", type=("build", "run"), when="@0.1.3")

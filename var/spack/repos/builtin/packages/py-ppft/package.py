@@ -19,12 +19,12 @@ class PyPpft(PythonPackage):
     version("1.6.4.5", sha256="d47da9d2e553848b75727ce7c510f9e149965d5c68f9fc56c774a7c6a3d18214")
 
     depends_on("python@2.5:2.8,3.1:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.6:", when="@1.6.6.4:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.6:", type=("build", "run"), when="@1.6.6.4:")
 
     depends_on("py-setuptools@0.6:", type="build")
     depends_on("py-six@1.7.3:", type=("build", "run"))
     depends_on("py-dill@0.2.6:", type=("build", "run"))
-    depends_on("py-dill@0.3.4:", when="@1.6.6.4:", type=("build", "run"))
+    depends_on("py-dill@0.3.4:", type=("build", "run"), when="@1.6.6.4:")
 
     def url_for_version(self, version):
         url = "https://pypi.io/packages/source/p/ppft/"

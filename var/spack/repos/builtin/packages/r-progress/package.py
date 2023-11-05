@@ -22,5 +22,5 @@ class RProgress(RPackage):
 
     depends_on("r-r6", type=("build", "run"))
     depends_on("r-prettyunits", type=("build", "run"))
-    depends_on("r-hms", when="@1.2.0:", type=("build", "run"))
-    depends_on("r-crayon", when="@1.2.0:", type=("build", "run"))
+    depends_on("r-hms", type=("build", "run"), when="@1.2.0:")
+    depends_on("r-crayon", type=("build", "run"), when="@1.2.0:")

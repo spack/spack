@@ -24,10 +24,10 @@ class Flatbuffers(CMakePackage):
     variant("python", default=False, description="Build with python support")
 
     extends("python", when="+python")
-    depends_on("python@3.6:", when="+python", type=("build", "run"))
-    depends_on("py-pip", when="+python", type="build")
-    depends_on("py-wheel", when="+python", type="build")
-    depends_on("py-setuptools", when="+python", type="build")
+    depends_on("python@3.6:", type=("build", "run"), when="+python")
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-wheel", type="build", when="+python")
+    depends_on("py-setuptools", type="build", when="+python")
 
     # Fixes "Class-memaccess" compilation error in test
     # https://github.com/google/flatbuffers/issues/5930

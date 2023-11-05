@@ -18,8 +18,8 @@ class PyPintXarray(PythonPackage):
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools-scm@3.4:+toml", type="build")
 
-    depends_on("python@3.8:", when="@0.3:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@0.3:")
     depends_on("py-numpy@1.17:", type=("build", "run"))
     depends_on("py-xarray@0.16.1:", type=("build", "run"))
     depends_on("py-pint@0.16:", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="@0.2.1 ^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@0.2.1 ^python@:3.7")

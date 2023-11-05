@@ -21,7 +21,7 @@ class PyDmHaiku(PythonPackage):
     depends_on("py-jmp@0.0.2:", type=("build", "run"))
     depends_on("py-numpy@1.18.0:", type=("build", "run"))
     depends_on("py-tabulate@0.8.9:", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")
     # from README.md:
     # Because JAX installation is different depending on your CUDA version, Haiku does
     # not list JAX as a dependency in `requirements.txt`.

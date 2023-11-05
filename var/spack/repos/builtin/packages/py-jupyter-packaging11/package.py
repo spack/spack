@@ -35,10 +35,10 @@ class PyJupyterPackaging11(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-tomlkit", type=("build", "run"))
-    depends_on("py-hatchling@0.25:", when="@0.12.3:", type="build")
-    depends_on("py-setuptools@60.2:", when="@0.12:", type=("build", "run"))
+    depends_on("py-hatchling@0.25:", type="build", when="@0.12.3:")
+    depends_on("py-setuptools@60.2:", type=("build", "run"), when="@0.12:")
     depends_on("py-setuptools@46.4:", type=("build", "run"))
     # https://github.com/jupyter/jupyter-packaging/issues/130
-    depends_on("py-setuptools@:60", when="@:0.11", type=("build", "run"))
+    depends_on("py-setuptools@:60", type=("build", "run"), when="@:0.11")
     depends_on("py-wheel", type=("build", "run"))
     depends_on("py-deprecation", type=("build", "run"))

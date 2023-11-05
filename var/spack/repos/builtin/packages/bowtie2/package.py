@@ -30,8 +30,8 @@ class Bowtie2(MakefilePackage):
     depends_on("perl", type="run")
     depends_on("python", type="run")
     depends_on("zlib-api", when="@2.3.1:")
-    depends_on("simde", when="@2.4.0: target=aarch64:", type="link")
-    depends_on("simde", when="@2.4.0: target=ppc64le:", type="link")
+    depends_on("simde", type="link", when="@2.4.0: target=aarch64:")
+    depends_on("simde", type="link", when="@2.4.0: target=ppc64le:")
 
     patch("bowtie2-2.2.5.patch", when="@2.2.5", level=0)
     patch("bowtie2-2.3.1.patch", when="@2.3.1", level=0)

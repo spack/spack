@@ -63,9 +63,9 @@ clang: error: unknown argument: '-static-libubsan'
     depends_on("mpi", when="+mpi")
     depends_on("boost+exception+chrono+system+atomic+thread", when="+boost")
 
-    depends_on("autoconf", when="@develop", type="build")
-    depends_on("automake", when="@develop", type="build")
-    depends_on("libtool", when="@develop", type="build")
+    depends_on("autoconf", type="build", when="@develop")
+    depends_on("automake", type="build", when="@develop")
+    depends_on("libtool", type="build", when="@develop")
 
     # Apply the patch suggested here:
     # http://valgrind.10908.n7.nabble.com/Unable-to-compile-on-Mac-OS-X-10-11-td57237.html

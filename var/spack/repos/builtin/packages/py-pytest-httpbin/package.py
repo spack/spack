@@ -17,7 +17,7 @@ class PyPytestHttpbin(PythonPackage):
     version("0.0.7", sha256="03af8a7055c8bbcb68b14d9a14c103c82c97aeb86a8f1b29cd63d83644c2f021")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-flask", when="@:0.2", type=("build", "run"))
-    depends_on("py-decorator", when="@:0.2", type=("build", "run"))
+    depends_on("py-flask", type=("build", "run"), when="@:0.2")
+    depends_on("py-decorator", type=("build", "run"), when="@:0.2")
     depends_on("py-httpbin", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))

@@ -33,5 +33,5 @@ class RGeiger(RPackage):
     depends_on("r-coda", type=("build", "run"))
     depends_on("r-ncbit", type=("build", "run"))
     depends_on("r-colorspace", type=("build", "run"))
-    depends_on("r-phytools@0.7.31:", when="@2.0.7:", type=("build", "run"))
-    depends_on("r-phytools@1.5-1:", when="@2.0.11:", type=("build", "run"))
+    depends_on("r-phytools@0.7.31:", type=("build", "run"), when="@2.0.7:")
+    depends_on("r-phytools@1.5-1:", type=("build", "run"), when="@2.0.11:")

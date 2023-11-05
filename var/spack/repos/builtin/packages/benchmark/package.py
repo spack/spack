@@ -43,9 +43,9 @@ class Benchmark(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel", "Coverage"),
     )
 
-    depends_on("cmake@2.8.11:", when="@:1.1.0", type="build")
-    depends_on("cmake@2.8.12:", when="@1.2.0:1.4", type="build")
-    depends_on("cmake@3.5.1:", when="@1.5.0:", type="build")
+    depends_on("cmake@2.8.11:", type="build", when="@:1.1.0")
+    depends_on("cmake@2.8.12:", type="build", when="@1.2.0:1.4")
+    depends_on("cmake@3.5.1:", type="build", when="@1.5.0:")
 
     def cmake_args(self):
         # No need for testing for the install

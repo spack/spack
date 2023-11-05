@@ -51,29 +51,29 @@ class AwsParallelcluster(PythonPackage):
     version("2.5.1", sha256="4fd6e14583f8cf81f9e4aa1d6188e3708d3d14e6ae252de0a94caaf58be76303")
     version("2.5.0", sha256="3b0209342ea0d9d8cc95505456103ad87c2d4e35771aa838765918194efd0ad3")
 
-    depends_on("python@3.6:", when="@2.11:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@:2.10", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@2.11:")
+    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:2.10")
 
-    depends_on("py-future@0.16.0:0.18.2", when="@:2.10", type=("build", "run"))
+    depends_on("py-future@0.16.0:0.18.2", type=("build", "run"), when="@:2.10")
 
     depends_on("py-ipaddress@1.0.22:", type=("build", "run"))
 
-    depends_on("py-tabulate@0.8.3:0.8.10", when="@2.11: ^python@:3.9", type=("build", "run"))
-    depends_on("py-tabulate@0.8.8:0.8.10", when="@2.11: ^python@3.10:", type=("build", "run"))
-    depends_on("py-tabulate@0.8.2:0.8.3", when="@:2.8", type=("build", "run"))
-    depends_on("py-tabulate@0.8.2:0.8.7", when="@2.9:", type=("build", "run"))
+    depends_on("py-tabulate@0.8.3:0.8.10", type=("build", "run"), when="@2.11: ^python@:3.9")
+    depends_on("py-tabulate@0.8.8:0.8.10", type=("build", "run"), when="@2.11: ^python@3.10:")
+    depends_on("py-tabulate@0.8.2:0.8.3", type=("build", "run"), when="@:2.8")
+    depends_on("py-tabulate@0.8.2:0.8.7", type=("build", "run"), when="@2.9:")
 
-    depends_on("py-pyyaml@5.3.1:", when="@2.9:", type=("build", "run"))
-    depends_on("py-pyyaml@5.2", when="@2.6:2.10", type=("build", "run"))
-    depends_on("py-pyyaml@5.1.2:", when="@:2.8", type=("build", "run"))
+    depends_on("py-pyyaml@5.3.1:", type=("build", "run"), when="@2.9:")
+    depends_on("py-pyyaml@5.2", type=("build", "run"), when="@2.6:2.10")
+    depends_on("py-pyyaml@5.1.2:", type=("build", "run"), when="@:2.8")
 
-    depends_on("py-jinja2@2.11.3:", when="@2.11:", type=("build", "run"))
-    depends_on("py-jinja2@2.11.0:", when="@2.9:", type=("build", "run"))
+    depends_on("py-jinja2@2.11.3:", type=("build", "run"), when="@2.11:")
+    depends_on("py-jinja2@2.11.0:", type=("build", "run"), when="@2.9:")
 
-    depends_on("py-boto3@1.17.27:", when="@2.11:", type=("build", "run"))
-    depends_on("py-boto3@1.16.14:", when="@2.10:", type=("build", "run"))
-    depends_on("py-boto3@1.14.3:", when="@2.8:2.9", type=("build", "run"))
-    depends_on("py-boto3@1.10.15:", when="@:2.7", type=("build", "run"))
+    depends_on("py-boto3@1.17.27:", type=("build", "run"), when="@2.11:")
+    depends_on("py-boto3@1.16.14:", type=("build", "run"), when="@2.10:")
+    depends_on("py-boto3@1.14.3:", type=("build", "run"), when="@2.8:2.9")
+    depends_on("py-boto3@1.10.15:", type=("build", "run"), when="@:2.7")
 
     depends_on("py-setuptools", type=("build", "run"))
 

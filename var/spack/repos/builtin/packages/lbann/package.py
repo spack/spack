@@ -189,7 +189,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+lld", when="platform=darwin", msg="lld does not work on Darwin")
 
     depends_on("cmake@3.17.0:", type="build")
-    depends_on("cmake@3.21.0:", when="@0.103:", type="build")
+    depends_on("cmake@3.21.0:", type="build", when="@0.103:")
 
     # Specify the correct versions of Hydrogen
     depends_on("hydrogen@:1.3.4", when="@0.95:0.100")
@@ -304,14 +304,14 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     # and 2) to drive the front end model creation and launch
 
     # Core library support for Python Data Reader and extensible interface
-    depends_on("python@3: +shared", when="@:0.90,0.99: +python", type=("run"))
+    depends_on("python@3: +shared", type=("run"), when="@:0.90,0.99: +python")
     extends("python", when="+python")
 
     # Python front end and possible extra packages
-    depends_on("python@3: +shared", when="@:0.90,0.99: +pfe", type=("build", "run"))
+    depends_on("python@3: +shared", type=("build", "run"), when="@:0.90,0.99: +pfe")
     extends("python", when="+pfe")
-    depends_on("py-setuptools", when="+pfe", type="build")
-    depends_on("py-protobuf+cpp@3.10.0:", when="@:0.90,0.99: +pfe", type=("build", "run"))
+    depends_on("py-setuptools", type="build", when="+pfe")
+    depends_on("py-protobuf+cpp@3.10.0:", type=("build", "run"), when="@:0.90,0.99: +pfe")
 
     depends_on("protobuf+shared@3.10.0:", when="@:0.90,0.99:")
     depends_on("zlib-api", when="protobuf@3.11.0:")
@@ -319,7 +319,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     # using cereal@1.3.1 and above requires changing the
     # find_package call to lowercase, so stick with :1.3.0
     depends_on("cereal@:1.3.0")
-    depends_on("catch2@2.9.0:2.99.999", when="+unit_tests", type=("build", "test"))
+    depends_on("catch2@2.9.0:2.99.999", type=("build", "test"), when="+unit_tests")
     depends_on("clara")
 
     depends_on("llvm-openmp", when="%apple-clang")

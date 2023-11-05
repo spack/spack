@@ -22,6 +22,6 @@ class PyPyedr(PythonPackage):
     depends_on("py-numpy@1.19.0:", type=("build", "run"))
     depends_on("py-pbr", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
-    depends_on("py-mda-xdrlib", when="@0.7.2:", type=("build", "run"))
+    depends_on("py-mda-xdrlib", type=("build", "run"), when="@0.7.2:")
 
     depends_on("py-setuptools", type="build")

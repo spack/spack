@@ -28,17 +28,17 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
 
     variant("all", default=False, description="Enable optional py-scipy, optuna, and cython")
 
-    depends_on("python@3.7:", when="@:11", type=("build", "run"))
-    depends_on("python@3.8:", when="@12:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@:11")
+    depends_on("python@3.8:", type=("build", "run"), when="@12:")
     depends_on("py-setuptools", type="build")
     depends_on("py-cython@0.29.22:2", type="build")
     depends_on("py-fastrlock@0.5:", type=("build", "run"))
-    depends_on("py-numpy@1.20:1.25", when="@:11", type=("build", "run"))
-    depends_on("py-numpy@1.20:1.26", when="@12:", type=("build", "run"))
+    depends_on("py-numpy@1.20:1.25", type=("build", "run"), when="@:11")
+    depends_on("py-numpy@1.20:1.26", type=("build", "run"), when="@12:")
 
-    depends_on("py-scipy@1.6:1.12", when="+all", type=("build", "run"))
-    depends_on("py-cython@0.29.22:2", when="+all", type=("build", "run"))
-    depends_on("py-optuna@2:", when="+all", type=("build", "run"))
+    depends_on("py-scipy@1.6:1.12", type=("build", "run"), when="+all")
+    depends_on("py-cython@0.29.22:2", type=("build", "run"), when="+all")
+    depends_on("py-optuna@2:", type=("build", "run"), when="+all")
 
     # Based on https://github.com/cupy/cupy/releases
     depends_on("cuda@:11.9", when="@:11 +cuda")
@@ -63,9 +63,9 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("hipsparse {0}".format(rocm_str), when=rocm_str, type=("link"))
         depends_on("hipfft {0}".format(rocm_str), when=rocm_str, type=("link"))
 
-    depends_on("rccl", when="+rocm", type=("link"))
-    depends_on("roctracer-dev", when="+rocm", type=("link"))
-    depends_on("rocprofiler-dev", when="+rocm", type=("link"))
+    depends_on("rccl", type=("link"), when="+rocm")
+    depends_on("roctracer-dev", type=("link"), when="+rocm")
+    depends_on("rocprofiler-dev", type=("link"), when="+rocm")
 
     conflicts("~cuda ~rocm")
     conflicts("+cuda +rocm")

@@ -18,7 +18,7 @@ class PyAvro(PythonPackage):
     version("1.8.2", sha256="8f9ee40830b70b5fb52a419711c9c4ad0336443a6fba7335060805f961b04b59")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@40.8.0:", when="@1.11.1:", type="build")
+    depends_on("py-setuptools@40.8.0:", type="build", when="@1.11.1:")
     depends_on("python@2.7:", type=("build", "run"))
-    depends_on("python@3.6:", when="@1.11.1:", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@1.11.1:")
+    depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")

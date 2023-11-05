@@ -59,7 +59,7 @@ class Unifyfs(AutotoolsPackage):
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
-    depends_on("automake@1.15:", when="@0.9.2:", type="build")
+    depends_on("automake@1.15:", type="build", when="@0.9.2:")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
     depends_on("pkgconfig", type="build")

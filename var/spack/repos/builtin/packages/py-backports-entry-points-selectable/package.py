@@ -18,8 +18,8 @@ class PyBackportsEntryPointsSelectable(PythonPackage):
     version("1.1.0", sha256="988468260ec1c196dab6ae1149260e2f5472c9110334e5d51adcb77867361f6a")
 
     depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-setuptools@56:", when="@1.1.1: ^python@3.6:", type="build")
+    depends_on("py-setuptools@56:", type="build", when="@1.1.1: ^python@3.6:")
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools-scm+toml@3.4.1:", type="build")
 
-    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")

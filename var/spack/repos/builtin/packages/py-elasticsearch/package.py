@@ -22,11 +22,11 @@ class PyElasticsearch(PythonPackage):
     variant("async", when="@8.6.2:", default=False, description="Include support for asyncio")
 
     depends_on("py-setuptools", type="build")
-    depends_on("python@3.7:3", when="@7.6.0:", type=("build", "run"))
-    depends_on("py-urllib3@1.8:1", when="@:5.2.0", type=("build", "run"))
-    depends_on("py-urllib3@1.21.1:", when="@6:7", type=("build", "run"))
-    depends_on("py-elastic-transport@8.0:8", when="@8.6.2:", type=("build", "run"))
-    depends_on("py-aiohttp@3.0:3", when="+async", type=("build", "run"))
+    depends_on("python@3.7:3", type=("build", "run"), when="@7.6.0:")
+    depends_on("py-urllib3@1.8:1", type=("build", "run"), when="@:5.2.0")
+    depends_on("py-urllib3@1.21.1:", type=("build", "run"), when="@6:7")
+    depends_on("py-elastic-transport@8.0:8", type=("build", "run"), when="@8.6.2:")
+    depends_on("py-aiohttp@3.0:3", type=("build", "run"), when="+async")
 
     # tests_require
     # depends_on('py-requests@1.0.0:2.9', type=('build', 'run'))

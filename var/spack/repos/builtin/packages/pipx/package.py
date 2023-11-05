@@ -19,7 +19,7 @@ class Pipx(PythonPackage):
     depends_on("py-hatchling@0.15.0:", type="build")
 
     depends_on("py-argcomplete@1.9.4:", type=("build", "run"))
-    depends_on("py-colorama@0.4.4:", when="platform=windows", type=("build", "run"))
-    depends_on("py-importlib-metadata@3.3.0:", when="^python@3.7", type=("build", "run"))
+    depends_on("py-colorama@0.4.4:", type=("build", "run"), when="platform=windows")
+    depends_on("py-importlib-metadata@3.3.0:", type=("build", "run"), when="^python@3.7")
     depends_on("py-packaging@20.0:", type=("build", "run"))
     depends_on("py-userpath@1.6.0:", type=("build", "run"))

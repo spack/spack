@@ -31,10 +31,10 @@ class SlurmDrmaa(AutotoolsPackage):
         when="@main",
     )
 
-    depends_on("autoconf", when="@main", type="build")
-    depends_on("automake", when="@main", type="build")
-    depends_on("libtool", when="@main", type="build")
-    depends_on("bison", when="@main", type="build")
+    depends_on("autoconf", type="build", when="@main")
+    depends_on("automake", type="build", when="@main")
+    depends_on("libtool", type="build", when="@main")
+    depends_on("bison", type="build", when="@main")
 
     depends_on("slurm")
     depends_on("slurm@:20-11-8-1", when="@1.1.2")

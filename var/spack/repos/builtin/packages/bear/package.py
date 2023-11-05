@@ -29,7 +29,7 @@ class Bear(CMakePackage):
     depends_on("spdlog +fmt_external", when="@3.0.0:")
     depends_on("cmake@2.8:", type="build")
     depends_on("python", type="build")
-    depends_on("googletest", when="@3:", type="test")
+    depends_on("googletest", type="test", when="@3:")
 
     patch("rpath-handling-3.0.20.patch", when="@3.0.20:")
 

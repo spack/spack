@@ -19,5 +19,5 @@ class RBibtex(RPackage):
     version("0.4.2", sha256="1f06ab3660c940405230ad16ff6e4ba38d4418a59cd9b16d78a4349f8b488372")
 
     depends_on("r@3.0.2:", type=("build", "run"))
-    depends_on("r-backports@1.4.0:", when="@0.5.0:", type=("build", "run"))
-    depends_on("r-stringr", when="@:0.4.2.3", type=("build", "run"))
+    depends_on("r-backports@1.4.0:", type=("build", "run"), when="@0.5.0:")
+    depends_on("r-stringr", type=("build", "run"), when="@:0.4.2.3")

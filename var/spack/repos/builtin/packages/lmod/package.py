@@ -56,7 +56,7 @@ class Lmod(AutotoolsPackage):
     depends_on("lua-luafilesystem", type=("build", "run"))
     depends_on("tcl", type=("build", "link", "run"))
 
-    depends_on("bc", when="@8.7.10:", type="build")
+    depends_on("bc", type="build", when="@8.7.10:")
 
     variant("auto_swap", default=True, description="Auto swapping of compilers, etc.")
     variant(

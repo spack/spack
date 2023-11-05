@@ -20,12 +20,12 @@ class RQqconf(RPackage):
     version("1.2.3", sha256="9b5b6042ea8e52e6e049807c0b5e3bfd534b624bd257be769de69cf505fece62")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@4.0.0:", when="@1.3.0:", type=("build", "run"))
+    depends_on("r@4.0.0:", type=("build", "run"), when="@1.3.0:")
     depends_on("r-mass@7.3-50:", type=("build", "run"))
     depends_on("r-robustbase@0.93-4:", type=("build", "run"))
     depends_on("r-rcpp", type=("build", "run"))
     depends_on("fftw@3.1.2:")
 
-    depends_on("r-dplyr@1.0.0:", when="@:1.2.3", type=("build", "run"))
-    depends_on("r-magrittr@1.5:", when="@:1.2.3", type=("build", "run"))
-    depends_on("r-rlang@0.4.9:", when="@:1.2.3", type=("build", "run"))
+    depends_on("r-dplyr@1.0.0:", type=("build", "run"), when="@:1.2.3")
+    depends_on("r-magrittr@1.5:", type=("build", "run"), when="@:1.2.3")
+    depends_on("r-rlang@0.4.9:", type=("build", "run"), when="@:1.2.3")

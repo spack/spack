@@ -25,5 +25,5 @@ class RFftwtools(RPackage):
     version("0.9-8", sha256="4641c8cd70938c2a8bde0b6da6cf7f83e96175ef52f1ca42ec3920a1dabf1bdb")
 
     depends_on("r@2.15.2:", type=("build", "run"))
-    depends_on("r@3.0:", when="@0.9-11:", type=("build", "run"))
+    depends_on("r@3.0:", type=("build", "run"), when="@0.9-11:")
     depends_on("fftw@3.1.2:")

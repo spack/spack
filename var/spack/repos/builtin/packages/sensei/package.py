@@ -82,12 +82,12 @@ class Sensei(CMakePackage):
     # HDF5
     depends_on("hdf5", when="+hdf5")
 
-    depends_on("python@3:", when="+python", type=("build", "run"))
+    depends_on("python@3:", type=("build", "run"), when="+python")
     extends("python", when="+python")
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-mpi4py", when="+python", type=("build", "run"))
-    depends_on("swig", when="+python", type="build")
-    depends_on("cmake@3.6:", when="@3:", type="build")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-mpi4py", type=("build", "run"), when="+python")
+    depends_on("swig", type="build", when="+python")
+    depends_on("cmake@3.6:", type="build", when="@3:")
     depends_on("pugixml")
     depends_on("mpi")
 

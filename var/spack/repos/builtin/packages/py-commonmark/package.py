@@ -18,4 +18,4 @@ class PyCommonmark(PythonPackage):
     version("0.9.0", sha256="867fc5db078ede373ab811e16b6789e9d033b15ccd7296f370ca52d1ee792ce0")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-future", when="@0.9.0", type=("build", "run"))
+    depends_on("py-future", type=("build", "run"), when="@0.9.0")

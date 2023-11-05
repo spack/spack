@@ -25,9 +25,9 @@ class RDecipher(RPackage):
     version("2.4.0", commit="1a57b8e4c7d7dec1c233f79c9a88d3705e0ad432")
 
     depends_on("r@3.3.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", when="@2.18.1:", type=("build", "run"))
+    depends_on("r@3.5.0:", type=("build", "run"), when="@2.18.1:")
     depends_on("r-biostrings@2.35.12:", type=("build", "run"))
-    depends_on("r-biostrings@2.59.1:", when="@2.22.0:", type=("build", "run"))
+    depends_on("r-biostrings@2.59.1:", type=("build", "run"), when="@2.22.0:")
     depends_on("r-rsqlite@1.1:", type=("build", "run"))
     depends_on("r-dbi", type=("build", "run"))
     depends_on("r-s4vectors", type=("build", "run"))

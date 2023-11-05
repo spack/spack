@@ -24,4 +24,4 @@ class RDeldir(RPackage):
     version("0.1-14", sha256="89d365a980ef8589971e5d311c6bd59fe32c48dbac8000a880b9655032c99289")
 
     depends_on("r@0.99:", type=("build", "run"))
-    depends_on("r@3.5.0:", when="@0.2-3:", type=("build", "run"))
+    depends_on("r@3.5.0:", type=("build", "run"), when="@0.2-3:")

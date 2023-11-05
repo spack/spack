@@ -38,7 +38,7 @@ class Lvm2(AutotoolsPackage, SourcewarePackage):
     variant("pkgconfig", default=True, description="install pkgconfig support")
 
     depends_on("libaio")
-    depends_on("pkgconfig", when="+pkgconfig", type="build")
+    depends_on("pkgconfig", type="build", when="+pkgconfig")
 
     conflicts("platform=darwin", msg="lvm2 depends on libaio which does not support Darwin")
 

@@ -20,7 +20,7 @@ class PyGpy(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.7:", type=("build", "run"))
     depends_on("py-scipy@0.16:", type=("build", "run"))
-    depends_on("py-scipy@1.3:", when="@1.10.0:", type=("build", "run"))
+    depends_on("py-scipy@1.3:", type=("build", "run"), when="@1.10.0:")
     depends_on("py-six", type=("build", "run"))
     depends_on("py-paramz@0.9.0:", type=("build", "run"))
     # cython is install_requires, but not used at runtime, so stick to build type

@@ -26,8 +26,8 @@ class Cromwell(Package):
         expand=False,
     )
 
-    depends_on("java@11", when="@60:", type="run")
-    depends_on("java@8", when="@:59", type="run")
+    depends_on("java@11", type="run", when="@60:")
+    depends_on("java@8", type="run", when="@:59")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

@@ -24,4 +24,4 @@ class RGgsignif(RPackage):
     version("0.6.0", sha256="6fe13efda31386483e64d466ba2f5a53a2a235ae04f5c17bba3ccc63d283499e")
 
     depends_on("r-ggplot2@2.0.0:", type=("build", "run"))
-    depends_on("r-ggplot2@3.3.5:", when="@0.6.3:", type=("build", "run"))
+    depends_on("r-ggplot2@3.3.5:", type=("build", "run"), when="@0.6.3:")

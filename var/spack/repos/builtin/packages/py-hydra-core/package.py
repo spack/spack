@@ -17,6 +17,6 @@ class PyHydraCore(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-omegaconf@2.2:2.3", type=("build", "run"))
     depends_on("py-antlr4-python3-runtime@4.9", type=("build", "run"))
-    depends_on("py-importlib-resources", when="^python@:3.8", type=("build", "run"))
+    depends_on("py-importlib-resources", type=("build", "run"), when="^python@:3.8")
     depends_on("py-packaging", type=("build", "run"))
     depends_on("java", type="build")

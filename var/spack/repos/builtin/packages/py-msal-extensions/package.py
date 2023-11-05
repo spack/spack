@@ -23,6 +23,6 @@ class PyMsalExtensions(PythonPackage):
     # https://github.com/AzureAD/microsoft-authentication-extensions-for-python/blob/1.0.0/setup.py
     depends_on("py-setuptools", type="build")
     depends_on("py-msal@0.4.1:1", type=("build", "run"))
-    depends_on("py-portalocker@1", when="@:0", type=("build", "run"))
+    depends_on("py-portalocker@1", type=("build", "run"), when="@:0")
     # This is the earliest version to work for Windows and non-Windows
-    depends_on("py-portalocker@1.6:1", when="@1:", type=("build", "run"))
+    depends_on("py-portalocker@1.6:1", type=("build", "run"), when="@1:")

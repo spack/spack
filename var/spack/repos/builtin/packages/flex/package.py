@@ -35,18 +35,18 @@ class Flex(AutotoolsPackage):
     variant("lex", default=True, description="Provide symlinks for lex and libl")
 
     depends_on("bison", type="build")
-    depends_on("gettext@0.19:", when="+nls", type="build")
-    depends_on("gettext@0.19:", when="@:2.6.0,2.6.4", type="build")
-    depends_on("help2man", when="@:2.6.0,2.6.4", type="build")
+    depends_on("gettext@0.19:", type="build", when="+nls")
+    depends_on("gettext@0.19:", type="build", when="@:2.6.0,2.6.4")
+    depends_on("help2man", type="build", when="@:2.6.0,2.6.4")
     depends_on("findutils", type="build")
     depends_on("diffutils", type="build")
 
     # Older tarballs don't come with a configure script and the patch for
     # 2.6.4 touches configure
     depends_on("m4", type="build")
-    depends_on("autoconf", when="@:2.6.0,2.6.4", type="build")
-    depends_on("automake", when="@:2.6.0,2.6.4", type="build")
-    depends_on("libtool", when="@:2.6.0,2.6.4", type="build")
+    depends_on("autoconf", type="build", when="@:2.6.0,2.6.4")
+    depends_on("automake", type="build", when="@:2.6.0,2.6.4")
+    depends_on("libtool", type="build", when="@:2.6.0,2.6.4")
 
     # 2.6.4 fails to compile with newer versions of gcc/glibc, see:
     # - https://github.com/spack/spack/issues/8152

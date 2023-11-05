@@ -26,10 +26,10 @@ class Repeatmasker(Package):
     depends_on("hmmer")
     depends_on("ncbi-rmblastn")
     depends_on("trf")
-    depends_on("python", when="@4.1:", type=("build", "run"))
-    depends_on("py-h5py", when="@4.1:", type=("build", "run"))
+    depends_on("python", type=("build", "run"), when="@4.1:")
+    depends_on("py-h5py", type=("build", "run"), when="@4.1:")
 
-    depends_on("phrap-crossmatch-swat", when="+crossmatch", type=("build", "run"))
+    depends_on("phrap-crossmatch-swat", type=("build", "run"), when="+crossmatch")
 
     patch("utf8.patch", when="@:4.0")
 

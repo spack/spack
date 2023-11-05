@@ -42,7 +42,7 @@ class Hdf(AutotoolsPackage):
 
     depends_on("bison", type="build")
     depends_on("flex", type="build")
-    depends_on("java@7:", when="+java", type=("build", "run"))
+    depends_on("java@7:", type=("build", "run"), when="+java")
 
     # https://forum.hdfgroup.org/t/cant-build-hdf-4-2-14-with-jdk-11-and-enable-java/5702
     patch("disable_doclint.patch", when="@:4.2.14^java@9:")

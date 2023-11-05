@@ -41,7 +41,7 @@ class PyDrep(PythonPackage):
     depends_on("mash@1.1.1:", type="run")
     depends_on("mummer@3.23:", type="run")
     # recommended dependencies
-    depends_on("fastani", when="+fastani", type="run")
-    depends_on("py-checkm-genome@1.0.7:", when="+py-checkm-genome", type="run")
-    depends_on("anicalculator@1:", when="+anicalculator", type="run")
-    depends_on("prodigal@2.6.3:", when="+prodigal", type="run")
+    depends_on("fastani", type="run", when="+fastani")
+    depends_on("py-checkm-genome@1.0.7:", type="run", when="+py-checkm-genome")
+    depends_on("anicalculator@1:", type="run", when="+anicalculator")
+    depends_on("prodigal@2.6.3:", type="run", when="+prodigal")

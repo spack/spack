@@ -36,12 +36,12 @@ class PyPygit2(PythonPackage):
     depends_on("python@:3.9", when="@1.4:1.6")
     depends_on("python@:3.8", when="@1.0:1.3")
     depends_on("python@:3.7", when="@0.28")
-    depends_on("py-six", when="@:0.28.2", type=("build", "run"))
-    depends_on("py-cffi@1.4.0:", when="@:1.5", type=("build", "run"))
-    depends_on("py-cffi@1.6.0:", when="@1.6:1.7", type=("build", "run"))
-    depends_on("py-cffi@1.9.1:", when="@1.8:", type=("build", "run"))
-    depends_on("py-cached-property", when="@1.1:1.5", type=("build", "run"))
-    depends_on("py-cached-property", when="@1.6: ^python@:3.7", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"), when="@:0.28.2")
+    depends_on("py-cffi@1.4.0:", type=("build", "run"), when="@:1.5")
+    depends_on("py-cffi@1.6.0:", type=("build", "run"), when="@1.6:1.7")
+    depends_on("py-cffi@1.9.1:", type=("build", "run"), when="@1.8:")
+    depends_on("py-cached-property", type=("build", "run"), when="@1.1:1.5")
+    depends_on("py-cached-property", type=("build", "run"), when="@1.6: ^python@:3.7")
 
     def setup_build_environment(self, env):
         spec = self.spec

@@ -29,7 +29,7 @@ class XalanC(CMakePackage):
     )
 
     depends_on("xerces-c@3:")
-    depends_on("icu4c", when="transcoder=icu", type="link")
+    depends_on("icu4c", type="link", when="transcoder=icu")
 
     def cmake_args(self):
         args = []

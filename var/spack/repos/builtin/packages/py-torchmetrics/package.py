@@ -38,19 +38,19 @@ class PyTorchmetrics(PythonPackage):
     version("0.2.0", sha256="481a28759acd2d77cc088acba6bc7dc4a356c7cb767da2e1495e91e612e2d548")
 
     # setup.py
-    depends_on("python@3.8:", when="@1:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@1:")
     depends_on("py-setuptools", type="build")
 
     # requirements.txt (upper bound is removed during processing)
-    depends_on("py-numpy@1.20.1:", when="@1:", type=("build", "run"))
-    depends_on("py-numpy@1.17.2:", when="@0.4:", type=("build", "run"))
-    depends_on("py-numpy", when="@0.3:", type=("build", "run"))
-    depends_on("py-torch@1.8.1:", when="@0.11:", type=("build", "run"))
+    depends_on("py-numpy@1.20.1:", type=("build", "run"), when="@1:")
+    depends_on("py-numpy@1.17.2:", type=("build", "run"), when="@0.4:")
+    depends_on("py-numpy", type=("build", "run"), when="@0.3:")
+    depends_on("py-torch@1.8.1:", type=("build", "run"), when="@0.11:")
     depends_on("py-torch@1.3.1:", type=("build", "run"))
-    depends_on("py-typing-extensions", when="@0.9: ^python@:3.8", type=("build", "run"))
-    depends_on("py-lightning-utilities@0.8:", when="@1.1:", type=("build", "run"))
-    depends_on("py-lightning-utilities@0.7:", when="@1:", type=("build", "run"))
+    depends_on("py-typing-extensions", type=("build", "run"), when="@0.9: ^python@:3.8")
+    depends_on("py-lightning-utilities@0.8:", type=("build", "run"), when="@1.1:")
+    depends_on("py-lightning-utilities@0.7:", type=("build", "run"), when="@1:")
 
     # Historical dependencies
-    depends_on("py-packaging", when="@0.3:1.1", type=("build", "run"))
-    depends_on("py-pydeprecate@0.3", when="@0.7:0.8", type=("build", "run"))
+    depends_on("py-packaging", type=("build", "run"), when="@0.3:1.1")
+    depends_on("py-pydeprecate@0.3", type=("build", "run"), when="@0.7:0.8")

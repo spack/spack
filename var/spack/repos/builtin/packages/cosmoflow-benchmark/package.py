@@ -27,11 +27,11 @@ class CosmoflowBenchmark(Package, CudaPackage):
     depends_on("py-horovod", type=("build", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
 
-    depends_on("py-tensorflow+cuda", when="+cuda", type=("build", "run"))
-    depends_on("py-tensorflow~cuda~nccl", when="~cuda", type=("build", "run"))
-    depends_on("py-torch+cuda", when="+cuda", type=("build", "run"))
-    depends_on("py-torch~cuda~cudnn~nccl", when="~cuda", type=("build", "run"))
-    depends_on("py-horovod tensor_ops=mpi", when="~cuda", type=("build", "run"))
+    depends_on("py-tensorflow+cuda", type=("build", "run"), when="+cuda")
+    depends_on("py-tensorflow~cuda~nccl", type=("build", "run"), when="~cuda")
+    depends_on("py-torch+cuda", type=("build", "run"), when="+cuda")
+    depends_on("py-torch~cuda~cudnn~nccl", type=("build", "run"), when="~cuda")
+    depends_on("py-horovod tensor_ops=mpi", type=("build", "run"), when="~cuda")
 
     def install(self, spec, prefix):
         # Mostly  about providing an environment so just copy everything

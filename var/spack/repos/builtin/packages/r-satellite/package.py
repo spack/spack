@@ -30,4 +30,4 @@ class RSatellite(RPackage):
     depends_on("r-raster", type=("build", "run"))
     depends_on("r-plyr", type=("build", "run"))
     depends_on("r-rcpp@0.10.3:", type=("build", "run"))
-    depends_on("r-terra", when="@1.0.4:", type=("build", "run"))
+    depends_on("r-terra", type=("build", "run"), when="@1.0.4:")

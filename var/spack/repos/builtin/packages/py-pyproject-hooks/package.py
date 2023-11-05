@@ -15,4 +15,4 @@ class PyPyprojectHooks(PythonPackage):
     version("1.0.0", sha256="f271b298b97f5955d53fb12b72c1fb1948c22c1a6b70b315c54cedaca0264ef5")
 
     depends_on("py-flit-core@3.2:3", type="build")
-    depends_on("py-tomli@1.1:", when="^python@:3.10", type=("build", "run"))
+    depends_on("py-tomli@1.1:", type=("build", "run"), when="^python@:3.10")

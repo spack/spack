@@ -23,7 +23,7 @@ class Leveldb(CMakePackage):
 
     variant("shared", default=True, description="Build shared library")
 
-    depends_on("cmake@3.9:", when="@1.21:", type="build")
+    depends_on("cmake@3.9:", type="build", when="@1.21:")
 
     depends_on("snappy")
 

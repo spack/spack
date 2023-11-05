@@ -20,10 +20,10 @@ class Libcroco(AutotoolsPackage):
 
     depends_on("glib")
     depends_on("libxml2")
-    depends_on("gtk-doc", when="+doc", type="build")
-    depends_on("docbook-xml", when="+doc", type="build")
-    depends_on("docbook-xsl", when="+doc", type="build")
-    depends_on("py-pygments", when="+doc", type="build")
+    depends_on("gtk-doc", type="build", when="+doc")
+    depends_on("docbook-xml", type="build", when="+doc")
+    depends_on("docbook-xsl", type="build", when="+doc")
+    depends_on("py-pygments", type="build", when="+doc")
     depends_on("pkgconfig", type="build")
 
     def configure_args(self):

@@ -28,4 +28,4 @@ class PyRegex(PythonPackage):
     )
 
     depends_on("py-setuptools", type="build")
-    depends_on("python@3.6:", when="@2022.8.17:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@2022.8.17:")

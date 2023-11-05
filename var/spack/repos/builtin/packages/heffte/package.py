@@ -32,9 +32,9 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     patch("cmake-magma-v230.patch", when="@2.3.0")
     patch("fortran200.patch", when="@2.0.0")
 
-    depends_on("cmake@3.10:", when="@:2.3.0", type=("build", "run"))
-    depends_on("cmake@3.19:", when="@2.4.0:", type=("build", "run"))
-    depends_on("cmake@3.21:", when="@2.4.0:+rocm", type=("build", "run"))
+    depends_on("cmake@3.10:", type=("build", "run"), when="@:2.3.0")
+    depends_on("cmake@3.19:", type=("build", "run"), when="@2.4.0:")
+    depends_on("cmake@3.21:", type=("build", "run"), when="@2.4.0:+rocm")
 
     variant("shared", default=True, description="Builds with shared libraries")
     variant("fftw", default=False, description="Builds with support for FFTW backend")
@@ -43,11 +43,11 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     variant("python", default=False, description="Install the Python bindings")
     variant("fortran", default=False, description="Install the Fortran modules")
 
-    depends_on("python@3.0:", when="+python", type=("build", "run"))
-    depends_on("py-mpi4py", when="+python", type=("build", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-numba", when="+python+cuda", type=("build", "run"))
-    extends("python", when="+python", type=("build", "run"))
+    depends_on("python@3.0:", type=("build", "run"), when="+python")
+    depends_on("py-mpi4py", type=("build", "run"), when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-numba", type=("build", "run"), when="+python+cuda")
+    extends("python", type=("build", "run"), when="+python")
 
     conflicts("^openmpi~cuda", when="+cuda")  # +cuda requires CUDA enabled OpenMPI
     conflicts("~cuda~rocm", when="+magma")  # magma requires CUDA or HIP
@@ -55,19 +55,19 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("mpi", type=("build", "run"))
 
-    depends_on("fftw@3.3.8:", when="+fftw", type=("build", "run"))
-    depends_on("intel-mkl@2018.0.128:", when="+mkl", type=("build", "run"))
-    depends_on("cuda@8.0:", when="+cuda", type=("build", "run"))
-    depends_on("hip@3.8.0:", when="+rocm", type=("build", "run"))
-    depends_on("rocfft@3.8.0:", when="+rocm", type=("build", "run"))
-    depends_on("hip@5.2.3:", when="@2.4.0:+rocm", type=("build", "run"))
-    depends_on("rocfft@5.2.3:", when="@2.4.0:+rocm", type=("build", "run"))
-    depends_on("magma@2.5.3:", when="+cuda+magma", type=("build", "run"))
-    depends_on("magma+rocm@2.6.1:", when="+magma+rocm @2.1:", type=("build", "run"))
-    depends_on("rocblas@3.8:", when="+magma+rocm", type=("build", "run"))
-    depends_on("rocsparse@3.8:", when="+magma+rocm", type=("build", "run"))
-    depends_on("hipblas@3.8:", when="+magma+rocm", type=("build", "run"))
-    depends_on("hipsparse@3.8:", when="+magma+rocm", type=("build", "run"))
+    depends_on("fftw@3.3.8:", type=("build", "run"), when="+fftw")
+    depends_on("intel-mkl@2018.0.128:", type=("build", "run"), when="+mkl")
+    depends_on("cuda@8.0:", type=("build", "run"), when="+cuda")
+    depends_on("hip@3.8.0:", type=("build", "run"), when="+rocm")
+    depends_on("rocfft@3.8.0:", type=("build", "run"), when="+rocm")
+    depends_on("hip@5.2.3:", type=("build", "run"), when="@2.4.0:+rocm")
+    depends_on("rocfft@5.2.3:", type=("build", "run"), when="@2.4.0:+rocm")
+    depends_on("magma@2.5.3:", type=("build", "run"), when="+cuda+magma")
+    depends_on("magma+rocm@2.6.1:", type=("build", "run"), when="+magma+rocm @2.1:")
+    depends_on("rocblas@3.8:", type=("build", "run"), when="+magma+rocm")
+    depends_on("rocsparse@3.8:", type=("build", "run"), when="+magma+rocm")
+    depends_on("hipblas@3.8:", type=("build", "run"), when="+magma+rocm")
+    depends_on("hipsparse@3.8:", type=("build", "run"), when="+magma+rocm")
 
     examples_src_dir = "examples"
 

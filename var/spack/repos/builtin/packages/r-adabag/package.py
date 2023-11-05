@@ -40,4 +40,4 @@ class RAdabag(RPackage):
     depends_on("r-foreach", type=("build", "run"))
     depends_on("r-doparallel", type=("build", "run"))
 
-    depends_on("r-mlbench", when="@:4.1", type=("build", "run"))
+    depends_on("r-mlbench", type=("build", "run"), when="@:4.1")

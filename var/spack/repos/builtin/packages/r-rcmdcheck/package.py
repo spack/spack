@@ -20,8 +20,8 @@ class RRcmdcheck(RPackage):
 
     depends_on("r-callr@3.1.1.9000:", type=("build", "run"))
     depends_on("r-cli@1.1.0:", type=("build", "run"))
-    depends_on("r-cli@3.0.0:", when="@1.4.0:", type=("build", "run"))
-    depends_on("r-curl", when="@1.4.0:", type=("build", "run"))
+    depends_on("r-cli@3.0.0:", type=("build", "run"), when="@1.4.0:")
+    depends_on("r-curl", type=("build", "run"), when="@1.4.0:")
     depends_on("r-desc@1.2.0:", type=("build", "run"))
     depends_on("r-digest", type=("build", "run"))
     depends_on("r-pkgbuild", type=("build", "run"))
@@ -32,4 +32,4 @@ class RRcmdcheck(RPackage):
     depends_on("r-withr", type=("build", "run"))
     depends_on("r-xopen", type=("build", "run"))
 
-    depends_on("r-crayon", when="@:1.3.3", type=("build", "run"))
+    depends_on("r-crayon", type=("build", "run"), when="@:1.3.3")

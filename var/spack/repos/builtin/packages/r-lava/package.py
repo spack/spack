@@ -30,8 +30,8 @@ class RLava(RPackage):
     version("1.4.7", sha256="d5cbd4835a94855478efb93051eece965db116ead203f4dd4e09d9a12d52f4bf")
 
     depends_on("r@3.0:", type=("build", "run"))
-    depends_on("r-future-apply", when="@1.6.10:", type=("build", "run"))
-    depends_on("r-progressr", when="@1.6.10:", type=("build", "run"))
+    depends_on("r-future-apply", type=("build", "run"), when="@1.6.10:")
+    depends_on("r-progressr", type=("build", "run"), when="@1.6.10:")
     depends_on("r-numderiv", type=("build", "run"))
     depends_on("r-survival", type=("build", "run"))
-    depends_on("r-squarem", when="@1.6.0:", type=("build", "run"))
+    depends_on("r-squarem", type=("build", "run"), when="@1.6.0:")

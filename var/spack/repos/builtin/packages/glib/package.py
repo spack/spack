@@ -131,10 +131,10 @@ class Glib(MesonPackage, AutotoolsPackage):
     )
 
     with when("build_system=meson"):
-        depends_on("meson@0.60.0:", when="@2.73:", type="build")
-        depends_on("meson@0.52.0:", when="@2.71:2.72", type="build")
-        depends_on("meson@0.49.2:", when="@2.61.2:2.70", type="build")
-        depends_on("meson@0.48.0:", when="@:2.61.1", type="build")
+        depends_on("meson@0.60.0:", type="build", when="@2.73:")
+        depends_on("meson@0.52.0:", type="build", when="@2.71:2.72")
+        depends_on("meson@0.49.2:", type="build", when="@2.61.2:2.70")
+        depends_on("meson@0.48.0:", type="build", when="@:2.61.1")
 
     depends_on("pkgconfig", type="build")
     depends_on("libffi")
@@ -142,7 +142,7 @@ class Glib(MesonPackage, AutotoolsPackage):
     depends_on("gettext")
     depends_on("perl", type=("build", "run"))
     # Uses distutils in gio/gdbus-2.0/codegen/utils.py
-    depends_on("python@:3.11", when="@2.53.4:", type=("build", "run"))
+    depends_on("python@:3.11", type=("build", "run"), when="@2.53.4:")
     depends_on("pcre2", when="@2.73.2:")
     depends_on("pcre2@10.34:", when="@2.74:")
     depends_on("pcre+utf", when="@2.48:2.73.1")

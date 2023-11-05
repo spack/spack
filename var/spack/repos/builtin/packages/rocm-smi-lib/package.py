@@ -112,7 +112,7 @@ class RocmSmiLib(CMakePackage):
     variant("shared", default=True, description="Build shared or static library")
 
     depends_on("cmake@3:", type="build")
-    depends_on("python@3:", when="@3.9.0:", type=("build", "run"))
+    depends_on("python@3:", type=("build", "run"), when="@3.9.0:")
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")

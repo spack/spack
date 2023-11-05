@@ -35,7 +35,7 @@ class Fio(AutotoolsPackage):
     depends_on("cairo", when="+gui")
     depends_on("libaio", when="+libaio")
 
-    depends_on("py-sphinx", when="+doc", type="build")
+    depends_on("py-sphinx", type="build", when="+doc")
 
     conflicts("+libaio", when="platform=darwin", msg="libaio does not support Darwin")
 

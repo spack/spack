@@ -21,5 +21,5 @@ class PyCheroot(PythonPackage):
     depends_on("py-setuptools-scm-git-archive@1.0:", type="build")
     depends_on("py-more-itertools@2.6:", type=("build", "run"))
     depends_on("py-six@1.11.0:", type=("build", "run"))
-    depends_on("py-jaraco-functools", when="@8.3.0:", type=("build", "run"))
+    depends_on("py-jaraco-functools", type=("build", "run"), when="@8.3.0:")
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))

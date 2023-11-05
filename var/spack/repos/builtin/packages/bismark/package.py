@@ -21,7 +21,7 @@ class Bismark(Package):
     depends_on("bowtie2", type="run")
     depends_on("perl", type="run")
     depends_on("samtools", type="run")
-    depends_on("hisat2", when="@0.21.0:", type="run")
+    depends_on("hisat2", type="run", when="@0.21.0:")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

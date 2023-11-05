@@ -19,14 +19,14 @@ class PyArgcomplete(PythonPackage):
     version("1.12.0", sha256="2fbe5ed09fd2c1d727d4199feca96569a5b50d44c71b16da9c742201f7cc295c")
     version("1.1.1", sha256="cca45b5fe07000994f4f06a0b95bd71f7b51b04f81c3be0b4ea7b666e4f1f084")
 
-    depends_on("py-setuptools@67.7.2:", when="@3.1:", type="build")
+    depends_on("py-setuptools@67.7.2:", type="build", when="@3.1:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm+toml@6.2:", when="@3.1:", type="build")
+    depends_on("py-setuptools-scm+toml@6.2:", type="build", when="@3.1:")
 
-    depends_on("py-importlib-metadata@0.23:6", when="@3.0.6: ^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata@0.23:6", type=("build", "run"), when="@3.0.6: ^python@:3.7")
     depends_on(
-        "py-importlib-metadata@0.23:4", when="@1.12.3:2 ^python@:3.7", type=("build", "run")
+        "py-importlib-metadata@0.23:4", type=("build", "run"), when="@1.12.3:2 ^python@:3.7"
     )
-    depends_on("py-importlib-metadata@0.23:3", when="@1.12.2 ^python@:3.7", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.23:2", when="@1.12.1 ^python@:3.7", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.23:1", when="@1.12.0 ^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata@0.23:3", type=("build", "run"), when="@1.12.2 ^python@:3.7")
+    depends_on("py-importlib-metadata@0.23:2", type=("build", "run"), when="@1.12.1 ^python@:3.7")
+    depends_on("py-importlib-metadata@0.23:1", type=("build", "run"), when="@1.12.0 ^python@:3.7")

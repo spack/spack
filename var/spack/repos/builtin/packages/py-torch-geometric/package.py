@@ -30,7 +30,7 @@ class PyTorchGeometric(PythonPackage):
     variant("cuda", default=False, description="Enable CUDA support")
 
     # setup.py
-    depends_on("python@3.7:", when="@2:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@2:")
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-tqdm", type=("build", "run"))
@@ -38,20 +38,20 @@ class PyTorchGeometric(PythonPackage):
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
-    depends_on("py-pyparsing", when="@2:", type=("build", "run"))
+    depends_on("py-pyparsing", type=("build", "run"), when="@2:")
     depends_on("py-scikit-learn", type=("build", "run"))
 
     # README.md
-    depends_on("py-torch-scatter+cuda", when="+cuda", type=("build", "run"))
-    depends_on("py-torch-scatter~cuda", when="~cuda", type=("build", "run"))
-    depends_on("py-torch-sparse+cuda", when="+cuda", type=("build", "run"))
-    depends_on("py-torch-sparse~cuda", when="~cuda", type=("build", "run"))
+    depends_on("py-torch-scatter+cuda", type=("build", "run"), when="+cuda")
+    depends_on("py-torch-scatter~cuda", type=("build", "run"), when="~cuda")
+    depends_on("py-torch-sparse+cuda", type=("build", "run"), when="+cuda")
+    depends_on("py-torch-sparse~cuda", type=("build", "run"), when="~cuda")
 
     # Optional dependencies
-    depends_on("py-torch-cluster+cuda", when="+cuda", type=("build", "run"))
-    depends_on("py-torch-cluster~cuda", when="~cuda", type=("build", "run"))
-    depends_on("py-torch-spline-conv+cuda", when="+cuda", type=("build", "run"))
-    depends_on("py-torch-spline-conv~cuda", when="~cuda", type=("build", "run"))
+    depends_on("py-torch-cluster+cuda", type=("build", "run"), when="+cuda")
+    depends_on("py-torch-cluster~cuda", type=("build", "run"), when="~cuda")
+    depends_on("py-torch-spline-conv+cuda", type=("build", "run"), when="+cuda")
+    depends_on("py-torch-spline-conv~cuda", type=("build", "run"), when="~cuda")
 
     # Undocumented dependencies
     depends_on("py-torch", type=("build", "run"))
@@ -60,7 +60,7 @@ class PyTorchGeometric(PythonPackage):
     with when("@:1"):
         depends_on("py-pytest-runner", type="build")
         depends_on("py-networkx", type=("build", "run"))
-        depends_on("py-python-louvain", when="@1.6.2:", type=("build", "run"))
+        depends_on("py-python-louvain", type=("build", "run"), when="@1.6.2:")
         depends_on("py-numba", type=("build", "run"))
         depends_on("py-pandas", type=("build", "run"))
         depends_on("py-rdflib", type=("build", "run"))

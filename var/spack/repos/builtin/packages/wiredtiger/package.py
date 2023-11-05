@@ -15,8 +15,8 @@ class Wiredtiger(AutotoolsPackage):
 
     version("10.0.0", sha256="4830107ac744c0459ef99697652aa3e655c2122005a469a49d221e692fb834a5")
 
-    depends_on("python@3:", when="+python", type=("build", "run"))
-    depends_on("swig", when="+python", type=("build", "run"))
+    depends_on("python@3:", type=("build", "run"), when="+python")
+    depends_on("swig", type=("build", "run"), when="+python")
     depends_on("lz4", when="+lz4")
     depends_on("snappy", when="+snappy")
     depends_on("zlib-api", when="+zlib")

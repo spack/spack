@@ -21,7 +21,7 @@ class Prism(MakefilePackage):
     build_directory = "prism"
 
     depends_on("java@9:", type=("build", "run"))
-    depends_on("java@9:11", when="@:4.5", type=("build", "run"))
+    depends_on("java@9:11", type=("build", "run"), when="@:4.5")
 
     patch("Makefile.patch", when="target=aarch64:")
 

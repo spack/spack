@@ -36,7 +36,7 @@ class PyGrpcio(PythonPackage):
     version("1.16.0", sha256="d99db0b39b490d2469a8ef74197d5f211fa740fc9581dccecbb76c56d080fce1")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.5.2:", when="@:1.48", type=("build", "run"))
+    depends_on("py-six@1.5.2:", type=("build", "run"), when="@:1.48")
     depends_on("py-cython@0.23:2", type="build")
     depends_on("openssl")
     depends_on("zlib-api")

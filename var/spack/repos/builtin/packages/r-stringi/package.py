@@ -33,7 +33,7 @@ class RStringi(RPackage):
     version("1.1.1", sha256="243178a138fe68c86384feb85ead8eb605e8230113d638da5650bca01e24e165")
 
     depends_on("r@2.14:", type=("build", "run"))
-    depends_on("r@3.1:", when="@1.6.1:", type=("build", "run"))
+    depends_on("r@3.1:", type=("build", "run"), when="@1.6.1:")
     depends_on("icu4c@52:")
     depends_on("icu4c@55:", when="@1.5.3:")
     # since version 1.6.1 there is also a SystemRequirement on C++11

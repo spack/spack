@@ -40,7 +40,7 @@ class Xyce(CMakePackage):
     depends_on("mpi", when="+mpi")
 
     variant("plugin", default=False, description="Enable plug-in support for Xyce")
-    depends_on("adms", when="+plugin", type=("build", "run"))
+    depends_on("adms", type=("build", "run"), when="+plugin")
 
     variant("shared", default=False, description="Enable shared libraries for Xyce")
     conflicts(
@@ -68,9 +68,9 @@ class Xyce(CMakePackage):
         description="Require static blas build for PyMi",
     )
 
-    depends_on("python@3:", when="+pymi", type=("build", "link", "run"))
-    depends_on("py-pip", when="+pymi", type="run")
-    depends_on("py-pybind11@2.6.1:", when="+pymi", type=("build", "link"))
+    depends_on("python@3:", type=("build", "link", "run"), when="+pymi")
+    depends_on("py-pip", type="run", when="+pymi")
+    depends_on("py-pybind11@2.6.1:", type=("build", "link"), when="+pymi")
 
     depends_on(
         "trilinos"

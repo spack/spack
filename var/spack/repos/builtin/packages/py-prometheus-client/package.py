@@ -24,8 +24,8 @@ class PyPrometheusClient(PythonPackage):
     depends_on("py-setuptools", type="build")
     # Notice: prometheus_client/twisted/_exposition.py imports 'twisted.web.wsgi'
     # which was not ported to Python 3 until twisted 16.0.0
-    depends_on("py-twisted@16:", when="@0.12.0: +twisted ^python@3:", type=("build", "run"))
-    depends_on("py-twisted", when="+twisted", type=("build", "run"))
+    depends_on("py-twisted@16:", type=("build", "run"), when="@0.12.0: +twisted ^python@3:")
+    depends_on("py-twisted", type=("build", "run"), when="+twisted")
 
     @property
     def skip_modules(self):

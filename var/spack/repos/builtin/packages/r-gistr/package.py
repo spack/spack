@@ -30,7 +30,7 @@ class RGistr(RPackage):
 
     depends_on("r+X", type=("build", "run"))
     depends_on("r-jsonlite@1.4:", type=("build", "run"))
-    depends_on("r-crul", when="@0.9.0:", type=("build", "run"))
+    depends_on("r-crul", type=("build", "run"), when="@0.9.0:")
     depends_on("r-httr@1.2.0:", type=("build", "run"))
     depends_on("r-magrittr", type=("build", "run"))
     depends_on("r-assertthat", type=("build", "run"))

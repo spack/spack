@@ -16,6 +16,6 @@ class PyGoogleCloudCore(PythonPackage):
     version("1.0.3", sha256="10750207c1a9ad6f6e082d91dbff3920443bdaf1c344a782730489a9efa802f1")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-google-api-core@1.31.6:1,2.3.1:2", when="@2:", type=("build", "run"))
-    depends_on("py-google-api-core@1.14:1", when="@:1", type=("build", "run"))
-    depends_on("py-google-auth@1.25:2", when="@2:", type=("build", "run"))
+    depends_on("py-google-api-core@1.31.6:1,2.3.1:2", type=("build", "run"), when="@2:")
+    depends_on("py-google-api-core@1.14:1", type=("build", "run"), when="@:1")
+    depends_on("py-google-auth@1.25:2", type=("build", "run"), when="@2:")

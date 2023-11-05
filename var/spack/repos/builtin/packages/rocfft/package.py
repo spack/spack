@@ -117,9 +117,9 @@ class Rocfft(CMakePackage):
         sticky=True,
     )
 
-    depends_on("cmake@3.16:", when="@4.5.0:", type="build")
+    depends_on("cmake@3.16:", type="build", when="@4.5.0:")
     depends_on("cmake@3.5:", type="build")
-    depends_on("python@3.6:", when="@5.0.0:", type="build")
+    depends_on("python@3.6:", type="build", when="@5.0.0:")
     depends_on("sqlite@3.36:", when="@5.0.0:")
 
     depends_on("googletest@1.10.0:", type="test")

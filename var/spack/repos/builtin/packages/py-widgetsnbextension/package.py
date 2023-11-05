@@ -20,9 +20,9 @@ class PyWidgetsnbextension(PythonPackage):
     version("1.2.6", sha256="c618cfb32978c9517caf0b4ef3aec312f8dd138577745e7b0d4abfcc7315ce51")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-jupyter-packaging@0.10:0", when="@4.0.3:", type="build")
+    depends_on("py-jupyter-packaging@0.10:0", type="build", when="@4.0.3:")
 
     depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
-    depends_on("python@3.7:", when="@4.0.3:", type=("build", "run"))
-    depends_on("py-notebook@4.2.0:", when="@1.2.6", type=("build", "run"))
-    depends_on("py-notebook@4.4.1:", when="@3.3.0:3", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@4.0.3:")
+    depends_on("py-notebook@4.2.0:", type=("build", "run"), when="@1.2.6")
+    depends_on("py-notebook@4.4.1:", type=("build", "run"), when="@3.3.0:3")

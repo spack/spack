@@ -27,7 +27,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
 
     # Dependencies:
     depends_on("pkgconfig", type="build")
-    depends_on("autoconf", when="@main:", type="build")
+    depends_on("autoconf", type="build", when="@main:")
     depends_on("python", type="build")
     depends_on("gawk", type="build")
     depends_on("bison", type="build")

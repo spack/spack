@@ -98,8 +98,8 @@ class Rose(AutotoolsPackage):
     depends_on("mvapich2", when="+mvapich2_backend")
 
     variant("binanalysis", default=False, description="Enable binary analysis tooling")
-    depends_on("libgcrypt", when="+binanalysis", type="build")
-    depends_on("py-binwalk", when="+binanalysis", type="run")
+    depends_on("libgcrypt", type="build", when="+binanalysis")
+    depends_on("py-binwalk", type="run", when="+binanalysis")
 
     variant("c", default=True, description="Enable c language support")
     variant("cxx", default=True, description="Enable c++ language support")

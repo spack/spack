@@ -80,10 +80,10 @@ class Libtiff(CMakePackage, AutotoolsPackage):
     variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     with when("build_system=cmake"):
-        depends_on("cmake@3.9:", when="@4.3:", type="build")
-        depends_on("cmake@2.8.11:", when="@4.0.10:4.2", type="build")
-        depends_on("cmake@2.8.9:", when="@4.0.6:4.0.9", type="build")
-        depends_on("cmake@3:", when="@4.0.5", type="build")
+        depends_on("cmake@3.9:", type="build", when="@4.3:")
+        depends_on("cmake@2.8.11:", type="build", when="@4.0.10:4.2")
+        depends_on("cmake@2.8.9:", type="build", when="@4.0.6:4.0.9")
+        depends_on("cmake@3:", type="build", when="@4.0.5")
 
     depends_on("zlib-api", when="+zlib")
     depends_on("zlib-api", when="+pixarlog")

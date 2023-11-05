@@ -67,8 +67,8 @@ class Geant4(CMakePackage):
     variant("tbb", default=False, description="Use TBB as a tasking backend", when="@11:")
     variant("vtk", default=False, description="Enable VTK support", when="@11:")
 
-    depends_on("cmake@3.16:", when="@11.0.0:", type="build")
-    depends_on("cmake@3.8:", when="@10.6.0:", type="build")
+    depends_on("cmake@3.16:", type="build", when="@11.0.0:")
+    depends_on("cmake@3.8:", type="build", when="@10.6.0:")
     depends_on("cmake@3.5:", type="build")
 
     for _vers in [

@@ -32,5 +32,5 @@ class PyBluepyemodel(PythonPackage):
     depends_on("py-morph-tool@2.8:", type=("build", "run"))
     depends_on("py-fasteners@0.16:", type=("build", "run"))
     depends_on("neuron+python@8.0:", type=("build", "run"))
-    depends_on("py-jinja2@3.0.3", when="@0.0.11:", type=("build", "run"))
+    depends_on("py-jinja2@3.0.3", type=("build", "run"), when="@0.0.11:")
     depends_on("py-currentscape@0.0.11:", type=("build", "run"))

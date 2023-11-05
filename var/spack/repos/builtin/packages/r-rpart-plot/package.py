@@ -22,6 +22,6 @@ class RRpartPlot(RPackage):
     version("2.1.0", sha256="17686da1883f97cb8f44be0d9cb915b366a3cb7313cd131b96497ab09f727436")
 
     depends_on("r@3.2.0:", type=("build", "run"))
-    depends_on("r@3.4.0:", when="@3.0.7:", type=("build", "run"))
+    depends_on("r@3.4.0:", type=("build", "run"), when="@3.0.7:")
     depends_on("r-rpart@4.1-10:", type=("build", "run"))
-    depends_on("r-rpart@4.1-15:", when="@3.0.9:", type=("build", "run"))
+    depends_on("r-rpart@4.1-15:", type=("build", "run"), when="@3.0.9:")

@@ -62,9 +62,9 @@ class Precice(CMakePackage):
         )
 
     depends_on("cmake@3.5:", type="build")
-    depends_on("cmake@3.10.2:", when="@1.4:", type="build")
-    depends_on("cmake@3.16.3:", when="@2.4:", type="build")
-    depends_on("pkgconfig", when="@2.2:", type="build")
+    depends_on("cmake@3.10.2:", type="build", when="@1.4:")
+    depends_on("cmake@3.16.3:", type="build", when="@2.4:")
+    depends_on("pkgconfig", type="build", when="@2.2:")
 
     # Boost components
     depends_on("boost+filesystem+log+program_options+system+test+thread")
@@ -81,14 +81,14 @@ class Precice(CMakePackage):
     depends_on("boost@:1.78", when="@:2.3.0")
 
     depends_on("eigen@3.2:")
-    depends_on("eigen@:3.3.7", when="@:1.5", type="build")  # bug in prettyprint
+    depends_on("eigen@:3.3.7", type="build", when="@:1.5")  # bug in prettyprint
     depends_on("libxml2")
     depends_on("mpi", when="+mpi")
     depends_on("petsc@3.6:", when="+petsc")
     depends_on("petsc@3.12:", when="+petsc@2.1.0:")
 
-    depends_on("python@3:", when="+python", type=("build", "run"))
-    depends_on("py-numpy@1.17:", when="+python", type=("build", "run"))
+    depends_on("python@3:", type=("build", "run"), when="+python")
+    depends_on("py-numpy@1.17:", type=("build", "run"), when="+python")
 
     # We require C++14 compiler support
     conflicts("%gcc@:4")

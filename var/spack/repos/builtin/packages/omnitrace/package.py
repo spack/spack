@@ -87,7 +87,7 @@ class Omnitrace(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("tau", when="+tau")
     depends_on("caliper", when="+caliper")
-    depends_on("python@3:", when="+python", type=("build", "run"))
+    depends_on("python@3:", type=("build", "run"), when="+python")
 
     def cmake_args(self):
         spec = self.spec

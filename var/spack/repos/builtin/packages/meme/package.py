@@ -37,7 +37,7 @@ class Meme(AutotoolsPackage):
     depends_on("libxml2")
     depends_on("libxslt")
     # Variant deps
-    depends_on("imagemagick", when="+magick", type=("build", "run"))
+    depends_on("imagemagick", type=("build", "run"), when="+magick")
     depends_on("mpi", when="+mpi")
 
     patch("arm.patch", when="%arm")

@@ -22,10 +22,10 @@ class PyPyparsing(PythonPackage):
     version("2.1.10", sha256="811c3e7b0031021137fc83e051795025fcb98674d07eb8fe922ba4de53d39188")
     version("2.0.3", sha256="06e729e1cbf5274703b1f47b6135ed8335999d547f9d8cf048b210fb8ebf844f")
 
-    depends_on("python@3.6.8:", when="@3.0.9:", type=("build", "run"))
-    depends_on("python@3.6:", when="@3:", type=("build", "run"))
+    depends_on("python@3.6.8:", type=("build", "run"), when="@3.0.9:")
+    depends_on("python@3.6:", type=("build", "run"), when="@3:")
     depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
-    depends_on("py-setuptools", when="@:3.0.8", type="build")
-    depends_on("py-flit-core@3.2:3", when="@3.0.9:", type="build")
+    depends_on("py-setuptools", type="build", when="@:3.0.8")
+    depends_on("py-flit-core@3.2:3", type="build", when="@3.0.9:")
 
     import_modules = ["pyparsing"]

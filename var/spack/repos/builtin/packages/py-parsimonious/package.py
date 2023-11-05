@@ -16,5 +16,5 @@ class PyParsimonious(PythonPackage):
     version("0.8.1", sha256="3add338892d580e0cb3b1a39e4a1b427ff9f687858fdd61097053742391a9f6b")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.9.0:", when="@:0.8.1", type=("build", "run"))
-    depends_on("py-regex@2022.3.15:", when="@0.10.0:", type=("build", "run"))
+    depends_on("py-six@1.9.0:", type=("build", "run"), when="@:0.8.1")
+    depends_on("py-regex@2022.3.15:", type=("build", "run"), when="@0.10.0:")

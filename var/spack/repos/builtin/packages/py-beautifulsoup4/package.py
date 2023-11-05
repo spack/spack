@@ -26,13 +26,13 @@ class PyBeautifulsoup4(PythonPackage):
     variant("lxml", default=False, description="Enable lxml parser")
     variant("html5lib", default=False, description="Enable html5lib parser")
 
-    depends_on("py-hatchling", when="@4.12.1:", type="build")
-    depends_on("py-setuptools", when="@:4.12.0", type="build")
+    depends_on("py-hatchling", type="build", when="@4.12.1:")
+    depends_on("py-setuptools", type="build", when="@:4.12.0")
 
-    depends_on("py-soupsieve@1.3:", when="@4.9.0:", type=("build", "run"))
-    depends_on("py-soupsieve@1.2:", when="@4.7.0:", type=("build", "run"))
+    depends_on("py-soupsieve@1.3:", type=("build", "run"), when="@4.9.0:")
+    depends_on("py-soupsieve@1.2:", type=("build", "run"), when="@4.7.0:")
 
-    depends_on("py-lxml", when="+lxml", type=("build", "run"))
-    depends_on("py-html5lib", when="+html5lib", type=("build", "run"))
+    depends_on("py-lxml", type=("build", "run"), when="+lxml")
+    depends_on("py-html5lib", type=("build", "run"), when="+html5lib")
 
     depends_on("py-pytest", type="test")

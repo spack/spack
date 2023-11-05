@@ -24,8 +24,8 @@ class PyMoreItertools(PythonPackage):
     version("4.1.0", sha256="c9ce7eccdcb901a2c75d326ea134e0886abfbea5f93e91cc95de9507c0816c44")
     version("2.2", sha256="93e62e05c7ad3da1a233def6731e8285156701e3419a5fe279017c429ec67ce0")
 
-    depends_on("py-flit-core@3.2:3", when="@8.14.0:", type="build")
+    depends_on("py-flit-core@3.2:3", type="build", when="@8.14.0:")
 
     # Historical dependencies
-    depends_on("py-setuptools", when="@:8.12.0", type="build")
-    depends_on("py-six@1.0.0:1", when="@:5", type=("build", "run"))
+    depends_on("py-setuptools", type="build", when="@:8.12.0")
+    depends_on("py-six@1.0.0:1", type=("build", "run"), when="@:5")

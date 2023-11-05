@@ -43,18 +43,18 @@ class Orthofinder(Package):
     depends_on("py-numpy", type="run")
     depends_on("py-scipy", type="run")
     depends_on("diamond", type="run")
-    depends_on("blast-plus", when="@:2.2.7", type="run")
+    depends_on("blast-plus", type="run", when="@:2.2.7")
     depends_on("mcl", type="run")
     depends_on("fastme", type="run")
     depends_on("mafft", type="run")
     depends_on("fasttree", type="run")
     # variant dependencies
-    depends_on("blast-plus", when="+blast", type="run")
-    depends_on("mmseqs2", when="+mmseqs2", type="run")
-    depends_on("muscle5", when="+muscle", type="run")
-    depends_on("iqtree2", when="+iqtree", type="run")
-    depends_on("raxml", when="+raxml", type="run")
-    depends_on("raxml-ng", when="+raxml-ng", type="run")
+    depends_on("blast-plus", type="run", when="+blast")
+    depends_on("mmseqs2", type="run", when="+mmseqs2")
+    depends_on("muscle5", type="run", when="+muscle")
+    depends_on("iqtree2", type="run", when="+iqtree")
+    depends_on("raxml", type="run", when="+raxml")
+    depends_on("raxml-ng", type="run", when="+raxml-ng")
 
     def url_for_version(self, version):
         if "@:2.3.6" in self.spec:

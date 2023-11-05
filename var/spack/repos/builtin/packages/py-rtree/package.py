@@ -20,11 +20,11 @@ class PyRtree(PythonPackage):
     version("0.9.7", sha256="be8772ca34699a9ad3fb4cfe2cfb6629854e453c10b3328039301bbfc128ca3e")
     version("0.8.3", sha256="6cb9cf3000963ea6a3db777a597baee2bc55c4fc891e4f1967f262cc96148649")
 
-    depends_on("python@3.8:", when="@1.1:", type=("build", "run"))
-    depends_on("py-setuptools@61:", when="@1.1:", type="build")
-    depends_on("py-setuptools@39.2:", when="@1:", type="build")
+    depends_on("python@3.8:", type=("build", "run"), when="@1.1:")
+    depends_on("py-setuptools@61:", type="build", when="@1.1:")
+    depends_on("py-setuptools@39.2:", type="build", when="@1:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-typing-extensions@3.7:", when="@1: ^python@:3.7", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7:", type=("build", "run"), when="@1: ^python@:3.7")
     depends_on("libspatialindex@1.8.5:")
 
     def setup_build_environment(self, env):

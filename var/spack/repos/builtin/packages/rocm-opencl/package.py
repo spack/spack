@@ -115,7 +115,7 @@ class RocmOpencl(CMakePackage):
 
     depends_on("cmake@3:", type="build")
     depends_on("gl@4.5:", type="link")
-    depends_on("numactl", when="@3.7.0:", type="link")
+    depends_on("numactl", type="link", when="@3.7.0:")
 
     for d_version, d_shasum in [
         ("5.6.1", "cc9a99c7e4de3d9360c0a471b27d626e84a39c9e60e0aff1e8e1500d82391819"),

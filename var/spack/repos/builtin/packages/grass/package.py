@@ -68,7 +68,7 @@ class Grass(AutotoolsPackage):
     # https://courses.neteler.org/grass-gis-7-8-1-released-with-proj-6-and-gdal-3-support/
     depends_on("proj@6:", when="@7.8.1:")
     depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-six", when="@7.8:", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"), when="@7.8:")
 
     # Optional packages
     depends_on("libtiff", when="+tiff")
@@ -91,7 +91,7 @@ class Grass(AutotoolsPackage):
     conflicts("^gdal@3.3:", when="@7.8")
     depends_on("liblas", when="+liblas")
     depends_on("wxwidgets", when="+wxwidgets")
-    depends_on("py-wxpython@2.8.10.1:", when="+wxwidgets", type=("build", "run"))
+    depends_on("py-wxpython@2.8.10.1:", type=("build", "run"), when="+wxwidgets")
     depends_on("netcdf-c", when="+netcdf")
     depends_on("geos", when="+geos")
     depends_on("libx11", when="+x")

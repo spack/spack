@@ -28,5 +28,5 @@ class PyProv(PythonPackage):
     depends_on("py-networkx@2.0:", type=("build", "run"))
     depends_on("py-python-dateutil@2.2:", type=("build", "run"))
     depends_on("py-rdflib@4.2.1:", type=("build", "run"))
-    depends_on("py-pydot@1.2.0:", when="+dot", type=("build", "run"))
-    depends_on("graphviz", when="+dot", type=("build", "run"))
+    depends_on("py-pydot@1.2.0:", type=("build", "run"), when="+dot")
+    depends_on("graphviz", type=("build", "run"), when="+dot")

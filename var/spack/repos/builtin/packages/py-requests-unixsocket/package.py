@@ -18,4 +18,4 @@ class PyRequestsUnixsocket(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-pbr", type="build")
     depends_on("py-requests@1.1:", type=("build", "run"))
-    depends_on("py-urllib3@1.8:", when="@:0.2.0", type=("build", "run"))
+    depends_on("py-urllib3@1.8:", type=("build", "run"), when="@:0.2.0")

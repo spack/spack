@@ -49,8 +49,8 @@ class Ipm(AutotoolsPackage):
 
     # These are required when running the perl script ipm_parse,
     # which is used to create reports from the generated xml file
-    depends_on("perl", when="+parser", type="run")
-    depends_on("ploticus", when="+parser", type="run")
+    depends_on("perl", type="run", when="+parser")
+    depends_on("ploticus", type="run", when="+parser")
 
     # 2COMPLEX and 2DOUBLE_COMPLEX are non-standard types and lead
     # to compile errors when building with coll_details

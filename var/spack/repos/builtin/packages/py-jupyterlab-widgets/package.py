@@ -31,4 +31,4 @@ class PyJupyterlabWidgets(PythonPackage):
     )
 
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("python@3.7:", when="@3.0.3:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@3.0.3:")

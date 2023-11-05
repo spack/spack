@@ -27,17 +27,17 @@ class PyNumcodecs(PythonPackage):
 
     variant("msgpack", default=False, description="Codec to encode data as msgpacked bytes.")
 
-    depends_on("python@3.8:", when="@0.11:", type=("build", "link", "run"))
-    depends_on("python@3.6:3", when="@0.7:0.10", type=("build", "link", "run"))
-    depends_on("py-setuptools@64:", when="@0.11:", type="build")
+    depends_on("python@3.8:", type=("build", "link", "run"), when="@0.11:")
+    depends_on("python@3.6:3", type=("build", "link", "run"), when="@0.7:0.10")
+    depends_on("py-setuptools@64:", type="build", when="@0.11:")
     depends_on("py-setuptools@18.1:", type="build")
-    depends_on("py-setuptools-scm@6.2: +toml", when="@0.11:", type="build")
+    depends_on("py-setuptools-scm@6.2: +toml", type="build", when="@0.11:")
     depends_on("py-setuptools-scm@1.5.5: +toml", type="build")
     depends_on("py-cython", type="build")
     depends_on("py-numpy@1.7:", type=("build", "run"))
-    depends_on("py-py-cpuinfo", when="@0.11:", type="build")
-    depends_on("py-entrypoints", when="@0.10.1:0.11", type=("build", "run"))
-    depends_on("py-msgpack", when="+msgpack", type=("build", "run"))
+    depends_on("py-py-cpuinfo", type="build", when="@0.11:")
+    depends_on("py-entrypoints", type=("build", "run"), when="@0.10.1:0.11")
+    depends_on("py-msgpack", type=("build", "run"), when="+msgpack")
 
     patch("apple-clang-12.patch", when="%apple-clang@12:")
 

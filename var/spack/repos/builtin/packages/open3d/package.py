@@ -43,13 +43,13 @@ class Open3d(CMakePackage, CudaPackage):
     # depends_on('tinygltf')
     # depends_on('tinyobjloader')
 
-    extends("python", when="+python", type=("build", "link", "run"))
-    depends_on("python@3.6:", when="+python", type=("build", "link", "run"))
-    depends_on("py-pip", when="+python", type="build")
-    depends_on("py-setuptools@40.8:", when="+python", type="build")
-    depends_on("py-wheel@0.36:", when="+python", type="build")
-    depends_on("py-numpy@1.18:", when="+python", type=("build", "run"))
-    depends_on("py-pytest", when="+python", type="test")
+    extends("python", type=("build", "link", "run"), when="+python")
+    depends_on("python@3.6:", type=("build", "link", "run"), when="+python")
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-setuptools@40.8:", type="build", when="+python")
+    depends_on("py-wheel@0.36:", type="build", when="+python")
+    depends_on("py-numpy@1.18:", type=("build", "run"), when="+python")
+    depends_on("py-pytest", type="test", when="+python")
     depends_on("cuda@10.1:", when="+cuda")
 
     # C++14 compiler required

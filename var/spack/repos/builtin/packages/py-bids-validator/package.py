@@ -20,5 +20,5 @@ class PyBidsValidator(PythonPackage):
     version("1.8.4", sha256="63e7a02c9ddb5505a345e178f4e436b82c35ec0a177d7047b67ea10ea3029a68")
     version("1.7.2", sha256="12398831a3a3a2ed7c67e693cf596610c23dd23e0889bfeae0830bbd1d41e5b9")
 
-    depends_on("python@3.8:", when="@1.12:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@1.12:")
     depends_on("py-setuptools", type="build")

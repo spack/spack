@@ -20,9 +20,9 @@ class PyImportlibResources(PythonPackage):
     version("5.1.0", sha256="bfdad047bce441405a49cf8eb48ddce5e56c696e185f59147a8b79e75e9e6380")
     version("1.0.2", sha256="d3279fd0f6f847cced9f7acc19bd3e5df54d34f93a2e7bb5f238f81545787078")
 
-    depends_on("py-setuptools@56:", when="@5.9.0:", type="build")
+    depends_on("py-setuptools@56:", type="build", when="@5.9.0:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@3.4.1:+toml", when="@5:", type="build")
+    depends_on("py-setuptools-scm@3.4.1:+toml", type="build", when="@5:")
 
-    depends_on("py-zipp@3.1.0:", when="@5.2.2: ^python@:3.9", type=("build", "run"))
-    depends_on("py-zipp@0.4:", when="@5.0:5.1", type=("build", "run"))
+    depends_on("py-zipp@3.1.0:", type=("build", "run"), when="@5.2.2: ^python@:3.9")
+    depends_on("py-zipp@0.4:", type=("build", "run"), when="@5.0:5.1")

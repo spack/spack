@@ -34,7 +34,7 @@ class Latex2html(AutotoolsPackage):
 
     depends_on("netpbm", type=("build", "run"))
     # Provides pdftocairo
-    depends_on("poppler+glib", when="+svg", type=("build", "run"))
+    depends_on("poppler+glib", type=("build", "run"), when="+svg")
 
     # A copy of texlive function as long as it does not provide the
     # bin env to dependent package:

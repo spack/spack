@@ -21,22 +21,22 @@ class PyAmici(PythonPackage):
     depends_on("py-setuptools@48:", type=("build", "run"))
 
     depends_on("blas", type=("build", "run"))
-    depends_on("boost", when="+boost", type=("build", "run"))
-    depends_on("hdf5", when="+hdf5", type=("build", "run"))
+    depends_on("boost", type=("build", "run"), when="+boost")
+    depends_on("hdf5", type=("build", "run"), when="+hdf5")
     depends_on("swig@3.0:", type=("build", "run"))
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-sympy@1.9:", type=("build", "run"))
-    depends_on("py-numpy@1.17.5:", when="^python@3.8", type=("build", "run"))
-    depends_on("py-numpy@1.19.3:", when="^python@3.9", type=("build", "run"))
-    depends_on("py-numpy@1.21.4:", when="^python@3.10:", type=("build", "run"))
+    depends_on("py-numpy@1.17.5:", type=("build", "run"), when="^python@3.8")
+    depends_on("py-numpy@1.19.3:", type=("build", "run"), when="^python@3.9")
+    depends_on("py-numpy@1.21.4:", type=("build", "run"), when="^python@3.10:")
     depends_on("py-python-libsbml", type=("build", "run"))
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-pkgconfig", type=("build", "run"))
     depends_on("py-wurlitzer", type=("build", "run"))
     depends_on("py-toposort", type=("build", "run"))
-    depends_on("py-mpmath", when="@0.16.0:", type=("build", "run"))
+    depends_on("py-mpmath", type=("build", "run"), when="@0.16.0:")
 
     def setup_run_environment(self, env):
         env.set("BLAS_LIBS", " ".join(self.spec["blas"].libs))

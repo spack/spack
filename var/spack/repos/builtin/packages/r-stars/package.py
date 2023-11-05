@@ -21,7 +21,7 @@ class RStars(RPackage):
     depends_on("r@3.3.0:", type=("build", "run"))
     depends_on("r-abind", type=("build", "run"))
     depends_on("r-sf@1.0-8:", type=("build", "run"))
-    depends_on("r-sf@1.0-10:", when="@0.6-1:", type=("build", "run"))
+    depends_on("r-sf@1.0-10:", type=("build", "run"), when="@0.6-1:")
     depends_on("r-classint@0.4-1:", type=("build", "run"))
     depends_on("r-lwgeom", type=("build", "run"))
     depends_on("r-rlang", type=("build", "run"))

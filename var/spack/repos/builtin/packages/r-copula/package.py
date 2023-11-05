@@ -30,9 +30,9 @@ class RCopula(RPackage):
     version("0.999-20", sha256="7d3d47bce2dacb05b94a772f84dbf3d83c99ac2ac11e5f1b4b03d50d9d5c0fb0")
 
     depends_on("r@3.2.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", when="@1.0-1:", type=("build", "run"))
+    depends_on("r@3.5.0:", type=("build", "run"), when="@1.0-1:")
     depends_on("r-matrix", type=("build", "run"))
-    depends_on("r-matrix@1.5-0:", when="@1.1-2:", type=("build", "run"))
+    depends_on("r-matrix@1.5-0:", type=("build", "run"), when="@1.1-2:")
     depends_on("r-lattice", type=("build", "run"))
     depends_on("r-colorspace", type=("build", "run"))
     depends_on("r-gsl", type=("build", "run"))

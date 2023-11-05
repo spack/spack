@@ -23,7 +23,7 @@ class Ross(CMakePackage):
     version("6.0.0", sha256="07ff70518a58503e116bb7386f490e901212798afdd471da1bcd34f78a7e6030")
 
     depends_on("mpi")
-    depends_on("cmake@3.5:", when="@7.0.1:", type="build")
+    depends_on("cmake@3.5:", type="build", when="@7.0.1:")
 
     @when("@:7.0.0")
     def cmake_args(self):

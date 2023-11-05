@@ -28,10 +28,10 @@ class PyLightningUtilities(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # requirements/base.txt
-    depends_on("py-importlib-metadata@4:", when="@0.4.1: ^python@:3.7", type=("build", "run"))
-    depends_on("py-packaging@17.1:", when="@0.6.0.post0:", type=("build", "run"))
-    depends_on("py-packaging@20:", when="@0.5:0.6.0.a", type=("build", "run"))
-    depends_on("py-typing-extensions", when="@0.5:", type=("build", "run"))
+    depends_on("py-importlib-metadata@4:", type=("build", "run"), when="@0.4.1: ^python@:3.7")
+    depends_on("py-packaging@17.1:", type=("build", "run"), when="@0.6.0.post0:")
+    depends_on("py-packaging@20:", type=("build", "run"), when="@0.5:0.6.0.a")
+    depends_on("py-typing-extensions", type=("build", "run"), when="@0.5:")
 
     # Historical dependencies
-    depends_on("py-fire", when="@0.3.0", type=("build", "run"))
+    depends_on("py-fire", type=("build", "run"), when="@0.3.0")

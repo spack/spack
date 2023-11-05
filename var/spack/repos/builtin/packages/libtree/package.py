@@ -62,13 +62,13 @@ class Libtree(MakefilePackage, CMakePackage):
         )
         depends_on("googletest", type="test")
         depends_on("cmake@3:", type="build")
-        depends_on("chrpath", when="+chrpath", type="run")
-        depends_on("binutils", when="+strip", type="run")
+        depends_on("chrpath", type="run", when="+chrpath")
+        depends_on("binutils", type="run", when="+strip")
 
     # header only dependencies
-    depends_on("cpp-termcolor", when="@2.0.0:2", type="build")
-    depends_on("cxxopts", when="@2.0.0:2", type="build")
-    depends_on("elfio@:3.9", when="@2.0.0:2", type="build")
+    depends_on("cpp-termcolor", type="build", when="@2.0.0:2")
+    depends_on("cxxopts", type="build", when="@2.0.0:2")
+    depends_on("elfio@:3.9", type="build", when="@2.0.0:2")
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):

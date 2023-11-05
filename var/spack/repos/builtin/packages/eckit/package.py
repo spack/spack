@@ -63,18 +63,18 @@ class Eckit(CMakePackage):
 
     # Build issues with cmake 3.20, not sure about 3.21
     depends_on("cmake@3.12:3.19,3.22:", type="build")
-    depends_on("ecbuild@3.5:", when="@:1.20.99", type="build")
-    depends_on("ecbuild@3.7:", when="@1.21:", type="build")
+    depends_on("ecbuild@3.5:", type="build", when="@:1.20.99")
+    depends_on("ecbuild@3.7:", type="build", when="@1.21:")
 
     depends_on("mpi", when="+mpi")
-    depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
+    depends_on("llvm-openmp", type=("build", "run"), when="+openmp %apple-clang")
 
-    depends_on("yacc", when="+admin", type="build")
-    depends_on("flex", when="+admin", type="build")
+    depends_on("yacc", type="build", when="+admin")
+    depends_on("flex", type="build", when="+admin")
     depends_on("ncurses", when="+admin")
 
-    depends_on("yacc", when="+sql", type="build")
-    depends_on("flex", when="+sql", type="build")
+    depends_on("yacc", type="build", when="+sql")
+    depends_on("flex", type="build", when="+sql")
 
     depends_on("eigen", when="linalg=eigen")
     depends_on("armadillo", when="linalg=armadillo")

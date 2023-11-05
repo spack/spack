@@ -25,5 +25,5 @@ class PyMsgpack(PythonPackage):
     version("0.6.0", sha256="4478a5f68142414084cd43af8f21cef9619ad08bb3c242ea505330dade6ca9ea")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@35.0.2:", when="@1.0.4:", type="build")
-    depends_on("py-cython@0.29.30:0.29", when="@1.0.4:", type="build")
+    depends_on("py-setuptools@35.0.2:", type="build", when="@1.0.4:")
+    depends_on("py-cython@0.29.30:0.29", type="build", when="@1.0.4:")

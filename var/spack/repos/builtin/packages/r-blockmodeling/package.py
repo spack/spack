@@ -24,6 +24,6 @@ class RBlockmodeling(RPackage):
     depends_on("r@2.10:", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
 
-    depends_on("r-doparallel", when="@:0.3.4", type=("build", "run"))
-    depends_on("r-dorng", when="@:0.3.4", type=("build", "run"))
-    depends_on("r-foreach", when="@:0.3.4", type=("build", "run"))
+    depends_on("r-doparallel", type=("build", "run"), when="@:0.3.4")
+    depends_on("r-dorng", type=("build", "run"), when="@:0.3.4")
+    depends_on("r-foreach", type=("build", "run"), when="@:0.3.4")

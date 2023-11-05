@@ -49,11 +49,11 @@ class Gnuradio(CMakePackage):
     depends_on("cppzmq")
 
     depends_on("cairo+X+ft+fc+pdf+gobject", when="+gui")
-    depends_on("hicolor-icon-theme", when="+gui", type=("build", "run"))
-    depends_on("adwaita-icon-theme", when="+gui", type=("build", "run"))
-    depends_on("gsettings-desktop-schemas", when="+gui", type=("build", "run"))
-    depends_on("py-pygobject", when="+gui", type=("build", "run"))
-    depends_on("py-pyqt5", when="+gui", type=("build", "run"))
+    depends_on("hicolor-icon-theme", type=("build", "run"), when="+gui")
+    depends_on("adwaita-icon-theme", type=("build", "run"), when="+gui")
+    depends_on("gsettings-desktop-schemas", type=("build", "run"), when="+gui")
+    depends_on("py-pygobject", type=("build", "run"), when="+gui")
+    depends_on("py-pyqt5", type=("build", "run"), when="+gui")
     depends_on("qwt", when="+gui")
 
     extends("python")

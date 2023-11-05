@@ -30,25 +30,25 @@ class PyUrllib3(PythonPackage):
     variant("secure", default=False, description="Add SSL/TLS support")
     variant("socks", default=False, when="@1.15:", description="SOCKS and HTTP proxy support")
 
-    depends_on("py-hatchling@1.6:1", when="@2:", type="build")
+    depends_on("py-hatchling@1.6:1", type="build", when="@2:")
 
     with when("+brotli"):
-        depends_on("py-brotli@1.0.9:", when="@1.26.9:", type=("build", "run"))
+        depends_on("py-brotli@1.0.9:", type=("build", "run"), when="@1.26.9:")
 
         # Historical dependencies
-        depends_on("py-brotlipy@0.6:", when="@:1.26.8", type=("build", "run"))
+        depends_on("py-brotlipy@0.6:", type=("build", "run"), when="@:1.26.8")
 
     with when("+secure"):
-        depends_on("py-pyopenssl@17.1:", when="@2:", type=("build", "run"))
-        depends_on("py-pyopenssl@0.14:", when="@1", type=("build", "run"))
-        depends_on("py-cryptography@1.9:", when="@2:", type=("build", "run"))
-        depends_on("py-cryptography@1.3.4:", when="@1", type=("build", "run"))
+        depends_on("py-pyopenssl@17.1:", type=("build", "run"), when="@2:")
+        depends_on("py-pyopenssl@0.14:", type=("build", "run"), when="@1")
+        depends_on("py-cryptography@1.9:", type=("build", "run"), when="@2:")
+        depends_on("py-cryptography@1.3.4:", type=("build", "run"), when="@1")
         depends_on("py-idna@2:", type=("build", "run"))
         depends_on("py-certifi", type=("build", "run"))
-        depends_on("py-urllib3-secure-extra", when="@1.26.12:", type=("build", "run"))
+        depends_on("py-urllib3-secure-extra", type=("build", "run"), when="@1.26.12:")
 
-    depends_on("py-pysocks@1.5.6,1.5.8:1", when="+socks", type=("build", "run"))
+    depends_on("py-pysocks@1.5.6,1.5.8:1", type=("build", "run"), when="+socks")
 
     # Historical dependencies
-    depends_on("py-setuptools", when="@1", type="build")
-    depends_on("python@3.6:3", when="@1.26.12:1", type=("build", "run"))
+    depends_on("py-setuptools", type="build", when="@1")
+    depends_on("python@3.6:3", type=("build", "run"), when="@1.26.12:1")

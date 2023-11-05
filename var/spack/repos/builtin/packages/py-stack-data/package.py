@@ -20,8 +20,8 @@ class PyStackData(PythonPackage):
     depends_on("py-setuptools@44:", type="build")
     depends_on("py-setuptools-scm+toml@3.4.3:", type="build")
 
-    depends_on("py-executing@1.2:", when="@0.6:", type=("build", "run"))
+    depends_on("py-executing@1.2:", type=("build", "run"), when="@0.6:")
     depends_on("py-executing", type=("build", "run"))
-    depends_on("py-asttokens@2.1:", when="@0.6:", type=("build", "run"))
+    depends_on("py-asttokens@2.1:", type=("build", "run"), when="@0.6:")
     depends_on("py-asttokens", type=("build", "run"))
     depends_on("py-pure-eval", type=("build", "run"))

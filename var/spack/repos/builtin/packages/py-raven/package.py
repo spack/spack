@@ -17,5 +17,5 @@ class PyRaven(PythonPackage):
     variant("flask", default=False, description="Build flask backend")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-flask@0.8:", when="+flask", type=("build", "run"))
-    depends_on("py-blinker@1.1:", when="+flask", type=("build", "run"))
+    depends_on("py-flask@0.8:", type=("build", "run"), when="+flask")
+    depends_on("py-blinker@1.1:", type=("build", "run"), when="+flask")

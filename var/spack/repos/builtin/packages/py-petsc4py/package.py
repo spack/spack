@@ -63,12 +63,12 @@ class PyPetsc4py(PythonPackage):
 
     patch("ldshared.patch", when="@:3.18")
 
-    depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
+    depends_on("py-cython@0.29.32:", type="build", when="^python@3.11:")
     depends_on("py-cython@0.24:", type="build")
     depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-mpi4py", when="+mpi", type=("build", "run"))
+    depends_on("py-mpi4py", type=("build", "run"), when="+mpi")
 
     depends_on("petsc+mpi", when="+mpi")
     depends_on("petsc~mpi", when="~mpi")

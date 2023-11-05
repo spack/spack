@@ -27,7 +27,7 @@ class NetcdfCxx4(AutotoolsPackage):
 
     depends_on("netcdf-c")
 
-    depends_on("doxygen", when="+doc", type="build")
+    depends_on("doxygen", type="build", when="+doc")
 
     filter_compiler_wrappers("ncxx4-config", relative_root="bin")
 

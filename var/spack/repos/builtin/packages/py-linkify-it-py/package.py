@@ -15,7 +15,7 @@ class PyLinkifyItPy(PythonPackage):
     version("2.0.2", sha256="19f3060727842c254c808e99d465c80c49d2c7306788140987a1a7a29b0d6ad2")
     version("1.0.3", sha256="2b3f168d5ce75e3a425e34b341a6b73e116b5d9ed8dbbbf5dc7456843b7ce2ee")
 
-    depends_on("python@3.6:", when="@1.0.3", type=("build", "run"))
-    depends_on("python@3.7:", when="@2.0.2:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@1.0.3")
+    depends_on("python@3.7:", type=("build", "run"), when="@2.0.2:")
     depends_on("py-setuptools", type="build")
     depends_on("py-uc-micro-py", type=("build", "run"))

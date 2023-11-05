@@ -51,8 +51,8 @@ class Nix(AutotoolsPackage):
     depends_on("bison@2.6.0:", type="build")
     depends_on("flex@2.5.35:", type="build")
     depends_on("libtool", type="build")
-    depends_on("libxml2", when="+doc", type="build")
-    depends_on("libxslt", when="+doc", type="build")
+    depends_on("libxml2", type="build", when="+doc")
+    depends_on("libxslt", type="build", when="+doc")
 
     depends_on("boost@1.66.0:+coroutine+context cxxstd=14", when="@2.2.0:")
     depends_on("boost@1.61.0:+coroutine+context cxxstd=14", when="@2.0.0:")

@@ -66,8 +66,8 @@ class AbseilCpp(CMakePackage):
         description="C++ standard used during compilation",
     )
 
-    depends_on("cmake@3.10:", when="@2023:", type="build")
-    depends_on("cmake@3.5:", when="@2019:", type="build")
+    depends_on("cmake@3.10:", type="build", when="@2023:")
+    depends_on("cmake@3.5:", type="build", when="@2019:")
     depends_on("cmake@3.1:", type="build")
 
     def cmake_args(self):

@@ -30,29 +30,29 @@ class PyCryptography(PythonPackage):
     variant("idna", default=False, when="@2.5:3.0", description="Deprecated U-label support")
 
     # distutils required in version <= 40
-    depends_on("python@:3.11", when="@:40", type=("build", "run"))
-    depends_on("py-setuptools@61.0:", when="@41:", type="build")
-    depends_on("py-setuptools@40.6:60.8,60.9.1:", when="@37:", type="build")
-    depends_on("py-setuptools@40.6:", when="@2.7:36", type="build")
-    depends_on("py-setuptools@18.5:", when="@2.2:2.6", type="build")
-    depends_on("py-setuptools@11.3:", when="@:2.1", type="build")
-    depends_on("py-setuptools-rust@0.11.4:", when="@3.4.2:", type="build")
-    depends_on("py-setuptools-rust@0.11.4:", when="@3.4:3.4.1", type=("build", "run"))
-    depends_on("rust@1.56:", when="@41:", type="build")
-    depends_on("rust@1.48:", when="@38:", type="build")
-    depends_on("rust@1.41:", when="@3.4.5:", type="build")
-    depends_on("rust@1.45:", when="@3.4.3:3.4.4", type="build")
-    depends_on("pkgconfig", when="@40:", type="build")
+    depends_on("python@:3.11", type=("build", "run"), when="@:40")
+    depends_on("py-setuptools@61.0:", type="build", when="@41:")
+    depends_on("py-setuptools@40.6:60.8,60.9.1:", type="build", when="@37:")
+    depends_on("py-setuptools@40.6:", type="build", when="@2.7:36")
+    depends_on("py-setuptools@18.5:", type="build", when="@2.2:2.6")
+    depends_on("py-setuptools@11.3:", type="build", when="@:2.1")
+    depends_on("py-setuptools-rust@0.11.4:", type="build", when="@3.4.2:")
+    depends_on("py-setuptools-rust@0.11.4:", type=("build", "run"), when="@3.4:3.4.1")
+    depends_on("rust@1.56:", type="build", when="@41:")
+    depends_on("rust@1.48:", type="build", when="@38:")
+    depends_on("rust@1.41:", type="build", when="@3.4.5:")
+    depends_on("rust@1.45:", type="build", when="@3.4.3:3.4.4")
+    depends_on("pkgconfig", type="build", when="@40:")
 
-    depends_on("py-cffi@1.12:", when="@3.3:", type=("build", "run"))
-    depends_on("py-cffi@1.8:1.11.2,1.11.4:", when="@2.5:3.2", type=("build", "run"))
-    depends_on("py-cffi@1.7:1.11.2,1.11.4:", when="@1.9:2.4.2", type=("build", "run"))
+    depends_on("py-cffi@1.12:", type=("build", "run"), when="@3.3:")
+    depends_on("py-cffi@1.8:1.11.2,1.11.4:", type=("build", "run"), when="@2.5:3.2")
+    depends_on("py-cffi@1.7:1.11.2,1.11.4:", type=("build", "run"), when="@1.9:2.4.2")
     depends_on("py-cffi@1.4.1:", type=("build", "run"))
 
-    depends_on("py-asn1crypto@0.21.0:", when="@:2.7", type=("build", "run"))
-    depends_on("py-six@1.4.1:", when="@:3.3", type=("build", "run"))
-    depends_on("py-idna@2.1:", when="@:2.4", type=("build", "run"))  # deprecated
-    depends_on("py-idna@2.1:", when="@2.5: +idna", type=("build", "run"))  # deprecated
+    depends_on("py-asn1crypto@0.21.0:", type=("build", "run"), when="@:2.7")
+    depends_on("py-six@1.4.1:", type=("build", "run"), when="@:3.3")
+    depends_on("py-idna@2.1:", type=("build", "run"), when="@:2.4")  # deprecated
+    depends_on("py-idna@2.1:", type=("build", "run"), when="@2.5: +idna")  # deprecated
 
     depends_on("openssl")
     depends_on("openssl@:1.0", when="@:1.8.1")
@@ -63,7 +63,7 @@ class PyCryptography(PythonPackage):
     # https://community.home-assistant.io/t/error-failed-building-wheel-for-cryptography/352020/14
     # We use CLI git instead of Cargo's internal git library
     # See reference: https://doc.rust-lang.org/cargo/reference/config.html#netgit-fetch-with-cli
-    depends_on("git", when="@35:", type="build")
+    depends_on("git", type="build", when="@35:")
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("@35:"):

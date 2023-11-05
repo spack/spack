@@ -103,7 +103,7 @@ class Tau(Package):
     )
     variant("dyninst", default=False, description="Activates dyninst support")
 
-    depends_on("cmake@3.14:", when="%clang", type="build")
+    depends_on("cmake@3.14:", type="build", when="%clang")
     depends_on("zlib-api", type="link")
     depends_on("pdt", when="+pdt")  # Required for TAU instrumentation
     depends_on("scorep", when="+scorep")
@@ -119,7 +119,7 @@ class Tau(Package):
     # python 3.11 doesn't work as of 2.32
     depends_on("python@2.7:3.10", when="@2.31.1:+python")
     depends_on("libunwind", when="+libunwind")
-    depends_on("mpi", when="+mpi", type=("build", "run", "link"))
+    depends_on("mpi", type=("build", "run", "link"), when="+mpi")
     depends_on("cuda", when="+cuda")
     depends_on("gasnet", when="+gasnet")
     depends_on("adios2", when="+adios2")

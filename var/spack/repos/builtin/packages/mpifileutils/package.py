@@ -56,7 +56,7 @@ class Mpifileutils(Package):
 
     depends_on("openssl")
 
-    depends_on("cmake@3.1:", when="@0.9:", type="build")
+    depends_on("cmake@3.1:", type="build", when="@0.9:")
 
     variant("xattr", default=True, description="Enable code for extended attributes")
 

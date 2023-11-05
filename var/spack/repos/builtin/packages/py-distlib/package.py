@@ -19,8 +19,8 @@ class PyDistlib(PythonPackage):
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@44:", when="@0.3.6:", type="build")
-    depends_on("py-wheel@0.29.0:", when="@0.3.6:", type="build")
+    depends_on("py-setuptools@44:", type="build", when="@0.3.6:")
+    depends_on("py-wheel@0.29.0:", type="build", when="@0.3.6:")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/d/distlib/distlib-{0}.{1}"

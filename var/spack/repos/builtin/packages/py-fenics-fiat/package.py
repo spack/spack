@@ -34,6 +34,6 @@ class PyFenicsFiat(PythonPackage):
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-sympy", when="@2019.1.0", type=("build", "run"))
+    depends_on("py-sympy", type=("build", "run"), when="@2019.1.0")
     # avoid compilation error of dolfin (ffc fails with latest sympy)
-    depends_on("py-sympy@1.0", when="@:2018.1.0", type=("build", "run"))
+    depends_on("py-sympy@1.0", type=("build", "run"), when="@:2018.1.0")

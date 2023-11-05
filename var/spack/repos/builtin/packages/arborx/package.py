@@ -59,7 +59,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     variant("trilinos", default=False, description="use Kokkos from Trilinos")
 
     depends_on("cmake@3.12:", type="build")
-    depends_on("cmake@3.16:", when="@1.0:", type="build")
+    depends_on("cmake@3.16:", type="build", when="@1.0:")
     depends_on("mpi", when="+mpi")
     depends_on("rocthrust", when="+rocm")
 

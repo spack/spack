@@ -22,7 +22,7 @@ class Apfel(AutotoolsPackage):
 
     depends_on("swig", when="+python")
     depends_on("python", type=("build", "run"))
-    depends_on("lhapdf", when="+lhapdf", type=("build", "run"))
+    depends_on("lhapdf", type=("build", "run"), when="+lhapdf")
 
     variant("python", description="Build python wrapper", default=False)
     variant("lhapdf", description="Link to LHAPDF", default=False)

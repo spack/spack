@@ -63,8 +63,8 @@ class Clhep(CMakePackage):
         description="Use the specified C++ standard when building.",
     )
 
-    depends_on("cmake@2.8.12.2:", when="@2.2.0.4:2.3.0.0", type="build")
-    depends_on("cmake@3.2:", when="@2.3.0.1:", type="build")
+    depends_on("cmake@2.8.12.2:", type="build", when="@2.2.0.4:2.3.0.0")
+    depends_on("cmake@3.2:", type="build", when="@2.3.0.1:")
 
     variant("cms", default=False, description="Apply CMS-specific changes")
 

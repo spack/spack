@@ -42,7 +42,7 @@ class UtilLinux(AutotoolsPackage):
 
     variant("bash", default=False, description="Install bash completion scripts")
 
-    depends_on("bash", when="+bash", type="run")
+    depends_on("bash", type="run", when="+bash")
 
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/util-linux/v{0}/util-linux-{1}.tar.gz"

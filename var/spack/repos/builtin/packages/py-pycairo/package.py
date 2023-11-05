@@ -20,9 +20,9 @@ class PyPycairo(PythonPackage):
     version("1.18.1", sha256="70172e58b6bad7572a3518c26729b074acdde15e6fee6cbab6d3528ad552b786")
     version("1.17.1", sha256="0f0a35ec923d87bc495f6753b1e540fd046d95db56a35250c44089fbce03b698")
 
-    depends_on("python@3.8:", when="@1.23:", type=("build", "run"))
-    depends_on("python@3.6:3", when="@1.20:1.22", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:3.7", when="@1.18.1:1.19", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@1.23:")
+    depends_on("python@3.6:3", type=("build", "run"), when="@1.20:1.22")
+    depends_on("python@2.7:2.8,3.4:3.7", type=("build", "run"), when="@1.18.1:1.19")
     depends_on("py-setuptools", type="build")
     # https://github.com/pygobject/pycairo/blob/main/docs/getting_started.rst
     depends_on("pkgconfig", type="build")

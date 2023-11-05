@@ -54,7 +54,7 @@ class Swipl(CMakePackage):
 
     depends_on("libxft", when="+xpce")
     depends_on("fontconfig", when="+xpce")
-    depends_on("pkgconfig", when="+xpce", type="build")
+    depends_on("pkgconfig", type="build", when="+xpce")
 
     conflicts("%intel", msg="Test builds with ICC failed when creating startup image")
 

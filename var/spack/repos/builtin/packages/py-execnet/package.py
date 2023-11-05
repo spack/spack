@@ -19,7 +19,7 @@ class PyExecnet(PythonPackage):
     version("1.4.1", sha256="f66dd4a7519725a1b7e14ad9ae7d3df8e09b2da88062386e08e941cafc0ef3e6")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@1.9:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@1.9:")
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")
-    depends_on("py-apipkg@1.4:", when="@:1.7", type=("build", "run"))
+    depends_on("py-apipkg@1.4:", type=("build", "run"), when="@:1.7")

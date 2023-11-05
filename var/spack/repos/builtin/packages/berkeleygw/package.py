@@ -58,10 +58,10 @@ class Berkeleygw(MakefilePackage):
     depends_on("fftw-api@3~openmp", when="~openmp")
 
     # in order to run the installed python scripts
-    depends_on("python", when="+python", type=("build", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-setuptools", when="+python", type=("build", "run"))
-    depends_on("py-h5py", when="+hdf5+python", type=("build", "run"))
+    depends_on("python", type=("build", "run"), when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-setuptools", type=("build", "run"), when="+python")
+    depends_on("py-h5py", type=("build", "run"), when="+hdf5+python")
 
     depends_on("perl", type="test")
 

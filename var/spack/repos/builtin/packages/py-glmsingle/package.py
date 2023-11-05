@@ -25,8 +25,8 @@ class PyGlmsingle(PythonPackage):
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
     depends_on("py-fracridge", type=("build", "run"))
-    depends_on("py-nibabel", when="@1.1:", type=("build", "run"))
-    depends_on("py-h5py", when="@1.1:", type=("build", "run"))
+    depends_on("py-nibabel", type=("build", "run"), when="@1.1:")
+    depends_on("py-h5py", type=("build", "run"), when="@1.1:")
 
     with when("@:1.0"):
         depends_on("py-twine", type=("build", "run"))

@@ -28,5 +28,5 @@ class PyGlobusSdk(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-requests@2.19.1:2", type=("build", "run"))
     depends_on("py-pyjwt@2.0.0:2+crypto", type=("build", "run"))
-    depends_on("py-cryptography@3.3.1:3.3,3.4.1:", when="@3.7:", type=("build", "run"))
-    depends_on("py-cryptography@2:3.3,3.4.1:3.6", when="@:3.0", type=("build", "run"))
+    depends_on("py-cryptography@3.3.1:3.3,3.4.1:", type=("build", "run"), when="@3.7:")
+    depends_on("py-cryptography@2:3.3,3.4.1:3.6", type=("build", "run"), when="@:3.0")

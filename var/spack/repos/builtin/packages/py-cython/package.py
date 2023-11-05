@@ -51,10 +51,10 @@ class PyCython(PythonPackage):
 
     # https://github.com/cython/cython/commit/1cd24026e9cf6d63d539b359f8ba5155fd48ae21
     # collections.Iterable was removed in Python 3.10
-    depends_on("python@:3.9", when="@:0.29.14", type=("build", "link", "run"))
+    depends_on("python@:3.9", type=("build", "link", "run"), when="@:0.29.14")
 
     # https://github.com/cython/cython/commit/430e2ca220c8fed49604daf578df98aadb33a87d
-    depends_on("python@:3.8", when="@:0.29.13", type=("build", "link", "run"))
+    depends_on("python@:3.8", type=("build", "link", "run"), when="@:0.29.13")
 
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("gdb@7.2:", type="test")

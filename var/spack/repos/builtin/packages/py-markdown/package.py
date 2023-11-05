@@ -22,10 +22,10 @@ class PyMarkdown(PythonPackage):
     version("3.1.1", sha256="2e50876bcdd74517e7b71f3e7a76102050edec255b3983403f1a63e7c8a41e7a")
 
     depends_on("python@2.7:2.8,3.3.5:", type=("build", "run"))
-    depends_on("python@3.6:", when="@3.3.4:", type=("build", "run"))
-    depends_on("python@3.7:", when="@3.4.1:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@3.3.4:")
+    depends_on("python@3.7:", type=("build", "run"), when="@3.4.1:")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@36.6:", type="build")
-    depends_on("py-importlib-metadata", when="@3.3.4: ^python@:3.7", type=("build", "run"))
-    depends_on("py-importlib-metadata@4.4:", when="@3.4.1: ^python@:3.9", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@3.3.4: ^python@:3.7")
+    depends_on("py-importlib-metadata@4.4:", type=("build", "run"), when="@3.4.1: ^python@:3.9")

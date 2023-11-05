@@ -41,7 +41,7 @@ class RVgam(RPackage):
     version("1.0-0", sha256="6acdd7db49c0987c565870afe593160ceba72a6ca4a84e6da3cf6f74d1fa02e1")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@3.1.0:", when="@1.0-2:", type=("build", "run"))
-    depends_on("r@3.4.0:", when="@1.0-4:", type=("build", "run"))
-    depends_on("r@3.5.0:", when="@1.1-5:", type=("build", "run"))
-    depends_on("r@4.0.0:", when="@1.1-8:", type=("build", "run"))
+    depends_on("r@3.1.0:", type=("build", "run"), when="@1.0-2:")
+    depends_on("r@3.4.0:", type=("build", "run"), when="@1.0-4:")
+    depends_on("r@3.5.0:", type=("build", "run"), when="@1.1-5:")
+    depends_on("r@4.0.0:", type=("build", "run"), when="@1.1-8:")

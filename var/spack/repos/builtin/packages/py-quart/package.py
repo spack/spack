@@ -25,5 +25,5 @@ class PyQuart(PythonPackage):
     depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-toml", type=("build", "run"))
     depends_on("py-werkzeug@2:", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")

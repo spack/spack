@@ -67,7 +67,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     depends_on("bzip2", type="link")
     depends_on("xz", type="link")
     depends_on("zlib-api", type="link")
-    depends_on("zstd", when="@0.182:", type="link")
+    depends_on("zstd", type="link", when="@0.182:")
 
     depends_on("gettext", when="+nls")
     depends_on("iconv")
@@ -76,10 +76,10 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     # debuginfod has extra dependencies
     # NB: Waiting on an elfutils patch before we can use libmicrohttpd@0.9.51
-    depends_on("libmicrohttpd@0.9.33:0.9.50", when="+debuginfod", type="link")
-    depends_on("libarchive@3.1.2:", when="+debuginfod", type="link")
-    depends_on("sqlite@3.7.17:", when="+debuginfod", type="link")
-    depends_on("curl@7.29.0:", when="+debuginfod", type="link")
+    depends_on("libmicrohttpd@0.9.33:0.9.50", type="link", when="+debuginfod")
+    depends_on("libarchive@3.1.2:", type="link", when="+debuginfod")
+    depends_on("sqlite@3.7.17:", type="link", when="+debuginfod")
+    depends_on("curl@7.29.0:", type="link", when="+debuginfod")
 
     conflicts("%gcc@7.2.0:", when="@0.163")
 

@@ -24,8 +24,8 @@ class Elfio(CMakePackage):
     version("3.7", sha256="0af2452214c32639f8dbe520b31e03802be184581ab5ad65e99ed745274dbd5d")
 
     # note, 3.10 is required on master it seems
-    depends_on("cmake@3.12:", when="@3.8:", type="build")
-    depends_on("cmake@3.12.4:", when="@3.7", type="build")
+    depends_on("cmake@3.12:", type="build", when="@3.8:")
+    depends_on("cmake@3.12.4:", type="build", when="@3.7")
 
     def cmake_args(self):
         return [

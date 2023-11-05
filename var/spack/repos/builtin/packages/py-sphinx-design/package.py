@@ -20,5 +20,5 @@ class PySphinxDesign(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-flit-core@3.4:3", type=("build"))
-    depends_on("py-sphinx@4:5", when="@0.3", type=("build", "run"))
-    depends_on("py-sphinx@4:6", when="@0.4:", type=("build", "run"))
+    depends_on("py-sphinx@4:5", type=("build", "run"), when="@0.3")
+    depends_on("py-sphinx@4:6", type=("build", "run"), when="@0.4:")

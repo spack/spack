@@ -84,8 +84,8 @@ class Libunwind(AutotoolsPackage):
     depends_on("libtool", type="build", when=reconf_versions)
     depends_on("m4", type="build", when=reconf_versions)
 
-    depends_on("xz", when="+xz", type="link")
-    depends_on("zlib-api", when="+zlib", type="link")
+    depends_on("xz", type="link", when="+xz")
+    depends_on("zlib-api", type="link", when="+zlib")
 
     conflicts("platform=darwin", msg="Non-GNU libunwind needs ELF libraries Darwin does not have")
 

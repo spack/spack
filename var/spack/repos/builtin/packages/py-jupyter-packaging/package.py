@@ -25,14 +25,14 @@ class PyJupyterPackaging(PythonPackage):
         url="https://files.pythonhosted.org/packages/source/j/jupyter_packaging/jupyter-packaging-0.7.12.tar.gz",
     )
 
-    depends_on("python@3.7:", when="@0.11:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@0.11:")
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-tomlkit", when="@0.8:", type=("build", "run"))
-    depends_on("py-setuptools@60.2:", when="@0.12:", type=("build", "run"))
-    depends_on("py-setuptools@46.4:", when="@0.8:", type=("build", "run"))
+    depends_on("py-tomlkit", type=("build", "run"), when="@0.8:")
+    depends_on("py-setuptools@60.2:", type=("build", "run"), when="@0.12:")
+    depends_on("py-setuptools@46.4:", type=("build", "run"), when="@0.8:")
     # https://github.com/jupyter/jupyter-packaging/issues/130
-    depends_on("py-setuptools@:60", when="@:0.11", type=("build", "run"))
+    depends_on("py-setuptools@:60", type=("build", "run"), when="@:0.11")
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-wheel", when="@0.8:", type=("build", "run"))
-    depends_on("py-deprecation", when="@0.8:", type=("build", "run"))
+    depends_on("py-wheel", type=("build", "run"), when="@0.8:")
+    depends_on("py-deprecation", type=("build", "run"), when="@0.8:")

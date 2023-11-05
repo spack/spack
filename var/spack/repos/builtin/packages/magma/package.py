@@ -47,7 +47,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda@8:", when="@2.5.1: +cuda")  # See PR #14471
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
-    depends_on("python", when="@master", type="build")
+    depends_on("python", type="build", when="@master")
 
     conflicts("~cuda", when="~rocm", msg="magma: Either CUDA or HIP support must be enabled")
     conflicts("+rocm", when="+cuda", msg="magma: CUDA must be disabled to support HIP (ROCm)")

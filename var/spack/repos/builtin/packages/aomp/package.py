@@ -93,14 +93,14 @@ class Aomp(Package):
 
     # Cmake above 3.18 would fail the build on 3.5.0
     depends_on("cmake@3:", type="build")
-    depends_on("cmake@3:3.17", when="@3.5.0", type="build")
+    depends_on("cmake@3:3.17", type="build", when="@3.5.0")
 
-    depends_on("python@3:", when="@3.9.0:", type="build")
-    depends_on("py-setuptools", when="@3.9.0:", type="build")
+    depends_on("python@3:", type="build", when="@3.9.0:")
+    depends_on("py-setuptools", type="build", when="@3.9.0:")
 
     depends_on("gl@4.5:", type=("build", "link"))
-    depends_on("py-pip", when="@3.8.0:", type="build")
-    depends_on("py-wheel", when="@3.8.0:", type=("build", "run"))
+    depends_on("py-pip", type="build", when="@3.8.0:")
+    depends_on("py-wheel", type=("build", "run"), when="@3.8.0:")
     depends_on("perl-data-dumper", type="build")
     depends_on("awk", type="build")
     depends_on("elfutils", type=("build", "link"))

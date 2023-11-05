@@ -35,5 +35,5 @@ class PyStreamlit(PythonPackage):
     depends_on("py-typing-extensions@3.10:", type=("build", "run"))
     depends_on("py-tzlocal@1.1:", type=("build", "run"))
     depends_on("py-validators@0.2:", type=("build", "run"))
-    depends_on("py-watchdog", when="platform=linux", type=("build", "run"))
-    depends_on("py-watchdog", when="platform=windows", type=("build", "run"))
+    depends_on("py-watchdog", type=("build", "run"), when="platform=linux")
+    depends_on("py-watchdog", type=("build", "run"), when="platform=windows")

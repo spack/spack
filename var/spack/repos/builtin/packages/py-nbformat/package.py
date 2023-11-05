@@ -23,18 +23,18 @@ class PyNbformat(PythonPackage):
     version("4.0.1", sha256="5261c957589b9dfcd387c338d59375162ba9ca82c69e378961a1f4e641285db5")
     version("4.0.0", sha256="daf9b990e96863d120aff123361156a316757757b81a8070eb6945e4a9774b2d")
 
-    depends_on("py-hatchling@1.5:", when="@5.6:", type="build")
-    depends_on("py-hatch-nodejs-version", when="@5.6:", type="build")
+    depends_on("py-hatchling@1.5:", type="build", when="@5.6:")
+    depends_on("py-hatch-nodejs-version", type="build", when="@5.6:")
 
-    depends_on("py-fastjsonschema", when="@5.3:", type=("build", "run"))
-    depends_on("py-jsonschema@2.6:", when="@5.3:", type=("build", "run"))
+    depends_on("py-fastjsonschema", type=("build", "run"), when="@5.3:")
+    depends_on("py-jsonschema@2.6:", type=("build", "run"), when="@5.3:")
     depends_on("py-jsonschema@2.4,2.5.1:", type=("build", "run"))
     depends_on("py-jupyter-core", type=("build", "run"))
-    depends_on("py-traitlets@5.1:", when="@5.4:", type=("build", "run"))
+    depends_on("py-traitlets@5.1:", type=("build", "run"), when="@5.4:")
     depends_on("py-traitlets@4.1:", type=("build", "run"))
-    depends_on("py-importlib-metadata@3.6:", when="@5.7: ^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata@3.6:", type=("build", "run"), when="@5.7: ^python@:3.7")
 
     # Historical dependencies
-    depends_on("py-setuptools@60:", when="@5.3:5.4", type="build")
-    depends_on("py-setuptools", when="@:5.4", type="build")
-    depends_on("py-ipython-genutils", when="@:5.1", type=("build", "run"))
+    depends_on("py-setuptools@60:", type="build", when="@5.3:5.4")
+    depends_on("py-setuptools", type="build", when="@:5.4")
+    depends_on("py-ipython-genutils", type=("build", "run"), when="@:5.1")

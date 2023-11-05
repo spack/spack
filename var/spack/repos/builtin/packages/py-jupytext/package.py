@@ -26,8 +26,8 @@ class PyJupytext(PythonPackage):
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-toml", type=("build", "run"))
     depends_on("py-mdit-py-plugins", type=("build", "run"))
-    depends_on("py-markdown-it-py@1.0:2", when="@1.14.1:", type=("build", "run"))
-    depends_on("py-markdown-it-py@1.0:1", when="@:1.13.6", type=("build", "run"))
+    depends_on("py-markdown-it-py@1.0:2", type=("build", "run"), when="@1.14.1:")
+    depends_on("py-markdown-it-py@1.0:1", type=("build", "run"), when="@:1.13.6")
     # todo: in order to use jupytext as a jupyterlab extension,
     # some additional dependencies need to be added (and checked):
     depends_on("py-jupyterlab@3", type=("build", "run"))

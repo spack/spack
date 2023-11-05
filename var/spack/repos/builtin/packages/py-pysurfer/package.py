@@ -24,4 +24,4 @@ class PyPysurfer(PythonPackage):
     depends_on("py-nibabel@1.2:", type=("build", "run"))
     depends_on("py-mayavi", type=("build", "run"))
 
-    depends_on("py-imageio@1.5:", when="+save_movie", type=("build", "run"))
+    depends_on("py-imageio@1.5:", type=("build", "run"), when="+save_movie")

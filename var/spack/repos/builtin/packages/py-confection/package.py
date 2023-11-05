@@ -17,5 +17,5 @@ class PyConfection(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-pydantic@1.7.4:1.7,1.9:1.10", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7.4.1:4.4", when="^python@3.7", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7.4.1:4.4", type=("build", "run"), when="^python@3.7")
     depends_on("py-srsly@2.4:2", type=("build", "run"))

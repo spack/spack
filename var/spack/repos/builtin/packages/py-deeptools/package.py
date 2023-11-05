@@ -22,14 +22,14 @@ class PyDeeptools(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.9.0:", type=("build", "run"))
     depends_on("py-scipy@0.17.0:", type=("build", "run"))
-    depends_on("py-matplotlib@3.3.0:", when="@3.5.1:", type=("build", "run"))
-    depends_on("py-matplotlib@2.1.2:", when="@:3.3.0", type=("build", "run"))
+    depends_on("py-matplotlib@3.3.0:", type=("build", "run"), when="@3.5.1:")
+    depends_on("py-matplotlib@2.1.2:", type=("build", "run"), when="@:3.3.0")
     depends_on("py-pysam@0.14.0:", type=("build", "run"))
     depends_on("py-numpydoc@0.5:", type=("build", "run"))
     depends_on("py-pybigwig@0.2.1:", type=("build", "run"))
     depends_on("py-py2bit@0.2.0:", type=("build", "run"))
-    depends_on("py-plotly@4.9:", when="@3.5.1:", type=("build", "run"))
-    depends_on("py-plotly@2.0.0:", when="@:3.5.0", type=("build", "run"))
+    depends_on("py-plotly@4.9:", type=("build", "run"), when="@3.5.1:")
+    depends_on("py-plotly@2.0.0:", type=("build", "run"), when="@:3.5.0")
     depends_on("py-deeptoolsintervals@0.1.8:", type=("build", "run"))
 
     def patch(self):

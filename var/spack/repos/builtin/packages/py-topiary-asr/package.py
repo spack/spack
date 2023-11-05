@@ -23,8 +23,8 @@ class PyTopiaryAsr(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-biopython", type=("build", "run"))
-    depends_on("py-numpy@:1.21", when="@0.9.9", type=("build", "run"))
-    depends_on("py-numpy", when="@main", type=("build", "run"))
+    depends_on("py-numpy@:1.21", type=("build", "run"), when="@0.9.9")
+    depends_on("py-numpy", type=("build", "run"), when="@main")
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-ete3", type=("build", "run"))
@@ -45,7 +45,7 @@ class PyTopiaryAsr(PythonPackage):
     depends_on("raxml-ng@1.1:", type="run")
 
     depends_on("mpi", type="run")
-    depends_on("openmpi+legacylaunchers", when="^openmpi schedulers=slurm", type="run")
+    depends_on("openmpi+legacylaunchers", type="run", when="^openmpi schedulers=slurm")
 
     conflicts("^mpich")
 

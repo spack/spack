@@ -33,12 +33,12 @@ class Autodiff(CMakePackage):
     variant("examples", default=False, description="Enable the compilation of the example files.")
 
     depends_on("cmake@3.0:", type="build")
-    depends_on("cmake@3.22:", when="@0.6.8", type="build")
-    depends_on("cmake@3.16:", when="@0.6.9:", type="build")
+    depends_on("cmake@3.22:", type="build", when="@0.6.8")
+    depends_on("cmake@3.16:", type="build", when="@0.6.9:")
     depends_on("eigen")
     depends_on("py-pybind11", type=("build", "run"))
     depends_on("catch2", type="test")
-    depends_on("catch2@3:", when="@0.6.12:", type="test")
+    depends_on("catch2@3:", type="test", when="@0.6.12:")
 
     def cmake_args(self):
         args = [

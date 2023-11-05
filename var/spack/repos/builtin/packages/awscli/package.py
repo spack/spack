@@ -20,27 +20,27 @@ class Awscli(PythonPackage):
     version("1.16.179", sha256="6a87114d1325358d000abe22b2103baae7b91f053ff245b9fde33cb0affb5e4f")
 
     depends_on("py-setuptools", type="build")
-    depends_on("python@3.7:", when="@1.25:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@1.25:")
 
     # py-botocore is pinned to the patch version number
-    depends_on("py-botocore@1.31.41", when="@1.29.41", type=("build", "run"))
-    depends_on("py-botocore@1.29.84", when="@1.27.84", type=("build", "run"))
-    depends_on("py-botocore@1.29.56", when="@1.27.56", type=("build", "run"))
-    depends_on("py-botocore@1.13.44", when="@1.16.308", type=("build", "run"))
-    depends_on("py-botocore@1.12.169", when="@1.16.179", type=("build", "run"))
+    depends_on("py-botocore@1.31.41", type=("build", "run"), when="@1.29.41")
+    depends_on("py-botocore@1.29.84", type=("build", "run"), when="@1.27.84")
+    depends_on("py-botocore@1.29.56", type=("build", "run"), when="@1.27.56")
+    depends_on("py-botocore@1.13.44", type=("build", "run"), when="@1.16.308")
+    depends_on("py-botocore@1.12.169", type=("build", "run"), when="@1.16.179")
 
-    depends_on("py-colorama@0.2.5:0.4.4", when="@1.27:", type=("build", "run"))
-    depends_on("py-colorama@0.2.5:0.3.9", when="@1.16", type=("build", "run"))
+    depends_on("py-colorama@0.2.5:0.4.4", type=("build", "run"), when="@1.27:")
+    depends_on("py-colorama@0.2.5:0.3.9", type=("build", "run"), when="@1.16")
 
-    depends_on("py-docutils@0.10:0.16", when="@1.27:", type=("build", "run"))
-    depends_on("py-docutils@0.10:0.15", when="@1.16", type=("build", "run"))
+    depends_on("py-docutils@0.10:0.16", type=("build", "run"), when="@1.27:")
+    depends_on("py-docutils@0.10:0.15", type=("build", "run"), when="@1.16")
 
-    depends_on("py-pyyaml@3.10:6.0", when="@1.29", type=("build", "run"))
-    depends_on("py-pyyaml@3.10:5.4", when="@1.27", type=("build", "run"))
-    depends_on("py-pyyaml@3.10:5.2", when="@1.16", type=("build", "run"))
+    depends_on("py-pyyaml@3.10:6.0", type=("build", "run"), when="@1.29")
+    depends_on("py-pyyaml@3.10:5.4", type=("build", "run"), when="@1.27")
+    depends_on("py-pyyaml@3.10:5.2", type=("build", "run"), when="@1.16")
 
-    depends_on("py-rsa@3.1.2:4.7", when="@1.27:", type=("build", "run"))
-    depends_on("py-rsa@3.1.2:3.5.0", when="@1.16", type=("build", "run"))
+    depends_on("py-rsa@3.1.2:4.7", type=("build", "run"), when="@1.27:")
+    depends_on("py-rsa@3.1.2:3.5.0", type=("build", "run"), when="@1.16")
 
-    depends_on("py-s3transfer@0.6", when="@1.27:", type=("build", "run"))
-    depends_on("py-s3transfer@0.2", when="@1.16", type=("build", "run"))
+    depends_on("py-s3transfer@0.6", type=("build", "run"), when="@1.27:")
+    depends_on("py-s3transfer@0.2", type=("build", "run"), when="@1.16")

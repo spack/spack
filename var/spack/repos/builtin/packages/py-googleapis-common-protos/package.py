@@ -18,7 +18,7 @@ class PyGoogleapisCommonProtos(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on(
-        "py-protobuf@3.19.5:3.19,3.20.2:4.21.0,4.21.6:4", when="@1.58:", type=("build", "run")
+        "py-protobuf@3.19.5:3.19,3.20.2:4.21.0,4.21.6:4", type=("build", "run"), when="@1.58:"
     )
-    depends_on("py-protobuf@3.12.0:3", when="@1.55", type=("build", "run"))
-    depends_on("py-protobuf@3.6.0:3", when="@:1.6", type=("build", "run"))
+    depends_on("py-protobuf@3.12.0:3", type=("build", "run"), when="@1.55")
+    depends_on("py-protobuf@3.6.0:3", type=("build", "run"), when="@:1.6")

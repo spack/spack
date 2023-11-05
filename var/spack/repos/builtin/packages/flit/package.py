@@ -26,7 +26,7 @@ class Flit(MakefilePackage):
     # Add dependencies
     depends_on("python@3:", type="run")
     depends_on("py-toml", type="run")
-    depends_on("py-pyelftools", when="@:2.1.0", type="run")
+    depends_on("py-pyelftools", type="run", when="@:2.1.0")
     depends_on("gmake", type=("run", "build"))
     depends_on("sqlite@3:", type="run")
 

@@ -24,4 +24,4 @@ class RSelectr(RPackage):
 
     depends_on("r@3.0:", type=("build", "run"))
     depends_on("r-stringr", type=("build", "run"))
-    depends_on("r-r6", when="@0.4-0:", type=("build", "run"))
+    depends_on("r-r6", type=("build", "run"), when="@0.4-0:")

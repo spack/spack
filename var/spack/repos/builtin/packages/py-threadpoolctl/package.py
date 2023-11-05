@@ -20,6 +20,6 @@ class PyThreadpoolctl(PythonPackage):
     version("2.0.0", sha256="48b3e3e9ee079d6b5295c65cbe255b36a3026afc6dde3fb49c085cd0c004bbcf")
 
     depends_on("python@3.5:", type=("build", "run"))
-    depends_on("python@3.6:", when="@3.0.0:", type=("build", "run"))
-    depends_on("py-flit", when="@:3.0.0", type="build")
-    depends_on("py-flit-core", when="@3.1.0:", type="build")
+    depends_on("python@3.6:", type=("build", "run"), when="@3.0.0:")
+    depends_on("py-flit", type="build", when="@:3.0.0")
+    depends_on("py-flit-core", type="build", when="@3.1.0:")

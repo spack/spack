@@ -56,28 +56,28 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
     depends_on("py-numpy@1.14.0:", type=("build", "run"))
     depends_on("py-scipy@1.1.0:", type=("build", "run"))
     depends_on("py-networkx@2.1:", type=("build", "run"))
-    depends_on("py-requests@2.19.0:", when="@0.4.3:", type=("build", "run"))
-    depends_on("py-tqdm", when="@1.0.1:", type=("build", "run"))
-    depends_on("py-psutil@5.8.0:", when="@1.0.1:", type=("build", "run"))
+    depends_on("py-requests@2.19.0:", type=("build", "run"), when="@0.4.3:")
+    depends_on("py-tqdm", type=("build", "run"), when="@1.0.1:")
+    depends_on("py-psutil@5.8.0:", type=("build", "run"), when="@1.0.1:")
 
     # Backends
     # See https://docs.dgl.ai/install/index.html#working-with-different-backends
-    depends_on("py-torch@1.12.0:", when="@1.0.1: backend=pytorch", type="run")
-    depends_on("py-torch@1.2.0:", when="@0.4.3: backend=pytorch", type="run")
-    depends_on("py-torch@0.4.1:", when="backend=pytorch", type="run")
-    depends_on("mxnet@1.6.0:", when="@1.0.1: backend=mxnet", type="run")
-    depends_on("mxnet@1.5.1:", when="@0.4.3: backend=mxnet", type="run")
-    depends_on("mxnet@1.5.0:", when="backend=mxnet", type="run")
-    depends_on("py-tensorflow@2.3:", when="@1.0.1: backend=tensorflow", type="run")
-    depends_on("py-tensorflow@2.1:", when="@0.4.3: backend=tensorflow", type="run")
-    depends_on("py-tensorflow@2.0:", when="backend=tensorflow", type="run")
+    depends_on("py-torch@1.12.0:", type="run", when="@1.0.1: backend=pytorch")
+    depends_on("py-torch@1.2.0:", type="run", when="@0.4.3: backend=pytorch")
+    depends_on("py-torch@0.4.1:", type="run", when="backend=pytorch")
+    depends_on("mxnet@1.6.0:", type="run", when="@1.0.1: backend=mxnet")
+    depends_on("mxnet@1.5.1:", type="run", when="@0.4.3: backend=mxnet")
+    depends_on("mxnet@1.5.0:", type="run", when="backend=mxnet")
+    depends_on("py-tensorflow@2.3:", type="run", when="@1.0.1: backend=tensorflow")
+    depends_on("py-tensorflow@2.1:", type="run", when="@0.4.3: backend=tensorflow")
+    depends_on("py-tensorflow@2.0:", type="run", when="backend=tensorflow")
 
     # Cuda
     # See https://github.com/dmlc/dgl/issues/3083
-    depends_on("cuda@:10", when="@:0.4 +cuda", type=("build", "run"))
+    depends_on("cuda@:10", type=("build", "run"), when="@:0.4 +cuda")
     # From error: "Your installed Caffe2 version uses cuDNN but I cannot find the
     # cuDNN libraries.  Please set the proper cuDNN prefixes and / or install cuDNN."
-    depends_on("cudnn", when="+cuda", type=("build", "run"))
+    depends_on("cudnn", type=("build", "run"), when="+cuda")
 
     patch(
         "https://patch-diff.githubusercontent.com/raw/dmlc/dgl/pull/5434.patch?full_index=1",

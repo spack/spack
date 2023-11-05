@@ -166,7 +166,7 @@ class Sherpa(AutotoolsPackage):
 
     depends_on("mpi", when="+mpi")
     depends_on("python", when="+python")
-    depends_on("swig", when="+python", type="build")
+    depends_on("swig", type="build", when="+python")
     depends_on("hepmc", when="+hepmc2")
     depends_on("hepmc3", when="+hepmc3")
     depends_on("hepmc3 +rootio", when="+hepmc3root")

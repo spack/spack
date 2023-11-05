@@ -70,7 +70,7 @@ class Sollve(CMakePackage):
     depends_on("ncurses", when="+lldb")
     depends_on("swig", when="+lldb")
     depends_on("libedit", when="+lldb")
-    depends_on("py-six", when="+lldb +python", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"), when="+lldb +python")
 
     # gold support
     depends_on("binutils+gold", when="+gold")

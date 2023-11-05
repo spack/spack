@@ -44,5 +44,5 @@ class RAffycoretools(RPackage):
     depends_on("r-edger", type=("build", "run"))
     depends_on("r-rsqlite", type=("build", "run"))
     depends_on("r-biocgenerics", type=("build", "run"))
-    depends_on("r-dbi", when="@1.50.6:", type=("build", "run"))
-    depends_on("r-glimma", when="@1.62.0:", type=("build", "run"))
+    depends_on("r-dbi", type=("build", "run"), when="@1.50.6:")
+    depends_on("r-glimma", type=("build", "run"), when="@1.62.0:")

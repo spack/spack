@@ -19,6 +19,6 @@ class PyPythonUtils(PythonPackage):
     version("2.3.0", sha256="34aaf26b39b0b86628008f2ae0ac001b30e7986a8d303b61e1357dfcdad4f6d3")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-six", when="@:2.4.0", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"), when="@:2.4.0")
 
-    depends_on("py-typing-extensions", when="@3.5.2 ^python@:3.7", type=("build", "run"))
+    depends_on("py-typing-extensions", type=("build", "run"), when="@3.5.2 ^python@:3.7")

@@ -35,20 +35,20 @@ class PyOnnx(PythonPackage):
     # https://github.com/protocolbuffers/protobuf/pull/8794, fixed in
     # https://github.com/onnx/onnx/pull/3112
     depends_on("protobuf@:3.17", when="@:1.8")
-    depends_on("py-protobuf@:3.17", when="@:1.8", type=("build", "run"))
+    depends_on("py-protobuf@:3.17", type=("build", "run"), when="@:1.8")
     # https://github.com/protocolbuffers/protobuf/issues/10051
     # https://github.com/onnx/onnx/issues/4222
     depends_on("protobuf@:3", when="@1.10.1")
-    depends_on("py-protobuf@:3", when="@1.10.1", type=("build", "run"))
+    depends_on("py-protobuf@:3", type=("build", "run"), when="@1.10.1")
     depends_on("protobuf@3.12.2:", when="@1.11.0")
-    depends_on("py-protobuf@3.12.2:", when="@1.11.0", type=("build", "run"))
+    depends_on("py-protobuf@3.12.2:", type=("build", "run"), when="@1.11.0")
     depends_on("protobuf@3.12.2:3.20.1", when="@1.12.0")
-    depends_on("py-protobuf@3.12.2:3.20.1", when="@1.12.0", type=("build", "run"))
+    depends_on("py-protobuf@3.12.2:3.20.1", type=("build", "run"), when="@1.12.0")
     depends_on("protobuf@3.20.2:3", when="@1.13.0:")
-    depends_on("py-protobuf@3.20.2:3", when="@1.13.0:", type=("build", "run"))
+    depends_on("py-protobuf@3.20.2:3", type=("build", "run"), when="@1.13.0:")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-numpy@1.16.6:", when="@1.8.1:", type=("build", "run"))
-    depends_on("py-six", when="@:1.8.1", type=("build", "run"))
+    depends_on("py-numpy@1.16.6:", type=("build", "run"), when="@1.8.1:")
+    depends_on("py-six", type=("build", "run"), when="@:1.8.1")
     depends_on("py-typing-extensions@3.6.2.1:", type=("build", "run"))
     depends_on("cmake@3.1:", type="build")
     depends_on("py-pytest-runner", type="build")

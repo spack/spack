@@ -21,12 +21,12 @@ class PyIsort(PythonPackage):
 
     variant("colors", default=False, description="Install colorama for --color support")
 
-    depends_on("python@3.8:", when="@5.12:", type=("build", "run"))
-    depends_on("python@3.6.1:3", when="@5:5.10", type=("build", "run"))
-    depends_on("py-setuptools", when="@:4", type=("build", "run"))
-    depends_on("py-poetry-core@1:", when="@5:", type="build")
-    depends_on("py-colorama@0.4.3:", when="+colors @5.12:", type=("build", "run"))
-    depends_on("py-colorama@0.4.3:0.4", when="+colors @:5.11", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@5.12:")
+    depends_on("python@3.6.1:3", type=("build", "run"), when="@5:5.10")
+    depends_on("py-setuptools", type=("build", "run"), when="@:4")
+    depends_on("py-poetry-core@1:", type="build", when="@5:")
+    depends_on("py-colorama@0.4.3:", type=("build", "run"), when="+colors @5.12:")
+    depends_on("py-colorama@0.4.3:0.4", type=("build", "run"), when="+colors @:5.11")
 
     # https://github.com/PyCQA/isort/issues/2077
     conflicts("^py-poetry-core@1.5:", when="@:5.11.4")

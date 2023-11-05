@@ -31,8 +31,8 @@ class P4est(AutotoolsPackage):
     variant("openmp", default=False, description="Enable OpenMP")
 
     # build dependencies
-    depends_on("automake", when="@2.0", type="build")
-    depends_on("autoconf", when="@2.0", type="build")
+    depends_on("automake", type="build", when="@2.0")
+    depends_on("autoconf", type="build", when="@2.0")
     depends_on("libtool@2.4.2:", type="build")
 
     # other dependencies

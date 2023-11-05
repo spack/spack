@@ -21,11 +21,11 @@ class PyWebsocketClient(PythonPackage):
     version("0.56.0", sha256="1fd5520878b68b84b5748bb30e592b10d0a91529d5383f74f4964e72b297fd3a")
     version("0.48.0", sha256="18f1170e6a1b5463986739d9fd45c4308b0d025c1b2f9b88788d8f69e8a5eb4a")
 
-    depends_on("python@3.8:", when="@1.6.2:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@1.6.2:")
     depends_on("py-setuptools", type="build")
 
     # Historical dependencies
-    depends_on("py-six", when="@:1.2.0", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"), when="@:1.2.0")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/w/{0}/{0}-{1}.tar.gz"

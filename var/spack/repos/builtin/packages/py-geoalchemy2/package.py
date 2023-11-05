@@ -19,4 +19,4 @@ class PyGeoalchemy2(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-sqlalchemy@0.8:", type=("build", "run"))
-    depends_on("py-shapely@1.3.0:", when="+dev", type=("build", "run"))
+    depends_on("py-shapely@1.3.0:", type=("build", "run"), when="+dev")

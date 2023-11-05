@@ -30,9 +30,9 @@ class ScineDatabase(CMakePackage):
     depends_on("eigen@3:")
     depends_on("googletest", type="build")
     depends_on("mongo-cxx-driver@3.2.1:")
-    depends_on("python@3.6:", when="+python", type=("build", "run"))
-    depends_on("py-pip", when="+python", type="build")
-    depends_on("py-pybind11", when="+python", type="build")
+    depends_on("python@3.6:", type=("build", "run"), when="+python")
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-pybind11", type="build", when="+python")
     depends_on("scine-utilities@5:")
     depends_on("scine-utilities+python", when="+python")
 

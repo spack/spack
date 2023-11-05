@@ -20,7 +20,7 @@ class Muparser(Package):
     # https://github.com/beltoforion/muparser/pull/46
     patch("auto_ptr.patch", when="@2.2.5")
 
-    depends_on("cmake@3.1.0:", when="@2.2.6:", type="build")
+    depends_on("cmake@3.1.0:", type="build", when="@2.2.6:")
 
     # Cmake build since 2.2.6
     @when("@2.2.6:")

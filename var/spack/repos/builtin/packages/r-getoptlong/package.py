@@ -20,10 +20,10 @@ class RGetoptlong(RPackage):
     version("0.1.6", sha256="f526f006e3ed8507f1f236430ac9e97341c1ee9c207fbb68f936dd4d377b28b5")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@3.3.0:", when="@1.0.5:", type=("build", "run"))
+    depends_on("r@3.3.0:", type=("build", "run"), when="@1.0.5:")
     depends_on("r-rjson", type=("build", "run"))
     depends_on("r-globaloptions@0.1.0:", type=("build", "run"))
-    depends_on("r-crayon", when="@1.0.5:", type=("build", "run"))
+    depends_on("r-crayon", type=("build", "run"), when="@1.0.5:")
 
     # The CRAN site lists SystemRequirments as: Perl, Getopt::Long. The
     # Getop::Long package will be installed with Perl so just depend on perl.

@@ -32,5 +32,5 @@ class PyTheano(PythonPackage, CudaPackage):
 
     depends_on("cuda", when="+cuda")
     depends_on("cudnn", when="+cuda")
-    depends_on("py-pygpu", when="+cuda", type=("build", "run"))
+    depends_on("py-pygpu", type=("build", "run"), when="+cuda")
     depends_on("libgpuarray", when="+cuda")

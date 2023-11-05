@@ -22,9 +22,9 @@ class PyOsqp(PythonPackage):
 
     depends_on("cmake", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@40.8.0:", when="@0.6.2.post8:", type="build")
-    depends_on("py-setuptools-scm@6.2:", when="@0.6.2.post8:", type="build")
+    depends_on("py-setuptools@40.8.0:", type="build", when="@0.6.2.post8:")
+    depends_on("py-setuptools-scm@6.2:", type="build", when="@0.6.2.post8:")
     depends_on("py-numpy@1.7:", type=("build", "run"))
     depends_on("py-scipy@0.13.2:", type=("build", "run"))
-    depends_on("py-future", when="@:0.6.1", type=("build", "run"))
-    depends_on("py-qdldl", when="@0.6.2.post8:", type=("build", "run"))
+    depends_on("py-future", type=("build", "run"), when="@:0.6.1")
+    depends_on("py-qdldl", type=("build", "run"), when="@0.6.2.post8:")

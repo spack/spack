@@ -25,9 +25,9 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("hdf5", type="build")
     depends_on("pkgconfig", type="build")
 
-    depends_on("python@3.8:", when="@0.6.1:", type=("build", "run"))
-    depends_on("python@3.8:3.10", when="@0.5:0.6.0", type=("build", "run"))
-    depends_on("python@3.7:3.10", when="@0.4", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@0.6.1:")
+    depends_on("python@3.8:3.10", type=("build", "run"), when="@0.5:0.6.0")
+    depends_on("python@3.7:3.10", type=("build", "run"), when="@0.4")
 
     depends_on("fenics-dolfinx@main", when="@main")
     depends_on("fenics-dolfinx@0.6.0", when="@0.6.0")
@@ -35,26 +35,26 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("fenics-dolfinx@0.5.0", when="@0.5.0")
     depends_on("fenics-dolfinx@0.4.1", when="@0.4.1")
 
-    depends_on("fenics-basix@main", when="@main", type=("build", "link"))
-    depends_on("fenics-basix@0.6.0:0.6", when="@0.6.0:0.6", type=("build", "link"))
-    depends_on("fenics-basix@0.5.1:0.5", when="@0.5.0:0.5", type=("build", "link"))
-    depends_on("fenics-basix@0.4.2", when="@0.4.1", type=("build", "link"))
+    depends_on("fenics-basix@main", type=("build", "link"), when="@main")
+    depends_on("fenics-basix@0.6.0:0.6", type=("build", "link"), when="@0.6.0:0.6")
+    depends_on("fenics-basix@0.5.1:0.5", type=("build", "link"), when="@0.5.0:0.5")
+    depends_on("fenics-basix@0.4.2", type=("build", "link"), when="@0.4.1")
 
-    depends_on("py-fenics-ffcx@main", when="@main", type=("build", "run"))
-    depends_on("py-fenics-ffcx@0.6", when="@0.6", type=("build", "run"))
-    depends_on("py-fenics-ffcx@0.5.0.post0", when="@0.5.0:0.5", type=("build", "run"))
-    depends_on("py-fenics-ffcx@0.4.2", when="@0.4.1", type=("build", "run"))
+    depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main")
+    depends_on("py-fenics-ffcx@0.6", type=("build", "run"), when="@0.6")
+    depends_on("py-fenics-ffcx@0.5.0.post0", type=("build", "run"), when="@0.5.0:0.5")
+    depends_on("py-fenics-ffcx@0.4.2", type=("build", "run"), when="@0.4.1")
 
-    depends_on("py-fenics-ufl@main", when="@main", type=("build", "run"))
-    depends_on("py-fenics-ufl@2023.1", when="@0.6", type=("build", "run"))
-    depends_on("py-fenics-ufl@2022.2.0", when="@0.5.0:0.5", type=("build", "run"))
-    depends_on("py-fenics-ufl@2022.1.0", when="@0.4.1", type=("build", "run"))
+    depends_on("py-fenics-ufl@main", type=("build", "run"), when="@main")
+    depends_on("py-fenics-ufl@2023.1", type=("build", "run"), when="@0.6")
+    depends_on("py-fenics-ufl@2022.2.0", type=("build", "run"), when="@0.5.0:0.5")
+    depends_on("py-fenics-ufl@2022.1.0", type=("build", "run"), when="@0.4.1")
 
     depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-petsc4py", type=("build", "run"))
     depends_on("py-pybind11@2.7.0:", type=("build", "run"))
-    depends_on("xtensor@0.23.10:", when="@:0.5", type="build")
+    depends_on("xtensor@0.23.10:", type="build", when="@:0.5")
 
     depends_on("py-setuptools@42:", type="build")
 

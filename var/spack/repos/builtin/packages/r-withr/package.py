@@ -26,4 +26,4 @@ class RWithr(RPackage):
     version("1.0.1", sha256="7e245fdd17d290ff9e7c237159804dd06e1c6a3efe7855ed641eb0765a1e727d")
 
     depends_on("r@3.0.2:", type=("build", "run"))
-    depends_on("r@3.2.0:", when="@2.2:", type=("build", "run"))
+    depends_on("r@3.2.0:", type=("build", "run"), when="@2.2:")

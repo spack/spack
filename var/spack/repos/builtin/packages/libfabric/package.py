@@ -117,10 +117,10 @@ class Libfabric(AutotoolsPackage):
     depends_on("uuid", when="fabrics=opx")
     depends_on("numactl", when="fabrics=opx")
 
-    depends_on("m4", when="@main", type="build")
-    depends_on("autoconf", when="@main", type="build")
-    depends_on("automake", when="@main", type="build")
-    depends_on("libtool", when="@main", type="build")
+    depends_on("m4", type="build", when="@main")
+    depends_on("autoconf", type="build", when="@main")
+    depends_on("automake", type="build", when="@main")
+    depends_on("libtool", type="build", when="@main")
 
     conflicts("@1.9.0", when="platform=darwin", msg="This distribution is missing critical files")
     conflicts("fabrics=opx", when="@:1.14.99")

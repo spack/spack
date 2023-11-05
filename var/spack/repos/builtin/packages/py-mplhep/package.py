@@ -17,8 +17,8 @@ class PyMplhep(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@39.2:", type="build")
-    depends_on("py-setuptools@42:", when="@0.3.26:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", when="@0.3.2:", type="build")
+    depends_on("py-setuptools@42:", type="build", when="@0.3.26:")
+    depends_on("py-setuptools-scm@3.4:+toml", type="build", when="@0.3.2:")
     depends_on("py-matplotlib@3.4:", type=("build", "run"))
     depends_on("py-mplhep-data", type=("build", "run"))
     depends_on("py-numpy@1.16.0:", type=("build", "run"))

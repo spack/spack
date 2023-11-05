@@ -25,25 +25,25 @@ class PyKeyring(PythonPackage):
     version("20.0.1", sha256="963bfa7f090269d30bdc5e25589e5fd9dad2cf2a7c6f176a7f2386910e5d0d8d")
     version("18.0.1", sha256="67d6cc0132bd77922725fae9f18366bb314fd8f95ff4d323a4df41890a96a838")
 
-    depends_on("py-setuptools@56:", when="@23.1:", type="build")
-    depends_on("py-setuptools@42:", when="@21:", type="build")
+    depends_on("py-setuptools@56:", type="build", when="@23.1:")
+    depends_on("py-setuptools@42:", type="build", when="@21:")
     depends_on("py-setuptools@34.4:", type="build")
-    depends_on("py-setuptools-scm@3.4.1:+toml", when="@21:", type="build")
+    depends_on("py-setuptools-scm@3.4.1:+toml", type="build", when="@21:")
     depends_on("py-setuptools-scm@1.15:", type="build")
 
-    depends_on("py-secretstorage@3.2:", when="@21: platform=linux", type=("build", "run"))
-    depends_on("py-secretstorage", when="platform=linux", type=("build", "run"))
-    depends_on("py-jeepney@0.4.2:", when="@21: platform=linux", type=("build", "run"))
+    depends_on("py-secretstorage@3.2:", type=("build", "run"), when="@21: platform=linux")
+    depends_on("py-secretstorage", type=("build", "run"), when="platform=linux")
+    depends_on("py-jeepney@0.4.2:", type=("build", "run"), when="@21: platform=linux")
     depends_on(
-        "py-importlib-metadata@4.11.4:", when="@23.10: ^python@:3.11", type=("build", "run")
+        "py-importlib-metadata@4.11.4:", type=("build", "run"), when="@23.10: ^python@:3.11"
     )
-    depends_on("py-importlib-metadata@3.6:", when="@23: ^python@:3.9", type=("build", "run"))
-    depends_on("py-importlib-metadata@1:", when="@21:22", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="@20:", type=("build", "run"))
-    depends_on("py-jaraco-classes", when="@23.9.1:", type=("build", "run"))
-    depends_on("py-importlib-resources", when="@23.13: ^python@:3.8", type=("build", "run"))
+    depends_on("py-importlib-metadata@3.6:", type=("build", "run"), when="@23: ^python@:3.9")
+    depends_on("py-importlib-metadata@1:", type=("build", "run"), when="@21:22")
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@20:")
+    depends_on("py-jaraco-classes", type=("build", "run"), when="@23.9.1:")
+    depends_on("py-importlib-resources", type=("build", "run"), when="@23.13: ^python@:3.8")
 
     # TODO: additional dependency on pywin32-ctypes required for Windows
 
     # Historical dependencies
-    depends_on("py-entrypoints", when="@18", type=("build", "run"))
+    depends_on("py-entrypoints", type=("build", "run"), when="@18")

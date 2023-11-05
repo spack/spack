@@ -19,5 +19,5 @@ class RGsl(RPackage):
     version("2.1-6", sha256="f5d463239693f146617018987687db31b163653708cbae0b730b9b7bed81995c")
 
     depends_on("r@3.1.0:", type=("build", "run"))
-    depends_on("r@4.0.0:", when="@2.1-8:", type=("build", "run"))
+    depends_on("r@4.0.0:", type=("build", "run"), when="@2.1-8:")
     depends_on("gsl@2.1:")

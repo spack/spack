@@ -27,7 +27,7 @@ class Uftrace(AutotoolsPackage):
     variant("python2", default=False, description="Build uftrace with python2 support")
     variant("python3", default=True, description="Build uftrace with python3 support")
 
-    depends_on("pandoc", when="+doc", type="build")
+    depends_on("pandoc", type="build", when="+doc")
     depends_on("capstone")
     depends_on("elfutils")
     depends_on("lsof", type="test")

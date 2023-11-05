@@ -215,8 +215,8 @@ class Hpcviewer(Package):
                         when="@{0}".format(key[0]),
                     )
 
-    depends_on("java@11:", when="@2021.0:", type=("build", "run"))
-    depends_on("java@8", when="@:2020", type=("build", "run"))
+    depends_on("java@11:", type=("build", "run"), when="@2021.0:")
+    depends_on("java@8", type=("build", "run"), when="@:2020")
 
     # Install for MacOSX / Darwin
     @when("platform=darwin")

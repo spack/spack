@@ -21,13 +21,13 @@ class PyLightningCloud(PythonPackage):
 
     # requirements.txt
     depends_on("py-click", type=("build", "run"))
-    depends_on("py-fastapi", when="@0.5.36:", type=("build", "run"))
-    depends_on("py-fastapi+all", when="@:0.5.31", type=("build", "run"))
+    depends_on("py-fastapi", type=("build", "run"), when="@0.5.36:")
+    depends_on("py-fastapi+all", type=("build", "run"), when="@:0.5.31")
     depends_on("py-pyjwt", type=("build", "run"))
-    depends_on("py-python-multipart", when="@0.5.36:", type=("build", "run"))
+    depends_on("py-python-multipart", type=("build", "run"), when="@0.5.36:")
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-rich", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
     depends_on("py-urllib3", type=("build", "run"))
-    depends_on("py-uvicorn", when="@0.5.36:", type=("build", "run"))
+    depends_on("py-uvicorn", type=("build", "run"), when="@0.5.36:")
     depends_on("py-websocket-client", type=("build", "run"))

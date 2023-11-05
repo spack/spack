@@ -56,7 +56,7 @@ class GpiSpace(CMakePackage):
     )
 
     depends_on("cmake@3.15.0:", type="build")
-    depends_on("cmake@3.16.0:", when="@23.06:", type="build")
+    depends_on("cmake@3.16.0:", type="build", when="@23.06:")
     depends_on("chrpath@0.13:", type=("build", "run"))
     depends_on("pkgconfig", type="build")
     depends_on(

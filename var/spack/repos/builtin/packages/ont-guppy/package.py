@@ -53,7 +53,7 @@ class OntGuppy(Package):
 
             version(ver, sha256=pkg[0], url=pkg[1], preferred=is_preferred)
 
-    depends_on("cuda@11.0.0:", when="@6.1.7-cuda", type="run")
+    depends_on("cuda@11.0.0:", type="run", when="@6.1.7-cuda")
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)

@@ -31,20 +31,20 @@ class PyRich(PythonPackage):
     version("9.5.0", sha256="a65a9d003cb6e87e6fa5d1b53bff6f43a8d7475524c58873acdbf5bba0683fa3")
     version("9.4.0", sha256="bde23a1761373fed2802502ff98292c5d735a5389ed96f4fe1be5fb4c2cde8ea")
 
-    depends_on("python@3.7:", when="@13:", type=("build", "run"))
-    depends_on("python@3.6.3:3", when="@12.2.1:12", type=("build", "run"))
-    depends_on("python@3.6.2:3", when="@10.14.0:12", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@13:")
+    depends_on("python@3.6.3:3", type=("build", "run"), when="@12.2.1:12")
+    depends_on("python@3.6.2:3", type=("build", "run"), when="@10.14.0:12")
     depends_on("py-poetry-core@1:", type="build")
 
-    depends_on("py-typing-extensions@4", when="@12.2: ^python@:3.8", type=("build", "run"))
+    depends_on("py-typing-extensions@4", type=("build", "run"), when="@12.2: ^python@:3.8")
     depends_on(
-        "py-typing-extensions@3.7.4:4", when="@10.14:12.1 ^python@:3.7", type=("build", "run")
+        "py-typing-extensions@3.7.4:4", type=("build", "run"), when="@10.14:12.1 ^python@:3.7"
     )
-    depends_on("py-typing-extensions@3.7.4:3", when="@:10.13", type=("build", "run"))
-    depends_on("py-pygments@2.13:2", when="@13.3.2:", type=("build", "run"))
-    depends_on("py-pygments@2.6:2", when="@:13.2", type=("build", "run"))
-    depends_on("py-markdown-it-py@2.2:", when="@13.3.2:", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7.4:3", type=("build", "run"), when="@:10.13")
+    depends_on("py-pygments@2.13:2", type=("build", "run"), when="@13.3.2:")
+    depends_on("py-pygments@2.6:2", type=("build", "run"), when="@:13.2")
+    depends_on("py-markdown-it-py@2.2:", type=("build", "run"), when="@13.3.2:")
 
     # Historical dependencies
-    depends_on("py-commonmark@0.9.0:0.9", when="@:13.1", type=("build", "run"))
-    depends_on("py-colorama@0.4.0:0.4", when="@:10.14.0", type=("build", "run"))
+    depends_on("py-commonmark@0.9.0:0.9", type=("build", "run"), when="@:13.1")
+    depends_on("py-colorama@0.4.0:0.4", type=("build", "run"), when="@:10.14.0")

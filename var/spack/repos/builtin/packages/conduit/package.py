@@ -123,8 +123,8 @@ class Conduit(CMakePackage):
     #######################
     depends_on("python", when="+python")
     extends("python", when="+python")
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-mpi4py", type=("build", "run"), when="+python+mpi")
 
     #######################
     # I/O Packages
@@ -180,8 +180,8 @@ class Conduit(CMakePackage):
     #######################
     # Documentation related
     #######################
-    depends_on("py-sphinx", when="+python+doc", type="build")
-    depends_on("py-sphinx-rtd-theme", when="+python+doc", type="build")
+    depends_on("py-sphinx", type="build", when="+python+doc")
+    depends_on("py-sphinx-rtd-theme", type="build", when="+python+doc")
     depends_on("doxygen", when="+doc+doxygen")
 
     conflicts("+parmetis", when="~mpi", msg="Parmetis support requires MPI")

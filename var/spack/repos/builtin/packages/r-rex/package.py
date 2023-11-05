@@ -19,4 +19,4 @@ class RRex(RPackage):
 
     depends_on("r-lazyeval", type=("build", "run"))
 
-    depends_on("r-magrittr", when="@:1.1.2", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"), when="@:1.1.2")

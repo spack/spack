@@ -17,8 +17,8 @@ class PyS3fs(PythonPackage):
     version("0.5.2", sha256="87e5210415db17b9de18c77bcfc4a301570cc9030ee112b77dc47ab82426bae1")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-aiobotocore@2.4", when="@2022:", type=("build", "run"))
-    depends_on("py-aiobotocore@1.0.1:", when="@:0", type=("build", "run"))
-    depends_on("py-fsspec@2022.11.0", when="@2022.11.0", type=("build", "run"))
-    depends_on("py-fsspec@0.8.0:", when="@0", type=("build", "run"))
-    depends_on("py-aiohttp", when="@2022:", type=("build", "run"))
+    depends_on("py-aiobotocore@2.4", type=("build", "run"), when="@2022:")
+    depends_on("py-aiobotocore@1.0.1:", type=("build", "run"), when="@:0")
+    depends_on("py-fsspec@2022.11.0", type=("build", "run"), when="@2022.11.0")
+    depends_on("py-fsspec@0.8.0:", type=("build", "run"), when="@0")
+    depends_on("py-aiohttp", type=("build", "run"), when="@2022:")

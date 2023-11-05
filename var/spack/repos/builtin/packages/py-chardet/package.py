@@ -23,4 +23,4 @@ class PyChardet(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # Historical dependencies
-    depends_on("py-pytest-runner", when="@3", type="build")
+    depends_on("py-pytest-runner", type="build", when="@3")

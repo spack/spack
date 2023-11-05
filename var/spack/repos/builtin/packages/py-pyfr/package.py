@@ -36,8 +36,8 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     # Required dependencies
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-gimmik@2.3:2", when="@:1.14.0", type=("build", "run"))
-    depends_on("py-gimmik@3", when="@1.15.0:", type=("build", "run"))
+    depends_on("py-gimmik@2.3:2", type=("build", "run"), when="@:1.14.0")
+    depends_on("py-gimmik@3", type=("build", "run"), when="@1.15.0:")
     depends_on("py-h5py@2.10:", type=("build", "run"))
     depends_on("py-mako@1.0.0:", type=("build", "run"))
     depends_on("py-mpi4py@3.1.0:", type=("build", "run"))
@@ -46,13 +46,13 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-pytools@2016.2.1:", type=("build", "run"))
 
     # Optional dependencies
-    depends_on("py-scipy", when="+scipy", type=("build", "run"))
-    depends_on("metis@5.0:", when="+metis", type=("run"))
-    depends_on("scotch@7.0.1: +link_error_lib", when="+scotch", type=("run"))
-    depends_on("cuda@8.0: +allow-unsupported-compilers", when="@:1.14.0 +cuda", type=("run"))
-    depends_on("cuda@11.4.0: +allow-unsupported-compilers", when="@1.15.0: +cuda", type=("run"))
-    depends_on("rocblas@5.2.0:", when="+hip", type=("run"))
-    depends_on("libxsmm@1.18:+shared blas=0", when="+libxsmm", type=("run"))
+    depends_on("py-scipy", type=("build", "run"), when="+scipy")
+    depends_on("metis@5.0:", type=("run"), when="+metis")
+    depends_on("scotch@7.0.1: +link_error_lib", type=("run"), when="+scotch")
+    depends_on("cuda@8.0: +allow-unsupported-compilers", type=("run"), when="@:1.14.0 +cuda")
+    depends_on("cuda@11.4.0: +allow-unsupported-compilers", type=("run"), when="@1.15.0: +cuda")
+    depends_on("rocblas@5.2.0:", type=("run"), when="+hip")
+    depends_on("libxsmm@1.18:+shared blas=0", type=("run"), when="+libxsmm")
 
     # Conflicts for compilers not supporting OpenMP 5.1+ from v1.15.0:
     conflicts("%gcc@:11", when="@1.15.0: +libxsmm", msg="OpenMP 5.1+ supported compiler required!")

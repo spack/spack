@@ -20,4 +20,4 @@ class PyPexpect(PythonPackage):
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
     depends_on("py-ptyprocess", type=("build", "run"))
-    depends_on("py-ptyprocess@0.5:", when="@4.7.0:", type=("build", "run"))
+    depends_on("py-ptyprocess@0.5:", type=("build", "run"), when="@4.7.0:")

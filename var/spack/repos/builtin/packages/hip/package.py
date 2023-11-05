@@ -116,7 +116,7 @@ class Hip(CMakePackage):
 
     depends_on("cuda", when="+cuda")
 
-    depends_on("cmake@3.16.8:", when="@4.5.0:", type=("build"))
+    depends_on("cmake@3.16.8:", type=("build"), when="@4.5.0:")
     depends_on("cmake@3.4.3:", type="build")
     depends_on("perl@5.10:", type=("build", "run"))
 
@@ -124,7 +124,7 @@ class Hip(CMakePackage):
 
     with when("+rocm"):
         depends_on("gl@4.5:")
-        depends_on("py-cppheaderparser", when="@5.3.3:", type="build")
+        depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
         for ver in [
             "3.5.0",
             "3.7.0",

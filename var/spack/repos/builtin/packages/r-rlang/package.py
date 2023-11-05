@@ -33,7 +33,7 @@ class RRlang(RPackage):
     version("0.1.1", sha256="5901f95d68728a7d9bb1c2373a20ce6e4ad222f66e397e7735e9eff987c73c3f")
 
     depends_on("r@3.1.0:", type=("build", "run"))
-    depends_on("r@3.2.0:", when="@0.4.0:", type=("build", "run"))
-    depends_on("r@3.3.0:", when="@0.4.10:", type=("build", "run"))
-    depends_on("r@3.4.0:", when="@1.0.2:", type=("build", "run"))
-    depends_on("r@3.5.0:", when="@1.1.0:", type=("build", "run"))
+    depends_on("r@3.2.0:", type=("build", "run"), when="@0.4.0:")
+    depends_on("r@3.3.0:", type=("build", "run"), when="@0.4.10:")
+    depends_on("r@3.4.0:", type=("build", "run"), when="@1.0.2:")
+    depends_on("r@3.5.0:", type=("build", "run"), when="@1.1.0:")

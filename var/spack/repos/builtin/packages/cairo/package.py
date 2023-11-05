@@ -46,7 +46,7 @@ class Cairo(AutotoolsPackage):
     depends_on("libxext", when="+X")
     depends_on("libxrender", when="+X")
     depends_on("libxcb", when="+X")
-    depends_on("python", when="+X", type="build")
+    depends_on("python", type="build", when="+X")
     depends_on("libpng", when="+png")
     depends_on("librsvg", when="+svg")
     depends_on("glib")

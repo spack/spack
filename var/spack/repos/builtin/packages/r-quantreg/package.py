@@ -33,11 +33,11 @@ class RQuantreg(RPackage):
     version("5.26", sha256="9d7403f7c5ee219ec155838648401a1c4915a46a74f5774a0f6876c537ef2c87")
 
     depends_on("r@2.6:", type=("build", "run"))
-    depends_on("r@3.5:", when="@5.93:", type=("build", "run"))
+    depends_on("r@3.5:", type=("build", "run"), when="@5.93:")
     depends_on("r-sparsem", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-matrixmodels", type=("build", "run"))
-    depends_on("r-survival", when="@5.93:", type=("build", "run"))
-    depends_on("r-mass", when="@5.93:", type=("build", "run"))
+    depends_on("r-survival", type=("build", "run"), when="@5.93:")
+    depends_on("r-mass", type=("build", "run"), when="@5.93:")
 
-    depends_on("r-conquer", when="@5.82:5.86", type=("build", "run"))
+    depends_on("r-conquer", type=("build", "run"), when="@5.82:5.86")

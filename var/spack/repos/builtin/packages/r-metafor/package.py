@@ -35,7 +35,7 @@ class RMetafor(RPackage):
     depends_on("r@4.0.0:", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-metadat", type=("build", "run"))
-    depends_on("r-numderiv", when="@4.0-0:", type=("build", "run"))
+    depends_on("r-numderiv", type=("build", "run"), when="@4.0-0:")
     depends_on("r-nlme", type=("build", "run"))
     depends_on("r-mathjaxr", type=("build", "run"))
     depends_on("r-pbapply", type=("build", "run"))

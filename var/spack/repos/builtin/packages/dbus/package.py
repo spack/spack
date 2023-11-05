@@ -37,7 +37,7 @@ class Dbus(AutotoolsPackage):
     depends_on("expat")
     depends_on("glib")
     depends_on("libsm")
-    depends_on("xmlto", when="+xml_docs", type="build")
+    depends_on("xmlto", type="build", when="+xml_docs")
 
     def configure_args(self):
         args = ["--disable-systemd", "--disable-launchd"]

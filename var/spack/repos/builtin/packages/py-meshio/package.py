@@ -16,8 +16,8 @@ class PyMeshio(PythonPackage):
     version("5.0.0", sha256="f6327c06d6171d30e0991d3dcb048751035f9cfac1f19e2444971275fd971188")
     version("4.4.6", sha256="be352a0924c9eff99768a6f402b7558dbb280bbf1e7bf43f18cef92db418684f")
 
-    depends_on("python@3.7:", when="@5.0.0:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@5.0.0:")
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")

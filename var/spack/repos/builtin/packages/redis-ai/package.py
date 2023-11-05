@@ -35,8 +35,8 @@ class RedisAi(MakefilePackage):
     depends_on("gmake", type=("build", "link"))
 
     # GPU deps
-    depends_on("cuda@11.2:", when="+cuda", type=("build", "link", "run"))
-    depends_on("cudnn@8.1:", when="+cuda", type=("build", "link", "run"))
+    depends_on("cuda@11.2:", type=("build", "link", "run"), when="+cuda")
+    depends_on("cudnn@8.1:", type=("build", "link", "run"), when="+cuda")
 
     with when("+rocm"):
         depends_on("hsa-rocr-dev")
@@ -55,9 +55,9 @@ class RedisAi(MakefilePackage):
 
     # Optional Deps
     with when("+torch"):
-        depends_on("py-torch@1.11.0:~cuda~rocm", when="~cuda~rocm", type=("build", "link"))
-        depends_on("py-torch@1.11.0:+cuda+cudnn~rocm", when="+cuda", type=("build", "link"))
-        depends_on("py-torch@1.11.0:~cuda+rocm", when="+rocm", type=("build", "link"))
+        depends_on("py-torch@1.11.0:~cuda~rocm", type=("build", "link"), when="~cuda~rocm")
+        depends_on("py-torch@1.11.0:+cuda+cudnn~rocm", type=("build", "link"), when="+cuda")
+        depends_on("py-torch@1.11.0:~cuda+rocm", type=("build", "link"), when="+rocm")
 
     build_directory = "opt"
     parallel = False

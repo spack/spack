@@ -37,7 +37,7 @@ class Augustus(MakefilePackage):
     )
 
     depends_on("perl", type=("build", "run"))
-    depends_on("python", when="@3.3.1:", type=("build", "run"))
+    depends_on("python", type=("build", "run"), when="@3.3.1:")
     depends_on("bamtools")
     depends_on("gsl")
 

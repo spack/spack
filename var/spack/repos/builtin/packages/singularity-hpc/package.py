@@ -46,9 +46,9 @@ class SingularityHpc(PythonPackage):
     depends_on("py-ruamel-yaml", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
 
-    depends_on("singularityce@3:", when="runtime=singularityce", type="run")
-    depends_on("singularity@3:", when="runtime=singularity", type="run")
-    depends_on("podman", when="runtime=podman", type="run")
+    depends_on("singularityce@3:", type="run", when="runtime=singularityce")
+    depends_on("singularity@3:", type="run", when="runtime=singularity")
+    depends_on("podman", type="run", when="runtime=podman")
 
-    depends_on("lmod", when="modules=lmod", type="run")
-    depends_on("environment-modules", when="modules=environment-modules", type="run")
+    depends_on("lmod", type="run", when="modules=lmod")
+    depends_on("environment-modules", type="run", when="modules=environment-modules")

@@ -64,8 +64,8 @@ class MochiMargo(AutotoolsPackage):
     depends_on("argobots@1.0:")
     depends_on("argobots@1.1:", when="@0.11:")
     # "breadcrumb" support not available in mercury-1.0
-    depends_on("mercury@1.0.0:", when="@:0.5.1", type=("build", "link", "run"))
-    depends_on("mercury@2.0.0:", when="@0.5.2:", type=("build", "link", "run"))
+    depends_on("mercury@1.0.0:", type=("build", "link", "run"), when="@:0.5.1")
+    depends_on("mercury@2.0.0:", type=("build", "link", "run"), when="@0.5.2:")
 
     # Fix pthread detection
     # https://github.com/mochi-hpc/mochi-margo/pull/177

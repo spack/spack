@@ -28,15 +28,15 @@ class PyKornia(PythonPackage):
     version("0.5.10", sha256="428b4b934a2ba7360cc6cba051ed8fd96c2d0f66611fdca0834e82845f14f65d")
 
     # pyproject.toml
-    depends_on("python@3.8:", when="@0.7:", type=("build", "run"))
-    depends_on("py-setuptools@61.2:", when="@0.6.11:", type="build")
+    depends_on("python@3.8:", type=("build", "run"), when="@0.7:")
+    depends_on("py-setuptools@61.2:", type="build", when="@0.6.11:")
     depends_on("py-setuptools", type="build")
 
     # requirements/requirements.txt
-    depends_on("py-packaging", when="@0.6:", type=("build", "run"))
-    depends_on("py-torch@1.9.1:", when="@0.6.9:", type=("build", "run"))
-    depends_on("py-torch@1.8.1:", when="@0.6:", type=("build", "run"))
+    depends_on("py-packaging", type=("build", "run"), when="@0.6:")
+    depends_on("py-torch@1.9.1:", type=("build", "run"), when="@0.6.9:")
+    depends_on("py-torch@1.8.1:", type=("build", "run"), when="@0.6:")
     depends_on("py-torch@1.6.0:", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("py-pytest-runner", when="@:0.6.10", type="build")
+    depends_on("py-pytest-runner", type="build", when="@:0.6.10")

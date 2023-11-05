@@ -29,5 +29,5 @@ class PyNumpyQuaternion(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.13:", type=("build", "run"))
-    depends_on("py-scipy", when="+scipy", type=("build", "run"))
-    depends_on("py-numba", when="+numba", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"), when="+scipy")
+    depends_on("py-numba", type=("build", "run"), when="+numba")

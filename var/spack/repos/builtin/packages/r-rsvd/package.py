@@ -31,5 +31,5 @@ class RRsvd(RPackage):
     version("1.0.2", sha256="c8fe5c18bf7bcfe32604a897e3a7caae39b49e47e93edad9e4d07657fc392a3a")
 
     depends_on("r@3.2.2:", type=("build", "run"))
-    depends_on("r@4.0.0:", when="@1.0.5:", type=("build", "run"))
+    depends_on("r@4.0.0:", type=("build", "run"), when="@1.0.5:")
     depends_on("r-matrix", type=("build", "run"))

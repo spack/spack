@@ -21,21 +21,21 @@ class PyBuild(PythonPackage):
 
     variant("virtualenv", default=False, description="Install optional virtualenv dependency")
 
-    depends_on("py-flit-core@3.8:", when="@1:", type="build")
-    depends_on("py-flit-core@3.4:", when="@0.10:", type="build")
+    depends_on("py-flit-core@3.8:", type="build", when="@1:")
+    depends_on("py-flit-core@3.4:", type="build", when="@0.10:")
     depends_on("py-packaging@19:", type=("build", "run"))
-    depends_on("py-pyproject-hooks", when="@0.10.0:", type=("build", "run"))
-    depends_on("py-colorama", when="platform=windows", type=("build", "run"))
-    depends_on("py-importlib-metadata@4.6:", when="@1: ^python@:3.9", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.22:", when="@0 ^python@:3.7", type=("build", "run"))
-    depends_on("py-tomli@1.1:", when="@1: ^python@:3.10", type=("build", "run"))
-    depends_on("py-tomli@1.1:", when="@0.10", type=("build", "run"))
-    depends_on("py-tomli@1:", when="@:0.9", type=("build", "run"))
+    depends_on("py-pyproject-hooks", type=("build", "run"), when="@0.10.0:")
+    depends_on("py-colorama", type=("build", "run"), when="platform=windows")
+    depends_on("py-importlib-metadata@4.6:", type=("build", "run"), when="@1: ^python@:3.9")
+    depends_on("py-importlib-metadata@0.22:", type=("build", "run"), when="@0 ^python@:3.7")
+    depends_on("py-tomli@1.1:", type=("build", "run"), when="@1: ^python@:3.10")
+    depends_on("py-tomli@1.1:", type=("build", "run"), when="@0.10")
+    depends_on("py-tomli@1:", type=("build", "run"), when="@:0.9")
 
     # Historical dependencies
-    depends_on("py-setuptools", when="@:0.9", type="build")
-    depends_on("py-pep517@0.9.1:", when="@:0.9", type=("build", "run"))
-    depends_on("py-virtualenv@20.0.35:", when="+virtualenv", type=("build", "run"))
+    depends_on("py-setuptools", type="build", when="@:0.9")
+    depends_on("py-pep517@0.9.1:", type=("build", "run"), when="@:0.9")
+    depends_on("py-virtualenv@20.0.35:", type=("build", "run"), when="+virtualenv")
 
     # https://github.com/pypa/build/issues/266
     # https://github.com/pypa/build/issues/406

@@ -17,8 +17,8 @@ class PyAvroPython3(PythonPackage):
     version("1.10.0", sha256="a455c215540b1fceb1823e2a918e94959b54cb363307c97869aa46b5b55bde05")
     version("1.9.1", sha256="daab2cea71b942a1eb57d700d4a729e9d6cd93284d4dd4d65a378b9f958aa0d2")
 
-    depends_on("python@3.5:", when="@1.10:", type=("build", "run"))
+    depends_on("python@3.5:", type=("build", "run"), when="@1.10:")
     depends_on("python@3.4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-isort", when="@1.10:", type="build")
-    depends_on("py-pycodestyle", when="@1.10:", type="build")
+    depends_on("py-isort", type="build", when="@1.10:")
+    depends_on("py-pycodestyle", type="build", when="@1.10:")

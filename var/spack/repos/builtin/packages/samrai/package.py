@@ -64,11 +64,11 @@ class Samrai(AutotoolsPackage):
     depends_on("zlib-api")
     depends_on("hdf5+mpi")
     depends_on("m4", type="build")
-    depends_on("boost@:1.64.0", when="@3.0.0:3.11", type="build")
+    depends_on("boost@:1.64.0", type="build", when="@3.0.0:3.11")
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, when="@3.0.0:3.11.99", type="build")
+    depends_on(Boost.with_default_variants, type="build", when="@3.0.0:3.11.99")
     depends_on("silo+mpi", when="+silo")
 
     # don't build SAMRAI 3+ with tools with gcc

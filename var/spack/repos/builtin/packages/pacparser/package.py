@@ -25,7 +25,7 @@ class Pacparser(MakefilePackage):
     )
 
     depends_on("python", when="+python")
-    depends_on("py-setuptools", when="+python", type=("build", "run"))
+    depends_on("py-setuptools", type=("build", "run"), when="+python")
 
     extends("python", when="+python")
 

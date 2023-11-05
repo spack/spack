@@ -25,7 +25,7 @@ class RLdheatmap(RPackage):
     version("0.99-7", sha256="aca54c839a424506d8be7153bf03b32026aeefe7ed38f534e8e19708e34212e4")
 
     depends_on("r@2.14.0:", type=("build", "run"))
-    depends_on("r@4.0:", when="@1.0-4:", type=("build", "run"))
+    depends_on("r@4.0:", type=("build", "run"), when="@1.0-4:")
     depends_on("r-genetics", type=("build", "run"))
     depends_on("r-snpstats", type=("build", "run"))
     depends_on("r-rcpp", type=("build", "run"))

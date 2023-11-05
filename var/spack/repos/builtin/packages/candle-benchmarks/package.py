@@ -28,9 +28,9 @@ class CandleBenchmarks(Package):
     depends_on("py-scikit-learn", type=("build", "run"))
     depends_on("opencv@3.2.0: +highgui +imgproc +jpeg +png +tiff ~dnn ~eigen ~gtk")
     depends_on("py-mdanalysis", type=("build", "run"))
-    depends_on("py-mpi4py", when="+mpi", type=("build", "run"))
-    depends_on("py-h5py~mpi", when="~mpi", type=("build", "run"))
-    depends_on("py-h5py+mpi", when="+mpi", type=("build", "run"))
+    depends_on("py-mpi4py", type=("build", "run"), when="+mpi")
+    depends_on("py-h5py~mpi", type=("build", "run"), when="~mpi")
+    depends_on("py-h5py+mpi", type=("build", "run"), when="+mpi")
     depends_on("py-requests", type=("build", "run"))
 
     # see #3244, but use external for now

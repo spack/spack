@@ -25,5 +25,5 @@ class RSpatstatSparse(RPackage):
     depends_on("r-abind", type=("build", "run"))
     depends_on("r-tensor", type=("build", "run"))
     depends_on("r-spatstat-utils@2.1-0:", type=("build", "run"))
-    depends_on("r-spatstat-utils@3.0-0:", when="@3.0-0:", type=("build", "run"))
-    depends_on("r-spatstat-utils@3.0-2:", when="@3.0-1:", type=("build", "run"))
+    depends_on("r-spatstat-utils@3.0-0:", type=("build", "run"), when="@3.0-0:")
+    depends_on("r-spatstat-utils@3.0-2:", type=("build", "run"), when="@3.0-1:")

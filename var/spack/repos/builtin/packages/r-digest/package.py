@@ -41,5 +41,5 @@ class RDigest(RPackage):
     version("0.6.9", sha256="95fdc36011869fcfe21b40c3b822b931bc01f8a531e2c9260582ba79560dbe47")
 
     depends_on("r@2.4.1:", type=("build", "run"))
-    depends_on("r@3.1.0:", when="@0.6.16:", type=("build", "run"))
-    depends_on("r@3.3.0:", when="@0.6.27:", type=("build", "run"))
+    depends_on("r@3.1.0:", type=("build", "run"), when="@0.6.16:")
+    depends_on("r@3.3.0:", type=("build", "run"), when="@0.6.27:")

@@ -27,10 +27,10 @@ class Jackcess(Package):
 
     extends("openjdk")
     depends_on("java", type="run")
-    depends_on("commons-lang@2.6", when="@2.1.12", type="run")
-    depends_on("commons-lang@2.4", when="@1.2.14.3", type="run")
-    depends_on("commons-logging@1.1.3", when="@2.1.12", type="run")
-    depends_on("commons-logging@1.1.1", when="@1.2.14.3", type="run")
+    depends_on("commons-lang@2.6", type="run", when="@2.1.12")
+    depends_on("commons-lang@2.4", type="run", when="@1.2.14.3")
+    depends_on("commons-logging@1.1.3", type="run", when="@2.1.12")
+    depends_on("commons-logging@1.1.1", type="run", when="@1.2.14.3")
 
     def install(self, spec, prefix):
         install("jackcess-{0}.jar".format(self.version), prefix)

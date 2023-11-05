@@ -19,7 +19,7 @@ class PyEmcee(PythonPackage):
     version("2.1.0", sha256="5ce1039a3d78fb9e7d53fcd768517585c5998193743bfcfaac407927d375ca63")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@40.6.0:", when="@3.1.1:", type="build")
-    depends_on("py-setuptools-scm", when="@3.1.1:", type="build")
-    depends_on("py-wheel", when="@3.1.1:", type="build")
+    depends_on("py-setuptools@40.6.0:", type="build", when="@3.1.1:")
+    depends_on("py-setuptools-scm", type="build", when="@3.1.1:")
+    depends_on("py-wheel", type="build", when="@3.1.1:")
     depends_on("py-numpy", type=("build", "run"))

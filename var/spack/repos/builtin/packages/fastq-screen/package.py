@@ -31,9 +31,9 @@ class FastqScreen(Package):
     depends_on("bowtie2", type="run")
     depends_on("samtools", type="run")
     # variant dependencies
-    depends_on("bismark", when="+bismark", type="run")
-    depends_on("bowtie", when="+bowtie", type="run")
-    depends_on("bwa", when="+bwa", type="run")
+    depends_on("bismark", type="run", when="+bismark")
+    depends_on("bowtie", type="run", when="+bowtie")
+    depends_on("bwa", type="run", when="+bwa")
 
     def patch(self):
         filter_file("/usr/bin/perl", self.spec["perl"].command.path, "fastq_screen", backup=False)

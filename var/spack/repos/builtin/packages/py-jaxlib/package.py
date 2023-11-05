@@ -24,16 +24,16 @@ class PyJaxlib(PythonPackage, CudaPackage):
     variant("cuda", default=True, description="Build with CUDA")
 
     # jaxlib/setup.py
-    depends_on("python@3.8:", when="@0.4:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@0.4:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.20:", when="@0.3:", type=("build", "run"))
+    depends_on("py-numpy@1.20:", type=("build", "run"), when="@0.3:")
     depends_on("py-numpy@1.18:", type=("build", "run"))
     depends_on("py-scipy@1.5:", type=("build", "run"))
 
     # .bazelversion
-    depends_on("bazel@5.1.1:5.9", when="@0.3:", type="build")
+    depends_on("bazel@5.1.1:5.9", type="build", when="@0.3:")
     # https://github.com/google/jax/issues/8440
-    depends_on("bazel@4.1:4", when="@0.1", type="build")
+    depends_on("bazel@4.1:4", type="build", when="@0.1")
 
     # README.md
     depends_on("cuda@11.4:", when="@0.4:+cuda")
@@ -44,8 +44,8 @@ class PyJaxlib(PythonPackage, CudaPackage):
     depends_on("cudnn@8.0.5:", when="+cuda")
 
     # Historical dependencies
-    depends_on("py-absl-py", when="@:0.3", type=("build", "run"))
-    depends_on("py-flatbuffers@1.12:2", when="@0.1", type=("build", "run"))
+    depends_on("py-absl-py", type=("build", "run"), when="@:0.3")
+    depends_on("py-flatbuffers@1.12:2", type=("build", "run"), when="@0.1")
 
     conflicts(
         "cuda_arch=none",

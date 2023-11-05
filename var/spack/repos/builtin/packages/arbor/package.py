@@ -84,21 +84,21 @@ class Arbor(CMakePackage, CudaPackage):
 
     # mpi
     depends_on("mpi", when="+mpi")
-    depends_on("py-mpi4py", when="+mpi+python", type=("build", "run"))
+    depends_on("py-mpi4py", type=("build", "run"), when="+mpi+python")
 
     # python (bindings)
     extends("python", when="+python")
-    depends_on("python@3.7:", when="+python", type=("build", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
     with when("+python"):
         depends_on("py-pybind11@2.6:", type="build")
-        depends_on("py-pybind11@2.8.1:", when="@0.5.3:", type="build")
-        depends_on("py-pybind11@2.10.1:", when="@0.7.1:", type="build")
+        depends_on("py-pybind11@2.8.1:", type="build", when="@0.5.3:")
+        depends_on("py-pybind11@2.10.1:", type="build", when="@0.7.1:")
 
     # sphinx based documentation
-    depends_on("python@3.7:", when="+doc", type="build")
-    depends_on("py-sphinx", when="+doc", type="build")
-    depends_on("py-svgwrite", when="+doc", type="build")
+    depends_on("python@3.7:", type="build", when="+doc")
+    depends_on("py-sphinx", type="build", when="+doc")
+    depends_on("py-svgwrite", type="build", when="+doc")
 
     @property
     def build_targets(self):

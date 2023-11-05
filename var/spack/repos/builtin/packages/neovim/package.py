@@ -87,15 +87,15 @@ class Neovim(CMakePackage):
     depends_on("lua@5.1:5.1.99", when="+no_luajit")
 
     # dependencies to allow regular lua to work
-    depends_on("lua-ffi", when="^lua", type=("link", "run"))
-    depends_on("lua-bitlib", when="^lua", type=("link", "run"))
+    depends_on("lua-ffi", type=("link", "run"), when="^lua")
+    depends_on("lua-bitlib", type=("link", "run"), when="^lua")
 
     # base dependencies
     depends_on("cmake@3.0:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("gettext")
     depends_on("gperf", type="link")
-    depends_on("jemalloc", when="platform=linux", type="link")
+    depends_on("jemalloc", type="link", when="platform=linux")
     depends_on("lua-lpeg")
     depends_on("lua-mpack")
     depends_on("iconv", type="link")
@@ -105,7 +105,7 @@ class Neovim(CMakePackage):
     depends_on("libvterm", type="link")
     depends_on("msgpack-c", type="link")
     depends_on("unibilium", type="link")
-    depends_on("unibilium@:1.2.0", when="@0.2.0", type="link")
+    depends_on("unibilium@:1.2.0", type="link", when="@0.2.0")
 
     # versions
     with when("@0.4:"):

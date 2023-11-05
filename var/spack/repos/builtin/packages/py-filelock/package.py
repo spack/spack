@@ -32,18 +32,18 @@ class PyFilelock(PythonPackage):
     version("2.0.9", sha256="0f91dce339c9f25d6f2e0733a17e4f9a47b139dffda52619a0e61e013e5c6782")
     version("2.0.8", sha256="7e48e4906de3c9a5d64d8f235eb3ae1050dfefa63fd65eaf318cc915c935212b")
 
-    depends_on("python@3.8:", when="@3.12.3:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@3.12.3:")
 
-    depends_on("py-hatch-vcs@0.3:", when="@3.8:", type="build")
-    depends_on("py-hatchling@1.18:", when="@3.12.3:", type="build")
-    depends_on("py-hatchling@1.14:", when="@3.8:", type="build")
+    depends_on("py-hatch-vcs@0.3:", type="build", when="@3.8:")
+    depends_on("py-hatchling@1.18:", type="build", when="@3.12.3:")
+    depends_on("py-hatchling@1.14:", type="build", when="@3.8:")
 
     # Historical dependencies
     with when("@:3.8.0"):
-        depends_on("py-setuptools@63.4:", when="@3.8:", type="build")
-        depends_on("py-setuptools@41:", when="@3.1:", type="build")
+        depends_on("py-setuptools@63.4:", type="build", when="@3.8:")
+        depends_on("py-setuptools@41:", type="build", when="@3.1:")
         depends_on("py-setuptools", type="build")
-        depends_on("py-setuptools-scm@7.0.5:", when="@3.8:", type="build")
-        depends_on("py-setuptools-scm@2:", when="@3.1:", type="build")
+        depends_on("py-setuptools-scm@7.0.5:", type="build", when="@3.8:")
+        depends_on("py-setuptools-scm@2:", type="build", when="@3.1:")
 
-    depends_on("py-wheel@0.30:", when="@3.1:3.7", type="build")
+    depends_on("py-wheel@0.30:", type="build", when="@3.1:3.7")

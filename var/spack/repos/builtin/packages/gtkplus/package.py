@@ -39,8 +39,8 @@ class Gtkplus(MesonPackage):
     variant("cups", default=False, description="enable cups support")
 
     # See meson.build for version requirements
-    depends_on("meson@0.48.0:", when="@3.24:", type="build")
-    depends_on("ninja", when="@3.24:", type="build")
+    depends_on("meson@0.48.0:", type="build", when="@3.24:")
+    depends_on("ninja", type="build", when="@3.24:")
     # Needed to build man pages:
     # depends_on('docbook-xml', when='@3.24:', type='build')
     # depends_on('docbook-xsl', when='@3.24:', type='build')

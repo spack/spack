@@ -19,7 +19,7 @@ class PyRuamelYamlClib(PythonPackage):
 
     depends_on("python", type=("build", "link", "run"))
     # to prevent legacy-install-failure
-    depends_on("python@:3.9", when="@0.2.0", type=("build", "link", "run"))
+    depends_on("python@:3.9", type=("build", "link", "run"), when="@0.2.0")
     depends_on("py-setuptools@28.7.0:", type="build")
 
     def flag_handler(self, name, flags):

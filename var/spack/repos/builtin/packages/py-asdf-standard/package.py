@@ -21,4 +21,4 @@ class PyAsdfStandard(PythonPackage):
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools-scm@3.4: +toml", type="build")
 
-    depends_on("py-importlib-resources@3:", when="^python@:3.8", type=("build", "run"))
+    depends_on("py-importlib-resources@3:", type=("build", "run"), when="^python@:3.8")

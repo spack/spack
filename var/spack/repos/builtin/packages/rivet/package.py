@@ -60,8 +60,8 @@ class Rivet(AutotoolsPackage):
     depends_on("swig", type="build")
 
     depends_on("autoconf", type="build")
-    depends_on("autoconf@2.71:", when="@3.1.7", type="build")
-    depends_on("autoconf@2.68:", when="@3.1.7b:", type="build")
+    depends_on("autoconf@2.71:", type="build", when="@3.1.7")
+    depends_on("autoconf@2.68:", type="build", when="@3.1.7b:")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")

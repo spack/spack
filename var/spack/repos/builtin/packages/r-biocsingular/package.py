@@ -29,7 +29,7 @@ class RBiocsingular(RPackage):
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-delayedarray", type=("build", "run"))
     depends_on("r-biocparallel", type=("build", "run"))
-    depends_on("r-scaledmatrix", when="@1.10.0:", type=("build", "run"))
+    depends_on("r-scaledmatrix", type=("build", "run"), when="@1.10.0:")
     depends_on("r-irlba", type=("build", "run"))
     depends_on("r-rsvd", type=("build", "run"))
     depends_on("r-rcpp", type=("build", "run"))

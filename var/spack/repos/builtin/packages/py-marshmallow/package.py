@@ -21,4 +21,4 @@ class PyMarshmallow(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-packaging@17:", when="@3.19.0:", type=("build", "run"))
+    depends_on("py-packaging@17:", type=("build", "run"), when="@3.19.0:")

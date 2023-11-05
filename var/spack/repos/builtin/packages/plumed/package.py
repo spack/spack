@@ -202,7 +202,7 @@ class Plumed(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("py-cython", when="@2.5:", type="build")
+    depends_on("py-cython", type="build", when="@2.5:")
 
     force_autoreconf = True
 

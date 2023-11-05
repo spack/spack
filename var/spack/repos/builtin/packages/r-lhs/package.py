@@ -23,5 +23,5 @@ class RLhs(RPackage):
     version("0.16", sha256="9cd199c3b5b2be1736d585ef0fd39a00e31fc015a053333a7a319668d0809425")
 
     depends_on("r@3.3.0:", type=("build", "run"))
-    depends_on("r@3.4.0:", when="@1.0:", type=("build", "run"))
-    depends_on("r-rcpp", when="@1.0:", type=("build", "run"))
+    depends_on("r@3.4.0:", type=("build", "run"), when="@1.0:")
+    depends_on("r-rcpp", type=("build", "run"), when="@1.0:")

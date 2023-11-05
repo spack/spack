@@ -27,4 +27,4 @@ class RGbm(RPackage):
     depends_on("r-lattice", type=("build", "run"))
     depends_on("r-survival", type=("build", "run"))
 
-    depends_on("r-gridextra", when="@2.1.5", type=("build", "run"))
+    depends_on("r-gridextra", type=("build", "run"), when="@2.1.5")

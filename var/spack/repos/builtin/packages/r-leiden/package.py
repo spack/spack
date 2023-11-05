@@ -26,4 +26,4 @@ class RLeiden(RPackage):
     depends_on("r-reticulate", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-igraph", type=("build", "run"))
-    depends_on("r-igraph@1.2.7:", when="@0.4.2:", type=("build", "run"))
+    depends_on("r-igraph@1.2.7:", type=("build", "run"), when="@0.4.2:")

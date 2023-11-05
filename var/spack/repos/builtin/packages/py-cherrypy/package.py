@@ -20,4 +20,4 @@ class PyCherrypy(PythonPackage):
     depends_on("py-zc-lockfile", type=("build", "run"))
     depends_on("py-cheroot@6.2.4:", type=("build", "run"))
     depends_on("py-portend@2.1.1:", type=("build", "run"))
-    depends_on("python@3.5:", when="@18.0.0:", type=("build", "run"))
+    depends_on("python@3.5:", type=("build", "run"), when="@18.0.0:")

@@ -33,7 +33,7 @@ class PyPyflakes(PythonPackage):
     version("0.9.1", sha256="baad29ac1e884c7077eb32ed1d9ee5cf30bf4b888329e1fcb51b9aa5298cb3b9")
     version("0.9.0", sha256="4c4d73085ce5de9d8147011c060d129659baa1111d1a5a3035f2bd03f2976538")
 
-    depends_on("python@3.6:", when="@2.5:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@2.5:")
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-pyflakes requires py-setuptools during runtime as well.

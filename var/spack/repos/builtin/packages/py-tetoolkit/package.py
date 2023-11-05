@@ -21,5 +21,5 @@ class PyTetoolkit(PythonPackage):
     depends_on("py-setuptools")
     depends_on("python@2.7:", type=("build", "run"))
     depends_on("py-pysam", type=("build", "run"))
-    depends_on("r-deseq", when="@:1.5.1", type=("build", "run"))
-    depends_on("r-deseq2", when="@2.0.0:", type=("build", "run"))
+    depends_on("r-deseq", type=("build", "run"), when="@:1.5.1")
+    depends_on("r-deseq2", type=("build", "run"), when="@2.0.0:")

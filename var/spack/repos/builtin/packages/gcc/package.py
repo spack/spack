@@ -150,7 +150,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         when="+bootstrap %gcc",
     )
 
-    depends_on("flex", when="@master", type="build")
+    depends_on("flex", type="build", when="@master")
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on("gmp@4.3.2:")
@@ -159,9 +159,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("texinfo@4.7:", type="build")
     depends_on("libtool", type="build")
     # dependencies required for git versions
-    depends_on("m4@1.4.6:", when="@master", type="build")
-    depends_on("automake@1.15.1:", when="@master", type="build")
-    depends_on("autoconf@2.69:", when="@master", type="build")
+    depends_on("m4@1.4.6:", type="build", when="@master")
+    depends_on("automake@1.15.1:", type="build", when="@master")
+    depends_on("autoconf@2.69:", type="build", when="@master")
 
     depends_on("gmake@3.80:", type="build")
     depends_on("perl@5", type="build")
@@ -188,9 +188,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("iconv", when="platform=darwin")
     depends_on("gnat", when="languages=ada")
     depends_on(
-        "binutils+gas+ld+plugins~libiberty", when="+binutils", type=("build", "link", "run")
+        "binutils+gas+ld+plugins~libiberty", type=("build", "link", "run"), when="+binutils"
     )
-    depends_on("zip", when="languages=java", type="build")
+    depends_on("zip", type="build", when="languages=java")
 
     # The server is sometimes a bit slow to respond
     timeout = {"timeout": 60}

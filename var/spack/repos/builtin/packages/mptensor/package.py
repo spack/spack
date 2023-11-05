@@ -23,7 +23,7 @@ class Mptensor(CMakePackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("scalapack", when="+mpi")
-    depends_on("doxygen@:1.8.11", when="+doc", type="build")
+    depends_on("doxygen@:1.8.11", type="build", when="+doc")
 
     test_requires_compiler = True
 

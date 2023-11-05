@@ -17,4 +17,4 @@ class PyClickPlugins(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-click@3.0:", type=("build", "run"))
-    depends_on("py-click@4.0:", when="@1.1.1:", type=("build", "run"))
+    depends_on("py-click@4.0:", type=("build", "run"), when="@1.1.1:")

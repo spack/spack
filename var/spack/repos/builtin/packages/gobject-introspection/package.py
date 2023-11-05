@@ -36,7 +36,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     depends_on("flex", type="build")
 
     # Does not build with sed from Darwin
-    depends_on("sed", when="platform=darwin", type="build")
+    depends_on("sed", type="build", when="platform=darwin")
 
     depends_on("cairo+gobject")
     depends_on("glib@2.49.2:", when="@1.49.2:")

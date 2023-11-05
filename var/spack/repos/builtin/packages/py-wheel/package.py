@@ -76,7 +76,7 @@ class PyWheel(Package, PythonExtension):
 
     extends("python")
     depends_on("python +ctypes", type=("build", "run"))
-    depends_on("python@3.7:", when="@0.38:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@0.38:")
     depends_on("py-pip", type="build")
 
     def url_for_version(self, version):

@@ -28,4 +28,4 @@ class RFilehash(RPackage):
     version("2.3", sha256="63b098df9a2cf4aac862cd7bf86ae516e00852a8ad0f3090f9721b6b173e6edb")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r-digest", when="@2.4-5:", type=("build", "run"))
+    depends_on("r-digest", type=("build", "run"), when="@2.4-5:")

@@ -94,10 +94,10 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     # -----------------------------------------------------------------------
     # Basics
     depends_on("cmake@3.14:", type="build")
-    depends_on("cmake@3.21:", when="+rocm", type="build")
+    depends_on("cmake@3.21:", type="build", when="+rocm")
 
     depends_on("blt", type="build")
-    depends_on("blt@0.5.1:", when="@0.6.2:", type="build")
+    depends_on("blt@0.5.1:", type="build", when="@0.6.2:")
 
     depends_on("mpi", when="+mpi")
 
@@ -151,7 +151,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("python", when="+devtools")
     depends_on("py-sphinx", when="+devtools")
     depends_on("py-shroud", when="+devtools")
-    depends_on("llvm+clang@10.0.0", when="+devtools", type="build")
+    depends_on("llvm+clang@10.0.0", type="build", when="+devtools")
 
     # Hard requirement after Axom 0.6.1
     conflicts("~cpp14", when="@0.6.2:")

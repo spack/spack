@@ -52,11 +52,11 @@ class Met(AutotoolsPackage):
     depends_on("cairo", when="+graphics")
     depends_on("freetype", when="+graphics")
 
-    depends_on("python@3.6.3:", when="+python", type=("build", "run"))
-    depends_on("py-netcdf4", when="+python", type=("build", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-xarray", when="+python", type=("build", "run"))
-    depends_on("py-pandas", when="+python", type=("build", "run"))
+    depends_on("python@3.6.3:", type=("build", "run"), when="+python")
+    depends_on("py-netcdf4", type=("build", "run"), when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-xarray", type=("build", "run"), when="+python")
+    depends_on("py-pandas", type=("build", "run"), when="+python")
 
     patch("openmp_shape_patch.patch", when="@10.1.0")
 

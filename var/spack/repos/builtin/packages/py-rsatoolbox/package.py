@@ -20,29 +20,29 @@ class PyRsatoolbox(PythonPackage):
     version("0.0.4", sha256="84153fa4c686c95f3e83f2cb668b97b82b53dc2a565856db80aa5f8c96d09359")
     version("0.0.3", sha256="9bf6e16d9feadc081f9daaaaab7ef38fc1cd64dd8ef0ccd9f74adb5fe6166649")
 
-    depends_on("python@:3.10", when="@:0.1.2", type=("build", "run"))
+    depends_on("python@:3.10", type=("build", "run"), when="@:0.1.2")
 
     # version restriction from pyproject.toml cannot be concretized at the
     # moment but package also builds with older versions
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm+toml@7.0", when="@0.0.5:", type="build")
+    depends_on("py-setuptools-scm+toml@7.0", type="build", when="@0.0.5:")
     # version restriction: same as for py-setuptools
-    depends_on("py-cython", when="@0.0.5:", type="build")
-    depends_on("py-twine@4.0.1:4.0", when="@0.0.5:", type="build")
+    depends_on("py-cython", type="build", when="@0.0.5:")
+    depends_on("py-twine@4.0.1:4.0", type="build", when="@0.0.5:")
 
     depends_on("py-numpy@1.21.2:", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-scikit-learn", type=("build", "run"))
     depends_on("py-scikit-image", type=("build", "run"))
-    depends_on("py-pandas", when="@0.0.4:", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"), when="@0.0.4:")
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
     depends_on("py-joblib", type=("build", "run"))
 
     # old dependcies
-    depends_on("py-coverage", when="@:0.1.1", type=("build", "run"))
-    depends_on("py-petname@2.2", when="@0.0.4", type=("build", "run"))
+    depends_on("py-coverage", type=("build", "run"), when="@:0.1.1")
+    depends_on("py-petname@2.2", type=("build", "run"), when="@0.0.4")
 
     @when("@:0.0.3")
     def patch(self):

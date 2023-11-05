@@ -21,6 +21,6 @@ class PyPykwalify(PythonPackage):
     depends_on("py-docopt@0.6.2:", type=("build", "run"))
     depends_on("py-ruamel-yaml@0.11.0:", type=("build", "run"))
     depends_on("py-python-dateutil@2.4.2:", type=("build", "run"))
-    depends_on("py-pyyaml@3.11:", when="@1.6.1", type=("build", "run"))
+    depends_on("py-pyyaml@3.11:", type=("build", "run"), when="@1.6.1")
 
     conflicts("^py-ruamel-yaml@0.16.0:", when="@1.6.1")

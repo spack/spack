@@ -177,7 +177,7 @@ class Phist(CMakePackage):
     # Python 3 or later is required for generating the Fortran 2003 bindings
     # since version 1.7, you can get rid of the dependency by switching off
     # the feature (e.g. use the '~fortran' variant)
-    depends_on("python@3:", when="@1.7: +fortran", type="build")
+    depends_on("python@3:", type="build", when="@1.7: +fortran")
     depends_on("mpi", when="+mpi")
     depends_on("trilinos@12:+tpetra gotype=long_long", when="kernel_lib=tpetra +int64")
     depends_on("trilinos@12:+tpetra gotype=int", when="kernel_lib=tpetra ~int64")
@@ -192,7 +192,7 @@ class Phist(CMakePackage):
     depends_on("parmetis+int64", when="+parmetis+int64")
     depends_on("parmetis~int64", when="+parmetis~int64")
     depends_on("py-pytest", type="test")
-    depends_on("py-numpy", when="+mpi", type="test")
+    depends_on("py-numpy", type="test", when="+mpi")
     # The test_install compiles the examples and needs pkgconfig for it
     depends_on("pkgconfig", type="test")
 

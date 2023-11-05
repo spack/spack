@@ -21,10 +21,10 @@ class Giflib(MakefilePackage, SourceforgePackage):
         extension="tar.bz2",
     )
 
-    depends_on("automake", when="@:5.2.0", type="build")
-    depends_on("autoconf", when="@:5.2.0", type="build")
-    depends_on("m4", when="@:5.2.0", type="build")
-    depends_on("libtool", when="@:5.2.0", type="build")
+    depends_on("automake", type="build", when="@:5.2.0")
+    depends_on("autoconf", type="build", when="@:5.2.0")
+    depends_on("m4", type="build", when="@:5.2.0")
+    depends_on("libtool", type="build", when="@:5.2.0")
 
     # https://sourceforge.net/p/giflib/bugs/133/
     patch(

@@ -22,13 +22,13 @@ class PyHumanize(PythonPackage):
     version("3.12.0", sha256="5ec1a66e230a3e31fb3f184aab9436ea13d4e37c168e0ffc345ae5bb57e58be6")
     version("0.5.1", sha256="a43f57115831ac7c70de098e6ac46ac13be00d69abbf60bdcac251344785bb19")
 
-    depends_on("py-hatch-vcs", when="@4.6:", type=("build", "run"))
-    depends_on("py-hatchling", when="@4.6:", type=("build", "run"))
+    depends_on("py-hatch-vcs", type=("build", "run"), when="@4.6:")
+    depends_on("py-hatchling", type=("build", "run"), when="@4.6:")
 
     with when("@:4.4"):
-        depends_on("py-setuptools@42:", when="@3.2:", type=("build", "run"))
+        depends_on("py-setuptools@42:", type=("build", "run"), when="@3.2:")
         depends_on("py-setuptools", type="build")
-        depends_on("py-setuptools-scm+toml@3.4:", when="@3.2:", type="build")
-        depends_on("py-setuptools-scm", when="@1:", type="build")
+        depends_on("py-setuptools-scm+toml@3.4:", type="build", when="@3.2:")
+        depends_on("py-setuptools-scm", type="build", when="@1:")
 
-    depends_on("py-importlib-metadata", when="@3.12: ^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@3.12: ^python@:3.7")

@@ -21,17 +21,17 @@ class PyPsycopg2(PythonPackage):
     # https://github.com/psycopg/psycopg2/blob/master/doc/src/install.rst
     # https://www.psycopg.org/docs/news.html#news
     # https://pypi.org/project/psycopg2/#history
-    depends_on("python@:3.11", when="@2.9.5:", type=("build", "link", "run"))
-    depends_on("python@:3.10", when="@2.9.1:2.9.4", type=("build", "link", "run"))
-    depends_on("python@:3.9", when="@2.8.6:2.9.0", type=("build", "link", "run"))
-    depends_on("python@:3.8", when="@2.8.4:2.8.5", type=("build", "link", "run"))
-    depends_on("python@:3.7", when="@:2.8.3", type=("build", "link", "run"))
+    depends_on("python@:3.11", type=("build", "link", "run"), when="@2.9.5:")
+    depends_on("python@:3.10", type=("build", "link", "run"), when="@2.9.1:2.9.4")
+    depends_on("python@:3.9", type=("build", "link", "run"), when="@2.8.6:2.9.0")
+    depends_on("python@:3.8", type=("build", "link", "run"), when="@2.8.4:2.8.5")
+    depends_on("python@:3.7", type=("build", "link", "run"), when="@:2.8.3")
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("postgresql@9.1:15", when="@2.9.4:", type=("build", "link", "run"))
-    depends_on("postgresql@9.1:14", when="@2.9.2:2.9.3", type=("build", "link", "run"))
-    depends_on("postgresql@9.1:13", when="@2.9:2.9.1", type=("build", "link", "run"))
-    depends_on("postgresql@9.1:12", when="@2.8.4:2.8", type=("build", "link", "run"))
-    depends_on("postgresql@9.1:11", when="@2.8:2.8.3", type=("build", "link", "run"))
-    depends_on("postgresql@9.1:10", when="@:2.7", type=("build", "link", "run"))
+    depends_on("postgresql@9.1:15", type=("build", "link", "run"), when="@2.9.4:")
+    depends_on("postgresql@9.1:14", type=("build", "link", "run"), when="@2.9.2:2.9.3")
+    depends_on("postgresql@9.1:13", type=("build", "link", "run"), when="@2.9:2.9.1")
+    depends_on("postgresql@9.1:12", type=("build", "link", "run"), when="@2.8.4:2.8")
+    depends_on("postgresql@9.1:11", type=("build", "link", "run"), when="@2.8:2.8.3")
+    depends_on("postgresql@9.1:10", type=("build", "link", "run"), when="@:2.7")

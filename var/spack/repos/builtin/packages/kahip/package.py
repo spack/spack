@@ -47,7 +47,7 @@ class Kahip(CMakePackage):
     )
     variant("metis", default=False, description="metis support")
 
-    depends_on("scons", when="@2:2.10", type="build")
+    depends_on("scons", type="build", when="@2:2.10")
     depends_on("argtable")
     depends_on("mpi")  # Note: upstream package only tested on openmpi
     depends_on("metis", when="@3.12: +metis")

@@ -33,7 +33,7 @@ class RDexseq(RPackage):
     depends_on("r-iranges@2.5.17:", type=("build", "run"))
     depends_on("r-genomicranges@1.23.7:", type=("build", "run"))
     depends_on("r-deseq2@1.9.11:", type=("build", "run"))
-    depends_on("r-deseq2@1.39.6:", when="@1.46.0:", type=("build", "run"))
+    depends_on("r-deseq2@1.39.6:", type=("build", "run"), when="@1.46.0:")
     depends_on("r-annotationdbi", type=("build", "run"))
     depends_on("r-rcolorbrewer", type=("build", "run"))
     depends_on("r-s4vectors@0.23.18:", type=("build", "run"))

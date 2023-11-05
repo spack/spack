@@ -32,7 +32,7 @@ class PyTensorflowEstimator(Package):
 
     extends("python")
 
-    depends_on("python@3.7:", when="@2.9:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@2.9:")
 
     for ver in ["2.10", "2.9", "2.8", "2.7", "2.6"]:
         depends_on(f"py-keras@{ver}", when=f"@{ver}", type=("build", "run"))

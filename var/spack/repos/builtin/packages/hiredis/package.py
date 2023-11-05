@@ -33,9 +33,9 @@ class Hiredis(MakefilePackage, CMakePackage):
     variant("test_ssl", default=False, description="Builds  test suite for SSL")
     variant("test_async", default=False, description="Builds test suite for async primitives")
 
-    depends_on("cmake@3.18:", when="build_system=cmake", type="build")
-    depends_on("openssl@1.1:", when="+ssl", type=("build", "link"))
-    depends_on("openssl@1.1:", when="+test_ssl", type=("build", "link"))
+    depends_on("cmake@3.18:", type="build", when="build_system=cmake")
+    depends_on("openssl@1.1:", type=("build", "link"), when="+ssl")
+    depends_on("openssl@1.1:", type=("build", "link"), when="+test_ssl")
 
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):

@@ -31,7 +31,7 @@ class PyMdanalysis(PythonPackage):
     )
     variant("extra_formats", default=False, description="Support extra formats")
 
-    depends_on("python@3.9:", when="@2.5.0:", type=("build", "run"))
+    depends_on("python@3.9:", type=("build", "run"), when="@2.5.0:")
     depends_on("python@3.8:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
@@ -39,8 +39,8 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-cython@0.28:", type="build")
 
     # MDAnalysis required dependencies (install_requires)
-    depends_on("py-numpy@1.22.3:1", when="@2.6.0:", type=("build", "run"))
-    depends_on("py-numpy@1.21.0:", when="@2.5.0:", type=("build", "run"))
+    depends_on("py-numpy@1.22.3:1", type=("build", "run"), when="@2.6.0:")
+    depends_on("py-numpy@1.21.0:", type=("build", "run"), when="@2.5.0:")
     depends_on("py-numpy@1.20.0:", type=("build", "run"))
 
     depends_on("py-biopython@1.80:", type=("build", "run"))
@@ -56,25 +56,25 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-threadpoolctl", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-fasteners", type=("build", "run"))
-    depends_on("py-gsd@1.9.3:", when="@:2.5.0", type=("build", "run"))
+    depends_on("py-gsd@1.9.3:", type=("build", "run"), when="@:2.5.0")
 
     # extra_format (extras_require)
-    depends_on("py-netcdf4@1.0:", when="+extra_formats", type=("build", "run"))
-    depends_on("py-h5py@2.10:", when="+extra_formats", type=("build", "run"))
-    depends_on("py-pytng@0.2.3:", when="+extra_formats", type=("build", "run"))
-    depends_on("py-chemfiles@0.10:", when="+extra_formats", type=("build", "run"))
-    depends_on("py-pyedr@0.7.0:", when="+extra_formats", type=("build", "run"))
+    depends_on("py-netcdf4@1.0:", type=("build", "run"), when="+extra_formats")
+    depends_on("py-h5py@2.10:", type=("build", "run"), when="+extra_formats")
+    depends_on("py-pytng@0.2.3:", type=("build", "run"), when="+extra_formats")
+    depends_on("py-chemfiles@0.10:", type=("build", "run"), when="+extra_formats")
+    depends_on("py-pyedr@0.7.0:", type=("build", "run"), when="+extra_formats")
     # py-gsd is now an optional dependency and requires >3.0.0
     # gsd>=2.9.0 requires setuptools>=64 and can't be concretised with py-numpy
-    #    depends_on("py-gsd@3.0.1:", when="+extra_formats @2.6.0:", type=("build", "run"))
+    #    depends_on("py-gsd@3.0.1:", type=("build", "run"), when="+extra_formats @2.6.0:")
     depends_on(
         "rdkit@2020.03.1: +python ~coordgen ~maeparser ~yaehmop ~descriptors3d",
         when="+extra_formats @2.6.0:",
         type=("build", "run"),
     )
-    depends_on("py-parmed", when="+extra_formats @2.6.0:", type=("build", "run"))
+    depends_on("py-parmed", type=("build", "run"), when="+extra_formats @2.6.0:")
 
     # analysis (extras_require)
-    depends_on("py-seaborn", when="+analysis", type=("build", "run"))
-    depends_on("py-scikit-learn", when="+analysis", type=("build", "run"))
-    depends_on("py-tidynamics@1:", when="+analysis", type=("build", "run"))
+    depends_on("py-seaborn", type=("build", "run"), when="+analysis")
+    depends_on("py-scikit-learn", type=("build", "run"), when="+analysis")
+    depends_on("py-tidynamics@1:", type=("build", "run"), when="+analysis")

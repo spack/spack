@@ -67,7 +67,7 @@ class Dray(Package, CudaPackage):
     depends_on("mpi", when="+mpi")
 
     depends_on("cmake@3.9:", type="build")
-    depends_on("cmake@3.14:", when="+cuda", type="build")
+    depends_on("cmake@3.14:", type="build", when="+cuda")
 
     depends_on("conduit~shared", when="~shared")
     depends_on("conduit+shared", when="+shared")

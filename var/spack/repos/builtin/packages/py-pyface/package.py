@@ -29,10 +29,10 @@ class PyPyface(PythonPackage):
     )
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-importlib-metadata", when="@7.2:", type=("build", "run"))
-    depends_on("py-importlib-resources@1.1:", when="@7.2:", type=("build", "run"))
-    depends_on("py-traits@6.2:", when="@7.3:", type=("build", "run"))
-    depends_on("py-traits@6:", when="@7:", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@7.2:")
+    depends_on("py-importlib-resources@1.1:", type=("build", "run"), when="@7.2:")
+    depends_on("py-traits@6.2:", type=("build", "run"), when="@7.3:")
+    depends_on("py-traits@6:", type=("build", "run"), when="@7:")
     depends_on("py-traits", type=("build", "run"))
 
     conflicts("backend=pyside", when="@7.3:")
@@ -40,7 +40,7 @@ class PyPyface(PythonPackage):
 
     # Backends
     with when("backend=wx"):
-        depends_on("py-wxpython@4:", when="@7:", type=("build", "run"))
+        depends_on("py-wxpython@4:", type=("build", "run"), when="@7:")
         depends_on("py-wxpython@2.8.10:", type=("build", "run"))
         depends_on("py-numpy", type=("build", "run"))
     with when("backend=pyqt"):

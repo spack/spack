@@ -19,4 +19,4 @@ class PyFnPy(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # Uses inspect.getargspec
-    depends_on("python@:3.10", when="@:0.5", type=("run", "build"))
+    depends_on("python@:3.10", type=("run", "build"), when="@:0.5")

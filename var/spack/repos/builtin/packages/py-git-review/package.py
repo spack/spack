@@ -19,11 +19,11 @@ class PyGitReview(PythonPackage):
     version("1.26.0", sha256="487c3c1d7cc81d02b303a1245e432579f683695c827ad454685b3953f70f0b94")
     version("1.25.0", sha256="087e0a7dc2415796a9f21c484a6f652c5410e6ba4562c36291c5399f9395a11d")
 
-    depends_on("python@3.5:", when="@2:", type=("build", "run"))
+    depends_on("python@3.5:", type=("build", "run"), when="@2:")
     depends_on("py-setuptools", type=("build"))
     depends_on("py-pbr", type=("build"))
-    depends_on("py-pbr@4.1.0:", when="@2:", type=("build"))
-    depends_on("py-six", when="@1.28.0", type=("build", "run"))
+    depends_on("py-pbr@4.1.0:", type=("build"), when="@2:")
+    depends_on("py-six", type=("build", "run"), when="@1.28.0")
     depends_on("py-requests@1.1:", type=("build", "run"))
     depends_on("git", type=("run"))
 

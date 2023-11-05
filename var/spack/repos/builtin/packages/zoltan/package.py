@@ -43,7 +43,7 @@ class Zoltan(AutotoolsPackage):
     depends_on("metis+int64", when="+parmetis+int64")
     depends_on("metis", when="+parmetis")
 
-    depends_on("perl@:5.21", when="@:3.6", type="build")
+    depends_on("perl@:5.21", type="build", when="@:3.6")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("m4", type="build")

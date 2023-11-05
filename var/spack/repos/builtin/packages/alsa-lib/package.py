@@ -22,7 +22,7 @@ class AlsaLib(AutotoolsPackage):
 
     patch("python.patch", when="@1.1.4:1.1.5 +python")
 
-    depends_on("python", when="+python", type=("link", "run"))
+    depends_on("python", type=("link", "run"), when="+python")
 
     conflicts("platform=darwin", msg="ALSA only works for Linux")
 

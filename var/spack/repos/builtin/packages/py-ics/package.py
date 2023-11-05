@@ -37,4 +37,4 @@ class PyIcs(PythonPackage):
     depends_on("py-python-dateutil", type=("build", "run"))
     depends_on("py-arrow@0.11:0.14", type=("build", "run"))
     depends_on("py-six@1.5:", type=("build", "run"))
-    depends_on("py-tatsu@4.2:", when="@0.6:", type=("build", "run"))
+    depends_on("py-tatsu@4.2:", type=("build", "run"), when="@0.6:")

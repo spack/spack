@@ -30,6 +30,6 @@ class PyNeurokit2(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-scikit-learn@1:", when="@0.2:", type=("build", "run"))
+    depends_on("py-scikit-learn@1:", type=("build", "run"), when="@0.2:")
     depends_on("py-scikit-learn", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))

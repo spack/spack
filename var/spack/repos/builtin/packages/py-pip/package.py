@@ -86,10 +86,10 @@ class PyPip(Package, PythonExtension):
     )
 
     extends("python")
-    depends_on("python@3.7:", when="@22:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@22:")
 
     # Uses collections.MutableMapping
-    depends_on("python@:3.9", when="@:19.1", type=("build", "run"))
+    depends_on("python@:3.9", type=("build", "run"), when="@:19.1")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/{0}/p/pip/pip-{1}-{0}-none-any.whl"

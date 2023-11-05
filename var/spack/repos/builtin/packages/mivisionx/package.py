@@ -181,8 +181,8 @@ class Mivisionx(CMakePackage):
             )
 
     depends_on("cmake@3.5:", type="build")
-    depends_on("ffmpeg@:4", when="@:5.3", type="build")
-    depends_on("ffmpeg@4.4", when="@5.4:", type="build")
+    depends_on("ffmpeg@:4", type="build", when="@:5.3")
+    depends_on("ffmpeg@4.4", type="build", when="@5.4:")
     depends_on("protobuf@:3", type="build")
     depends_on(
         "opencv@:3.4"
@@ -199,7 +199,7 @@ class Mivisionx(CMakePackage):
         when="@5.3:",
     )
     depends_on("rocm-opencl@3.5.0", when="@1.7+opencl")
-    depends_on("rocm-cmake@3.5.0", when="@1.7", type="build")
+    depends_on("rocm-cmake@3.5.0", type="build", when="@1.7")
     depends_on("miopen-opencl@3.5.0", when="@1.7+opencl")
     depends_on("miopengemm@1.1.6", when="@1.7+opencl")
     depends_on("openssl", when="@4.0.0:")

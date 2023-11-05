@@ -59,7 +59,7 @@ class Asio(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
-    depends_on("pkgconfig", when="@1.23:", type="build")
+    depends_on("pkgconfig", type="build", when="@1.23:")
 
     # See https://github.com/chriskohlhoff/asio/issues/944 and
     # https://github.com/chriskohlhoff/asio/pull/995

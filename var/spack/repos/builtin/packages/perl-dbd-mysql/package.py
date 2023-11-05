@@ -19,7 +19,7 @@ class PerlDbdMysql(PerlPackage):
     )
     version("4.043", sha256="629f865e8317f52602b2f2efd2b688002903d2e4bbcba5427cb6188b043d6f99")
 
-    depends_on("perl-devel-checklib", when="@4.050:", type="build")
+    depends_on("perl-devel-checklib", type="build", when="@4.050:")
     depends_on("perl-test-deep", type=("build", "run"))
     depends_on("perl-dbi", type=("build", "run"))
     depends_on("mysql-client")

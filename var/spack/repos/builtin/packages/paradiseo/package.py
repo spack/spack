@@ -41,7 +41,7 @@ class Paradiseo(CMakePackage):
     # Optional dependencies
     depends_on("mpi", when="+mpi")
     depends_on("gnuplot", when="+gnuplot")
-    depends_on("eigen", when="+edo", type="build")
+    depends_on("eigen", type="build", when="+edo")
     depends_on("boost~mpi", when="+edo~mpi")
     depends_on("boost+mpi", when="+edo+mpi")
 

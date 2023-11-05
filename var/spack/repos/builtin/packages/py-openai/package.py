@@ -30,7 +30,7 @@ class PyOpenai(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-requests@2.20:", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@3.7", type=("build", "run"))
+    depends_on("py-typing-extensions", type=("build", "run"), when="^python@3.7")
     depends_on("py-aiohttp", type=("build", "run"))
 
     with when("+datalib"):

@@ -24,8 +24,8 @@ class PyPastml(PythonPackage):
 
     depends_on("py-ete3@3.1.1:", type=("build", "run"))
     depends_on("py-pandas@1.0.0:", type=("build", "run"))
-    depends_on("py-numpy@1.19.0:", when="@1.9.38", type=("build", "run"))
-    depends_on("py-numpy@1.22:", when="@1.9.40", type=("build", "run"))
+    depends_on("py-numpy@1.19.0:", type=("build", "run"), when="@1.9.38")
+    depends_on("py-numpy@1.22:", type=("build", "run"), when="@1.9.40")
     depends_on("py-jinja2@2.11.0:", type=("build", "run"))
     depends_on("py-scipy@1.5.0:", type=("build", "run"))
     depends_on("py-itolapi@4.0.0:", type=("build", "run"))

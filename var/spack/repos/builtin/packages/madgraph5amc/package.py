@@ -43,10 +43,10 @@ class Madgraph5amc(MakefilePackage):
     depends_on("collier", when="+collier")
     depends_on("lhapdf")
     depends_on("fastjet")
-    depends_on("py-six", when="@2.7.3.py3,2.8.0:", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"), when="@2.7.3.py3,2.8.0:")
 
-    depends_on("python@3.7:", when="@2.7.3.py3", type=("build", "run"))
-    depends_on("python@2.7.0:2.8.0,3.7:", when="@2.8.0:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@2.7.3.py3")
+    depends_on("python@2.7.0:2.8.0,3.7:", type=("build", "run"), when="@2.8.0:")
     depends_on("libtirpc")
 
     patch("array-bounds.patch")

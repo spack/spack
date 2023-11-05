@@ -18,4 +18,4 @@ class PyAstpretty(PythonPackage):
 
     depends_on("python@3.6.1:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-typed-ast", when="+typed", type=("build", "run"))
+    depends_on("py-typed-ast", type=("build", "run"), when="+typed")

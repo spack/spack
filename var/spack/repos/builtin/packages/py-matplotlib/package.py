@@ -131,37 +131,37 @@ class PyMatplotlib(PythonPackage):
     # https://matplotlib.org/stable/devel/dependencies.html
     # Runtime dependencies
     # Mandatory dependencies
-    depends_on("python@3.9:", when="@3.8:", type=("build", "link", "run"))
-    depends_on("python@3.8:", when="@3.6:", type=("build", "link", "run"))
+    depends_on("python@3.9:", type=("build", "link", "run"), when="@3.8:")
+    depends_on("python@3.8:", type=("build", "link", "run"), when="@3.6:")
     depends_on("python", type=("build", "link", "run"))
-    depends_on("py-contourpy@1.0.1:", when="@3.6:", type=("build", "run"))
+    depends_on("py-contourpy@1.0.1:", type=("build", "run"), when="@3.6:")
     depends_on("py-cycler@0.10:", type=("build", "run"))
-    depends_on("py-fonttools@4.22:", when="@3.5:", type=("build", "run"))
-    depends_on("py-kiwisolver@1.3.1:", when="@3.8.1:", type=("build", "run"))
-    depends_on("py-kiwisolver@1.0.1:", when="@2.2:", type=("build", "run"))
-    depends_on("py-numpy@1.21:1", when="@3.8:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.20:", when="@3.7:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.19:", when="@3.6:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.17:", when="@3.5:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.16:", when="@3.4:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.15:", when="@3.3:", type=("build", "link", "run"))
+    depends_on("py-fonttools@4.22:", type=("build", "run"), when="@3.5:")
+    depends_on("py-kiwisolver@1.3.1:", type=("build", "run"), when="@3.8.1:")
+    depends_on("py-kiwisolver@1.0.1:", type=("build", "run"), when="@2.2:")
+    depends_on("py-numpy@1.21:1", type=("build", "link", "run"), when="@3.8:")
+    depends_on("py-numpy@1.20:", type=("build", "link", "run"), when="@3.7:")
+    depends_on("py-numpy@1.19:", type=("build", "link", "run"), when="@3.6:")
+    depends_on("py-numpy@1.17:", type=("build", "link", "run"), when="@3.5:")
+    depends_on("py-numpy@1.16:", type=("build", "link", "run"), when="@3.4:")
+    depends_on("py-numpy@1.15:", type=("build", "link", "run"), when="@3.3:")
     depends_on("py-numpy@1.11:", type=("build", "run"))
-    depends_on("py-packaging@20:", when="@3.6:", type=("build", "run"))
-    depends_on("py-packaging", when="@3.5:", type=("build", "run"))
-    depends_on("pil@8:", when="@3.8.1:", type=("build", "run"))
-    depends_on("pil@6.2:", when="@3.3:", type=("build", "run"))
-    depends_on("py-pyparsing@2.3.1:3.0", when="@3.7.2", type=("build", "run"))
-    depends_on("py-pyparsing@2.3.1:", when="@3.7:", type=("build", "run"))
-    depends_on("py-pyparsing@2.2.1:", when="@3.4:", type=("build", "run"))
+    depends_on("py-packaging@20:", type=("build", "run"), when="@3.6:")
+    depends_on("py-packaging", type=("build", "run"), when="@3.5:")
+    depends_on("pil@8:", type=("build", "run"), when="@3.8.1:")
+    depends_on("pil@6.2:", type=("build", "run"), when="@3.3:")
+    depends_on("py-pyparsing@2.3.1:3.0", type=("build", "run"), when="@3.7.2")
+    depends_on("py-pyparsing@2.3.1:", type=("build", "run"), when="@3.7:")
+    depends_on("py-pyparsing@2.2.1:", type=("build", "run"), when="@3.4:")
     depends_on("py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:", type=("build", "run"))
-    depends_on("py-python-dateutil@2.7:", when="@3.4:", type=("build", "run"))
+    depends_on("py-python-dateutil@2.7:", type=("build", "run"), when="@3.4:")
     depends_on("py-python-dateutil@2.1:", type=("build", "run"))
-    depends_on("py-importlib-resources@3.2:", when="@3.7: ^python@:3.9", type=("build", "run"))
+    depends_on("py-importlib-resources@3.2:", type=("build", "run"), when="@3.7: ^python@:3.9")
 
     # Historical dependencies
-    depends_on("py-pytz", when="@:2", type=("build", "run"))
-    depends_on("py-six@1.10.0:", when="@2", type=("build", "run"))
-    depends_on("py-six@1.9.0:", when="@:1", type=("build", "run"))
+    depends_on("py-pytz", type=("build", "run"), when="@:2")
+    depends_on("py-six@1.10.0:", type=("build", "run"), when="@2")
+    depends_on("py-six@1.9.0:", type=("build", "run"), when="@:1")
 
     # Optional dependencies
     # Backends
@@ -201,15 +201,15 @@ class PyMatplotlib(PythonPackage):
     for backend in ["wx", "wxagg", "wxcairo"]:
         depends_on("py-wxpython@4:", when="backend=" + backend, type="run")
     # Other
-    depends_on("py-tornado@5:", when="backend=webagg", type="run")
-    depends_on("py-ipykernel", when="backend=nbagg", type="run")
+    depends_on("py-tornado@5:", type="run", when="backend=webagg")
+    depends_on("py-ipykernel", type="run", when="backend=nbagg")
 
     # Optional dependencies
     depends_on("ffmpeg", when="+movies")
     depends_on("imagemagick", when="+animation")
-    depends_on("pil@3.4:", when="+image", type=("build", "run"))
-    depends_on("texlive", when="+latex", type="run")
-    depends_on("ghostscript@9:", when="+latex", type="run")
+    depends_on("pil@3.4:", type=("build", "run"), when="+image")
+    depends_on("texlive", type="run", when="+latex")
+    depends_on("ghostscript@9:", type="run", when="+latex")
     depends_on("fontconfig@2.7:", when="+fonts")
     depends_on("pkgconfig", type="build")
 
@@ -223,16 +223,16 @@ class PyMatplotlib(PythonPackage):
 
     # Dependencies for building matplotlib
     # Setup dependencies
-    depends_on("py-certifi@2020.6.20:", when="@3.3.1:", type="build")
-    depends_on("py-numpy@1.25:", when="@3.8:", type="build")
-    depends_on("py-pybind11@2.6:", when="@3.7:", type="build")
-    depends_on("py-setuptools@64:", when="@3.8.1:", type="build")
-    depends_on("py-setuptools@42:", when="@3.8:", type="build")
-    depends_on("py-setuptools@42:", when="@3.7.2:3.7", type=("build", "run"))
-    depends_on("py-setuptools", when="@:3.7.1", type=("build", "run"))
-    depends_on("py-setuptools-scm@7:", when="@3.6:", type="build")
-    depends_on("py-setuptools-scm@4:6", when="@3.5", type="build")
-    depends_on("py-setuptools-scm-git-archive", when="@3.5", type="build")
+    depends_on("py-certifi@2020.6.20:", type="build", when="@3.3.1:")
+    depends_on("py-numpy@1.25:", type="build", when="@3.8:")
+    depends_on("py-pybind11@2.6:", type="build", when="@3.7:")
+    depends_on("py-setuptools@64:", type="build", when="@3.8.1:")
+    depends_on("py-setuptools@42:", type="build", when="@3.8:")
+    depends_on("py-setuptools@42:", type=("build", "run"), when="@3.7.2:3.7")
+    depends_on("py-setuptools", type=("build", "run"), when="@:3.7.1")
+    depends_on("py-setuptools-scm@7:", type="build", when="@3.6:")
+    depends_on("py-setuptools-scm@4:6", type="build", when="@3.5")
+    depends_on("py-setuptools-scm-git-archive", type="build", when="@3.5")
 
     # Testing dependencies
     # https://matplotlib.org/stable/devel/development_setup.html#additional-dependencies-for-testing

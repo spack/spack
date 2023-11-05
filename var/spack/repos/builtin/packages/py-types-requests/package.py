@@ -18,4 +18,4 @@ class PyTypesRequests(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-types-urllib3", type=("build", "run"))
-    depends_on("py-types-urllib3@:1.26", when="@:2.29", type=("build", "run"))
+    depends_on("py-types-urllib3@:1.26", type=("build", "run"), when="@:2.29")

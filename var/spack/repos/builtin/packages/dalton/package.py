@@ -52,9 +52,9 @@ class Dalton(CMakePackage):
     depends_on("blas", type="link")
     depends_on("lapack", type="link")
     with when("+pde"):
-        depends_on("hdf5+fortran", when="+mpi", type="link")
-        depends_on("hdf5+fortran~mpi", when="~mpi", type="link")
-    depends_on("mpi", when="+mpi", type=("build", "link", "run"))
+        depends_on("hdf5+fortran", type="link", when="+mpi")
+        depends_on("hdf5+fortran~mpi", type="link", when="~mpi")
+    depends_on("mpi", type=("build", "link", "run"), when="+mpi")
 
     patch("pelib-master.patch", when="@master+mpi+pelib%gcc@10:", working_dir="external/pelib")
     patch("pelib-2020.0.patch", when="@2020.0+mpi+pelib%gcc@10:", working_dir="external/pelib")

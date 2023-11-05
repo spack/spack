@@ -22,5 +22,5 @@ class PyFortls(PythonPackage):
     depends_on("py-setuptools-scm-git-archive", type="build")
 
     depends_on("py-json5", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")

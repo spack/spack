@@ -59,28 +59,28 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         values=("Debug", "Release"),
     )
 
-    depends_on("cmake@3.10:", when="@7.0:", type=("build", "run"))
-    depends_on("cmake@3.22:", when="@8.0:", type=("build", "run"))
+    depends_on("cmake@3.10:", type=("build", "run"), when="@7.0:")
+    depends_on("cmake@3.22:", type=("build", "run"), when="@8.0:")
 
-    depends_on("python@3.0:", when="+python", type=("build", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("python@3.0:", type=("build", "run"), when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
 
-    extends("python", when="+python", type=("build", "run"))
+    extends("python", type=("build", "run"), when="+python")
 
-    depends_on("mpi", when="+mpi", type=("build", "run"))  # openmpi 2 and 3 tested
+    depends_on("mpi", type=("build", "run"), when="+mpi")  # openmpi 2 and 3 tested
 
-    depends_on("blas", when="+blas", type=("build", "run"))  # openblas 0.2.18 or newer
-    depends_on("lapack", when="+blas @7.1:", type=("build", "run"))  # lapack used since 7.1
+    depends_on("blas", type=("build", "run"), when="+blas")  # openblas 0.2.18 or newer
+    depends_on("lapack", type=("build", "run"), when="+blas @7.1:")  # lapack used since 7.1
 
-    depends_on("cuda@10.0:", when="+cuda", type=("build", "run"))
-    depends_on("cuda@10.0:", when="+magma", type=("build", "run"))
+    depends_on("cuda@10.0:", type=("build", "run"), when="+cuda")
+    depends_on("cuda@10.0:", type=("build", "run"), when="+magma")
 
-    depends_on("hip@5.0:", when="+rocm", type=("build", "run"))
-    depends_on("rocblas@5.0:", when="+rocm", type=("build", "run"))
-    depends_on("rocsparse@5.0:", when="+rocm", type=("build", "run"))
-    depends_on("rocsolver@5.0:", when="+rocm", type=("build", "run"))
+    depends_on("hip@5.0:", type=("build", "run"), when="+rocm")
+    depends_on("rocblas@5.0:", type=("build", "run"), when="+rocm")
+    depends_on("rocsparse@5.0:", type=("build", "run"), when="+rocm")
+    depends_on("rocsolver@5.0:", type=("build", "run"), when="+rocm")
 
-    depends_on("magma@2.5.0:", when="+magma @7.0:", type=("build", "run"))
+    depends_on("magma@2.5.0:", type=("build", "run"), when="+magma @7.0:")
 
     # https://github.com/spack/spack/issues/39536#issuecomment-1685161942
     conflicts("^cuda@12", when="@:7.9 +cuda")

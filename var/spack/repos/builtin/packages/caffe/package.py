@@ -46,7 +46,7 @@ class Caffe(CMakePackage, CudaPackage):
     depends_on("leveldb", when="+leveldb")
     depends_on("lmdb", when="+lmdb")
     depends_on("python@2.7:", when="+python")
-    depends_on("py-numpy@1.7:", when="+python", type=("build", "run"))
+    depends_on("py-numpy@1.7:", type=("build", "run"), when="+python")
     depends_on("matlab", when="+matlab")
 
     extends("python", when="+python")

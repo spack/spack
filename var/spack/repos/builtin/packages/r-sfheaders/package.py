@@ -19,7 +19,7 @@ class RSfheaders(RPackage):
     version("0.4.0", sha256="86bcd61018a0491fc8a1e7fb0422c918296287b82be299a79ccee8fcb515e045")
 
     depends_on("r-geometries@0.2.0:", type=("build", "run"))
-    depends_on("r-geometries@0.2.2:", when="@0.4.2:", type=("build", "run"))
+    depends_on("r-geometries@0.2.2:", type=("build", "run"), when="@0.4.2:")
     depends_on("r-rcpp", type=("build", "run"))
-    depends_on("r-rcpp@1.0.10:", when="@0.4.2:", type=("build", "run"))
-    depends_on("r@3.0.2:", when="@0.4.2:", type=("build", "run"))
+    depends_on("r-rcpp@1.0.10:", type=("build", "run"), when="@0.4.2:")
+    depends_on("r@3.0.2:", type=("build", "run"), when="@0.4.2:")

@@ -40,16 +40,16 @@ class Mpibind(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
 
     depends_on("hwloc@2:+libxml2", type="link")
-    depends_on("hwloc@2:+cuda+nvml", when="+cuda", type="link")
-    depends_on("hwloc@2.4:+rocm+opencl", when="+rocm", type="link")
+    depends_on("hwloc@2:+cuda+nvml", type="link", when="+cuda")
+    depends_on("hwloc@2.4:+rocm+opencl", type="link", when="+rocm")
     depends_on("hwloc@2:+pci", type="link", when=(sys.platform != "darwin"))
 
     # flux-core >= 0.30.0 supports FLUX_SHELL_RC_PATH,
     # which is needed to load the plugin into Flux
-    depends_on("flux-core@0.30:", when="+flux", type="link")
+    depends_on("flux-core@0.30:", type="link", when="+flux")
 
-    depends_on("python@3:", when="+python", type=("build", "run"))
-    depends_on("py-cffi", when="+python", type=("build", "run"))
+    depends_on("python@3:", type=("build", "run"), when="+python")
+    depends_on("py-cffi", type=("build", "run"), when="+python")
 
     def autoreconf(self, spec, prefix):
         autoreconf("--install", "--verbose", "--force")

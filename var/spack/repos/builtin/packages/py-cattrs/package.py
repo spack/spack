@@ -19,5 +19,5 @@ class PyCattrs(PythonPackage):
     depends_on("py-poetry-core@1.1.0:", type="build")
 
     depends_on("py-attrs@20:", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
-    depends_on("py-exceptiongroup", when="^python@:3.10", type=("build", "run"))
+    depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-exceptiongroup", type=("build", "run"), when="^python@:3.10")

@@ -28,4 +28,4 @@ class RTimedate(RPackage):
     version("3012.100", sha256="6262ef7ca9f5eeb9db8229d6bb7a51d46d467a4fa73e2ccc5b4b78e18780c432")
 
     depends_on("r@2.15.1:", type=("build", "run"))
-    depends_on("r@3.6.0:", when="@4021.106:", type=("build", "run"))
+    depends_on("r@3.6.0:", type=("build", "run"), when="@4021.106:")

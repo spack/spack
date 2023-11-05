@@ -18,5 +18,5 @@ class PyTomlkit(PythonPackage):
     version("0.7.2", sha256="d7a454f319a7e9bd2e249f239168729327e4dd2d27b17dc68be264ad1ce36754")
     version("0.7.0", sha256="ac57f29693fab3e309ea789252fcce3061e19110085aa31af5446ca749325618")
 
-    depends_on("python@3.6:3", when="@0.11.0:0.11.5", type=("build", "run"))
+    depends_on("python@3.6:3", type=("build", "run"), when="@0.11.0:0.11.5")
     depends_on("py-poetry-core@1:", type="build")

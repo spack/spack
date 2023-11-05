@@ -113,8 +113,8 @@ class HipRocclr(CMakePackage):
 
     depends_on("cmake@3:", type="build")
     depends_on("gl@4.5:", type="link")
-    depends_on("libelf", when="@3.7.0:3.8.0", type="link")
-    depends_on("numactl", when="@3.7.0:", type="link")
+    depends_on("libelf", type="link", when="@3.7.0:3.8.0")
+    depends_on("numactl", type="link", when="@3.7.0:")
 
     for ver in [
         "3.5.0",

@@ -137,8 +137,8 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
         exe = join_path(self.build_directory, "clients", "staging", "hipblas-test")
         self.run_test(exe, options=["--gtest_filter=-*known_bug*"])
 
-    depends_on("rocm-cmake@5.2.0:", when="@5.2.0:", type="build")
-    depends_on("rocm-cmake@4.5.0:", when="@4.5.0:", type="build")
+    depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:")
+    depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
     depends_on("rocm-cmake@3.5.0:", type="build")
 
     depends_on("hip +cuda", when="+cuda")

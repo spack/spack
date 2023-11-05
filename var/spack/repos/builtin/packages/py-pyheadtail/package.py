@@ -17,7 +17,7 @@ class PyPyheadtail(PythonPackage):
     version("1.13.1", sha256="29c742573a918126b5a9c21806ee0ec6a34ec642a0e6ad200f6d4551bf1bb310")
 
     depends_on("python", type=("build", "run"))
-    depends_on("python@3:", when="@1.13.5:", type=("build", "run"))
+    depends_on("python@3:", type=("build", "run"), when="@1.13.5:")
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", type="build")
     depends_on("py-numpy", type=("build", "run"))

@@ -24,7 +24,7 @@ class Migrate(AutotoolsPackage):
     depends_on("m4", type="build")
     depends_on("zlib-api", type="link")
 
-    depends_on("openmpi", when="+mpi", type=("build", "link", "run"))
+    depends_on("openmpi", type=("build", "link", "run"), when="+mpi")
 
     configure_directory = "src"
 

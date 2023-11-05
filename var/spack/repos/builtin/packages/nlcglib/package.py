@@ -35,7 +35,7 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("lapack")
     depends_on("kokkos~cuda~rocm", when="~cuda~rocm")
     depends_on("kokkos+openmp", when="+openmp")
-    depends_on("googletest", when="+tests", type="build")
+    depends_on("googletest", type="build", when="+tests")
     depends_on("nlohmann-json")
 
     with when("@:0.9"):

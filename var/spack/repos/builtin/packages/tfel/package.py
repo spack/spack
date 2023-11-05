@@ -118,9 +118,9 @@ class Tfel(CMakePackage):
     )
 
     depends_on("java", when="+java")
-    depends_on("python", when="+python", type=("build", "link", "run"))
-    depends_on("python", when="+python_bindings", type=("build", "link", "run"))
-    depends_on("py-numpy", when="+python_bindings", type=("build", "link", "run"))
+    depends_on("python", type=("build", "link", "run"), when="+python")
+    depends_on("python", type=("build", "link", "run"), when="+python_bindings")
+    depends_on("py-numpy", type=("build", "link", "run"), when="+python_bindings")
     # As boost+py has py runtime dependency, boost+py needs types link and run as well:
     depends_on(
         "boost+python+numpy+exception+container",

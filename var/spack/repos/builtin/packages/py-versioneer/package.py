@@ -25,8 +25,8 @@ class PyVersioneer(PythonPackage):
     variant("toml", default=True, description="Install TOML support", when="@0.26:")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-tomli", when="@0.28: ^python@:3.10", type="build")
-    depends_on("py-tomli", when="@0.27", type="build")
+    depends_on("py-tomli", type="build", when="@0.28: ^python@:3.10")
+    depends_on("py-tomli", type="build", when="@0.27")
 
-    depends_on("py-tomli", when="@0.28: +toml ^python@:3.10", type=("build", "run"))
-    depends_on("py-tomli", when="@:0.27 +toml", type=("build", "run"))
+    depends_on("py-tomli", type=("build", "run"), when="@0.28: +toml ^python@:3.10")
+    depends_on("py-tomli", type=("build", "run"), when="@:0.27 +toml")

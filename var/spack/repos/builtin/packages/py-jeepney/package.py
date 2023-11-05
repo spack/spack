@@ -18,7 +18,7 @@ class PyJeepney(PythonPackage):
     version("0.6.0", sha256="7d59b6622675ca9e993a6bd38de845051d315f8b0c72cca3aef733a20b648657")
     version("0.4.3", sha256="3479b861cc2b6407de5188695fa1a8d57e5072d7059322469b62628869b8e36e")
 
-    depends_on("python@3.7:", when="@0.8:", type=("build", "run"))
-    depends_on("python@3.6:", when="@0.5:", type=("build", "run"))
-    depends_on("python@3.5:", when="@:0.4", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@0.8:")
+    depends_on("python@3.6:", type=("build", "run"), when="@0.5:")
+    depends_on("python@3.5:", type=("build", "run"), when="@:0.4")
     depends_on("py-flit-core@2:3", type="build")

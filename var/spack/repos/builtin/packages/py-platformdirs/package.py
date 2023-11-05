@@ -30,23 +30,23 @@ class PyPlatformdirs(PythonPackage):
         description="Install from wheel (required for bootstrapping Spack)",
     )
 
-    depends_on("python@3.7:", when="@2.4.1:", type=("build", "run"))
-    depends_on("py-hatch-vcs@0.3:", when="@3:", type="build")
-    depends_on("py-hatch-vcs", when="@2.5.2:", type="build")
-    depends_on("py-hatchling@1.17.1:", when="@3.10:", type="build")
-    depends_on("py-hatchling@1.17:", when="@3.5.2:", type="build")
-    depends_on("py-hatchling@1.14:", when="@3.3:", type="build")
-    depends_on("py-hatchling@1.12.2:", when="@3:", type="build")
-    depends_on("py-hatchling@0.22.0:", when="@2.5.2:", type="build")
+    depends_on("python@3.7:", type=("build", "run"), when="@2.4.1:")
+    depends_on("py-hatch-vcs@0.3:", type="build", when="@3:")
+    depends_on("py-hatch-vcs", type="build", when="@2.5.2:")
+    depends_on("py-hatchling@1.17.1:", type="build", when="@3.10:")
+    depends_on("py-hatchling@1.17:", type="build", when="@3.5.2:")
+    depends_on("py-hatchling@1.14:", type="build", when="@3.3:")
+    depends_on("py-hatchling@1.12.2:", type="build", when="@3:")
+    depends_on("py-hatchling@0.22.0:", type="build", when="@2.5.2:")
 
-    depends_on("py-typing-extensions@4.7.1:", when="@3.10: ^python@:3.7", type=("build", "run"))
-    depends_on("py-typing-extensions@4.6.3:", when="@3.5.2: ^python@:3.7", type=("build", "run"))
-    depends_on("py-typing-extensions@4.5:", when="@3.2: ^python@:3.7", type=("build", "run"))
-    depends_on("py-typing-extensions@4.4:", when="@3: ^python@:3.7", type=("build", "run"))
+    depends_on("py-typing-extensions@4.7.1:", type=("build", "run"), when="@3.10: ^python@:3.7")
+    depends_on("py-typing-extensions@4.6.3:", type=("build", "run"), when="@3.5.2: ^python@:3.7")
+    depends_on("py-typing-extensions@4.5:", type=("build", "run"), when="@3.2: ^python@:3.7")
+    depends_on("py-typing-extensions@4.4:", type=("build", "run"), when="@3: ^python@:3.7")
 
     # Historical dependencies
-    depends_on("py-setuptools@44:", when="@:2.5.1", type="build")
-    depends_on("py-setuptools-scm@5:+toml", when="@:2.5.1", type="build")
+    depends_on("py-setuptools@44:", type="build", when="@:2.5.1")
+    depends_on("py-setuptools-scm@5:+toml", type="build", when="@:2.5.1")
 
 
 class PythonPipBuilder(spack.build_systems.python.PythonPipBuilder):

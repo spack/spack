@@ -22,8 +22,8 @@ class PyOmegaconf(PythonPackage):
     version("2.1.0", sha256="a08aec03a63c66449b550b85d70238f4dee9c6c4a0541d6a98845dcfeb12439d")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", when="@2.1", type="build")
-    depends_on("py-antlr4-python3-runtime@4.9", when="@2.2.2:", type=("build", "run"))
-    depends_on("py-antlr4-python3-runtime@4.8", when="@2.1", type=("build", "run"))
+    depends_on("py-pytest-runner", type="build", when="@2.1")
+    depends_on("py-antlr4-python3-runtime@4.9", type=("build", "run"), when="@2.2.2:")
+    depends_on("py-antlr4-python3-runtime@4.8", type=("build", "run"), when="@2.1")
     depends_on("py-pyyaml@5.1:", type=("build", "run"))
     depends_on("java", type="build")

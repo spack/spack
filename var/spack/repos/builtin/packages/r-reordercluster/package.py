@@ -19,8 +19,8 @@ class RReordercluster(RPackage):
     version("1.0", sha256="a87898faa20380aac3e06a52eedcb2f0eb2b35ab74fdc3435d40ee9f1d28476b")
 
     depends_on("r@2.10:", type=("build", "run"))
-    depends_on("r@2.13.0:", when="@2.0:", type=("build", "run"))
-    depends_on("r-gtools", when="@2.0:", type=("build", "run"))
+    depends_on("r@2.13.0:", type=("build", "run"), when="@2.0:")
+    depends_on("r-gtools", type=("build", "run"), when="@2.0:")
     depends_on("r-gplots", type=("build", "run"))
     depends_on("r-rcpp@0.11.0:", type=("build", "run"))
-    depends_on("r-rcpp@0.12.1:", when="@2.0:", type=("build", "run"))
+    depends_on("r-rcpp@0.12.1:", type=("build", "run"), when="@2.0:")

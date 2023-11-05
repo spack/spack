@@ -129,8 +129,8 @@ class Scr(CMakePackage):
     # PDSH required up to 3.0rc1, optional thereafter
     # TODO spack currently assumes 3.0.0 = 3.0 = 3 < 3.0rc1 < 3.0rc2
     variant("pdsh", default=True, when="@3.0.0,3.0rc2:", description="Enable use of PDSH")
-    depends_on("pdsh+static_modules", when="+pdsh", type=("build", "run"))
-    depends_on("pdsh+static_modules", when="@:2,3.0rc1", type=("build", "run"))
+    depends_on("pdsh+static_modules", type=("build", "run"), when="+pdsh")
+    depends_on("pdsh+static_modules", type=("build", "run"), when="@:2,3.0rc1")
 
     variant(
         "scr_config",

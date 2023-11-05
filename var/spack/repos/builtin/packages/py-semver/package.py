@@ -17,4 +17,4 @@ class PySemver(PythonPackage):
     version("2.8.1", sha256="5b09010a66d9a3837211bb7ae5a20d10ba88f8cb49e92cb139a69ef90d5060d8")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", when="@3:", type="build")
+    depends_on("py-setuptools-scm", type="build", when="@3:")

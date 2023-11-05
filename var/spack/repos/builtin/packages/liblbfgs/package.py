@@ -23,7 +23,7 @@ class Liblbfgs(AutotoolsPackage):
     version("master", branch="master")
     version("1.10", sha256="4158ab7402b573e5c69d5f6b03c973047a91e16ca5737d3347e3af9c906868cf")
 
-    depends_on("autoconf", when="@master", type="build")
-    depends_on("automake", when="@master", type="build")
-    depends_on("libtool", when="@master", type="build")
-    depends_on("m4", when="@master", type="build")
+    depends_on("autoconf", type="build", when="@master")
+    depends_on("automake", type="build", when="@master")
+    depends_on("libtool", type="build", when="@master")
+    depends_on("m4", type="build", when="@master")

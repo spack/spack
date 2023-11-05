@@ -27,7 +27,7 @@ class Libfive(CMakePackage):
     depends_on(Boost.with_default_variants)
     depends_on("eigen@3.3.0:")
     depends_on("libpng")
-    depends_on("python@3:", when="+python", type=("link", "run"))
+    depends_on("python@3:", type=("link", "run"), when="+python")
     depends_on("guile@2.2.1:", when="+guile")
     # In case build of future git master fails, check raising the minimum Qt version
     depends_on("qt@5.15.2:+opengl", when="+qt")

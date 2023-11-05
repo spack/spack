@@ -28,6 +28,6 @@ class RPhilentropy(RPackage):
     depends_on("r@3.1.2:", type=("build", "run"))
     depends_on("r-rcpp", type=("build", "run"))
     depends_on("r-kernsmooth", type=("build", "run"))
-    depends_on("r-poorman", when="@0.6.0:", type=("build", "run"))
+    depends_on("r-poorman", type=("build", "run"), when="@0.6.0:")
 
-    depends_on("r-dplyr", when="@:0.5.0", type=("build", "run"))
+    depends_on("r-dplyr", type=("build", "run"), when="@:0.5.0")

@@ -18,8 +18,8 @@ class PyFasteners(PythonPackage):
     version("0.15", sha256="3a176da6b70df9bb88498e1a18a9e4a8579ed5b9141207762368a1017bf8f5ef")
     version("0.14.1", sha256="427c76773fe036ddfa41e57d89086ea03111bbac57c55fc55f3006d027107e18")
 
-    depends_on("python@3.6:", when="@0.17:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@0.17:")
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-monotonic@0.1:", when="@:0.15", type=("build", "run"))
-    depends_on("py-six", when="@:0.16", type=("build", "run"))
+    depends_on("py-monotonic@0.1:", type=("build", "run"), when="@:0.15")
+    depends_on("py-six", type=("build", "run"), when="@:0.16")

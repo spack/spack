@@ -16,7 +16,7 @@ class PyIso8601(PythonPackage):
     version("1.0.2", sha256="27f503220e6845d9db954fb212b95b0362d8b7e6c1b2326a87061c3de93594b1")
     version("0.1.14", sha256="8aafd56fa0290496c5edbb13c311f78fa3a241f0853540da09d9363eae3ebd79")
 
-    depends_on("python@3.6.2:3", when="@1:", type=("build", "run"))
-    depends_on("py-poetry-core@1:", when="@1:", type="build")
+    depends_on("python@3.6.2:3", type=("build", "run"), when="@1:")
+    depends_on("py-poetry-core@1:", type="build", when="@1:")
 
-    depends_on("py-setuptools", when="@:0", type="build")
+    depends_on("py-setuptools", type="build", when="@:0")

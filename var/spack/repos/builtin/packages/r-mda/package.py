@@ -20,5 +20,5 @@ class RMda(RPackage):
     version("0.4-9", sha256="b72456d2fa5b49895644489735d21cf4836d3d597f5e693e6103cce1887ffd85")
 
     depends_on("r@1.9.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", when="@0.5-2:", type=("build", "run"))
+    depends_on("r@3.5.0:", type=("build", "run"), when="@0.5-2:")
     depends_on("r-class", type=("build", "run"))

@@ -23,5 +23,5 @@ class ROptparse(RPackage):
     version("1.6.0", sha256="10e816bb8f5b08d52cfd3a0028903a8c62ef9cf7bfd85f9dae8af442e82bfbb4")
 
     depends_on("r@2.9.0:", type=("build", "run"))
-    depends_on("r@3.6.0:", when="@1.7.3:", type=("build", "run"))
+    depends_on("r@3.6.0:", type=("build", "run"), when="@1.7.3:")
     depends_on("r-getopt@1.20.2:", type=("build", "run"))

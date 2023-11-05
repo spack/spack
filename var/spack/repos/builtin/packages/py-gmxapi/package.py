@@ -26,14 +26,14 @@ class PyGmxapi(PythonPackage):
     depends_on("gromacs@2022.1:~mdrun_only+shared")
     depends_on("mpi")
     depends_on("py-cmake@3.16:", type="build")
-    depends_on("py-importlib-metadata", when="^python@:3.7", type="test")
+    depends_on("py-importlib-metadata", type="test", when="^python@:3.7")
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-networkx@2.0:", type=("build", "run"))
     depends_on("py-numpy@1.8:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-pybind11@2.6:", type="build")
-    depends_on("py-pybind11@2.6:", when="@:0.4", type=("build", "run"))
+    depends_on("py-pybind11@2.6:", type=("build", "run"), when="@:0.4")
     depends_on("py-pytest@4.6:", type="test")
 
     def setup_build_environment(self, env):

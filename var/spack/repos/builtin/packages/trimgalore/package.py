@@ -33,8 +33,8 @@ class Trimgalore(Package):
     depends_on("py-cutadapt", type=("build", "run"))
     depends_on("fastqc")
     # variant dependencies
-    depends_on("pigz", when="+pigz", type="run")
-    depends_on("libisal", when="+igzip", type="run")
+    depends_on("pigz", type="run", when="+pigz")
+    depends_on("libisal", type="run", when="+igzip")
 
     def install(self, spec, prefix):
         filter_file(r"#!/usr/bin/perl", "#!/usr/bin/env perl", "trim_galore")

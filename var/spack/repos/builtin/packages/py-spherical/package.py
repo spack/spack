@@ -19,7 +19,7 @@ class PySpherical(PythonPackage):
 
     depends_on("python@3.6:3.9", type=("build", "run"))
     depends_on("py-poetry-core@1.0.1:", type="build")
-    depends_on("py-importlib-metadata@1:", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata@1:", type=("build", "run"), when="^python@:3.7")
     depends_on("py-numpy@1.13:", type=("build", "run"))
     depends_on("py-numba@0.50:", type=("build", "run"))
     depends_on("py-quaternionic@1:", type=("build", "run"))

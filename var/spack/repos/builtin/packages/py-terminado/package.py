@@ -21,16 +21,16 @@ class PyTerminado(PythonPackage):
     version("0.8.1", sha256="55abf9ade563b8f9be1f34e4233c7b7bde726059947a593322e8a553cc4c067a")
     version("0.6", sha256="2c0ba1f624067dccaaead7d2247cfe029806355cef124dc2ccb53c83229f0126")
 
-    depends_on("py-hatchling@1.5:", when="@0.16:", type="build")
-    depends_on("py-hatchling@0.25:", when="@0.15:", type="build")
+    depends_on("py-hatchling@1.5:", type="build", when="@0.16:")
+    depends_on("py-hatchling@0.25:", type="build", when="@0.15:")
 
     depends_on("py-ptyprocess", type=("build", "run"))
-    depends_on("py-tornado@6.1.0:", when="@0.15:", type=("build", "run"))
+    depends_on("py-tornado@6.1.0:", type=("build", "run"), when="@0.15:")
     depends_on("py-tornado@4:", type=("build", "run"))
     # not yet in spack
-    # depends_on("py-pywinpty@1.1:", when="platform=windows", type=("build", "run"))
+    # depends_on("py-pywinpty@1.1:", type=("build", "run"), when="platform=windows")
 
     # Historical dependencies
-    depends_on("py-setuptools@40.8.0:", when="@0.12.1", type="build")
-    depends_on("py-flit", when="@0.8", type="build")
-    depends_on("py-setuptools", when="@:0.6", type="build")
+    depends_on("py-setuptools@40.8.0:", type="build", when="@0.12.1")
+    depends_on("py-flit", type="build", when="@0.8")
+    depends_on("py-setuptools", type="build", when="@:0.6")

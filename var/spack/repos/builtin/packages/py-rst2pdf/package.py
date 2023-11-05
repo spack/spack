@@ -20,7 +20,7 @@ class PyRst2pdf(PythonPackage):
     version("0.100", sha256="664c3c16e6d3dea274e840a436eac4dba6cb50ab6af3162fc9d5716be3cb7b42")
     version("0.99", sha256="8fa23fa93bddd1f52d058ceaeab6582c145546d80f2f8a95974f3703bd6c8152")
 
-    depends_on("python@3.8:", when="@0.100:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@0.100:")
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")
 

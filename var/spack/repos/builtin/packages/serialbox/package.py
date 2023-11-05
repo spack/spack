@@ -41,18 +41,18 @@ class Serialbox(CMakePackage):
     depends_on("cmake@3.12:", type="build")
     # We might be provided with an external vanilla cmake, and we need one with
     # with https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5025
-    depends_on("cmake@3.19:", when="%pgi", type="build")
+    depends_on("cmake@3.19:", type="build", when="%pgi")
 
     depends_on("boost@1.54:", type="build")
-    depends_on("boost+filesystem+system", when="~std-filesystem", type=("build", "link"))
+    depends_on("boost+filesystem+system", type=("build", "link"), when="~std-filesystem")
 
     depends_on("netcdf-c", when="+netcdf")
 
     # The preprocessor can be run with Python 2:
     depends_on("python", type="run")
     # The Python interface is compatible only with Python 3:
-    depends_on("python@3.4:", when="+python", type=("build", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("python@3.4:", type=("build", "run"), when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
 
     # pp_ser fails to process source files containing Unicode character with
     # Python 3 (https://github.com/GridTools/serialbox/pull/249):

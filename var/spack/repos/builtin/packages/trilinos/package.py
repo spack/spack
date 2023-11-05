@@ -408,7 +408,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     #
     depends_on("cgns", when="+exodus")
-    depends_on("cmake@3.23:", when="@14.0.0:", type="build")
+    depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
     for plat in ["cray", "darwin", "linux"]:
         depends_on("hypre~internal-superlu~int64", when="+hypre platform=%s" % plat)
@@ -424,11 +424,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("parallel-netcdf", when="+exodus+mpi")
     depends_on("parmetis", when="+mpi +zoltan")
     depends_on("parmetis", when="+scorec")
-    depends_on("py-mpi4py", when="+mpi+python", type=("build", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("py-mpi4py", type=("build", "run"), when="+mpi+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
     depends_on("python", when="+python")
-    depends_on("python", when="@13.2: +ifpack +hypre", type="build")
-    depends_on("python", when="@13.2: +ifpack2 +hypre", type="build")
+    depends_on("python", type="build", when="@13.2: +ifpack +hypre")
+    depends_on("python", type="build", when="@13.2: +ifpack2 +hypre")
     depends_on("scalapack", when="+mumps")
     depends_on("scalapack", when="+strumpack+mpi")
     depends_on("strumpack+shared", when="+strumpack")

@@ -21,8 +21,8 @@ class PyGimmik(PythonPackage):
     version("2.3", sha256="c019c85316bcf0d5e84de9b7d10127355dfe8037c0e37f1880a9819ce92b74e1")
     version("2.2", sha256="9144640f94aab92f9c5dfcaf16885a79428ab97337cf503a4b2dddeb870f3cf0")
 
-    depends_on("python@3.8", when="@:2.3", type=("build", "run"))
-    depends_on("python@3.9:", when="@3.0:", type=("build", "run"))
+    depends_on("python@3.8", type=("build", "run"), when="@:2.3")
+    depends_on("python@3.9:", type=("build", "run"), when="@3.0:")
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.7:", type=("build", "run"))
     depends_on("py-mako", type=("build", "run"))

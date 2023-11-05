@@ -90,7 +90,7 @@ class Go(Package):
 
     depends_on("git", type=("build", "link", "run"))
     depends_on("go-or-gccgo-bootstrap", type="build")
-    depends_on("go-or-gccgo-bootstrap@1.17.13:", when="@1.20:", type="build")
+    depends_on("go-or-gccgo-bootstrap@1.17.13:", type="build", when="@1.20:")
 
     phases = ["build", "install"]
 

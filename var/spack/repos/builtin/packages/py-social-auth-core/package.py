@@ -29,4 +29,4 @@ class PySocialAuthCore(PythonPackage):
     depends_on("py-defusedxml@0.5.0:", type=("build", "run"))
     depends_on("py-python3-openid@3.0.10:", type=("build", "run"))
 
-    depends_on("py-python-jose@3.0.0:", when="+openidconnect", type=("build", "run"))
+    depends_on("py-python-jose@3.0.0:", type=("build", "run"), when="+openidconnect")

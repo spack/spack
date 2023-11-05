@@ -100,12 +100,12 @@ class Eccodes(CMakePackage):
     depends_on("libpng", when="+png")
     depends_on("libaec", when="+aec")
     # Can be built with Python 2 or Python 3.
-    depends_on("python", when="+memfs", type="build")
+    depends_on("python", type="build", when="+memfs")
 
     depends_on("cmake@3.6:", type="build")
-    depends_on("cmake@3.12:", when="@2.19:", type="build")
+    depends_on("cmake@3.12:", type="build", when="@2.19:")
 
-    depends_on("ecbuild", when="@develop", type="build")
+    depends_on("ecbuild", type="build", when="@develop")
 
     conflicts("+openmp", when="+pthreads", msg="Cannot enable both POSIX threads and OMP")
 

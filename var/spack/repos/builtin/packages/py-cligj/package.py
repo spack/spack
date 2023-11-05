@@ -16,7 +16,7 @@ class PyCligj(PythonPackage):
     version("0.5.0", sha256="6c7d52d529a78712491974f975c33473f430c0f7beb18c0d7a402a743dcb460a")
     version("0.4.0", sha256="12ad07994f5c1173b06087ffbaacec52f9ebe4687926e5aacfc22b6b0c8b3f54")
 
-    depends_on("python@2.7:2,3.3:3", when="@0.7:", type=("build", "run"))
+    depends_on("python@2.7:2,3.3:3", type=("build", "run"), when="@0.7:")
     depends_on("py-setuptools", type="build")
     depends_on("py-click@4:", type=("build", "run"))
-    depends_on("py-click@4:7", when="@0.5.0", type=("build", "run"))
+    depends_on("py-click@4:7", type=("build", "run"), when="@0.5.0")

@@ -20,7 +20,7 @@ class PyTorchSparse(PythonPackage):
     variant("cuda", default=False, description="Enable CUDA support")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", when="@:0.6.8", type="build")
+    depends_on("py-pytest-runner", type="build", when="@:0.6.8")
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-torch", type=("build", "run"))
     depends_on("py-torch-scatter+cuda", when="+cuda")

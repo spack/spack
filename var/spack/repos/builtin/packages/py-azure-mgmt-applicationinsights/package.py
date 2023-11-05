@@ -18,7 +18,7 @@ class PyAzureMgmtApplicationinsights(PythonPackage):
     version("0.1.1", sha256="f10229eb9e3e9d0ad20188b8d14d67055e86f3815b43b75eedf96b654bee2a9b")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", when="@0.3:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", when="@0.3:", type=("build", "run"))
+    depends_on("py-msrest@0.5.0:", type=("build", "run"), when="@0.3:")
+    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"), when="@0.3:")
     depends_on("py-msrestazure@0.4.20:1", type=("build", "run"))
     depends_on("py-azure-common@1.1:1", type=("build", "run"))

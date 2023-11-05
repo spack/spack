@@ -68,7 +68,7 @@ class PyAzuremlDataprepNative(PythonPackage):
             url="https://pypi.io/packages/cp37/a/azureml_dataprep_native/azureml_dataprep_native-14.2.1-cp37-cp37m-manylinux1_x86_64.whl",
         )
 
-    depends_on("python@3.9.0:3.9", when="@30.0.0-py3.9", type=("build", "run"))
-    depends_on("python@3.8.0:3.8", when="@30.0.0-py3.8", type=("build", "run"))
-    depends_on("python@3.7.0:3.7", when="@30.0.0-py3.7", type=("build", "run"))
-    depends_on("python@3.7.0:3.7", when="@14.2.1-py3.7", type=("build", "run"))
+    depends_on("python@3.9.0:3.9", type=("build", "run"), when="@30.0.0-py3.9")
+    depends_on("python@3.8.0:3.8", type=("build", "run"), when="@30.0.0-py3.8")
+    depends_on("python@3.7.0:3.7", type=("build", "run"), when="@30.0.0-py3.7")
+    depends_on("python@3.7.0:3.7", type=("build", "run"), when="@14.2.1-py3.7")

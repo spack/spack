@@ -28,14 +28,14 @@ class PyPromptToolkit(PythonPackage):
     version("1.0.16", sha256="c1cedd626e08b8ee830ee65897de754113ff3f3035880030c08b01674d85c5b4")
     version("1.0.9", sha256="cd6523b36adc174cc10d54b1193eb626b4268609ff6ea92c15bcf1996609599c")
 
-    depends_on("python@3.7:", when="@3.0.37:", type=("build", "run"))
-    depends_on("python@3.6.2:", when="@3.0.24:", type=("build", "run"))
-    depends_on("python@3.6.1:", when="@3:3.0.17", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@3.0.37:")
+    depends_on("python@3.6.2:", type=("build", "run"), when="@3.0.24:")
+    depends_on("python@3.6.1:", type=("build", "run"), when="@3:3.0.17")
     # collections.Mapping was removed in python@3.10
-    depends_on("python@:3.9", when="@1.0.9", type=("build", "run"))
+    depends_on("python@:3.9", type=("build", "run"), when="@1.0.9")
     depends_on("py-setuptools", type="build")
 
     depends_on("py-wcwidth", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("py-six@1.9.0:", when="@:2", type=("build", "run"))
+    depends_on("py-six@1.9.0:", type=("build", "run"), when="@:2")

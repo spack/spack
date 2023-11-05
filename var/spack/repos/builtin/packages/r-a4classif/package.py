@@ -28,10 +28,10 @@ class RA4classif(RPackage):
 
     depends_on("r-a4core", type=("build", "run"))
     depends_on("r-a4preproc", type=("build", "run"))
-    depends_on("r-biobase", when="@1.38.0:", type=("build", "run"))
+    depends_on("r-biobase", type=("build", "run"), when="@1.38.0:")
     depends_on("r-rocr", type=("build", "run"))
     depends_on("r-pamr", type=("build", "run"))
     depends_on("r-glmnet", type=("build", "run"))
     depends_on("r-varselrf", type=("build", "run"))
 
-    depends_on("r-mlinterfaces", when="@:1.32.0", type=("build", "run"))
+    depends_on("r-mlinterfaces", type=("build", "run"), when="@:1.32.0")

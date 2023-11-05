@@ -21,14 +21,14 @@ class PyPylatex(PythonPackage):
 
     depends_on("python@2.7,3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@:57", when="@:1.4.1", type="build")
+    depends_on("py-setuptools@:57", type="build", when="@:1.4.1")
     depends_on("py-ordered-set", type=("build", "run"))
 
     # from extras section in setup.py
-    depends_on("py-sphinx", when="+docs", type="run")
-    depends_on("py-matplotlib", when="+matplotlib", type="run")
-    depends_on("py-numpy", when="+matrices", type="run")
-    depends_on("py-numpy", when="+quantities", type="run")
-    depends_on("py-quantities", when="+quantities", type="run")
+    depends_on("py-sphinx", type="run", when="+docs")
+    depends_on("py-matplotlib", type="run", when="+matplotlib")
+    depends_on("py-numpy", type="run", when="+matrices")
+    depends_on("py-numpy", type="run", when="+quantities")
+    depends_on("py-quantities", type="run", when="+quantities")
 
     depends_on("texlive", type="run")

@@ -25,6 +25,6 @@ class RNetwork(RPackage):
     version("1.13.0", sha256="7a04ea89261cdf32ccb52222810699d5fca59a849053e306b5ec9dd5c1184f87")
 
     depends_on("r@2.10:", type=("build", "run"))
-    depends_on("r-tibble", when="@1.14-377:", type=("build", "run"))
-    depends_on("r-magrittr", when="@1.14-377:", type=("build", "run"))
-    depends_on("r-statnet-common@4.5:", when="@1.17.1:", type=("build", "run"))
+    depends_on("r-tibble", type=("build", "run"), when="@1.14-377:")
+    depends_on("r-magrittr", type=("build", "run"), when="@1.14-377:")
+    depends_on("r-statnet-common@4.5:", type=("build", "run"), when="@1.17.1:")

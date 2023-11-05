@@ -20,7 +20,7 @@ class PyPyinstrument(PythonPackage):
     variant("jupyter", default=False, description="Support Jupyter/IPython magic", when="@4.1:")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-ipython", when="+jupyter", type=("build", "run"))
+    depends_on("py-ipython", type=("build", "run"), when="+jupyter")
 
     # Historical dependencies
     with when("@3"):

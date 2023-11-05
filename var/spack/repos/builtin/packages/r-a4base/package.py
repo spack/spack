@@ -36,4 +36,4 @@ class RA4base(RPackage):
     depends_on("r-glmnet", type=("build", "run"))
     depends_on("r-gplots", type=("build", "run"))
 
-    depends_on("r-annotationdbi", when="@:1.32.0", type=("build", "run"))
+    depends_on("r-annotationdbi", type=("build", "run"), when="@:1.32.0")

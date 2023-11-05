@@ -38,8 +38,8 @@ class RApe(RPackage):
     version("4.1", sha256="935af5ddadcba832d3f9cc032a80fc1a2e627a7ed54ef5f3773f87e06374a924")
 
     depends_on("r@3.2:", type=("build", "run"))
-    depends_on("r@3.2.0:", when="@5.7-1:", type=("build", "run"))
+    depends_on("r@3.2.0:", type=("build", "run"), when="@5.7-1:")
     depends_on("r-nlme", type=("build", "run"))
     depends_on("r-lattice", type=("build", "run"))
     depends_on("r-rcpp@0.12.0:", type=("build", "run"))
-    depends_on("r-digest", when="@5.7-1:", type=("build", "run"))
+    depends_on("r-digest", type=("build", "run"), when="@5.7-1:")

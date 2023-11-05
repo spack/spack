@@ -34,7 +34,7 @@ class Tamaas(SConsPackage):
     )
 
     # Python 3.6 causes unicode issues with scons
-    depends_on("python@3.7:", when="~python", type="build")
+    depends_on("python@3.7:", type="build", when="~python")
     depends_on("scons@3:", type="build")
 
     depends_on("thrust", type="build")
@@ -50,7 +50,7 @@ class Tamaas(SConsPackage):
         extends("python")
         depends_on("python@3.7:", type=("build", "run"))
         depends_on("py-numpy", type=("build", "run"))
-        depends_on("py-scipy", when="+solvers", type="run")
+        depends_on("py-scipy", type="run", when="+solvers")
         depends_on("py-pybind11", type="build")
         depends_on("py-wheel", type="build")
 

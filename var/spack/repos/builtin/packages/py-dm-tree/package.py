@@ -25,9 +25,9 @@ class PyDmTree(PythonPackage):
     version("0.1.5", sha256="a951d2239111dfcc468071bc8ff792c7b1e3192cab5a3c94d33a8b2bda3127fa")
 
     depends_on("py-setuptools", type="build")
-    depends_on("cmake", when="@0.1.7:", type="build")
-    depends_on("bazel@:5", when="@:0.1.6", type="build")
-    depends_on("py-six@1.12.0:", when="@:0.1.6", type=("build", "run"))
+    depends_on("cmake", type="build", when="@0.1.7:")
+    depends_on("bazel@:5", type="build", when="@:0.1.6")
+    depends_on("py-six@1.12.0:", type=("build", "run"), when="@:0.1.6")
 
     # This is set later
     tmp_path = None

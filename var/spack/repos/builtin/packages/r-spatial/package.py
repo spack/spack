@@ -20,4 +20,4 @@ class RSpatial(RPackage):
 
     depends_on("r@3.0.0:", type=("build", "run"))
 
-    depends_on("r-mass", when="@:7.3-11", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"), when="@:7.3-11")

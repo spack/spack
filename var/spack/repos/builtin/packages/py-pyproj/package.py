@@ -34,13 +34,13 @@ class PyPyproj(PythonPackage):
     version("2.1.3", sha256="99c52788b01a7bb9a88024bf4d40965c0a66a93d654600b5deacf644775f424d")
 
     # In pyproject.toml
-    depends_on("py-setuptools@61:", when="@3.4:", type="build")
+    depends_on("py-setuptools@61:", type="build", when="@3.4:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython@3:", when="@3.6.1:", type="build")
-    depends_on("py-cython@0.28.4:2", when="@2:3.6.0", type="build")
-    depends_on("python@3.9:", when="@3.6:", type=("build", "link", "run"))
-    depends_on("python@3.8:", when="@3.3:", type=("build", "link", "run"))
-    depends_on("py-certifi", when="@3:", type=("build", "run"))
+    depends_on("py-cython@3:", type="build", when="@3.6.1:")
+    depends_on("py-cython@0.28.4:2", type="build", when="@2:3.6.0")
+    depends_on("python@3.9:", type=("build", "link", "run"), when="@3.6:")
+    depends_on("python@3.8:", type=("build", "link", "run"), when="@3.3:")
+    depends_on("py-certifi", type=("build", "run"), when="@3:")
 
     # In setup.py (PROJ_MIN_VERSION)
     # https://pyproj4.github.io/pyproj/stable/installation.html#installing-from-source

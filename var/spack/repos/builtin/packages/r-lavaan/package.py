@@ -26,4 +26,4 @@ class RLavaan(RPackage):
     depends_on("r-mnormt", type=("build", "run"))
     depends_on("r-pbivnorm", type=("build", "run"))
     depends_on("r-numderiv", type=("build", "run"))
-    depends_on("r-quadprog", when="@0.6-15:", type=("build", "run"))
+    depends_on("r-quadprog", type=("build", "run"), when="@0.6-15:")

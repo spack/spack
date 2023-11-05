@@ -23,11 +23,11 @@ class PyPyopenssl(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-cryptography@38:41", when="@23.2:", type=("build", "run"))
-    depends_on("py-cryptography@38", when="@22", type=("build", "run"))
+    depends_on("py-cryptography@38:41", type=("build", "run"), when="@23.2:")
+    depends_on("py-cryptography@38", type=("build", "run"), when="@22")
     depends_on("py-cryptography@2.3:", type=("build", "run"))
 
     conflicts("^py-cryptography@40:40.0.1", when="@23.2:")
 
     # Historical dependencies
-    depends_on("py-six@1.5.2:", when="@:19", type=("build", "run"))
+    depends_on("py-six@1.5.2:", type=("build", "run"), when="@:19")

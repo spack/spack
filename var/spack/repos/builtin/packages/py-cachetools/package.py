@@ -20,6 +20,6 @@ class PyCachetools(PythonPackage):
     version("3.1.1", sha256="8ea2d3ce97850f31e4a08b0e2b5e6c34997d7216a9d2c98e0f3978630d4da69a")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@46.4.0:", when="@4.2.2:", type="build")
-    depends_on("python@3.5:3", when="@4.2.2", type=("build", "run"))
-    depends_on("python@3.7:3", when="@5.2.0", type=("build", "run"))
+    depends_on("py-setuptools@46.4.0:", type="build", when="@4.2.2:")
+    depends_on("python@3.5:3", type=("build", "run"), when="@4.2.2")
+    depends_on("python@3.7:3", type=("build", "run"), when="@5.2.0")

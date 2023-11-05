@@ -48,8 +48,8 @@ class Hugo(Package):
 
     # Uses go modules.
     # See https://gohugo.io/getting-started/installing/#fetch-from-github
-    depends_on("go@1.11:", when="@0.48:", type="build")
-    depends_on("go@1.18:", when="@0.106:", type="build")
+    depends_on("go@1.11:", type="build", when="@0.48:")
+    depends_on("go@1.18:", type="build", when="@0.106:")
 
     variant("extended", default=False, description="Enable extended features")
 

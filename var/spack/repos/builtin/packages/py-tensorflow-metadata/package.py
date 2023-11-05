@@ -32,8 +32,8 @@ class PyTensorflowMetadata(PythonPackage):
     depends_on("bazel@0.24.1:", type="build")
     depends_on("python@3.7:3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-absl-py@0.9:1", when="@1.6:", type=("build", "run"))
-    depends_on("py-absl-py@0.9:0.12", when="@:1.5", type=("build", "run"))
+    depends_on("py-absl-py@0.9:1", type=("build", "run"), when="@1.6:")
+    depends_on("py-absl-py@0.9:0.12", type=("build", "run"), when="@:1.5")
     depends_on("py-googleapis-common-protos@1.52:1", type=("build", "run"))
     depends_on("py-protobuf@3.13:3", type=("build", "run"))
 

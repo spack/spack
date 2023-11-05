@@ -17,7 +17,7 @@ class PyShortuuid(PythonPackage):
     version("1.0.0", sha256="cc2539aaed1b4de34853ee4aaf8331176b768a2d3a87d5a790453e082ce36850")
     version("0.5.0", sha256="5dabb502352a43f67284a0edb16a1d46ec9f71b332df2095218c2df1be7d019c")
 
-    depends_on("python@2.5:", when="@:1.0.0", type=("build", "run"))
-    depends_on("python@3.5:", when="@1.0.1:", type=("build", "run"))
-    depends_on("py-setuptools", when="@:1.0.8", type="build")
-    depends_on("py-poetry-core", when="@1.0.9:", type="build")
+    depends_on("python@2.5:", type=("build", "run"), when="@:1.0.0")
+    depends_on("python@3.5:", type=("build", "run"), when="@1.0.1:")
+    depends_on("py-setuptools", type="build", when="@:1.0.8")
+    depends_on("py-poetry-core", type="build", when="@1.0.9:")

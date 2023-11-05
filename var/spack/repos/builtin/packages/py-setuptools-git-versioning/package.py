@@ -18,5 +18,5 @@ class PySetuptoolsGitVersioning(PythonPackage):
 
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("git")
-    depends_on("py-toml@0.10.2:", when="^python@:3.10", type=("build", "run"))
+    depends_on("py-toml@0.10.2:", type=("build", "run"), when="^python@:3.10")
     depends_on("py-packaging", type=("build", "run"))

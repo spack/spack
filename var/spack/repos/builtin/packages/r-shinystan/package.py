@@ -40,4 +40,4 @@ class RShinystan(RPackage):
     depends_on("r-xtable", type=("build", "run"))
     depends_on("r-xts@0.9-7:", type=("build", "run"))
 
-    depends_on("r-rsconnect@0.4.2:", when="@:2.5.0", type=("build", "run"))
+    depends_on("r-rsconnect@0.4.2:", type=("build", "run"), when="@:2.5.0")

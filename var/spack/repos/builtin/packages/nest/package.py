@@ -35,12 +35,12 @@ class Nest(CMakePackage):
     conflicts("~shared", when="@:2.10", msg="Option only introduced for non-ancient versions.")
     conflicts("~openmp", when="@:2.10", msg="Option only introduced for non-ancient versions.")
 
-    depends_on("python@2.6:", when="+python", type=("build", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-scipy", when="+python", type=("run"))
-    depends_on("py-cython@0.19.2:", when="+python", type="build")
-    depends_on("py-nose", when="+python", type="test")
-    depends_on("py-setuptools", when="+python", type="build")
+    depends_on("python@2.6:", type=("build", "run"), when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-scipy", type=("run"), when="+python")
+    depends_on("py-cython@0.19.2:", type="build", when="+python")
+    depends_on("py-nose", type="test", when="+python")
+    depends_on("py-setuptools", type="build", when="+python")
 
     depends_on("mpi", when="+mpi")
 

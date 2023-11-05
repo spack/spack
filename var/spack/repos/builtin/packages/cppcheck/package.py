@@ -31,8 +31,8 @@ class Cppcheck(CMakePackage):
     variant("rules", default=False, description="Enable rules (requires PCRE)")
     variant("htmlreport", default=False, description="Install cppcheck-htmlreport")
 
-    depends_on("pcre", when="+rules", type="build")
-    depends_on("py-pygments", when="+htmlreport", type="run")
+    depends_on("pcre", type="build", when="+rules")
+    depends_on("py-pygments", type="run", when="+htmlreport")
 
     def cmake_args(self):
         args = []

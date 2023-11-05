@@ -24,14 +24,14 @@ class Z3(CMakePackage):
     version("4.5.0", sha256="aeae1d239c5e06ac183be7dd853775b84698db1265cb2258e5918a28372d4a0c")
 
     variant("python", default=False, description="Enable python binding")
-    depends_on("python", when="~python", type="build")
-    depends_on("python", when="+python", type=("build", "run"))
-    depends_on("py-setuptools", when="+python", type=("run"))
+    depends_on("python", type="build", when="~python")
+    depends_on("python", type=("build", "run"), when="+python")
+    depends_on("py-setuptools", type=("run"), when="+python")
     extends("python", when="+python")
 
     variant("gmp", default=False, description="GNU multiple precision library support")
     depends_on("cmake@3.4:", type="build")
-    depends_on("gmp", when="+gmp", type=("build", "link"))
+    depends_on("gmp", type=("build", "link"), when="+gmp")
 
     # Referenced: https://github.com/Z3Prover/z3/issues/1016
     patch("fix_1016_2.patch", when="@4.5.0")

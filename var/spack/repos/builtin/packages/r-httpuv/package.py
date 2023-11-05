@@ -29,12 +29,12 @@ class RHttpuv(RPackage):
 
     depends_on("r@2.15.1:", type=("build", "run"))
     depends_on("r-rcpp@0.11.0:", type=("build", "run"))
-    depends_on("r-rcpp@1.0.7:", when="@1.6.5:", type=("build", "run"))
-    depends_on("r-r6", when="@1.5.0:", type=("build", "run"))
-    depends_on("r-promises", when="@1.5.0:", type=("build", "run"))
-    depends_on("r-later@0.8.0:", when="@1.5.0:", type=("build", "run"))
+    depends_on("r-rcpp@1.0.7:", type=("build", "run"), when="@1.6.5:")
+    depends_on("r-r6", type=("build", "run"), when="@1.5.0:")
+    depends_on("r-promises", type=("build", "run"), when="@1.5.0:")
+    depends_on("r-later@0.8.0:", type=("build", "run"), when="@1.5.0:")
     depends_on("gmake", type="build")
     depends_on("zip")
     depends_on("zlib-api", when="@1.6.4:")
 
-    depends_on("r-bh", when="@1.5.5", type=("build", "run"))
+    depends_on("r-bh", type=("build", "run"), when="@1.5.5")

@@ -20,11 +20,11 @@ class PyPydocstyle(PythonPackage):
 
     variant("toml", default=True, description="Allow pydocstyle to read pyproject.toml")
 
-    depends_on("py-poetry-core", when="@6.2:", type="build")
-    depends_on("py-setuptools", when="@:6.1", type="build")
-    depends_on("py-snowballstemmer@2.2:", when="@6.2:", type=("build", "run"))
+    depends_on("py-poetry-core", type="build", when="@6.2:")
+    depends_on("py-setuptools", type="build", when="@:6.1")
+    depends_on("py-snowballstemmer@2.2:", type=("build", "run"), when="@6.2:")
     depends_on("py-snowballstemmer", type=("build", "run"))
-    depends_on("py-tomli@1.2.3:", when="@6.2.1:+toml ^python@:3.10", type=("build", "run"))
-    depends_on("py-toml@0.10.2:", when="@6.2.0+toml", type=("build", "run"))
-    depends_on("py-toml", when="@:6.1+toml", type=("build", "run"))
-    depends_on("py-importlib-metadata@2:4", when="@6.2: ^python@:3.7", type=("build", "run"))
+    depends_on("py-tomli@1.2.3:", type=("build", "run"), when="@6.2.1:+toml ^python@:3.10")
+    depends_on("py-toml@0.10.2:", type=("build", "run"), when="@6.2.0+toml")
+    depends_on("py-toml", type=("build", "run"), when="@:6.1+toml")
+    depends_on("py-importlib-metadata@2:4", type=("build", "run"), when="@6.2: ^python@:3.7")

@@ -30,9 +30,9 @@ class Serenity(CMakePackage):
     depends_on("libecpint")
     depends_on("libxc@5.0.0")
     depends_on("pkgconfig", type="build")
-    depends_on("python@3.6:", when="+python", type=("build", "run"))
-    depends_on("py-pip", when="+python", type="build")
-    depends_on("py-pybind11", when="+python", type="build")
+    depends_on("python@3.6:", type=("build", "run"), when="+python")
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-pybind11", type="build", when="+python")
     depends_on("serenity-libint")
     depends_on("xcfun")
 

@@ -57,14 +57,14 @@ class Trinity(MakefilePackage):
     # There is no documented list of these deps, but they're in the Dockerfile
     #  and we have runtime errors without them
     # https://github.com/trinityrnaseq/trinityrnaseq/blob/master/Docker/Dockerfile
-    depends_on("r-dexseq", when="@2.12", type="run")
-    depends_on("star", when="@2.12", type="run")
-    depends_on("picard", when="@2.12", type="run")
-    depends_on("subread", when="@2.12", type="run")
-    depends_on("gatk", when="@2.12", type="run")
-    depends_on("gmap-gsnap", when="@2.12", type="run")
-    depends_on("r-tximport", when="@2.12", type="run")
-    depends_on("r-tximportdata", when="@2.12", type="run")
+    depends_on("r-dexseq", type="run", when="@2.12")
+    depends_on("star", type="run", when="@2.12")
+    depends_on("picard", type="run", when="@2.12")
+    depends_on("subread", type="run", when="@2.12")
+    depends_on("gatk", type="run", when="@2.12")
+    depends_on("gmap-gsnap", type="run", when="@2.12")
+    depends_on("r-tximport", type="run", when="@2.12")
+    depends_on("r-tximportdata", type="run", when="@2.12")
     depends_on("blast-plus", type="run")
     depends_on("bowtie", type="run")
     depends_on("r", type="run")

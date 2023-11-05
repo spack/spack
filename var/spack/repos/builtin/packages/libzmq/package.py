@@ -55,12 +55,12 @@ class Libzmq(AutotoolsPackage):
     depends_on("libsodium", when="+libsodium")
     depends_on("libsodium@:1.0.3", when="+libsodium@:4.1.2")
 
-    depends_on("autoconf", when="@master", type="build")
-    depends_on("automake", when="@master", type="build")
-    depends_on("libtool", when="@master", type="build")
+    depends_on("autoconf", type="build", when="@master")
+    depends_on("automake", type="build", when="@master")
+    depends_on("libtool", type="build", when="@master")
     depends_on("pkgconfig", type="build")
-    depends_on("docbook-xml", when="+docs", type="build")
-    depends_on("docbook-xsl", when="+docs", type="build")
+    depends_on("docbook-xml", type="build", when="+docs")
+    depends_on("docbook-xsl", type="build", when="+docs")
 
     depends_on("libbsd", when="+libbsd")
 

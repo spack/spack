@@ -27,9 +27,9 @@ class PyImbalancedLearn(PythonPackage):
     depends_on("py-scikit-learn@1.0.2:", type=("build", "run"))
 
     variant("optional", default=False, description="Enable optional dependencies.")
-    depends_on("py-pandas@1.0.5:", when="+optional", type=("build", "run"))
-    depends_on("py-tensorflow@2.4.3:", when="+optional", type=("build", "run"))
-    depends_on("py-keras@2.4.3:", when="+optional", type=("build", "run"))
+    depends_on("py-pandas@1.0.5:", type=("build", "run"), when="+optional")
+    depends_on("py-tensorflow@2.4.3:", type=("build", "run"), when="+optional")
+    depends_on("py-keras@2.4.3:", type=("build", "run"), when="+optional")
 
     # From https://imbalanced-learn.org/stable/install.html#getting-started:
     depends_on("py-joblib@1.1.1:", type=("build", "run"))

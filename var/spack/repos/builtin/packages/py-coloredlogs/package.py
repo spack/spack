@@ -19,5 +19,5 @@ class PyColoredlogs(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-humanfriendly@9.1:", when="@15:", type=("build", "run"))
+    depends_on("py-humanfriendly@9.1:", type=("build", "run"), when="@15:")
     depends_on("py-humanfriendly@4.7:", type=("build", "run"))

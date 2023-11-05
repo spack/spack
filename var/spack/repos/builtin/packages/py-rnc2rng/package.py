@@ -17,5 +17,5 @@ class PyRnc2rng(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     # rnc2rng@2.6.5 uses use_2to3 which was removed in py-setuptools@58
-    depends_on("py-setuptools@:57", when="@:2.6.5", type="build")
+    depends_on("py-setuptools@:57", type="build", when="@:2.6.5")
     depends_on("py-rply", type=("build", "run"))

@@ -79,8 +79,8 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     variant("vecgeom", default=True, description="Use VecGeom geometry")
 
     depends_on("cmake@3.13:", type="build")
-    depends_on("cmake@3.18:", when="+cuda+vecgeom", type="build")
-    depends_on("cmake@3.22:", when="+rocm", type="build")
+    depends_on("cmake@3.18:", type="build", when="+cuda+vecgeom")
+    depends_on("cmake@3.22:", type="build", when="+rocm")
 
     depends_on("nlohmann-json")
     depends_on("geant4@10.5:", when="@0.3.1: +geant4")
@@ -93,9 +93,9 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("vecgeom", when="+vecgeom")
 
     depends_on("python", type="build")
-    depends_on("doxygen", when="+doc", type="build")
-    depends_on("py-breathe", when="+doc", type="build")
-    depends_on("py-sphinx", when="+doc", type="build")
+    depends_on("doxygen", type="build", when="+doc")
+    depends_on("py-breathe", type="build", when="+doc")
+    depends_on("py-sphinx", type="build", when="+doc")
 
     for _std in _cxxstd_values:
         depends_on("geant4 cxxstd=" + _std, when="+geant4 cxxstd=" + _std)

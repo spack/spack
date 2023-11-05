@@ -17,4 +17,4 @@ class PyJmespath(PythonPackage):
     version("0.9.4", sha256="bde2aef6f44302dfb30320115b17d030798de8c4110e28d5cf6cf91a7a31074c")
 
     depends_on("py-setuptools", type="build")
-    depends_on("python@3.7:", when="@1.0.0:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@1.0.0:")

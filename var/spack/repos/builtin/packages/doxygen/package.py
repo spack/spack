@@ -78,12 +78,12 @@ class Doxygen(CMakePackage):
     depends_on("bison", type="build")
     # code.l just checks subminor version <=2.5.4 or >=2.5.33
     # but does not recognize 2.6.x as newer...could be patched if needed
-    depends_on("flex@2.5.39", when="@1.8.10", type="build")
-    depends_on("bison@2.7:", when="@1.8.10:", type="build")
+    depends_on("flex@2.5.39", type="build", when="@1.8.10")
+    depends_on("bison@2.7:", type="build", when="@1.8.10:")
 
     # optional dependencies
-    depends_on("graphviz", when="+graphviz", type="run")
-    depends_on("mscgen", when="+mscgen", type="run")
+    depends_on("graphviz", type="run", when="+graphviz")
+    depends_on("mscgen", type="run", when="+mscgen")
 
     # Support C++14's std::shared_ptr. For details about this patch, see
     # https://github.com/Sleepyowl/doxygen/commit/6c380ba91ae41c6d5c409a5163119318932ae2a3?diff=unified

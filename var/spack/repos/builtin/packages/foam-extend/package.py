@@ -85,7 +85,7 @@ class FoamExtend(Package):
     depends_on("metis@5:", when="+metis")
     depends_on("parmetis", when="+parmetis")
     # mgridgen is statically linked
-    depends_on("parmgridgen", when="+parmgridgen", type="build")
+    depends_on("parmgridgen", type="build", when="+parmgridgen")
     depends_on("paraview@:5.0.1", when="+paraview")
 
     # General patches

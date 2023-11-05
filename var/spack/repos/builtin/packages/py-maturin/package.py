@@ -21,5 +21,5 @@ class PyMaturin(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-wheel@0.36.2:", type="build")
     depends_on("py-setuptools-rust@1.4:", type="build")
-    depends_on("py-tomli@1.1:", when="^python@:3.10", type=("build", "run"))
+    depends_on("py-tomli@1.1:", type=("build", "run"), when="^python@:3.10")
     depends_on("rust", type=("build", "run"))

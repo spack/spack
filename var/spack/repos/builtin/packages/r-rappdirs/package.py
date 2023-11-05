@@ -19,4 +19,4 @@ class RRappdirs(RPackage):
     version("0.3.1", sha256="2fd891ec16d28862f65bb57e4a78f77a597930abb59380e757afd8b6c6d3264a")
 
     depends_on("r@2.14:", type=("build", "run"))
-    depends_on("r@3.2:", when="@0.3.2:", type=("build", "run"))
+    depends_on("r@3.2:", type=("build", "run"), when="@0.3.2:")

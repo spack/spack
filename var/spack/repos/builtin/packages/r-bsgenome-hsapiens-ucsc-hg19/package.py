@@ -29,4 +29,4 @@ class RBsgenomeHsapiensUcscHg19(RPackage):
     )
 
     depends_on("r-bsgenome@1.33.5:", type=("build", "run"))
-    depends_on("r-bsgenome@1.54.0:", when="@1.4.3:", type=("build", "run"))
+    depends_on("r-bsgenome@1.54.0:", type=("build", "run"), when="@1.4.3:")

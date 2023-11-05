@@ -606,14 +606,14 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-cython", when="+ml-iap+python")
     depends_on("py-numpy", when="+python")
     depends_on("py-mpi4py", when="+python+mpi")
-    depends_on("py-setuptools", when="@20220217:+python", type="build")
+    depends_on("py-setuptools", type="build", when="@20220217:+python")
     depends_on("n2p2@2.1.4:", when="+user-hdnnp")
     depends_on("n2p2@2.1.4:", when="+ml-hdnnp")
     depends_on("n2p2+shared", when="+lib ^n2p2")
     depends_on("vtk", when="+user-vtk")
     depends_on("vtk", when="+vtk")
     depends_on("hipcub", when="~kokkos +rocm")
-    depends_on("llvm-amdgpu +openmp", when="+rocm +openmp", type="build")
+    depends_on("llvm-amdgpu +openmp", type="build", when="+rocm +openmp")
 
     # propagate CUDA and ROCm architecture when +kokkos
     for arch in CudaPackage.cuda_arch_values:

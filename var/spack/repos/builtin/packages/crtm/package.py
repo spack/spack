@@ -45,13 +45,13 @@ class Crtm(CMakePackage):
     depends_on("crtm-fix@2.3.0_emc", when="@2.3.0 +fix")
     depends_on("crtm-fix@2.4.0_emc", when="@2.4.0 +fix")
 
-    depends_on("ecbuild", when="@v2.3-jedi.4", type=("build"))
-    depends_on("ecbuild", when="@v2.4-jedi.1", type=("build"))
-    depends_on("ecbuild", when="@v2.4-jedi.2", type=("build"))
+    depends_on("ecbuild", type=("build"), when="@v2.3-jedi.4")
+    depends_on("ecbuild", type=("build"), when="@v2.4-jedi.1")
+    depends_on("ecbuild", type=("build"), when="@v2.4-jedi.2")
 
     # ecbuild release v2.4.0 is broken
     # add ecbuild dependency for next release with fix
-    # depends_on("ecbuild", when="@2.4.0:", type=("build"))
+    # depends_on("ecbuild", type=("build"), when="@2.4.0:")
 
     # REL-2.4.0_emc (v2.4.0 ecbuild does not work)
     version("2.4.0", commit="5ddd0d6b0138284764065feda73b5adf599082a2")

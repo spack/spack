@@ -55,11 +55,11 @@ class Su2(MesonPackage):
     depends_on("zlib-api")
     depends_on("pkgconfig")
     depends_on("mpi", when="+mpi")
-    depends_on("swig", when="+pywrapper", type="build")
+    depends_on("swig", type="build", when="+pywrapper")
     depends_on("py-mpi4py", when="+pywrapper")
     depends_on("intel-oneapi-mkl", when="+mkl")
     depends_on("openblas", when="+openblas ~mkl")
-    depends_on("cmake", when="+mpp", type="build")
+    depends_on("cmake", type="build", when="+mpp")
 
     # Remove the part that fixes the meson version to 0.61.1.
     # This fix is considered meaningless and will be removed in the next version(@7.6:) of SU2.

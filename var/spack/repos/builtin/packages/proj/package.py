@@ -87,17 +87,17 @@ class Proj(CMakePackage, AutotoolsPackage):
 
     # https://proj.org/install.html#build-requirements
     with when("build_system=cmake"):
-        depends_on("cmake@3.9:", when="@6:", type="build")
-        depends_on("cmake@3.5:", when="@5", type="build")
-        depends_on("cmake@2.6:", when="@:4", type="build")
+        depends_on("cmake@3.9:", type="build", when="@6:")
+        depends_on("cmake@3.5:", type="build", when="@5")
+        depends_on("cmake@2.6:", type="build", when="@:4")
 
     with when("build_system=autotools"):
-        depends_on("pkgconfig@0.9:", when="@6:", type="build")
+        depends_on("pkgconfig@0.9:", type="build", when="@6:")
 
     depends_on("sqlite@3.11:", when="@6:")
     depends_on("libtiff@4:", when="@7:+tiff")
     depends_on("curl@7.29:", when="@7:+curl")
-    depends_on("googletest@1.8:", when="@6:", type="test")
+    depends_on("googletest@1.8:", type="test", when="@6:")
 
     build_system(
         conditional("autotools", when="@:8"), conditional("cmake", when="@5:"), default="cmake"

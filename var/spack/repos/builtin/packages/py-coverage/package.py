@@ -27,5 +27,5 @@ class PyCoverage(PythonPackage):
     variant("toml", default=False, description="Enable pyproject.toml support")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-tomli", when="@6: +toml ^python@:3.10", type=("build", "run"))
-    depends_on("py-toml", when="@:5 +toml", type=("build", "run"))
+    depends_on("py-tomli", type=("build", "run"), when="@6: +toml ^python@:3.10")
+    depends_on("py-toml", type=("build", "run"), when="@:5 +toml")

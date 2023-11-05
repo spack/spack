@@ -18,8 +18,8 @@ class PyAliveProgress(PythonPackage):
     version("1.6.2", sha256="642e1ce98becf226c8c36bf24e10221085998c5465a357a66fb83b7dc618b43e")
 
     depends_on("python@2.7:3.8", type=("build", "run"))
-    depends_on("python@3.6:3", when="@2:", type=("build", "run"))
-    depends_on("python@3.7:3", when="@2.2:", type=("build", "run"))
+    depends_on("python@3.6:3", type=("build", "run"), when="@2:")
+    depends_on("python@3.7:3", type=("build", "run"), when="@2.2:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-about-time@3.1.1", when="@2.4.1:", type=("build", "run"))
-    depends_on("py-grapheme@0.6.0", when="@2.4.1:", type=("build", "run"))
+    depends_on("py-about-time@3.1.1", type=("build", "run"), when="@2.4.1:")
+    depends_on("py-grapheme@0.6.0", type=("build", "run"), when="@2.4.1:")

@@ -22,9 +22,9 @@ class Form(AutotoolsPackage):
         url="https://github.com/vermaseren/form/releases/download/v4.1-20131025/form-4.1.tar.gz",
     )
 
-    depends_on("gmp", when="+gmp", type="link")
-    depends_on("zlib-api", when="+zlib", type="link")
-    depends_on("mpi", when="+parform", type="link")
+    depends_on("gmp", type="link", when="+gmp")
+    depends_on("zlib-api", type="link", when="+zlib")
+    depends_on("mpi", type="link", when="+parform")
 
     variant("gmp", default=True, description="Use GMP for long integer arithmetic")
     variant("zlib", default=True, description="Use zlib for compression")

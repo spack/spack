@@ -35,8 +35,8 @@ class Libkml(CMakePackage):
     depends_on("zlib-api")
     conflicts("^zlib@:1.2.7")
     depends_on("googletest@1.7.0:", type="link")
-    depends_on("swig", when="+java", type="build")
-    depends_on("swig", when="+python", type="build")
+    depends_on("swig", type="build", when="+java")
+    depends_on("swig", type="build", when="+python")
 
     @property
     def libs(self):

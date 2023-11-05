@@ -39,7 +39,7 @@ class Hipace(CMakePackage):
         description="Floating point precision (single/double)",
     )
 
-    depends_on("cmake@3.18.0:", when="@23.05:", type="build")
+    depends_on("cmake@3.18.0:", type="build", when="@23.05:")
     depends_on("cmake@3.15.0:", type="build")
     depends_on("mpi", when="+mpi")
     with when("+openpmd"):

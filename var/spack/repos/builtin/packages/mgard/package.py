@@ -41,10 +41,10 @@ class Mgard(CMakePackage, CudaPackage):
         description="Enable experimental unstructured mesh support",
     )
 
-    depends_on("python", when="@2022-11-18:", type=("build",))
-    depends_on("sed", when="@2022-11-18:", type=("build",))
+    depends_on("python", type=("build",), when="@2022-11-18:")
+    depends_on("sed", type=("build",), when="@2022-11-18:")
     depends_on("zlib-api")
-    depends_on("pkgconfig", when="@2022-11-18:", type=("build",))
+    depends_on("pkgconfig", type=("build",), when="@2022-11-18:")
     depends_on("zstd")
     depends_on("protobuf@:3.21.12", when="@2022-11-18:")
     depends_on("libarchive", when="@2021-11-12:")

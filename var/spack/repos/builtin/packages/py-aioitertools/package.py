@@ -19,5 +19,5 @@ class PyAioitertools(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-flit-core@2:3", type="build")
-    depends_on("py-typing-extensions@3.7:", when="@0.7.1", type=("build", "run"))
-    depends_on("py-typing-extensions@4:", when="@0.11.0: ^python@:3.9", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7:", type=("build", "run"), when="@0.7.1")
+    depends_on("py-typing-extensions@4:", type=("build", "run"), when="@0.11.0: ^python@:3.9")

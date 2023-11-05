@@ -27,7 +27,7 @@ class Antlr(AutotoolsPackage):
     variant("pic", default=False, description="Enable fPIC")
 
     extends("python", when="+python")
-    depends_on("java", when="+java", type=("build", "run"))
+    depends_on("java", type=("build", "run"), when="+java")
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+pic"):

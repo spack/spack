@@ -19,12 +19,12 @@ class Treelite(CMakePackage):
     variant("python", default=True, description="Build with python support")
 
     depends_on("protobuf", when="+protobuf")
-    depends_on("python@3.6:", when="+python", type=("build", "run"))
-    depends_on("py-pip", when="+python", type="build")
-    depends_on("py-wheel", when="+python", type="build")
-    depends_on("py-setuptools", when="+python", type="build")
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-scipy", when="+python", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="+python")
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-wheel", type="build", when="+python")
+    depends_on("py-setuptools", type="build", when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-scipy", type=("build", "run"), when="+python")
 
     build_directory = "build"
 

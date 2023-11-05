@@ -25,7 +25,7 @@ class PyTokenizers(PythonPackage):
     # A nightly or dev version of rust is required to build older versions.
     # https://github.com/huggingface/tokenizers/issues/176
     # https://github.com/PyO3/pyo3/issues/5
-    depends_on("rust@nightly", when="@:0.10", type="build")
+    depends_on("rust@nightly", type="build", when="@:0.10")
 
     # TODO: This package currently requires internet access to install.
 

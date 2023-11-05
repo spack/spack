@@ -22,4 +22,4 @@ class PyPubchempy(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     variant("pandas", default=False, description="Enable pandas support")
-    depends_on("py-pandas", when="+pandas", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"), when="+pandas")

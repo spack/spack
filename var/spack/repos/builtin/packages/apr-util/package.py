@@ -32,7 +32,7 @@ class AprUtil(AutotoolsPackage):
     depends_on("postgresql", when="+pgsql")
     depends_on("sqlite", when="+sqlite")
     depends_on("unixodbc", when="+odbc")
-    depends_on("pkgconfig", when="+crypto ^openssl~shared", type="build")
+    depends_on("pkgconfig", type="build", when="+crypto ^openssl~shared")
 
     @property
     def libs(self):

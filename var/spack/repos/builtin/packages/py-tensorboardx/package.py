@@ -25,10 +25,10 @@ class PyTensorboardx(PythonPackage):
     version("1.8", sha256="13fe0abba27f407778a7321937190eedaf12bc8c544d9a4e294fcf0ba177fd76")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", when="@2.6.2.2:", type="build")
+    depends_on("py-setuptools-scm", type="build", when="@2.6.2.2:")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-protobuf@3.8.0:3.20.1", when="@:2.5.1", type=("build", "run"))
-    depends_on("py-protobuf@3.20:", when="@2.6.2.2:", type=("build", "run"))
-    depends_on("py-packaging", when="@2.6.2.2:", type=("build", "run"))
+    depends_on("py-protobuf@3.8.0:3.20.1", type=("build", "run"), when="@:2.5.1")
+    depends_on("py-protobuf@3.20:", type=("build", "run"), when="@2.6.2.2:")
+    depends_on("py-packaging", type=("build", "run"), when="@2.6.2.2:")
 
-    depends_on("py-six", when="@:2.1", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"), when="@:2.1")

@@ -104,12 +104,12 @@ class Pfunit(CMakePackage):
         values=("Debug", "Release"),
     )
 
-    depends_on("doxygen", when="+docs", type="build")
+    depends_on("doxygen", type="build", when="+docs")
 
     depends_on("python", type=("build", "run"))
     depends_on("mpi", when="+mpi")
     depends_on("esmf", when="+esmf")
-    depends_on("m4", when="@4.1.5:", type="build")
+    depends_on("m4", type="build", when="@4.1.5:")
     depends_on("fargparse", when="@4:")
     depends_on("cmake@3.12:", type="build")
 

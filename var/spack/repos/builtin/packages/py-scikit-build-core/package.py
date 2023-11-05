@@ -28,21 +28,21 @@ class PyScikitBuildCore(PythonPackage):
     depends_on("py-hatch-vcs", type="build")
 
     # Dependencies
-    depends_on("py-exceptiongroup", when="^python@:3.10", type=("build", "run"))
-    depends_on("py-importlib-resources@1.3:", when="^python@:3.8", type=("build", "run"))
+    depends_on("py-exceptiongroup", type=("build", "run"), when="^python@:3.10")
+    depends_on("py-importlib-resources@1.3:", type=("build", "run"), when="^python@:3.8")
     depends_on("py-packaging@20.9:", type=("build", "run"))
-    depends_on("py-tomli@1.1:", when="^python@:3.10", type=("build", "run"))
-    depends_on("py-typing-extensions@3.10:", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-tomli@1.1:", type=("build", "run"), when="^python@:3.10")
+    depends_on("py-typing-extensions@3.10:", type=("build", "run"), when="^python@:3.7")
     depends_on("cmake@3.15:", type=("build", "run"))
 
     # Optional dependencies
-    depends_on("py-pyproject-metadata@0.5:", when="+pyproject", type=("build", "run"))
-    depends_on("py-pathspec@0.10.1:", when="+pyproject", type=("build", "run"))
+    depends_on("py-pyproject-metadata@0.5:", type=("build", "run"), when="+pyproject")
+    depends_on("py-pathspec@0.10.1:", type=("build", "run"), when="+pyproject")
 
     # Test dependencies
     depends_on("py-build +virtualenv", type="test")
     depends_on("py-cattrs@22.2:", type="test")
-    depends_on("py-importlib-metadata", when="^python@:3.7", type="test")
+    depends_on("py-importlib-metadata", type="test", when="^python@:3.7")
     depends_on("py-pathspec@0.10.1:", type="test")
     depends_on("py-pybind11", type="test")
     depends_on("py-pyproject-metadata@0.5:", type="test")

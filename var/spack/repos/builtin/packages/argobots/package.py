@@ -41,10 +41,10 @@ class Argobots(AutotoolsPackage):
     variant("tool", default=False, description="Enable ABT_tool interface")
     variant("affinity", default=False, description="Enable affinity setting")
 
-    depends_on("m4", when="@main", type=("build"))
-    depends_on("autoconf", when="@main", type=("build"))
-    depends_on("automake", when="@main", type=("build"))
-    depends_on("libtool", when="@main", type=("build"))
+    depends_on("m4", type=("build"), when="@main")
+    depends_on("autoconf", type=("build"), when="@main")
+    depends_on("automake", type=("build"), when="@main")
+    depends_on("libtool", type=("build"), when="@main")
     depends_on("valgrind", when="+valgrind")
     depends_on("libunwind", when="+stackunwind")
 

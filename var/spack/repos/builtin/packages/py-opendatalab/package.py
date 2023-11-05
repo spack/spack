@@ -22,5 +22,5 @@ class PyOpendatalab(PythonPackage):
     depends_on("py-tqdm", type=("build", "run"))
     depends_on("py-colorama", type=("build", "run"))
     depends_on("py-rich", type=("build", "run"))
-    # depends_on("py-pywin32", when="platform=windows", type=("build", "run"))
+    # depends_on("py-pywin32", type=("build", "run"), when="platform=windows")
     conflicts("platform=windows", msg="Requires py-pywin32 to be packaged")

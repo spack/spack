@@ -35,10 +35,10 @@ class RAbaenrichment(RPackage):
 
     depends_on("r+X", type=("build", "run"))
     depends_on("r@3.2:", type=("build", "run"))
-    depends_on("r@3.4:", when="@1.8.0:", type=("build", "run"))
+    depends_on("r@3.4:", type=("build", "run"), when="@1.8.0:")
     depends_on("r-rcpp@0.11.5:", type=("build", "run"))
     depends_on("r-gplots@2.14.2:", type=("build", "run"))
     depends_on("r-gtools@3.5.0:", type=("build", "run"))
     depends_on("r-abadata@0.99.2:", type=("build", "run"))
-    depends_on("r-data-table@1.10.4:", when="@1.8.0:", type=("build", "run"))
-    depends_on("r-gofuncr@1.1.2:", when="@1.12.0:", type=("build", "run"))
+    depends_on("r-data-table@1.10.4:", type=("build", "run"), when="@1.8.0:")
+    depends_on("r-gofuncr@1.1.2:", type=("build", "run"), when="@1.12.0:")

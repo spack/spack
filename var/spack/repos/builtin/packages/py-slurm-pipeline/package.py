@@ -21,4 +21,4 @@ class PySlurmPipeline(PythonPackage):
     # listed in install_requires:
     depends_on("py-pytest@6.2.2:", type="build")
     # Before 4.0.0, slurm_pipeline/base.py has: from six import string_types
-    depends_on("py-six@1.10.0:", when="@:3", type=("build", "run"))
+    depends_on("py-six@1.10.0:", type=("build", "run"), when="@:3")

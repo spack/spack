@@ -41,7 +41,7 @@ class Fdb(CMakePackage):
 
     depends_on("cmake@3.12:", type="build")
     depends_on("ecbuild@3.4:", type="build")
-    depends_on("ecbuild@3.7:", when="@5.11.6:", type="build")
+    depends_on("ecbuild@3.7:", type="build", when="@5.11.6:")
 
     depends_on("eckit@1.16:")
     depends_on("eckit+admin", when="+tools")

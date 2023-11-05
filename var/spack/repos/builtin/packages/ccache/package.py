@@ -54,9 +54,9 @@ class Ccache(CMakePackage):
 
     variant("redis", default=True, description="Enable Redis secondary storage")
 
-    depends_on("cmake@3.15:", when="@4.7:", type="build")
-    depends_on("cmake@3.10:", when="@4.4:", type="build")
-    depends_on("cmake@3.4.3:", when="@4.0:", type="build")
+    depends_on("cmake@3.15:", type="build", when="@4.7:")
+    depends_on("cmake@3.10:", type="build", when="@4.4:")
+    depends_on("cmake@3.4.3:", type="build", when="@4.0:")
 
     depends_on("gperf", when="@:3")
     depends_on("libxslt", when="@:3")
@@ -65,7 +65,7 @@ class Ccache(CMakePackage):
     depends_on("zstd", when="@4.0:")
 
     depends_on("hiredis@0.13.3:", when="@4.4: +redis")
-    depends_on("pkgconfig", when="@4.4:", type="build")
+    depends_on("pkgconfig", type="build", when="@4.4:")
 
     conflicts("%gcc@:7", when="@4.7.1:")
     conflicts("%gcc@:5", when="@4.4:")

@@ -38,10 +38,10 @@ class SingularityLegacy(AutotoolsPackage):
 
     depends_on("libarchive", when="@2.5.2:")
     # these are only needed if we're grabbing the unreleased tree
-    depends_on("m4", when="@2.6-release", type="build")
-    depends_on("autoconf", when="@2.6-release", type="build")
-    depends_on("automake", when="@2.6-release", type="build")
-    depends_on("libtool", when="@2.6-release", type="build")
+    depends_on("m4", type="build", when="@2.6-release")
+    depends_on("autoconf", type="build", when="@2.6-release")
+    depends_on("automake", type="build", when="@2.6-release")
+    depends_on("libtool", type="build", when="@2.6-release")
 
     # When installing as root, the copy has to run before chmod runs
     def install(self, spec, prefix):

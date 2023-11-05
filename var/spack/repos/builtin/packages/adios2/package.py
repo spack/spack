@@ -178,12 +178,12 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mgard", when="+mgard")
 
     extends("python", when="+python")
-    depends_on("python@2.7:2.8,3.5:", when="@:2.4.0 +python", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@:2.4.0", type="test")
-    depends_on("python@3.5:", when="@2.5.0: +python", type=("build", "run"))
-    depends_on("python@3.5:", when="@2.5.0:", type="test")
-    depends_on("py-numpy@1.6.1:", when="+python", type=("build", "run"))
-    depends_on("py-mpi4py@2.0.0:", when="+mpi +python", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@:2.4.0 +python")
+    depends_on("python@2.7:2.8,3.5:", type="test", when="@:2.4.0")
+    depends_on("python@3.5:", type=("build", "run"), when="@2.5.0: +python")
+    depends_on("python@3.5:", type="test", when="@2.5.0:")
+    depends_on("py-numpy@1.6.1:", type=("build", "run"), when="+python")
+    depends_on("py-mpi4py@2.0.0:", type=("build", "run"), when="+mpi +python")
     depends_on("aws-sdk-cpp", when="+aws")
     depends_on("libcatalyst@2", when="+libcatalyst")
 

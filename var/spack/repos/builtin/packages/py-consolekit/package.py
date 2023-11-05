@@ -17,7 +17,7 @@ class PyConsolekit(PythonPackage):
 
     depends_on("py-flit-core@3.2:3", type="build")
     depends_on("py-click@7.1.2:", type=("build", "run"))
-    depends_on("py-colorama@0.4.3:", when="^python@:3.9 platform=windows", type=("build", "run"))
+    depends_on("py-colorama@0.4.3:", type=("build", "run"), when="^python@:3.9 platform=windows")
     depends_on("py-deprecation-alias@0.1.1:", type=("build", "run"))
     depends_on("py-domdf-python-tools@2.6:", type=("build", "run"))
     depends_on("py-mistletoe@0.7.2:", type=("build", "run"))

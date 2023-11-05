@@ -19,4 +19,4 @@ class RRjson(RPackage):
     version("0.2.15", sha256="77d00d8f6a1c936329b46f3b8b0be79a165f8c5f1989497f942ecc53dcf6f2ef")
 
     depends_on("r@3.1.0:", type=("build", "run"))
-    depends_on("r@4.0.0:", when="@0.2.21:", type=("build", "run"))
+    depends_on("r@4.0.0:", type=("build", "run"), when="@0.2.21:")

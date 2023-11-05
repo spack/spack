@@ -32,12 +32,12 @@ class Fish(CMakePackage):
     variant("docs", default=False, description="Build documentation")
 
     # https://github.com/fish-shell/fish-shell#dependencies-1
-    depends_on("cmake@3.5:", when="@3.4:", type="build")
+    depends_on("cmake@3.5:", type="build", when="@3.4:")
     depends_on("cmake@3.2:", type="build")
     depends_on("ncurses")
     depends_on("pcre2@10.21:")
     depends_on("gettext")
-    depends_on("py-sphinx", when="+docs", type="build")
+    depends_on("py-sphinx", type="build", when="+docs")
     depends_on("python@3.3:", type="test")
     depends_on("py-pexpect", type="test")
 

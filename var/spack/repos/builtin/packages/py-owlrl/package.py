@@ -17,5 +17,5 @@ class PyOwlrl(PythonPackage):
     version("5.2.3", sha256="b1891d75b2c2fb0db9e1504a9b12dab738ed89236414c51393d1030597004342")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-rdflib@5.0.0:", when="@5.0:5", type=("build", "run"))
-    depends_on("py-rdflib@6.0.2:", when="@6.0:", type=("build", "run"))
+    depends_on("py-rdflib@5.0.0:", type=("build", "run"), when="@5.0:5")
+    depends_on("py-rdflib@6.0.2:", type=("build", "run"), when="@6.0:")

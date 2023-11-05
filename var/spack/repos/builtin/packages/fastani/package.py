@@ -19,10 +19,10 @@ class Fastani(CMakePackage, AutotoolsPackage):
 
     build_system(conditional("cmake", when="@1.34:"), "autotools", default="cmake")
 
-    depends_on("autoconf", when="build_system=autotools", type="build")
-    depends_on("automake", when="build_system=autotools", type="build")
-    depends_on("cmake@3.20:", when="build_system=cmake", type="build")
-    depends_on("libtool", when="build_system=autotools", type="build")
-    depends_on("m4", when="build_system=autotools", type="build")
+    depends_on("autoconf", type="build", when="build_system=autotools")
+    depends_on("automake", type="build", when="build_system=autotools")
+    depends_on("cmake@3.20:", type="build", when="build_system=cmake")
+    depends_on("libtool", type="build", when="build_system=autotools")
+    depends_on("m4", type="build", when="build_system=autotools")
     depends_on("gsl", type=("build", "link"))
     depends_on("zlib-api", type=("build", "link"))

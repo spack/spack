@@ -162,7 +162,7 @@ class Qt(Package):
 
     # Build-only dependencies
     depends_on("pkgconfig", type="build")
-    depends_on("python", when="@5.7.0:", type="build")
+    depends_on("python", type="build", when="@5.7.0:")
 
     # Dependencies, then variant- and version-specific dependencies
     depends_on("icu4c")
@@ -173,7 +173,7 @@ class Qt(Package):
     depends_on("zlib-api")
     depends_on("freetype", when="+gui")
     depends_on("gtkplus", when="+gtk")
-    depends_on("sqlite+column_metadata", when="+sql", type=("build", "run"))
+    depends_on("sqlite+column_metadata", type=("build", "run"), when="+sql")
 
     depends_on("libpng@1.2.57", when="@3")
     depends_on("libsm", when="@3")

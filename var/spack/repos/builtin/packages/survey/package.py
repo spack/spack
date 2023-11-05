@@ -59,14 +59,14 @@ class Survey(CMakePackage):
     depends_on("cmake@3.12:", type="build")
 
     # for collectors
-    depends_on("libmonitor@2021.04.27+commrank", when="@:1.0.2", type=("build", "link", "run"))
-    depends_on("libmonitor@2021.11.08+commrank", when="@1.0.3:", type=("build", "link", "run"))
+    depends_on("libmonitor@2021.04.27+commrank", type=("build", "link", "run"), when="@:1.0.2")
+    depends_on("libmonitor@2021.11.08+commrank", type=("build", "link", "run"), when="@1.0.3:")
 
     depends_on("papi@5:", type=("build", "link", "run"))
-    depends_on("gotcha@master", when="@:1.0.7", type=("build", "link"))
-    depends_on("gotcha@1.0.4", when="@1.0.8:", type=("build", "link"))
-    depends_on("llvm-openmp@9.0.0", when="@:1.0.2", type=("build", "link"))
-    depends_on("llvm-openmp@12.0.1", when="@1.0.3:", type=("build", "link"))
+    depends_on("gotcha@master", type=("build", "link"), when="@:1.0.7")
+    depends_on("gotcha@1.0.4", type=("build", "link"), when="@1.0.8:")
+    depends_on("llvm-openmp@9.0.0", type=("build", "link"), when="@:1.0.2")
+    depends_on("llvm-openmp@12.0.1", type=("build", "link"), when="@1.0.3:")
 
     # MPI Installation
     depends_on("mpi", when="+mpi")
@@ -78,16 +78,16 @@ class Survey(CMakePackage):
     depends_on("py-psutil", type=("build", "run"))
     depends_on("py-sqlalchemy", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-seaborn", when="@1.0.3:", type=("build", "run"))
-    depends_on("py-jinja2", when="@1.0.3:", type=("build", "run"))
-    depends_on("py-matplotlib", when="@1.0.3:", type=("build", "run"))
-    depends_on("py-more-itertools", when="@1.0.4:", type=("build", "run"))
-    depends_on("py-versioneer", when="@1.0.5:", type=("build", "run"))
-    depends_on("py-filelock", when="@1.0.7:", type=("build", "run"))
-    depends_on("py-zipp", when="@1.0.7:", type=("build", "run"))
-    depends_on("py-humanize", when="@1.0.8:", type=("build", "run"))
-    depends_on("py-importlib-resources", when="@1.0.8:", type=("build", "run"))
-    depends_on("py-gitpython", when="@1.0.9:", type=("build", "run"))
+    depends_on("py-seaborn", type=("build", "run"), when="@1.0.3:")
+    depends_on("py-jinja2", type=("build", "run"), when="@1.0.3:")
+    depends_on("py-matplotlib", type=("build", "run"), when="@1.0.3:")
+    depends_on("py-more-itertools", type=("build", "run"), when="@1.0.4:")
+    depends_on("py-versioneer", type=("build", "run"), when="@1.0.5:")
+    depends_on("py-filelock", type=("build", "run"), when="@1.0.7:")
+    depends_on("py-zipp", type=("build", "run"), when="@1.0.7:")
+    depends_on("py-humanize", type=("build", "run"), when="@1.0.8:")
+    depends_on("py-importlib-resources", type=("build", "run"), when="@1.0.8:")
+    depends_on("py-gitpython", type=("build", "run"), when="@1.0.9:")
 
     extends("python")
 

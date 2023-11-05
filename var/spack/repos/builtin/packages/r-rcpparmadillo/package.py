@@ -57,5 +57,5 @@ class RRcpparmadillo(RPackage):
         "0.8.100.1.0", sha256="97ca929b34d84d99d7cadc3612b544632cdd0c43ed962933a3d47caa27854fa7"
     )
 
-    depends_on("r@3.3.0:", when="@0.8.500.0:", type=("build", "run"))
+    depends_on("r@3.3.0:", type=("build", "run"), when="@0.8.500.0:")
     depends_on("r-rcpp@0.11.0:", type=("build", "run"))

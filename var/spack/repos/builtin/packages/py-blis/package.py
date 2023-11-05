@@ -19,7 +19,7 @@ class PyBlis(PythonPackage):
     version("0.4.1", sha256="d69257d317e86f34a7f230a2fd1f021fd2a1b944137f40d8cdbb23bd334cd0c4")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython@0.25:", when="@0.7.9:", type="build")
+    depends_on("py-cython@0.25:", type="build", when="@0.7.9:")
     depends_on("py-numpy@1.15:", type=("build", "run"))
 
     def setup_build_environment(self, env):

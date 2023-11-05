@@ -70,19 +70,19 @@ class Sgpp(SConsPackage):
     depends_on("zlib-api", type=("link"))
     # Python dependencies
     extends("python", when="+python")
-    depends_on("py-pip", when="+python", type="build")
-    depends_on("py-wheel", when="+python", type="build")
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-wheel", type="build", when="+python")
     # TODO allow newer versions once distutils is removed from SGpp
     depends_on("py-setuptools@:59", type=("build"))
     # TODO allow newer versions once distutils is removed from SGpp
     depends_on("python@3.7:3.11", type=("build", "run"))
-    depends_on("swig@3:", when="+python", type=("build"))
-    depends_on("py-numpy@1.17:", when="+python", type=("build", "run"))
-    depends_on("py-scipy@1.3:", when="+python", type=("build", "run"))
+    depends_on("swig@3:", type=("build"), when="+python")
+    depends_on("py-numpy@1.17:", type=("build", "run"), when="+python")
+    depends_on("py-scipy@1.3:", type=("build", "run"), when="+python")
     # OpenCL dependency
-    depends_on("opencl@1.1:", when="+opencl", type=("build", "run"))
+    depends_on("opencl@1.1:", type=("build", "run"), when="+opencl")
     # MPI dependency
-    depends_on("mpi", when="+mpi", type=("build", "run"))
+    depends_on("mpi", type=("build", "run"), when="+mpi")
     # Testing requires boost test
     depends_on("boost+test", type=("test"))
 

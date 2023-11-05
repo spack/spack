@@ -112,14 +112,14 @@ class HsaRocrDev(CMakePackage):
     variant("image", default=True, description="build with or without image support")
 
     depends_on("cmake@3:", type="build")
-    depends_on("pkgconfig", when="@5.3.0:", type="build")
+    depends_on("pkgconfig", type="build", when="@5.3.0:")
 
     # Note, technically only necessary when='@3.7: +image', but added to all
     # to work around https://github.com/spack/spack/issues/23951
-    depends_on("xxd", when="+image", type="build")
+    depends_on("xxd", type="build", when="+image")
     depends_on("elf", type="link")
     depends_on("numactl")
-    depends_on("pkgconfig", when="@5.3.0:", type="build")
+    depends_on("pkgconfig", type="build", when="@5.3.0:")
 
     for ver in [
         "3.5.0",

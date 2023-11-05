@@ -28,5 +28,5 @@ class RCrul(RPackage):
     depends_on("r-r6@2.2.0:", type=("build", "run"))
     depends_on("r-urltools@1.6.0:", type=("build", "run"))
     depends_on("r-httpcode@0.2.0:", type=("build", "run"))
-    depends_on("r-jsonlite", when="@0.8.4:", type=("build", "run"))
+    depends_on("r-jsonlite", type=("build", "run"), when="@0.8.4:")
     depends_on("r-mime", type=("build", "run"))

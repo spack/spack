@@ -36,4 +36,4 @@ class ROrdinal(RPackage):
     depends_on("r-mass", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-numderiv", type=("build", "run"))
-    depends_on("r-nlme", when="@2022.11-16:", type=("build", "run"))
+    depends_on("r-nlme", type=("build", "run"), when="@2022.11-16:")

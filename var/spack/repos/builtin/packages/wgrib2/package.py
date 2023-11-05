@@ -85,7 +85,7 @@ class Wgrib2(MakefilePackage):
     conflicts("+netcdf3", when="+netcdf4")
     conflicts("+openmp", when="%apple-clang")
 
-    depends_on("wget", when="+netcdf4", type=("build"))
+    depends_on("wget", type=("build"), when="+netcdf4")
 
     variant_map = {
         "netcdf3": "USE_NETCDF3",

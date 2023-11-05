@@ -153,26 +153,26 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("cuda_arch=%d" % _arch, when="+cuda", msg="ParaView requires cuda_arch >= 20")
 
     depends_on("cmake@3.3:", type="build")
-    depends_on("cmake@3.21:", when="+rocm", type="build")
+    depends_on("cmake@3.21:", type="build", when="+rocm")
 
     extends("python", when="+python")
 
     # VTK < 8.2.1 can't handle Python 3.8
     # This affects Paraview <= 5.7 (VTK 8.2.0)
     # https://gitlab.kitware.com/vtk/vtk/-/issues/17670
-    depends_on("python@3:3.7", when="@:5.7 +python", type=("build", "run"))
-    depends_on("python@3:", when="@5.8:+python", type=("build", "run"))
+    depends_on("python@3:3.7", type=("build", "run"), when="@:5.7 +python")
+    depends_on("python@3:", type=("build", "run"), when="@5.8:+python")
 
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-mpi4py", type=("build", "run"), when="+python+mpi")
 
-    depends_on("py-matplotlib", when="+python", type="run")
-    depends_on("py-pandas@0.21:", when="+python", type="run")
+    depends_on("py-matplotlib", type="run", when="+python")
+    depends_on("py-pandas@0.21:", type="run", when="+python")
 
     # openPMD is implemented as a Python module and provides ADIOS2 and HDF5 backends
-    depends_on("openpmd-api@0.14.5: +python", when="+python +openpmd", type=("build", "run"))
-    depends_on("openpmd-api +adios2", when="+openpmd +adios2", type=("build", "run"))
-    depends_on("openpmd-api +hdf5", when="+openpmd +hdf5", type=("build", "run"))
+    depends_on("openpmd-api@0.14.5: +python", type=("build", "run"), when="+python +openpmd")
+    depends_on("openpmd-api +adios2", type=("build", "run"), when="+openpmd +adios2")
+    depends_on("openpmd-api +hdf5", type=("build", "run"), when="+openpmd +hdf5")
 
     depends_on("tbb", when="+tbb")
 

@@ -80,8 +80,8 @@ class Libgit2(CMakePackage):
     variant("mmap", default=True, description="Enable mmap support", when="@1.1.1:")
 
     # Build Dependencies
-    depends_on("cmake@2.8:", when="@:0.28", type="build")
-    depends_on("cmake@3.5:", when="@0.99:", type="build")
+    depends_on("cmake@2.8:", type="build", when="@:0.28")
+    depends_on("cmake@3.5:", type="build", when="@0.99:")
     depends_on("pkgconfig", type="build")
 
     # Runtime Dependencies

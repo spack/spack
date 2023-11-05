@@ -19,8 +19,8 @@ class PyPyjwt(PythonPackage):
     variant("crypto", default=False, description="Build with cryptography support")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@3.6:", when="@2.1.0:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@2.1.0:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-cryptography@1.4:", when="+crypto", type=("build", "run"))
-    depends_on("py-cryptography@3.3.1:3", when="@2.1:2.3+crypto", type=("build", "run"))
-    depends_on("py-cryptography@3.3.1:", when="@2.4:+crypto", type=("build", "run"))
+    depends_on("py-cryptography@1.4:", type=("build", "run"), when="+crypto")
+    depends_on("py-cryptography@3.3.1:3", type=("build", "run"), when="@2.1:2.3+crypto")
+    depends_on("py-cryptography@3.3.1:", type=("build", "run"), when="@2.4:+crypto")

@@ -25,9 +25,9 @@ class RLifecycle(RPackage):
     version("0.2.0", sha256="29746e8dee05d4e36f9c612e8c7a903a4f648a36b3b94c9776e518c38a412224")
 
     depends_on("r@3.2:", type=("build", "run"))
-    depends_on("r@3.3:", when="@1:", type=("build", "run"))
-    depends_on("r@3.4:", when="@1.0.3:", type=("build", "run"))
-    depends_on("r-cli@3.4.0:", when="@1.0.3:", type=("build", "run"))
+    depends_on("r@3.3:", type=("build", "run"), when="@1:")
+    depends_on("r@3.4:", type=("build", "run"), when="@1.0.3:")
+    depends_on("r-cli@3.4.0:", type=("build", "run"), when="@1.0.3:")
     depends_on("r-glue", type=("build", "run"))
     depends_on("r-rlang@0.4.0:", type=("build", "run"))
-    depends_on("r-rlang@1.0.6:", when="@1.0.3:", type=("build", "run"))
+    depends_on("r-rlang@1.0.6:", type=("build", "run"), when="@1.0.3:")

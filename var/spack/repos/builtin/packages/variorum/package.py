@@ -48,7 +48,7 @@ class Variorum(CMakePackage):
     #########################
     # Documentation related #
     #########################
-    depends_on("py-sphinx", when="+docs", type="build")
+    depends_on("py-sphinx", type="build", when="+docs")
 
     root_cmakelists_dir = "src"
 

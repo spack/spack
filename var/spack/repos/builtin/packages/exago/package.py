@@ -91,7 +91,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+python~mpi", msg="#16 - Python wrapper requires MPI enabled")
     # Dependencies
     depends_on("python@3.6:3.10", when="@1.3.0:1.5+python")
-    depends_on("py-pytest", when="@1.5.0:+python", type=("build", "run"))
+    depends_on("py-pytest", type=("build", "run"), when="@1.5.0:+python")
     depends_on("py-mpi4py", when="@1.3.0:+mpi+python")
     depends_on("pkgconfig", type="build")
     depends_on("mpi", when="+mpi")

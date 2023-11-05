@@ -19,4 +19,4 @@ class PyJsmin(PythonPackage):
     depends_on("py-setuptools", type="build")
     # They use use_2to3, so must be setuptools<58
     # https://github.com/tikitu/jsmin/blob/release-2.2.2/setup.py#L10
-    depends_on("py-setuptools@:57", when="@:2", type="build")
+    depends_on("py-setuptools@:57", type="build", when="@:2")

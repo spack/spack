@@ -18,4 +18,4 @@ class PyPastedeploy(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@41:", type="build")
 
-    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")

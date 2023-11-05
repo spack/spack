@@ -22,7 +22,7 @@ class Librsb(AutotoolsPackage):
     version("1.2.0.8", sha256="8bebd19a1866d80ade13eabfdd0f07ae7e8a485c0b975b5d15f531ac204d80cb")
 
     depends_on("zlib-api")
-    depends_on("googletest", when="+googletest", type="build")
+    depends_on("googletest", type="build", when="+googletest")
     conflicts("%apple-clang")
     # conflicts('%clang')
     conflicts("%gcc@11.0.0:11.2.99", msg="gcc-11.0:gcc-11.3 can break librsb on x86_64")

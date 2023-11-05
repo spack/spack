@@ -19,6 +19,6 @@ class PyPypdf2(PythonPackage):
     version("2.5.0", sha256="5802b1f40fa79be1b5ab9edc95a4e7f7e73399589db4f0e66ca831f449e7a2cd")
     version("1.26.0", sha256="e28f902f2f0a1603ea95ebe21dff311ef09be3d0f0ef29a3e44a932729564385")
 
-    depends_on("python@3.6:", when="@2.0.0:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@2.0.0:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-typing-extensions", when="@2.0.0:^python@:3.9", type=("build", "run"))
+    depends_on("py-typing-extensions", type=("build", "run"), when="@2.0.0:^python@:3.9")

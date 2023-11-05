@@ -24,6 +24,6 @@ class RGgplotify(RPackage):
     depends_on("r@3.4.0:", type=("build", "run"))
     depends_on("r-ggplot2", type=("build", "run"))
     depends_on("r-gridgraphics", type=("build", "run"))
-    depends_on("r-yulab-utils", when="@0.1.0:", type=("build", "run"))
+    depends_on("r-yulab-utils", type=("build", "run"), when="@0.1.0:")
 
-    depends_on("r-rvcheck", when="@:0.0.5", type=("build", "run"))
+    depends_on("r-rvcheck", type=("build", "run"), when="@:0.0.5")

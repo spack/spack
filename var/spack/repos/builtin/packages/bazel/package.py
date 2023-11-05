@@ -415,12 +415,12 @@ class Bazel(Package):
 
     # https://bazel.build/install/compile-source#bootstrap-unix-prereq
     depends_on("java", type=("build", "run"))
-    depends_on("java@11", when="@5.3:", type=("build", "run"))
-    depends_on("java@8,11", when="@3.3:5.2", type=("build", "run"))
-    depends_on("java@8", when="@0.6:3.2", type=("build", "run"))
-    depends_on("java@7:8", when="@:0.5", type=("build", "run"))
+    depends_on("java@11", type=("build", "run"), when="@5.3:")
+    depends_on("java@8,11", type=("build", "run"), when="@3.3:5.2")
+    depends_on("java@8", type=("build", "run"), when="@0.6:3.2")
+    depends_on("java@7:8", type=("build", "run"), when="@:0.5")
     depends_on("python+pythoncmd", type=("build", "run"))
-    depends_on("zip", when="platform=linux", type=("build", "run"))
+    depends_on("zip", type=("build", "run"), when="platform=linux")
 
     # Pass Spack environment variables to the build
     patch("bazelruleclassprovider-0.25.patch", when="@0.25:")

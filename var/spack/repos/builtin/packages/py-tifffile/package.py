@@ -20,12 +20,12 @@ class PyTifffile(PythonPackage):
     version("2020.10.1", sha256="799feeccc91965b69e1288c51a1d1118faec7f40b2eb89ad2979591b85324830")
     version("0.12.1", sha256="802367effe86b0d1e64cb5c2ed886771f677fa63260b945e51a27acccdc08fa1")
 
-    depends_on("python@3.9:", when="@2023.7.18:", type=("build", "run"))
-    depends_on("python@3.8:", when="@2022.2.2:", type=("build", "run"))
+    depends_on("python@3.9:", type=("build", "run"), when="@2023.7.18:")
+    depends_on("python@3.8:", type=("build", "run"), when="@2022.2.2:")
     depends_on("py-setuptools", type="build")
 
     # py-tifffile@2023.1.23: don't have a lower bound on py-numpy anymore
     # -> leave it in nonetheless
-    depends_on("py-numpy@1.19.2:", when="@2022.2.2:", type=("build", "run"))
-    depends_on("py-numpy@1.15.1:", when="@2020.10.1:", type=("build", "run"))
+    depends_on("py-numpy@1.19.2:", type=("build", "run"), when="@2022.2.2:")
+    depends_on("py-numpy@1.15.1:", type=("build", "run"), when="@2020.10.1:")
     depends_on("py-numpy@1.8.2:", type=("build", "run"))

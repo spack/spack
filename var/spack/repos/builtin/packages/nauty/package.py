@@ -69,10 +69,10 @@ class Nauty(AutotoolsPackage):
         for path, sha256 in url_and_sha256:
             patch(path, when=condition, level=1, sha256=sha256)
 
-    depends_on("m4", when="@2.6r7", type="build")
-    depends_on("autoconf", when="@2.6r7", type="build")
-    depends_on("automake", when="@2.6r7", type="build")
-    depends_on("libtool", when="@2.6r7", type="build")
+    depends_on("m4", type="build", when="@2.6r7")
+    depends_on("autoconf", type="build", when="@2.6r7")
+    depends_on("automake", type="build", when="@2.6r7")
+    depends_on("libtool", type="build", when="@2.6r7")
     depends_on("pkgconfig", type="build")
     depends_on("help2man", type="build")
     depends_on("zlib-api")

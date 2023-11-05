@@ -36,6 +36,6 @@ class PyLxml(PythonPackage):
 
     depends_on("libxml2@2.9.2:", type=("build", "link", "run"))
     depends_on("libxslt@1.1.27:", type=("build", "link", "run"))
-    depends_on("py-html5lib", when="+html5", type=("build", "run"))
-    depends_on("py-beautifulsoup4", when="+htmlsoup", type=("build", "run"))
-    depends_on("py-cssselect@0.7:", when="+cssselect", type=("build", "run"))
+    depends_on("py-html5lib", type=("build", "run"), when="+html5")
+    depends_on("py-beautifulsoup4", type=("build", "run"), when="+htmlsoup")
+    depends_on("py-cssselect@0.7:", type=("build", "run"), when="+cssselect")

@@ -18,6 +18,6 @@ class PyDomdfPythonTools(PythonPackage):
     depends_on("py-wheel@0.34.2:", type="build")
     depends_on("py-setuptools@40.6:", type="build")
     conflicts("^py-setuptools@61")
-    depends_on("py-importlib-metadata@3.6:", when="^python@:3.8", type=("build", "run"))
+    depends_on("py-importlib-metadata@3.6:", type=("build", "run"), when="^python@:3.8")
     depends_on("py-natsort@7.0.1:", type=("build", "run"))
     depends_on("py-typing-extensions@3.7.4.1:", type=("build", "run"))

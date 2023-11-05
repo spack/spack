@@ -122,11 +122,11 @@ class Margo(AutotoolsPackage):
     depends_on("pkgconfig", type=("build"))
     depends_on("argobots@1.0:")
     # "breadcrumb" support not available in mercury-1.0
-    depends_on("mercury@1.0.0:", when="@:0.5.1", type=("build", "link", "run"))
-    depends_on("mercury@2.0.0:", when="@0.5.2:", type=("build", "link", "run"))
+    depends_on("mercury@1.0.0:", type=("build", "link", "run"), when="@:0.5.1")
+    depends_on("mercury@2.0.0:", type=("build", "link", "run"), when="@0.5.2:")
 
     # dependencies for develop version
-    depends_on("mercury@master", when="@develop", type=("build", "link", "run"))
+    depends_on("mercury@master", type=("build", "link", "run"), when="@develop")
 
     def autoreconf(self, spec, prefix):
         sh = which("sh")

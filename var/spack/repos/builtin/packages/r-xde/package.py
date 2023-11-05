@@ -32,8 +32,8 @@ class RXde(RPackage):
     depends_on("r-genefilter", type=("build", "run"))
     depends_on("r-gtools", type=("build", "run"))
     depends_on("r-mvtnorm", type=("build", "run"))
-    depends_on("r-rcolorbrewer", when="@2.24.0:", type=("build", "run"))
-    depends_on("r-genemeta", when="@2.24.0:", type=("build", "run"))
-    depends_on("r-siggenes", when="@2.24.0:", type=("build", "run"))
+    depends_on("r-rcolorbrewer", type=("build", "run"), when="@2.24.0:")
+    depends_on("r-genemeta", type=("build", "run"), when="@2.24.0:")
+    depends_on("r-siggenes", type=("build", "run"), when="@2.24.0:")
 
-    depends_on("r-mergemaid", when="@:2.30.0", type=("build", "run"))
+    depends_on("r-mergemaid", type=("build", "run"), when="@:2.30.0")

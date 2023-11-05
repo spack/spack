@@ -21,4 +21,4 @@ class PyBandit(PythonPackage):
     depends_on("py-pyyaml@5.3.1:", type=("build", "run"))
     depends_on("py-six@1.10.0:", type=("build", "run"))
     depends_on("py-stevedore@1.20.0:", type=("build", "run"))
-    depends_on("py-colorama@0.3.9:", when="platform=win32", type=("build", "run"))
+    depends_on("py-colorama@0.3.9:", type=("build", "run"), when="platform=win32")

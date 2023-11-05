@@ -19,21 +19,21 @@ class PyNibabel(PythonPackage):
     version("3.2.1", sha256="4d2ff9426b740011a1c916b54fc25da9348282e727eaa2ea163f42e00f1fc29e")
     version("2.4.1", sha256="f165ff1cb4464902d6594eb2694e2cfb6f8b9fe233b856c976c3cff623ee0e17")
 
-    depends_on("python@3.8:", when="@5:", type=("build", "run"))
-    depends_on("python@3.7:", when="@4:", type=("build", "run"))
-    depends_on("py-hatchling", when="@5:", type="build")
-    depends_on("py-hatch-vcs", when="@5:", type="build")
+    depends_on("python@3.8:", type=("build", "run"), when="@5:")
+    depends_on("python@3.7:", type=("build", "run"), when="@4:")
+    depends_on("py-hatchling", type="build", when="@5:")
+    depends_on("py-hatch-vcs", type="build", when="@5:")
 
-    depends_on("py-numpy@1.19:", when="@5:", type=("build", "run"))
-    depends_on("py-numpy@1.17:", when="@4:", type=("build", "run"))
-    depends_on("py-numpy@1.14:", when="@3.2:", type=("build", "run"))
+    depends_on("py-numpy@1.19:", type=("build", "run"), when="@5:")
+    depends_on("py-numpy@1.17:", type=("build", "run"), when="@4:")
+    depends_on("py-numpy@1.14:", type=("build", "run"), when="@3.2:")
     depends_on("py-numpy@1.8:", type=("build", "run"))
-    depends_on("py-packaging@17:", when="@4:", type=("build", "run"))
-    depends_on("py-packaging@14.3:", when="@3.1:", type=("build", "run"))
-    depends_on("py-importlib-resources@1.3:", when="@5.1: ^python@:3.8", type=("build", "run"))
+    depends_on("py-packaging@17:", type=("build", "run"), when="@4:")
+    depends_on("py-packaging@14.3:", type=("build", "run"), when="@3.1:")
+    depends_on("py-importlib-resources@1.3:", type=("build", "run"), when="@5.1: ^python@:3.8")
 
     depends_on("py-pytest", type="test")
 
     # Historical dependencies
-    depends_on("py-setuptools@30.3.0:", when="@:5.0", type=("build", "run"))
-    depends_on("py-six@1.3:", when="@:2.5", type=("build", "run"))
+    depends_on("py-setuptools@30.3.0:", type=("build", "run"), when="@:5.0")
+    depends_on("py-six@1.3:", type=("build", "run"), when="@:2.5")

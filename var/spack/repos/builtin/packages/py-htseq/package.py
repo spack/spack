@@ -30,7 +30,7 @@ class PyHtseq(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pysam", type=("build", "run"))
     # variant dependencies
-    depends_on("py-matplotlib@1.4:", when="+qa", type=("build", "run"))
-    depends_on("py-scipy@1.5.0:", when="+mtx", type=("build", "run"))
-    depends_on("py-anndata", when="+h5ad", type=("build", "run"))
-    depends_on("py-loompy", when="+loom", type=("build", "run"))
+    depends_on("py-matplotlib@1.4:", type=("build", "run"), when="+qa")
+    depends_on("py-scipy@1.5.0:", type=("build", "run"), when="+mtx")
+    depends_on("py-anndata", type=("build", "run"), when="+h5ad")
+    depends_on("py-loompy", type=("build", "run"), when="+loom")

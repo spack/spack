@@ -27,11 +27,11 @@ class PyFlitCore(PythonPackage):
     version("2.3.0", sha256="a50bcd8bf5785e3a7d95434244f30ba693e794c5204ac1ee908fc07c4acdbf80")
 
     # pyproject.toml
-    depends_on("python@3.6:", when="@3.4:", type=("build", "run"))
-    depends_on("python@3.4:", when="@3:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@3.4:")
+    depends_on("python@3.4:", type=("build", "run"), when="@3:")
     depends_on("python@2.7,3.4:", type=("build", "run"))
 
     # flit_core/build_thyself.py
-    depends_on("py-tomli", when="@3.4:3.5", type="run")
-    depends_on("py-toml", when="@3.1:3.3", type="run")
-    depends_on("py-pytoml", when="@:3.0", type="run")
+    depends_on("py-tomli", type="run", when="@3.4:3.5")
+    depends_on("py-toml", type="run", when="@3.1:3.3")
+    depends_on("py-pytoml", type="run", when="@:3.0")

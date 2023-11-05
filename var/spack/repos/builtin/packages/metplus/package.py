@@ -37,13 +37,13 @@ class Metplus(Package):
     depends_on("met+python", type=("run"))
     depends_on("py-python-dateutil", type=("run"))
 
-    depends_on("py-cartopy", when="+makeplots", type=("run"))
-    depends_on("py-matplotlib", when="+cycloneplotter", type=("run"))
-    depends_on("py-cartopy", when="+cycloneplotter", type=("run"))
+    depends_on("py-cartopy", type=("run"), when="+makeplots")
+    depends_on("py-matplotlib", type=("run"), when="+cycloneplotter")
+    depends_on("py-cartopy", type=("run"), when="+cycloneplotter")
 
-    depends_on("r", when="+tcmpr_plotter", type=("run"))
-    depends_on("imagemagick", when="+series_analysis", type=("run"))
-    depends_on("imagemagick", when="+plotdataplane", type=("run"))
+    depends_on("r", type=("run"), when="+tcmpr_plotter")
+    depends_on("imagemagick", type=("run"), when="+series_analysis")
+    depends_on("imagemagick", type=("run"), when="+plotdataplane")
 
     def install(self, spec, prefix):
         if spec.satisfies("@4.0.0:"):

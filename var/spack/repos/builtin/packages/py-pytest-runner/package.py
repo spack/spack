@@ -18,12 +18,12 @@ class PyPytestRunner(PythonPackage):
     version("2.11.1", sha256="983a31eab45e375240e250161a556163bc8d250edaba97960909338c273a89b3")
 
     # requirements from pyproject.toml are marked with *
-    depends_on("python@3.6:", when="@5.3:", type=("build", "run"))
-    depends_on("python@3.7:", when="@6.0.0:", type=("build", "run"))
-    depends_on("py-setuptools@56:", when="@6.0.0:", type=("build", "run"))  # *
-    depends_on("py-setuptools@42:", when="@5.3:", type=("build", "run"))  # *
-    depends_on("py-setuptools@34.4:", when="@5:", type=("build", "run"))  # *
-    depends_on("py-setuptools@27.3:", when="@4.1:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@5.3:")
+    depends_on("python@3.7:", type=("build", "run"), when="@6.0.0:")
+    depends_on("py-setuptools@56:", type=("build", "run"), when="@6.0.0:")  # *
+    depends_on("py-setuptools@42:", type=("build", "run"), when="@5.3:")  # *
+    depends_on("py-setuptools@34.4:", type=("build", "run"), when="@5:")  # *
+    depends_on("py-setuptools@27.3:", type=("build", "run"), when="@4.1:")
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools-scm+toml@3.4.1:", when="@5.3:", type="build")  # *
+    depends_on("py-setuptools-scm+toml@3.4.1:", type="build", when="@5.3:")  # *
     depends_on("py-setuptools-scm@1.15:", type="build")

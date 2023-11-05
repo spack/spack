@@ -26,20 +26,20 @@ class PyScikitBuild(PythonPackage):
     version("0.11.1", sha256="da40dfd69b2456fad1349a894b90180b43712152b8a85d2a00f4ae2ce8ac9a5c")
     version("0.10.0", sha256="7342017cc82dd6178e3b19377389b8a8d1f8b429d9cdb315cfb1094e34a0f526")
 
-    depends_on("py-hatchling", when="@0.17:", type="build")
-    depends_on("py-hatch-fancy-pypi-readme", when="@0.17:", type="build")
-    depends_on("py-hatch-vcs", when="@0.17:", type="build")
-    depends_on("py-distro", when="@0.11:", type=("build", "run"))
+    depends_on("py-hatchling", type="build", when="@0.17:")
+    depends_on("py-hatch-fancy-pypi-readme", type="build", when="@0.17:")
+    depends_on("py-hatch-vcs", type="build", when="@0.17:")
+    depends_on("py-distro", type=("build", "run"), when="@0.11:")
     depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-setuptools@42:", when="@0.15:", type=("build", "run"))
+    depends_on("py-setuptools@42:", type=("build", "run"), when="@0.15:")
     depends_on("py-setuptools@28:", type=("build", "run"))
-    depends_on("py-tomli", when="@0.17: ^python@:3.10", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7:", when="@0.17: ^python@:3.7", type=("build", "run"))
-    depends_on("py-wheel@0.32:", when="@0.17:", type=("build", "run"))
+    depends_on("py-tomli", type=("build", "run"), when="@0.17: ^python@:3.10")
+    depends_on("py-typing-extensions@3.7:", type=("build", "run"), when="@0.17: ^python@:3.7")
+    depends_on("py-wheel@0.32:", type=("build", "run"), when="@0.17:")
     depends_on("py-wheel@0.29:", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("py-setuptools-scm+toml", when="@0.15", type="build")
+    depends_on("py-setuptools-scm+toml", type="build", when="@0.15")
 
     def url_for_version(self, version):
         url = (

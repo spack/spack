@@ -39,16 +39,16 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
 
     conflicts("+tests", when="~python", msg="+tests must be accompanied by +python")
 
-    depends_on("cmake@3.17:", when="build_system=cmake", type="build")
+    depends_on("cmake@3.17:", type="build", when="build_system=cmake")
 
     extends("python", when="+python")
-    depends_on("python@3.7:", when="+python", type=("build", "run"))
-    depends_on("py-pip", when="+python", type="build")
-    depends_on("py-wheel", when="+python", type="build")
-    depends_on("py-setuptools", when="+python", type="build")
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("swig@4", when="+python", type="build")
-    depends_on("py-scipy", when="+python+tests", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="+python")
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-wheel", type="build", when="+python")
+    depends_on("py-setuptools", type="build", when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("swig@4", type="build", when="+python")
+    depends_on("py-scipy", type=("build", "run"), when="+python+tests")
 
     depends_on("blas")
 

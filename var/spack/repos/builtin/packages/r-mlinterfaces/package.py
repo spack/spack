@@ -27,8 +27,8 @@ class RMlinterfaces(RPackage):
     version("1.56.0", commit="31fe6fb20d859fcb01d5552f42bca6bab16cc67f")
 
     depends_on("r@2.9:", type=("build", "run"))
-    depends_on("r@3.5:", when="@1.60.1:", type=("build", "run"))
-    depends_on("r-rcpp", when="@1.70.0:", type=("build", "run"))
+    depends_on("r@3.5:", type=("build", "run"), when="@1.60.1:")
+    depends_on("r-rcpp", type=("build", "run"), when="@1.70.0:")
     depends_on("r-biocgenerics@0.13.11:", type=("build", "run"))
     depends_on("r-biobase", type=("build", "run"))
     depends_on("r-annotate", type=("build", "run"))
@@ -47,7 +47,7 @@ class RMlinterfaces(RPackage):
     depends_on("r-hwriter", type=("build", "run"))
     depends_on("r-threejs@0.2.2:", type=("build", "run"))
     depends_on("r-mlbench", type=("build", "run"))
-    depends_on("r-magrittr", when="@1.74.0:", type=("build", "run"))
-    depends_on("r-summarizedexperiment", when="@1.78.0:", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"), when="@1.74.0:")
+    depends_on("r-summarizedexperiment", type=("build", "run"), when="@1.78.0:")
 
-    depends_on("r-rda", when="@:1.64.1", type=("build", "run"))
+    depends_on("r-rda", type=("build", "run"), when="@:1.64.1")

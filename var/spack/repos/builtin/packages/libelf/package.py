@@ -30,10 +30,10 @@ class Libelf(AutotoolsPackage):
     provides("elf@0")
 
     # configure: error: neither int nor long is 32-bit
-    depends_on("automake", when="platform=darwin", type="build")
-    depends_on("autoconf", when="platform=darwin", type="build")
-    depends_on("libtool", when="platform=darwin", type="build")
-    depends_on("m4", when="platform=darwin", type="build")
+    depends_on("automake", type="build", when="platform=darwin")
+    depends_on("autoconf", type="build", when="platform=darwin")
+    depends_on("libtool", type="build", when="platform=darwin")
+    depends_on("m4", type="build", when="platform=darwin")
 
     @property
     def force_autoreconf(self):

@@ -22,7 +22,7 @@ class PyPythonDateutil(PythonPackage):
     version("2.2", sha256="eec865307ebe7f329a6a9945c15453265a449cdaaf3710340828a1934d53e468")
     version("1.5", sha256="6f197348b46fb8cdf9f3fcfc2a7d5a97da95db3e2e8667cf657216274fe1b009")
 
-    depends_on("python@2.7:2.8,3.3:", when="@2.7.5:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.3:", type=("build", "run"), when="@2.7.5:")
     depends_on("py-setuptools@24.3:", type="build")
-    depends_on("py-setuptools-scm", when="@2.7.0:", type="build")
-    depends_on("py-six@1.5:", when="@2:", type=("build", "run"))
+    depends_on("py-setuptools-scm", type="build", when="@2.7.0:")
+    depends_on("py-six@1.5:", type=("build", "run"), when="@2:")

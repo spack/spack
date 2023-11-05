@@ -36,8 +36,8 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     variant("tests", default=False, description="Build tests")
     variant("loop_fuser", default=False, description="Enable loop fusion capability")
 
-    depends_on("blt@0.4.0:", when="@0.3.1:", type="build")
-    depends_on("blt@:0.3.6", when="@:0.3.0", type="build")
+    depends_on("blt@0.4.0:", type="build", when="@0.3.1:")
+    depends_on("blt@:0.3.6", type="build", when="@:0.3.0")
     conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("camp")

@@ -158,8 +158,8 @@ class Picard(Package):
 
     variant("parameters", default=False, description="get java parameters in the adapter script")
 
-    depends_on("java@17:", when="@3.0.0:", type="run")
-    depends_on("java@8:", when="@:2.27.5", type="run")
+    depends_on("java@17:", type="run", when="@3.0.0:")
+    depends_on("java@8:", type="run", when="@:2.27.5")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

@@ -20,4 +20,4 @@ class PyPytestDoctestplus(PythonPackage):
     depends_on("py-setuptools-scm", type="build")
 
     depends_on("py-pytest@4.6:", type=("build", "run"))
-    depends_on("py-packaging@17:", when="@0.10:", type=("build", "run"))
+    depends_on("py-packaging@17:", type=("build", "run"), when="@0.10:")

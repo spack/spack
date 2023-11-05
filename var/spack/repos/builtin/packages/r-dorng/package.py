@@ -27,7 +27,7 @@ class RDorng(RPackage):
     depends_on("r@3.0.0:", type=("build", "run"))
     depends_on("r-foreach", type=("build", "run"))
     depends_on("r-rngtools@1.3:", type=("build", "run"))
-    depends_on("r-rngtools@1.5:", when="@1.8.2:", type=("build", "run"))
+    depends_on("r-rngtools@1.5:", type=("build", "run"), when="@1.8.2:")
     depends_on("r-iterators", type=("build", "run"))
 
-    depends_on("r-pkgmaker@0.20:", when="@:1.7.1", type=("build", "run"))
+    depends_on("r-pkgmaker@0.20:", type=("build", "run"), when="@:1.7.1")

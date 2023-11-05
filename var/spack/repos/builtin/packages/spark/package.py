@@ -19,7 +19,7 @@ class Spark(Package):
     variant("hadoop", default=False, description="Build with Hadoop")
 
     depends_on("java", type=("build", "run"))
-    depends_on("hadoop", when="+hadoop", type=("build", "run"))
+    depends_on("hadoop", type=("build", "run"), when="+hadoop")
 
     version("3.1.1", sha256="2d16f527016993e69a7c801233e661a170e3099ae2d9b950f7457729d63062f4")
     version("3.0.2", sha256="1a904f9bfa44a1218cb440c99800dd2ae729249a73c63b3bb10e431ed5b58406")

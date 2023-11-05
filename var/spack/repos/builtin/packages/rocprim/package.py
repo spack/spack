@@ -109,9 +109,9 @@ class Rocprim(CMakePackage):
         sticky=True,
     )
 
-    depends_on("cmake@3.10.2:", when="@4.2.0:", type="build")
+    depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
-    depends_on("numactl", when="@3.7.0:", type="link")
+    depends_on("numactl", type="link", when="@3.7.0:")
     depends_on("googletest@1.10.0:", type="test")
 
     for ver in [

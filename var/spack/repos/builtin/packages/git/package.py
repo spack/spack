@@ -210,8 +210,8 @@ class Git(AutotoolsPackage):
     depends_on("perl", when="+perl")
     depends_on("zlib-api")
     depends_on("openssh", type="run")
-    depends_on("perl-alien-svn", when="+svn", type="run")
-    depends_on("tk", when="+tcltk", type=("build", "link"))
+    depends_on("perl-alien-svn", type="run", when="+svn")
+    depends_on("tk", type=("build", "link"), when="+tcltk")
 
     conflicts("+svn", when="~perl")
 

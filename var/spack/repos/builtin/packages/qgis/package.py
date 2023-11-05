@@ -104,7 +104,7 @@ class Qgis(CMakePackage):
     depends_on("exiv2")
     depends_on("expat@1.95:")
     depends_on("gdal@2.1.0: +python", type=("build", "link", "run"))
-    depends_on("gdal@3.2.0: +python", when="@3.28:", type=("build", "link", "run"))
+    depends_on("gdal@3.2.0: +python", type=("build", "link", "run"), when="@3.28:")
     depends_on("geos@3.4.0:")
     depends_on("libspatialindex")
     depends_on("libspatialite@4.2.0:")
@@ -118,11 +118,11 @@ class Qgis(CMakePackage):
     depends_on("py-pyqt4", when="@2")
     depends_on("py-pyqt5@5.3:", when="@3")
     depends_on("py-sip", type="build")
-    depends_on("py-pyqt-builder", when="^py-sip@5:", type="build")
+    depends_on("py-pyqt-builder", type="build", when="^py-sip@5:")
     depends_on("py-requests", type=("build", "run"))  # TODO: is build dependency necessary?
-    depends_on("python@3.0.0:", when="@3", type=("build", "run"))
-    depends_on("python@3.6:", when="@3.18:", type=("build", "run"))
-    depends_on("python@3.7:", when="@3.20:", type=("build", "run"))
+    depends_on("python@3.0.0:", type=("build", "run"), when="@3")
+    depends_on("python@3.6:", type=("build", "run"), when="@3.18:")
+    depends_on("python@3.7:", type=("build", "run"), when="@3.20:")
     depends_on("qca@2.2.1:")
     depends_on("qjson")
     depends_on("qscintilla +python")
@@ -147,7 +147,7 @@ class Qgis(CMakePackage):
     depends_on("postgresql@8:", when="+postgresql")  # for PostGIS support
     depends_on("gsl", when="+georeferencer")  # for georeferencer
     # grass@7.8.1 is the first version that supports proj@6
-    depends_on("grass@7:", when="+grass7", type=("build", "link", "run"))  # for georeferencer
+    depends_on("grass@7:", type=("build", "link", "run"), when="+grass7")  # for georeferencer
 
     # The below dependencies are shown in cmake config
     # hdf5 and netcdf-c together run afoul of a concretizer bug.
@@ -157,8 +157,8 @@ class Qgis(CMakePackage):
 
     # build
     depends_on("cmake@3.0.0:", type="build")
-    depends_on("cmake@3.10.0:", when="@3.16:", type="build")
-    depends_on("cmake@3.12.0:", when="@3.28:", type="build")
+    depends_on("cmake@3.10.0:", type="build", when="@3.16:")
+    depends_on("cmake@3.12.0:", type="build", when="@3.28:")
     depends_on("flex@2.5.6:", type="build")
     depends_on("bison@2.4:", type="build")
     depends_on("pkgconfig", type="build")

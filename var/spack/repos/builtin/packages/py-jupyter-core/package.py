@@ -33,13 +33,13 @@ class PyJupyterCore(PythonPackage):
     version("4.0.1", sha256="7c165f7de7a063596f8be1bcfc86e9ba6897e38baf24e8510514690963600122")
     version("4.0.0", sha256="9025208cdfc40718c7e3ab62b5e17aacf68e3fc66e34ff21fe032d553620122a")
 
-    depends_on("python@3.8:", when="@5:", type=("build", "run"))
-    depends_on("py-hatchling@1.4:", when="@4.11.1:", type="build")
+    depends_on("python@3.8:", type=("build", "run"), when="@5:")
+    depends_on("py-hatchling@1.4:", type="build", when="@4.11.1:")
 
-    depends_on("py-platformdirs@2.5:", when="@5.1:", type=("build", "run"))
-    depends_on("py-traitlets@5.3:", when="@5.1:", type=("build", "run"))
+    depends_on("py-platformdirs@2.5:", type=("build", "run"), when="@5.1:")
+    depends_on("py-traitlets@5.3:", type=("build", "run"), when="@5.1:")
     depends_on("py-traitlets", type=("build", "run"))
     # additional pywin32>=300 dependency for windows
 
     # Historical dependencies
-    depends_on("py-setuptools", when="@:4.9.2", type=("build", "run"))
+    depends_on("py-setuptools", type=("build", "run"), when="@:4.9.2")

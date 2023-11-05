@@ -22,14 +22,14 @@ class PyRuamelYaml(PythonPackage):
     version("0.11.7", sha256="c89363e16c9eafb9354e55d757723efeff8682d05e56b0881450002ffb00a344")
 
     # from `supported` in __init__.py
-    depends_on("python@3.7:", when="@0.17.22:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@0.17.22:")
     # from setup.py
-    depends_on("py-setuptools@28.7:", when="@0.17:", type=("build"))
+    depends_on("py-setuptools@28.7:", type=("build"), when="@0.17:")
     depends_on("py-setuptools", type="build")
     # from __init__.py
-    depends_on("py-ruamel-yaml-clib@0.2.7:", when="@0.17.23: ^python@:3.11", type=("build", "run"))
+    depends_on("py-ruamel-yaml-clib@0.2.7:", type=("build", "run"), when="@0.17.23: ^python@:3.11")
     depends_on(
-        "py-ruamel-yaml-clib@0.1.2:", when="@0.16:0.17.22 ^python@:3.8", type=("build", "run")
+        "py-ruamel-yaml-clib@0.1.2:", type=("build", "run"), when="@0.16:0.17.22 ^python@:3.8"
     )
 
     @run_after("install")

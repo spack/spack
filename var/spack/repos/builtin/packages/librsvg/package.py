@@ -24,12 +24,12 @@ class Librsvg(AutotoolsPackage):
     depends_on("gobject-introspection", type="build")
     depends_on("pkgconfig", type="build")
     # rust minimal version from NEWS file
-    depends_on("rust@1.65:", when="@2.56.1:", type="build")
+    depends_on("rust@1.65:", type="build", when="@2.56.1:")
     # upper bound because "Unaligned references to packed fields are a hard
     # error" starting from 1.69
-    depends_on("rust@1.40:1.68", when="@2.50:2.51", type="build")
-    depends_on("rust", when="@2.41:", type="build")
-    depends_on("gtk-doc", when="+doc", type="build")
+    depends_on("rust@1.40:1.68", type="build", when="@2.50:2.51")
+    depends_on("rust", type="build", when="@2.41:")
+    depends_on("gtk-doc", type="build", when="+doc")
 
     # requirements according to `configure` file
     depends_on("cairo@1.16:+gobject", when="@2.50:")

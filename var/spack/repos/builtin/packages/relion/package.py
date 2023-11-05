@@ -90,7 +90,7 @@ class Relion(CMakePackage, CudaPackage):
     depends_on("tbb", when="+altcpu")
     depends_on("mkl", when="+mklfft")
     depends_on("ctffind", type="run")
-    depends_on("motioncor2", when="+external_motioncor2", type="run")
+    depends_on("motioncor2", type="run", when="+external_motioncor2")
 
     # TODO: more externals to add
     # Spack packages needed

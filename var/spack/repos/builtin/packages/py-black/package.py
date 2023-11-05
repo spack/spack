@@ -34,9 +34,9 @@ class PyBlack(PythonPackage):
     variant("d", default=False, description="enable blackd HTTP server")
     variant("jupyter", default=False, description="enable Jupyter support")
 
-    depends_on("py-hatchling@1.8:", when="@22.10:", type="build")
-    depends_on("py-hatch-vcs", when="@22.10:", type="build")
-    depends_on("py-hatch-fancy-pypi-readme", when="@22.10:", type="build")
+    depends_on("py-hatchling@1.8:", type="build", when="@22.10:")
+    depends_on("py-hatch-vcs", type="build", when="@22.10:")
+    depends_on("py-hatch-fancy-pypi-readme", type="build", when="@22.10:")
 
     with default_args(type=("build", "run")):
         depends_on("python@3.8:", when="@23.7:")
@@ -57,16 +57,16 @@ class PyBlack(PythonPackage):
     depends_on("py-tokenize-rt@3.2:", when="+jupyter")
 
     # Historical dependencies
-    depends_on("py-setuptools@45:", when="@:22.8", type=("build", "run"))
-    depends_on("py-setuptools-scm@6.3.1:+toml", when="@:22.8", type="build")
-    depends_on("py-typed-ast@1.4.2:", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-setuptools@45:", type=("build", "run"), when="@:22.8")
+    depends_on("py-setuptools-scm@6.3.1:+toml", type="build", when="@:22.8")
+    depends_on("py-typed-ast@1.4.2:", type=("build", "run"), when="^python@:3.7")
 
     # Needed because this package is used to bootstrap Spack (Spack supports Python 3.6+)
-    depends_on("py-dataclasses@0.6:", when="^python@:3.6", type=("build", "run"))
+    depends_on("py-dataclasses@0.6:", type=("build", "run"), when="^python@:3.6")
 
     # see: https://github.com/psf/black/issues/2964
     # note that pip doesn't know this constraint.
-    depends_on("py-click@:8.0", when="@:22.2", type=("build", "run"))
+    depends_on("py-click@:8.0", type=("build", "run"), when="@:22.2")
 
     @property
     def import_modules(self):

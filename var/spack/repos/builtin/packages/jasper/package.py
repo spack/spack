@@ -29,8 +29,8 @@ class Jasper(Package):
         values=("Debug", "Release"),
     )
 
-    depends_on("cmake@2.8.11:", when="@2:", type="build")
-    depends_on("cmake@3.12:", when="@3:", type="build")
+    depends_on("cmake@2.8.11:", type="build", when="@2:")
+    depends_on("cmake@3.12:", type="build", when="@3:")
     depends_on("jpeg", when="+jpeg")
     depends_on("gl", when="+opengl")
 

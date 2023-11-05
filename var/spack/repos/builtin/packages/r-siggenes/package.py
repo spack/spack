@@ -29,4 +29,4 @@ class RSiggenes(RPackage):
 
     depends_on("r-biobase", type=("build", "run"))
     depends_on("r-multtest", type=("build", "run"))
-    depends_on("r-scrime@1.2.5:", when="@1.58.0:", type=("build", "run"))
+    depends_on("r-scrime@1.2.5:", type=("build", "run"), when="@1.58.0:")

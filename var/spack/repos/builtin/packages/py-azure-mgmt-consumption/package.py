@@ -17,7 +17,7 @@ class PyAzureMgmtConsumption(PythonPackage):
     version("2.0.0", sha256="9a85a89f30f224d261749be20b4616a0eb8948586f7f0f20573b8ea32f265189")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", when="@3:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", when="@3:", type=("build", "run"))
+    depends_on("py-msrest@0.5.0:", type=("build", "run"), when="@3:")
+    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"), when="@3:")
     depends_on("py-msrestazure@0.4.20:1", type=("build", "run"))
     depends_on("py-azure-common@1.1:1", type=("build", "run"))

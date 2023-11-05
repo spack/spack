@@ -18,8 +18,8 @@ class PyColorama(PythonPackage):
     version("0.4.1", sha256="05eed71e2e327246ad6b38c540c4a3117230b19679b875190486ddd2d721422d")
     version("0.3.7", sha256="e043c8d32527607223652021ff648fbb394d5e19cba9f1a698670b338c9d782b")
 
-    depends_on("python@2.7:2,3.7:", when="@0.4.6:", type=("build", "run"))
-    depends_on("python@2.7:2,3.5:", when="@0.4.2:", type=("build", "run"))
+    depends_on("python@2.7:2,3.7:", type=("build", "run"), when="@0.4.6:")
+    depends_on("python@2.7:2,3.5:", type=("build", "run"), when="@0.4.2:")
     depends_on("python@2.7:2,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", when="@:0.4.5", type="build")
-    depends_on("py-hatchling@0.25.1:", when="@0.4.6:", type="build")
+    depends_on("py-setuptools", type="build", when="@:0.4.5")
+    depends_on("py-hatchling@0.25.1:", type="build", when="@0.4.6:")

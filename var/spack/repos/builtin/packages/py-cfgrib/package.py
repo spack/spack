@@ -21,13 +21,13 @@ class PyCfgrib(PythonPackage):
 
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", when="@0.9.8.5", type="build")
+    depends_on("py-pytest-runner", type="build", when="@0.9.8.5")
     depends_on("py-attrs@19.2:", type=("build", "run"))
-    depends_on("py-cffi", when="@0.9.8.5", type=("build", "run"))
+    depends_on("py-cffi", type=("build", "run"), when="@0.9.8.5")
     depends_on("py-click", type=("build", "run"))
     depends_on("py-eccodes", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-xarray@0.12.0:", when="+xarray", type=("build", "run"))
+    depends_on("py-xarray@0.12.0:", type=("build", "run"), when="+xarray")
 
     @property
     def import_modules(self):

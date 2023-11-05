@@ -25,5 +25,5 @@ class RSpam(RPackage):
     version("2.3-0.2", sha256="848fa95c0a71ac82af6344539af7b1c33563c687f06ead42851a68b621fff533")
 
     depends_on("r@3.1:", type=("build", "run"))
-    depends_on("r@3.5:", when="@2.9-1:", type=("build", "run"))
+    depends_on("r@3.5:", type=("build", "run"), when="@2.9-1:")
     depends_on("r-dotcall64", type=("build", "run"))

@@ -22,5 +22,5 @@ class PyPylibmagic(PythonPackage):
     depends_on("cmake", type="build")
     depends_on("ninja", type="build")
 
-    depends_on("py-importlib-resources", when="^python@:3.8", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7:", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-resources", type=("build", "run"), when="^python@:3.8")
+    depends_on("py-typing-extensions@3.7:", type=("build", "run"), when="^python@:3.7")

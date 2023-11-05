@@ -27,13 +27,13 @@ class PyScikitOptimize(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-numpy@1.13.3:", when="@0.9:", type=("build", "run"))
+    depends_on("py-numpy@1.13.3:", type=("build", "run"), when="@0.9:")
     depends_on("py-scipy@0.14:", type=("build", "run"))
-    depends_on("py-scipy@0.19.1:", when="@0.9:", type=("build", "run"))
+    depends_on("py-scipy@0.19.1:", type=("build", "run"), when="@0.9:")
     depends_on("py-scikit-learn@0.19.1:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.20:", when="@0.9:", type=("build", "run"))
-    depends_on("py-pyaml@16.9:", when="@0.9:", type=("build", "run"))
-    depends_on("py-joblib@0.11:", when="@0.9:", type=("build", "run"))
+    depends_on("py-scikit-learn@0.20:", type=("build", "run"), when="@0.9:")
+    depends_on("py-pyaml@16.9:", type=("build", "run"), when="@0.9:")
+    depends_on("py-joblib@0.11:", type=("build", "run"), when="@0.9:")
 
     depends_on("py-matplotlib", when="+plots")
     depends_on("py-matplotlib@2:", when="@0.9:+plots")

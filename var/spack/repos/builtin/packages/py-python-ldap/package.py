@@ -24,10 +24,10 @@ class PyPythonLdap(PythonPackage):
     depends_on("openldap+client_only @:2.4", type=("build", "link", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@3.6:", when="@3.4.2:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@3.4.2:")
     depends_on("py-pyasn1@0.3.7:", type=("build", "run"))
     depends_on("py-pyasn1-modules@0.1.5:", type=("build", "run"))
-    depends_on("cyrus-sasl", when="^openldap+sasl", type="link")
+    depends_on("cyrus-sasl", type="link", when="^openldap+sasl")
 
     def patch(self):
         if self.spec.satisfies("^openldap~sasl"):

@@ -25,7 +25,7 @@ class PyMccabe(PythonPackage):
     version("0.2.1", sha256="5a2a170e47de5593a6abfae1e9542bd2c3924ac62bbe4e6ed96c953c0352243a")
     version("0.2", sha256="e0210235022d05d11b3c4c86e2cb65d5b307ab46ac88882d20ff998fd2ef0ad4")
 
-    depends_on("python@3.6:", when="@0.7:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"), when="@0.7:")
 
     depends_on("py-setuptools", type="build")
 

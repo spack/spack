@@ -24,7 +24,7 @@ class RLwgeom(RPackage):
     depends_on("r-rcpp", type=("build", "run"))
     depends_on("r-units", type=("build", "run"))
     depends_on("r-sf@0.9-3:", type=("build", "run"))
-    depends_on("r-sf@0.6-0:", when="@0.2-9:", type=("build", "run"))
+    depends_on("r-sf@0.6-0:", type=("build", "run"), when="@0.2-9:")
     depends_on("geos@3.5.0:")
     depends_on("proj@4.8.0:6.999")
     depends_on("sqlite", when="@0.2-8:")

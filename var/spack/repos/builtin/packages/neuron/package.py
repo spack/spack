@@ -43,7 +43,7 @@ class Neuron(CMakePackage):
 
     depends_on("bison", type="build")
     depends_on("flex", type="build")
-    depends_on("py-cython", when="+rx3d", type="build")
+    depends_on("py-cython", type="build", when="+rx3d")
 
     depends_on("gettext")
     depends_on("mpi", when="+mpi")

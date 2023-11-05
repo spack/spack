@@ -35,20 +35,20 @@ class PyTensorflowProbability(Package):
     depends_on("py-setuptools", type="build")
 
     # required_packages.py
-    depends_on("py-absl-py", when="@0.18:", type=("build", "run"))
+    depends_on("py-absl-py", type=("build", "run"), when="@0.18:")
     depends_on("py-six@1.10:", type=("build", "run"))
     depends_on("py-numpy@1.13.3:", type=("build", "run"))
     depends_on("py-decorator", type=("build", "run"))
-    depends_on("py-cloudpickle@1.3:", when="@0.12:", type=("build", "run"))
-    depends_on("py-cloudpickle@1.1.1", when="@0.8", type=("build", "run"))
-    depends_on("py-gast@0.3.2:", when="@0.12:", type=("build", "run"))
-    depends_on("py-gast@0.2", when="@0.8", type=("build", "run"))
-    depends_on("py-dm-tree", when="@0.12:", type=("build", "run"))
+    depends_on("py-cloudpickle@1.3:", type=("build", "run"), when="@0.12:")
+    depends_on("py-cloudpickle@1.1.1", type=("build", "run"), when="@0.8")
+    depends_on("py-gast@0.3.2:", type=("build", "run"), when="@0.12:")
+    depends_on("py-gast@0.2", type=("build", "run"), when="@0.8")
+    depends_on("py-dm-tree", type=("build", "run"), when="@0.12:")
 
     # tensorflow_probability/python/__init__.py
-    depends_on("py-tensorflow@2.10:", when="@0.18:", type=("build", "run"))
-    depends_on("py-tensorflow@2.4:", when="@0.12:", type=("build", "run"))
-    depends_on("py-tensorflow@1.14:", when="@0.8:", type=("build", "run"))
+    depends_on("py-tensorflow@2.10:", type=("build", "run"), when="@0.18:")
+    depends_on("py-tensorflow@2.4:", type=("build", "run"), when="@0.12:")
+    depends_on("py-tensorflow@1.14:", type=("build", "run"), when="@0.8:")
 
     depends_on("bazel@3.2:", type="build")
 

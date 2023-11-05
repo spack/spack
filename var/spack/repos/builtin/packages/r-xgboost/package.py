@@ -31,16 +31,16 @@ class RXgboost(RPackage):
     version("0.4-4", sha256="b955fc3352fcdc4894178c82fd62fbaf5e099c9d794f1e9daa2dd7b3494b61ff")
 
     depends_on("r@2.10:", type=("build", "run"))
-    depends_on("r@2.15.1:", when="@0.6-0:", type=("build", "run"))
-    depends_on("r@3.3.0:", when="@0.6-3:", type=("build", "run"))
+    depends_on("r@2.15.1:", type=("build", "run"), when="@0.6-0:")
+    depends_on("r@3.3.0:", type=("build", "run"), when="@0.6-3:")
     depends_on("r-matrix@1.1-0:", type=("build", "run"))
     depends_on("r-data-table@1.9.6:", type=("build", "run"))
-    depends_on("r-jsonlite@1.0:", when="@1.5.0.2:", type=("build", "run"))
+    depends_on("r-jsonlite@1.0:", type=("build", "run"), when="@1.5.0.2:")
     depends_on("gmake", type="build")
 
     # This is not listed as required, but installation fails without it
     # ERROR: dependency 'stringr' is not available for package 'xgboost'
     depends_on("r-stringr", type=("build", "run"))
 
-    depends_on("r-stringi@0.5.2:", when="@:0.90.0.2", type=("build", "run"))
-    depends_on("r-magrittr@1.5:", when="@:1.3.2.1", type=("build", "run"))
+    depends_on("r-stringi@0.5.2:", type=("build", "run"), when="@:0.90.0.2")
+    depends_on("r-magrittr@1.5:", type=("build", "run"), when="@:1.3.2.1")

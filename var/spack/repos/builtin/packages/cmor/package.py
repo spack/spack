@@ -38,9 +38,9 @@ class Cmor(AutotoolsPackage):
     depends_on("udunits")
 
     extends("python", when="+python")
-    depends_on("py-pip", when="+python", type="build")
-    depends_on("py-wheel", when="+python", type="build")
-    depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-wheel", type="build", when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
 
     @run_before("configure")
     def validate(self):

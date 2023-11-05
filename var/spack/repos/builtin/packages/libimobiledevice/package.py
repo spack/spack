@@ -17,9 +17,9 @@ class Libimobiledevice(AutotoolsPackage):
     version("master", branch="master")
     version("1.2.0", sha256="786b0de0875053bf61b5531a86ae8119e320edab724fc62fe2150cc931f11037")
 
-    depends_on("autoconf", when="@master", type="build")
-    depends_on("automake", when="@master", type="build")
-    depends_on("libtool", when="@master", type="build")
+    depends_on("autoconf", type="build", when="@master")
+    depends_on("automake", type="build", when="@master")
+    depends_on("libtool", type="build", when="@master")
     depends_on("pkgconfig", type="build")
     depends_on("libplist")
     depends_on("libtasn1")

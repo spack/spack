@@ -167,14 +167,14 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("device_alloc", default=True, description="Build Umpire Device Allocator")
 
     depends_on("cmake@3.8:", type="build")
-    depends_on("cmake@3.9:", when="+cuda", type="build")
-    depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
+    depends_on("cmake@3.9:", type="build", when="+cuda")
+    depends_on("cmake@3.14:", type="build", when="@2022.03.0:")
 
-    depends_on("blt@0.5.2:", when="@2022.10.0:", type="build")
-    depends_on("blt@0.5.0:", when="@2022.03.0:", type="build")
-    depends_on("blt@0.4.1", when="@6.0.0", type="build")
-    depends_on("blt@0.4.0:", when="@4.1.3:5.0.1", type="build")
-    depends_on("blt@0.3.6:", when="@:4.1.2", type="build")
+    depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
+    depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
+    depends_on("blt@0.4.1", type="build", when="@6.0.0")
+    depends_on("blt@0.4.0:", type="build", when="@4.1.3:5.0.1")
+    depends_on("blt@0.3.6:", type="build", when="@:4.1.2")
     conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("camp", when="@5.0.0:")

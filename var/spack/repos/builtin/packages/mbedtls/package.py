@@ -135,7 +135,7 @@ class Mbedtls(MakefilePackage):
     )
 
     depends_on("perl", type="test")
-    depends_on("python@3:", when="@3:", type="test")
+    depends_on("python@3:", type="test", when="@3:")
 
     # See https://github.com/Mbed-TLS/mbedtls/issues/4917
     # Only 2.16.12, 2.28.0 and 3.1.0 support clang 12.

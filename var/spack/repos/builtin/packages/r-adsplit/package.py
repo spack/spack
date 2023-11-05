@@ -32,7 +32,7 @@ class RAdsplit(RPackage):
     depends_on("r-biobase@1.5.12:", type=("build", "run"))
     depends_on("r-cluster@1.9.1:", type=("build", "run"))
     depends_on("r-go-db@1.8.1:", type=("build", "run"))
-    depends_on("r-keggrest@1.30.1:", when="@1.62.0:", type=("build", "run"))
+    depends_on("r-keggrest@1.30.1:", type=("build", "run"), when="@1.62.0:")
     depends_on("r-multtest@1.6.0:", type=("build", "run"))
 
-    depends_on("r-kegg-db@1.8.1:", when="@:1.60.0", type=("build", "run"))
+    depends_on("r-kegg-db@1.8.1:", type=("build", "run"), when="@:1.60.0")

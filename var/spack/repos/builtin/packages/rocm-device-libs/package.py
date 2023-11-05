@@ -102,11 +102,11 @@ class RocmDeviceLibs(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("cmake@3.13.4:", when="@3.9.0:", type="build")
+    depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
     depends_on("cmake@3.4.3:", type="build")
 
-    depends_on("zlib-api", when="@3.9.0:", type="link")
-    depends_on("texinfo", when="@3.9.0:", type="link")
+    depends_on("zlib-api", type="link", when="@3.9.0:")
+    depends_on("texinfo", type="link", when="@3.9.0:")
 
     depends_on("rocm-cmake@3.5.0:", type="build")
 

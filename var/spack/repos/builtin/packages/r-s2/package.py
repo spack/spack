@@ -26,6 +26,6 @@ class RS2(RPackage):
     depends_on("r@3.0.0:", type=("build", "run"))
     depends_on("r-rcpp", type=("build", "run"))
     depends_on("r-wk", type=("build", "run"))
-    depends_on("r-wk@0.5.0:", when="@1.0.7:", type=("build", "run"))
-    depends_on("r-wk@0.6.0:", when="@1.1.0:", type=("build", "run"))
+    depends_on("r-wk@0.5.0:", type=("build", "run"), when="@1.0.7:")
+    depends_on("r-wk@0.6.0:", type=("build", "run"), when="@1.1.0:")
     depends_on("openssl@1.0.1:", when="@1.0.7:")

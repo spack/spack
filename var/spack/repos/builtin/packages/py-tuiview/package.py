@@ -32,8 +32,8 @@ class PyTuiview(PythonPackage):
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
-    depends_on("py-pyqt4", when="@:1.1", type=("build", "run"))
-    depends_on("py-pyqt5", when="@1.2.0:", type=("build", "run"))
+    depends_on("py-pyqt4", type=("build", "run"), when="@:1.1")
+    depends_on("py-pyqt5", type=("build", "run"), when="@1.2.0:")
     depends_on("py-numpy", type=("build", "link", "run"))
-    depends_on("gdal+geos+python", when="@1.2.0:", type=("build", "run"))
+    depends_on("gdal+geos+python", type=("build", "run"), when="@1.2.0:")
     depends_on("gdal@1.11.0:+python", when="@:1.1")

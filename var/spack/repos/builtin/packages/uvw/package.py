@@ -22,7 +22,7 @@ class Uvw(CMakePackage):
     variant("docs", default=False, description="Builds and install the documentation")
 
     depends_on("libuv", type="link")
-    depends_on("doxygen", when="+docs", type="build")
+    depends_on("doxygen", type="build", when="+docs")
 
     matching_libuv_version = {"1.14.0": "1.26", "1.13.0": "1.25", "1.12.0": "1.24"}
 

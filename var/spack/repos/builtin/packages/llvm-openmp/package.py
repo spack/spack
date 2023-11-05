@@ -27,7 +27,7 @@ class LlvmOpenmp(CMakePackage):
         description="Support gomp and the Intel openMP runtime library.",
     )
 
-    depends_on("cmake@3.13.4:", when="@12:", type="build")
+    depends_on("cmake@3.13.4:", type="build", when="@12:")
     depends_on("cmake@2.8:", type="build")
     depends_on("py-lit", type="test")
     depends_on("py-filecheck", type="test")

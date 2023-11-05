@@ -33,14 +33,14 @@ class PyEspressopp(CMakePackage):
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-mpi4py@2.0.0:", type=("build", "run"))
     depends_on("fftw")
-    depends_on("py-sphinx", when="+ug", type="build")
-    depends_on("py-sphinx", when="+pdf", type="build")
+    depends_on("py-sphinx", type="build", when="+ug")
+    depends_on("py-sphinx", type="build", when="+pdf")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pyh5md", when="@master", type=("build", "run"))
-    depends_on("py-matplotlib", when="+ug", type="build")
-    depends_on("py-matplotlib", when="+pdf", type="build")
-    depends_on("texlive", when="+pdf", type="build")
-    depends_on("doxygen", when="+dg", type="build")
+    depends_on("py-pyh5md", type=("build", "run"), when="@master")
+    depends_on("py-matplotlib", type="build", when="+ug")
+    depends_on("py-matplotlib", type="build", when="+pdf")
+    depends_on("texlive", type="build", when="+pdf")
+    depends_on("doxygen", type="build", when="+dg")
 
     def cmake_args(self):
         return ["-DEXTERNAL_MPI4PY=ON", "-DEXTERNAL_BOOST=ON", "-DWITH_RC_FILES=OFF"]

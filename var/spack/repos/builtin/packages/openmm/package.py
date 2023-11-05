@@ -27,16 +27,16 @@ class Openmm(CMakePackage, CudaPackage):
     install_targets = ["install", "PythonInstall"]
 
     depends_on("python@2.7:", type=("build", "run"))
-    depends_on("cmake@3.17:", when="@7.6.0:", type="build")
+    depends_on("cmake@3.17:", type="build", when="@7.6.0:")
     depends_on("cmake@3.1:", type="build")
     # https://github.com/openmm/openmm/issues/3317
-    depends_on("doxygen@:1.9.1", when="@:7.6.0", type="build")
-    depends_on("doxygen", when="@7.7:", type="build")
+    depends_on("doxygen@:1.9.1", type="build", when="@:7.6.0")
+    depends_on("doxygen", type="build", when="@7.7:")
     depends_on("swig", type="build")
     depends_on("fftw", when="@:7")
     depends_on("py-cython", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("cuda", when="+cuda", type=("build", "link", "run"))
+    depends_on("cuda", type=("build", "link", "run"), when="+cuda")
     extends("python")
 
     def patch(self):

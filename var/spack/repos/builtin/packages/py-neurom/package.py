@@ -31,5 +31,5 @@ class PyNeurom(PythonPackage):
     depends_on("py-scipy@1.2.0:", type=("build", "run"))
     depends_on("py-tqdm@4.8.4:", type=("build", "run"))
 
-    depends_on("py-plotly@3.6.0:", when="+plotly", type=("build", "run"))
-    depends_on("py-psutil@5.5.1:", when="+plotly", type=("build", "run"))
+    depends_on("py-plotly@3.6.0:", type=("build", "run"), when="+plotly")
+    depends_on("py-psutil@5.5.1:", type=("build", "run"), when="+plotly")

@@ -18,12 +18,12 @@ class PyFastapi(PythonPackage):
 
     variant("all", default=False, description="Build all optional dependencies")
 
-    depends_on("py-hatchling@1.13:", when="@0.98:", type="build")
+    depends_on("py-hatchling@1.13:", type="build", when="@0.98:")
     depends_on("py-hatchling", type="build")
-    depends_on("py-starlette@0.27", when="@0.95.2:", type=("build", "run"))
-    depends_on("py-starlette@0.22.0", when="@:0.89.1", type=("build", "run"))
-    depends_on("py-pydantic@1.7.4:1", when="@0.96.1:", type=("build", "run"))
-    depends_on("py-pydantic@1.6.2:1", when="@:0.96.0", type=("build", "run"))
+    depends_on("py-starlette@0.27", type=("build", "run"), when="@0.95.2:")
+    depends_on("py-starlette@0.22.0", type=("build", "run"), when="@:0.89.1")
+    depends_on("py-pydantic@1.7.4:1", type=("build", "run"), when="@0.96.1:")
+    depends_on("py-pydantic@1.6.2:1", type=("build", "run"), when="@:0.96.0")
 
     conflicts("^py-pydantic@1.7.0:1.7.3,1.8.0:1.8.1")
 

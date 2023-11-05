@@ -31,21 +31,21 @@ class PySqlalchemy(PythonPackage):
         values=any_combination_of("mysql", "postgresql", "pymysql"),
     )
 
-    depends_on("py-setuptools@47:", when="@2:", type="build")
+    depends_on("py-setuptools@47:", type="build", when="@2:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython@0.29.24:", when="@2:", type="build")
+    depends_on("py-cython@0.29.24:", type="build", when="@2:")
 
-    depends_on("py-importlib-metadata", when="@1.4.0: ^python@:3.7", type=("build", "run"))
-    depends_on("py-greenlet", when="@1.4.0:", type=("build", "run"))
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@1.4.0: ^python@:3.7")
+    depends_on("py-greenlet", type=("build", "run"), when="@1.4.0:")
     conflicts("^py-greenlet@0.4.17", when="@1.4.0:")
-    depends_on("py-typing-extensions@4.2.0", when="@2:", type=("build", "run"))
+    depends_on("py-typing-extensions@4.2.0", type=("build", "run"), when="@2:")
 
     # >=1.4.0
-    depends_on("py-mysqlclient@1.4:", when="backend=mysql @1.4:", type=("build", "run"))
-    depends_on("py-psycopg2@2.7:", when="backend=postgresql @1.4:", type=("build", "run"))
-    depends_on("py-pymysql", when="backend=pymysql @1.4:", type=("build", "run"))
+    depends_on("py-mysqlclient@1.4:", type=("build", "run"), when="backend=mysql @1.4:")
+    depends_on("py-psycopg2@2.7:", type=("build", "run"), when="backend=postgresql @1.4:")
+    depends_on("py-pymysql", type=("build", "run"), when="backend=pymysql @1.4:")
 
     # < 1.4.0
-    depends_on("py-mysqlclient", when="backend=mysql @:1.3", type=("build", "run"))
-    depends_on("py-pymysql", when="backend=pymysql @:1.3", type=("build", "run"))
-    depends_on("py-psycopg2", when="backend=postgresql @:1.3", type=("build", "run"))
+    depends_on("py-mysqlclient", type=("build", "run"), when="backend=mysql @:1.3")
+    depends_on("py-pymysql", type=("build", "run"), when="backend=pymysql @:1.3")
+    depends_on("py-psycopg2", type=("build", "run"), when="backend=postgresql @:1.3")

@@ -137,36 +137,36 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # Required dependencies
     # See python_min_version in setup.py
     # Upper bounds come from wheel availability on PyPI
-    depends_on("python@3.8:3.11", when="@2:", type=("build", "link", "run"))
-    depends_on("python@:3.10", when="@1.11:1", type=("build", "link", "run"))
-    depends_on("python@:3.9", when="@1.7.1:1.10", type=("build", "link", "run"))
-    depends_on("python@:3.8", when="@1.4:1.7.0", type=("build", "link", "run"))
-    depends_on("python@:3.7", when="@:1.3", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", type=("build", "link", "run"), when="@2:")
+    depends_on("python@:3.10", type=("build", "link", "run"), when="@1.11:1")
+    depends_on("python@:3.9", type=("build", "link", "run"), when="@1.7.1:1.10")
+    depends_on("python@:3.8", type=("build", "link", "run"), when="@1.4:1.7.0")
+    depends_on("python@:3.7", type=("build", "link", "run"), when="@:1.3")
 
     # CMakelists.txt
-    depends_on("cmake@3.18:", when="@2:", type="build")
-    depends_on("cmake@3.13:", when="@1.11:", type="build")
-    depends_on("cmake@3.10:", when="@1.10:", type="build")
+    depends_on("cmake@3.18:", type="build", when="@2:")
+    depends_on("cmake@3.13:", type="build", when="@1.11:")
+    depends_on("cmake@3.10:", type="build", when="@1.10:")
     depends_on("cmake@3.5:", type="build")
 
     # pyproject.toml
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-astunparse", when="@1.13:", type=("build", "run"))
+    depends_on("py-astunparse", type=("build", "run"), when="@1.13:")
     depends_on("py-numpy@1.16.6:", type=("build", "run"))
-    depends_on("ninja@1.5:", when="@1.1:", type="build")
+    depends_on("ninja@1.5:", type="build", when="@1.1:")
     depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-requests", when="@1.13:", type=("build", "run"))
-    depends_on("py-cffi", when="@:1", type=("build", "run"))
-    depends_on("py-future", when="@1.5:1", type=("build", "run"))
-    depends_on("py-six", when="@1.13:1", type=("build", "run"))
+    depends_on("py-requests", type=("build", "run"), when="@1.13:")
+    depends_on("py-cffi", type=("build", "run"), when="@:1")
+    depends_on("py-future", type=("build", "run"), when="@1.5:1")
+    depends_on("py-six", type=("build", "run"), when="@1.13:1")
 
     # setup.py
-    depends_on("py-filelock", when="@2:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:", type=("build", "run"))
-    depends_on("py-sympy", when="@2:", type=("build", "run"))
-    depends_on("py-networkx", when="@2:", type=("build", "run"))
-    depends_on("py-jinja2", when="@2:", type=("build", "run"))
-    depends_on("py-fsspec", when="@2.1:", type=("build", "run"))
+    depends_on("py-filelock", type=("build", "run"), when="@2:")
+    depends_on("py-typing-extensions@3.6.2.1:", type=("build", "run"), when="@1.7:")
+    depends_on("py-sympy", type=("build", "run"), when="@2:")
+    depends_on("py-networkx", type=("build", "run"), when="@2:")
+    depends_on("py-jinja2", type=("build", "run"), when="@2:")
+    depends_on("py-fsspec", type=("build", "run"), when="@2.1:")
 
     # Undocumented dependencies
     depends_on("py-tqdm", type="run")
@@ -174,14 +174,14 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("lapack")
 
     # third_party
-    depends_on("py-pybind11@2.11.0", when="@2.1:", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.10.1", when="@2.0", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.10.0", when="@1.13:1", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.6.2", when="@1.8:1.12", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.3.0", when="@1.1:1.7", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.2.4", when="@:1.0", type=("build", "link", "run"))
-    depends_on("py-protobuf@3.12.2:", when="@1.10:", type=("build", "run"))
-    depends_on("py-protobuf@:3.14", when="@:1.9", type=("build", "run"))
+    depends_on("py-pybind11@2.11.0", type=("build", "link", "run"), when="@2.1:")
+    depends_on("py-pybind11@2.10.1", type=("build", "link", "run"), when="@2.0")
+    depends_on("py-pybind11@2.10.0", type=("build", "link", "run"), when="@1.13:1")
+    depends_on("py-pybind11@2.6.2", type=("build", "link", "run"), when="@1.8:1.12")
+    depends_on("py-pybind11@2.3.0", type=("build", "link", "run"), when="@1.1:1.7")
+    depends_on("py-pybind11@2.2.4", type=("build", "link", "run"), when="@:1.0")
+    depends_on("py-protobuf@3.12.2:", type=("build", "run"), when="@1.10:")
+    depends_on("py-protobuf@:3.14", type=("build", "run"), when="@:1.9")
     depends_on("protobuf@3.12.2:", when="@1.10:")
     depends_on("protobuf@:3.14", when="@:1.9")
     # https://github.com/protocolbuffers/protobuf/issues/10051
@@ -206,13 +206,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # Optional dependencies
     # https://github.com/pytorch/pytorch#prerequisites
-    depends_on("cuda@11:", when="@2:+cuda", type=("build", "link", "run"))
-    depends_on("cuda@10.2:", when="@1.11:1+cuda", type=("build", "link", "run"))
+    depends_on("cuda@11:", type=("build", "link", "run"), when="@2:+cuda")
+    depends_on("cuda@10.2:", type=("build", "link", "run"), when="@1.11:1+cuda")
     # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
-    depends_on("cuda@10.2:11.4", when="@1.10+cuda", type=("build", "link", "run"))
-    depends_on("cuda@9.2:11.4", when="@1.6:1.9+cuda", type=("build", "link", "run"))
-    depends_on("cuda@9:11.4", when="@1.2:1.5+cuda", type=("build", "link", "run"))
-    depends_on("cuda@7.5:11.4", when="@:1.1+cuda", type=("build", "link", "run"))
+    depends_on("cuda@10.2:11.4", type=("build", "link", "run"), when="@1.10+cuda")
+    depends_on("cuda@9.2:11.4", type=("build", "link", "run"), when="@1.6:1.9+cuda")
+    depends_on("cuda@9:11.4", type=("build", "link", "run"), when="@1.2:1.5+cuda")
+    depends_on("cuda@7.5:11.4", type=("build", "link", "run"), when="@:1.1+cuda")
     depends_on("cudnn@7:", when="@1.6:+cudnn")
     depends_on("cudnn@7", when="@1.2:1.5+cudnn")
     depends_on("cudnn@6.5:7", when="@:1.1+cudnn")

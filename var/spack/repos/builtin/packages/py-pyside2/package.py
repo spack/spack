@@ -49,25 +49,25 @@ class PyPyside2(PythonPackage):
     )
 
     depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:", type=("build", "run"))
-    depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.8", when="@:5.14", type=("build", "run"))
+    depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.8", type=("build", "run"), when="@:5.14")
 
     depends_on("cmake@3.1:", type="build")
     # libclang versioning from sources/shiboken2/doc/gettingstarted.rst
-    depends_on("llvm@6", when="@5.12:5.13", type="build")
-    depends_on("llvm@10:", when="@5.15:", type="build")
+    depends_on("llvm@6", type="build", when="@5.12:5.13")
+    depends_on("llvm@10:", type="build", when="@5.15:")
     depends_on("py-setuptools", type="build")
     depends_on("py-packaging", type="build")
     depends_on("py-wheel", type="build")
     # https://bugreports.qt.io/browse/PYSIDE-1385
-    depends_on("py-wheel@:0.34", when="@:5.14", type="build")
+    depends_on("py-wheel@:0.34", type="build", when="@:5.14")
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
     depends_on("qt@5.11:+opengl")
 
-    depends_on("graphviz", when="+doc", type="build")
-    depends_on("libxml2@2.6.32:", when="+doc", type="build")
-    depends_on("libxslt@1.1.19:", when="+doc", type="build")
-    depends_on("py-sphinx", when="+doc", type="build")
+    depends_on("graphviz", type="build", when="+doc")
+    depends_on("libxml2@2.6.32:", type="build", when="+doc")
+    depends_on("libxslt@1.1.19:", type="build", when="+doc")
+    depends_on("py-sphinx", type="build", when="+doc")
 
     def patch(self):
         filter_file(

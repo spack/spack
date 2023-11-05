@@ -30,10 +30,10 @@ class GenemarkEt(Package):
     depends_on("perl-yaml", type=("build", "run"))
     depends_on("perl-hash-merge", type=("build", "run"))
     depends_on("perl-parallel-forkmanager", type=("build", "run"))
-    depends_on("perl-logger-simple", when="@:4.46", type=("build", "run"))
-    depends_on("perl-mce", when="@4.65:", type=("build", "run"))
-    depends_on("perl-thread-queue", when="@4.65:", type=("build", "run"))
-    depends_on("perl-threads", when="@4.65:", type=("build", "run"))
+    depends_on("perl-logger-simple", type=("build", "run"), when="@:4.46")
+    depends_on("perl-mce", type=("build", "run"), when="@4.65:")
+    depends_on("perl-thread-queue", type=("build", "run"), when="@4.65:")
+    depends_on("perl-threads", type=("build", "run"), when="@4.65:")
 
     def url_for_version(self, version):
         if version >= Version("4.65"):

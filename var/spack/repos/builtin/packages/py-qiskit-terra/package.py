@@ -37,7 +37,7 @@ class PyQiskitTerra(PythonPackage):
         depends_on("py-fastjsonschema@2.10:", type=("build", "run"))
         depends_on("py-python-constraint@1.4:", type=("build", "run"))
         depends_on("py-symengine@0.7:", type=("build", "run"))
-        depends_on("py-tweedledum@1.1:1", when="^python@:3.11", type=("build", "run"))
+        depends_on("py-tweedledum@1.1:1", type=("build", "run"), when="^python@:3.11")
 
     with when("@0.22.2"):
         depends_on("python@3.7:", type=("build", "run"))
@@ -45,10 +45,10 @@ class PyQiskitTerra(PythonPackage):
         depends_on("py-retworkx@0.11.0:", type=("build", "run"))
         depends_on("py-scipy@1.5:", type=("build", "run"))
         depends_on("py-symengine@0.9:", type=("build", "run"))
-        depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
-        depends_on("py-shared-memory38", when="^python@:3.7", type=("build", "run"))
-        depends_on("py-tweedledum@1.1:1", when="^python@:3.11", type=("build", "run"))
-        depends_on("py-importlib-metadata@:4", when="^python@:3.7", type=("build", "run"))
+        depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")
+        depends_on("py-shared-memory38", type=("build", "run"), when="^python@:3.7")
+        depends_on("py-tweedledum@1.1:1", type=("build", "run"), when="^python@:3.11")
+        depends_on("py-importlib-metadata@:4", type=("build", "run"), when="^python@:3.7")
 
     with when("@0.23.3"):
         depends_on("python@3.7:", type=("build", "run"))
@@ -56,7 +56,7 @@ class PyQiskitTerra(PythonPackage):
         depends_on("py-rustworkx@0.12.0:", type=("build", "run"))
         depends_on("py-scipy@1.5:", type=("build", "run"))
         depends_on("py-symengine@0.9:", type=("build", "run"))
-        depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
-        depends_on("py-shared-memory38", when="^python@:3.7", type=("build", "run"))
-        depends_on("py-importlib-metadata@:4", when="^python@:3.7", type=("build", "run"))
-        depends_on("py-singledispatchmethod", when="^python@:3.7", type=("build", "run"))
+        depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")
+        depends_on("py-shared-memory38", type=("build", "run"), when="^python@:3.7")
+        depends_on("py-importlib-metadata@:4", type=("build", "run"), when="^python@:3.7")
+        depends_on("py-singledispatchmethod", type=("build", "run"), when="^python@:3.7")

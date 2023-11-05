@@ -39,9 +39,9 @@ class PyJedi(PythonPackage):
 
     depends_on("py-setuptools", type=("build", "run"))
 
-    depends_on("py-parso@0.8", when="@0.18.0:", type=("build", "run"))
-    depends_on("py-parso@0.7", when="@0.17", type=("build", "run"))
-    depends_on("py-parso@0.5.2:", when="@0.15.2:0.16", type=("build", "run"))
-    depends_on("py-parso@0.5.0:", when="@0.14.1:0.15.1", type=("build", "run"))
-    depends_on("py-parso@0.3.0:", when="@0.12.1:0.14.0", type=("build", "run"))
-    depends_on("py-parso@0.2.0:", when="@0.12.0", type=("build", "run"))
+    depends_on("py-parso@0.8", type=("build", "run"), when="@0.18.0:")
+    depends_on("py-parso@0.7", type=("build", "run"), when="@0.17")
+    depends_on("py-parso@0.5.2:", type=("build", "run"), when="@0.15.2:0.16")
+    depends_on("py-parso@0.5.0:", type=("build", "run"), when="@0.14.1:0.15.1")
+    depends_on("py-parso@0.3.0:", type=("build", "run"), when="@0.12.1:0.14.0")
+    depends_on("py-parso@0.2.0:", type=("build", "run"), when="@0.12.0")

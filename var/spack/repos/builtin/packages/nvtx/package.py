@@ -19,10 +19,10 @@ class Nvtx(Package, PythonExtension):
 
     variant("python", default=True, description="Install Python bindings.")
     extends("python", when="+python")
-    depends_on("py-pip", when="+python", type="build")
-    depends_on("py-setuptools", when="+python", type="build")
-    depends_on("py-wheel", when="+python", type="build")
-    depends_on("py-cython", when="+python", type="build")
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-setuptools", type="build", when="+python")
+    depends_on("py-wheel", type="build", when="+python")
+    depends_on("py-cython", type="build", when="+python")
 
     build_directory = "python"
 

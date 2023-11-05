@@ -58,10 +58,10 @@ class Libfuse(MesonPackage):
     )
     variant("utils", default=True, description="Build and install helper and example programs.")
 
-    depends_on("autoconf", when="@:2", type="build")
-    depends_on("automake", when="@:2", type="build")
-    depends_on("libtool", when="@:2", type="build")
-    depends_on("gettext", when="@:2", type="build")
+    depends_on("autoconf", type="build", when="@:2")
+    depends_on("automake", type="build", when="@:2")
+    depends_on("libtool", type="build", when="@:2")
+    depends_on("gettext", type="build", when="@:2")
 
     provides("fuse")
     conflicts("+useroot", when="~system_install", msg="useroot requires system_install")

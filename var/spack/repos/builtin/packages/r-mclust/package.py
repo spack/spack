@@ -26,4 +26,4 @@ class RMclust(RPackage):
     version("5.3", sha256="2b1b6d8266ae16b0e96f118df81559f208a568744a7c105af9f9abf1eef6ba40")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@3.0:", when="@6.0.0:", type=("build", "run"))
+    depends_on("r@3.0:", type=("build", "run"), when="@6.0.0:")

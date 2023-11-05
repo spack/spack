@@ -33,7 +33,7 @@ class PyJoblib(PythonPackage):
     version("0.10.2", sha256="3123553bdad83b143428033537c9e1939caf4a4d8813dade6a2246948c94494b")
     version("0.10.0", sha256="49b3a0ba956eaa2f077e1ebd230b3c8d7b98afc67520207ada20a4d8b8efd071")
 
-    depends_on("python@3.7:", when="@1.2:", type=("build", "run"))
-    depends_on("python@3.6:", when="@0.15:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@1.2:")
+    depends_on("python@3.6:", type=("build", "run"), when="@0.15:")
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))

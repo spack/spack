@@ -51,14 +51,14 @@ class Genesis(AutotoolsPackage, CudaPackage):
 
     conflicts("%apple-clang", when="+openmp")
 
-    depends_on("autoconf", when="@1.5.1 %fj", type="build")
-    depends_on("autoconf", when="@master", type="build")
-    depends_on("automake", when="@1.5.1 %fj", type="build")
-    depends_on("automake", when="@master", type="build")
-    depends_on("libtool", when="@1.5.1 %fj", type="build")
-    depends_on("libtool", when="@master", type="build")
-    depends_on("m4", when="@1.5.1 %fj", type="build")
-    depends_on("m4", when="@master", type="build")
+    depends_on("autoconf", type="build", when="@1.5.1 %fj")
+    depends_on("autoconf", type="build", when="@master")
+    depends_on("automake", type="build", when="@1.5.1 %fj")
+    depends_on("automake", type="build", when="@master")
+    depends_on("libtool", type="build", when="@1.5.1 %fj")
+    depends_on("libtool", type="build", when="@master")
+    depends_on("m4", type="build", when="@1.5.1 %fj")
+    depends_on("m4", type="build", when="@master")
 
     depends_on("mpi", type=("build", "run"))
     depends_on("lapack")

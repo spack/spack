@@ -25,17 +25,17 @@ class RIgraph(RPackage):
     version("1.1.2", sha256="89b16b41bc77949ea208419e52a18b78b5d418c7fedc52cd47d06a51a6e746ec")
     version("1.0.1", sha256="dc64ed09b8b5f8d66ed4936cde3491974d6bc5178dd259b6eab7ef3936aa5602")
 
-    depends_on("r@3.0.2:", when="@1.4.2:", type=("build", "run"))
+    depends_on("r@3.0.2:", type=("build", "run"), when="@1.4.2:")
 
     depends_on("r-magrittr", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-pkgconfig@2.0.0:", type=("build", "run"))
-    depends_on("r-rlang", when="@1.3.5:", type=("build", "run"))
-    depends_on("r-cpp11@0.2.0:", when="@1.4.2:", type=("build", "run"))
+    depends_on("r-rlang", type=("build", "run"), when="@1.3.5:")
+    depends_on("r-cpp11@0.2.0:", type=("build", "run"), when="@1.4.2:")
     depends_on("gmp")
     depends_on("gmp@4.38:", when="@1.2.11:")
     depends_on("libxml2")
     depends_on("glpk", when="@1.2.0:")
     depends_on("glpk@4.57:", when="@1.3.1:")
 
-    depends_on("r-irlba", when="@:1.1.9", type=("build", "run"))
+    depends_on("r-irlba", type=("build", "run"), when="@:1.1.9")

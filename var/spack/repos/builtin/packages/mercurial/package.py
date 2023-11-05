@@ -26,11 +26,11 @@ class Mercurial(PythonPackage):
     version("5.3", sha256="e57ff61d6b67695149dd451922b40aa455ab02e01711806a131a1e95c544f9b9")
 
     depends_on("python+bz2+ssl+zlib", type=("build", "run"))
-    depends_on("python@3.5:", when="@5.2:", type=("build", "run"))
-    depends_on("python@3.6:", when="@6.2:", type=("build", "run"))
+    depends_on("python@3.5:", type=("build", "run"), when="@5.2:")
+    depends_on("python@3.6:", type=("build", "run"), when="@6.2:")
     # Upperbounds because of forward compat issues.
-    depends_on("python@:3.9", when="@:6.0.0", type=("build", "run"))
-    depends_on("python@:3.10", when="@:6.3.0", type=("build", "run"))
+    depends_on("python@:3.9", type=("build", "run"), when="@:6.0.0")
+    depends_on("python@:3.10", type=("build", "run"), when="@:6.3.0")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-docutils", type="build")

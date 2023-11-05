@@ -20,4 +20,4 @@ class PyDbf(PythonPackage):
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-aenum", when="@0.97.11:", type=("build", "run"))
+    depends_on("py-aenum", type=("build", "run"), when="@0.97.11:")

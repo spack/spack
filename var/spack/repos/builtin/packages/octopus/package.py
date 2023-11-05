@@ -77,10 +77,10 @@ class Octopus(AutotoolsPackage, CudaPackage):
     )
     variant("debug", default=False, description="Compile with debug flags")
 
-    depends_on("autoconf", when="@develop", type="build")
-    depends_on("automake", when="@develop", type="build")
-    depends_on("libtool", when="@develop", type="build")
-    depends_on("m4", when="@develop", type="build")
+    depends_on("autoconf", type="build", when="@develop")
+    depends_on("automake", type="build", when="@develop")
+    depends_on("libtool", type="build", when="@develop")
+    depends_on("m4", type="build", when="@develop")
     depends_on("mpi", when="+mpi")
 
     depends_on("blas")

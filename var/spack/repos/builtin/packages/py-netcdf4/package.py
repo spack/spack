@@ -21,18 +21,18 @@ class PyNetcdf4(PythonPackage):
 
     variant("mpi", default=True, description="Parallel IO support")
 
-    depends_on("python@2.6:2.7,3.3:", when="@1.2.8:1.5.1", type=("build", "link", "run"))
-    depends_on("python@2.7,3.5:", when="@1.5.2:1.5.3", type=("build", "link", "run"))
-    depends_on("python@3.6:", when="@1.5.4:", type=("build", "link", "run"))
+    depends_on("python@2.6:2.7,3.3:", type=("build", "link", "run"), when="@1.2.8:1.5.1")
+    depends_on("python@2.7,3.5:", type=("build", "link", "run"), when="@1.5.2:1.5.3")
+    depends_on("python@3.6:", type=("build", "link", "run"), when="@1.5.4:")
 
-    depends_on("py-setuptools@18:", when="@1.4.2:1.5.8", type="build")
-    depends_on("py-setuptools@41.2:", when="@1.6.2:", type="build")
+    depends_on("py-setuptools@18:", type="build", when="@1.4.2:1.5.8")
+    depends_on("py-setuptools@41.2:", type="build", when="@1.6.2:")
     depends_on("py-cython@0.19:", type="build")
 
     depends_on("py-numpy@1.7:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.9:", when="@1.5.4:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.9:", type=("build", "link", "run"), when="@1.5.4:")
     depends_on("py-cftime", type=("build", "run"))
-    depends_on("py-mpi4py", when="+mpi", type=("build", "run"))
+    depends_on("py-mpi4py", type=("build", "run"), when="+mpi")
 
     depends_on("netcdf-c", when="-mpi")
     depends_on("netcdf-c+mpi", when="+mpi")

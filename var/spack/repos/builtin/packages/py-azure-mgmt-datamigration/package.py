@@ -17,7 +17,7 @@ class PyAzureMgmtDatamigration(PythonPackage):
     version("0.1.0", sha256="e754928992743f54d999800a5e0679ee3e91d804d23a25f12c2e6f2f86cd05df")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", when="@4:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", when="@4:", type=("build", "run"))
+    depends_on("py-msrest@0.5.0:", type=("build", "run"), when="@4:")
+    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"), when="@4:")
     depends_on("py-msrestazure@0.4.27:1", type=("build", "run"))
     depends_on("py-azure-common@1.1:1", type=("build", "run"))

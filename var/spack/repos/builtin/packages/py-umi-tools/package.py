@@ -26,4 +26,4 @@ class PyUmiTools(PythonPackage):
     depends_on("py-regex", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
-    depends_on("py-pybktree", when="@1.1.0:", type=("build", "run"))
+    depends_on("py-pybktree", type=("build", "run"), when="@1.1.0:")

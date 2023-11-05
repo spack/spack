@@ -25,28 +25,28 @@ class PyMne(PythonPackage):
     variant("full", default=False, when="@:0.23", description="Enable full functionality.")
     variant("hdf5", default=False, when="@1:", description="Enable hdf5 functionality.")
 
-    depends_on("python@3.8:", when="@1.4:", type=("build", "run"))
-    depends_on("py-setuptools@45:", when="@1.4:", type="build")
+    depends_on("python@3.8:", type=("build", "run"), when="@1.4:")
+    depends_on("py-setuptools@45:", type="build", when="@1.4:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@6.2:", when="@1.4:", type="build")
+    depends_on("py-setuptools-scm@6.2:", type="build", when="@1.4:")
 
     # requirements_base.txt with versions specified in README.rst (marked with *)
-    depends_on("py-numpy@1.20.2:", when="@1.4:", type=("build", "run"))  # *
-    depends_on("py-numpy@1.18.1:", when="@1:", type=("build", "run"))  # *
-    depends_on("py-numpy@1.15.4:", when="@0.23:", type=("build", "run"))
+    depends_on("py-numpy@1.20.2:", type=("build", "run"), when="@1.4:")  # *
+    depends_on("py-numpy@1.18.1:", type=("build", "run"), when="@1:")  # *
+    depends_on("py-numpy@1.15.4:", type=("build", "run"), when="@0.23:")
     depends_on("py-numpy@1.11.3:", type=("build", "run"))
-    depends_on("py-scipy@1.6.3:", when="@1.4:", type=("build", "run"))
-    depends_on("py-scipy@1.4.1:", when="@1:", type=("build", "run"))  # *
-    depends_on("py-scipy@1.1.0:", when="@0.23:", type=("build", "run"))
+    depends_on("py-scipy@1.6.3:", type=("build", "run"), when="@1.4:")
+    depends_on("py-scipy@1.4.1:", type=("build", "run"), when="@1:")  # *
+    depends_on("py-scipy@1.1.0:", type=("build", "run"), when="@0.23:")
     depends_on("py-scipy@0.17.1:", type=("build", "run"))
-    depends_on("py-matplotlib@3.4:", when="@1:", type=("build", "run"))  # *
-    depends_on("py-matplotlib@3.1:", when="@1:", type=("build", "run"))  # *
-    depends_on("py-tqdm", when="@1:", type=("build", "run"))
-    depends_on("py-pooch@1.5:", when="@1:", type=("build", "run"))
-    depends_on("py-decorator", when="@1:", type=("build", "run"))
-    depends_on("py-packaging", when="@1:", type=("build", "run"))
-    depends_on("py-jinja2", when="@1:", type=("build", "run"))
-    depends_on("py-importlib-resources@5.10.2:", when="@1.4: ^python@:3.8", type=("build", "run"))
+    depends_on("py-matplotlib@3.4:", type=("build", "run"), when="@1:")  # *
+    depends_on("py-matplotlib@3.1:", type=("build", "run"), when="@1:")  # *
+    depends_on("py-tqdm", type=("build", "run"), when="@1:")
+    depends_on("py-pooch@1.5:", type=("build", "run"), when="@1:")
+    depends_on("py-decorator", type=("build", "run"), when="@1:")
+    depends_on("py-packaging", type=("build", "run"), when="@1:")
+    depends_on("py-jinja2", type=("build", "run"), when="@1:")
+    depends_on("py-importlib-resources@5.10.2:", type=("build", "run"), when="@1.4: ^python@:3.8")
 
     with when("+hdf5"):
         depends_on("py-h5io", type=("build", "run"))
@@ -55,10 +55,10 @@ class PyMne(PythonPackage):
     with when("+full"):
         # requirements.txt with versions specified in README.rst (marked with *)
         depends_on("py-matplotlib@3.0.3:", type=("build", "run"))  # *
-        depends_on("py-pyqt5@5.10:,:5.15.1,5.15.4:", when="platform=linux", type=("build", "run"))
-        depends_on("py-pyqt5@5.10:,:5.13", when="platform=darwin", type=("build", "run"))
-        depends_on("py-pyqt5@5.10:,:5.15.2,5.15.4:", when="platform=cray", type=("build", "run"))
-        depends_on("py-pyqt5@5.10:,:5.15.2,5.15.4:", when="platform=win32", type=("build", "run"))
+        depends_on("py-pyqt5@5.10:,:5.15.1,5.15.4:", type=("build", "run"), when="platform=linux")
+        depends_on("py-pyqt5@5.10:,:5.13", type=("build", "run"), when="platform=darwin")
+        depends_on("py-pyqt5@5.10:,:5.15.2,5.15.4:", type=("build", "run"), when="platform=cray")
+        depends_on("py-pyqt5@5.10:,:5.15.2,5.15.4:", type=("build", "run"), when="platform=win32")
         depends_on("py-pyqt5-sip", type=("build", "run"))
         depends_on("py-sip", type=("build", "run"))
         depends_on("py-scikit-learn@0.20.2:", type=("build", "run"))  # *
@@ -74,7 +74,7 @@ class PyMne(PythonPackage):
         depends_on("py-psutil", type=("build", "run"))
         depends_on("py-dipy@0.10.1:", type=("build", "run"))  # *
         depends_on("vtk+python", type=("build", "run"))
-        depends_on("vtk+python@:8.1", when="platform=darwim", type=("build", "run"))
+        depends_on("vtk+python@:8.1", type=("build", "run"), when="platform=darwim")
         depends_on("py-mayavi", type=("build", "run"))
         depends_on("py-pysurfer+save_movie", type=("build", "run"))
         depends_on("py-nilearn", type=("build", "run"))

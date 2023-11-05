@@ -24,5 +24,5 @@ class RFontawesome(RPackage):
 
     depends_on("r@3.3.0:", type=("build", "run"))
     depends_on("r-rlang@0.4.10:", type=("build", "run"))
-    depends_on("r-rlang@1.0.6:", when="@0.5.1:", type=("build", "run"))
+    depends_on("r-rlang@1.0.6:", type=("build", "run"), when="@0.5.1:")
     depends_on("r-htmltools@0.5.1.1:", type=("build", "run"))

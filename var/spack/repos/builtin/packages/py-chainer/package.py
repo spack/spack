@@ -31,19 +31,19 @@ class PyChainer(PythonPackage):
 
     variant("mn", default=False, description="run with ChainerMN")
 
-    depends_on("python@3.5.1:", when="@7:", type=("build", "run"))
+    depends_on("python@3.5.1:", type=("build", "run"), when="@7:")
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-numpy@1.9:", type=("build", "run"))
     depends_on("py-six@1.9.0:", type=("build", "run"))
     depends_on("py-typing-extensions", type=("build", "run"))
-    depends_on("py-typing-extensions@:3.6.6", when="@:6", type=("build", "run"))
+    depends_on("py-typing-extensions@:3.6.6", type=("build", "run"), when="@:6")
     depends_on("py-filelock", type=("build", "run"))
     depends_on("py-protobuf@3:", type=("build", "run"))
 
     # Dependencies only required for test of ChainerMN
-    depends_on("py-matplotlib", when="+mn", type=("build", "run"))
-    depends_on("py-mpi4py", when="+mn", type=("build", "run"))
-    depends_on("mpi", when="+mn", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"), when="+mn")
+    depends_on("py-mpi4py", type=("build", "run"), when="+mn")
+    depends_on("mpi", type=("build", "run"), when="+mn")
 
     @run_after("install")
     def cache_test_sources(self):

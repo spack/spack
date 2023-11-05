@@ -120,7 +120,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant("xpmem", default=False, description="Enable XPMEM support")
     variant("gtest", default=False, description="Build and install Googletest")
 
-    depends_on("binutils+ld", when="%aocc", type="build")
+    depends_on("binutils+ld", type="build", when="%aocc")
     depends_on("binutils", when="+backtrace_detail")
     depends_on("gdrcopy", when="@1.7:+gdrcopy")
     depends_on("gdrcopy@1.3", when="@:1.6+gdrcopy")

@@ -26,6 +26,6 @@ class PyPyprojectParser(PythonPackage):
     depends_on("py-packaging@20.9:", type=("build", "run"))
     depends_on("py-shippinglabel@1:", type=("build", "run"))
     depends_on("py-toml@0.10.2:", type=("build", "run"))
-    depends_on("py-tomli@1.2.3:", when="^python@:3.10", type=("build", "run"))
+    depends_on("py-tomli@1.2.3:", type=("build", "run"), when="^python@:3.10")
     depends_on("py-typing-extensions@3.7.4.3:", type=("build", "run"))
     conflicts("^py-typing-extensions@4.7.0")

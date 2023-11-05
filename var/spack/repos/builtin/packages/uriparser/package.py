@@ -30,8 +30,8 @@ class Uriparser(CMakePackage):
 
     depends_on("cmake@3.3:", type="build")
     depends_on("googletest@1.8.1", type="link")
-    depends_on("doxygen", when="+docs", type="build")
-    depends_on("graphviz", when="+docs", type="build")
+    depends_on("doxygen", type="build", when="+docs")
+    depends_on("graphviz", type="build", when="+docs")
 
     def cmake_args(self):
         args = []

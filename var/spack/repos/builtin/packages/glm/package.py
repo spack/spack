@@ -22,7 +22,7 @@ class Glm(CMakePackage):
     version("0.9.7.1", sha256="285a0dc8f762b4e523c8710fbd97accaace0c61f45bc8be2bdb0deed07b0e6f3")
 
     depends_on("cmake@2.6:", type="build")
-    depends_on("cmake@3.2:", when="@0.9.9.0:", type="build")
+    depends_on("cmake@3.2:", type="build", when="@0.9.9.0:")
 
     # CMake install target was removed in version 0.9.9.6
     @when("@0.9.9.6:0.9.9.8")

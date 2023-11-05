@@ -27,15 +27,15 @@ class PySmartOpen(PythonPackage):
 
         # google cloud support
         variant("gcs", default=False, description="Adds Google Cloud support")
-        depends_on("py-google-cloud-storage", when="+gcs", type=("build", "run"))
+        depends_on("py-google-cloud-storage", type=("build", "run"), when="+gcs")
 
         # aws support
         variant("s3", default=False, description="Adds AWS S3 support")
-        depends_on("py-boto3", when="+s3", type=("build", "run"))
+        depends_on("py-boto3", type=("build", "run"), when="+s3")
 
         # http support
         variant("http", default=True, description="Adds http and webhdfs support")
-        depends_on("py-requests", when="+http", type=("build", "run"))
+        depends_on("py-requests", type=("build", "run"), when="+http")
 
         # azure support
         variant("azure", default=False, description="Adds Microsoft Azure Support")
@@ -47,5 +47,5 @@ class PySmartOpen(PythonPackage):
     with when("@:2"):
         depends_on("py-requests", type=("build", "run"))
         depends_on("py-boto3", type=("build", "run"))
-        depends_on("py-boto@2.3.2:", when="@1.8.4", type=("build", "run"))
-        depends_on("py-google-cloud-storage", when="@1.10:", type=("build", "run"))
+        depends_on("py-boto@2.3.2:", type=("build", "run"), when="@1.8.4")
+        depends_on("py-google-cloud-storage", type=("build", "run"), when="@1.10:")

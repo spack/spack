@@ -21,7 +21,7 @@ class RPacman(RPackage):
     version("0.4.1", sha256="fffa72307912cbd5aa5bee0a9b65931500483036ccffb1791dd808eb5eb70362")
 
     depends_on("r@3.0.2:", type=("build", "run"))
-    depends_on("r@3.5.0:", when="@0.5.0:", type=("build", "run"))
-    depends_on("r-remotes", when="@0.5.0:", type=("build", "run"))
+    depends_on("r@3.5.0:", type=("build", "run"), when="@0.5.0:")
+    depends_on("r-remotes", type=("build", "run"), when="@0.5.0:")
 
-    depends_on("r-devtools", when="@:0.4.6", type=("build", "run"))
+    depends_on("r-devtools", type=("build", "run"), when="@:0.4.6")

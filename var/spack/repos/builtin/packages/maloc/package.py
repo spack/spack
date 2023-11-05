@@ -25,8 +25,8 @@ class Maloc(AutotoolsPackage):
 
     variant("doc", default=False, description="Build documentation.")
 
-    depends_on("graphviz", when="+doc", type="build")
-    depends_on("doxygen", when="+doc", type="build")
+    depends_on("graphviz", type="build", when="+doc")
+    depends_on("doxygen", type="build", when="+doc")
 
     def configure_args(self):
         spec = self.spec
