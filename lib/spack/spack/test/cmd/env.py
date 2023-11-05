@@ -2856,7 +2856,7 @@ def test_query_develop_specs():
 )
 def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
-    args = Namespace(shell="sh", activate_env="a", env=env, no_env=no_env, env_dir=env_dir)
+    args = Namespace(shell="sh", env_name="a", env=env, no_env=no_env, env_dir=env_dir)
     with pytest.raises(SystemExit):
         method(args)
     _, err = capsys.readouterr()
@@ -2905,6 +2905,7 @@ def test_create_and_activate_managed(tmp_path):
         assert str(tmp_path) in active_env_var
         active_ev = ev.active_environment()
         assert "foo" == active_ev.name
+        env("deactivate")
 
 
 def test_create_and_activate_unmanaged(tmp_path):
@@ -2912,8 +2913,9 @@ def test_create_and_activate_unmanaged(tmp_path):
         env_dir = os.path.join(str(tmp_path), "foo")
         shell = env("activate", "--without-view", "--create", "--sh", "-d", env_dir)
         active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
-        assert str(tmp_path) in active_env_var
+        assert str(env_dir) in active_env_var
         assert ev.is_env_dir(env_dir)
+        env("deactivate")
 
 
 def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock_fetch):
