@@ -118,11 +118,10 @@ class Dftbplus(CMakePackage, MakefilePackage):
 
     variant("shared", default=False, description="Most often for the Python wrappers.")
 
-    # ONLY for version 19.1
     variant(
         "dftd3",
         default=False,
-        when="@:21.1",
+        when="@:19.1",
         description="Use DftD3 dispersion library " "(if you need this dispersion model)",
     )
 
