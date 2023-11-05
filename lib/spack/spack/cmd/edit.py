@@ -43,10 +43,7 @@ def edit_package(name, repo_path, namespace):
         if not os.access(path, os.R_OK):
             tty.die("Insufficient permissions on '%s'!" % path)
     else:
-        tty.die(
-            "No package for '{0}' was found.".format(spec.name),
-            "  Use `spack create` to create a new package",
-        )
+        raise spack.repo.UnknownPackageError(spec.name)
 
     editor(path)
 
