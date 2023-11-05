@@ -124,10 +124,19 @@ def env_activate_setup_parser(subparser):
         default=False,
         help="create and activate an environment in a temporary directory",
     )
-    env_options.add_argument(
+    persistent_options = env_options.add_argument_group()
+    persistent_options.add_argument(
+        "--create",
+        action="store_true",
+        default=False,
+        help="create and activate an environment based on a name (managed env) or directory when"
+            " combined with the --dir argument (unmanaged env)",
+    )
+    env_select_options = persistent_options.add_mutually_exclusive_group()
+    env_select_options.add_argument(
         "-d", "--dir", default=None, help="activate the environment in this directory"
     )
-    env_options.add_argument(
+    env_select_options.add_argument(
         metavar="env",
         dest="activate_env",
         nargs="?",
@@ -176,6 +185,12 @@ def env_activate(args):
     elif ev.is_env_dir(env_name_or_dir):
         env_path = os.path.abspath(env_name_or_dir)
         short_name = os.path.basename(env_path)
+
+    # create if user requested, and then recall recursively
+    elif args.create:
+        env_create(args)
+        env_activate(args)
+        return
 
     else:
         tty.die("No such environment: '%s'" % env_name_or_dir)
@@ -303,6 +318,11 @@ def env_create_setup_parser(subparser):
         nargs="?",
         default=None,
         help="either a lockfile (must end with '.json' or '.lock') or a manifest file",
+    )
+    subparser.add_argument(
+        "-a",
+        "--activate",
+        help="activate the environment immeditately after it was created",
     )
 
 
