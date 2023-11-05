@@ -1517,8 +1517,7 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = "Did you mean to specify a filename with './{0}'?"
                 long_msg = long_msg.format(name)
             else:
-                long_msg = "You may need to run 'spack clean -m'"
-                long_msg += " or use 'spack create' to create a new package."
+                long_msg = "Use 'spack create' to create a new package."
 
                 if not repo:
                     repo = spack.repo.PATH
