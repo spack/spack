@@ -126,8 +126,8 @@ class Dftbplus(CMakePackage, MakefilePackage):
         description="Use DftD3 dispersion library " "(if you need this dispersion model)",
     )
 
-    depends_on("cmake@3.16:", type="build")
-    depends_on("ninja@1.10", type="build")
+    depends_on("cmake@3.16:", type="build", when="@20.1:")
+    depends_on("ninja@1.10", type="build", when="@20.1:")
 
     depends_on("blas", when="-mpi")
     depends_on("lapack", when="-mpi")
