@@ -53,10 +53,5 @@ class Sleef(CMakePackage):
     # conflicts("^mpfr@4.2:")
 
     def cmake_args(self):
-        # Taken from PyTorch's aten/src/ATen/CMakeLists.txt
-        return [
-            self.define("BUILD_SHARED_LIBS", False),
-            self.define("BUILD_DFT", False),
-            self.define("BUILD_GNUABI_LIBS", False),
-            self.define("BUILD_TESTS", False),
-        ]
+        # https://salsa.debian.org/science-team/sleef/-/blob/master/debian/rules
+        return [self.define("BUILD_DFT", False), self.define("SLEEF_TEST_ALL_IUT", True)]
