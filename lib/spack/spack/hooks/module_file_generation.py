@@ -3,17 +3,22 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from typing import Optional, Set
+
 from llnl.util import tty
 
 import spack.config
 import spack.modules
+import spack.spec
 
 
-def _for_each_enabled(spec, method_name, explicit=None):
+def _for_each_enabled(
+    spec: spack.spec.Spec, method_name: str, explicit: Optional[bool] = None
+) -> None:
     """Calls a method for each enabled module"""
-    set_names = set(spack.config.get("modules", {}).keys())
+    set_names: Set[str] = set(spack.config.get("modules", {}).keys())
     for name in set_names:
-        enabled = spack.config.get("modules:%s:enable" % name)
+        enabled = spack.config.get(f"modules:{name}:enable")
         if not enabled:
             tty.debug("NO MODULE WRITTEN: list of enabled module files is empty")
             continue
@@ -28,7 +33,7 @@ def _for_each_enabled(spec, method_name, explicit=None):
                 tty.warn(msg.format(method_name, str(e)))
 
 
-def post_install(spec, explicit):
+def post_install(spec, explicit: bool):
     import spack.environment as ev  # break import cycle
 
     if ev.active_environment():

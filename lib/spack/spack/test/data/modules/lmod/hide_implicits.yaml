@@ -2,6 +2,7 @@ enable:
   - lmod
 lmod:
   hide_implicits: true
+  hash_length: 0
   core_compilers:
     - 'clang@3.3'
   hierarchy:
