@@ -2899,7 +2899,7 @@ def test_activate_temp(monkeypatch, tmpdir):
 
 def test_create_and_activate(tmp_path):
     with fs.working_dir(str(tmp_path)):
-        env_dir = os.path.join(str(tmp_path), "foo-env")
+        env_dir = os.path.join(str(tmp_path))
         shell = env("activate", "--without-view", "--create", "--sh", "-d", env_dir)
         active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
         assert str(tmp_path) in active_env_var
