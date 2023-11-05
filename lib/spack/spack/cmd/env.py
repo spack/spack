@@ -219,8 +219,7 @@ def env_activate_setup_parser(subparser):
         "--create",
         action="store_true",
         default=False,
-        help="create and activate an environment based on a name (managed env) or directory when"
-            " combined with the --dir argument (unmanaged env)",
+        help="if the environment doesn't exist, create it before activating",
     )
     persistent_options.add_argument(
         "--envfile",
@@ -234,11 +233,10 @@ def env_activate_setup_parser(subparser):
         help="copy relative develop paths verbatim into the new environment"
         " when initializing from envfile",
     )
-    env_select_options = persistent_options.add_mutually_exclusive_group()
-    env_select_options.add_argument(
-        "-d", "--dir", default=None, help="activate the environment in this directory"
+    persistent_options.add_argument(
+        "-d", "--dir", default=False, action="store_true", help="activate environment based on the directory"
     )
-    env_select_options.add_argument(
+    persistent_options.add_argument(
         metavar="env",
         dest="env_name",
         nargs="?",
@@ -269,7 +267,7 @@ def env_activate(args):
     if args.env or args.no_env or args.env_dir:
         tty.die("Calling spack env activate with --env, --env-dir and --no-env is ambiguous")
 
-    env_name_or_dir = args.env_name or args.dir
+    env_name_or_dir = args.env_name
 
     # Temporary environment
     if args.temp:

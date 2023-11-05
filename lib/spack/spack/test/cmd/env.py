@@ -2907,6 +2907,15 @@ def test_create_and_activate_managed(tmp_path):
         assert "foo" == active_ev.name
 
 
+def test_create_and_activate_unmanaged(tmp_path):
+    with fs.working_dir(str(tmp_path)):
+        env_dir = os.path.join(str(tmp_path), "foo")
+        shell = env("activate", "--without-view", "--create", "--sh", "-d", env_dir)
+        active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+        assert str(tmp_path) in active_env_var
+        assert ev.is_env_dir(env_dir)
+
+
 def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock_fetch):
     view = str(tmpdir.join("view"))
     # Put a symlink to an actual directory in view
