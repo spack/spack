@@ -62,3 +62,25 @@ def _make_validator():
 
 
 Validator = llnl.util.lang.Singleton(_make_validator)
+
+spec_list_schema = {
+    "type": "array",
+    "default": [],
+    "items": {
+        "anyOf": [
+            {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "matrix": {
+                        "type": "array",
+                        "items": {"type": "array", "items": {"type": "string"}},
+                    },
+                    "exclude": {"type": "array", "items": {"type": "string"}},
+                },
+            },
+            {"type": "string"},
+            {"type": "null"},
+        ]
+    },
+}
