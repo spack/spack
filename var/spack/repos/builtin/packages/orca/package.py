@@ -61,9 +61,7 @@ class Orca(Package):
         "5.0.3-f.1": "4.1.2",
     }
     for orca_version, openmpi_version in openmpi_versions.items():
-        depends_on(
-            "openmpi@{0}".format(openmpi_version), when="@{0}", type="run".format(orca_version)
-        )
+        depends_on(f"openmpi@{openmpi_version}", when=f"@{orca_version}", type="run")
 
     def url_for_version(self, version):
         out = "file://{0}/orca_{1}_linux_x86-64_openmpi{2}.tar.zst"
