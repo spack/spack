@@ -38,7 +38,7 @@ class QtPackage(CMakePackage):
     # Default dependencies for all qt-* components
     generator("ninja")
     depends_on("cmake@3.16:", type="build")
-    depends_on("pkgconfig", type="build", when="platform=linux")
+    depends_on("pkgconfig", when="platform=linux", type="build")
     depends_on("python", type="build")
 
     # List of unnecessary directories in src/3rdparty

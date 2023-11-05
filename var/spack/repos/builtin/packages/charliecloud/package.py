@@ -110,27 +110,27 @@ class Charliecloud(AutotoolsPackage):
     # Image manipulation.
     depends_on("python@3.6:", type="run")
     depends_on("py-requests", type="run")
-    depends_on("git@2.28.1:", type="run", when="@0.29:")  # build cache
-    depends_on("py-lark", type="run", when="@:0.24")  # 0.25+ bundles lark
+    depends_on("git@2.28.1:", when="@0.29:", type="run")  # build cache
+    depends_on("py-lark", when="@:0.24", type="run")  # 0.25+ bundles lark
 
     # Man page and html docs.
-    depends_on("rsync", type="build", when="+docs")
-    depends_on("py-sphinx", type="build", when="+docs")
-    depends_on("py-sphinx-rtd-theme", type="build", when="+docs")
+    depends_on("rsync", when="+docs", type="build")
+    depends_on("py-sphinx", when="+docs", type="build")
+    depends_on("py-sphinx-rtd-theme", when="+docs", type="build")
 
     # Bash automated testing harness (bats).
     depends_on("bats@0.4.0", type="test")
 
     # Require pip and wheel for git checkout builds (master).
-    depends_on("py-pip@21.1.2:", type="build", when="@master")
-    depends_on("py-wheel", type="build", when="@master")
+    depends_on("py-pip@21.1.2:", when="@master", type="build")
+    depends_on("py-wheel", when="@master", type="build")
 
     # See https://github.com/spack/spack/pull/16049.
     conflicts("platform=darwin", msg="This package does not build on macOS")
 
     # Squashfuse support
     depends_on("squashfuse@0.1.105:", when="+squashfuse")
-    depends_on("squashfs", type="run", when="+squashfuse")
+    depends_on("squashfs", when="+squashfuse", type="run")
 
     def autoreconf(self, spec, prefix):
         which("bash")("autogen.sh")

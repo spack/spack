@@ -29,9 +29,9 @@ class Prmon(CMakePackage):
     depends_on("nlohmann-json")
     depends_on("cmake@3.3:", type="build")
     depends_on("spdlog", when="@3.0.0:")
-    depends_on("py-matplotlib", type="run", when="+plot")
-    depends_on("py-numpy", type="run", when="+plot")
-    depends_on("py-pandas", type="run", when="+plot")
+    depends_on("py-matplotlib", when="+plot", type="run")
+    depends_on("py-numpy", when="+plot", type="run")
+    depends_on("py-pandas", when="+plot", type="run")
 
     def cmake_args(self):
         args = [

@@ -30,13 +30,13 @@ class PyUnicycler(PythonPackage):
     depends_on("blast-plus", type="run")
 
     # for version 0.5.0
-    depends_on("spades@3.14.0:", type="run", when="@0.5.0")
+    depends_on("spades@3.14.0:", when="@0.5.0", type="run")
 
     # for versions 0.4.9 and earlier
-    depends_on("spades@3.6.2:3.13.0", type="run", when="@:0.4.9")
-    depends_on("pilon", type="run", when="@:0.4.9")
+    depends_on("spades@3.6.2:3.13.0", when="@:0.4.9", type="run")
+    depends_on("pilon", when="@:0.4.9", type="run")
     depends_on("java", when="@:0.4.9", type=("build", "run"))
-    depends_on("bowtie2", type="run", when="@:0.4.9")
+    depends_on("bowtie2", when="@:0.4.9", type="run")
     depends_on("samtools@1.0:", when="@:0.4.9", type=("build", "link", "run"))
 
     conflicts("%gcc@:4.9.0")

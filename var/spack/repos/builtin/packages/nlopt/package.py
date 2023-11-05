@@ -33,7 +33,7 @@ class Nlopt(CMakePackage):
     # Note: matlab is licenced - spack does not download automatically
     variant("matlab", default=False, description="Build the Matlab bindings.")
 
-    depends_on("cmake@3.0:", type="build", when="@master")
+    depends_on("cmake@3.0:", when="@master", type="build")
     depends_on("python", when="+python", type=("build", "run"))
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("swig", when="+python")

@@ -118,7 +118,7 @@ class Qgis(CMakePackage):
     depends_on("py-pyqt4", when="@2")
     depends_on("py-pyqt5@5.3:", when="@3")
     depends_on("py-sip", type="build")
-    depends_on("py-pyqt-builder", type="build", when="^py-sip@5:")
+    depends_on("py-pyqt-builder", when="^py-sip@5:", type="build")
     depends_on("py-requests", type=("build", "run"))  # TODO: is build dependency necessary?
     depends_on("python@3.0.0:", when="@3", type=("build", "run"))
     depends_on("python@3.6:", when="@3.18:", type=("build", "run"))
@@ -157,8 +157,8 @@ class Qgis(CMakePackage):
 
     # build
     depends_on("cmake@3.0.0:", type="build")
-    depends_on("cmake@3.10.0:", type="build", when="@3.16:")
-    depends_on("cmake@3.12.0:", type="build", when="@3.28:")
+    depends_on("cmake@3.10.0:", when="@3.16:", type="build")
+    depends_on("cmake@3.12.0:", when="@3.28:", type="build")
     depends_on("flex@2.5.6:", type="build")
     depends_on("bison@2.4:", type="build")
     depends_on("pkgconfig", type="build")

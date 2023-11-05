@@ -37,8 +37,8 @@ class GitLfs(MakefilePackage):
     version("2.7.0", sha256="1c829ddd163be2206a44edb366bd7f6d84c5afae3496687405ca9d2a5f3af07b")
     version("2.6.1", sha256="e17cd9d4e66d1116be32f7ddc7e660c7f8fabbf510bc01b01ec15a22dd934ead")
 
-    depends_on("go@1.17:", type="build", when="@2.13:")
-    depends_on("go@1.5:", type="build", when="@:2.12")
+    depends_on("go@1.17:", when="@2.13:", type="build")
+    depends_on("go@1.5:", when="@:2.12", type="build")
     depends_on("git@1.8.2:", type="run")
 
     patch("patches/issue-10702.patch", when="@2.7.0:2.7.1")

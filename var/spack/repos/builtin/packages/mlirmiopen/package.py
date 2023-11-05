@@ -55,8 +55,8 @@ class Mlirmiopen(CMakePackage):
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
-        depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
-        depends_on("rocminfo@" + ver, type="build", when="@" + ver)
+        depends_on("rocm-cmake@" + ver, when="@", type="build" + ver)
+        depends_on("rocminfo@" + ver, when="@", type="build" + ver)
 
     def cmake_args(self):
         spec = self.spec

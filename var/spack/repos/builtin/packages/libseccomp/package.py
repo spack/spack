@@ -18,8 +18,8 @@ class Libseccomp(AutotoolsPackage):
 
     variant("python", default=True, description="Build Python bindings")
 
-    depends_on("gperf", type="build", when="@2.5:")
-    depends_on("py-cython", type="build", when="+python")
+    depends_on("gperf", when="@2.5:", type="build")
+    depends_on("py-cython", when="+python", type="build")
 
     def configure_args(self):
         args = []

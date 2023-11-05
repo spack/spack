@@ -22,7 +22,7 @@ class Direnv(Package):
     version("2.20.0", sha256="cc72525b0a5b3c2ab9a52a3696e95562913cd431f923bcc967591e75b7541bff")
     version("2.11.3", sha256="2d34103a7f9645059270763a0cfe82085f6d9fe61b2a85aca558689df0e7b006")
 
-    depends_on("go@1.16:", type="build", when="@2.28:")
+    depends_on("go@1.16:", when="@2.28:", type="build")
     depends_on("go", type="build")
 
     phases = ["build", "install"]

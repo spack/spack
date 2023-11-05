@@ -32,14 +32,14 @@ class Rust(Package):
     depends_on("rust-bootstrap", type="build")
 
     # Pre-release version dependencies
-    depends_on("rust-bootstrap@beta", type="build", when="@beta")
-    depends_on("rust-bootstrap@nightly", type="build", when="@master")
-    depends_on("rust-bootstrap@nightly", type="build", when="@nightly")
+    depends_on("rust-bootstrap@beta", when="@beta", type="build")
+    depends_on("rust-bootstrap@nightly", when="@master", type="build")
+    depends_on("rust-bootstrap@nightly", when="@nightly", type="build")
 
     # Stable version dependencies
-    depends_on("rust-bootstrap@1.59:1.60", type="build", when="@1.60")
-    depends_on("rust-bootstrap@1.64:1.65", type="build", when="@1.65")
-    depends_on("rust-bootstrap@1.69:1.70", type="build", when="@1.70")
+    depends_on("rust-bootstrap@1.59:1.60", when="@1.60", type="build")
+    depends_on("rust-bootstrap@1.64:1.65", when="@1.65", type="build")
+    depends_on("rust-bootstrap@1.69:1.70", when="@1.70", type="build")
 
     # When adding a version of Rust you may need to add an additional version
     # to rust-bootstrap as the minimum bootstrapping requirements increase.

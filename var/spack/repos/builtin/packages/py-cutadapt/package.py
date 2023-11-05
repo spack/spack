@@ -27,7 +27,7 @@ class PyCutadapt(PythonPackage):
     # version 4 deps
     depends_on("py-setuptools@63:", when="@4.2:", type=("build", "run"))
     depends_on("py-setuptools@43:", when="@:4.1", type=("build", "run"))
-    depends_on("py-setuptools-scm@6.2:+toml", type="build", when="@2.0:")
+    depends_on("py-setuptools-scm@6.2:+toml", when="@2.0:", type="build")
     depends_on("python@3.7:", when="@4.1:", type=("build", "run"))
     depends_on("py-cython@0.29.20:", type="build")
     depends_on("py-dnaio@0.10:", when="@4.3:", type=("build", "run"))

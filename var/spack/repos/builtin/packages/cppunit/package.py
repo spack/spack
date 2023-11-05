@@ -41,9 +41,9 @@ class Cppunit(AutotoolsPackage):
         description="Build shared libs, static libs or both",
     )
 
-    depends_on("autoconf", type="build", when="@1.15_20220904")
-    depends_on("automake", type="build", when="@1.15_20220904")
-    depends_on("libtool", type="build", when="@1.15_20220904")
+    depends_on("autoconf", when="@1.15_20220904", type="build")
+    depends_on("automake", when="@1.15_20220904", type="build")
+    depends_on("libtool", when="@1.15_20220904", type="build")
 
     def setup_build_environment(self, env):
         cxxstd = self.spec.variants["cxxstd"].value

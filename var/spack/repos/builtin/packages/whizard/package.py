@@ -56,8 +56,8 @@ class Whizard(AutotoolsPackage):
     variant("latex", default=False, description="data visualization with latex")
 
     depends_on("libtirpc", type=("build", "link", "run"))
-    depends_on("ocaml@4.02.3:", type="build", when="@3:")
-    depends_on("ocaml@4.02.3:~force-safe-string", type="build", when="@:2")
+    depends_on("ocaml@4.02.3:", when="@3:", type="build")
+    depends_on("ocaml@4.02.3:~force-safe-string", when="@:2", type="build")
     depends_on("hepmc", when="hepmc=2")
     depends_on("hepmc3", when="hepmc=3")
     depends_on("lcio", when="+lcio")

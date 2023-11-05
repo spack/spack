@@ -17,7 +17,7 @@ class PySubmitit(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", when="@:1.4.1", type=("build", "run"))
-    depends_on("py-flit-core@3.2:3", type="build", when="@1.4.2:")
+    depends_on("py-flit-core@3.2:3", when="@1.4.2:", type="build")
 
     depends_on("py-cloudpickle@1.2.1:", type=("build", "run"))
     depends_on("py-typing-extensions@3.7.4.2:", type=("build", "run"))

@@ -192,7 +192,7 @@ class Phist(CMakePackage):
     depends_on("parmetis+int64", when="+parmetis+int64")
     depends_on("parmetis~int64", when="+parmetis~int64")
     depends_on("py-pytest", type="test")
-    depends_on("py-numpy", type="test", when="+mpi")
+    depends_on("py-numpy", when="+mpi", type="test")
     # The test_install compiles the examples and needs pkgconfig for it
     depends_on("pkgconfig", type="test")
 

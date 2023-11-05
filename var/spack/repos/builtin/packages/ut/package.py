@@ -20,8 +20,8 @@ class Ut(CMakePackage):
 
     generator("ninja")
 
-    depends_on("cmake@3.21:3.25", type="build", when="@master")
-    depends_on("cmake@3.12:3.20", type="build", when="@1.1.9")
+    depends_on("cmake@3.21:3.25", when="@master", type="build")
+    depends_on("cmake@3.12:3.20", when="@1.1.9", type="build")
     depends_on("ninja", type="build")
 
     conflicts("%gcc@:8")

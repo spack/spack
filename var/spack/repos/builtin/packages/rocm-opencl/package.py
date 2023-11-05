@@ -115,7 +115,7 @@ class RocmOpencl(CMakePackage):
 
     depends_on("cmake@3:", type="build")
     depends_on("gl@4.5:", type="link")
-    depends_on("numactl", type="link", when="@3.7.0:")
+    depends_on("numactl", when="@3.7.0:", type="link")
 
     for d_version, d_shasum in [
         ("5.6.1", "cc9a99c7e4de3d9360c0a471b27d626e84a39c9e60e0aff1e8e1500d82391819"),
@@ -163,7 +163,7 @@ class RocmOpencl(CMakePackage):
         "4.3.1",
         "master",
     ]:
-        depends_on("hip-rocclr@" + ver, type="build", when="@" + ver)
+        depends_on("hip-rocclr@" + ver, when="@", type="build" + ver)
     for ver in [
         "3.5.0",
         "3.7.0",
@@ -194,8 +194,8 @@ class RocmOpencl(CMakePackage):
         "5.6.1",
         "master",
     ]:
-        depends_on("comgr@" + ver, type="build", when="@" + ver)
-        depends_on("hsa-rocr-dev@" + ver, type="link", when="@" + ver)
+        depends_on("comgr@" + ver, when="@", type="build" + ver)
+        depends_on("hsa-rocr-dev@" + ver, when="@", type="link" + ver)
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)

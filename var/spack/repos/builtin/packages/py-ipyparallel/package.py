@@ -23,11 +23,11 @@ class PyIpyparallel(PythonPackage):
     depends_on("python@3.5:", when="@6.3:", type=("build", "run"))
     depends_on("python@2.7,3.4:", type=("build", "run"))
 
-    depends_on("py-jupyterlab@3.0:3", type="build", when="@7.1:")
-    depends_on("py-packaging", type="build", when="@7.1:8.0.0")
-    depends_on("py-setuptools@40.8:", type="build", when="@7.1:8.2")
-    depends_on("py-setuptools@:60", type="build", when="@:8.2.0")
-    depends_on("py-hatchling@0.25:", type="build", when="@8.4:")
+    depends_on("py-jupyterlab@3.0:3", when="@7.1:", type="build")
+    depends_on("py-packaging", when="@7.1:8.0.0", type="build")
+    depends_on("py-setuptools@40.8:", when="@7.1:8.2", type="build")
+    depends_on("py-setuptools@:60", when="@:8.2.0", type="build")
+    depends_on("py-hatchling@0.25:", when="@8.4:", type="build")
 
     depends_on("py-ipython-genutils", when="@:6.3", type=("build", "run"))
     depends_on("py-entrypoints", when="@7.1:", type=("build", "run"))

@@ -18,8 +18,8 @@ class PyXxhash(PythonPackage):
 
     depends_on("python@2.6:2,3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@45:", type="build", when="@3.2.0:")
-    depends_on("py-setuptools-scm@6.2:", type="build", when="@3.2.0:")
+    depends_on("py-setuptools@45:", when="@3.2.0:", type="build")
+    depends_on("py-setuptools-scm@6.2:", when="@3.2.0:", type="build")
     depends_on("xxhash@0.8:")
 
     def setup_build_environment(self, env):

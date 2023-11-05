@@ -33,9 +33,9 @@ class Dlb(AutotoolsPackage):
 
     depends_on("mpi", when="+mpi")
     depends_on("python", type="build")
-    depends_on("autoconf", type="build", when="@main")
-    depends_on("automake", type="build", when="@main")
-    depends_on("libtool", type="build", when="@main")
+    depends_on("autoconf", when="@main", type="build")
+    depends_on("automake", when="@main", type="build")
+    depends_on("libtool", when="@main", type="build")
 
     def configure_args(self):
         args = []

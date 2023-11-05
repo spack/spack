@@ -33,7 +33,7 @@ class Icu4c(AutotoolsPackage):
         description="Use the specified C++ standard when building",
     )
 
-    depends_on("python", type="build", when="@64.1:")
+    depends_on("python", when="@64.1:", type="build")
 
     conflicts(
         "%intel@:16",

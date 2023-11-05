@@ -22,7 +22,7 @@ class PyDnaio(PythonPackage):
     depends_on("py-setuptools-scm@6.2:", when="@0.4:", type="build")
     # 0.9.1 deps
     depends_on("python@3.7:", when="@0.9.1:", type=("build", "run"))
-    depends_on("py-cython@0.29.20:", type="build", when="@0.9.1:")
+    depends_on("py-cython@0.29.20:", when="@0.9.1:", type="build")
     depends_on("py-xopen@1.4.0:", when="@0.9.1:", type=("build", "run"))
     # older deps
     depends_on("py-xopen", type=("build", "run"))

@@ -62,7 +62,7 @@ class Orca(Package):
     }
     for orca_version, openmpi_version in openmpi_versions.items():
         depends_on(
-            "openmpi@{0}".format(openmpi_version), type="run", when="@{0}".format(orca_version)
+            "openmpi@{0}".format(openmpi_version), when="@{0}", type="run".format(orca_version)
         )
 
     def url_for_version(self, version):

@@ -31,7 +31,7 @@ class Glfw(CMakePackage):
     variant("shared", default=False, description="Builds a shared version of the library")
 
     # dependencies
-    depends_on("doxygen", type="build", when="+doc")
+    depends_on("doxygen", when="+doc", type="build")
 
     # linux only dependencies
     depends_on("libxrandr", when="platform=linux")
@@ -43,7 +43,7 @@ class Glfw(CMakePackage):
     depends_on("libxmu", when="platform=linux")
     depends_on("freetype", when="platform=linux")
     depends_on("fontconfig", when="platform=linux")
-    depends_on("pkgconfig", type="build", when="platform=linux")
+    depends_on("pkgconfig", when="platform=linux", type="build")
 
     def cmake_args(self):
         return [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]

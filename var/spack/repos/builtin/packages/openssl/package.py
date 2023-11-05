@@ -378,7 +378,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     depends_on("zlib-api")
     depends_on("perl@5.14.0:", type=("build", "test"))
-    depends_on("ca-certificates-mozilla", type="build", when="certs=mozilla")
+    depends_on("ca-certificates-mozilla", when="certs=mozilla", type="build")
     depends_on("nasm", when="platform=windows")
 
     patch(

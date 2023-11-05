@@ -26,9 +26,9 @@ class Libplist(AutotoolsPackage):
     version("1.4", sha256="2ad226abe1131a72e7ecbb2b921ad92f54b8e787c2281c89b00145b519479a71")
     version("1.3", sha256="982c8aac59cdc3fafc925a407a29b6cf367c5ec9bad6ad509fe5ea25d3e5b6b0")
 
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("libtool", type="build", when="@master")
+    depends_on("autoconf", when="@master", type="build")
+    depends_on("automake", when="@master", type="build")
+    depends_on("libtool", when="@master", type="build")
     depends_on("pkgconfig", type="build")
 
     install_targets = ["install", "PYTHON_LDFLAGS=-undefined dynamic_lookup"]

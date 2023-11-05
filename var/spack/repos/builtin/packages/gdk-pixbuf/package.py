@@ -49,16 +49,16 @@ class GdkPixbuf(Package):
     # Man page creation was getting docbook errors, see issue #18853
     variant("man", default=False, description="Enable man page creation")
 
-    depends_on("meson@0.55.3:", type="build", when="@2.42.2:")
-    depends_on("meson@0.46.0:", type="build", when="@2.37.92:")
-    depends_on("meson@0.45.0:", type="build", when="@2.37.0:")
-    depends_on("ninja", type="build", when="@2.37.0:")
+    depends_on("meson@0.55.3:", when="@2.42.2:", type="build")
+    depends_on("meson@0.46.0:", when="@2.37.92:", type="build")
+    depends_on("meson@0.45.0:", when="@2.37.0:", type="build")
+    depends_on("ninja", when="@2.37.0:", type="build")
     depends_on("shared-mime-info", when="@2.36.8: platform=linux")
     depends_on("shared-mime-info", when="@2.36.8: platform=cray")
     depends_on("pkgconfig", type="build")
     # Building the man pages requires libxslt and the Docbook stylesheets
-    depends_on("libxslt", type="build", when="+man")
-    depends_on("docbook-xsl@1.79.2:", type="build", when="+man")
+    depends_on("libxslt", when="+man", type="build")
+    depends_on("docbook-xsl@1.79.2:", when="+man", type="build")
     depends_on("gettext")
     depends_on("glib@2.38.0:")
     depends_on("jpeg")

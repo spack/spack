@@ -25,9 +25,9 @@ class FluxSecurity(AutotoolsPackage):
     version("0.8.0", sha256="9963628063b4abdff6bece03208444c8f23fbfda33c20544c48b21e9f4819ce2")
 
     # Need autotools when building on master:
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("libtool", type="build", when="@master")
+    depends_on("autoconf", when="@master", type="build")
+    depends_on("automake", when="@master", type="build")
+    depends_on("libtool", when="@master", type="build")
 
     depends_on("pkgconfig")
     depends_on("libsodium@1.0.14:")

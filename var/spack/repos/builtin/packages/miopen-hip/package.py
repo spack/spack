@@ -148,7 +148,7 @@ class MiopenHip(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
+        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-clang-ocl@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)

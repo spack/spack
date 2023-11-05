@@ -74,8 +74,8 @@ class PyKeras(PythonPackage):
             when="@2.{}".format(minor_ver),
         )
     depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("bazel", type="build", when="@2.5:")
-    depends_on("protobuf", type="build", when="@2.5:")
+    depends_on("bazel", when="@2.5:", type="build")
+    depends_on("protobuf", when="@2.5:", type="build")
 
     def url_for_version(self, version):
         if version >= Version("2.6"):

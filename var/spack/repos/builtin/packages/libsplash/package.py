@@ -31,7 +31,7 @@ class Libsplash(CMakePackage):
 
     variant("mpi", default=True, description="Enable parallel I/O (one-file aggregation) support")
 
-    depends_on("cmake@3.10.0:", type="build", when="@1.7.0:")
+    depends_on("cmake@3.10.0:", when="@1.7.0:", type="build")
     depends_on("hdf5@1.8.6: ~mpi", when="~mpi")
     depends_on("hdf5@1.8.6: +mpi", when="+mpi")
     depends_on("mpi", when="+mpi")

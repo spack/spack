@@ -18,5 +18,5 @@ class PyAnsimarkup(PythonPackage):
     version("1.5.0", sha256="96c65d75bbed07d3dcbda8dbede8c2252c984f90d0ca07434b88a6bbf345fad3")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@61:", type="build", when="@2.1.0")
+    depends_on("py-setuptools@61:", when="@2.1.0", type="build")
     depends_on("py-colorama", type=("build", "run"))

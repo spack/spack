@@ -45,7 +45,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
 
     conflicts("~pic+shared")
 
-    depends_on("pkgconfig@0.9.0:", type="build", when="build_system=autotools")
+    depends_on("pkgconfig@0.9.0:", when="build_system=autotools", type="build")
     # conditional on non Windows, but rather than specify for each platform
     # specify for non Windows builder, which has equivalent effect
     depends_on("iconv", when="build_system=autotools")

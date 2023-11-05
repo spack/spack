@@ -36,7 +36,7 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     depends_on("openssl", when="ssl=openssl")
 
     depends_on("gettext", type="build")
-    depends_on("python@3:", type="build", when="+python")
+    depends_on("python@3:", when="+python", type="build")
 
     depends_on("zlib-api", when="+zlib")
     depends_on("libpsl", when="+libpsl")

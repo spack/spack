@@ -24,7 +24,7 @@ class Z3(CMakePackage):
     version("4.5.0", sha256="aeae1d239c5e06ac183be7dd853775b84698db1265cb2258e5918a28372d4a0c")
 
     variant("python", default=False, description="Enable python binding")
-    depends_on("python", type="build", when="~python")
+    depends_on("python", when="~python", type="build")
     depends_on("python", when="+python", type=("build", "run"))
     depends_on("py-setuptools", when="+python", type=("run"))
     extends("python", when="+python")

@@ -508,10 +508,10 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     if sys.platform != "darwin":
         depends_on("numactl")
 
-    depends_on("autoconf @2.69:", type="build", when="@main")
-    depends_on("automake @1.13.4:", type="build", when="@main")
-    depends_on("libtool @2.4.2:", type="build", when="@main")
-    depends_on("m4", type="build", when="@main")
+    depends_on("autoconf @2.69:", when="@main", type="build")
+    depends_on("automake @1.13.4:", when="@main", type="build")
+    depends_on("libtool @2.4.2:", when="@main", type="build")
+    depends_on("m4", when="@main", type="build")
 
     depends_on("perl", type="build")
     depends_on("pkgconfig", type="build")
@@ -567,7 +567,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # Libevent is required when *vendored* PMIx is used
     depends_on("libevent@2:", when="@main")
 
-    depends_on("openssh", type="run", when="+rsh")
+    depends_on("openssh", when="+rsh", type="run")
 
     conflicts("+cxx_exceptions", when="%nvhpc", msg="nvc does not ignore -fexceptions, but errors")
 

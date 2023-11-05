@@ -42,7 +42,7 @@ class PyPycuda(PythonPackage):
     depends_on("python@3.6:3", when="@2020.1:", type=("build", "run"))
     depends_on("py-numpy@1.6:", type=("build", "run"))
     depends_on("py-pytools@2011.2:", type=("build", "run"))
-    depends_on("py-six", type="run", when="@:2020.1")
+    depends_on("py-six", when="@:2020.1", type="run")
     depends_on("py-decorator@3.2.0:", when="@:2020.1", type=("build", "run"))
     depends_on("py-appdirs@1.4.0:", type=("build", "run"))
     depends_on("py-mako", type=("build", "run"))

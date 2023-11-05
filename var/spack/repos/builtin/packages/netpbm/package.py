@@ -51,7 +51,7 @@ class Netpbm(MakefilePackage):
     depends_on("libtiff")
     depends_on("libpng")
     # Ghostscript is called as "gs" by pstopnm and pbmtextps
-    depends_on("ghostscript", type="run", when="+ghostscript")
+    depends_on("ghostscript", when="+ghostscript", type="run")
 
     # These are the optional libs:
     # svgtopam : http://netpbm.sourceforge.net/prereq.html

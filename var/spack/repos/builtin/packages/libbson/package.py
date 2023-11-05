@@ -35,12 +35,12 @@ class Libbson(Package):
     version("1.6.2", sha256="aad410123e4bd8a9804c3c3d79e03344e2df104872594dc2cf19605d492944ba")
     version("1.6.1", sha256="5f160d44ea42ce9352a7a3607bc10d3b4b22d3271763aa3b3a12665e73e3a02d")
 
-    depends_on("cmake@3.1:", type="build", when="@1.10.0:")
+    depends_on("cmake@3.1:", when="@1.10.0:", type="build")
 
-    depends_on("autoconf", type="build", when="@1.6.1")
-    depends_on("automake", type="build", when="@1.6.1")
-    depends_on("libtool", type="build", when="@1.6.1")
-    depends_on("m4", type="build", when="@1.6.1")
+    depends_on("autoconf", when="@1.6.1", type="build")
+    depends_on("automake", when="@1.6.1", type="build")
+    depends_on("libtool", when="@1.6.1", type="build")
+    depends_on("m4", when="@1.6.1", type="build")
 
     def url_for_version(self, version):
         if version >= Version("1.10.0"):

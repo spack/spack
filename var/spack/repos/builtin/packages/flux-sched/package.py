@@ -80,9 +80,9 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     depends_on("flux-core@master", when="@master", type=("build", "run", "link"))
 
     # Need autotools when building on master:
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("libtool", type="build", when="@master")
+    depends_on("autoconf", when="@master", type="build")
+    depends_on("automake", when="@master", type="build")
+    depends_on("libtool", when="@master", type="build")
 
     # Set default to cmake so master (and branches) use it
     build_system(

@@ -36,6 +36,6 @@ class PyFenicsBasix(PythonPackage):
     depends_on("py-pybind11@2.9.1:", when="@:0.7", type="build")
     depends_on("py-nanobind@1.5.1:", when="@0.8:", type="build")
 
-    depends_on("xtensor@0.23.10:", type="build", when="@:0.4")
+    depends_on("xtensor@0.23.10:", when="@:0.4", type="build")
 
     build_directory = "python"

@@ -95,7 +95,7 @@ class Aomp(Package):
     depends_on("cmake@3:", type="build")
     depends_on("cmake@3:3.17", when="@3.5.0", type="build")
 
-    depends_on("python@3:", type="build", when="@3.9.0:")
+    depends_on("python@3:", when="@3.9.0:", type="build")
     depends_on("py-setuptools", when="@3.9.0:", type="build")
 
     depends_on("gl@4.5:", type=("build", "link"))
@@ -108,7 +108,7 @@ class Aomp(Package):
 
     for ver in ["3.5.0", "3.7.0", "3.8.0", "3.9.0", "3.10.0"]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
-        depends_on("comgr@" + ver, type="build", when="@" + ver)
+        depends_on("comgr@" + ver, when="@", type="build" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("rocm-device-libs@" + ver, when="@" + ver)
 

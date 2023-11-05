@@ -51,10 +51,10 @@ class AdolC(AutotoolsPackage):
     variant("boost", default=False, description="Enable boost")
 
     # Build dependencies
-    depends_on("automake", type="build", when="@develop")
-    depends_on("autoconf", type="build", when="@develop")
-    depends_on("libtool", type="build", when="@develop")
-    depends_on("m4", type="build", when="@develop")
+    depends_on("automake", when="@develop", type="build")
+    depends_on("autoconf", when="@develop", type="build")
+    depends_on("libtool", when="@develop", type="build")
+    depends_on("m4", when="@develop", type="build")
 
     # Link dependencies
     depends_on("boost+system", when="+boost")

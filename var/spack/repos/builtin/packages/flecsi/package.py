@@ -104,7 +104,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     # FleCSI@1.x
     depends_on("cmake@3.12:", when="@:1")
     # Requires cinch > 1.0 due to cinchlog installation issue
-    depends_on("cinch@1.01:", type="build", when="+external_cinch @:1")
+    depends_on("cinch@1.01:", when="+external_cinch @:1", type="build")
     depends_on("mpi", when="backend=mpi @:1")
     depends_on("mpi", when="backend=legion @:1")
     depends_on("mpi", when="backend=hpx @:1")

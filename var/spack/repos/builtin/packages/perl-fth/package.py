@@ -51,7 +51,7 @@ class PerlFth(Package):
     depends_on("perl", type="run")
     depends_on("perl-cgi", type="run")
     # Actual dependency was on etags only, but no longer in recent releases:
-    depends_on("emacs", type="run", when="@:0.520")
+    depends_on("emacs", when="@:0.520", type="run")
     # For fth.pl -hevea option
     depends_on("hevea", when="+hevea", type="run")
     # Actual dependency is on pdflatex only for fth.pl -latexindex option

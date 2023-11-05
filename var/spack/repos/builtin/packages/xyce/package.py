@@ -69,7 +69,7 @@ class Xyce(CMakePackage):
     )
 
     depends_on("python@3:", when="+pymi", type=("build", "link", "run"))
-    depends_on("py-pip", type="run", when="+pymi")
+    depends_on("py-pip", when="+pymi", type="run")
     depends_on("py-pybind11@2.6.1:", when="+pymi", type=("build", "link"))
 
     depends_on(

@@ -37,9 +37,9 @@ class Capnproto(AutotoolsPackage):
     depends_on("zlib-api", when="+zlib")
     depends_on("openssl", when="+tls")
 
-    depends_on("autoconf", type="build", when="build_system=autotools")
-    depends_on("automake", type="build", when="build_system=autotools")
-    depends_on("libtool", type="build", when="build_system=autotools")
+    depends_on("autoconf", when="build_system=autotools", type="build")
+    depends_on("automake", when="build_system=autotools", type="build")
+    depends_on("libtool", when="build_system=autotools", type="build")
 
     variant("zlib", default=True, description="Enable compression")
     variant("tls", default=False, description="Enable TLS support")

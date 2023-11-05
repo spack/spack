@@ -17,8 +17,8 @@ class PyLibrosa(PythonPackage):
 
     depends_on("python@3.6:", when="@0.9.1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@48:", type="build", when="@0.9.1:")
-    depends_on("py-wheel@0.29:", type="build", when="@0.9.1:")
+    depends_on("py-setuptools@48:", when="@0.9.1:", type="build")
+    depends_on("py-wheel@0.29:", when="@0.9.1:", type="build")
     depends_on("py-audioread@2.0.0:", type=("build", "run"))
     depends_on("py-audioread@2.1.5:", when="@0.9.1:", type=("build", "run"))
     depends_on("py-numpy@1.15.0:", type=("build", "run"))

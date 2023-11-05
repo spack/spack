@@ -48,7 +48,7 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("xsdk@0.7.0 ^mfem+strumpack", when="@0.3.0 ^xsdk+strumpack")
     depends_on("xsdk@0.7.0 ^sundials+magma", when="@0.3.0 +cuda")
     depends_on("mpi")
-    depends_on("cmake@3.21:", type="build", when="@0.3.0:")
+    depends_on("cmake@3.21:", when="@0.3.0:", type="build")
 
     def cmake_args(self):
         spec = self.spec

@@ -23,7 +23,7 @@ class Tpm2Tss(AutotoolsPackage):
     depends_on("autoconf-archive", type="build")
     depends_on("json-c")
     depends_on("curl")
-    depends_on("doxygen", type="build", when="@:2.4.2")
+    depends_on("doxygen", when="@:2.4.2", type="build")
     depends_on("libgcrypt", when="@:2.4.2")
 
     @when("@:2.4.2")

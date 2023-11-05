@@ -116,7 +116,7 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
 
-    depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
+    depends_on("cmake@3.10.2:", when="@4.2.0:", type="build")
     depends_on("cmake@3.5.1:", type="build")
 
     depends_on("hip +cuda", when="+cuda")
@@ -153,7 +153,7 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
         "5.6.1",
     ]:
         depends_on("rocprim@" + ver, when="+rocm @" + ver)
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
+        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
 
     # fix hardcoded search in /opt/rocm and broken config mode search
     patch("find-hip-cuda-rocm-5.1.patch", when="@5.1:5.2 +cuda")

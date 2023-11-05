@@ -69,12 +69,12 @@ class Eckit(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
 
-    depends_on("yacc", type="build", when="+admin")
-    depends_on("flex", type="build", when="+admin")
+    depends_on("yacc", when="+admin", type="build")
+    depends_on("flex", when="+admin", type="build")
     depends_on("ncurses", when="+admin")
 
-    depends_on("yacc", type="build", when="+sql")
-    depends_on("flex", type="build", when="+sql")
+    depends_on("yacc", when="+sql", type="build")
+    depends_on("flex", when="+sql", type="build")
 
     depends_on("eigen", when="linalg=eigen")
     depends_on("armadillo", when="linalg=armadillo")

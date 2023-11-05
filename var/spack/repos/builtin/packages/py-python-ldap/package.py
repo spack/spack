@@ -27,7 +27,7 @@ class PyPythonLdap(PythonPackage):
     depends_on("python@3.6:", when="@3.4.2:", type=("build", "run"))
     depends_on("py-pyasn1@0.3.7:", type=("build", "run"))
     depends_on("py-pyasn1-modules@0.1.5:", type=("build", "run"))
-    depends_on("cyrus-sasl", type="link", when="^openldap+sasl")
+    depends_on("cyrus-sasl", when="^openldap+sasl", type="link")
 
     def patch(self):
         if self.spec.satisfies("^openldap~sasl"):

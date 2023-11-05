@@ -149,8 +149,8 @@ class PyHorovod(PythonPackage, CudaPackage):
     variant("rocm", default=False, description="Build with ROCm")
 
     # Build dependencies
-    depends_on("cmake@3.13:", type="build", when="@0.24:")
-    depends_on("cmake@2.8.12:", type="build", when="@0.20:")
+    depends_on("cmake@3.13:", when="@0.24:", type="build")
+    depends_on("cmake@2.8.12:", when="@0.20:", type="build")
     depends_on("pkgconfig", type="build")
 
     # Required dependencies
@@ -202,13 +202,13 @@ class PyHorovod(PythonPackage, CudaPackage):
 
     # Controller dependencies
     depends_on("mpi", when="controllers=mpi")
-    depends_on("cmake", type="build", when="controllers=gloo")
+    depends_on("cmake", when="controllers=gloo", type="build")
     depends_on("libuv@1.26:", when="controllers=gloo platform=darwin")
 
     # Tensor Operations dependencies
     depends_on("nccl@2:", when="tensor_ops=nccl")
     depends_on("mpi", when="tensor_ops=mpi")
-    depends_on("cmake", type="build", when="tensor_ops=gloo")
+    depends_on("cmake", when="tensor_ops=gloo", type="build")
     depends_on("libuv@1.26:", when="tensor_ops=gloo platform=darwin")
     depends_on("intel-oneapi-ccl", when="tensor_ops=ccl")
 

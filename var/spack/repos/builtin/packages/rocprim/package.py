@@ -109,9 +109,9 @@ class Rocprim(CMakePackage):
         sticky=True,
     )
 
-    depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
+    depends_on("cmake@3.10.2:", when="@4.2.0:", type="build")
     depends_on("cmake@3.5.1:", type="build")
-    depends_on("numactl", type="link", when="@3.7.0:")
+    depends_on("numactl", when="@3.7.0:", type="link")
     depends_on("googletest@1.10.0:", type="test")
 
     for ver in [
@@ -147,7 +147,7 @@ class Rocprim(CMakePackage):
         depends_on("comgr@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
+        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
 
     # the patch is meant for 5.3.0 only.this is already in the 5.3.3+ releases
     patch("fix-device-merge-mismatched-param-5.3.0.patch", when="@5.3.0")

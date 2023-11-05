@@ -28,11 +28,11 @@ class Qscintilla(QMakePackage):
     depends_on("qmake")
     depends_on("qmake+opengl", when="+python")
     depends_on("py-pyqt6", when="+python ^qt-base", type=("build", "run"))
-    depends_on("py-pyqt-builder", type="build", when="+python")
+    depends_on("py-pyqt-builder", when="+python", type="build")
     depends_on("py-pyqt5", when="+python ^qt@5", type=("build", "run"))
     depends_on("python", when="+python", type=("build", "run"))
     # adter install inquires py-sip variant : so we need to have it
-    depends_on("py-sip", type="build", when="~python")
+    depends_on("py-sip", when="~python", type="build")
 
     extends("python", when="+python")
 

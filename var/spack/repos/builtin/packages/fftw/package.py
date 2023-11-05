@@ -231,9 +231,9 @@ class Fftw(FftwBase):
         description="Add extra transpose functions for PFFT compatibility",
     )
 
-    depends_on("automake", type="build", when="+pfft_patches")
-    depends_on("autoconf", type="build", when="+pfft_patches")
-    depends_on("libtool", type="build", when="+pfft_patches")
+    depends_on("automake", when="+pfft_patches", type="build")
+    depends_on("autoconf", when="+pfft_patches", type="build")
+    depends_on("libtool", when="+pfft_patches", type="build")
 
     provides("fftw-api@2", when="@2.1.5")
     provides("fftw-api@3", when="@3:")

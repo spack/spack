@@ -39,7 +39,7 @@ class Ninja(Package):
     )
 
     depends_on("python", type="build")
-    depends_on("re2c@0.11.3:", type="build", when="+re2c")
+    depends_on("re2c@0.11.3:", when="+re2c", type="build")
 
     phases = ["configure", "install"]
 

@@ -104,8 +104,8 @@ class Graphviz(AutotoolsPackage):
 
     # Feature dependencies
     depends_on("zlib-api")
-    depends_on("groff", type="build", when="+doc")
-    depends_on("ghostscript", type="build", when="+doc")
+    depends_on("groff", when="+doc", type="build")
+    depends_on("ghostscript", when="+doc", type="build")
     depends_on("expat", when="+expat")
     depends_on("libgd", when="+libgd")
     depends_on("fontconfig", when="+libgd")

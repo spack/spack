@@ -80,7 +80,7 @@ class Interproscan(Package):
 
     depends_on("java@8.0:8.9", when="@5:5.36-99.0", type=("build", "run"))
     depends_on("java@11", when="@5.37-76.0:", type=("build", "run"))
-    depends_on("maven", type="build", when="@5:")
+    depends_on("maven", when="@5:", type="build")
     depends_on("perl@5:", type=("build", "run"))
     depends_on("python@3:", when="@5:", type=("build", "run"))
     depends_on("perl-cgi", when="@:4.8", type=("build", "run"))

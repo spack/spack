@@ -78,7 +78,7 @@ class MiopenTensile(CMakePackage):
     )
 
     for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0"]:
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
+        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocminfo@" + ver, when="@" + ver)

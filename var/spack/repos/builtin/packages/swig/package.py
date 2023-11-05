@@ -90,7 +90,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
 
     # Need newer 'automake' to support newer platforms
     for _target in ["ppc64le", "aarch64"]:
-        depends_on("automake@1.15:", type="build", when="target={0}:".format(_target))
+        depends_on("automake@1.15:", when="target={0}:", type="build".format(_target))
     depends_on("pkgconfig", type="build")
 
     conflicts("%nvhpc", when="@:4.0.2")

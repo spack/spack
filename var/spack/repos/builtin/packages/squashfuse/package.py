@@ -47,10 +47,10 @@ class Squashfuse(AutotoolsPackage):
     depends_on("xz", when="+xz")
     depends_on("zstd", when="+zstd")
 
-    depends_on("m4", type="build", when="@master")
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("libtool", type="build", when="@master")
+    depends_on("m4", when="@master", type="build")
+    depends_on("autoconf", when="@master", type="build")
+    depends_on("automake", when="@master", type="build")
+    depends_on("libtool", when="@master", type="build")
 
     def flag_handler(self, name, flags):
         if name == "cflags" and "+min_size" in self.spec:

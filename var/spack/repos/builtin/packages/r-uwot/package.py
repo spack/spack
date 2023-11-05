@@ -37,5 +37,5 @@ class RUwot(RPackage):
     depends_on("r-dqrng", type=("build", "run"))
 
     depends_on("r-rcppparallel", when="@:0.1.3", type=("build", "run"))
-    depends_on("gmake", type="build", when="@:0.1.3")
+    depends_on("gmake", when="@:0.1.3", type="build")
     depends_on("r-rspectra", when="@:0.1.11", type=("build", "run"))

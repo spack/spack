@@ -136,8 +136,8 @@ class LlvmAmdgpu(CMakePackage):
     provides("libllvm@15", when="@5.3:5.4")
     provides("libllvm@16", when="@5.5:")
 
-    depends_on("cmake@3.4.3:", type="build", when="@:3.8")
-    depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
+    depends_on("cmake@3.4.3:", when="@:3.8", type="build")
+    depends_on("cmake@3.13.4:", when="@3.9.0:", type="build")
     depends_on("python", type="build")
     depends_on("z3", type="link")
     depends_on("zlib-api", type="link")
@@ -147,7 +147,7 @@ class LlvmAmdgpu(CMakePackage):
     # openmp dependencies
     depends_on("perl-data-dumper", when="+openmp", type=("build"))
     depends_on("hwloc", when="+openmp")
-    depends_on("elf", type="link", when="+openmp")
+    depends_on("elf", when="+openmp", type="link")
 
     # Will likely only be fixed in LLVM 12 upstream
     patch("fix-system-zlib-ncurses.patch", when="@3.5.0:3.8.0")

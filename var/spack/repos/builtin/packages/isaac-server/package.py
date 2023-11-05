@@ -31,7 +31,7 @@ class IsaacServer(CMakePackage):
 
     depends_on("cmake@3.3:", type="build")
     depends_on("jpeg", type="link")
-    depends_on("jansson@:2.9", type="link", when="@:1.5.1")
+    depends_on("jansson@:2.9", when="@:1.5.1", type="link")
     depends_on("jansson", type="link")
     depends_on("boost@1.56.0:+serialization", type="link")
     depends_on("libwebsockets@2.1.1:", type="link")

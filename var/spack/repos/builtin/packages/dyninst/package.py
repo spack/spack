@@ -72,10 +72,10 @@ class Dyninst(CMakePackage):
     # before that.
     # NB: Parallel DWARF parsing in Dyninst 10.2.0 requires a thread-
     #     safe libdw
-    depends_on("elfutils@0.186:", type="link", when="@12.0.1:")
-    depends_on("elfutils@0.178:", type="link", when="@10.2.0:")
-    depends_on("elfutils", type="link", when="@9.3.0:10.1")
-    depends_on("libelf", type="link", when="@:9.2")
+    depends_on("elfutils@0.186:", when="@12.0.1:", type="link")
+    depends_on("elfutils@0.178:", when="@10.2.0:", type="link")
+    depends_on("elfutils", when="@9.3.0:10.1", type="link")
+    depends_on("libelf", when="@:9.2", type="link")
 
     # Dyninst uses libdw from elfutils starting with 10.0, and used
     # libdwarf before that.
@@ -88,9 +88,9 @@ class Dyninst(CMakePackage):
     conflicts("^intel-parallel-studio", when="@12.0.0:")
     depends_on("tbb@2018.6.0:", when="@10.0.0:")
 
-    depends_on("cmake@3.4.0:", type="build", when="@10.1.0:")
-    depends_on("cmake@3.0.0:", type="build", when="@10.0.0:10.0")
-    depends_on("cmake@2.8:", type="build", when="@:9")
+    depends_on("cmake@3.4.0:", when="@10.1.0:", type="build")
+    depends_on("cmake@3.0.0:", when="@10.0.0:10.0", type="build")
+    depends_on("cmake@2.8:", when="@:9", type="build")
 
     patch("stat_dysect.patch", when="+stat_dysect")
     patch("stackanalysis_h.patch", when="@9.2.0")

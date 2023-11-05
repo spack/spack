@@ -20,7 +20,7 @@ class Roary(Package):
     depends_on("blast-plus", type="run")
     depends_on("cdhit", type="run")
     depends_on("fasttree~openmp", type="run")
-    depends_on("kraken", type="run", when="+kraken")
+    depends_on("kraken", when="+kraken", type="run")
     depends_on("mafft", type="run")
     depends_on("mcl+blast", type="run")
     depends_on("parallel", type="run")

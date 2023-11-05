@@ -408,7 +408,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     #
     depends_on("cgns", when="+exodus")
-    depends_on("cmake@3.23:", type="build", when="@14.0.0:")
+    depends_on("cmake@3.23:", when="@14.0.0:", type="build")
     depends_on("hdf5+hl", when="+hdf5")
     for plat in ["cray", "darwin", "linux"]:
         depends_on("hypre~internal-superlu~int64", when="+hypre platform=%s" % plat)

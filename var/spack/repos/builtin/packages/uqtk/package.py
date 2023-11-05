@@ -37,7 +37,7 @@ class Uqtk(CMakePackage):
     depends_on("py-scipy", when="+python", type=("build", "run"))
     depends_on("py-matplotlib", when="+python", type=("build", "run"))
     depends_on("py-pymc3", when="+python", type=("build", "run"))
-    depends_on("swig", type="build", when="@:3.1.0 +python")
+    depends_on("swig", when="@:3.1.0 +python", type="build")
 
     # The two patches for 3.1.0 fail with 3.1.2, therefore convert the patches
     # to more versatile and reliable sed-like filter_file substitutions.

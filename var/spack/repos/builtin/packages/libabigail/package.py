@@ -22,9 +22,9 @@ class Libabigail(AutotoolsPackage):
     depends_on("elfutils", type=("build", "link"))
     depends_on("libxml2", type=("build", "link"))
 
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("libtool", type="build", when="@master")
+    depends_on("autoconf", when="@master", type="build")
+    depends_on("automake", when="@master", type="build")
+    depends_on("libtool", when="@master", type="build")
 
     # Libabigail won't generate it's bin without Python
     depends_on("python@3.8:")
@@ -33,8 +33,8 @@ class Libabigail(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
 
     # Documentation dependencies
-    depends_on("doxygen", type="build", when="+docs")
-    depends_on("py-sphinx", type="build", when="+docs")
+    depends_on("doxygen", when="+docs", type="build")
+    depends_on("py-sphinx", when="+docs", type="build")
 
     def configure_args(self):
         spec = self.spec

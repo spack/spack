@@ -47,7 +47,7 @@ class RRhtslib(RPackage):
     # Some versions of this package will leave the temporary installation
     # directory in the htslib shared object. R will fix this if patchelf is
     # available
-    depends_on("patchelf", type="build", when="@1.12:1.14")
+    depends_on("patchelf", when="@1.12:1.14", type="build")
 
     patch("use_spack_Makeconf.patch", when="@1.12:1.28.0")
     patch("find_deps-1.12.patch", when="@1.12:1.14")

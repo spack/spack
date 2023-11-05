@@ -35,7 +35,7 @@ class Beast2(Package):
     depends_on("java")
     depends_on("java@17:", when="@2.7.0:")
     depends_on("javafx", when="@2.7.0:")
-    depends_on("libbeagle", type="run", when="+beagle")
+    depends_on("libbeagle", when="+beagle", type="run")
 
     def patch(self):
         # handle javafx stuff

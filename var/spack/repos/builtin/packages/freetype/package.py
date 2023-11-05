@@ -35,7 +35,7 @@ class Freetype(AutotoolsPackage, CMakePackage):
     depends_on("bzip2")
     depends_on("libpng")
     for plat in ["linux", "darwin", "cray"]:
-        depends_on("pkgconfig", type="build", when="platform=%s" % plat)
+        depends_on("pkgconfig", when="platform=%s", type="build" % plat)
 
     conflicts(
         "%intel",

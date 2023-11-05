@@ -37,7 +37,7 @@ class Openbabel(CMakePackage):
     depends_on("python", when="+python", type=("build", "run"))
     depends_on("cmake@3.1:", type="build")
     depends_on("pkgconfig", type="build")
-    depends_on("swig@2.0:", type="build", when="+python")
+    depends_on("swig@2.0:", when="+python", type="build")
 
     depends_on("boost +filesystem +iostreams +test")
     depends_on("cairo", when="+cairo")  # required to support PNG depiction

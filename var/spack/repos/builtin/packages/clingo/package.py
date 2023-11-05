@@ -41,16 +41,16 @@ class Clingo(CMakePackage):
 
     # See https://github.com/potassco/clingo/blob/v5.5.2/INSTALL.md
     depends_on("cmake@3.1:", type="build")
-    depends_on("cmake@3.18:", type="build", when="@5.5:")
+    depends_on("cmake@3.18:", when="@5.5:", type="build")
     depends_on("py-setuptools", when="@5.6.2:", type="build")
 
-    depends_on("doxygen", type="build", when="+docs")
+    depends_on("doxygen", when="+docs", type="build")
 
     with when("@spack,master"):
         depends_on("re2c@0.13:", type="build")
-        depends_on("bison@2.5:", type="build", when="platform=linux")
-        depends_on("bison@2.5:", type="build", when="platform=darwin")
-        depends_on("bison@2.5:", type="build", when="platform=cray")
+        depends_on("bison@2.5:", when="platform=linux", type="build")
+        depends_on("bison@2.5:", when="platform=darwin", type="build")
+        depends_on("bison@2.5:", when="platform=cray", type="build")
 
     with when("platform=windows"):
         depends_on("re2c@0.13:", type="build")

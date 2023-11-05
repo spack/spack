@@ -43,8 +43,8 @@ class NimrodAai(CMakePackage):
 
     depends_on("cmake", type="build")
     depends_on("mpi", when="+mpi")
-    depends_on("hdf5+fortran~mpi", type="build", when="~mpi")
-    depends_on("hdf5+fortran+mpi", type="build", when="+mpi")
+    depends_on("hdf5+fortran~mpi", when="~mpi", type="build")
+    depends_on("hdf5+fortran+mpi", when="+mpi", type="build")
 
     def cmake_args(self):
         args = [

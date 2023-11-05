@@ -30,6 +30,6 @@ class PyXopen(PythonPackage):
     depends_on("python@2.7,3.4:", when="@0.5:0.8", type=("build", "run"))
     depends_on("python@2.6:2,3.3:", when="@0.1.1", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@6.2:", type="build", when="@1.2.0:")
+    depends_on("py-setuptools-scm@6.2:", when="@1.2.0:", type="build")
     depends_on("py-setuptools-scm", type="build")
     depends_on("py-isal@1.0.0:", when="@1.6.0: target=x86_64:", type=("build", "run"))

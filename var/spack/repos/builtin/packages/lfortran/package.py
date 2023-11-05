@@ -21,13 +21,13 @@ class Lfortran(CMakePackage):
     variant("llvm", default=True, description="Build with LLVM support")
     variant("stacktrace", default=True, description="Build with stacktrace support")
 
-    depends_on("python@3:", type="build", when="@main")
+    depends_on("python@3:", when="@main", type="build")
     depends_on("cmake", type="build")
     depends_on("llvm@11:15", when="+llvm", type=("build", "run"))
     depends_on("zlib-api")
-    depends_on("re2c", type="build", when="@main")
-    depends_on("bison@:3.4", type="build", when="@main")
-    depends_on("binutils@2.38:", type="build", when="platform=linux")
+    depends_on("re2c", when="@main", type="build")
+    depends_on("bison@:3.4", when="@main", type="build")
+    depends_on("binutils@2.38:", when="platform=linux", type="build")
 
     def cmake_args(self):
         args = [

@@ -65,7 +65,7 @@ class Ccache(CMakePackage):
     depends_on("zstd", when="@4.0:")
 
     depends_on("hiredis@0.13.3:", when="@4.4: +redis")
-    depends_on("pkgconfig", type="build", when="@4.4:")
+    depends_on("pkgconfig", when="@4.4:", type="build")
 
     conflicts("%gcc@:7", when="@4.7.1:")
     conflicts("%gcc@:5", when="@4.4:")

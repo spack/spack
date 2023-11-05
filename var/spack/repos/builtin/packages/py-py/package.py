@@ -26,4 +26,4 @@ class PyPy(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")
-    depends_on("py-setuptools-scm+toml", type="build", when="@1.11.0:")
+    depends_on("py-setuptools-scm+toml", when="@1.11.0:", type="build")

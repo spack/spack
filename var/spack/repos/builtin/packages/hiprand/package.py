@@ -61,7 +61,7 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.10.2:", type="build")
 
-    depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:")
+    depends_on("rocm-cmake@5.2.0:", when="@5.2.0:", type="build")
     depends_on("rocm-cmake@5.1.0:", type="build")
 
     depends_on("hip +cuda", when="+cuda")

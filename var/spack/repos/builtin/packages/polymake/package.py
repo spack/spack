@@ -27,7 +27,7 @@ class Polymake(Package):
     depends_on("gmp")
     depends_on("lrslib")
     depends_on("mpfr")
-    depends_on("ninja", type="build", when="@3.2:")
+    depends_on("ninja", when="@3.2:", type="build")
     depends_on("perl")
     depends_on("perl-json")
     depends_on("perl-termreadkey")

@@ -104,7 +104,7 @@ class RocmCmake(CMakePackage):
     )
 
     depends_on("cmake@3:", type="build")
-    depends_on("cmake@3.6:", type="build", when="@4.1.0:")
+    depends_on("cmake@3.6:", when="@4.1.0:", type="build")
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)

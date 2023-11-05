@@ -150,7 +150,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         when="+bootstrap %gcc",
     )
 
-    depends_on("flex", type="build", when="@master")
+    depends_on("flex", when="@master", type="build")
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on("gmp@4.3.2:")
@@ -190,7 +190,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on(
         "binutils+gas+ld+plugins~libiberty", when="+binutils", type=("build", "link", "run")
     )
-    depends_on("zip", type="build", when="languages=java")
+    depends_on("zip", when="languages=java", type="build")
 
     # The server is sometimes a bit slow to respond
     timeout = {"timeout": 60}

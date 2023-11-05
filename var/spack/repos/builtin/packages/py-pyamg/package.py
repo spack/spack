@@ -25,9 +25,9 @@ class PyPyamg(PythonPackage):
     # PythonPackage class.
     depends_on("py-numpy@1.7:", type=("build", "run"))
     depends_on("py-scipy@0.12:", type=("build", "run"))
-    depends_on("py-setuptools@42:", type="build", when="@4.2.0:")
+    depends_on("py-setuptools@42:", when="@4.2.0:", type="build")
     # Later version required due to
     # https://github.com/pypa/setuptools_scm/issues/758
-    depends_on("py-setuptools-scm@7.1:+toml", type="build", when="@5.0.0:")
-    depends_on("py-setuptools-scm@5:+toml", type="build", when="@4.2.0:")
+    depends_on("py-setuptools-scm@7.1:+toml", when="@5.0.0:", type="build")
+    depends_on("py-setuptools-scm@5:+toml", when="@4.2.0:", type="build")
     depends_on("py-pybind11@2.8.0:", when="@4.2.0:", type=("build"))

@@ -97,7 +97,7 @@ class Texlive(AutotoolsPackage):
         description='Package subset to install, only meaningful for "live" ' "version",
     )
 
-    depends_on("perl", type="build", when="@live")
+    depends_on("perl", when="@live", type="build")
     depends_on("pkgconfig", when="@2019:", type="build")
 
     depends_on("cairo+X", when="@2019:")

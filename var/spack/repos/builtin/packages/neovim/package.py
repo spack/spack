@@ -95,7 +95,7 @@ class Neovim(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("gettext")
     depends_on("gperf", type="link")
-    depends_on("jemalloc", type="link", when="platform=linux")
+    depends_on("jemalloc", when="platform=linux", type="link")
     depends_on("lua-lpeg")
     depends_on("lua-mpack")
     depends_on("iconv", type="link")
@@ -105,7 +105,7 @@ class Neovim(CMakePackage):
     depends_on("libvterm", type="link")
     depends_on("msgpack-c", type="link")
     depends_on("unibilium", type="link")
-    depends_on("unibilium@:1.2.0", type="link", when="@0.2.0")
+    depends_on("unibilium@:1.2.0", when="@0.2.0", type="link")
 
     # versions
     with when("@0.4:"):

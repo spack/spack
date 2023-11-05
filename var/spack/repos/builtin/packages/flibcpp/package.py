@@ -35,8 +35,8 @@ class Flibcpp(CMakePackage):
         description="Build with this Fortran standard",
     )
 
-    depends_on("swig@4.0.2-fortran", type="build", when="+swig")
-    depends_on("py-sphinx", type="build", when="+doc")
+    depends_on("swig@4.0.2-fortran", when="+swig", type="build")
+    depends_on("py-sphinx", when="+doc", type="build")
 
     @run_before("cmake")
     def die_without_fortran(self):

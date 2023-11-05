@@ -48,9 +48,9 @@ class Meep(AutotoolsPackage):
     variant("mpb", default=True, description="Enable MPB support")
     variant("openmp", default=True, description="Enable OpenMP support")
 
-    depends_on("autoconf", type="build", when="@1.21.0:")
-    depends_on("automake", type="build", when="@1.21.0:")
-    depends_on("libtool", type="build", when="@1.21.0:")
+    depends_on("autoconf", when="@1.21.0:", type="build")
+    depends_on("automake", when="@1.21.0:", type="build")
+    depends_on("libtool", when="@1.21.0:", type="build")
 
     depends_on("blas", when="+blas")
     depends_on("lapack", when="+lapack")

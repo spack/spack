@@ -122,7 +122,7 @@ class Hipfort(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hip@" + ver, type="build", when="@" + ver)
+        depends_on("hip@" + ver, when="@", type="build" + ver)
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)

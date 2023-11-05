@@ -38,10 +38,10 @@ class Knem(AutotoolsPackage):
     )
 
     depends_on("hwloc", when="+hwloc")
-    depends_on("pkgconfig", type="build", when="+hwloc")
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("m4", type="build", when="@master")
+    depends_on("pkgconfig", when="+hwloc", type="build")
+    depends_on("autoconf", when="@master", type="build")
+    depends_on("automake", when="@master", type="build")
+    depends_on("m4", when="@master", type="build")
 
     # The support for hwloc was added in 0.9.1:
     conflicts("+hwloc", when="@:0.9.0")

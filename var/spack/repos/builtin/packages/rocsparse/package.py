@@ -150,7 +150,7 @@ class Rocsparse(CMakePackage):
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
+        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
 
     # Add option so Spack can manage downloaded test matricies as resources.
     patch("0001-set-mtx-directory.patch", when="@4.5.0:5.3 +test")
@@ -162,8 +162,8 @@ class Rocsparse(CMakePackage):
 
     depends_on("googletest@1.11.0:", when="@5.1.0: +test")
     depends_on("googletest@1.10.0:", when="+test")
-    depends_on("python@3:", type="build", when="+test")
-    depends_on("py-pyyaml", type="build", when="+test")
+    depends_on("python@3:", when="+test", type="build")
+    depends_on("py-pyyaml", when="+test", type="build")
 
     with when("+test"):
         resource(

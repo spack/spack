@@ -25,7 +25,7 @@ class LtrRetriever(Package):
     depends_on("hmmer@3.1b2:", type="run")
     depends_on("cdhit", type="run")
     depends_on("repeatmasker", type="run")
-    depends_on("py-tesorter", type="run", when="@2.9.4:")
+    depends_on("py-tesorter", when="@2.9.4:", type="run")
 
     def install(self, spec, prefix):
         filter_file(r"BLAST\+=.*", "BLAST+=%s" % spec["blast-plus"].prefix.bin, "paths")

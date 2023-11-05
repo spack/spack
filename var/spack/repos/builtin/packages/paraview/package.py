@@ -153,7 +153,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("cuda_arch=%d" % _arch, when="+cuda", msg="ParaView requires cuda_arch >= 20")
 
     depends_on("cmake@3.3:", type="build")
-    depends_on("cmake@3.21:", type="build", when="+rocm")
+    depends_on("cmake@3.21:", when="+rocm", type="build")
 
     extends("python", when="+python")
 

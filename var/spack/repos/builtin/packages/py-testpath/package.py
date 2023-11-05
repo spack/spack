@@ -18,5 +18,5 @@ class PyTestpath(PythonPackage):
     version("0.4.2", sha256="b694b3d9288dbd81685c5d2e7140b81365d46c29f5db4bc659de5aa6b98780f8")
 
     depends_on("python@3.5:", when="@0.5.0:", type=("build", "run"))
-    depends_on("py-flit-core@3.2.0:3.2", type="build", when="@:0.5.0")
-    depends_on("py-flit-core@3.2.0:3", type="build", when="@0.6.0:")
+    depends_on("py-flit-core@3.2.0:3.2", when="@:0.5.0", type="build")
+    depends_on("py-flit-core@3.2.0:3", when="@0.6.0:", type="build")

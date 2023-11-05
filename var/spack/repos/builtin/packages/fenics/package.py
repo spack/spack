@@ -139,7 +139,7 @@ class Fenics(CMakePackage):
 
     depends_on("py-pip", when="+python", type="build")
     depends_on("py-wheel", when="+python", type="build")
-    depends_on("py-setuptools", type="build", when="+python")
+    depends_on("py-setuptools", when="+python", type="build")
     depends_on("py-pkgconfig", when="+python", type=("build", "run"))
     depends_on("py-sphinx@1.0.1:", when="+doc", type="build")
 

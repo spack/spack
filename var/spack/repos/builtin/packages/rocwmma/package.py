@@ -55,7 +55,7 @@ class Rocwmma(CMakePackage):
         description="CMake build type",
     )
 
-    depends_on("cmake@3.16:", type="build", when="@5.2.0:")
+    depends_on("cmake@3.16:", when="@5.2.0:", type="build")
     depends_on("cmake@3.5:", type="build")
 
     depends_on("googletest@1.10.0:", type="test")
@@ -73,11 +73,11 @@ class Rocwmma(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
+        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
+        depends_on("llvm-amdgpu@" + ver, when="@", type="build" + ver)
         depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocblas@" + ver, type="build", when="@" + ver)
-        depends_on("rocm-openmp-extras@" + ver, type="build", when="@" + ver)
+        depends_on("rocblas@" + ver, when="@", type="build" + ver)
+        depends_on("rocm-openmp-extras@" + ver, when="@", type="build" + ver)
 
     for ver in ["5.6.0", "5.6.1"]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)

@@ -151,4 +151,4 @@ class PyTensorboard(PythonPackage):
     depends_on("py-tensorboard-plugin-wit@1.6.0:", when="@:2.13", type=("build", "run"))
     depends_on("py-werkzeug@1.0.1:", when="@2.9:", type=("build", "run"))
     depends_on("py-werkzeug@0.11.15:", type=("build", "run"))
-    depends_on("py-wheel@0.26:", type="build", when="@:2.13")
+    depends_on("py-wheel@0.26:", when="@:2.13", type="build")

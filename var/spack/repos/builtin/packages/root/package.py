@@ -206,10 +206,10 @@ class Root(CMakePackage):
 
     # ###################### Dependencies ######################
 
-    depends_on("cmake@3.4.3:", type="build", when="@:6.16")
-    depends_on("cmake@3.9:", type="build", when="@6.18.00:")
-    depends_on("cmake@3.16:", type="build", when="@6.26.00:")
-    depends_on("cmake@3.19:", type="build", when="@6.28.00: platform=darwin")
+    depends_on("cmake@3.4.3:", when="@:6.16", type="build")
+    depends_on("cmake@3.9:", when="@6.18.00:", type="build")
+    depends_on("cmake@3.16:", when="@6.26.00:", type="build")
+    depends_on("cmake@3.19:", when="@6.28.00: platform=darwin", type="build")
     depends_on("pkgconfig", type="build")
 
     depends_on("blas")

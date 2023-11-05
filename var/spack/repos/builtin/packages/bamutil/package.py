@@ -25,7 +25,7 @@ class Bamutil(MakefilePackage):
     )
 
     depends_on("zlib-api")
-    depends_on("git", type="build", when="@1.0.15:")
+    depends_on("git", when="@1.0.15:", type="build")
 
     patch("libstatgen-issue-9.patch", when="@1.0.13")
     patch("libstatgen-issue-19.patch", when="@1.0.13")

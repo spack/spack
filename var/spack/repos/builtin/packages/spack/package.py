@@ -63,11 +63,11 @@ class Spack(Package):
 
     # Python
     depends_on("python@2.6.0:2.7,3.5:", type="run")
-    depends_on("python@2.7.0:2.7,3.5:", type="run", when="@0.18.0:")
-    depends_on("python@2.7.0:2.7,3.6:", type="run", when="@0.19.0:")
+    depends_on("python@2.7.0:2.7,3.5:", when="@0.18.0:", type="run")
+    depends_on("python@2.7.0:2.7,3.6:", when="@0.19.0:", type="run")
 
     # Old Spack unfortunately depends on distutils, removed in Python 3.12
-    depends_on("python@:3.12", type="run", when="@0.18:0.20.1")
+    depends_on("python@:3.12", when="@0.18:0.20.1", type="run")
 
     # spack python -i ipython support
     depends_on("py-ipython", type="run")
@@ -91,26 +91,26 @@ class Spack(Package):
     depends_on("ccache", type="run")
 
     # Fetchers
-    depends_on("curl", type="run", when="fetchers=curl")
-    depends_on("git", type="run", when="fetchers=git")
-    depends_on("mercurial", type="run", when="fetchers=mercurial")
-    depends_on("subversion", type="run", when="fetchers=subversion")
-    depends_on("py-boto3", type="run", when="fetchers=s3")
+    depends_on("curl", when="fetchers=curl", type="run")
+    depends_on("git", when="fetchers=git", type="run")
+    depends_on("mercurial", when="fetchers=mercurial", type="run")
+    depends_on("subversion", when="fetchers=subversion", type="run")
+    depends_on("py-boto3", when="fetchers=s3", type="run")
 
     # Modules
-    depends_on("environment-modules", type="run", when="modules=environment-modules")
+    depends_on("environment-modules", when="modules=environment-modules", type="run")
 
     with when("modules=lmod"):
         depends_on("lmod", type="run")
         # Spack 0.18 uses lmod's depends_on function, which was introduced in v7.5.12
-        depends_on("lmod@7.5.12:", type="run", when="@0.18:")
+        depends_on("lmod@7.5.12:", when="@0.18:", type="run")
 
     # Buildcache
     # We really just need the 'strings' from binutils for older versions of spack
-    depends_on("binutils", type="run", when="@:0.20")
+    depends_on("binutils", when="@:0.20", type="run")
     depends_on("gnupg", type="run")
-    depends_on("patchelf", type="run", when="platform=linux")
-    depends_on("patchelf", type="run", when="platform=cray")
+    depends_on("patchelf", when="platform=linux", type="run")
+    depends_on("patchelf", when="platform=cray", type="run")
 
     # See https://github.com/spack/spack/pull/24686
     # and #25595, #25726, #25853, #25923, #25924 upstream in python/cpython

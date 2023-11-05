@@ -122,11 +122,11 @@ class Gnupg(AutotoolsPackage):
     depends_on("libksba@1.3.4:", when="@2.0.0:")
     depends_on("libassuan@2.4:", when="@2.0.0:2.2.3")
     depends_on("libassuan@2.5:", when="@2.2.15:")
-    depends_on("pinentry", type="run", when="@2:")
+    depends_on("pinentry", when="@2:", type="run")
     depends_on("iconv", when="@2:")
     depends_on("zlib-api")
 
-    depends_on("gawk", type="build", when="@:1")
+    depends_on("gawk", when="@:1", type="build")
     # note: perl and curl are gnupg1 dependencies when keyserver support is
     # requested, but we disable that.
 

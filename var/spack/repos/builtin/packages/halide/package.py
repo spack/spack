@@ -68,10 +68,10 @@ class Halide(CMakePackage, PythonExtension):
 
     depends_on("python@3.8:", when="+python", type=("build", "link", "run"))
     # See https://github.com/halide/Halide/blob/main/requirements.txt
-    depends_on("py-pybind11@2.6.2", type="build", when="+python")
-    depends_on("py-setuptools@43:", type="build", when="+python")
-    depends_on("py-scikit-build", type="build", when="+python")
-    depends_on("py-wheel", type="build", when="+python")
+    depends_on("py-pybind11@2.6.2", when="+python", type="build")
+    depends_on("py-setuptools@43:", when="+python", type="build")
+    depends_on("py-scikit-build", when="+python", type="build")
+    depends_on("py-wheel", when="+python", type="build")
 
     depends_on("py-imageio", when="+python", type=("build", "run"))
     depends_on("pil", when="+python", type=("build", "run"))

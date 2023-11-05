@@ -38,10 +38,10 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
 
     conflicts("+external-cblas", when="@:2.2")
 
-    depends_on("m4", type="build", when="+external-cblas")
-    depends_on("autoconf", type="build", when="+external-cblas")
-    depends_on("automake", type="build", when="+external-cblas")
-    depends_on("libtool", type="build", when="+external-cblas")
+    depends_on("m4", when="+external-cblas", type="build")
+    depends_on("autoconf", when="+external-cblas", type="build")
+    depends_on("automake", when="+external-cblas", type="build")
+    depends_on("libtool", when="+external-cblas", type="build")
     depends_on("blas", when="+external-cblas")
 
     @property

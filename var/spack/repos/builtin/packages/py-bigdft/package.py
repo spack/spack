@@ -24,6 +24,6 @@ class PyBigdft(PythonPackage):
     depends_on("py-setuptools")
 
     for vers in ["1.9.0", "1.9.1", "1.9.2", "develop"]:
-        depends_on("bigdft-futile@{0}".format(vers), type="run", when="@{0}".format(vers))
+        depends_on("bigdft-futile@{0}".format(vers), when="@{0}", type="run".format(vers))
 
     build_directory = "PyBigDFT"

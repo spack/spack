@@ -140,7 +140,7 @@ class RocmDbgapi(CMakePackage):
         "5.6.1",
         "master",
     ]:
-        depends_on("hsa-rocr-dev@" + ver, type="build", when="@" + ver)
+        depends_on("hsa-rocr-dev@" + ver, when="@", type="build" + ver)
         depends_on("comgr@" + ver, when="@", type=("build", "link") + ver)
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:

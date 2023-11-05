@@ -55,8 +55,8 @@ class PyDevito(PythonPackage):
 
     depends_on("mpi", when="+mpi", type=("build", "run"))
 
-    depends_on("intel-parallel-studio", type="run", when="%intel@:2021.1.1")
-    depends_on("intel-oneapi-compilers", type="run", when="%intel@2021.1.2:")
+    depends_on("intel-parallel-studio", when="%intel@:2021.1.1", type="run")
+    depends_on("intel-oneapi-compilers", when="%intel@2021.1.2:", type="run")
 
     patch("4.8.1.patch", when="@4.8.1")
 

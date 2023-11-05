@@ -51,8 +51,8 @@ class PyPyzmq(PythonPackage):
     depends_on("py-packaging", type="build")
 
     # setup.py
-    depends_on("py-cython@0.29:", type="build", when="@22.3.0:")
-    depends_on("py-cython@0.20:", type="build", when="@18:")
+    depends_on("py-cython@0.29:", when="@22.3.0:", type="build")
+    depends_on("py-cython@0.20:", when="@18:", type="build")
     depends_on("py-cython@0.16:", type="build")
     depends_on("libzmq", type=("build", "link"))
     depends_on("libzmq@3.2:", when="@22.3.0:", type=("build", "link"))

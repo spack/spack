@@ -53,12 +53,12 @@ class PyArmPyart(PythonPackage):
     depends_on("py-pylab-sdk", type="run")
 
     # Dependencies for variants
-    depends_on("py-cartopy", type="run", when="+cartopy")
-    depends_on("py-cylp", type="run", when="+cylp")
-    depends_on("gdal+python", type="run", when="+gdal")
-    depends_on("py-h5py", type="run", when="+hdf5")
+    depends_on("py-cartopy", when="+cartopy", type="run")
+    depends_on("py-cylp", when="+cylp", type="run")
+    depends_on("gdal+python", when="+gdal", type="run")
+    depends_on("py-h5py", when="+hdf5", type="run")
     depends_on("rsl", when="+rsl", type=("build", "run"))
-    depends_on("py-wradlib", type="run", when="+wradlib")
+    depends_on("py-wradlib", when="+wradlib", type="run")
 
     patch("StringIO.patch")
 

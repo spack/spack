@@ -45,7 +45,7 @@ class PyTopiaryAsr(PythonPackage):
     depends_on("raxml-ng@1.1:", type="run")
 
     depends_on("mpi", type="run")
-    depends_on("openmpi+legacylaunchers", type="run", when="^openmpi schedulers=slurm")
+    depends_on("openmpi+legacylaunchers", when="^openmpi schedulers=slurm", type="run")
 
     conflicts("^mpich")
 

@@ -40,7 +40,7 @@ class Libdrm(Package):
 
     # 2.4.90 is the first version to use meson, spack defaults to meson since
     # 2.4.101.
-    depends_on("meson", type="build", when="@2.4.101:")
+    depends_on("meson", when="@2.4.101:", type="build")
 
     # >= 2.4.104 uses reStructuredText for man pages.
     with when("@2.4.104: +docs"):

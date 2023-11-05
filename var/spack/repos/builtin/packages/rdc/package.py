@@ -100,9 +100,9 @@ class Rdc(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("cmake@3.15:3.19.7", type="build", when="@:4.3.1")
-    depends_on("cmake@3.15:", type="build", when="@4.5.0:")
-    depends_on("grpc@1.28.1+shared", type="build", when="@:5.3")
+    depends_on("cmake@3.15:3.19.7", when="@:4.3.1", type="build")
+    depends_on("cmake@3.15:", when="@4.5.0:", type="build")
+    depends_on("grpc@1.28.1+shared", when="@:5.3", type="build")
     depends_on("grpc@1.44.0+shared", when="@5.4.0:5.4")
     depends_on("grpc@1.55.0+shared", when="@5.5.0:")
     depends_on("protobuf")

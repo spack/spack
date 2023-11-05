@@ -42,7 +42,7 @@ class Botan(MakefilePackage):
     executables = ["^botan$"]
 
     depends_on("python", type="build")
-    depends_on("py-sphinx@1.2:", type="build", when="+doc")
+    depends_on("py-sphinx@1.2:", when="+doc", type="build")
 
     conflicts("%gcc@:10", when="@3:")
 

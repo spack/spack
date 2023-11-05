@@ -64,7 +64,7 @@ class RangeV3(CMakePackage):
     conflicts("%gcc@:5", when="cxxstd=17")
 
     depends_on("cmake@3.6:", type="build")
-    depends_on("doxygen+graphviz", type="build", when="+doc")
+    depends_on("doxygen+graphviz", when="+doc", type="build")
     depends_on(
         "boost+date_time+program_options@1.59.0: cxxstd=14",
         type="build",

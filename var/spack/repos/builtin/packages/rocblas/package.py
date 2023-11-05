@@ -131,8 +131,8 @@ class Rocblas(CMakePackage):
     # https://github.com/ROCm-Developer-Tools/hipamd/blob/rocm-5.2.x/include/hip/amd_detail/host_defines.h#L50
     conflicts("%gcc@12", when="@5.2.1:5.2.3")
 
-    depends_on("cmake@3.16.8:", type="build", when="@4.2.0:")
-    depends_on("cmake@3.8:", type="build", when="@3.9.0:")
+    depends_on("cmake@3.16.8:", when="@4.2.0:", type="build")
+    depends_on("cmake@3.8:", when="@3.9.0:", type="build")
     depends_on("cmake@3.5:", type="build")
 
     depends_on("googletest@1.10.0:", type="test")
@@ -144,10 +144,10 @@ class Rocblas(CMakePackage):
             self.run_test(exe, options=["--gtest_filter=*quick*-*known_bug*"])
 
     depends_on("hip@4.1.0:", when="@4.1.0:")
-    depends_on("llvm-amdgpu@4.1.0:", type="build", when="@4.1.0:")
-    depends_on("rocm-cmake@master", type="build", when="@master:")
-    depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
-    depends_on("rocm-cmake@4.3.0:", type="build", when="@4.3.0:")
+    depends_on("llvm-amdgpu@4.1.0:", when="@4.1.0:", type="build")
+    depends_on("rocm-cmake@master", when="@master:", type="build")
+    depends_on("rocm-cmake@4.5.0:", when="@4.5.0:", type="build")
+    depends_on("rocm-cmake@4.3.0:", when="@4.3.0:", type="build")
     depends_on("rocm-cmake@3.5.0:", type="build")
 
     for ver in [
@@ -180,8 +180,8 @@ class Rocblas(CMakePackage):
         "5.6.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
-        depends_on("rocminfo@" + ver, type="build", when="@" + ver)
+        depends_on("llvm-amdgpu@" + ver, when="@", type="build" + ver)
+        depends_on("rocminfo@" + ver, when="@", type="build" + ver)
 
     depends_on("python@3.6:", type="build")
 
@@ -195,8 +195,8 @@ class Rocblas(CMakePackage):
         depends_on("py-wheel", type="build")
         depends_on("py-msgpack", type="build")
         depends_on("py-pip", type="build")
-        depends_on("py-joblib", type="build", when="@5.6:")
-        depends_on("procps", type="build", when="@5.6:")
+        depends_on("py-joblib", when="@5.6:", type="build")
+        depends_on("procps", when="@5.6:", type="build")
 
     for t_version, t_commit in [
         ("@3.5.0", "f842a1a4427624eff6cbddb2405c36dec9a210cd"),

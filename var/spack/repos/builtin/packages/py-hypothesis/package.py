@@ -28,10 +28,10 @@ class PyHypothesis(PythonPackage):
     depends_on("py-attrs", when="@3.28.0:", type=("build", "run"))
     depends_on("py-sortedcontainers@2.1.0:2", when="@4.57.1:", type=("build", "run"))
 
-    depends_on("py-django@2.2:", type="run", when="+django")
-    depends_on("py-pytz@2014.1:", type="run", when="+django")
-    depends_on("py-numpy@1.9.0:", type="run", when="+numpy")
-    depends_on("py-pandas@0.25:", type="run", when="+pandas")
+    depends_on("py-django@2.2:", when="+django", type="run")
+    depends_on("py-pytz@2014.1:", when="+django", type="run")
+    depends_on("py-numpy@1.9.0:", when="+numpy", type="run")
+    depends_on("py-pandas@0.25:", when="+pandas", type="run")
 
     variant("django", default=False, description="Enable django support")
     variant("numpy", default=False, description="Enable numpy support")

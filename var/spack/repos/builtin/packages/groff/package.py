@@ -46,7 +46,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     # iconv is being asked whatever the release
     depends_on("iconv")
     # makeinfo is being searched for
-    depends_on("texinfo", type="build", when="@1.22.4:")
+    depends_on("texinfo", when="@1.22.4:", type="build")
     # configure complains when there is no uchardet that enhances preconv
     depends_on("uchardet", when="@1.22.4:")
     depends_on("pkgconfig", type="build")

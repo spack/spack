@@ -35,9 +35,9 @@ class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
     depends_on("halide@14.0.0:", type=("build", "link", "run"))
     depends_on("isl", type=("build", "link", "run"))
     depends_on("python@3.8:", when="+python", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.6.2:", type="build", when="+python")
+    depends_on("py-pybind11@2.6.2:", when="+python", type="build")
     depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-cython", type="run", when="+python")
+    depends_on("py-cython", when="+python", type="run")
 
     def cmake_args(self):
         spec = self.spec

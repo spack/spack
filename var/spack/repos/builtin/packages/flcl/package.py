@@ -22,8 +22,8 @@ class Flcl(CMakePackage):
     version("0.3", sha256="fc18c8fa3ae33db61203b647ad9025d894612b0faaf7fe07426aaa8bbfa9e703")
 
     depends_on("kokkos")
-    depends_on("cmake@3.17:", type="build", when="@:0.4.0")
-    depends_on("cmake@3.19:", type="build", when="@0.5.0:")
+    depends_on("cmake@3.17:", when="@:0.4.0", type="build")
+    depends_on("cmake@3.19:", when="@0.5.0:", type="build")
 
     conflicts(
         "^kokkos@3.3.00:", when="@:0.4.99", msg="Requires FLCL >= 0.5.0 to use Kokkos >= 3.3"

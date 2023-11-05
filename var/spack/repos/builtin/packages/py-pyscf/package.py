@@ -24,7 +24,7 @@ class PyPyscf(PythonPackage):
     version("1.7.3", sha256="62a26146a222140395b276ea33182f87809a21989ddcf78e2dcb8e35ebc57af2")
 
     # dependencies
-    depends_on("cmake@3.10:", type="build", when="@2.1:")
+    depends_on("cmake@3.10:", when="@2.1:", type="build")
     depends_on("cmake@2.8:", type="build")
     depends_on("python@3.6:", when="@2.1:", type=("build", "run"))
     depends_on("python@2.6:", type=("build", "run"))

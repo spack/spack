@@ -123,9 +123,9 @@ class Rocsolver(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("cmake@3.8:", type="build", when="@4.1.0:")
+    depends_on("cmake@3.8:", when="@4.1.0:", type="build")
     depends_on("cmake@3.5:", type="build")
-    depends_on("fmt@7:", type="build", when="@4.5.0:")
+    depends_on("fmt@7:", when="@4.5.0:", type="build")
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
@@ -141,9 +141,9 @@ class Rocsolver(CMakePackage):
         self.run_test(exe, options=["--gtest_filter=checkin*-*known_bug*"])
 
     depends_on("hip@4.1.0:", when="@4.1.0:")
-    depends_on("rocm-cmake@master", type="build", when="@master:")
-    depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
-    depends_on("rocm-cmake@4.3.0:", type="build", when="@4.3.0:")
+    depends_on("rocm-cmake@master", when="@master:", type="build")
+    depends_on("rocm-cmake@4.5.0:", when="@4.5.0:", type="build")
+    depends_on("rocm-cmake@4.3.0:", when="@4.3.0:", type="build")
     depends_on("rocm-cmake@3.5.0:", type="build")
 
     for ver in ["master", "develop"]:

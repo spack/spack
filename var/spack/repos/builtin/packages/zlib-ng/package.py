@@ -48,7 +48,7 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
     with when("build_system=cmake"):
         depends_on("cmake@3.5.1:", type="build")
-        depends_on("cmake@3.14.0:", type="build", when="@2.1.0:")
+        depends_on("cmake@3.14.0:", when="@2.1.0:", type="build")
 
     @property
     def libs(self):

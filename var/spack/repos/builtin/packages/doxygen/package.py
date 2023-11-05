@@ -78,8 +78,8 @@ class Doxygen(CMakePackage):
     depends_on("bison", type="build")
     # code.l just checks subminor version <=2.5.4 or >=2.5.33
     # but does not recognize 2.6.x as newer...could be patched if needed
-    depends_on("flex@2.5.39", type="build", when="@1.8.10")
-    depends_on("bison@2.7:", type="build", when="@1.8.10:")
+    depends_on("flex@2.5.39", when="@1.8.10", type="build")
+    depends_on("bison@2.7:", when="@1.8.10:", type="build")
 
     # optional dependencies
     depends_on("graphviz", when="+graphviz", type="run")

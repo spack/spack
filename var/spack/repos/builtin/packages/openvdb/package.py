@@ -54,7 +54,7 @@ class Openvdb(CMakePackage):
     depends_on("llvm@8.0.1", when="+ax")
     depends_on("bison", when="+ax")
     depends_on("flex", when="+ax")
-    depends_on("git", type="build", when="@develop")
+    depends_on("git", when="@develop", type="build")
 
     def cmake_args(self):
         args = [

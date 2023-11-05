@@ -98,7 +98,7 @@ class LinaroForge(Package):
     variant("accept-eula", default=False, description="Accept the EULA")
 
     # forge-probe executes with "/usr/bin/env python"
-    depends_on("python@2.7:", type="build", when="+probe")
+    depends_on("python@2.7:", when="+probe", type="build")
 
     # Licensing
     license_required = True

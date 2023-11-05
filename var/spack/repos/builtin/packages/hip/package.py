@@ -124,7 +124,7 @@ class Hip(CMakePackage):
 
     with when("+rocm"):
         depends_on("gl@4.5:")
-        depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
+        depends_on("py-cppheaderparser", when="@5.3.3:", type="build")
         for ver in [
             "3.5.0",
             "3.7.0",

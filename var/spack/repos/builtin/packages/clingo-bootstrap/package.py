@@ -37,7 +37,7 @@ class ClingoBootstrap(Clingo):
         default=False,
         description="Force a dependency on setuptools to help the old concretizer",
     )
-    depends_on("py-setuptools", type="build", when="+force_setuptools")
+    depends_on("py-setuptools", when="+force_setuptools", type="build")
 
     # Enable LTO
     conflicts("~ipo", when="+optimized")

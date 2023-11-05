@@ -28,6 +28,6 @@ class PyKiwisolver(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@61.2:", when="@1.4.4:", type="build")
     depends_on("py-setuptools-scm@3.4.3:+toml", when="@1.4.4:", type="build")
-    depends_on("py-cppy@1.1.0:", type="build", when="@1.2.0:")
-    depends_on("py-cppy@1.2.0:", type="build", when="@1.4.4:")
+    depends_on("py-cppy@1.1.0:", when="@1.2.0:", type="build")
+    depends_on("py-cppy@1.2.0:", when="@1.4.4:", type="build")
     depends_on("py-typing-extensions", when="@1.4.4: ^python@:3.7", type=("build", "run"))

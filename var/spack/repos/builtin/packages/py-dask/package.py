@@ -37,11 +37,11 @@ class PyDask(PythonPackage):
     depends_on("python@3.8:", when="@2022.10.2:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@62.6:", type="build", when="@2023.4.1:")
-    depends_on("py-versioneer@0.28+toml", type="build", when="@2023.4.1:")
+    depends_on("py-setuptools@62.6:", when="@2023.4.1:", type="build")
+    depends_on("py-versioneer@0.28+toml", when="@2023.4.1:", type="build")
 
     # Common requirements
-    depends_on("py-packaging@20:", type="build", when="@2022.10.2:")
+    depends_on("py-packaging@20:", when="@2022.10.2:", type="build")
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-pyyaml@5.3.1:", when="@2022.10.2:", type=("build", "run"))
     depends_on("py-cloudpickle@1.1.1:", when="@2021.3.1:", type=("build", "run"))

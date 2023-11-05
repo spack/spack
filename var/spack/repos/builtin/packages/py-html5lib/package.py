@@ -18,5 +18,5 @@ class PyHtml5lib(PythonPackage):
 
     depends_on("py-six", type=("build", "run"))
     depends_on("py-six@1.9:", when="@1.0.1:", type=("build", "run"))
-    depends_on("py-setuptools", type="build", when="@1.0.1:")
+    depends_on("py-setuptools", when="@1.0.1:", type="build")
     depends_on("py-webencodings", when="@1.0.1:", type=("build", "run"))

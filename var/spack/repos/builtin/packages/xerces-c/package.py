@@ -63,8 +63,8 @@ class XercesC(AutotoolsPackage):
         description="Use the specified transcoder",
     )
 
-    depends_on("iconv", type="link", when="transcoder=gnuiconv")
-    depends_on("icu4c", type="link", when="transcoder=icu")
+    depends_on("iconv", when="transcoder=gnuiconv", type="link")
+    depends_on("icu4c", when="transcoder=icu", type="link")
     depends_on("curl", when="netaccessor=curl")
 
     # Pass flags to configure.  This is necessary for CXXFLAGS or else

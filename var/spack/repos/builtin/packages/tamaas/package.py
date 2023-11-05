@@ -34,7 +34,7 @@ class Tamaas(SConsPackage):
     )
 
     # Python 3.6 causes unicode issues with scons
-    depends_on("python@3.7:", type="build", when="~python")
+    depends_on("python@3.7:", when="~python", type="build")
     depends_on("scons@3:", type="build")
 
     depends_on("thrust", type="build")

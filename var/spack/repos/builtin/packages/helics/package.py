@@ -77,17 +77,17 @@ class Helics(CMakePackage):
     )
 
     # Build dependency
-    depends_on("git", type="build", when="@master:")
-    depends_on("cmake@3.4:", type="build", when="@:2")
-    depends_on("cmake@3.10:", type="build", when="@3.0.0:3.2.1")
-    depends_on("cmake@3.11:", type="build", when="@3.3.0:")
-    depends_on("boost@1.70:", type="build", when="+boost")
+    depends_on("git", when="@master:", type="build")
+    depends_on("cmake@3.4:", when="@:2", type="build")
+    depends_on("cmake@3.10:", when="@3.0.0:3.2.1", type="build")
+    depends_on("cmake@3.11:", when="@3.3.0:", type="build")
+    depends_on("boost@1.70:", when="+boost", type="build")
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, type="build", when="+boost")
-    depends_on("swig@3.0:", type="build", when="+swig")
+    depends_on(Boost.with_default_variants, when="+boost", type="build")
+    depends_on("swig@3.0:", when="+swig", type="build")
 
     depends_on("libzmq@4.3:", when="+zmq")
     depends_on("mpi@2", when="+mpi")

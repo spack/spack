@@ -43,14 +43,14 @@ class PyH5py(PythonPackage):
     depends_on("python@3.7:", when="@3.2:", type=("build", "run"))
 
     # Build dependencies
-    depends_on("py-cython@0.23:0", type="build", when="@:2")
+    depends_on("py-cython@0.23:0", when="@:2", type="build")
     depends_on("py-cython@0.29:0", when="@3:", type=("build"))
     depends_on("py-cython@0.29.14:0", when="@3:3.7 ^python@3.8.0:3.8", type=("build"))
     depends_on("py-cython@0.29.15:0", when="@3:3.7 ^python@3.9.0:", type=("build"))
     depends_on("py-pkgconfig", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@61:", type="build", when="@3.8.0:")
-    depends_on("py-wheel", type="build", when="@3:")
+    depends_on("py-setuptools@61:", when="@3.8.0:", type="build")
+    depends_on("py-wheel", when="@3:", type="build")
 
     # Build and runtime dependencies
     depends_on("py-cached-property@1.5:", when="@:3.6 ^python@:3.7", type=("build", "run"))

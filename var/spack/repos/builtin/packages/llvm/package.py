@@ -265,13 +265,13 @@ class Llvm(CMakePackage, CudaPackage):
 
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
-    depends_on("cmake@3.13.4:", type="build", when="@12:")
-    depends_on("cmake@3.20:", type="build", when="@16:")
+    depends_on("cmake@3.13.4:", when="@12:", type="build")
+    depends_on("cmake@3.20:", when="@16:", type="build")
     with when("@:10"):
         # Versions 10 and older cannot build runtimes with cmake@3.17:
         # See https://reviews.llvm.org/D77284
         for runtime in ["libunwind", "libcxx", "compiler-rt"]:
-            depends_on("cmake@:3.16", type="build", when="{0}=runtime".format(runtime))
+            depends_on("cmake@:3.16", when="{0}=runtime", type="build".format(runtime))
         del runtime
     depends_on("python", when="~python", type="build")
     depends_on("pkgconfig", type="build")

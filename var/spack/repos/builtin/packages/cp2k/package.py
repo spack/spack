@@ -183,7 +183,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
 
     with when("+libint"):
         # ... and in CP2K 7.0+ for linking to libint2
-        depends_on("pkgconfig", type="build", when="@7.0:")
+        depends_on("pkgconfig", when="@7.0:", type="build")
         # libint & libxc are always statically linked
         depends_on("libint@1.1.4:1.2", when="@3.0:6.9")
         for lmax in HFX_LMAX_RANGE:

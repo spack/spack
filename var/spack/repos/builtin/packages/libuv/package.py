@@ -37,10 +37,10 @@ class Libuv(AutotoolsPackage):
             url = "https://dist.libuv.org/dist/v{0}/libuv-v{0}-dist.tar.gz"
         return url.format(version, version)
 
-    depends_on("automake", type="build", when="@:1.43.0")
-    depends_on("autoconf", type="build", when="@:1.43.0")
-    depends_on("libtool", type="build", when="@:1.43.0")
-    depends_on("m4", type="build", when="@:1.43.0")
+    depends_on("automake", when="@:1.43.0", type="build")
+    depends_on("autoconf", when="@:1.43.0", type="build")
+    depends_on("libtool", when="@:1.43.0", type="build")
+    depends_on("m4", when="@:1.43.0", type="build")
 
     # Tries to build an Objective-C file with GCC's C frontend
     # https://github.com/libuv/libuv/issues/2805

@@ -26,14 +26,14 @@ class Eztrace(Package):
     depends_on("binutils")
 
     # eztrace 1.x dependencies
-    depends_on("autoconf@2.71", type="build", when="@:1")
-    depends_on("automake", type="build", when="@:1")
-    depends_on("libtool", type="build", when="@:1")
+    depends_on("autoconf@2.71", when="@:1", type="build")
+    depends_on("automake", when="@:1", type="build")
+    depends_on("libtool", when="@:1", type="build")
     # Does not work on Darwin due to MAP_POPULATE
     conflicts("platform=darwin", when="@:1")
 
     # eztrace 2.x dependencies
-    depends_on("cmake@3.1:", type="build", when="@2.0:")
+    depends_on("cmake@3.1:", when="@2.0:", type="build")
     depends_on("otf2", when="@2.0:")
 
     variant("starpu", default=False, description="Enable StarPU support", when="@2.1:")

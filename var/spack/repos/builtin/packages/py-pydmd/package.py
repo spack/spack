@@ -25,9 +25,9 @@ class PyPydmd(PythonPackage):
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-future", type=("build", "run"))
     depends_on("py-nose", type="test")
-    depends_on("texlive", type="build", when="+docs")
-    depends_on("py-sphinx@1.4.0:1.4", type="build", when="+docs")
-    depends_on("py-sphinx-rtd-theme", type="build", when="+docs")
+    depends_on("texlive", when="+docs", type="build")
+    depends_on("py-sphinx@1.4.0:1.4", when="+docs", type="build")
+    depends_on("py-sphinx-rtd-theme", when="+docs", type="build")
 
     # https://github.com/mathLab/PyDMD/pull/133
     patch("isuue-133.patch", when="@0.3")

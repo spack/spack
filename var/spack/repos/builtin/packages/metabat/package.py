@@ -29,7 +29,7 @@ class Metabat(CMakePackage):
     )
 
     depends_on("autoconf", type="build")
-    depends_on("cmake", type="build", when="@2.13:")
+    depends_on("cmake", when="@2.13:", type="build")
     depends_on("boost@1.55.0:", type=("build", "run"))
 
     # TODO: replace this with an explicit list of components of Boost,

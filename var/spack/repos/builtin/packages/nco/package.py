@@ -49,7 +49,7 @@ class Nco(AutotoolsPackage):
 
     depends_on("flex", type="build")
     depends_on("bison", type="build")
-    depends_on("texinfo@4.12:", type="build", when="+doc")
+    depends_on("texinfo@4.12:", when="+doc", type="build")
 
     conflicts("%gcc@9:", when="@:4.7.8")
 

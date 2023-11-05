@@ -17,5 +17,5 @@ class PyDeap(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     # uses 2to3
-    depends_on("py-setuptools@:57", type="build", when="@1.3.1")
+    depends_on("py-setuptools@:57", when="@1.3.1", type="build")
     depends_on("py-numpy", type=("build", "run"))

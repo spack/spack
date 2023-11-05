@@ -19,6 +19,6 @@ class PyInflect(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("python@3.7:", when="@6.0.2:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools@56:", type="build", when="@6.0.2:")
+    depends_on("py-setuptools@56:", when="@6.0.2:", type="build")
     depends_on("py-setuptools-scm+toml@3.4.1:", type="build")
     depends_on("py-pydantic@1.9.1:", when="@6.0.2:", type=("build", "run"))

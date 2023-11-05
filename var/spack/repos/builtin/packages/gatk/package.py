@@ -62,10 +62,10 @@ class Gatk(Package):
     # output.
     variant("r", default=False, description="Use R for plotting")
 
-    depends_on("java@17", type="run", when="@4.4:")
-    depends_on("java@8", type="run", when="@:4.3")
-    depends_on("python@2.6:2.8,3.6:", type="run", when="@4.0:")
-    depends_on("r@3.2:", type="run", when="@4.0: +r")
+    depends_on("java@17", when="@4.4:", type="run")
+    depends_on("java@8", when="@:4.3", type="run")
+    depends_on("python@2.6:2.8,3.6:", when="@4.0:", type="run")
+    depends_on("r@3.2:", when="@4.0: +r", type="run")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

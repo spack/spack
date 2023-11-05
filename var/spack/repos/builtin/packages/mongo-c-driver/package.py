@@ -43,12 +43,12 @@ class MongoCDriver(Package):
         when="@1.8.1",
     )
 
-    depends_on("cmake@3.1:", type="build", when="@1.10.0:")
+    depends_on("cmake@3.1:", when="@1.10.0:", type="build")
 
-    depends_on("autoconf", type="build", when="@1.8.1")
-    depends_on("automake", type="build", when="@1.8.1")
-    depends_on("libtool", type="build", when="@1.8.1")
-    depends_on("m4", type="build", when="@1.8.1")
+    depends_on("autoconf", when="@1.8.1", type="build")
+    depends_on("automake", when="@1.8.1", type="build")
+    depends_on("libtool", when="@1.8.1", type="build")
+    depends_on("m4", when="@1.8.1", type="build")
 
     depends_on("pkgconfig", type="build")
 

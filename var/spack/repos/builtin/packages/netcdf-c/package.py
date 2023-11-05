@@ -136,13 +136,13 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     with when("build_system=cmake"):
         # Based on the versions required by the root CMakeLists.txt:
-        depends_on("cmake@2.8.12:", type="build", when="@4.3.3:4.3")
-        depends_on("cmake@2.8.11:", type="build", when="@4.4.0:")
-        depends_on("cmake@3.6.1:", type="build", when="@4.5.0:")
-        depends_on("cmake@3.12:", type="build", when="@4.9.0:")
+        depends_on("cmake@2.8.12:", when="@4.3.3:4.3", type="build")
+        depends_on("cmake@2.8.11:", when="@4.4.0:", type="build")
+        depends_on("cmake@3.6.1:", when="@4.5.0:", type="build")
+        depends_on("cmake@3.12:", when="@4.9.0:", type="build")
         # Starting version 4.9.1, nczarr_test/CMakeLists.txt relies on the FILE_PERMISSIONS feature
         # of the configure_file command, which is only available starting CMake 3.20:
-        depends_on("cmake@3.20:", type="test", when="@4.9.1:")
+        depends_on("cmake@3.20:", when="@4.9.1:", type="test")
 
     with when("build_system=autotools"):
         for __s in itertools.chain(["@main"], _force_autoreconf_when):
@@ -155,7 +155,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     # M4 is also needed for the source and man file generation. All the generated source files are
     # included in the release tarballs starting at least the oldest supported version:
-    depends_on("m4", type="build", when="@main")
+    depends_on("m4", when="@main", type="build")
 
     # The man files are included in the release tarballs starting version 4.5.0 but they are not
     # needed for the Windows platform:
@@ -164,10 +164,10 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
             # It is possible to install the package with CMake and without M4 on a non-Windows
             # platform but some of the man files will not be installed in that case (even if they
             # are in the release tarball):
-            depends_on("m4", type="build", when="build_system=cmake")
+            depends_on("m4", when="build_system=cmake", type="build")
             # Apart from the redundant configure-time check, which we suppress below, M4 is not
             # needed when building with Autotools if the man files are in the release tarball:
-            depends_on("m4", type="build", when="@:4.4 build_system=autotools")
+            depends_on("m4", when="@:4.4 build_system=autotools", type="build")
     del __p
 
     depends_on("hdf~netcdf", when="+hdf4")

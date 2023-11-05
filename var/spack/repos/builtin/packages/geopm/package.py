@@ -57,16 +57,16 @@ class Geopm(AutotoolsPackage):
     variant("gnu-ld", default=False, description="Assume C compiler uses gnu-ld.")
 
     # Added dependencies.
-    depends_on("ruby-ronn", type="build", when="+doc")
-    depends_on("doxygen", type="build", when="+doc")
+    depends_on("ruby-ronn", when="+doc", type="build")
+    depends_on("doxygen", when="+doc", type="build")
     depends_on("mpi@2.2:", when="+mpi")
 
     depends_on("m4", type="build")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
-    depends_on("ruby-ronn", type="build", when="+doc")
-    depends_on("doxygen", type="build", when="+doc")
+    depends_on("ruby-ronn", when="+doc", type="build")
+    depends_on("doxygen", when="+doc", type="build")
     depends_on("numactl", when="@:1.0.0-rc2")
     depends_on("mpi", when="+mpi")
     depends_on("hwloc@1.11.9", when="@:0.5.1")

@@ -63,7 +63,7 @@ class Grid(AutotoolsPackage):
 
     depends_on("c-lime", when="+lime")
 
-    depends_on("doxygen", type="build", when="+doxygen-doc")
+    depends_on("doxygen", when="+doxygen-doc", type="build")
 
     def autoreconf(self, spec, prefix):
         Executable("./bootstrap.sh")()

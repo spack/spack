@@ -24,5 +24,5 @@ class PyPythonDateutil(PythonPackage):
 
     depends_on("python@2.7:2.8,3.3:", when="@2.7.5:", type=("build", "run"))
     depends_on("py-setuptools@24.3:", type="build")
-    depends_on("py-setuptools-scm", type="build", when="@2.7.0:")
+    depends_on("py-setuptools-scm", when="@2.7.0:", type="build")
     depends_on("py-six@1.5:", when="@2:", type=("build", "run"))

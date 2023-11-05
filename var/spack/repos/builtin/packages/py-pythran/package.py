@@ -48,7 +48,7 @@ class PyPythran(PythonPackage):
     depends_on("llvm-openmp", when="%apple-clang", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("py-pytest-runner", type="build", when="@:0.9")
+    depends_on("py-pytest-runner", when="@:0.9", type="build")
     depends_on("py-networkx@2:", when="@:0.9.11", type=("build", "run"))
     depends_on("py-decorator", when="@:0.9.11", type=("build", "run"))
     depends_on("py-six", when="@:0.9.11", type=("build", "run"))

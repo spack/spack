@@ -60,8 +60,8 @@ class Ngspice(AutotoolsPackage):
     depends_on("readline", when="+readline build=bin")
 
     # Needed for autoreconf:
-    depends_on("bison", type="build", when="@master")
-    depends_on("flex", type="build", when="@master")
+    depends_on("bison", when="@master", type="build")
+    depends_on("flex", when="@master", type="build")
 
     # INSTALL indicates dependency on these :
     depends_on("freetype", when="+X build=bin")
@@ -74,9 +74,9 @@ class Ngspice(AutotoolsPackage):
     depends_on("libx11", when="+X build=bin")
 
     # Need autotools when building on master:
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("libtool", type="build", when="@master")
+    depends_on("autoconf", when="@master", type="build")
+    depends_on("automake", when="@master", type="build")
+    depends_on("libtool", when="@master", type="build")
 
     depends_on("adms", when="@master")
 

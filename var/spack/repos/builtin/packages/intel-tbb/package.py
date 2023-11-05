@@ -115,7 +115,7 @@ class IntelTbb(CMakePackage, MakefilePackage):
 
     # Build and install CMake config files if we're new enough.
     # CMake support started in 2017.7.
-    depends_on("cmake@3.1.0:", type="build", when="@2017.7:")
+    depends_on("cmake@3.1.0:", when="@2017.7:", type="build")
 
     depends_on("hwloc", when="@2021.1.1:")
 

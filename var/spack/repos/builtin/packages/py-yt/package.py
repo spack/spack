@@ -75,8 +75,8 @@ class PyYt(PythonPackage):
     # Build dependencies:
     # See https://github.com/yt-project/yt/blob/yt-4.1.2/pyproject.toml#L2
     depends_on("py-cython@0.24:", type="build")
-    depends_on("py-cython@0.29.21:2", type="build", when="@4.1.2:")
-    depends_on("py-wheel@0.36.2:", type="build", when="@4.1.2:")
+    depends_on("py-cython@0.29.21:2", when="@4.1.2:", type="build")
+    depends_on("py-wheel@0.36.2:", when="@4.1.2:", type="build")
     depends_on("py-setuptools@19.6:", type=("build", "run"))
     depends_on("py-setuptools@59.0.1:", when="@4.1.2:", type=("build", "run"))
 

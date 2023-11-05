@@ -19,6 +19,6 @@ class PyConfigparser(PythonPackage):
 
     depends_on("python@3.6:", when="@5.2.0:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@34.4:", type="build", when="@3.5.1:")
-    depends_on("py-setuptools@56:", type="build", when="@5.2.0:")
-    depends_on("py-setuptools-scm@3.4.1:+toml", type="build", when="@5.2.0:")
+    depends_on("py-setuptools@34.4:", when="@3.5.1:", type="build")
+    depends_on("py-setuptools@56:", when="@5.2.0:", type="build")
+    depends_on("py-setuptools-scm@3.4.1:+toml", when="@5.2.0:", type="build")

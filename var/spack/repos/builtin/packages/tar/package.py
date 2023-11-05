@@ -38,9 +38,9 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
     depends_on("iconv")
 
     # Compression
-    depends_on("gzip", type="run", when="zip=gzip")
-    depends_on("pigz", type="run", when="zip=pigz")
-    depends_on("zstd+programs", type="run", when="@1.31:")
+    depends_on("gzip", when="zip=gzip", type="run")
+    depends_on("pigz", when="zip=pigz", type="run")
+    depends_on("zstd+programs", when="@1.31:", type="run")
     depends_on("xz", type="run")  # for xz/lzma
     depends_on("bzip2", type="run")
 

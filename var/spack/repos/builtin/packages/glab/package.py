@@ -27,8 +27,8 @@ class Glab(Package):
     version("1.20.0", sha256="6beb0186fa50d0dea3b05fcfe6e4bc1f9be0c07aa5fa15b37ca2047b16980412")
 
     depends_on("go@1.13:", type="build")
-    depends_on("go@1.17:", type="build", when="@1.22.0:")
-    depends_on("go@1.18:", type="build", when="@1.23.0:")
+    depends_on("go@1.17:", when="@1.22.0:", type="build")
+    depends_on("go@1.18:", when="@1.23.0:", type="build")
 
     phases = ["build", "install"]
 

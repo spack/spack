@@ -22,7 +22,7 @@ class PyIgraph(PythonPackage):
     depends_on("pkgconfig", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-texttable@1.6.2:", type=("build", "run"))
-    depends_on("py-matplotlib@3.5", type="run", when="+matplotlib")
+    depends_on("py-matplotlib@3.5", when="+matplotlib", type="run")
 
     def setup_build_environment(self, env):
         env.set("IGRAPH_USE_PKG_CONFIG", "1")

@@ -28,6 +28,6 @@ class PyQtconsole(PythonPackage):
     depends_on("py-traitlets", type=("build", "run"))
     depends_on("py-ipython-genutils", when="@4.5.1:", type=("build", "run"))
     depends_on("py-sphinx@1.3:", when="+docs", type=("build", "run"))
-    depends_on("py-pyqt5", type="run", when="@:5.1")
+    depends_on("py-pyqt5", when="@:5.1", type="run")
     depends_on("py-qtpy", when="@5.2.0:", type=("build", "run"))
     depends_on("py-pyzmq@17.1:", when="@5.2.0:", type=("build", "run"))

@@ -31,7 +31,7 @@ class Mumax(MakefilePackage, CudaPackage):
 
     depends_on("cuda")
     depends_on("go", type="build")
-    depends_on("gnuplot", type="run", when="+gnuplot")
+    depends_on("gnuplot", when="+gnuplot", type="run")
 
     conflicts("~cuda", msg="mumax requires cuda")
 

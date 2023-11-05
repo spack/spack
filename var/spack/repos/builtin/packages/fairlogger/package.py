@@ -103,7 +103,7 @@ class Fairlogger(CMakePackage):
     conflicts("+pretty", when="@:1.3")
 
     depends_on("cmake@3.9.4:", type="build")
-    depends_on("git", type="build", when="@develop")
+    depends_on("git", when="@develop", type="build")
 
     depends_on("boost", when="+pretty")
     conflicts("^boost@1.70:", when="^cmake@:3.14")

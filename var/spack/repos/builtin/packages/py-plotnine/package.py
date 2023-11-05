@@ -24,10 +24,10 @@ class PyPlotnine(PythonPackage):
     depends_on("python@3.8:", when="@0.9.0:", type=("build", "run"))
     depends_on("python@3.6:", when="@0.6.0:", type=("build", "run"))
 
-    depends_on("py-setuptools@59:", type="build", when="@0.9.0:")
-    depends_on("py-setuptools", type="build", when="@0.6.0:")
+    depends_on("py-setuptools@59:", when="@0.9.0:", type="build")
+    depends_on("py-setuptools", when="@0.6.0:", type="build")
 
-    depends_on("py-setuptools-scm@6.4:+toml", type="build", when="@0.9.0:")
+    depends_on("py-setuptools-scm@6.4:+toml", when="@0.9.0:", type="build")
 
     depends_on("py-descartes@1.1.0:", when="@:0.8.0", type=("build", "run"))
 

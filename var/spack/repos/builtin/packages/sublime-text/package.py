@@ -38,14 +38,14 @@ class SublimeText(Package):
     # add them as runtime dependencies.
 
     # depends_on("libgobject", type="run")
-    depends_on("gtkplus@:2", type="run", when="@:3.1")
-    depends_on("gtkplus@3:", type="run", when="@3.2:3.2.2")
-    depends_on("glib", type="run", when="@:3.2.2")
-    depends_on("libx11", type="run", when="@:3.2.2")
-    depends_on("pcre", type="run", when="@:3.2.2")
-    depends_on("libffi", type="run", when="@:3.2.2")
-    depends_on("libxcb", type="run", when="@:3.2.2")
-    depends_on("libxau", type="run", when="@:3.2.2")
+    depends_on("gtkplus@:2", when="@:3.1", type="run")
+    depends_on("gtkplus@3:", when="@3.2:3.2.2", type="run")
+    depends_on("glib", when="@:3.2.2", type="run")
+    depends_on("libx11", when="@:3.2.2", type="run")
+    depends_on("pcre", when="@:3.2.2", type="run")
+    depends_on("libffi", when="@:3.2.2", type="run")
+    depends_on("libxcb", when="@:3.2.2", type="run")
+    depends_on("libxau", when="@:3.2.2", type="run")
 
     def url_for_version(self, version):
         if version[0] == 2:

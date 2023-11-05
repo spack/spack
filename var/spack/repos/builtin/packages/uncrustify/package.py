@@ -40,6 +40,6 @@ class Uncrustify(CMakePackage, AutotoolsPackage):
     with when("build_system=autotools"):
         depends_on("automake", type="build")
         depends_on("autoconf", type="build")
-        depends_on("libtool", type="build", when="@0.63")
+        depends_on("libtool", when="@0.63", type="build")
 
     patch("uncrustify-includes.patch", when="@0.73")

@@ -154,7 +154,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
+        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
         depends_on("rocsparse@" + ver, when="+rocm @" + ver)
 
     for tgt in ROCmPackage.amdgpu_targets:

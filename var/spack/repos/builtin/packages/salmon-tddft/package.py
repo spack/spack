@@ -37,12 +37,12 @@ class SalmonTddft(CMakePackage):
     )
 
     depends_on("cmake@3.14:", type="build")
-    depends_on("mpi", type="link", when="+mpi")
-    depends_on("scalapack", type="link", when="+scalapack")
-    depends_on("eigenexa", type="link", when="+eigenexa")
+    depends_on("mpi", when="+mpi", type="link")
+    depends_on("scalapack", when="+scalapack", type="link")
+    depends_on("eigenexa", when="+eigenexa", type="link")
     depends_on("lapack", type="link")
-    depends_on("libxc", type="link", when="+libxc")
-    depends_on("libxc@:4.9", type="link", when="@:1.9.9 +libxc")
+    depends_on("libxc", when="+libxc", type="link")
+    depends_on("libxc@:4.9", when="@:1.9.9 +libxc", type="link")
 
     conflicts("+scalapack", when="~mpi")
     conflicts("+eigenexa", when="@:1.9.9")

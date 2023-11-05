@@ -189,7 +189,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+lld", when="platform=darwin", msg="lld does not work on Darwin")
 
     depends_on("cmake@3.17.0:", type="build")
-    depends_on("cmake@3.21.0:", type="build", when="@0.103:")
+    depends_on("cmake@3.21.0:", when="@0.103:", type="build")
 
     # Specify the correct versions of Hydrogen
     depends_on("hydrogen@:1.3.4", when="@0.95:0.100")
@@ -310,7 +310,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     # Python front end and possible extra packages
     depends_on("python@3: +shared", when="@:0.90,0.99: +pfe", type=("build", "run"))
     extends("python", when="+pfe")
-    depends_on("py-setuptools", type="build", when="+pfe")
+    depends_on("py-setuptools", when="+pfe", type="build")
     depends_on("py-protobuf+cpp@3.10.0:", when="@:0.90,0.99: +pfe", type=("build", "run"))
 
     depends_on("protobuf+shared@3.10.0:", when="@:0.90,0.99:")

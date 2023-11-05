@@ -31,7 +31,7 @@ class Angsd(MakefilePackage):
     depends_on("lzma")
     depends_on("curl")
 
-    depends_on("r", type="run", when="+r")
+    depends_on("r", when="+r", type="run")
 
     def setup_run_environment(self, env):
         env.set("R_LIBS", self.prefix.R)

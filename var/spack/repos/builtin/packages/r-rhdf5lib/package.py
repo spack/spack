@@ -23,8 +23,8 @@ class RRhdf5lib(RPackage):
     version("1.2.1", commit="dbf85dbedb736d5a696794d52875729c8514494e")
     version("1.0.0", commit="79608038c2016a518ba747fe6a2bf02ce53a75f9")
 
-    depends_on("r@3.3.0:", type="build", when="@1.12.1:")
-    depends_on("r@4.0.0:", type="build", when="@1.16.0:")
+    depends_on("r@3.3.0:", when="@1.12.1:", type="build")
+    depends_on("r@4.0.0:", when="@1.16.0:", type="build")
     depends_on("r@4.2.0:", when="@1.22.0:", type=("build", "run"))
     depends_on("gmake", type="build")
     depends_on("zlib-api")

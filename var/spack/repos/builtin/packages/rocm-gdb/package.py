@@ -140,8 +140,8 @@ class RocmGdb(AutotoolsPackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-dbgapi@" + ver, type="link", when="@" + ver)
-        depends_on("comgr@" + ver, type="link", when="@" + ver)
+        depends_on("rocm-dbgapi@" + ver, when="@", type="link" + ver)
+        depends_on("comgr@" + ver, when="@", type="link" + ver)
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
         depends_on("rocm-core@" + ver, when="@" + ver)

@@ -29,7 +29,7 @@ class Librsvg(AutotoolsPackage):
     # error" starting from 1.69
     depends_on("rust@1.40:1.68", when="@2.50:2.51", type="build")
     depends_on("rust", when="@2.41:", type="build")
-    depends_on("gtk-doc", type="build", when="+doc")
+    depends_on("gtk-doc", when="+doc", type="build")
 
     # requirements according to `configure` file
     depends_on("cairo@1.16:+gobject", when="@2.50:")

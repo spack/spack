@@ -18,6 +18,6 @@ class PyOpenslidePython(PythonPackage):
     depends_on("openslide@3.4.0:")
     depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
     # https://github.com/openslide/openslide-python/pull/76
-    depends_on("py-setuptools@:45", type="build", when="@1.1.1")
-    depends_on("py-setuptools", type="build", when="@1.1.2:")
+    depends_on("py-setuptools@:45", when="@1.1.1", type="build")
+    depends_on("py-setuptools", when="@1.1.2:", type="build")
     depends_on("pil", type=("build", "run"))

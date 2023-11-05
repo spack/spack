@@ -131,7 +131,7 @@ class Rocalution(CMakePackage):
                 "rocsparse@{0} amdgpu_target={1}".format(ver, tgt),
                 when="@{0} amdgpu_target={1}".format(ver, tgt),
             )
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
+        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
 
     for ver in [
         "3.9.0",
@@ -175,7 +175,7 @@ class Rocalution(CMakePackage):
                 "rocrand@{0} amdgpu_target={1}".format(ver, tgt),
                 when="@{0} amdgpu_target={1}".format(ver, tgt),
             )
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
+        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
 
     depends_on("googletest@1.10.0:", type="test")
     # This fix is added to address the compilation failure and it is

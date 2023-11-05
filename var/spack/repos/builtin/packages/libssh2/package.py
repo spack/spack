@@ -34,7 +34,7 @@ class Libssh2(AutotoolsPackage, CMakePackage):
     with when("build_system=cmake"):
         depends_on("cmake@2.8.11:", type="build")
         # on macOS ensure CMP0042 is on (default in cmake 3.0+)
-        depends_on("cmake@3:", type="build", when="platform=darwin")
+        depends_on("cmake@3:", when="platform=darwin", type="build")
 
     with when("crypto=openssl"):
         depends_on("openssl")

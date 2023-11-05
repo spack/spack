@@ -58,7 +58,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hwloc@2.1:", when="+hwloc")
 
     depends_on("googletest", type="test")
-    depends_on("numactl", type="test", when="+hwloc")
+    depends_on("numactl", when="+hwloc", type="test")
 
     depends_on("intel-oneapi-mkl", when="+oneapi")
     depends_on("intel-oneapi-dpl", when="+oneapi")

@@ -55,10 +55,10 @@ class Gpi2(AutotoolsPackage):
         "'auto', 'none' or 'pbs' use 'gaspi_run.ssh'",
     )
 
-    depends_on("autoconf", type="build", when="@1.4.0:")  # autogen.sh - autoreconf
-    depends_on("automake", type="build", when="@1.4.0:")  # autogen.sh - automake
-    depends_on("libtool", type="build", when="@1.4.0:")
-    depends_on("m4", type="build", when="@1.4.0:")
+    depends_on("autoconf", when="@1.4.0:", type="build")  # autogen.sh - autoreconf
+    depends_on("automake", when="@1.4.0:", type="build")  # autogen.sh - automake
+    depends_on("libtool", when="@1.4.0:", type="build")
+    depends_on("m4", when="@1.4.0:", type="build")
 
     depends_on("sed", type=("build", "run"))
     depends_on("gawk", when="@:1.3.3", type=("build", "run"))

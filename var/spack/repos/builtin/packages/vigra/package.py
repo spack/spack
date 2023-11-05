@@ -43,9 +43,9 @@ class Vigra(CMakePackage):
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants, when="+python")
-    depends_on("py-sphinx", type="build", when="+python")
-    depends_on("doxygen", type="build", when="+cxxdoc")
-    depends_on("python", type="build", when="+cxxdoc")
+    depends_on("py-sphinx", when="+python", type="build")
+    depends_on("doxygen", when="+cxxdoc", type="build")
+    depends_on("python", when="+cxxdoc", type="build")
     depends_on("py-nose", when="+python", type=("build", "test"))
 
     extends("python", when="+python")

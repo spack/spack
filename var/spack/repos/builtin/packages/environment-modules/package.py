@@ -59,13 +59,13 @@ class EnvironmentModules(Package):
 
     variant("X", default=True, description="Build with X functionality")
 
-    depends_on("autoconf", type="build", when="@main")
-    depends_on("automake", type="build", when="@main")
-    depends_on("libtool", type="build", when="@main")
-    depends_on("m4", type="build", when="@main")
-    depends_on("python", type="build", when="@main")
-    depends_on("py-sphinx@1.0:", type="build", when="@main")
-    depends_on("gzip", type="build", when="@main")
+    depends_on("autoconf", when="@main", type="build")
+    depends_on("automake", when="@main", type="build")
+    depends_on("libtool", when="@main", type="build")
+    depends_on("m4", when="@main", type="build")
+    depends_on("python", when="@main", type="build")
+    depends_on("py-sphinx@1.0:", when="@main", type="build")
+    depends_on("gzip", when="@main", type="build")
 
     # Dependencies:
     depends_on("tcl", type=("build", "link", "run"))

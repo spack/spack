@@ -29,10 +29,10 @@ class Kallisto(CMakePackage):
 
     # v0.44.0 vendored a copy of htslib and uses auto* to build
     # its configure script.
-    depends_on("autoconf", type="build", when="@0.44.0:")
-    depends_on("automake", type="build", when="@0.44.0:")
-    depends_on("libtool", type="build", when="@0.44.0:")
-    depends_on("m4", type="build", when="@0.44.0:")
+    depends_on("autoconf", when="@0.44.0:", type="build")
+    depends_on("automake", when="@0.44.0:", type="build")
+    depends_on("libtool", when="@0.44.0:", type="build")
+    depends_on("m4", when="@0.44.0:", type="build")
 
     patch("link_zlib.patch", when="@:0.43")
     patch("limits.patch", when="@:0.46")

@@ -27,8 +27,8 @@ class Freebayes(MesonPackage):
     depends_on("zlib-api")
 
     # Deps for @1.3.5 and beyond
-    depends_on("ninja", type="build", when="@1.3.5:")
-    depends_on("pkgconfig", type="build", when="@1.3.5:")
+    depends_on("ninja", when="@1.3.5:", type="build")
+    depends_on("pkgconfig", when="@1.3.5:", type="build")
     depends_on("htslib", when="@1.3.5:")
     depends_on("zlib-api", when="@1.3.5:")
     depends_on("xz", when="@1.3.5:")

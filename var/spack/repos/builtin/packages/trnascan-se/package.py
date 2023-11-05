@@ -16,7 +16,7 @@ class TrnascanSe(AutotoolsPackage):
     version("2.0.0", sha256="0dde1c07142e4bf77b21d53ddf3eeb1ef8c52248005a42323d13f8d7c798100c")
 
     depends_on("autoconf", type="build")
-    depends_on("infernal@1.1:", type="run", when="@2.0.0:")
+    depends_on("infernal@1.1:", when="@2.0.0:", type="run")
 
     def patch(self):
         filter_file(
