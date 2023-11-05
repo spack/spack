@@ -52,6 +52,7 @@ subcommands = [
     "depfile",
 ]
 
+
 #
 # env create
 #
@@ -234,7 +235,11 @@ def env_activate_setup_parser(subparser):
         " when initializing from envfile",
     )
     persistent_options.add_argument(
-        "-d", "--dir", default=False, action="store_true", help="activate environment based on the directory"
+        "-d",
+        "--dir",
+        default=False,
+        action="store_true",
+        help="activate environment based on the directory",
     )
     persistent_options.add_argument(
         metavar="env",
