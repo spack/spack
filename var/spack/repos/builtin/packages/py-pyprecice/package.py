@@ -48,7 +48,7 @@ class PyPyprecice(PythonPackage):
         "2.0.1",
         "2.0.0",
     ]:
-        depends_on("precice@" + ver, when="@" + ver)
+        depends_on(f"precice@{ver}", when=f"@{ver}")
 
     depends_on("python@3:", type=("build", "link", "run"))
     depends_on("py-setuptools", type="build")

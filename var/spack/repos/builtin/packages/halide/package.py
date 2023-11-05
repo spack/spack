@@ -58,9 +58,7 @@ class Halide(CMakePackage, PythonExtension):
     depends_on("llvm@13.0.0:15", when="@14.0.0", type=("link", "run"))
     depends_on("llvm@14.0.0:16", when="@15.0.0:", type=("link", "run"))
     for v in _values:
-        depends_on(
-            "llvm targets={0}".format(v), when="targets={0}", type=("link", "run").format(v)
-        )
+        depends_on(f"llvm targets={v}", when=f"targets={v}", type=("link", "run"))
     depends_on("llvm+llvm_dylib", when="+sharedllvm", type=("link", "run"))
 
     depends_on("libjpeg", type=("build", "link", "run"))

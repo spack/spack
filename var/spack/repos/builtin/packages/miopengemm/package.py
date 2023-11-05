@@ -138,8 +138,8 @@ class Miopengemm(CMakePackage):
         "5.5.0",
         "5.5.1",
     ]:
-        depends_on("rocm-cmake@" + ver, when="@", type="build" + ver)
-        depends_on("rocm-opencl@" + ver, when="@" + ver)
+        depends_on(f"rocm-cmake@{ver}", when=f"@{ver}", type="build")
+        depends_on(f"rocm-opencl@{ver}", when=f"@{ver}")
 
     @classmethod
     def determine_version(cls, lib):

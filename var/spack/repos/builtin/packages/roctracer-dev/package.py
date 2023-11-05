@@ -77,10 +77,10 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hsakmt-roct@" + ver, when="@" + ver)
-        depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
-        depends_on("rocminfo@" + ver, when="@" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+        depends_on(f"rocminfo@{ver}", when=f"@{ver}")
+        depends_on(f"hip@{ver}", when=f"@{ver}")
     for ver in [
         "4.5.0",
         "4.5.2",
@@ -96,10 +96,10 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         "5.4.0",
         "5.4.3",
     ]:
-        depends_on("rocprofiler-dev@" + ver, when="@" + ver)
+        depends_on(f"rocprofiler-dev@{ver}", when=f"@{ver}")
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     patch("0001-include-rocprofiler-dev-path.patch", when="@5.3:5.4")
 

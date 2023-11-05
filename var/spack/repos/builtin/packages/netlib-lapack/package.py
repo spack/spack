@@ -76,7 +76,7 @@ class NetlibLapack(CMakePackage):
         "3.4.0",
         "3.3.1",
     ]:
-        provides("lapack@" + ver, when="@" + ver)
+        provides(f"lapack@{ver}", when=f"@{ver}")
 
     variant("shared", default=True, description="Build shared library version")
     variant("external-blas", default=False, description="Build lapack with an external blas")

@@ -137,7 +137,7 @@ class Hip(CMakePackage):
             "4.3.0",
             "4.3.1",
         ]:
-            depends_on("hip-rocclr@" + ver, when="@" + ver)
+            depends_on(f"hip-rocclr@{ver}", when=f"@{ver}")
         for ver in [
             "3.5.0",
             "3.7.0",
@@ -167,18 +167,18 @@ class Hip(CMakePackage):
             "5.6.0",
             "5.6.1",
         ]:
-            depends_on("hsakmt-roct@" + ver, when="@" + ver)
-            depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
-            depends_on("comgr@" + ver, when="@" + ver)
-            depends_on("llvm-amdgpu@{0} +rocm-device-libs".format(ver), when="@" + ver)
-            depends_on("rocminfo@" + ver, when="@" + ver)
-            depends_on("roctracer-dev-api@" + ver, when="@" + ver)
+            depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+            depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+            depends_on(f"comgr@{ver}", when=f"@{ver}")
+            depends_on("llvm-amdgpu@{0} +rocm-device-libs".format(ver), when=f"@{ver}")
+            depends_on(f"rocminfo@{ver}", when=f"@{ver}")
+            depends_on(f"roctracer-dev-api@{ver}", when=f"@{ver}")
 
         for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-            depends_on("hipify-clang", when="@" + ver)
+            depends_on("hipify-clang", when=f"@{ver}")
 
         for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-            depends_on("rocm-core@" + ver, when="@" + ver)
+            depends_on(f"rocm-core@{ver}", when=f"@{ver}")
         # hipcc likes to add `-lnuma` by default :(
         # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")

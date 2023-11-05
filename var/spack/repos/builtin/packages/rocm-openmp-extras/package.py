@@ -254,13 +254,13 @@ class RocmOpenmpExtras(Package):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hsakmt-roct@" + ver, when="@" + ver)
-        depends_on("comgr@" + ver, when="@" + ver)
-        depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@{0} ~openmp".format(ver), when="@" + ver)
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+        depends_on(f"comgr@{ver}", when=f"@{ver}")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+        depends_on("llvm-amdgpu@{0} ~openmp".format(ver), when=f"@{ver}")
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
         # tag changed to 'rocm-' in 4.0.0
         if ver == "3.9.0" or ver == "3.10.0":
@@ -275,7 +275,7 @@ class RocmOpenmpExtras(Package):
             expand=True,
             destination="rocm-openmp-extras",
             placement="rocm-device-libs",
-            when="@" + ver,
+            when=f"@{ver}",
         )
 
         resource(
@@ -285,7 +285,7 @@ class RocmOpenmpExtras(Package):
             expand=True,
             destination="rocm-openmp-extras",
             placement="flang",
-            when="@" + ver,
+            when=f"@{ver}",
         )
 
         resource(
@@ -295,7 +295,7 @@ class RocmOpenmpExtras(Package):
             expand=True,
             destination="rocm-openmp-extras",
             placement="aomp-extras",
-            when="@" + ver,
+            when=f"@{ver}",
         )
 
         resource(
@@ -305,7 +305,7 @@ class RocmOpenmpExtras(Package):
             expand=True,
             destination="rocm-openmp-extras",
             placement="llvm-project",
-            when="@" + ver,
+            when=f"@{ver}",
         )
 
     def setup_run_environment(self, env):

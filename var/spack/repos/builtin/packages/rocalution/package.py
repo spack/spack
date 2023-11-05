@@ -119,8 +119,8 @@ class Rocalution(CMakePackage):
 
     depends_on("cmake@3.5:", type="build")
     for ver in ["3.5.0", "3.7.0", "3.8.0"]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocprim@" + ver, when="@" + ver)
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"rocprim@{ver}", when=f"@{ver}")
         for tgt in itertools.chain(["auto"], amdgpu_targets):
             rocblas_tgt = tgt if tgt != "gfx900:xnack-" else "gfx900"
             depends_on(
@@ -131,7 +131,7 @@ class Rocalution(CMakePackage):
                 "rocsparse@{0} amdgpu_target={1}".format(ver, tgt),
                 when="@{0} amdgpu_target={1}".format(ver, tgt),
             )
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
 
     for ver in [
         "3.9.0",
@@ -159,8 +159,8 @@ class Rocalution(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocprim@" + ver, when="@" + ver)
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"rocprim@{ver}", when=f"@{ver}")
         for tgt in itertools.chain(["auto"], amdgpu_targets):
             rocblas_tgt = tgt if tgt != "gfx900:xnack-" else "gfx900"
             depends_on(
@@ -175,7 +175,7 @@ class Rocalution(CMakePackage):
                 "rocrand@{0} amdgpu_target={1}".format(ver, tgt),
                 when="@{0} amdgpu_target={1}".format(ver, tgt),
             )
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
 
     depends_on("googletest@1.10.0:", type="test")
     # This fix is added to address the compilation failure and it is

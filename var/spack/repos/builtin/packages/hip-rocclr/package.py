@@ -146,9 +146,9 @@ class HipRocclr(CMakePackage):
         "5.6.1",
         "master",
     ]:
-        depends_on("hsakmt-roct@" + ver, when="@" + ver)
-        depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
-        depends_on("comgr@" + ver, when="@" + ver)
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+        depends_on(f"comgr@{ver}", when=f"@{ver}")
 
     # See: https://github.com/ROCm-Developer-Tools/ROCclr/pull/16
     # In 3.7.0 the find opengl things have changed slightly.

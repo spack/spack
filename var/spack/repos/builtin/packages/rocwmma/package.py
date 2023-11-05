@@ -73,14 +73,14 @@ class Rocwmma(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@", type="build" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocblas@" + ver, when="@", type="build" + ver)
-        depends_on("rocm-openmp-extras@" + ver, when="@", type="build" + ver)
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}", type="build")
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"rocblas@{ver}", when=f"@{ver}", type="build")
+        depends_on(f"rocm-openmp-extras@{ver}", when=f"@{ver}", type="build")
 
     for ver in ["5.6.0", "5.6.1"]:
-        depends_on("rocm-smi-lib@" + ver, when="@" + ver)
+        depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
 
     for tgt in itertools.chain(["auto"], amdgpu_targets):
         depends_on("rocblas amdgpu_target={0}".format(tgt), when="amdgpu_target={0}".format(tgt))

@@ -67,8 +67,8 @@ class Opencarp(CMakePackage):
     depends_on("meshtool", when="+meshtool", type=("build", "run"))
     # Use specific versions of carputils and meshtool for releases
     for ver in ["13.0", "12.0", "11.0", "10.0", "9.0", "8.2", "7.0", "8.1"]:
-        depends_on("py-carputils@oc" + ver, when="@" + ver + " +carputils")
-        depends_on("meshtool@oc" + ver, when="@" + ver + " +meshtool")
+        depends_on("py-carputils@oc" + ver, when=f"@{ver}" + " +carputils")
+        depends_on("meshtool@oc" + ver, when=f"@{ver}" + " +meshtool")
 
     def cmake_args(self):
         return [self.define("DLOPEN", True), self.define("SPACK_BUILD", True)]

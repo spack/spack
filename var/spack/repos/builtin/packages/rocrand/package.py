@@ -198,8 +198,8 @@ class Rocrand(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
 
     def patch(self):
         if self.spec.satisfies("@5.1.0:5.4 +hiprand"):

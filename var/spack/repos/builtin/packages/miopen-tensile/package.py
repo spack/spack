@@ -78,10 +78,10 @@ class MiopenTensile(CMakePackage):
     )
 
     for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0"]:
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@" + ver)
-        depends_on("rocminfo@" + ver, when="@" + ver)
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+        depends_on(f"rocminfo@{ver}", when=f"@{ver}")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)

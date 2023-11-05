@@ -161,11 +161,11 @@ class Migraphx(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@" + ver)
-        depends_on("rocblas@" + ver, when="@" + ver)
-        depends_on("miopen-hip@" + ver, when="@" + ver)
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+        depends_on(f"rocblas@{ver}", when=f"@{ver}")
+        depends_on(f"miopen-hip@{ver}", when=f"@{ver}")
 
     @property
     def cmake_python_hints(self):

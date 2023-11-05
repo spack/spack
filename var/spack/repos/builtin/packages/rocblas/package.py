@@ -179,9 +179,9 @@ class Rocblas(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@", type="build" + ver)
-        depends_on("rocminfo@" + ver, when="@", type="build" + ver)
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}", type="build")
+        depends_on(f"rocminfo@{ver}", when=f"@{ver}", type="build")
 
     depends_on("python@3.6:", type="build")
 

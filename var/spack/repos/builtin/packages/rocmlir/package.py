@@ -48,11 +48,11 @@ class Rocmlir(CMakePackage):
     depends_on("pkgconfig", type="build")
 
     for ver in ["5.3.0", "5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@" + ver)
-        depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
-        depends_on("rocm-cmake@" + ver, when="@", type="build" + ver)
-        depends_on("rocminfo@" + ver, when="@", type="build" + ver)
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+        depends_on(f"rocm-cmake@{ver}", when=f"@{ver}", type="build")
+        depends_on(f"rocminfo@{ver}", when=f"@{ver}", type="build")
 
     def cmake_args(self):
         spec = self.spec

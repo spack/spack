@@ -148,4 +148,4 @@ class PyPillow(PyPillowBase):
         "6.0.0",
         "5.4.1",
     ]:
-        provides("pil@" + ver, when="@" + ver)
+        provides(f"pil@{ver}", when=f"@{ver}")

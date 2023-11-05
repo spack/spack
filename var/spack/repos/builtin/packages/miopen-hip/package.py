@@ -148,20 +148,20 @@ class MiopenHip(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocm-clang-ocl@" + ver, when="@" + ver)
-        depends_on("rocblas@" + ver, when="@" + ver)
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"rocm-clang-ocl@{ver}", when=f"@{ver}")
+        depends_on(f"rocblas@{ver}", when=f"@{ver}")
 
     for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3"]:
-        depends_on("mlirmiopen@" + ver, when="@" + ver)
+        depends_on(f"mlirmiopen@{ver}", when=f"@{ver}")
 
     for ver in ["5.5.1", "5.6.0", "5.6.1"]:
         depends_on("nlohmann-json", type="link")
-        depends_on("composable-kernel@" + ver, when="@" + ver)
+        depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
     for ver in ["5.4.0", "5.4.3", "5.5.0"]:
         depends_on("nlohmann-json", type="link")
-        depends_on("rocmlir@" + ver, when="@" + ver)
+        depends_on(f"rocmlir@{ver}", when=f"@{ver}")
 
     def setup_build_environment(self, env):
         if "@3.9.0:" in self.spec:

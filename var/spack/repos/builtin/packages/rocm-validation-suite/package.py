@@ -159,10 +159,10 @@ class RocmValidationSuite(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocminfo@" + ver, when="@" + ver)
-        depends_on("rocblas@" + ver, when="@" + ver)
-        depends_on("rocm-smi-lib@" + ver, when="@" + ver)
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"rocminfo@{ver}", when=f"@{ver}")
+        depends_on(f"rocblas@{ver}", when=f"@{ver}")
+        depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
 
     for ver in [
         "3.5.0",
@@ -176,7 +176,7 @@ class RocmValidationSuite(CMakePackage):
         "4.3.0",
         "4.3.1",
     ]:
-        depends_on("hip-rocclr@" + ver, when="@" + ver)
+        depends_on(f"hip-rocclr@{ver}", when=f"@{ver}")
 
     def patch(self):
         if self.spec.satisfies("@4.5:5.1"):

@@ -151,14 +151,14 @@ class HsaRocrDev(CMakePackage):
         "5.6.1",
         "master",
     ]:
-        depends_on("hsakmt-roct@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@" + ver)
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
         # allow standalone rocm-device-libs (useful for aomp)
         depends_on(
-            "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
+            f"rocm-device-libs@{ver}", when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways
     patch("0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch", when="@3.5.0")

@@ -35,7 +35,7 @@ class PyTensorflowEstimator(Package):
     depends_on("python@3.7:", when="@2.9:", type=("build", "run"))
 
     for ver in ["2.10", "2.9", "2.8", "2.7", "2.6"]:
-        depends_on("py-keras@" + ver, when="@" + ver, type=("build", "run"))
+        depends_on(f"py-keras@{ver}", when=f"@{ver}", type=("build", "run"))
 
     for ver in [
         "2.10",
@@ -51,7 +51,7 @@ class PyTensorflowEstimator(Package):
         "2.0",
         "1.13",
     ]:
-        depends_on("py-tensorflow@" + ver, when="@" + ver, type=("build", "run"))
+        depends_on(f"py-tensorflow@{ver}", when=f"@{ver}", type=("build", "run"))
 
     depends_on("bazel@0.19.0:", type="build")
     depends_on("py-pip", type="build")

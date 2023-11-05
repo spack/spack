@@ -147,7 +147,7 @@ class Rocsolver(CMakePackage):
     depends_on("rocm-cmake@3.5.0:", type="build")
 
     for ver in ["master", "develop"]:
-        depends_on("rocblas@" + ver, when="@" + ver)
+        depends_on(f"rocblas@{ver}", when=f"@{ver}")
 
     for ver in [
         "3.5.0",
@@ -178,8 +178,8 @@ class Rocsolver(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocblas@" + ver, when="@" + ver)
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"rocblas@{ver}", when=f"@{ver}")
     for ver in ["5.6.0", "5.6.1"]:
         depends_on("rocsparse@5.2:", when="@5.6:")
 

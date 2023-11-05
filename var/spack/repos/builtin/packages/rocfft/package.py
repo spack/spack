@@ -160,8 +160,8 @@ class Rocfft(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
 
     patch("0001-Improve-compilation-by-using-sqlite-recipe-for-rocfft.patch", when="@5.0.0:5.0.2")
     # Patch to add spack build test support. No longer required from 5.2

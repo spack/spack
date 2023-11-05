@@ -34,7 +34,7 @@ class PyFenicsFfc(PythonPackage):
     for ver in ["2019.1.0.post0", "2018.1.0", "2017.2.0.post0", "2016.2.0"]:
         if ver in ["2019.1.0.post0", "2017.2.0.post0"]:
             ver = ver[: ver.rfind(".post")]
-        wver = "@" + ver
+        wver = f"@{ver}"
         depends_on("py-fenics-fiat{0}".format(wver), type=("build", "run"), when=wver)
         if Version(ver) < Version("2017.2.0"):
             depends_on("py-fenics-instant{0}".format(wver), type=("build", "run"), when=wver)

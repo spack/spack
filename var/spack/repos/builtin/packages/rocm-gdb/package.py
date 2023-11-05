@@ -140,11 +140,11 @@ class RocmGdb(AutotoolsPackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-dbgapi@" + ver, when="@", type="link" + ver)
-        depends_on("comgr@" + ver, when="@", type="link" + ver)
+        depends_on(f"rocm-dbgapi@{ver}", when=f"@{ver}", type="link")
+        depends_on(f"comgr@{ver}", when=f"@{ver}", type="link")
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     build_directory = "spack-build"
 

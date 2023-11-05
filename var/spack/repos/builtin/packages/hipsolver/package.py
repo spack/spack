@@ -112,8 +112,8 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         "master",
         "develop",
     ]:
-        depends_on("rocblas@" + ver, when="+rocm @" + ver)
-        depends_on("rocsolver@" + ver, when="+rocm @" + ver)
+        depends_on(f"rocblas@{ver}", when="+rocm @" + ver)
+        depends_on(f"rocsolver@{ver}", when="+rocm @" + ver)
 
     for tgt in ROCmPackage.amdgpu_targets:
         depends_on(

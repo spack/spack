@@ -107,17 +107,17 @@ class Aomp(Package):
     depends_on("libffi", type=("build", "link"))
 
     for ver in ["3.5.0", "3.7.0", "3.8.0", "3.9.0", "3.10.0"]:
-        depends_on("hsakmt-roct@" + ver, when="@" + ver)
-        depends_on("comgr@" + ver, when="@", type="build" + ver)
-        depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
-        depends_on("rocm-device-libs@" + ver, when="@" + ver)
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+        depends_on(f"comgr@{ver}", when=f"@{ver}", type="build")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+        depends_on(f"rocm-device-libs@{ver}", when=f"@{ver}")
 
         if ver != "3.5.0":
-            depends_on("hip@" + ver, when="@" + ver)
-            depends_on("hip-rocclr@" + ver, when="@" + ver)
+            depends_on(f"hip@{ver}", when=f"@{ver}")
+            depends_on(f"hip-rocclr@{ver}", when=f"@{ver}")
 
         if ver == "3.9.0" or ver == "3.10.0":
-            depends_on("rocm-gdb@" + ver, when="@" + ver)
+            depends_on(f"rocm-gdb@{ver}", when=f"@{ver}")
 
         resource(
             name="rocm-device-libs",
@@ -126,7 +126,7 @@ class Aomp(Package):
             expand=True,
             destination="aomp-dir",
             placement="rocm-device-libs",
-            when="@" + ver,
+            when=f"@{ver}",
         )
 
         resource(
@@ -136,7 +136,7 @@ class Aomp(Package):
             expand=True,
             destination="aomp-dir",
             placement="amd-llvm-project",
-            when="@" + ver,
+            when=f"@{ver}",
         )
 
         resource(
@@ -146,7 +146,7 @@ class Aomp(Package):
             expand=True,
             destination="aomp-dir",
             placement="flang",
-            when="@" + ver,
+            when=f"@{ver}",
         )
 
         resource(
@@ -156,7 +156,7 @@ class Aomp(Package):
             expand=True,
             destination="aomp-dir",
             placement="aomp-extras",
-            when="@" + ver,
+            when=f"@{ver}",
         )
 
         if ver == "3.5.0":

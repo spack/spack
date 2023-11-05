@@ -163,7 +163,7 @@ class RocmOpencl(CMakePackage):
         "4.3.1",
         "master",
     ]:
-        depends_on("hip-rocclr@" + ver, when="@", type="build" + ver)
+        depends_on(f"hip-rocclr@{ver}", when=f"@{ver}", type="build")
     for ver in [
         "3.5.0",
         "3.7.0",
@@ -194,11 +194,11 @@ class RocmOpencl(CMakePackage):
         "5.6.1",
         "master",
     ]:
-        depends_on("comgr@" + ver, when="@", type="build" + ver)
-        depends_on("hsa-rocr-dev@" + ver, when="@", type="link" + ver)
+        depends_on(f"comgr@{ver}", when=f"@{ver}", type="build")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}", type="link")
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     @classmethod
     def determine_version(cls, lib):

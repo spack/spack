@@ -148,10 +148,10 @@ class Rccl(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("comgr@" + ver, when="@" + ver)
-        depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"comgr@{ver}", when=f"@{ver}")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
 
     for ver in [
         "3.7.0",
@@ -181,7 +181,7 @@ class Rccl(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("numactl@2:", when="@" + ver)
+        depends_on("numactl@2:", when=f"@{ver}")
     for ver in [
         "4.5.0",
         "4.5.2",
@@ -201,11 +201,11 @@ class Rccl(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-smi-lib@" + ver, when="@" + ver)
+        depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
         depends_on("chrpath", when="@5.3.0:")
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
     depends_on("googletest@1.11.0:", when="@5.3:")
 
     @classmethod

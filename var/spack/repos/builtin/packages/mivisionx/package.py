@@ -239,9 +239,9 @@ class Mivisionx(CMakePackage):
             "5.5.0",
             "5.5.1",
         ]:
-            depends_on("rocm-opencl@" + ver, when="@" + ver)
-            depends_on("miopengemm@" + ver, when="@" + ver)
-            depends_on("miopen-opencl@" + ver, when="@" + ver)
+            depends_on(f"rocm-opencl@{ver}", when=f"@{ver}")
+            depends_on(f"miopengemm@{ver}", when=f"@{ver}")
+            depends_on(f"miopen-opencl@{ver}", when=f"@{ver}")
     with when("+hip"):
         for ver in [
             "4.5.0",
@@ -262,12 +262,12 @@ class Mivisionx(CMakePackage):
             "5.6.0",
             "5.6.1",
         ]:
-            depends_on("miopen-hip@" + ver, when="@" + ver)
+            depends_on(f"miopen-hip@{ver}", when=f"@{ver}")
         for ver in ["5.3.3", "5.4.0", "5.4.3", "5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-            depends_on("migraphx@" + ver, when="@" + ver)
+            depends_on(f"migraphx@{ver}", when=f"@{ver}")
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
         depends_on("python@3.5:", type="build")
 
     def flag_handler(self, name, flags):

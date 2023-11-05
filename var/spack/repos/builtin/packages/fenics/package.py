@@ -87,7 +87,7 @@ class Fenics(CMakePackage):
 
     # fenics python package dependencies
     for ver in dolfin_versions:
-        wver = "@" + ver
+        wver = f"@{ver}"
         depends_on("py-fenics-fiat{0}".format(wver), type=("build", "run"), when=wver + "+python")
         if Version(ver) < Version("2018.1.0"):
             depends_on(
@@ -99,7 +99,7 @@ class Fenics(CMakePackage):
             )
         depends_on("py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver + "+python")
         if ver in ["2019.1.0", "2017.2.0"]:
-            wver = "@" + ver + ".post0"
+            wver = f"@{ver}" + ".post0"
         depends_on("py-fenics-ffc{0}".format(wver), type=("build", "run"), when=wver + "+python")
 
     # package dependencies

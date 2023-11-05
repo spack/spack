@@ -131,12 +131,12 @@ class Atmi(CMakePackage):
         "5.5.0",
         "5.5.1",
     ]:
-        depends_on("comgr@" + ver, when="@", type="link" + ver)
-        depends_on("hsa-rocr-dev@" + ver, when="@", type="link" + ver)
-        depends_on("elf", when="@", type="link" + ver)
+        depends_on(f"comgr@{ver}", when=f"@{ver}", type="link")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}", type="link")
+        depends_on("elf", when=f"@{ver}", type="link")
 
     for ver in ["5.5.0", "5.5.1"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     root_cmakelists_dir = "src"
 

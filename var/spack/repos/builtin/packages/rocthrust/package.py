@@ -147,9 +147,9 @@ class Rocthrust(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocprim@" + ver, when="@" + ver)
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"rocprim@{ver}", when=f"@{ver}")
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)

@@ -144,10 +144,10 @@ class RocmDeviceLibs(CMakePackage):
         "5.6.1",
         "master",
     ]:
-        depends_on("llvm-amdgpu@" + ver, when="@" + ver)
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     def cmake_args(self):
         spec = self.spec

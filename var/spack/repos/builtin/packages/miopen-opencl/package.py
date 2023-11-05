@@ -116,8 +116,8 @@ class MiopenOpencl(CMakePackage):
     depends_on("miopengemm@1.1.6", when="@3.5.0", type="link")
 
     for ver in ["3.5.0"]:
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
-        depends_on("rocm-opencl@" + ver, when="@" + ver)
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
+        depends_on(f"rocm-opencl@{ver}", when=f"@{ver}")
 
     for ver in [
         "3.7.0",
@@ -144,17 +144,17 @@ class MiopenOpencl(CMakePackage):
         "5.5.0",
         "5.5.1",
     ]:
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
-        depends_on("rocm-opencl@" + ver, when="@" + ver)
-        depends_on("miopengemm@" + ver, when="@" + ver)
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
+        depends_on(f"rocm-opencl@{ver}", when=f"@{ver}")
+        depends_on(f"miopengemm@{ver}", when=f"@{ver}")
 
     for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3"]:
-        depends_on("mlirmiopen@" + ver, when="@" + ver)
+        depends_on(f"mlirmiopen@{ver}", when=f"@{ver}")
 
     for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
         depends_on("nlohmann-json", type="link")
         depends_on("rocblas", type="link")
-        depends_on("rocmlir@" + ver, when="@" + ver)
+        depends_on(f"rocmlir@{ver}", when=f"@{ver}")
 
     @classmethod
     def determine_version(cls, lib):

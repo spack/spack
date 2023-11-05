@@ -27,6 +27,6 @@ class PyPillowSimd(PyPillowBase):
     )
 
     for ver in ["6.2.2.post1", "7.0.0.post3", "9.0.0.post1"]:
-        provides("pil@" + ver, when="@" + ver)
+        provides(f"pil@{ver}", when=f"@{ver}")
 
     conflicts("target=aarch64:")

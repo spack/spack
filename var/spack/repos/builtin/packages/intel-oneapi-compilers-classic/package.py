@@ -38,7 +38,7 @@ class IntelOneapiCompilersClassic(Package):
         "2021.10.0": "2023.2.0",
     }.items():
         version(ver)
-        depends_on("intel-oneapi-compilers@" + oneapi_ver, when="@" + ver, type="run")
+        depends_on("intel-oneapi-compilers@" + oneapi_ver, when=f"@{ver}", type="run")
 
     # icc@2021.6.0 does not support gcc@12 headers
     conflicts("%gcc@12:", when="@:2021.6.0")

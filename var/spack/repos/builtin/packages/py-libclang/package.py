@@ -27,7 +27,7 @@ class PyLibclang(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     for ver in ["9", "10", "11", "13", "14"]:
-        depends_on("llvm+clang@" + ver, when="@" + ver, type="build")
+        depends_on("llvm+clang@" + ver, when=f"@{ver}", type="build")
 
     def patch(self):
         filter_file(

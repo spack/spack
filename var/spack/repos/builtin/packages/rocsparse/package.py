@@ -148,9 +148,9 @@ class Rocsparse(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocprim@" + ver, when="@" + ver)
-        depends_on("rocm-cmake@%s:" % ver, when="@", type="build" + ver)
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"rocprim@{ver}", when=f"@{ver}")
+        depends_on(f"rocm-cmake@{ver}:", when=f"@{ver}", type="build")
 
     # Add option so Spack can manage downloaded test matricies as resources.
     patch("0001-set-mtx-directory.patch", when="@4.5.0:5.3 +test")

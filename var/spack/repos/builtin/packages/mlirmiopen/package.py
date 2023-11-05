@@ -52,11 +52,11 @@ class Mlirmiopen(CMakePackage):
     depends_on("pkgconfig", type="build")
 
     for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3", "5.4.0"]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@" + ver)
-        depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
-        depends_on("rocm-cmake@" + ver, when="@", type="build" + ver)
-        depends_on("rocminfo@" + ver, when="@", type="build" + ver)
+        depends_on(f"hip@{ver}", when=f"@{ver}" + ver)
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+        depends_on(f"rocm-cmake@{ver}", when=f"@{ver}", type="build")
+        depends_on(f"rocminfo@{ver}", when=f"@{ver}", type="build")
 
     def cmake_args(self):
         spec = self.spec

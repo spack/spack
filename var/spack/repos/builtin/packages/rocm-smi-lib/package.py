@@ -115,7 +115,7 @@ class RocmSmiLib(CMakePackage):
     depends_on("python@3:", when="@3.9.0:", type=("build", "run"))
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
     patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@4.5.2:")
 
     def cmake_args(self):

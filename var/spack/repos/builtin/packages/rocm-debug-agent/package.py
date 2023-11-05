@@ -143,8 +143,8 @@ class RocmDebugAgent(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
-        depends_on("hsakmt-roct@" + ver, when="@" + ver)
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
 
     for ver in [
         "3.7.0",
@@ -174,11 +174,11 @@ class RocmDebugAgent(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-dbgapi@" + ver, when="@" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
+        depends_on(f"rocm-dbgapi@{ver}", when=f"@{ver}")
+        depends_on(f"hip@{ver}", when=f"@{ver}")
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1"]:
-        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     # https://github.com/ROCm-Developer-Tools/rocr_debug_agent/pull/4
     patch("0001-Drop-overly-strict-Werror-flag.patch", when="@3.7.0:")
