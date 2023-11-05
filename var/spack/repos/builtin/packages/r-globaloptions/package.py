@@ -19,4 +19,4 @@ class RGlobaloptions(RPackage):
     version("0.0.12", sha256="c09da3f9b1646d0f815056cdbeb5fff7dda29f7dd8742d245f5f6dc7066077a9")
 
     depends_on("r@2.10:", type=("build", "run"))
-    depends_on("r@3.3.0:", type=("build", "run"), when="@0.0.13:")
+    depends_on("r@3.3.0:", when="@0.0.13:", type=("build", "run"))

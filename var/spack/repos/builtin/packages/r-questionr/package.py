@@ -28,6 +28,6 @@ class RQuestionr(RPackage):
     depends_on("r-styler", type=("build", "run"))
     depends_on("r-classint", type=("build", "run"))
     depends_on("r-htmltools", type=("build", "run"))
-    depends_on("r-rlang", type=("build", "run"), when="@0.7.8:")
+    depends_on("r-rlang", when="@0.7.8:", type=("build", "run"))
     depends_on("r-labelled@2.6.0:", type=("build", "run"))
     depends_on("xclip", when="platform=linux")

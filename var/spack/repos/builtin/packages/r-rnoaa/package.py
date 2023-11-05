@@ -28,7 +28,7 @@ class RRnoaa(RPackage):
     depends_on("r-lubridate", type=("build", "run"))
     depends_on("r-dplyr", type=("build", "run"))
     depends_on("r-tidyr", type=("build", "run"))
-    depends_on("r-tidyselect", type=("build", "run"), when="@1.3.0:")
+    depends_on("r-tidyselect", when="@1.3.0:", type=("build", "run"))
     depends_on("r-ggplot2", type=("build", "run"))
     depends_on("r-scales", type=("build", "run"))
     depends_on("r-xml", type=("build", "run"))
@@ -39,6 +39,6 @@ class RRnoaa(RPackage):
     depends_on("r-isdparser@0.2.0:", type=("build", "run"))
     depends_on("r-geonames", type=("build", "run"))
     depends_on("r-hoardr@0.5.2:", type=("build", "run"))
-    depends_on("r-data-table", type=("build", "run"), when="@1.3.0:")
+    depends_on("r-data-table", when="@1.3.0:", type=("build", "run"))
 
-    depends_on("r-rappdirs", type=("build", "run"), when="@:1.3.0")
+    depends_on("r-rappdirs", when="@:1.3.0", type=("build", "run"))

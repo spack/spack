@@ -32,10 +32,10 @@ class RCli(RPackage):
     version("1.0.0", sha256="8fa3dbfc954ca61b8510f767ede9e8a365dac2ef95fe87c715a0f37d721b5a1d")
 
     depends_on("r@2.10:", type=("build", "run"))
-    depends_on("r@3,4:", type=("build", "run"), when="@3.3.0:")
+    depends_on("r@3,4:", when="@3.3.0:", type=("build", "run"))
 
-    depends_on("r-assertthat", type=("build", "run"), when="@:2.3")
-    depends_on("r-crayon@1.3.4:", type=("build", "run"), when="@:2.2")
-    depends_on("r-fansi", type=("build", "run"), when="@2:2.2")
-    depends_on("r-glue", type=("build", "run"), when="@2:3.4.1")
-    depends_on("r-glue@1.6.0:", type=("build", "run"), when="@3.3.0")
+    depends_on("r-assertthat", when="@:2.3", type=("build", "run"))
+    depends_on("r-crayon@1.3.4:", when="@:2.2", type=("build", "run"))
+    depends_on("r-fansi", when="@2:2.2", type=("build", "run"))
+    depends_on("r-glue", when="@2:3.4.1", type=("build", "run"))
+    depends_on("r-glue@1.6.0:", when="@3.3.0", type=("build", "run"))

@@ -24,16 +24,16 @@ class Snakemake(PythonPackage):
     version("6.12.3", sha256="af86af9a540da3dceb05dad1040f1d3d733e6a695f8b3f8c30f8cf3bc6570a88")
 
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools@42:", type=("build", "run"), when="@7:")
+    depends_on("py-setuptools@42:", when="@7:", type=("build", "run"))
 
     # See https://github.com/snakemake/snakemake/pull/2065
-    depends_on("py-tomli", type=("build"), when="@7.20.0: ^python@:3.10")
+    depends_on("py-tomli", when="@7.20.0: ^python@:3.10", type=("build"))
     # See https://github.com/snakemake/snakemake/blob/v7.20.0/setup.cfg#L44
-    depends_on("py-humanfriendly", type=("build", "run"), when="@7.20.0:")
+    depends_on("py-humanfriendly", when="@7.20.0:", type=("build", "run"))
     # See https://github.com/snakemake/snakemake/blob/v7.18.2/setup.py#L56
     depends_on("py-wrapt", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
-    depends_on("py-throttler", type=("build", "run"), when="@7:")
+    depends_on("py-throttler", when="@7:", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-configargparse", type=("build", "run"))
     depends_on("py-appdirs", type=("build", "run"))
@@ -47,21 +47,21 @@ class Snakemake(PythonPackage):
     depends_on("py-connectionpool@0.0.3:", type=("build", "run"))
     depends_on("py-pulp@2:", type=("build", "run"))
     depends_on("py-smart-open@3:", type=("build", "run"))
-    depends_on("py-filelock", type=("build", "run"), when="@:6")
+    depends_on("py-filelock", when="@:6", type=("build", "run"))
     depends_on("py-stopit", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
-    depends_on("py-ratelimiter", type=("build", "run"), when="@:6")
-    depends_on("py-yte@1", type=("build", "run"), when="@7:")
-    depends_on("py-jinja2@3", type=("build", "run"), when="@7:")
-    depends_on("py-reretry", type=("build", "run"), when="@7:")
+    depends_on("py-ratelimiter", when="@:6", type=("build", "run"))
+    depends_on("py-yte@1", when="@7:", type=("build", "run"))
+    depends_on("py-jinja2@3", when="@7:", type=("build", "run"))
+    depends_on("py-reretry", when="@7:", type=("build", "run"))
 
     variant("reports", default=False, description="Generate self-contained HTML reports")
     with when("+reports"):
-        depends_on("py-jinja2", type=("build", "run"), when="@:7.19.1")
+        depends_on("py-jinja2", when="@:7.19.1", type=("build", "run"))
         depends_on("py-pygments", type=("build", "run"))
         # https://github.com/snakemake/snakemake/pull/1470
-        depends_on("py-networkx", type=("build", "run"), when="@:7.1.1")
-        depends_on("py-pygraphviz", type=("build", "run"), when="@:7.1.1")
+        depends_on("py-networkx", when="@:7.1.1", type=("build", "run"))
+        depends_on("py-pygraphviz", when="@:7.1.1", type=("build", "run"))
 
     variant("google-cloud", default=False, description="Enable Google Cloud execution")
     with when("+google-cloud"):

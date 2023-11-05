@@ -22,6 +22,6 @@ class RThData(RPackage):
     version("1.0-7", sha256="29e126344daccbebc7df68924730ae4159a0faad77f86302070920684ba6070e")
 
     depends_on("r@2.10.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@1.1-0:")
+    depends_on("r@3.5.0:", when="@1.1-0:", type=("build", "run"))
     depends_on("r-survival", type=("build", "run"))
     depends_on("r-mass", type=("build", "run"))

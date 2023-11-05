@@ -22,7 +22,7 @@ class PyPy(PythonPackage):
     version("1.4.31", sha256="a6501963c725fc2554dabfece8ae9a8fb5e149c0ac0a42fd2b02c5c1c57fc114")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@1.11.0:")
+    depends_on("python@2.7:2.8,3.5:", when="@1.11.0:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")

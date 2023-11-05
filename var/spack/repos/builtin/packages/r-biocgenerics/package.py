@@ -25,5 +25,5 @@ class RBiocgenerics(RPackage):
     version("0.24.0", commit="3db111e8c1f876267da89f4f0c5406a9d5c31cd1")
     version("0.22.1", commit="9c90bb8926885289d596a81ff318ee3745cbb6ad")
 
-    depends_on("r@3.6.0:", type=("build", "run"), when="@0.30.0:")
-    depends_on("r@4.0.0:", type=("build", "run"), when="@0.36.0:")
+    depends_on("r@3.6.0:", when="@0.30.0:", type=("build", "run"))
+    depends_on("r@4.0.0:", when="@0.36.0:", type=("build", "run"))

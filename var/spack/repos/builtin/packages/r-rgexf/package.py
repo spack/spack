@@ -25,6 +25,6 @@ class RRgexf(RPackage):
 
     depends_on("r-xml", type=("build", "run"))
     depends_on("r-igraph", type=("build", "run"))
-    depends_on("r-servr", type=("build", "run"), when="@0.16.0:")
+    depends_on("r-servr", when="@0.16.0:", type=("build", "run"))
 
-    depends_on("r-rook", type=("build", "run"), when="@:0.15.3")
+    depends_on("r-rook", when="@:0.15.3", type=("build", "run"))

@@ -23,7 +23,7 @@ class RCaracas(RPackage):
 
     depends_on("r@3.0:", type=("build", "run"))
     depends_on("r-reticulate@1.14:", type=("build", "run"))
-    depends_on("r-doby@4.6.15:", type=("build", "run"), when="@2.0.0:")
-    depends_on("r-matrix", type=("build", "run"), when="@2.0.0:")
-    depends_on("r-magrittr", type=("build", "run"), when="@1.1.1:")
+    depends_on("r-doby@4.6.15:", when="@2.0.0:", type=("build", "run"))
+    depends_on("r-matrix", when="@2.0.0:", type=("build", "run"))
+    depends_on("r-magrittr", when="@1.1.1:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"))

@@ -30,5 +30,5 @@ class RSfsmisc(RPackage):
     version("1.1-0", sha256="7f430cf3ebb95bac806fbf093fb1e2112deba47416a93be8d5d1064b76bc0015")
 
     depends_on("r@3.0.1:", type=("build", "run"))
-    depends_on("r@3.2.0:", type=("build", "run"), when="@1.1-2:")
-    depends_on("r@3.3.0:", type=("build", "run"), when="@1.1-12:")
+    depends_on("r@3.2.0:", when="@1.1-2:", type=("build", "run"))
+    depends_on("r@3.3.0:", when="@1.1-12:", type=("build", "run"))

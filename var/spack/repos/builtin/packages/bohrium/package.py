@@ -87,8 +87,8 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on("opencv+openmp", when="+opencv+openmp")
 
     depends_on("python", type="build", when="~python")
-    depends_on("python", type=("build", "link", "test"), when="+python")
-    depends_on("py-numpy", type=("build", "test", "run"), when="+python")
+    depends_on("python", when="+python", type=("build", "link", "test"))
+    depends_on("py-numpy", when="+python", type=("build", "test", "run"))
     depends_on("swig", type="build", when="+python")
     depends_on("py-cython", type="build", when="+python")
     depends_on("py-virtualenv", type="build", when="+python")

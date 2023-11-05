@@ -29,4 +29,4 @@ class RPtw(RPackage):
     version("1.9-12", sha256="cdb1752e04e661e379f11867b0a17e2177e9ee647c54bbcc37d39d6b8c062b84")
 
     depends_on("r-nloptr", type=("build", "run"))
-    depends_on("r-rcppde", type=("build", "run"), when="@1.9-16:")
+    depends_on("r-rcppde", when="@1.9-16:", type=("build", "run"))

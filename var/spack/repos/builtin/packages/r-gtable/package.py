@@ -23,8 +23,8 @@ class RGtable(RPackage):
     version("0.2.0", sha256="801e4869830ff3da1d38e41f5a2296a54fc10a7419c6ffb108582850c701e76f")
 
     depends_on("r@3.0:", type=("build", "run"))
-    depends_on("r@3.5:", type=("build", "run"), when="@0.3.3:")
-    depends_on("r-rlang@1.1.0:", type=("build", "run"), when="@0.3.3:")
-    depends_on("r-lifecycle", type=("build", "run"), when="@0.3.3:")
-    depends_on("r-glue", type=("build", "run"), when="@0.3.3:")
-    depends_on("r-cli", type=("build", "run"), when="@0.3.3:")
+    depends_on("r@3.5:", when="@0.3.3:", type=("build", "run"))
+    depends_on("r-rlang@1.1.0:", when="@0.3.3:", type=("build", "run"))
+    depends_on("r-lifecycle", when="@0.3.3:", type=("build", "run"))
+    depends_on("r-glue", when="@0.3.3:", type=("build", "run"))
+    depends_on("r-cli", when="@0.3.3:", type=("build", "run"))

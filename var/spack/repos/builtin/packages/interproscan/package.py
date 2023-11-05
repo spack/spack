@@ -78,8 +78,8 @@ class Interproscan(Package):
         description="Fetch and include databases in the install. Greatly increases install size.",
     )
 
-    depends_on("java@8.0:8.9", type=("build", "run"), when="@5:5.36-99.0")
-    depends_on("java@11", type=("build", "run"), when="@5.37-76.0:")
+    depends_on("java@8.0:8.9", when="@5:5.36-99.0", type=("build", "run"))
+    depends_on("java@11", when="@5.37-76.0:", type=("build", "run"))
     depends_on("maven", type="build", when="@5:")
     depends_on("perl@5:", type=("build", "run"))
     depends_on("python@3:", when="@5:", type=("build", "run"))

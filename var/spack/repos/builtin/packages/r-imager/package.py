@@ -39,5 +39,5 @@ class RImager(RPackage):
     depends_on("fftw")
     depends_on("libtiff")
 
-    depends_on("r-cairo", type=("build", "run"), when="@:0.41.2")
-    depends_on("r-plyr", type=("build", "run"), when="@:0.41.2")
+    depends_on("r-cairo", when="@:0.41.2", type=("build", "run"))
+    depends_on("r-plyr", when="@:0.41.2", type=("build", "run"))

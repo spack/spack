@@ -17,4 +17,4 @@ class PyMonty(PythonPackage):
 
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-six", type=("build", "run"), when="@:1")
+    depends_on("py-six", when="@:1", type=("build", "run"))

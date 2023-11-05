@@ -19,6 +19,6 @@ class RGitcreds(RPackage):
     version("0.1.2", sha256="41c6abcca5635062b123ffb5af2794770eca5ebd97b05c5a64b24fa1c803c75d")
     version("0.1.1", sha256="b14aaf4e910a9d2d6c65c93e645f0b0159c00898e669f917f83c03dfedb1dfea")
 
-    depends_on("r@3.4:", type=("build", "run"), when="@0.1.2:")
+    depends_on("r@3.4:", when="@0.1.2:", type=("build", "run"))
 
     depends_on("git", type="run")

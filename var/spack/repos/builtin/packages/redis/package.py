@@ -51,7 +51,7 @@ class Redis(MakefilePackage):
     version("4.0.11", sha256="fc53e73ae7586bcdacb4b63875d1ff04f68c5474c1ddeda78f00e5ae2eed1bbb")
 
     variant("tls", default=False, when="@6:", description="Builds with TLS support")
-    depends_on("openssl@1.1:", type=("build", "link"), when="+tls")
+    depends_on("openssl@1.1:", when="+tls", type=("build", "link"))
 
     variant(
         "systemd",

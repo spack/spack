@@ -80,7 +80,7 @@ class Yoda(AutotoolsPackage):
     depends_on("py-cython@0.23.5:", type="build", when="@1.6.5:1.8.0")
     depends_on("py-cython@0.24:", type="build", when="@1.8.0:")
     depends_on("py-matplotlib", when="@1.3.0:", type=("build", "run"))
-    depends_on("root", type=("build", "link", "run"), when="+root")
+    depends_on("root", when="+root", type=("build", "link", "run"))
 
     extends("python")
 

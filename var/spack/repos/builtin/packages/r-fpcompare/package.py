@@ -26,4 +26,4 @@ class RFpcompare(RPackage):
     version("0.2.3", sha256="f89be3568544a3a44e4f01b5050ed03705805308ec1aa4add9a5e1b5b328dbdf")
 
     depends_on("r@3.3:", type=("build", "run"))
-    depends_on("r@3.4:", type=("build", "run"), when="@0.2.4:")
+    depends_on("r@3.4:", when="@0.2.4:", type=("build", "run"))

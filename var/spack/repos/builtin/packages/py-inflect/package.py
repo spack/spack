@@ -17,8 +17,8 @@ class PyInflect(PythonPackage):
     version("5.0.2", sha256="d284c905414fe37c050734c8600fe170adfb98ba40f72fc66fed393f5b8d5ea0")
 
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("python@3.7:", type=("build", "run"), when="@6.0.2:")
+    depends_on("python@3.7:", when="@6.0.2:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools@56:", type="build", when="@6.0.2:")
     depends_on("py-setuptools-scm+toml@3.4.1:", type="build")
-    depends_on("py-pydantic@1.9.1:", type=("build", "run"), when="@6.0.2:")
+    depends_on("py-pydantic@1.9.1:", when="@6.0.2:", type=("build", "run"))

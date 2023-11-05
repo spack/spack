@@ -26,12 +26,12 @@ class RAffy(RPackage):
     version("1.56.0", commit="d36a7b8f05b1ef60162d94e75037d45c48f88871")
     version("1.54.0", commit="a815f02906fcf491b28ed0a356d6fce95a6bd20e")
 
-    depends_on("r@2.8.0:4.0", type=("build", "run"), when="@:1.68.0")
+    depends_on("r@2.8.0:4.0", when="@:1.68.0", type=("build", "run"))
     depends_on("r-biocgenerics@0.1.12:", type=("build", "run"))
     depends_on("r-biobase@2.5.5:", type=("build", "run"))
     depends_on("r-affyio@1.13.3:", type=("build", "run"))
-    depends_on("r-biocmanager", type=("build", "run"), when="@1.60.0:")
+    depends_on("r-biocmanager", when="@1.60.0:", type=("build", "run"))
     depends_on("r-preprocesscore", type=("build", "run"))
     depends_on("r-zlibbioc", type=("build", "run"))
 
-    depends_on("r-biocinstaller", type=("build", "run"), when="@1.54.0:1.58.0")
+    depends_on("r-biocinstaller", when="@1.54.0:1.58.0", type=("build", "run"))

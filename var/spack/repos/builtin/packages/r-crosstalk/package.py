@@ -20,10 +20,10 @@ class RCrosstalk(RPackage):
     version("1.0.0", sha256="b31eada24cac26f24c9763d9a8cbe0adfd87b264cf57f8725027fe0c7742ca51")
 
     depends_on("r-htmltools@0.3.5:", type=("build", "run"))
-    depends_on("r-htmltools@0.3.6:", type=("build", "run"), when="@1.1.0.1:")
+    depends_on("r-htmltools@0.3.6:", when="@1.1.0.1:", type=("build", "run"))
     depends_on("r-jsonlite", type=("build", "run"))
     depends_on("r-lazyeval", type=("build", "run"))
     depends_on("r-r6", type=("build", "run"))
 
-    depends_on("r-ggplot2", type=("build", "run"), when="@:1.0.0")
-    depends_on("r-shiny@0.11:", type=("build", "run"), when="@:1.0.0")
+    depends_on("r-ggplot2", when="@:1.0.0", type=("build", "run"))
+    depends_on("r-shiny@0.11:", when="@:1.0.0", type=("build", "run"))

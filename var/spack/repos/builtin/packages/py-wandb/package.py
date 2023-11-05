@@ -24,7 +24,7 @@ class PyWandb(PythonPackage):
     depends_on("py-appdirs@1.4.3:", type=("build", "run"))
     depends_on("py-protobuf@3.19:4", type=("build", "run"))
     conflicts("^py-protobuf@4.21.0")
-    depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.9")
+    depends_on("py-typing-extensions", when="^python@:3.9", type=("build", "run"))
 
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-click@7:", type=("build", "run"))

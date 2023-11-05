@@ -69,7 +69,7 @@ class Amdlibflame(LibflameBase):
 
     depends_on("python+pythoncmd", type="build")
     depends_on("gmake@4:", when="@3.0.1,3.1:", type="build")
-    depends_on("aocl-utils", type=("build"), when="@4.1: ")
+    depends_on("aocl-utils", when="@4.1: ", type=("build"))
 
     @property
     def lapack_libs(self):

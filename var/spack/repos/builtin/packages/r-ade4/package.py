@@ -30,9 +30,9 @@ class RAde4(RPackage):
 
     depends_on("r@2.10:", type=("build", "run"))
     depends_on("r-mass", type=("build", "run"))
-    depends_on("r-pixmap", type=("build", "run"), when="@1.7-16:")
-    depends_on("r-sp", type=("build", "run"), when="@1.7-16:")
-    depends_on("r-rcpp", type=("build", "run"), when="@1.7-22:")
-    depends_on("r-rcpparmadillo", type=("build", "run"), when="@1.7-22:")
+    depends_on("r-pixmap", when="@1.7-16:", type=("build", "run"))
+    depends_on("r-sp", when="@1.7-16:", type=("build", "run"))
+    depends_on("r-rcpp", when="@1.7-22:", type=("build", "run"))
+    depends_on("r-rcpparmadillo", when="@1.7-22:", type=("build", "run"))
 
-    depends_on("r-progress", type=("build", "run"), when="@1.7-16")
+    depends_on("r-progress", when="@1.7-16", type=("build", "run"))

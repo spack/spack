@@ -19,5 +19,5 @@ class PyPythonRapidjson(PythonPackage):
     version("0.9.1", sha256="ad80bd7e4bb15d9705227630037a433e2e2a7982b54b51de2ebabdd1611394a1")
 
     depends_on("python@3.4:", type=("build", "run"))
-    depends_on("python@3.6:", type=("build", "run"), when="@1.5:")
+    depends_on("python@3.6:", when="@1.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

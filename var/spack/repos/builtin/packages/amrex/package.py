@@ -162,7 +162,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hypre@2.19.0:", type="link", when="@21.03: ~cuda +hypre")
     depends_on("hypre@2.20.0:", type="link", when="@21.03: +cuda +hypre")
     depends_on("petsc", type="link", when="+petsc")
-    depends_on("intel-oneapi-mkl", type=("build", "link"), when="+sycl")
+    depends_on("intel-oneapi-mkl", when="+sycl", type=("build", "link"))
 
     # these versions of gcc have lambda function issues
     # see https://github.com/spack/spack/issues/22310

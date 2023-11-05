@@ -34,7 +34,7 @@ class Openbabel(CMakePackage):
 
     extends("python", when="+python")
 
-    depends_on("python", type=("build", "run"), when="+python")
+    depends_on("python", when="+python", type=("build", "run"))
     depends_on("cmake@3.1:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("swig@2.0:", type="build", when="+python")

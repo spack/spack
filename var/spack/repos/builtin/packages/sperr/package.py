@@ -36,8 +36,8 @@ class Sperr(CMakePackage):
 
     # Depend ons
     depends_on("git", type="build")
-    depends_on("pkgconfig", type=("build"), when="+zstd")
-    depends_on("zstd", type=("build", "link"), when="@:0.6.2+zstd")
+    depends_on("pkgconfig", when="+zstd", type=("build"))
+    depends_on("zstd", when="@:0.6.2+zstd", type=("build", "link"))
 
     def cmake_args(self):
         # ensure the compiler supports OpenMP if it is used

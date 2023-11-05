@@ -24,8 +24,8 @@ class RRandomfields(RPackage):
     version("3.1.50", sha256="2d6a07c3a716ce20f9c685deb59e8fcc64fd52c8a50b0f04baf451b6b928e848")
 
     depends_on("r@3.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@3.3.8:")
+    depends_on("r@3.5.0:", when="@3.3.8:", type=("build", "run"))
     depends_on("r-sp", type=("build", "run"))
     depends_on("r-randomfieldsutils@0.5.1:", type=("build", "run"))
-    depends_on("r-randomfieldsutils@0.5.5:", type=("build", "run"), when="@3.3.13:")
-    depends_on("r-randomfieldsutils@1.1:", type=("build", "run"), when="@3.3.14:")
+    depends_on("r-randomfieldsutils@0.5.5:", when="@3.3.13:", type=("build", "run"))
+    depends_on("r-randomfieldsutils@1.1:", when="@3.3.14:", type=("build", "run"))

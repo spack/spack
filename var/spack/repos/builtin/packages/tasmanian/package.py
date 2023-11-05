@@ -59,8 +59,8 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         values=("Debug", "Release"),
     )
 
-    depends_on("cmake@3.10:", type=("build", "run"), when="@7.0:")
-    depends_on("cmake@3.22:", type=("build", "run"), when="@8.0:")
+    depends_on("cmake@3.10:", when="@7.0:", type=("build", "run"))
+    depends_on("cmake@3.22:", when="@8.0:", type=("build", "run"))
 
     depends_on("python@3.0:", when="+python", type=("build", "run"))
     depends_on("py-numpy", when="+python", type=("build", "run"))

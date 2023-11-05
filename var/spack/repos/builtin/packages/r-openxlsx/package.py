@@ -23,6 +23,6 @@ class ROpenxlsx(RPackage):
     version("4.1.0.1", sha256="8b7011debe14714de035ef42797c8caa923162d5dc3cc3c2a299fc10eff3d4d1")
 
     depends_on("r@3.3.0:", type=("build", "run"))
-    depends_on("r-stringi", type=("build", "run"), when="@4.2.3:")
+    depends_on("r-stringi", when="@4.2.3:", type=("build", "run"))
     depends_on("r-zip", type=("build", "run"))
     depends_on("r-rcpp", type=("build", "run"))

@@ -73,11 +73,11 @@ class Parsec(CMakePackage, CudaPackage):
     depends_on("hwloc")
     depends_on("mpi")
     depends_on("papi", when="+profile")
-    depends_on("python", type=("build", "run"), when="+profile")
-    depends_on("py-cython", type=("build", "run"), when="+profile")
-    depends_on("py-pandas", type=("build", "run"), when="+profile")
-    depends_on("py-matplotlib", type=("build", "run"), when="+profile")
-    depends_on("py-tables", type=("build", "run"), when="+profile")
+    depends_on("python", when="+profile", type=("build", "run"))
+    depends_on("py-cython", when="+profile", type=("build", "run"))
+    depends_on("py-pandas", when="+profile", type=("build", "run"))
+    depends_on("py-matplotlib", when="+profile", type=("build", "run"))
+    depends_on("py-tables", when="+profile", type=("build", "run"))
 
     def cmake_args(self):
         args = [

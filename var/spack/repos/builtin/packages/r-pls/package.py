@@ -23,4 +23,4 @@ class RPls(RPackage):
     version("2.6-0", sha256="3d8708fb7f45863d3861fd231e06955e6750bcbe717e1ccfcc6d66d0cb4d4596")
 
     depends_on("r@2.10:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@2.8-1:")
+    depends_on("r@3.5.0:", when="@2.8-1:", type=("build", "run"))

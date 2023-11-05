@@ -24,8 +24,8 @@ class RRngtools(RPackage):
     version("1.3.1", sha256="763fc493cb821a4d3e514c0dc876d602a692c528e1d67f295dde70c77009e224")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@3.2.0:", type=("build", "run"), when="@1.4:")
+    depends_on("r@3.2.0:", when="@1.4:", type=("build", "run"))
     depends_on("r-digest", type=("build", "run"))
 
-    depends_on("r-pkgmaker@0.20:", type=("build", "run"), when="@:1.4")
-    depends_on("r-stringr", type=("build", "run"), when="@:1.4")
+    depends_on("r-pkgmaker@0.20:", when="@:1.4", type=("build", "run"))
+    depends_on("r-stringr", when="@:1.4", type=("build", "run"))

@@ -20,4 +20,4 @@ class RAmap(RPackage):
     version("0.8-16", sha256="d3775ad7f660581f7d2f070e426be95ae0d6743622943e6f5491988e5217d4e2")
 
     depends_on("r@2.10.0:", type=("build", "run"))
-    depends_on("r@3.6.0:", type=("build", "run"), when="@0.8-17:")
+    depends_on("r@3.6.0:", when="@0.8-17:", type=("build", "run"))

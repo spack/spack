@@ -20,4 +20,4 @@ class RGeometries(RPackage):
     version("0.2.0", sha256="8cf5094f3c2458fef5d755799c766afd27c66cd1c292574a6ab532d608360314")
 
     depends_on("r-rcpp", type=("build", "run"))
-    depends_on("r-rcpp@1.0.10:", type=("build", "run"), when="@0.2.2:")
+    depends_on("r-rcpp@1.0.10:", when="@0.2.2:", type=("build", "run"))

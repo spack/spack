@@ -36,7 +36,7 @@ class PySmartsim(PythonPackage):
     depends_on("py-protobuf@3.20:3", type=("build", "run"))
 
     # Companion libs
-    depends_on("py-smartredis@0.4.1:", type=("build", "run"), when="@0.5.0")
+    depends_on("py-smartredis@0.4.1:", when="@0.5.0", type=("build", "run"))
 
     # Backends
     # SmartSim defines sensible and well tested lower bounds for redis

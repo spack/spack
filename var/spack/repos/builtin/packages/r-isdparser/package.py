@@ -24,4 +24,4 @@ class RIsdparser(RPackage):
 
     depends_on("r-tibble@1.2:", type=("build", "run"))
     depends_on("r-data-table@1.10.0:", type=("build", "run"))
-    depends_on("r-lubridate", type=("build", "run"), when="@0.4.0:")
+    depends_on("r-lubridate", when="@0.4.0:", type=("build", "run"))

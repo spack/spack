@@ -28,4 +28,4 @@ class RBit64(RPackage):
 
     depends_on("r@3.0.1:", type=("build", "run"))
     depends_on("r-bit@1.1-12:", type=("build", "run"))
-    depends_on("r-bit@4.0.0:", type=("build", "run"), when="@4.0.5:")
+    depends_on("r-bit@4.0.0:", when="@4.0.5:", type=("build", "run"))

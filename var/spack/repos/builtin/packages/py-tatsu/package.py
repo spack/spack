@@ -18,7 +18,7 @@ class PyTatsu(PythonPackage):
 
     variant("future_regex", default=True, description="Use regex implementation")
 
-    depends_on("python@3.6:", type=("build", "run"), when="@4.5:")
+    depends_on("python@3.6:", when="@4.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     # optional dependency, otherwise falls back to standard implementation
-    depends_on("py-regex@2018.8:", type=("build", "run"), when="+future_regex")
+    depends_on("py-regex@2018.8:", when="+future_regex", type=("build", "run"))

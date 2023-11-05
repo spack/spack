@@ -18,6 +18,6 @@ class PyCloudpickle(PythonPackage):
     version("1.1.1", sha256="7d43c4d0c7e9735ee8a352c96f84031dabd6676170c4e5e0585a469cc4769f22")
     version("0.5.2", sha256="b0e63dd89ed5285171a570186751bc9b84493675e99e12789e9a5dc5490ef554")
 
-    depends_on("python@3.5:", type=("build", "run"), when="@1.6.0:")
-    depends_on("python@3.6:", type=("build", "run"), when="@2.2.0:")
+    depends_on("python@3.5:", when="@1.6.0:", type=("build", "run"))
+    depends_on("python@3.6:", when="@2.2.0:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

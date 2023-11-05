@@ -25,4 +25,4 @@ class PyWidgetsnbextension(PythonPackage):
     depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
     depends_on("python@3.7:", when="@4.0.3:", type=("build", "run"))
     depends_on("py-notebook@4.2.0:", when="@1.2.6", type=("build", "run"))
-    depends_on("py-notebook@4.4.1:", type=("build", "run"), when="@3.3.0:3")
+    depends_on("py-notebook@4.4.1:", when="@3.3.0:3", type=("build", "run"))

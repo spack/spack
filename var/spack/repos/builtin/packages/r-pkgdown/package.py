@@ -21,7 +21,7 @@ class RPkgdown(RPackage):
     depends_on("r@3.1.0:", type=("build", "run"))
     depends_on("r-bslib@0.3.1:", type=("build", "run"))
     depends_on("r-callr@2.0.2:", type=("build", "run"))
-    depends_on("r-callr@3.7.3:", type=("build", "run"), when="@2.0.7:")
+    depends_on("r-callr@3.7.3:", when="@2.0.7:", type=("build", "run"))
     depends_on("r-cli", type=("build", "run"))
     depends_on("r-desc", type=("build", "run"))
     depends_on("r-digest", type=("build", "run"))

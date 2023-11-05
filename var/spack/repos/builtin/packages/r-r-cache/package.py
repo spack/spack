@@ -27,9 +27,9 @@ class RRCache(RPackage):
 
     depends_on("r@2.14.0:", type=("build", "run"))
     depends_on("r-r-methodss3@1.7.1:", type=("build", "run"))
-    depends_on("r-r-methodss3@1.8.1:", type=("build", "run"), when="@0.15.0:")
+    depends_on("r-r-methodss3@1.8.1:", when="@0.15.0:", type=("build", "run"))
     depends_on("r-r-oo@1.23.0:", type=("build", "run"))
-    depends_on("r-r-oo@1.24.0:", type=("build", "run"), when="@0.15.0:")
+    depends_on("r-r-oo@1.24.0:", when="@0.15.0:", type=("build", "run"))
     depends_on("r-r-utils@2.8.0:", type=("build", "run"))
-    depends_on("r-r-utils@2.10.1:", type=("build", "run"), when="@0.15.0:")
+    depends_on("r-r-utils@2.10.1:", when="@0.15.0:", type=("build", "run"))
     depends_on("r-digest@0.6.13:", type=("build", "run"))

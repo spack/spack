@@ -19,14 +19,14 @@ class PyAnuga(PythonPackage):
     version("main", branch="main")
 
     # Non-versioned dependencies for Anuga main and future versions based on python@3.5:
-    depends_on("python@3.5:", type=("build", "run"), when="@2.2:")
-    depends_on("gdal+geos+python", type=("build", "run"), when="@2.2:")
-    depends_on("py-future", type=("build", "run"), when="@2.2:")
-    depends_on("py-matplotlib", type=("build", "run"), when="@2.2:")
-    depends_on("py-numpy", type=("build", "run"), when="@2.2:")
-    depends_on("py-setuptools", type=("build"), when="@2.2:")
+    depends_on("python@3.5:", when="@2.2:", type=("build", "run"))
+    depends_on("gdal+geos+python", when="@2.2:", type=("build", "run"))
+    depends_on("py-future", when="@2.2:", type=("build", "run"))
+    depends_on("py-matplotlib", when="@2.2:", type=("build", "run"))
+    depends_on("py-numpy", when="@2.2:", type=("build", "run"))
+    depends_on("py-setuptools", when="@2.2:", type=("build"))
     # Replaces pyar in python3 anuga:
-    depends_on("py-mpi4py", type=("build", "run"), when="@2.2:")
+    depends_on("py-mpi4py", when="@2.2:", type=("build", "run"))
 
     # Unversioned dependencies of the python2 and python3-based versions
     depends_on("py-cython", type=("build"))

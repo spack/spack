@@ -26,10 +26,10 @@ class RCner(RPackage):
     version("1.12.1", commit="90d611f9cd19a73d0fe92ab03ef428519d64c017")
 
     depends_on("r@3.2.2:", type=("build", "run"))
-    depends_on("r@3.4:", type=("build", "run"), when="@1.14.0:")
+    depends_on("r@3.4:", when="@1.14.0:", type=("build", "run"))
     depends_on("r-biostrings@2.33.4:", type=("build", "run"))
     depends_on("r-dbi@0.6:", type=("build", "run"))
-    depends_on("r-dbi@0.7:", type=("build", "run"), when="@1.14.0:")
+    depends_on("r-dbi@0.7:", when="@1.14.0:", type=("build", "run"))
     depends_on("r-rsqlite@0.11.4:", type=("build", "run"))
     depends_on("r-genomeinfodb@1.1.3:", type=("build", "run"))
     depends_on("r-genomicranges@1.23.16:", type=("build", "run"))

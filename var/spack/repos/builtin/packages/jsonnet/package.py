@@ -24,9 +24,9 @@ class Jsonnet(MakefilePackage):
 
     variant("python", default=False, description="Provide Python bindings for jsonnet")
     extends("python", when="+python")
-    depends_on("py-setuptools", type=("build",), when="+python")
-    depends_on("py-pip", type=("build",), when="+python")
-    depends_on("py-wheel", type=("build",), when="+python")
+    depends_on("py-setuptools", when="+python", type=("build",))
+    depends_on("py-pip", when="+python", type=("build",))
+    depends_on("py-wheel", when="+python", type=("build",))
 
     @property
     def install_targets(self):

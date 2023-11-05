@@ -29,7 +29,7 @@ class Repeatmasker(Package):
     depends_on("python", when="@4.1:", type=("build", "run"))
     depends_on("py-h5py", when="@4.1:", type=("build", "run"))
 
-    depends_on("phrap-crossmatch-swat", type=("build", "run"), when="+crossmatch")
+    depends_on("phrap-crossmatch-swat", when="+crossmatch", type=("build", "run"))
 
     patch("utf8.patch", when="@:4.0")
 

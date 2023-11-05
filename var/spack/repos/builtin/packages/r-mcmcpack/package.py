@@ -29,6 +29,6 @@ class RMcmcpack(RPackage):
     depends_on("r-mcmc", type=("build", "run"))
     depends_on("r-quantreg", type=("build", "run"))
 
-    depends_on("r-mass", type=("build", "run"), when="@:1.6-0")
+    depends_on("r-mass", when="@:1.6-0", type=("build", "run"))
 
     conflicts("%gcc@:3")

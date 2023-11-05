@@ -30,5 +30,5 @@ class RNp(RPackage):
 
     depends_on("r-boot", type=("build", "run"))
     depends_on("r-cubature", type=("build", "run"))
-    depends_on("r-quadprog", type=("build", "run"), when="@0.60-8:")
-    depends_on("r-quantreg", type=("build", "run"), when="@0.60-8:")
+    depends_on("r-quadprog", when="@0.60-8:", type=("build", "run"))
+    depends_on("r-quantreg", when="@0.60-8:", type=("build", "run"))

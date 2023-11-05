@@ -43,7 +43,7 @@ class Amdlibm(SConsPackage):
     # Mandatory dependencies
     depends_on("python@3.6.1:", type=("build", "run"))
     depends_on("scons@3.1.2:", type=("build"))
-    depends_on("aocl-utils", type=("build"), when="@4.1: ")
+    depends_on("aocl-utils", when="@4.1: ", type=("build"))
     depends_on("mpfr", type=("link"))
 
     patch("0001-libm-ose-Scripts-cleanup-pyc-files.patch", when="@2.2")

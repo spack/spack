@@ -25,7 +25,7 @@ class RKs(RPackage):
     version("1.11.2", sha256="9dfd485096e1e67abc7dfcb7b76a83de110dd15bcfeffe5c899605b3a5592961")
 
     depends_on("r@2.10:", type=("build", "run"))
-    depends_on("r@2.10.0:", type=("build", "run"), when="@1.14.0:")
+    depends_on("r@2.10.0:", when="@1.14.0:", type=("build", "run"))
     depends_on("r-fnn@1.1:", type=("build", "run"))
     depends_on("r-kernlab", type=("build", "run"))
     depends_on("r-kernsmooth@2.22:", type=("build", "run"))
@@ -34,5 +34,5 @@ class RKs(RPackage):
     depends_on("r-mgcv", type=("build", "run"))
     depends_on("r-multicool", type=("build", "run"))
     depends_on("r-mvtnorm@1.0-0:", type=("build", "run"))
-    depends_on("r-plot3d", type=("build", "run"), when="@1.13.3:")
-    depends_on("r-pracma", type=("build", "run"), when="@1.13.3:")
+    depends_on("r-plot3d", when="@1.13.3:", type=("build", "run"))
+    depends_on("r-pracma", when="@1.13.3:", type=("build", "run"))

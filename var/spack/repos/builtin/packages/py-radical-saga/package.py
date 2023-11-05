@@ -33,9 +33,9 @@ class PyRadicalSaga(PythonPackage):
 
     depends_on("py-radical-utils", type=("build", "run"))
 
-    depends_on("py-radical-utils@1.12:", type=("build", "run"), when="@1.12:")
+    depends_on("py-radical-utils@1.12:", when="@1.12:", type=("build", "run"))
 
-    depends_on("py-radical-utils@:1.11", type=("build", "run"), when="@:1.11")
+    depends_on("py-radical-utils@:1.11", when="@:1.11", type=("build", "run"))
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-apache-libcloud", type=("build", "run"))

@@ -25,4 +25,4 @@ class REvaluate(RPackage):
 
     depends_on("r@3.0.2:", type=("build", "run"))
 
-    depends_on("r-stringr@0.6.2:", type=("build", "run"), when="@:0.11")
+    depends_on("r-stringr@0.6.2:", when="@:0.11", type=("build", "run"))

@@ -22,6 +22,6 @@ class RHighr(RPackage):
     version("0.6", sha256="43e152b2dea596df6e14c44398c74fcd438ece15eaae5bdb84aef8d61b213b59")
 
     depends_on("r@3.0.2:", type=("build", "run"))
-    depends_on("r@3.2.3:", type=("build", "run"), when="@0.8:")
-    depends_on("r@3.3.0:", type=("build", "run"), when="@0.10:")
-    depends_on("r-xfun@0.18:", type=("build", "run"), when="@0.9:")
+    depends_on("r@3.2.3:", when="@0.8:", type=("build", "run"))
+    depends_on("r@3.3.0:", when="@0.10:", type=("build", "run"))
+    depends_on("r-xfun@0.18:", when="@0.9:", type=("build", "run"))

@@ -20,21 +20,21 @@ class PyBrian2(PythonPackage):
     version("2.0rc3", sha256="05f347f5fa6b25d1ce5ec152a2407bbce033599eb6664f32f5331946eb3c7d66")
 
     depends_on("python@2.7:", type=("build", "run"))
-    depends_on("python@3.6:", type=("build", "run"), when="@2.4:")
-    depends_on("python@3.7:", type=("build", "run"), when="@2.5:")
+    depends_on("python@3.6:", when="@2.4:", type=("build", "run"))
+    depends_on("python@3.7:", when="@2.5:", type=("build", "run"))
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
 
     depends_on("py-numpy@1.10:", type=("build", "run"))
-    depends_on("py-numpy@1.15:", type=("build", "run"), when="@2.4:")
-    depends_on("py-numpy@1.17:", type=("build", "run"), when="@2.5:")
+    depends_on("py-numpy@1.15:", when="@2.4:", type=("build", "run"))
+    depends_on("py-numpy@1.17:", when="@2.5:", type=("build", "run"))
     depends_on("py-cython@0.29:", type=("build", "run"))
     depends_on("py-sympy@0.7.6:1.0,1.1.1:", type=("build", "run"))
-    depends_on("py-sympy@1.2:", type=("build", "run"), when="@2.4:")
+    depends_on("py-sympy@1.2:", when="@2.4:", type=("build", "run"))
     depends_on("py-pyparsing", type=("build", "run"))
     depends_on("py-jinja2@2.7:", type=("build", "run"))
     depends_on("py-setuptools@21:", type=("build", "run"))
-    depends_on("py-setuptools@24.2:", type=("build", "run"), when="@2.4:")
+    depends_on("py-setuptools@24.2:", when="@2.4:", type=("build", "run"))
 
     def install_options(self, spec, prefix):
         return ["--with-cython"]

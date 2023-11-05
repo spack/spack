@@ -25,8 +25,8 @@ class Z3(CMakePackage):
 
     variant("python", default=False, description="Enable python binding")
     depends_on("python", type="build", when="~python")
-    depends_on("python", type=("build", "run"), when="+python")
-    depends_on("py-setuptools", type=("run"), when="+python")
+    depends_on("python", when="+python", type=("build", "run"))
+    depends_on("py-setuptools", when="+python", type=("run"))
     extends("python", when="+python")
 
     variant("gmp", default=False, description="GNU multiple precision library support")

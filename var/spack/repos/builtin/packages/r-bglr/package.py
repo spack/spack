@@ -17,4 +17,4 @@ class RBglr(RPackage):
 
     depends_on("r@3.5.0:", type=("build", "run"))
     depends_on("r-truncnorm", type=("build", "run"))
-    depends_on("r-mass", type=("build", "run"), when="@1.0.9:")
+    depends_on("r-mass", when="@1.0.9:", type=("build", "run"))

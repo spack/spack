@@ -19,6 +19,6 @@ class PyTenacity(PythonPackage):
     depends_on("py-setuptools@21:", type="build")
     depends_on("py-setuptools-scm@3.4:+toml", type="build")
 
-    depends_on("py-six@1.9.0:", type=("build", "run"), when="@:7")
+    depends_on("py-six@1.9.0:", when="@:7", type=("build", "run"))
 
     conflicts("^py-setuptools@24.0.0,34.0.0:34.0.3,34.1.0:34.1.1,34.2.0,34.3.0:34.3.2,36.2.0")

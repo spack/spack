@@ -30,6 +30,6 @@ class RGcrma(RPackage):
     depends_on("r-affyio@1.13.3:", type=("build", "run"))
     depends_on("r-xvector", type=("build", "run"))
     depends_on("r-biostrings@2.11.32:", type=("build", "run"))
-    depends_on("r-biocmanager", type=("build", "run"), when="@2.54.0:")
+    depends_on("r-biocmanager", when="@2.54.0:", type=("build", "run"))
 
-    depends_on("r-biocinstaller", type=("build", "run"), when="@:2.52.0")
+    depends_on("r-biocinstaller", when="@:2.52.0", type=("build", "run"))

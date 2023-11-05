@@ -26,4 +26,4 @@ class RRbgl(RPackage):
     version("1.52.0", commit="93e8fcfafec8f1cd5638fe30dc0f9506d15b49c0")
 
     depends_on("r-graph", type=("build", "run"))
-    depends_on("r-bh", type=("build", "run"), when="@1.60.0:")
+    depends_on("r-bh", when="@1.60.0:", type=("build", "run"))

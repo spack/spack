@@ -30,20 +30,20 @@ class PyBreathe(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("python@3.5:", type=("build", "run"), when="@4.21:4.32")
-    depends_on("python@3.6:", type=("build", "run"), when="@4.33:")
-    depends_on("py-docutils@0.5:", type=("build", "run"), when="@:4.20")
-    depends_on("py-docutils@0.12:", type=("build", "run"), when="@4.21:")
+    depends_on("python@3.5:", when="@4.21:4.32", type=("build", "run"))
+    depends_on("python@3.6:", when="@4.33:", type=("build", "run"))
+    depends_on("py-docutils@0.5:", when="@:4.20", type=("build", "run"))
+    depends_on("py-docutils@0.12:", when="@4.21:", type=("build", "run"))
     # Note: Pygments is missing from the setup.py in 4.34.0 but is listed in
     # the requirements file and used by breathe.filetypes.
-    depends_on("py-pygments@1.6:", type=("build", "run"), when="@4.21:")
-    depends_on("py-six@1.4:", type=("build", "run"), when="@:4.20")
-    depends_on("py-six@1.9:", type=("build", "run"), when="@4.21:4.32")
+    depends_on("py-pygments@1.6:", when="@4.21:", type=("build", "run"))
+    depends_on("py-six@1.4:", when="@:4.20", type=("build", "run"))
+    depends_on("py-six@1.9:", when="@4.21:4.32", type=("build", "run"))
     depends_on("py-sphinx", type=("build", "run"))
-    depends_on("py-sphinx@:3", type=("build", "run"), when="@:4.20")
-    depends_on("py-sphinx@3:3.2", type=("build", "run"), when="@4.21:4.32")
-    depends_on("py-sphinx@3:4", type=("build", "run"), when="@4.33")
-    depends_on("py-sphinx@4,5.0.1:5", type=("build", "run"), when="@4.34")
-    depends_on("py-sphinx@4,5.0.1:", type=("build", "run"), when="@4.35:")
+    depends_on("py-sphinx@:3", when="@:4.20", type=("build", "run"))
+    depends_on("py-sphinx@3:3.2", when="@4.21:4.32", type=("build", "run"))
+    depends_on("py-sphinx@3:4", when="@4.33", type=("build", "run"))
+    depends_on("py-sphinx@4,5.0.1:5", when="@4.34", type=("build", "run"))
+    depends_on("py-sphinx@4,5.0.1:", when="@4.35:", type=("build", "run"))
 
     depends_on("doxygen@1.8.4:", type="run")

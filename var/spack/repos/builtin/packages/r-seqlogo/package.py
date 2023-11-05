@@ -26,4 +26,4 @@ class RSeqlogo(RPackage):
     version("1.44.0", commit="4cac14ff29f413d6de1a9944eb5d21bfe5045fac")
     version("1.42.0", commit="d7e04726c813282aa3f47a9ee98c5e1cec9bdddd")
 
-    depends_on("r@4.2:", type=("build", "run"), when="@1.62.0:")
+    depends_on("r@4.2:", when="@1.62.0:", type=("build", "run"))

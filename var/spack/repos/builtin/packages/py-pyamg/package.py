@@ -30,4 +30,4 @@ class PyPyamg(PythonPackage):
     # https://github.com/pypa/setuptools_scm/issues/758
     depends_on("py-setuptools-scm@7.1:+toml", type="build", when="@5.0.0:")
     depends_on("py-setuptools-scm@5:+toml", type="build", when="@4.2.0:")
-    depends_on("py-pybind11@2.8.0:", type=("build"), when="@4.2.0:")
+    depends_on("py-pybind11@2.8.0:", when="@4.2.0:", type=("build"))

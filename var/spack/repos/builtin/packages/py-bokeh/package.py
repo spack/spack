@@ -21,30 +21,30 @@ class PyBokeh(PythonPackage):
 
     depends_on("py-setuptools", type="build", when="@1.3.4:")
 
-    depends_on("python@2.6:", type=("build", "run"), when="@0.12.2")
-    depends_on("python@2.7:", type=("build", "run"), when="@1.3.4:")
-    depends_on("python@3.6:", type=("build", "run"), when="@2.3.3:")
-    depends_on("python@3.7:", type=("build", "run"), when="@2.4.0:")
+    depends_on("python@2.6:", when="@0.12.2", type=("build", "run"))
+    depends_on("python@2.7:", when="@1.3.4:", type=("build", "run"))
+    depends_on("python@3.6:", when="@2.3.3:", type=("build", "run"))
+    depends_on("python@3.7:", when="@2.4.0:", type=("build", "run"))
 
-    depends_on("py-requests@1.2.3:", type=("build", "run"), when="@0.12.2")
-    depends_on("py-six@1.5.2:", type=("build", "run"), when="@:1.3.4")
-    depends_on("py-python-dateutil@2.1:", type=("build", "run"), when="@:2.3.3")
+    depends_on("py-requests@1.2.3:", when="@0.12.2", type=("build", "run"))
+    depends_on("py-six@1.5.2:", when="@:1.3.4", type=("build", "run"))
+    depends_on("py-python-dateutil@2.1:", when="@:2.3.3", type=("build", "run"))
 
     depends_on("py-jinja2@2.7:", type=("build", "run"))
-    depends_on("py-jinja2@2.9:", type=("build", "run"), when="@2.3.3:")
+    depends_on("py-jinja2@2.9:", when="@2.3.3:", type=("build", "run"))
 
     depends_on("py-numpy@1.7.1:", type=("build", "run"))
-    depends_on("py-numpy@1.11.3:", type=("build", "run"), when="@2.3.3:")
+    depends_on("py-numpy@1.11.3:", when="@2.3.3:", type=("build", "run"))
 
-    depends_on("py-packaging@16.8:", type=("build", "run"), when="@1.3.4:")
+    depends_on("py-packaging@16.8:", when="@1.3.4:", type=("build", "run"))
 
-    depends_on("pil@4.0:", type=("build", "run"), when="@1.3.4:")
-    depends_on("pil@7.1.0:", type=("build", "run"), when="@2.3.3:")
+    depends_on("pil@4.0:", when="@1.3.4:", type=("build", "run"))
+    depends_on("pil@7.1.0:", when="@2.3.3:", type=("build", "run"))
 
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
 
     depends_on("py-tornado@4.3:", type=("build", "run"))
-    depends_on("py-tornado@5.1:", type=("build", "run"), when="@2.3.3:")
+    depends_on("py-tornado@5.1:", when="@2.3.3:", type=("build", "run"))
 
-    depends_on("py-typing-extensions@3.7.4:", type=("build", "run"), when="@2.3.3:")
-    depends_on("py-typing-extensions@3.10.0:", type=("build", "run"), when="@2.4.0:")
+    depends_on("py-typing-extensions@3.7.4:", when="@2.3.3:", type=("build", "run"))
+    depends_on("py-typing-extensions@3.10.0:", when="@2.4.0:", type=("build", "run"))

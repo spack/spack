@@ -21,4 +21,4 @@ class PyPybigwig(PythonPackage):
     depends_on("curl", type=("build", "link", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-numpy", type=("build", "run"), when="+numpy")
+    depends_on("py-numpy", when="+numpy", type=("build", "run"))

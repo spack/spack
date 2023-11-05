@@ -22,4 +22,4 @@ class PyHypercorn(PythonPackage):
     depends_on("py-priority", type=("build", "run"))
     depends_on("py-toml", type=("build", "run"))
     depends_on("py-wsproto@0.14.0:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7.4:", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-typing-extensions@3.7.4:", when="^python@:3.7", type=("build", "run"))

@@ -26,4 +26,4 @@ class RDygraphs(RPackage):
     depends_on("r-htmlwidgets@0.6:", type=("build", "run"))
     depends_on("r-zoo@1.7-10:", type=("build", "run"))
     depends_on("r-xts@0.9-7:", type=("build", "run"))
-    depends_on("r-htmltools@0.3.5:", type=("build", "run"), when="@1.1.1.0:")
+    depends_on("r-htmltools@0.3.5:", when="@1.1.1.0:", type=("build", "run"))

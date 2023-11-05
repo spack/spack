@@ -31,5 +31,5 @@ class RTidytree(RPackage):
     depends_on("r-tidyr", type=("build", "run"))
     depends_on("r-tidyselect", type=("build", "run"))
     depends_on("r-yulab-utils@0.0.4:", type=("build", "run"))
-    depends_on("r-pillar", type=("build", "run"), when="@0.3.9:")
-    depends_on("r-cli", type=("build", "run"), when="@0.4.2:")
+    depends_on("r-pillar", when="@0.3.9:", type=("build", "run"))
+    depends_on("r-cli", when="@0.4.2:", type=("build", "run"))

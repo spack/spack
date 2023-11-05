@@ -145,7 +145,7 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("pkgconfig", type="build")
 
     # openmp dependencies
-    depends_on("perl-data-dumper", type=("build"), when="+openmp")
+    depends_on("perl-data-dumper", when="+openmp", type=("build"))
     depends_on("hwloc", when="+openmp")
     depends_on("elf", type="link", when="+openmp")
 

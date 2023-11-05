@@ -34,8 +34,8 @@ class RedisPlusPlus(CMakePackage):
 
     depends_on("cmake@3.18:", type="build")
     depends_on("hiredis@1.0.0:", type=("build", "link"))
-    depends_on("hiredis@1.0.0:+ssl", type=("build", "link"), when="+tls")
-    depends_on("openssl@1.1:", type=("build", "link"), when="+tls")
+    depends_on("hiredis@1.0.0:+ssl", when="+tls", type=("build", "link"))
+    depends_on("openssl@1.1:", when="+tls", type=("build", "link"))
 
     conflicts("+tls", when="+static", msg="Static libraries cannot be built with TLS support.")
 

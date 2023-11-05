@@ -18,4 +18,4 @@ class PyZict(PythonPackage):
     depends_on("python@3.8:", when="@3.0.0:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-heapdict", type=("build", "run"), when="@:2.2.0")
+    depends_on("py-heapdict", when="@:2.2.0", type=("build", "run"))

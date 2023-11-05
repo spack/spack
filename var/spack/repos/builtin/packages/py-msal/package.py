@@ -25,6 +25,6 @@ class PyMsal(PythonPackage):
     # https://github.com/AzureAD/microsoft-authentication-library-for-python/blob/1.20.0/setup.py
     depends_on("py-setuptools", type="build")
     depends_on("py-requests@2.0.0:2", type=("build", "run"))
-    depends_on("py-pyjwt@1.0.0:1+crypto", type=("build", "run"), when="@:1.3")
-    depends_on("py-pyjwt@1.0.0:2+crypto", type=("build", "run"), when="@1.20:")
-    depends_on("py-cryptography@0.6:40", type=("build", "run"), when="@1.20:")
+    depends_on("py-pyjwt@1.0.0:1+crypto", when="@:1.3", type=("build", "run"))
+    depends_on("py-pyjwt@1.0.0:2+crypto", when="@1.20:", type=("build", "run"))
+    depends_on("py-cryptography@0.6:40", when="@1.20:", type=("build", "run"))

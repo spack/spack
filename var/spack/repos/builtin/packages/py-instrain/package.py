@@ -45,4 +45,4 @@ class PyInstrain(PythonPackage):
     # Essential dependencies
     depends_on("samtools", type=("build", "run"))
     # Optional dependencies
-    depends_on("prodigal", type=("build", "run"), when="+prodigal")
+    depends_on("prodigal", when="+prodigal", type=("build", "run"))

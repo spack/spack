@@ -31,7 +31,7 @@ class PyXdot(PythonPackage):
     depends_on("atk", type=("build", "run"))
     depends_on("gdk-pixbuf", type=("build", "run"))
     depends_on("gtkplus", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"), when="@1.2:")
+    depends_on("py-numpy", when="@1.2:", type=("build", "run"))
 
     @run_after("install")
     def post_install(self):

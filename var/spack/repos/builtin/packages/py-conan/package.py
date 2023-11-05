@@ -24,7 +24,7 @@ class PyConan(PythonPackage):
     depends_on("py-fasteners@0.14.1:", type=("build", "run"))
     depends_on("py-six@1.10.0:1.16.0", type=("build", "run"))
     depends_on("py-node-semver@0.6.1", type=("build", "run"))
-    depends_on("py-distro@1.0.2:1.6.0", type=("build", "run"), when="platform=linux")
+    depends_on("py-distro@1.0.2:1.6.0", when="platform=linux", type=("build", "run"))
     depends_on("py-pygments@2.0:2", type=("build", "run"))
     depends_on("py-tqdm@4.28.1:4", type=("build", "run"))
     depends_on("py-jinja2@3.0:3", type=("build", "run"))

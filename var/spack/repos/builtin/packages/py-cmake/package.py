@@ -25,9 +25,9 @@ class PyCmake(PythonPackage):
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
     depends_on("git", type="build")
-    depends_on("cmake@3.22.2", type=("build", "link", "run"), when="@3.22.2")
-    depends_on("cmake@3.21.4", type=("build", "link", "run"), when="@3.21.4")
-    depends_on("cmake@3.18.0", type=("build", "link", "run"), when="@3.18.0")
+    depends_on("cmake@3.22.2", when="@3.22.2", type=("build", "link", "run"))
+    depends_on("cmake@3.21.4", when="@3.21.4", type=("build", "link", "run"))
+    depends_on("cmake@3.18.0", when="@3.18.0", type=("build", "link", "run"))
 
     # see:
     #   https://github.com/scikit-build/cmake-python-distributions/issues/227

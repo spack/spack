@@ -19,8 +19,8 @@ class PyLazyObjectProxy(PythonPackage):
     version("1.3.1", sha256="eb91be369f945f10d3a49f5f9be8b3d0b93a4c2be8f8a5b83b0571b8123e0a7a")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.6:", type=("build", "run"), when="@1.6.0:")
-    depends_on("python@3.6:", type=("build", "run"), when="@1.7.0:")
+    depends_on("python@2.7:2.8,3.6:", when="@1.6.0:", type=("build", "run"))
+    depends_on("python@3.6:", when="@1.7.0:", type=("build", "run"))
 
     depends_on("py-setuptools-scm@3.3.1:", type="build", when="@1.4.0:")
     depends_on("py-setuptools-scm@3.3.1:5", type="build", when="@1.6.0:1.6")

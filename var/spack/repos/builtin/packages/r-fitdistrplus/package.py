@@ -29,8 +29,8 @@ class RFitdistrplus(RPackage):
     version("1.0-14", sha256="85082590f62aa08d99048ea3414c5cc1e5b780d97b3779d2397c6cb435470083")
 
     depends_on("r@3.2.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@1.1-6:")
+    depends_on("r@3.5.0:", when="@1.1-6:", type=("build", "run"))
     depends_on("r-mass", type=("build", "run"))
     depends_on("r-survival", type=("build", "run"))
 
-    depends_on("r-npsurv", type=("build", "run"), when="@:1.0-14")
+    depends_on("r-npsurv", when="@:1.0-14", type=("build", "run"))

@@ -145,21 +145,21 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("opencl-c-headers", when="+opencl")
 
     depends_on("intel-xed+pic", when="target=x86_64:")
-    depends_on("memkind", type=("build", "run"), when="@2021.05.01:")
+    depends_on("memkind", when="@2021.05.01:", type=("build", "run"))
     depends_on("papi", when="+papi")
     depends_on("libpfm4", when="~papi")
     depends_on("mpi", when="+cray")
     depends_on("mpi", when="+mpi")
     depends_on("hpcviewer@2022.10:", type="run", when="@2022.10: +viewer")
     depends_on("hpcviewer", type="run", when="+viewer")
-    depends_on("python@3.10:", type=("build", "run"), when="+python")
+    depends_on("python@3.10:", when="+python", type=("build", "run"))
 
     # Avoid 'link' dep, we don't actually link, and that adds rpath
     # that conflicts with app.
-    depends_on("hip@4.5:", type=("build", "run"), when="+rocm")
-    depends_on("hsa-rocr-dev@4.5:", type=("build", "run"), when="+rocm")
-    depends_on("roctracer-dev@4.5:", type=("build", "run"), when="+rocm")
-    depends_on("rocprofiler-dev@4.5:", type=("build", "run"), when="+rocm")
+    depends_on("hip@4.5:", when="+rocm", type=("build", "run"))
+    depends_on("hsa-rocr-dev@4.5:", when="+rocm", type=("build", "run"))
+    depends_on("roctracer-dev@4.5:", when="+rocm", type=("build", "run"))
+    depends_on("rocprofiler-dev@4.5:", when="+rocm", type=("build", "run"))
 
     conflicts("%gcc@:7", when="@2022.10:", msg="hpctoolkit requires gnu gcc 8.x or later")
     conflicts("%gcc@:6", when="@2021.00:2022.06", msg="hpctoolkit requires gnu gcc 7.x or later")

@@ -23,7 +23,7 @@ class LibcapNg(AutotoolsPackage):
     depends_on("m4", type="build")
     depends_on("attr", type="build")
     depends_on("swig", type="build")
-    depends_on("python@2.7:", type=("build", "link", "run"), when="+python")
+    depends_on("python@2.7:", when="+python", type=("build", "link", "run"))
 
     variant("python", default=True, description="Enable python")
 

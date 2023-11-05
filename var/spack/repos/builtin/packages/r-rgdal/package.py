@@ -70,7 +70,7 @@ class RRgdal(RPackage):
     )
 
     depends_on("r@3.3.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@1.5:")
+    depends_on("r@3.5.0:", when="@1.5:", type=("build", "run"))
     depends_on("r-sp@1.1-0:", type=("build", "run"))
     depends_on("gdal@1.11.4:")
     depends_on("proj@4.8.0:5", when="@:1.3-9")

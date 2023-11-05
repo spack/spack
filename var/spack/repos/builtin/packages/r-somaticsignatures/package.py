@@ -38,7 +38,7 @@ class RSomaticsignatures(RPackage):
     depends_on("r-ggplot2", type=("build", "run"))
     depends_on("r-ggbio", type=("build", "run"))
     depends_on("r-reshape2", type=("build", "run"))
-    depends_on("r-nmf", type=("build", "run"), when="@2.26.0:")
+    depends_on("r-nmf", when="@2.26.0:", type=("build", "run"))
     depends_on("r-pcamethods", type=("build", "run"))
     depends_on("r-biobase", type=("build", "run"))
     depends_on("r-proxy", type=("build", "run"))

@@ -26,5 +26,5 @@ class RExactextractr(RPackage):
     depends_on("r-rcpp@0.12.12:", type=("build", "run"))
     depends_on("r-raster", type=("build", "run"))
     depends_on("r-sf", type=("build", "run"))
-    depends_on("r-sf@0.9.0:", type=("build", "run"), when="@0.7.2:")
+    depends_on("r-sf@0.9.0:", when="@0.7.2:", type=("build", "run"))
     depends_on("geos@3.5.0:")

@@ -21,4 +21,4 @@ class RBiocinstaller(RPackage):
     version("1.26.1", commit="9049b82a77aefa98e3f8e4dd7068317505d70e98")
 
     depends_on("r@3.4.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@1.30.0:")
+    depends_on("r@3.5.0:", when="@1.30.0:", type=("build", "run"))

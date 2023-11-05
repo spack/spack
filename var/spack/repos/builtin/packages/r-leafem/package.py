@@ -24,7 +24,7 @@ class RLeafem(RPackage):
 
     depends_on("r@3.1.0:", type=("build", "run"))
     depends_on("r-base64enc", type=("build", "run"))
-    depends_on("r-geojsonsf", type=("build", "run"), when="@0.1.6:")
+    depends_on("r-geojsonsf", when="@0.1.6:", type=("build", "run"))
     depends_on("r-htmltools@0.3:", type=("build", "run"))
     depends_on("r-htmlwidgets", type=("build", "run"))
     depends_on("r-leaflet@2.0.1:", type=("build", "run"))

@@ -29,4 +29,4 @@ class PySetuptoolsRust(PythonPackage):
     # Historical dependencies
     depends_on("py-setuptools-scm+toml@6.3.2:", when="@1.2.0:1.4.1", type="build")
     depends_on("py-setuptools-scm+toml@3.4.3:", when="@:1.1", type="build")
-    depends_on("py-toml@0.9.0:", type=("build", "run"), when="@0.12.1")
+    depends_on("py-toml@0.9.0:", when="@0.12.1", type=("build", "run"))

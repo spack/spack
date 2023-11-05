@@ -34,5 +34,5 @@ class RAmelia(RPackage):
     depends_on("r@3.0.2:", type=("build", "run"))
     depends_on("r-rcpp@0.11:", type=("build", "run"))
     depends_on("r-foreign", type=("build", "run"))
-    depends_on("r-rlang", type=("build", "run"), when="@1.8.1:")
+    depends_on("r-rlang", when="@1.8.1:", type=("build", "run"))
     depends_on("r-rcpparmadillo", type=("build", "run"))

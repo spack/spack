@@ -28,13 +28,13 @@ class RGeomorph(RPackage):
 
     depends_on("r+X", type=("build", "run"))
     depends_on("r@3.1.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@3.3.2:")
+    depends_on("r@3.5.0:", when="@3.3.2:", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
-    depends_on("r-rrpp", type=("build", "run"), when="@3.0.7:")
-    depends_on("r-rrpp@1.0.0:", type=("build", "run"), when="@4.0.1:")
+    depends_on("r-rrpp", when="@3.0.7:", type=("build", "run"))
+    depends_on("r-rrpp@1.0.0:", when="@4.0.1:", type=("build", "run"))
     depends_on("r-rgl", type=("build", "run"))
     depends_on("r-jpeg", type=("build", "run"))
     depends_on("r-ape", type=("build", "run"))
-    depends_on("r-ggplot2", type=("build", "run"), when="@4.0.1:")
+    depends_on("r-ggplot2", when="@4.0.1:", type=("build", "run"))
 
-    depends_on("r-geiger", type=("build", "run"), when="@:3.1.1")
+    depends_on("r-geiger", when="@:3.1.1", type=("build", "run"))

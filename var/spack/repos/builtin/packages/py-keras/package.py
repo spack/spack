@@ -47,18 +47,18 @@ class PyKeras(PythonPackage):
     # * keras/tools/pip_package/setup.py
     # * CONTRIBUTING.md
     # * PKG-INFO
-    depends_on("python@3.8:", type=("build", "run"), when="@2.12:")
+    depends_on("python@3.8:", when="@2.12:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     # Required dependencies listed in multiple places:
     # * BUILD
     # * WORKSPACE
-    depends_on("py-absl-py", type=("build", "run"), when="@2.6:")
+    depends_on("py-absl-py", when="@2.6:", type=("build", "run"))
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("pil", type=("build", "run"))
-    depends_on("py-portpicker", type=("build", "run"), when="@2.10:")
+    depends_on("py-portpicker", when="@2.10:", type=("build", "run"))
     depends_on("py-pydot", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))

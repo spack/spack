@@ -37,8 +37,8 @@ class RCheckpoint(RPackage):
     version("0.3.15", sha256="09f1feeb2b5b8b409a2e16a9185827b8da5e555f1aa84442a287f15e452beed7")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@3.3.0:", type=("build", "run"), when="@1.0.0:")
-    depends_on("r-jsonlite", type=("build", "run"), when="@1.0.0:")
-    depends_on("r-yaml", type=("build", "run"), when="@1.0.0:")
-    depends_on("r-withr", type=("build", "run"), when="@1.0.0:")
-    depends_on("r-pkgdepends", type=("build", "run"), when="@1.0.0:")
+    depends_on("r@3.3.0:", when="@1.0.0:", type=("build", "run"))
+    depends_on("r-jsonlite", when="@1.0.0:", type=("build", "run"))
+    depends_on("r-yaml", when="@1.0.0:", type=("build", "run"))
+    depends_on("r-withr", when="@1.0.0:", type=("build", "run"))
+    depends_on("r-pkgdepends", when="@1.0.0:", type=("build", "run"))

@@ -27,4 +27,4 @@ class PyZipp(PythonPackage):
     depends_on("py-setuptools-scm@1.15.0:", type="build")
 
     # Historical dependencies
-    depends_on("py-more-itertools", type=("build", "run"), when="@0.6.0:2.1.0")
+    depends_on("py-more-itertools", when="@0.6.0:2.1.0", type=("build", "run"))

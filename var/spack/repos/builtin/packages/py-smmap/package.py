@@ -19,7 +19,7 @@ class PySmmap(PythonPackage):
     version("3.0.5", sha256="84c2751ef3072d4f6b2785ec7ee40244c6f45eb934d9e543e2c51f1bd3d54c50")
     version("3.0.4", sha256="9c98bbd1f9786d22f14b3d4126894d56befb835ec90cef151af566c7e19b5d24")
 
-    depends_on("python@3.6:", type=("build", "run"), when="@5.0.0:")
-    depends_on("python@3.5:", type=("build", "run"), when="@4.0.0")
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:3")
+    depends_on("python@3.6:", when="@5.0.0:", type=("build", "run"))
+    depends_on("python@3.5:", when="@4.0.0", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.4:", when="@:3", type=("build", "run"))
     depends_on("py-setuptools", type="build")

@@ -74,10 +74,10 @@ class PyX21(PythonPackage):
             expand=False,
         )
 
-    depends_on("python@3.7.0:3.7", type=("build", "run"), when="@0.2.6-py3.7")
-    depends_on("python@3.8.0:3.8", type=("build", "run"), when="@0.2.6-py3.8")
-    depends_on("python@3.9.0:3.9", type=("build", "run"), when="@0.2.6-py3.9")
-    depends_on("python@3.10.0:3.10", type=("build", "run"), when="@0.2.6-py3.10")
+    depends_on("python@3.7.0:3.7", when="@0.2.6-py3.7", type=("build", "run"))
+    depends_on("python@3.8.0:3.8", when="@0.2.6-py3.8", type=("build", "run"))
+    depends_on("python@3.9.0:3.9", when="@0.2.6-py3.9", type=("build", "run"))
+    depends_on("python@3.10.0:3.10", when="@0.2.6-py3.10", type=("build", "run"))
     depends_on("py-pynacl", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-tomli", type=("build", "run"))

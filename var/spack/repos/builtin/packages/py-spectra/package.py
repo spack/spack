@@ -16,4 +16,4 @@ class PySpectra(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-colormath", type=("build", "run"))
-    depends_on("py-colormath@3.0.0:", type=("build", "run"), when="@0.0.11:")
+    depends_on("py-colormath@3.0.0:", when="@0.0.11:", type=("build", "run"))

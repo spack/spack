@@ -19,9 +19,9 @@ class PyHttpcore(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-h11@0.13:0.14", when="@0.16.3", type=("build", "run"))
-    depends_on("py-h11@0.11:0.12", type=("build", "run"), when="@0.14.7")
-    depends_on("py-h11@0.8:0.9", type=("build", "run"), when="@0.11.0")
+    depends_on("py-h11@0.11:0.12", when="@0.14.7", type=("build", "run"))
+    depends_on("py-h11@0.8:0.9", when="@0.11.0", type=("build", "run"))
     depends_on("py-sniffio@1", type=("build", "run"))
     depends_on("py-anyio@3:4", when="@0.16.3", type=("build", "run"))
-    depends_on("py-anyio@3", type=("build", "run"), when="@0.14.7")
-    depends_on("py-certifi", type=("build", "run"), when="@0.14.7:")
+    depends_on("py-anyio@3", when="@0.14.7", type=("build", "run"))
+    depends_on("py-certifi", when="@0.14.7:", type=("build", "run"))

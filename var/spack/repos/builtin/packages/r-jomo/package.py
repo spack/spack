@@ -28,6 +28,6 @@ class RJomo(RPackage):
 
     depends_on("r-lme4", type=("build", "run"))
     depends_on("r-survival", type=("build", "run"))
-    depends_on("r-mass", type=("build", "run"), when="@2.6-7:")
-    depends_on("r-ordinal", type=("build", "run"), when="@2.6-7:")
-    depends_on("r-tibble", type=("build", "run"), when="@2.7-3:")
+    depends_on("r-mass", when="@2.6-7:", type=("build", "run"))
+    depends_on("r-ordinal", when="@2.6-7:", type=("build", "run"))
+    depends_on("r-tibble", when="@2.7-3:", type=("build", "run"))

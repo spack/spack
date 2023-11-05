@@ -159,9 +159,9 @@ class PyMatplotlib(PythonPackage):
     depends_on("py-importlib-resources@3.2:", when="@3.7: ^python@:3.9", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("py-pytz", type=("build", "run"), when="@:2")
-    depends_on("py-six@1.10.0:", type=("build", "run"), when="@2")
-    depends_on("py-six@1.9.0:", type=("build", "run"), when="@:1")
+    depends_on("py-pytz", when="@:2", type=("build", "run"))
+    depends_on("py-six@1.10.0:", when="@2", type=("build", "run"))
+    depends_on("py-six@1.9.0:", when="@:1", type=("build", "run"))
 
     # Optional dependencies
     # Backends

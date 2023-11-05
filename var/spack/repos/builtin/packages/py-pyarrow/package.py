@@ -35,9 +35,9 @@ class PyPyarrow(PythonPackage, CudaPackage):
 
     depends_on("cmake@3.0.0:", type="build")
     depends_on("pkgconfig", type="build")
-    depends_on("python@3.5:", type=("build", "run"), when="@0.17:")
-    depends_on("python@3.6:", type=("build", "run"), when="@3.0.0:")
-    depends_on("python@3.7:", type=("build", "run"), when="@7.0.0:")
+    depends_on("python@3.5:", when="@0.17:", type=("build", "run"))
+    depends_on("python@3.6:", when="@3.0.0:", type=("build", "run"))
+    depends_on("python@3.7:", when="@7.0.0:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@38.6.0:", type="build", when="@7.0.0:")
     depends_on("py-setuptools@40.1.0:", type="build", when="@10.0.1:")
@@ -48,8 +48,8 @@ class PyPyarrow(PythonPackage, CudaPackage):
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
 
-    depends_on("py-numpy@1.14:", type=("build", "run"), when="@0.15.0:")
-    depends_on("py-numpy@1.16.6:", type=("build", "run"), when="@3.0.0:")
+    depends_on("py-numpy@1.14:", when="@0.15.0:", type=("build", "run"))
+    depends_on("py-numpy@1.16.6:", when="@3.0.0:", type=("build", "run"))
 
     arrow_versions = (
         "@0.9.0",

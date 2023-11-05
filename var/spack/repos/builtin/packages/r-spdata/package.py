@@ -27,5 +27,5 @@ class RSpdata(RPackage):
     version("0.3.0", sha256="de24ea659541a6c795cd26a1f6a213e15061af9c97a24cba1c24ce30c6c24c98")
 
     depends_on("r@3.3.0:", type=("build", "run"))
-    depends_on("r-sp", type=("build", "run"), when="@0.3.8:")
-    depends_on("r-raster", type=("build", "run"), when="@0.3.8:2.0.1")
+    depends_on("r-sp", when="@0.3.8:", type=("build", "run"))
+    depends_on("r-raster", when="@0.3.8:2.0.1", type=("build", "run"))

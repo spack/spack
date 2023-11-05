@@ -59,7 +59,7 @@ class Netpbm(MakefilePackage):
     # https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/netpbm.rb
     depends_on("libxml2", when="+all")
     # thinkjettopbm : http://netpbm.sourceforge.net/prereq.html
-    depends_on("flex", type=("build", "run"), when="+all")
+    depends_on("flex", when="+all", type=("build", "run"))
     # https://formulae.brew.sh/formula/netpbm
     depends_on("jasper", when="+all~builtin")
     # Only Mac Ports sets a dependency to jbig

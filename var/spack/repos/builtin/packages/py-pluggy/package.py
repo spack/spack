@@ -21,7 +21,7 @@ class PyPluggy(PythonPackage):
     version("0.6.0", sha256="7f8ae7f5bdf75671a718d2daf0a64b7885f74510bcd98b1a0bb420eb9a9d0cff")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@3.6:", type=("build", "run"), when="@1.0.0:")
+    depends_on("python@3.6:", when="@1.0.0:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")

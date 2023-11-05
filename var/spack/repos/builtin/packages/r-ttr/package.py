@@ -23,4 +23,4 @@ class RTtr(RPackage):
 
     depends_on("r-xts@0.10-0:", type=("build", "run"))
     depends_on("r-zoo", type=("build", "run"))
-    depends_on("r-curl", type=("build", "run"), when="@0.23-4:")
+    depends_on("r-curl", when="@0.23-4:", type=("build", "run"))

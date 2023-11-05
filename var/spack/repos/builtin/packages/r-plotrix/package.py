@@ -20,4 +20,4 @@ class RPlotrix(RPackage):
     version("3.6-4", sha256="883b7d0a00c1b2b418f9167c72ed9e86eca3c9865d34158a7a6ad0b9bf95bff3")
     version("3.6-3", sha256="217164bdd04405c3280a0c8b2691f289287f9851fa8248648a5ae38f54962741")
 
-    depends_on("r@3.5.0:", type=("build", "run"), when="@3.7-6:")
+    depends_on("r@3.5.0:", when="@3.7-6:", type=("build", "run"))

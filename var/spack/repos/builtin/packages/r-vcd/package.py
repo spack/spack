@@ -27,7 +27,7 @@ class RVcd(RPackage):
     version("1.4-1", sha256="af4c77522efef28271afab7d90679824826132c6bc61abe17df763ed1fc24994")
 
     depends_on("r@2.4.0:", type=("build", "run"))
-    depends_on("r@2.10:", type=("build", "run"), when="@1.4-11:")
+    depends_on("r@2.10:", when="@1.4-11:", type=("build", "run"))
     depends_on("r-mass", type=("build", "run"))
     depends_on("r-colorspace", type=("build", "run"))
     depends_on("r-lmtest", type=("build", "run"))

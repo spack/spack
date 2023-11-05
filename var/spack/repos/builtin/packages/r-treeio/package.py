@@ -32,5 +32,5 @@ class RTreeio(RPackage):
     depends_on("r-rlang", type=("build", "run"))
     depends_on("r-tibble", type=("build", "run"))
     depends_on("r-tidytree@0.3.0:", type=("build", "run"))
-    depends_on("r-tidytree@0.3.9:", type=("build", "run"), when="@1.20.0:")
-    depends_on("r-cli", type=("build", "run"), when="@1.24.0:")
+    depends_on("r-tidytree@0.3.9:", when="@1.20.0:", type=("build", "run"))
+    depends_on("r-cli", when="@1.24.0:", type=("build", "run"))

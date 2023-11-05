@@ -23,7 +23,7 @@ class RRstantools(RPackage):
     version("1.5.1", sha256="5cab16c132c12e84bd08e18cd6ef25ba39d67a04ce61015fc4490659c7cfb485")
 
     depends_on("r+X", type=("build", "run"))
-    depends_on("r-desc", type=("build", "run"), when="@2.1.1:")
-    depends_on("r-rcpp@0.12.16:", type=("build", "run"), when="@2.1.1:")
-    depends_on("r-rcppparallel@5.0.1:", type=("build", "run"), when="@2.1.1:")
+    depends_on("r-desc", when="@2.1.1:", type=("build", "run"))
+    depends_on("r-rcpp@0.12.16:", when="@2.1.1:", type=("build", "run"))
+    depends_on("r-rcppparallel@5.0.1:", when="@2.1.1:", type=("build", "run"))
     depends_on("pandoc", type="build")

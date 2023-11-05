@@ -19,4 +19,4 @@ class PyGriffe(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-pdm-pep517", type="build")
-    depends_on("py-cached-property", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-cached-property", when="^python@:3.7", type=("build", "run"))

@@ -23,10 +23,10 @@ class RHtmltools(RPackage):
 
     depends_on("r@2.14.1:", type=("build", "run"))
     depends_on("r-digest", type=("build", "run"))
-    depends_on("r-base64enc", type=("build", "run"), when="@0.5.1:")
-    depends_on("r-rlang@0.4.10:", type=("build", "run"), when="@0.5.2:")
-    depends_on("r-rlang", type=("build", "run"), when="@0.5.1:")
-    depends_on("r-fastmap@1.1.0:", type=("build", "run"), when="@0.5.2:")
-    depends_on("r-ellipsis", type=("build", "run"), when="@0.5.5:")
+    depends_on("r-base64enc", when="@0.5.1:", type=("build", "run"))
+    depends_on("r-rlang@0.4.10:", when="@0.5.2:", type=("build", "run"))
+    depends_on("r-rlang", when="@0.5.1:", type=("build", "run"))
+    depends_on("r-fastmap@1.1.0:", when="@0.5.2:", type=("build", "run"))
+    depends_on("r-ellipsis", when="@0.5.5:", type=("build", "run"))
 
-    depends_on("r-rcpp", type=("build", "run"), when="@:0.3.6")
+    depends_on("r-rcpp", when="@:0.3.6", type=("build", "run"))

@@ -29,9 +29,9 @@ class RAnnaffy(RPackage):
 
     depends_on("r@2.5.0:", type=("build", "run"))
     depends_on("r-biobase", type=("build", "run"))
-    depends_on("r-biocmanager", type=("build", "run"), when="@1.64.2:")
+    depends_on("r-biocmanager", when="@1.64.2:", type=("build", "run"))
     depends_on("r-go-db", type=("build", "run"))
     depends_on("r-annotationdbi@0.1.15:", type=("build", "run"))
     depends_on("r-dbi", type=("build", "run"))
 
-    depends_on("r-kegg-db", type=("build", "run"), when="@:1.62.0")
+    depends_on("r-kegg-db", when="@:1.62.0", type=("build", "run"))

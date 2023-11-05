@@ -40,8 +40,8 @@ class AsdfCxx(CMakePackage):
 
     depends_on("bzip2")
     depends_on("openssl")
-    depends_on("py-numpy", type=("build", "run"), when="+python")
-    depends_on("python", type=("build", "run"), when="+python")
+    depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("python", when="+python", type=("build", "run"))
     # An error in the cmake script requires swig all the time, not only when
     # Python bindings are used
     depends_on("swig @3.0.0:3", type="build")

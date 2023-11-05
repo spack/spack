@@ -22,7 +22,7 @@ class Pestpp(CMakePackage):
     variant("mpi", default=True, description="Enable MPI support")
 
     depends_on("cmake@3.9:", type="build")
-    depends_on("mpi", type=("build", "run"), when="+mpi")
+    depends_on("mpi", when="+mpi", type=("build", "run"))
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)

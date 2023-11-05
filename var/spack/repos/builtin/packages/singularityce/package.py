@@ -25,7 +25,7 @@ class SingularityBase(MakefilePackage):
     depends_on("squashfs", type="run")
     depends_on("git", when="@develop")  # mconfig uses it for version info
     depends_on("shadow", type="run", when="@3.3:")
-    depends_on("cryptsetup", type=("build", "run"), when="@3.4:")
+    depends_on("cryptsetup", when="@3.4:", type=("build", "run"))
 
     conflicts("platform=darwin", msg="singularity requires a Linux VM on Windows & Mac")
 

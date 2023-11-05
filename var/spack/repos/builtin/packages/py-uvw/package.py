@@ -30,4 +30,4 @@ class PyUvw(PythonPackage):
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-mpi4py", type=("build", "run"), when="+mpi")
+    depends_on("py-mpi4py", when="+mpi", type=("build", "run"))

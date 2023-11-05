@@ -20,10 +20,10 @@ class RDesc(RPackage):
     version("1.2.0", sha256="e66fb5d4fc7974bc558abcdc107a1f258c9177a29dcfcf9164bc6b33dd08dae8")
 
     depends_on("r@3.1.0:", type=("build", "run"))
-    depends_on("r@3.4:", type=("build", "run"), when="@1.4.1:")
-    depends_on("r-cli", type=("build", "run"), when="@1.4.1:")
+    depends_on("r@3.4:", when="@1.4.1:", type=("build", "run"))
+    depends_on("r-cli", when="@1.4.1:", type=("build", "run"))
     depends_on("r-r6", type=("build", "run"))
     depends_on("r-rprojroot", type=("build", "run"))
 
-    depends_on("r-assertthat", type=("build", "run"), when="@:1.2")
-    depends_on("r-crayon", type=("build", "run"), when="@:1.4.0")
+    depends_on("r-assertthat", when="@:1.2", type=("build", "run"))
+    depends_on("r-crayon", when="@:1.4.0", type=("build", "run"))

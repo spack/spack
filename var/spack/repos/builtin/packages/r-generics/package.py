@@ -22,4 +22,4 @@ class RGenerics(RPackage):
     version("0.0.2", sha256="71b3d1b719ce89e71dd396ac8bc6aa5f1cd99bbbf03faff61dfbbee32fec6176")
 
     depends_on("r@3.1:", type=("build", "run"))
-    depends_on("r@3.2:", type=("build", "run"), when="@0.1.1:")
+    depends_on("r@3.2:", when="@0.1.1:", type=("build", "run"))

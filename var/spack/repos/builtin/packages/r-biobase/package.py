@@ -27,4 +27,4 @@ class RBiobase(RPackage):
 
     depends_on("r@2.10:", type=("build", "run"))
     depends_on("r-biocgenerics@0.3.2:", type=("build", "run"))
-    depends_on("r-biocgenerics@0.27.1:", type=("build", "run"), when="@2.42.0:")
+    depends_on("r-biocgenerics@0.27.1:", when="@2.42.0:", type=("build", "run"))

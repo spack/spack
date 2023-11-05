@@ -15,9 +15,9 @@ class RktCompilerLib(RacketPackage):
     maintainers("elfprince13")
 
     version("8.3", commit="cab83438422bfea0e4bd74bc3e8305e6517cf25f")  # tag='v8.3'
-    depends_on("rkt-base@8.3", type=("build", "run"), when="@8.3")
-    depends_on("rkt-scheme-lib@8.3", type=("build", "run"), when="@8.3")
-    depends_on("rkt-rackunit-lib@8.3", type=("build", "run"), when="@8.3")
-    depends_on("rkt-zo-lib@1.3", type=("build", "run"), when="@8.3")
+    depends_on("rkt-base@8.3", when="@8.3", type=("build", "run"))
+    depends_on("rkt-scheme-lib@8.3", when="@8.3", type=("build", "run"))
+    depends_on("rkt-rackunit-lib@8.3", when="@8.3", type=("build", "run"))
+    depends_on("rkt-zo-lib@1.3", when="@8.3", type=("build", "run"))
 
     racket_name = "compiler-lib"

@@ -22,11 +22,11 @@ class RLobstr(RPackage):
     version("1.0.0", sha256="9d24de1519c51b3bac79066a1abf623b939e884ba5b3005110bb9c2016954b3d")
 
     depends_on("r@3.1:", type=("build", "run"))
-    depends_on("r@3.2:", type=("build", "run"), when="@1.1.1:")
+    depends_on("r@3.2:", when="@1.1.1:", type=("build", "run"))
     depends_on("r-crayon", type=("build", "run"))
-    depends_on("r-cpp11@0.4.2:", type=("build", "run"), when="@1.1.2:")
-    depends_on("r-prettyunits", type=("build", "run"), when="@1.1.2:")
+    depends_on("r-cpp11@0.4.2:", when="@1.1.2:", type=("build", "run"))
+    depends_on("r-prettyunits", when="@1.1.2:", type=("build", "run"))
     depends_on("r-rlang@0.3.0:", type=("build", "run"))
-    depends_on("r-rlang@1.0.0:", type=("build", "run"), when="@1.1.2:")
+    depends_on("r-rlang@1.0.0:", when="@1.1.2:", type=("build", "run"))
 
-    depends_on("r-rcpp", type=("build", "run"), when="@:1.1.1")
+    depends_on("r-rcpp", when="@:1.1.1", type=("build", "run"))

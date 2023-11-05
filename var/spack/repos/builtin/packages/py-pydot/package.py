@@ -17,7 +17,7 @@ class PyPydot(PythonPackage):
     version("1.2.3", sha256="edb5d3f249f97fbd9c4bb16959e61bc32ecf40eee1a9f6d27abe8d01c0a73502")
     version("1.2.2", sha256="04a97a885ed418dcc193135cc525fa356cad8b16719293295a149b30718ce400")
 
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@1.3.0:")
+    depends_on("python@2.7:2.8,3.4:", when="@1.3.0:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-pyparsing@2.1.4:", type=("build", "run"))
     depends_on("graphviz", type=("build", "run"))

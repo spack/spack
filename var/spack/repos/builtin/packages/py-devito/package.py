@@ -46,14 +46,14 @@ class PyDevito(PythonPackage):
     depends_on("py-pytest-cov", type=("build", "run"))
 
     # requirements-mpi.txt
-    depends_on("py-mpi4py@:3", type=("build", "run"), when="+mpi")
-    depends_on("py-ipyparallel@:8.5", type=("build", "run"), when="+mpi")
+    depends_on("py-mpi4py@:3", when="+mpi", type=("build", "run"))
+    depends_on("py-ipyparallel@:8.5", when="+mpi", type=("build", "run"))
 
     # requirements-optional.txt
-    depends_on("py-matplotlib", type=("build", "run"), when="+optional")
-    depends_on("py-pandas", type=("build", "run"), when="+optional")
+    depends_on("py-matplotlib", when="+optional", type=("build", "run"))
+    depends_on("py-pandas", when="+optional", type=("build", "run"))
 
-    depends_on("mpi", type=("build", "run"), when="+mpi")
+    depends_on("mpi", when="+mpi", type=("build", "run"))
 
     depends_on("intel-parallel-studio", type="run", when="%intel@:2021.1.1")
     depends_on("intel-oneapi-compilers", type="run", when="%intel@2021.1.2:")

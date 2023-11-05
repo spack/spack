@@ -20,7 +20,7 @@ class PyUhi(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-numpy@1.13.3:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7:", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-typing-extensions@3.7:", when="^python@:3.7", type=("build", "run"))
     depends_on("py-hatchling", when="@0.3.2:", type="build")
     depends_on("py-hatch-vcs", when="@0.3.3:", type="build")
     depends_on("py-flit-core@3.2:", when="@0.3.1", type="build")

@@ -60,7 +60,7 @@ class PyTorchGeometric(PythonPackage):
     with when("@:1"):
         depends_on("py-pytest-runner", type="build")
         depends_on("py-networkx", type=("build", "run"))
-        depends_on("py-python-louvain", type=("build", "run"), when="@1.6.2:")
+        depends_on("py-python-louvain", when="@1.6.2:", type=("build", "run"))
         depends_on("py-numba", type=("build", "run"))
         depends_on("py-pandas", type=("build", "run"))
         depends_on("py-rdflib", type=("build", "run"))

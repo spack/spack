@@ -69,8 +69,8 @@ class EnvironmentModules(Package):
 
     # Dependencies:
     depends_on("tcl", type=("build", "link", "run"))
-    depends_on("tcl@8.4:", type=("build", "link", "run"), when="@4.0.0:4.8")
-    depends_on("tcl@8.5:", type=("build", "link", "run"), when="@5.0.0:")
+    depends_on("tcl@8.4:", when="@4.0.0:4.8", type=("build", "link", "run"))
+    depends_on("tcl@8.5:", when="@5.0.0:", type=("build", "link", "run"))
 
     def install(self, spec, prefix):
         tcl = spec["tcl"]

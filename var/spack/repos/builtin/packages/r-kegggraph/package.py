@@ -30,8 +30,8 @@ class RKegggraph(RPackage):
     version("1.38.1", commit="dd31665beb36d5aad8ed09ed56c603633b6b2292")
 
     depends_on("r@2.10.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@1.54.0:")
+    depends_on("r@3.5.0:", when="@1.54.0:", type=("build", "run"))
     depends_on("r-xml@2.3-0:", type=("build", "run"))
     depends_on("r-graph", type=("build", "run"))
-    depends_on("r-rcurl", type=("build", "run"), when="@1.44.0:")
-    depends_on("r-rgraphviz", type=("build", "run"), when="@1.54.0:")
+    depends_on("r-rcurl", when="@1.44.0:", type=("build", "run"))
+    depends_on("r-rgraphviz", when="@1.54.0:", type=("build", "run"))

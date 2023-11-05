@@ -21,5 +21,5 @@ class PyVector(PythonPackage):
     depends_on("py-wheel", type="build")
     depends_on("py-numpy@1.13.3:", type=("build", "run"))
     depends_on("py-packaging@19.0:", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.22:", type=("build", "run"), when="^python@:3.7")
-    depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-importlib-metadata@0.22:", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))

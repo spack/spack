@@ -108,7 +108,7 @@ class Jube(PythonPackage):
         multi=False,
     )
 
-    depends_on("python@3.2:", type=("build", "run"), when="@2.5:")
+    depends_on("python@3.2:", when="@2.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-pyyaml", type=("build", "run"))
 

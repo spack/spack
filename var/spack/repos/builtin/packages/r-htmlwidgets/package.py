@@ -24,8 +24,8 @@ class RHtmlwidgets(RPackage):
     version("0.6", sha256="9c227f93ada71526d6e195e39a8efef41255af5567e39db3a6417ea9fed192ea")
 
     depends_on("r-htmltools@0.3:", type=("build", "run"))
-    depends_on("r-htmltools@0.5.4:", type=("build", "run"), when="@1.6.2:")
+    depends_on("r-htmltools@0.5.4:", when="@1.6.2:", type=("build", "run"))
     depends_on("r-jsonlite@0.9.16:", type=("build", "run"))
     depends_on("r-yaml", type=("build", "run"))
-    depends_on("r-rmarkdown", type=("build", "run"), when="@1.6.2:")
-    depends_on("r-knitr@1.8:", type=("build", "run"), when="@1.6.2:")
+    depends_on("r-rmarkdown", when="@1.6.2:", type=("build", "run"))
+    depends_on("r-knitr@1.8:", when="@1.6.2:", type=("build", "run"))

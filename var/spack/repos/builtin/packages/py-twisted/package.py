@@ -16,20 +16,20 @@ class PyTwisted(PythonPackage):
     version("15.4.0", sha256="78862662fa9ae29654bc2b9d349c3f1d887e6b2ed978512c4442d53ea861f05c")
     version("15.3.0", sha256="025729751cf898842262375a40f70ae1d246daea88369eab9f6bb96e528bf285")
 
-    depends_on("python@3.6.7:", type=("build", "run"), when="@21.7.0:")
+    depends_on("python@3.6.7:", when="@21.7.0:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@35.0.2:", type="build", when="@21.7.0:")
 
     depends_on("py-zope-interface@4.0.2:", type=("build", "run"))
-    depends_on("py-zope-interface@4.4.2:", type=("build", "run"), when="@21.7.0:")
+    depends_on("py-zope-interface@4.4.2:", when="@21.7.0:", type=("build", "run"))
 
-    depends_on("py-incremental@21.3.0:", type=("build", "run"), when="@21.7.0:")
-    depends_on("py-constantly@15.1:", type=("build", "run"), when="@21.7.0:")
-    depends_on("py-automat@0.8.0:", type=("build", "run"), when="@21.7.0:")
-    depends_on("py-hyperlink@17.1.1:", type=("build", "run"), when="@21.7.0:")
-    depends_on("py-attrs@19.2.0:", type=("build", "run"), when="@21.7.0:")
-    depends_on("py-typing-extensions@3.6.5:", type=("build", "run"), when="@21.7.0:")
+    depends_on("py-incremental@21.3.0:", when="@21.7.0:", type=("build", "run"))
+    depends_on("py-constantly@15.1:", when="@21.7.0:", type=("build", "run"))
+    depends_on("py-automat@0.8.0:", when="@21.7.0:", type=("build", "run"))
+    depends_on("py-hyperlink@17.1.1:", when="@21.7.0:", type=("build", "run"))
+    depends_on("py-attrs@19.2.0:", when="@21.7.0:", type=("build", "run"))
+    depends_on("py-typing-extensions@3.6.5:", when="@21.7.0:", type=("build", "run"))
 
     def url_for_version(self, version):
         url = "https://pypi.io/packages/source/T/Twisted/"

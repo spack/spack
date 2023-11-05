@@ -61,8 +61,8 @@ class Pagmo(CMakePackage):
     depends_on("ipopt", when="+ipopt")
     depends_on("mpi@1.2:", when="+mpi")
     depends_on("blas", when="+blas")
-    depends_on("py-scipy", type=("build", "run"), when="+scipy")
-    depends_on("py-networkx", type=("build", "run"), when="+networkx")
+    depends_on("py-scipy", when="+scipy", type=("build", "run"))
+    depends_on("py-networkx", when="+networkx", type=("build", "run"))
 
     # TODO: Add packages for missing dependencies
     # depends_on('nlopt+cxx', when='+nlopt')

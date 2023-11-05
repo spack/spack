@@ -43,4 +43,4 @@ class RAdegenet(RPackage):
     depends_on("r-dplyr@0.4.1:", type=("build", "run"))
     depends_on("r-vegan", type=("build", "run"))
 
-    depends_on("r-spdep", type=("build", "run"), when="@:2.1.3")
+    depends_on("r-spdep", when="@:2.1.3", type=("build", "run"))

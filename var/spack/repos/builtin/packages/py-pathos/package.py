@@ -22,12 +22,12 @@ class PyPathos(PythonPackage):
     depends_on("py-setuptools@0.6:", type="build")
     depends_on("py-multiprocess@0.70.7:", type=("build", "run"))
     depends_on("py-pox@0.2.5:", type=("build", "run"))
-    depends_on("py-pox@0.3.0:", type=("build", "run"), when="@0.2.8:")
+    depends_on("py-pox@0.3.0:", when="@0.2.8:", type=("build", "run"))
     depends_on("py-ppft@1.6.4.9:", type=("build", "run"))
-    depends_on("py-ppft@1.6.6.4:", type=("build", "run"), when="@0.2.8:")
+    depends_on("py-ppft@1.6.6.4:", when="@0.2.8:", type=("build", "run"))
     depends_on("py-dill@0.2.9:", type=("build", "run"))
-    depends_on("py-dill@0.3.4:", type=("build", "run"), when="@0.2.8:")
-    depends_on("py-multiprocess@0.70.12:", type=("build", "run"), when="@0.2.8:")
+    depends_on("py-dill@0.3.4:", when="@0.2.8:", type=("build", "run"))
+    depends_on("py-multiprocess@0.70.12:", when="@0.2.8:", type=("build", "run"))
 
     def url_for_version(self, version):
         url = self.url.rsplit("/", 1)[0]

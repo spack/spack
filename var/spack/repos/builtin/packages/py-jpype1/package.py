@@ -25,4 +25,4 @@ class PyJpype1(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("java", type=("build", "run"))
     # extra requirements
-    depends_on("py-numpy@1.6:", type=("build", "run"), when="+numpy")
+    depends_on("py-numpy@1.6:", when="+numpy", type=("build", "run"))

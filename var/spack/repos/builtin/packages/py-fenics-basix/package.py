@@ -20,11 +20,11 @@ class PyFenicsBasix(PythonPackage):
     version("0.5.1", sha256="69133476ac35f0bd0deccb480676030378c341d7dfb2adaca22cd16b7e1dc1cb")
     version("0.4.2", sha256="a54f5e442b7cbf3dbb6319c682f9161272557bd7f42e2b8b8ccef88bc1b7a22f")
 
-    depends_on("fenics-basix@main", type=("build", "run"), when="@main")
-    depends_on("fenics-basix@0.7.0", type=("build", "run"), when="@0.7.0")
-    depends_on("fenics-basix@0.6.0", type=("build", "run"), when="@0.6.0")
-    depends_on("fenics-basix@0.5.1", type=("build", "run"), when="@0.5.1")
-    depends_on("fenics-basix@0.4.2", type=("build", "run"), when="@0.4.2")
+    depends_on("fenics-basix@main", when="@main", type=("build", "run"))
+    depends_on("fenics-basix@0.7.0", when="@0.7.0", type=("build", "run"))
+    depends_on("fenics-basix@0.6.0", when="@0.6.0", type=("build", "run"))
+    depends_on("fenics-basix@0.5.1", when="@0.5.1", type=("build", "run"))
+    depends_on("fenics-basix@0.4.2", when="@0.4.2", type=("build", "run"))
 
     # See python/CMakeLists.txt
     depends_on("cmake@3.16:", type="build")

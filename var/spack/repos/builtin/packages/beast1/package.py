@@ -18,7 +18,7 @@ class Beast1(Package):
     variant("beagle", default=True, description="Build with libbeagle support")
 
     depends_on("java", type="run")
-    depends_on("libbeagle", type=("build", "link", "run"), when="+beagle")
+    depends_on("libbeagle", when="+beagle", type=("build", "link", "run"))
 
     def url_for_version(self, ver):
         base = "https://github.com/beast-dev/beast-mcmc/releases/download"

@@ -21,12 +21,12 @@ class PyHypothesis(PythonPackage):
     version("3.7.0", sha256="0fea49d08f2d5884f014151a5af6fb48d862f6ad567ffc4a2e84abf2f186c423")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("python@3.6:", type=("build", "run"), when="@6:")
+    depends_on("python@3.6:", when="@6:", type=("build", "run"))
     depends_on("py-setuptools@36.2:", type=("build"))
     depends_on("py-attrs@19.2.0:", when="@4.38.2:", type=("build", "run"))
     depends_on("py-attrs@16.0.0:", when="@3.44.22:", type=("build", "run"))
     depends_on("py-attrs", when="@3.28.0:", type=("build", "run"))
-    depends_on("py-sortedcontainers@2.1.0:2", type=("build", "run"), when="@4.57.1:")
+    depends_on("py-sortedcontainers@2.1.0:2", when="@4.57.1:", type=("build", "run"))
 
     depends_on("py-django@2.2:", type="run", when="+django")
     depends_on("py-pytz@2014.1:", type="run", when="+django")

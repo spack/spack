@@ -18,7 +18,7 @@ class PyScanpy(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools-scm", type="build")
     depends_on("py-flit-core@3.4:3", type="build")
-    depends_on("py-importlib-metadata@0.7:", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-importlib-metadata@0.7:", when="^python@:3.7", type=("build", "run"))
     depends_on("py-tomli", type="build")
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-anndata@0.7.4:", type=("build", "run"))

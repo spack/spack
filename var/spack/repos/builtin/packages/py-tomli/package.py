@@ -26,4 +26,4 @@ class PyTomli(PythonPackage):
 
     # https://github.com/hukkin/tomli/blob/2.0.1/pyproject.toml#L13
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("python@3.7:", type=("build", "run"), when="@2.0.1:")
+    depends_on("python@3.7:", when="@2.0.1:", type=("build", "run"))

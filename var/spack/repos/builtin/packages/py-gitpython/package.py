@@ -41,17 +41,17 @@ class PyGitpython(PythonPackage):
     version("0.3.6", sha256="e6599fcb939cb9b25a015a429702db39de10f2b493655ed5669c49c37707d233")
 
     depends_on("python@3.4:", type=("build", "run"))
-    depends_on("python@3.5:", type=("build", "run"), when="@3.1.15:")
-    depends_on("python@3.6:", type=("build", "run"), when="@3.1.18:")
-    depends_on("python@3.7:", type=("build", "run"), when="@3.1.22:")
+    depends_on("python@3.5:", when="@3.1.15:", type=("build", "run"))
+    depends_on("python@3.6:", when="@3.1.18:", type=("build", "run"))
+    depends_on("python@3.7:", when="@3.1.22:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-gitdb@4.0.1:4", type=("build", "run"))
     depends_on(
-        "py-typing-extensions@3.7.4.0:", type=("build", "run"), when="@3.1.16: ^python@:3.7"
+        "py-typing-extensions@3.7.4.0:", when="@3.1.16: ^python@:3.7", type=("build", "run")
     )
     depends_on(
-        "py-typing-extensions@3.7.4.3:", type=("build", "run"), when="@3.1.19:3.1.26 ^python@:3.10"
+        "py-typing-extensions@3.7.4.3:", when="@3.1.19:3.1.26 ^python@:3.10", type=("build", "run")
     )
     depends_on(
-        "py-typing-extensions@3.7.4.3:", type=("build", "run"), when="@3.1.27: ^python@:3.7"
+        "py-typing-extensions@3.7.4.3:", when="@3.1.27: ^python@:3.7", type=("build", "run")
     )

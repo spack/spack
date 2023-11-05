@@ -45,7 +45,7 @@ class Keepassxc(CMakePackage):
     # Had to add libqrencode
     depends_on("libqrencode", type=("link", "build"))
     # Has anyone done gem i bundler and gem i asciidoctor ? https://asciidoctor.org/
-    depends_on("ruby-asciidoctor@2.0:", type=("build"), when="+docs")
+    depends_on("ruby-asciidoctor@2.0:", when="+docs", type=("build"))
     # sudo apt install libxi-dev libxtst-dev libqt5x11extras5-dev libyubikey-dev \
     # libykpers-1-dev libquazip5-dev libreadline-dev
     # These are required to build Auto-Type, Yubikey and browser integration support.

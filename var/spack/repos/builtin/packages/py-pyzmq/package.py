@@ -41,7 +41,7 @@ class PyPyzmq(PythonPackage):
     version("16.0.2", sha256="0322543fff5ab6f87d11a8a099c4c07dd8a1719040084b6ce9162bcdf5c45c9d")
     version("14.7.0", sha256="77994f80360488e7153e64e5959dc5471531d1648e3a4bff14a714d074a38cc2")
 
-    depends_on("python@2.6:2.7,3.2:3.8", type=("build", "run"), when="@:14")
+    depends_on("python@2.6:2.7,3.2:3.8", when="@:14", type=("build", "run"))
 
     # pyproject.toml
     depends_on("py-setuptools", type="build")
@@ -55,10 +55,10 @@ class PyPyzmq(PythonPackage):
     depends_on("py-cython@0.20:", type="build", when="@18:")
     depends_on("py-cython@0.16:", type="build")
     depends_on("libzmq", type=("build", "link"))
-    depends_on("libzmq@3.2:", type=("build", "link"), when="@22.3.0:")
+    depends_on("libzmq@3.2:", when="@22.3.0:", type=("build", "link"))
     # Only when python is provided by 'pypy'
-    depends_on("py-py", type=("build", "run"), when="@:22")
-    depends_on("py-cffi", type=("build", "run"), when="@:22")
+    depends_on("py-py", when="@:22", type=("build", "run"))
+    depends_on("py-cffi", when="@:22", type=("build", "run"))
 
     # Undocumented dependencies
     depends_on("py-gevent", type=("build", "run"))

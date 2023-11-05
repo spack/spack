@@ -28,9 +28,9 @@ class RSinglecellexperiment(RPackage):
     version("1.0.0", commit="545e974aa7ca7855e039bf9e3030290cd71d9031")
 
     depends_on("r@3.4:", type=("build", "run"))
-    depends_on("r@3.5:", type=("build", "run"), when="@1.2.0:1.6.0")
+    depends_on("r@3.5:", when="@1.2.0:1.6.0", type=("build", "run"))
     depends_on("r-summarizedexperiment", type=("build", "run"))
     depends_on("r-s4vectors", type=("build", "run"))
     depends_on("r-biocgenerics", type=("build", "run"))
-    depends_on("r-genomicranges", type=("build", "run"), when="@1.16.0:")
-    depends_on("r-delayedarray", type=("build", "run"), when="@1.16.0:")
+    depends_on("r-genomicranges", when="@1.16.0:", type=("build", "run"))
+    depends_on("r-delayedarray", when="@1.16.0:", type=("build", "run"))

@@ -36,19 +36,19 @@ class PyRadicalPilot(PythonPackage):
 
     depends_on("py-radical-utils", type=("build", "run"))
     depends_on("py-radical-saga", type=("build", "run"))
-    depends_on("py-radical-gtod", type=("build", "run"), when="@1.14:")
+    depends_on("py-radical-gtod", when="@1.14:", type=("build", "run"))
 
-    depends_on("py-radical-utils@1.12:", type=("build", "run"), when="@1.12:")
-    depends_on("py-radical-saga@1.12:", type=("build", "run"), when="@1.12:")
+    depends_on("py-radical-utils@1.12:", when="@1.12:", type=("build", "run"))
+    depends_on("py-radical-saga@1.12:", when="@1.12:", type=("build", "run"))
 
-    depends_on("py-radical-utils@1.8.4:1.11", type=("build", "run"), when="@1.11")
-    depends_on("py-radical-saga@1.8:1.11", type=("build", "run"), when="@1.11")
+    depends_on("py-radical-utils@1.8.4:1.11", when="@1.11", type=("build", "run"))
+    depends_on("py-radical-saga@1.8:1.11", when="@1.11", type=("build", "run"))
 
-    depends_on("py-radical-utils@:1.8.3", type=("build", "run"), when="@:1.10")
-    depends_on("py-radical-saga@:1.7", type=("build", "run"), when="@:1.10")
+    depends_on("py-radical-utils@:1.8.3", when="@:1.10", type=("build", "run"))
+    depends_on("py-radical-saga@:1.7", when="@:1.10", type=("build", "run"))
 
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-dill", type=("build", "run"), when="@1.14:")
+    depends_on("py-dill", when="@1.14:", type=("build", "run"))
     depends_on("py-pymongo@:3", type=("build", "run"))
     depends_on("py-setproctitle", type=("build", "run"))
     depends_on("py-setuptools", type="build")

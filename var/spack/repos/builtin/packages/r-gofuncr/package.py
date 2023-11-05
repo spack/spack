@@ -44,5 +44,5 @@ class RGofuncr(RPackage):
     depends_on("r-mapplots@1.5:", type=("build", "run"))
     depends_on("r-gtools@3.5.0:", type=("build", "run"))
     depends_on("r-genomicranges@1.28.4:", type=("build", "run"))
-    depends_on("r-iranges", type=("build", "run"), when="@1.2.0:")
+    depends_on("r-iranges", when="@1.2.0:", type=("build", "run"))
     depends_on("r-annotationdbi", type=("build", "run"))

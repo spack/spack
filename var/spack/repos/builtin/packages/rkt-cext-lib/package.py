@@ -15,10 +15,10 @@ class RktCextLib(RacketPackage):
 
     version("8.3", commit="cc22e2456df881a9008240d70dd9012ef37395f5")  # tag = 'v8.3'
 
-    depends_on("rkt-base@8.3", type=("build", "run"), when="@8.3")
-    depends_on("rkt-compiler-lib@8.3", type=("build", "run"), when="@8.3")
-    depends_on("rkt-dynext-lib@8.3", type=("build", "run"), when="@8.3")
-    depends_on("rkt-scheme-lib@8.3", type=("build", "run"), when="@8.3")
+    depends_on("rkt-base@8.3", when="@8.3", type=("build", "run"))
+    depends_on("rkt-compiler-lib@8.3", when="@8.3", type=("build", "run"))
+    depends_on("rkt-dynext-lib@8.3", when="@8.3", type=("build", "run"))
+    depends_on("rkt-scheme-lib@8.3", when="@8.3", type=("build", "run"))
 
     racket_name = "cext-lib"
     subdirectory = racket_name

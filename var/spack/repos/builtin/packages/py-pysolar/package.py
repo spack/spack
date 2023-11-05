@@ -22,6 +22,6 @@ class PyPysolar(PythonPackage):
     )
 
     depends_on("py-setuptools", type="build")
-    depends_on("python@3:", type=("build", "run"), when="@0.8:")
+    depends_on("python@3:", when="@0.8:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pytz", type=("build", "run"))

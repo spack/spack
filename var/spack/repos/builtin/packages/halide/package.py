@@ -55,28 +55,28 @@ class Halide(CMakePackage, PythonExtension):
 
     depends_on("cmake@3.22:", type="build")
     depends_on("llvm+clang+lld build_type=Release", type=("link", "run"))
-    depends_on("llvm@13.0.0:15", type=("link", "run"), when="@14.0.0")
-    depends_on("llvm@14.0.0:16", type=("link", "run"), when="@15.0.0:")
+    depends_on("llvm@13.0.0:15", when="@14.0.0", type=("link", "run"))
+    depends_on("llvm@14.0.0:16", when="@15.0.0:", type=("link", "run"))
     for v in _values:
         depends_on(
-            "llvm targets={0}".format(v), type=("link", "run"), when="targets={0}".format(v)
+            "llvm targets={0}".format(v), when="targets={0}", type=("link", "run").format(v)
         )
-    depends_on("llvm+llvm_dylib", type=("link", "run"), when="+sharedllvm")
+    depends_on("llvm+llvm_dylib", when="+sharedllvm", type=("link", "run"))
 
     depends_on("libjpeg", type=("build", "link", "run"))
     depends_on("libpng", type=("build", "link", "run"))
 
-    depends_on("python@3.8:", type=("build", "link", "run"), when="+python")
+    depends_on("python@3.8:", when="+python", type=("build", "link", "run"))
     # See https://github.com/halide/Halide/blob/main/requirements.txt
     depends_on("py-pybind11@2.6.2", type="build", when="+python")
     depends_on("py-setuptools@43:", type="build", when="+python")
     depends_on("py-scikit-build", type="build", when="+python")
     depends_on("py-wheel", type="build", when="+python")
 
-    depends_on("py-imageio", type=("build", "run"), when="+python")
-    depends_on("pil", type=("build", "run"), when="+python")
-    depends_on("py-scipy", type=("build", "run"), when="+python")
-    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-imageio", when="+python", type=("build", "run"))
+    depends_on("pil", when="+python", type=("build", "run"))
+    depends_on("py-scipy", when="+python", type=("build", "run"))
+    depends_on("py-numpy", when="+python", type=("build", "run"))
 
     @property
     def libs(self):

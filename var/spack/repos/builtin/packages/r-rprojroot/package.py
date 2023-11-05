@@ -22,4 +22,4 @@ class RRprojroot(RPackage):
 
     depends_on("r@3.0.0:", type=("build", "run"))
 
-    depends_on("r-backports", type=("build", "run"), when="@:1.3-2")
+    depends_on("r-backports", when="@:1.3-2", type=("build", "run"))

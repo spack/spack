@@ -26,5 +26,5 @@ class RC50(RPackage):
     depends_on("r@2.10.0:", type=("build", "run"))
     depends_on("r-partykit", type=("build", "run"))
     depends_on("r-cubist@0.2.1:", type=("build", "run"))
-    depends_on("r-cubist@0.2.3:", type=("build", "run"), when="@0.1.3.1:")
-    depends_on("r-cubist@0.3.0:", type=("build", "run"), when="@0.1.5:")
+    depends_on("r-cubist@0.2.3:", when="@0.1.3.1:", type=("build", "run"))
+    depends_on("r-cubist@0.3.0:", when="@0.1.5:", type=("build", "run"))

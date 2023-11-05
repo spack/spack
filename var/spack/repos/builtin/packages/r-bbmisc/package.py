@@ -19,4 +19,4 @@ class RBbmisc(RPackage):
     version("1.11", sha256="1ea48c281825349d8642a661bb447e23bfd651db3599bf72593bfebe17b101d2")
 
     depends_on("r-checkmate@1.8.0:", type=("build", "run"))
-    depends_on("r-data-table", type=("build", "run"), when="@1.12:")
+    depends_on("r-data-table", when="@1.12:", type=("build", "run"))

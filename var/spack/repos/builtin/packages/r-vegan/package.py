@@ -22,9 +22,9 @@ class RVegan(RPackage):
     version("2.4-3", sha256="2556b1281a62e53f32bb57539bc600c00a599d0699867912220535d1a3ebec97")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@3.1.0:", type=("build", "run"), when="@2.5-1")
-    depends_on("r@3.2.0:", type=("build", "run"), when="@2.5-2:")
-    depends_on("r@3.4.0:", type=("build", "run"), when="@2.5-5:")
+    depends_on("r@3.1.0:", when="@2.5-1", type=("build", "run"))
+    depends_on("r@3.2.0:", when="@2.5-2:", type=("build", "run"))
+    depends_on("r@3.4.0:", when="@2.5-5:", type=("build", "run"))
     depends_on("r-permute@0.9-0:", type=("build", "run"))
     depends_on("r-lattice", type=("build", "run"))
     depends_on("r-mass", type=("build", "run"))

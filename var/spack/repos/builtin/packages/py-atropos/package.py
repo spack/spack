@@ -19,8 +19,8 @@ class PyAtropos(PythonPackage):
     depends_on("python@3.3:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-cython@0.25.2:", type="build")
-    depends_on("py-tqdm", type=("build", "run"), when="+tqdm")
-    depends_on("py-pysam", type=("build", "run"), when="+pysam")
+    depends_on("py-tqdm", when="+tqdm", type=("build", "run"))
+    depends_on("py-pysam", when="+pysam", type=("build", "run"))
 
     variant("tqdm", default=False, description="Enable progress bar")
     variant("pysam", default=False, description="Enable bam file parsing")

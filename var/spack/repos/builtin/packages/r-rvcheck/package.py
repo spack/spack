@@ -20,8 +20,8 @@ class RRvcheck(RPackage):
     version("0.0.9", sha256="6e7be7b029d28181a1b57ebd4d25978f3459722ffdb45a3698157a7f943bea92")
 
     depends_on("r@3.3.0:", type=("build", "run"))
-    depends_on("r@3.4.0:", type=("build", "run"), when="@0.1.3:")
-    depends_on("r-biocmanager", type=("build", "run"), when="@0.1.8:")
-    depends_on("r-yulab-utils", type=("build", "run"), when="@0.2.1:")
+    depends_on("r@3.4.0:", when="@0.1.3:", type=("build", "run"))
+    depends_on("r-biocmanager", when="@0.1.8:", type=("build", "run"))
+    depends_on("r-yulab-utils", when="@0.2.1:", type=("build", "run"))
 
-    depends_on("r-rlang", type=("build", "run"), when="@0.1.1:0.1.8")
+    depends_on("r-rlang", when="@0.1.1:0.1.8", type=("build", "run"))

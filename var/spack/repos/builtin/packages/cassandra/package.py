@@ -29,8 +29,8 @@ class Cassandra(Package):
     )
     version("2.2.19", sha256="5496c0254a66b6d50bde7999d1bab9129b0406b71ad3318558f4d7dbfbed0ab9")
 
-    depends_on("java@9:", type=("build", "run"), when="@4.0.0:")
-    depends_on("java@:8", type=("build", "run"), when="@:3.11.11")
+    depends_on("java@9:", when="@4.0.0:", type=("build", "run"))
+    depends_on("java@:8", when="@:3.11.11", type=("build", "run"))
 
     def install(self, spec, prefix):
         install_tree(".", prefix)

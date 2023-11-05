@@ -29,8 +29,8 @@ class PyYtopt(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-scikit-learn@0.23.1", type=("build", "run"), when="@:0.0.2")
-    depends_on("py-scikit-learn@1.0.0:", type=("build", "run"), when="@0.0.3:")
+    depends_on("py-scikit-learn@0.23.1", when="@:0.0.2", type=("build", "run"))
+    depends_on("py-scikit-learn@1.0.0:", when="@0.0.3:", type=("build", "run"))
     depends_on("py-dh-scikit-optimize", type=("build", "run"))
     depends_on("py-configspace", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
@@ -40,4 +40,4 @@ class PyYtopt(PythonPackage):
     depends_on("py-tqdm", type=("build", "run"))
     depends_on("py-ray", type=("build", "run"))
     depends_on("py-mpi4py@3.0.0:", type=("build", "run"))
-    depends_on("py-sdv@0.13.1:0.13", type=("build", "run"), when="@0.0.3: +online")
+    depends_on("py-sdv@0.13.1:0.13", when="@0.0.3: +online", type=("build", "run"))

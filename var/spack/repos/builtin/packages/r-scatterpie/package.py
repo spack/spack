@@ -22,8 +22,8 @@ class RScatterpie(RPackage):
     depends_on("r-ggplot2", type=("build", "run"))
     depends_on("r-ggforce", type=("build", "run"))
     depends_on("r-rlang", type=("build", "run"))
-    depends_on("r-ggfun", type=("build", "run"), when="@0.1.7:")
+    depends_on("r-ggfun", when="@0.1.7:", type=("build", "run"))
     depends_on("r-tidyr", type=("build", "run"))
-    depends_on("r-dplyr", type=("build", "run"), when="@0.1.9:")
+    depends_on("r-dplyr", when="@0.1.9:", type=("build", "run"))
 
-    depends_on("r-rvcheck", type=("build", "run"), when="@:0.1.5")
+    depends_on("r-rvcheck", when="@:0.1.5", type=("build", "run"))

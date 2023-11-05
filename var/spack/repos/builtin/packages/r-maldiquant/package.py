@@ -27,4 +27,4 @@ class RMaldiquant(RPackage):
     version("1.16.4", sha256="9b910dbd5dd1a739a17a7ee3f83d7e1ebad2fee89fd01a5b274415d2b6d3b0de")
 
     depends_on("r@3.2.0:", type=("build", "run"))
-    depends_on("r@4.0.0:", type=("build", "run"), when="@1.21:")
+    depends_on("r@4.0.0:", when="@1.21:", type=("build", "run"))

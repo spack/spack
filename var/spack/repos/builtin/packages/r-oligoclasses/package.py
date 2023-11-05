@@ -28,7 +28,7 @@ class ROligoclasses(RPackage):
 
     depends_on("r@2.14:", type=("build", "run"))
     depends_on("r-biocgenerics@0.3.2:", type=("build", "run"))
-    depends_on("r-biocgenerics@0.27.1:", type=("build", "run"), when="@1.44.0:")
+    depends_on("r-biocgenerics@0.27.1:", when="@1.44.0:", type=("build", "run"))
     depends_on("r-biobase@2.17.8:", type=("build", "run"))
     depends_on("r-iranges@2.5.17:", type=("build", "run"))
     depends_on("r-genomicranges@1.23.7:", type=("build", "run"))
@@ -36,10 +36,10 @@ class ROligoclasses(RPackage):
     depends_on("r-biostrings@2.23.6:", type=("build", "run"))
     depends_on("r-affyio@1.23.2:", type=("build", "run"))
     depends_on("r-foreach", type=("build", "run"))
-    depends_on("r-biocmanager", type=("build", "run"), when="@1.44.0:")
+    depends_on("r-biocmanager", when="@1.44.0:", type=("build", "run"))
     depends_on("r-s4vectors@0.9.25:", type=("build", "run"))
     depends_on("r-rsqlite", type=("build", "run"))
-    depends_on("r-dbi", type=("build", "run"), when="@1.40.0:")
+    depends_on("r-dbi", when="@1.40.0:", type=("build", "run"))
     depends_on("r-ff", type=("build", "run"))
 
-    depends_on("r-biocinstaller", type=("build", "run"), when="@:1.42.0")
+    depends_on("r-biocinstaller", when="@:1.42.0", type=("build", "run"))

@@ -38,7 +38,7 @@ class RParty(RPackage):
     version("1.1-2", sha256="c3632b4b02dc12ec949e2ee5b24004e4a4768b0bc9737432e9a85acbc2ed0e74")
 
     depends_on("r@2.14.0:", type=("build", "run"))
-    depends_on("r@3.0.0:", type=("build", "run"), when="@1.2-3:")
+    depends_on("r@3.0.0:", when="@1.2-3:", type=("build", "run"))
     depends_on("r-mvtnorm@1.0-2:", type=("build", "run"))
     depends_on("r-modeltools@0.2-21:", type=("build", "run"))
     depends_on("r-strucchange", type=("build", "run"))

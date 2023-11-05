@@ -247,11 +247,11 @@ class Root(CMakePackage):
     # Python
     depends_on("python@2.7:", when="+python", type=("build", "run"))
     depends_on("python@2.7:3.10", when="@:6.26.09 +python", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"), when="+tmva")
+    depends_on("py-numpy", when="+tmva", type=("build", "run"))
     # This numpy dependency was not intended and will hopefully
     # be fixed in 6.20.06.
     # See: https://sft.its.cern.ch/jira/browse/ROOT-10626
-    depends_on("py-numpy", type=("build", "run"), when="@6.20.00:6.20.05 +python")
+    depends_on("py-numpy", when="@6.20.00:6.20.05 +python", type=("build", "run"))
 
     # Optional dependencies
     depends_on("arrow", when="+arrow")

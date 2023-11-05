@@ -41,9 +41,9 @@ class PyChainer(PythonPackage):
     depends_on("py-protobuf@3:", type=("build", "run"))
 
     # Dependencies only required for test of ChainerMN
-    depends_on("py-matplotlib", type=("build", "run"), when="+mn")
-    depends_on("py-mpi4py", type=("build", "run"), when="+mn")
-    depends_on("mpi", type=("build", "run"), when="+mn")
+    depends_on("py-matplotlib", when="+mn", type=("build", "run"))
+    depends_on("py-mpi4py", when="+mn", type=("build", "run"))
+    depends_on("mpi", when="+mn", type=("build", "run"))
 
     @run_after("install")
     def cache_test_sources(self):

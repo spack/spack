@@ -35,4 +35,4 @@ class RRrcov(RPackage):
     depends_on("r-lattice", type=("build", "run"))
     depends_on("r-pcapp", type=("build", "run"))
 
-    depends_on("r-cluster", type=("build", "run"), when="@:1.4-7")
+    depends_on("r-cluster", when="@:1.4-7", type=("build", "run"))

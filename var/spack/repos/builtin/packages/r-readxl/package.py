@@ -24,12 +24,12 @@ class RReadxl(RPackage):
     version("1.1.0", sha256="b63d21fc6510acb373e96deaec45e966a523ec75cbec75a089529297ed443116")
     version("1.0.0", sha256="fbd62f07fed7946363698a57be88f4ef3fa254ecf456ef292535849c787fc7ad")
 
-    depends_on("r@3.4:", type=("build", "run"), when="@1.4.0:")
-    depends_on("r@3.5:", type=("build", "run"), when="@1.4.2:")
+    depends_on("r@3.4:", when="@1.4.0:", type=("build", "run"))
+    depends_on("r@3.5:", when="@1.4.2:", type=("build", "run"))
     depends_on("r-cellranger", type=("build", "run"))
     depends_on("r-tibble@1.3.1:", type=("build", "run"))
-    depends_on("r-tibble@2.0.1:", type=("build", "run"), when="@1.4.0:")
-    depends_on("r-cpp11@0.4.0:", type=("build", "run"), when="@1.4.0:")
-    depends_on("r-progress", type=("build", "run"), when="@1.2.0:")
+    depends_on("r-tibble@2.0.1:", when="@1.4.0:", type=("build", "run"))
+    depends_on("r-cpp11@0.4.0:", when="@1.4.0:", type=("build", "run"))
+    depends_on("r-progress", when="@1.2.0:", type=("build", "run"))
 
-    depends_on("r-rcpp@0.12.18:", type=("build", "run"), when="@:1.3.1")
+    depends_on("r-rcpp@0.12.18:", when="@:1.3.1", type=("build", "run"))

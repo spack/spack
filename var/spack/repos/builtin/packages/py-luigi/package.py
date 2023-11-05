@@ -21,17 +21,17 @@ class PyLuigi(PythonPackage):
     version("2.8.3", sha256="8b5c84a3c3f4df07309056d3b98348b93c054f1931b7ee22fc29e7989f645c9e")
 
     depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
-    depends_on("python@3.3:", type=("build", "run"), when="@3.0.0:")
-    depends_on("python@3.5:", type=("build", "run"), when="@3.0.2:")
+    depends_on("python@3.3:", when="@3.0.0:", type=("build", "run"))
+    depends_on("python@3.5:", when="@3.0.2:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-tornado@4.0:4", type=("build", "run"), when="@:2")
-    depends_on("py-tornado@5.0:5", type=("build", "run"), when="@3.0.1")
-    depends_on("py-tornado@5.0:6", type=("build", "run"), when="@3.0.2:")
+    depends_on("py-tornado@4.0:4", when="@:2", type=("build", "run"))
+    depends_on("py-tornado@5.0:5", when="@3.0.1", type=("build", "run"))
+    depends_on("py-tornado@5.0:6", when="@3.0.2:", type=("build", "run"))
 
-    depends_on("py-tenacity@6.3.0:6", type=("build", "run"), when="@3.0.3:3.0")
-    depends_on("py-tenacity@8.0.0:8", type=("build", "run"), when="@3.1:")
+    depends_on("py-tenacity@6.3.0:6", when="@3.0.3:3.0", type=("build", "run"))
+    depends_on("py-tenacity@8.0.0:8", when="@3.1:", type=("build", "run"))
 
     depends_on("py-python-daemon", type=("build", "run"))
 

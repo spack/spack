@@ -27,7 +27,7 @@ class RGit2r(RPackage):
     version("0.15.0", sha256="682ab9e7f71b2ed13a9ef95840df3c6b429eeea070edeb4d21d725cf0b72ede6")
 
     depends_on("r@3.1:", type=("build", "run"))
-    depends_on("r@3.4:", type=("build", "run"), when="@0.31.0:")
+    depends_on("r@3.4:", when="@0.31.0:", type=("build", "run"))
     depends_on("libgit2")
     depends_on("zlib-api")
     depends_on("openssl")

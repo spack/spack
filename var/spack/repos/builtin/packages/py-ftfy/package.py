@@ -17,8 +17,8 @@ class PyFtfy(PythonPackage):
     version("5.8", sha256="51c7767f8c4b47d291fcef30b9625fb5341c06a31e6a3b627039c706c42f3720")
     version("4.4.3", sha256="3c0066db64a98436e751e56414f03f1cdea54f29364c0632c141c36cca6a5d94")
 
-    depends_on("python@3.6:", type=("build", "run"), when="@6:")
-    depends_on("python@3.5:", type=("build", "run"), when="@5:")
+    depends_on("python@3.6:", when="@6:", type=("build", "run"))
+    depends_on("python@3.5:", when="@5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-html5lib", when="@:4", type=("build", "run"))
     depends_on("py-wcwidth", type=("build", "run"))

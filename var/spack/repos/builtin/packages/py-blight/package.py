@@ -27,14 +27,14 @@ class PyBlight(PythonPackage):
     depends_on("py-typing-extensions", type=("build", "run"))
     depends_on("py-pydantic@1.7:1", type=("build", "run"))
 
-    depends_on("py-flake8", type=("build", "run"), when="+dev")
-    depends_on("py-black", type=("build", "run"), when="+dev")
+    depends_on("py-flake8", when="+dev", type=("build", "run"))
+    depends_on("py-black", when="+dev", type=("build", "run"))
     # blight uses pyproject.toml to configure isort. isort added
     # support in 5.0.0
-    depends_on("py-isort@5.0.0:", type=("build", "run"), when="+dev")
-    depends_on("py-pytest", type=("build", "run"), when="+dev")
-    depends_on("py-pytest-cov", type=("build", "run"), when="+dev")
-    depends_on("py-coverage+toml", type=("build", "run"), when="+dev")
-    depends_on("py-twine", type=("build", "run"), when="+dev")
-    depends_on("py-pdoc3", type=("build", "run"), when="+dev")
-    depends_on("py-mypy", type=("build", "run"), when="@0.0.5:+dev")
+    depends_on("py-isort@5.0.0:", when="+dev", type=("build", "run"))
+    depends_on("py-pytest", when="+dev", type=("build", "run"))
+    depends_on("py-pytest-cov", when="+dev", type=("build", "run"))
+    depends_on("py-coverage+toml", when="+dev", type=("build", "run"))
+    depends_on("py-twine", when="+dev", type=("build", "run"))
+    depends_on("py-pdoc3", when="+dev", type=("build", "run"))
+    depends_on("py-mypy", when="@0.0.5:+dev", type=("build", "run"))

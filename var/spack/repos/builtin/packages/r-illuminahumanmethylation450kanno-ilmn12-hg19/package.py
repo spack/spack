@@ -28,5 +28,5 @@ class RIlluminahumanmethylation450kannoIlmn12Hg19(RPackage):
     )
 
     depends_on("r@3.3.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@0.6.1:")
+    depends_on("r@3.5.0:", when="@0.6.1:", type=("build", "run"))
     depends_on("r-minfi@1.19.15:", type=("build", "run"))

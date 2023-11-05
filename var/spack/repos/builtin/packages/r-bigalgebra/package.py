@@ -27,4 +27,4 @@ class RBigalgebra(RPackage):
 
     depends_on("r-bigmemory@4.0.0:", type=("build", "run"))
     depends_on("r-bh", type=("build", "run"))
-    depends_on("r-rcpp", type=("build", "run"), when="@1.0.0:")
+    depends_on("r-rcpp", when="@1.0.0:", type=("build", "run"))

@@ -20,4 +20,4 @@ class PyRichClick(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-click@7:", type=("build", "run"))
     depends_on("py-rich@10.7.0:", type=("build", "run"))
-    depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))

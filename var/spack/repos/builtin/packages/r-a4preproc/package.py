@@ -25,7 +25,7 @@ class RA4preproc(RPackage):
     version("1.26.0", commit="be7403acc06670c05ead1adaf60533b0fe3a65ea")
     version("1.24.0", commit="651014b8102807aea4f1274e34e083e70b5e7ee7")
 
-    depends_on("r-biocgenerics", type=("build", "run"), when="@1.38.0:")
-    depends_on("r-biobase", type=("build", "run"), when="@1.38.0:")
+    depends_on("r-biocgenerics", when="@1.38.0:", type=("build", "run"))
+    depends_on("r-biobase", when="@1.38.0:", type=("build", "run"))
 
-    depends_on("r-annotationdbi", type=("build", "run"), when="@:1.32.0")
+    depends_on("r-annotationdbi", when="@:1.32.0", type=("build", "run"))

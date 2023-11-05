@@ -135,7 +135,7 @@ class Rdc(CMakePackage):
         "5.6.0",
         "5.6.1",
     ]:
-        depends_on("rocm-smi-lib@" + ver, type=("build", "link"), when="@" + ver)
+        depends_on("rocm-smi-lib@" + ver, when="@", type=("build", "link") + ver)
 
     for ver in [
         "5.0.0",

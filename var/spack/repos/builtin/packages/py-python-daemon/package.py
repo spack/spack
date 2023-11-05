@@ -27,6 +27,6 @@ class PyPythonDaemon(PythonPackage):
 
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-lockfile", type=("build", "run"))
-    depends_on("py-lockfile@0.10:", type=("build", "run"), when="@2.3.0:")
+    depends_on("py-lockfile@0.10:", when="@2.3.0:", type=("build", "run"))
     depends_on("py-docutils", type="build")
     depends_on("py-twine", type="build")

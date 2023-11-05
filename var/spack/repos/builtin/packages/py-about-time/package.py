@@ -18,5 +18,5 @@ class PyAboutTime(PythonPackage):
     version("4.1.0", sha256="963b1f3739b0c9732eb205031762b76f1291d89b5d0c8220a8d5b154e32ce650")
     version("3.1.1", sha256="586b329450c9387d1ae8c42d2db4f5b4c57a54508d0f1b7bb00322ffd5ce9f9b")
 
-    depends_on("python@3.7:3", type=("build", "run"), when="@4:")
+    depends_on("python@3.7:3", when="@4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

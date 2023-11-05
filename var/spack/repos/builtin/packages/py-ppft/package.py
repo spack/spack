@@ -24,7 +24,7 @@ class PyPpft(PythonPackage):
     depends_on("py-setuptools@0.6:", type="build")
     depends_on("py-six@1.7.3:", type=("build", "run"))
     depends_on("py-dill@0.2.6:", type=("build", "run"))
-    depends_on("py-dill@0.3.4:", type=("build", "run"), when="@1.6.6.4:")
+    depends_on("py-dill@0.3.4:", when="@1.6.6.4:", type=("build", "run"))
 
     def url_for_version(self, version):
         url = "https://pypi.io/packages/source/p/ppft/"

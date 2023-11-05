@@ -24,8 +24,8 @@ class PySmartredis(PythonPackage):
     depends_on("cmake@3.13:", type=("build",))
 
     # Documented dependencies
-    depends_on("hiredis@1.1:", type=("build", "link", "run"), when="@0.4.1")
-    depends_on("hiredis@1.0:", type=("build", "link", "run"), when="@0.4.0")
+    depends_on("hiredis@1.1:", when="@0.4.1", type=("build", "link", "run"))
+    depends_on("hiredis@1.0:", when="@0.4.0", type=("build", "link", "run"))
     depends_on("redis-plus-plus@1.3.5: cxxstd=17", type=("build", "link"))
 
     # Unlisted dependency needed to build the python client. The pybind requirement

@@ -26,9 +26,9 @@ class RExperimenthub(RPackage):
 
     depends_on("r-biocgenerics@0.15.10:", type=("build", "run"))
     depends_on("r-annotationhub@2.19.3:", type=("build", "run"))
-    depends_on("r-annotationhub@3.3.6:", type=("build", "run"), when="@2.4.0:")
+    depends_on("r-annotationhub@3.3.6:", when="@2.4.0:", type=("build", "run"))
     depends_on("r-biocfilecache@1.5.1:", type=("build", "run"))
     depends_on("r-s4vectors", type=("build", "run"))
     depends_on("r-biocmanager", type=("build", "run"))
     depends_on("r-rappdirs", type=("build", "run"))
-    depends_on("r-curl", type=("build", "run"), when="@:2.6.0")
+    depends_on("r-curl", when="@:2.6.0", type=("build", "run"))

@@ -25,7 +25,7 @@ class RTinytiger(RPackage):
     version("0.0.3", sha256="841d92dd4185b9bff5eef0d3635805c5a3efb1bc4ff0a1101ef264417e37921c")
 
     depends_on("r@2.0.0:", type=("build", "run"))
-    depends_on("r@2.10:", type=("build", "run"), when="@0.0.4:")
+    depends_on("r@2.10:", when="@0.0.4:", type=("build", "run"))
     depends_on("r-rlang")
     depends_on("r-cli")
     depends_on("r-glue")

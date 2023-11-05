@@ -18,7 +18,7 @@ class PyAnndata(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools-scm", type="build")
     depends_on("py-flit-core@3.4:3", type="build")
-    depends_on("py-importlib-metadata@0.7:", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-importlib-metadata@0.7:", when="^python@:3.7", type=("build", "run"))
     depends_on("py-pandas@1.1.1:", type=("build", "run"))
     depends_on("py-numpy@1.16.5:", type=("build", "run"))
     depends_on("py-scipy@1.4.1:", type=("build", "run"))

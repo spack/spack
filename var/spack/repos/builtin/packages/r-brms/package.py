@@ -39,7 +39,7 @@ class RBrms(RPackage):
     depends_on("r-rstan@2.19.2:", type=("build", "run"))
     depends_on("r-ggplot2@2.0.0:", type=("build", "run"))
     depends_on("r-loo@2.3.1:", type=("build", "run"))
-    depends_on("r-posterior@1.0.0:", type=("build", "run"), when="@2.16:")
+    depends_on("r-posterior@1.0.0:", when="@2.16:", type=("build", "run"))
     depends_on("r-matrix@1.1.1:", type=("build", "run"))
     depends_on("r-mgcv@1.8-13:", type=("build", "run"))
     depends_on("r-rstantools@2.1.1:", type=("build", "run"))
@@ -47,7 +47,7 @@ class RBrms(RPackage):
     depends_on("r-shinystan@2.4.0:", type=("build", "run"))
     depends_on("r-bridgesampling@0.3-0:", type=("build", "run"))
     depends_on("r-glue@1.3.0:", type=("build", "run"))
-    depends_on("r-rlang@1.0.0:", type=("build", "run"), when="@2.19.0:")
+    depends_on("r-rlang@1.0.0:", when="@2.19.0:", type=("build", "run"))
     depends_on("r-future@1.19.0:", type=("build", "run"))
     depends_on("r-matrixstats", type=("build", "run"))
     depends_on("r-nleqslv", type=("build", "run"))
@@ -56,4 +56,4 @@ class RBrms(RPackage):
     depends_on("r-abind", type=("build", "run"))
     depends_on("r-backports", type=("build", "run"))
 
-    depends_on("r-projpred@2.0.0:", type=("build", "run"), when="@:2.16.1")
+    depends_on("r-projpred@2.0.0:", when="@:2.16.1", type=("build", "run"))

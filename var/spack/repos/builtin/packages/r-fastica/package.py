@@ -18,4 +18,4 @@ class RFastica(RPackage):
     version("1.2-2", sha256="32223593374102bf54c8fdca7b57231e4f4d0dd0be02d9f3500ad41b1996f1fe")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@4.0.0:", type=("build", "run"), when="@1.2-3:")
+    depends_on("r@4.0.0:", when="@1.2-3:", type=("build", "run"))

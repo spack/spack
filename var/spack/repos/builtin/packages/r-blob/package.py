@@ -23,9 +23,9 @@ class RBlob(RPackage):
     version("1.2.0", sha256="1af1cfa28607bc0e2f1f01598a00a7d5d1385ef160a9e79e568f30f56538e023")
     version("1.1.0", sha256="16d6603df3ddba177f0ac4d9469c938f89131c4bf8834345db838defd9ffea16")
 
-    depends_on("r-rlang", type=("build", "run"), when="@1.2.0:")
-    depends_on("r-vctrs@0.2.0:", type=("build", "run"), when="@1.2.0:")
-    depends_on("r-vctrs@0.2.1:", type=("build", "run"), when="@1.2.1:")
+    depends_on("r-rlang", when="@1.2.0:", type=("build", "run"))
+    depends_on("r-vctrs@0.2.0:", when="@1.2.0:", type=("build", "run"))
+    depends_on("r-vctrs@0.2.1:", when="@1.2.1:", type=("build", "run"))
 
-    depends_on("r-prettyunits", type=("build", "run"), when="@1.2.0")
-    depends_on("r-tibble", type=("build", "run"), when="@:1.1.0")
+    depends_on("r-prettyunits", when="@1.2.0", type=("build", "run"))
+    depends_on("r-tibble", when="@:1.1.0", type=("build", "run"))

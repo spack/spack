@@ -25,9 +25,9 @@ class RCallr(RPackage):
     version("3.0.0", sha256="e36361086c65660a6ecbbc09b5ecfcddee6b59caf75e983e48b21d3b8defabe7")
     version("1.0.0", sha256="2c56808c723aba2ea8a8b6bbdc9b8332c96f59b119079861dd52f5988c27f715")
 
-    depends_on("r@3.4:", type=("build", "run"), when="@3.7.2:")
+    depends_on("r@3.4:", when="@3.7.2:", type=("build", "run"))
 
-    depends_on("r-processx@3.4.0:", type=("build", "run"), when="@3.0.0:")
-    depends_on("r-processx@3.5.0:", type=("build", "run"), when="@3.6.0:")
-    depends_on("r-processx@3.6.1:", type=("build", "run"), when="@3.7.2:")
-    depends_on("r-r6", type=("build", "run"), when="@3.0.0:")
+    depends_on("r-processx@3.4.0:", when="@3.0.0:", type=("build", "run"))
+    depends_on("r-processx@3.5.0:", when="@3.6.0:", type=("build", "run"))
+    depends_on("r-processx@3.6.1:", when="@3.7.2:", type=("build", "run"))
+    depends_on("r-r6", when="@3.0.0:", type=("build", "run"))

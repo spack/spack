@@ -18,7 +18,7 @@ class PyKombu(PythonPackage):
     version("4.5.0", sha256="389ba09e03b15b55b1a7371a441c894fd8121d174f5583bbbca032b9ea8c9edd")
     version("4.3.0", sha256="529df9e0ecc0bad9fc2b376c3ce4796c41b482cf697b78b71aea6ebe7ca353c8")
 
-    depends_on("python@3.7:", type=("build", "run"), when="@5.2.3:")
+    depends_on("python@3.7:", when="@5.2.3:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
 
     variant("redis", default=False, description="Use redis transport")
@@ -32,7 +32,7 @@ class PyKombu(PythonPackage):
     depends_on("py-amqp@5.0.0:5", when="@5.0.0:5.0.2", type=("build", "run"))
     depends_on("py-amqp@5.0.9:5.0", when="@5.2.3", type=("build", "run"))
     depends_on("py-vine", when="@5.1.0:", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.18:", type=("build", "run"), when="python@:3.7")
-    depends_on("py-cached-property", type=("build", "run"), when="python@:3.7")
+    depends_on("py-importlib-metadata@0.18:", when="python@:3.7", type=("build", "run"))
+    depends_on("py-cached-property", when="python@:3.7", type=("build", "run"))
 
     depends_on("py-redis@3.4.1:3,4.0.2:", when="+redis", type=("build", "run"))

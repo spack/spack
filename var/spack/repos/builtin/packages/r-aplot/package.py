@@ -25,12 +25,12 @@ class RAplot(RPackage):
     version("0.1.4", sha256="cde9dfc1c6b38e370c1f7338651c37727efa57d52b646fec6b021855809492ac")
     version("0.1.2", sha256="899c4d101ddcedb1eba9803d78cf02288b63de25e2879add8add1165167509f0")
 
-    depends_on("r-ggfun@0.0.4:", type=("build", "run"), when="@0.1.2:")
-    depends_on("r-ggfun@0.0.6:", type=("build", "run"), when="@0.1.4:")
-    depends_on("r-ggfun@0.0.9:", type=("build", "run"), when="@0.1.10:")
+    depends_on("r-ggfun@0.0.4:", when="@0.1.2:", type=("build", "run"))
+    depends_on("r-ggfun@0.0.6:", when="@0.1.4:", type=("build", "run"))
+    depends_on("r-ggfun@0.0.9:", when="@0.1.10:", type=("build", "run"))
     depends_on("r-ggplot2", type=("build", "run"))
     depends_on("r-ggplotify", type=("build", "run"))
     depends_on("r-patchwork", type=("build", "run"))
     depends_on("r-magrittr", type=("build", "run"))
 
-    depends_on("r-yulab-utils", type=("build", "run"), when="@0.1.2")
+    depends_on("r-yulab-utils", when="@0.1.2", type=("build", "run"))

@@ -23,9 +23,9 @@ class PyMultiprocess(PythonPackage):
 
     depends_on("py-setuptools@0.6:", type="build")
     depends_on("py-dill@0.2.6:", type=("build", "run"))
-    depends_on("py-dill@0.2.9:", type=("build", "run"), when="@0.70.7:")
-    depends_on("py-dill@0.3.1:", type=("build", "run"), when="@0.70.9:")
-    depends_on("py-dill@0.3.4:", type=("build", "run"), when="@0.70.12.2:")
+    depends_on("py-dill@0.2.9:", when="@0.70.7:", type=("build", "run"))
+    depends_on("py-dill@0.3.1:", when="@0.70.9:", type=("build", "run"))
+    depends_on("py-dill@0.3.4:", when="@0.70.12.2:", type=("build", "run"))
 
     def url_for_version(self, version):
         url = self.url.rsplit("/", 1)[0]

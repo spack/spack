@@ -37,4 +37,4 @@ class RManipulatewidget(RPackage):
     depends_on("r-base64enc", type=("build", "run"))
     depends_on("r-codetools", type=("build", "run"))
     depends_on("r-webshot", type=("build", "run"))
-    depends_on("r-shinyjs", type=("build", "run"), when="@0.11.1:")
+    depends_on("r-shinyjs", when="@0.11.1:", type=("build", "run"))

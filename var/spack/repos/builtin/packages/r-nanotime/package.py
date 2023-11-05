@@ -26,7 +26,7 @@ class RNanotime(RPackage):
 
     depends_on("r-bit64", type=("build", "run"))
     depends_on("r-rcppcctz@0.2.3:", type=("build", "run"))
-    depends_on("r-rcppcctz@0.2.9:", type=("build", "run"), when="@0.3.2:")
+    depends_on("r-rcppcctz@0.2.9:", when="@0.3.2:", type=("build", "run"))
     depends_on("r-zoo", type=("build", "run"))
-    depends_on("r-rcpp", type=("build", "run"), when="@0.3.2:")
-    depends_on("r-rcppdate", type=("build", "run"), when="@0.3.2:")
+    depends_on("r-rcpp", when="@0.3.2:", type=("build", "run"))
+    depends_on("r-rcppdate", when="@0.3.2:", type=("build", "run"))

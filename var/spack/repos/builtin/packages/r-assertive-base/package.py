@@ -21,4 +21,4 @@ class RAssertiveBase(RPackage):
     version("0.0-1", sha256="6a5fb06ad912f01cd8aaf2aa7c8ca03b8ebbb1c5eb2be47fa145930f15f4d258")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@0.0-9:")
+    depends_on("r@3.5.0:", when="@0.0-9:", type=("build", "run"))

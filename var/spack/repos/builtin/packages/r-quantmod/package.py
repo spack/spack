@@ -22,9 +22,9 @@ class RQuantmod(RPackage):
     version("0.4-10", sha256="030040aa567adaba1ea4a1f05eb45712dbdaabbabca72733e7fb2984051f688b")
     version("0.4-5", sha256="c7889eb55a21296e7bda1242c46e734a0a8bd6dcbf5726aafae5313354eec893")
 
-    depends_on("r@3.2.0:", type=("build", "run"), when="@0.4-11:")
+    depends_on("r@3.2.0:", when="@0.4-11:", type=("build", "run"))
     depends_on("r-xts@0.9-0:", type=("build", "run"))
     depends_on("r-zoo", type=("build", "run"))
     depends_on("r-ttr@0.2:", type=("build", "run"))
     depends_on("r-curl", type=("build", "run"))
-    depends_on("r-jsonlite@1.1:", type=("build", "run"), when="@0.4.22:")
+    depends_on("r-jsonlite@1.1:", when="@0.4.22:", type=("build", "run"))

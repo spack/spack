@@ -26,5 +26,5 @@ class RShinyjs(RPackage):
     depends_on("r-jsonlite", type=("build", "run"))
     depends_on("r-shiny@1.0.0:", type=("build", "run"))
 
-    depends_on("r-htmltools@0.2.9:", type=("build", "run"), when="@:2.0.0")
+    depends_on("r-htmltools@0.2.9:", when="@:2.0.0", type=("build", "run"))
     depends_on("pandoc", type="build", when="@:2.0.0")

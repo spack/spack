@@ -21,4 +21,4 @@ class RGss(RPackage):
     version("2.1-7", sha256="0405bb5e4c4d60b466335e5da07be4f9570045a24aed09e7bc0640e1a00f3adb")
 
     depends_on("r@2.14.0:", type=("build", "run"))
-    depends_on("r@3.0.0:", type=("build", "run"), when="@2.2-2:")
+    depends_on("r@3.0.0:", when="@2.2-2:", type=("build", "run"))

@@ -18,4 +18,4 @@ class RProj(RPackage):
     version("0.1.0", sha256="5186f221335e8092bbcd4d82bd323ee7e752c7c9cf83d3f94e4567e0b407aa6f")
 
     depends_on("r@2.10:", type=("build", "run"))
-    depends_on("r@3.0.2:", type=("build", "run"), when="@0.4.0:")
+    depends_on("r@3.0.2:", when="@0.4.0:", type=("build", "run"))

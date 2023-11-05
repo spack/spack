@@ -33,8 +33,8 @@ class Vacuumms(CMakePackage):
     variant("tiff", default=False, description="Build TIFF utilities")
     variant("cuda", default=False, description="Build CUDA applications and utilities")
 
-    depends_on("libtiff", type=("link", "run"), when="+tiff")
-    depends_on("cuda", type=("link", "run"), when="+cuda")
+    depends_on("libtiff", when="+tiff", type=("link", "run"))
+    depends_on("cuda", when="+cuda", type=("link", "run"))
     depends_on("libx11", type=("link", "run"))
     depends_on("libxext", type=("link", "run"))
     depends_on("libsm", type=("link", "run"))

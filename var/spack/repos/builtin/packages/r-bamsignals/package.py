@@ -28,15 +28,15 @@ class RBamsignals(RPackage):
     version("1.8.0", commit="b123b83e8e026c9ec91209d4498aff3e95a5de23")
 
     depends_on("r@3.2.0:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@1.28.0:")
+    depends_on("r@3.5.0:", when="@1.28.0:", type=("build", "run"))
     depends_on("r-biocgenerics", type=("build", "run"))
     depends_on("r-rcpp@0.10.6:", type=("build", "run"))
     depends_on("r-iranges", type=("build", "run"))
     depends_on("r-genomicranges", type=("build", "run"))
     depends_on("r-zlibbioc", type=("build", "run"))
     depends_on("r-rhtslib", type=("build", "run"))
-    depends_on("r-rhtslib@1.12.1:", type=("build", "run"), when="@1.12.1:")
-    depends_on("r-rhtslib@1.13.1:", type=("build", "run"), when="@1.14.0:")
+    depends_on("r-rhtslib@1.12.1:", when="@1.12.1:", type=("build", "run"))
+    depends_on("r-rhtslib@1.13.1:", when="@1.14.0:", type=("build", "run"))
     depends_on("gmake", type="build")
 
     # this is not listed but is needed

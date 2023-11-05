@@ -47,4 +47,4 @@ class RSva(RPackage):
     depends_on("r-biocparallel", type=("build", "run"))
     depends_on("r-matrixstats", type=("build", "run"))
     depends_on("r-limma", type=("build", "run"))
-    depends_on("r-edger", type=("build", "run"), when="@3.38.0:")
+    depends_on("r-edger", when="@3.38.0:", type=("build", "run"))

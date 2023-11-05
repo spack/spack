@@ -22,17 +22,17 @@ class PyPennylane(PythonPackage):
     version("0.30.0", sha256="7fe4821fbc733e3e40d7011e054bd2e31edde3151fd9539025c827a5a3579d6b")
     version("0.29.1", sha256="6ecfb305a3898347df8c539a89a67e748766941d159dbef9e34864872f13c45c")
 
-    depends_on("python@3.8:", type=("build", "run"), when="@:0.31.0")
-    depends_on("python@3.9:", type=("build", "run"), when="@0.32.0:")
+    depends_on("python@3.8:", when="@:0.31.0", type=("build", "run"))
+    depends_on("python@3.9:", when="@0.32.0:", type=("build", "run"))
     depends_on("py-pip", type=("build", "run"))  # Runtime req for pennylane.about()
     depends_on("py-setuptools", type="build")
 
     depends_on("py-numpy@:1.23", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-scipy@:1.10", type=("build", "run"), when="@:0.31.0")
+    depends_on("py-scipy@:1.10", when="@:0.31.0", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
-    depends_on("py-rustworkx", type=("build", "run"), when="@0.30.0:")
-    depends_on("py-retworkx", type=("build", "run"), when="@0.28.0:0.29.1")
+    depends_on("py-rustworkx", when="@0.30.0:", type=("build", "run"))
+    depends_on("py-retworkx", when="@0.28.0:0.29.1", type=("build", "run"))
     depends_on("py-autograd@:1.5", type=("build", "run"))
     depends_on("py-toml", type=("build", "run"))
     depends_on("py-appdirs", type=("build", "run"))
@@ -42,10 +42,10 @@ class PyPennylane(PythonPackage):
     for v in range(30, 33):
         depends_on(f"py-pennylane-lightning@0.{v}.0:", type=("build", "run"), when=f"@0.{v}.0:")
     depends_on(
-        "py-pennylane-lightning@0.28.0:0.29.0", type=("build", "run"), when="@0.28.0:0.29.1"
+        "py-pennylane-lightning@0.28.0:0.29.0", when="@0.28.0:0.29.1", type=("build", "run")
     )
     depends_on("py-requests", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"), when="@0.32.0:")
+    depends_on("py-typing-extensions", when="@0.32.0:", type=("build", "run"))
 
     # Test deps
     depends_on("py-pytest", type="test")

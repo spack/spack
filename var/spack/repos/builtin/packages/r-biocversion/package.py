@@ -21,6 +21,6 @@ class RBiocversion(RPackage):
     version("3.12.0", commit="23b971963c6b73550a7e330dab5a046d58ce0223")
 
     depends_on("r@4.0.0:", type=("build", "run"))
-    depends_on("r@4.1.0:", type=("build", "run"), when="@3.14.0:")
-    depends_on("r@4.2.0:", type=("build", "run"), when="@3.15.2:")
-    depends_on("r@4.3.0:", type=("build", "run"), when="@3.17.1:")
+    depends_on("r@4.1.0:", when="@3.14.0:", type=("build", "run"))
+    depends_on("r@4.2.0:", when="@3.15.2:", type=("build", "run"))
+    depends_on("r@4.3.0:", when="@3.17.1:", type=("build", "run"))

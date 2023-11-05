@@ -41,7 +41,7 @@ class Openturns(CMakePackage):
     depends_on("intel-tbb", type=("build", "run"))
     depends_on("py-cloudpickle", type=("build", "run"))
     depends_on("py-urllib3", type=("build", "run"))
-    depends_on("libxml2", type=("build", "run"), when="+libxml2")
+    depends_on("libxml2", when="+libxml2", type=("build", "run"))
 
     def cmake_args(self):
         spec = self.spec

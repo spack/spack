@@ -36,7 +36,7 @@ class Vigra(CMakePackage):
     depends_on("hdf5", when="+hdf5")
     depends_on("fftw", when="+fftw")
     depends_on("openexr", when="+exr")
-    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("boost+python+numpy", when="+python")
 
     # TODO: replace this with an explicit list of components of Boost,
@@ -46,7 +46,7 @@ class Vigra(CMakePackage):
     depends_on("py-sphinx", type="build", when="+python")
     depends_on("doxygen", type="build", when="+cxxdoc")
     depends_on("python", type="build", when="+cxxdoc")
-    depends_on("py-nose", type=("build", "test"), when="+python")
+    depends_on("py-nose", when="+python", type=("build", "test"))
 
     extends("python", when="+python")
 

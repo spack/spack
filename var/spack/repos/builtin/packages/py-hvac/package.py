@@ -20,5 +20,5 @@ class PyHvac(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-requests@2.7.0:", type=("build", "run"))
-    depends_on("py-requests@2.21.0:", type=("build", "run"), when="@0.9.3:")
-    depends_on("py-six@1.5.0:", type=("build", "run"), when="@0.9.6:")
+    depends_on("py-requests@2.21.0:", when="@0.9.3:", type=("build", "run"))
+    depends_on("py-six@1.5.0:", when="@0.9.6:", type=("build", "run"))

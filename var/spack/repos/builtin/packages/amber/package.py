@@ -131,7 +131,7 @@ class Amber(Package, CudaPackage):
     depends_on("bison", type="build")
     depends_on("netcdf-fortran")
     depends_on("parallel-netcdf", when="@20:")  # when='AmberTools@21:'
-    depends_on("tcsh", type=("build"), when="@20")  # when='AmberTools@21:'
+    depends_on("tcsh", when="@20", type=("build"))  # when='AmberTools@21:'
     # Potential issues with openmpi 4
     # (http://archive.ambermd.org/201908/0105.html)
     depends_on("mpi", when="+mpi")

@@ -45,5 +45,5 @@ class RGenomeinfodbdata(RPackage):
     )
     version("0.99.0", sha256="457049804bbd70f218c1c84067a23e83bdecb7304a3e4d8b697fee0b16dc1888")
 
-    depends_on("r@3.5:", type=("build", "run"), when="@1.2.1:")
-    depends_on("r@3.3:", type=("build", "run"), when="@0.99.0:1.1.0")
+    depends_on("r@3.5:", when="@1.2.1:", type=("build", "run"))
+    depends_on("r@3.3:", when="@0.99.0:1.1.0", type=("build", "run"))

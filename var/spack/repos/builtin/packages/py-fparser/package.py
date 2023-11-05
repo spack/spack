@@ -20,10 +20,10 @@ class PyFparser(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-numpy", type=("build", "run"), when="@:0.0.5")
-    depends_on("py-nose", type=("build", "run"), when="@:0.0.7")
+    depends_on("py-numpy", when="@:0.0.5", type=("build", "run"))
+    depends_on("py-nose", when="@:0.0.7", type=("build", "run"))
     # six is unused as of 0.0.15, but still listed in setup.py
-    depends_on("py-six", type=("build", "run"), when="@0.0.6:")
+    depends_on("py-six", when="@0.0.6:", type=("build", "run"))
 
     depends_on("py-pytest", type="test")
 

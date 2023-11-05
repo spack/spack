@@ -29,11 +29,11 @@ class REmmeans(RPackage):
     version("1.6.0", sha256="201bb7b008dde94231ed60bcc6a32749442faaab4baeea99ad28b97c951b3c1e")
 
     depends_on("r@3.5.0:", type=("build", "run"))
-    depends_on("r@4.1.0:", type=("build", "run"), when="@1.8.1-1:")
+    depends_on("r@4.1.0:", when="@1.8.1-1:", type=("build", "run"))
     depends_on("r-estimability@1.3:", type=("build", "run"))
-    depends_on("r-estimability@1.4.1:", type=("build", "run"), when="@1.8.1-1:")
+    depends_on("r-estimability@1.4.1:", when="@1.8.1-1:", type=("build", "run"))
     depends_on("r-numderiv", type=("build", "run"))
     depends_on("r-mvtnorm", type=("build", "run"))
 
-    depends_on("r-plyr", type=("build", "run"), when="@:1.6")
-    depends_on("r-xtable@1.8-2:", type=("build", "run"), when="@:1.8.2")
+    depends_on("r-plyr", when="@:1.6", type=("build", "run"))
+    depends_on("r-xtable@1.8-2:", when="@:1.8.2", type=("build", "run"))

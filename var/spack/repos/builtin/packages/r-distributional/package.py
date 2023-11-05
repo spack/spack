@@ -33,4 +33,4 @@ class RDistributional(RPackage):
     depends_on("r-farver", type=("build", "run"))
     depends_on("r-digest", type=("build", "run"))
     depends_on("r-lifecycle", type=("build", "run"))
-    depends_on("r-ellipsis", type=("build", "run"), when="@:0.3.0")
+    depends_on("r-ellipsis", when="@:0.3.0", type=("build", "run"))

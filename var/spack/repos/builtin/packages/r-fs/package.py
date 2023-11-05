@@ -20,7 +20,7 @@ class RFs(RPackage):
     version("1.3.1", sha256="d6934dca8f835d8173e3fb9fd4d5e2740c8c04348dd2bcc57df1b711facb46bc")
 
     depends_on("r@3.1:", type=("build", "run"))
-    depends_on("r@3.4:", type=("build", "run"), when="@1.6.2:")
+    depends_on("r@3.4:", when="@1.6.2:", type=("build", "run"))
     depends_on("gmake", type="build")
 
-    depends_on("r-rcpp", type=("build", "run"), when="@:1.3.1")
+    depends_on("r-rcpp", when="@:1.3.1", type=("build", "run"))

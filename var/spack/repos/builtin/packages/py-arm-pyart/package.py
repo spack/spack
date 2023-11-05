@@ -57,7 +57,7 @@ class PyArmPyart(PythonPackage):
     depends_on("py-cylp", type="run", when="+cylp")
     depends_on("gdal+python", type="run", when="+gdal")
     depends_on("py-h5py", type="run", when="+hdf5")
-    depends_on("rsl", type=("build", "run"), when="+rsl")
+    depends_on("rsl", when="+rsl", type=("build", "run"))
     depends_on("py-wradlib", type="run", when="+wradlib")
 
     patch("StringIO.patch")

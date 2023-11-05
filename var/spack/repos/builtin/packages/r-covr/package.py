@@ -29,10 +29,10 @@ class RCovr(RPackage):
     version("3.0.1", sha256="66b799fd03cb83a9ab382d9cf4ff40603d1e3f3a89905a3174546b0c63e8d184")
 
     depends_on("r@3.1.0:", type=("build", "run"))
-    depends_on("r-digest", type=("build", "run"), when="@3.2.0:")
+    depends_on("r-digest", when="@3.2.0:", type=("build", "run"))
     depends_on("r-jsonlite", type=("build", "run"))
     depends_on("r-rex", type=("build", "run"))
     depends_on("r-httr", type=("build", "run"))
     depends_on("r-crayon", type=("build", "run"))
     depends_on("r-withr@1.0.2:", type=("build", "run"))
-    depends_on("r-yaml", type=("build", "run"), when="@3.3.0:")
+    depends_on("r-yaml", when="@3.3.0:", type=("build", "run"))

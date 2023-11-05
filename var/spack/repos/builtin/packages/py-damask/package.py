@@ -28,7 +28,7 @@ class PyDamask(PythonPackage):
         "3.0.0-alpha4", sha256="0bb8bde43b27d852b1fb6e359a7157354544557ad83d87987b03f5d629ce5493"
     )
 
-    depends_on("python@3.8:", type=("build", "run"), when="@3.0.0-alpha6:")
+    depends_on("python@3.8:", when="@3.0.0-alpha6:", type=("build", "run"))
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@40.6:", type="build")
     depends_on("vtk+python", type=("build", "run"))

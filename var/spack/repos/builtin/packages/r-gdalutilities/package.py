@@ -28,4 +28,4 @@ class RGdalutilities(RPackage):
     version("1.2.0", sha256="ead446f7f77f952b72b9ed80c5e415cb9d8d30cfb2439c8d1a8156fa55e2b65b")
 
     depends_on("r-sf", type=("build", "run"))
-    depends_on("r-sf@1.0-11:", type=("build", "run"), when="@1.2.4:")
+    depends_on("r-sf@1.0-11:", when="@1.2.4:", type=("build", "run"))

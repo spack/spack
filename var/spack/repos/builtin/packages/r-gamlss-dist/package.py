@@ -30,5 +30,5 @@ class RGamlssDist(RPackage):
     version("5.1-1", sha256="44f999ff74ee516757eb39c8308c48aa850523aad2f38e622268313a13dda0b1")
 
     depends_on("r@2.15:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@6.0-3:")
+    depends_on("r@3.5.0:", when="@6.0-3:", type=("build", "run"))
     depends_on("r-mass", type=("build", "run"))

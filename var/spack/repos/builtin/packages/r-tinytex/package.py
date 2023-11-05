@@ -28,6 +28,6 @@ class RTinytex(RPackage):
     version("0.15", sha256="5d0988d3b7f763dfa65c722f177452a21344e428415a4b31aeb51478f0abad90")
 
     depends_on("r-xfun@0.5:", type=("build", "run"))
-    depends_on("r-xfun@0.19:", type=("build", "run"), when="@0.28:")
-    depends_on("r-xfun@0.23:", type=("build", "run"), when="@0.32:")
-    depends_on("r-xfun@0.29:", type=("build", "run"), when="@0.36:")
+    depends_on("r-xfun@0.19:", when="@0.28:", type=("build", "run"))
+    depends_on("r-xfun@0.23:", when="@0.32:", type=("build", "run"))
+    depends_on("r-xfun@0.29:", when="@0.36:", type=("build", "run"))

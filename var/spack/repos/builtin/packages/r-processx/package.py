@@ -32,10 +32,10 @@ class RProcessx(RPackage):
     version("2.0.0.1", sha256="8f61b2952d0f2d13c74465bfba174ce11eee559475c2f7b9be6bcb9e2e1d827b")
     version("2.0.0", sha256="8325b56a60a276909228756281523cda9256bc754c5f3ca03b41c5c17cc398ad")
 
-    depends_on("r@3.4.0:", type=("build", "run"), when="@3.5.3:")
-    depends_on("r-ps@1.2.0:", type=("build", "run"), when="@3.2.0:")
+    depends_on("r@3.4.0:", when="@3.5.3:", type=("build", "run"))
+    depends_on("r-ps@1.2.0:", when="@3.2.0:", type=("build", "run"))
     depends_on("r-r6", type=("build", "run"))
 
-    depends_on("r-assertthat", type=("build", "run"), when="@:3.2.9")
-    depends_on("r-crayon", type=("build", "run"), when="@:3.2.9")
-    depends_on("r-debugme", type=("build", "run"), when="@:3.0.9")
+    depends_on("r-assertthat", when="@:3.2.9", type=("build", "run"))
+    depends_on("r-crayon", when="@:3.2.9", type=("build", "run"))
+    depends_on("r-debugme", when="@:3.0.9", type=("build", "run"))

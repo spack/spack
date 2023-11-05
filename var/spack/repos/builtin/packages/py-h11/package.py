@@ -20,5 +20,5 @@ class PyH11(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("python@3.6:", type=("build", "run"), when="@0.12.0:")
-    depends_on("py-typing-extensions", type=("build", "run"), when="@0.13: ^python@:3.7")
+    depends_on("python@3.6:", when="@0.12.0:", type=("build", "run"))
+    depends_on("py-typing-extensions", when="@0.13: ^python@:3.7", type=("build", "run"))

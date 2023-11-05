@@ -22,8 +22,8 @@ class PyKiwisolver(PythonPackage):
     version("1.0.1", sha256="ce3be5d520b4d2c3e5eeb4cd2ef62b9b9ab8ac6b6fedbaa0e39cdb6f50644278")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@3.6:", type=("build", "run"), when="@1.2.0:")
-    depends_on("python@3.7:", type=("build", "run"), when="@1.3.2:")
+    depends_on("python@3.6:", when="@1.2.0:", type=("build", "run"))
+    depends_on("python@3.7:", when="@1.3.2:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@61.2:", when="@1.4.4:", type="build")

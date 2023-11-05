@@ -24,7 +24,7 @@ class RSeqinr(RPackage):
     version("3.3-6", sha256="42a3ae01331db744d67cc9c5432ce9ae389bed465af826687b9c10216ac7a08d")
 
     depends_on("r@2.10:", type=("build", "run"))
-    depends_on("r@2.10.0:", type=("build", "run"), when="@4.2-30:")
+    depends_on("r@2.10.0:", when="@4.2-30:", type=("build", "run"))
     depends_on("r-ade4", type=("build", "run"))
     depends_on("r-segmented", type=("build", "run"))
     depends_on("zlib-api")

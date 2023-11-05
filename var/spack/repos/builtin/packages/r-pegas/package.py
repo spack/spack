@@ -27,4 +27,4 @@ class RPegas(RPackage):
     depends_on("r@3.2.0:", type=("build", "run"))
     depends_on("r-ape@5.3-11:", type=("build", "run"))
 
-    depends_on("r-adegenet", type=("build", "run"), when="@:0.14")
+    depends_on("r-adegenet", when="@:0.14", type=("build", "run"))

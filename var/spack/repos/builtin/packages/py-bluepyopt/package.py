@@ -29,7 +29,7 @@ class PyBluepyopt(PythonPackage):
     depends_on("py-jinja2@2.8:", type=("build", "run"))
     depends_on("py-future", type=("build", "run"))
     depends_on("py-pebble@4.6:", type=("build", "run"))
-    depends_on("py-scoop@0.7:", type=("build", "run"), when="+scoop")
+    depends_on("py-scoop@0.7:", when="+scoop", type=("build", "run"))
     depends_on("neuron@7.4:", type=("build", "run"))
 
     def setup_run_environment(self, env):

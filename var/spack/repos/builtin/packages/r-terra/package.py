@@ -30,7 +30,7 @@ class RTerra(RPackage):
 
     depends_on("r@3.5.0:", type=("build", "run"))
     depends_on("r-rcpp", type=("build", "run"))
-    depends_on("r-rcpp@1.0-10:", type=("build", "run"), when="@1.7-29:")
+    depends_on("r-rcpp@1.0-10:", when="@1.7-29:", type=("build", "run"))
     depends_on("gdal@2.2.3:")
     depends_on("geos@3.4.0:")
     depends_on("proj@4.9.3:")

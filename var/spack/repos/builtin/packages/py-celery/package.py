@@ -47,11 +47,11 @@ class PyCelery(PythonPackage):
     # 'cosmosdbsql',
     # 's3',
 
-    depends_on("python@3.7:", type=("build", "run"), when="@5.2.3:")
+    depends_on("python@3.7:", when="@5.2.3:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
 
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools@59.1.1:59.6", type=("build", "run"), when="@5.2.3:")
+    depends_on("py-setuptools@59.1.1:59.6", when="@5.2.3:", type=("build", "run"))
 
     depends_on("py-redis@3.2.0:", when="+redis", type=("build", "run"))
     depends_on("py-redis@3.4.1:3,4.0.2:", when="@5.2.3:+redis", type=("build", "run"))
@@ -64,9 +64,9 @@ class PyCelery(PythonPackage):
     depends_on("py-click-repl@:0.1.6", when="@5.0.0:5.0", type=("build", "run"))
     depends_on("py-click-repl@0.2.0:", when="@5.2.0:", type=("build", "run"))
     depends_on("py-pytz@2019.3:", type=("build", "run"))
-    depends_on("py-pytz@2021.3:", type=("build", "run"), when="@5.2.3")
+    depends_on("py-pytz@2021.3:", when="@5.2.3", type=("build", "run"))
     depends_on("py-billiard@3.6.3.0:3", type=("build", "run"))
-    depends_on("py-billiard@3.6.4.0:3", type=("build", "run"), when="@5.2.3")
+    depends_on("py-billiard@3.6.4.0:3", when="@5.2.3", type=("build", "run"))
     depends_on("py-kombu@4.6.11", when="@4.3.0:4", type=("build", "run"))
     depends_on("py-kombu@5.0.0:", when="@5.0.0:5.0", type=("build", "run"))
     depends_on("py-kombu@5.2.3:5", when="@5.2.0:5.2", type=("build", "run"))

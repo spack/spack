@@ -21,4 +21,4 @@ class RLater(RPackage):
     depends_on("r-rcpp@0.12.9:", type=("build", "run"))
     depends_on("r-rlang", type=("build", "run"))
 
-    depends_on("r-bh", type=("build", "run"), when="@:1.1.0.1")
+    depends_on("r-bh", when="@:1.1.0.1", type=("build", "run"))

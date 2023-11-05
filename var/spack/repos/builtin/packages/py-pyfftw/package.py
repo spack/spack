@@ -20,8 +20,8 @@ class PyPyfftw(PythonPackage):
     depends_on("fftw")
     depends_on("py-setuptools", type="build")
     depends_on("py-cython@0.29:0", type="build")
-    depends_on("py-numpy@1.6:", type=("build", "run"), when="@:0.10.4")
-    depends_on("py-numpy@1.10:1", type=("build", "run"), when="@0.11.0:")
+    depends_on("py-numpy@1.6:", when="@:0.10.4", type=("build", "run"))
+    depends_on("py-numpy@1.10:1", when="@0.11.0:", type=("build", "run"))
 
     def setup_build_environment(self, env):
         env.append_flags("LDFLAGS", self.spec["fftw"].libs.search_flags)

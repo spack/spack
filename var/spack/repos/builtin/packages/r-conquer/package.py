@@ -28,4 +28,4 @@ class RConquer(RPackage):
     depends_on("r-matrixstats", type=("build", "run"))
     depends_on("r-rcpparmadillo@0.9.850.1.0:", type=("build", "run"))
 
-    depends_on("r-caret", type=("build", "run"), when="@1.2.1")
+    depends_on("r-caret", when="@1.2.1", type=("build", "run"))

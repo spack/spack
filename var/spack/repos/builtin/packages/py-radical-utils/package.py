@@ -32,7 +32,7 @@ class PyRadicalUtils(PythonPackage):
     version("1.8.0", sha256="8582c65593f51d394fc263c6354ec5ad9cc7173369dcedfb2eef4f5e8146cf03")
     version("1.6.7", sha256="552f6c282f960ccd9d2401d686b0b3bfab35dfa94a26baeb2d3b4e45211f05a9")
 
-    depends_on("py-radical-gtod", type=("build", "run"), when="@:1.13")
+    depends_on("py-radical-gtod", when="@:1.13", type=("build", "run"))
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-colorama", type=("build", "run"))

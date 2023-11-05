@@ -22,5 +22,5 @@ class RGeosphere(RPackage):
     version("1.5-5", sha256="8b6fe012744fc45b88e0ef6f20e60e103ef013e761e99dcff3f9dceeedbdce6d")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r-rcpp", type=("build", "run"), when="@1.5-18:")
+    depends_on("r-rcpp", when="@1.5-18:", type=("build", "run"))
     depends_on("r-sp", type=("build", "run"))

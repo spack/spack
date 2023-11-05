@@ -30,5 +30,5 @@ class RCmdstanr(RPackage):
     depends_on("r-posterior@1.1.0:", type=("build", "run"))
     depends_on("r-processx@3.5.0:", type=("build", "run"))
     depends_on("r-r6@2.4.0:", type=("build", "run"))
-    depends_on("r-withr@2.5.0:", type=("build", "run"), when="@0.5.2:")
+    depends_on("r-withr@2.5.0:", when="@0.5.2:", type=("build", "run"))
     depends_on("cmdstan", type="run")

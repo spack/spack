@@ -29,4 +29,4 @@ class PyTpot(PythonPackage):
     depends_on("py-pandas@0.24.2:", type=("build", "run"))
     depends_on("py-joblib@0.13.2:", type=("build", "run"))
     depends_on("py-update-checker@0.16:", type=("build", "run"))
-    depends_on("py-xgboost@1.1.0:", type=("build", "run"), when="@0.11.7:")
+    depends_on("py-xgboost@1.1.0:", when="@0.11.7:", type=("build", "run"))

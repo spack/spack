@@ -37,7 +37,7 @@ class PyNumcodecs(PythonPackage):
     depends_on("py-numpy@1.7:", type=("build", "run"))
     depends_on("py-py-cpuinfo", when="@0.11:", type="build")
     depends_on("py-entrypoints", when="@0.10.1:0.11", type=("build", "run"))
-    depends_on("py-msgpack", type=("build", "run"), when="+msgpack")
+    depends_on("py-msgpack", when="+msgpack", type=("build", "run"))
 
     patch("apple-clang-12.patch", when="%apple-clang@12:")
 

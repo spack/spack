@@ -25,7 +25,7 @@ class PyWebsocketClient(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # Historical dependencies
-    depends_on("py-six", type=("build", "run"), when="@:1.2.0")
+    depends_on("py-six", when="@:1.2.0", type=("build", "run"))
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/w/{0}/{0}-{1}.tar.gz"

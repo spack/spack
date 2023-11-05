@@ -42,4 +42,4 @@ class RWgcna(RPackage):
     depends_on("r-annotationdbi", type=("build", "run"))
     depends_on("r-rcpp@0.11.0:", type=("build", "run"))
 
-    depends_on("r-robust", type=("build", "run"), when="@:1.68")
+    depends_on("r-robust", when="@:1.68", type=("build", "run"))

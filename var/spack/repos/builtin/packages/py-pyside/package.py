@@ -37,7 +37,7 @@ class PyPyside(PythonPackage):
     depends_on("cmake@2.6:", type="build")
 
     depends_on("py-sphinx", type=("build", "run"))
-    depends_on("py-sphinx@:3.5.0", type=("build", "run"), when="@:1.2.2")
+    depends_on("py-sphinx@:3.5.0", when="@:1.2.2", type=("build", "run"))
     depends_on("qt@4.6:4.8")
     depends_on("libxml2@2.6.32:")
     depends_on("libxslt@1.1.19:")

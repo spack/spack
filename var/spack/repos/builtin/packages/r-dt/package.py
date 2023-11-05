@@ -33,8 +33,8 @@ class RDt(RPackage):
 
     depends_on("r-htmltools@0.3.6:", type=("build", "run"))
     depends_on("r-htmlwidgets@1.3:", type=("build", "run"))
-    depends_on("r-jsonlite@0.9.16:", type=("build", "run"), when="@0.8:")
+    depends_on("r-jsonlite@0.9.16:", when="@0.8:", type=("build", "run"))
     depends_on("r-magrittr", type=("build", "run"))
     depends_on("r-crosstalk", type=("build", "run"))
-    depends_on("r-jquerylib", type=("build", "run"), when="@0.19:")
-    depends_on("r-promises", type=("build", "run"), when="@0.5:")
+    depends_on("r-jquerylib", when="@0.19:", type=("build", "run"))
+    depends_on("r-promises", when="@0.5:", type=("build", "run"))

@@ -30,4 +30,4 @@ class RInteractivedisplaybase(RPackage):
     depends_on("r@2.10:", type=("build", "run"))
     depends_on("r-biocgenerics", type=("build", "run"))
     depends_on("r-shiny", type=("build", "run"))
-    depends_on("r-dt", type=("build", "run"), when="@1.28.0:")
+    depends_on("r-dt", when="@1.28.0:", type=("build", "run"))

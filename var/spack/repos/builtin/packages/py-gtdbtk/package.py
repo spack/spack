@@ -23,7 +23,7 @@ class PyGtdbtk(PythonPackage):
     depends_on("py-dendropy@4.1.0:", type=("build", "run"))
     depends_on("py-numpy@1.9.0:", type=("build", "run"))
     depends_on("py-tqdm@4.35.0:", type=("build", "run"))
-    depends_on("py-pydantic@1.9.2:1", type=("build", "run"), when="@2.3.0:")
+    depends_on("py-pydantic@1.9.2:1", when="@2.3.0:", type=("build", "run"))
     depends_on("prodigal@2.6.2:", type=("build", "run"))
     depends_on("hmmer@3.1b2:", type=("build", "run"))
     depends_on("pplacer@1.1:", type=("build", "run"))

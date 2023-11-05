@@ -22,9 +22,9 @@ class RSpatstatData(RPackage):
     version("1.4-0", sha256="121e5bb92beb7ccac920f921e760f429fd71bcfe11cb9b07a7e7326c7a72ec8c")
 
     depends_on("r@3.3:", type=("build", "run"))
-    depends_on("r@3.5.0:", type=("build", "run"), when="@1.7-0:")
+    depends_on("r@3.5.0:", when="@1.7-0:", type=("build", "run"))
     depends_on("r-spatstat-utils", type=("build", "run"))
-    depends_on("r-spatstat-utils@2.1-0:", type=("build", "run"), when="@2.1-2:")
-    depends_on("r-spatstat-utils@3.0-0:", type=("build", "run"), when="@3.0-0:")
-    depends_on("r-spatstat-utils@3.0-2:", type=("build", "run"), when="@3.0-1:")
+    depends_on("r-spatstat-utils@2.1-0:", when="@2.1-2:", type=("build", "run"))
+    depends_on("r-spatstat-utils@3.0-0:", when="@3.0-0:", type=("build", "run"))
+    depends_on("r-spatstat-utils@3.0-2:", when="@3.0-1:", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))

@@ -45,32 +45,32 @@ class PyYt(PythonPackage):
 
     # Main dependencies:
     # See https://github.com/yt-project/yt/blob/yt-4.1.2/setup.cfg#L40
-    depends_on("py-cmyt@0.2.2:", type=("build", "run"), when="@4.1.2:")
-    depends_on("py-ipywidgets@8:", type=("build", "run"), when="@4.1.2")
+    depends_on("py-cmyt@0.2.2:", when="@4.1.2:", type=("build", "run"))
+    depends_on("py-ipywidgets@8:", when="@4.1.2", type=("build", "run"))
     depends_on("py-matplotlib@1.5.3:", type=("build", "run"))
-    depends_on("py-matplotlib@:3.2.2", type=("build", "run"), when="@:3.6.0")
-    depends_on("py-matplotlib@3.1:", type=("build", "run"), when="@4.1.2:")
+    depends_on("py-matplotlib@:3.2.2", when="@:3.6.0", type=("build", "run"))
+    depends_on("py-matplotlib@3.1:", when="@4.1.2:", type=("build", "run"))
     conflicts("^py-matplotlib@3.4.2", when="@4.1.2:")
     depends_on("py-more-itertools@8.4:", when="@4.1.2:")
     depends_on("py-numpy@1.10.4:", type=("build", "run"))
-    depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@4.1.2:")
-    depends_on("py-packaging@20.9:", type=("build", "run"), when="@4.1.2:")
+    depends_on("py-numpy@1.14.5:", when="@4.1.2:", type=("build", "run"))
+    depends_on("py-packaging@20.9:", when="@4.1.2:", type=("build", "run"))
     # PIL/pillow and pyparsing dependency is handled by matplotlib
-    depends_on("py-tomli-w@0.4:", type=("build", "run"), when="@4.1.2:")
-    depends_on("py-tqdm@3.4.0:", type=("build", "run"), when="@4.1.2:")
-    depends_on("py-unyt@2.8:2", type=("build", "run"), when="@4.1.2:")
-    depends_on("py-importlib-metadata@1.4:", type=("build", "run"), when="@4.1.2: ^python@:3.7")
-    depends_on("py-tomli@1.2.3:", type=("build", "run"), when="@4.1.2: ^python@:3.10")
-    depends_on("py-typing-extensions@4.2:", type=("build", "run"), when="@4.1.2: ^python@:3.7")
+    depends_on("py-tomli-w@0.4:", when="@4.1.2:", type=("build", "run"))
+    depends_on("py-tqdm@3.4.0:", when="@4.1.2:", type=("build", "run"))
+    depends_on("py-unyt@2.8:2", when="@4.1.2:", type=("build", "run"))
+    depends_on("py-importlib-metadata@1.4:", when="@4.1.2: ^python@:3.7", type=("build", "run"))
+    depends_on("py-tomli@1.2.3:", when="@4.1.2: ^python@:3.10", type=("build", "run"))
+    depends_on("py-typing-extensions@4.2:", when="@4.1.2: ^python@:3.7", type=("build", "run"))
     # See https://github.com/spack/spack/pull/30418#discussion_r863962805
-    depends_on("py-ipython@1.0:", type=("build", "run"), when="@:3")
+    depends_on("py-ipython@1.0:", when="@:3", type=("build", "run"))
 
     # Extras:
     # See https://github.com/yt-project/yt/blob/yt-4.1.2/setup.cfg#L80
-    depends_on("py-h5py@3.1:3", type=("build", "run"), when="+h5py")
-    depends_on("py-scipy@1.5.0:", type=("build", "run"), when="+scipy")
-    depends_on("rockstar@yt", type=("build", "run"), when="+rockstar")
-    depends_on("py-astropy@4.0.1:5", type=("build", "run"), when="+astropy")
+    depends_on("py-h5py@3.1:3", when="+h5py", type=("build", "run"))
+    depends_on("py-scipy@1.5.0:", when="+scipy", type=("build", "run"))
+    depends_on("rockstar@yt", when="+rockstar", type=("build", "run"))
+    depends_on("py-astropy@4.0.1:5", when="+astropy", type=("build", "run"))
 
     # Build dependencies:
     # See https://github.com/yt-project/yt/blob/yt-4.1.2/pyproject.toml#L2
@@ -78,7 +78,7 @@ class PyYt(PythonPackage):
     depends_on("py-cython@0.29.21:2", type="build", when="@4.1.2:")
     depends_on("py-wheel@0.36.2:", type="build", when="@4.1.2:")
     depends_on("py-setuptools@19.6:", type=("build", "run"))
-    depends_on("py-setuptools@59.0.1:", type=("build", "run"), when="@4.1.2:")
+    depends_on("py-setuptools@59.0.1:", when="@4.1.2:", type=("build", "run"))
 
     @run_before("install")
     def prep_yt(self):

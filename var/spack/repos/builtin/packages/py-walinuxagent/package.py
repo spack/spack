@@ -18,4 +18,4 @@ class PyWalinuxagent(PythonPackage):
     depends_on("python@2.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-pyasn1", type=("build", "run"))
-    depends_on("py-distro", type=("build", "run"), when="^python@3.8:")
+    depends_on("py-distro", when="^python@3.8:", type=("build", "run"))
