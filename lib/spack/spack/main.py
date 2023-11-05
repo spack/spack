@@ -881,6 +881,7 @@ def resolve_alias(cmd_name, cmd):
     Returns:
         (str, list): new command name and arguments.
     """
+    all_commands = spack.cmd.all_commands()
     aliases = spack.config.get("config:aliases")
 
     if aliases:
@@ -890,8 +891,13 @@ def resolve_alias(cmd_name, cmd):
                     f"Alias '{key}' (mapping to '{value}') contains a space"
                     ", which is not supported."
                 )
+            if key in all_commands:
+                tty.warn(
+                    f"Alias '{key}' (mapping to '{value}') attempts to override"
+                    " built-in command."
+                )
 
-    if cmd_name not in spack.cmd.all_commands():
+    if cmd_name not in all_commands:
         alias = None
 
         if aliases:

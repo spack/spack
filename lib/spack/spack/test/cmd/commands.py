@@ -67,6 +67,7 @@ def test_override_alias():
 
     out = install(fail_on_error=False, global_args=["-c", "config:aliases:install:find"])
     assert "install requires a package argument or active environment" in out
+    assert "Alias 'install' (mapping to 'find') attempts to override built-in command" in out
 
     out = install(fail_on_error=False, global_args=["-c", "config:aliases:foo bar:find"])
     assert "Alias 'foo bar' (mapping to 'find') contains a space, which is not supported" in out
