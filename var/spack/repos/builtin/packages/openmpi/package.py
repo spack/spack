@@ -408,6 +408,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # To fix performance regressions introduced while fixing a bug in older
     # gcc versions on x86_64, Refs. open-mpi/ompi#8603
     patch("opal_assembly_arch.patch", when="@4.0.0:4.0.5,4.1.0")
+    # To fix an error in Open MPI configury related to findng dl lib.
+    # This is specific to the 5.0.0 release.
+    patch("fix-for-dlopen-missing-symbol-problem.patch", when="@5.0.0")
 
     variant(
         "fabrics",
@@ -514,10 +517,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     if sys.platform != "darwin":
         depends_on("numactl")
 
-    depends_on("autoconf @2.69:", type="build", when="@main")
-    depends_on("automake @1.13.4:", type="build", when="@main")
-    depends_on("libtool @2.4.2:", type="build", when="@main")
-    depends_on("m4", type="build", when="@main")
+    depends_on("autoconf @2.69:", type="build", when="@5.0.0,main")
+    depends_on("automake @1.13.4:", type="build", when="@5.0.0,main")
+    depends_on("libtool @2.4.2:", type="build", when="@5.0.0,main")
 
     depends_on("perl", type="build")
     depends_on("pkgconfig", type="build")
@@ -916,6 +918,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     def autoreconf(self, spec, prefix):
         perl = which("perl")
         perl("autogen.pl")
+
+    @when("@5.0.0")
+    def autoreconf(self, spec, prefix):
+        perl = which("perl")
+        perl("autogen.pl", "--force")
 
     def configure_args(self):
         spec = self.spec
