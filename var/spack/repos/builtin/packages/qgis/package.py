@@ -17,12 +17,14 @@ class Qgis(CMakePackage):
 
     maintainers("adamjstewart", "Sinan81")
 
+    version("3.34.0", sha256="348a2df4c4520813a319b7f72546b3823e044cacd28646ba189b56a49c7d1b5f")
     # Prefer latest long term release
     version(
-        "3.28.11",
-        sha256="c5eb703893c7f98de051c45d677c4a34b40f986db51782a4930ddefad4e193b4",
+        "3.28.12",
+        sha256="d6d0ea39ed3433d553f8b83324dc14cfa90f8caaf766fa484791df9169800f25",
         preferred=True,
     )
+    version("3.28.11", sha256="c5eb703893c7f98de051c45d677c4a34b40f986db51782a4930ddefad4e193b4")
     version("3.28.10", sha256="cff867e97909bbc2facce6343770dcb1b61fc6e4855f57783e30bf63d51c5218")
     version("3.28.3", sha256="a09124f46465a520f6d735306ba3954c339b84aa396d6f52b476b82edcc4fe0e")
     version("3.22.16", sha256="dbd1f8a639291bb2492eea61e4ef96079d7b27d3dfa538dab8cd98f31429254a")
@@ -63,6 +65,7 @@ class Qgis(CMakePackage):
         "custom_widgets", default=False, description="Build QGIS custom widgets for Qt Designer"
     )
     variant("desktop", default=True, description="Build QGIS desktop")
+    # variant("draco", default=True, description="Build with DRACO support") #TODO
     variant("georeferencer", default=True, description="Build GeoReferencer plugin")
     variant("globe", default=False, description="Build Globe plugin")
     variant("grass7", default=False, description="Build with GRASS providers and plugin")
@@ -77,6 +80,7 @@ class Qgis(CMakePackage):
     )
     variant("oauth2_plugin", default=True, description="Build OAuth2 authentication method plugin")
     variant("oracle", default=False, description="Build with Oracle support")
+    # variant("pdal", default=False, description="Build with PDAL support") #TODO
     variant("postgresql", default=True, description="Build with PostreSQL support")
     variant(
         "py_compile",
@@ -244,6 +248,7 @@ class Qgis(CMakePackage):
                     "TRUE" if "+custom_widgets" in spec else "FALSE"
                 ),
                 "-DWITH_DESKTOP={0}".format("TRUE" if "+desktop" in spec else "FALSE"),
+                "-DWITH_DRACO={0}".format("TRUE" if "+draco" in spec else "FALSE"),
                 "-DWITH_GEOREFERENCER={0}".format("TRUE" if "+georeferencer" in spec else "FALSE"),
                 "-DWITH_GLOBE={0}".format("TRUE" if "+globe" in spec else "FALSE"),
                 "-DWITH_GUI={0}".format("TRUE" if "+gui" in spec else "FALSE"),
@@ -251,6 +256,7 @@ class Qgis(CMakePackage):
                 self.define_from_variant("WITH_INTERNAL_O2", "internal_o2"),
                 "-DWITH_OAUTH2_PLUGIN={0}".format("TRUE" if "+oauth2_plugin" in spec else "FALSE"),
                 "-DWITH_ORACLE={0}".format("TRUE" if "+oracle" in spec else "FALSE"),
+                "-DWITH_PDAL={0}".format("TRUE" if "+pdal" in spec else "FALSE"),
                 "-DWITH_POSTGRESQL={0}".format("TRUE" if "+postgresql" in spec else "FALSE"),
                 "-DWITH_PY_COMPILE={0}".format("TRUE" if "+py_compile" in spec else "FALSE"),
                 "-DWITH_QSCIAPI={0}".format("TRUE" if "+qsciapi" in spec else "FALSE"),
