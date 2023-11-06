@@ -2924,6 +2924,25 @@ def test_activate_temp(monkeypatch, tmpdir):
     assert ev.is_env_dir(str(tmpdir))
 
 
+def test_activate_default(monkeypatch):
+    """Tests whether `spack env activate` creates / activates the default
+    environment"""
+    assert not ev.exists("default")
+
+    # Activating it the first time should create it
+    env("activate", "--sh")
+    env("deactivate", "--sh")
+    assert ev.exists("default")
+
+    # Activating it while it already exists should work
+    env("activate", "--sh")
+    env("deactivate", "--sh")
+    assert ev.exists("default")
+
+    env("remove", "-y", "default")
+    assert not ev.exists("default")
+
+
 def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock_fetch):
     view = str(tmpdir.join("view"))
     # Put a symlink to an actual directory in view

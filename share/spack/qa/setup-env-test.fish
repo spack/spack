@@ -371,7 +371,6 @@ spt_contains " spack env list " spack env list --help
 
 title 'Testing `spack env activate`'
 spt_contains "No such environment:" spack env activate no_such_environment
-spt_contains "env activate requires an environment " spack env activate
 spt_contains "usage: spack env activate " spack env activate -h
 spt_contains "usage: spack env activate " spack env activate --help
 
@@ -413,6 +412,11 @@ spack env activate spack_test_env
 spack env activate spack_test_2_env
 spt_contains 'spack_test_2_env' 'fish' '-c' 'echo $PATH'
 spt_does_not_contain 'spack_test_env' 'fish' '-c' 'echo $PATH'
+despacktivate
+
+echo "Testing default environment"
+spack env activate
+contains "In environment default" spack env status
 despacktivate
 
 echo "Correct error exit codes for activate and deactivate"
