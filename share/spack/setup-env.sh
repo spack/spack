@@ -126,8 +126,7 @@ _spack_shell_wrapper() {
                         # Space needed here to differentiate between `-h`
                         # argument and environments with "-h" in the name.
                         # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
-                        if [ -z ${1+x} ] || \
-                           [ "${_a#* --sh}" != "$_a" ] || \
+                        if [ "${_a#* --sh}" != "$_a" ] || \
                            [ "${_a#* --csh}" != "$_a" ] || \
                            [ "${_a#* -h}" != "$_a" ] || \
                            [ "${_a#* --help}" != "$_a" ];
