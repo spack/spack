@@ -1016,10 +1016,17 @@ class SetupContext:
                 self._make_runnable(dspec, env)
 
             if self.should_setup_run_env & flag:
+                run_env_mods = EnvironmentModifications()
                 for spec in dspec.dependents(deptype=dt.LINK | dt.RUN):
                     if id(spec) in self.nodes_in_subdag:
-                        pkg.setup_dependent_run_environment(env, spec)
-                pkg.setup_run_environment(env)
+                        pkg.setup_dependent_run_environment(run_env_mods, spec)
+                pkg.setup_run_environment(run_env_mods)
+                if self.context == Context.BUILD:
+                    # Don't let the runtime environment of comiler like dependencies leak into the
+                    # build env
+                    run_env_mods.drop("CC", "CXX", "F77", "FC")
+                env.extend(run_env_mods)
+
         return env
 
     def _make_buildtime_detectable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
