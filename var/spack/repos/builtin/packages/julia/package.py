@@ -26,6 +26,7 @@ class Julia(MakefilePackage):
     maintainers("vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
+    version("1.10.2", sha256="e3d20c02975da054aeb18d32ed84c5d760d54d2563e45e25017684a5a105d185")
     version("1.9.3", sha256="8d7dbd8c90e71179e53838cdbe24ff40779a90d7360e29766609ed90d982081d")
     version("1.9.2", sha256="015438875d591372b80b09d01ba899657a6517b7c72ed41222298fef9d4ad86b")
     version("1.9.0", sha256="48f4c8a7d5f33d0bc6ce24226df20ab49e385c2d0c3767ec8dfdb449602095b2")
@@ -59,8 +60,23 @@ class Julia(MakefilePackage):
     )
     depends_on("libuv", when="@:1.7")
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
-    depends_on("libuv-julia@1.44.2", when="@1.8.2:")
+    depends_on("libuv-julia@1.44.2", when="@1.8.2:1.9")
+    depends_on("libuv-julia@1.44.3", when="@1.10.0:")
     depends_on("suite-sparse@5.4:5.10", when="@1.6:1.9")
+
+    with when("@1.10.0:1.10"):
+        # libssh2.so.1, libpcre2-8.so.0, libmbedtls.so.14, libmbedcrypto.so.7, libmbedx509.so.1,
+        # libopenlibm.so.4, libblastrampoline.so.5, libgit2.so.1.6, libnghttp2.so.14,
+        # libcurl.so.4
+        depends_on("libblastrampoline@5.8.0:5")
+        depends_on("libgit2@1.6.4:1.6")
+        depends_on("libssh2@1.11.0:1.11")
+        depends_on("llvm@15.0.7 +lld shlib_symbol_version=JL_LLVM_15.0")
+        depends_on("mbedtls@2.28.2:2.28")
+        depends_on("openlibm@0.8.1:0.8", when="+openlibm")
+        depends_on("nghttp2@1.52.0:1.52")
+        depends_on("curl@8.4.0:")
+        depends_on("suite-sparse@7.2.1")
 
     with when("@1.9.0:1.9"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -143,6 +159,14 @@ class Julia(MakefilePackage):
         patches=patch(
             "https://raw.githubusercontent.com/spack/patches/master/julia/f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099.patch",
             sha256="f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099",
+        ),
+    )
+    depends_on(
+        "llvm",
+        when="^llvm@15.0.7",
+        patches=patch(
+            "https://github.com/spack/patches/raw/master/julia/25cdc0271e7722d4a7cc6f72abcb17bfe205fc741bbe3716a21759c3eee7d32c.patch",
+            sha256="25cdc0271e7722d4a7cc6f72abcb17bfe205fc741bbe3716a21759c3eee7d32c",
         ),
     )
 
