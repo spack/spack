@@ -155,6 +155,33 @@ List of popular build caches
 
 * `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
 
+----------
+Relocation
+----------
+
+When using buildcaches across different machines, it is likely that the install
+root will be different from the one used to build the binaries.
+
+To address this issue, Spack automatically relocates all paths encoded in binaries
+and scripts to their new location upon install.
+
+Note that there are some cases where this is not possible: if binaries are built in
+a relatively short path, and then installed to a longer path, there may not be enough
+space in the binary to encode the new path. In this case, Spack will fail to install
+the package from the build cache, and a source build is required.
+
+To reduce the likelihood of this happening, it is highly recommended to add padding to
+the install root during the build, as specified in the :ref:`config <config-yaml>`
+section of the configuration:
+
+.. code-block:: yaml
+
+   config:
+     install_tree:
+       root: /opt/spack
+       padded_length: 128
+
+
 
 -----------------------------------------
 OCI / Docker V2 registries as build cache
@@ -304,16 +331,6 @@ Spack offers a public build cache for GitHub Actions with a set of common packag
 which lets you get started quickly. See the following resources for more information:
 
 * `spack/github-actions-buildcache <https://github.com/spack/github-actions-buildcache>`_
-
-----------
-Relocation
-----------
-
-Initial build and later installation do not necessarily happen at the same
-location. Spack provides a relocation capability and corrects for RPATHs and
-non-relocatable scripts. However, many packages compile paths into binary
-artifacts directly. In such cases, the build instructions of this package would
-need to be adjusted for better re-locatability.
 
 .. _cmd-spack-buildcache:
 
