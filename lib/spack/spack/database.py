@@ -1572,13 +1572,14 @@ class Database:
                 results.append(rec.spec)
                 continue
 
-            # save non-name matches for later
-            if query_spec.name and rec.spec.name != query_spec.name:
-                deferred.append(rec.spec)
-                continue
+            # check anon specs and exact name matches first
+            if not query_spec.name or rec.spec.name == query_spec.name:
+                if rec.spec.satisfies(query_spec):
+                    results.append(rec.spec)
 
-            if rec.spec.satisfies(query_spec):
-                results.append(rec.spec)
+            # save potential virtual matches for later, but not if we already found a match
+            elif not results:
+                deferred.append(rec.spec)
 
         # Checking for virtuals is expensive, so we save it for last and only if needed.
         # If we get here, we didn't find anything in the DB that matched by name.
