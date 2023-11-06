@@ -170,8 +170,10 @@ class Mapl(CMakePackage):
     # Patch to add missing MPI Fortran target to top-level CMakeLists.txt
     patch("mapl-2.12.3-mpi-fortran.patch", when="@:2.12.3")
 
-    # MAPL only compiles with version 2.42.0 and higher so we conflict
-    # with older versions
+    # MAPL only compiles with MPICH from version 2.42.0 and higher so we conflict
+    # with older versions. Also, it's only been tested with MPICH 4, so we don't
+    # allow older MPICH
+    conflicts("mpich@:3")
     conflicts("mpich@4", when="@:2.41")
 
     variant("flap", default=False, description="Build with FLAP support", when="@:2.39")
