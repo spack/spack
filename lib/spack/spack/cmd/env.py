@@ -402,7 +402,7 @@ def env_remove(args):
         try:
             env = ev.read(env_name)
             read_envs.append(env)
-        except spack.config.ConfigFormatError:
+        except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError):
             bad_envs.append(env_name)
 
     if not args.yes_to_all:
@@ -570,8 +570,8 @@ def env_update_setup_parser(subparser):
 def env_update(args):
     manifest_file = ev.manifest_file(args.update_env)
     backup_file = manifest_file + ".bkp"
-    needs_update = not ev.is_latest_format(manifest_file)
 
+    needs_update = not ev.is_latest_format(manifest_file)
     if not needs_update:
         tty.msg('No update needed for the environment "{0}"'.format(args.update_env))
         return

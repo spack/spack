@@ -342,7 +342,7 @@ def create_in_dir(
 
         manifest.flush()
 
-    except spack.config.ConfigFormatError as e:
+    except (spack.config.ConfigFormatError, SpackEnvironmentConfigError) as e:
         shutil.rmtree(manifest_dir)
         raise e
 
@@ -396,7 +396,13 @@ def all_environments():
 
 def _read_yaml(str_or_file):
     """Read YAML from a file for round-trip parsing."""
-    data = syaml.load_config(str_or_file)
+    try:
+        data = syaml.load_config(str_or_file)
+    except syaml.SpackYAMLError as e:
+        raise SpackEnvironmentConfigError(
+            f"Invalid environment configuration detected: {e.message}"
+        )
+
     filename = getattr(str_or_file, "name", None)
     default_data = spack.config.validate(data, spack.schema.env.schema, filename)
     return data, default_data
@@ -2960,3 +2966,7 @@ class SpackEnvironmentError(spack.error.SpackError):
 
 class SpackEnvironmentViewError(SpackEnvironmentError):
     """Class for errors regarding view generation."""
+
+
+class SpackEnvironmentConfigError(SpackEnvironmentError):
+    """Class for Spack environment-specific configuration errors."""
