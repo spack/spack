@@ -59,10 +59,11 @@ class Amdlibflame(LibflameBase):
 
     conflicts("+ilp64", when="@:3.0.0", msg="ILP64 is supported from 3.0.1 onwards")
     conflicts("threads=pthreads", msg="pthread is not supported")
-    conflicts("threads=openmp", msg="openmp is not supported")
+    conflicts("threads=openmp", when="@:3", msg="openmp is not supported by amdlibflame < 4.0")
 
     patch("aocc-2.2.0.patch", when="@:2", level=1)
     patch("cray-compiler-wrapper.patch", when="@:3.0.0", level=1)
+    patch("supermat.patch", when="@4.0:4.1", level=1)
 
     provides("flame@5.2", when="@2:")
 
@@ -109,13 +110,13 @@ class Amdlibflame(LibflameBase):
             )
 
         # From 3.2 version, amd optimized flags are encapsulated under:
-        # enable-amd-flags for gcc compiler
-        # enable-amd-aocc-flags for aocc compiler
+        # enable-amd-aocc-flags for AOCC compiler
+        # enable-amd-flags for all other compilers
         if "@3.2:" in self.spec:
-            if "%gcc" in self.spec:
-                args.append("--enable-amd-flags")
             if "%aocc" in self.spec:
                 args.append("--enable-amd-aocc-flags")
+            else:
+                args.append("--enable-amd-flags")
 
         if "@:3.1" in self.spec:
             args.append("--enable-external-lapack-interfaces")
