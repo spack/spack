@@ -54,4 +54,8 @@ class Sleef(CMakePackage):
 
     def cmake_args(self):
         # https://salsa.debian.org/science-team/sleef/-/blob/master/debian/rules
-        return [self.define("BUILD_DFT", False), self.define("SLEEF_TEST_ALL_IUT", True)]
+        return [
+            self.define("BUILD_DFT", False),
+            self.define("SLEEF_TEST_ALL_IUT", True),
+            self.define("BUILD_TESTS", False),
+        ]
