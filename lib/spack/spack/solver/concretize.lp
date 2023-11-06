@@ -123,33 +123,34 @@ trigger_node(TriggerID, Node, Node) :-
   trigger_condition_holds(TriggerID, Node),
   literal(TriggerID).
 
+% Since we trigger the existence of literal nodes from a condition, we need to construct
+% the condition_set/2 manually below
 mentioned_in_literal(Root, Mentioned) :-
-  literal(TriggerID),
+  solve_literal(TriggerID),
   trigger_and_effect(Root, TriggerID, EffectID),
   imposed_constraint(EffectID, _, Mentioned).
 mentioned_in_literal(Root, Mentioned) :-
-  literal(TriggerID),
+  solve_literal(TriggerID),
   trigger_and_effect(Root, TriggerID, EffectID),
   imposed_constraint(EffectID, _, Mentioned, _).
 mentioned_in_literal(Root, Mentioned) :-
-  literal(TriggerID),
+  solve_literal(TriggerID),
   trigger_and_effect(Root, TriggerID, EffectID),
   imposed_constraint(EffectID, _, Mentioned, _, _).
 mentioned_in_literal(Root, Mentioned) :-
-  literal(TriggerID),
+  solve_literal(TriggerID),
   trigger_and_effect(Root, TriggerID, EffectID),
   imposed_constraint(EffectID, _, Mentioned, _, _, _).
 mentioned_in_literal(Root, Mentioned) :-
-  literal(TriggerID),
+  solve_literal(TriggerID),
   trigger_and_effect(Root, TriggerID, EffectID),
   imposed_constraint(EffectID, "depends_on", _, _, Mentioned, _).
 mentioned_in_literal(Root, Mentioned) :-
-  literal(TriggerID),
+  solve_literal(TriggerID),
   trigger_and_effect(Root, TriggerID, EffectID),
   imposed_constraint(EffectID, "provider_set", _, Mentioned).
 
-condition_set(node(min_dupe_id, Root), node(min_dupe_id, Mentioned)) :-
-  mentioned_in_literal(Root, Mentioned).
+condition_set(node(min_dupe_id, Root), node(min_dupe_id, Mentioned)) :-  mentioned_in_literal(Root, Mentioned).
 
 % Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
 explicitly_requested_root(node(min_dupe_id, Package)) :-
