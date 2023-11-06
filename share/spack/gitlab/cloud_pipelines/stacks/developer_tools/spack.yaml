@@ -1,0 +1,65 @@
+spack:
+  view: false
+  packages:
+    all:
+      require: target=x86_64_v3
+  concretizer:
+    reuse: true
+    unify: true
+  definitions:
+    - default_specs:
+      # editors
+      - neovim~no_luajit
+      - py-pynvim
+      - emacs@29.1+json+native+treesitter # note, pulls in gcc
+      - nano # just in case
+      # tags and scope search helpers
+      - universal-ctags # only maintained ctags, works better with c++
+      # runtimes and compilers
+      - python
+      - llvm+link_llvm_dylib~lld~lldb~polly+python build_type=MinSizeRel # for clangd, clang-format
+      - node-js # for editor plugins etc., pyright language server
+      - go # to build fzf, gh, hub
+      - rust+analysis # fd, ripgrep, hyperfine, exa, rust-analyzer
+      - binutils+ld+gold+plugins # support linking with built gcc
+      # styling and lints
+      - astyle
+      - cppcheck
+      - uncrustify
+      - py-fprettify
+      - py-fortran-language-server
+      # cli dev tools
+      - ripgrep
+      - gh
+      - fd
+      - bfs
+      - 'fzf^go@1.20:'
+      - tree
+      - jq
+      - py-yq
+      - hub
+      - ncdu
+      - exa
+      - hyperfine
+      - htop
+      - tmux
+      - ccache
+      # ensure we can use a jobserver build and do this fast
+      - gmake
+      - ninja@kitware
+      - "openssl certs=system"
+    - arch:
+      - '%gcc target=x86_64_v3'
+
+  specs:
+    - matrix:
+        - - $default_specs
+        - - $arch
+
+  ci:
+    pipeline-gen:
+    - build-job:
+        image: "ghcr.io/spack/ubuntu20.04-runner-amd64-gcc-11.4:2023.08.01"
+
+  cdash:
+    build-group: Developer Tools

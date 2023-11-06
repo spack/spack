@@ -461,6 +461,28 @@ build_systems-build:
     - artifacts: True
       job: build_systems-generate
 
+###########################################
+# Build tests for different developer tools
+###########################################
+.developer_tools:
+  extends: [ ".linux_x86_64_v3" ]
+  variables:
+    SPACK_CI_STACK_NAME: developer_tools
+
+developer_tools-generate:
+  extends: [ ".developer_tools", ".generate-x86_64"]
+
+developer_tools-build:
+  extends: [ ".developer_tools", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: developer_tools-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: developer_tools-generate
+
 #########################################
 # RADIUSS
 #########################################
