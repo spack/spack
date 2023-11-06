@@ -124,5 +124,6 @@ class Libgit2(CMakePackage):
 
         # Control tests
         args.append(self.define("BUILD_CLAR", self.run_tests))
+        args.append(self.define("BUILD_TESTS", self.run_tests))
 
         return args
