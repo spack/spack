@@ -33,5 +33,5 @@ class PyCleo(PythonPackage):
     depends_on("py-clikit@0.6", when="@0.8.1", type=("build", "run"))
     depends_on("py-pylev@1.3:1", when="@1.0.0a5", type=("build", "run"))
     depends_on("py-crashtest@0.4.1:0", when="@1:", type=("build", "run"))
-    depends_on("py-rapidfuzz@2.2.0:2", when="@1.0.0:2.0", type=("build", "run"))
-    depends_on("py-rapidfuzz@3.0.0:3", when="@2.0.1", type=("build", "run"))
+    depends_on("py-rapidfuzz@2.2:2", when="@1:2.0", type=("build", "run"))
+    depends_on("py-rapidfuzz@3", when="@2.1:", type=("build", "run"))
