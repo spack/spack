@@ -260,11 +260,16 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(
                 cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
             )
+            llvm_bin = spec["llvm-amdgpu"].prefix.bin
+            llvm_prefix = spec["llvm-amdgpu"].prefix
+            # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
+            # others point to /<path>/rocm-<ver>/llvm
+            if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
+                llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
             entries.append(
                 cmake_cache_filepath(
                     "CMAKE_HIP_COMPILER",
-                    os.path.join(spec["llvm-amdgpu"].prefix.bin, "clang++")))
-#                    os.path.join(spec["llvm-amdgpu"].prefix, "llvm/bin/clang++")))
+                    os.path.join(llvm_bin, "clang++")))
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
