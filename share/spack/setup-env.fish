@@ -651,7 +651,7 @@ function spack_pathadd -d "Add path to specified variable (defaults to PATH)"
         # skip path if it is already contained in the variable
         # note spaces in regular expression: we're matching to a space delimited
         # list of paths
-        if not echo $_a | string match -q -r " *$pa_new_path *"
+        if not echo $_a | string match -q -r "^$pa_new_path *"
             if test -n "$pa_oldvalue"
                 set $pa_varname $pa_new_path $pa_oldvalue
             else
