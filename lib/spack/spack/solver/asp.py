@@ -2687,15 +2687,15 @@ class SpackSolverSetup:
         self.define_target_constraints()
 
     def literal_specs(self, specs):
-        for idx, spec in enumerate(specs):
+        for spec in specs:
             self.gen.h2("Spec: %s" % str(spec))
             condition_id = next(self._condition_id_counter)
             trigger_id = next(self._trigger_id_counter)
 
             # Special condition triggered by "literal_solved"
+            self.gen.fact(fn.literal(trigger_id))
             self.gen.fact(fn.pkg_fact(spec.name, fn.condition_trigger(condition_id, trigger_id)))
             self.gen.fact(fn.condition_reason(condition_id, f"{spec} requested from CLI"))
-            self.gen.fact(fn.literal(trigger_id))
 
             # Effect imposes the spec
             imposed_spec_key = str(spec), None
@@ -2706,11 +2706,18 @@ class SpackSolverSetup:
             assert imposed_spec_key not in cache, msg
             effect_id = next(self._effect_id_counter)
             requirements = self.spec_clauses(spec)
+            root_name = spec.name
             for clause in requirements:
-                if clause.args[0] == "variant_set":
+                clause_name = clause.args[0]
+                if clause_name == "variant_set":
                     requirements.append(
                         fn.attr("variant_default_value_from_cli", *clause.args[1:])
                     )
+                elif clause_name in ("node", "virtual_node", "hash"):
+                    # These facts are needed to compute the "condition_set" of the root
+                    pkg_name = clause.args[1]
+                    self.gen.fact(fn.mentioned_in_literal(trigger_id, root_name, pkg_name))
+
             requirements.append(fn.attr("virtual_root" if spec.virtual else "root", spec.name))
             cache[imposed_spec_key] = (effect_id, requirements)
             self.gen.fact(fn.pkg_fact(spec.name, fn.condition_effect(condition_id, effect_id)))
