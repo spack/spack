@@ -14,6 +14,7 @@ import spack.bootstrap
 import spack.caches
 import spack.cmd.test
 import spack.config
+import spack.paths
 import spack.repo
 import spack.stage
 import spack.store
@@ -133,7 +134,10 @@ def clean(parser, args):
         remove_python_cache()
 
     if args.bootstrap:
-        bootstrap_prefix = spack.util.path.canonicalize_path(spack.config.get("bootstrap:root"))
+        bootstrap_prefix = spack.util.path.canonicalize_path(
+            spack.config.get("bootstrap:root"),
+            replacements=spack.paths.path_replacements()
+        )
         msg = 'Removing bootstrapped software and configuration in "{0}"'
         tty.msg(msg.format(bootstrap_prefix))
         llnl.util.filesystem.remove_directory_contents(bootstrap_prefix)

@@ -10,9 +10,13 @@ throughout Spack and should bring in a minimal number of external
 dependencies.
 """
 import os
+import tempfile
+from datetime import date
 from pathlib import PurePath
 
 import llnl.util.filesystem
+
+import spack.util.path
 
 #: This file lives in $prefix/lib/spack/spack/__file__
 prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
@@ -136,3 +140,52 @@ user_config_path = _get_user_config_path()
 
 #: System configuration location
 system_config_path = _get_system_config_path()
+
+
+def architecture():
+    # break circular import
+    import spack.platforms
+    import spack.spec
+
+    host_platform = spack.platforms.host()
+    host_os = host_platform.operating_system("default_os")
+    host_target = host_platform.target("default_target")
+
+    return spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
+
+
+def get_user():
+    # User pwd where available because it accounts for effective uids when using ksu and similar
+    try:
+        # user pwd for unix systems
+        import pwd
+
+        return pwd.getpwuid(os.geteuid()).pw_name
+    except ImportError:
+        # fallback on getpass
+        return getpass.getuser()
+
+
+def path_replacements():
+    # break circular imports
+    import spack.environment as ev
+    import spack.paths
+
+    arch = architecture()
+
+    return {
+        "spack": lambda: spack.paths.prefix,
+        "user": lambda: get_user(),
+        "tempdir": lambda: tempfile.gettempdir(),
+        "user_cache_path": lambda: spack.paths.user_cache_path,
+        "architecture": lambda: arch,
+        "arch": lambda: arch,
+        "platform": lambda: arch.platform,
+        "operating_system": lambda: arch.os,
+        "os": lambda: arch.os,
+        "target": lambda: arch.target,
+        "target_family": lambda: arch.target.microarchitecture.family,
+        "date": lambda: date.today().strftime("%Y-%m-%d"),
+        "env": lambda: ev.active_environment().path if ev.active_environment() else \
+                spack.util.path.NOMATCH,
+    }

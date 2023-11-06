@@ -16,6 +16,7 @@ import archspec.cpu
 from llnl.util import tty
 
 import spack.environment
+import spack.paths
 import spack.tengine
 import spack.util.cpus
 import spack.util.executable
@@ -50,7 +51,8 @@ class BootstrapEnvironment(spack.environment.Environment):
         environment_dir = f"{python_part}-{arch_part}-{interpreter_part}"
         return pathlib.Path(
             spack.util.path.canonicalize_path(
-                os.path.join(bootstrap_root_path, "environments", environment_dir)
+                os.path.join(bootstrap_root_path, "environments", environment_dir),
+                replacements=spack.paths.path_replacements()
             )
         )
 

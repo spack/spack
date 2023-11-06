@@ -225,7 +225,8 @@ def root_path(name, module_set_name):
     roots = spack.config.merge_yaml(defaults, roots)
 
     path = roots.get(name, os.path.join(spack.paths.share_path, name))
-    return spack.util.path.canonicalize_path(path)
+    return spack.util.path.canonicalize_path(path,
+                                             replacements=spack.paths.path_replacements())
 
 
 def generate_module_index(root, modules, overwrite=False):

@@ -16,6 +16,7 @@ import llnl.util.lang
 
 import spack.config
 import spack.error
+import spack.paths
 import spack.util.path
 
 _extension_regexp = re.compile(r"spack-(\w[-\w]*)$")
@@ -109,7 +110,8 @@ def load_command_extension(command, path):
 def get_extension_paths():
     """Return the list of canonicalized extension paths from config:extensions."""
     extension_paths = spack.config.get("config:extensions") or []
-    paths = [spack.util.path.canonicalize_path(p) for p in extension_paths]
+    r = spack.paths.path_replacements()
+    paths = [spack.util.path.canonicalize_path(p, replacements=r) for p in extension_paths]
     return paths
 
 

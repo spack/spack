@@ -44,6 +44,7 @@ import spack.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
+import spack.paths
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
@@ -532,7 +533,8 @@ class BinaryCacheIndex:
 def binary_index_location():
     """Set up a BinaryCacheIndex for remote buildcache dbs in the user's homedir."""
     cache_root = os.path.join(misc_cache_location(), "indices")
-    return spack.util.path.canonicalize_path(cache_root)
+    return spack.util.path.canonicalize_path(cache_root,
+                                             replacements=spack.paths.path_replacements())
 
 
 #: Default binary cache index instance

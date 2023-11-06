@@ -7,6 +7,7 @@ import warnings
 
 import spack.error
 import spack.repo
+import spack.paths
 from spack.config import ConfigError
 from spack.util.path import canonicalize_path
 from spack.version import Version
@@ -177,7 +178,8 @@ def spec_externals(spec):
             spec_str = entry["spec"]
             external_path = entry.get("prefix", None)
             if external_path:
-                external_path = canonicalize_path(external_path)
+                external_path = canonicalize_path(external_path,
+                                                  replacements=spack.paths.path_replacements())
             external_modules = entry.get("modules", None)
             external_spec = spack.spec.Spec.from_detection(
                 spack.spec.Spec(

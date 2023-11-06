@@ -150,7 +150,8 @@ def _resolve_paths(candidates):
     Adjustments involve removing extra $user from $tempdir if $tempdir includes
     $user and appending $user if it is not present in the path.
     """
-    temp_path = sup.canonicalize_path("$tempdir")
+    temp_path = sup.canonicalize_path("$tempdir",
+                                      replacements=spack.paths.path_replacements())
     user = getpass.getuser()
     tmp_has_usr = user in temp_path.split(os.path.sep)
 
@@ -162,7 +163,8 @@ def _resolve_paths(candidates):
             path = path.replace("/$user", "", 1)
 
         # Ensure the path is unique per user.
-        can_path = sup.canonicalize_path(path)
+        can_path = sup.canonicalize_path(path,
+                                         replacements=spack.paths.path_replacements())
         # When multiple users share a stage root, we can avoid conflicts between
         # them by adding a per-user subdirectory.
         # Avoid doing this on Windows to keep stage absolute path as short as possible.
@@ -199,9 +201,11 @@ def get_stage_root():
 def _mirror_roots():
     mirrors = spack.config.get("mirrors")
     return [
-        sup.substitute_path_variables(root)
+        sup.substitute_path_variables(root,
+                                      replacements=spack.paths.path_replacements())
         if root.endswith(os.sep)
-        else sup.substitute_path_variables(root) + os.sep
+        else sup.substitute_path_variables(root,
+                                           replacemnts=spack.paths.path_replacements()) + os.sep
         for root in mirrors.values()
     ]
 

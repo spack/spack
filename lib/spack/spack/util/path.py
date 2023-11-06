@@ -21,61 +21,11 @@ from llnl.util.lang import memoized
 
 import spack.util.spack_yaml as syaml
 
-__all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
-
-
-def architecture():
-    # break circular import
-    import spack.platforms
-    import spack.spec
-
-    host_platform = spack.platforms.host()
-    host_os = host_platform.operating_system("default_os")
-    host_target = host_platform.target("default_target")
-
-    return spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
-
-
-def get_user():
-    # User pwd where available because it accounts for effective uids when using ksu and similar
-    try:
-        # user pwd for unix systems
-        import pwd
-
-        return pwd.getpwuid(os.geteuid()).pw_name
-    except ImportError:
-        # fallback on getpass
-        return getpass.getuser()
+__all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path", "NOMATCH"]
 
 
 # return value for replacements with no match
 NOMATCH = object()
-
-
-# Substitutions to perform
-def replacements():
-    # break circular imports
-    import spack.environment as ev
-    import spack.paths
-
-    arch = architecture()
-
-    return {
-        "spack": lambda: spack.paths.prefix,
-        "user": lambda: get_user(),
-        "tempdir": lambda: tempfile.gettempdir(),
-        "user_cache_path": lambda: spack.paths.user_cache_path,
-        "architecture": lambda: arch,
-        "arch": lambda: arch,
-        "platform": lambda: arch.platform,
-        "operating_system": lambda: arch.os,
-        "os": lambda: arch.os,
-        "target": lambda: arch.target,
-        "target_family": lambda: arch.target.microarchitecture.family,
-        "date": lambda: date.today().strftime("%Y-%m-%d"),
-        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
-    }
-
 
 # This is intended to be longer than the part of the install path
 # spack generates from the root path we give it.  Included in the
@@ -144,7 +94,7 @@ def get_system_path_max():
     return sys_max_path_length
 
 
-def substitute_config_variables(path):
+def substitute_config_variables(path, replacements={}):
     """Substitute placeholders into paths.
 
     Spack allows paths in configs to have some placeholders, as follows:
@@ -168,22 +118,20 @@ def substitute_config_variables(path):
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
-    _replacements = replacements()
-
     # Look up replacements
     def repl(match):
         m = match.group(0)
         key = m.strip("${}").lower()
-        repl = _replacements.get(key, lambda: m)()
+        repl = replacements.get(key, lambda: m)()
         return m if repl is NOMATCH else str(repl)
 
     # Replace $var or ${var}.
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
-def substitute_path_variables(path):
+def substitute_path_variables(path, replacements={}):
     """Substitute config vars, expand environment vars, expand user home."""
-    path = substitute_config_variables(path)
+    path = substitute_config_variables(path, replacements=replacements)
     path = os.path.expandvars(path)
     path = os.path.expanduser(path)
     return path
@@ -225,7 +173,7 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path, default_wd=None):
+def canonicalize_path(path, default_wd=None, replacements=None):
     """Same as substitute_path_variables, but also take absolute path.
 
     If the string is a yaml object with file annotations, make absolute paths
@@ -234,6 +182,7 @@ def canonicalize_path(path, default_wd=None):
 
     Arguments:
         path (str): path being converted as needed
+        replacements (dict): dictionary of replacements to use
 
     Returns:
         (str): An absolute path with path variable substitution
@@ -245,7 +194,16 @@ def canonicalize_path(path, default_wd=None):
         filename = os.path.dirname(path._start_mark.name)
         assert path._start_mark.name == path._end_mark.name
 
-    path = substitute_path_variables(path)
+    if replacements is None:
+        _replacements = {}
+    else:
+        _replacements = replacements
+
+    if not isinstance(_replacements, dict):
+        tty.die("Replacements returned by replacements func are of type"
+                f"{type(replacements)} and not of the expected type of dict.")
+
+    path = substitute_path_variables(path, replacements=_replacements)
     if not os.path.isabs(path):
         if filename:
             path = os.path.join(filename, path)

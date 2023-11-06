@@ -45,7 +45,8 @@ def spec_for_current_python() -> str:
 def root_path() -> str:
     """Root of all the bootstrap related folders"""
     return spack.util.path.canonicalize_path(
-        spack.config.get("bootstrap:root", spack.paths.default_user_bootstrap_path)
+        spack.config.get("bootstrap:root", spack.paths.default_user_bootstrap_path),
+        replacements=spack.paths.path_replacements()
     )
 
 
@@ -79,12 +80,14 @@ def spack_python_interpreter() -> Generator:
 
 def _store_path() -> str:
     bootstrap_root_path = root_path()
-    return spack.util.path.canonicalize_path(os.path.join(bootstrap_root_path, "store"))
+    return spack.util.path.canonicalize_path(os.path.join(bootstrap_root_path, "store"),
+                                             replacements=spack.paths.path_replacements())
 
 
 def _config_path() -> str:
     bootstrap_root_path = root_path()
-    return spack.util.path.canonicalize_path(os.path.join(bootstrap_root_path, "config"))
+    return spack.util.path.canonicalize_path(os.path.join(bootstrap_root_path, "config"),
+                                             replacements=spack.paths.path_replacements())
 
 
 @contextlib.contextmanager

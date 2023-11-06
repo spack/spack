@@ -26,7 +26,8 @@ def misc_cache_location():
     providers and for which packages provide which tags.
     """
     path = spack.config.get("config:misc_cache", spack.paths.default_misc_cache_path)
-    return spack.util.path.canonicalize_path(path)
+    return spack.util.path.canonicalize_path(path,
+                                             replacements=spack.paths.path_replacements())
 
 
 def _misc_cache():
@@ -49,7 +50,8 @@ def fetch_cache_location():
     path = spack.config.get("config:source_cache")
     if not path:
         path = spack.paths.default_fetch_cache_path
-    path = spack.util.path.canonicalize_path(path)
+    path = spack.util.path.canonicalize_path(path,
+                                             replacements=spack.paths.path_replacements())
     return path
 
 

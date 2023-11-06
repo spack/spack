@@ -31,6 +31,7 @@ import spack.compilers
 import spack.config
 import spack.environment
 import spack.error
+import spack.paths
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -91,7 +92,8 @@ class Concretizer:
         if not dev_info:
             return False
 
-        path = spack.util.path.canonicalize_path(dev_info["path"], default_wd=env.path)
+        path = spack.util.path.canonicalize_path(dev_info["path"], default_wd=env.path,
+                                                 replacements=spack.paths.path_replacements())
 
         if "dev_path" in spec.variants:
             assert spec.variants["dev_path"].value == path

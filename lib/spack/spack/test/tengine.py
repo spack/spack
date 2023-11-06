@@ -7,6 +7,7 @@
 import pytest
 
 import spack.config
+import spack.paths
 import spack.tengine as tengine
 from spack.util.path import canonicalize_path
 
@@ -70,8 +71,9 @@ class TestTengineEnvironment:
     def test_template_retrieval(self):
         """Tests the template retrieval mechanism hooked into config files"""
         # Check the directories are correct
+        r = spack.paths.path_replacements()
         template_dirs = spack.config.get("config:template_dirs")
-        template_dirs = tuple([canonicalize_path(x) for x in template_dirs])
+        template_dirs = tuple([canonicalize_path(x, replacements=r) for x in template_dirs])
         assert len(template_dirs) == 3
 
         env = tengine.make_environment(template_dirs)

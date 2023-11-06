@@ -30,6 +30,7 @@ import spack.error
 import spack.fetch_strategy
 import spack.mirror
 import spack.oci.image
+import spack.paths
 import spack.spec
 import spack.util.path
 import spack.util.spack_json as sjson
@@ -51,7 +52,10 @@ def _url_or_path_to_url(url_or_path: str) -> str:
         return url_or_path
 
     # Otherwise we interpret it as path, and we should promote it to file:// URL.
-    return url_util.path_to_file_url(spack.util.path.canonicalize_path(url_or_path))
+    return url_util.path_to_file_url(
+        spack.util.path.canonicalize_path(url_or_path,
+                                          replacements=spack.paths.path_replacements())
+    )
 
 
 class Mirror:

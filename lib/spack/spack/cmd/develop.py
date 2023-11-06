@@ -8,6 +8,7 @@ import shutil
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.paths
 import spack.spec
 import spack.util.path
 import spack.version
@@ -55,7 +56,10 @@ def develop(parser, args):
         # download all dev specs
         for name, entry in env.dev_specs.items():
             path = entry.get("path", name)
-            abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
+            abspath = spack.util.path.canonicalize_path(
+                path, default_wd=env.path,
+                replacements=spack.paths.path_replacements()
+            )
 
             if os.path.exists(abspath):
                 msg = "Skipping developer download of %s" % entry["spec"]
@@ -86,7 +90,8 @@ def develop(parser, args):
 
     # default path is relative path to spec.name
     path = args.path or spec.name
-    abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
+    abspath = spack.util.path.canonicalize_path(path, default_wd=env.path,
+                                                replacements=spack.paths.path_replacements())
 
     # clone default: only if the path doesn't exist
     clone = args.clone

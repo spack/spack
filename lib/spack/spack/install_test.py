@@ -91,7 +91,8 @@ def get_test_stage_dir():
             the default test stage path
     """
     return spack.util.path.canonicalize_path(
-        spack.config.get("config:test_stage", spack.paths.default_test_path)
+        spack.config.get("config:test_stage", spack.paths.default_test_path),
+        replacements=spack.paths.path_replacements()
     )
 
 

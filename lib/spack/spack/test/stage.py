@@ -734,7 +734,8 @@ class TestStage:
         assert spack.stage._resolve_paths(paths) == paths
 
         tempdir = "$tempdir"
-        can_tempdir = canonicalize_path(tempdir)
+        can_tempdir = canonicalize_path(tempdir,
+                                        replacements=spack.paths.path_replacements())
         user = getpass.getuser()
         temp_has_user = user in can_tempdir.split(os.sep)
         paths = [
@@ -744,7 +745,8 @@ class TestStage:
             os.path.join(tempdir, "$user", "stage", "$user"),
         ]
 
-        res_paths = [canonicalize_path(p) for p in paths]
+        r = spack.paths.path_replacements()
+        res_paths = [canonicalize_path(p, replacements=r) for p in paths]
         if temp_has_user:
             res_paths[1] = can_tempdir
             res_paths[2] = os.path.join(can_tempdir, user)

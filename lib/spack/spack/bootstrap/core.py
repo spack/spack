@@ -92,7 +92,10 @@ class Bootstrapper:
     def __init__(self, conf: ConfigDictionary) -> None:
         self.conf = conf
         self.name = conf["name"]
-        self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
+        self.metadata_dir = spack.util.path.canonicalize_path(
+            conf["metadata"],
+            replacements=spack.paths.path_replacements()
+        )
 
         # Promote (relative) paths to file urls
         url = conf["info"]["url"]
@@ -585,7 +588,10 @@ def bootstrapping_sources(scope: Optional[str] = None):
     list_of_sources = []
     for entry in source_configs:
         current = copy.copy(entry)
-        metadata_dir = spack.util.path.canonicalize_path(entry["metadata"])
+        metadata_dir = spack.util.path.canonicalize_path(
+            entry["metadata"],
+            replacements=spack.paths.path_replacements()
+        )
         metadata_yaml = os.path.join(metadata_dir, METADATA_YAML_FILENAME)
         with open(metadata_yaml, encoding="utf-8") as stream:
             current.update(spack.util.spack_yaml.load(stream))

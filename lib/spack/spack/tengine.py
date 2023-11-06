@@ -10,6 +10,7 @@ import llnl.util.lang
 
 import spack.config
 import spack.extensions
+import spack.paths
 from spack.util.path import canonicalize_path
 
 
@@ -76,7 +77,9 @@ def make_environment(dirs: Optional[Tuple[str, ...]] = None):
         # Default directories where to search for templates
         builtins = spack.config.get("config:template_dirs", ["$spack/share/spack/templates"])
         extensions = spack.extensions.get_template_dirs()
-        dirs = tuple(canonicalize_path(d) for d in itertools.chain(builtins, extensions))
+        r = spack.paths.path_replacements()
+        dirs = tuple(canonicalize_path(d, replacements=r)
+                     for d in itertools.chain(builtins, extensions))
 
     # Loader for the templates
     loader = jinja2.FileSystemLoader(dirs)
