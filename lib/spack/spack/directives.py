@@ -137,6 +137,7 @@ class DirectiveMeta(type):
     _directive_dict_names: Set[str] = set()
     _directives_to_be_executed: List[str] = []
     _when_constraints_from_context: List[str] = []
+    _default_args: List[dict] = []
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
@@ -200,6 +201,16 @@ class DirectiveMeta(type):
         return DirectiveMeta._when_constraints_from_context.pop()
 
     @staticmethod
+    def push_default_args(default_args):
+        """Push default arguments"""
+        DirectiveMeta._default_args.append(default_args)
+
+    @staticmethod
+    def pop_default_args():
+        """Pop default arguments"""
+        return DirectiveMeta._default_args.pop()
+
+    @staticmethod
     def directive(dicts=None):
         """Decorator for Spack directives.
 
@@ -259,7 +270,13 @@ class DirectiveMeta(type):
             directive_names.append(decorated_function.__name__)
 
             @functools.wraps(decorated_function)
-            def _wrapper(*args, **kwargs):
+            def _wrapper(*args, **_kwargs):
+                # First merge default args with kwargs
+                kwargs = dict()
+                for default_args in DirectiveMeta._default_args:
+                    kwargs.update(default_args)
+                kwargs.update(_kwargs)
+
                 # Inject when arguments from the context
                 if DirectiveMeta._when_constraints_from_context:
                     # Check that directives not yet supporting the when= argument
