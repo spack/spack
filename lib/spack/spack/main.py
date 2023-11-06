@@ -22,6 +22,7 @@ import subprocess as sp
 import sys
 import traceback
 import warnings
+from typing import List, Tuple
 
 import archspec.cpu
 
@@ -871,15 +872,15 @@ def restore_macos_dyld_vars():
             os.environ[dyld_var] = os.environ[stored_var_name]
 
 
-def resolve_alias(cmd_name, cmd):
+def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
     """Resolves aliases in the given command.
 
     Args:
-        cmd_name (string): command name.
-        cmd (list): command line arguments.
+        cmd_name: command name.
+        cmd: command line arguments.
 
     Returns:
-        (str, list): new command name and arguments.
+        new command name and arguments.
     """
     all_commands = spack.cmd.all_commands()
     aliases = spack.config.get("config:aliases")
