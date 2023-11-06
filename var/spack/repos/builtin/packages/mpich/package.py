@@ -249,13 +249,13 @@ spack package at this time.""",
     # building from git requires regenerating autotools files
     depends_on("automake@1.15:", when="@develop", type="build")
     depends_on("libtool@2.4.4:", when="@develop", type="build")
-    depends_on("m4", when="@develop", type="build"),
+    depends_on("m4", when="@develop", type="build")
     depends_on("autoconf@2.67:", when="@develop", type="build")
 
     # building with "+hwloc' also requires regenerating autotools files
     depends_on("automake@1.15:", when="@3.3:3.3.99 +hwloc", type="build")
     depends_on("libtool@2.4.4:", when="@3.3:3.3.99 +hwloc", type="build")
-    depends_on("m4", when="@3.3:3.3.99 +hwloc", type="build"),
+    depends_on("m4", when="@3.3:3.3.99 +hwloc", type="build")
     depends_on("autoconf@2.67:", when="@3.3:3.3.99 +hwloc", type="build")
 
     # MPICH's Yaksa submodule requires python to configure
