@@ -116,7 +116,7 @@ properties = {
                 "deprecatedProperties": {
                     "properties": ["version"],
                     "message": "setting version preferences in the 'all' section of packages.yaml "
-                    "is deprecated and will be removed in v0.22\n\n\tCurrently, these preferences "
+                    "is deprecated and will be removed in v0.22\n\n\tThese preferences "
                     "will be ignored by Spack. You can set them only in package specific sections "
                     "of the same file.\n",
                     "error": False,
@@ -164,7 +164,7 @@ properties = {
                     "properties": ["target", "compiler", "providers"],
                     "message": "setting compiler, target or provider preferences in a package "
                     "specific section of packages.yaml is deprecated, and will be removed in "
-                    "v0.22.\n\n\tCurrently, these preferences will be ignored by Spack. You "
+                    "v0.22.\n\n\tThese preferences will be ignored by Spack. You "
                     "can set them only in the 'all' section of the same file.\n",
                     "error": False,
                 },
