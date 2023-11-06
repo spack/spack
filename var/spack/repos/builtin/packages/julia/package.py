@@ -166,6 +166,7 @@ class Julia(MakefilePackage):
     depends_on("patchelf@0.13:", type="build")
     depends_on("perl", type="build")
     depends_on("libwhich", type="build")
+    depends_on("python", type="build")
 
     depends_on("blas")  # note: for now openblas is fixed...
     depends_on("curl tls=mbedtls +nghttp2 +libssh2")
