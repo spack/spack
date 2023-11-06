@@ -31,6 +31,9 @@ petsc_spec_rocm='^petsc+rocm+mumps'
 strumpack_spec='^strumpack~slate~openmp~cuda'
 strumpack_cuda_spec='^strumpack+cuda~slate~openmp'
 strumpack_rocm_spec='^strumpack+rocm~slate~openmp~cuda'
+# superlu specs with cuda and rocm
+superlu_cuda_spec='^superlu-dist+cuda'
+superlu_rocm_spec='^superlu-dist+rocm'
 
 builds=(
     # preferred version:
@@ -136,7 +139,7 @@ builds_cuda=(
         +superlu-dist+strumpack+suite-sparse+gslib+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared'" $strumpack_cuda_spec"' \
-        '"$petsc_spec_cuda $conduit_spec"
+        '"$superlu_cuda_spec $petsc_spec_cuda $conduit_spec"
 
     # hypre with cuda:
     # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
@@ -148,7 +151,7 @@ builds_cuda=(
         +superlu-dist+strumpack+suite-sparse+gslib \
         +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared ^hypre+cuda \
-        '" $strumpack_cuda_spec $conduit_spec"
+        '" $strumpack_cuda_spec $superlu_cuda_spec $conduit_spec"
 
     #
     # same builds as above with ${mfem_dev}
@@ -173,7 +176,7 @@ builds_cuda=(
         +superlu-dist+strumpack+suite-sparse+gslib+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared'" $strumpack_cuda_spec"' \
-        '"$petsc_spec_cuda $conduit_spec"
+        '"$superlu_cuda_spec $petsc_spec_cuda $conduit_spec"
 
     # hypre with cuda:
     # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
@@ -185,7 +188,7 @@ builds_cuda=(
         +superlu-dist+strumpack+suite-sparse+gslib \
         +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared ^hypre+cuda \
-        '"$strumpack_cuda_spec $conduit_spec"
+        '"$strumpack_cuda_spec $superlu_cuda_spec $conduit_spec"
 )
 
 
@@ -208,7 +211,7 @@ builds_rocm=(
         +superlu-dist+strumpack+suite-sparse+gslib+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
         ^raja+rocm~openmp ^occa~cuda'" $strumpack_rocm_spec"' \
-        '"$petsc_spec_rocm $conduit_spec"
+        '"$superlu_rocm_spec $petsc_spec_rocm $conduit_spec"
 
     # hypre with rocm:
     # TODO: add back "+petsc+slepc $petsc_spec_rocm" when it works.
@@ -220,7 +223,7 @@ builds_rocm=(
         +superlu-dist+strumpack+suite-sparse+gslib \
         +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
         ^raja+rocm~openmp ^occa~cuda ^hypre+rocm \
-        '"$strumpack_rocm_spec $conduit_spec"
+        '"$strumpack_rocm_spec $superlu_rocm_spec $conduit_spec"
 
     #
     # same builds as above with ${mfem_dev}
