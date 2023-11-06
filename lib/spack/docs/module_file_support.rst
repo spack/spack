@@ -519,11 +519,11 @@ inspections and customize them per-module-set.
 
   modules:
     prefix_inspections:
-      bin:
+      ./bin:
         - PATH
-      man:
+      ./man:
         - MANPATH
-      '':
+      ./:
         - CMAKE_PREFIX_PATH
 
 Prefix inspections are only applied if the relative path inside the
@@ -579,7 +579,7 @@ the view.
        view_relative_modules:
          use_view: my_view
        prefix_inspections:
-         bin:
+         ./bin:
            - PATH
      view:
        my_view:
