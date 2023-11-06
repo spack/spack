@@ -10,9 +10,8 @@
 % ID of the nodes in the "root" link-run sub-DAG
 #const min_dupe_id = 0.
 
-#const link_run = 0.
-#const direct_link_run =1.
-#const direct_build = 2.
+#const direct_link_run = 0.
+#const direct_build = 1.
 
 % Allow clingo to create nodes
 { attr("node", node(0..X-1, Package))         } :- max_dupes(Package, X), not virtual(Package).
@@ -149,7 +148,7 @@ mentioned_in_literal(Root, Mentioned) :-
   trigger_and_effect(Root, TriggerID, EffectID),
   imposed_constraint(EffectID, "provider_set", _, Mentioned).
 
-condition_set(node(min_dupe_id, Root), node(min_dupe_id, Mentioned), link_run) :-
+condition_set(node(min_dupe_id, Root), node(min_dupe_id, Mentioned)) :-
   mentioned_in_literal(Root, Mentioned).
 
 % Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
