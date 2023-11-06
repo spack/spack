@@ -339,6 +339,7 @@ the commit or version.
 from .environment import (
     TOP_LEVEL_KEY,
     Environment,
+    SpackEnvironmentConfigError,
     SpackEnvironmentError,
     SpackEnvironmentViewError,
     activate,
@@ -372,6 +373,7 @@ from .environment import (
 __all__ = [
     "TOP_LEVEL_KEY",
     "Environment",
+    "SpackEnvironmentConfigError",
     "SpackEnvironmentError",
     "SpackEnvironmentViewError",
     "activate",
