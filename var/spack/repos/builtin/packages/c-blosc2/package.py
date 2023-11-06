@@ -17,6 +17,7 @@ class CBlosc2(CMakePackage):
     maintainers("ax3l", "robert-mijakovic")
 
     version("develop", branch="master")
+    version("2.11.1", sha256="1e9923e0f026eb6e6caee608b4b9a523837806076fc79409055a6386cf5de1ea")
     version("2.10.5", sha256="a88f94bf839c1371aab8207a6a43698ceb92c72f65d0d7fe5b6e59f24c138b4d")
     # 2.10.2+ fixes regressions with external dependencies
     version("2.10.2", sha256="069785bc14c006c7dab40ea0c620bdf3eb8752663fd55c706d145bceabc2a31d")
