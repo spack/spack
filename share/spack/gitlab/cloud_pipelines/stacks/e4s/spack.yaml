@@ -51,6 +51,8 @@ spack:
       require: "@3.4.4"
     vtk-m:
       require: "+examples"
+    visit:
+      require: "~gui"
     cuda:
       version: [11.8.0]
     paraview:
