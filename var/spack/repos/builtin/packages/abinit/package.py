@@ -177,7 +177,7 @@ class Abinit(AutotoolsPackage):
             if spec.satisfies("@9.8:"):
                 oapp(f"F90={spec['mpi'].mpifc}")
             else:
-                oapp(f"FC={spec['mpi'].mpifc}")            
+                oapp(f"FC={spec['mpi'].mpifc}")
 
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
