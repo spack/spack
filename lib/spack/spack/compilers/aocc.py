@@ -5,7 +5,6 @@
 
 import os
 import re
-import sys
 
 import llnl.util.lang
 
@@ -113,17 +112,6 @@ class Aocc(Compiler):
         if match:
             return ".".join(match.groups())
         return "unknown"
-
-    @classmethod
-    def fc_version(cls, fortran_compiler):
-        if sys.platform == "darwin":
-            return cls.default_version("clang")
-
-        return cls.default_version(fortran_compiler)
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.fc_version(f77)
 
     @property
     def stdcxx_libs(self):

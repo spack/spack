@@ -143,7 +143,9 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
 def _add_compilers_if_missing() -> None:
     arch = spack.spec.ArchSpec.frontend_arch()
     if not spack.compilers.compilers_for_arch(arch):
-        new_compilers = spack.compilers.find_new_compilers()
+        new_compilers = spack.compilers.find_new_compilers(
+            mixed_toolchain=sys.platform == "darwin"
+        )
         if new_compilers:
             spack.compilers.add_compilers_to_config(new_compilers, init_config=False)
 

@@ -31,6 +31,19 @@ def setup_parser(subparser):
         aliases=["add"],
         help="search the system for compilers to add to Spack configuration",
     )
+    mixed_toolchain_group = find_parser.add_mutually_exclusive_group()
+    mixed_toolchain_group.add_argument(
+        "--mixed-toolchain",
+        action="store_true",
+        default=sys.platform == "darwin",
+        help="Allow mixed toolchains (for example: clang, clang++, gfortran)",
+    )
+    mixed_toolchain_group.add_argument(
+        "--no-mixed-toolchain",
+        action="store_false",
+        dest="mixed_toolchain",
+        help="Do not allow mixed toolchains (for example: clang, clang++, gfortran)",
+    )
     find_parser.add_argument("add_paths", nargs=argparse.REMAINDER)
     find_parser.add_argument(
         "--scope",
@@ -86,7 +99,9 @@ def compiler_find(args):
 
     # Below scope=None because we want new compilers that don't appear
     # in any other configuration.
-    new_compilers = spack.compilers.find_new_compilers(paths, scope=None)
+    new_compilers = spack.compilers.find_new_compilers(
+        paths, scope=None, mixed_toolchain=args.mixed_toolchain
+    )
     if new_compilers:
         spack.compilers.add_compilers_to_config(new_compilers, scope=args.scope, init_config=False)
         n = len(new_compilers)
