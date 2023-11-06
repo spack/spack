@@ -106,6 +106,7 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         msg="FP16 support not implemented for ROCm.")
 
     depends_on("cmake@3.22.0:", type="build", when="@1.5.2:")
+    depends_on("cmake@3.17.0:", type="build", when="@1.5.1")
 
     depends_on("mpi")
     depends_on("blas")
