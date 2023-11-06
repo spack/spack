@@ -472,6 +472,18 @@ class TestConcretize:
 
         assert spec.satisfies("^openblas+shared")
 
+    @pytest.mark.only_clingo("Original concretizer is allowed to forego variant propagation")
+    def test_concretize_propagate_multivalue_variant(self):
+        """Test that multivalue variants are propagating the specified value(s)
+        to their dependecies. The dependencies should not have the default value"""
+        spec = Spec("multivalue-variant foo==baz,fee")
+        spec.concretize()
+
+        assert spec.satisfies("^a foo=baz,fee")
+        assert spec.satisfies("^b foo=baz,fee")
+        assert not spec.satisfies("^a foo=bar")
+        assert not spec.satisfies("^b foo=bar")
+
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():

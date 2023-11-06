@@ -140,7 +140,6 @@ contains " spack env list " spack env list --help
 
 title 'Testing `spack env activate`'
 contains "No such environment:" spack env activate no_such_environment
-contains "env activate requires an environment " spack env activate
 contains "usage: spack env activate " spack env activate -h
 contains "usage: spack env activate " spack env activate --help
 
@@ -195,6 +194,11 @@ succeeds spack env activate spack_test_2_env
 spack env activate spack_test_2_env
 contains "spack_test_2_env" sh -c 'echo $PATH'
 does_not_contain "spack_test_env" sh -c 'echo $PATH'
+despacktivate
+
+echo "Testing default environment"
+spack env activate
+contains "In environment default" spack env status
 despacktivate
 
 echo "Correct error exit codes for activate and deactivate"
