@@ -1021,11 +1021,11 @@ class SetupContext:
                     if id(spec) in self.nodes_in_subdag:
                         pkg.setup_dependent_run_environment(run_env_mods, spec)
                 pkg.setup_run_environment(run_env_mods)
-                run_env_dict = run_env_mods.group_by_name()
                 if self.context == Context.BUILD:
+                    # Don't let the runtime environment of comiler like dependencies leak into the
+                    # build env
                     run_env_mods.drop("CC", "CXX", "F77", "FC")
                 env.extend(run_env_mods)
-
 
         return env
 
