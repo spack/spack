@@ -632,7 +632,7 @@ def test_env_view_external_prefix(tmp_path, mutable_database, mock_packages):
     manifest_dir.mkdir(parents=True, exist_ok=False)
     manifest_file = manifest_dir / ev.manifest_name
     manifest_file.write_text(
-        """
+        """\
 spack:
   specs:
   - a
@@ -720,38 +720,25 @@ spack:
 
 def test_with_config_bad_include(environment_from_manifest):
     """Confirm missing include paths raise expected exception and error."""
-    e = environment_from_manifest(
-        """
+    with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
+        e = environment_from_manifest(
+            """
 spack:
   include:
   - /no/such/directory
   - no/such/file.yaml
 """
-    )
-    with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
+        )
         with e:
             e.concretize()
 
     assert ev.active_environment() is None
 
 
-def test_env_with_include_config_files_same_basename(environment_from_manifest):
-    e = environment_from_manifest(
-        """
-spack:
-  include:
-  - ./path/to/included-config.yaml
-  - ./second/path/to/include-config.yaml
-  specs:
-  - libelf
-  - mpileaks
-"""
-    )
-
-    e = ev.read("test")
-
-    fs.mkdirp(os.path.join(e.path, "path", "to"))
-    with open(os.path.join(e.path, "./path/to/included-config.yaml"), "w") as f:
+def test_env_with_include_config_files_same_basename(tmp_path, environment_from_manifest):
+    file1 = fs.join_path(tmp_path, "path", "to", "included-config.yaml")
+    fs.mkdirp(os.path.dirname(file1))
+    with open(file1, "w") as f:
         f.write(
             """\
         packages:
@@ -760,8 +747,9 @@ spack:
         """
         )
 
-    fs.mkdirp(os.path.join(e.path, "second", "path", "to"))
-    with open(os.path.join(e.path, "./second/path/to/include-config.yaml"), "w") as f:
+    file2 = fs.join_path(tmp_path, "second", "path", "included-config.yaml")
+    fs.mkdirp(os.path.dirname(file2))
+    with open(file2, "w") as f:
         f.write(
             """\
         packages:
@@ -769,6 +757,18 @@ spack:
               version: ["2.2"]
         """
         )
+
+    e = environment_from_manifest(
+        f"""
+spack:
+  include:
+  - {file1}
+  - {file2}
+  specs:
+  - libelf
+  - mpileaks
+"""
+    )
 
     with e:
         e.concretize()
@@ -806,12 +806,18 @@ spack:
     )
 
 
-def test_env_with_included_config_file(environment_from_manifest, packages_file):
+def test_env_with_included_config_file(mutable_mock_env_path, packages_file):
     """Test inclusion of a relative packages configuration file added to an
     existing environment.
     """
+    env_root = mutable_mock_env_path
+    fs.mkdirp(env_root)
     include_filename = "included-config.yaml"
-    e = environment_from_manifest(
+    included_path = env_root / include_filename
+    shutil.move(packages_file.strpath, included_path)
+
+    spack_yaml = env_root / ev.manifest_name
+    spack_yaml.write_text(
         f"""\
 spack:
   include:
@@ -821,9 +827,7 @@ spack:
 """
     )
 
-    included_path = os.path.join(e.path, include_filename)
-    shutil.move(packages_file.strpath, included_path)
-
+    e = ev.Environment(env_root)
     with e:
         e.concretize()
 
@@ -856,68 +860,67 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
     with spack_yaml.open("w") as f:
         f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
 
-    env = ev.Environment(tmpdir.strpath)
     with pytest.raises(spack.config.ConfigError, match="missing include path"):
-        ev.activate(env)
+        ev.Environment(tmpdir.strpath)
 
 
-def test_env_with_included_config_scope(environment_from_manifest, packages_file):
+def test_env_with_included_config_scope(mutable_mock_env_path, packages_file):
     """Test inclusion of a package file from the environment's configuration
     stage directory. This test is intended to represent a case where a remote
     file has already been staged."""
-    config_scope_path = os.path.join(ev.root("test"), "config")
-
-    # Configure the environment to include file(s) from the environment's
-    # remote configuration stage directory.
-    e = environment_from_manifest(mpileaks_env_config(config_scope_path))
+    env_root = mutable_mock_env_path
+    config_scope_path = env_root / "config"
 
     # Copy the packages.yaml file to the environment configuration
     # directory, so it is picked up during concretization. (Using
     # copy instead of rename in case the fixture scope changes.)
     fs.mkdirp(config_scope_path)
     include_filename = os.path.basename(packages_file.strpath)
-    included_path = os.path.join(config_scope_path, include_filename)
+    included_path = config_scope_path / include_filename
     fs.copy(packages_file.strpath, included_path)
+
+    # Configure the environment to include file(s) from the environment's
+    # remote configuration stage directory.
+    spack_yaml = env_root / ev.manifest_name
+    spack_yaml.write_text(mpileaks_env_config(config_scope_path))
 
     # Ensure the concretized environment reflects contents of the
     # packages.yaml file.
+    e = ev.Environment(env_root)
     with e:
         e.concretize()
 
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_var_path(environment_from_manifest, packages_file):
+def test_env_with_included_config_var_path(tmpdir, packages_file):
     """Test inclusion of a package configuration file with path variables
     "staged" in the environment's configuration stage directory."""
-    config_var_path = os.path.join("$tempdir", "included-config.yaml")
-    e = environment_from_manifest(mpileaks_env_config(config_var_path))
+    included_file = packages_file.strpath
+    env_path = pathlib.PosixPath(tmpdir)
+    config_var_path = os.path.join("$tempdir", "included-packages.yaml")
+
+    spack_yaml = env_path / ev.manifest_name
+    spack_yaml.write_text(mpileaks_env_config(config_var_path))
 
     config_real_path = substitute_path_variables(config_var_path)
-    fs.mkdirp(os.path.dirname(config_real_path))
-    shutil.move(packages_file.strpath, config_real_path)
+    shutil.move(included_file, config_real_path)
     assert os.path.exists(config_real_path)
 
+    e = ev.Environment(env_path)
     with e:
         e.concretize()
 
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_env_config_precedence(environment_from_manifest):
-    e = environment_from_manifest(
-        """
-spack:
-  packages:
-    libelf:
-      version: ["0.8.12"]
-  include:
-  - ./included-config.yaml
-  specs:
-  - mpileaks
-"""
-    )
-    with open(os.path.join(e.path, "included-config.yaml"), "w") as f:
+def test_env_with_included_config_precedence(tmp_path):
+    """Test included scope and manifest precedence when including a package
+    configuration file."""
+
+    included_file = "included-packages.yaml"
+    included_path = tmp_path / included_file
+    with open(included_path, "w") as f:
         f.write(
             """\
 packages:
@@ -928,29 +931,50 @@ packages:
 """
         )
 
-    with e:
-        e.concretize()
-
-    # ensure included scope took effect
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
-
-    # ensure env file takes precedence
-    assert any(x.satisfies("libelf@0.8.12") for x in e._get_environment_specs())
-
-
-def test_included_config_precedence(environment_from_manifest):
-    e = environment_from_manifest(
-        """
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""\
 spack:
+  packages:
+    libelf:
+      version: ["0.8.12"]
   include:
-  - ./high-config.yaml  # this one should take precedence
-  - ./low-config.yaml
+  - {os.path.join(".", included_file)}
   specs:
   - mpileaks
 """
     )
 
-    with open(os.path.join(e.path, "high-config.yaml"), "w") as f:
+    e = ev.Environment(tmp_path)
+    with e:
+        e.concretize()
+    specs = e._get_environment_specs()
+
+    # ensure included scope took effect
+    assert any(x.satisfies("mpileaks@2.2") for x in specs)
+
+    # ensure env file takes precedence
+    assert any(x.satisfies("libelf@0.8.12") for x in specs)
+
+
+def test_env_with_included_configs_precedence(tmp_path):
+    """Test precendence of multiple included configuration files."""
+    file1 = "high-config.yaml"
+    file2 = "low-config.yaml"
+
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""\
+spack:
+  include:
+  - {os.path.join(".", file1)} # this one should take precedence
+  - {os.path.join(".", file2)}
+  specs:
+  - mpileaks
+"""
+    )
+
+    with open(tmp_path / file1, "w") as f:
         f.write(
             """\
 packages:
@@ -959,7 +983,7 @@ packages:
 """
         )
 
-    with open(os.path.join(e.path, "low-config.yaml"), "w") as f:
+    with open(tmp_path / file2, "w") as f:
         f.write(
             """\
 packages:
@@ -970,12 +994,16 @@ packages:
 """
         )
 
+    e = ev.Environment(tmp_path)
     with e:
         e.concretize()
+    specs = e._get_environment_specs()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    # ensure included package spec took precedence over manifest spec
+    assert any(x.satisfies("mpileaks@2.2") for x in specs)
 
-    assert any([x.satisfies("libelf@0.8.10") for x in e._get_environment_specs()])
+    # ensure first included package spec took precedence over one from second
+    assert any(x.satisfies("libelf@0.8.10") for x in specs)
 
 
 def test_bad_env_yaml_format(environment_from_manifest):
@@ -1578,11 +1606,10 @@ spack:
         assert Spec("callpath") in test.user_specs
 
 
-def test_stack_yaml_remove_from_list_force(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+def test_stack_yaml_remove_from_list_force(tmp_path):
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
 spack:
   definitions:
     - packages: [mpileaks, callpath]
@@ -1591,20 +1618,20 @@ spack:
         - [$packages]
         - [^mpich, ^zmpi]
 """
-        )
-    with tmpdir.as_cwd():
-        env("create", "test", "./spack.yaml")
-        with ev.read("test"):
-            concretize()
-            remove("-f", "-l", "packages", "mpileaks")
-            find_output = find("-c")
+    )
 
-        assert "mpileaks" not in find_output
+    env("create", "test", str(spack_yaml))
+    with ev.read("test"):
+        concretize()
+        remove("-f", "-l", "packages", "mpileaks")
+        find_output = find("-c")
 
-        test = ev.read("test")
-        assert len(test.user_specs) == 2
-        assert Spec("callpath ^zmpi") in test.user_specs
-        assert Spec("callpath ^mpich") in test.user_specs
+    assert "mpileaks" not in find_output
+
+    test = ev.read("test")
+    assert len(test.user_specs) == 2
+    assert Spec("callpath ^zmpi") in test.user_specs
+    assert Spec("callpath ^mpich") in test.user_specs
 
 
 def test_stack_yaml_remove_from_matrix_no_effect(tmpdir):
@@ -1650,7 +1677,7 @@ spack:
     with tmpdir.as_cwd():
         env("create", "test", "./spack.yaml")
         with ev.read("test") as e:
-            concretize()
+            e.concretize()
 
             before_user = e.user_specs.specs
             before_conc = e.concretized_user_specs

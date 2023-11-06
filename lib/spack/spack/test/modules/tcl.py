@@ -488,7 +488,7 @@ class TestTcl:
 
         assert str(spec.os) not in path
 
-    def test_hide_implicits(self, module_configuration):
+    def test_hide_implicits(self, module_configuration, temporary_store):
         """Tests the addition and removal of hide command in modulerc."""
         module_configuration("hide_implicits")
 
@@ -499,29 +499,37 @@ class TestTcl:
         writer.write()
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc) as f:
-            content = f.readlines()
-            content = "".join(content).split("\n")
-        hide_cmd = "module-hide --soft --hidden-loaded %s" % writer.layout.use_name
-        assert len([x for x in content if hide_cmd == x]) == 1
+            content = [line.strip() for line in f.readlines()]
+        hide_implicit_mpileaks = f"module-hide --soft --hidden-loaded {writer.layout.use_name}"
+        assert len([x for x in content if hide_implicit_mpileaks == x]) == 1
 
-        # mpileaks becomes explicit, thus modulerc is removed
-        writer = writer_cls(spec, "default", True)
-        writer.write(overwrite=True)
-        assert not os.path.exists(writer.layout.modulerc)
+        # The direct dependencies are all implicit, and they should have depends-on with fixed
+        # 7 character hash, even though the config is set to hash_length = 0.
+        with open(writer.layout.filename) as f:
+            depends_statements = [line.strip() for line in f.readlines() if "depends-on" in line]
+            for dep in spec.dependencies(deptype=("link", "run")):
+                assert any(dep.dag_hash(7) in line for line in depends_statements)
 
-        # mpileaks is defined as explicit, no modulerc file should exist
+        # when mpileaks becomes explicit, its file name changes (hash_length = 0), meaning an
+        # extra module file is created; the old one still exists and remains hidden.
         writer = writer_cls(spec, "default", True)
         writer.write()
-        assert not os.path.exists(writer.layout.modulerc)
+        assert os.path.exists(writer.layout.modulerc)
+        with open(writer.layout.modulerc) as f:
+            content = [line.strip() for line in f.readlines()]
+        assert hide_implicit_mpileaks in content  # old, implicit mpileaks is still hidden
+        assert f"module-hide --soft --hidden-loaded {writer.layout.use_name}" not in content
 
-        # explicit module is removed
-        writer.remove()
+        # after removing both the implicit and explicit module, the modulerc file would be empty
+        # and should be removed.
+        writer_cls(spec, "default", False).remove()
+        writer_cls(spec, "default", True).remove()
         assert not os.path.exists(writer.layout.modulerc)
         assert not os.path.exists(writer.layout.filename)
 
         # implicit module is removed
         writer = writer_cls(spec, "default", False)
-        writer.write(overwrite=True)
+        writer.write()
         assert os.path.exists(writer.layout.filename)
         assert os.path.exists(writer.layout.modulerc)
         writer.remove()
@@ -539,35 +547,19 @@ class TestTcl:
         writer_alt2.write(overwrite=True)
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc) as f:
-            content = f.readlines()
-            content = "".join(content).split("\n")
-        hide_cmd = "module-hide --soft --hidden-loaded %s" % writer.layout.use_name
-        hide_cmd_alt1 = "module-hide --soft --hidden-loaded %s" % writer_alt1.layout.use_name
-        hide_cmd_alt2 = "module-hide --soft --hidden-loaded %s" % writer_alt2.layout.use_name
+            content = [line.strip() for line in f.readlines()]
+        hide_cmd = f"module-hide --soft --hidden-loaded {writer.layout.use_name}"
+        hide_cmd_alt1 = f"module-hide --soft --hidden-loaded {writer_alt1.layout.use_name}"
+        hide_cmd_alt2 = f"module-hide --soft --hidden-loaded {writer_alt2.layout.use_name}"
         assert len([x for x in content if hide_cmd == x]) == 1
         assert len([x for x in content if hide_cmd_alt1 == x]) == 1
         assert len([x for x in content if hide_cmd_alt2 == x]) == 1
 
-        # one version is removed, a second becomes explicit
+        # one version is removed
         writer_alt1.remove()
-        writer_alt2 = writer_cls(spec_alt2, "default", True)
-        writer_alt2.write(overwrite=True)
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc) as f:
-            content = f.readlines()
-            content = "".join(content).split("\n")
+            content = [line.strip() for line in f.readlines()]
         assert len([x for x in content if hide_cmd == x]) == 1
         assert len([x for x in content if hide_cmd_alt1 == x]) == 0
-        assert len([x for x in content if hide_cmd_alt2 == x]) == 0
-
-        # disable hide_implicits configuration option
-        module_configuration("autoload_direct")
-        writer = writer_cls(spec, "default")
-        writer.write(overwrite=True)
-        assert not os.path.exists(writer.layout.modulerc)
-
-        # reenable hide_implicits configuration option
-        module_configuration("hide_implicits")
-        writer = writer_cls(spec, "default")
-        writer.write(overwrite=True)
-        assert os.path.exists(writer.layout.modulerc)
+        assert len([x for x in content if hide_cmd_alt2 == x]) == 1
