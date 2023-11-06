@@ -2688,60 +2688,6 @@ appear in the package file (or in this case, in the list).
    right version. If two packages depend on ``binutils`` patched *the
    same* way, they can both use a single installation of ``binutils``.
 
-.. _setup-dependent-environment:
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Influence how dependents are built or run
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack provides a mechanism for dependencies to influence the
-environment of their dependents by overriding  the
-:meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
-or the
-:meth:`setup_dependent_build_environment <spack.builder.Builder.setup_dependent_build_environment>`
-methods.
-The Qt package, for instance, uses this call:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
-   :pyobject: Qt.setup_dependent_build_environment
-   :linenos:
-
-to set the ``QTDIR`` environment variable so that packages
-that depend on a particular Qt installation will find it.
-Another good example of how a dependency can influence
-the build environment of dependents is the Python package:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.setup_dependent_build_environment
-   :linenos:
-
-In the method above it is ensured that any package that depends on Python
-will have the ``PYTHONPATH``, ``PYTHONHOME`` and ``PATH`` environment
-variables set appropriately before starting the installation. To make things
-even simpler the ``python setup.py`` command is also inserted into the module
-scope of dependents by overriding a third method called
-:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`
-:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.setup_dependent_package
-   :linenos:
-
-This allows most python packages to have a very simple install procedure,
-like the following:
-
-.. code-block:: python
-
-   def install(self, spec, prefix):
-       setup_py("install", "--prefix={0}".format(prefix))
-
-Finally the Python package takes also care of the modifications to ``PYTHONPATH``
-to allow dependencies to run correctly:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-    :pyobject: Python.setup_dependent_run_environment
-    :linenos:
-
 
 .. _packaging_conflicts:
 
@@ -2886,6 +2832,70 @@ variant(s) are selected.  This may be accomplished with conditional
        extends("python", when="+python")
        ...
 
+.. _setup-environment:
+
+--------------------------------------------
+Runtime and build time environment variables
+--------------------------------------------
+
+Spack provides a few methods to help package authors set up the required environment variables for
+their package. Environment variables typically depend on how the package is used: variables that
+make sense during the build phase may not be needed at runtime, and vice versa. Further, sometimes
+it makes sense to let a dependency set the environment variables for its dependents. To allow all
+this, Spack provides four different methods that can be overridden in a package:
+
+1. :meth:`setup_build_environment <spack.builder.Builder.setup_build_environment>`
+2. :meth:`setup_run_environment <spack.package_base.PackageBase.setup_run_environment>`
+3. :meth:`setup_dependent_build_environment <spack.builder.Builder.setup_dependent_build_environment>`
+4. :meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
+
+The Qt package, for instance, uses this call:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
+   :pyobject: Qt.setup_dependent_build_environment
+   :linenos:
+
+to set the ``QTDIR`` environment variable so that packages that depend on a particular Qt
+installation will find it.
+
+The following diagram will give you an idea when each of these methods is called in a build
+context:
+
+.. image:: images/setup_env.png
+   :align: center
+
+Notice that ``setup_dependent_run_environment`` can be called multiple times, once for each
+dependent package, whereas ``setup_run_environment`` is called only once for the package itself.
+This means that the former should only be used if the environment variables depend on the dependent
+package, whereas the latter should be used if the environment variables depend only on the package
+itself.
+
+--------------------------------
+Setting package module variables
+--------------------------------
+
+Apart from modifying environment variables of the dependent package, you can also define Python
+variables to be used by the dependent. This is done by implementing
+:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`. An
+example of this can be found in the ``Python`` package:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
+   :pyobject: Python.setup_dependent_package
+   :linenos:
+
+This allows Python packages to directly use these variables:
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       ...
+       install("script.py", python_platlib)
+
+.. note::
+
+   We recommend using ``setup_dependent_package`` sparingly, as it is not always clear where
+   global variables are coming from when editing a ``package.py`` file.
+
 -----
 Views
 -----
@@ -2963,6 +2973,33 @@ say MPICH, we'll see something like this:
 The ``provides("mpi")`` call tells Spack that the ``mpich`` package
 can be used to satisfy the dependency of any package that
 ``depends_on("mpi")``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Providing multiple virtuals simultaneously
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Packages can provide more than one virtual dependency. Sometimes, due to implementation details,
+there are subsets of those virtuals that need to be provided together by the same package.
+
+A well-known example is ``openblas``, which provides both the ``lapack`` and ``blas`` API in a single ``libopenblas``
+library. A package that needs ``lapack`` and ``blas`` must either use ``openblas`` to provide both, or not use
+``openblas`` at all. It cannot pick one or the other.
+
+To express this constraint in a package, the two virtual dependencies must be listed in the same ``provides`` directive:
+
+.. code-block:: python
+
+   provides('blas', 'lapack')
+
+This makes it impossible to select ``openblas`` as a provider for one of the two
+virtual dependencies and not for the other. If you try to, Spack will report an error:
+
+.. code-block:: console
+
+   $ spack spec netlib-scalapack  ^[virtuals=lapack] openblas ^[virtuals=blas] atlas
+   ==> Error: concretization failed for the following reasons:
+
+      1. Package 'openblas' needs to provide both 'lapack' and 'blas' together, but provides only 'lapack'
 
 ^^^^^^^^^^^^^^^^^^^^
 Versioned Interfaces
@@ -3765,7 +3802,7 @@ Similarly, ``spack install example +feature build_system=autotools`` will pick
 the  ``AutotoolsBuilder`` and invoke ``./configure --with-my-feature``.
 
 Dependencies are always specified in the package class. When some dependencies
-depend on the choice of the build system, it is possible to use when conditions as 
+depend on the choice of the build system, it is possible to use when conditions as
 usual:
 
 .. code-block:: python
@@ -3783,7 +3820,7 @@ usual:
            depends_on("cmake@3.18:", when="@2.0:", type="build")
            depends_on("cmake@3:", type="build")
 
-       # Specify extra build dependencies used only in the configure script 
+       # Specify extra build dependencies used only in the configure script
        with when("build_system=autotools"):
            depends_on("perl", type="build")
            depends_on("pkgconfig", type="build")
@@ -6831,25 +6868,58 @@ the adapter role is to "emulate" a method resolution order like the one represen
 Specifying License Information
 ------------------------------
 
-A significant portion of software that Spack packages is open source. Most open
-source software is released under one or more common open source licenses.
-Specifying the specific license that a package is released under in a project's
-`package.py` is good practice. To specify a license, find the SPDX identifier for
-a project and then add it using the license directive:
+Most of the software in Spack is open source, and most open source software is released
+under one or more `common open source licenses <https://opensource.org/licenses/>`_.
+Specifying the license that a package is released under in a project's
+`package.py` is good practice. To specify a license, find the `SPDX identifier
+<https://spdx.org/licenses/>`_ for a project and then add it using the license
+directive:
 
 .. code-block:: python
 
    license("<SPDX Identifier HERE>")
 
+For example, the SPDX ID for the Apache Software License, version 2.0 is ``Apache-2.0``,
+so you'd write:
+
+.. code-block:: python
+
+   license("Apache-2.0")
+
+Or, for a dual-licensed package like Spack, you would use an `SPDX Expression
+<https://spdx.github.io/spdx-spec/v2-draft/SPDX-license-expressions/>`_ with both of its
+licenses:
+
+.. code-block:: python
+
+   license("Apache-2.0 OR MIT")
+
 Note that specifying a license without a when clause makes it apply to all
 versions and variants of the package, which might not actually be the case.
 For example, a project might have switched licenses at some point or have
 certain build configurations that include files that are licensed differently.
-To account for this, you can specify when licenses should be applied. For
-example, to specify that a specific license identifier should only apply
-to versionup to and including 1.5, you could write the following directive:
+Spack itself used to be under the ``LGPL-2.1`` license, until it was relicensed
+in version ``0.12`` in 2018.
+
+You can specify when a ``license()`` directive applies using with a ``when=``
+clause, just like other directives. For example, to specify that a specific
+license identifier should only apply to versions up to ``0.11``, but another
+license should apply for later versions, you could write:
 
 .. code-block:: python
 
-   license("...", when="@:1.5")
+   license("LGPL-2.1", when="@:0.11")
+   license("Apache-2.0 OR MIT", when="@0.12:")
 
+Note that unlike for most other directives, the ``when=`` constraints in the
+``license()`` directive can't intersect. Spack needs to be able to resolve
+exactly one license identifier expression for any given version. To specify
+*multiple* licenses, use SPDX expressions and operators as above. The operators
+you probably care most about are:
+
+* ``OR``: user chooses one license to adhere to; and
+* ``AND``: user has to adhere to all the licenses.
+
+You may also care about `license exceptions
+<https://spdx.org/licenses/exceptions-index.html>`_ that use the ``WITH`` operator,
+e.g. ``Apache-2.0 WITH LLVM-exception``.

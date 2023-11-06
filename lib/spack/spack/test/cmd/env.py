@@ -14,6 +14,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
+import llnl.util.tty as tty
 
 import spack.cmd.env
 import spack.config
@@ -977,10 +978,9 @@ packages:
     assert any([x.satisfies("libelf@0.8.10") for x in e._get_environment_specs()])
 
 
-def test_bad_env_yaml_format(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
+def test_bad_env_yaml_format(environment_from_manifest):
+    with pytest.raises(spack.config.ConfigFormatError) as e:
+        environment_from_manifest(
             """\
 spack:
   spacks:
@@ -988,11 +988,58 @@ spack:
 """
         )
 
-    with tmpdir.as_cwd():
-        with pytest.raises(spack.config.ConfigFormatError) as e:
-            env("create", "test", "./spack.yaml")
-        assert "spack.yaml:2" in str(e)
         assert "'spacks' was unexpected" in str(e)
+
+    assert "test" not in env("list")
+
+
+def test_bad_env_yaml_format_remove(mutable_mock_env_path):
+    badenv = "badenv"
+    env("create", badenv)
+    filename = mutable_mock_env_path / "spack.yaml"
+    with open(filename, "w") as f:
+        f.write(
+            """\
+    - mpileaks
+"""
+        )
+
+    assert badenv in env("list")
+    env("remove", "-y", badenv)
+    assert badenv not in env("list")
+
+
+@pytest.mark.parametrize("answer", ["-y", ""])
+def test_multi_env_remove(mutable_mock_env_path, monkeypatch, answer):
+    """Test removal (or not) of a valid and invalid environment"""
+    remove_environment = answer == "-y"
+    monkeypatch.setattr(tty, "get_yes_or_no", lambda prompt, default: remove_environment)
+
+    environments = ["goodenv", "badenv"]
+    for e in environments:
+        env("create", e)
+
+    # Ensure the bad environment contains invalid yaml
+    filename = mutable_mock_env_path / environments[1] / "spack.yaml"
+    filename.write_text(
+        """\
+    - libdwarf
+"""
+    )
+
+    assert all(e in env("list") for e in environments)
+
+    args = [answer] if answer else []
+    args.extend(environments)
+    output = env("remove", *args, fail_on_error=False)
+
+    if remove_environment is True:
+        # Successfully removed (and reported removal) of *both* environments
+        assert not all(e in env("list") for e in environments)
+        assert output.count("Successfully removed") == 2
+    else:
+        # Not removing any of the environments
+        assert all(e in env("list") for e in environments)
 
 
 def test_env_loads(install_mockery, mock_fetch):
@@ -2443,8 +2490,12 @@ def test_concretize_user_specs_together():
     e.remove("mpich")
     e.add("mpich2")
 
+    exc_cls = spack.error.SpackError
+    if spack.config.get("config:concretizer") == "clingo":
+        exc_cls = spack.error.UnsatisfiableSpecError
+
     # Concretizing without invalidating the concrete spec for mpileaks fails
-    with pytest.raises(spack.error.UnsatisfiableSpecError):
+    with pytest.raises(exc_cls):
         e.concretize()
     e.concretize(force=True)
 
@@ -2476,9 +2527,12 @@ def test_duplicate_packages_raise_when_concretizing_together():
     e.add("mpileaks~opt")
     e.add("mpich")
 
-    with pytest.raises(
-        spack.error.UnsatisfiableSpecError, match=r"You could consider setting `concretizer:unify`"
-    ):
+    exc_cls, match = spack.error.SpackError, None
+    if spack.config.get("config:concretizer") == "clingo":
+        exc_cls = spack.error.UnsatisfiableSpecError
+        match = r"You could consider setting `concretizer:unify`"
+
+    with pytest.raises(exc_cls, match=match):
         e.concretize()
 
 
