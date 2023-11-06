@@ -313,7 +313,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         resource(
             name="nvptx-tools",
             git="https://github.com/MentorEmbedded/nvptx-tools",
-            commit="d0524fbdc86dfca068db5a21cc78ac255b335be5",
+            commit="c321f1a3573dd89a12e3291d690207685a34df6e",
         )
         # NVPTX offloading supported in 7 and later by limited languages
         conflicts("@:6", msg="NVPTX only supported in gcc 7 and above")
