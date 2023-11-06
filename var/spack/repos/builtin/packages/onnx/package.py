@@ -73,6 +73,4 @@ class Onnx(CMakePackage):
             filter_file("CMAKE_CXX_STANDARD 11", "CMAKE_CXX_STANDARD 14", "CMakeLists.txt")
 
     def cmake_args(self):
-        # Try to get ONNX to use the same version of python as the spec is using
-        args = ["-DPY_VERSION={0}".format(self.spec["python"].version.up_to(2))]
-        return args
+        return [self.define("ONNX_ML", True)]
