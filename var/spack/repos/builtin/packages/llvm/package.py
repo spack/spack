@@ -977,7 +977,9 @@ class Llvm(CMakePackage, CudaPackage):
                 ninja()
                 ninja("install")
         if "+python" in self.spec:
-            install_tree("llvm/bindings/python", python_platlib)
+            if spec.version < Version("17.0.0"):
+                # llvm bindings were removed in v17: https://releases.llvm.org/17.0.1/docs/ReleaseNotes.html#changes-to-the-python-bindings
+                install_tree("llvm/bindings/python", python_platlib)
 
             if "+clang" in self.spec:
                 install_tree("clang/bindings/python", python_platlib)
