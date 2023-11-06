@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re
 import os
+import re
 
 from spack.package import *
 
@@ -94,8 +94,12 @@ class Rust(Package):
 
         # Manually inject the path of openssl's certs for build.
         certs = None
-        for p in ("etc/openssl/cert.pem", "../etc/openssl/cert.pem",
-                  "etc/ssl/certs/ca-bundle.crt", "../etc/ssl/certs/ca-bundle.crt"):
+        for p in (
+            "etc/openssl/cert.pem",
+            "../etc/openssl/cert.pem",
+            "etc/ssl/certs/ca-bundle.crt",
+            "../etc/ssl/certs/ca-bundle.crt",
+        ):
             certs = join_path(self.spec["openssl"].prefix, p)
             if os.path.exists(certs):
                 break

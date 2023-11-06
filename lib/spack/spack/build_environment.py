@@ -1026,7 +1026,6 @@ class SetupContext:
                     run_env_mods.drop("CC", "CXX", "F77", "FC")
                 env.extend(run_env_mods)
 
-
         return env
 
     def _make_buildtime_detectable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
