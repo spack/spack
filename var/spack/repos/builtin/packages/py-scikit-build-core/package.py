@@ -30,6 +30,7 @@ class PyScikitBuildCore(PythonPackage):
 
     # Dependencies
     depends_on("py-exceptiongroup", when="^python@:3.10", type=("build", "run"))
+    depends_on("py-importlib-metadata", when="@0.3.0: ^python@:3.7")
     depends_on("py-importlib-resources@1.3:", when="^python@:3.8", type=("build", "run"))
     depends_on("py-packaging@20.9:", type=("build", "run"))
     depends_on("py-tomli@1.1:", when="^python@:3.10", type=("build", "run"))
@@ -50,6 +51,7 @@ class PyScikitBuildCore(PythonPackage):
     depends_on("py-pytest@7:", type="test")
     depends_on("py-pytest-subprocess@1.5:", type="test")
     depends_on("py-setuptools", type="test")
+    depends_on("py-virtualenv", type="test")
     depends_on("py-wheel", type="test")
 
     @run_after("install")
