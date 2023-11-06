@@ -2943,7 +2943,7 @@ def test_create_and_activate_unmanaged(tmp_path):
         assert ev.is_env_dir(env_dir)
         env("deactivate")
 
-        
+
 def test_activate_default(monkeypatch):
     """Tests whether `spack env activate` creates / activates the default
     environment"""
