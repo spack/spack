@@ -373,11 +373,13 @@ attr("node_flag_source", node(X, A1), A2, node(Y, A3))
      imposed_constraint(ID, "node_flag_source", A1, A2, A3),
      condition_set(node(Y, A3), node(X, A1)).
 
-attr("provider_set", node(PDupID, Provider), node(VDupID, Virtual))
-  :- impose(ID, RequestingNode),
-     imposed_constraint(ID, "provider_set", Provider, Virtual),
-     condition_set(RequestingNode, node(PDupID, Provider)),
-     condition_set(RequestingNode, node(VDupID, Virtual)).
+% Provider set is relevant only for literals, since it's the only place where `^[virtuals=foo] bar`
+% might appear in the HEAD of a rule
+attr("provider_set", node(min_dupe_id, Provider), node(min_dupe_id, Virtual))
+  :- solve_literal(TriggerID),
+     trigger_and_effect(_, TriggerID, EffectID),
+     impose(EffectID, _),
+     imposed_constraint(EffectID, "provider_set", Provider, Virtual).
 
 provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, VirtualNode).
 
