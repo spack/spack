@@ -24,10 +24,11 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version(
-        "2.9.1",
-        sha256="ddfa32c14494250ee8a48ef1c97a1bf6442c15484bbbd4669228a0f90242f4f9",
+        "2.9.2",
+        sha256="78309297c82a95ee38ed3224c98b93d330128c753a43893f63bbe969320e4979",
         preferred=True,
     )
+    version("2.9.1", sha256="ddfa32c14494250ee8a48ef1c97a1bf6442c15484bbbd4669228a0f90242f4f9")
     version("2.9.0", sha256="69f98ef58c818bb5410133e1891ac192653b0ec96eb9468590140f2552b6e5d1")
     version("2.8.3", sha256="4906ab1899721c41dd918dddb039ba2848a1fb0cf84f3a563a1179b9d6ee0d9f")
     version("2.8.2", sha256="9909f6409dc44b2c28c1fda0042dab4b711f25ec3277ef0cb6ffc40f5483910d")
@@ -210,6 +211,10 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         when="@:2.7.1",
         sha256="8221073d1b2f8944395a88a5d60a15c7370646b62f5fc6309867bbb6a8c2096c",
     )
+
+    # cmake: find threads package first
+    # https://github.com/ornladios/ADIOS2/pull/3893
+    patch("2.9.2-cmake-find-threads-package-first.patch", when="@2.9.2:")
 
     @when("%fj")
     def patch(self):
