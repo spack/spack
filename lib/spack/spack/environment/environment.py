@@ -1880,6 +1880,9 @@ class Environment:
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
+    # TODO: this should only use git state when configured to do so
+    # TODO: this should use a mock-able object attribute to determine
+    # when a GitChangeDetector is available
     def _get_overwrite_specs(self):
         # Find all dev specs that were modified.
         git_states = list()
