@@ -14,7 +14,7 @@ import llnl.util.filesystem as fs
 import spack.environment as ev
 import spack.spec
 from spack.environment.environment import (
-    DevelopGitPackage,
+    GitRepoChangeDetector,
     EnvironmentManifestFile,
     SpackEnvironmentViewError,
     _error_on_nonempty_view_dir,
@@ -781,10 +781,10 @@ def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
             e.concretize()
 
 
-class TestDevelopGitPackage:
+class TestGitRepoChangeDetector:
     def test_detect_git_change(self, mock_git_repository):
         repo_path = mock_git_repository.path
-        git_change_detector = DevelopGitPackage.from_src_dir(repo_path)
+        git_change_detector = GitRepoChangeDetector.from_src_dir(repo_path)
         git_change_detector.update_changed()
         git_change_detector.update_prior()
 

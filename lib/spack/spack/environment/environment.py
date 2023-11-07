@@ -431,7 +431,7 @@ def _timestamp_changed(spec):
     return mtime > record.installation_time
 
 
-class DevelopGitPackage:
+class GitRepoChangeDetector:
     def __init__(self, dev_path):
         self.base_dir = pathlib.Path(dev_path)
         self.git_dir = self.base_dir / ".git"
@@ -444,7 +444,7 @@ class DevelopGitPackage:
         git_dir = pathlib.Path(dev_path) / ".git"
         if not git_dir.is_dir():
             return
-        return DevelopGitPackage(dev_path)
+        return GitRepoChangeDetector(dev_path)
 
     def git_modification_hash(self):
         """
@@ -1889,7 +1889,7 @@ class Environment:
                 # Not installed -> nothing to compare against
                 return False
 
-            git_state = DevelopGitPackage.from_src_dir(dev_path_var.value)
+            git_state = GitRepoChangeDetector.from_src_dir(dev_path_var.value)
 
             if git_state:
                 if git_state.update_changed():
