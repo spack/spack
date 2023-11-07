@@ -863,10 +863,11 @@ class PyclingoDriver:
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
 
+        tty.debug(f"Pyclingodriver attrs: {self.__dir__()}")
         has_propagation = False
         for spec in specs:
             for dep in spec.traverse(root=True):
-                has_propagation |= self._compiler_flag_has_propagation(dep.compiler_flags)
+                has_propagation |= self._compiler_flags_has_propagation(dep.compiler_flags)
         if has_propagation:
             self.control.load(os.path.join(parent_dir, "propagation.lp"))
 
@@ -978,7 +979,7 @@ class PyclingoDriver:
 
         return cycle_result.unsatisfiable
 
-    def _compiler_flag_has_propagation(self, flags):
+    def _compiler_flags_has_propagation(self, flags):
         for _, flag_vals in flags.items():
             if any(val.propagate for val in flag_vals):
                 return True
