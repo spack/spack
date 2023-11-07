@@ -17,6 +17,7 @@ class PyElephant(PythonPackage):
     maintainers("Moritz-Alexander-Kern")
 
     version("master", branch="master")
+    version("0.14.0", sha256="02ce3b2a8d08dc19828f95384551339ea0946bc405c1db9aace54135417c2b0f")
     version("0.13.0", sha256="2c6463cf9ace41631f2af196c5b80b468bf1c4b264d3a6b1ea0fb587d9e7dd67")
     version("0.12.0", sha256="81f8d668f92d8688344bb7a9c5abaa8438d824560c935a411e6e36ddf7dc7c72")
     version("0.11.2", sha256="f8759fff0bbb136ae4ffc8d1eacadeea8ba56610d705c3bf207de87ada3ba240")
