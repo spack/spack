@@ -797,7 +797,7 @@ class TestDevelopGitPackage:
         assert git_change_detector.update_changed()
 
         git_change_detector.update_prior()
-    
+
         # Now that prior has updated, and no change has occurred since
         # then, we should go back to reporting no change.
         assert not git_change_detector.update_changed()
