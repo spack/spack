@@ -33,9 +33,11 @@ def cmake_cache_option(name, boolean_value, comment="", force=False):
     force_str = " FORCE" if force else ""
     return 'set({0} {1} CACHE BOOL "{2}"{3})\n'.format(name, value, comment, force_str)
 
+
 def cmake_cache_filepath(name, value, comment=""):
     """Generate a string for a cmake cache variable of type FILEPATH"""
     return 'set({0} "{1}" CACHE FILEPATH "{2}")\n'.format(name, value, comment)
+
 
 class CachedCMakeBuilder(CMakeBuilder):
     #: Phases of a Cached CMake package
@@ -267,9 +269,8 @@ class CachedCMakeBuilder(CMakeBuilder):
             if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
                 llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
             entries.append(
-                cmake_cache_filepath(
-                    "CMAKE_HIP_COMPILER",
-                    os.path.join(llvm_bin, "clang++")))
+                cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
+            )
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)

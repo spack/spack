@@ -8,6 +8,7 @@ import os
 import spack.build_environment
 from spack.package import *
 
+
 # This is a hack to get around some deficiencies in Hydrogen.
 def get_blas_entries(inspec):
     entries = []
@@ -19,13 +20,26 @@ def get_blas_entries(inspec):
     elif "blas=essl" in spec or spec.satisfies("^essl"):
         entries.append(cmake_cache_string("BLA_VENDOR", "IBMESSL"))
         # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
-        entries.append(cmake_cache_string("LAPACK_LIBRARIES", "%s;-llapack;-lblas" % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names)))
-        entries.append(cmake_cache_string("BLAS_LIBRARIES", "%s;-lblas" % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names)))
+        entries.append(
+            cmake_cache_string(
+                "LAPACK_LIBRARIES",
+                "%s;-llapack;-lblas"
+                % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+            )
+        )
+        entries.append(
+            cmake_cache_string(
+                "BLAS_LIBRARIES",
+                "%s;-lblas"
+                % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+            )
+        )
     elif "blas=accelerate" in spec:
         entries.append(cmake_cache_option("DiHydrogen_USE_ACCELERATE", True))
     elif spec.satisfies("^netlib-lapack"):
         entries.append(cmake_cache_string("BLA_VENDOR", "Generic"))
     return entries
+
 
 class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     """DiHydrogen is the second version of the Hydrogen fork of the
@@ -50,80 +64,73 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     # Primary features
 
-    variant(
-        "dace",
-        default=False,
-        sticky=True,
-        description="Enable DaCe backend.")
+    variant("dace", default=False, sticky=True, description="Enable DaCe backend.")
 
     variant(
         "distconv",
         default=False,
         sticky=True,
-        description="Enable (legacy) Distributed Convolution support.")
+        description="Enable (legacy) Distributed Convolution support.",
+    )
 
     variant(
         "nvshmem",
         default=False,
         sticky=True,
         description="Enable support for NVSHMEM-based halo exchanges.",
-        when="+distconv")
+        when="+distconv",
+    )
 
     variant(
-        "shared",
-        default=True,
-        sticky=True,
-        description="Enables the build of shared libraries")
+        "shared", default=True, sticky=True, description="Enables the build of shared libraries"
+    )
 
     # Some features of developer interest
 
     variant(
         "developer",
         default=False,
-        description="Enable extra warnings and force tests to be enabled.")
+        description="Enable extra warnings and force tests to be enabled.",
+    )
+
+    variant("ci", default=False, description="Use default options for CI builds")
 
     variant(
-        "ci",
+        "coverage",
         default=False,
-        description="Use default options for CI builds")
-
+        description="Decorate build with code coverage instrumentation options",
+        when="%gcc",
+    )
     variant(
         "coverage",
         default=False,
         description="Decorate build with code coverage instrumentation options",
-        when="%gcc")
+        when="%clang",
+    )
     variant(
         "coverage",
         default=False,
         description="Decorate build with code coverage instrumentation options",
-        when="%clang")
-    variant(
-        "coverage",
-        default=False,
-        description="Decorate build with code coverage instrumentation options",
-        when="%rocmcc")
+        when="%rocmcc",
+    )
 
     # Package conflicts and requirements
 
-    conflicts(
-        "+nvshmem",
-        when="~cuda",
-        msg="NVSHMEM requires CUDA support.")
+    conflicts("+nvshmem", when="~cuda", msg="NVSHMEM requires CUDA support.")
 
-    conflicts(
-        "+cuda",
-        when="+rocm",
-        msg="CUDA and ROCm are mutually exclusive.")
+    conflicts("+cuda", when="+rocm", msg="CUDA and ROCm are mutually exclusive.")
 
     requires(
-        "+cuda", "+rocm",
+        "+cuda",
+        "+rocm",
         when="+distconv",
         policy="any_of",
-        msg="DistConv support requires CUDA or ROCm.")
+        msg="DistConv support requires CUDA or ROCm.",
+    )
 
     # Dependencies
 
-    depends_on("catch2@3.0.1:", type=("build","test"), when="+developer")
+    depends_on("catch2@3.0.1:", type=("build", "test"), when="+developer")
     depends_on("cmake@3.21.0:", type="build")
     depends_on("cuda@11.0:", when="+cuda")
     depends_on("spdlog@1.11.0", when="@:0.1,0.2:")
@@ -133,12 +140,14 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         for arch in CudaPackage.cuda_arch_values:
             depends_on(
                 "hydrogen +cuda cuda_arch={0}".format(arch),
-                when="+cuda cuda_arch={0}".format(arch))
+                when="+cuda cuda_arch={0}".format(arch),
+            )
 
         for val in ROCmPackage.amdgpu_targets:
             depends_on(
                 "hydrogen amdgpu_target={0}".format(val),
-                when="+rocm amdgpu_target={0}".format(val))
+                when="+rocm amdgpu_target={0}".format(val),
+            )
 
     with when("+distconv"):
         depends_on("mpi")
@@ -166,32 +175,48 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         for arch in CudaPackage.cuda_arch_values:
             depends_on(
                 "aluminum +cuda cuda_arch={0}".format(arch),
-                when="+cuda cuda_arch={0}".format(arch))
+                when="+cuda cuda_arch={0}".format(arch),
+            )
 
             # This is a workaround for a bug in the Aluminum package,
             # as it should be responsible for its own NCCL dependency.
             # Rather than failing to concretize, we help it along.
             depends_on(
                 "nccl cuda_arch={0}".format(arch),
-                when="+distconv +cuda cuda_arch={0}".format(arch))
+                when="+distconv +cuda cuda_arch={0}".format(arch),
+            )
 
             # NVSHMEM also needs arch forwarding
             depends_on(
                 "nvshmem +cuda cuda_arch={0}".format(arch),
-                when="+nvshmem +cuda cuda_arch={0}".format(arch))
+                when="+nvshmem +cuda cuda_arch={0}".format(arch),
+            )
 
         # Idenfity versions of cuda_arch that are too old from
         # lib/spack/spack/build_systems/cuda.py. We require >=60.
-        illegal_cuda_arch_values = ["10", "11", "12", "13",
-                                    "20", "21", "30", "32", "35", "37",
-                                    "50", "52", "53"]
+        illegal_cuda_arch_values = [
+            "10",
+            "11",
+            "12",
+            "13",
+            "20",
+            "21",
+            "30",
+            "32",
+            "35",
+            "37",
+            "50",
+            "52",
+            "53",
+        ]
         for value in illegal_cuda_arch_values:
             conflicts("cuda_arch=" + value)
 
         for val in ROCmPackage.amdgpu_targets:
             depends_on(
                 "aluminum amdgpu_target={0}".format(val),
-                when="+rocm amdgpu_target={0}".format(val))
+                when="+rocm amdgpu_target={0}".format(val),
+            )
 
         # CUDA-specific distconv dependencies
         depends_on("cudnn", when="+cuda")
@@ -252,8 +277,11 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
             clang_root = os.path.dirname(clang_bin)
             entries.append(cmake_cache_string("OpenMP_CXX_FLAGS", "-fopenmp=libomp"))
             entries.append(cmake_cache_string("OpenMP_CXX_LIB_NAMES", "libomp"))
-            entries.append(cmake_cache_string("OpenMP_libomp_LIBRARY",
-                                              "{0}/lib/libomp.dylib".format(clang_root)))
+            entries.append(
+                cmake_cache_string(
+                    "OpenMP_libomp_LIBRARY", "{0}/lib/libomp.dylib".format(clang_root)
+                )
+            )
 
         return entries
 
@@ -274,10 +302,11 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
             # flags in play, and we need to be sure to get them all.
             cuda_flags = self.get_cuda_flags()
             if len(cuda_flags) > 0:
-                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS",
-                                                  " ".join(cuda_flags)))
+                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", " ".join(cuda_flags)))
 
-        enable_rocm_var="H2_ENABLE_ROCM" if spec.version < Version("0.3") else "H2_ENABLE_HIP_ROCM"
+        enable_rocm_var = (
+            "H2_ENABLE_ROCM" if spec.version < Version("0.3") else "H2_ENABLE_HIP_ROCM"
+        )
         entries.append(cmake_cache_option(enable_rocm_var, "+rocm" in spec))
         if spec.satisfies("+rocm"):
             entries.append(cmake_cache_string("CMAKE_HIP_STANDARD", "17"))
